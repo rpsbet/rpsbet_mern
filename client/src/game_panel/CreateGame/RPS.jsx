@@ -250,7 +250,7 @@ class RPS extends Component {
     } else {
       alertModal(
         this.props.isDarkMode,
-        'PURR-HAPS YOU SHOULD CREATE AT LEAST 3 TURNS TO TRAIN THE AUTOPLAY'
+        'PURR-HAPS YOU SHOULD CREATE AT LEAST 3 TURNS TO TRAIN THE AI PLAY'
       );
       return;
     }
@@ -337,7 +337,7 @@ class RPS extends Component {
     }
   }
 
-  // handleAutoplayChange = () => {
+  // handleAI PlayChange = () => {
   //   this.setState(prevState => ({
   //     autoplay: !prevState.autoplay
   //   }));
@@ -586,7 +586,7 @@ class RPS extends Component {
                       variant="contained"
                       onClick={this.onAutoPlay}
                     >
-                      Test Autoplay&nbsp;<span className="roll-tag">[space]</span>
+                      Test AI Play&nbsp;<span className="roll-tag">[space]</span>
                     </Button>
                   </div>
                   <div className="rps-add-run-table">

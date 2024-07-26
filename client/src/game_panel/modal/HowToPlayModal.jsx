@@ -64,7 +64,7 @@ class HowToPlayModal extends Component {
                       <p>
                         RPS.GAME is a skill-based 'casino' meaning the more the learn and stick around, the better chance you have of earning, vs. traditional casinos where the math works in the House's favor over time. House Edge for us is commission-based per bet, and does not affect your odds, whereas in a traditional casino, their business-model is based entirely on you losing. Sound fair to you?
                       </p>
-                      <h5 style={{ color: '#02c526' }}>Using AI for Autoplay (vs. an RNG)</h5>
+                      <h5 style={{ color: '#02c526' }}>Using AI for AI Play (vs. an RNG)</h5>
 
                       <div className="tiers">
                         <br />

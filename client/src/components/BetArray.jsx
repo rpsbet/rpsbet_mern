@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { getRpsBetItems, getQsBetItems, updateRpsBetItems, updateQsBetItems } from '../redux/Logic/logic.actions';
 import { setFocused } from '../redux/Auth/user.actions';
 import { useDispatch } from 'react-redux';
-
+import { Info } from '@material-ui/icons';
 import {
   Button,
   Tabs,
@@ -23,7 +23,7 @@ import {
   Table, TableHead, TableBody, TableRow, TableCell
 } from '@material-ui/core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrash, faToggleOn, faBrain, faBan, faClock, faRobot, faCoins, faToggleOff } from '@fortawesome/free-solid-svg-icons';
+import { faToggleOn, faBrain, faBan, faClock, faRobot, faCoins, faToggleOff, faBalanceScale } from '@fortawesome/free-solid-svg-icons';
 import { convertToCurrency } from '../util/conversion';
 import ApexChart from "react-apexcharts";
 import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
@@ -34,6 +34,7 @@ import Lottie from 'react-lottie';
 import animationData from '../game_panel/LottieAnimations/spinningIcon.json';
 import { alertModal } from '../game_panel/modal/ConfirmAlerts';
 import SettingsRef from './SettingsRef';
+import { FaMoneyBillWave } from 'react-icons/fa';
 
 const theme = createTheme({
   overrides: {
@@ -58,7 +59,6 @@ const useStyles = makeStyles((theme) => ({
     '&:nth-of-type(odd)': {
       background: '#e5e5e5',
     },
-
     '&:hover': {
       background: '#f9f9f9',
     },
@@ -72,6 +72,31 @@ const useStyles = makeStyles((theme) => ({
   tableContainer: {
     maxHeight: 200,
     overflowY: 'auto',
+  },
+  redTooltip: {
+    backgroundColor: 'red',
+    color: 'white',
+    fontSize: '1em',
+    padding: 8
+  },
+  slider: {
+    color: 'red',
+    height: 8,
+    '& .MuiSlider-thumb': {
+      backgroundColor: 'red',
+      border: '2px solid red',
+      height: 24,
+      width: 24,
+      '&:focus, &:hover, &$active': {
+        boxShadow: '0 0 0 8px rgba(255, 0, 0, 0.16)',
+      },
+    },
+    '& .MuiSlider-track': {
+      height: 8,
+    },
+    '& .MuiSlider-rail': {
+      height: 8,
+    },
   },
 }));
 
@@ -87,7 +112,6 @@ const defaultOptions = {
 const SideTabs = ({ selectedTab, handleTabChange }) => (
   <Tabs
     orientation="vertical"
-    // variant="fullWidth"
     value={selectedTab}
     onChange={handleTabChange}
     className={`side-tab-switcher`}
@@ -98,13 +122,9 @@ const SideTabs = ({ selectedTab, handleTabChange }) => (
 );
 
 
-
 const PlaceholderComponent = ({
   selectedTab,
   handleTabChange,
-  handleSettingsIconClick,
-  settingsRef,
-  settings_panel_opened
 }) => (
   <ThemeProvider theme={theme}>
     <div style={{ position: 'relative' }}>
@@ -112,12 +132,12 @@ const PlaceholderComponent = ({
       <SideTabs selectedTab={selectedTab} handleTabChange={handleTabChange} />
       {selectedTab === 0 && (
         <div className="gamified-container">
-          Join a room to use Autoplay!
+          Join a room to use AI Play!
         </div>
       )}
       {selectedTab === 1 && (
         <div className="gamified-container">
-          Join a room to use Autoplay!
+          Join a room to use AI Play!
         </div>
       )}
     </div>
@@ -125,8 +145,6 @@ const PlaceholderComponent = ({
 );
 
 function BetArray({
-  arrayName,
-  label,
   rpsbetitems,
   getRpsBetItems,
   updateRpsBetItems,
@@ -138,12 +156,14 @@ function BetArray({
   betting,
   handleSwitchChange,
   isDarkMode,
+  qs_game_type,
   ai_mode,
   user_balance,
   rank,
   is_betting,
   user_id,
   room_id,
+  user,
   strategies,
   game_type
 }) {
@@ -152,63 +172,210 @@ function BetArray({
   const [settings_panel_opened, setSettingsPanelOpened] = useState(false);
   const [selectedTab, setSelectedTab] = useState(0);
   const [timerValue, setTimerValue] = useState(2000);
-  const [budget, setBudget] = useState(0.001);
   const [selectedCell, setSelectedCell] = useState(null);
   const [openModal, setOpenModal] = useState(false);
   const [editedValue, setEditedValue] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [hoveredIndex, setHoveredIndex] = useState(null);
-
   const [selectedRow, setSelectedRow] = useState(null);
   const [selectedStrategy, setSelectedStrategy] = useState(ai_mode);
   const [modalTitle, setModalTitle] = useState('');
+  const [range, setRange] = useState([1, 100]);
+  const [isDragging, setIsDragging] = useState(false);
+  const [debounceTimeoutId, setDebounceTimeoutId] = useState(null);
+  const [isSliderDisabled, setIsSliderDisabled] = useState(false);
+  const [text, setText] = useState('');
+
+  function debounce(fn, delay) {
+    return function (...args) {
+      if (debounceTimeoutId) {
+        clearTimeout(debounceTimeoutId);
+      }
+      const newTimeoutId = setTimeout(() => {
+        fn(...args);
+      }, delay);
+      setDebounceTimeoutId(newTimeoutId);
+    };
+  }
+
+  const handleSliderChange = (event, newValue) => {
+    setText(<>New range detected: {convertToCurrency(newValue)}</>);
+    setRange(newValue);
+    setIsDragging(true);
+
+    if (debounceTimeoutId) {
+      clearTimeout(debounceTimeoutId);
+    }
+  };
+
+  const handleSliderChangeCommitted = (event, newValue) => {
+    setText(<>Attempting to update range...</>);
+    setIsDragging(false);
+    debouncedHandleRangeChange(event, newValue);
+  };
+
+  const debouncedHandleRangeChange = debounce(async (event, newValue) => {
+    if (!isDragging) {
+      setIsSliderDisabled(true);
+      await handleRangeChange(event, newValue);
+      setIsSliderDisabled(false);
+    }
+  }, 3000);
+
+
+  const handleRangeChange = async (event, newValue) => {
+    let [newMin, newMax] = newValue;
+    newMin = Math.max(1, newMin);
+    newMax = Math.min(user_balance, newMax);
+
+    const itemsToUpdate = game_type === 'Quick Shoot' ? qsbetitems : rpsbetitems;
+    const updateFunction = game_type === 'Quick Shoot' ? updateQsBetItems : updateRpsBetItems;
+    const uniqueBetAmounts = [...new Set(itemsToUpdate.map(item => item.bet_amount))];
+
+    if (uniqueBetAmounts.length === 1) {
+      const uniqueValue = uniqueBetAmounts[0];
+      if (uniqueValue !== newMin) {
+        const itemToUpdate = itemsToUpdate.find(item => item.bet_amount === uniqueValue);
+        setText(<>Updating item(s) with new min: {convertToCurrency(newMin)}, please wait...</>);
+        await updateFunction(itemToUpdate._id, 'bet_amount', newMin);
+      }
+      if (uniqueValue !== newMax) {
+        const itemToUpdate = itemsToUpdate.find(item => item.bet_amount === uniqueValue);
+        setText(<>Updating item(s) with new max: {convertToCurrency(newMax)}, please wait...</>);
+        await updateFunction(itemToUpdate._id, 'bet_amount', newMax);
+      }
+    } else {
+      // Update items for new min value
+      const currentMin = Math.min(...uniqueBetAmounts);
+      if (newMin < currentMin) {
+        const itemToUpdate = itemsToUpdate.find(item => item.bet_amount === currentMin);
+        setText(<>Updating item(s) with new min: {convertToCurrency(newMin)}, please wait...</>);
+        await updateFunction(itemToUpdate._id, 'bet_amount', newMin);
+      } else {
+        for (const item of itemsToUpdate) {
+          if (item.bet_amount < newMin) {
+            setText(<>Updating item(s) with new min: {convertToCurrency(newMin)}, please wait...</>);
+            await updateFunction(item._id, 'bet_amount', newMin);
+          }
+        }
+      }
+
+      const currentMax = Math.max(...uniqueBetAmounts);
+      if (newMax > currentMax) {
+        const itemToUpdate = itemsToUpdate.find(item => item.bet_amount === currentMax);
+        setText(<>Updating item(s) with new max: {convertToCurrency(newMax)}, please wait...</>);
+        await updateFunction(itemToUpdate._id, 'bet_amount', newMax);
+      } else {
+        for (const item of itemsToUpdate) {
+          if (item.bet_amount > newMax) {
+            setText(<>Updating item(s) with new max: {convertToCurrency(newMax)}, please wait...</>);
+            await updateFunction(item._id, 'bet_amount', newMax);
+          }
+        }
+      }
+    }
+
+    if (game_type === 'Quick Shoot') {
+      await getQsBetItems(room_id);
+    } else {
+      await getRpsBetItems(room_id);
+    }
+    setText('');
+  };
+
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+    if (debounceTimeoutId) {
+      clearTimeout(debounceTimeoutId);
+      setDebounceTimeoutId(null);
+    }
+    debouncedHandleRangeChange();
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+    if (debounceTimeoutId) {
+      clearTimeout(debounceTimeoutId);
+      setDebounceTimeoutId(null);
+    }
+    debouncedHandleRangeChange();
+  };
 
   const classes = useStyles();
   const prevIsBettingRef = useRef(is_betting);
-
   useEffect(() => {
-    // Check if is_betting has changed from true to false
     if (prevIsBettingRef.current && !is_betting) {
-      // Trigger action when is_betting changes from true to false
-      getQsBetItems(room_id); // Assuming room_id is available here
-      getRpsBetItems(room_id); // Assuming room_id is available here
+      getQsBetItems(room_id);
+      getRpsBetItems(room_id);
     }
-
-
-    // Update previous value of is_betting
     prevIsBettingRef.current = is_betting;
   }, [is_betting, getRpsBetItems, getQsBetItems, room_id]);
 
   const [accumulativeProfit, setAccumulativeProfit] = useState([]);
+  const getMinMaxValues = (items) => {
+    if (items.length === 0) return [1, 100];
+    const amounts = items.map(item => item.bet_amount);
+    const min = Math.min(...amounts);
+    const max = Math.max(...amounts);
+    return [min, max];
+  };
 
-  // Calculate accumulative profit based on rules
+  useEffect(() => {
+    if (game_type === 'Quick Shoot') {
+      const [min, max] = getMinMaxValues(qsbetitems);
+      setRange([min, max]);
+    } else if (game_type === 'RPS') {
+      const [min, max] = getMinMaxValues(rpsbetitems);
+      setRange([min, max]);
+    }
+  }, [qsbetitems, rpsbetitems, game_type]);
+
+
   useEffect(() => {
     let profit = 0;
-    const reversedItems = [...rpsbetitems].reverse(); // Reverse the items
-    // Calculate profit for each bet
+    const reversedItems = [...(game_type === 'Quick Shoot' ? qsbetitems : rpsbetitems)].reverse();
+
     const calculatedProfit = reversedItems.map(item => {
       let profitChange = 0;
-      if (
-        (item.rps === 'R' && item.joiner_rps === 'P') ||
-        (item.rps === 'P' && item.joiner_rps === 'S') ||
-        (item.rps === 'S' && item.joiner_rps === 'R')
-      ) {
-        profitChange = item.bet_amount * 2;
-      } else if (
-        (item.rps === 'R' && item.joiner_rps === 'S') ||
-        (item.rps === 'P' && item.joiner_rps === 'R') ||
-        (item.rps === 'S' && item.joiner_rps === 'P')
-      ) {
-        profitChange = -item.bet_amount;
+
+      if (game_type === 'RPS') {
+        if (
+          (item.rps === 'R' && item.joiner_rps === 'P') ||
+          (item.rps === 'P' && item.joiner_rps === 'S') ||
+          (item.rps === 'S' && item.joiner_rps === 'R')
+        ) {
+          profitChange = item.bet_amount * 2;
+        } else if (
+          (item.rps === 'R' && item.joiner_rps === 'S') ||
+          (item.rps === 'P' && item.joiner_rps === 'R') ||
+          (item.rps === 'S' && item.joiner_rps === 'P')
+        ) {
+          profitChange = -item.bet_amount;
+        }
+      } else if (game_type === 'Quick Shoot') {
+        const betAmount = Number(item.bet_amount);
+        const qs = Number(item.qs);
+        const joinerQs = Number(item.joiner_qs);
+        const qsGameType = Number(qs_game_type);
+
+        if (!isNaN(betAmount) && !isNaN(qs) && !isNaN(joinerQs) && !isNaN(qsGameType) && qsGameType > 1) {
+          if (qs !== joinerQs) {
+            profitChange = betAmount / (qsGameType - 1);
+          } else {
+            profitChange = -betAmount;
+          }
+        }
       }
+
       profit += profitChange;
       return profit;
     });
 
     setAccumulativeProfit(calculatedProfit);
-  }, [rpsbetitems]);
+  }, [rpsbetitems, qsbetitems, game_type, qs_game_type]);
 
-  // Data for ApexChart
+
   const chartData = {
     options: {
       chart: {
@@ -273,54 +440,32 @@ function BetArray({
     }],
   };
 
-  const filteredArray = game_type === 'Quick Shoot' ? rpsbetitems.filter(item => item.qs !== undefined) : rpsbetitems;
+  const filteredArray = game_type === 'Quick Shoot' ? qsbetitems : rpsbetitems;
   const settingsRef = useRef(null);
-  const handleClearLocalStorage = () => {
-    localStorage.removeItem(arrayName);
-    window.location.reload();
-  };
 
   const handleTabChange = (event, newValue) => {
     setSelectedTab(newValue);
   };
 
-  const getPositionLetter = (position) => {
-    switch (position) {
-      case 0:
-        return 'P';
-      case 1:
-        return 'q';
-      case 2:
-        return 'w';
-      case 3:
-        return 'e';
-      case 4:
-        return 'r';
-      default:
-        return '';
-    }
-  };
   const handleCellClick = (item, index, cell) => {
     setSelectedCell(cell);
-    setEditedValue(item[cell]); // Directly accessing the property value
+    setEditedValue(item[cell]);
     setSelectedIndex(index);
     setSelectedRow(item);
     setOpenModal(true);
-    // setHoveredIndex(index);
     dispatch(setFocused(true));
-    // Set modal title based on the clicked cell
     switch (cell) {
       case 'bet_amount':
         setModalTitle('EDIT BET AMOUNT');
         break;
+      case 'qs':
+        setModalTitle('EDIT HOST\'S CHOICE');
+        break;
       case 'rps':
         setModalTitle('EDIT HOST\'S CHOICE');
         break;
-      case 'joiner_rps':
-        setModalTitle('EDIT YOUR CHOICE');
-        break;
       default:
-        setModalTitle('');
+        setModalTitle('EDIT YOUR CHOICE');
         break;
     }
   };
@@ -331,27 +476,28 @@ function BetArray({
     dispatch(setFocused(false));
   };
 
-  // Function to handle updating cell data
-  // Example of calling the action
   const handleUpdateCellData = async (isDarkMode) => {
-    // Check if editedValue is a number greater than 0.05
     if (isNaN(editedValue) || Number(editedValue) <= 0.05) {
       alertModal(
         isDarkMode,
         'TRY A DIFFERENT NUM-PURR!'
       );
-        return;
+      return;
     }
 
     try {
+      if (game_type === 'RPS') {
         await updateRpsBetItems(selectedRow._id, selectedCell, editedValue);
+      } else if (game_type === 'Quick Shoot') {
+        await updateQsBetItems(selectedRow._id, selectedCell, editedValue);
+
+      }
     } catch (err) {
-        console.error('Failed to update RpsBetItems:', err.message);
+      console.error('Failed to update RpsBetItems:', err.message);
     }
 
     setOpenModal(false);
-};
-
+  };
 
   const formatProfit = (profit) => {
     if (profit > 0) {
@@ -364,8 +510,8 @@ function BetArray({
   };
   const formatTag = (tag) => {
     return <span style={{ padding: "0 5px", fontSize: "0.75em", background: "#007bff22", borderRadius: "30px", border: "2px solid #007bff45", color: '#007bff' }}>{tag}</span>;
-
   }
+
   const handleSettingsIconClick = () => {
     setSettingsPanelOpened(!settings_panel_opened);
   };
@@ -388,7 +534,6 @@ function BetArray({
     typeof handleSwitchChange === 'undefined' ||
     typeof room_id === 'undefined'
   ) {
-    // alertModal(isDarkMode, "22");
     return (
       <PlaceholderComponent
         handleSettingsIconClick={handleSettingsIconClick}
@@ -400,7 +545,6 @@ function BetArray({
       />
     );
   }
-
 
   return (
     <ThemeProvider theme={theme}>
@@ -469,7 +613,7 @@ function BetArray({
 
                 <div style={{ display: "flex", width: "100%", justifyContent: "center" }}>
                   <div style={{ display: "inline-flex", flexDirection: "row", alignItems: "center", justifyContent: "center", width: "50%", padding: "10px" }}>
-                    <Tooltip title="TOGGLE AUTOPLAY BETTING">
+                    <Tooltip title="TOGGLE AI PLAY BETTING">
 
                       <Switch
                         id="aiplay-switch"
@@ -496,43 +640,18 @@ function BetArray({
                     <FontAwesomeIcon icon={betting ? faToggleOn : faToggleOff} style={{ marginRight: '5px' }} />
                     {betting ? 'AP ON' : 'AP OFF'}
                   </div>
-
-
-
-
                 </div>
 
                 <div style={{ display: "flex", justifyContent: "center", width: "100%", marginTop: "10px" }}>
                   <div style={{ display: "inline-flex", flexDirection: "column", justifyContent: "center", alignItems: "center", width: "50%", padding: "10px" }}>
-
-                    {/* <Slider
-                      style={{ width: "60%" }}
-                      value={budget}
-                      onChange={handleBudgetChange}
-                      disabled={!betting} // Disable the slider when betting is turned off
-                      aria-labelledby="budget-slider"
-                      min={0}
-                      max={user_balance} // Set the maximum budget value dynamically
-                      step={0.0001} // Adjust the step value as needed
-                    /> */}
-
                     <div>
-                      {/* <p>{convertToCurrency(budget)}</p> */}
-                      {/* <Tooltip title="CHART">
 
-                        <p style={{ border: "2px solid #ff0000", boxShadow: "0 2px 1px #f9f9f9", borderRadius: "6px", padding: "5px 10px", textShadow: "0 1px #f9f9f9", color: "#ff0000", textAlign: "center", fontSize: "small" , whiteSpace: "nowrap"}}>{convertToCurrency(predictedBetAmount)}</p>
-                      </Tooltip> */}
-                      {/* <Tooltip title="CHOSEN AUTOPLAY STRATEGY">
-
-                        <p style={{ border: "2px solid #ff0000", boxShadow: "0 2px 1px #f9f9f9", borderRadius: "6px", padding: "5px 10px", textShadow: "0 1px #f9f9f9", color: "#ff0000", textAlign: "center", fontSize: "small" }}></p>
-                      </Tooltip> */}
-                      <Tooltip title="CHANGE AUTOPLAY STRATEGY">
+                      <Tooltip title="CHANGE AI PLAY STRATEGY">
                         <IconButton
                           id="btn-rps-settings"
                           style={{ borderRadius: "200px" }}
                           onClick={handleSettingsIconClick}
                         >
-
                           <span style={{ fontSize: "0.5em" }}>EDIT</span><SettingsOutlinedIcon
                           />
                         </IconButton>
@@ -540,12 +659,9 @@ function BetArray({
                     </div>
 
                   </div>
+
                   <div style={{ display: "inline-flex", flexDirection: "column", justifyContent: "center", alignItems: "center", width: "50%", padding: "10px 0" }}>
                     <div style={{ width: "100%", }}>
-                      {/* <p style={{ width: "100%", textAlign: "center", boxShadow: "inset 0px 0px 6px 0px #b4b4b4a8", borderRadius: "9px", padding: "5px 10px", overflow: "hidden" }}>
-                        <span><FontAwesomeIcon icon={faChartLine} />&nbsp;Chart</span>
-                      </p> */}
-
                       <p style={{ width: "100%", textAlign: "center", boxShadow: "inset 0px 0px 6px 0px #b4b4b4a8", borderRadius: "9px", padding: "5px 10px", overflow: "hidden" }}>
                         <span><FontAwesomeIcon icon={faRobot} />&nbsp;{selectedStrategy ? selectedStrategy : ai_mode}</span>
                       </p>
@@ -553,13 +669,40 @@ function BetArray({
 
                   </div>
                 </div>
-
-
-
-
+                <div style={{ display: 'flex', alignItems: 'center', width: "100%", boxShadow: "inset 0px 0px 6px 0px #b4b4b4a8", borderRadius: "9px", justifyContent: "center", padding: "5px 10px", overflow: "hidden" }}>
+                  <FontAwesomeIcon icon={faBalanceScale} style={{ marginRight: '5px' }} />
+                  <Typography>ADJUST BET RANGE</Typography>
+                </div>
+                <div style={{ display: "flex", padding: '0 10px', flexDirection: "row", alignItems: "center", justifyContent: "space-between", width: "100%", marginTop: "10px" }}>
+                  <Typography><span style={{ fontSize: "xx-small" }}>Min:</span> {convertToCurrency(range[0])}</Typography>
+                  <Typography><span style={{ fontSize: "xx-small" }}>Max:</span> {convertToCurrency(range[1])}</Typography>
+                </div>
+                <div style={{ display: "flex", padding: '0 10px', flexDirection: "column", alignItems: "center", justifyContent: "center", width: "100%", marginTop: "10px" }}>
+                  <Tooltip style={{ width: "100%" }} title={<>MIN & MAX BET VALUES</>} classes={{ tooltip: classes.redTooltip }}>
+                    <Slider
+                      value={range}
+                      onChange={handleSliderChange}
+                      onChangeCommitted={handleSliderChangeCommitted}
+                      onMouseUp={handleMouseUp}
+                      onTouchEnd={handleTouchEnd}
+                      valueLabelDisplay="auto"
+                      step={0.1}
+                      min={1}
+                      max={user_balance}
+                      aria-labelledby="range-slider"
+                      className={classes.slider}
+                      disabled={isSliderDisabled}
+                      minDistance={1}
+                    />
+                  </Tooltip>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', width: "100%", boxShadow: "inset 0px 0px 6px 0px #b4b4b4a8", borderRadius: "9px", justifyContent: "center", padding: "5px 10px", overflow: "hidden" }}>
+                <span style={{fontSize: "x-small", color: "#ff0000"}}>
+                {text}
+                </span>
+                </div>
               </div>
             </div>
-
           </>
 
         )}
@@ -567,14 +710,17 @@ function BetArray({
           <>
             <div className="gamified-container">
               <Grid item>
-                <h2 className="gamified-heading">Training Data</h2>
+                <h2 className="gamified-heading">Training Data&nbsp;
+                  <Tooltip title="This data may not represent your recent transactions and is for the AI purposes only.">
+                    <Info style={{ width: "18px", marginTop: "-3px", cursor: "pointer" }} />
+                  </Tooltip>
+                </h2>
                 <div style={{ position: "absolute", zIndex: '2', top: '180px', right: '30px' }}>
                   {formatTag('Last 50 Games')} &nbsp;
                   <Tooltip title={`${accumulativeProfit[accumulativeProfit.length - 1]} RPS`}>
                     {formatProfit(accumulativeProfit[accumulativeProfit.length - 1])}
                   </Tooltip>
                 </div>
-
 
                 <ApexChart
                   options={chartData.options}
@@ -584,15 +730,14 @@ function BetArray({
                 />
 
                 <div className="gamified-content">
-
                   {filteredArray.length > 0 ? (
                     <>
                       <Table>
                         <TableHead>
                           <TableRow className={classes.tableHeader}>
                             <TableCell>BET</TableCell>
-                            <TableCell>HOST</TableCell>
-                            <TableCell>YOU</TableCell>
+                            <TableCell>{'HOST'}</TableCell>
+                            <TableCell>{'YOU'}</TableCell>
                           </TableRow>
                         </TableHead>
                       </Table>
@@ -619,10 +764,10 @@ function BetArray({
                                   </div>
                                 </TableCell>
                                 <TableCell
-                                  onClick={() => handleCellClick(item, index, 'rps')}
+                                  onClick={() => handleCellClick(item, index, game_type === 'Quick Shoot' ? 'qs' : 'rps')}
                                   className={classes.cell}>
                                   <div className={classes.cellContent}>
-                                    {item.rps}
+                                    {game_type === 'Quick Shoot' ? item.qs : item.rps}
                                     {hoveredIndex === index && (
                                       <IconButton className={classes.editIcon} size="small">
                                         <EditIcon />
@@ -631,10 +776,10 @@ function BetArray({
                                   </div>
                                 </TableCell>
                                 <TableCell
-                                  onClick={() => handleCellClick(item, index, 'joiner_rps')}
+                                  onClick={() => handleCellClick(item, index, game_type === 'Quick Shoot' ? 'joiner_qs' : 'joiner_rps')}
                                   className={classes.cell}>
                                   <div className={classes.cellContent}>
-                                    {item.joiner_rps}
+                                    {game_type === 'Quick Shoot' ? item.joiner_qs : item.joiner_rps}
                                     {hoveredIndex === index && (
                                       <IconButton className={classes.editIcon} size="small">
                                         <EditIcon />
@@ -643,7 +788,6 @@ function BetArray({
                                   </div>
                                 </TableCell>
                               </TableRow>
-
                             ))}
                           </TableBody>
                         </Table>
@@ -655,20 +799,16 @@ function BetArray({
                     </Typography>
                   )}
 
-                  {/* Popup modal for editing cell data */}
                   <Modal open={openModal} onClose={handleCloseModal} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <div className={classes.modalContainer}>
                       <div className={classes.modal} style={{ background: '#f0f0f0', padding: '20px', borderRadius: '5px' }}>
                         <Typography variant="h6" gutterBottom>{modalTitle}</Typography>
-                        {/* <Typography variant="body1" className={classes.placeholder}>
-              {selectedRow ? selectedRow[selectedCell] : ''}
-            </Typography> */}
                         <TextField
                           label="EDIT VALUE"
                           value={editedValue}
                           onChange={(e) => setEditedValue(e.target.value)}
                         />
-                        <Button variant="contained" color="primary" onClick={() => {handleUpdateCellData(isDarkMode)}}>Update</Button>
+                        <Button variant="contained" color="primary" onClick={() => { handleUpdateCellData(isDarkMode) }}>Update</Button>
                       </div>
                     </div>
                   </Modal>
@@ -677,6 +817,7 @@ function BetArray({
             </div>
           </>
         )}
+
       </div>
     </ThemeProvider>
   );
@@ -686,6 +827,7 @@ function BetArray({
 const mapStateToProps = (state) => ({
   rpsbetitems: state.logic.rpsbetitems,
   qsbetitems: state.logic.qsbetitems,
+  user_balance: state.auth.user.balance
 });
 
 const mapDispatchToProps = {

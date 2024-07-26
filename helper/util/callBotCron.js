@@ -2,13 +2,13 @@ const cron = require('node-cron');
 const Room = require('../../model/Room.js');
 const User = require('../../model/User.js');
 const RpsBetItem = require('../../model/RpsBetItem.js');
-const QsBetItem = require('../../model/QsBetItem');
+const QsBetItem = require('../../model/QsBetItem.js');
 const socketController = require('../../socketController.js');
 const executeBet = require('./betExecutor.js');
 const executeBet4 = require('./betExecutor4.js');
 const saveDocumentWithRetry = require('./retrySave');
-
 const { botAI, botCounterRandomness } = require('./predictNext.js');
+const { getRandomItem_qs } = require('./predictNextQs.js');
 const os = require('os');
 let socketio = null;
 let isExecutingBet = false;
@@ -81,7 +81,6 @@ let useFirstBetFunction = true;
 
 async function executeCronJob(user, betArray, cronJobUserIds) {
 
-
   if (!user.username.includes('BOT')) {
     console.log('User is not a bot. Skipping execution.');
     return;
@@ -96,52 +95,45 @@ async function executeCronJob(user, betArray, cronJobUserIds) {
 
     for (const room of rooms) {
       const roomId = room._id;
+      const gameType = room.game_type;
 
       let nextState;
       let predictedBetAmount;
 
-      const rpsBetItems = await RpsBetItem.find({
-        joiner: user._id,
-        room: roomId
-      }).sort({ created_at: -1 }).limit(3);
-      const rpsBetItems2 = await RpsBetItem.find({
-        joiner: user._id,
-        room: roomId
-      }).sort({ created_at: -1 });
+      let betItems;
+      let penultimateSameAsLast;
+      
+      if (gameType.toString() === '62a25d2a723b9f15709d1ae7') {
+        betItems = await RpsBetItem.find({
+          joiner: user._id,
+          room: roomId
+        }).sort({ created_at: -1 }).limit(3);
 
-      if (rpsBetItems && rpsBetItems.length > 0) {
-
-        // Determine nextState and predictedBetAmount based on strategy
-        if (room.selectedStrategy === 'Random' || room.selectedStrategy === 'Martingale' || room.selectedStrategy === 'Adam' || room.selectedStrategy === 'Markov') {
-          // Skill-issue strategy
-          const randomnessResult = await botCounterRandomness(rpsBetItems);
+        if (betItems && betItems.length > 0) {
+          const randomnessResult = await botCounterRandomness(betItems);
           nextState = randomnessResult.counterMove;
-          const penultimateSameAsLast = randomnessResult.risk;
-          predictedBetAmount = await predictNextBetAmount(betArray, penultimateSameAsLast, 0, 0.01, 0.2, room);
+          penultimateSameAsLast = randomnessResult.risk;
         } else {
-          // Other strategies
-          const nextMove = await botAI(rpsBetItems2);
-          nextState = nextMove.move;
-          let penultimateSameAsLast;
-          if (nextMove.risk >= 0.9) {
-            penultimateSameAsLast = 3;
-          } else if (nextMove.risk >= 0.5) {
-            penultimateSameAsLast = 2;
-          } else {
-            penultimateSameAsLast = 1;
-          }
-          predictedBetAmount = await predictNextBetAmount(betArray, penultimateSameAsLast, 0, 0.01, 0.2, room);
+          // No previous moves, choose randomly
+          const randomIndex = Math.floor(Math.random() * 3);
+          const rpsOptions = ['R', 'P', 'S'];
+          nextState = rpsOptions[randomIndex];
+          penultimateSameAsLast = 0;
         }
+      } else if (gameType.toString() === '62a25d2a723b9f15709d1aeb') {
 
-      } else {
+        nextState = await getRandomItem_qs(room.qs_game_type);
 
-        // No previous moves, choose randomly
-        const randomIndex = Math.floor(Math.random() * 3);
-        const rpsOptions = ['R', 'P', 'S'];
-        nextState = rpsOptions[randomIndex];
-        predictedBetAmount = await predictNextBetAmount(betArray, 0, 0, 0.01, 0.2, room);
-
+        const randomValue = Math.random();
+        if (randomValue <= 0.6) {
+          penultimateSameAsLast = 1;
+        } else if (randomValue <= 0.9) {
+          penultimateSameAsLast = 2;
+        } else {
+          penultimateSameAsLast = 3;
+        }
       }
+      predictedBetAmount = await predictNextBetAmount(betArray, penultimateSameAsLast, 0, 0.01, 0.2, room);
 
       const req = {
         params: {

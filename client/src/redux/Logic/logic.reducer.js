@@ -109,7 +109,7 @@ const initialState = {
     rps_game_type: 0,
     qs_game_type: 2,
     description: '',
-    // qs_nation: 0,
+    qs_nation: 0,
     likes: 0,
     dislikes: 0,
     views: 0,

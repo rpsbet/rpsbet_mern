@@ -173,7 +173,7 @@ class CreateGame extends Component {
       aveMultiplier: 0,
       score: 0,
       youtubeUrl: '',
-      
+
       gameBackground: '',
       ai_mode: this.props.user.ai_mode,
       videoId: '',
@@ -219,7 +219,6 @@ class CreateGame extends Component {
 
 
   async componentDidMount() {
-
     document.addEventListener('keydown', this.handleKeyPress);
 
     Object.values(this.state.sounds).forEach(sound => {
@@ -228,37 +227,50 @@ class CreateGame extends Component {
 
     this.IsAuthenticatedReroute();
     this.props.getHistory();
-    const gameTypeName = this.props.match.params.game_type_name;
-    // this.props.getGameTypeList();
-    await this.props.setGameMode(gameTypeName);
-    const selectedGameType = this.props.gameTypeList.find(
-      gameType => gameType.game_type_name === gameTypeName
-    );
-    if (selectedGameType && selectedGameType.short_name) {
 
-      this.setState({ selectedGameType: selectedGameType.short_name })
-    }
+    const gameTypeName = this.props.match.params.game_type_name;
+
+    this.props.getGameTypeList();
+    await this.props.setGameMode(gameTypeName);
+    await this.initializeGameType(gameTypeName);
+
     if (this.props.isAuthenticated) {
       // this.props.getMyGames();
       this.props.getMyHistory();
       this.props.getMyChat();
     }
-    if (gameTypeName === 'Brain Game') {
-      this.props.getBrainGameType();
-    }
-    this.props.getBrainGameType();
+    // this.props.getBrainGameType();
     this.props.getStrategies();
+  }
 
+  async componentDidUpdate(prevProps) {
+    const prevGameTypeName = prevProps.match.params.game_type_name;
+    const currentGameTypeName = this.props.match.params.game_type_name;
+
+    if (prevGameTypeName !== currentGameTypeName) {
+      await this.initializeGameType(currentGameTypeName);
+    }
+  }
+
+  async initializeGameType(gameTypeName) {
+    const selectedGameType = this.props.gameTypeList.find(
+      gameType => gameType.game_type_name === gameTypeName
+    );
+
+    if (selectedGameType && selectedGameType.short_name) {
+      this.setState({ selectedGameType: selectedGameType.short_name });
+    }
 
     let newState = {
       child_step: 1,
-      bet_amount: 0.001,
+      bet_amount: 1,
       endgame_amount: 0,
       max_return: 0,
       max_prize: 0,
       lowest_box_price: 0,
       public_bet_amount: convertToCurrency(1)
     };
+
     if (gameTypeName === 'Spleesh!') {
       newState = {
         ...newState,
@@ -283,82 +295,20 @@ class CreateGame extends Component {
         game_type: 5,
         public_bet_amount: convertToCurrency(1),
         max_return: 2,
-        bet_amount: 0.001,
+        bet_amount: 1,
         winChance: 0,
         qs_nation: Math.floor(Math.random() * 4),
         endgame_amount: 0
       };
-      // } else if (gameTypeName === 'Brain Game') {
-      //   newState = {
-      //     ...newState,
-      //     game_type: 3,
-      //     winChance: 0,
-      //     max_return: '∞',
-      //     endgame_amount: 0
-      //   };
-      // } else if (gameTypeName === 'Mystery Box') {
-      //   newState = {
-      //     ...newState,
-      //     game_type: 4,
-      //     winChance: 0,
-      //     bet_amount: 0,
-      //     public_bet_amount: 0,
-      //     endgame_amount: 0
-      //   };
-      // } else if (gameTypeName === 'Drop Game') {
-      //   newState = {
-      //     ...newState,
-      //     game_type: 6,
-      //     winChance: 0,
-      //     bet_amount: 0.001,
-      //     endgame_amount: 0
-      //   };
-      // } else if (gameTypeName === 'Bang!') {
-      //   newState = {
-      //     ...newState,
-      //     game_type: 7,
-      //     winChance: 0,
-      //     bet_amount: 0.001,
-      //     endgame_amount: 0,
-      //     aveMultiplier: 0
-      //   };
-      // } else if (gameTypeName === 'Roll') {
-      //   newState = {
-      //     ...newState,
-      //     game_type: 8,
-      //     winChance: 0,
-      //     bet_amount: 0.001,
-      //     endgame_amount: 0,
-      //     aveMultiplier: 0
-      //   };
-      // } else if (gameTypeName === 'Blackjack') {
-      //   newState = {
-      //     ...newState,
-      //     game_type: 9,
-      //     bet_amount: 0.001,
-      //     winChance: 0,
-      //     max_return: 0,
-      //     endgame_amount: 0
-      //   };
+      // Add other game types here as needed
     }
 
     this.setState(newState);
   }
+
   componentWillUnmount() {
     document.removeEventListener('keydown', this.handleKeyPress);
   }
-
-  // componentDidUpdate(prevProps, prevState) {
-
-  //   if (prevState.step !== this.state.step) {
-  //     console.log("1step: ", this.state.step)
-  //     console.log("1child_step: ", this.state.child_step)
-  //   }
-  //   if (prevState.child_step !== this.state.child_step) {
-  //     console.log("2step: ", this.state.step)
-  //     console.log("2child_step: ", this.state.child_step)
-  //   }
-  // }
 
   handleUrlChange = event => {
     this.setState({
@@ -614,12 +564,12 @@ class CreateGame extends Component {
       return;
     };
 
-    if (game_mode === 'Quick Shoot') {
-      alertAndReturn(
-        `COMING SOON! FOLLOW US ON X FOR UPDATES: https://x.com/officialrpsgame`
-      );
-      return true;
-    }
+    // if (game_mode === 'Quick Shoot') {
+    //   alertAndReturn(
+    //     `COMING SOON! FOLLOW US ON X FOR UPDATES: https://x.com/officialrpsgame`
+    //   );
+    //   return true;
+    // }
 
 
     const isMinimumRunsNeeded = (minRuns, list) => {
@@ -1045,7 +995,7 @@ class CreateGame extends Component {
 
 
   action_panel = () => {
-    const {isLowGraphics } = this.props;
+    const { isLowGraphics } = this.props;
     return (
       <>
         <hr />
@@ -1322,7 +1272,7 @@ class CreateGame extends Component {
                 {/* <h2 className="main-title desktop-only">JUKEBOX</h2>
                 <JukeboxPanel isMusicEnabled={this.props.isMusicEnabled} /> */}
 
-                <h2 className="main-title desktop-only">AUTOPLAY PANEL</h2>
+                <h2 className="main-title desktop-only">AI PANEL</h2>
                 <AiPanel user_id={this.props.user_id} />
                 <h2 className="main-title desktop-only">YOUR HISTORY</h2>
 

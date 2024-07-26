@@ -124,11 +124,12 @@ async function trainModel(rpsNumeric, joinerRPSNumeric) {
   model.compile({
     optimizer: 'adam',
     loss: 'sparseCategoricalCrossentropy',
-    metrics: ['accuracy']
+    metrics: ['accuracy'],
+    verbose: 0,
   });
 
   // Train the model
-  await model.fit(rpsTensor, joinerRPSTensor, { epochs: 50, batch_size: 32 });
+  await model.fit(rpsTensor, joinerRPSTensor, { epochs: 30, verbose: 0, batch_size: 32 });
 
   // Dispose of tensors
   rpsTensor.dispose();
@@ -381,9 +382,6 @@ export function counterRandomness(historicData) {
 
   return { counterMove, risk };
 }
-
-
-
 
 export function NPC(historicData) {
   // Get the AI's most recent move

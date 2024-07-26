@@ -120,7 +120,6 @@ class BonusModal extends Component {
 
     setTimeout(async () => {
       const landedNumber = await this.props.addBonus();
-      console.log("landedNumber", landedNumber)
       this.setState({ spinning: false, landedNumber: landedNumber.amount, showFlash: true }, async () => {
         await this.props.getUser(true, 5);
       });

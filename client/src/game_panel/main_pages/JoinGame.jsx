@@ -40,6 +40,7 @@ import {
   deductBalanceWhenStartBrainGame
 } from '../../redux/Logic/logic.actions';
 import { predictNext, reinforcementAI, martingaleStrategy, patternBasedAI, counterSwitchAI, generatePattern, counterRandomness, NPC } from '../../util/predictNext';
+import { predictNextQs, reinforcementAI_qs, martingaleStrategy_qs, patternBasedAI_qs, counterSwitchAI_qs, generatePattern_qs, counterRandomness_qs, NPC_qs, getCopyCatItem_qs, getRandomItem_qs } from '../../util/predictNextQs';
 import ChatPanel from '../ChatPanel/ChatPanel';
 import { Tabs, Tab } from '@material-ui/core';
 import MyGamesTable from '../MyGames/MyGamesTable';
@@ -91,6 +92,7 @@ class JoinGame extends Component {
       selected_rps: '',
       selected_qs_position: 0,
       index: 0,
+      qs_game_type: 2,
       selected_id: '',
       image: '',
       loading: this.props.loading,
@@ -120,6 +122,7 @@ class JoinGame extends Component {
         bang: new Audio('/sounds/bang.mp3'),
         shine: new Audio('/sounds/shine.mp3'),
         cards: new Audio('/sounds/card.mp3'),
+        ballKick: new Audio('/sounds/ball_kick.mp3'),
         grunt2: new Audio('/sounds/grunt2.mp3'),
         grunt: new Audio('/sounds/grunt.mp3'),
       },
@@ -144,10 +147,8 @@ class JoinGame extends Component {
     if (current_state.roomInfo._id !== props.roomInfo._id) {
       return {
         roomInfo: props.roomInfo
-        // bankroll: props.roomInfo.bet_amount - this.getPreviousBets()
       };
     }
-
     return null;
   }
 
@@ -155,7 +156,6 @@ class JoinGame extends Component {
     const { id } = this.props.match.params;
     await this.initializeRoomData(id);
     window.addEventListener('unload', this.handleUnload);
-
   }
 
   async initializeRoomData(id) {
@@ -215,7 +215,7 @@ class JoinGame extends Component {
   // manual bet
   join = async betInfo => {
     const result = await this.props.bet3({
-      _id: this.state.roomInfo._id,
+      _id: this.props.roomInfo._id,
       user: this.props.user_id,
       game_type: this.props.roomInfo.game_type,
       ...betInfo
@@ -235,8 +235,6 @@ class JoinGame extends Component {
       const dp = await this.props.fetchAccessory({ _id: this.props.user_id });
       if (accessory.accessory.CP !== undefined) {
         this.setState({ cp: accessory.accessory.CP - dp.accessory.DP });
-      } else {
-        console.log("accessory2", accessory, dp)
       }
     } catch (error) {
       console.error('Error fetching accessory:', error);
@@ -253,228 +251,6 @@ class JoinGame extends Component {
     });
     return result;
   };
-
-  calcWinChanceQs = (gametype, rounds) => {
-    let positionCounts = new Array(gametype + 1).fill(0);
-    for (let i = 0; i < rounds.length; i++) {
-      positionCounts[rounds[i].qs]++;
-    }
-    let entropy = 0;
-    for (let i = 0; i < gametype; i++) {
-      if (positionCounts[i] === 0) {
-        continue;
-      }
-      let probability = positionCounts[i] / rounds.length;
-      entropy -= probability * Math.log2(probability);
-    }
-    let winChanceMin = Math.max(
-      0,
-      (1 - entropy / Math.log2(gametype)) / gametype
-    );
-    let winChanceMax = Math.min(1, 1 - entropy / Math.log2(gametype));
-    winChanceMin *= 100;
-    winChanceMax *= 100;
-    return winChanceMin.toFixed(2) + '% - ' + winChanceMax.toFixed(2) + '%';
-  };
-
-  predictNextQs = (qs_list, gameType) => {
-    const options = [...Array(gameType).keys()];
-    const transitionMatrix = {};
-    options.forEach(option1 => {
-      transitionMatrix[option1] = {};
-      options.forEach(option2 => {
-        transitionMatrix[option1][option2] = {};
-        options.forEach(option3 => {
-          transitionMatrix[option1][option2][option3] = {};
-          options.forEach(option4 => {
-            transitionMatrix[option1][option2][option3][option4] = 0;
-          });
-        });
-      });
-    });
-
-    for (let i = 0; i < qs_list.length - 3; i++) {
-      transitionMatrix[qs_list[i].qs][qs_list[i + 1].qs][qs_list[i + 2].qs][
-        qs_list[i + 3].qs
-      ]++;
-    }
-
-    Object.keys(transitionMatrix).forEach(fromState1 => {
-      Object.keys(transitionMatrix[fromState1]).forEach(fromState2 => {
-        Object.keys(transitionMatrix[fromState1][fromState2]).forEach(
-          fromState3 => {
-            const totalTransitions = Object.values(
-              transitionMatrix[fromState1][fromState2][fromState3]
-            ).reduce((a, b) => a + b);
-            Object.keys(
-              transitionMatrix[fromState1][fromState2][fromState3]
-            ).forEach(toState => {
-              transitionMatrix[fromState1][fromState2][fromState3][
-                toState
-              ] /= totalTransitions;
-            });
-          }
-        );
-      });
-    });
-
-    const winChance = this.calcWinChanceQs(this.props.roomInfo.qs_game_type, qs_list);
-    let deviation = 0;
-    if (winChance !== '33.33%') {
-      deviation = (1 - 1 / gameType) / 2;
-    }
-
-    let currentState1 = qs_list[qs_list.length - 3].qs;
-    let currentState2 = qs_list[qs_list.length - 2].qs;
-    let currentState3 = qs_list[qs_list.length - 1].qs;
-    let nextState = currentState3;
-    let maxProb = 0;
-    Object.keys(
-      transitionMatrix[currentState1][currentState2][currentState3]
-    ).forEach(state => {
-      if (
-        transitionMatrix[currentState1][currentState2][currentState3][state] >
-        maxProb
-      ) {
-        maxProb =
-          transitionMatrix[currentState1][currentState2][currentState3][state];
-        nextState = state;
-      }
-    });
-
-    let randomNum = Math.random();
-    if (randomNum < deviation) {
-      let randomState = '';
-      do {
-        randomNum = Math.random();
-        randomState = options[Math.floor(randomNum * gameType)];
-      } while (randomState === nextState);
-      nextState = randomState;
-    }
-
-    return nextState;
-  };
-
-
-  createTransitionMatrix(betArray, smoothingFactor = 0.01, decayFactor = 0.9) {
-    const transitionMatrix = {};
-    const betArrayLength = betArray.length;
-
-    for (let i = 0; i < betArrayLength - 1; i++) {
-      const currentBet = betArray[i];
-      const nextBet = betArray[i + 1];
-      const distance = betArrayLength - i; // Calculate distance from the most recent transition
-
-      if (!transitionMatrix[currentBet]) {
-        transitionMatrix[currentBet] = {};
-      }
-
-      if (!transitionMatrix[currentBet][nextBet]) {
-        transitionMatrix[currentBet][nextBet] = smoothingFactor * Math.pow(decayFactor, distance);
-      } else {
-        transitionMatrix[currentBet][nextBet] += smoothingFactor * Math.pow(decayFactor, distance);
-      }
-    }
-
-    // Ensure all possible transitions have some default value
-    const allStates = Array.from(new Set(betArray)); // Get all unique states
-
-    allStates.forEach((currentState) => {
-      if (!transitionMatrix[currentState]) {
-        transitionMatrix[currentState] = {};
-      }
-
-      allStates.forEach((nextState) => {
-        if (!transitionMatrix[currentState][nextState]) {
-          transitionMatrix[currentState][nextState] = smoothingFactor;
-        }
-      });
-    });
-
-    // Apply Laplace smoothing to all transitions
-    Object.keys(transitionMatrix).forEach((currentState) => {
-      const possibleNextStates = Object.keys(transitionMatrix[currentState]);
-
-      possibleNextStates.forEach((nextState) => {
-        transitionMatrix[currentState][nextState] += smoothingFactor;
-      });
-    });
-
-    return transitionMatrix;
-  }
-
-
-  chooseRandomIndex(probabilities) {
-    const totalProbability = probabilities.reduce((sum, prob) => sum + prob, 0);
-    const randomValue = Math.random() * totalProbability;
-
-    let cumulativeProbability = 0;
-    for (let i = 0; i < probabilities.length; i++) {
-      cumulativeProbability += probabilities[i];
-      if (randomValue <= cumulativeProbability) {
-        return i;
-      }
-    }
-
-    // This should not happen, but just in case
-    return probabilities.length - 1;
-  }
-
-  async predictNextBetAmount(betArray, penultimateSameAsLast, smoothingFactor = 0.01, randomnessFactor = 0.2, threshold = 0.0005) {
-    if (betArray.length < 2) {
-      return null;
-    }
-
-    const allStates = Array.from(new Set(betArray)); // Get all unique states
-
-    if (penultimateSameAsLast !== 0) {
-      if (penultimateSameAsLast >= 3) {
-        // Return the highest value from allStates without 50%
-        const maxState = Math.max(...allStates);
-        return Math.min(Math.max(maxState, 0.05), this.props.roomInfo.bet_amount);
-      } else if (penultimateSameAsLast === 2) {
-        // Return the second highest value from allStates
-        const sortedStates = allStates.sort((a, b) => b - a);
-
-        if (sortedStates.length >= 2) {
-          const secondHighestState = sortedStates[this.state.index] || sortedStates[0];
-          this.setState({ index: this.state.index + 1 });
-          return Math.min(Math.max(secondHighestState, 0.05), this.props.roomInfo.bet_amount);
-        } else {
-          // If there is no second state, return the first state from allStates
-          const firstState = sortedStates[0];
-          return Math.min(Math.max(firstState, 0.05), this.props.roomInfo.bet_amount);
-        }
-      } else if (penultimateSameAsLast === 1) {
-        this.setState({ index: 0 });
-
-        // Return the lowest value from allStates
-        const minState = Math.min(...allStates);
-        return Math.min(Math.max(minState, 0.05), this.props.roomInfo.bet_amount);
-      }
-    }
-
-    const transitionMatrix = await this.createTransitionMatrix(betArray, smoothingFactor);
-    const lastBet = betArray[betArray.length - 1];
-    const possibleNextStates = transitionMatrix[lastBet] ? Object.keys(transitionMatrix[lastBet]) : [];
-
-    if (possibleNextStates.length === 0) {
-      const fallbackState = allStates[Math.floor(Math.random() * betArray.length)];
-      const returnValue = Math.min(Math.max(fallbackState, threshold), this.props.roomInfo.bet_amount);
-      return Math.max(returnValue, 0.05);
-    }
-
-    const adjustedProbabilities = possibleNextStates.map(
-      (nextState) => transitionMatrix[lastBet][nextState] + Math.random() * randomnessFactor
-    );
-
-    const nextStateIndex = this.chooseRandomIndex(adjustedProbabilities);
-    const nextState = possibleNextStates[nextStateIndex];
-
-    // Ensure the return value is at least 0.05
-    const returnValue = Math.min(Math.max(nextState, threshold), this.props.roomInfo.bet_amount);
-    return Math.max(returnValue, 0.05);
-  }
 
   predictNextDg = dropAmounts => {
     const sortedDrops = dropAmounts.map(drop => drop.drop).sort((a, b) => a - b);
@@ -714,6 +490,125 @@ class JoinGame extends Component {
     this.setState({ spleesh_guesses: guesses });
   }
 
+  createTransitionMatrix(betArray, smoothingFactor = 0.01, decayFactor = 0.9) {
+    const transitionMatrix = {};
+    const betArrayLength = betArray.length;
+
+    for (let i = 0; i < betArrayLength - 1; i++) {
+      const currentBet = betArray[i];
+      const nextBet = betArray[i + 1];
+      const distance = betArrayLength - i; // Calculate distance from the most recent transition
+
+      if (!transitionMatrix[currentBet]) {
+        transitionMatrix[currentBet] = {};
+      }
+
+      if (!transitionMatrix[currentBet][nextBet]) {
+        transitionMatrix[currentBet][nextBet] = smoothingFactor * Math.pow(decayFactor, distance);
+      } else {
+        transitionMatrix[currentBet][nextBet] += smoothingFactor * Math.pow(decayFactor, distance);
+      }
+    }
+
+    // Ensure all possible transitions have some default value
+    const allStates = Array.from(new Set(betArray)); // Get all unique states
+
+    allStates.forEach((currentState) => {
+      if (!transitionMatrix[currentState]) {
+        transitionMatrix[currentState] = {};
+      }
+
+      allStates.forEach((nextState) => {
+        if (!transitionMatrix[currentState][nextState]) {
+          transitionMatrix[currentState][nextState] = smoothingFactor;
+        }
+      });
+    });
+
+    // Apply Laplace smoothing to all transitions
+    Object.keys(transitionMatrix).forEach((currentState) => {
+      const possibleNextStates = Object.keys(transitionMatrix[currentState]);
+
+      possibleNextStates.forEach((nextState) => {
+        transitionMatrix[currentState][nextState] += smoothingFactor;
+      });
+    });
+
+    return transitionMatrix;
+  }
+
+
+  chooseRandomIndex(probabilities) {
+    const totalProbability = probabilities.reduce((sum, prob) => sum + prob, 0);
+    const randomValue = Math.random() * totalProbability;
+
+    let cumulativeProbability = 0;
+    for (let i = 0; i < probabilities.length; i++) {
+      cumulativeProbability += probabilities[i];
+      if (randomValue <= cumulativeProbability) {
+        return i;
+      }
+    }
+
+    // This should not happen, but just in case
+    return probabilities.length - 1;
+  }
+
+  async predictNextBetAmount(betArray, penultimateSameAsLast, smoothingFactor = 0.01, randomnessFactor = 0.2, threshold = 0.0005) {
+    if (betArray.length < 2) {
+      return null;
+    }
+
+    const allStates = Array.from(new Set(betArray)); // Get all unique states
+
+    if (penultimateSameAsLast !== 0) {
+      if (penultimateSameAsLast >= 3) {
+        // Return the highest value from allStates without 50%
+        const maxState = Math.max(...allStates);
+        return Math.min(Math.max(maxState, 0.05), this.props.roomInfo.user_bet);
+      } else if (penultimateSameAsLast === 2) {
+        // Return the second highest value from allStates
+        const sortedStates = allStates.sort((a, b) => b - a);
+
+        if (sortedStates.length >= 2) {
+          const secondHighestState = sortedStates[this.state.index] || sortedStates[0];
+          this.setState({ index: this.state.index + 1 });
+          return Math.min(Math.max(secondHighestState, 0.05), this.props.roomInfo.bet_amount);
+        } else {
+          // If there is no second state, return the first state from allStates
+          const firstState = sortedStates[0];
+          return Math.min(Math.max(firstState, 0.05), this.props.roomInfo.bet_amount);
+        }
+      } else if (penultimateSameAsLast === 1) {
+        this.setState({ index: 0 });
+
+        // Return the lowest value from allStates
+        const minState = Math.min(...allStates);
+        return Math.min(Math.max(minState, 0.05), this.props.roomInfo.bet_amount);
+      }
+    }
+
+    const transitionMatrix = await this.createTransitionMatrix(betArray, smoothingFactor);
+    const lastBet = betArray[betArray.length - 1];
+    const possibleNextStates = transitionMatrix[lastBet] ? Object.keys(transitionMatrix[lastBet]) : [];
+
+    if (possibleNextStates.length === 0) {
+      const fallbackState = allStates[Math.floor(Math.random() * betArray.length)];
+      const returnValue = Math.min(Math.max(fallbackState, threshold), this.props.roomInfo.bet_amount);
+      return Math.max(returnValue, 0.05);
+    }
+
+    const adjustedProbabilities = possibleNextStates.map(
+      (nextState) => transitionMatrix[lastBet][nextState] + Math.random() * randomnessFactor
+    );
+
+    const nextStateIndex = this.chooseRandomIndex(adjustedProbabilities);
+    const nextState = possibleNextStates[nextStateIndex];
+
+    // Ensure the return value is at least 0.05
+    const returnValue = Math.min(Math.max(nextState, threshold), this.props.roomInfo.bet_amount);
+    return Math.max(returnValue, 0.05);
+  }
 
   handleSwitchChange = async () => {
     const {
@@ -721,17 +616,34 @@ class JoinGame extends Component {
       isDarkMode,
       user_id,
       getCustomerStatisticsData,
-      roomInfo
+      roomInfo,
+      rpsbetitems,
+      qsbetitems
     } = this.props;
     const { betting } = this.state;
 
     const game_type = roomInfo.game_type;
     let gameType;
+    let betArray = [];
 
     if (game_type === 'RPS') {
       gameType = '62a25d2a723b9f15709d1ae7';
+      if (!validateLocalStorageLength(rpsbetitems, isDarkMode)) {
+        return;
+      }
+
+      if (rpsbetitems && rpsbetitems.length > 0) {
+        betArray = rpsbetitems.map(item => item.bet_amount);
+      }
     } else if (game_type === 'Quick Shoot') {
       gameType = '62a25d2a723b9f15709d1aeb';
+      if (!validateLocalStorageLength(qsbetitems, isDarkMode)) {
+        return;
+      }
+
+      if (qsbetitems && qsbetitems.length > 0) {
+        betArray = qsbetitems.map(item => item.bet_amount);
+      }
       // } else if (game_type === 'Spleesh!') {
       //   gameType = '62a25d2a723b9f15709d1ae8';
       // } else if (game_type === 'Brain Game') {
@@ -754,17 +666,12 @@ class JoinGame extends Component {
       return;
     }
 
-    if (!validateLocalStorageLength(this.props.rpsbetitems, isDarkMode)) {
-      return;
-    }
-
     if (betting) {
       this.stopBetting();
     } else {
 
       this.playSound('start');
       this.setState({ betting: true });
-
 
       // const result = await getCustomerStatisticsData(
       //   user_id,
@@ -775,104 +682,125 @@ class JoinGame extends Component {
       // );
 
 
-      let betArray = [];
-
-      if (this.props.rpsbetitems && this.props.rpsbetitems.length > 0) {
-        betArray = this.props.rpsbetitems.map(item => item.bet_amount);
-      }
-
       this.startBetting(betArray);
 
     }
   };
 
   startBetting = async betArray => {
-    const { isDarkMode, openGamePasswordModal, roomInfo, user_balance, getRpsBetItems } = this.props;
-    // let storageName;
-
-    // switch (roomInfo.game_type) {
-    //   case 'Quick Shoot':
-    //     storageName = `qs_array_${roomInfo.qs_game_type}`;
-    //   default:
-    //     storageName = `rps_array`;
-
-    // }
-
-    // if (!validateLocalStorageLength(storageName, isDarkMode)) {
-    //   return;
-    // }
-    // const stored_array =
-    //   JSON.parse(localStorage.getItem(storageName)) || [];
-    const interval =
-      this.props.ai_mode === 'Adam' || this.props.ai_mode === 'Sniper' ? 4200 :
-        this.props.ai_mode === 'Skill-issue-2' ? 1500 :
-          3000;
+    const { isDarkMode, openGamePasswordModal, roomInfo, user_balance, getRpsBetItems, getQsBetItems } = this.props;
+    const interval = this.props.ai_mode === 'Adam' || this.props.ai_mode === 'Sniper' ? 4200 :
+      this.props.ai_mode === 'Skill-issue-2' ? 1500 :
+        3000;
 
     const intervalId = setInterval(async () => {
-
       try {
         let randomItem;
         let predictedBetAmount;
-
 
         await getRpsBetItems(roomInfo._id);
         await getQsBetItems(roomInfo._id);
 
         switch (roomInfo.game_type) {
           case 'Quick Shoot':
-            randomItem = this.predictNextQs(stored_array, roomInfo.qs_game_type);
-            predictedBetAmount = this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
-            if (!validateBetAmount(predictedBetAmount, user_balance, isDarkMode)) {
-              return;
+            if (this.props.qsbetitems && this.props.qsbetitems.length > 0) {
+              if (this.props.ai_mode === 'Random') {
+                randomItem = await getRandomItem_qs(roomInfo.qs_game_type);
+                predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
+              } else if (this.props.ai_mode === 'Adam') {
+                const nextMove = await reinforcementAI_qs(this.props.qsbetitems, roomInfo.qs_game_type);
+                randomItem = nextMove.move;
+                predictedBetAmount = await this.predictNextBetAmount(betArray, nextMove.risk, 0, 0.01, 0.2);
+              } else if (this.props.ai_mode === 'Sniper') {
+                const nextMove = await reinforcementAI_qs(this.props.qsbetitems, roomInfo.qs_game_type);
+                randomItem = nextMove.move;
+                predictedBetAmount = nextMove.risk === 4 ? (this.props.user_balance < parseFloat(roomInfo.user_bet) ? this.props.user_balance : parseFloat(roomInfo.user_bet)) : Math.min(...betArray);
+              } else if (this.props.ai_mode === 'Hertz') {
+                randomItem = await patternBasedAI_qs(this.props.qsbetitems, roomInfo.qs_game_type);
+                predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
+              } else if (this.props.ai_mode === 'Feedback') {
+                randomItem = await counterSwitchAI_qs(this.props.rpsbetitems, roomInfo.qs_game_type);
+                predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
+              } else if (this.props.ai_mode === 'Skill-issue' || this.props.ai_mode === 'Skill-issue-2') {
+                const randomnessResult = await counterRandomness_qs(this.props.qsbetitems, roomInfo.qs_game_type);
+                randomItem = randomnessResult.counterMove;
+                const penultimateSameAsLast = randomnessResult.risk;
+                if (this.props.ai_mode === 'Skill-issue') {
+                  predictedBetAmount = await this.predictNextBetAmount(betArray, penultimateSameAsLast, 0.01, 0.2);
+                } else if (this.props.ai_mode === 'Skill-issue-2') {
+
+                  if (penultimateSameAsLast !== 3) {
+                    const outcome = await martingaleStrategy_qs(this.props.qsbetitems, roomInfo.qs_game_type);
+                    predictedBetAmount = outcome.lastResult === 'loss' || outcome.lastResult === 'draw' ? this.props.qsbetitems[0].bet_amount * 1.4 : Math.min(...betArray);
+                  } else {
+                    predictedBetAmount = await this.predictNextBetAmount(betArray, penultimateSameAsLast, 0.01, 0.2);
+                  }
+                  if (predictedBetAmount > this.props.user_balance / 2) {
+                    predictedBetAmount = this.props.user_balance / 4;
+                  }
+                }
+
+              } else if (this.props.ai_mode === 'NPC') {
+                randomItem = await NPC_qs(this.props.qsbetitems, roomInfo.qs_game_type);
+                predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
+              } else if (this.props.ai_mode === 'Tesla') {
+                randomItem = await generatePattern_qs(this.props.qsbetitems, roomInfo.qs_game_type);
+                predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
+              } else if (this.props.ai_mode === 'CopyCat') {
+                randomItem = await getCopyCatItem_qs(this.props.qsbetitems, roomInfo.qs_game_type);
+                predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
+              } else if (this.props.ai_mode === 'Hidden Markov') {
+                if (this.props.qsbetitems.length > 0) {
+                  const transformedItems = this.props.qsbetitems.map(item => ({ qs: item.joiner_qs }));
+                  randomItem = await predictNextQs(transformedItems, roomInfo.qs_game_type);
+                }
+                predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
+              } else if (this.props.ai_mode === 'Markov') {
+                randomItem = await predictNextQs(this.props.qsbetitems, roomInfo.qs_game_type);
+                predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
+              } else if (this.props.ai_mode === 'Martingale') {
+                const outcome = await martingaleStrategy_qs(this.props.qsbetitems, roomInfo.qs_game_type);
+                randomItem = outcome.move;
+                predictedBetAmount = outcome.lastResult === 'loss' || outcome.lastResult === 'draw' ? this.props.qsbetitems[0].bet_amount * 2 : Math.min(...betArray);
+              }
             }
             break;
-          //   break;
+
           default:
             // RPS
-
             if (this.props.rpsbetitems && this.props.rpsbetitems.length > 0) {
-
               if (this.props.ai_mode === 'Random') {
-                // Randomly select 'R', 'P', or 'S'
                 const randomIndex = Math.floor(Math.random() * 3);
                 const rpsOptions = ['R', 'P', 'S'];
                 randomItem = rpsOptions[randomIndex];
                 predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
-
               } else if (this.props.ai_mode === 'Adam') {
                 const nextMove = await reinforcementAI(this.props.rpsbetitems);
                 randomItem = nextMove.move;
                 predictedBetAmount = await this.predictNextBetAmount(betArray, nextMove.risk, 0, 0.01, 0.2);
-
               } else if (this.props.ai_mode === 'Sniper') {
                 const nextMove = await reinforcementAI(this.props.rpsbetitems);
                 randomItem = nextMove.move;
                 predictedBetAmount = nextMove.risk === 4 ? (this.props.user_balance < parseFloat(roomInfo.user_bet) ? this.props.user_balance : parseFloat(roomInfo.user_bet)) : Math.min(...betArray);
-
               } else if (this.props.ai_mode === 'Hertz') {
                 randomItem = await patternBasedAI(this.props.rpsbetitems);
                 predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
               } else if (this.props.ai_mode === 'Feedback') {
-
                 randomItem = await counterSwitchAI(this.props.rpsbetitems);
-
                 predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
               } else if (this.props.ai_mode === 'Skill-issue' || this.props.ai_mode === 'Skill-issue-2') {
-                const randomnessResult = await counterRandomness(this.props.rpsbetitems, 1);
+                const randomnessResult = await counterRandomness(this.props.rpsbetitems);
                 randomItem = randomnessResult.counterMove;
                 const penultimateSameAsLast = randomnessResult.risk;
-
                 if (this.props.ai_mode === 'Skill-issue') {
                   predictedBetAmount = await this.predictNextBetAmount(betArray, penultimateSameAsLast, 0.01, 0.2);
                 } else if (this.props.ai_mode === 'Skill-issue-2') {
                   const outcome = await martingaleStrategy(this.props.rpsbetitems);
-
                   if (penultimateSameAsLast === 3) {
                     predictedBetAmount = outcome.lastResult === 'loss' || outcome.lastResult === 'draw' ? this.props.rpsbetitems[0].bet_amount * 1.4 : Math.min(...betArray);
                   } else {
                     predictedBetAmount = await this.predictNextBetAmount(betArray, penultimateSameAsLast, 0.01, 0.2);
                   }
-
                   if (predictedBetAmount > this.props.user_balance / 2) {
                     predictedBetAmount = this.props.user_balance / 4;
                   }
@@ -880,46 +808,41 @@ class JoinGame extends Component {
               } else if (this.props.ai_mode === 'NPC') {
                 randomItem = await NPC(this.props.rpsbetitems);
                 predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
-
               } else if (this.props.ai_mode === 'Tesla') {
                 randomItem = await generatePattern(this.props.rpsbetitems);
                 predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
-
               } else if (this.props.ai_mode === 'CopyCat') {
                 const copyCatBetItem = this.props.rpsbetitems[0];
                 if (copyCatBetItem) {
                   randomItem = copyCatBetItem.rps;
                 } else {
-                  const randomIndex = Math.floor(Math.random() * 3); // Generate random index: 0, 1, or 2
+                  const randomIndex = Math.floor(Math.random() * 3);
                   const rpsOptions = ['R', 'P', 'S'];
                   randomItem = rpsOptions[randomIndex];
                 }
                 predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
-
               } else if (this.props.ai_mode === 'Hidden Markov') {
                 if (this.props.rpsbetitems.length > 0) {
                   const transformedItems = this.props.rpsbetitems.map(item => ({ rps: item.joiner_rps }));
                   randomItem = await predictNext(transformedItems);
                 }
                 predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
-
-
               } else if (this.props.ai_mode === 'Markov') {
                 randomItem = await predictNext(this.props.rpsbetitems, true);
                 predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
-
               } else if (this.props.ai_mode === 'Martingale') {
                 const outcome = await martingaleStrategy(this.props.rpsbetitems);
                 randomItem = outcome.move;
                 predictedBetAmount = outcome.lastResult === 'loss' || outcome.lastResult === 'draw' ? this.props.rpsbetitems[0].bet_amount * 2 : Math.min(...betArray);
-
               }
-
             }
-            if (!validateBetAmount(predictedBetAmount, balance, isDarkMode)) {
-              return;
-            }
+            break;
         }
+
+        if (!validateBetAmount(predictedBetAmount, user_balance, isDarkMode)) {
+          return;
+        }
+
         const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
         const passwordCorrect = rooms[roomInfo._id];
         if (roomInfo.is_private === true && passwordCorrect !== true) {
@@ -931,10 +854,9 @@ class JoinGame extends Component {
         console.error('Error in interval function:', error);
       }
     }, interval);
-
-
     this.setState({ intervalId });
   };
+
 
   stopBetting = () => {
     this.playSound('stop');
@@ -981,7 +903,7 @@ class JoinGame extends Component {
   };
 
   joinGame2 = async (randomItem, predictedBetAmount) => {
-    const { balance, isDarkMode, roomInfo, deductBalanceWhenStartBrainGame, getRpsBetItems, getQsBetItems } = this.props;
+    const { balance, isDarkMode, isMuted, roomInfo, deductBalanceWhenStartBrainGame, getRpsBetItems, getQsBetItems } = this.props;
     let { betting, selected_qs_position, selected_rps, selected_id, bankroll } = this.state;
     const gameType = roomInfo.game_type;
     if (!betting) {
@@ -1010,12 +932,18 @@ class JoinGame extends Component {
             rps_bet_item_id: roomInfo.rps_bet_item_id
           });
         }
-        // else if (gameType === 'Quick Shoot') {
-        //   result = await this.join({
-        //     bet_amount: parseFloat(predictedBetAmount),
-        //     selected_qs_position: selected_qs_position,
-        //     qs_bet_item_id: roomInfo.qs_bet_item_id,
-        //   });
+        else if (gameType === 'Quick Shoot') {
+        
+      
+          result = await this.join2({
+            bet_amount: parseFloat(predictedBetAmount),
+            selected_qs_position: selected_qs_position,
+            qs_bet_item_id: roomInfo.qs_bet_item_id,
+          });
+          if (result.status === 'success' && !isMuted) {
+            this.playSound('ballKick');
+          }
+        }
 
         if (result && result.status === 'success') {
           let text;
@@ -1261,7 +1189,7 @@ class JoinGame extends Component {
                     cp={this.state.cp}
                     is_mobile={this.state.is_mobile}
                     gameResult={this.state.gameResult}
-                    rpsbetitems={this.props.rpsbetitems}
+                    rpsbetitems={rpsbetitems}
                     updateSelectedRps={this.updateSelectedRps}
                     selected_rps={selected_rps}
                     refreshHistory={this.refreshHistory}
@@ -1384,6 +1312,8 @@ class JoinGame extends Component {
                     showPlayerModal={showPlayerModal}
                     refreshHistory={this.refreshHistory}
                     join={this.join}
+                    result={result}
+                    gameResult={this.state.gameResult}
                     updateUserStrategy={this.props.updateUserStrategy}
                     borderColor={borderColor}
                     bgColorChanged={bgColorChanged}
@@ -1391,11 +1321,11 @@ class JoinGame extends Component {
                     updateSelectedQs={this.updateSelectedQs}
                     user_id={user_id}
                     betResult={betResult}
-                    qsbetitems={this.props.qsbetitems}
+                    qsbetitems={qsbetitems}
                     creator_id={roomInfo.creator_id}
                     qs_game_type={roomInfo.qs_game_type}
+                    user_bet={roomInfo.user_bet}
                     bet_amount={roomInfo.bet_amount}
-                    // bankroll={bankroll}
                     qs_bet_item_id={roomInfo.qs_bet_item_id}
                     is_private={roomInfo.is_private}
                     selected_qs_position={selected_qs_position}
@@ -1539,7 +1469,7 @@ class JoinGame extends Component {
             </div>
           </div>
           <div className="sub-panel">
-            <h2 className="main-title desktop-only">AUTOPLAY PANEL <Tooltip title="Some strategies require you to train the bot by playing normally, in order to use certain bet amounts and patterns.">
+            <h2 className="main-title desktop-only">AI PANEL <Tooltip title="Some strategies require you to train the bot by playing normally, in order to use certain bet amounts and patterns.">
               <QuestionIcon style={{ width: "18px", cursor: "pointer", float: "right", marginTop: "-1px" }} />
             </Tooltip></h2>
             {!this.state.is_mobile &&
@@ -1547,7 +1477,7 @@ class JoinGame extends Component {
                 <AiPanel
                   rpsbetitems={this.props.rpsbetitems}
                   qsbetitems={this.props.qsbetitems}
-                  updateUserStrategy={this.props.updateUserStrategy()}
+                  updateUserStrategy={this.props.updateUserStrategy}
                   strategies={strategies}
                   betting={betting}
                   is_betting={is_betting}

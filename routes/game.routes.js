@@ -521,7 +521,7 @@ router.get('/room/:id', async (req, res) => {
         // multiplier: room['multiplier'],
         qs_game_type: room['qs_game_type'],
         selectedStrategy: room['selectedStrategy'],
-        // qs_nation: room['qs_nation'],
+        qs_nation: room['qs_nation'],
         rps_game_type: room['rps_game_type'],
         room_history: roomHistory,
         // box_list: boxPrizeList,
@@ -650,6 +650,34 @@ router.get('/rpsbetitems/:roomId', auth, async (req, res) => {
     });
   }
 });
+
+// Define your route
+router.get('/qsbetitems/:roomId', auth, async (req, res) => {
+  const { roomId } = req.params;
+  try {
+    // Find QsBetItems filtered by room id and status equal to 'open'
+    const qsBetItems = await QsBetItem.find({
+      room: roomId,
+      joiner: req.user._id,
+      joiner_qs: { $ne: null }
+    })
+      .sort({ created_at: -1 })
+      .limit(50);
+
+    // Return the filtered QsBetItems
+    res.json({
+      success: true,
+      data: qsBetItems
+    });
+  } catch (err) {
+
+    res.json({
+      success: false,
+      err: err
+    });
+  }
+});
+
 router.put('/rpsbetitems/:itemId', auth, async (req, res) => {
   const { itemId } = req.params;
   const { updatedItem, cellindex } = req.body;
@@ -710,32 +738,6 @@ router.put('/rpsbetitems/:itemId', auth, async (req, res) => {
       success: false,
       message: 'Failed to update RpsBetItem',
       error: err.message
-    });
-  }
-});
-// Define your route
-router.get('/qsbetitems/:roomId', auth, async (req, res) => {
-  const { roomId } = req.params;
-  try {
-    // Find QsBetItems filtered by room id and status equal to 'open'
-    const qsBetItems = await QsBetItem.find({
-      room: roomId,
-      joiner: req.user._id,
-      joiner_qs: { $ne: null }
-    })
-      .sort({ created_at: -1 })
-      .limit(50);
-
-    // Return the filtered QsBetItems
-    res.json({
-      success: true,
-      data: qsBetItems
-    });
-  } catch (err) {
-
-    res.json({
-      success: false,
-      err: err
     });
   }
 });
@@ -1197,7 +1199,7 @@ router.post('/rooms', auth, async (req, res) => {
       qs_list,
       rps_game_type
     } = req.body;
-
+console.log("game_type", game_type);
     if (bet_amount <= 0) {
       return res.json({
         success: false,

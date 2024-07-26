@@ -26,18 +26,18 @@ const GameLogSchema = new Schema({
         type: String,
         default: ''
     },
-    // selected_roll: {
-    //     type: String,
-    //     default: ''
-    // },
+    qs_game_type: {
+        type: Number,
+        default: 0
+    },
     // selected_dg: {
     //     type: String,
     //     default: ''
     // },
-    // selected_qs_position: {
-    //     type: Number,
-    //     default: 0
-    // },
+    selected_qs_position: {
+        type: Number,
+        default: 0
+    },
     commission: {
         type: Number,
         default: 0

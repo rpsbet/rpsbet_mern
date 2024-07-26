@@ -329,7 +329,7 @@ class MainPage extends Component {
 
           {!this.state.is_mobile && this.props.selectedMainTabIndex === 0 && (
             <>
-              <h2 className="main-title desktop-only">AUTOPLAY PANEL</h2>
+              <h2 className="main-title desktop-only">AI PANEL</h2>
               <AiPanel user_id={this.props.user._id} />
             </>
           )}
@@ -350,7 +350,7 @@ class MainPage extends Component {
           />
           {!this.state.is_mobile && this.props.selectedMainTabIndex === 1 && (
             <>
-              <h2 className="main-title desktop-only">AUTOPLAY PANEL</h2>
+              <h2 className="main-title desktop-only">AI PANEL</h2>
 
               <AiPanel user_id={this.props.user._id} />
             </>

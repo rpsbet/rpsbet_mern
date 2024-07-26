@@ -27,7 +27,7 @@ const SettingsRef = ({ strategies, rank, user_id, ai_mode, setSelectedStrategy, 
   return (
     <div ref={settingsRef}
       className={`transaction-settings ${settings_panel_opened ? 'active' : ''}`}>
-      <h5>Autoplay Settings</h5>
+      <h5>AI Play Settings</h5>
 
       <div className="tiers">
         {/* Move description outside the table */}

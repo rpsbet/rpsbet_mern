@@ -74,7 +74,7 @@ export const validateIsAuthenticated = (isAuthenticated, isDarkMode) => {
   export const validateLocalStorageLength = (storageName, isDarkMode) => {
     // const storedArray = JSON.parse(localStorage.getItem(storageName)) || [];
     if (storageName.length < 3) {
-      alertModal(isDarkMode, "PURR-HAPS YOU SHOULD BET MANUALLY FOR AT LEAST 3 TURNS TO TRAIN THE AUTOPLAY");
+      alertModal(isDarkMode, "PURR-HAPS YOU SHOULD BET MANUALLY FOR AT LEAST 3 TURNS TO TRAIN THE AI PLAY");
       return false;
     }
     return true;

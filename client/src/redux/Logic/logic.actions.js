@@ -206,11 +206,9 @@ export const bet = bet_info => async dispatch => {
 
 // auto join game
 export const bet2 = bet_info => async dispatch => {
-
   try {
     dispatch({ type: START_BET });
     const res = await axios.post('/game/bet2', bet_info);
-    console.log(res)
     dispatch({ type: END_BET });
 
     if (res.data.success) {
@@ -735,6 +733,7 @@ export const getHistory = search_condition => async dispatch => {
   } catch (err) { }
 };
 
+
 export const getRpsBetItems = (room_id) => async dispatch => {
   try {
     const res = await axios.get(`/game/rpsbetitems/${room_id}`);
@@ -807,7 +806,7 @@ export const updateUserStrategy = (user_id, strategy) => async dispatch => {
     const res = await axios.patch(`/game/strategies/${user_id}`, { strategy });
     if (res.data.success) {
 
-      dispatch({ type: MSG_SUCCESS, payload: "AUTOPLAY STRATEGY UPDATED" });
+      dispatch({ type: MSG_SUCCESS, payload: "AI PLAY STRATEGY UPDATED" });
     }
   } catch (err) {
     // Handle errors

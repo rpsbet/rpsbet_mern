@@ -651,7 +651,7 @@ class MyGamesTable extends Component {
                       )}
                       <div className="table-cell winnings desktop-only">
 
-                        <Tooltip title="CHANGE AUTOPLAY STRATEGY">
+                        <Tooltip title="CHANGE AI PLAY STRATEGY">
                           <a
                             style={{ borderRadius: "200px", cursor: "pointer", padding: "1px", display: "flex", justifyContent: "center", alignItems: "center" }}
                             onClick={() => this.handleSettingsIconClick(row)}
@@ -730,7 +730,7 @@ class MyGamesTable extends Component {
                     <div className="mobile-only" style={{ display: "table" }}>
                       <div className="table-cell action" style={{ width: "auto", float: "right", display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
 
-                        <Tooltip title="CHANGE AUTOPLAY STRATEGY">
+                        <Tooltip title="CHANGE AI PLAY STRATEGY">
                           <a
                             style={{ borderRadius: "200px", cursor: "pointer", padding: "1px", display: "flex", justifyContent: "center", alignItems: "center" }}
                             onClick={() => this.handleSettingsIconClick(row)}

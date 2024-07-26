@@ -9,16 +9,15 @@ import { acQueryMyItem } from '../../redux/Item/item.action';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
 import ReactApexChart from 'react-apexcharts';
 import Avatar from '../../components/Avatar';
-import { faBan } from '@fortawesome/free-solid-svg-icons';
 import progress from '../LottieAnimations/progress.json';
-import PlayerModal from '../modal/PlayerModal';
 import pressHold from '../LottieAnimations/pressHold.json';
+import PlayerModal from '../modal/PlayerModal';
 import AiPanel from '../../components/AiPanel';
 import loadingChart from '../LottieAnimations/loadingChart.json';
 import { YouTubeVideo } from '../../components/YoutubeVideo';
 import { updateRoomBot, kickBots, endGame } from '../../redux/Logic/logic.actions';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faRobot, faMoneyBillWave, faBrain } from '@fortawesome/free-solid-svg-icons';
+import { faRobot, faMoneyBillWave, faBrain, faBan } from '@fortawesome/free-solid-svg-icons';
 import ViewIcon from '@material-ui/icons/Visibility';
 import InfoIcon from '@material-ui/icons/Info';
 import SwordsIcon from '@material-ui/icons/VisibilityOff';
@@ -198,17 +197,6 @@ class RPS extends Component {
     this.setState({ modalOpen: false });
   };
 
-  getPreviousBets() {
-    let previousBets = 0;
-    if (this.props.roomInfo && this.props.roomInfo.game_log_list) {
-      this.props.roomInfo.game_log_list.forEach(room_history => {
-        if (room_history.bet_amount) {
-          previousBets += parseFloat(room_history.bet_amount);
-        }
-      });
-    }
-    return previousBets;
-  }
 
   handleClickOutside = e => {
     if (
@@ -498,13 +486,6 @@ class RPS extends Component {
     const { roomInfo, actionList, selected_rps, is_betting } = this.props;
     const { isPasswordCorrect, rps } = this.state;
 
-    if (prevProps.isWatching !== this.props.isWatching) {
-      this.removeSocketListeners();
-      this.setupSocket();
-    }
-    if (prevProps.balance !== this.props.balance && this.props.gameResult !== -1 && this.state.isMax) {
-      this.handleMaxButtonClick();
-    }
     if (prevProps.actionList !== actionList) {
       this.setState({
         actionList: actionList
@@ -513,6 +494,13 @@ class RPS extends Component {
 
     if (prevState.bankroll !== this.state.bankroll && this.state.bankroll <= 0.05) {
       this.state.status = 'finished';
+    }
+    if (prevProps.isWatching !== this.props.isWatching) {
+      this.removeSocketListeners();
+      this.setupSocket();
+    }
+    if (prevProps.balance !== this.props.balance && this.props.gameResult !== -1 && this.state.isMax) {
+      this.handleMaxButtonClick();
     }
 
     if (prevProps.is_betting !== is_betting && !is_betting) {
@@ -568,7 +556,6 @@ class RPS extends Component {
   joinGame = async () => {
     const {
       rps_bet_item_id,
-      isDarkMode,
       join,
       playSound,
       rps_game_type,
@@ -685,12 +672,16 @@ class RPS extends Component {
 
 
       if (creator_id && user_id && creator_id.toString() === user_id.toString()) {
-        callBot(creator_id, roomInfo._id, user_id, isDarkMode, this.props.updateRoomBot);
+        callBot(creator_id, roomInfo._id, user_id, isDarkMode, async () => {
+          const botAttached = await updateRoomBot(roomInfo._id);
+          if (botAttached) {
+            this.setState(prevState => ({
+              botsCount: prevState.botsCount + 1
+            }));
+          }
+        });
         return;
-      }     // if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
-      //    return;
-      // }
-
+      }
       if (!validateBetAmount(bet_amount, balance, isDarkMode)) {
         return;
       }
@@ -1141,9 +1132,8 @@ class RPS extends Component {
 
                 )}
               </div>
-
-
             </div>
+            
             {status === 'open' && rps_game_type === 0 ? (
               <>
                 <Tooltip title={!isWatching ? "CLICK TO STOP WATCHING" : "CLICK TO START WATCHING"}>

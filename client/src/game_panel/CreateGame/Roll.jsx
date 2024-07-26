@@ -401,7 +401,7 @@ class Roll extends Component {
             </div>
 
             <Button id="aiplay" onClick={this.onAutoPlay}>Test AI Play&nbsp;<span className='roll-tag'>[space]</span></Button>
-            {/* <label>AUTOPLAY <input type="checkbox" onChange={()=>this.setState({autoplay: !this.state.autoplay})} />
+            {/* <label>AI PLAY <input type="checkbox" onChange={()=>this.setState({autoplay: !this.state.autoplay})} />
   </label> */}
 
           </div>

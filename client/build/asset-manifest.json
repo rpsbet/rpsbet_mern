@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/static/css/main.49805d9b.css",
-    "main.js": "/static/js/main.232f238a.js",
+    "main.css": "/static/css/main.2c605db9.css",
+    "main.js": "/static/js/main.92cad878.js",
     "static/js/469.95be026d.chunk.js": "/static/js/469.95be026d.chunk.js",
     "static/js/857.d36b7e12.chunk.js": "/static/js/857.d36b7e12.chunk.js",
     "static/js/331.a9ba1ba8.chunk.js": "/static/js/331.a9ba1ba8.chunk.js",
@@ -48,6 +48,7 @@
     "static/media/ltc.png": "/static/media/ltc.60dc61ace8dba0c8f84a.png",
     "static/media/net_profit.svg": "/static/media/net_profit.b1f332f67ed9debac7c1.svg",
     "static/media/win.svg": "/static/media/win.1fba7a25412531507ecd.svg",
+    "static/media/football.svg": "/static/media/football.9f4ef1953d8988fcd171.svg",
     "static/media/modal-bang.svg": "/static/media/modal-bang.193ad0a0cbb7c8390d31.svg",
     "static/media/modal-roll.svg": "/static/media/modal-roll.b3b28adeda1dd57b08e2.svg",
     "static/media/modal-wheel.svg": "/static/media/modal-wheel.ea9b4d5dab101de132d7.svg",
@@ -118,11 +119,11 @@
     "static/media/btn-paypal.svg": "/static/media/btn-paypal.4ed05cb443934a9fa8a0.svg",
     "static/media/btn-bank-active.svg": "/static/media/btn-bank-active.5c45b7981b5e7971c30a.svg",
     "static/media/btn-bank.svg": "/static/media/btn-bank.8ce60c3913abb5408b9b.svg",
-    "main.49805d9b.css.map": "/static/css/main.49805d9b.css.map",
-    "main.232f238a.js.map": "/static/js/main.232f238a.js.map"
+    "main.2c605db9.css.map": "/static/css/main.2c605db9.css.map",
+    "main.92cad878.js.map": "/static/js/main.92cad878.js.map"
   },
   "entrypoints": [
-    "static/css/main.49805d9b.css",
-    "static/js/main.232f238a.js"
+    "static/css/main.2c605db9.css",
+    "static/js/main.92cad878.js"
   ]
 }

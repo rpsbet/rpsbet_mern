@@ -217,7 +217,7 @@ class Summary extends Component {
             </div>
           )}
           <div className="summary-item">
-              <div className="summary-item-name">Autoplay Strategy</div>
+              <div className="summary-item-name">AI Play Strategy</div>
               <div className="summary-item-value">
                 {selectedStrategy}
             </div>

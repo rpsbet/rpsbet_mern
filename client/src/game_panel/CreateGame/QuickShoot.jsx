@@ -119,8 +119,6 @@ class QuickShoot extends Component {
     } else if (this.props.qs_game_type === 4) {
       position_short_name = ['tl', 'tr', 'bl', 'br'];
     }
-    console.log("haribo",
-      this.props.selected_qs_position)
     const animationData = await getQsLottieAnimation(
       this.props.qs_nation,
       position_short_name[this.props.selected_qs_position]
@@ -332,7 +330,6 @@ class QuickShoot extends Component {
   };
 
   async componentDidMount() {
-    console.log("dedweS", this.props.selectedStrategy);
     await this.updateAnimation();
     document.addEventListener('keydown', this.handleKeyPress);
     document.addEventListener('mousedown', this.handleClickOutside);
@@ -424,7 +421,7 @@ class QuickShoot extends Component {
     } else {
       alertModal(
         isDarkMode,
-        'PURR-HAPS YOU SHOULD BET MANUALLY FOR AT LEAST 3 TURNS TO TRAIN THE AUTOPLAY'
+        'PURR-HAPS YOU SHOULD BET MANUALLY FOR AT LEAST 3 TURNS TO TRAIN THE AI PLAY'
       );
       return;
     }
@@ -467,6 +464,7 @@ class QuickShoot extends Component {
             <div className="qs-game-type-panel">
               {[2, 3, 4, 5].map(i => (
                 <button
+                  key={i}
                   className={qs_game_type === i ? ' active' : ''}
                   onClick={() => {
                     onChangeState({
@@ -486,6 +484,7 @@ class QuickShoot extends Component {
             <p className="tip">Your multiplier</p>
           </div>
         )}
+
         {step === 1 && (
           <DefaultBetAmountPanel
             game_type="Quick Shoot"
@@ -538,7 +537,7 @@ class QuickShoot extends Component {
                       {this.state.animation}
                       {this.renderButtons()}
                       <Button id="aiplay" onClick={this.onAutoPlay}>
-                        Test Autoplay&nbsp;<span className="roll-tag">[space]</span>
+                        Test AI Play&nbsp;<span className="roll-tag">[space]</span>
                       </Button>
                     </div>
                     <div className="qs-add-run-table">

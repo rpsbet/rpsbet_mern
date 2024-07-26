@@ -16,6 +16,7 @@ const { convertGameLogToHistoryStyle } = require('./convertGameLogToHistoryStyle
 const check_access_time = require('../../helper/util/checkAccessTime');
 
 const { predictNext, reinforcementAI, patternBasedAI, counterSwitchAI, counterRandomness, NPC, generatePattern } = require('./predictNext');
+const { NPC_qs, patternBasedAI_qs, getRandomItem_qs, counterSwitchAI_qs, generatePattern_qs, counterRandomness_qs, getCopyCatItem_qs, predictNextQs, reinforcementAI_qs } = require('./predictNextQs');
 const saveDocumentWithRetry = require('./retrySave');
 const requestQueue = [];
 let user_access_log = {};
@@ -37,6 +38,7 @@ const addToQueue = async (req, bot = false) => {
         let user;
         let game_result;
         let bet_item;
+        let roomInfo;
         let newTransactionAmount = 0;
         let newTransactionJ = new Transaction({
             user: '',
@@ -75,7 +77,7 @@ const addToQueue = async (req, bot = false) => {
             let betAmount = parseFloat(req.body.bet_amount);
 
             roomInfo = await Room.findOne({ _id: req.body._id })
-                .select('room_number battles selectedStrategy game_type rps_game_type joiners creator bet_amount user_bet pr host_pr endgame_type endgame_amount is_private room_password status hosts')
+                .select('room_number battles selectedStrategy qs_game_type game_type rps_game_type joiners creator bet_amount user_bet pr host_pr endgame_type endgame_amount is_private room_password status hosts')
                 .populate({
                     path: 'creator',
                     model: User,
@@ -86,6 +88,8 @@ const addToQueue = async (req, bot = false) => {
                     model: GameType,
                     select: 'game_type_name short_name'
                 })
+
+
             if (
                 roomInfo['creator'] &&
                 roomInfo['creator']._id &&
@@ -110,7 +114,6 @@ const addToQueue = async (req, bot = false) => {
 
                 return responseData;
             }
-
             const creatorUser = await User.findOne({
                 _id: roomInfo['creator']._id
             }).select('accessory');
@@ -123,17 +126,17 @@ const addToQueue = async (req, bot = false) => {
             if (accessory) {
                 const item = await Item.findOne({ image: accessory }).select('CP');
                 const itemJ = await Item.findOne({ image: accessoryJ }).select('DP');
-                
+
                 // Default CP or DP to 0 if they are null or undefined
                 const cp = item ? item.CP || 0 : 0;
                 const dp = itemJ ? itemJ.DP || 0 : 0;
-            
+
                 // Calculate commission
                 commission = cp - dp + parseFloat(tax.value);
             } else {
                 commission = parseFloat(tax.value); // If no accessory, use tax.value directly
             }
-            
+
 
 
             newGameLog = new GameLog({
@@ -204,14 +207,16 @@ const addToQueue = async (req, bot = false) => {
                 });
                 bet_item = availableBetItem;
 
-                const allBetItems = await RpsBetItem.find({
+                const reversedBetItems = await RpsBetItem.find({
                     room: new ObjectId(req.body._id),
                     joiner: user._id,
                     joiner_rps: { $ne: null }
                 })
                     .sort({ created_at: -1 })
                     .limit(50);
-                const mostRecentItems = allBetItems.slice(0, 4);
+
+                const allBetItems = reversedBetItems.reverse();
+                const mostRecentItems = reversedBetItems.slice(0, 4);
 
 
                 // if no more items, create a new one
@@ -471,8 +476,6 @@ const addToQueue = async (req, bot = false) => {
                     hosts: gameLog.hosts
                 }));
 
-                // Now updatedGameLogArray has the populated sub-documents
-
                 // Assuming convertGameLogToHistoryStyle can be optimized similarly
                 const newLog = await convertGameLogToHistoryStyle(updatedGameLogArray);
 
@@ -503,7 +506,6 @@ const addToQueue = async (req, bot = false) => {
                     }
                 }
 
-
                 // rug game if bankroll too low
                 if (roomInfo['user_bet'] <= 0.1) {
                     roomInfo.status = 'finished';
@@ -519,24 +521,8 @@ const addToQueue = async (req, bot = false) => {
 
                 }
 
-            } else if (roomInfo['game_type']['game_type_name'] === 'Quick Shoot') {
-
-                // get next unused item
-                const availableBetItem = await QsBetItem.findOne({
-                    _id: req.body._id,
-                    joiner_qs: ''
-                });
-                bet_item = availableBetItem;
-
-                const allBetItems = await QsBetItem.find({
-                    room: new ObjectId(req.body._id),
-                    joiner: user._id,
-                    joiner_qs: { $ne: null }
-                })
-                    .sort({ created_at: -1 })
-                    .limit(50);
-                const mostRecentItems = allBetItems.slice(0, 4);
-                newGameLog.bet_amount = parseFloat(req.body.bet_amount);
+            }
+            else if (roomInfo['game_type']['game_type_name'] === 'Quick Shoot') {
                 if (
                     parseFloat(req.body.bet_amount) / (roomInfo['qs_game_type'] - 1) +
                     parseFloat(req.body.bet_amount) -
@@ -544,11 +530,29 @@ const addToQueue = async (req, bot = false) => {
                     parseFloat(roomInfo['user_bet']) ||
                     parseFloat(req.body.bet_amount) > parseFloat(req.user.balance)
                 ) {
-                    // Return an error or some other response to the user, e.g.:
                     return res
                         .status(400)
                         .json({ error: 'Bet amount exceeds available balance.' });
                 }
+
+                newGameLog.bet_amount = parseFloat(req.body.bet_amount);
+
+                const availableBetItem = await QsBetItem.findOne({
+                    _id: req.body._id,
+                    joiner_qs: ''
+                });
+                bet_item = availableBetItem;
+
+                const reversedBetItems = await QsBetItem.find({
+                    room: new ObjectId(req.body._id),
+                    joiner: user._id,
+                    joiner_qs: { $ne: null }
+                })
+                    .sort({ created_at: -1 })
+                    .limit(50);
+
+                const allBetItems = reversedBetItems.reverse();
+                const mostRecentItems = reversedBetItems.slice(0, 4);
 
                 if (!bet_item) {
 
@@ -556,69 +560,57 @@ const addToQueue = async (req, bot = false) => {
 
                     switch (roomInfo['selectedStrategy']) {
                         case 'Random':
-                            nextItem = await getRandomItem();
+                            nextItem = await getRandomItem_qs(roomInfo['qs_game_type']);
                             break;
                         case 'Martingale':
-                            nextItem = await getRandomItem();
+                            nextItem = await getRandomItem_qs(roomInfo['qs_game_type']);
                             break;
                         case 'Hertz':
-                            nextItem = await patternBasedAI(allBetItems);
+                            nextItem = await patternBasedAI_qs(allBetItems, roomInfo['qs_game_type']);
                             break;
                         case 'Feedback':
-                            nextItem = await counterSwitchAI(allBetItems);
+                            nextItem = await counterSwitchAI_qs(allBetItems, roomInfo['qs_game_type']);
                             break;
                         case 'Skill-issue':
-                            nextItem = await counterRandomness(allBetItems);
+                            nextItem = await counterRandomness_qs(allBetItems, roomInfo['qs_game_type']);
                             break;
                         case 'Skill-issue-2':
-                            nextItem = await counterRandomness(allBetItems);
+                            nextItem = await counterRandomness_qs(allBetItems, roomInfo['qs_game_type']);
                             break;
                         case 'NPC':
-                            nextItem = await NPC(allBetItems);
+                            nextItem = await NPC_qs(allBetItems);
                             break;
                         case 'Tesla':
-                            nextItem = await generatePattern(allBetItems);
+                            nextItem = await generatePattern_qs(allBetItems);
                             break;
                         case 'CopyCat':
-                            nextItem = await getCopyCatItem(allBetItems);
+                            nextItem = await getCopyCatItem_qs(allBetItems);
                             break;
                         case 'Markov':
-                            nextItem = await getNextItemUsingMarkov(allBetItems);
+                            nextItem = await getNextItemUsingMarkov_qs(allBetItems);
                             break;
                         case 'Hidden Markov':
                             nextItem = await predictNextQs(allBetItems, roomInfo['qs_game_type']);
                             break;
 
                         default:
-                            const move = await reinforcementAI(allBetItems);
+                            const move = await reinforcementAI_qs(allBetItems, roomInfo['qs_game_type']);
                             nextItem = move.move;
                             break;
                     }
-                    // save the new item
                     bet_item = new QsBetItem({
                         room: new ObjectId(req.body._id),
-                        qs: 0,
+                        qs: nextItem,
                         bet_amount: betAmount,
                     });
 
-                    // Define helper functions
-                    function getRandomItem() {
-                        const rpsOptions = ['R', 'P', 'S'];
-                        return rpsOptions[Math.floor(Math.random() * 3)];
-                    }
-
-                    function getCopyCatItem(allBetItems) {
-                        const copyCatBetItem = allBetItems.find(item => item.joiner_rps);
-                        return copyCatBetItem ? copyCatBetItem.joiner_rps : getRandomItem();
-                    }
-
-                    async function getNextItemUsingMarkov(allBetItems) {
+                    async function getNextItemUsingMarkov_qs(allBetItems) {
                         if (allBetItems.length <= 3) {
                             return getRandomItem();
                         }
 
-                        const transformedItems = allBetItems.map(item => ({ rps: item.joiner_rps }));
-                        const nextItem = await predictNext(transformedItems, true);
+                        const transformedItems = allBetItems.map(item => ({ qs: item.joiner_qs }));
+                        const nextItem = await predictNextQs(transformedItems, true);
                         return nextItem;
                     }
                 }
@@ -627,8 +619,9 @@ const addToQueue = async (req, bot = false) => {
 
                 // deduct the joiner's bet
                 newTransactionAmount -= betAmount;
+                roomInfo['user_bet'] = parseFloat(roomInfo['user_bet']);
                 if (Number(bet_item.qs) === req.body.selected_qs_position) {
-                    newGameLog.game_result = -1;
+                    game_result = -1;
 
                     roomInfo['user_bet'] =
                         parseFloat(roomInfo['user_bet']) + parseFloat(req.body.bet_amount);
@@ -666,14 +659,15 @@ const addToQueue = async (req, bot = false) => {
                         '-' +
                         roomInfo['room_number'];
                 } else {
-                    newGameLog.game_result = 1;
+                    game_result = 1;
                     newTransactionAmount +=
                         (betAmount +
                             betAmount /
-                            (room['qs_game_type'] - 1)) *
+                            (roomInfo['qs_game_type'] - 1)) *
                         ((100 - commission) / 100);
                     roomInfo['host_pr'] -=
                         betAmount / (roomInfo['qs_game_type'] - 1);
+
                     roomInfo['user_bet'] -=
                         betAmount / (roomInfo['qs_game_type'] - 1);
 
@@ -724,11 +718,13 @@ const addToQueue = async (req, bot = false) => {
 
                 bet_item.joiner = req.user;
                 bet_item.joiner_qs = req.body.selected_qs_position;
+                bet_item.bet_amount = betAmount;
+                await saveDocumentWithRetry(bet_item);
+
+                newGameLog.qs_game_type = parseFloat(roomInfo.qs_game_type);
                 newGameLog.winnings = newTransactionAmount;
                 newGameLog.game_result = game_result;
                 newGameLog.endgame_amount = roomInfo['endgame_amount'];
-                bet_item.bet_amount = betAmount;
-                await saveDocumentWithRetry(bet_item);
                 gameLogArray.push(newGameLog);
 
 
@@ -759,6 +755,7 @@ const addToQueue = async (req, bot = false) => {
                         user_bet: gameLog.user_bet,
                         _id: gameLog._id,
                         room: populatedRoom,
+                        qs_game_type: gameLog.qs_game_type,
                         creator: populatedCreator,
                         joined_user: populatedJoinedUser,
                         game_type: populatedGameType,
@@ -771,32 +768,29 @@ const addToQueue = async (req, bot = false) => {
                 }));
 
                 const newLog = await convertGameLogToHistoryStyle(updatedGameLogArray);
-
                 // socket for last 5 items
-                if (roomInfo['qs_game_type'] === 0) {
-                    mostRecentItems.reverse();
-                    mostRecentItems.push(bet_item);
-                    if (mostRecentItems.length > 0) {
-                        if (req.io.sockets) {
-                            req.io.sockets.emit(`UPDATED_BANKROLL_QS_${roomInfo._id}`, {
-                                bankroll: roomInfo['user_bet'],
-                                host_pr: roomInfo['host_pr'],
-                                rps: mostRecentItems,
-                                newLog: newLog,
-                                user: user
-                            });
-                            req.io.sockets.emit('NEW_LOG', {
-                                newLog: newLog
-                            });
-                        }
-                    } else {
-                        responseData = {
-                            success: false,
-                            message: 'irregular action',
-                            betResult: -3000
-                        };
-                        return responseData;
+                mostRecentItems.reverse();
+                mostRecentItems.push(bet_item);
+                if (mostRecentItems.length > 0) {
+                    if (req.io.sockets) {
+                        req.io.sockets.emit(`UPDATED_BANKROLL_QS_${roomInfo._id}`, {
+                            bankroll: roomInfo['user_bet'],
+                            host_pr: roomInfo['host_pr'],
+                            qs: mostRecentItems,
+                            newLog: newLog,
+                            user: user
+                        });
+                        req.io.sockets.emit('NEW_LOG', {
+                            newLog: newLog
+                        });
                     }
+                } else {
+                    responseData = {
+                        success: false,
+                        message: 'irregular action',
+                        betResult: -3000
+                    };
+                    return responseData;
                 }
 
                 // rug game if bankroll too low
@@ -852,7 +846,6 @@ const addToQueue = async (req, bot = false) => {
                     // is_anonymous: req.body.is_anonymous,
                     is_read: false
                 });
-
                 notification.from = roomInfo['creator']._id;
                 notification.to = roomInfo['creator']._id;
                 notification.message = 'Hosting ' + convertToCurrency(newTransactionC.amount) + ' auto-payout in ' + roomInfo.game_type.short_name + '-' + roomInfo.room_number;
@@ -981,6 +974,7 @@ const addToQueue = async (req, bot = false) => {
             ];
 
             const shouldSave = roomInfo.joiners.some(joiner => requiredIds.includes(String(joiner)));
+
             if (!roomInfo.joiners.includes(user._id)) {
                 roomInfo.joiners.push(user._id);
             }
@@ -1027,6 +1021,7 @@ const addToQueue = async (req, bot = false) => {
             bet_item = null;
             // }, 0);
         }
+
         if (newTransactionAmount !== 0) {
             try {
                 newTransactionJ.amount = newTransactionAmount;
@@ -1035,7 +1030,6 @@ const addToQueue = async (req, bot = false) => {
                 console.error("Error saving newTransactionJ", error);
             }
         }
-
         responseData = {
             success: true,
             message: 'successful bet',
@@ -1051,6 +1045,7 @@ const addToQueue = async (req, bot = false) => {
 };
 
 const executeBet3 = (req, bot = false) => {
+
     return new Promise((resolve, reject) => {
         requestQueue.push({ req, bot, resolve, reject });
         if (requestQueue.length === 1) {

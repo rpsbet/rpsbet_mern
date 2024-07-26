@@ -5,14 +5,18 @@ import Share from '../../components/Share';
 import ReactApexChart from 'react-apexcharts';
 import Moment from 'moment';
 import Avatar from '../../components/Avatar';
+import progress from '../LottieAnimations/progress.json';
+import pressHold from '../LottieAnimations/pressHold.json';
 import PlayerModal from '../modal/PlayerModal';
 import AiPanel from '../../components/AiPanel';
 import ViewIcon from '@material-ui/icons/Visibility';
 import SwordsIcon from '@material-ui/icons/VisibilityOff';
-import InfoIcon from '@material-ui/icons/Warning';
+import InfoIcon from '@material-ui/icons/Info';
 import { getQsLottieAnimation } from '../../util/helper';
+import { updateRoomBot, kickBots, endGame } from '../../redux/Logic/logic.actions';
+import { setSpectateMode } from '../../redux/Auth/user.actions';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faRobot, faMoneyBillWave, faBrain } from '@fortawesome/free-solid-svg-icons';
+import { faRobot, faMoneyBillWave, faBrain, faBan } from '@fortawesome/free-solid-svg-icons';
 import {
   Button,
   IconButton,
@@ -23,6 +27,7 @@ import BetAmountInput from '../../components/BetAmountInput';
 import {
   validateIsAuthenticated,
   validateCreatorId,
+  callBot,
   validateBetAmount,
   validateLocalStorageLength,
   validateBankroll
@@ -70,14 +75,20 @@ class QuickShoot extends Component {
       advanced_status: '',
       is_anonymous: false,
       animation: <div />,
+      qs: [],
+      ballClassApplied: false,
+      qsValueAtLastIndex: '',
+      startedPlaying: false,
+      prev_qs: [],
       bet_amount: 1,
+      players: [],
+      botsCount: 0,
       potential_return: 1.25,
-      bankroll: parseFloat(this.props.bet_amount) - this.getPreviousBets(),
+      bankroll: this.props.user_bet,
+      host_pr: this.props.roomInfo.host_pr,
       balance: this.props.balance,
       productName: '',
       status: this.props.roomInfo.status,
-      qs: '',
-      host_pr: this.props.pr,
       image: '',
       showImageModal: false,
       isPasswordCorrect: this.props.isPasswordCorrect
@@ -103,17 +114,19 @@ class QuickShoot extends Component {
     const initializeSocket = async () => {
       try {
         const { socket, playSound, roomInfo } = this.props;
-        this.setState({ socket: socket });
+        const initializedSocket = socket || null;
+        this.setState({ socket: initializedSocket });
 
-        if (socket) {
+        if (initializedSocket) {
 
-          socket.on(`UPDATED_BANKROLL_QS${roomInfo._id}`, this.handleSocketData);
-          socket.on(`UPDATED_BANKROLL_QS2_${roomInfo._id}`, this.handleSocketData2);
+          initializedSocket.on(`UPDATED_BANKROLL_QS_${roomInfo._id}`, this.handleSocketData);
+          initializedSocket.on(`UPDATED_BANKROLL_QS2_${roomInfo._id}`, this.handleSocketData2);
+        } else {
+          setTimeout(initializeSocket, 3000);
         }
-
       } catch (error) {
         console.error('Socket initialization failed:', error);
-        setTimeout(initializeSocket, 3000); // Retry after 3 seconds
+        setTimeout(initializeSocket, 3000);
       }
     };
 
@@ -123,7 +136,7 @@ class QuickShoot extends Component {
   removeSocketListeners() {
     const { socket, roomInfo } = this.props;
     if (socket) {
-      socket.off(`UPDATED_BANKROLL_QS${roomInfo._id}`, this.handleSocketData);
+      socket.off(`UPDATED_BANKROLL_QS_${roomInfo._id}`, this.handleSocketData);
     }
   }
 
@@ -131,15 +144,15 @@ class QuickShoot extends Component {
     this.setState(prevState => {
       let updatedPlayers = [...prevState.players, data.user];
       if (updatedPlayers.length > 5) {
-        updatedPlayers.shift(); // Remove the oldest player
+        updatedPlayers.shift();
       }
       if (!this.props.isMuted) {
         this.props.playSound('blip');
       }
-
       // Check if the filtered result is empty
       let filteredQS = data.qs.filter(game => game.joiner === this.props.user_id);
       let qsState = filteredQS.length > 0 ? filteredQS : prevState.qs;
+      let qsValueAtLastIndex = data.qs.length > 0 ? parseInt(data.qs[data.qs.length - 1].joiner_qs) : null;
 
       return {
         bankroll: data.bankroll,
@@ -147,15 +160,35 @@ class QuickShoot extends Component {
         qs: this.props.isWatching ? qsState : data.qs,
         prev_qs: data.qs,
         startedPlaying: true,
-        players: updatedPlayers
+        players: updatedPlayers,
+        qsValueAtLastIndex: qsValueAtLastIndex
       };
+    }, () => {
+      if (!(this.props.isWatching && data.qs.every(game => game.joiner !== this.props.user_id))) {
+        this.updateAnimation();
+      }
     });
   };
+
+
+  handleClickOutside = e => {
+    if (
+      this.settingsRef &&
+      this.settingsRef.current &&
+      !this.settingsRef.current.contains(e.target)
+    ) {
+      this.setState({ settings_panel_opened: false });
+    }
+  };
+
+
   handleSocketData2 = (data) => {
     this.setState({ bankroll: data.bankroll });
   };
 
-
+  handleSpectateMode = () => {
+    this.props.setSpectateMode(!this.props.isWatching);
+  };
 
   componentWillUnmount() {
     document.removeEventListener('keydown', this.handleKeyPress);
@@ -197,8 +230,6 @@ class QuickShoot extends Component {
     }
   }
 
-
-
   static getDerivedStateFromProps(props, current_state) {
     const { isPasswordCorrect, balance } = props;
 
@@ -216,29 +247,11 @@ class QuickShoot extends Component {
     return null;
   }
 
-  getPreviousBets() {
-    let previousBets = 0;
-    const { roomInfo } = this.props;
-
-    if (roomInfo && roomInfo.game_log_list) {
-      roomInfo.game_log_list.forEach(room_history => {
-        if (room_history.bet_amount) {
-          previousBets += parseFloat(room_history.bet_amount);
-        }
-      });
-    }
-
-    return previousBets;
-  }
-
   updateAnimation = async () => {
+  
+    let qsIndex = parseInt(this.state.qs[this.state.qs.length - 1].qs);
     let position_short_name = ['center', 'tl', 'tr', 'bl', 'br'];
-    if (position_short_name[this.props.selected_qs_position] === 'center') {
-      this.props.playSound('grunt2');
 
-    } else {
-      this.props.playSound('grunt')
-    }
     if (this.props.qs_game_type === 2) {
       position_short_name = ['bl', 'br'];
 
@@ -250,7 +263,7 @@ class QuickShoot extends Component {
 
     const animationData = await getQsLottieAnimation(
       this.props.roomInfo.qs_nation,
-      position_short_name[this.state.qs]
+      position_short_name[qsIndex]
     );
 
 
@@ -272,22 +285,62 @@ class QuickShoot extends Component {
         </div>
       )
     });
+    setTimeout(() => {
+      if (position_short_name[qsIndex] === 'center') {
+        this.props.playSound('grunt2');
+      } else {
+        this.props.playSound('grunt')
+      }
+    }, 1000);
   };
 
-  componentDidUpdate(prevProps, prevState) {
-    const { roomInfo, actionList } = this.props;
-    const { isPasswordCorrect } = this.state;
+  async componentDidUpdate(prevProps, prevState) {
+    const { roomInfo, actionList, is_betting, bgColorChanged  } = this.props;
+    const { isPasswordCorrect, qs, qsValueAtLastIndex } = this.state;
 
+    
     if (prevProps.actionList !== actionList) {
       this.setState({
         actionList: actionList
       });
     }
+    if (prevState.bankroll !== this.state.bankroll && this.state.bankroll <= 0.05) {
+      this.state.status = 'finished';
+    }
+    if (prevProps.isWatching !== this.props.isWatching) {
+      this.removeSocketListeners();
+      this.setupSocket();
+    }
+    if (prevProps.balance !== this.props.balance && this.props.gameResult !== -1 && this.state.isMax) {
+      this.handleMaxButtonClick();
+    }
+
+    if (prevProps.is_betting !== is_betting && !is_betting) {
+      const prevLastItemId = this.props.qsbetitems.length > 4 ? this.props.qsbetitems.slice(0, 5).reverse()[4]._id : null;
+      const currentLastItemId = qs.length > 4 ? qs[4]._id : null;
+
+
+      if (prevLastItemId === currentLastItemId) {
+        await this.props.getQsBetItems(roomInfo._id);
+        this.setState({
+          qs: this.props.qsbetitems.slice(0, 5).reverse(),
+          prev_qs: this.props.qsbetitems.slice(0, 5).reverse()
+        });
+      }
+    }
+
 
     if (prevProps.roomInfo && roomInfo) {
       if (prevProps.roomInfo.bet_amount !== roomInfo.bet_amount) {
         this.setState({
-          bankroll: parseFloat(roomInfo.bet_amount) - this.getPreviousBets()
+          bankroll: parseFloat(roomInfo.bet_amount)
+        });
+      }
+    }
+    if (prevProps.roomInfo && roomInfo) {
+      if (prevProps.roomInfo.host_pr !== roomInfo.host_pr) {
+        this.setState({
+          host_pr: parseFloat(roomInfo.host_pr)
         });
       }
     }
@@ -303,99 +356,59 @@ class QuickShoot extends Component {
   joinGame = async () => {
     const {
       qs_bet_item_id,
-      isDarkMode,
       qs_game_type,
-      refreshHistory,
+      onChangeState,
       playSound,
       selected_qs_position,
       changeBgColor,
+      isMuted
     } = this.props;
     const { bet_amount } = this.state;
-
+    onChangeState({ result: '' });
+ 
     const result = await this.props.join({
       bet_amount: parseFloat(bet_amount),
       selected_qs_position: selected_qs_position,
       qs_bet_item_id: qs_bet_item_id
     });
 
-    if (result.status === 'success') {
-      let text = 'LOST, SAVED BY THE KEEPER!';
-      changeBgColor(result.betResult);
-      playSound('lose');
-      if (result.betResult === 1) {
+    if (!isMuted) {
+      playSound('ballKick');
+    }
+
+    let text;
+    let color;
+
+    if (result.betResult === 1) {
+      if (!isMuted) {
+
         playSound('win');
-        text = 'WIN, EXCELLENT SHOT!';
-        changeBgColor(result.betResult);
-      } else if (result.betResult === 0) {
-        playSound('split');
-        text = 'Draw, No Winner!';
-        changeBgColor(result.betResult);
       }
-
-      if (result.roomStatus === 'finished') {
-        gameResultModal(
-          isDarkMode,
-          text,
-          result.amount,
-          result.betResult,
-          'Okay',
-          null,
-          () => {
-            history.push('/');
-          },
-          () => { }
-        );
-      } else {
-        gameResultModal(
-          isDarkMode,
-          text,
-          result.amount,
-          result.betResult,
-          'Okay',
-          null,
-          () => {
-            // history.go(0);
-          },
-          () => {
-            // history.push('/');
-          }
-        );
-      }
+      text = '+';
+      changeBgColor(result.betResult);
     } else {
-      if (result.message) {
-        alertModal(isDarkMode, result.message);
+      if (!isMuted) {
+
+        playSound('lose');
       }
+      text = '-';
+      changeBgColor(result.betResult);
     }
 
-    let stored_qs_array;
+    const currencyElement = convertToCurrency(Math.abs(result.amount));
 
-    if (qs_game_type === 2) {
-      stored_qs_array = JSON.parse(localStorage.getItem('qs_array_2')) || [];
-    } else if (qs_game_type === 3) {
-      stored_qs_array = JSON.parse(localStorage.getItem('qs_array_3')) || [];
-    } else if (qs_game_type === 4) {
-      stored_qs_array = JSON.parse(localStorage.getItem('qs_array_4')) || [];
-    } else if (qs_game_type === 5) {
-      stored_qs_array = JSON.parse(localStorage.getItem('qs_array_5')) || [];
-    }
+    const fragmentStyle = {
+      color: color,
+    };
 
-    while (stored_qs_array.length >= 20) {
-      stored_qs_array.shift();
-    }
-
-    stored_qs_array.push({ qs: selected_qs_position, room_id: qs_bet_item_id });
-
-    if (qs_game_type === 2) {
-      localStorage.setItem('qs_array_2', JSON.stringify(stored_qs_array));
-    } else if (qs_game_type === 3) {
-      localStorage.setItem('qs_array_3', JSON.stringify(stored_qs_array));
-    } else if (qs_game_type === 4) {
-      localStorage.setItem('qs_array_4', JSON.stringify(stored_qs_array));
-    } else if (qs_game_type === 5) {
-      localStorage.setItem('qs_array_5', JSON.stringify(stored_qs_array));
-    }
-    refreshHistory();
-  };
+    onChangeState({
+      result: (
+        <React.Fragment>
+          <span style={fragmentStyle}> {text} {currencyElement}</span>
+        </React.Fragment>
+      ), gameResult: result.betResult
+    });
+  }
 
 
   handleHalfXButtonClick = () => {
@@ -482,11 +495,19 @@ class QuickShoot extends Component {
     } = this.props;
     const { bet_amount, bankroll } = this.state;
 
-    if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
+    if (creator_id && user_id && creator_id.toString() === user_id.toString()) {
+      callBot(creator_id, roomInfo._id, user_id, isDarkMode, async () => {
+        const botAttached = await updateRoomBot(roomInfo._id);
+        if (botAttached) {
+          this.setState(prevState => ({
+            botsCount: prevState.botsCount + 1
+          }));
+        }
+      });
       return;
     }
 
-    if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
+    if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
       return;
     }
 
@@ -551,7 +572,7 @@ class QuickShoot extends Component {
     }
   }
 
-  
+
   bootBots = async () => {
     const { creator_id, user_id, roomInfo, kickBots } = this.props;
     this.setState({ botsCount: 0 }, async () => {
@@ -594,40 +615,78 @@ class QuickShoot extends Component {
   };
 
   renderButton(id, position) {
-    const { betResult, selected_qs_position, bgColorChanged, is_betting } = this.props;
-
-    // Define the base classes
-    let classes = `${selected_qs_position === position ? 'active' : ''}${bgColorChanged && betResult === -1 && selected_qs_position === position
-      ? ' lose-bg'
-      : ''
-      }${betResult === 0 && selected_qs_position === position ? ' draw-bg' : ''}${betResult === 1 && selected_qs_position === position ? ' win-bg' : ''
-      }`;
-
-    // Add the 'disabled' class if is_betting is true
-    if (is_betting) {
-      classes += ' disabled';
+    const { betResult, bgColorChanged, is_betting } = this.props;
+    const { qsValueAtLastIndex, showBall } = this.state;
+  
+    // Initialize the classes array
+    let classes = [];
+  
+    // Add the active class if the position matches
+    if (qsValueAtLastIndex === position) {
+      classes.push('active');
     }
-
+  
+    if (bgColorChanged && qsValueAtLastIndex === position && !is_betting) {
+      setTimeout(() => {
+        this.setState({ showBall: true }); // setState to show the ball image
+      }, 1000);
+    }
+  
+    if (bgColorChanged && betResult === -1 && qsValueAtLastIndex === position) {
+      classes.push('lose-bg');
+    } else if (betResult === 0 && qsValueAtLastIndex === position) {
+      classes.push('draw-bg');
+    } else if (betResult === 1 && qsValueAtLastIndex === position) {
+      classes.push('win-bg');
+    }
+  
+    // Add the disabled class if is_betting is true
+    if (is_betting) {
+      classes.push('disabled');
+    }
+  
+    // Join all classes with a space
+    const className = classes.join(' ');
+  
     const buttonStyle = {
-      opacity: 0.9
+      opacity: 1,
+      position: 'relative' // Ensure position relative to position the ball image
     };
-
+  
     return (
       <IconButton
         id={id}
         onClick={() => {
           this.onBtnBetClick(position);
-          this.props.playSound('select');
+          if (!this.props.isMuted) {
+            this.props.playSound('select');
+          }
         }}
-        className={classes}
+        className={className}
         style={buttonStyle}
         disabled={is_betting} // Optionally disable the button directly
       >
         <span className="roll-tag">{this.getPositionLetter(position)}</span>
+        {showBall && bgColorChanged && qsValueAtLastIndex === position && !is_betting && (
+          <img
+            src="/img/football.svg"
+            alt="ball"
+            className="ball-kicked"
+            onAnimationEnd={() => this.setState({ showBall: false })} // Hide ball after animation
+            style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: '30px',
+              height: '30px'
+            }}
+          />
+        )}
       </IconButton>
     );
   }
-
+  
 
 
   renderButtons() {
@@ -679,7 +738,12 @@ class QuickShoot extends Component {
       image,
       productName,
       botsCount,
-      status
+      status,
+      startedPlaying,
+      host_pr,
+      qs,
+      players,
+      prev_qs
     } = this.state;
     const {
       selectedCreator,
@@ -862,7 +926,23 @@ class QuickShoot extends Component {
                   </div>
                   <div className="data-item">
                     <div>
-                      <div className="label host-display-name">Host</div>
+                      <div className="label public-interest">Interest Received</div>
+                    </div>
+                    <div className="value" >
+                      <Tooltip title="Paid every 33 minutes, at a rate of 0.00001% of the bankroll. Room must be public.">
+                        <div style={{ cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center" }}>
+                          <span style={{ color: "#00fff5" }}>
+                            {convertToCurrency(this.props.pr)}
+                          </span>
+                          <InfoIcon style={{ fontSize: 16, marginLeft: 4 }} />
+                        </div>
+                      </Tooltip>
+
+                    </div>
+                  </div>
+                  <div className="data-item">
+                    <div>
+                      <div className="label host-display-name">Creator</div>
                     </div>
                     <div className="value host">
                       <a
@@ -904,131 +984,265 @@ class QuickShoot extends Component {
               ))}
             </div>
           </div>
-          {status === 'open' ? (
-            <>
-              <Tooltip title={!isWatching ? "CLICK TO STOP WATCHING" : "CLICK TO START WATCHING"}>
-                <IconButton className="spectate" onClick={this.handleSpectateMode}>
-                  {isWatching ? <>PLAY&nbsp;<SwordsIcon /></> : <>SPECTATE&nbsp;<ViewIcon /></>}
+          <div
+            className="game-info-panel"
+            style={{ position: 'relative', zIndex: 10 }}
+          >
+            <div className="guesses">
+              <div>
 
-                </IconButton>
-              </Tooltip>
-              <div
-                className="game-info-panel"
-                style={{ position: 'relative', zIndex: 10 }}
-              >
-                {/* {renderLottieAvatarAnimation(
-              gameBackground,
-              isLowGraphics
-            )} */}
+                {prev_qs
+                  .slice()
+                  .map((item, index) => (
+                    <p key={index}>{item.qs}</p>
+                  ))}
+              </div>
+              <div>
 
-                <h3 className="game-sub-title">Choose WHERE TO SHOOT</h3>
-                <div
-                  className="qs-image-panel"
-                  style={{
-                    zIndex: '1'
-                  }}
-                >
-                  <img
-                    src={`/img/gametype/quick_shoot/gametype${qs_game_type}/type${qs_game_type}-${position_short_name[selected_qs_position]}.png`}
-                    alt=""
-                    style={{
-                      width: '600px',
-                      maxWidth: '100%',
-                      borderRadius: '10px',
-                      border: `3px solid ${borderColor}`,
-                      boxShadow: `0 0 20px ${borderColor}`
-
-                    }}
-                  />
-                  <div
-                    id="cat-football"
-
-                  >
-
-                    <Lottie
-                      options={{
-                        loop: true,
-                        autoplay: true,
-                        animationData: football
-                      }}
-                      style={{ transform: 'translate(15px, 60px)', width: '100px', }}
-                    />
-                  </div>
-                  {this.state.animation}
-                  {this.renderButtons()}
-                </div>
-
-
-                {creator_id && user_id && creator_id.toString() === user_id.toString() ? (
-                  <div className='host-controls'>
-                    <Button
-                      onClick={this.handleBotClick}
-                      className="hover-text-button"
-                    >
-                      <FontAwesomeIcon className="button-icon" icon={faRobot} />
-                      <span className="button-text">&nbsp;CALL BOT? [{botsCount}]</span>
-                    </Button>
-                    {botsCount > 0 && (
-
-                      <Button
-                        onClick={this.bootBots}
-                        className="hover-text-button"
-                      >
-                        <FontAwesomeIcon className="button-icon" icon={faBan} />
-                        <span className="button-text">&nbsp;KICK BOTS?</span>
-                      </Button>
-                    )}
-                    <Button
-                      onClick={this.handleEndClick}
-                      className="hover-text-button special-button"
-                    >
-                      <FontAwesomeIcon className="button-icon" icon={faMoneyBillWave} />
-                      <span className="button-text">&nbsp;QUICK RUG&nbsp;{convertToCurrency(bankroll)}</span>
-                    </Button>
-                  </div>
-                ) : (
+                {this.state.players.length !== 0 && (
                   <>
-                    <BetAmountInput
-                      betAmount={this.state.bet_amount}
-                      handle2xButtonClick={this.handle2xButtonClick}
-                      handleHalfXButtonClick={this.handleHalfXButtonClick}
-                      handleMaxButtonClick={this.handleMaxButtonClick}
-                      onChangeState={this.onChangeState}
-                      isDarkMode={isDarkMode}
-                      balance={this.state.balance}
-                      bankroll={this.state.bankroll}
-                    />
-                    {this.props.is_mobile && (
-                      <AiPanel
-                        qsbetitems={this.props.qsbetitems}
-                        updateUserStrategy={this.props.updateUserStrategy}
-                        strategies={strategies}
-                        betting={betting}
-                        is_betting={is_betting}
-                        predictedBetAmount={predictedBetAmount}
-                        roomId={roomInfo._id}
-                        handleSwitchChange={this.props.handleSwitchChange}
-                        game_type={roomInfo.game_type}
-                        rank={this.props.rank}
-                        user_id={user_id}
-                        ai_mode={ai_mode}
-                        user_balance={balance}
-                      />
-                    )}
+                    {this.state.players.slice(0, 5).map((player, index) => (
+                      <div key={index} style={{ opacity: "0.4", width: "29px", cursor: "pointer" }}>
+                        <a
+                          className="avatar"
+                          onClick={() =>
+                            handleOpenPlayerModal(player._id)
+                          }
+                        >
+                          <Avatar
+                            className="avatar"
+                            src={player.avatar}
+                            rank={player.totalWagered}
+                            username={player.username}
+                            accessory={player.accessory}
+                            alt=""
+                            darkMode={this.props.isDarkMode}
+                          />
+                        </a>
+
+                      </div>
+                    ))}
                   </>
 
                 )}
               </div>
-            </>
+            </div>
 
-          ) : (
-            <span style={{ color: "#ff0000" }}>THIS GAME HAS ENDED</span>
-          )}
+            <div className="guesses">
+              <div>
+                {prev_qs
+                  .slice()
+                  .map((item, index) => (
+                    <p key={index}>{item.qs}</p>
+                  ))}
+              </div>
+              <div>
 
-        <div className="action-panel">
-          <Share roomInfo={roomInfo} />
+                {this.state.players.length !== 0 && (
+                  <>
+                    {this.state.players.slice(0, 5).map((player, index) => (
+                      <div key={index} style={{ opacity: "0.4", width: "29px", cursor: "pointer" }}>
+                        <a
+                          className="avatar"
+                          onClick={() =>
+                            handleOpenPlayerModal(player._id)
+                          }
+                        >
+                          <Avatar
+                            className="avatar"
+                            src={player.avatar}
+                            rank={player.totalWagered}
+                            username={player.username}
+                            accessory={player.accessory}
+                            alt=""
+                            darkMode={this.props.isDarkMode}
+                          />
+                        </a>
+
+                      </div>
+                    ))}
+                  </>
+
+                )}
+              </div>
+            </div>
+            {status === 'open' ? (
+              <>
+                <Tooltip title={!isWatching ? "CLICK TO STOP WATCHING" : "CLICK TO START WATCHING"}>
+                  <IconButton className="spectate" onClick={this.handleSpectateMode}>
+                    {isWatching ? <>PLAY&nbsp;<SwordsIcon /></> : <>SPECTATE&nbsp;<ViewIcon /></>}
+
+                  </IconButton>
+                </Tooltip>
+                <div className="game-info-panel">
+                  <div className={`rps-radio-host ${this.props.is_betting || this.props.betting ? 'blueish-hue' : ''}`} style={{ top: "25px", right: "25px", boxShadow: "0px 0 5px 0px #ffc107", background: "radial-gradient(#ffd000, rgb(255, 0, 0, 0.2)", position: "absolute", width: "12.5px", height: "12.5px", borderRadius: "50%" }}>
+                    <span className='result' style={{ display: (!startedPlaying) ? 'none' : 'flex' }}>
+                      {this.props.result !== '' ? (
+                        <>
+                          {this.props.result}
+                          {/* Second Lottie Animation */}
+                          {this.props.betting && (
+
+                            <div className='lottie-pressHold'>
+                              <Lottie
+                                options={{
+                                  loop: isLowGraphics ? false : true,
+                                  autoplay: isLowGraphics ? false : true,
+                                  animationData: pressHold
+                                }}
+                                style={{
+                                  position: 'relative',
+                                  filter: `hue-rotate(${this.props.gameResult === -1 ? 0 : (this.props.gameResult === 0 ? 195 : (this.props.gameResult === 1 ? 80 : 20))}deg)`
+                                }}
+                              />
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <span><FontAwesomeIcon icon={faBrain} />&nbsp;<span className='desktop-only'>thinking...</span></span>
+                          {/* First Lottie Animation */}
+                          <div className='lottie-progress'>
+                            <Lottie
+                              options={{
+                                loop: isLowGraphics ? false : true,
+                                autoplay: isLowGraphics ? false : true,
+                                animationData: progress
+                              }}
+                              style={{
+                                position: 'relative',
+                              }}
+                            />
+                          </div>
+                        </>
+                      )}
+                    </span>
+                  </div>
+                  {/* {renderLottieAvatarAnimation(
+              gameBackground,
+              isLowGraphics
+            )} */}
+                  {!startedPlaying &&
+                    <h3 className="game-sub-title">Choose WHERE TO SHOOT</h3>
+                  }
+
+                  <div
+                    className="qs-image-panel"
+                    style={{
+                      zIndex: '1'
+                    }}
+                  >
+
+                    <img
+                      src={`/img/gametype/quick_shoot/gametype${qs_game_type}/type${qs_game_type}-${position_short_name[selected_qs_position]}.png`}
+                      alt=""
+                      style={{
+                        width: '600px',
+                        maxWidth: '100%',
+                        borderRadius: '10px',
+                        border: `3px solid ${borderColor}`,
+                        boxShadow: `0 0 20px ${borderColor}`,
+                        opacity: '0.5'
+                      }}
+                    />
+
+                    {this.props.result !== '' && (
+
+                      <div
+                        id="cat-football"
+                      >
+
+                        <Lottie
+                          options={{
+                            loop: true,
+                            autoplay: true,
+                            animationData: football
+                          }}
+                          style={{ transform: 'translate(15px, 60px)', width: '100px', }}
+                        />
+                      </div>
+                    )}
+                    {this.props.result !== '' && (
+                      <>
+                        {this.state.animation}
+                      </>
+                    )}
+
+                    {this.renderButtons()}
+                  </div>
+
+
+                  {creator_id && user_id && creator_id.toString() === user_id.toString() ? (
+                    <div className='host-controls'>
+                      <Button
+                        onClick={this.handleBotClick}
+                        className="hover-text-button"
+                      >
+                        <FontAwesomeIcon className="button-icon" icon={faRobot} />
+                        <span className="button-text">&nbsp;CALL BOT? [{botsCount}]</span>
+                      </Button>
+                      {botsCount > 0 && (
+
+                        <Button
+                          onClick={this.bootBots}
+                          className="hover-text-button"
+                        >
+                          <FontAwesomeIcon className="button-icon" icon={faBan} />
+                          <span className="button-text">&nbsp;KICK BOTS?</span>
+                        </Button>
+                      )}
+                      <Button
+                        onClick={this.handleEndClick}
+                        className="hover-text-button special-button"
+                      >
+                        <FontAwesomeIcon className="button-icon" icon={faMoneyBillWave} />
+                        <span className="button-text">&nbsp;QUICK RUG&nbsp;{convertToCurrency(bankroll)}</span>
+                      </Button>
+                    </div>
+                  ) : (
+                    <>
+                      <BetAmountInput
+                        betAmount={this.state.bet_amount}
+                        handle2xButtonClick={this.handle2xButtonClick}
+                        handleHalfXButtonClick={this.handleHalfXButtonClick}
+                        handleMaxButtonClick={this.handleMaxButtonClick}
+                        onChangeState={this.onChangeState}
+                        isDarkMode={isDarkMode}
+                        balance={this.state.balance}
+                        bankroll={this.state.bankroll}
+                      />
+                      {this.props.is_mobile && (
+                        <AiPanel
+                          qsbetitems={this.props.qsbetitems}
+                          updateUserStrategy={this.props.updateUserStrategy}
+                          strategies={strategies}
+                          betting={betting}
+                          is_betting={is_betting}
+                          predictedBetAmount={predictedBetAmount}
+                          roomId={roomInfo._id}
+                          handleSwitchChange={this.props.handleSwitchChange}
+                          game_type={roomInfo.game_type}
+                          rank={this.props.rank}
+                          user_id={user_id}
+                          ai_mode={ai_mode}
+                          user_balance={balance}
+                        />
+                      )}
+                    </>
+
+                  )}
+                </div>
+              </>
+
+            ) : (
+              <span style={{ color: "#ff0000" }}>THIS GAME HAS ENDED</span>
+            )}
+          </div>
+
+          <div className="action-panel">
+            <Share roomInfo={roomInfo} />
+          </div>
         </div>
-      </div >
       </div >
     );
   }
@@ -1040,6 +1254,7 @@ const mapStateToProps = state => ({
   isPasswordCorrect: state.snackbar.isPasswordCorrect,
   balance: state.auth.balance,
   isDarkMode: state.auth.isDarkMode,
+  isWatching: state.auth.isWatching,
   is_betting: state.logic.is_betting,
   balance: state.auth.balance,
   creator: state.logic.curRoomInfo.creator_name,
@@ -1049,11 +1264,17 @@ const mapStateToProps = state => ({
   username: state.logic.curRoomInfo.username,
   isLowGraphics: state.auth.isLowGraphics,
   isFocused: state.auth.isFocused,
+  isMuted: state.auth.isMuted,
   isMusicEnabled: state.auth.isMusicEnabled
 });
 
 const mapDispatchToProps = {
   openGamePasswordModal,
-  getRoomBotCount
+  getRoomBotCount,
+  getQsBetItems,
+  updateRoomBot,
+  kickBots,
+  setSpectateMode,
+  endGame,
 };
 export default connect(mapStateToProps, mapDispatchToProps)(QuickShoot);

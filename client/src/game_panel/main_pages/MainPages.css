@@ -1127,6 +1127,27 @@ div.table.my-open-game-table::-webkit-scrollbar {
   display: none !important;
 }
 
+/* CSS for animation */
+@keyframes kick {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-50%, -80%) scale(1.2);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(-50%, -100%) scale(0);
+    opacity: 0;
+  }
+}
+
+.ball-kicked {
+  animation: kick 1s forwards;
+}
+
+
 .win-box {
   border-color: #0cff00 !important;
 }
@@ -1165,6 +1186,15 @@ button.win-bg,
   background-color: #0cff00 !important;
   filter: unset !important;
 }
+
+.game-page .game-contents .game-info-panel .qs-buttons button.ball {
+  background: url('../../../public/img/football.svg') !important;
+  background-size: 30px !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+}
+
+
 
 .boxes-panel .box i:hover {
   transform: scale(1.2);
@@ -3525,7 +3555,7 @@ input {
   justify-content: center;
   align-items: center;
   margin-bottom: 32px;
-  max-width: 420px;
+  width: 420px;
   margin: auto;
 }
 

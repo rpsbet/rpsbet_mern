@@ -47,6 +47,7 @@ const AiPanel = ({ isDarkMode, rank, is_betting, rpsbetitems, qsbetitems, predic
         is_betting={is_betting}
         strategies={strategies}
         ai_mode={ai_mode}
+        qs_game_type={qs_game_type}
         rank={rank}
         betting={betting}
         predictedBetAmount={predictedBetAmount}
