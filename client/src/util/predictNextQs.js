@@ -65,7 +65,7 @@ export async function predictNextQs(qs_list, gameType) {
     });
   });
 
-  const winChance = this.calcWinChanceQs(this.props.roomInfo.qs_game_type, qs_list);
+  const winChance = calcWinChanceQs(gameType, qs_list);
   let deviation = 0;
   if (winChance !== '33.33%') {
     deviation = (1 - 1 / gameType) / 2;
@@ -131,6 +131,63 @@ function getResult(aiMove, opponentMove) {
     return 'win';
   }
 }
+
+async function trainModel_qs(rpsNumeric, joinerRPSNumeric, qs_game_type) {
+  if (!qs_game_type || typeof qs_game_type !== 'number' || qs_game_type <= 0) {
+      throw new Error(`Invalid qs_game_type: ${qs_game_type}`);
+  }
+
+  const rpsTensor = tf.tensor2d(rpsNumeric, [rpsNumeric.length, 1]);
+  const joinerRPSTensor = tf.tensor1d(joinerRPSNumeric);
+
+  // Define a smaller neural network model
+  const model = tf.sequential();
+  model.add(tf.layers.dense({ units: 32, inputShape: [1], activation: 'relu' }));
+  model.add(tf.layers.dense({ units: qs_game_type, activation: 'softmax' }));
+
+  model.compile({
+      optimizer: tf.train.adam(0.1), // Higher learning rate for quicker adaptation
+      loss: 'sparseCategoricalCrossentropy',
+      metrics: ['accuracy']
+  });
+
+  // Train the model with the recent data
+  await model.fit(rpsTensor, joinerRPSTensor, {
+      epochs: 10,
+      verbose: 0,
+      batch_size: Math.max(1, rpsNumeric.length), // Handle small batch sizes
+      callbacks: {
+          onEpochEnd: async (epoch, logs) => {
+              // console.log(`Epoch ${epoch}: loss = ${logs.loss}, accuracy = ${logs.acc}`);
+          }
+      }
+  });
+
+  // Dispose of tensors
+  rpsTensor.dispose();
+  joinerRPSTensor.dispose();
+
+  return model;
+}
+
+async function predictNextMove_qs(model, rpsNumeric, qs_game_type) {
+  if (!qs_game_type || typeof qs_game_type !== 'number' || qs_game_type <= 0) {
+      throw new Error(`Invalid qs_game_type: ${qs_game_type}`);
+  }
+
+  const rpsTensor = tf.tensor2d(rpsNumeric, [rpsNumeric.length, 1]);
+  const prediction = model.predict(rpsTensor);
+
+  const predictionData = prediction.dataSync();
+
+  const nextJoinerRPSNumeric = tf.argMax(prediction, 1).dataSync()[0];
+
+  // Dispose of tensors
+  rpsTensor.dispose();
+
+  return { move: nextJoinerRPSNumeric, risk: predictionData[nextJoinerRPSNumeric] };
+}
+
 
 export async function reinforcementAI_qs(data, qs_game_type) {
   if (!qs_game_type || typeof qs_game_type !== 'number' || qs_game_type <= 0) {

@@ -505,7 +505,7 @@ class DepositModal extends Component {
                           <img style={{ width: '50px', display: 'block', margin: 'auto' }} src={this.images[index]} alt={`option-${index}`} />
                           <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignContent: 'center', flexDirection: 'row' }} >
 
-                            <Typography variant="heading2" className={classes.price}>{paymentMethod === 'web2' ? convertToCurrency((price / currencyValue)) : convertToCurrency((price / currencyValue) + (0.589 * (index + 1)))}&nbsp;</Typography>
+                            <Typography variant="heading2" className={classes.price}>{paymentMethod === 'web2' ? convertToCurrency((price / currencyValue)) : convertToCurrency((price / currencyValue) + (0.489 * (index + 1)))}&nbsp;</Typography>
                             <Typography variant="heading2" className={classes.price}>{`($${price})`}</Typography>
                           </div>
                         </ButtonBase>

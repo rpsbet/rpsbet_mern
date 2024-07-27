@@ -3058,7 +3058,7 @@ button.btn-submit:active,
 .transaction-settings.active {
   opacity: 1;
   display: inline-block;
-  z-index: 99;
+  z-index: 9999999;
   position: fixed;
 }
 
@@ -4279,9 +4279,13 @@ input {
     width: 286px;
   }
 
+  .join-game-panel .qs-image-panel {
+    height: 180px;
+    margin-bottom: 0 !important;
+  }
     
   .game-info-panel .qs-image-panel img {
-    border-radius: 44px !important;
+    border-radius: 14px !important;
   }
 
   .host-controls {

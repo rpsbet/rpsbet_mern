@@ -1144,7 +1144,7 @@ circle {
   #quickShoot_lottie div {
     width: 278px !important;
     height: 156px !important;
-    border-radius: 40px !important;
+    border-radius: 4px !important;
   }
 
   #runs {

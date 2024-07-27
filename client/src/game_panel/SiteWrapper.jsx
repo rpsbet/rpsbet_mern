@@ -1311,7 +1311,7 @@ class SiteWrapper extends Component {
                             onMouseLeave={this.handleDollarLeave}
                           >
                             {isHovered ? (
-                              `$${(balance * 0.589).toFixed(numDecimals)}`
+                              `$${(balance * 0.489).toFixed(numDecimals)}`
                             ) : (
                               <>
                                 <InlineSVG

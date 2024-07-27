@@ -1321,6 +1321,7 @@ class JoinGame extends Component {
                     updateSelectedQs={this.updateSelectedQs}
                     user_id={user_id}
                     betResult={betResult}
+                    is_mobile={this.state.is_mobile}
                     qsbetitems={qsbetitems}
                     creator_id={roomInfo.creator_id}
                     qs_game_type={roomInfo.qs_game_type}
@@ -1332,6 +1333,8 @@ class JoinGame extends Component {
                     roomInfo={roomInfo}
                     playSound={this.playSound}
                     ai_mode={ai_mode}
+                    betting={betting}
+                    strategies={strategies}
                     handleSwitchChange={this.handleSwitchChange}
                     pr={roomInfo.pr}
                     onChangeState={this.onChangeState}

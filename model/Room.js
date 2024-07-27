@@ -23,7 +23,7 @@
     },
     selectedStrategy: {
       type: String,
-      default: 'Random'
+      default: 'Hidden Markov'
     },
     // aveMultiplier: {
     //   type: Number,

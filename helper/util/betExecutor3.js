@@ -530,9 +530,13 @@ const addToQueue = async (req, bot = false) => {
                     parseFloat(roomInfo['user_bet']) ||
                     parseFloat(req.body.bet_amount) > parseFloat(req.user.balance)
                 ) {
-                    return res
-                        .status(400)
-                        .json({ error: 'Bet amount exceeds available balance.' });
+                    responseData = {
+                        success: false,
+                        message: 'Bet amount exceeds available balance.',
+                        betResult: -1000
+                    }
+    
+                    return responseData;
                 }
 
                 newGameLog.bet_amount = parseFloat(req.body.bet_amount);

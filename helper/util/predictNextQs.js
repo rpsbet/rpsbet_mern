@@ -30,6 +30,7 @@ const predictNextQs = (qs_list, gameType) => {
   const transitionMatrix = {};
   const randomnessFactor = 0.15;
 
+  // Initialize the transition matrix
   options.forEach((option1) => {
     transitionMatrix[option1] = {};
     options.forEach((option2) => {
@@ -43,35 +44,60 @@ const predictNextQs = (qs_list, gameType) => {
     });
   });
 
+  // Populate the transition matrix
   for (let i = 0; i < qs_list.length - 3; i++) {
-    transitionMatrix[qs_list[i].qs][qs_list[i + 1].qs][qs_list[i + 2].qs][qs_list[i + 3].qs]++;
+    if (
+      transitionMatrix[qs_list[i].qs] &&
+      transitionMatrix[qs_list[i].qs][qs_list[i + 1].qs] &&
+      transitionMatrix[qs_list[i].qs][qs_list[i + 1].qs][qs_list[i + 2].qs]
+    ) {
+      transitionMatrix[qs_list[i].qs][qs_list[i + 1].qs][qs_list[i + 2].qs][qs_list[i + 3].qs]++;
+    }
   }
 
+  // Normalize the transition matrix
   Object.keys(transitionMatrix).forEach((fromState1) => {
     Object.keys(transitionMatrix[fromState1]).forEach((fromState2) => {
       Object.keys(transitionMatrix[fromState1][fromState2]).forEach((fromState3) => {
-        const totalTransitions = Object.values(transitionMatrix[fromState1][fromState2][fromState3]).reduce((a, b) => a + b);
-        Object.keys(transitionMatrix[fromState1][fromState2][fromState3]).forEach((toState) => {
-          transitionMatrix[fromState1][fromState2][fromState3][toState] /= totalTransitions;
-        });
+        const totalTransitions = Object.values(transitionMatrix[fromState1][fromState2][fromState3]).reduce((a, b) => a + b, 0);
+        if (totalTransitions > 0) {
+          Object.keys(transitionMatrix[fromState1][fromState2][fromState3]).forEach((toState) => {
+            transitionMatrix[fromState1][fromState2][fromState3][toState] /= totalTransitions;
+          });
+        }
       });
     });
   });
 
-  const winChance = calcWinChanceQs(gameType, qs_list);
+  // Ensure qs_list has at least 4 elements
+  if (qs_list.length < 4) {
+    throw new Error('qs_list must contain at least 4 elements.');
+  }
+
+  const winChance = calcWinChanceQs(gameType, qs_list); // Assuming this function is defined elsewhere
   const targetProbability = 100 / gameType;
   const deviation = Math.abs(winChance - targetProbability);
 
-  let currentState1 = qs_list[qs_list.length - 3].qs;
-  let currentState2 = qs_list[qs_list.length - 2].qs;
-  let currentState3 = qs_list[qs_list.length - 1].qs;
+  let currentState1 = qs_list[qs_list.length - 3]?.qs;
+  let currentState2 = qs_list[qs_list.length - 2]?.qs;
+  let currentState3 = qs_list[qs_list.length - 1]?.qs;
+
+  if (currentState1 === undefined || currentState2 === undefined || currentState3 === undefined) {
+    throw new Error('Insufficient data in qs_list to determine current states.');
+  }
 
   const weightedOptions = [];
-  Object.entries(transitionMatrix[currentState1][currentState2][currentState3]).forEach(([state, prob]) => {
-    for (let i = 0; i < Math.floor(prob * 100); i++) {
-      weightedOptions.push(state);
-    }
-  });
+  if (
+    transitionMatrix[currentState1] &&
+    transitionMatrix[currentState1][currentState2] &&
+    transitionMatrix[currentState1][currentState2][currentState3]
+  ) {
+    Object.entries(transitionMatrix[currentState1][currentState2][currentState3]).forEach(([state, prob]) => {
+      for (let i = 0; i < Math.floor(prob * 100); i++) {
+        weightedOptions.push(state);
+      }
+    });
+  }
 
   let nextState;
   if (weightedOptions.length > 0) {
@@ -86,6 +112,7 @@ const predictNextQs = (qs_list, gameType) => {
 
   return nextState;
 };
+
 
 async function reinforcementAI_qs(data, qs_game_type) {
   if (!qs_game_type || typeof qs_game_type !== 'number' || qs_game_type <= 0) {

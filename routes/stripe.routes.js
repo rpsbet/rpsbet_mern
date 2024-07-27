@@ -205,20 +205,20 @@ router.post('/create_payment', auth, async (req, res) => {
 });
 
 function calculateAmount(price_amount) {
-  return price_amount / 0.59523;
+  return price_amount / 0.49523;
 }
 function calculateAmountWeb3(price_amount) {
   switch (price_amount) {
     case 10:
-      return price_amount / 0.59523 + 0.589;
+      return price_amount / 0.49523 + 0.489;
     case 25:
-      return price_amount / 0.59523 + (2 * 0.589);
+      return price_amount / 0.49523 + (2 * 0.489);
     case 50:
-      return price_amount / 0.59523 + (3 * 0.589);
+      return price_amount / 0.49523 + (3 * 0.489);
     case 100:
-      return price_amount / 0.59523 + (4 * 0.589);
+      return price_amount / 0.49523 + (4 * 0.489);
     case 250:
-      return price_amount / 0.59523 + (5 * 0.589);
+      return price_amount / 0.49523 + (5 * 0.489);
     default:
       return 0; // Or handle invalid price_amount accordingly
   }
@@ -313,17 +313,17 @@ router.post('/create_payout', auth, async (req, res) => {
       });
     }
 
-    if (withdrawalLimit >= 100) {
+    if (withdrawalLimit >= 250) {
       return res.json({
         success: false,
         message: 'EXCEEDED DAILY WITHDRAWAL LIMIT (DURING LAUNCH PHASE ONLY!)'
       });
     }
 
-    if (amount > 100) {
+    if (amount > 250) {
       return res.json({
         success: false,
-        message: 'Maximum Withdrawal Amount is 100 RPS per DAY during Launch'
+        message: 'Maximum Withdrawal Amount is 250 RPS per DAY during Launch'
       });
     }
 
@@ -612,7 +612,7 @@ router.post('/withdraw_request', auth, async (req, res) => {
 
     const signer = new ethers.Wallet(walletKey, provider);
     try {
-      const estimatedAmount = await estimateAmount((req.body.amount * 0.589), 'eth');
+      const estimatedAmount = await estimateAmount((req.body.amount * 0.489), 'eth');
       const amountTransfer = ethers.utils.parseUnits(String(estimatedAmount.estimated_amount), 'ether');
       const block = await provider.getBlock('latest');
       const baseFeeGwei = ethers.utils.formatUnits(block.baseFeePerGas, 'gwei');
