@@ -37,7 +37,11 @@ import {
   getRpsBetItems,
   getQsBetItems,
   getStrategies,
-  deductBalanceWhenStartBrainGame
+  deductBalanceWhenStartBrainGame,
+  attachPlayerToRoom,
+  detachPlayerFromRoom,
+  checkPlayerAttachment,
+  getAttachedRooms
 } from '../../redux/Logic/logic.actions';
 import { predictNext, reinforcementAI, martingaleStrategy, patternBasedAI, counterSwitchAI, generatePattern, counterRandomness, NPC } from '../../util/predictNext';
 import { predictNextQs, reinforcementAI_qs, martingaleStrategy_qs, patternBasedAI_qs, counterSwitchAI_qs, generatePattern_qs, counterRandomness_qs, NPC_qs, getCopyCatItem_qs, getRandomItem_qs } from '../../util/predictNextQs';
@@ -155,6 +159,10 @@ class JoinGame extends Component {
   async componentDidMount() {
     const { id } = this.props.match.params;
     await this.initializeRoomData(id);
+    await this.props.checkPlayerAttachment(id);
+    if (this.props.attached) {
+      this.setState({ betting: true });
+    }
     window.addEventListener('unload', this.handleUnload);
   }
 
@@ -671,6 +679,7 @@ class JoinGame extends Component {
     } else {
 
       this.playSound('start');
+
       this.setState({ betting: true });
 
       // const result = await getCustomerStatisticsData(
@@ -681,8 +690,10 @@ class JoinGame extends Component {
       //   50
       // );
 
+      if (!this.props.attached) {
 
-      this.startBetting(betArray);
+        this.startBetting(betArray);
+      }
 
     }
   };
@@ -839,10 +850,6 @@ class JoinGame extends Component {
             break;
         }
 
-        if (!validateBetAmount(predictedBetAmount, user_balance, isDarkMode)) {
-          return;
-        }
-
         const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
         const passwordCorrect = rooms[roomInfo._id];
         if (roomInfo.is_private === true && passwordCorrect !== true) {
@@ -857,13 +864,21 @@ class JoinGame extends Component {
     this.setState({ intervalId });
   };
 
-
-  stopBetting = () => {
-    this.playSound('stop');
-    clearInterval(this.state.intervalId);
-    this.setState({ intervalId: null, betting: false, timerValue: 2000 });
+  stopBetting = async () => {
+    try {
+      this.playSound('stop');
+      clearInterval(this.state.intervalId);
+      this.setState({ intervalId: null, betting: false, timerValue: 2000 });
+      if (this.props.attached) {
+           this.handleDetachAttachChange(this.props.roomInfo._id);
+      }
+  
+    } catch (error) {
+      console.error("Error detaching player:", error);
+    }
   };
-
+  
+  
 
   changeBgColor = async result => {
     this.setState({ betResult: result, bgColorChanged: true }, async () => {
@@ -933,8 +948,8 @@ class JoinGame extends Component {
           });
         }
         else if (gameType === 'Quick Shoot') {
-        
-      
+
+
           result = await this.join2({
             bet_amount: parseFloat(predictedBetAmount),
             selected_qs_position: selected_qs_position,
@@ -1050,6 +1065,41 @@ class JoinGame extends Component {
     }
   };
 
+  handleDetachAttachChange = () => {
+    const { rpsbetitems, qsbetitems, roomInfo, attachPlayerToRoom, detachPlayerFromRoom, attached } = this.props;
+
+    const gameType = roomInfo.game_type;
+
+    const items = gameType === "RPS" ? rpsbetitems : qsbetitems;
+
+    if (!Array.isArray(items)) {
+      console.error("Items is not an array:", items);
+      return;
+    }
+
+    const uniqueBetAmounts = [...new Set(items.map(item => item.bet_amount))];
+
+    if (attached) {
+      detachPlayerFromRoom(roomInfo._id)
+        .then((result) => {
+          if (result) {
+            this.startBetting(uniqueBetAmounts);
+            this.props.checkPlayerAttachment(roomInfo._id);
+          }
+        })
+        .catch((error) => console.error("Error detaching player:", error));
+    } else {
+      attachPlayerToRoom(roomInfo._id, uniqueBetAmounts)
+        .then(() => {
+          clearInterval(this.state.intervalId);
+          this.setState({ intervalId: null, timerValue: 2000 });
+        })
+        .catch((error) => console.error("Error attaching player:", error));
+    }
+  };
+
+
+
   handleOpenPlayerModal = creator_id => {
     this.setState({ showPlayerModal: true, selectedCreator: creator_id });
   };
@@ -1120,7 +1170,9 @@ class JoinGame extends Component {
       selectedMainTabIndex,
       rpsbetitems,
       qsbetitems,
-      total_wagered
+      total_wagered,
+      attached,
+      getAttachedRooms
     } = this.props;
     const defaultOptions = {
       loop: this.props.isLowGraphics ? false : true,
@@ -1478,12 +1530,16 @@ class JoinGame extends Component {
             {!this.state.is_mobile &&
               this.props.selectedMainTabIndex === 0 && (
                 <AiPanel
+                  handleDetachAttachChange={this.handleDetachAttachChange}
                   rpsbetitems={this.props.rpsbetitems}
                   qsbetitems={this.props.qsbetitems}
                   updateUserStrategy={this.props.updateUserStrategy}
                   strategies={strategies}
                   betting={betting}
                   is_betting={is_betting}
+                  attached={attached}
+                  creator_id={roomInfo.creator_id}
+                  getAttachedRooms={getAttachedRooms}
                   predictedBetAmount={predictedBetAmount}
                   roomId={roomInfo._id}
                   handleSwitchChange={this.handleSwitchChange}
@@ -1665,7 +1721,8 @@ const mapStateToProps = state => ({
   loading: state.logic.isActiveLoadingOverlay,
   isDarkMode: state.auth.isDarkMode,
   isLowGraphics: state.auth.isLowGraphics,
-  is_betting: state.logic.is_betting
+  is_betting: state.logic.is_betting,
+  attached: state.logic.attached
 });
 
 const mapDispatchToProps = {
@@ -1678,10 +1735,14 @@ const mapDispatchToProps = {
   loadRoomInfo,
   // getMyChat,
   // getMyGames,
+  detachPlayerFromRoom,
+  attachPlayerToRoom,
+  checkPlayerAttachment,
   updateUserStrategy,
   // getMyHistory,
   getRoomStatisticsData,
   getHistory,
+  getAttachedRooms,
   toggleDrawer,
   getGameTypeList,
   getRpsBetItems,

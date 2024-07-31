@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { connect } from 'react-redux';
 import { getRpsBetItems, getQsBetItems, updateRpsBetItems, updateQsBetItems } from '../redux/Logic/logic.actions';
 import { setFocused } from '../redux/Auth/user.actions';
@@ -23,12 +23,13 @@ import {
   Table, TableHead, TableBody, TableRow, TableCell
 } from '@material-ui/core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faToggleOn, faBrain, faBan, faClock, faRobot, faCoins, faToggleOff, faBalanceScale } from '@fortawesome/free-solid-svg-icons';
+import { faToggleOn, faBrain, faBan, faClock, faRobot, faCoins, faToggleOff, faBalanceScale, faLink, faUnlink } from '@fortawesome/free-solid-svg-icons';
 import { convertToCurrency } from '../util/conversion';
 import ApexChart from "react-apexcharts";
 import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
 import TableChartOutlinedIcon from '@material-ui/icons/TableChartOutlined';
 import TuneOutlinedIcon from '@material-ui/icons/TuneOutlined';
+import MeetingRoomOutlinedIcon from '@material-ui/icons/MeetingRoomOutlined';
 import EditIcon from '@material-ui/icons/Edit';
 import Lottie from 'react-lottie';
 import animationData from '../game_panel/LottieAnimations/spinningIcon.json';
@@ -118,6 +119,7 @@ const SideTabs = ({ selectedTab, handleTabChange }) => (
   >
     <Tab icon={<TuneOutlinedIcon />} />
     <Tab icon={<TableChartOutlinedIcon />} />
+    <Tab icon={<MeetingRoomOutlinedIcon />} />
   </Tabs>
 );
 
@@ -125,24 +127,30 @@ const SideTabs = ({ selectedTab, handleTabChange }) => (
 const PlaceholderComponent = ({
   selectedTab,
   handleTabChange,
-}) => (
-  <ThemeProvider theme={theme}>
-    <div style={{ position: 'relative' }}>
+  ownRoom
+}) => {
+  const getTextForTab = () => {
+    if (ownRoom) {
+      return "No AI available for your own room.";
+    }
+    return "Join a room to use AI Play!";
+  };
 
-      <SideTabs selectedTab={selectedTab} handleTabChange={handleTabChange} />
-      {selectedTab === 0 && (
-        <div className="gamified-container">
-          Join a room to use AI Play!
+  return (
+    <ThemeProvider theme={theme}>
+      <div style={{ position: 'relative' }}>
+        <SideTabs selectedTab={selectedTab} handleTabChange={handleTabChange} />
+        <div
+          className="gamified-container"
+          style={{ minHeight: '150px', padding: '20px', display: "flex", justifyContent: "center", alignItems: "center" }} // Adding minHeight and optional padding
+        >
+          {getTextForTab()}
         </div>
-      )}
-      {selectedTab === 1 && (
-        <div className="gamified-container">
-          Join a room to use AI Play!
-        </div>
-      )}
-    </div>
-  </ThemeProvider>
-);
+      </div>
+    </ThemeProvider>
+  );
+};
+
 
 function BetArray({
   rpsbetitems,
@@ -155,11 +163,15 @@ function BetArray({
   updateUserStrategy,
   betting,
   handleSwitchChange,
+  handleDetachAttachChange,
   isDarkMode,
+  attached,
   qs_game_type,
   ai_mode,
   user_balance,
   rank,
+  creator_id,
+  getAttachedRooms,
   is_betting,
   user_id,
   room_id,
@@ -185,6 +197,7 @@ function BetArray({
   const [debounceTimeoutId, setDebounceTimeoutId] = useState(null);
   const [isSliderDisabled, setIsSliderDisabled] = useState(false);
   const [text, setText] = useState('');
+  const [attachedRooms, setAttachedRooms] = useState([]);
 
   function debounce(fn, delay) {
     return function (...args) {
@@ -321,7 +334,29 @@ function BetArray({
     return [min, max];
   };
 
+  const fetchAttachedRooms = useCallback(async () => {
+    try {
+      const rooms = await getAttachedRooms();
+      setAttachedRooms(rooms);
+    } catch (error) {
+      console.error('Error fetching attached rooms:', error);
+    }
+  }, [getAttachedRooms]);
+
   useEffect(() => {
+    fetchAttachedRooms();
+  }, [fetchAttachedRooms]);
+
+  const handleSwitchChangeWithFetch = async (event) => {
+    await handleDetachAttachChange(event);
+    setTimeout(async () => {
+      await fetchAttachedRooms();
+    }, 1500); 
+  };
+
+
+  useEffect(() => {
+
     if (game_type === 'Quick Shoot') {
       const [min, max] = getMinMaxValues(qsbetitems);
       setRange([min, max]);
@@ -329,8 +364,7 @@ function BetArray({
       const [min, max] = getMinMaxValues(rpsbetitems);
       setRange([min, max]);
     }
-  }, [qsbetitems, rpsbetitems, game_type]);
-
+  }, [room_id, game_type, qsbetitems, rpsbetitems]);
 
   useEffect(() => {
     let profit = 0;
@@ -539,13 +573,23 @@ function BetArray({
         handleSettingsIconClick={handleSettingsIconClick}
         handleTabChange={handleTabChange}
         selectedTab={selectedTab}
-
+        ownRoom={false}
+        settingsRef={settingsRef}
+        settings_panel_opened={settings_panel_opened}
+      />
+    );
+  } else if (creator_id === user_id) {
+    return (
+      <PlaceholderComponent
+        handleSettingsIconClick={handleSettingsIconClick}
+        handleTabChange={handleTabChange}
+        selectedTab={selectedTab}
+        ownRoom={true}
         settingsRef={settingsRef}
         settings_panel_opened={settings_panel_opened}
       />
     );
   }
-
   return (
     <ThemeProvider theme={theme}>
       <div style={{ position: 'relative' }}>
@@ -614,7 +658,6 @@ function BetArray({
                 <div style={{ display: "flex", width: "100%", justifyContent: "center" }}>
                   <div style={{ display: "inline-flex", flexDirection: "row", alignItems: "center", justifyContent: "center", width: "50%", padding: "10px" }}>
                     <Tooltip title="TOGGLE AI PLAY BETTING">
-
                       <Switch
                         id="aiplay-switch"
                         checked={betting}
@@ -622,7 +665,6 @@ function BetArray({
                         disabled={game_type === 'Roll' || game_type === 'Blackjack' || game_type === 'Bang!'}
                       />
                     </Tooltip>
-
                     {betting ? (
                       <div id="stop">
                         <Lottie options={defaultOptions} width={32} />
@@ -636,9 +678,27 @@ function BetArray({
                     )}
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', width: "50%", boxShadow: "inset 0px 0px 6px 0px #b4b4b4a8", borderRadius: "9px", justifyContent: "center", width: "50%", padding: "5px 10px", overflow: "hidden" }}>
+                  <div style={{ display: 'flex', alignItems: 'center', width: "50%", boxShadow: "inset 0px 0px 6px 0px #b4b4b4a8", borderRadius: "9px", justifyContent: "center", padding: "5px 10px", overflow: "hidden" }}>
                     <FontAwesomeIcon icon={betting ? faToggleOn : faToggleOff} style={{ marginRight: '5px' }} />
                     {betting ? 'AP ON' : 'AP OFF'}
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", width: "100%", justifyContent: "center", marginTop: "10px" }}>
+                  <div style={{ display: "inline-flex", flexDirection: "row", alignItems: "center", justifyContent: "center", width: "50%", padding: "10px" }}>
+                    <Tooltip title="TOGGLE DETACH/ATTACH">
+                      <Switch
+                        id="detach-attach-switch"
+                        checked={attached ? true : false}
+                        onChange={handleSwitchChangeWithFetch}
+                        disabled={!betting} // Disabled if the top switch is off
+                      />
+                    </Tooltip>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', width: "50%", boxShadow: "inset 0px 0px 6px 0px #b4b4b4a8", borderRadius: "9px", justifyContent: "center", padding: "5px 10px", overflow: "hidden" }}>
+
+                    <FontAwesomeIcon icon={attached ? faLink : faUnlink} style={{ marginLeft: '10px', marginRight: '5px' }} />
+                    {attached ? 'DETACH' : 'ATTACH'}
                   </div>
                 </div>
 
@@ -697,9 +757,9 @@ function BetArray({
                   </Tooltip>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', width: "100%", boxShadow: "inset 0px 0px 6px 0px #b4b4b4a8", borderRadius: "9px", justifyContent: "center", padding: "5px 10px", overflow: "hidden" }}>
-                <span style={{fontSize: "x-small", color: "#ff0000"}}>
-                {text}
-                </span>
+                  <span style={{ fontSize: "x-small", color: "#ff0000" }}>
+                    {text}
+                  </span>
                 </div>
               </div>
             </div>
@@ -817,6 +877,75 @@ function BetArray({
             </div>
           </>
         )}
+        {selectedTab === 2 && (
+          <>
+            <div className="gamified-container">
+              <Grid item>
+                <h2 className="gamified-heading">Attached Rooms&nbsp;
+                  <Tooltip title="This data may not represent your recent transactions and is for the AI purposes only.">
+                    <Info style={{ width: "18px", marginTop: "-3px", cursor: "pointer" }} />
+                  </Tooltip>
+                </h2>
+                <div style={{ position: "absolute", zIndex: '2', top: '180px', right: '30px' }}>
+
+                </div>
+
+
+
+                <div className="gamified-content">
+                  <Table aria-label="rooms table">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell align="center">Room</TableCell>
+                        <TableCell align="center">Range</TableCell>
+                        <TableCell align="center">Strategy</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {attachedRooms.length > 0 ? (
+                        attachedRooms.map((room) => {
+                          const betAmounts = room.bet_amounts;
+                          const minBet = Math.min(...betAmounts);
+                          const maxBet = Math.max(...betAmounts);
+
+                          return (
+                            <TableRow key={room._id}>
+                              <TableCell align="center">
+                                <Typography><a style={{color: '#333'}} href={`/join/${room._id}`}>{room.room_name}</a></Typography>
+                              </TableCell>
+                              <TableCell align="center">{<>{convertToCurrency(minBet)} - {convertToCurrency(maxBet)}</>}</TableCell>
+                              <TableCell align="center">{room.selected_strategy}</TableCell>
+                            </TableRow>
+                          );
+                        })
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={3} align="center">
+                            No attached rooms available
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+
+                  <Modal open={openModal} onClose={handleCloseModal} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div className={classes.modalContainer}>
+                      <div className={classes.modal} style={{ background: '#f0f0f0', padding: '20px', borderRadius: '5px' }}>
+                        <Typography variant="h6" gutterBottom>{modalTitle}</Typography>
+                        <TextField
+                          label="EDIT VALUE"
+                          value={editedValue}
+                          onChange={(e) => setEditedValue(e.target.value)}
+                        />
+                        <Button variant="contained" color="primary" onClick={() => { handleUpdateCellData(isDarkMode) }}>Update</Button>
+                      </div>
+                    </div>
+                  </Modal>
+                </div>
+              </Grid>
+            </div>
+          </>
+        )}
 
       </div>
     </ThemeProvider>
@@ -827,7 +956,7 @@ function BetArray({
 const mapStateToProps = (state) => ({
   rpsbetitems: state.logic.rpsbetitems,
   qsbetitems: state.logic.qsbetitems,
-  user_balance: state.auth.user.balance
+  user_balance: state.auth.user.balance,
 });
 
 const mapDispatchToProps = {
@@ -835,7 +964,7 @@ const mapDispatchToProps = {
   updateRpsBetItems,
   getQsBetItems,
   updateQsBetItems,
-  setFocused
+  setFocused,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(BetArray);

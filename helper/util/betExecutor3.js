@@ -144,7 +144,7 @@ const addToQueue = async (req, bot = false) => {
                 creator: roomInfo['creator'],
                 joined_user: user,
                 game_type: roomInfo['game_type'],
-                bet_amount: roomInfo['bet_amount'],
+                bet_amount: req.body.bet_amount,
                 // is_anonymous: req.body.is_anonymous
             });
 
@@ -198,8 +198,6 @@ const addToQueue = async (req, bot = false) => {
 
                 newGameLog.bet_amount = betAmount;
 
-
-                // get next unused item
                 const availableBetItem = await RpsBetItem.findOne({
                     room: req.body._id,
                     // joiner: user._id,
@@ -212,13 +210,12 @@ const addToQueue = async (req, bot = false) => {
                     joiner: user._id,
                     joiner_rps: { $ne: null }
                 })
-                    .sort({ created_at: -1 })
-                    .limit(50);
-
-                const allBetItems = reversedBetItems.reverse();
+                .sort({ created_at: -1 })
+                .limit(50);
+                
+                // Create a copy of the array and reverse the copy
+                const allBetItems = [...reversedBetItems].reverse();
                 const mostRecentItems = reversedBetItems.slice(0, 4);
-
-
                 // if no more items, create a new one
                 if (!bet_item && roomInfo['rps_game_type'] === 0) {
                     let nextItem;
@@ -281,7 +278,8 @@ const addToQueue = async (req, bot = false) => {
                     }
 
                     function getCopyCatItem(allBetItems) {
-                        const copyCatBetItem = allBetItems.find(item => item.joiner_rps);
+                        const copyCatBetItem = allBetItems[allBetItems.length - 1];
+                        console.log(copyCatBetItem);
                         return copyCatBetItem ? copyCatBetItem.joiner_rps : getRandomItem();
                     }
 
@@ -546,16 +544,16 @@ const addToQueue = async (req, bot = false) => {
                     joiner_qs: ''
                 });
                 bet_item = availableBetItem;
-
+                
                 const reversedBetItems = await QsBetItem.find({
                     room: new ObjectId(req.body._id),
                     joiner: user._id,
                     joiner_qs: { $ne: null }
                 })
-                    .sort({ created_at: -1 })
-                    .limit(50);
-
-                const allBetItems = reversedBetItems.reverse();
+                .sort({ created_at: -1 })
+                .limit(50);
+                
+                const allBetItems = [...reversedBetItems].reverse();
                 const mostRecentItems = reversedBetItems.slice(0, 4);
 
                 if (!bet_item) {

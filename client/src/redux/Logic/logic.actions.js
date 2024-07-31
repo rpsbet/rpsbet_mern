@@ -8,6 +8,7 @@ import {
   END_LOADING,
   START_BET,
   END_BET,
+  ATTACHED,
   TNX_COMPLETE,
   TNX_INCOMPLETE,
   COMMENT_CREATED,
@@ -878,6 +879,81 @@ export const updateRoomBot = (room_id) => async dispatch => {
   } catch (err) {
     dispatch({ type: MSG_ERROR, payload: 'NO MORE BOTS OR ROOM HAS ENDED' });
     return false; // Bot attachment failed
+  }
+};
+
+export const checkPlayerAttachment = (room_id) => async dispatch => {
+  try {
+    const res = await axios.get(`/game/checkAttachment/${room_id}`);
+
+    if (res.data.success) {
+      if (res.data.attached) {
+        dispatch({ type: ATTACHED, payload: res.data.attached });
+      } else {
+        dispatch({ type: ATTACHED, payload: false });
+      }
+    } else {
+      dispatch({ type: MSG_ERROR, payload: 'Failed to check attachment' });
+    }
+  } catch (err) {
+    console.error("API Error:", err);
+    dispatch({ type: MSG_ERROR, payload: 'API request failed' });
+  }
+};
+export const getAttachedRooms = () => async dispatch => {
+  try {
+    const res = await axios.get(`/game/getattachedrooms`);
+
+    if (res.data.success) {
+      dispatch({ type: MSG_SUCCESS, payload: "Retrieved Player's Attachments" });
+      return res.data.attachments;
+    } else {
+      dispatch({ type: MSG_ERROR, payload: 'Failed to get attachments' });
+    }
+  } catch (err) {
+    console.error("API Error:", err);
+    dispatch({ type: MSG_ERROR, payload: 'API request failed' });
+  }
+};
+
+
+export const attachPlayerToRoom = (room_id, bet_amounts) => async dispatch => {
+
+  try {
+    const res = await axios.patch(`/game/attachPlayer/${room_id}`, {
+      bet_amounts
+    });
+
+    if (res.data.success) {
+      dispatch({ type: MSG_SUCCESS, payload: "Attached AI to room" });
+      dispatch({ type: ATTACHED, payload: true });
+
+      return true; // Player successfully attached
+    } else {
+      dispatch({ type: MSG_ERROR, payload: res.data.message || 'Failed to attach player to the room' });
+      dispatch({ type: ATTACHED, payload: false });
+
+      return false; // Player attachment failed
+    }
+  } catch (err) {
+    dispatch({ type: MSG_ERROR, payload: 'Internal server error or room not found' });
+    return false; // Player attachment failed
+  }
+};
+
+export const detachPlayerFromRoom = (room_id) => async dispatch => {
+  try {
+    const res = await axios.post(`/game/detachPlayer/${room_id}`);
+    if (res.data.success) {
+      dispatch({ type: MSG_SUCCESS, payload: "Detached AI from the room" });
+      return true; // Player successfully detached
+    } else {
+      dispatch({ type: MSG_ERROR, payload: res.data.message || 'Failed to detach player from the room' });
+      return false; // Player detachment failed
+    }
+  } catch (err) {
+    dispatch({ type: MSG_ERROR, payload: 'Internal server error or room not found' });
+    return false; // Player detachment failed
   }
 };
 

@@ -69,12 +69,11 @@ const predictNextQs = (qs_list, gameType) => {
     });
   });
 
-  // Ensure qs_list has at least 4 elements
-  if (qs_list.length < 4) {
-    throw new Error('qs_list must contain at least 4 elements.');
+  if (qs_list.length < 3) {
+    return { move: getRandomItem_qs(gameType), risk: 0 };
   }
 
-  const winChance = calcWinChanceQs(gameType, qs_list); // Assuming this function is defined elsewhere
+  const winChance = calcWinChanceQs(gameType, qs_list);
   const targetProbability = 100 / gameType;
   const deviation = Math.abs(winChance - targetProbability);
 
@@ -112,7 +111,7 @@ const predictNextQs = (qs_list, gameType) => {
 
   return nextState;
 };
-
+  
 
 async function reinforcementAI_qs(data, qs_game_type) {
   if (!qs_game_type || typeof qs_game_type !== 'number' || qs_game_type <= 0) {
@@ -120,8 +119,7 @@ async function reinforcementAI_qs(data, qs_game_type) {
   }
 
   // Return random move if data is empty
-  if (data.length === 0) {
-    console.log("Data is empty, returning random move");
+  if (data.length <= 3) {
     return { move: getRandomItem_qs(qs_game_type), risk: 0 };
   }
 
@@ -163,29 +161,32 @@ async function reinforcementAI_qs(data, qs_game_type) {
     const mostRecentGame = results[results.length - 1];
 
     // Introduce randomness to avoid overfitting
-    const randomnessFactor = 0.4;
+    const randomnessFactor = 0.1;
     if (Math.random() < randomnessFactor) {
 
       bestCounterMove.move = getRandomItem_qs(qs_game_type);
+      bestCounterMove.risk = 0;
     } else if (mostRecentGame.win) {
       // If recent game was a win
-      if (winChangesLikely > 0.5) {
+      if (winChangesLikely > 0.4) {
         // Predict next move based on the model
         bestCounterMove = await predictNextMove_qs(model, joinerRPSNumeric, qs_game_type);
       } else {
         // Repeat the same move as the most recent game
         bestCounterMove.move = mostRecentGame.joiner_qs;
+        bestCounterMove.risk = 1;
       }
     } else {
-      if (lossChangesLikely > 0.5) {
+      if (lossChangesLikely > 0.4) {
         bestCounterMove = await predictNextMove_qs(model, joinerRPSNumeric, qs_game_type);
+
       } else {
         bestCounterMove.move = mostRecentGame.joiner_qs;
+        bestCounterMove.risk = 1;
       }
     }
     // const predictedMove = bestCounterMove.move;
     // const actualMoveChanged = predictedMove !== mostRecentGame.joiner_qs;
-    // console.log("move", bestCounterMove.move)
     // console.log(`Most recent game was a ${mostRecentGame.win ? 'win' : 'loss'}. Prediction: joiner_qs will ${actualMoveChanged ? 'change' : 'repeat'}`);
 
     return bestCounterMove;
@@ -262,6 +263,36 @@ function NPC_qs(historicData) {
 
 }
 
+function martingaleStrategy_qs(historicData, qs_game_type) {
+  // If there's no historic data or it's the first round, play randomly
+  if (historicData.length === 0) {
+    const randomMove = getRandomItem_qs(qs_game_type);
+    return {
+      move: randomMove,
+      lastResult: null
+    };
+  }
+
+  const lastOpponentMove = historicData[0].qs;
+  const lastAIMove = historicData[0].joiner_qs;
+  const lastResult = getResult(lastAIMove, lastOpponentMove);
+
+  const randomMove = getRandomItem_qs(qs_game_type);
+
+  return {
+    move: randomMove,
+    lastResult: lastResult
+  };
+}
+
+function getResult(aiMove, opponentMove) {
+  if (aiMove === opponentMove) {
+    return 'loss';
+  } else {
+    return 'win';
+  }
+}
+
 
 function generatePattern_qs(allBetItems, qs_game_type) {
   // Create patterns based on qs_game_type
@@ -325,6 +356,60 @@ function getCopyCatItem_qs(allBetItems) {
   return copyCatBetItem ? copyCatBetItem.joiner_qs : getRandomItem();
 }
 
+function skillIssue_qs(historicData, qs_game_type) {
+  const dataLength = qs_game_type + 3;
+  if (historicData.length < 3) {
+    return { counterMove: getRandomItem_qs(qs_game_type), risk: 1 };
+  }
+
+  const moveCounts = Array(qs_game_type).fill(0);
+  const recentMoves = historicData.slice(0, dataLength)
+    .map(move => parseInt(move.qs, 10))
+    .filter(move => !Number.isNaN(move) && move >= 0 && move < qs_game_type);
+
+  if (recentMoves.length < dataLength) {
+    return { counterMove: getRandomItem_qs(qs_game_type), risk: 1 };
+  }
+
+  recentMoves.forEach(move => {
+    moveCounts[move]++;
+  });
+
+const leastPlayedMove = getLeastPlayedMove(moveCounts);
+const lastTwoMoves = getLastMoves(historicData, 4);
+const lastThreeMoves = getLastMoves(historicData, 3);
+
+const availableMoves = Array.from({ length: qs_game_type }, (_, i) => i).filter(move => move !== leastPlayedMove);
+
+
+if (Number.isNaN(leastPlayedMove)) {
+    return { counterMove: getRandomItem_qs(qs_game_type), risk: 1 };
+  } else if (!lastTwoMoves.includes(leastPlayedMove)) {
+    return { counterMove: getRandomItem_qs(qs_game_type, availableMoves), risk: 3 };
+  } else if (!lastThreeMoves.includes(leastPlayedMove)) {
+    return { counterMove: getRandomItem_qs(qs_game_type, availableMoves), risk: 2 };
+  } else {
+    return { counterMove: getRandomItem_qs(qs_game_type), risk: 1 };
+  }
+}
+
+function getLeastPlayedMove(moveCounts) {
+  const minCount = Math.min(...moveCounts);
+  const leastPlayedMoves = moveCounts
+    .map((count, move) => ({ move, count }))
+    .filter(({ count }) => count === minCount)
+    .map(({ move }) => move);
+
+  return leastPlayedMoves.length > 0 ? leastPlayedMoves[0] : NaN;
+}
+
+function getLastMoves(historicData, n) {
+  return historicData.slice(0, n)
+    .map(move => parseInt(move.joiner_qs, 10))
+    .filter(move => !Number.isNaN(move));
+}
+
+
 
 module.exports = {
   predictNextQs,
@@ -335,6 +420,8 @@ module.exports = {
   NPC_qs,
   getRandomItem_qs,
   getCopyCatItem_qs,
+  martingaleStrategy_qs,
+  skillIssue_qs,
   counterRandomness_qs,
   generatePattern_qs
 };

@@ -134,6 +134,179 @@ router.patch('/strategies/:user_id', async (req, res) => {
   }
 });
 
+router.post('/detachPlayer/:room_id', auth, async (req, res) => {
+  const { room_id } = req.params;
+  const user_id = req.user._id;
+
+  try {
+    // Check if the room exists
+    const room = await Room.findById(room_id);
+    if (!room) {
+      console.log('Room not found');
+      return res.status(404).json({ success: false, message: 'Room not found' });
+    }
+
+    // Check if the user is attached to the room in AttachedPlayers
+    const attachedPlayer = await AttachedPlayer.findOne({ room: room_id, user: user_id });
+    if (!attachedPlayer) {
+      console.log('Attached player not found');
+      return res.status(404).json({ success: false, message: 'Attached player not found' });
+    }
+
+    // Remove the attached player entry
+    await AttachedPlayer.deleteOne({ _id: attachedPlayer._id });
+
+    res.json({
+      success: true,
+      message: 'Successfully detached from the room'
+    });
+  } catch (err) {
+    console.error('Error detaching player from room:', err.message);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: err.message
+    });
+  }
+});
+
+// Route to update an existing AttachedPlayer document
+router.put('/updateAttachment/:room_id', auth, async (req, res) => {
+  const { room_id } = req.params;
+  const user_id = req.user._id;
+  const { bet_amounts, selected_strategy } = req.body;
+
+  try {
+    // Find the document and update it
+    const updatedAttachment = await AttachedPlayer.findOneAndUpdate(
+      { user: user_id, room: room_id },
+      { $set: { bet_amounts, selected_strategy, updated_at: Date.now() } },
+      { new: true, runValidators: true }
+    );
+
+    if (updatedAttachment) {
+      return res.json({
+        success: true,
+        message: 'Attachment updated successfully',
+        updatedAttachment
+      });
+    } else {
+      return res.status(404).json({
+        success: false,
+        message: 'No attachment found for this user and room'
+      });
+    }
+  } catch (err) {
+    console.error('Error updating attachment:', err.message);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: err.message
+    });
+  }
+});
+
+
+// Route to find all documents for the user
+router.get('/getattachedrooms', auth, async (req, res) => {
+  const user_id = req.user._id;
+  try {
+    const attachments = await AttachedPlayer.find({ user: user_id });
+
+    return res.json({
+      success: true,
+      attachments: attachments
+    });
+  } catch (err) {
+    console.error('Error finding attachments:', err.message);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: err.message
+    });
+  }
+});
+
+
+router.get('/checkAttachment/:room_id', auth, async (req, res) => {
+  const { room_id } = req.params;
+  const user_id = req.user._id;
+try {
+  // Check if the user is already attached to the room
+  const existingAttachment = await AttachedPlayer.findOne({ user: user_id, room: room_id });
+
+    if (existingAttachment) {
+      return res.json({
+        success: true,
+        attached: true,
+        message: 'User is already attached to this room',
+        attachedPlayer: existingAttachment
+      });
+    } else {
+      return res.json({
+        success: true,
+        attached: false,
+        message: 'User is not attached to this room'
+      });
+    }
+  } catch (err) {
+    console.error('Error checking attachment:', err.message);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: err.message
+    });
+  }
+});
+
+
+router.patch('/attachPlayer/:room_id', auth, async (req, res) => {
+  const { room_id } = req.params;
+  const user_id = req.user._id;
+  const ai_mode = req.user.ai_mode;
+  const bet_amounts = req.body.bet_amounts;
+  try {
+
+    // Check if the room exists
+    const room = await Room.findById(room_id).populate({ path: 'game_type', model: GameType });
+    if (!room) {
+      console.log('Room not found');
+      return res.status(404).json({ success: false, message: 'Room not found' });
+    }
+
+    if (room.status === 'finished') {
+      return res.json({
+        success: false,
+        already_finished: true,
+        message: 'THIS BATTLE HAS ENDED ALREADY'
+      });
+    }
+
+    // Add a new document to the AttachedPlayers schema
+    const newAttachedPlayer = new AttachedPlayer({
+      user: user_id,
+      room: room_id,
+      room_name: room['game_type']['short_name'] + '-' + room['room_number'],
+      selected_strategy: ai_mode,
+      bet_amounts: bet_amounts
+    });
+
+    await newAttachedPlayer.save();
+
+    res.json({
+      success: true,
+      message: 'Successfully attached to the room!',
+    });
+  } catch (err) {
+    console.error('Error updating room:', err.message);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: err.message
+    });
+  }
+});
+
 router.patch('/rooms/:room_id', async (req, res) => {
   const { room_id } = req.params;
 

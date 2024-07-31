@@ -139,7 +139,7 @@ const addToQueue = async (req, bot = false) => {
                 creator: roomInfo['creator'],
                 joined_user: user,
                 game_type: roomInfo['game_type'],
-                bet_amount: roomInfo['bet_amount'],
+                bet_amount: req.body.bet_amount,
                 ai_mode: user.ai_mode
                 // is_anonymous: req.body.is_anonymous
             });
@@ -207,11 +207,12 @@ const addToQueue = async (req, bot = false) => {
                     joiner: user._id,
                     joiner_rps: { $ne: null }
                 })
-                    .sort({ created_at: -1 })
-                    .limit(50);
-                const allBetItems = reversedBetItems.reverse()
+                .sort({ created_at: -1 })
+                .limit(50);
+                
+                // Create a copy of the array and reverse the copy
+                const allBetItems = [...reversedBetItems].reverse();
                 const mostRecentItems = reversedBetItems.slice(0, 4);
-
 
                 // if no more items, create a new one
                 if (!bet_item && roomInfo['rps_game_type'] === 0) {
@@ -275,7 +276,8 @@ const addToQueue = async (req, bot = false) => {
                     }
 
                     function getCopyCatItem(allBetItems) {
-                        const copyCatBetItem = allBetItems.find(item => item.joiner_rps);
+                        const copyCatBetItem = allBetItems[allBetItems.length - 1];
+                        console.log(copyCatBetItem)
                         return copyCatBetItem ? copyCatBetItem.joiner_rps : getRandomItem();
                     }
 
@@ -475,7 +477,6 @@ const addToQueue = async (req, bot = false) => {
 
                 // Assuming convertGameLogToHistoryStyle can be optimized similarly
                 const newLog = await convertGameLogToHistoryStyle(updatedGameLogArray);
-
                 // socket for last 5 items
                 if (roomInfo['rps_game_type'] === 0) {
                     mostRecentItems.reverse();
@@ -528,13 +529,13 @@ const addToQueue = async (req, bot = false) => {
                     parseFloat(roomInfo['user_bet']) ||
                     parseFloat(req.body.bet_amount) > parseFloat(req.user.balance)
                 ) {
-                   responseData = {
-                    success: false,
-                    message: 'Bet amount exceeds available balance.',
-                    betResult: -1000
-                }
+                    responseData = {
+                        success: false,
+                        message: 'Bet amount exceeds available balance.',
+                        betResult: -1000
+                    }
 
-                return responseData;
+                    return responseData;
                 }
 
                 newGameLog.bet_amount = parseFloat(req.body.bet_amount);
@@ -544,16 +545,17 @@ const addToQueue = async (req, bot = false) => {
                     joiner_qs: ''
                 });
                 bet_item = availableBetItem;
-
+                
                 const reversedBetItems = await QsBetItem.find({
                     room: new ObjectId(req.body._id),
                     joiner: user._id,
                     joiner_qs: { $ne: null }
                 })
-                    .sort({ created_at: -1 })
-                    .limit(50);
+                .sort({ created_at: -1 })
+                .limit(50);
+                
+                const allBetItems = [...reversedBetItems].reverse();
                 const mostRecentItems = reversedBetItems.slice(0, 4);
-                const allBetItems = reversedBetItems.reverse();
 
                 if (!bet_item) {
 

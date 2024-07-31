@@ -148,6 +148,45 @@ a:hover {
   color: #e5e5e5;
 }
 
+.room-card {
+  background-color: #fff;
+  border: 2px solid #ddd;
+  border-radius: 10px;
+  padding: 20px;
+  width: 250px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+}
+
+.room-card:hover {
+  transform: scale(1.05);
+}
+
+.room-title {
+  font-size: 1.5em;
+  color: #333;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.bet-range, .strategy {
+  font-size: 1.1em;
+  color: #666;
+  margin: 10px 0;
+}
+
+.bet-range span, .strategy span {
+  font-weight: bold;
+  color: #333;
+}
+
+.no-rooms {
+  font-size: 1.2em;
+  color: #666;
+  text-align: center;
+  width: 100%;
+}
+
 div.table .table-row .table-cell button:last-child:before,
 /* .create-room-btn-panel button.btn-create-room:before, */
 .game_header .main_header .header_action_panel button#btn-login:before,

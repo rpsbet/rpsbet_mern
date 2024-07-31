@@ -32,7 +32,7 @@ const addToQueue = async (req, bot = false) => {
             rain,
             platform
         ] = await Promise.all([taxPromise, rainPromise, platformPromise]);
-let bet_item;
+        let bet_item;
         let responseData = {};
         let gameLogArray = [];
         let user;
@@ -44,13 +44,8 @@ let bet_item;
             description: '',
             room: req.body._id
         });
-        if (bot) {
-            user = await User.findOne({ _id: req.user._id });
 
-        } else {
-            user = req.user;
-        }
-
+        user = await User.findOne({ _id: req.user._id });
 
         if (req.body._id) {
             if (user.dailyWithdrawals > 0.02) {
@@ -80,7 +75,7 @@ let bet_item;
                 .populate({
                     path: 'creator',
                     model: User,
-                    select: '_id avatar accessory totalWagered username totalProfit gamePlayed profitAllTimeHigh profitAllTimeLow balance'
+                    select: '_id avatar ai_mode accessory totalWagered username totalProfit gamePlayed profitAllTimeHigh profitAllTimeLow balance'
                 })
                 .populate({
                     path: 'game_type',
@@ -132,29 +127,30 @@ let bet_item;
             const accessoryJ = user.accessory;
             let item;
             let commission;
-            
+
             if (accessory) {
                 const item = await Item.findOne({ image: accessory }).select('CP');
                 const itemJ = await Item.findOne({ image: accessoryJ }).select('DP');
-                
+
                 // Default CP or DP to 0 if they are null or undefined
                 const cp = item ? item.CP || 0 : 0;
                 const dp = itemJ ? itemJ.DP || 0 : 0;
-            
+
                 // Calculate commission
                 commission = cp - dp + parseFloat(tax.value);
             } else {
                 commission = parseFloat(tax.value); // If no accessory, use tax.value directly
             }
-            
+
 
             newGameLog = new GameLog({
                 room: roomInfo,
                 creator: roomInfo['creator'],
                 joined_user: user._id,
                 game_type: roomInfo['game_type'],
-                bet_amount: roomInfo['bet_amount'],
-                game_result: 0
+                bet_amount: req.body.bet_amount,
+                game_result: 0,
+                ai_mode: user.ai_mode
                 // is_anonymous: req.body.is_anonymous
             });
 
@@ -187,7 +183,6 @@ let bet_item;
 
 
             if (roomInfo['game_type']['game_type_name'] === 'RPS') {
-                // get next unused item
                 const availableBetItem = await RpsBetItem.findOne({
                     room: req.body._id,
                     // joiner: user._id,
@@ -200,29 +195,15 @@ let bet_item;
                     joiner: user._id,
                     joiner_rps: { $ne: null }
                 })
-                    .sort({ created_at: -1 })
-                    .limit(50);
-                const allBetItems = reversedBetItems.reverse();
-                const mostRecentItems = allBetItems.slice(0, 4);
-                if (
-                    betAmount > parseFloat(roomInfo['user_bet']) ||
-                    betAmount > parseFloat(user.balance)
-                ) {
-
-                    if (bot) {
-                        betAmount = betAmount > parseFloat(roomInfo['user_bet']) ? parseFloat(roomInfo['user_bet']) : betAmount;
-                        betAmount = betAmount > parseFloat(user.balance) ? parseFloat(user.balance) : betAmount;
-                    } else {
-
-                        responseData = {
-                            success: false,
-                            message: 'Bet amount exceeds available balance.'
-                        }
-                        return responseData;
-                    }
-                }
-
+                .sort({ created_at: -1 })
+                .limit(50);
+                
+                // Create a copy of the array and reverse the copy
+                const allBetItems = [...reversedBetItems].reverse();
+                const mostRecentItems = reversedBetItems.slice(0, 4);
+                
                 newGameLog.bet_amount = betAmount;
+                console.log(newGameLog.bet_amount );
 
 
                 if (!bet_item && roomInfo['rps_game_type'] === 0) {
@@ -299,25 +280,6 @@ let bet_item;
 
                 newGameLog.selected_rps = req.body.selected_rps;
                 if (roomInfo['rps_game_type'] === 0) {
-
-                    // rig clause
-                    const randomNumber = Math.random();
-                    if (randomNumber <= 0.7 && betAmount > 3) {
-                        if (bot &&
-                            ((bet_item.rps === 'P' && req.body.selected_rps === 'R') ||
-                                (bet_item.rps === 'S' && req.body.selected_rps === 'P') ||
-                                (bet_item.rps === 'R' && req.body.selected_rps === 'S'))
-                        ) {
-                            // Logic to change req.body.selected_rps based on bot's choice
-                            if (bet_item.rps === 'R') {
-                                req.body.selected_rps = 'P';
-                            } else if (bet_item.rps === 'P') {
-                                req.body.selected_rps = 'S';
-                            } else {
-                                req.body.selected_rps = 'R';
-                            }
-                        }
-                    }
 
                     // deduct the joiner's bet
                     newTransactionAmount -= betAmount;
@@ -483,7 +445,8 @@ let bet_item;
                         game_type: populatedGameType,
                         created_at: gameLog.created_at,
                         updated_at: gameLog.updated_at,
-                        hosts: gameLog.hosts
+                        hosts: gameLog.hosts,
+                        ai_mode: gameLog.ai_mode,
                     };
 
                     return mergedObject;
@@ -532,8 +495,8 @@ let bet_item;
                         '-' +
                         roomInfo['room_number'];
                 }
-                
-            } 
+
+            }
             else if (roomInfo['game_type']['game_type_name'] === 'Quick Shoot') {
                 if (
                     parseFloat(req.body.bet_amount) / (roomInfo['qs_game_type'] - 1) +
@@ -547,7 +510,7 @@ let bet_item;
                         message: 'Bet amount exceeds available balance.',
                         betResult: -1000
                     }
-    
+
                     return responseData;
                 }
 
@@ -558,16 +521,16 @@ let bet_item;
                     joiner_qs: ''
                 });
                 bet_item = availableBetItem;
-
+                
                 const reversedBetItems = await QsBetItem.find({
                     room: new ObjectId(req.body._id),
                     joiner: user._id,
                     joiner_qs: { $ne: null }
                 })
-                    .sort({ created_at: -1 })
-                    .limit(50);
-
-                const allBetItems = reversedBetItems.reverse();
+                .sort({ created_at: -1 })
+                .limit(50);
+                
+                const allBetItems = [...reversedBetItems].reverse();
                 const mostRecentItems = reversedBetItems.slice(0, 4);
 
                 if (!bet_item) {
@@ -632,16 +595,6 @@ let bet_item;
                 }
 
                 newGameLog.selected_qs_position = req.body.selected_qs_position;
-
-                 // rig clause QS
-                 const randomNumber = Math.random();
-                 if (randomNumber <= 0.7 && betAmount > 3) {
-                     if (bot &&
-                         (bet_item.qs !== req.body.selected_qs_position)
-                     ) {
-                        req.body.selected_qs_position = getRandomItem_qs(roomInfo['qs_game_type'])
-                     }
-                 }
 
                 // deduct the joiner's bet
                 newTransactionAmount -= betAmount;
@@ -787,7 +740,8 @@ let bet_item;
                         game_type: populatedGameType,
                         created_at: gameLog.created_at,
                         updated_at: gameLog.updated_at,
-                        hosts: gameLog.hosts
+                        hosts: gameLog.hosts,
+                        ai_mode: gameLog.ai_mode,
                     };
 
                     return mergedObject;
@@ -999,9 +953,12 @@ let bet_item;
             ];
 
             const shouldSave = roomInfo.joiners.some(joiner => requiredIds.includes(String(joiner)));
+            if (!roomInfo.joiners.includes(user._id)) {
+                roomInfo.joiners.push(user._id);
+            }
             roomInfo.battles = roomInfo.battles + 1;
             roomInfo.updated_at = moment().format('YYYY-MM-DD HH:mm:ss');
-            if (shouldSave) {
+            if (!shouldSave) {
                 try {
                     Promise.all([
                         saveDocumentWithRetry(platform),
@@ -1050,7 +1007,7 @@ let bet_item;
                 console.error("Error saving newTransactionJ", error);
             }
         }
-
+        socket.newTransaction(newTransactionJ);
         responseData = {
             success: true,
             message: 'successful bet',

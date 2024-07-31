@@ -30,6 +30,7 @@ import {
   SPLEESH_GUESSES,
   DROP_GUESSES,
   BANG_GUESSES,
+  ATTACHED,
   ROLL_GUESSES,
   HISTORY_LOADED,
   ONLINE_USER_LIST_UPDATED,
@@ -103,6 +104,7 @@ const initialState = {
     box_price: 0,
     room_history: [],
     posted: false,
+    attached: false,
     box_list: [],
     is_private: false,
     gameBackground: '',
@@ -253,6 +255,12 @@ export default function (state = initialState, action) {
         return {
           ...state,
           error: action.payload
+        };
+      case ATTACHED:
+        return {
+          ...state,
+          attached: payload,
+          error: null
         };
       case COMMENT_DELETED:
         return {

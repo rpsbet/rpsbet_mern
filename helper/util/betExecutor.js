@@ -155,7 +155,7 @@ const addToQueue = async (req, bot = false) => {
                 creator: roomInfo['creator'],
                 joined_user: user._id,
                 game_type: roomInfo['game_type'],
-                bet_amount: roomInfo['bet_amount'],
+                bet_amount: req.body.bet_amount,
                 game_result: 0
                 // is_anonymous: req.body.is_anonymous
             });
@@ -189,8 +189,7 @@ const addToQueue = async (req, bot = false) => {
 
 
             if (roomInfo['game_type']['game_type_name'] === 'RPS') {
-                // get next unused item
-                const availableBetItem = await RpsBetItem.findOne({
+                 const availableBetItem = await RpsBetItem.findOne({
                     room: req.body._id,
                     // joiner: user._id,
                     joiner_rps: ''
@@ -202,10 +201,13 @@ const addToQueue = async (req, bot = false) => {
                     joiner: user._id,
                     joiner_rps: { $ne: null }
                 })
-                    .sort({ created_at: -1 })
-                    .limit(50);
-                const allBetItems = reversedBetItems.reverse();
+                .sort({ created_at: -1 })
+                .limit(50);
+                
+                // Create a copy of the array and reverse the copy
+                const allBetItems = [...reversedBetItems].reverse();
                 const mostRecentItems = reversedBetItems.slice(0, 4);
+
                 if (
                     betAmount > parseFloat(roomInfo['user_bet']) ||
                     betAmount > parseFloat(user.balance)
@@ -560,17 +562,18 @@ const addToQueue = async (req, bot = false) => {
                     joiner_qs: ''
                 });
                 bet_item = availableBetItem;
-
+                
                 const reversedBetItems = await QsBetItem.find({
                     room: new ObjectId(req.body._id),
                     joiner: user._id,
                     joiner_qs: { $ne: null }
                 })
-                    .sort({ created_at: -1 })
-                    .limit(50);
-
-                const allBetItems = reversedBetItems.reverse();
+                .sort({ created_at: -1 })
+                .limit(50);
+                
+                const allBetItems = [...reversedBetItems].reverse();
                 const mostRecentItems = reversedBetItems.slice(0, 4);
+                
 
                 if (!bet_item) {
 
