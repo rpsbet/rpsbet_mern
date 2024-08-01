@@ -245,7 +245,6 @@ class JoinGame extends Component {
         this.setState({ cp: accessory.accessory.CP - dp.accessory.DP });
       }
     } catch (error) {
-      console.error('Error fetching accessory:', error);
     }
   }
 

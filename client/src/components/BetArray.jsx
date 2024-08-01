@@ -336,8 +336,10 @@ function BetArray({
 
   const fetchAttachedRooms = useCallback(async () => {
     try {
-      const rooms = await getAttachedRooms();
-      setAttachedRooms(rooms);
+      if (getAttachedRooms) {
+        const rooms = await getAttachedRooms();
+        setAttachedRooms(rooms);
+      }
     } catch (error) {
       console.error('Error fetching attached rooms:', error);
     }
@@ -752,7 +754,6 @@ function BetArray({
                       aria-labelledby="range-slider"
                       className={classes.slider}
                       disabled={isSliderDisabled}
-                      minDistance={1}
                     />
                   </Tooltip>
                 </div>

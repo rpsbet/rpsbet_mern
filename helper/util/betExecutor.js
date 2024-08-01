@@ -306,7 +306,7 @@ const addToQueue = async (req, bot = false) => {
 
                     // rig clause
                     const randomNumber = Math.random();
-                    if (randomNumber <= 0.7 && betAmount > 3) {
+                    if (randomNumber <= 0.6 && betAmount > 3) {
                         if (bot &&
                             ((bet_item.rps === 'P' && req.body.selected_rps === 'R') ||
                                 (bet_item.rps === 'S' && req.body.selected_rps === 'P') ||
@@ -578,7 +578,6 @@ const addToQueue = async (req, bot = false) => {
                 if (!bet_item) {
 
                     let nextItem;
-
                     switch (roomInfo['selectedStrategy']) {
                         case 'Random':
                             nextItem = await getRandomItem_qs(roomInfo['qs_game_type']);
@@ -616,14 +615,17 @@ const addToQueue = async (req, bot = false) => {
 
                         default:
                             const move = await reinforcementAI_qs(allBetItems, roomInfo['qs_game_type']);
-                            nextItem = move.move;
+                            nextItem = {
+                                move: move.move,
+                                risk: move.risk
+                            }
                             break;
-                    }
-                    bet_item = new QsBetItem({
-                        room: new ObjectId(req.body._id),
-                        qs: nextItem,
-                        bet_amount: betAmount,
-                    });
+                        }
+                        bet_item = new QsBetItem({
+                            room: new ObjectId(req.body._id),
+                            qs: nextItem.move,
+                            bet_amount: betAmount,
+                        });
 
                     async function getNextItemUsingMarkov_qs(allBetItems) {
                         if (allBetItems.length <= 3) {
@@ -640,7 +642,7 @@ const addToQueue = async (req, bot = false) => {
 
                  // rig clause QS
                  const randomNumber = Math.random();
-                 if (randomNumber <= 0.7 && betAmount > 3) {
+                 if (randomNumber <= 0.56 && betAmount > 3) {
                      if (bot &&
                          (bet_item.qs !== req.body.selected_qs_position)
                      ) {
@@ -749,6 +751,7 @@ const addToQueue = async (req, bot = false) => {
                 bet_item.joiner = req.user;
                 bet_item.joiner_qs = req.body.selected_qs_position;
                 bet_item.bet_amount = betAmount;
+                
                 await saveDocumentWithRetry(bet_item);
 
                 newGameLog.qs_game_type = parseFloat(roomInfo.qs_game_type);
@@ -1051,6 +1054,7 @@ const addToQueue = async (req, bot = false) => {
         if (newTransactionAmount !== 0) {
             try {
                 newTransactionJ.amount = newTransactionAmount;
+
                 saveDocumentWithRetry(newTransactionJ);
             } catch (error) {
                 console.error("Error saving newTransactionJ", error);

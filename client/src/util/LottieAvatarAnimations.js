@@ -247,7 +247,7 @@ const animationMap = {
 };
 
 export const renderLottieAvatarAnimation = (image, isLowGraphics) => {
-  const convertToReactNode = ({ animationData, className, styles }) => {
+  const convertToReactNode = ({ animationData, className, styles = {} }) => {
     const options = {
       animationData,
       loop: !isLowGraphics,
@@ -257,11 +257,27 @@ export const renderLottieAvatarAnimation = (image, isLowGraphics) => {
       isPaused: isLowGraphics
     };
 
-    const conditionalStyles = className.includes('lottie-bg') ? { filter: 'grayscale(100%)', opacity: 0.5} : {};
+    const conditionalStyles = className.includes('lottie-bg') 
+      ? { filter: 'grayscale(100%)', opacity: 0.5 }
+      : {};
+
+    // Separate margin shorthand properties safely
+    const { margin, ...restStyles } = styles;
+    const { marginTop, marginRight, marginBottom, marginLeft } = restStyles;
 
     return (
       <div className={className}>
-        <Lottie style={{ ...styles, ...conditionalStyles }} options={options} />
+        <Lottie 
+          style={{ 
+            ...restStyles, 
+            marginTop: marginTop ?? margin?.top, 
+            marginRight: marginRight ?? margin?.right, 
+            marginBottom: marginBottom ?? margin?.bottom, 
+            marginLeft: marginLeft ?? margin?.left, 
+            ...conditionalStyles 
+          }} 
+          options={options} 
+        />
       </div>
     );
   };

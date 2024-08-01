@@ -26,6 +26,10 @@ const calcWinChanceQs = (gameType, rounds) => {
 };
 
 const predictNextQs = (qs_list, gameType) => {
+  if (qs_list.length < 3) {
+    return { move: getRandomItem_qs(gameType), risk: 0 };
+  }
+
   const options = [...Array(gameType).keys()];
   const transitionMatrix = {};
   const randomnessFactor = 0.15;
