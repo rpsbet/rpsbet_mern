@@ -779,10 +779,13 @@ class RPS extends Component {
       selected_rps,
       isLowGraphics,
       isMusicEnabled,
+      handleDetachAttachChange,
       handleClosePlayerModal,
       showPlayerModal,
       ai_mode,
       balance,
+      attached,
+      getAttachedRooms,
       betting,
       is_betting,
       predictedBetAmount,
@@ -1329,7 +1332,16 @@ class RPS extends Component {
                           user_id={user_id}
                           ai_mode={ai_mode}
                           user_balance={balance}
+                          handleDetachAttachChange={handleDetachAttachChange}
+                          attached={attached}
+                          creator_id={roomInfo.creator_id}
+                          getAttachedRooms={getAttachedRooms}
+                          rps_game_type={roomInfo.rps_game_type}
+                          brain_game_type={roomInfo.brain_game_type}
+                          spleesh_bet_unit={roomInfo.spleesh_bet_unit}
+                          isDarkMode={this.props.isDarkMode}
                         />
+                        
                       )}
                     </>
 

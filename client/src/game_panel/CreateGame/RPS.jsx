@@ -348,7 +348,7 @@ class RPS extends Component {
   }
 
   render() {
-    const defaultBetAmounts = [10, 25, 50, 100, 250];
+    const defaultBetAmounts = [50, 250, 500, 1000, 2500];
     const { selected_rps, card_list, settings_panel_opened } = this.state;
     const {
       rps_game_type,

@@ -677,8 +677,8 @@ router.post('/add-bonus', auth, async (req, res) => {
       return res.status(400).json({ message: 'Bonus can only be claimed once every 6 hours.' });
     }
 
-    if (user.totalWagered <= 250) {
-      return res.status(400).json({ message: 'Total wagered must be more than 250 to claim bonus.' });
+    if (user.totalWagered <= 2500) {
+      return res.status(400).json({ message: 'Total wagered must be more than 2500 to claim bonus.' });
     }
 
     const randomIndex = Math.floor(Math.random() * bonusNumbers.length);

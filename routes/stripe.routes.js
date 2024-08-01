@@ -205,20 +205,20 @@ router.post('/create_payment', auth, async (req, res) => {
 });
 
 function calculateAmount(price_amount) {
-  return price_amount / 0.49523;
+  return price_amount / 0.119;
 }
 function calculateAmountWeb3(price_amount) {
   switch (price_amount) {
     case 10:
-      return price_amount / 0.49523 + 0.489;
+      return price_amount / 0.119 + 0.119;
     case 25:
-      return price_amount / 0.49523 + (2 * 0.489);
+      return price_amount / 0.119 + (2 * 0.119);
     case 50:
-      return price_amount / 0.49523 + (3 * 0.489);
+      return price_amount / 0.119 + (3 * 0.119);
     case 100:
-      return price_amount / 0.49523 + (4 * 0.489);
+      return price_amount / 0.119 + (4 * 0.119);
     case 250:
-      return price_amount / 0.49523 + (5 * 0.489);
+      return price_amount / 0.141 + (5 * 0.119);
     default:
       return 0; // Or handle invalid price_amount accordingly
   }
@@ -313,17 +313,17 @@ router.post('/create_payout', auth, async (req, res) => {
       });
     }
 
-    if (withdrawalLimit >= 250) {
+    if (withdrawalLimit >= 2500) {
       return res.json({
         success: false,
         message: 'EXCEEDED DAILY WITHDRAWAL LIMIT (DURING LAUNCH PHASE ONLY!)'
       });
     }
 
-    if (amount > 250) {
+    if (amount > 2500) {
       return res.json({
         success: false,
-        message: 'Maximum Withdrawal Amount is 250 RPS per DAY during Launch'
+        message: 'Maximum Withdrawal Amount is 2500 RPS per DAY during Launch'
       });
     }
 
@@ -346,7 +346,7 @@ router.post('/create_payout', auth, async (req, res) => {
     while (attempt < retryLimit) {
       try {
         // Attempt to estimate the new amount
-        newAmount = await estimateAmount((req.body.amount * 0.579), currency);
+        newAmount = await estimateAmount((req.body.amount * 0.119), currency);
 
         break; // Break out of loop if estimation is successful
       } catch (error) {
@@ -377,11 +377,11 @@ router.post('/create_payout', auth, async (req, res) => {
       ]
     };
 
-    // Make request to NowPayments API with token from the authorization header
+   
     const response = await axios.post('https://api.nowpayments.io/v1/payout', payload, {
       headers: {
         'Authorization': `Bearer ${token}`,
-        'x-api-key': API_KEY, // Replace with your actual API key
+        'x-api-key': API_KEY,
         'Content-Type': 'application/json',
       }
     });
@@ -416,22 +416,22 @@ router.post('/create_payout', auth, async (req, res) => {
           message: 'Failed to save transaction or receipt'
         });
       }
-      // Create and save a new game log
+      // Create and save
       const newGameLog = new GameLog({
-        room: null, // Assign appropriate value
+        room: null,
         creator: req.user._id,
-        joined_user: null, // Assign appropriate value
-        game_type: null, // Assign appropriate value
+        joined_user: null,
+        game_type: null,
         bet_amount: amount,
-        selected_rps: '', // Assign appropriate value
-        commission: 0, // Adjust as necessary
-        game_result: 0, // Adjust as necessary
-        winnings: 0, // Adjust as necessary
-        endgame_amount: 0, // Adjust as necessary
-        host_pr: 0, // Adjust as necessary
-        user_bet: 0, // Adjust as necessary
-        status: 'pending', // Adjust as necessary
-        hosts: [] // Assign appropriate value
+        selected_rps: '',
+        commission: 0,
+        game_result: 0,
+        winnings: 0,
+        endgame_amount: 0,
+        host_pr: 0,
+        user_bet: 0,
+        status: 'pending',
+        hosts: []
       });
 
       try {
@@ -448,7 +448,7 @@ router.post('/create_payout', auth, async (req, res) => {
         success: true,
         balance: req.user.balance,
         newTransaction,
-        newGameLog, // Include the new game log in the response
+        newGameLog,
         message: `Withdrawal request received and is pending confirmation. 🤑 Much Wow.`
       });
     }
@@ -612,7 +612,7 @@ router.post('/withdraw_request', auth, async (req, res) => {
 
     const signer = new ethers.Wallet(walletKey, provider);
     try {
-      const estimatedAmount = await estimateAmount((req.body.amount * 0.489), 'eth');
+      const estimatedAmount = await estimateAmount((req.body.amount * 0.119), 'eth');
       const amountTransfer = ethers.utils.parseUnits(String(estimatedAmount.estimated_amount), 'ether');
       const block = await provider.getBlock('latest');
       const baseFeeGwei = ethers.utils.formatUnits(block.baseFeePerGas, 'gwei');

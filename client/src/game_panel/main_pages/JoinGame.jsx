@@ -1237,11 +1237,14 @@ class JoinGame extends Component {
                     strategies={strategies}
                     result={result}
                     ai_mode={ai_mode}
+                    getAttachedRooms={getAttachedRooms}
+                    handleDetachAttachChange={this.handleDetachAttachChange}
                     onChangeState={this.onChangeState}
                     cp={this.state.cp}
                     is_mobile={this.state.is_mobile}
                     gameResult={this.state.gameResult}
                     rpsbetitems={rpsbetitems}
+                    attached={attached}
                     updateSelectedRps={this.updateSelectedRps}
                     selected_rps={selected_rps}
                     refreshHistory={this.refreshHistory}
@@ -1363,9 +1366,12 @@ class JoinGame extends Component {
                     selectedCreator={selectedCreator}
                     showPlayerModal={showPlayerModal}
                     refreshHistory={this.refreshHistory}
+                    handleDetachAttachChange={this.handleDetachAttachChange}
                     join={this.join}
                     result={result}
                     gameResult={this.state.gameResult}
+                    getAttachedRooms={getAttachedRooms}
+                    attached={attached}
                     updateUserStrategy={this.props.updateUserStrategy}
                     borderColor={borderColor}
                     bgColorChanged={bgColorChanged}

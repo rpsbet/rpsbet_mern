@@ -771,7 +771,10 @@ class QuickShoot extends Component {
       ai_mode,
       balance,
       user_id,
+      attached,
       betting,
+      handleDetachAttachChange,
+      getAttachedRooms,
       is_betting,
       strategies
     } = this.props;
@@ -1213,19 +1216,27 @@ class QuickShoot extends Component {
                       />
                       {this.props.is_mobile && (
                         <AiPanel
-                          qsbetitems={this.props.qsbetitems}
-                          updateUserStrategy={this.props.updateUserStrategy}
-                          strategies={strategies}
-                          betting={betting}
-                          is_betting={is_betting}
-                          predictedBetAmount={predictedBetAmount}
-                          roomId={roomInfo._id}
-                          handleSwitchChange={this.props.handleSwitchChange}
-                          game_type={roomInfo.game_type}
-                          rank={this.props.rank}
-                          user_id={user_id}
-                          ai_mode={ai_mode}
-                          user_balance={balance}
+                        qsbetitems={this.props.qsbetitems}
+                        updateUserStrategy={this.props.updateUserStrategy}
+                        strategies={strategies}
+                        betting={betting}
+                        is_betting={is_betting}
+                        predictedBetAmount={predictedBetAmount}
+                        roomId={roomInfo._id}
+                        handleSwitchChange={this.props.handleSwitchChange}
+                        game_type={roomInfo.game_type}
+                        rank={this.props.rank}
+                        user_id={user_id}
+                        ai_mode={ai_mode}
+                        user_balance={balance}
+                        handleDetachAttachChange={handleDetachAttachChange}
+                        attached={attached}
+                        creator_id={roomInfo.creator_id}
+                        getAttachedRooms={getAttachedRooms}
+                        rps_game_type={roomInfo.rps_game_type}
+                        brain_game_type={roomInfo.brain_game_type}
+                        spleesh_bet_unit={roomInfo.spleesh_bet_unit}
+                        isDarkMode={this.props.isDarkMode}
                         />
                       )}
                     </>
