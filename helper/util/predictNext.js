@@ -74,11 +74,11 @@ const getBeatingType = (currentState) => {
   const random = Math.random();
 
   if (currentState === 'R') {
-    return random < 0.5 ? 'P' : 'R';
+    return random < 0.7 ? 'P' : 'R';
   } else if (currentState === 'P') {
-    return random < 0.5 ? 'S' : 'P';
+    return random < 0.7 ? 'S' : 'P';
   } else {
-    return random < 0.5 ? 'R' : 'S';
+    return random < 0.7 ? 'R' : 'S';
   }
 }
 
@@ -162,9 +162,6 @@ async function reinforcementAI(data) {
   const winChangeProbability = winCount > 0 ? winChangesCount / winCount : 0;
   const lossChangeProbability = lossCount > 0 ? lossChangesCount / lossCount : 0;
 
-  // console.log("winChangeProbability: ", winChangeProbability);
-  // console.log("lossChangeProbability: ", lossChangeProbability);
-
   const winChangesLikely = winChangeProbability > 0.3;
   const lossChangesLikely = lossChangeProbability > 0.3;
 
@@ -214,6 +211,31 @@ async function reinforcementAI(data) {
     if (model) {
       model.dispose();
     }
+  }
+}
+
+function innovate(historicData) {
+  // Get the first 6 entries of joiner_rps from the historic data
+  const firstEntries = historicData.slice(0, 6);
+  const firstJoinerQs = firstEntries.map(entry => entry.rps);
+
+  // Ensure we have valid entries for comparison
+  if (firstJoinerQs.length < 6 || firstJoinerQs.some(entry => !['R', 'P', 'S'].includes(entry))) {
+    // Not enough data or invalid data, return a random move with risk 1
+    return { counterMove: getRandomMove(), risk: 1 };
+  }
+
+  // Check if all the first 6 joiner_qs are the same
+  const allSame = firstJoinerQs.every(rps => rps === firstJoinerQs[0]);
+  if (allSame) {
+    // Generate a list of possible moves excluding the last joiner_rps value
+    const lastMove = firstJoinerQs[firstJoinerQs.length - 1];
+    const possibleMoves = ['R', 'P', 'S'].filter(move => move !== lastMove);
+    return { counterMove: possibleMoves[Math.floor(Math.random() * possibleMoves.length)], risk: 3 };
+  } else {
+    // Return the same move as the first joiner_qs
+    const previousMove = historicData[0].rps;
+    return { counterMove: previousMove, risk: 1 };
   }
 }
 
@@ -292,7 +314,6 @@ function patternBasedAI(historicData) {
 }
 
 function counterSwitchAI(historicData) {
-
   if (historicData.length > 0) {
     const lastGame = historicData[historicData.length - 1];
 
@@ -305,16 +326,18 @@ function counterSwitchAI(historicData) {
       (lastGame.rps === 'R' && lastGame.joiner_rps === 'P') ||
       (lastGame.rps === 'S' && lastGame.joiner_rps === 'R') ||
       (lastGame.rps === 'P' && lastGame.joiner_rps === 'S');
-
+      
     if (lastGameWasWin) {
       const repeatProbability = 1;
       if (Math.random() < repeatProbability) {
         return lastGame.rps;
       }
     } else if (lastGameWasLoss) {
-      if (lastGame.rps === 'R') return 'S';
-      else if (lastGame.rps === 'P') return 'R';
-      else return 'P';
+      if (lastGame.rps === 'R') return 'P';
+      else if (lastGame.rps === 'P') return 'S';
+      else {
+        return 'R';
+      } 
     } else {
       return lastGame.rps;
     }
@@ -387,7 +410,6 @@ function skillIssue(historicData) {
     }
 
     if (missingValue) {
-      // console.log("missingValue", missingValue);
       switch (missingValue) {
         case 'R':
           counterMove = 'P';
@@ -405,7 +427,6 @@ function skillIssue(historicData) {
       risk = 1;
     }
   }
-  // console.log("counterMove and risk", counterMove, risk);
 
   return { counterMove, risk };
 }
@@ -489,6 +510,7 @@ module.exports = {
   counterSwitchAI,
   NPC,
   skillIssue,
+  innovate,
   counterRandomness,
   martingaleStrategy,
   generatePattern,

@@ -251,10 +251,10 @@ class QuickShoot extends Component {
   
     let qsIndex = parseInt(this.state.qs[this.state.qs.length - 1].qs);
     let position_short_name = ['center', 'tl', 'tr', 'bl', 'br'];
-
+    
     if (this.props.qs_game_type === 2) {
       position_short_name = ['bl', 'br'];
-
+      
     } else if (this.props.qs_game_type === 3) {
       position_short_name = ['bl', 'center', 'br'];
     } else if (this.props.qs_game_type === 4) {
@@ -297,7 +297,6 @@ class QuickShoot extends Component {
   async componentDidUpdate(prevProps, prevState) {
     const { roomInfo, actionList, is_betting, bgColorChanged  } = this.props;
     const { isPasswordCorrect, qs, qsValueAtLastIndex } = this.state;
-
     
     if (prevProps.actionList !== actionList) {
       this.setState({
@@ -752,7 +751,6 @@ class QuickShoot extends Component {
       creator_id,
       qs_game_type,
       youtubeUrl,
-      selected_qs_position,
       accessory,
       username,
       creator_avatar,
@@ -776,10 +774,10 @@ class QuickShoot extends Component {
       handleDetachAttachChange,
       getAttachedRooms,
       is_betting,
-      strategies
+      strategies,
+      selected_qs_position
     } = this.props;
     const payoutPercentage = (bankroll / roomInfo.endgame_amount) * 100;
-
     const barStyle = {
       width: `${payoutPercentage + 10}%`,
       backgroundColor: payoutPercentage <= 50 ? 'yellow' : 'red'
@@ -1145,7 +1143,8 @@ class QuickShoot extends Component {
                         borderRadius: '10px',
                         border: `3px solid ${borderColor}`,
                         boxShadow: `0 0 20px ${borderColor}`,
-                        opacity: '0.5'
+                        opacity: '0.5',
+                        height: '238px'
                       }}
                     />
 

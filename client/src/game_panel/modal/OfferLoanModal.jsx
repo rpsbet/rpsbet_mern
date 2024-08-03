@@ -243,12 +243,6 @@ class OfferLoanModal extends Component {
       lender: offerInfo._id,
       og: userInfo._id,
     });
-    // console.log(response)
-    // if (response.success) {
-    //   const { balance, newTransaction, message } = response;
-
-    //   alertModal(isDarkMode, message, '-cat');
-    // }
   };
 
   onBtnCancelClicked = () => {

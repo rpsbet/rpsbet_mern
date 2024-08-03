@@ -353,7 +353,7 @@ function BetArray({
     await handleDetachAttachChange(event);
     setTimeout(async () => {
       await fetchAttachedRooms();
-    }, 1500); 
+    }, 1500);
   };
 
 
@@ -696,6 +696,9 @@ function BetArray({
                         disabled={!betting} // Disabled if the top switch is off
                       />
                     </Tooltip>
+                    <Tooltip title="Betting will be slow, whilst active. Best used whilst AFK">
+                    <Info style={{ width: "18px", marginTop: "-3px", cursor: "pointer" }} />
+                  </Tooltip>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', width: "50%", boxShadow: "inset 0px 0px 6px 0px #b4b4b4a8", borderRadius: "9px", justifyContent: "center", padding: "5px 10px", overflow: "hidden" }}>
 
@@ -731,16 +734,40 @@ function BetArray({
 
                   </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', width: "100%", boxShadow: "inset 0px 0px 6px 0px #b4b4b4a8", borderRadius: "9px", justifyContent: "center", padding: "5px 10px", overflow: "hidden" }}>
+
+                <div style={{
+                  pointerEvents: selectedStrategy === "Martingale" ? "none" : "auto",
+                  filter: selectedStrategy === "Martingale" ? "grayscale(100%)" : "none",
+                  opacity: selectedStrategy === "Martingale" ? "0.3" : "1", display: 'flex', alignItems: 'center', width: "100%", boxShadow: "inset 0px 0px 6px 0px #b4b4b4a8", borderRadius: "9px", justifyContent: "center", padding: "5px 10px", overflow: "hidden"
+                }}>
                   <FontAwesomeIcon icon={faBalanceScale} style={{ marginRight: '5px' }} />
                   <Typography>ADJUST BET RANGE</Typography>
                 </div>
-                <div style={{ display: "flex", padding: '0 10px', flexDirection: "row", alignItems: "center", justifyContent: "space-between", width: "100%", marginTop: "10px" }}>
+                <div style={{  pointerEvents: selectedStrategy === "Martingale" ? "none" : "auto",
+                    filter: selectedStrategy === "Martingale" ? "grayscale(100%)" : "none",
+                    opacity: selectedStrategy === "Martingale" ? "0.3" : "1", display: "flex", padding: '0 10px', flexDirection: "row", alignItems: "center", justifyContent: "space-between", width: "100%", marginTop: "10px" }}>
                   <Typography><span style={{ fontSize: "xx-small" }}>Min:</span> {convertToCurrency(range[0])}</Typography>
                   <Typography><span style={{ fontSize: "xx-small" }}>Max:</span> {convertToCurrency(range[1])}</Typography>
                 </div>
-                <div style={{ display: "flex", padding: '0 10px', flexDirection: "column", alignItems: "center", justifyContent: "center", width: "100%", marginTop: "10px" }}>
-                  <Tooltip style={{ width: "100%" }} title={<>MIN & MAX BET VALUES</>} classes={{ tooltip: classes.redTooltip }}>
+                <div
+                  style={{
+                    display: "flex",
+                    padding: '0 10px',
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: "100%",
+                    marginTop: "10px",
+                    pointerEvents: selectedStrategy === "Martingale" ? "none" : "auto",
+                    filter: selectedStrategy === "Martingale" ? "grayscale(100%)" : "none",
+                    opacity: selectedStrategy === "Martingale" ? "0.3" : "1"
+                  }}
+                >
+                  <Tooltip
+                    style={{ width: "100%" }}
+                    title={selectedStrategy === "Martingale" ? `NO BET RANGE FOR ${selectedStrategy}` : <>MIN & MAX BET VALUES</>}
+                    classes={{ tooltip: classes.redTooltip }}
+                  >
                     <Slider
                       value={range}
                       onChange={handleSliderChange}
@@ -754,13 +781,30 @@ function BetArray({
                       aria-labelledby="range-slider"
                       className={classes.slider}
                       disabled={isSliderDisabled}
+                      style={{
+                        pointerEvents: ai_mode === "IMartingale" ? "none" : "auto",
+                        filter: ai_mode === "IMartingale" ? "grayscale(100%)" : "none"
+                      }}
                     />
                   </Tooltip>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', width: "100%", boxShadow: "inset 0px 0px 6px 0px #b4b4b4a8", borderRadius: "9px", justifyContent: "center", padding: "5px 10px", overflow: "hidden" }}>
-                  <span style={{ fontSize: "x-small", color: "#ff0000" }}>
-                    {text}
-                  </span>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      width: "100%",
+                      boxShadow: "inset 0px 0px 6px 0px #b4b4b4a8",
+                      borderRadius: "9px",
+                      justifyContent: "center",
+                      padding: "5px 10px",
+                      overflow: "hidden",
+                      pointerEvents: ai_mode === "IMartingale" ? "none" : "auto",
+                      filter: ai_mode === "IMartingale" ? "grayscale(100%)" : "none"
+                    }}
+                  >
+                    <span style={{ fontSize: "x-small", color: "#ff0000" }}>
+                      {text}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -912,7 +956,7 @@ function BetArray({
                           return (
                             <TableRow key={room._id}>
                               <TableCell align="center">
-                                <Typography><a style={{color: '#333'}} href={`/join/${room._id}`}>{room.room_name}</a></Typography>
+                                <Typography><a style={{ color: '#333' }} href={`/join/${room._id}`}>{room.room_name}</a></Typography>
                               </TableCell>
                               <TableCell align="center">{<>{convertToCurrency(minBet)} - {convertToCurrency(maxBet)}</>}</TableCell>
                               <TableCell align="center">{room.selected_strategy}</TableCell>

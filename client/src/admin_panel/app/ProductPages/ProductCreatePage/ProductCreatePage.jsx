@@ -44,17 +44,6 @@ class ProductCreatePage extends Component {
     history.push(`/product/`);
   };
 
-
-  // onSaveForm = e => {
-  //   e.preventDefault();
-  //   console.log(this.state);
-  //   this.props.infoMsgBar(`New Loan Listed!`);
-  //   this.props.updateLoan(this.state);
-  //   this.handelCancel();
-  // };
-
-
- 
   render() {
     return (
       <>

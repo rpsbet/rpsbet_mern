@@ -512,7 +512,6 @@ router.post('/deposit_successed', auth, async (req, res) => {
     if (Number(tx.value) != Number(wamount) || tx.to !== signer.address) {
       return res.status(400).send('Transaction does not match with input');
     }
-    // console.log("wamount", wamount);
     const rpsAmount = calculateAmountWeb3(price_amount)
     // The cron job will periodically check for confirmations and update the balance
     // No need to update the balance here

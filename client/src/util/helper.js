@@ -29,7 +29,7 @@ export function addCurrencySignal(amount) {
 	return 0;
 }
 
-export async function getQsLottieAnimation(nation, short_name) {
+export async function   getQsLottieAnimation(nation, short_name) {
   let nationStr = '';
   let shortStr = '';
   

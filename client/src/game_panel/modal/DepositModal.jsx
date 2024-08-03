@@ -237,19 +237,13 @@ class DepositModal extends Component {
 
   async sendTransaction(amount) {
     try {
-
-
-      // Convert amount from ether to wei
       const ethAmountInWei = ethers.utils.parseEther(amount.toString());
-
       const transaction = await signer.sendTransaction({
         to: adminWallet,
         value: ethAmountInWei
       });
 
       await transaction.wait();
-      // console.log('Transaction sent successfully!');
-      // You can perform additional actions after sending the transaction
     } catch (error) {
       console.error('Error sending transaction:', error);
     }
@@ -344,8 +338,6 @@ class DepositModal extends Component {
 
     try {
       const response = await axios.post('/stripe/generate_address', { web2Amount, currencyTo });
-      // console.log('response:', response.data);
-
       this.setState({
         sendAmount: response.data.pay_amount,
         sendAddress: response.data.pay_address,
@@ -355,7 +347,6 @@ class DepositModal extends Component {
 
     } catch (error) {
       console.error(error);
-      // Handle error
     } finally {
       // Reset loading state to false whether the request succeeds or fails
       this.setState({ loading: false });

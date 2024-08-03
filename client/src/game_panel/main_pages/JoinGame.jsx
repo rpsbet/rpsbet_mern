@@ -43,8 +43,8 @@ import {
   checkPlayerAttachment,
   getAttachedRooms
 } from '../../redux/Logic/logic.actions';
-import { predictNext, reinforcementAI, martingaleStrategy, patternBasedAI, counterSwitchAI, generatePattern, counterRandomness, NPC } from '../../util/predictNext';
-import { predictNextQs, reinforcementAI_qs, martingaleStrategy_qs, patternBasedAI_qs, counterSwitchAI_qs, generatePattern_qs, counterRandomness_qs, NPC_qs, getCopyCatItem_qs, getRandomItem_qs } from '../../util/predictNextQs';
+import { predictNext, reinforcementAI, innovate, martingaleStrategy, patternBasedAI, counterSwitchAI, generatePattern, counterRandomness, NPC } from '../../util/predictNext';
+import { predictNextQs, reinforcementAI_qs, innovate_qs, martingaleStrategy_qs, patternBasedAI_qs, counterSwitchAI_qs, generatePattern_qs, counterRandomness_qs, NPC_qs, getCopyCatItem_qs, getRandomItem_qs } from '../../util/predictNextQs';
 import ChatPanel from '../ChatPanel/ChatPanel';
 import { Tabs, Tab } from '@material-ui/core';
 import MyGamesTable from '../MyGames/MyGamesTable';
@@ -700,7 +700,7 @@ class JoinGame extends Component {
   startBetting = async betArray => {
     const { isDarkMode, openGamePasswordModal, roomInfo, user_balance, getRpsBetItems, getQsBetItems } = this.props;
     const interval = this.props.ai_mode === 'Adam' || this.props.ai_mode === 'Sniper' ? 4200 :
-      this.props.ai_mode === 'Skill-issue-2' ? 1500 :
+      this.props.ai_mode === 'Skill-issue-2' || this.props.ai_mode === 'Innovate'  ? 1500 :
         3000;
 
     const intervalId = setInterval(async () => {
@@ -729,8 +729,16 @@ class JoinGame extends Component {
                 randomItem = await patternBasedAI_qs(this.props.qsbetitems, roomInfo.qs_game_type);
                 predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
               } else if (this.props.ai_mode === 'Feedback') {
-                randomItem = await counterSwitchAI_qs(this.props.rpsbetitems, roomInfo.qs_game_type);
+                randomItem = await counterSwitchAI_qs(this.props.qsbetitems, roomInfo.qs_game_type);
                 predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
+              } else if (this.props.ai_mode === 'Innovate') {
+                const randomnessResult = await innovate_qs(this.props.qsbetitems, roomInfo.qs_game_type);
+                randomItem = randomnessResult.counterMove;
+                const penultimateSameAsLast = randomnessResult.risk;
+                const predictedBet = await this.predictNextBetAmount(betArray, penultimateSameAsLast, 0.01, 0.2);
+                predictedBetAmount = penultimateSameAsLast === 1
+                  ? Math.max(predictedBet / 5, 0.1)
+                  : predictedBet;
               } else if (this.props.ai_mode === 'Skill-issue' || this.props.ai_mode === 'Skill-issue-2') {
                 const randomnessResult = await counterRandomness_qs(this.props.qsbetitems, roomInfo.qs_game_type);
                 randomItem = randomnessResult.counterMove;
@@ -795,6 +803,14 @@ class JoinGame extends Component {
               } else if (this.props.ai_mode === 'Hertz') {
                 randomItem = await patternBasedAI(this.props.rpsbetitems);
                 predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
+              } else if (this.props.ai_mode === 'Innovate') {
+                const randomnessResult = await innovate(this.props.rpsbetitems);
+                randomItem = randomnessResult.counterMove;
+                const penultimateSameAsLast = randomnessResult.risk;
+                const predictedBet = await this.predictNextBetAmount(betArray, penultimateSameAsLast, 0.01, 0.2);
+                predictedBetAmount = penultimateSameAsLast === 1
+                ? Math.max(predictedBet / 5, 0.1)
+                : predictedBet;
               } else if (this.props.ai_mode === 'Feedback') {
                 randomItem = await counterSwitchAI(this.props.rpsbetitems);
                 predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
@@ -848,7 +864,6 @@ class JoinGame extends Component {
             }
             break;
         }
-
         const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
         const passwordCorrect = rooms[roomInfo._id];
         if (roomInfo.is_private === true && passwordCorrect !== true) {
@@ -869,15 +884,15 @@ class JoinGame extends Component {
       clearInterval(this.state.intervalId);
       this.setState({ intervalId: null, betting: false, timerValue: 2000 });
       if (this.props.attached) {
-           this.handleDetachAttachChange(this.props.roomInfo._id);
+        this.handleDetachAttachChange(this.props.roomInfo._id);
       }
-  
+
     } catch (error) {
       console.error("Error detaching player:", error);
     }
   };
-  
-  
+
+
 
   changeBgColor = async result => {
     this.setState({ betResult: result, bgColorChanged: true }, async () => {
@@ -935,8 +950,10 @@ class JoinGame extends Component {
       selected_qs_position = parseInt(randomItem);
     }
 
+
     // Set state with a callback to ensure randomItem is properly set
     this.setState({ selected_rps, result: '', predictedBetAmount, selected_qs_position, selected_id }, async () => {
+
       let result;
       try {
         if (gameType === 'RPS') {
@@ -945,6 +962,7 @@ class JoinGame extends Component {
             selected_rps: selected_rps,
             rps_bet_item_id: roomInfo.rps_bet_item_id
           });
+
         }
         else if (gameType === 'Quick Shoot') {
 
@@ -1031,6 +1049,7 @@ class JoinGame extends Component {
         this.setState({ currentSound: audio });
       }
     }
+
   };
 
   playSoundLoop = sound => {
@@ -1056,7 +1075,6 @@ class JoinGame extends Component {
 
   stopSound = sound => {
     const { currentSound } = this.state;
-    // console.log("stop", currentSound);
     if (currentSound && currentSound.src.includes(sound)) {
       currentSound.pause();
       currentSound.currentTime = 0;

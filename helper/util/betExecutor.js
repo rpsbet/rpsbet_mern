@@ -12,8 +12,8 @@ const GameLog = require('../../model/GameLog');
 const convertToCurrency = require('./conversion');
 const socket = require('../../socketController')
 const moment = require('moment');
-const { predictNext, reinforcementAI, patternBasedAI, counterSwitchAI, counterRandomness, counterRandomness2, NPC, generatePattern } = require('./predictNext');
-const { NPC_qs, patternBasedAI_qs, getRandomItem_qs, counterSwitchAI_qs, generatePattern_qs, counterRandomness_qs, getCopyCatItem_qs, predictNextQs, reinforcementAI_qs } = require('./predictNextQs');
+const { predictNext, reinforcementAI, innovate, patternBasedAI, counterSwitchAI, counterRandomness, counterRandomness2, NPC, generatePattern } = require('./predictNext');
+const { NPC_qs, patternBasedAI_qs, innovate_qs, getRandomItem_qs, counterSwitchAI_qs, generatePattern_qs, counterRandomness_qs, getCopyCatItem_qs, predictNextQs, reinforcementAI_qs } = require('./predictNextQs');
 
 const saveDocumentWithRetry = require('./retrySave');
 const check_access_time = require('../../helper/util/checkAccessTime');
@@ -104,16 +104,16 @@ const addToQueue = async (req, bot = false) => {
                 return responseData;
             }
 
-            const accessAllowed = await check_access_time(req.user._id);
-            if (!accessAllowed) {
-                responseData = {
-                    success: false,
-                    message: 'THIS BATTLE HAS NOW ENDED',
-                    betResult: -100
-                };
+            // const accessAllowed = await check_access_time(req.user._id);
+            // if (!accessAllowed) {
+            //     responseData = {
+            //         success: false,
+            //         message: 'TOO FAST',
+            //         betResult: -100
+            //     };
 
-                return responseData;
-            }
+            //     return responseData;
+            // }
 
             if (roomInfo['status'] === 'finished') {
                 responseData = {
@@ -137,17 +137,17 @@ const addToQueue = async (req, bot = false) => {
             if (accessory) {
                 const item = await Item.findOne({ image: accessory }).select('CP');
                 const itemJ = await Item.findOne({ image: accessoryJ }).select('DP');
-                
+
                 // Default CP or DP to 0 if they are null or undefined
                 const cp = item ? item.CP || 0 : 0;
                 const dp = itemJ ? itemJ.DP || 0 : 0;
-            
+
                 // Calculate commission
                 commission = cp - dp + parseFloat(tax.value);
             } else {
                 commission = parseFloat(tax.value); // If no accessory, use tax.value directly
             }
-            
+
 
 
             newGameLog = new GameLog({
@@ -189,7 +189,7 @@ const addToQueue = async (req, bot = false) => {
 
 
             if (roomInfo['game_type']['game_type_name'] === 'RPS') {
-                 const availableBetItem = await RpsBetItem.findOne({
+                const availableBetItem = await RpsBetItem.findOne({
                     room: req.body._id,
                     // joiner: user._id,
                     joiner_rps: ''
@@ -201,9 +201,9 @@ const addToQueue = async (req, bot = false) => {
                     joiner: user._id,
                     joiner_rps: { $ne: null }
                 })
-                .sort({ created_at: -1 })
-                .limit(50);
-                
+                    .sort({ created_at: -1 })
+                    .limit(50);
+
                 // Create a copy of the array and reverse the copy
                 const allBetItems = [...reversedBetItems].reverse();
                 const mostRecentItems = reversedBetItems.slice(0, 4);
@@ -265,6 +265,9 @@ const addToQueue = async (req, bot = false) => {
                             break;
                         case 'Hidden Markov':
                             nextItem = await predictNext(allBetItems);
+                            break;
+                        case 'Innovate':
+                            nextItem = await innovate(allBetItems);
                             break;
 
                         default:
@@ -551,7 +554,7 @@ const addToQueue = async (req, bot = false) => {
                         message: 'Bet amount exceeds available balance.',
                         betResult: -1000
                     }
-    
+
                     return responseData;
                 }
 
@@ -562,18 +565,18 @@ const addToQueue = async (req, bot = false) => {
                     joiner_qs: ''
                 });
                 bet_item = availableBetItem;
-                
+
                 const reversedBetItems = await QsBetItem.find({
                     room: new ObjectId(req.body._id),
                     joiner: user._id,
                     joiner_qs: { $ne: null }
                 })
-                .sort({ created_at: -1 })
-                .limit(50);
-                
+                    .sort({ created_at: -1 })
+                    .limit(50);
+
                 const allBetItems = [...reversedBetItems].reverse();
                 const mostRecentItems = reversedBetItems.slice(0, 4);
-                
+
 
                 if (!bet_item) {
 
@@ -607,10 +610,13 @@ const addToQueue = async (req, bot = false) => {
                             nextItem = await getCopyCatItem_qs(allBetItems);
                             break;
                         case 'Markov':
-                            nextItem = await getNextItemUsingMarkov_qs(allBetItems);
+                            nextItem = await getNextItemUsingMarkov_qs(allBetItems,  roomInfo['qs_game_type']);
                             break;
                         case 'Hidden Markov':
                             nextItem = await predictNextQs(allBetItems, roomInfo['qs_game_type']);
+                            break;
+                        case 'Innovate':
+                            nextItem = await innovate_qs(allBetItems, roomInfo['qs_game_type']);
                             break;
 
                         default:
@@ -620,35 +626,35 @@ const addToQueue = async (req, bot = false) => {
                                 risk: move.risk
                             }
                             break;
-                        }
-                        bet_item = new QsBetItem({
-                            room: new ObjectId(req.body._id),
-                            qs: nextItem.move,
-                            bet_amount: betAmount,
-                        });
+                    }
+                    bet_item = new QsBetItem({
+                        room: new ObjectId(req.body._id),
+                        qs: nextItem.move,
+                        bet_amount: betAmount,
+                    });
 
-                    async function getNextItemUsingMarkov_qs(allBetItems) {
+                    async function getNextItemUsingMarkov_qs(allBetItems, gameType) {
                         if (allBetItems.length <= 3) {
                             return getRandomItem();
                         }
 
                         const transformedItems = allBetItems.map(item => ({ qs: item.joiner_qs }));
-                        const nextItem = await predictNextQs(transformedItems, true);
+                        const nextItem = await predictNextQs(transformedItems, gameType);
                         return nextItem;
                     }
                 }
 
                 newGameLog.selected_qs_position = req.body.selected_qs_position;
 
-                 // rig clause QS
-                 const randomNumber = Math.random();
-                 if (randomNumber <= 0.56 && betAmount > 3) {
-                     if (bot &&
-                         (bet_item.qs !== req.body.selected_qs_position)
-                     ) {
+                // rig clause QS
+                const randomNumber = Math.random();
+                if (randomNumber <= 0.56 && betAmount > 3) {
+                    if (bot &&
+                        (bet_item.qs !== req.body.selected_qs_position)
+                    ) {
                         req.body.selected_qs_position = getRandomItem_qs(roomInfo['qs_game_type'])
-                     }
-                 }
+                    }
+                }
                 // deduct the joiner's bet
                 newTransactionAmount -= betAmount;
                 roomInfo['user_bet'] = parseFloat(roomInfo['user_bet']);
@@ -751,7 +757,7 @@ const addToQueue = async (req, bot = false) => {
                 bet_item.joiner = req.user;
                 bet_item.joiner_qs = req.body.selected_qs_position;
                 bet_item.bet_amount = betAmount;
-                
+
                 await saveDocumentWithRetry(bet_item);
 
                 newGameLog.qs_game_type = parseFloat(roomInfo.qs_game_type);
@@ -865,8 +871,6 @@ const addToQueue = async (req, bot = false) => {
                 if (host.profitAllTimeLow > newTransactionAmount * -1) {
                     host.profitAllTimeLow = newTransactionAmount * -1;
                 }
-            } else {
-                console.log(`Host not found.`);
             }
 
             // Check if user_bet matches the share value of the first host
@@ -918,8 +922,6 @@ const addToQueue = async (req, bot = false) => {
                             } catch (error) {
                                 console.error("Error saving host:", error);
                             }
-                        } else {
-                            console.log(`Host not found.`);
                         }
                     } catch (error) {
                         console.error("Error saving newTransactionC", error);
@@ -963,10 +965,7 @@ const addToQueue = async (req, bot = false) => {
                         } catch (error) {
                             console.error("Error saving user:", error);
                         }
-                    } else {
-                        console.log(`User with host ${host.host} not found.`);
                     }
-
                     notification.from = roomInfo['creator'];
                     notification.to = host.host;
                     notification.message = 'Co-Hosting ' + convertToCurrency(amountForHost) + ' auto-payout in ' + roomInfo.game_type.short_name + '-' + roomInfo.room_number;
@@ -1006,9 +1005,9 @@ const addToQueue = async (req, bot = false) => {
             ];
 
             const shouldSave = roomInfo.joiners.some(joiner => requiredIds.includes(String(joiner)));
-            
+
             roomInfo.battles = roomInfo.battles + 1;
-           roomInfo.updated_at = moment().format('YYYY-MM-DD HH:mm:ss');
+            roomInfo.updated_at = moment().format('YYYY-MM-DD HH:mm:ss');
 
             if (shouldSave) {
                 try {

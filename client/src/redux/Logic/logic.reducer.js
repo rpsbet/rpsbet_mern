@@ -328,7 +328,6 @@ export default function (state = initialState, action) {
         }
       };
     case ROOMS_COUNT:
-      // console.log(payload)
       return {
         ...state,
         rooms_count: payload

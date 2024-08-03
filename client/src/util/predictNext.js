@@ -1,73 +1,105 @@
 import * as tf from '@tensorflow/tfjs';
 export const predictNext = (rps_list, hiddenMarkov = false) => {
-  const transitionMatrix = {
-    R: { R: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } }, P: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } }, S: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } } },
-    P: { R: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } }, P: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } }, S: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } } },
-    S: { R: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } }, P: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } }, S: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } } },
+
+  // Transition probabilities between hidden states
+  const hiddenTransitionMatrix = {
+    H: { H: 0, T: 0, S: 0 },
+    T: { H: 0, T: 0, S: 0 },
+    S: { H: 0, T: 0, S: 0 }
   };
 
-  for (let i = 0; i < rps_list.length - 3; i++) {
-    const currentState1 = rps_list[i].rps;
-    const currentState2 = rps_list[i + 1].rps;
-    const currentState3 = rps_list[i + 2].rps;
-    const nextState = rps_list[i + 3].rps;
-    transitionMatrix[currentState1][currentState2][currentState3][nextState]++;
+  // Emission probabilities from hidden states to observable states
+  const emissionMatrix = {
+    H: { R: 0, P: 0, S: 0 },
+    T: { R: 0, P: 0, S: 0 },
+    S: { R: 0, P: 0, S: 0 }
+  };
+
+  // Initialize count matrices
+  for (let i = 0; i < rps_list.length - 1; i++) {
+    const currentState = rps_list[i].rps;
+    const nextState = rps_list[i + 1].rps;
+
+    hiddenTransitionMatrix[currentState][nextState]++;
+    emissionMatrix[currentState][nextState]++;
   }
 
-  Object.keys(transitionMatrix).forEach((fromState1) => {
-    Object.keys(transitionMatrix[fromState1]).forEach((fromState2) => {
-      Object.keys(transitionMatrix[fromState1][fromState2]).forEach((fromState3) => {
-        const totalTransitions = Object.values(transitionMatrix[fromState1][fromState2][fromState3]).reduce((a, b) => a + b);
-        Object.keys(transitionMatrix[fromState1][fromState2][fromState3]).forEach((toState) => {
-          transitionMatrix[fromState1][fromState2][fromState3][toState] /= totalTransitions;
-        });
-      });
+  // Normalize transition probabilities
+  Object.keys(hiddenTransitionMatrix).forEach((fromState) => {
+    const totalTransitions = Object.values(hiddenTransitionMatrix[fromState]).reduce((a, b) => a + b, 0);
+    Object.keys(hiddenTransitionMatrix[fromState]).forEach((toState) => {
+      hiddenTransitionMatrix[fromState][toState] /= totalTransitions;
     });
   });
 
-  const winChance = calcWinChance(rps_list);
-  let deviation = 0;
-  if (winChance !== "33.33%") {
-    deviation = 0.03;
-  }
+  // Normalize emission probabilities
+  Object.keys(emissionMatrix).forEach((hiddenState) => {
+    const totalEmissions = Object.values(emissionMatrix[hiddenState]).reduce((a, b) => a + b, 0);
+    Object.keys(emissionMatrix[hiddenState]).forEach((observedState) => {
+      emissionMatrix[hiddenState][observedState] /= totalEmissions;
+    });
+  });
 
-  let currentState1 = rps_list[2].rps;
-  let currentState2 = rps_list[1].rps;
-  let currentState3 = rps_list[0].rps;
-  let nextState = currentState3;
+  // Hidden states
+  const hiddenStates = ['H', 'T', 'S'];
+
+  // Determine the current hidden state based on the last observed sequence
+  const currentState = rps_list[rps_list.length - 1].rps;
+
+  // Viterbi algorithm to predict the next hidden state and observed state
   let maxProb = 0;
-  Object.keys(transitionMatrix[currentState1][currentState2][currentState3]).forEach((state) => {
-    if (transitionMatrix[currentState1][currentState2][currentState3][state] > maxProb) {
-      maxProb = transitionMatrix[currentState1][currentState2][currentState3][state];
-      nextState = state;
+  let predictedHiddenState = currentState;
+
+  hiddenStates.forEach(hiddenState => {
+    const prob = hiddenTransitionMatrix[currentState][hiddenState] * emissionMatrix[hiddenState][currentState];
+    if (prob > maxProb) {
+      maxProb = prob;
+      predictedHiddenState = hiddenState;
     }
   });
 
+  let nextState = 'R';
+  maxProb = 0;
+  Object.keys(emissionMatrix[predictedHiddenState]).forEach(observedState => {
+    const prob = emissionMatrix[predictedHiddenState][observedState];
+    if (prob > maxProb) {
+      maxProb = prob;
+      nextState = observedState;
+    }
+  });
+
+  // Adjust prediction for beating type if hiddenMarkov flag is true
   if (hiddenMarkov) {
-    // Convert nextState to its beating type
     nextState = getBeatingType(nextState);
   }
 
-  let randomNum = Math.random();
-  if (randomNum < deviation) {
-    let randomState = '';
-    const availableStates = ['R', 'P', 'S'].filter(state => state !== currentState3);
-    randomState = availableStates[Math.floor(Math.random() * availableStates.length)];
-    nextState = randomState;
-  }
   return nextState;
 }
+
 
 // Function to get the beating type
 const getBeatingType = (currentState) => {
   const random = Math.random();
 
   if (currentState === 'R') {
-    return random < 0.5 ? 'P' : 'R'; // 50% chance to return P or R
+    return random < 0.7 ? 'P' : 'R';
   } else if (currentState === 'P') {
-    return random < 0.5 ? 'S' : 'P'; // 50% chance to return S or P
+    return random < 0.7 ? 'S' : 'P';
   } else {
-    return random < 0.5 ? 'R' : 'S'; // 50% chance to return R or S
+    return random < 0.7 ? 'R' : 'S';
+  }
+}
+
+// Function to get the beating type
+const getBeatingType2 = (currentState) => {
+  const random = Math.random();
+
+  if (currentState === 'R') {
+    return  'S';
+  } else if (currentState === 'P') {
+    return 'R';
+  } else {
+    return 'P';
   }
 }
 
@@ -235,9 +267,6 @@ export async function reinforcementAI(data) {
   const winChangeProbability = winCount > 0 ? winChangesCount / winCount : 0;
   const lossChangeProbability = lossCount > 0 ? lossChangesCount / lossCount : 0;
 
-  // console.log("winChangeProbability: ", winChangeProbability);
-  // console.log("lossChangeProbability: ", lossChangeProbability);
-
   const winChangesLikely = winChangeProbability > 0.3;
   const lossChangesLikely = lossChangeProbability > 0.3;
 
@@ -344,20 +373,53 @@ export function counterSwitchAI(historicData) {
       (lastGame.joiner_rps === 'S' && lastGame.rps === 'R') ||
       (lastGame.joiner_rps === 'P' && lastGame.rps === 'S');
 
-    if (lastGameWasWin) {
-      const repeatProbability = 1;
-      if (Math.random() < repeatProbability) {
+      if (lastGameWasWin) {
+        const repeatProbability = 1;
+        if (Math.random() < repeatProbability) {
+          return lastGame.joiner_rps;
+        }
+      } else if (lastGameWasLoss) {
+        if (lastGame.joiner_rps === 'R') return 'P';
+        else if (lastGame.joiner_rps === 'P') return 'S';
+        else {
+          return 'R';
+        } 
+      } else {
         return lastGame.joiner_rps;
       }
-    } else if (lastGameWasLoss) {
-      if (lastGame.joiner_rps === 'R') return 'S';
-      else if (lastGame.joiner_rps === 'P') return 'R';
-      else return 'P';
-    } else {
-      return lastGame.rps;
-    }
   }
 }
+
+export function innovate(historicData) {
+  // Get the first 6 entries of joiner_rps from the historic data
+  const firstEntries = historicData.slice(0, 6);
+  const firstJoinerQs = firstEntries.map(entry => entry.joiner_rps);
+
+  // Ensure we have valid entries for comparison
+  if (firstJoinerQs.length < 6 || firstJoinerQs.some(entry => !['R', 'P', 'S'].includes(entry))) {
+    // Not enough data or invalid data, return a random move with risk 1
+    return { counterMove: getRandomMove(), risk: 1 };
+  }
+
+  // Check if all the first 6 joiner_qs are the same
+  const allSame = firstJoinerQs.every(rps => rps === firstJoinerQs[0]);
+  if (allSame) {
+    // Generate a list of possible moves excluding the last joiner_rps value
+    const lastMove = firstJoinerQs[0];
+    // const possibleMoves = ['R', 'P', 'S'].filter(move => move !== lastMove);
+    return { counterMove: getBeatingType2(lastMove), risk: 3};
+  } else {
+    // Return the same move as the first joiner_qs
+    const previousMove = historicData[0].joiner_rps;
+    return { counterMove: previousMove, risk: 1 };
+  }
+}
+
+function getRandomMove() {
+  const moves = ['R', 'P', 'S'];
+  return moves[Math.floor(Math.random() * moves.length)];
+}
+
 
 export function counterRandomness(historicData) {
   if (historicData.length < 3) {
@@ -408,7 +470,6 @@ export function counterRandomness(historicData) {
     }
 
     if (missingValue) {
-      // console.log("missingValue", missingValue);
       switch (missingValue) {
         case 'R':
           counterMove = 'P';
@@ -426,7 +487,6 @@ export function counterRandomness(historicData) {
       risk = 1;
     }
   }
-  // console.log("counterMove and risk", counterMove, risk);
 
   return { counterMove, risk };
 }
@@ -434,12 +494,6 @@ export function counterRandomness(historicData) {
 export function NPC(historicData) {
   const lastMove = historicData[0].joiner_rps;
   return lastMove;
-}
-
-// Utility function to get a random move (if needed)
-function getRandomMove() {
-  const moves = ['R', 'P', 'S'];
-  return moves[Math.floor(Math.random() * moves.length)];
 }
 
 export function generatePattern(allBetItems) {

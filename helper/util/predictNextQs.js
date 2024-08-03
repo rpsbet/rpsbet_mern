@@ -2,8 +2,8 @@ const tf = require('@tensorflow/tfjs-node');
 const { trainModel_qs, predictNextMove_qs } = require('./modelUtils');
 
 const calcWinChanceQs = (gameType, rounds) => {
-  let probWin = (100 / gameType).toFixed(2);
-  let probLose = (100 - probWin).toFixed(2);
+  let probWin = 100 / gameType;
+  let probLose = 100 - probWin;
 
   const freq = {};
   for (let i = 0; i < gameType; i++) {
@@ -11,7 +11,7 @@ const calcWinChanceQs = (gameType, rounds) => {
   }
 
   rounds.forEach((round) => {
-    freq[round.qs]++;
+    freq[Number(round.qs)]++; // Ensure qs is treated as a number
   });
 
   const freqValues = Object.values(freq);
@@ -19,14 +19,18 @@ const calcWinChanceQs = (gameType, rounds) => {
 
   const sensitivityFactor = (range / 100) * gameType;
   const adjustmentFactor = (range / gameType) * sensitivityFactor;
-  probWin = (+probWin - adjustmentFactor).toFixed(2);
-  probLose = (+probLose + adjustmentFactor).toFixed(2);
+  probWin = (probWin - adjustmentFactor).toFixed(2);
+  probLose = (probLose + adjustmentFactor).toFixed(2);
 
   return `${probWin}% - ${probLose}%`;
 };
-
 const predictNextQs = (qs_list, gameType) => {
-  if (qs_list.length < 3) {
+
+  if (typeof gameType !== 'number' || gameType <= 0) {
+    throw new Error('Invalid gameType. It must be a positive integer.');
+  }
+
+  if (qs_list.length < 4) {
     return { move: getRandomItem_qs(gameType), risk: 0 };
   }
 
@@ -50,16 +54,22 @@ const predictNextQs = (qs_list, gameType) => {
 
   // Populate the transition matrix
   for (let i = 0; i < qs_list.length - 3; i++) {
+    const fromState1 = Number(qs_list[i].qs);
+    const fromState2 = Number(qs_list[i + 1].qs);
+    const fromState3 = Number(qs_list[i + 2].qs);
+    const toState = Number(qs_list[i + 3].qs);
+
     if (
-      transitionMatrix[qs_list[i].qs] &&
-      transitionMatrix[qs_list[i].qs][qs_list[i + 1].qs] &&
-      transitionMatrix[qs_list[i].qs][qs_list[i + 1].qs][qs_list[i + 2].qs]
+      transitionMatrix[fromState1] &&
+      transitionMatrix[fromState1][fromState2] &&
+      transitionMatrix[fromState1][fromState2][fromState3]
     ) {
-      transitionMatrix[qs_list[i].qs][qs_list[i + 1].qs][qs_list[i + 2].qs][qs_list[i + 3].qs]++;
+      transitionMatrix[fromState1][fromState2][fromState3][toState]++;
+    } else {
+      console.error(`Invalid transition: ${fromState1} -> ${fromState2} -> ${fromState3} -> ${toState}`);
     }
   }
 
-  // Normalize the transition matrix
   Object.keys(transitionMatrix).forEach((fromState1) => {
     Object.keys(transitionMatrix[fromState1]).forEach((fromState2) => {
       Object.keys(transitionMatrix[fromState1][fromState2]).forEach((fromState3) => {
@@ -73,17 +83,14 @@ const predictNextQs = (qs_list, gameType) => {
     });
   });
 
-  if (qs_list.length < 3) {
-    return { move: getRandomItem_qs(gameType), risk: 0 };
-  }
 
   const winChance = calcWinChanceQs(gameType, qs_list);
   const targetProbability = 100 / gameType;
   const deviation = Math.abs(winChance - targetProbability);
 
-  let currentState1 = qs_list[qs_list.length - 3]?.qs;
-  let currentState2 = qs_list[qs_list.length - 2]?.qs;
-  let currentState3 = qs_list[qs_list.length - 1]?.qs;
+  let currentState1 = Number(qs_list[qs_list.length - 3]?.qs);
+  let currentState2 = Number(qs_list[qs_list.length - 2]?.qs);
+  let currentState3 = Number(qs_list[qs_list.length - 1]?.qs);
 
   if (currentState1 === undefined || currentState2 === undefined || currentState3 === undefined) {
     throw new Error('Insufficient data in qs_list to determine current states.');
@@ -97,7 +104,7 @@ const predictNextQs = (qs_list, gameType) => {
   ) {
     Object.entries(transitionMatrix[currentState1][currentState2][currentState3]).forEach(([state, prob]) => {
       for (let i = 0; i < Math.floor(prob * 100); i++) {
-        weightedOptions.push(state);
+        weightedOptions.push(Number(state));
       }
     });
   }
@@ -115,7 +122,7 @@ const predictNextQs = (qs_list, gameType) => {
 
   return nextState;
 };
-  
+
 
 async function reinforcementAI_qs(data, qs_game_type) {
   if (!qs_game_type || typeof qs_game_type !== 'number' || qs_game_type <= 0) {
@@ -189,10 +196,6 @@ async function reinforcementAI_qs(data, qs_game_type) {
         bestCounterMove.risk = 1;
       }
     }
-    // const predictedMove = bestCounterMove.move;
-    // const actualMoveChanged = predictedMove !== mostRecentGame.joiner_qs;
-    // console.log(`Most recent game was a ${mostRecentGame.win ? 'win' : 'loss'}. Prediction: joiner_qs will ${actualMoveChanged ? 'change' : 'repeat'}`);
-
     return bestCounterMove;
   } finally {
     if (model) {
@@ -201,7 +204,30 @@ async function reinforcementAI_qs(data, qs_game_type) {
   }
 }
 
+function innovate_qs(historicData, qs_game_type) {
+  // Get the first 10 entries of joiner_qs from the historic data
+  const firstEntries = historicData.slice(0, 6);
+  const firstJoinerQs = firstEntries.map(entry => parseInt(entry.qs, 10));
 
+  // Ensure we have valid entries for comparison
+  if (firstJoinerQs.length < 6 || firstJoinerQs.some(isNaN)) {
+    // Not enough data or invalid data, return a random move with risk 0
+    return { counterMove: getRandomItem_qs(qs_game_type), risk: 1 };
+  }
+
+  // Check if all the first 10 joiner_qs are the same
+  const allSame = firstJoinerQs.every(qs => qs === firstJoinerQs[0]);
+  if (allSame) {
+    // Generate a list of possible moves excluding the last joiner_qs value
+    const lastMove = firstJoinerQs[0];
+    const possibleMoves = Array.from({ length: qs_game_type }, (_, i) => i).filter(move => move !== lastMove);
+    return { counterMove: getRandomItem_qs(qs_game_type, possibleMoves), risk: 3 };
+  } else {
+    // Return the same move as the first joiner_qs
+    const previousMove = parseInt(historicData[historicData.length - 1].qs, 6);
+    return { counterMove: previousMove, risk: 1 };
+  }
+}
 
 function getRandomItem_qs(qs_game_type, possibleMoves = null) {
   if (!possibleMoves) {
@@ -425,6 +451,7 @@ module.exports = {
   getRandomItem_qs,
   getCopyCatItem_qs,
   martingaleStrategy_qs,
+  innovate_qs,
   skillIssue_qs,
   counterRandomness_qs,
   generatePattern_qs

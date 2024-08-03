@@ -337,45 +337,32 @@ router.post('/equip', auth, async (req, res) => {
     }
 
     const item = await Item.findOne({ _id: item_id }).select('image owners');
-console.log("item", item);
 
-if (!item) {
-  return res.json({
-    success: false,
-    message: 'Item not found',
-  });
-}
+    if (!item) {
+      return res.json({
+        success: false,
+        message: 'Item not found',
+      });
+    }
 
-// Log the userId and all the users in the owners array
-console.log("userId", userId);
-item.owners.forEach(owner => {
-  console.log("owner.user", owner.user.toString());
-});
+    const owner = item.owners.find(owner => owner.user.toString() === userId.toString());
 
-// Find the owner matching the userId
-const owner = item.owners.find(owner => owner.user.toString() === userId.toString());
+    if (!owner) {
+      return res.json({
+        success: false,
+        message: 'Owner not found',
+      });
+    }
 
-if (!owner) {
-  return res.json({
-    success: false,
-    message: 'Owner not found',
-  });
-}
-
-console.log("owner.rentOption", owner.rentOption);
-
-if (owner.rentOption) {
-  return res.json({
-    success: false,
-    message: 'De-list item first to equip',
-  });
-}
-
-// Continue with the rest of your logic if the item can be equipped
-
+    if (owner.rentOption) {
+      return res.json({
+        success: false,
+        message: 'De-list item first to equip',
+      });
+    }
 
     if (String(user.accessory) === String(item.image)) {
-      user.accessory = null; // Remove the accessory
+      user.accessory = null;
       try {
         await saveDocumentWithRetry(user);
       } catch (error) {
@@ -412,11 +399,11 @@ router.get('/my-items', auth, async (req, res) => {
   const pagination = req.query.pagination ? parseInt(req.query.pagination) : 10;
   const page = req.query.page ? parseInt(req.query.page) : 1;
   const sort = 'owners.price';
-  const itemTypeFilter = req.query.item_type; // specific item type
+  const itemTypeFilter = req.query.item_type;
   const userId = req.user._id;
 
   try {
-    let query = { 'owners.onSale': { $gt: 0 }, 'owners.user': userId }; // filter by user ID
+    let query = { 'owners.onSale': { $gt: 0 }, 'owners.user': userId };
     if (itemTypeFilter) {
       query['item_type'] = itemTypeFilter;
     }
@@ -431,7 +418,6 @@ router.get('/my-items', auth, async (req, res) => {
     let item_list = [];
 
     for (const item of items) {
-      // Map the owners array to include only the owner matching the user ID
       const owner = item.owners.find(owner => owner.user.equals(userId));
 
       if (owner && owner.count > 0) {
@@ -472,7 +458,7 @@ router.get('/products', async (req, res) => {
   const userId = req.query.id;
 
   try {
-    let query = { 'owners.onSale': { $gt: 0 }, 'owners.user': userId }; // filter by user ID and onSale > 0
+    let query = { 'owners.onSale': { $gt: 0 }, 'owners.user': userId };
 
     const items = await Item.find(query)
       .sort({ updated_at: 'desc' })
@@ -484,7 +470,6 @@ router.get('/products', async (req, res) => {
     let item_list = [];
 
     for (const item of items) {
-      // Map the owners array to include only the owner matching the user ID
       const owner = item.owners.find(owner => owner.user.equals(userId));
 
       if (owner && owner.count > 0) {
@@ -519,8 +504,6 @@ router.get('/products', async (req, res) => {
   }
 });
 
-
-// List an item for sale or rent
 router.post('/list-for-sale', auth, async (req, res) => {
   try {
     const { item_id, price, rentOption } = req.body;
@@ -534,7 +517,6 @@ router.post('/list-for-sale', auth, async (req, res) => {
       });
     }
 
-    // Find the owner's index in the owners sub-array
     const ownerIndex = item.owners.findIndex((ownerObj) => ownerObj.user.equals(req.user._id));
 
     if (ownerIndex === -1) {
@@ -544,10 +526,8 @@ router.post('/list-for-sale', auth, async (req, res) => {
       });
     }
 
-    // Check if rentOption is true
     if (rentOption) {
       item.owners[ownerIndex].rentOption = rentOption;
-      // Ensure item_type is '653ee81117c9f5ee2124564b' when rentOption is true
       if (item.item_type.toString() !== '653ee81117c9f5ee2124564b') {
         return res.json({
           success: false,
@@ -559,13 +539,10 @@ router.post('/list-for-sale', auth, async (req, res) => {
 
     }
 
-    // Check if the onSale value is less than the item's count
     if (item.owners[ownerIndex].onSale < item.owners[ownerIndex].count) {
-      // Increment the onSale field
       item.owners[ownerIndex].onSale += 1;
       item.owners[ownerIndex].price = price;
 
-      // Save changes to the item
       try {
         await saveDocumentWithRetry(item);
       } catch (error) {
@@ -617,16 +594,13 @@ router.post('/delist-from-sale', auth, async (req, res) => {
       });
     }
 
-    // Check if the onSale value is greater than 0
     if (item.owners[ownerIndex].onSale > 0) {
-      // Decrement the onSale field
       item.owners[ownerIndex].onSale -= 1;
 
       if (item.owners[ownerIndex].onSale -= 1
       ) {
         item.owners[ownerIndex].rentOption = false;
       }
-      // Save changes to the item
       try {
         await saveDocumentWithRetry(item);
       } catch (error) {
@@ -679,13 +653,13 @@ router.get('/', async (req, res) => {
   const pagination = req.query.pagination ? parseInt(req.query.pagination) : 5;
   const page = req.query.page ? parseInt(req.query.page) : 1;
   const sort = 'owners.price';
-  const itemTypeFilter = req.query.itemType; // specific item type
+  const itemTypeFilter = req.query.itemType;
 
   try {
-    let query = { 
-      'owners.onSale': { $gt: 0 }, 
+    let query = {
+      'owners.onSale': { $gt: 0 },
       'item_type': itemTypeFilter,
-      'image': { $nin: ['santaHat', 'xmasTree', 'ghost2',  'ghost']  } // exclude santaHat and xmasTree images
+      'image': { $nin: ['santaHat', 'xmasTree', 'ghost2', 'ghost'] }
     };
 
     const items = await Item.find(query)
@@ -697,10 +671,8 @@ router.get('/', async (req, res) => {
     let item_list = [];
 
     for (const item of items) {
-      // Calculate the total count for this item
       const totalCount = item.owners.reduce((sum, owner) => sum + owner.count, 0);
 
-      // Create a separate entry for each owner
       for (const owner of item.owners) {
         if (owner.onSale) {
           item_list.push({
@@ -715,7 +687,7 @@ router.get('/', async (req, res) => {
                 rentOption: owner.rentOption,
               },
             ],
-            total_count: totalCount, // Include the total count
+            total_count: totalCount,
             item_type: item.item_type,
             image: item.image,
             CP: item.CP,
@@ -739,7 +711,7 @@ router.get('/', async (req, res) => {
       pages: Math.ceil(count / pagination),
     });
   } catch (err) {
-    console.error('Error:', err); // Add an error log statement.
+    console.error('Error:', err);
     res.json({
       success: false,
       err: err,

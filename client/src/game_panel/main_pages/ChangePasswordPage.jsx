@@ -12,10 +12,6 @@ class ChangePasswordPage extends Component {
     };
   }
 
-  componentDidMount() {
-    console.log({ params: this.props.match.params });
-  }
-
   handlePasswordChanged = e => {
     e.preventDefault();
     this.setState({ password: e.target.value });
@@ -38,7 +34,6 @@ class ChangePasswordPage extends Component {
       alertModal(this.props.isDarkMode, 'Not matched password confirmation');
       return;
     }
-    console.log(this.props.match.params);
 
     const result = await this.props.resetPassword({
       code: this.props.match.params.code,

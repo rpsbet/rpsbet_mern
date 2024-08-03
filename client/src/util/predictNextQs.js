@@ -27,6 +27,8 @@ export const calcWinChanceQs = (gameType, rounds) => {
 export async function predictNextQs(qs_list, gameType) {
   const options = [...Array(gameType).keys()];
   const transitionMatrix = {};
+
+  // Initialize transition matrix
   options.forEach(option1 => {
     transitionMatrix[option1] = {};
     options.forEach(option2 => {
@@ -40,67 +42,58 @@ export async function predictNextQs(qs_list, gameType) {
     });
   });
 
+  // Populate transition matrix
   for (let i = 0; i < qs_list.length - 3; i++) {
-    transitionMatrix[qs_list[i].qs][qs_list[i + 1].qs][qs_list[i + 2].qs][
-      qs_list[i + 3].qs
-    ]++;
+    transitionMatrix[qs_list[i].qs][qs_list[i + 1].qs][qs_list[i + 2].qs][qs_list[i + 3].qs]++;
   }
 
+  // Normalize transition matrix
   Object.keys(transitionMatrix).forEach(fromState1 => {
     Object.keys(transitionMatrix[fromState1]).forEach(fromState2 => {
-      Object.keys(transitionMatrix[fromState1][fromState2]).forEach(
-        fromState3 => {
-          const totalTransitions = Object.values(
-            transitionMatrix[fromState1][fromState2][fromState3]
-          ).reduce((a, b) => a + b);
-          Object.keys(
-            transitionMatrix[fromState1][fromState2][fromState3]
-          ).forEach(toState => {
-            transitionMatrix[fromState1][fromState2][fromState3][
-              toState
-            ] /= totalTransitions;
-          });
-        }
-      );
+      Object.keys(transitionMatrix[fromState1][fromState2]).forEach(fromState3 => {
+        const totalTransitions = Object.values(transitionMatrix[fromState1][fromState2][fromState3]).reduce((a, b) => a + b, 0);
+        Object.keys(transitionMatrix[fromState1][fromState2][fromState3]).forEach(toState => {
+          transitionMatrix[fromState1][fromState2][fromState3][toState] /= totalTransitions;
+        });
+      });
     });
   });
 
+  // Calculate win chance
   const winChance = calcWinChanceQs(gameType, qs_list);
   let deviation = 0;
   if (winChance !== '33.33%') {
-    deviation = (1 - 1 / gameType) / 2;
+    deviation = (1 - 1 / gameType) / 10; // Reduced deviation factor
   }
 
+  // Determine current states
   let currentState1 = qs_list[qs_list.length - 3].qs;
   let currentState2 = qs_list[qs_list.length - 2].qs;
   let currentState3 = qs_list[qs_list.length - 1].qs;
   let nextState = currentState3;
   let maxProb = 0;
-  Object.keys(
-    transitionMatrix[currentState1][currentState2][currentState3]
-  ).forEach(state => {
-    if (
-      transitionMatrix[currentState1][currentState2][currentState3][state] >
-      maxProb
-    ) {
-      maxProb =
-        transitionMatrix[currentState1][currentState2][currentState3][state];
+
+  // Find the state with the highest transition probability
+  Object.keys(transitionMatrix[currentState1][currentState2][currentState3]).forEach(state => {
+    if (transitionMatrix[currentState1][currentState2][currentState3][state] > maxProb) {
+      maxProb = transitionMatrix[currentState1][currentState2][currentState3][state];
       nextState = state;
     }
   });
 
+  // Introduce reduced randomness based on deviation
   let randomNum = Math.random();
   if (randomNum < deviation) {
     let randomState = '';
     do {
-      randomNum = Math.random();
-      randomState = options[Math.floor(randomNum * gameType)];
+      randomState = options[Math.floor(Math.random() * gameType)];
     } while (randomState === nextState);
     nextState = randomState;
   }
 
   return nextState;
-};
+}
+
 
 export function martingaleStrategy_qs(historicData, qs_game_type) {
   // If there's no historic data or it's the first round, play randomly
@@ -134,7 +127,7 @@ function getResult(aiMove, opponentMove) {
 
 async function trainModel_qs(rpsNumeric, joinerRPSNumeric, qs_game_type) {
   if (!qs_game_type || typeof qs_game_type !== 'number' || qs_game_type <= 0) {
-      throw new Error(`Invalid qs_game_type: ${qs_game_type}`);
+    throw new Error(`Invalid qs_game_type: ${qs_game_type}`);
   }
 
   const rpsTensor = tf.tensor2d(rpsNumeric, [rpsNumeric.length, 1]);
@@ -146,21 +139,21 @@ async function trainModel_qs(rpsNumeric, joinerRPSNumeric, qs_game_type) {
   model.add(tf.layers.dense({ units: qs_game_type, activation: 'softmax' }));
 
   model.compile({
-      optimizer: tf.train.adam(0.1), // Higher learning rate for quicker adaptation
-      loss: 'sparseCategoricalCrossentropy',
-      metrics: ['accuracy']
+    optimizer: tf.train.adam(0.1), // Higher learning rate for quicker adaptation
+    loss: 'sparseCategoricalCrossentropy',
+    metrics: ['accuracy']
   });
 
   // Train the model with the recent data
   await model.fit(rpsTensor, joinerRPSTensor, {
-      epochs: 10,
-      verbose: 0,
-      batch_size: Math.max(1, rpsNumeric.length), // Handle small batch sizes
-      callbacks: {
-          onEpochEnd: async (epoch, logs) => {
-              // console.log(`Epoch ${epoch}: loss = ${logs.loss}, accuracy = ${logs.acc}`);
-          }
+    epochs: 10,
+    verbose: 0,
+    batch_size: Math.max(1, rpsNumeric.length), // Handle small batch sizes
+    callbacks: {
+      onEpochEnd: async (epoch, logs) => {
+        // console.log(`Epoch ${epoch}: loss = ${logs.loss}, accuracy = ${logs.acc}`);
       }
+    }
   });
 
   // Dispose of tensors
@@ -172,7 +165,7 @@ async function trainModel_qs(rpsNumeric, joinerRPSNumeric, qs_game_type) {
 
 async function predictNextMove_qs(model, rpsNumeric, qs_game_type) {
   if (!qs_game_type || typeof qs_game_type !== 'number' || qs_game_type <= 0) {
-      throw new Error(`Invalid qs_game_type: ${qs_game_type}`);
+    throw new Error(`Invalid qs_game_type: ${qs_game_type}`);
   }
 
   const rpsTensor = tf.tensor2d(rpsNumeric, [rpsNumeric.length, 1]);
@@ -191,11 +184,11 @@ async function predictNextMove_qs(model, rpsNumeric, qs_game_type) {
 
 export async function reinforcementAI_qs(data, qs_game_type) {
   if (!qs_game_type || typeof qs_game_type !== 'number' || qs_game_type <= 0) {
-      throw new Error(`Invalid qs_game_type: ${qs_game_type}`);
+    throw new Error(`Invalid qs_game_type: ${qs_game_type}`);
   }
 
   if (data.length === 0) {
-      return { move: getRandomItem_qs(qs_game_type), risk: 0 };
+    return { move: getRandomItem_qs(qs_game_type), risk: 0 };
   }
 
   const historicData = data.reverse().slice(0, 20);
@@ -203,26 +196,26 @@ export async function reinforcementAI_qs(data, qs_game_type) {
   const joinerRPSNumeric = historicData.map(entry => parseInt(entry.joiner_qs, 10));
 
   const results = historicData.map((entry, index) => ({
-      qs: entry.qs,
-      joiner_qs: entry.joiner_qs,
-      win: entry.qs !== entry.joiner_qs
+    qs: entry.qs,
+    joiner_qs: entry.joiner_qs,
+    win: entry.qs !== entry.joiner_qs
   }));
 
   const recentGamesAnalysis = results.slice(1).map((current, i) => {
-      const previous = results[i];
-      return {
-          win: previous.win,
-          joinerChanged: current.joiner_qs !== previous.joiner_qs
-      };
+    const previous = results[i];
+    return {
+      win: previous.win,
+      joinerChanged: current.joiner_qs !== previous.joiner_qs
+    };
   });
 
   const winChangePattern = recentGamesAnalysis.reduce((acc, game) => {
-      if (game.win) {
-          acc.winChanges.push(game.joinerChanged);
-      } else {
-          acc.lossChanges.push(game.joinerChanged);
-      }
-      return acc;
+    if (game.win) {
+      acc.winChanges.push(game.joinerChanged);
+    } else {
+      acc.lossChanges.push(game.joinerChanged);
+    }
+    return acc;
   }, { winChanges: [], lossChanges: [] });
 
   const winChangesLikely = winChangePattern.winChanges.every(change => change);
@@ -230,39 +223,39 @@ export async function reinforcementAI_qs(data, qs_game_type) {
 
   let model;
   try {
-      model = await trainModel_qs(joinerRPSNumeric, qsNumeric, qs_game_type);
+    model = await trainModel_qs(joinerRPSNumeric, qsNumeric, qs_game_type);
 
-      let bestCounterMove = await predictNextMove_qs(model, qsNumeric, qs_game_type);
+    let bestCounterMove = await predictNextMove_qs(model, qsNumeric, qs_game_type);
 
-      const randomnessFactor = 0.1;
-      if (Math.random() < randomnessFactor) {
-          const possibleMoves = Array.from({ length: qs_game_type }, (_, i) => i);
-          possibleMoves.splice(bestCounterMove.move, 1);
-          bestCounterMove.move = getRandomItem_qs(qs_game_type, possibleMoves);
-      } else if (winChangesLikely || lossChangesLikely) {
-          bestCounterMove = await predictNextMove_qs(model, qsNumeric, qs_game_type);
-      } else {
-          const possibleMoves = Array.from({ length: qs_game_type }, (_, i) => i);
-          possibleMoves.splice(bestCounterMove.move, 1);
-          bestCounterMove.move = getRandomItem_qs(qs_game_type, possibleMoves);
-      }
+    const randomnessFactor = 0.1;
+    if (Math.random() < randomnessFactor) {
+      const possibleMoves = Array.from({ length: qs_game_type }, (_, i) => i);
+      possibleMoves.splice(bestCounterMove.move, 1);
+      bestCounterMove.move = getRandomItem_qs(qs_game_type, possibleMoves);
+    } else if (winChangesLikely || lossChangesLikely) {
+      bestCounterMove = await predictNextMove_qs(model, qsNumeric, qs_game_type);
+    } else {
+      const possibleMoves = Array.from({ length: qs_game_type }, (_, i) => i);
+      possibleMoves.splice(bestCounterMove.move, 1);
+      bestCounterMove.move = getRandomItem_qs(qs_game_type, possibleMoves);
+    }
 
-      return bestCounterMove;
+    return bestCounterMove;
   } finally {
-      if (model) {
-          model.dispose();
-      }
+    if (model) {
+      model.dispose();
+    }
   }
 }
 
 export function patternBasedAI_qs(historicData, qs_game_type) {
   if (historicData.length === 0) {
-      return getRandomItem_qs(qs_game_type);
+    return getRandomItem_qs(qs_game_type);
   }
   const opponentMoves = historicData.map(item => item.joiner_qs);
   const moveCounts = Array(qs_game_type).fill(0);
   opponentMoves.slice(-10).forEach(move => {
-      moveCounts[move]++;
+    moveCounts[move]++;
   });
 
   const mostFrequentMove = moveCounts.indexOf(Math.max(...moveCounts));
@@ -273,22 +266,50 @@ export function patternBasedAI_qs(historicData, qs_game_type) {
 
 export function counterSwitchAI_qs(historicData, qs_game_type) {
   if (historicData.length > 0) {
-      const lastGame = historicData[0];
+    const lastGame = historicData[0];
 
-      const lastGameWasWin = lastGame.joiner_qs !== lastGame.qs;
-      const lastGameWasLoss = lastGame.joiner_qs === lastGame.qs;
+    const lastGameWasWin = lastGame.joiner_qs !== lastGame.qs;
+    const lastGameWasLoss = lastGame.joiner_qs === lastGame.qs;
 
-      if (lastGameWasWin) {
-          const repeatProbability = 1;
-          if (Math.random() < repeatProbability) {
-              return parseInt(lastGame.qs, 10);
-          }
-      } else if (lastGameWasLoss) {
-          return (parseInt(lastGame.joiner_qs, 10) + 1) % qs_game_type;
+    if (lastGameWasWin) {
+      const repeatProbability = 1;
+      if (Math.random() < repeatProbability) {
+        return parseInt(lastGame.qs, 10);
       }
+    } else if (lastGameWasLoss) {
+      return (parseInt(lastGame.joiner_qs, 10) + 1) % qs_game_type;
+    }
   }
   return getRandomItem_qs(qs_game_type);
 }
+
+export function innovate_qs(historicData, qs_game_type) {
+  // Get the first 10 entries of joiner_qs from the historic data
+  const firstEntries = historicData.slice(0, 6);
+  const firstJoinerQs = firstEntries.map(entry => parseInt(entry.joiner_qs, 10));
+
+  // Ensure we have valid entries for comparison
+  if (firstJoinerQs.length < 6 || firstJoinerQs.some(isNaN)) {
+    // Not enough data or invalid data, return a random move with risk 0
+    return { counterMove: getRandomItem_qs(qs_game_type), risk: 1 };
+  }
+
+  // Check if all the first 10 joiner_qs are the same
+  const allSame = firstJoinerQs.every(qs => qs === firstJoinerQs[0]);
+  if (allSame) {
+    // Generate a list of possible moves excluding the last joiner_qs value
+    const lastMove = firstJoinerQs[0];
+    const possibleMoves = Array.from({ length: qs_game_type }, (_, i) => i).filter(move => move !== lastMove);
+    return { counterMove: getRandomItem_qs(qs_game_type, possibleMoves), risk: 3 };
+  } else {
+    // Return the same move as the first joiner_qs
+    const previousMove = parseInt(historicData[0].joiner_qs, 6);
+    return { counterMove: previousMove, risk: 1 };
+  }
+}
+
+
+
 
 export function counterRandomness_qs(historicData, qs_game_type) {
   const dataLength = qs_game_type + 3;
@@ -309,14 +330,14 @@ export function counterRandomness_qs(historicData, qs_game_type) {
     moveCounts[move]++;
   });
 
-const leastPlayedMove = getLeastPlayedMove(moveCounts);
-const lastTwoMoves = getLastMoves(historicData, 4);
-const lastThreeMoves = getLastMoves(historicData, 3);
+  const leastPlayedMove = getLeastPlayedMove(moveCounts);
+  const lastTwoMoves = getLastMoves(historicData, 4);
+  const lastThreeMoves = getLastMoves(historicData, 3);
 
-const availableMoves = Array.from({ length: qs_game_type }, (_, i) => i).filter(move => move !== leastPlayedMove);
+  const availableMoves = Array.from({ length: qs_game_type }, (_, i) => i).filter(move => move !== leastPlayedMove);
 
 
-if (Number.isNaN(leastPlayedMove)) {
+  if (Number.isNaN(leastPlayedMove)) {
     return { counterMove: getRandomItem_qs(qs_game_type), risk: 1 };
   } else if (!lastTwoMoves.includes(leastPlayedMove)) {
     return { counterMove: getRandomItem_qs(qs_game_type, availableMoves), risk: 3 };
@@ -360,45 +381,45 @@ export function NPC_qs(historicData) {
 export function generatePattern_qs(allBetItems, qs_game_type) {
   const patterns = [];
   for (let i = 0; i < qs_game_type; i++) {
-      for (let j = 0; j < qs_game_type; j++) {
-          if (i !== j) {
-              patterns.push([i, j]);
-          }
+    for (let j = 0; j < qs_game_type; j++) {
+      if (i !== j) {
+        patterns.push([i, j]);
       }
+    }
   }
 
   const lastTwoMoves = allBetItems.slice(0, 2).map(item => parseInt(item.qs, 10));
 
   let matchedPattern = null;
   for (const pattern of patterns) {
-      if ((pattern[0] === lastTwoMoves[0] && pattern[1] === lastTwoMoves[1]) ||
-          (pattern[1] === lastTwoMoves[0] && pattern[0] === lastTwoMoves[1])) {
-          matchedPattern = pattern;
-          break;
-      }
+    if ((pattern[0] === lastTwoMoves[0] && pattern[1] === lastTwoMoves[1]) ||
+      (pattern[1] === lastTwoMoves[0] && pattern[0] === lastTwoMoves[1])) {
+      matchedPattern = pattern;
+      break;
+    }
   }
 
   if (matchedPattern) {
-      let continuationCount = 0;
+    let continuationCount = 0;
 
-      for (let i = 2; i < allBetItems.length; i++) {
-          if ((parseInt(allBetItems[i - 1].joiner_qs, 10) === matchedPattern[0] && parseInt(allBetItems[i].joiner_qs, 10) === matchedPattern[1]) ||
-              (parseInt(allBetItems[i - 1].joiner_qs, 10) === matchedPattern[1] && parseInt(allBetItems[i].joiner_qs, 10) === matchedPattern[0])) {
-              continuationCount++;
-          } else {
-              break;
-          }
+    for (let i = 2; i < allBetItems.length; i++) {
+      if ((parseInt(allBetItems[i - 1].joiner_qs, 10) === matchedPattern[0] && parseInt(allBetItems[i].joiner_qs, 10) === matchedPattern[1]) ||
+        (parseInt(allBetItems[i - 1].joiner_qs, 10) === matchedPattern[1] && parseInt(allBetItems[i].joiner_qs, 10) === matchedPattern[0])) {
+        continuationCount++;
+      } else {
+        break;
       }
+    }
 
-      const maxContinuation = Math.floor(Math.random() * 4) + 2;
-      if (continuationCount > maxContinuation) {
-          const movesNotInPattern = Array.from({ length: qs_game_type }, (_, i) => i).filter(move => !matchedPattern.includes(move));
-          const randomMove = movesNotInPattern[Math.floor(Math.random() * movesNotInPattern.length)];
-          return randomMove;
-      }
-      return parseInt(allBetItems[1].joiner_qs, 10);
+    const maxContinuation = Math.floor(Math.random() * 4) + 2;
+    if (continuationCount > maxContinuation) {
+      const movesNotInPattern = Array.from({ length: qs_game_type }, (_, i) => i).filter(move => !matchedPattern.includes(move));
+      const randomMove = movesNotInPattern[Math.floor(Math.random() * movesNotInPattern.length)];
+      return randomMove;
+    }
+    return parseInt(allBetItems[1].joiner_qs, 10);
   } else {
-      return getRandomItem_qs(qs_game_type);
+    return getRandomItem_qs(qs_game_type);
   }
 }
 

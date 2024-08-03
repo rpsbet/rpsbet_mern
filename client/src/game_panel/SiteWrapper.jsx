@@ -567,8 +567,6 @@ class SiteWrapper extends Component {
   loadWeb3 = async () => {
     const { isDarkMode } = this.props;
     try {
-      // console.log("Loading Web3");
-
       // Check if there is a provider available
       if (window.ethereum) {
         const web3 = new Web3(window.ethereum);
@@ -578,12 +576,10 @@ class SiteWrapper extends Component {
 
         // Check if accounts are available
         if (accounts.length > 0) {
-          // alertModal(isDarkMode, 'CONNECTED ETHEREUM ACCOUNT: ' + accounts[0].toUpperCase());
 
           // Get ETH balance of the account
           const ethBalance = await web3.eth.getBalance(accounts[0]);
           const tokenAmount = web3.utils.fromWei(ethBalance, 'ether');
-          // console.log(tokenAmount)
           // Update state with the connected account and balance
           this.setState({
             web3: web3,
@@ -596,7 +592,6 @@ class SiteWrapper extends Component {
       } else {
         alertModal(isDarkMode, 'NO WEB3 WALLET FOUND IN YOUR BROWSER.');
       }
-      // console.log("Web3 loaded successfully");
 
     } catch (e) {
       alertModal(isDarkMode, 'NO CONNECTED WALLET');
@@ -928,7 +923,6 @@ class SiteWrapper extends Component {
   handleLoadMore = async () => {
     const { loadMore, filterType, sortType, searchQuery } = this.state;
     const nextLoadMore = loadMore >= 10 ? loadMore + 10 : 10;
-    // console.log("nextLoadMore", nextLoadMore)
     if (!this.props.tnxComplete) {
       await this.props.getUser(
         false,

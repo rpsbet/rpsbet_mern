@@ -15,8 +15,8 @@ const { convertGameLogToHistoryStyle } = require('./convertGameLogToHistoryStyle
 const check_access_time = require('../../helper/util/checkAccessTime');
 
 const moment = require('moment');
-const { predictNext, reinforcementAI, patternBasedAI, counterSwitchAI, counterRandomness, NPC, generatePattern } = require('./predictNext');
-const { NPC_qs, patternBasedAI_qs, getRandomItem_qs, counterSwitchAI_qs, generatePattern_qs, counterRandomness_qs, getCopyCatItem_qs, predictNextQs, reinforcementAI_qs } = require('./predictNextQs');
+const { predictNext, reinforcementAI, innovate, patternBasedAI, counterSwitchAI, counterRandomness, NPC, generatePattern } = require('./predictNext');
+const { NPC_qs, patternBasedAI_qs, innovate_qs, getRandomItem_qs, counterSwitchAI_qs, generatePattern_qs, counterRandomness_qs, getCopyCatItem_qs, predictNextQs, reinforcementAI_qs } = require('./predictNextQs');
 
 const saveDocumentWithRetry = require('./retrySave');
 const requestQueue = [];
@@ -195,16 +195,14 @@ const addToQueue = async (req, bot = false) => {
                     joiner: user._id,
                     joiner_rps: { $ne: null }
                 })
-                .sort({ created_at: -1 })
-                .limit(50);
-                
+                    .sort({ created_at: -1 })
+                    .limit(50);
+
                 // Create a copy of the array and reverse the copy
                 const allBetItems = [...reversedBetItems].reverse();
                 const mostRecentItems = reversedBetItems.slice(0, 4);
-                
-                newGameLog.bet_amount = betAmount;
-                console.log(newGameLog.bet_amount );
 
+                newGameLog.bet_amount = betAmount;
 
                 if (!bet_item && roomInfo['rps_game_type'] === 0) {
                     let nextItem;
@@ -242,6 +240,9 @@ const addToQueue = async (req, bot = false) => {
                             break;
                         case 'Hidden Markov':
                             nextItem = await predictNext(allBetItems);
+                            break;
+                        case 'Innovate':
+                            nextItem = await innovate(allBetItems);
                             break;
 
                         default:
@@ -521,15 +522,15 @@ const addToQueue = async (req, bot = false) => {
                     joiner_qs: ''
                 });
                 bet_item = availableBetItem;
-                
+
                 const reversedBetItems = await QsBetItem.find({
                     room: new ObjectId(req.body._id),
                     joiner: user._id,
                     joiner_qs: { $ne: null }
                 })
-                .sort({ created_at: -1 })
-                .limit(50);
-                
+                    .sort({ created_at: -1 })
+                    .limit(50);
+
                 const allBetItems = [...reversedBetItems].reverse();
                 const mostRecentItems = reversedBetItems.slice(0, 4);
 
@@ -566,10 +567,13 @@ const addToQueue = async (req, bot = false) => {
                             nextItem = await getCopyCatItem_qs(allBetItems);
                             break;
                         case 'Markov':
-                            nextItem = await getNextItemUsingMarkov_qs(allBetItems);
+                            nextItem = await getNextItemUsingMarkov_qs(allBetItems,  roomInfo['qs_game_type']);
                             break;
                         case 'Hidden Markov':
                             nextItem = await predictNextQs(allBetItems, roomInfo['qs_game_type']);
+                            break;
+                        case 'Innovate':
+                            nextItem = await innovate_qs(allBetItems, roomInfo['qs_game_type']);
                             break;
 
                         default:
@@ -583,13 +587,13 @@ const addToQueue = async (req, bot = false) => {
                         bet_amount: betAmount,
                     });
 
-                    async function getNextItemUsingMarkov_qs(allBetItems) {
+                    async function getNextItemUsingMarkov_qs(allBetItems, gameType) {
                         if (allBetItems.length <= 3) {
                             return getRandomItem();
                         }
 
                         const transformedItems = allBetItems.map(item => ({ qs: item.joiner_qs }));
-                        const nextItem = await predictNextQs(transformedItems, true);
+                        const nextItem = await predictNextQs(transformedItems, gameType);
                         return nextItem;
                     }
                 }
@@ -812,11 +816,7 @@ const addToQueue = async (req, bot = false) => {
                 if (host.profitAllTimeLow > newTransactionAmount * -1) {
                     host.profitAllTimeLow = newTransactionAmount * -1;
                 }
-            } else {
-                console.log(`Host not found.`);
-            }
-
-            // Check if user_bet matches the share value of the first host
+            } 
             if (roomInfo.hosts[0].share === 100) {
                 let notification = new Notification({
                     from: user._id,
@@ -865,8 +865,6 @@ const addToQueue = async (req, bot = false) => {
                             } catch (error) {
                                 console.error("Error saving host:", error);
                             }
-                        } else {
-                            console.log(`Host not found.`);
                         }
                     } catch (error) {
                         console.error("Error saving newTransactionC", error);
@@ -910,10 +908,7 @@ const addToQueue = async (req, bot = false) => {
                         } catch (error) {
                             console.error("Error saving user:", error);
                         }
-                    } else {
-                        console.log(`User with host ${host.host} not found.`);
                     }
-
                     notification.from = roomInfo['creator'];
                     notification.to = host.host;
                     notification.message = 'Co-Hosting ' + convertToCurrency(amountForHost) + ' auto-payout in ' + roomInfo.game_type.short_name + '-' + roomInfo.room_number;

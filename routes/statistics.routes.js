@@ -479,6 +479,7 @@ router.get('/get-leaderboards', auth, async (req, res) => {
       'WHALE WATCHERS',
       'OFFICIALRPSGAME',
       'PimpedPistols',
+      'KEKW',
       'smellyfingers',
       'NO BROKIES',
       'SUPPORT',

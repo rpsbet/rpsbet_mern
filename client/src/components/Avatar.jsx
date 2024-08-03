@@ -143,6 +143,7 @@ class Avatar extends Component {
     const systemUsernames = [
       'PimpedPistols',
       'GIGACHAD',
+      'KEKW',
       'smellyfingers',
       'SUPPORT',
       'OFFICIALRPSGAME',
@@ -154,6 +155,7 @@ class Avatar extends Component {
 
     const verifiedUsernames = [
       'PimpedPistols',
+      'KEKW',
       'GIGACHAD',
       'smellyfingers',
       'SUPPORT',

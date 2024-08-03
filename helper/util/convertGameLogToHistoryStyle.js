@@ -6,7 +6,6 @@ const convertGameLogToHistoryStyle = async gameLogList => {
   let result = [];
 
   gameLogList.forEach(gameLog => {
-    // console.log("1",gameLog['room']);
     let room_name;
     if (gameLog.game_result === 3000) {
       room_name = `<a style='color: #b9bbbe;' href="/join/${gameLog['room']['_id']}">${gameLog['game_type']['short_name']}-${gameLog['room']['room_number']}</a>`;

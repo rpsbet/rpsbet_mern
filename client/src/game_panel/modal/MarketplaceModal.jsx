@@ -50,7 +50,6 @@ class MarketplaceModal extends Component {
 
   onSubmitFrom = () => {
     // e.preventDefault();
-    // console.log(this.state);
     this.props.infoMsgBar(`New Item Listed!`);
     this.props.createItem(this.state);
     this.closeProductCreateModal();

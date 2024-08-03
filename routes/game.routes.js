@@ -65,7 +65,7 @@ router.get('/game_types', async (req, res) => {
 
 router.get('/strategies', async (req, res) => {
   try {
-    const excludedStrategies = ['Bush Mosteller', 'Innovate', 'Random'];
+    const excludedStrategies = ['Bush Mosteller', 'Random'];
     const strategies = await Strategy.find({ name: { $nin: excludedStrategies } }).sort({ created_at: 1 });
     res.json({
       success: true,

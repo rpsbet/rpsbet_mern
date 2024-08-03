@@ -6,8 +6,8 @@ const QsBetItem = require('../../model/QsBetItem.js')
 const AttachedPlayer = require('../../model/AttachedPlayer.js');
 const executeBet1 = require('./betExecutor.js');
 const executeBet4 = require('./betExecutor4.js');
-const { predictNext, reinforcementAI, patternBasedAI, counterSwitchAI, NPC, generatePattern, skillIssue, getRandomMove, martingaleStrategy } = require('./predictNext');
-const { NPC_qs, patternBasedAI_qs, getRandomItem_qs, counterSwitchAI_qs, generatePattern_qs, getCopyCatItem_qs, predictNextQs, reinforcementAI_qs, skillIssue_qs, martingaleStrategy_qs } = require('./predictNextQs');
+const { predictNext, reinforcementAI, innovate, patternBasedAI, counterSwitchAI, NPC, generatePattern, skillIssue, getRandomMove, martingaleStrategy } = require('./predictNext');
+const { NPC_qs, patternBasedAI_qs, innovate_qs, getRandomItem_qs, counterSwitchAI_qs, generatePattern_qs, getCopyCatItem_qs, predictNextQs, reinforcementAI_qs, skillIssue_qs, martingaleStrategy_qs } = require('./predictNextQs');
 
 const os = require('os');
 let socketio = null;
@@ -19,8 +19,8 @@ async function swapRpsBetItems(roomId, user) {
       room: roomId,
       joiner: user._id
     })
-    .sort({ created_at: -1 })  // Sort by created_at in descending order
-    .limit(50);  // Limit to the first 50 items
+    .sort({ created_at: -1 })
+    .limit(50);
 
     const swappedRpsBetItems = rpsBetItems.map(item => ({
       ...item.toObject(),
@@ -28,7 +28,6 @@ async function swapRpsBetItems(roomId, user) {
       joiner_rps: item.rps,
     }));
 
-    // Log the rps and joiner_rps arrays
     const rpsArray = swappedRpsBetItems.map(item => item.rps);
     const joinerRpsArray = swappedRpsBetItems.map(item => item.joiner_rps);
 
@@ -47,8 +46,8 @@ async function swapQsBetItems(roomId, user) {
       room: roomId,
       joiner: user._id
     })
-    .sort({ created_at: -1 })  // Sort by created_at in descending order
-    .limit(50);  // Limit to the first 50 items
+    .sort({ created_at: -1 })
+    .limit(50);
 
     const swappedQsBetItems = qsBetItems.map(item => ({
       ...item.toObject(),
@@ -65,6 +64,7 @@ async function swapQsBetItems(roomId, user) {
 
 
 async function predictNextBetAmount(betArray, penultimateSameAsLast, smoothingFactor = 0.01, randomnessFactor = 0.2, threshold = 0.0005, room) {
+
   const allStates = Array.from(new Set(betArray));
   if (penultimateSameAsLast !== 0) {
     if (penultimateSameAsLast >= 3) {
@@ -137,11 +137,9 @@ async function delay(ms) {
 }
 
 async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room = null, ai_mode = null) {
-  // if (!user.username.includes('BOT')) {
-  //   console.log('User is not a bot. Skipping execution.');
-  //   return;
-  // }
-
+  if (!room) {
+    return;
+  }
   try {
     const rooms = room ? [room] : await Room.find({
       'joiners': user._id,
@@ -242,6 +240,14 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
               const outcome = await martingaleStrategy(rpsBetItems);
               nextState = outcome.move;
               predictedBetAmount = outcome.lastResult === 'loss' || outcome.lastResult === 'draw' ? betArray[0].bet_amount * 2 : Math.min(...betArray);
+            } else if (ai_mode === 'Innovate') {
+              const randomnessResult = await innovate(rpsBetItems);
+              nextState = randomnessResult.counterMove;
+              const penultimateSameAsLast = randomnessResult.risk;
+              const predictedBet = await predictNextBetAmount(betArray, penultimateSameAsLast, 0, 0.01, 0.2, room);
+              predictedBetAmount = penultimateSameAsLast === 1
+                ? Math.max(predictedBet / 5, 0.1)
+                : predictedBet;
             }
 
           }
@@ -249,8 +255,6 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
           if (predictedBetAmount > user.balance) {
             try {
               await AttachedPlayer.deleteOne({ user: user._id, room: room._id });
-
-              // console.log(`Deleted AttachedPlayer document for user ${user._id} in room ${room._id} because predictedBetAmount (${predictedBetAmount}) exceeded user balance (${user.balance})`);
             } catch (error) {
               console.error('Error deleting AttachedPlayer document:', error);
             }
@@ -341,6 +345,15 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
               const outcome = await martingaleStrategy_qs(qsBetItems, room.qs_game_type);
               nextState = outcome.move;
               predictedBetAmount = outcome.lastResult === 'loss' || outcome.lastResult === 'draw' ? betArray[0].bet_amount * 2 : Math.min(...betArray);
+            } else if (ai_mode === 'Innovate') {
+              
+              const randomnessResult = await innovate_qs(qsBetItems, room.qs_game_type);
+              nextState = randomnessResult.counterMove;
+              const penultimateSameAsLast = randomnessResult.risk;
+              const predictedBet = await predictNextBetAmount(betArray, penultimateSameAsLast, 0, 0.01, 0.2, room);
+              predictedBetAmount = penultimateSameAsLast === 1
+                ? Math.max(predictedBet / 5, 0.1)
+                : predictedBet;
             }
           }
 
@@ -352,7 +365,6 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
           ) {
             try {
               await AttachedPlayer.deleteOne({ user: user._id, room: room._id });
-              // console.log(`Deleted AttachedPlayer document for user ${user._id} in room ${room._id} because predictedBetAmount (${predictedBetAmount}) exceeded user balance (${user.balance})`);
             } catch (error) {
               console.error('Error deleting AttachedPlayer document:', error);
             }
