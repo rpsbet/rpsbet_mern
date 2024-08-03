@@ -163,7 +163,7 @@ class CreateGame extends Component {
       bj_list: [],
       roll_list: [],
       qs_list: [],
-      selectedStrategy: 'Random',
+      selectedStrategy: 'Hidden Markov',
       qs_game_type: 2,
       qs_nation: 0,
       selected_qs_position: 0,
