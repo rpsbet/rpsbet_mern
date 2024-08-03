@@ -104,16 +104,16 @@ const addToQueue = async (req, bot = false) => {
                 return responseData;
             }
 
-            // const accessAllowed = await check_access_time(req.user._id);
-            // if (!accessAllowed) {
-            //     responseData = {
-            //         success: false,
-            //         message: 'TOO FAST',
-            //         betResult: -100
-            //     };
+            const accessAllowed = await check_access_time(req.user._id);
+            if (!accessAllowed) {
+                responseData = {
+                    success: false,
+                    message: 'TOO FAST',
+                    betResult: -100
+                };
 
-            //     return responseData;
-            // }
+                return responseData;
+            }
 
             if (roomInfo['status'] === 'finished') {
                 responseData = {
@@ -687,7 +687,7 @@ const addToQueue = async (req, bot = false) => {
                     }
 
                     bet_item.joiner = req.user;
-                    bet_item.joiner_qs = req.body.selected_qs;
+                    bet_item.joiner_qs = req.body.selected_qs_position;
 
                     message.message =
                         'Lost ' +

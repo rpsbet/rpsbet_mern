@@ -657,7 +657,7 @@ const addToQueue = async (req, bot = false) => {
                     }
 
                     bet_item.joiner = req.user;
-                    bet_item.joiner_qs = req.body.selected_qs;
+                    bet_item.joiner_qs = req.body.selected_qs_position;
 
                     message.message =
                         'Lost ' +

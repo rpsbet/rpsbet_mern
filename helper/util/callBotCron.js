@@ -346,7 +346,6 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
               nextState = outcome.move;
               predictedBetAmount = outcome.lastResult === 'loss' || outcome.lastResult === 'draw' ? betArray[0].bet_amount * 2 : Math.min(...betArray);
             } else if (ai_mode === 'Innovate') {
-              
               const randomnessResult = await innovate_qs(qsBetItems, room.qs_game_type);
               nextState = randomnessResult.counterMove;
               const penultimateSameAsLast = randomnessResult.risk;
@@ -381,19 +380,22 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
         body: {
           _id: roomId,
           bet_amount: predictedBetAmount,
-          [gameType.toString() === '62a25d2a723b9f15709d1aeb' ? 'selected_qs' : 'selected_rps']: nextState
+          selected_qs_position: nextState,
+          selected_rps_position: nextState,
         }
       };
 
-
       if (parseFloat(room.user_bet) >= 0.1 && predictedBetAmount >= 0 && predictedBetAmount <= parseFloat(room.user_bet) && userIds.some(id => room.joiners.includes(id))) {
         if (useFirstBetFunction && !isExecutingBet1) {
+          // BOT
           isExecutingBet1 = true;
-          await executeBet1(req, true);
+         const  newBet = await executeBet1(req, true);
           isExecutingBet1 = false;
         } else if (!useFirstBetFunction && !isExecutingBet4) {
+          // attached
           isExecutingBet4 = true;
-          await executeBet4(req, true);
+          const newBet = await executeBet4(req, true);
+
           isExecutingBet4 = false;
         }
       }

@@ -46,7 +46,6 @@ const addToQueue = async (req, bot = false) => {
         });
 
         user = await User.findOne({ _id: req.user._id });
-
         if (req.body._id) {
             if (user.dailyWithdrawals > 0.02) {
                 responseData = {
@@ -243,6 +242,7 @@ const addToQueue = async (req, bot = false) => {
                             break;
                         case 'Innovate':
                             nextItem = await innovate(allBetItems);
+                            
                             break;
 
                         default:
@@ -580,7 +580,7 @@ const addToQueue = async (req, bot = false) => {
                             const move = await reinforcementAI_qs(allBetItems, roomInfo['qs_game_type']);
                             nextItem = move.move;
                             break;
-                    }
+                    }                       
                     bet_item = new QsBetItem({
                         room: new ObjectId(req.body._id),
                         qs: nextItem,
@@ -597,9 +597,7 @@ const addToQueue = async (req, bot = false) => {
                         return nextItem;
                     }
                 }
-
                 newGameLog.selected_qs_position = req.body.selected_qs_position;
-
                 // deduct the joiner's bet
                 newTransactionAmount -= betAmount;
                 roomInfo['user_bet'] = parseFloat(roomInfo['user_bet']);
@@ -632,7 +630,7 @@ const addToQueue = async (req, bot = false) => {
                     }
 
                     bet_item.joiner = req.user;
-                    bet_item.joiner_qs = req.body.selected_qs;
+                    bet_item.joiner_qs = req.body.selected_qs_position;
 
                     message.message =
                         'Lost ' +

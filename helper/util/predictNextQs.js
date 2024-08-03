@@ -212,7 +212,7 @@ function innovate_qs(historicData, qs_game_type) {
   // Ensure we have valid entries for comparison
   if (firstJoinerQs.length < 6 || firstJoinerQs.some(isNaN)) {
     // Not enough data or invalid data, return a random move with risk 0
-    return { counterMove: getRandomItem_qs(qs_game_type), risk: 1 };
+    return getRandomItem_qs(qs_game_type);
   }
 
   // Check if all the first 10 joiner_qs are the same
@@ -221,11 +221,11 @@ function innovate_qs(historicData, qs_game_type) {
     // Generate a list of possible moves excluding the last joiner_qs value
     const lastMove = firstJoinerQs[0];
     const possibleMoves = Array.from({ length: qs_game_type }, (_, i) => i).filter(move => move !== lastMove);
-    return { counterMove: getRandomItem_qs(qs_game_type, possibleMoves), risk: 3 };
+    return getRandomItem_qs(qs_game_type, possibleMoves) ;
   } else {
     // Return the same move as the first joiner_qs
     const previousMove = parseInt(historicData[historicData.length - 1].qs, 6);
-    return { counterMove: previousMove, risk: 1 };
+    return previousMove;
   }
 }
 
@@ -308,7 +308,6 @@ function martingaleStrategy_qs(historicData, qs_game_type) {
   const lastResult = getResult(lastAIMove, lastOpponentMove);
 
   const randomMove = getRandomItem_qs(qs_game_type);
-
   return {
     move: randomMove,
     lastResult: lastResult
