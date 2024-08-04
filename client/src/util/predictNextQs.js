@@ -177,8 +177,18 @@ async function predictNextMove_qs(model, rpsNumeric, qs_game_type) {
 
   // Dispose of tensors
   rpsTensor.dispose();
+  let risk;
+  if (predictionData[nextJoinerRPSNumeric] > 0.4 && predictionData[nextJoinerRPSNumeric] <= 0.7) {
+    risk = 3;
+  } else if (predictionData[nextJoinerRPSNumeric] > 0.7) {
+    risk = 4;
+  } else if (predictionData[nextJoinerRPSNumeric] > 0.2) {
+    risk = 2;
+  } else {
+    risk = 1;
+  }
 
-  return { move: nextJoinerRPSNumeric, risk: predictionData[nextJoinerRPSNumeric] };
+  return { move: nextJoinerRPSNumeric, risk: risk };
 }
 
 
@@ -284,25 +294,19 @@ export function counterSwitchAI_qs(historicData, qs_game_type) {
 }
 
 export function innovate_qs(historicData, qs_game_type) {
-  // Get the first 10 entries of joiner_qs from the historic data
   const firstEntries = historicData.slice(0, 6);
   const firstJoinerQs = firstEntries.map(entry => parseInt(entry.joiner_qs, 10));
 
-  // Ensure we have valid entries for comparison
   if (firstJoinerQs.length < 6 || firstJoinerQs.some(isNaN)) {
-    // Not enough data or invalid data, return a random move with risk 0
     return { counterMove: getRandomItem_qs(qs_game_type), risk: 1 };
   }
 
-  // Check if all the first 10 joiner_qs are the same
   const allSame = firstJoinerQs.every(qs => qs === firstJoinerQs[0]);
   if (allSame) {
-    // Generate a list of possible moves excluding the last joiner_qs value
     const lastMove = firstJoinerQs[0];
     const possibleMoves = Array.from({ length: qs_game_type }, (_, i) => i).filter(move => move !== lastMove);
     return { counterMove: getRandomItem_qs(qs_game_type, possibleMoves), risk: 3 };
   } else {
-    // Return the same move as the first joiner_qs
     const previousMove = parseInt(historicData[0].joiner_qs, 6);
     return { counterMove: previousMove, risk: 1 };
   }

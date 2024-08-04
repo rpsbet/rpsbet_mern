@@ -736,7 +736,7 @@ function BetArray({
                 </div>
 
                 <div style={{
-                  pointerEvents: selectedStrategy === "Martingale" ? "none" : "auto",
+                  pointerEvents: selectedStrategy === "Martingale" || selectedStrategy === "Sniper" ? "none" : "auto",
                   filter: selectedStrategy === "Martingale" ? "grayscale(100%)" : "none",
                   opacity: selectedStrategy === "Martingale" ? "0.3" : "1", display: 'flex', alignItems: 'center', width: "100%", boxShadow: "inset 0px 0px 6px 0px #b4b4b4a8", borderRadius: "9px", justifyContent: "center", padding: "5px 10px", overflow: "hidden"
                 }}>

@@ -196,7 +196,6 @@ async function predictNextMove(model, rpsNumeric) {
   } else {
     risk = 1;
   }
-
   let bestCounterMove;
 
   // Introduce 33% chance of returning a random move

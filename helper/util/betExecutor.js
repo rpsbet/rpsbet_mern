@@ -610,15 +610,16 @@ const addToQueue = async (req, bot = false) => {
                             nextItem = await getCopyCatItem_qs(allBetItems);
                             break;
                         case 'Markov':
-                            nextItem = await getNextItemUsingMarkov_qs(allBetItems,  roomInfo['qs_game_type']);
+                            nextItem = await getNextItemUsingMarkov_qs(allBetItems, roomInfo['qs_game_type']);
                             break;
                         case 'Hidden Markov':
                             nextItem = await predictNextQs(allBetItems, roomInfo['qs_game_type']);
                             break;
                         case 'Innovate':
-                            nextItem = await innovate_qs(allBetItems, roomInfo['qs_game_type']);
+                            let nextState;
+                            nextState = await innovate_qs(allBetItems, roomInfo['qs_game_type']);
+                            nextItem = nextState.move;
                             break;
-
                         default:
                             const move = await reinforcementAI_qs(allBetItems, roomInfo['qs_game_type']);
                             nextItem = {

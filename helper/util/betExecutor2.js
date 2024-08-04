@@ -586,7 +586,7 @@ const addToQueue = async (req, bot = false) => {
                             nextItem = await NPC_qs(allBetItems);
                             break;
                         case 'Tesla':
-                            nextItem = await generatePattern_qs(allBetItems);
+                            nextItem = await generatePattern_qs(allBetItems, roomInfo['qs_game_type']);
                             break;
                         case 'CopyCat':
                             nextItem = await getCopyCatItem_qs(allBetItems);
@@ -598,7 +598,9 @@ const addToQueue = async (req, bot = false) => {
                             nextItem = await predictNextQs(allBetItems, roomInfo['qs_game_type']);
                             break;
                         case 'Innovate':
-                            nextItem = await innovate_qs(allBetItems, roomInfo['qs_game_type']);
+                            let nextState;
+                            nextState = await innovate_qs(allBetItems, roomInfo['qs_game_type']);
+                            nextItem = nextState.move;
                             break;
 
                         default:

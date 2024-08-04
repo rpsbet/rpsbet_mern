@@ -204,29 +204,30 @@ async function reinforcementAI_qs(data, qs_game_type) {
   }
 }
 
-function innovate_qs(historicData, qs_game_type) {
-  // Get the first 10 entries of joiner_qs from the historic data
-  const firstEntries = historicData.slice(0, 6);
+ function innovate_qs(historicData, qs_game_type) {
+
+  let nextState = {};
+  const firstEntries = historicData.slice(-6);
   const firstJoinerQs = firstEntries.map(entry => parseInt(entry.qs, 10));
 
-  // Ensure we have valid entries for comparison
+
   if (firstJoinerQs.length < 6 || firstJoinerQs.some(isNaN)) {
-    // Not enough data or invalid data, return a random move with risk 0
-    return getRandomItem_qs(qs_game_type);
+    nextState.move = getRandomItem_qs(qs_game_type);
+    nextState.risk = 1;
   }
 
-  // Check if all the first 10 joiner_qs are the same
   const allSame = firstJoinerQs.every(qs => qs === firstJoinerQs[0]);
   if (allSame) {
-    // Generate a list of possible moves excluding the last joiner_qs value
     const lastMove = firstJoinerQs[0];
     const possibleMoves = Array.from({ length: qs_game_type }, (_, i) => i).filter(move => move !== lastMove);
-    return getRandomItem_qs(qs_game_type, possibleMoves) ;
+    nextState.move = getRandomItem_qs(qs_game_type, possibleMoves);
+    nextState.risk = 3;
   } else {
-    // Return the same move as the first joiner_qs
     const previousMove = parseInt(historicData[historicData.length - 1].qs, 6);
-    return previousMove;
+    nextState.move = previousMove;
+    nextState.risk = 1;
   }
+  return nextState;
 }
 
 function getRandomItem_qs(qs_game_type, possibleMoves = null) {
@@ -237,6 +238,7 @@ function getRandomItem_qs(qs_game_type, possibleMoves = null) {
 }
 
 function patternBasedAI_qs(historicData, qs_game_type) {
+
   if (historicData.length === 0) {
       return getRandomItem_qs(qs_game_type);
   }
@@ -268,6 +270,7 @@ function counterSwitchAI_qs(historicData, qs_game_type) {
           return (parseInt(lastGame.joiner_qs, 10) + 1) % qs_game_type;
       }
   }
+  
   return getRandomItem_qs(qs_game_type);
 }
 
@@ -324,7 +327,6 @@ function getResult(aiMove, opponentMove) {
 
 
 function generatePattern_qs(allBetItems, qs_game_type) {
-  // Create patterns based on qs_game_type
   const patterns = [];
   for (let i = 0; i < qs_game_type; i++) {
       for (let j = 0; j < qs_game_type; j++) {
@@ -333,11 +335,7 @@ function generatePattern_qs(allBetItems, qs_game_type) {
           }
       }
   }
-
-  // Get the last two moves from the allBetItems
   const lastTwoMoves = allBetItems.slice(0, 2).map(item => parseInt(item.qs, 10));
-
-  // Find matching pattern or its reverse
   let matchedPattern = null;
   for (const pattern of patterns) {
       if ((pattern[0] === lastTwoMoves[0] && pattern[1] === lastTwoMoves[1]) ||
@@ -348,34 +346,25 @@ function generatePattern_qs(allBetItems, qs_game_type) {
   }
 
   if (matchedPattern) {
-      // Count how many times the pattern has been continued
       let continuationCount = 0;
-
-      // Iterate over recent items to find continuation of the pattern
       for (let i = 2; i < allBetItems.length; i++) {
           if ((parseInt(allBetItems[i - 1].qs, 10) === matchedPattern[0] && parseInt(allBetItems[i].qs, 10) === matchedPattern[1]) ||
               (parseInt(allBetItems[i - 1].qs, 10) === matchedPattern[1] && parseInt(allBetItems[i].qs, 10) === matchedPattern[0])) {
               continuationCount++;
           } else {
-              // If there is a break in the pattern, reset the count
               break;
           }
       }
-
-      // Generate a random number between 2 and 5 for the maximum continuation count
       const maxContinuation = Math.floor(Math.random() * 4) + 2;
 
       if (continuationCount > maxContinuation) {
-          // Reset the continuation count and switch to a random move not in the pattern
           const movesNotInPattern = Array.from({ length: qs_game_type }, (_, i) => i).filter(move => !matchedPattern.includes(move));
           const randomMove = movesNotInPattern[Math.floor(Math.random() * movesNotInPattern.length)];
+
           return randomMove;
       }
-
-      // Return the next move based on the dynamic index
       return parseInt(allBetItems[1].qs, 10);
   } else {
-      // If no matching pattern found, return a random move
       return getRandomItem_qs(qs_game_type);
   }
 }
