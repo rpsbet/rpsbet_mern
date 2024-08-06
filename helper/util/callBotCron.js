@@ -108,7 +108,8 @@ async function callCronJobs(io) {
   try {
     for (const cronJob of cronJobs) {
       const user = await User.findOne({ _id: cronJob.userId });
-      const result = await executeCronJob(user, cronJob.betArray, cronJobUserIds, true);
+      const room = await Room.findOne({ joiners: cronJob.userId, status: "open" });
+      const result = await executeCronJob(user, cronJob.betArray, cronJobUserIds, true, room, 'Random');
       if (result && result.success) {
         await delay(cronJob.delay);
       }
@@ -147,6 +148,7 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
     });
 
     for (const room of rooms) {
+      console.log(room._id)
       const roomId = room._id;
       const gameType = room.game_type;
       let nextState;
@@ -284,7 +286,6 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
           // attached qs (PLAYER)
           const qsBetItems = await swapQsBetItems(roomId, user);
 
-
           if (qsBetItems && qsBetItems.length > 0) {
             if (ai_mode === 'Random') {
               nextState = await getRandomItem_qs(room.qs_game_type);
@@ -347,6 +348,7 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
               predictedBetAmount = outcome.lastResult === 'loss' || outcome.lastResult === 'draw' ? betArray[0].bet_amount * 2 : Math.min(...betArray);
             } else if (ai_mode === 'Innovate') {
               const randomnessResult = await innovate_qs(qsBetItems, room.qs_game_type);
+              console.log("randomnessResult", randomnessResult)
               nextState = randomnessResult.counterMove;
               const penultimateSameAsLast = randomnessResult.risk;
               const predictedBet = await predictNextBetAmount(betArray, penultimateSameAsLast, 0, 0.01, 0.2, room);
@@ -381,7 +383,7 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
           _id: roomId,
           bet_amount: predictedBetAmount,
           selected_qs_position: nextState,
-          selected_rps_position: nextState,
+          selected_rps: nextState,
         }
       };
 
@@ -395,7 +397,6 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
           // attached
           isExecutingBet4 = true;
           const newBet = await executeBet4(req, true);
-
           isExecutingBet4 = false;
         }
       }

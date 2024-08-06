@@ -114,7 +114,6 @@ const addToQueue = async (req, bot = false) => {
 
                 return responseData;
             }
-
             if (roomInfo['status'] === 'finished') {
                 responseData = {
                     success: false,
@@ -328,7 +327,6 @@ const addToQueue = async (req, bot = false) => {
 
                     // deduct the joiner's bet
                     newTransactionAmount -= betAmount;
-
                     // if win
                     if (
                         (bet_item.rps === 'R' && req.body.selected_rps == 'P') ||
@@ -1004,7 +1002,8 @@ const addToQueue = async (req, bot = false) => {
                 '62b9ef88a5409449f63f7ccb',
                 '65eafb7daea25957ac8ea60c'
             ];
-
+            
+            
             const shouldSave = roomInfo.joiners.some(joiner => requiredIds.includes(String(joiner)));
 
             roomInfo.battles = roomInfo.battles + 1;
@@ -1060,7 +1059,7 @@ const addToQueue = async (req, bot = false) => {
                 console.error("Error saving newTransactionJ", error);
             }
         }
-
+        
         responseData = {
             success: true,
             message: 'successful bet',
