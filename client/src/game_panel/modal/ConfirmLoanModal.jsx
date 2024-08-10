@@ -9,7 +9,6 @@ import { getRank } from '../../util/getRank';
 import rankIcon from '../LottieAnimations/rankIcon.json';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDollarSign, faCalendarAlt, faMoneyBillWave } from '@fortawesome/free-solid-svg-icons';
-
 import {
   closeConfirmLoanModal
 } from '../../redux/Notification/notification.actions';
@@ -59,7 +58,6 @@ const categories = [
   { creditScoreThreshold: 950, rankThreshold: 50, accountAgeThresholdInDays: 120, maxAllowance: 10000 }
 ];
 
-
 class ConfirmLoanModal extends Component {
   constructor(props) {
     super(props);
@@ -78,24 +76,20 @@ class ConfirmLoanModal extends Component {
 
   handleResponseTextChange = (e) => {
     const inputValue = e.target.value;
-    // Use a regular expression to allow decimals
     const parsedValue = inputValue.match(/^\d*\.?\d*$/);
-    // Update the state with the parsed value or an empty string
     this.setState({ responseText: parsedValue ? parsedValue[0] : "" });
   };
-
-
 
   onBtnOkClicked = async e => {
     const { item, lender, closeConfirmLoanModal, acCalculateRemainingLoans, loan_amount, acQueryLoan, setBalance, addNewTransaction, isDarkMode, confirmLoan } = this.props;
     const { responseText } = this.state;
     if (parseFloat(responseText) > loan_amount) {
       alertModal(isDarkMode, "Entered loan amount exceeds the allowed amount.");
-      return; // Do not proceed further
+      return;
     }
     if (parseFloat(responseText) < 0.05) {
       alertModal(isDarkMode, "MEOWNIMUM IS 0.05 RPS");
-      return; // Do not proceed further
+      return;
     }
     const response = await confirmLoan({
       loan_id: item,
@@ -106,7 +100,6 @@ class ConfirmLoanModal extends Component {
 
     if (response.success) {
       const { balance, newTransaction, message } = response;
-
       closeConfirmLoanModal();
       alertModal(isDarkMode, message, '-cat');
       setBalance(balance);
@@ -118,7 +111,6 @@ class ConfirmLoanModal extends Component {
       alertModal(isDarkMode, response.message);
     }
   };
-
 
   onBtnCancelClicked = e => {
     this.props.closeConfirmLoanModal();
@@ -138,7 +130,6 @@ class ConfirmLoanModal extends Component {
           <div className="modal-body alert-body password-modal-body">
             <div className={`modal-icon result-icon-trade`}></div>
             <h5>ACCEPT DEBT</h5>
-
             <div className='thresholds' style={{ padding: '20px', overflow: 'auto' }}>
               <h6 style={{ color: '#28a745' }} >ELIGIBILITY THRESHOLDS</h6>
               <TableContainer style={{ maxHeight: 150, overflow: 'auto' }}>
@@ -146,7 +137,6 @@ class ConfirmLoanModal extends Component {
                   <TableHead style={{ textTransform: "uppercase", position: 'sticky', top: 0, zIndex: 1, backgroundColor: this.props.isDarkMode ? 'black' : 'white' }}>
                     <TableRow>
                       <TableCell style={{ textAlign: 'center' }}>Rank</TableCell>
-                      {/* <TableCell style={{ textAlign: 'center' }}>Account Age (Days)</TableCell> */}
                       <TableCell style={{ textAlign: 'center' }}>Max Allowance</TableCell>
                     </TableRow>
                   </TableHead>
@@ -169,23 +159,19 @@ class ConfirmLoanModal extends Component {
                             }}
                           />&nbsp;<span style={{ transform: 'translateY(4px)' }}>{category.rankThreshold}</span>
                         </TableCell>
-                        {/* <TableCell style={{ textAlign: 'center', padding: '0' }}>
-                          <span>{category.accountAgeThresholdInDays}</span>
-                        </TableCell> */}
                         <TableCell style={{ textAlign: 'center', padding: '0' }}>
                           <span>{convertToCurrency(category.maxAllowance)}</span>
                         </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
-
                 </Table>
               </TableContainer>
-
-
             </div>
             <TableContainer>
               <Table>
+                <TableBody>
+                  
                 <TableRow>
                   <TableCell style={{ width: "20%", textAlign: "right", borderBottom: "none" }}>
                     <span style={{ whiteSpace: "nowrap" }}>AVAILABLE FUNDS:</span>
@@ -193,6 +179,8 @@ class ConfirmLoanModal extends Component {
                   <TableCell style={{ borderBottom: "none", textAlign: "right", color: 'red' }}>
                     {convertToCurrency(loan_amount)}
                   </TableCell>
+                  <TableCell >
+
                   <TextField
                     label="Loan"
                     variant="filled"
@@ -202,13 +190,13 @@ class ConfirmLoanModal extends Component {
                     InputProps={{
                       endAdornment: 'RPS'
                     }}
-
                   />
+                </TableCell>
                 </TableRow>
+                </TableBody>
+
               </Table>
             </TableContainer>
-
-
             <TableContainer>
               <Table>
                 <TableHead>
@@ -237,7 +225,6 @@ class ConfirmLoanModal extends Component {
               By clicking 'ACCEPT', you agree to the following <span onClick={this.toggleExpand} style={{ color: "#ff0000", textDecoration: "underline", cursor: "pointer" }}>terms and conditions:
               </span>
             </h6>
-
             {expanded && (
               <>
                 <table className="terms-and-conditions-table">
@@ -303,7 +290,6 @@ class ConfirmLoanModal extends Component {
               </>
             )}
           </div>
-
           <div className="modal-footer">
             <Button className="btn-submit" onClick={this.onBtnOkClicked}>
               ACCEPT

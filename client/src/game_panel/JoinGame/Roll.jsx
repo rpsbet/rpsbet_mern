@@ -1029,7 +1029,7 @@ class Roll extends Component {
     return (
       <div className="game-page">
         <div className="page-title">
-          <h2>PLAY - Roll!</h2>
+          <h2 className="title">PLAY - Roll!</h2>
         </div>
         {showImageModal && (
           <ImageResultModal
@@ -1048,9 +1048,9 @@ class Roll extends Component {
           // {...this.state.selectedRow}
           />
         )}
-        <div className="game-contents">
+        <div className="game-contents title">
           <div
-            className="pre-summary-panel"
+            className="pre-summary-panel title"
             ref={this.panelRef}
           >
             <div className="pre-summary-panel__inner">

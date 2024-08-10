@@ -4,11 +4,8 @@ import styled from 'styled-components';
 import Elevation from '../../../../Styles/Elevation';
 import moment from 'moment';
 import './style.css';
-// import Lottie from 'react-lottie';
-
 import rankIcon from '../../../../game_panel/LottieAnimations/rankIcon.json';
 import { Button, Table, TableBody, TableCell, TableRow } from '@material-ui/core';
-
 import { FormControl, MenuItem, Select } from '@material-ui/core';
 import { Link as LinkIcon } from '@material-ui/icons';
 import { convertToCurrency } from '../../../../util/conversion';
@@ -32,12 +29,63 @@ class StatisticsForm extends React.Component {
       room_info: null,
       loaded: true,
       showButton: false,
-
+      creditScore: props.creditScore || 0,
+      hexagon: null,
       url: '',
       roomName: '',
       roomId: '',
       rank: ''
     };
+  }
+
+  async componentDidMount() {
+    const { creditScore } = this.props;
+    if (creditScore !== undefined) {
+      await this.updateHexagon(creditScore);
+    }
+  }
+
+  async componentDidUpdate(prevProps) {
+    const { creditScore } = this.props;
+    if (creditScore !== prevProps.creditScore) {
+      await this.updateHexagon(creditScore);
+    }
+  }
+
+  async updateHexagon(creditScore) {
+    if (typeof creditScore === 'number') {
+      const hexagon = await this.renderProgressHexagon(creditScore);
+      this.setState({ creditScore, hexagon });
+    }
+  }
+
+  calculateDashOffset(creditScore) {
+    if (typeof creditScore !== 'number') return NaN;
+    const scalingFactor = 390 / (2000 - 900);
+    const invertedScore = 2000 - creditScore;
+    return invertedScore * scalingFactor;
+  }
+
+  getHexagonColor(creditScore) {
+    if (creditScore < 1000) {
+      return 'red';
+    } else if (creditScore === 1000) {
+      return 'white';
+    } else {
+      return 'green';
+    }
+  }
+
+  renderProgressHexagon(creditScore) {
+    if (typeof creditScore !== 'number') return null;
+    const dashOffset = this.calculateDashOffset(creditScore);
+    return (
+      <polygon
+        points="60,15 105,40 105,80 60,105 15,80 15,40"
+        className={`progress-hexagon ${this.getHexagonColor(creditScore)}`}
+        style={{ strokeDashoffset: dashOffset }}
+      />
+    );
   }
 
   handleActorTypeChange = event => {
@@ -54,61 +102,25 @@ class StatisticsForm extends React.Component {
     this.props.onDropdownChange('timeType', event.target.value);
   };
 
-  calculateDashOffset(creditScore) {
-    // Adjust the scaling factor based on the credit score range
-    const scalingFactor = 390 / (2000 - 900);
-    const invertedScore = 2000 - creditScore; // Invert the score so that lower scores result in more incomplete hexagons
-    return invertedScore * scalingFactor;
-  }
-
-  renderProgressHexagon(creditScore) {
-    const dashOffset = this.calculateDashOffset(creditScore);
-    return (
-      <polygon
-        points="60,15 105,40 105,80 60,105 15,80 15,40"
-        className={`progress-hexagon ${this.getHexagonColor(creditScore)}`}
-        style={{ strokeDashoffset: dashOffset }}
-      />
-    );
-  }
-
-  getHexagonColor(creditScore) {
-    if (creditScore >= 950 && creditScore < 1150) {
-      return 'red';
-    } else if (creditScore >= 1150 && creditScore < 1400) {
-      return 'white';
-    } else {
-      return 'green';
-    }
-  }
   getRank(totalWagered) {
     const level = Math.floor(Math.log2(totalWagered + 1) / 1.2) + 1;
-
     const nextLevelWager = Math.pow(2, 1.2 * (level)) - 1;
     const progress = totalWagered / nextLevelWager;
     const progressBarWidth = 100;
     const roundedProgress = (progress * progressBarWidth).toFixed(2);
     const remainingProgress = progressBarWidth - roundedProgress;
-
-    // Calculate rank - 1 and rank + 1
     const rank = Math.floor(Math.log2(totalWagered + 1) / 1.2) + 1;
     const rankPlusOne = rank + 1;
 
-
     return (
       <div>
-
         <div className="progress-bar-outer" style={{ width: `${progressBarWidth}px`, position: 'relative' }}>
-
           <div className="progress-bar-filled" style={{ width: `${roundedProgress}%` }}>
             <div className="progress-label progress-label-left">{`${roundedProgress}%`}</div>
-
           </div>
           <div className="progress-bar-remaining" style={{ width: `${remainingProgress}%` }}>
-
             <div className="progress-label progress-label-right">{`${remainingProgress}%`}</div>
           </div>
-          {/* <div className="stars">{stars}</div> */}
         </div>
         <div className="rank-indicators">
           <div className="rank-minus-one">{`${rank}`}</div>
@@ -153,7 +165,7 @@ class StatisticsForm extends React.Component {
         toolbar: {
           show: true,
           tools: {
-            download: false // <== line to add
+            download: false
           }
         },
 
@@ -236,9 +248,6 @@ class StatisticsForm extends React.Component {
         }
       },
       xaxis: {
-        // range: 1500,
-        // min: 0,
-        // max: 1500,
         forceNiceScale: true,
         labels: {
           show: false,
@@ -252,13 +261,9 @@ class StatisticsForm extends React.Component {
           const convertToCurrency = input => {
             let number = Number(input);
             if (!isNaN(number)) {
-              // Round the number down
               number = Math.floor(number * 100000) / 100000;
-
               let [whole, decimal] = number.toString().split('.');
               whole = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-
-              // Remove trailing zeros after the decimal point
               if (decimal) {
                 decimal = decimal.replace(/0+$/, '');
               }
@@ -340,7 +345,6 @@ class StatisticsForm extends React.Component {
       totalWagered,
       dateJoined,
       last_seen,
-      creditScore,
       netProfit,
       gameProfit,
       averageWager,
@@ -349,22 +353,7 @@ class StatisticsForm extends React.Component {
       profitAllTimeHigh,
       profitAllTimeLow
     } = this.props;
-
-    // Determine the color based on the credit score
-    const dialColor = creditScore < 900 ? 'red' : creditScore > 1000 ? 'green' : 'orange';
-
-    // Define the inline styles for the dial
-    const dialStyles = {
-      width: '100px', // Adjust the width of the dial as needed
-      height: '100px', // Adjust the height of the dial as needed
-      borderRadius: '50%',
-      backgroundColor: dialColor,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      color: 'white', // Adjust the text color based on the background color
-      fontSize: 'larger',
-    };
+    const { creditScore, hexagon } = this.state;
 
     const date_joined = moment(dateJoined);
     const lastSeen = moment(this.props.last_seen);
@@ -379,9 +368,9 @@ class StatisticsForm extends React.Component {
           <Table>
             <TableBody>
               <TableRow>
-            <TableCell><b style={{opacity: "0.6",  fontSize: '0.9em', fontWeight: '500' }}>LAST SEEN</b></TableCell>
-            <TableCell style={{ color: "#ffb000",textAlign: 'center' }}>{lastSeenAgo}</TableCell>
-          </TableRow>
+                <TableCell><b style={{ opacity: "0.6", fontSize: '0.9em', fontWeight: '500' }}>LAST SEEN</b></TableCell>
+                <TableCell style={{ color: "#ffb000", textAlign: 'center' }}>{lastSeenAgo}</TableCell>
+              </TableRow>
               <TableRow>
                 <TableCell><b style={{ opacity: "0.6", fontSize: '0.9em', fontWeight: '500' }}>JOINED</b></TableCell>
                 <TableCell style={{ color: "#ffb000", textAlign: 'center' }}>{joinedAgo}</TableCell>
@@ -395,7 +384,9 @@ class StatisticsForm extends React.Component {
                 <TableCell>
                   <div className="creditScore">
                     <svg className="dial" width="120" height="120">
-                      {this.renderProgressHexagon(this.props.creditScore)}
+                      <svg width="120" height="120">
+                        {hexagon}
+                      </svg>
                       <text x="50%" y="40%" textAnchor="middle" alignmentBaseline="middle" className="creditScoreStatus" style={{ fill: '#ffb000' }}>
                         {roundedCreditScore >= 1000 && roundedCreditScore <= 1500 && 'OK'}
                         {roundedCreditScore > 1500 && roundedCreditScore <= 2000 && 'HIGH'}
@@ -405,21 +396,17 @@ class StatisticsForm extends React.Component {
                         {roundedCreditScore} / 2000
                       </text>
                     </svg>
-
                   </div>
                 </TableCell>
               </TableRow>
             </TableBody>
           </Table>
         </div>
-
-
         <div className="statistics-container">
           <div>
             <div className="statistics-panel">
               <h5>PERFORMANCE</h5>
               <div className='filters'>
-
                 <FormControl>
                   <Select
                     value={this.props.actorType}
@@ -438,7 +425,7 @@ class StatisticsForm extends React.Component {
                   >
                     <MenuItem value="All">All</MenuItem>
                     <MenuItem value="62a25d2a723b9f15709d1ae7">RPS</MenuItem>
-                    {/* <MenuItem value="62a25d2a723b9f15709d1aeb">Quick Shoot</MenuItem> */}
+                    <MenuItem value="62a25d2a723b9f15709d1aeb">Quick Shoot</MenuItem>
                     {/* <MenuItem value="62a25d2a723b9f15709d1ae9">Brain Game</MenuItem>
                     <MenuItem value="62a25d2a723b9f15709d1aea">Mystery Box</MenuItem>
                     <MenuItem value="63dac60ba1316a1e70a468ab">Drop Game</MenuItem>

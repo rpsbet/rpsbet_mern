@@ -138,8 +138,8 @@ class DebtsModal extends Component {
       >
         <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
           <div className="modal-header">
-            <h2 className="modal-title">Your Debts</h2>
-            <Button className="btn-close" onClick={this.props.closeModal}>
+            <h2 className="modal-title title">Your Debts</h2>
+            <Button className="btn-close title" onClick={this.props.closeModal}>
               ×
             </Button>
           </div>
@@ -195,7 +195,6 @@ class DebtsModal extends Component {
                     </TableContainer>
                     <Button
                       fullWidth
-                      variant="filled"
                       onClick={() => this.openPaybackModal(loan)}
                     >
                       CLEAR DEBT
@@ -220,8 +219,8 @@ class DebtsModal extends Component {
         >
           <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
             <div className="modal-header">
-              <h2 className="modal-title">Pay back Loan</h2>
-              <Button className="btn-close" onClick={this.closePaybackModal}>
+              <h2 className="modal-title title">Pay back Loan</h2>
+              <Button className="btn-close title" onClick={this.closePaybackModal}>
                 ×
               </Button>
             </div>

@@ -174,8 +174,8 @@ class BonusModal extends Component {
       >
         <div className={isDarkMode ? 'dark_mode' : ''}>
           <div className="modal-header">
-            <h2 className="modal-title"> <FontAwesomeIcon icon={faStar} />&nbsp;THE WHEEL</h2>
-            <Button className="btn-close" onClick={this.props.closeModal}>
+            <h2 className="modal-title title"> <FontAwesomeIcon icon={faStar} />&nbsp;THE WHEEL</h2>
+            <Button className="btn-close title" onClick={this.props.closeModal}>
               ×
             </Button>
           </div>

@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import Modal from 'react-modal';
 import { connect } from 'react-redux';
-import './Modals.css';
 
 import { userSignOut, verifyEmail, resendVerificationEmail } from '../../redux/Auth/user.actions';
 
@@ -61,7 +60,7 @@ class VerificationModal extends Component {
             >
                 <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
                     <div className="modal-body">
-                        <button className="btn-close" onClick={(e) => { 
+                        <button className="btn-close title" onClick={(e) => { 
                             e.preventDefault();
                             this.props.userSignOut();
                             this.props.closeModal();

@@ -23,10 +23,17 @@ export const calcWinChanceQs = (gameType, rounds) => {
 
   return `${probWin}% - ${probLose}%`;
 };
-
 export async function predictNextQs(qs_list, gameType) {
   const options = [...Array(gameType).keys()];
   const transitionMatrix = {};
+
+  // Filter out items with empty or null `qs` values
+  const filteredQsList = qs_list.filter(item => item.qs !== null && item.qs !== '');
+
+  // If fewer than 3 valid items, return a random value
+  if (filteredQsList.length < 3) {
+    return options[Math.floor(Math.random() * gameType)];
+  }
 
   // Initialize transition matrix
   options.forEach(option1 => {
@@ -43,8 +50,8 @@ export async function predictNextQs(qs_list, gameType) {
   });
 
   // Populate transition matrix
-  for (let i = 0; i < qs_list.length - 3; i++) {
-    transitionMatrix[qs_list[i].qs][qs_list[i + 1].qs][qs_list[i + 2].qs][qs_list[i + 3].qs]++;
+  for (let i = 0; i < filteredQsList.length - 3; i++) {
+    transitionMatrix[filteredQsList[i].qs][filteredQsList[i + 1].qs][filteredQsList[i + 2].qs][filteredQsList[i + 3].qs]++;
   }
 
   // Normalize transition matrix
@@ -53,23 +60,25 @@ export async function predictNextQs(qs_list, gameType) {
       Object.keys(transitionMatrix[fromState1][fromState2]).forEach(fromState3 => {
         const totalTransitions = Object.values(transitionMatrix[fromState1][fromState2][fromState3]).reduce((a, b) => a + b, 0);
         Object.keys(transitionMatrix[fromState1][fromState2][fromState3]).forEach(toState => {
-          transitionMatrix[fromState1][fromState2][fromState3][toState] /= totalTransitions;
+          if (totalTransitions > 0) {
+            transitionMatrix[fromState1][fromState2][fromState3][toState] /= totalTransitions;
+          }
         });
       });
     });
   });
 
   // Calculate win chance
-  const winChance = calcWinChanceQs(gameType, qs_list);
+  const winChance = calcWinChanceQs(gameType, filteredQsList);
   let deviation = 0;
   if (winChance !== '33.33%') {
     deviation = (1 - 1 / gameType) / 10; // Reduced deviation factor
   }
 
   // Determine current states
-  let currentState1 = qs_list[qs_list.length - 3].qs;
-  let currentState2 = qs_list[qs_list.length - 2].qs;
-  let currentState3 = qs_list[qs_list.length - 1].qs;
+  let currentState1 = filteredQsList[filteredQsList.length - 3].qs;
+  let currentState2 = filteredQsList[filteredQsList.length - 2].qs;
+  let currentState3 = filteredQsList[filteredQsList.length - 1].qs;
   let nextState = currentState3;
   let maxProb = 0;
 
@@ -93,6 +102,7 @@ export async function predictNextQs(qs_list, gameType) {
 
   return nextState;
 }
+
 
 
 export function martingaleStrategy_qs(historicData, qs_game_type) {
@@ -377,9 +387,8 @@ export function getRandomItem_qs(qs_game_type, possibleMoves = null) {
 
 
 export function NPC_qs(historicData) {
-  const lastMove = historicData.length > 0 ? historicData[0].joiner_qs : "0";
+  const lastMove = historicData.length > 0 ? historicData[0].joiner_qs : 0;
   return lastMove;
-
 }
 
 export function generatePattern_qs(allBetItems, qs_game_type) {
@@ -429,5 +438,5 @@ export function generatePattern_qs(allBetItems, qs_game_type) {
 
 export function getCopyCatItem_qs(allBetItems) {
   const copyCatBetItem = allBetItems.find(item => item.qs);
-  return copyCatBetItem ? copyCatBetItem.qs : getRandomItem();
+  return copyCatBetItem ? copyCatBetItem.qs : getRandomItem_qs();
 }

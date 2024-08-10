@@ -320,6 +320,31 @@ class MyProductTable extends Component {
     await this.fetchItems();
   }
 
+  componentDidUpdate(prevProps) {
+    const { showListItemModal, showDeListItemModal } = this.props;
+    if (
+      prevProps.showListItemModal !== showListItemModal && !showListItemModal ||
+      prevProps.showDeListItemModal !== showDeListItemModal && !showDeListItemModal
+    ) {
+      this.handleModalClose();
+    }
+  }
+
+  handleModalClose() {
+    const { _id } = this.state;
+
+    this.fetchAccessory(_id);
+    this.fetchItems();
+    this.fetchRoomLists();
+  }
+
+  fetchRoomLists() {
+    const { getRoomList } = this.props;
+    getRoomList({ game_type: 'RPS' });
+    getRoomList({ game_type: 'All' });
+  }
+
+
   async fetchAccessory(_id) {
     try {
       const accessory = await this.props.fetchAccessory({ _id });
@@ -330,15 +355,15 @@ class MyProductTable extends Component {
     }
   }
 
-   // handleSortChange = event => {
+  // handleSortChange = event => {
   //   this.setState({ sortCriteria: event.target.value });
   //   this.fetchItems();
   // }
 
   async fetchItems() {
-  const { acQueryMyItem, page } = this.props;
+    const { acQueryMyItem, page } = this.props;
     const { sortCriteria, itemType } = this.state;
-    await acQueryMyItem(30, page, sortCriteria, itemType);
+    await acQueryMyItem(100, page, sortCriteria, itemType);
   }
 
   handleFilterClick = event => {
@@ -350,7 +375,7 @@ class MyProductTable extends Component {
       this.fetchItems();
     });
   };
-  
+
   handleSortClick = event => {
     this.setState({ sortAnchorEl: event.currentTarget });
   };
@@ -373,11 +398,7 @@ class MyProductTable extends Component {
       const response = await equipItem({ item_id: this.state.item_id });
 
       if (response.success) {
-        this.fetchAccessory(this.state._id);
-        this.fetchItems();
-        this.props.getRoomList({ game_type: 'RPS' });
-        this.props.getRoomList({ game_type: 'All' });
-
+        this.handleModalClose();
         const { message } = response;
         alertModal(isDarkMode, message, '-cat');
       } else {
@@ -471,7 +492,7 @@ class MyProductTable extends Component {
               open={Boolean(anchorEl)}
               onClose={() => this.handleFilterClose(null)}
             >
-            
+
               {/* <MenuItem
                 onClick={() =>
                   this.handleFilterClose('653ee7df17c9f5ee2124564a')
@@ -480,7 +501,7 @@ class MyProductTable extends Component {
               >
                 Game Background
               </MenuItem> */}
-     
+
               <MenuItem
                 onClick={() =>
                   this.handleFilterClose('653ee81117c9f5ee2124564b')
@@ -489,7 +510,7 @@ class MyProductTable extends Component {
               >
                 Accessory
               </MenuItem>
-                {/* <MenuItem
+              {/* <MenuItem
                 onClick={() =>
                   this.handleFilterClose('653ee7ac17c9f5ee21245649')
                 }
@@ -568,15 +589,15 @@ class MyProductTable extends Component {
                 )}
                 {row.item_type === '653ee81117c9f5ee2124564b' ? (
                   <PowerContainer>
-                  <PowerItem>
-                    <PercentageBar percentage={row.CP} color="#28a745" />
-                    <PercentageBar percentage={row.DP} color="#dc3545" />
-                  </PowerItem>
-                  <PowerItem>
-                    <CommissionPower>CP: {row.CP}%</CommissionPower>
-                    <DefensePower>BP: {row.DP}%</DefensePower>
-                  </PowerItem>
-                </PowerContainer>
+                    <PowerItem>
+                      <PercentageBar percentage={row.CP} color="#28a745" />
+                      <PercentageBar percentage={row.DP} color="#dc3545" />
+                    </PowerItem>
+                    <PowerItem>
+                      <CommissionPower>CP: {row.CP}%</CommissionPower>
+                      <DefensePower>BP: {row.DP}%</DefensePower>
+                    </PowerItem>
+                  </PowerContainer>
                 ) : (
                   ''
                 )}
@@ -647,29 +668,29 @@ class MyProductTable extends Component {
                   </TableContainer>
                 </ProductInfo>
                 {row.onSale !== 0 ? null : (
-                <EquipItemButton>
-                  {row.item_type !== '653ee81117c9f5ee2124564b' ? null : (
-                    <Tooltip
-                      title={
-                        accessory && accessory === row.image
-                          ? 'Unequip Item'
-                          : 'Equip Item'
-                      }
-                    >
-                      <IconButton
-                        className="btn-back"
-                        onClick={() => {
-                          this.equipItem(row._id);
-                        }}
+                  <EquipItemButton>
+                    {row.item_type !== '653ee81117c9f5ee2124564b' ? null : (
+                      <Tooltip
+                        title={
+                          accessory && accessory === row.image
+                            ? 'Unequip Item'
+                            : 'Equip Item'
+                        }
                       >
-                        {accessory && accessory === row.image
-                          ? 'UNEQUIP'
-                          : 'EQUIP'}{' '}
-                        <SwapHoriz />
-                      </IconButton>
-                    </Tooltip>
-                  )}
-                </EquipItemButton>
+                        <IconButton
+                          className="btn-back"
+                          onClick={() => {
+                            this.equipItem(row._id);
+                          }}
+                        >
+                          {accessory && accessory === row.image
+                            ? 'UNEQUIP'
+                            : 'EQUIP'}{' '}
+                          <SwapHoriz />
+                        </IconButton>
+                      </Tooltip>
+                    )}
+                  </EquipItemButton>
                 )}
                 {row.onSale === 0 && row.rentOption ? (
                   // Show "Discontinue" button
@@ -743,7 +764,7 @@ class MyProductTable extends Component {
             offset={page - 1}
             total={pages}
             onClick={(e, offset) => {
-              acQueryMyItem(30, offset + 1, this.state.sortCriteria, this.state.itemType);
+              acQueryMyItem(100, offset + 1, this.state.sortCriteria, this.state.itemType);
             }}
           />
         </PaginationContainer>
@@ -759,8 +780,8 @@ const mapStateToProps = state => ({
   loading: state.itemReducer.loading,
   total: state.itemReducer.totalResults,
   accessory: state.itemReducer.accessory,
-  tnxComplete: state.logic.transactionComplete,
   showListItemModal: state.snackbar.showListItemModal,
+  showDeListItemModal: state.snackbar.showDeListItemModal,
   isDarkMode: state.auth.isDarkMode,
   userInfo: state.auth.user,
   isLowGraphics: state.auth.isLowGraphics

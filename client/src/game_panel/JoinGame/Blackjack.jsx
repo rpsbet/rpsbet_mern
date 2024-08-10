@@ -1104,7 +1104,7 @@ class Blackjack extends Component {
       <div className="game-page">
         <div className="page-title">
           {/* <h1> DEMO ONLY, GAME UNDER DEVELOPMENT 🚧</h1> */}
-          <h2>PLAY - Blackjack</h2>
+          <h2 className="title">PLAY - Blackjack</h2>
         </div>
         {showImageModal && (
           <ImageResultModal
@@ -1122,9 +1122,9 @@ class Blackjack extends Component {
             closeModal={handleClosePlayerModal}
           />
         )}
-        <div className="game-contents">
+        <div className="game-contents title">
           <div
-            className="pre-summary-panel"
+            className="pre-summary-panel title"
             ref={this.panelRef}
           // onScroll={this.handleScroll}
           >

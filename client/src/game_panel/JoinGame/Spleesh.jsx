@@ -561,7 +561,7 @@ class Spleesh extends Component {
       <div className="game-page">
 
         <div className="page-title">
-          <h2>
+          <h2 className="title">
             PLAY - <i>Spleesh!</i>
           </h2>
         </div>
@@ -581,9 +581,9 @@ class Spleesh extends Component {
             closeModal={handleClosePlayerModal}
           />
         )}
-        <div className="game-contents">
+        <div className="game-contents title">
           <div
-            className="pre-summary-panel"
+            className="pre-summary-panel title"
             ref={this.panelRef}
           >
             <div className="pre-summary-panel__inner spleesh">

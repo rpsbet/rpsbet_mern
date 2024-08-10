@@ -186,7 +186,7 @@ class MyHistoryTable extends Component {
   //           </IconButton>
   //         </Box>
   //         <Button
-  //   className={`btn-game-type btn-icon all-games ${
+  //   className={`btn-game-type title btn-icon all-games ${
   //     this.state.selectedGameType === 'All' ? 'active' : ''
   //   }`}
   //   key="open-game-all-game-button"
@@ -198,7 +198,7 @@ class MyHistoryTable extends Component {
   // </Button>
   // {this.props.gameTypeList.map((gameType, index) => (
   //   <Button
-  //     className={`btn-game-type btn-icon ${
+  //     className={`btn-game-type title btn-icon ${
   //       gameTypeStyleClass[gameType.short_name]
   //     } ${
   //       this.state.selectedGameType === gameType.short_name ? 'active' : ''

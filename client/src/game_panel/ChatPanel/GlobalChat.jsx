@@ -301,7 +301,7 @@ class GlobalChat extends Component {
                       <span className="reply-sender sender-name">
                         {chat.replyTo.username}
                       </span>
-                      <span className="reply-message chat-text">
+                      <span className="reply-message chat-text title">
                         {chat.replyTo.messageType === 'gif' ? (
                           <img
                             src={JSON.parse(chat.replyTo.message).content}
@@ -340,7 +340,7 @@ class GlobalChat extends Component {
                     <div className="chat-msg">
                       <span className="sender-name">{chat.sender}</span>
   
-                      <span className="chat-text">
+                      <span className="chat-text title">
                         {chat.messageType === 'gif' ? (
                           <img
                             src={JSON.parse(chat.message).content}

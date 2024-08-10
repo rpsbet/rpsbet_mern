@@ -52,7 +52,7 @@ function CreateProductForm({ updateTextField }) {
                   label="Loan Amount"
                   name="loan_amount"
                   margin="normal"
-                  type="text"
+                  type="number"
                   value={formValues.loan_amount}
                   onChange={(e) => handleInputChange(e.target.name, e.target.value, 8)}
                   autoComplete="off"
@@ -75,6 +75,7 @@ function CreateProductForm({ updateTextField }) {
                   variant="filled"
                   name="loan_period"
                   margin="normal"
+                  type="number"
                   value={formValues.loan_period}
                   onChange={(e) => handleInputChange(e.target.name, e.target.value, 2)}
                   autoComplete="off"
@@ -97,6 +98,7 @@ function CreateProductForm({ updateTextField }) {
                   name="apy"
                   variant="filled"
                   margin="normal"
+                  type="number"
                   value={formValues.apy}
                   onChange={(e) => handleInputChange(e.target.name, e.target.value, 3)}
                   autoComplete="off"

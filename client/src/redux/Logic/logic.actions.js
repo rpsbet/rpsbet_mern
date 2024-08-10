@@ -779,7 +779,41 @@ export const updateQsBetItems = (itemId, cellindex, updatedItem) => async dispat
     return res.data;
   } catch (err) {
     dispatch({ type: MSG_ERROR, payload: 'TRAINING DATA FAILED TO UPDATE, CHECK VALUE IS CORRECT' });
+  }
+};
 
+export const editPayout = (amount, rowId) => async dispatch => {
+  try {
+    const result = await axios.post('/game/editPayout/', { amount, rowId });
+    if (result.data.success) {
+      dispatch({ type: MSG_SUCCESS, payload: "UPDATED PAYOUT SETTINGS" });
+      return result.data;
+    } 
+  } catch (e) {
+    dispatch({ type: MSG_ERROR, payload: 'UNABLE TO EDIT PAYOUT SETTINGS' });
+  }
+};
+export const topUp = (amount, rowId) => async dispatch => {
+  try {
+    const result = await axios.post('/game/topUp/', { amount, rowId });
+    if (result.data.success) {
+      dispatch({ type: MSG_SUCCESS, payload: "TOP UP SUCCESSFUL" });
+      return result.data;
+    } 
+  } catch (e) {
+    dispatch({ type: MSG_ERROR, payload: 'UNABLE TO TOP UP' });
+  }
+};
+
+export const coHost = (amount, rowId) => async dispatch => {
+  try {
+    const result = await axios.post('/game/coHost/', { amount, rowId });
+    if (result.data.success) {
+      dispatch({ type: MSG_SUCCESS, payload: "YOU ARE NOW A CO-HOST!" });
+      return result.data;
+    } 
+  } catch (e) {
+    dispatch({ type: MSG_ERROR, payload: 'UNABLE TO CO-HOST' });
   }
 };
 

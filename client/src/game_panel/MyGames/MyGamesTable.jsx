@@ -11,18 +11,18 @@ import {
   unstake,
   addNewTransaction,
   getStrategies,
-  updateRoomStrategy
+  updateRoomStrategy,
+  editPayout,
+  setGameMode,
+  createRoom,
+  topUp,
+  reCreateRoom
 } from '../../redux/Logic/logic.actions';
 import { getRank } from '../../util/getRank';
 import { faFilter, faSort, faEdit, faPiggyBank, faMoneyCheckAlt } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Battle from '../icons/Battle';
 import blob from '../LottieAnimations/blob.json';
-import {
-  setGameMode,
-  createRoom,
-  reCreateRoom
-} from '../../redux/Logic/logic.actions';
 import { alertModal, confirmModalClosed, confirmModalCreate } from '../modal/ConfirmAlerts';
 // import Pagination from '../../components/Pagination';
 import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
@@ -153,46 +153,39 @@ class MyGamesTable extends Component {
   };
 
   handleSendTopUp = async () => {
+    const { topUpAmount, selectedRow } = this.state;
+    const { balance, isDarkMode, setBalance, addNewTransaction } = this.props;
+  
     try {
-      if (this.state.topUpAmount < 0) {
-        alertModal(
-          this.props.isDarkMode,
-          `R U FURR-REAL? TOPUP AMOUNT MUST BE MORE THAN 0!`
-        );
+      if (topUpAmount <= 0) {
+        alertModal(isDarkMode, 'R U FURR-REAL? TOPUP AMOUNT MUST BE MORE THAN 0!');
         return;
       }
-
-      if (this.state.topUpAmount > this.props.balance) {
-        alertModal(this.props.isDarkMode, `NOT ENUFF FUNDS AT THIS MEOWMENT`);
+  
+      if (topUpAmount > balance) {
+        alertModal(isDarkMode, 'NOT ENUFF FUNDS AT THIS MEOWMENT');
         return;
       }
-
+  
       this.setState({ isLoading: true });
-      const result = await axios.post('/game/topUp/', {
-        amount: this.state.topUpAmount,
-        rowId: this.state.selectedRow._id,
-      });
-
-      if (result.data.success) {
-        this.props.setBalance(result.data.balance);
-        this.props.addNewTransaction(result.data.newTransaction);
+      const result = await this.props.topUp(topUpAmount, selectedRow._id);
+  
+      if (result.success) {
+        setBalance(result.balance);
+        addNewTransaction(result.newTransaction);
         await this.fetchData();
-        alertModal(this.props.isDarkMode, result.data.message, '-cat');
-        this.setState({ isLoading: false });
+        alertModal(isDarkMode, result.message, '-cat');
         this.handleCloseTopUpModal();
       } else {
-        this.setState({ isLoading: false });
-        alertModal(this.props.isDarkMode, result.data.message);
+        alertModal(isDarkMode, result.message);
       }
     } catch (e) {
+      alertModal(isDarkMode, 'FAILED TRANSACTION');
+    } finally {
       this.setState({ isLoading: false });
-      if (this.state.amount <= 0) {
-        alertModal(this.props.isDarkMode, `FAILED TRANSACTION`);
-        return;
-      }
     }
   };
-
+  
   handlePayout = (row) => {
     let paymentMethod = 'automatic';
     let payoutAmount = row.endgame_amount;
@@ -220,39 +213,32 @@ class MyGamesTable extends Component {
   };
 
   handleSendPayout = async () => {
+    const { payoutAmount, selectedRow } = this.state;
+    const { isDarkMode, editPayout } = this.props;
+  
     try {
-      if (this.state.payoutAmount < 0) {
-        alertModal(
-          this.props.isDarkMode,
-          `R U FURR-REAL? PAYOUT AMOUNT MUST BE MORE THAN 0!`
-        );
+      if (payoutAmount <= 0) {
+        alertModal(isDarkMode, 'R U FURR-REAL? PAYOUT AMOUNT MUST BE MORE THAN 0!');
         return;
       }
-
+  
       this.setState({ isLoading: true });
-      const result = await axios.post('/game/editPayout/', {
-        amount: this.state.payoutAmount,
-        rowId: this.state.selectedRow._id,
-      });
-
-      if (result.data.success) {
+  
+      const result = await editPayout(payoutAmount, selectedRow._id);
+      if (result.success) {
         await this.fetchData();
-        alertModal(this.props.isDarkMode, result.data.message, '-cat');
-        this.setState({ isLoading: false });
+        alertModal(isDarkMode, result.message, '-cat');
         this.handleClosePayoutModal();
       } else {
-        this.setState({ isLoading: false });
-        alertModal(this.props.isDarkMode, result.data.message);
+        alertModal(isDarkMode, result.message);
       }
     } catch (e) {
+      alertModal(isDarkMode, 'Failed to adjust payout.');
+    } finally {
       this.setState({ isLoading: false });
-      if (this.state.amount <= 0) {
-        alertModal(this.props.isDarkMode, `Failed to adjust payout.`);
-        return;
-      }
     }
   };
-
+  
   handlePaymentMethodChange = (event) => {
     const selectedMethod = event.target.value;
     this.setState({ paymentMethod: selectedMethod });
@@ -503,7 +489,7 @@ class MyGamesTable extends Component {
         preserveAspectRatio: 'xMidYMid slice'
       }
     };
-    
+
     return (
       <div className="my-open-games">
         <div className="filter-container overflowX">
@@ -820,12 +806,12 @@ class MyGamesTable extends Component {
         >
           <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
             <div className="modal-header">
-              <h2 className="modal-title">
+              <h2 className="modal-title title">
                 <FontAwesomeIcon icon={faPiggyBank} className="mr-2" />
 
                 STAKE
               </h2>
-              <Button className="btn-close" onClick={this.handleCloseTopUpModal}>
+              <Button className="btn-close title" onClick={this.handleCloseTopUpModal}>
                 ×
               </Button>
             </div>
@@ -833,22 +819,20 @@ class MyGamesTable extends Component {
               <div className="modal-content-wrapper">
                 <div className="modal-content-panel">
                   <div className="input-amount">
-
                     <TextField
                       label="Amount"
-                      value={this.state.topUpAmount}
+                      value={this.state.topUpAmount || ''}
                       onChange={this.handleTopUpAmountChange}
-                      pattern="^\\d*\\.?\\d*$"
+                      type="number"
                       variant="filled"
                       autoComplete="off"
                       id="payout"
-
                       className="form-control"
                       InputProps={{
                         onFocus: this.handleFocus,
                         endAdornment: !this.state.isFocused ? ' RPS ' : (
                           <ButtonGroup
-                            className={isFocused ? 'fade-in' : 'fade-out'}
+                            className={this.state.isFocused ? 'fade-in' : 'fade-out'}
                           >
                             <Button
                               variant="contained"
@@ -862,6 +846,7 @@ class MyGamesTable extends Component {
                         ),
                       }}
                     />
+
                   </div>
                   <Table>
                     <TableBody>
@@ -870,7 +855,7 @@ class MyGamesTable extends Component {
                           <span>IN-GAME BALANCE:</span>
                         </TableCell>
                         <TableCell>
-                          {convertToCurrency(this.props.balance)}
+                          {convertToCurrency(this.props.balance || 0)}
                         </TableCell>
                       </TableRow>
                       <TableRow>
@@ -878,7 +863,7 @@ class MyGamesTable extends Component {
                           <span>TOP-UP AMOUNT:</span>
                         </TableCell>
                         <TableCell style={{ color: 'red' }}>
-                          {convertToCurrency(this.state.topUpAmount * -1)}
+                          {convertToCurrency((this.state.topUpAmount || 0) * -1)}
                         </TableCell>
                       </TableRow>
                       <TableRow>
@@ -887,7 +872,7 @@ class MyGamesTable extends Component {
                         </TableCell>
                         <TableCell style={{ color: "#ffb000" }}>
                           {this.state.selectedRow ? (
-                            convertToCurrency(this.state.selectedRow.user_bet)
+                            convertToCurrency(parseFloat(this.state.selectedRow.user_bet || 0))
                           ) : (
                             null
                           )}
@@ -901,11 +886,10 @@ class MyGamesTable extends Component {
                         </TableCell>
                         <TableCell>
                           {convertToCurrency(
-                            this.props.balance - this.state.topUpAmount
+                            (this.props.balance || 0) - (this.state.topUpAmount || 0)
                           )}
                           &nbsp;
-                          {this.props.balance - this.state.topUpAmount <
-                            0 && <Warning width="15pt" />}
+                          {(this.props.balance || 0) - (this.state.topUpAmount || 0) < 0 && <Warning width="15pt" />}
                         </TableCell>
 
                       </TableRow>
@@ -915,7 +899,9 @@ class MyGamesTable extends Component {
                         </TableCell>
                         <TableCell style={{ color: "#ffb000" }}>
                           {this.state.selectedRow ? (
-                            convertToCurrency(parseFloat(this.state.selectedRow.user_bet) + parseFloat(this.state.topUpAmount))
+                            convertToCurrency(
+                              parseFloat(this.state.selectedRow.user_bet || 0) + (parseFloat(this.state.topUpAmount || 0))
+                            )
                           ) : (
                             null
                           )}
@@ -947,12 +933,12 @@ class MyGamesTable extends Component {
         >
           <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
             <div className="modal-header">
-              <h2 className="modal-title">
+              <h2 className="modal-title title">
                 <FontAwesomeIcon icon={faMoneyCheckAlt} className="mr-2" />
 
                 AUTO-PAYOUT
               </h2>
-              <Button className="btn-close" onClick={this.handleClosePayoutModal}>
+              <Button className="btn-close title" onClick={this.handleClosePayoutModal}>
                 ×
               </Button>
             </div>
@@ -985,7 +971,7 @@ class MyGamesTable extends Component {
                       value={this.state.paymentMethod}
                       onChange={this.handlePaymentMethodChange}
                     >
-                      <h4 style={{ textAlign: "center", padding: "0" }}>Change Auto-Payout</h4>
+                      <h4 className="title" style={{ textAlign: "center", padding: "0" }}>Change Auto-Payout</h4>
                       <FormControlLabel value="manual" control={<Radio />} label="MANUAL" />
                       <FormControlLabel value="automatic" control={<Radio />} label="AUTOMATIC" />
                     </RadioGroup>
@@ -993,7 +979,8 @@ class MyGamesTable extends Component {
                     <div className="input-amount">
                       <TextField
                         label="Amount"
-                        value={this.state.payoutAmount}
+                        value={this.state.payoutAmount || 0}
+                        type="number"
                         onChange={this.handlePayoutAmountChange}
                         pattern="^\\d*\\.?\\d*$"
                         variant="filled"
@@ -1051,7 +1038,9 @@ const mapDispatchToProps = {
   setGameMode,
   updateRoomStrategy,
   setBalance,
-  reCreateRoom
+  reCreateRoom,
+  editPayout,
+  topUp
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(MyGamesTable);

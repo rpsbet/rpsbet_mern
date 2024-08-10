@@ -2,45 +2,55 @@ const tf = require('@tensorflow/tfjs-node');
 const { trainModel, predictNextMove } = require('./modelUtils');
 
 const predictNext = (rps_list, markov = false) => {
-  if (rps_list.length <= 3) {
-    return ['R', 'P', 'S'][Math.floor(Math.random() * 3)];
+  const choices = ['R', 'P', 'S'];
+  const smoothingFactor = 0.1; // Smoothing factor to avoid zero probabilities
+
+  if (rps_list.length <= 1) {
+    // Not enough data, return a random choice
+    return choices[Math.floor(Math.random() * 3)];
   }
 
+  // Randomly select a subset of the data for the transition matrix
+  const subsetSize = Math.min(rps_list.length - 1, 10); // Adjust subset size if needed
+  const startIndex = Math.floor(Math.random() * (rps_list.length - subsetSize));
+  const subset = rps_list.slice(startIndex, startIndex + subsetSize);
+
+  // Create a simplified 1st-order Markov model transition matrix
   const transitionMatrix = {
-    R: { R: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } }, P: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } }, S: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } } },
-    P: { R: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } }, P: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } }, S: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } } },
-    S: { R: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } }, P: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } }, S: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } } },
-  };  
+    R: { R: 0, P: 0, S: 0 },
+    P: { R: 0, P: 0, S: 0 },
+    S: { R: 0, P: 0, S: 0 },
+  };
 
-  for (let i = 0; i < rps_list.length - 3; i++) {
-    const currentState1 = rps_list[i].rps;
-    const currentState2 = rps_list[i + 1].rps;
-    const currentState3 = rps_list[i + 2].rps;
-    const nextState = rps_list[i + 3].rps;
-    transitionMatrix[currentState1][currentState2][currentState3][nextState]++;
+  for (let i = 0; i < subset.length - 1; i++) {
+    const currentState = subset[i].rps;
+    const nextState = subset[i + 1].rps;
+    transitionMatrix[currentState][nextState]++;
   }
 
-  Object.keys(transitionMatrix).forEach((fromState1) => {
-    Object.keys(transitionMatrix[fromState1]).forEach((fromState2) => {
-      Object.keys(transitionMatrix[fromState1][fromState2]).forEach((fromState3) => {
-        const totalTransitions = Object.values(transitionMatrix[fromState1][fromState2][fromState3]).reduce((a, b) => a + b, 0);
-        if (totalTransitions > 0) {
-          Object.keys(transitionMatrix[fromState1][fromState2][fromState3]).forEach((toState) => {
-            transitionMatrix[fromState1][fromState2][fromState3][toState] /= totalTransitions;
-          });
-        }
+  // Convert counts to probabilities with smoothing
+  Object.keys(transitionMatrix).forEach((fromState) => {
+    const totalTransitions = Object.values(transitionMatrix[fromState]).reduce((a, b) => a + b, 0);
+    if (totalTransitions > 0) {
+      Object.keys(transitionMatrix[fromState]).forEach((toState) => {
+        transitionMatrix[fromState][toState] = (transitionMatrix[fromState][toState] + smoothingFactor) / (totalTransitions + smoothingFactor * 3);
       });
-    });
+    } else {
+      // If no transitions, initialize with equal probability
+      Object.keys(transitionMatrix[fromState]).forEach((toState) => {
+        transitionMatrix[fromState][toState] = 1 / 3;
+      });
+    }
   });
 
-  let currentState1 = rps_list[rps_list.length - 3].rps;
-  let currentState2 = rps_list[rps_list.length - 2].rps;
-  let currentState3 = rps_list[rps_list.length - 1].rps;
-  let nextState = currentState3;
+  // Predict next state based on the last observed state
+  const currentState = rps_list[rps_list.length - 1].rps;
+  let nextState = currentState;
   let maxProb = 0;
-  Object.keys(transitionMatrix[currentState1][currentState2][currentState3]).forEach((state) => {
-    if (transitionMatrix[currentState1][currentState2][currentState3][state] > maxProb) {
-      maxProb = transitionMatrix[currentState1][currentState2][currentState3][state];
+
+  Object.keys(transitionMatrix[currentState]).forEach((state) => {
+    if (transitionMatrix[currentState][state] > maxProb) {
+      maxProb = transitionMatrix[currentState][state];
       nextState = state;
     }
   });
@@ -49,20 +59,13 @@ const predictNext = (rps_list, markov = false) => {
     nextState = getBeatingType(nextState);
   }
 
-  let randomNum = Math.random();
-  const deviationThreshold = 0.05; // Lower deviation threshold to reduce randomness
-  if (randomNum < deviationThreshold) {
-    let randomState = '';
+  // Balance between model prediction and randomness
+  const deviationThreshold = 0.05; // Adjusted to make randomness more impactful
+  if (Math.random() < deviationThreshold) {
+    let randomState;
     do {
-      randomNum = Math.random();
-      if (randomNum < (1 / 3)) {
-        randomState = 'R';
-      } else if (randomNum < (2 / 3)) {
-        randomState = 'P';
-      } else {
-        randomState = 'S';
-      }
-    } while (randomState === currentState3);
+      randomState = choices[Math.floor(Math.random() * 3)];
+    } while (randomState === currentState);
     nextState = randomState;
   }
 
@@ -70,15 +73,16 @@ const predictNext = (rps_list, markov = false) => {
 }
 
 
+
 const getBeatingType = (currentState) => {
   const random = Math.random();
 
   if (currentState === 'R') {
-    return random < 0.7 ? 'P' : 'R';
+    return random < 0.95 ? 'P' : 'R';
   } else if (currentState === 'P') {
-    return random < 0.7 ? 'S' : 'P';
+    return random < 0.95 ? 'S' : 'P';
   } else {
-    return random < 0.7 ? 'R' : 'S';
+    return random < 0.95 ? 'R' : 'S';
   }
 }
 
@@ -214,53 +218,50 @@ async function reinforcementAI(data) {
   }
 }
 
+function getRandomNumber(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
 function innovate(historicData) {
-  // Get the first 6 entries of joiner_rps from the historic data
-  const firstEntries = historicData.slice(0, 6);
+  const numEntries = getRandomNumber(1, 9);
+  const firstEntries = historicData.slice(-numEntries);
   const firstJoinerQs = firstEntries.map(entry => entry.rps);
 
-  // Ensure we have valid entries for comparison
-  if (firstJoinerQs.length < 6 || firstJoinerQs.some(entry => !['R', 'P', 'S'].includes(entry))) {
-    // Not enough data or invalid data, return a random move with risk 1
+  if (firstJoinerQs.length < numEntries || firstJoinerQs.some(entry => !['R', 'P', 'S'].includes(entry))) {
     return { counterMove: getRandomMove(), risk: 1 };
   }
 
-  // Check if all the first 6 joiner_qs are the same
   const allSame = firstJoinerQs.every(rps => rps === firstJoinerQs[0]);
+
   if (allSame) {
-    // Generate a list of possible moves excluding the last joiner_rps value
     const lastMove = firstJoinerQs[firstJoinerQs.length - 1];
     const possibleMoves = ['R', 'P', 'S'].filter(move => move !== lastMove);
     return { counterMove: possibleMoves[Math.floor(Math.random() * possibleMoves.length)], risk: 3 };
   } else {
-    // Return the same move as the first joiner_qs
-    const previousMove = historicData[0].rps;
+    const previousMove = historicData[historicData.length - 1].rps;
     return { counterMove: previousMove, risk: 1 };
   }
 }
 
+
 function martingaleStrategy(historicData) {
-  // If there's no historic data or it's the first round, play randomly
   if (historicData.length === 0) {
     const randomMove = ['R', 'P', 'S'][Math.floor(Math.random() * 3)];
     return {
       move: randomMove,
-      lastResult: null // No previous result
+      lastResult: null
     };
   }
 
-  // Get the result of the previous game
   const lastOpponentMove = historicData[historicData.length - 1].rps;
   const lastAIMove = historicData[historicData.length - 1].joiner_rps;
   const lastResult = getResult(lastAIMove, lastOpponentMove);
 
-  // Play randomly
   const randomMove = ['R', 'P', 'S'][Math.floor(Math.random() * 3)];
 
-  // Return the random move along with the result of the previous game
   return {
     move: randomMove,
-    lastResult: lastResult // Return the result of the previous game
+    lastResult: lastResultx
   };
 }
 

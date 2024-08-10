@@ -1,7 +1,6 @@
 const documentLocks = new Map();
 
-async function saveDocumentWithRetry(document, retryCount = 30, delayMs = 800) {
-
+async function saveDocumentWithRetry(document, retryCount = 15, delayMs = 800) {
     const documentId = document._id.toString(); // Assuming _id is an ObjectId
 
     if (documentLocks.has(documentId)) {
@@ -18,7 +17,7 @@ async function saveDocumentWithRetry(document, retryCount = 30, delayMs = 800) {
                 return;
             } catch (error) {
                 await new Promise(resolve => setTimeout(resolve, delayMs));
-                console.log("Retrying... Retry count:", retryCount);
+                console.log("Retrying... Retry count:", error);
                 retryCount--; // Decrement retryCount here
                 console.log("After decrementing, Retry count:", retryCount);
             }

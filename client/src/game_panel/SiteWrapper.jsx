@@ -30,16 +30,8 @@ import busdSvg from './JoinGame/busd.svg';
 
 import AllTransactionsModal from './modal/AllTransactionsModal.jsx';
 import {
-  Close,
-  Link,
-  ArrowUpward,
-  ArrowDownward,
   AccountBalanceWallet,
   ArrowDropDown,
-  Brightness7,
-  Brightness4,
-  VolumeUp,
-  VolumeOff,
   ExitToApp,
   PersonOutline,
   Help,
@@ -51,7 +43,6 @@ import socketIOClient from 'socket.io-client';
 import Moment from 'moment';
 import Avatar from '../components/Avatar';
 import Web3 from 'web3';
-import './SiteWrapper.css';
 import ProfileModal from './modal/ProfileModal';
 import PlayerModal from './modal/PlayerModal';
 import HowToPlayModal from './modal/HowToPlayModal';
@@ -241,7 +232,6 @@ class SiteWrapper extends Component {
       remainingLoans: this.props.remainingLoans,
       web3balance: 0
     };
-    // this.state.notifications = this.props.notification || {};
     this.initSocket = this.initSocket.bind(this);
   }
   static getDerivedStateFromProps(props, currentState) {
@@ -251,12 +241,10 @@ class SiteWrapper extends Component {
       currentState.balance !== balance ||
       currentState.betResult !== betResult ||
       currentState.userName !== userName
-      // currentState.notifications !== notifications
     ) {
       return {
         ...currentState,
         balance,
-        // notifications: updateFromNow(props.notifications),
         userName,
         transactions: updateFromNow(props.transactions),
         betResult
@@ -277,7 +265,7 @@ class SiteWrapper extends Component {
     }
 
     if (prevState.showNotifications !== this.state.showNotifications && !this.state.showNotifications) {
-      this.props.readNotifications(); // Mark all notifications as read
+      this.props.readNotifications();
       const updatedNotifications = this.state.notifications.map(notification => ({
         ...notification,
         is_read: true
@@ -288,8 +276,6 @@ class SiteWrapper extends Component {
     const shouldUpdate =
       transactions &&
       transactions.length > 0 &&
-      // transactions[0] &&
-      // transactions[0].amount !== null &&
       prevProps.transactions[0] &&
       prevProps.transactions[0] !== transactions[0] &&
       !tnxComplete;
@@ -303,10 +289,8 @@ class SiteWrapper extends Component {
       try {
         await this.props.getUser(true, 5);
 
-        // await this.props.getHistory();
       } catch (error) {
         console.error("An error occurred during asynchronous operations:", error);
-        // Handle the error appropriately, e.g., show an error message to the user
       }
 
       if (!this.isUnmounted) {
@@ -374,12 +358,6 @@ class SiteWrapper extends Component {
     }
   };
 
-  // updateCounter = () => {
-  //   if (this.state.counter < 100) {
-  //     this.setState(prevState => ({ counter: prevState.counter + 1 }));
-  //   }
-  // };
-
   handleUnmute = () => {
     const audioElements = [
       this.audioWin,
@@ -400,8 +378,8 @@ class SiteWrapper extends Component {
   speak(message) {
     if (!this.props.isMuted && window.speechSynthesis) {
       const utterance = new SpeechSynthesisUtterance(message);
-      utterance.rate = 1.0; // set the speed to 1.0 (normal speed)
-      utterance.lang = 'en-US'; // set the language to US English
+      utterance.rate = 1.0;
+      utterance.lang = 'en-US';
       window.speechSynthesis.speak(utterance);
     }
   }
@@ -497,33 +475,25 @@ class SiteWrapper extends Component {
         if (!this.props.isMuted) {
           this.notificationSound.play();
         }
-        // Initialize notifications as an empty array if it's null or undefined
         const currentNotifications = this.state.notifications || [];
-        // Prepend the new notification data to the beginning of the array
         currentNotifications.unshift(data);
         this.setState({
           notifications: currentNotifications
         });
 
         if (this.props.isNotificationsAllowed && window.Notification) {
-          // Check if the Notification API is available
 
-          // Options for the notification
           const options = {
-            body: data, // You can customize the notification body here
-            silent: false // Display notification even when the tab is inactive
+            body: data,
+            silent: false 
           };
 
           if (Notification.permission === 'granted') {
-            // If permission is granted, create the notification
             new Notification('New Notification', options);
           } else if (Notification.permission !== 'denied') {
-            // If permission is not denied, request permission and create the notification if granted
             Notification.requestPermission().then(permission => {
               if (permission === 'granted') {
-                // Call setNotificationsAllowed appropriately
                 this.props.setNotificationsAllowed(true);
-                // Create the notification
                 new Notification('New Notification', options);
               }
             });
@@ -556,7 +526,6 @@ class SiteWrapper extends Component {
 
     } catch (error) {
       console.error('Socket initialization failed:', error);
-      // Retry socket initialization after a short delay
       setTimeout(() => {
         this.initSocket();
       }, 3000);
@@ -567,20 +536,14 @@ class SiteWrapper extends Component {
   loadWeb3 = async () => {
     const { isDarkMode } = this.props;
     try {
-      // Check if there is a provider available
       if (window.ethereum) {
         const web3 = new Web3(window.ethereum);
-
-        // Request accounts using the new Ethereum provider
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
 
-        // Check if accounts are available
         if (accounts.length > 0) {
 
-          // Get ETH balance of the account
           const ethBalance = await web3.eth.getBalance(accounts[0]);
           const tokenAmount = web3.utils.fromWei(ethBalance, 'ether');
-          // Update state with the connected account and balance
           this.setState({
             web3: web3,
             web3account: accounts[0],
@@ -601,7 +564,6 @@ class SiteWrapper extends Component {
   async componentDidMount() {
 
     try {
-      // this.historyInterval = setInterval(this.fetchHistory, 15000);
       const initialBalance = await this.props.fetchVaultBalance();
       this.setState({ vaultBal: initialBalance, websiteLoading: true });
       const currentUrl = window.location.pathname;
@@ -615,16 +577,13 @@ class SiteWrapper extends Component {
         this.fetchData(),
       ]);
       this.setState({ websiteLoading: false, notifications: this.props.notifications });
-      // Set selectedMainTabIndex based on the current URL
       if (currentUrl.includes('create')) {
         this.setState({ selectedMainTabIndex: this.props.selectMainTab(1) });
       }
 
-      // Set up intervals for fetchData and updateReminderTime
       setInterval(() => this.fetchData(), 2000);
       this.interval = setInterval(this.updateReminderTime, 3000);
 
-      // Set up Ethereum event listeners
       if (window.ethereum) {
         window.ethereum.on('chainChanged', () => {
           this.loadWeb3();
@@ -633,7 +592,6 @@ class SiteWrapper extends Component {
           this.loadWeb3();
         });
 
-        // Load Web3 only once when the component mounts
         this.loadWeb3();
       } else {
         alertModal(this.props.isDarkMode, 'NO WEB3 WALLET FOUND IN YOUR BROWSER.');
@@ -651,7 +609,6 @@ class SiteWrapper extends Component {
       await this.props.getHistory();
     } catch (error) {
       console.error("An error occurred during getHistory:", error);
-      // Handle the error appropriately, e.g., show an error message to the user
     }
   }
 
@@ -870,7 +827,6 @@ class SiteWrapper extends Component {
   onSearchQueryChange = event => {
     const searchQuery = event;
     this.setState({ searchQuery }, () => {
-      // Call the function to fetch data with the updated search query
       this.props.getUser(
         false,
         this.state.loadMore,
@@ -953,14 +909,11 @@ class SiteWrapper extends Component {
       showAllGameLogs: !prevState.showAllGameLogs,
       loadMore: 0
     }), () => {
-      // This function is a callback executed after the state has been updated
       if (this.state.showAllGameLogs) {
         this.props.getProfitData();
       }
     });
   };
-
-
 
   handleDollarEnter = () => {
     this.setState({ isHovered: true });
@@ -1042,7 +995,6 @@ class SiteWrapper extends Component {
     const timeRemaining = valentinesDay - currentDate;
     const unreadNotificationsCount = notifications.filter(notification => !notification.is_read).length;
 
-    // Convert the remaining time to seconds
     this.secondsRemaining = Math.floor(timeRemaining / 1000);
     return (
       <MuiThemeProvider theme={isDarkMode ? darkTheme : mainTheme}>
@@ -1057,7 +1009,6 @@ class SiteWrapper extends Component {
 
                   <img style={{ width: "420px", border: '0.6em solid #6002a6', borderRadius: '2em' }} src="../img/coming-soon.svg" />
                   <Countdown
-                    // style={{ zIndex: '1', position: 'absolute' }}
                     date={valentinesDay}
                     renderer={({ days, hours, minutes, seconds, completed }) => (
                       <div style={{ zIndex: '1', height: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -1297,7 +1248,7 @@ class SiteWrapper extends Component {
                     </a>
                     {isAuthenticated ? (
                       <>
-                        <div id="balance">
+                        <div id="balance" className='title'>
 
 
                           <div style={{ display: "inline" }}
@@ -1411,7 +1362,6 @@ class SiteWrapper extends Component {
                             className="avatar"
                             darkMode={isDarkMode}
                           />
-                          {/* <span className="username">{this.state.userName}</span> */}
                           <ArrowDropDown />
                         </Button>
                         <Menu
@@ -1420,7 +1370,6 @@ class SiteWrapper extends Component {
                           getContentAnchorEl={null}
                           open={Boolean(anchorEl)}
                           onClose={this.handleCloseMenu}
-                          isDarkMode={isDarkMode}
                           anchorOrigin={{
                             vertical: 'bottom',
                             horizontal: 'center'
@@ -1487,12 +1436,6 @@ class SiteWrapper extends Component {
                         <Button id="btn-login" onClick={this.handleOpenLoginModal}>
                           Login
                         </Button>
-                        {/* <Button
-                      id="btn-signup"
-                      onClick={this.handleOpenSignupModal}
-                    >
-                      Register
-                    </Button> */}
                       </>
                     )}
                   </div>
@@ -1504,7 +1447,7 @@ class SiteWrapper extends Component {
                 >
                   <div className="arrow-up"></div>
                   <div className="header_panel_contents">
-                    {<h2>NOTIFICATIONS</h2>}
+                    {<h2 className='title'>NOTIFICATIONS</h2>}
                     {
                       <div className="notification-element">
                         {notificationsArray.length > 0 ? (
@@ -1618,7 +1561,7 @@ class SiteWrapper extends Component {
                     }
 
 
-                    <h2>BALANCE HISTORY</h2>
+                    <h2 className='title'>BALANCE HISTORY</h2>
 
                     {
                       <div>
@@ -1677,14 +1620,14 @@ class SiteWrapper extends Component {
 
                     <div className="transaction-panel">
                       <Button
-                        className="btn-inventory"
+                        className="btn-inventory title"
                         // isDarkMode={isDarkMode}
                         onClick={this.handleOpenInventoryModal}
                       >
                         Inventory
                       </Button>
                       <Button
-                        className="btn-vault"
+                        className="btn-vault title"
                         // isDarkMode={isDarkMode}
                         onClick={this.handleOpenVaultModal}
                       >
@@ -1697,7 +1640,7 @@ class SiteWrapper extends Component {
                     <div className="transaction-panel">
                       {this.state.remainingLoans > 0 ? (
                         <Button
-                          className="btn-withdraw debt"
+                          className="btn-withdraw debt title"
                           onClick={this.handleOpenDebtsModal}
                         // isDarkMode={isDarkMode}
                         >
@@ -1705,7 +1648,7 @@ class SiteWrapper extends Component {
                         </Button>
                       ) : (
                         <Button
-                          className="btn-withdraw"
+                          className="btn-withdraw title"
                           onClick={this.handleOpenWithdrawModal}
                         // isDarkMode={isDarkMode}
                         >
@@ -1714,7 +1657,7 @@ class SiteWrapper extends Component {
                       )}
 
                       <Button
-                        className="btn-deposit"
+                        className="btn-deposit title"
                         onClick={this.handleOpenDepositModal}
                       // isDarkMode={isDarkMode}
                       >
@@ -1729,12 +1672,12 @@ class SiteWrapper extends Component {
                             value={web3account}
                             readOnly
                           />
-                          <Button className="connect" onClick={this.disconnectWeb3}>
+                          <Button className="connect title" onClick={this.disconnectWeb3}>
                             Disconnect
                           </Button>
                         </>
                       ) : (
-                        <Button className="connect" onClick={this.loadWeb3}>
+                        <Button className="connect title" onClick={this.loadWeb3}>
                           Wallet Not connected
                         </Button>
                       )}

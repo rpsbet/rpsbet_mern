@@ -45,8 +45,8 @@ class PrivacyModal extends Component {
         >
             <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
                 <div className='modal-header'>
-					<h2 className="modal-title">Privacy <span style={{color: "#d81719"}}>RPS</span><span style={{color: "#ebddca"}}>Game</span></h2>
-					<Button className="btn-close" onClick={this.props.closeModal}>×</Button>
+					<h2 className="modal-title title">Privacy <span style={{color: "#d81719"}}>RPS</span><span style={{color: "#ebddca"}}>Game</span></h2>
+					<Button className="btn-close title" onClick={this.props.closeModal}>×</Button>
                 </div>
 				<div className="modal-body edit-modal-body terms-modal-body">
                     <div>

@@ -24,7 +24,6 @@ import { faUser, faEdit, faChartBar } from '@fortawesome/free-solid-svg-icons';
 import Avatar from '../../components/Avatar';
 
 import moment from 'moment';
-import './Modals.css';
 import { convertToCurrency } from '../../util/conversion';
 
 Modal.setAppElement('#root');
@@ -102,7 +101,6 @@ class ProfileModal extends Component {
   async componentDidMount() {
     const { userInfo } = this.props;
     const { rewards } = userInfo;
-    // Fetch customer info for each reward user
     rewards.forEach(async reward => {
       const info = await this.props.acGetCustomerInfo(reward.user);
       if (info) {
@@ -261,7 +259,7 @@ class ProfileModal extends Component {
   handleCopyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
     this.setState({ copied: true });
-    setTimeout(() => this.setState({ copied: false }), 1500); // Reset copied state after 1.5 seconds
+    setTimeout(() => this.setState({ copied: false }), 1500);
   };
 
   handleAvatarLoaded = filename => {
@@ -289,21 +287,15 @@ class ProfileModal extends Component {
     }
 
     try {
-      // Create a canvas element
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
-
-      // Create an image element to load the avatar
       const img = new Image();
       img.src = this.state.avatar;
 
-      // Wait for the image to load
       img.onload = () => {
-        // Set maximum dimensions for the canvas
         const maxWidth = 600;
         const maxHeight = 600;
 
-        // Calculate new dimensions for the image
         let width = img.width;
         let height = img.height;
         if (width > height) {
@@ -318,23 +310,16 @@ class ProfileModal extends Component {
           }
         }
 
-        // Set canvas dimensions to match new image dimensions
         canvas.width = width;
         canvas.height = height;
 
-        // Draw the resized image onto the canvas
         ctx.drawImage(img, 0, 0, width, height);
-
-        // Convert canvas content to a Blob (WebP format)
         canvas.toBlob(async blob => {
-          // Read the Blob as a data URL
           const reader = new FileReader();
           reader.readAsDataURL(blob);
           reader.onloadend = async () => {
-            // Get the base64 string from the FileReader result
             const base64Avatar = reader.result;
 
-            // Call the changePasswordAndAvatar function with the password and base64 avatar
             const is_success = await this.props.changePasswordAndAvatar(
               this.state.password,
               base64Avatar
@@ -344,12 +329,11 @@ class ProfileModal extends Component {
               this.props.closeModal();
             }
           };
-        }, 'image/webp', 0.5); // Adjust quality parameter as needed (e.g., 0.5 for 50% quality)
+        }, 'image/webp', 0.5);
       };
     } catch (error) {
       console.error('Error converting image to WebP:', error);
       alertModal(this.props.isDarkMode, 'Failed to convert image. Please try again.');
-      // Handle error appropriately (e.g., display error message to the user)
     }
   };
 
@@ -404,11 +388,11 @@ class ProfileModal extends Component {
       >
         <div className={isDarkMode ? 'dark_mode' : ''}>
           <div className="modal-header">
-            <h2 className="modal-title">
+            <h2 className="modal-title title">
               <FontAwesomeIcon icon={faUser} className="mr-2" />
 
               Your Profile</h2>
-            <Button className="btn-close" onClick={this.handleCloseModal}>
+            <Button className="btn-close title" onClick={this.handleCloseModal}>
               ×
             </Button>
           </div>
@@ -448,16 +432,16 @@ class ProfileModal extends Component {
                         avatar={avatar}
                       />
                       <div style={{ marginTop: '30px', borderBottom: '2px solid' }}>
-                        <h4 className="modal-title" style={{ marginBottom: '-20px' }}>
+                        <h4 className="modal-title title">
                           {this.state.username}
                         </h4>
-                        <p style={{  marginBottom: '20px', color: this.props.isDarkMode ? "#e5e5e5" : "#333" }}>
+                        <div style={{ marginBottom: '20px', color: isDarkMode ? "#e5e5e5" : "#333" }}>
                           {isLink ? (
                             <a
                               href={this.state.link}
                               style={{
                                 marginBottom: '20px',
-                                color: this.props.isDarkMode ? "#e5e5e5" : "#333"
+                                color: isDarkMode ? "#e5e5e5" : "#333"
                               }}
                               target="_blank"
                               rel="noopener noreferrer"
@@ -465,17 +449,18 @@ class ProfileModal extends Component {
                               {this.state.link}
                             </a>
                           ) : (
-                            <p
+                            <span
                               style={{
                                 marginBottom: '20px',
                                 paddingBottom: '10px',
-                                color: this.props.isDarkMode ? "#e5e5e5" : "#333"
+                                color: isDarkMode ? "#e5e5e5" : "#333"
                               }}
                             >
                               {this.state.link}
-                            </p>
+                            </span>
                           )}
-                        </p>
+                        </div>
+
 
                       </div>
                     </div>
@@ -504,7 +489,6 @@ class ProfileModal extends Component {
                   <div className="input-wrapper" style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
                     <Button
                       className="form-control"
-                      variant="filled"
                       onClick={this.handleReferrals}
                     >
                       See All Referrals
@@ -541,7 +525,6 @@ class ProfileModal extends Component {
                   <div>
                     <Button
                       className="form-control"
-                      variant="filled"
                       onClick={this.handleLink}
                     >
                       CHANGE BIO
@@ -559,7 +542,6 @@ class ProfileModal extends Component {
                   <div>
                     <Button
                       className="form-control"
-                      variant="filled"
                       onClick={this.handleNewUsername}
                     >
                       Change Username
@@ -640,10 +622,10 @@ class ProfileModal extends Component {
           style={customStyles}
           contentLabel="New Username Modal"
         >
-          <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
+          <div className={isDarkMode ? 'dark_mode' : ''}>
             <div className="modal-header">
-              <h2 className="modal-title">ENTER NEW USERNAME</h2>
-              <Button className="btn-close" onClick={this.handleCloseModal}>
+              <h2 className="modal-title title">ENTER NEW USERNAME</h2>
+              <Button className="btn-close title" onClick={this.handleCloseModal}>
                 ×
               </Button>
             </div>
@@ -683,10 +665,10 @@ class ProfileModal extends Component {
           style={customStyles}
           contentLabel="New Username Modal"
         >
-          <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
+          <div className={isDarkMode ? 'dark_mode' : ''}>
             <div className="modal-header">
-              <h2 className="modal-title">ENTER NEW BIO</h2>
-              <Button className="btn-close" onClick={this.handleCloseModal}>
+              <h2 className="modal-title title">ENTER NEW BIO</h2>
+              <Button className="btn-close title" onClick={this.handleCloseModal}>
                 ×
               </Button>
             </div>
@@ -701,7 +683,7 @@ class ProfileModal extends Component {
                       variant="filled"
                       autoComplete="off"
                       multiline
-                      rowsMax={4}
+                      maxRows={4}
                       className="form-control"
                       inputProps={{ maxLength: 40 }}
                     />
@@ -728,10 +710,10 @@ class ProfileModal extends Component {
           style={customStyles}
           contentLabel="Referrals Modal"
         >
-          <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
+          <div className={isDarkMode ? 'dark_mode' : ''}>
             <div className="modal-header">
-              <h2 className="modal-title">ALL REFERRALS</h2>
-              <Button className="btn-close" onClick={this.handleCloseModal}>
+              <h2 className="modal-title title">ALL REFERRALS</h2>
+              <Button className="btn-close title" onClick={this.handleCloseModal}>
                 ×
               </Button>
             </div>

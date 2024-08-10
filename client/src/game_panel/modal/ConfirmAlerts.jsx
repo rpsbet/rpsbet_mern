@@ -11,7 +11,7 @@ const showAlert = (isDarkMode, text, icon) => {
       return (
         <div style={{ borderRadius: "0.6em" }} className={isDarkMode ? 'dark_mode' : ''}>
           <div className="modal-body alert-body">
-            <Button className="btn-close" onClick={onClose}>
+            <Button className="btn-close title" onClick={onClose}>
               ×
             </Button>
             <div className={`modal-icon alert-icon${icon}`}></div>
@@ -40,7 +40,7 @@ const showConfirm = (
       return (
         <div style={{ borderRadius: "0.6em" }} className={isDarkMode ? 'dark_mode' : ''}>
           <div className="modal-body alert-body confirm-body">
-            <Button className="btn-close" onClick={onClose}>
+            <Button className="btn-close title" onClick={onClose}>
               ×
             </Button>
             <div className={`modal-icon alert-icon${icon}`}></div>
@@ -222,7 +222,7 @@ const showResultModal = (
         <div style={{ borderRadius: "0.6em" }} className={isDarkMode ? 'dark_mode' : ''}>
           <div className="modal-body alert-body result-body">
             <div className={`modal-icon result-icon${icon}`}></div>
-            <h4>{text}</h4>
+            <h4 className='title'>{text}</h4>
             <h1 style={amountStyle}>{convertToCurrency(amount)}</h1>
             <div className="modal-footer">
               <div className="countdown-timer">

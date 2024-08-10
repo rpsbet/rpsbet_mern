@@ -11,7 +11,7 @@ const calcWinChanceQs = (gameType, rounds) => {
   }
 
   rounds.forEach((round) => {
-    freq[Number(round.qs)]++; // Ensure qs is treated as a number
+    freq[Number(round.qs)]++;
   });
 
   const freqValues = Object.values(freq);
@@ -24,8 +24,8 @@ const calcWinChanceQs = (gameType, rounds) => {
 
   return `${probWin}% - ${probLose}%`;
 };
-const predictNextQs = (qs_list, gameType) => {
 
+const predictNextQs = (qs_list, gameType) => {
   if (typeof gameType !== 'number' || gameType <= 0) {
     throw new Error('Invalid gameType. It must be a positive integer.');
   }
@@ -119,7 +119,6 @@ const predictNextQs = (qs_list, gameType) => {
   if (Math.random() < randomnessFactor) {
     nextState = options[Math.floor(Math.random() * options.length)];
   }
-
   return nextState;
 };
 
@@ -129,17 +128,14 @@ async function reinforcementAI_qs(data, qs_game_type) {
     throw new Error(`Invalid qs_game_type: ${qs_game_type}`);
   }
 
-  // Return random move if data is empty
   if (data.length <= 3) {
     return { move: getRandomItem_qs(qs_game_type), risk: 0 };
   }
 
-  // Process the last 20 items from data
   const historicData = data.slice(-30);
   const qsNumeric = historicData.map(entry => parseInt(entry.qs, 10));
   const joinerRPSNumeric = historicData.map(entry => parseInt(entry.joiner_qs, 10));
 
-  // Determine wins and losses
   const results = historicData.map(entry => ({
     qs: entry.qs,
     joiner_qs: entry.joiner_qs,
@@ -152,7 +148,7 @@ async function reinforcementAI_qs(data, qs_game_type) {
   for (let i = 0; i < results.length - 1; i++) {
     const current = results[i];
     const next = results[i + 1];
-    
+
     if (current.win) {
       winChanges.push(next.joiner_qs !== current.joiner_qs);
     } else {
@@ -204,7 +200,7 @@ async function reinforcementAI_qs(data, qs_game_type) {
   }
 }
 
- function innovate_qs(historicData, qs_game_type) {
+function innovate_qs(historicData, qs_game_type) {
 
   let nextState = {};
   const firstEntries = historicData.slice(-6);
@@ -239,13 +235,13 @@ function getRandomItem_qs(qs_game_type, possibleMoves = null) {
 
 function patternBasedAI_qs(historicData, qs_game_type) {
 
-  if (historicData.length === 0) {
-      return getRandomItem_qs(qs_game_type);
+  if (historicData.length <= 3) {
+    return getRandomItem_qs(qs_game_type);
   }
   const opponentMoves = historicData.map(item => item.joiner_qs);
   const moveCounts = Array(qs_game_type).fill(0);
   opponentMoves.slice(-10).forEach(move => {
-      moveCounts[move]++;
+    moveCounts[move]++;
   });
 
   const mostFrequentMove = moveCounts.indexOf(Math.max(...moveCounts));
@@ -256,48 +252,41 @@ function patternBasedAI_qs(historicData, qs_game_type) {
 
 function counterSwitchAI_qs(historicData, qs_game_type) {
   if (historicData.length > 0) {
-      const lastGame = historicData[0];
+    const lastGame = historicData[0];
 
-      const lastGameWasWin = lastGame.qs !== lastGame.joiner_qs;
-      const lastGameWasLoss = lastGame.qs === lastGame.joiner_qs;
+    const lastGameWasWin = lastGame.qs !== lastGame.joiner_qs;
+    const lastGameWasLoss = lastGame.qs === lastGame.joiner_qs;
 
-      if (lastGameWasWin) {
-          const repeatProbability = 1;
-          if (Math.random() < repeatProbability) {
-              return parseInt(lastGame.qs, 10);
-          }
-      } else if (lastGameWasLoss) {
-          return (parseInt(lastGame.joiner_qs, 10) + 1) % qs_game_type;
+    if (lastGameWasWin) {
+      const repeatProbability = 1;
+      if (Math.random() < repeatProbability) {
+        return parseInt(lastGame.qs, 10);
       }
+    } else if (lastGameWasLoss) {
+      return (parseInt(lastGame.joiner_qs, 10) + 1) % qs_game_type;
+    }
   }
-  
+
   return getRandomItem_qs(qs_game_type);
 }
 
 
 function counterRandomness_qs(historicData, qs_game_type) {
-  // If historicData is empty or undefined, default to a random move
   if (!historicData || historicData.length === 0) {
-      return getRandomItem_qs(qs_game_type);
+    return getRandomItem_qs(qs_game_type);
   }
-
-  // Get the last move from the historic data
-  const lastOpponentMove = historicData[0].joiner_qs !== undefined ? parseInt(historicData[0].joiner_qs, 10) : getRandomItem_qs(qs_game_type);
-
-  // Return a random move
   return getRandomItem_qs(qs_game_type);
 }
 
 
 
 function NPC_qs(historicData) {
-  const lastMove = historicData.length > 0 ? historicData[0].qs : "0";
+  const lastMove = historicData.length > 0 ? historicData[historicData.length - 1].qs : 0;
   return lastMove;
-
 }
 
+
 function martingaleStrategy_qs(historicData, qs_game_type) {
-  // If there's no historic data or it's the first round, play randomly
   if (historicData.length === 0) {
     const randomMove = getRandomItem_qs(qs_game_type);
     return {
@@ -327,45 +316,50 @@ function getResult(aiMove, opponentMove) {
 
 
 function generatePattern_qs(allBetItems, qs_game_type) {
+  if (allBetItems.length <= 3) {
+    return getRandomItem_qs(qs_game_type);
+  }
   const patterns = [];
   for (let i = 0; i < qs_game_type; i++) {
-      for (let j = 0; j < qs_game_type; j++) {
-          if (i !== j) {
-              patterns.push([i, j]);
-          }
+    for (let j = 0; j < qs_game_type; j++) {
+      if (i !== j) {
+        patterns.push([i, j]);
       }
+    }
   }
   const lastTwoMoves = allBetItems.slice(0, 2).map(item => parseInt(item.qs, 10));
+
   let matchedPattern = null;
   for (const pattern of patterns) {
-      if ((pattern[0] === lastTwoMoves[0] && pattern[1] === lastTwoMoves[1]) ||
-          (pattern[1] === lastTwoMoves[0] && pattern[0] === lastTwoMoves[1])) {
-          matchedPattern = pattern;
-          break;
-      }
+    if ((pattern[0] === lastTwoMoves[0] && pattern[1] === lastTwoMoves[1]) ||
+      (pattern[1] === lastTwoMoves[0] && pattern[0] === lastTwoMoves[1])) {
+      matchedPattern = pattern;
+      break;
+    }
   }
 
   if (matchedPattern) {
-      let continuationCount = 0;
-      for (let i = 2; i < allBetItems.length; i++) {
-          if ((parseInt(allBetItems[i - 1].qs, 10) === matchedPattern[0] && parseInt(allBetItems[i].qs, 10) === matchedPattern[1]) ||
-              (parseInt(allBetItems[i - 1].qs, 10) === matchedPattern[1] && parseInt(allBetItems[i].qs, 10) === matchedPattern[0])) {
-              continuationCount++;
-          } else {
-              break;
-          }
+    let continuationCount = 0;
+    for (let i = 2; i < allBetItems.length; i++) {
+      if ((parseInt(allBetItems[i - 1].qs, 10) === matchedPattern[0] && parseInt(allBetItems[i].qs, 10) === matchedPattern[1]) ||
+        (parseInt(allBetItems[i - 1].qs, 10) === matchedPattern[1] && parseInt(allBetItems[i].qs, 10) === matchedPattern[0])) {
+        continuationCount++;
+      } else {
+        break;
       }
-      const maxContinuation = Math.floor(Math.random() * 4) + 2;
+    }
+    const maxContinuation = Math.floor(Math.random() * 4) + 2;
 
-      if (continuationCount > maxContinuation) {
-          const movesNotInPattern = Array.from({ length: qs_game_type }, (_, i) => i).filter(move => !matchedPattern.includes(move));
-          const randomMove = movesNotInPattern[Math.floor(Math.random() * movesNotInPattern.length)];
+    if (continuationCount > maxContinuation) {
+      const movesNotInPattern = Array.from({ length: qs_game_type }, (_, i) => i).filter(move => !matchedPattern.includes(move));
+      const randomMove = movesNotInPattern[Math.floor(Math.random() * movesNotInPattern.length)];
 
-          return randomMove;
-      }
-      return parseInt(allBetItems[1].qs, 10);
+      return randomMove;
+    }
+    return parseInt(allBetItems[1].qs, 10);
   } else {
-      return getRandomItem_qs(qs_game_type);
+    const eef = getRandomItem_qs(qs_game_type);
+    return eef;
   }
 }
 
@@ -393,14 +387,14 @@ function skillIssue_qs(historicData, qs_game_type) {
     moveCounts[move]++;
   });
 
-const leastPlayedMove = getLeastPlayedMove(moveCounts);
-const lastTwoMoves = getLastMoves(historicData, 4);
-const lastThreeMoves = getLastMoves(historicData, 3);
+  const leastPlayedMove = getLeastPlayedMove(moveCounts);
+  const lastTwoMoves = getLastMoves(historicData, 4);
+  const lastThreeMoves = getLastMoves(historicData, 3);
 
-const availableMoves = Array.from({ length: qs_game_type }, (_, i) => i).filter(move => move !== leastPlayedMove);
+  const availableMoves = Array.from({ length: qs_game_type }, (_, i) => i).filter(move => move !== leastPlayedMove);
 
 
-if (Number.isNaN(leastPlayedMove)) {
+  if (Number.isNaN(leastPlayedMove)) {
     return { counterMove: getRandomItem_qs(qs_game_type), risk: 1 };
   } else if (!lastTwoMoves.includes(leastPlayedMove)) {
     return { counterMove: getRandomItem_qs(qs_game_type, availableMoves), risk: 3 };

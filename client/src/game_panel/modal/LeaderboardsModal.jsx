@@ -58,7 +58,7 @@ class LeaderboardsModal extends Component {
     selectedCreator: ''
   };
 
- 
+
 
   async componentDidMount() {
     await this.props.fetchLeaderboardsData()
@@ -93,7 +93,7 @@ class LeaderboardsModal extends Component {
       selectedCreator
     } = this.state;
     const { leaderboards, isDarkMode, loading } = this.props;
-    
+
     // Sort the leaderboards data based on current sorting options
     const sortedLeaderboards = [...leaderboards].sort((a, b) => {
       const aValue = a[this.state.sortField];
@@ -110,10 +110,10 @@ class LeaderboardsModal extends Component {
       >
         <div className={isDarkMode ? 'dark_mode' : ''}>
           <div className="modal-header">
-            <h2 className="modal-title">
-            <FontAwesomeIcon icon={faList} className="mr-2" /> {/* Use appropriate icon */}
-Leaderboards</h2>
-            <Button className="btn-close" onClick={this.props.closeModal}>
+            <h2 className="modal-title title">
+              <FontAwesomeIcon icon={faList} className="mr-2" />
+              Leaderboards</h2>
+            <Button className="btn-close title" onClick={this.props.closeModal}>
               ×
             </Button>
           </div>
@@ -122,67 +122,60 @@ Leaderboards</h2>
               selectedCreator={selectedCreator}
               modalIsOpen={showPlayerModal}
               closeModal={this.handleClosePlayerModal}
-              // {...this.state.selectedRow}
+            // {...this.state.selectedRow}
             />
           )}
           <div className="modal-body leaderboards-modal edit-modal-body">
             <div className="modal-content-wrapper">
               <div className="modal-content-panel">
-              {!loading ? (
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell onClick={() => this.handleSort('username')}>
-                        PLAYER {sortField === 'username' && <Sort />}
-                      </TableCell>
-                      <TableCell
-                        onClick={() => this.handleSort('totalWagered')}
-                      >
-                        TOTAL WAGERED {sortField === 'totalWagered' && <Sort />}
-                      </TableCell>
-                      <TableCell onClick={() => this.handleSort('totalProfit')}>
-                        NET PROFIT {sortField === 'totalProfit' && <Sort />}
-                      </TableCell>
-                      <TableCell
-                        onClick={() => this.handleSort('profitAllTimeHigh')}
-                      >
-                        ALL-TIME-HIGH (ATH){' '}
-                        {sortField === 'profitAllTimeHigh' && <Sort />}
-                      </TableCell>
-                      <TableCell
-                        onClick={() => this.handleSort('profitAllTimeLow')}
-                      >
-                        ALL-TIME-LOW (ATL){' '}
-                        {sortField === 'profitAllTimeLow' && <Sort />}
-                      </TableCell>
-                      <TableCell onClick={() => this.handleSort('gamePlayed')}>
-                        GAMES PLAYED {sortField === 'gamePlayed' && <Sort />}
-                      </TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {sortedLeaderboards.map((entry, index) => (
-                      <TableRow key={index}>
-                        <TableCell>
-                          {' '}
-                          <a
-                            className="player"
-                            onClick={() =>
-                              this.handleOpenPlayerModal(entry._id)
-                            }
-                          >
-                            <Avatar
-                              className="avatar"
-                              src={entry.avatar}
-                              rank={entry.totalWagered}
-                              accessory={entry.accessory}
-                              username={entry.username}
-                              alt=""
-                              darkMode={isDarkMode}
-                            />
-                            {/* {entry.username} */}
-                          </a>
-                          {/* <i
+                {!loading ? (
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell onClick={() => this.handleSort('username')}>
+                          PLAYER {sortField === 'username' && <Sort />}
+                        </TableCell>
+                        <TableCell
+                          onClick={() => this.handleSort('totalWagered')}
+                        >
+                          TOTAL WAGERED {sortField === 'totalWagered' && <Sort />}
+                        </TableCell>
+                        <TableCell onClick={() => this.handleSort('totalProfit')}>
+                          NET PROFIT {sortField === 'totalProfit' && <Sort />}
+                        </TableCell>
+                        <TableCell
+                          onClick={() => this.handleSort('profitAllTimeHigh')}
+                        >
+                          ALL-TIME-HIGH (ATH){' '}
+                          {sortField === 'profitAllTimeHigh' && <Sort />}
+                        </TableCell>
+                        <TableCell
+                          onClick={() => this.handleSort('profitAllTimeLow')}
+                        >
+                          ALL-TIME-LOW (ATL){' '}
+                          {sortField === 'profitAllTimeLow' && <Sort />}
+                        </TableCell>
+                        <TableCell onClick={() => this.handleSort('gamePlayed')}>
+                          GAMES PLAYED {sortField === 'gamePlayed' && <Sort />}
+                        </TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {sortedLeaderboards.map((entry, index) => (
+                        <TableRow key={index}>
+                          <TableCell>
+                            <a className="player" onClick={() => this.handleOpenPlayerModal(entry._id)}>
+                              <Avatar
+                                className="avatar"
+                                src={entry.avatar}
+                                rank={entry.totalWagered}
+                                accessory={entry.accessory}
+                                username={entry.username}
+                                alt=""
+                                darkMode={isDarkMode}
+                              />
+                            </a>
+                            {/* <i
                         className={`online-status${
                           this.props.onlineUserList.filter(
                             user => user === row.creator_id
@@ -191,30 +184,21 @@ Leaderboards</h2>
                             : ''
                         }`}
                       ></i> */}
-                        </TableCell>
-                        <TableCell>
-                          {convertToCurrency(entry.totalWagered)}
-                        </TableCell>
-                        <TableCell>
-                          {convertToCurrency(entry.totalProfit)}
-                        </TableCell>
-                        <TableCell>
-                          {convertToCurrency(entry.profitAllTimeHigh)}
-                        </TableCell>
-                        <TableCell>
-                          {convertToCurrency(entry.profitAllTimeLow)}
-                        </TableCell>
-                        <TableCell>
-                          {entry.gamePlayed}
-                        </TableCell>{' '}
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              ) : (
-                
-<LinearProgress color='secondary' />
-              )}
+                          </TableCell>
+                          <TableCell>{convertToCurrency(entry.totalWagered)}</TableCell>
+                          <TableCell>{convertToCurrency(entry.totalProfit)}</TableCell>
+                          <TableCell>{convertToCurrency(entry.profitAllTimeHigh)}</TableCell>
+                          <TableCell>{convertToCurrency(entry.profitAllTimeLow)}</TableCell>
+                          <TableCell>{entry.gamePlayed}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+
+                  </Table>
+                ) : (
+
+                  <LinearProgress color='secondary' />
+                )}
               </div>
             </div>
           </div>

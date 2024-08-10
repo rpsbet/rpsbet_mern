@@ -29,7 +29,7 @@ function updateFromNow(history) {
 
 const styles = theme => ({
   activeTab: {
-    color: props => props.isDarkMode ? '#f9f9f9' : '#ff0000', // Red color for the tab label
+    color: props => props.isDarkMode ? '#f9f9f9' : '#ff0000',
     '& .MuiTab-wrapper': {
       color: '#ff0000',
 

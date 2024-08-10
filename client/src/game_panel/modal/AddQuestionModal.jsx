@@ -233,10 +233,10 @@ class AddQuestionModal extends Component {
         <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
           <div className="modal-header">
 
-            <h2 className="modal-title">
+            <h2 className="modal-title title">
           <FontAwesomeIcon icon={faBrain} /> &nbsp;
               Submit Your Own Brain Game</h2>
-            <Button className="btn-close" onClick={this.handelCancel}>
+            <Button className="btn-close title" onClick={this.handelCancel}>
               ×
             </Button>
           </div>
@@ -284,10 +284,10 @@ class AddQuestionModal extends Component {
         >
           <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
             <div className="modal-header">
-              <h2 className="modal-title">
+              <h2 className="modal-title title">
               <FontAwesomeIcon icon={faList} /> &nbsp;
                 View All Questions</h2>
-              <Button className="btn-close" onClick={this.toggleQuestionTableModal}>
+              <Button className="btn-close title" onClick={this.toggleQuestionTableModal}>
                 ×
               </Button>
             </div>
@@ -307,10 +307,10 @@ class AddQuestionModal extends Component {
         >
           <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
             <div className="modal-header">
-              <h2 className="modal-title">
+              <h2 className="modal-title title">
               <FontAwesomeIcon icon={faEdit} /> &nbsp;
                 Update Question</h2>
-              <Button className="btn-close" onClick={this.toggleQuestionEditModal}>
+              <Button className="btn-close title" onClick={this.toggleQuestionEditModal}>
                 ×
               </Button>
             </div>

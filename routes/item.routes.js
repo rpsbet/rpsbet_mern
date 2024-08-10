@@ -584,7 +584,6 @@ router.post('/delist-from-sale', auth, async (req, res) => {
         message: 'Item not found',
       });
     }
-
     const ownerIndex = item.owners.findIndex((ownerObj) => ownerObj.user.equals(req.user._id));
 
     if (ownerIndex === -1) {
@@ -596,11 +595,7 @@ router.post('/delist-from-sale', auth, async (req, res) => {
 
     if (item.owners[ownerIndex].onSale > 0) {
       item.owners[ownerIndex].onSale -= 1;
-
-      if (item.owners[ownerIndex].onSale -= 1
-      ) {
-        item.owners[ownerIndex].rentOption = false;
-      }
+      item.owners[ownerIndex].rentOption = false;
       try {
         await saveDocumentWithRetry(item);
       } catch (error) {

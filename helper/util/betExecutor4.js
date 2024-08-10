@@ -241,9 +241,10 @@ const addToQueue = async (req, bot = false) => {
                             nextItem = await predictNext(allBetItems);
                             break;
                         case 'Innovate':
-                            nextItem = await innovate(allBetItems);
-
+                            const nextState = await innovate(allBetItems)
+                            nextItem = nextState.counterMove;
                             break;
+
 
                         default:
                             const move = await reinforcementAI(allBetItems);
@@ -591,7 +592,7 @@ const addToQueue = async (req, bot = false) => {
 
                     async function getNextItemUsingMarkov_qs(allBetItems, gameType) {
                         if (allBetItems.length <= 3) {
-                            return getRandomItem();
+                            return getRandomItem_qs(roomInfo['qs_game_type']);
                         }
 
                         const transformedItems = allBetItems.map(item => ({ qs: item.joiner_qs }));
@@ -680,7 +681,7 @@ const addToQueue = async (req, bot = false) => {
                     }
                     // update bankroll
                     roomInfo['user_bet'] =
-                        parseFloat(roomInfo['user_bet']) +
+                        parseFloat(roomInfo['user_bet']) -
                         (betAmount +
                             betAmount /
                             (roomInfo['qs_game_type'] - 1)) *

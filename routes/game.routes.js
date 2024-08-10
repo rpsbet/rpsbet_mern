@@ -81,6 +81,7 @@ router.get('/strategies', async (req, res) => {
 });
 
 router.get('/recently-closed', async (req, res) => {
+
   try {
     const rooms = await Room.find({ status: 'finished' })
       .populate({ path: 'game_type', model: GameType, select: 'short_name game_type_name' })
@@ -855,7 +856,7 @@ router.put('/rpsbetitems/:itemId', auth, async (req, res) => {
   const { itemId } = req.params;
   const { updatedItem, cellindex } = req.body;
 
-  try {
+    try {
     // Find the RpsBetItem by ID
     const rpsBetItem = await RpsBetItem.findById(itemId);
 
@@ -868,7 +869,6 @@ router.put('/rpsbetitems/:itemId', auth, async (req, res) => {
       });
     }
 
-    // Validate and set the updated item based on the cell index
     if (cellindex === 'bet_amount') {
       // Validate if the updated item is a float or integer
       if (!isNaN(updatedItem)) {
@@ -878,7 +878,7 @@ router.put('/rpsbetitems/:itemId', auth, async (req, res) => {
       }
     } else if (cellindex === 'rps' || cellindex === 'joiner_rps') {
       // Validate if the updated item is either 'r', 'p', or 's' (case-insensitive)
-      const validRPSValues = ['r', 'p', 's'];
+      const validRPSValues = ['r', 'p', 's', 'R', 'P', 'S'];
       if (validRPSValues.includes(updatedItem.toLowerCase())) {
         rpsBetItem[cellindex] = updatedItem.toUpperCase();
       } else {
@@ -1122,6 +1122,7 @@ const getHistory = async (pageSize, my_id, game_type) => {
     const countQuery = GameLog.countDocuments(search_condition);
 
     const [gameLogList, count] = await Promise.all([gameLogQuery, countQuery]);
+
     const result = await convertGameLogToHistoryStyle(gameLogList);
 
     return {
@@ -1372,7 +1373,7 @@ router.post('/rooms', auth, async (req, res) => {
       qs_list,
       rps_game_type
     } = req.body;
-console.log("game_type", game_type);
+
     if (bet_amount <= 0) {
       return res.json({
         success: false,
@@ -2245,7 +2246,6 @@ router.post('/unstake', auth, async (req, res) => {
       });
     }
 
-
     const roomInfo = await Room.findOne({ _id: roomId })
       .populate({ path: 'creator', model: User })
       .populate({ path: 'game_type', model: GameType });
@@ -2270,17 +2270,45 @@ router.post('/unstake', auth, async (req, res) => {
       });
     }
 
+    const oldAmount = roomInfo.hosts[hostIndex].share / 100 * roomInfo.user_bet;
     // Deduct the unstake amount from the host's share
-    const unstakeAmount = roomInfo.hosts[hostIndex].share / 100 * roomInfo.user_bet;
+    const unstakeAmount = oldAmount;
     req.user.balance += unstakeAmount;
 
-    // Create a new transaction for unstaking
     const newTransaction = new Transaction({
       user: userId,
       amount: unstakeAmount,
       description: `Unstaked from ${roomInfo.game_type.short_name}-${roomInfo.room_number}`,
       room: roomId
     });
+
+    const newGameLog = new GameLog({
+      room: roomInfo._id,
+      creator: userId,
+      joined_user: null,
+      game_type: roomInfo.game_type,
+      bet_amount: unstakeAmount,
+      selected_rps: '',
+      ai_mode: '',
+      commission: 0,
+      game_result: 666,
+      winnings: 0,
+      endgame_amount: roomInfo.hosts[hostIndex].initial_stake,
+      host_pr: oldAmount,
+      user_bet: 0,
+      status: 'open',
+      hosts: []
+    });
+
+    try {
+      await newGameLog.save();
+    } catch (error) {
+      console.error('Error saving game log:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to save game log'
+      });
+    }
 
     // Update room's user_bet and remove the host entry from the array
     roomInfo.user_bet = parseFloat(roomInfo.user_bet) - unstakeAmount;
@@ -2328,7 +2356,6 @@ router.post('/unstake', auth, async (req, res) => {
     // Retrieve the user's updated room list
     const myRooms = await getMyRooms(userId);
 
-    // Send response with updated room list and new transaction
     res.json({
       success: true,
       myGames: myRooms.rooms,
@@ -2336,7 +2363,6 @@ router.post('/unstake', auth, async (req, res) => {
       newTransaction
     });
 
-    // Emit socket event to update room list for all users
     const rooms = await getRoomList(7, 'All');
     req.io.sockets.emit('UPDATED_ROOM_LIST', {
       total: rooms.count,
@@ -2788,6 +2814,35 @@ router.post('/coHost', auth, async (req, res) => {
       });
     }
 
+    const newGameLog = new GameLog({
+      room: room._id,
+      creator: req.user._id,
+      joined_user: null,
+      game_type: room.game_type,
+      bet_amount: coHostAmount,
+      selected_rps: '',
+      ai_mode: '',
+      commission: 0,
+      game_result: 333,
+      winnings: 0,
+      endgame_amount: 0,
+      host_pr: 0,
+      user_bet: 0,
+      status: 'open',
+      hosts: []
+    });
+
+    try {
+      await newGameLog.save();
+    } catch (error) {
+      console.error('Error saving game log:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to save game log'
+      });
+    }
+
+
     const description = `Co-hosted room ${gameType.short_name}-${room.room_number}`;
 
     const existingHostIndex = room.hosts.findIndex(host => host.host.equals(req.user._id));
@@ -2808,6 +2863,7 @@ router.post('/coHost', auth, async (req, res) => {
         username: req.user.username,
         avatar: req.user.avatar,
         rank: req.user.totalWagered,
+        initial_stake: coHostAmount,
         stake: coHostAmount
       };
       room.hosts.push(newHost);
@@ -2815,6 +2871,7 @@ router.post('/coHost', auth, async (req, res) => {
       // Update existing host's share
       newShare = ((((room.hosts[existingHostIndex].share / 100) * oldValuation) + coHostAmount) / parseFloat(room.user_bet) * 100);
       room.hosts[existingHostIndex].share = newShare;
+      room.hosts[existingHostIndex].initial_stake += coHostAmount;
       room.hosts[existingHostIndex].stake = coHostAmount;
     }
 
@@ -3341,7 +3398,6 @@ router.post('/reCreate', auth, async (req, res) => {
 router.post('/bet2', auth, async (req, res) => {
   try {
     const requestId = uuidv4();
-
     // Acquire the semaphore
     if (semaphore2 === 0) {
       // If semaphore is already acquired, return a busy response

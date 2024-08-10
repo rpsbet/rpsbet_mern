@@ -65,10 +65,10 @@ class MarketplaceModal extends Component {
       >
         <div className={`${this.props.isDarkMode ? 'dark_mode' : ''} big-modal`}>
           <div className="modal-header">
-            <h2 className="modal-title">
+            <h2 className="modal-title title">
               <FontAwesomeIcon icon={faStore} className="mr-2" />
               Marketplace</h2>
-            <Button className="btn-close" onClick={this.props.closeModal}>
+            <Button className="btn-close title" onClick={this.props.closeModal}>
               ×
             </Button>
           </div>

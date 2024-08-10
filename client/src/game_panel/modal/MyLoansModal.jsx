@@ -89,8 +89,8 @@ class MyLoansModal extends Component {
       >
         <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
           <div className="modal-header">
-            <h2 className="modal-title"><FontAwesomeIcon icon={faCoins} className="mr-2" />Your Loans</h2>
-            <Button className="btn-close" onClick={this.props.closeModal}>
+            <h2 className="modal-title title"><FontAwesomeIcon icon={faCoins} className="mr-2" />Your Loans</h2>
+            <Button className="btn-close title" onClick={this.props.closeModal}>
               ×
             </Button>
           </div>
@@ -106,7 +106,6 @@ class MyLoansModal extends Component {
           </div>
         </div>
 
-        {/* ProductCreatePage Modal */}
         <Modal
           isOpen={this.state.productCreateModalIsOpen}
           onRequestClose={this.closeProductCreateModal}
@@ -115,8 +114,8 @@ class MyLoansModal extends Component {
         >
           <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
             <div className="modal-header">
-              <h2 className="modal-title">New Loan</h2>
-              <Button className="btn-close" onClick={this.closeProductCreateModal}>
+              <h2 className="modal-title title">New Loan</h2>
+              <Button className="btn-close title" onClick={this.closeProductCreateModal}>
                 ×
               </Button>
             </div>

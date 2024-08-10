@@ -19,8 +19,8 @@ async function swapRpsBetItems(roomId, user) {
       room: roomId,
       joiner: user._id
     })
-    .sort({ created_at: -1 })
-    .limit(50);
+      .sort({ created_at: -1 })
+      .limit(50);
 
     const swappedRpsBetItems = rpsBetItems.map(item => ({
       ...item.toObject(),
@@ -46,8 +46,8 @@ async function swapQsBetItems(roomId, user) {
       room: roomId,
       joiner: user._id
     })
-    .sort({ created_at: -1 })
-    .limit(50);
+      .sort({ created_at: -1 })
+      .limit(50);
 
     const swappedQsBetItems = qsBetItems.map(item => ({
       ...item.toObject(),
@@ -64,7 +64,6 @@ async function swapQsBetItems(roomId, user) {
 
 
 async function predictNextBetAmount(betArray, penultimateSameAsLast, smoothingFactor = 0.01, randomnessFactor = 0.2, threshold = 0.0005, room) {
-
   const allStates = Array.from(new Set(betArray));
   if (penultimateSameAsLast !== 0) {
     if (penultimateSameAsLast >= 3) {
@@ -148,7 +147,6 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
     });
 
     for (const room of rooms) {
-      console.log(room._id)
       const roomId = room._id;
       const gameType = room.game_type;
       let nextState;
@@ -253,10 +251,10 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
             }
 
           }
-
-          if (predictedBetAmount > user.balance) {
+          if (predictedBetAmount > parseFloat(user.balance)) {
             try {
               await AttachedPlayer.deleteOne({ user: user._id, room: room._id });
+              return;
             } catch (error) {
               console.error('Error deleting AttachedPlayer document:', error);
             }
@@ -348,7 +346,6 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
               predictedBetAmount = outcome.lastResult === 'loss' || outcome.lastResult === 'draw' ? betArray[0].bet_amount * 2 : Math.min(...betArray);
             } else if (ai_mode === 'Innovate') {
               const randomnessResult = await innovate_qs(qsBetItems, room.qs_game_type);
-              console.log("randomnessResult", randomnessResult)
               nextState = randomnessResult.counterMove;
               const penultimateSameAsLast = randomnessResult.risk;
               const predictedBet = await predictNextBetAmount(betArray, penultimateSameAsLast, 0, 0.01, 0.2, room);
@@ -359,7 +356,7 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
           }
 
           if ((predictedBetAmount) / (room.qs_game_type - 1) +
-          predictedBetAmount -
+            predictedBetAmount -
             (room.qs_game_type - 1) * room.user_bet >
             room.user_bet ||
             predictedBetAmount > user.balance
@@ -391,11 +388,12 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
         if (useFirstBetFunction && !isExecutingBet1) {
           // BOT
           isExecutingBet1 = true;
-         const  newBet = await executeBet1(req, true);
+          const newBet = await executeBet1(req, true);
           isExecutingBet1 = false;
         } else if (!useFirstBetFunction && !isExecutingBet4) {
           // attached
           isExecutingBet4 = true;
+
           const newBet = await executeBet4(req, true);
           isExecutingBet4 = false;
         }

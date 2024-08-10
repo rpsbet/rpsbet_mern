@@ -121,13 +121,13 @@ class PlayBrainGame extends Component {
 		return (
 			<div className="game-info-panel brain-game-play-panel">
 				<div className="play-panel-header">
-					<div className="timer">
+					<div className="timer title">
 						<div className="timer-title">Timer: </div>
 						<div className="countdown">{this.state.remaining_time}</div>
 						<div className="timer-footer">seconds left</div>
 						<div className="timer-footer2">S</div>
 					</div>
-					<div className="brain-score">
+					<div className="brain-score title">
 						Score: <span>{this.state.score}</span>
 					</div>
 				</div>

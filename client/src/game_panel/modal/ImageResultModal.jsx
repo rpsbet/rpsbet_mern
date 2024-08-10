@@ -57,7 +57,7 @@ class ImageResultModal extends Component {
           className={isDarkMode ? 'dark_mode' : ''}
         >
           <div className="modal-body alert-body result-body">
-            <Button className="btn-close" onClick={this.props.closeModal}>
+            <Button className="btn-close title" onClick={this.props.closeModal}>
               ×
             </Button>
             <h1

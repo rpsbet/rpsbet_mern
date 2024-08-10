@@ -247,13 +247,13 @@ class ChatPage extends Component {
         {/* <h2 className="main-title desktop-only">{this.getActiveTabText()}</h2> */}
         <div className="chat-page">
           <div
-            className="chat-header"
+            className="chat-header title"
             style={{
               width: isDrawerOpen ? 'calc(100% - 610px)' : 'calc(100% - 350px)'
             }}
           >
             <Button
-              className="btn-back"
+              className="btn-back title"
               onClick={() => {
                 history.push('/');
               }}

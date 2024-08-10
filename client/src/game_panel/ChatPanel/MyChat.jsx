@@ -82,7 +82,7 @@ class MyChat extends Component {
 											{/* {this.state.myChat[row].username} */}
 										</div>
 									</div>
-									<div className="message-panel">
+									<div className="message-panel title">
 										<div className="table-cell">{this.state.myChat[row].message}</div>
 										<div className="table-cell message-date">{Moment(this.state.myChat[row].created_at_str).format('DD / MM')}</div>
 										<div><div className="table-cell" title="Unread message">{this.state.myChat[row].unread_message_count === 0 ? <></> : <span className="unread_message_badge">{this.state.myChat[row].unread_message_count}</span>}</div></div>

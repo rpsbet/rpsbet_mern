@@ -116,11 +116,11 @@ class AllTransactionsModal extends Component {
 
         >
           <div className="modal-header">
-            <h2 className="modal-title">
+            <h2 className="modal-title title">
               <FontAwesomeIcon icon={faCreditCard} className="mr-2" />
 
               ALL TRANSACTIONS</h2>
-            <Button className="btn-close" onClick={close}>
+            <Button className="btn-close title" onClick={close}>
               ×
             </Button>
           </div>

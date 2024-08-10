@@ -795,7 +795,7 @@ class Bang extends Component {
     return (
       <div className="game-page">
         <div className="page-title">
-          <h2>PLAY - Bang!</h2>
+          <h2  className="title">PLAY - Bang!</h2>
         </div>
         {showImageModal && (
           <ImageResultModal
@@ -813,9 +813,9 @@ class Bang extends Component {
             closeModal={handleClosePlayerModal}
           />
         )}
-        <div className="game-contents">
+        <div className="game-contents title">
           <div
-            className="pre-summary-panel"
+            className="pre-summary-panel title"
             ref={this.panelRef}
           // onScroll={this.handleScroll}
           >
@@ -1039,7 +1039,7 @@ class Bang extends Component {
               </Button>
               <div
                 ref={this.runsRef}
-                className={`runs-modal ${runs_panel_opened ? 'active' : ''}`}
+                className={`runs-modal title ${runs_panel_opened ? 'active' : ''}`}
               >
                 <div className="slippage-select-panel">
                   <div>

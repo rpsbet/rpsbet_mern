@@ -824,7 +824,7 @@ class RPS extends Component {
     return (
       <div className="game-page">
         <div className="page-title">
-          {rps_game_type === 1 ? <h2>PLAY - RRPS</h2> : <h2>PLAY - RPS</h2>}{' '}
+          {rps_game_type === 1 ? <h2 className="title">PLAY - RRPS</h2> : <h2 className="title">PLAY - RPS</h2>}{' '}
         </div>
         {showImageModal && (
           <ImageResultModal
@@ -842,8 +842,8 @@ class RPS extends Component {
             closeModal={handleClosePlayerModal}
           />
         )}
-        <div className="game-contents">
-          <div className="pre-summary-panel" ref={this.panelRef}>
+        <div className="game-contents title">
+          <div className="pre-summary-panel title" ref={this.panelRef}>
             <div className="pre-summary-panel__inner">
               {[...Array(1)].map((_, i) => (
                 <React.Fragment key={i}>
@@ -1140,7 +1140,7 @@ class RPS extends Component {
             {status === 'open' && rps_game_type === 0 ? (
               <>
                 <Tooltip title={!isWatching ? "CLICK TO STOP WATCHING" : "CLICK TO START WATCHING"}>
-                  <IconButton className="spectate" onClick={this.handleSpectateMode}>
+                  <IconButton className="spectate title" onClick={this.handleSpectateMode}>
                     {isWatching ? <>PLAY&nbsp;<SwordsIcon /></> : <>SPECTATE&nbsp;<ViewIcon /></>}
 
                   </IconButton>
@@ -1302,7 +1302,7 @@ class RPS extends Component {
                         className="hover-text-button special-button"
                       >
                         <FontAwesomeIcon className="button-icon" icon={faMoneyBillWave} />
-                        <span className="button-text">&nbsp;QUICK RUG&nbsp;{convertToCurrency(bankroll)}</span>
+                        <span className="button-text">&nbsp;QUICK RUG&nbsp;{convertToCurrency(bankroll)}&nbsp;&nbsp;&nbsp;</span>
                       </Button>
                     </div>
                   ) : (

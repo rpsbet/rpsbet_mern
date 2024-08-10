@@ -54,7 +54,7 @@ class Summary extends Component {
     }
 
     return (
-      <div className="pre-summary-panel">
+      <div className="pre-summary-panel title">
         <div className="data-item">
           <div className="label your-bet-amount">YOUR BET</div>
           <div className="value">
@@ -179,7 +179,7 @@ class Summary extends Component {
         <h3 className="game-sub-title">Room Summary</h3>
         <div className="summary-info">
           <div className="summary-item">
-            <div className="summary-item-name">Expected Value</div>
+            <div className="summary-item-name title">Expected Value</div>
             <div className="summary-item-value" style={{ color: valueColor, background: backgroundColor }}>
               {convertToCurrency(winChance) === -0
                 ? convertToCurrency(0.0).toFixed(2)
@@ -190,7 +190,7 @@ class Summary extends Component {
             </div>
           </div>
           <div className="summary-item">
-            <div className="summary-item-name">Bet Amount</div>
+            <div className="summary-item-name title">Bet Amount</div>
             <div className="summary-item-value">
               {convertToCurrency(bet_amount)}
             </div>
@@ -198,7 +198,7 @@ class Summary extends Component {
           
           {/* {game_mode === 'RPS' && (
             <div className="summary-item">
-              <div className="summary-item-name">Game Mode</div>
+              <div className="summary-item-name title">Game Mode</div>
               <div className="summary-item-value">
                 {rps_game_type === 0
                   ? 'Classic'
@@ -212,19 +212,19 @@ class Summary extends Component {
 
           {game_mode === 'Quick Shoot' && (
             <div className="summary-item">
-              <div className="summary-item-name">Game Mode</div>
+              <div className="summary-item-name title">Game Mode</div>
               <div className="summary-item-value">{qs_game_type}</div>
             </div>
           )}
           <div className="summary-item">
-              <div className="summary-item-name">AI Play Strategy</div>
+              <div className="summary-item-name title">AI Play Strategy</div>
               <div className="summary-item-value">
                 {selectedStrategy}
             </div>
             </div>
           {(game_mode === 'Quick Shoot') && (
             <div className="summary-item">
-              <div className="summary-item-name">Public Bet Amount</div>
+              <div className="summary-item-name title">Public Bet Amount</div>
               <div className="summary-item-value">
                 {convertToCurrency(public_bet_amount)}
               </div>
@@ -232,7 +232,7 @@ class Summary extends Component {
           )}
           {(game_mode === 'Spleesh!') && (
             <div className="summary-item">
-              <div className="summary-item-name">Public Bet Amount</div>
+              <div className="summary-item-name title">Public Bet Amount</div>
               <div className="summary-item-value">
                 {convertToCurrency(spleesh_public_bet_amount)}
               </div>
@@ -240,52 +240,52 @@ class Summary extends Component {
           )}
           {game_mode === 'Quick Shoot' && (
             <div className="summary-item">
-              <div className="summary-item-name">Public Max Return</div>
+              <div className="summary-item-name title">Public Max Return</div>
               <div className="summary-item-value">{public_max_return}</div>
             </div>
           )}
           {game_mode === 'Bang!' ||
             (game_mode === 'Roll' && (
               <div className="summary-item">
-                <div className="summary-item-name">Average Multiplier</div>
+                <div className="summary-item-name title">Average Multiplier</div>
                 <div className="summary-item-value">{aveMultiplier}x</div>
               </div>
             ))}
             
           <div className="summary-item">
-            <div className="summary-item-name">TARGET ROI</div>
+            <div className="summary-item-name title">TARGET ROI</div>
             <div className="summary-item-value">
               {convertToCurrency(max_return)}
             </div>
           </div>
           {endgame_type && (
             <div className="summary-item">
-              <div className="summary-item-name">Payout</div>
+              <div className="summary-item-name title">Payout</div>
               <div className="summary-item-value">
                 {convertToCurrency(endgame_amount)}
               </div>
             </div>
           )}
           {/* <div className="summary-item">
-            <div className="summary-item-name">Music</div>
+            <div className="summary-item-name title">Music</div>
             <div className="summary-item-value">
               {youtubeUrl ? youtubeUrl : 'No Music'}
             </div>
           </div>
           <div className="summary-item">
-            <div className="summary-item-name">Background</div>
+            <div className="summary-item-name title">Background</div>
             <div className="summary-item-value">
               {gameBackground ? gameBackground : 'No Background'}
             </div>
           </div> */}
           <div className="summary-item">
-            <div className="summary-item-name">Description</div>
+            <div className="summary-item-name title">Description</div>
             <div className="summary-item-value">
               {description ? description : 'No Description'}
             </div>
           </div>
           <div className="summary-item">
-            <div className="summary-item-name">Privacy</div>
+            <div className="summary-item-name title">Privacy</div>
             <div className="summary-item-value">
               {is_private ? 'Private' : 'Public'}
             </div>

@@ -436,7 +436,7 @@ class MysteryBox extends Component {
     return (
       <div className="game-page">
         <div className="page-title">
-          <h2>PLAY - Mystery Box</h2>
+          <h2 className="title">PLAY - Mystery Box</h2>
         </div>
         {showImageModal && (
           <ImageResultModal
@@ -455,9 +455,9 @@ class MysteryBox extends Component {
           // {...this.state.selectedRow}
           />
         )}
-        <div className="game-contents">
+        <div className="game-contents title">
           <div
-            className="pre-summary-panel"
+            className="pre-summary-panel title"
             ref={this.panelRef}
           // onScroll={this.handleScroll}
           >
@@ -818,7 +818,7 @@ class MysteryBox extends Component {
       return true;
     });
     prizes.sort((a, b) => a.prize - b.prize);
-    let timeLeft = 1500; // duration of modal in milliseconds
+    let timeLeft = 1500;
     const intervalId = setInterval(() => {
       timeLeft -= 100;
       if (timeLeft === 0) {
@@ -830,7 +830,7 @@ class MysteryBox extends Component {
       <div className="game-page">
         <div className="mystery-box-result-contents">
           <div className="game-info-panel">
-            <h4 className="game-sub-title" style={{ marginTop: '30px' }}>
+            <h4 className="game-sub-title title" style={{ marginTop: '30px' }}>
               {betResult === 0
                 ? `WRONG BOX DICKHEAD!`
                 : `NICE, ISSA MONEY BOX`}
@@ -884,9 +884,9 @@ class MysteryBox extends Component {
           >
             <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
               <div className="modal-header">
-                <h2>PRIZE</h2>
+                <h2 className="title">PRIZE</h2>
                 <Button
-                  className="btn-close"
+                  className="btn-close title"
                   onClick={this.onBtnPlayAgainClicked}
                 >
                   ×

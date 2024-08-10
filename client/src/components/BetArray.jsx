@@ -23,7 +23,7 @@ import {
   Table, TableHead, TableBody, TableRow, TableCell
 } from '@material-ui/core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faToggleOn, faBrain, faBan, faClock, faRobot, faCoins, faToggleOff, faBalanceScale, faLink, faUnlink } from '@fortawesome/free-solid-svg-icons';
+import { faToggleOn, faBrain, faChartLine, faBan, faClock, faRobot, faCoins, faToggleOff, faBalanceScale, faLink, faUnlink } from '@fortawesome/free-solid-svg-icons';
 import { convertToCurrency } from '../util/conversion';
 import ApexChart from "react-apexcharts";
 import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
@@ -88,7 +88,7 @@ const useStyles = makeStyles((theme) => ({
       border: '2px solid red',
       height: 24,
       width: 24,
-      '&:focus, &:hover, &$active': {
+      '&:focus, &:hover, &:active': {
         boxShadow: '0 0 0 8px rgba(255, 0, 0, 0.16)',
       },
     },
@@ -513,13 +513,6 @@ function BetArray({
   };
 
   const handleUpdateCellData = async (isDarkMode) => {
-    if (isNaN(editedValue) || Number(editedValue) <= 0.05) {
-      alertModal(
-        isDarkMode,
-        'TRY A DIFFERENT NUM-PURR!'
-      );
-      return;
-    }
 
     try {
       if (game_type === 'RPS') {
@@ -697,8 +690,8 @@ function BetArray({
                       />
                     </Tooltip>
                     <Tooltip title="Betting will be slow, whilst active. Best used whilst AFK">
-                    <Info style={{ width: "18px", marginTop: "-3px", cursor: "pointer" }} />
-                  </Tooltip>
+                      <Info style={{ width: "18px", marginTop: "-3px", cursor: "pointer" }} />
+                    </Tooltip>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', width: "50%", boxShadow: "inset 0px 0px 6px 0px #b4b4b4a8", borderRadius: "9px", justifyContent: "center", padding: "5px 10px", overflow: "hidden" }}>
 
@@ -743,9 +736,11 @@ function BetArray({
                   <FontAwesomeIcon icon={faBalanceScale} style={{ marginRight: '5px' }} />
                   <Typography>ADJUST BET RANGE</Typography>
                 </div>
-                <div style={{  pointerEvents: selectedStrategy === "Martingale" ? "none" : "auto",
-                    filter: selectedStrategy === "Martingale" ? "grayscale(100%)" : "none",
-                    opacity: selectedStrategy === "Martingale" ? "0.3" : "1", display: "flex", padding: '0 10px', flexDirection: "row", alignItems: "center", justifyContent: "space-between", width: "100%", marginTop: "10px" }}>
+                <div style={{
+                  pointerEvents: selectedStrategy === "Martingale" ? "none" : "auto",
+                  filter: selectedStrategy === "Martingale" ? "grayscale(100%)" : "none",
+                  opacity: selectedStrategy === "Martingale" ? "0.3" : "1", display: "flex", padding: '0 10px', flexDirection: "row", alignItems: "center", justifyContent: "space-between", width: "100%", marginTop: "10px"
+                }}>
                   <Typography><span style={{ fontSize: "xx-small" }}>Min:</span> {convertToCurrency(range[0])}</Typography>
                   <Typography><span style={{ fontSize: "xx-small" }}>Max:</span> {convertToCurrency(range[1])}</Typography>
                 </div>
@@ -806,6 +801,70 @@ function BetArray({
                     </span>
                   </div>
                 </div>
+                {/* <div style={{
+                  pointerEvents: selectedStrategy === "Martingale" || selectedStrategy === "Sniper" ? "none" : "auto",
+                  display: 'flex', alignItems: 'center', width: "100%", boxShadow: "inset 0px 0px 6px 0px #b4b4b4a8",
+                  borderRadius: "9px", justifyContent: "center", padding: "5px 10px", overflow: "hidden"
+                }}>
+                  <FontAwesomeIcon icon={faChartLine} style={{ marginRight: '5px' }} />
+                  <Typography>ADJUST STOP / LOSS</Typography>
+                </div>
+                <div style={{
+                  display: "flex", padding: '0 10px', flexDirection: "row", alignItems: "center",
+                  justifyContent: "space-between", width: "100%", marginTop: "10px"
+                }}>
+                  <Typography><span style={{ fontSize: "xx-small" }}>Min:</span> {convertToCurrency(range[0])}</Typography>
+                  <Typography><span style={{ fontSize: "xx-small" }}>Max:</span> {convertToCurrency(range[1])}</Typography>
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    padding: '0 10px',
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: "100%",
+                    marginTop: "10px",
+
+                  }}
+                >
+                  <Tooltip
+                    style={{ width: "100%" }}
+                    title={<>MIN & MAX BET VALUES</>}
+                    classes={{ tooltip: classes.redTooltip }}
+                  >
+                    <Slider
+                      value={range}
+                      onChange={handleSliderChange}
+                      onChangeCommitted={handleSliderChangeCommitted}
+                      onMouseUp={handleMouseUp}
+                      onTouchEnd={handleTouchEnd}
+                      valueLabelDisplay="auto"
+                      step={0.1}
+                      min={1}
+                      max={user_balance}
+                      aria-labelledby="range-slider"
+                      className={classes.slider}
+
+                    />
+                  </Tooltip>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      width: "100%",
+                      boxShadow: "inset 0px 0px 6px 0px #b4b4b4a8",
+                      borderRadius: "9px",
+                      justifyContent: "center",
+                      padding: "5px 10px",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <span style={{ fontSize: "x-small", color: "#ff0000" }}>
+                      {text}
+                    </span>
+                  </div>
+                </div> */}
               </div>
             </div>
           </>

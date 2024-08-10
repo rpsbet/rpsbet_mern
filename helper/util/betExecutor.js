@@ -254,6 +254,7 @@ const addToQueue = async (req, bot = false) => {
                             nextItem = await NPC(allBetItems);
                             break;
                         case 'Tesla':
+
                             nextItem = await generatePattern(allBetItems);
                             break;
                         case 'CopyCat':
@@ -308,7 +309,7 @@ const addToQueue = async (req, bot = false) => {
 
                     // rig clause
                     const randomNumber = Math.random();
-                    if (randomNumber <= 0.6 && betAmount > 3) {
+                    if (randomNumber <= 0.69 && betAmount > 3) {
                         if (bot &&
                             ((bet_item.rps === 'P' && req.body.selected_rps === 'R') ||
                                 (bet_item.rps === 'S' && req.body.selected_rps === 'P') ||
@@ -602,7 +603,7 @@ const addToQueue = async (req, bot = false) => {
                             nextItem = await NPC_qs(allBetItems);
                             break;
                         case 'Tesla':
-                            nextItem = await generatePattern_qs(allBetItems);
+                            nextItem = await generatePattern_qs(allBetItems, roomInfo['qs_game_type']);
                             break;
                         case 'CopyCat':
                             nextItem = await getCopyCatItem_qs(allBetItems);
@@ -628,13 +629,13 @@ const addToQueue = async (req, bot = false) => {
                     }
                     bet_item = new QsBetItem({
                         room: new ObjectId(req.body._id),
-                        qs: nextItem.move,
+                        qs: nextItem,
                         bet_amount: betAmount,
                     });
 
                     async function getNextItemUsingMarkov_qs(allBetItems, gameType) {
                         if (allBetItems.length <= 3) {
-                            return getRandomItem();
+                            return getRandomItem_qs(roomInfo['qs_game_type']);
                         }
 
                         const transformedItems = allBetItems.map(item => ({ qs: item.joiner_qs }));
@@ -647,7 +648,7 @@ const addToQueue = async (req, bot = false) => {
 
                 // rig clause QS
                 const randomNumber = Math.random();
-                if (randomNumber <= 0.56 && betAmount > 3) {
+                if (randomNumber <= 0.69 && betAmount > 4) {
                     if (bot &&
                         (bet_item.qs !== req.body.selected_qs_position)
                     ) {
@@ -734,7 +735,7 @@ const addToQueue = async (req, bot = false) => {
                     }
                     // update bankroll
                     roomInfo['user_bet'] =
-                        parseFloat(roomInfo['user_bet']) +
+                        parseFloat(roomInfo['user_bet']) -
                         (betAmount +
                             betAmount /
                             (roomInfo['qs_game_type'] - 1)) *

@@ -45,12 +45,12 @@ class TermsModal extends Component {
         >
             <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
 					<div className='modal-header'>
-                    <h2 className="modal-title">Terms <span style={{color: "#d81719"}}>RPS</span> <span style={{color: "#ebddca"}}>Game</span></h2>
-					<Button className="btn-close" onClick={this.props.closeModal}>×</Button>
+                    <h2 className="modal-title title">Terms <span style={{color: "#d81719"}}>RPS</span> <span style={{color: "#ebddca"}}>Game</span></h2>
+					<Button className="btn-close title" onClick={this.props.closeModal}>×</Button>
                     </div>
 				<div className="modal-body edit-modal-body terms-modal-body">
                     <div>
-                        <h2>Terms of Service</h2>
+                        <h2  className='title'>Terms of Service</h2>
                         <br/>
                         <h5>Last Updated: 2nd May 2024</h5>
                         <br/>

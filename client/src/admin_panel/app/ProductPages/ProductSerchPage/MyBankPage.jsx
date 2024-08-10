@@ -15,9 +15,6 @@ export class MyBankPage extends Component {
   render() {
     return (
       <>
-        {/* <ContainerHeader
-          title={'Manage Rooms'}
-        /> */}
         <MyBankTable />
       </>
     );

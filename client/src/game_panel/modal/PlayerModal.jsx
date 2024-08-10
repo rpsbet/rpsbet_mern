@@ -41,7 +41,6 @@ import {
 } from '../../redux/Item/item.action';
 import Avatar from '../../components/Avatar';
 import StatisticsForm from '../../admin_panel/app/Customer/EditCustomerPage/StatisticsForm';
-import './Modals.css';
 
 Modal.setAppElement('#root');
 
@@ -459,7 +458,7 @@ class PlayerModal extends Component {
           >
             <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
               <div className="modal-header">
-                <h2 className="modal-title">
+                <h2 className="modal-title title">
                   {isBot ? (
                     <>
                       <FontAwesomeIcon icon={faRobot} className="mr-2" style={{ color: 'red' }} />
@@ -478,7 +477,7 @@ class PlayerModal extends Component {
                   )}
                 </h2>
 
-                <Button className="btn-close" onClick={this.handleCloseModal}>
+                <Button className="btn-close title" onClick={this.handleCloseModal}>
                   ×
                 </Button>
               </div>
@@ -520,11 +519,12 @@ class PlayerModal extends Component {
                           rank={this.state.rank}
                           alt=""
                         />
-                          <h1 className={'player-username'} style={{ marginTop: '60px' }}>
-                            {this.state.username}
-                          </h1>
+                        <h1 className={'player-username'} style={{ marginTop: '60px' }}>
+                          {this.state.username}
+                        </h1>
                         <div style={{ position: 'relative', marginTop: '20px', borderBottom: '2px solid', borderTop: '2px solid' }}>
-                          <p  className={'player-username'} style={{  color: this.props.isDarkMode ? "#e5e5e5" : "#333" }}><span style={{position:'absolute', top: '20px', left: '30px', fontSize: "xx-small"}}>USER BIO</span>
+                          <div className={'player-username'} style={{ color: this.props.isDarkMode ? "#e5e5e5" : "#333" }}>
+                            <span style={{ position: 'absolute', top: '20px', left: '30px', fontSize: "xx-small" }}>USER BIO</span>
                             {isBio ? (
                               <a
                                 href={bio}
@@ -539,7 +539,7 @@ class PlayerModal extends Component {
                                 {this.state.bio}
                               </a>
                             ) : (
-                              <p
+                              <span
                                 style={{
                                   fontSize: "1.2em",
                                   marginBottom: '20px',
@@ -548,10 +548,11 @@ class PlayerModal extends Component {
                                 }}
                               >
                                 {this.state.bio}
-                              </p>
+                              </span>
                             )}
-                          </p>
+                          </div>
                         </div>
+
                       </div>
                     </>
 
@@ -654,11 +655,11 @@ class PlayerModal extends Component {
             >
               <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
                 <div className="modal-header">
-                  <h2 className="modal-title">
+                  <h2 className="modal-title title">
                     <FontAwesomeIcon icon={faMoneyBill} className="mr-2" />
 
                     ENTER TIP AMOUNT</h2>
-                  <Button className="btn-close" onClick={this.handleCloseModal}>
+                  <Button className="btn-close title" onClick={this.handleCloseModal}>
                     ×
                   </Button>
                 </div>
@@ -668,7 +669,8 @@ class PlayerModal extends Component {
                       <div className="input-amount">
                         <TextField
                           label="Amount"
-                          value={this.state.tipAmount}
+                          value={this.state.tipAmount || 0}
+                          type="number"
                           onChange={this.handleTipAmountChange}
                           pattern="^\\d*\\.?\\d*$"
                           variant="filled"

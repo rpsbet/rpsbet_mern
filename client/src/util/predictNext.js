@@ -1,76 +1,69 @@
 import * as tf from '@tensorflow/tfjs';
-export const predictNext = (rps_list, hiddenMarkov = false) => {
+export const predictNext = (rps_list, markov = false) => {
+  const choices = ['R', 'P', 'S'];
+  const smoothingFactor = 0.1; // Smoothing factor to avoid zero probabilities
 
-  // Transition probabilities between hidden states
-  const hiddenTransitionMatrix = {
-    H: { H: 0, T: 0, S: 0 },
-    T: { H: 0, T: 0, S: 0 },
-    S: { H: 0, T: 0, S: 0 }
-  };
-
-  // Emission probabilities from hidden states to observable states
-  const emissionMatrix = {
-    H: { R: 0, P: 0, S: 0 },
-    T: { R: 0, P: 0, S: 0 },
-    S: { R: 0, P: 0, S: 0 }
-  };
-
-  // Initialize count matrices
-  for (let i = 0; i < rps_list.length - 1; i++) {
-    const currentState = rps_list[i].rps;
-    const nextState = rps_list[i + 1].rps;
-
-    hiddenTransitionMatrix[currentState][nextState]++;
-    emissionMatrix[currentState][nextState]++;
+  if (rps_list.length <= 1) {
+    // Not enough data, return a random choice
+    return choices[Math.floor(Math.random() * 3)];
   }
 
-  // Normalize transition probabilities
-  Object.keys(hiddenTransitionMatrix).forEach((fromState) => {
-    const totalTransitions = Object.values(hiddenTransitionMatrix[fromState]).reduce((a, b) => a + b, 0);
-    Object.keys(hiddenTransitionMatrix[fromState]).forEach((toState) => {
-      hiddenTransitionMatrix[fromState][toState] /= totalTransitions;
-    });
+  // Randomly select a subset of the data for the transition matrix
+  const subsetSize = Math.min(rps_list.length - 1, 10); // Adjust subset size if needed
+  const startIndex = Math.floor(Math.random() * (rps_list.length - subsetSize));
+  const subset = rps_list.slice(startIndex, startIndex + subsetSize);
+
+  // Create a simplified 1st-order Markov model transition matrix
+  const transitionMatrix = {
+    R: { R: 0, P: 0, S: 0 },
+    P: { R: 0, P: 0, S: 0 },
+    S: { R: 0, P: 0, S: 0 },
+  };
+
+  for (let i = 0; i < subset.length - 1; i++) {
+    const currentState = subset[i].rps;
+    const nextState = subset[i + 1].rps;
+    transitionMatrix[currentState][nextState]++;
+  }
+
+  // Convert counts to probabilities with smoothing
+  Object.keys(transitionMatrix).forEach((fromState) => {
+    const totalTransitions = Object.values(transitionMatrix[fromState]).reduce((a, b) => a + b, 0);
+    if (totalTransitions > 0) {
+      Object.keys(transitionMatrix[fromState]).forEach((toState) => {
+        transitionMatrix[fromState][toState] = (transitionMatrix[fromState][toState] + smoothingFactor) / (totalTransitions + smoothingFactor * 3);
+      });
+    } else {
+      // If no transitions, initialize with equal probability
+      Object.keys(transitionMatrix[fromState]).forEach((toState) => {
+        transitionMatrix[fromState][toState] = 1 / 3;
+      });
+    }
   });
 
-  // Normalize emission probabilities
-  Object.keys(emissionMatrix).forEach((hiddenState) => {
-    const totalEmissions = Object.values(emissionMatrix[hiddenState]).reduce((a, b) => a + b, 0);
-    Object.keys(emissionMatrix[hiddenState]).forEach((observedState) => {
-      emissionMatrix[hiddenState][observedState] /= totalEmissions;
-    });
-  });
-
-  // Hidden states
-  const hiddenStates = ['H', 'T', 'S'];
-
-  // Determine the current hidden state based on the last observed sequence
+  // Predict next state based on the last observed state
   const currentState = rps_list[rps_list.length - 1].rps;
-
-  // Viterbi algorithm to predict the next hidden state and observed state
+  let nextState = currentState;
   let maxProb = 0;
-  let predictedHiddenState = currentState;
 
-  hiddenStates.forEach(hiddenState => {
-    const prob = hiddenTransitionMatrix[currentState][hiddenState] * emissionMatrix[hiddenState][currentState];
-    if (prob > maxProb) {
-      maxProb = prob;
-      predictedHiddenState = hiddenState;
+  Object.keys(transitionMatrix[currentState]).forEach((state) => {
+    if (transitionMatrix[currentState][state] > maxProb) {
+      maxProb = transitionMatrix[currentState][state];
+      nextState = state;
     }
   });
 
-  let nextState = 'R';
-  maxProb = 0;
-  Object.keys(emissionMatrix[predictedHiddenState]).forEach(observedState => {
-    const prob = emissionMatrix[predictedHiddenState][observedState];
-    if (prob > maxProb) {
-      maxProb = prob;
-      nextState = observedState;
-    }
-  });
-
-  // Adjust prediction for beating type if hiddenMarkov flag is true
-  if (hiddenMarkov) {
+  if (markov) {
     nextState = getBeatingType(nextState);
+  }
+
+  const deviationThreshold = 0.05; // Adjusted to make randomness more impactful
+  if (Math.random() < deviationThreshold) {
+    let randomState;
+    do {
+      randomState = choices[Math.floor(Math.random() * 3)];
+    } while (randomState === currentState);
+    nextState = randomState;
   }
 
   return nextState;
@@ -82,11 +75,11 @@ const getBeatingType = (currentState) => {
   const random = Math.random();
 
   if (currentState === 'R') {
-    return random < 0.7 ? 'P' : 'R';
+    return random < 0.95 ? 'P' : 'R';
   } else if (currentState === 'P') {
-    return random < 0.7 ? 'S' : 'P';
+    return random < 0.95 ? 'S' : 'P';
   } else {
-    return random < 0.7 ? 'R' : 'S';
+    return random < 0.95 ? 'R' : 'S';
   }
 }
 
@@ -140,7 +133,6 @@ const calcWinChance = (rps_list) => {
   }
   return lowest.toFixed(2) + "% - " + highest.toFixed(2) + "%";
 }
-// Function to preprocess data and train the model
 async function trainModel(rpsNumeric, joinerRPSNumeric) {
   const rpsTensor = tf.tensor2d(rpsNumeric, [rpsNumeric.length, 1]);
   const joinerRPSTensor = tf.tensor1d(joinerRPSNumeric);
@@ -170,12 +162,11 @@ async function trainModel(rpsNumeric, joinerRPSNumeric) {
   return model;
 }
 
-// Function to make predictions using the trained model
 async function predictNextMove(model, rpsNumeric) {
   const rpsTensor = tf.tensor2d(rpsNumeric, [rpsNumeric.length, 1]);
   const prediction = model.predict(rpsTensor);
-  const probabilities = prediction.dataSync(); // Get the array of probabilities
-  const nextJoinerRPSNumeric = tf.argMax(prediction, 1).dataSync()[0]; // Specify axis as 1
+  const probabilities = prediction.dataSync();
+  const nextJoinerRPSNumeric = tf.argMax(prediction, 1).dataSync()[0];
 
   // Dispose of tensors
   rpsTensor.dispose();
@@ -391,11 +382,11 @@ export function counterSwitchAI(historicData) {
 
 export function innovate(historicData) {
   // Get the first 6 entries of joiner_rps from the historic data
-  const firstEntries = historicData.slice(0, 6);
+  const firstEntries = historicData.slice(0, 8);
   const firstJoinerQs = firstEntries.map(entry => entry.joiner_rps);
 
   // Ensure we have valid entries for comparison
-  if (firstJoinerQs.length < 6 || firstJoinerQs.some(entry => !['R', 'P', 'S'].includes(entry))) {
+  if (firstJoinerQs.length < 8 || firstJoinerQs.some(entry => !['R', 'P', 'S'].includes(entry))) {
     // Not enough data or invalid data, return a random move with risk 1
     return { counterMove: getRandomMove(), risk: 1 };
   }

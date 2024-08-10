@@ -810,7 +810,7 @@ class QuickShoot extends Component {
     return (
       <div className="game-page">
         <div className="page-title">
-          <h2>PLAY - Quick Shoot</h2>
+          <h2 className="title">PLAY - Quick Shoot</h2>
         </div>
         {showImageModal && (
           <ImageResultModal
@@ -829,9 +829,9 @@ class QuickShoot extends Component {
           // {...this.state.selectedRow}
           />
         )}
-        <div className="game-contents">
+        <div className="game-contents title">
           <div
-            className="pre-summary-panel"
+            className="pre-summary-panel title"
             ref={this.panelRef}
           // onScroll={this.handleScroll}
           >
@@ -1070,7 +1070,7 @@ class QuickShoot extends Component {
             {status === 'open' ? (
               <>
                 <Tooltip title={!isWatching ? "CLICK TO STOP WATCHING" : "CLICK TO START WATCHING"}>
-                  <IconButton className="spectate" onClick={this.handleSpectateMode}>
+                  <IconButton className="spectate title" onClick={this.handleSpectateMode}>
                     {isWatching ? <>PLAY&nbsp;<SwordsIcon /></> : <>SPECTATE&nbsp;<ViewIcon /></>}
 
                   </IconButton>
@@ -1198,7 +1198,7 @@ class QuickShoot extends Component {
                         className="hover-text-button special-button"
                       >
                         <FontAwesomeIcon className="button-icon" icon={faMoneyBillWave} />
-                        <span className="button-text">&nbsp;QUICK RUG&nbsp;{convertToCurrency(bankroll)}</span>
+                        <span className="button-text">&nbsp;QUICK RUG&nbsp;{convertToCurrency(bankroll)}&nbsp;&nbsp;&nbsp;</span>
                       </Button>
                     </div>
                   ) : (

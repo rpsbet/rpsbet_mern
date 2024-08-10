@@ -130,7 +130,7 @@ class Comments extends Component {
                 ) : (
                     <div>
                         {comments.map((comment) => (
-                            <div className="comment-container" key={comment._id}>
+                            <div className="comment-container title" key={comment._id}>
                                 <div className="comment-header">
                                     <a
                                         className="player"
@@ -153,14 +153,14 @@ class Comments extends Component {
                                 <div className="comment-footer">
                                     <span>{comment.user._id === this.props.currentUserId && (
                                         <IconButton
-                                            className="delete-icon"
+                                            className="delete-icon title"
                                             onClick={() => this.handleDeleteComment(comment._id)}
                                         >
                                             <DeleteIcon />
                                         </IconButton>
                                     )}</span>
                                 </div>
-                                <span className="comment-time">{Moment(comment.created_at).fromNow()}</span>
+                                <span className="comment-time title">{Moment(comment.created_at).fromNow()}</span>
 
                             </div>
                         ))}

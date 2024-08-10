@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import Modal from 'react-modal';
 import { connect } from 'react-redux';
-import './Modals.css';
+
 import { Button, TextField } from '@material-ui/core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSignInAlt } from '@fortawesome/free-solid-svg-icons';
@@ -153,15 +153,15 @@ class LoginModal extends Component {
       >
         <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
           <div className="modal-header">
-            <h2 className="modal-title">
+            <h2 className="modal-title title">
               <FontAwesomeIcon icon={faSignInAlt} className="mr-2" />
               LOGIN
             </h2>
-            <Button className="btn-close" onClick={this.props.closeModal}>
+            <Button className="btn-close title" onClick={this.props.closeModal}>
               ×
             </Button>
           </div>
-          <div className="modal-img">
+          <div className="modal-img title">
             <img style={{ maxWidth: "95%", margin: "10px", overflow: "hidden" }} src="/img/giant-login.svg" alt="Login" />
           </div>
           <div className="modal-body" style={{ paddingTop: "0", paddingBottom: "5px" }}>

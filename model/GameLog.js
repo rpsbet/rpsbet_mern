@@ -129,7 +129,11 @@ const GameLogSchema = new Schema({
         share: {
           type: Number,
           default: 0
-        }
+        },
+        initial_stake: {
+            type: Number,
+            default: 0
+          },
       }],
 });
 

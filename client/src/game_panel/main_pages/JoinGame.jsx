@@ -700,7 +700,7 @@ class JoinGame extends Component {
   startBetting = async betArray => {
     const { isDarkMode, openGamePasswordModal, roomInfo, user_balance, getRpsBetItems, getQsBetItems } = this.props;
     const interval = this.props.ai_mode === 'Adam' || this.props.ai_mode === 'Sniper' ? 4200 :
-      this.props.ai_mode === 'Skill-issue-2' || this.props.ai_mode === 'Innovate'  ? 1500 :
+      this.props.ai_mode === 'Skill-issue-2' || this.props.ai_mode === 'Innovate' ? 1500 :
         3000;
 
     const intervalId = setInterval(async () => {
@@ -775,6 +775,7 @@ class JoinGame extends Component {
                 predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
               } else if (this.props.ai_mode === 'Markov') {
                 randomItem = await predictNextQs(this.props.qsbetitems, roomInfo.qs_game_type);
+                console.log("randomItem", randomItem)
                 predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
               } else if (this.props.ai_mode === 'Martingale') {
                 const outcome = await martingaleStrategy_qs(this.props.qsbetitems, roomInfo.qs_game_type);
@@ -809,8 +810,8 @@ class JoinGame extends Component {
                 const penultimateSameAsLast = randomnessResult.risk;
                 const predictedBet = await this.predictNextBetAmount(betArray, penultimateSameAsLast, 0.01, 0.2);
                 predictedBetAmount = penultimateSameAsLast === 1
-                ? Math.max(predictedBet / 5, 0.1)
-                : predictedBet;
+                  ? Math.max(predictedBet / 5, 0.1)
+                  : predictedBet;
               } else if (this.props.ai_mode === 'Feedback') {
                 randomItem = await counterSwitchAI(this.props.rpsbetitems);
                 predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);

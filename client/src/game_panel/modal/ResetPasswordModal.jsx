@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import Modal from 'react-modal';
 import { connect } from 'react-redux';
-import './Modals.css';
 
 import { sendResetPasswordEmail } from '../../redux/Auth/user.actions';
 
@@ -56,7 +55,7 @@ class ResetPasswordModal extends Component {
                 >
                     <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
                         <div className="modal-body">
-                            <button className="btn-close" onClick={this.props.closeModal}>×</button>
+                            <button className="btn-close title" onClick={this.props.closeModal}>×</button>
                             <h2>RECOVER PASSWORD</h2>
                             <form onSubmit={this.onSubmitForm}>
                                 <p>YOUR EMAIL ADDRESS</p>

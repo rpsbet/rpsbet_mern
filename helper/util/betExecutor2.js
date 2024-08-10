@@ -22,6 +22,7 @@ let user_access_log = {};
 
 
 const addToQueue = async (req, bot = false) => {
+
     try {
         const taxPromise = SystemSetting.findOne({ name: 'commission' });
         const rainPromise = SystemSetting.findOne({ name: 'rain' });
@@ -218,8 +219,7 @@ const addToQueue = async (req, bot = false) => {
                 if (!bet_item && roomInfo['rps_game_type'] === 0) {
                     let nextItem;
 
-
-                    switch (roomInfo['selectedStrategy']) {
+                    switch (roomInfo.selectedStrategy) {
                         case 'Random':
                             nextItem = await getRandomItem();
                             break;
@@ -245,14 +245,16 @@ const addToQueue = async (req, bot = false) => {
                             nextItem = await getCopyCatItem(allBetItems);
                             break;
                         case 'Markov':
-                            nextItem = await getNextItemUsingMarkov(allBetItems);
+                            nextItem = await getNextItemUsingMarkov(allBetItems, true);
                             break;
                         case 'Hidden Markov':
                             nextItem = await predictNext(allBetItems);
                             break;
 
                         case 'Innovate':
-                            nextItem = await innovate(allBetItems);
+                            const nextState = await innovate(allBetItems)
+                            nextItem = nextState.move;
+
                             break;
                         default:
                             const move = await reinforcementAI(allBetItems);
@@ -592,6 +594,7 @@ const addToQueue = async (req, bot = false) => {
                             nextItem = await getCopyCatItem_qs(allBetItems);
                             break;
                         case 'Markov':
+
                             nextItem = await getNextItemUsingMarkov_qs(allBetItems, roomInfo['qs_game_type']);
                             break;
                         case 'Hidden Markov':
@@ -616,7 +619,7 @@ const addToQueue = async (req, bot = false) => {
 
                     async function getNextItemUsingMarkov_qs(allBetItems, gameType) {
                         if (allBetItems.length <= 3) {
-                            return getRandomItem();
+                            return getRandomItem_qs(roomInfo['qs_game_type']);
                         }
 
                         const transformedItems = allBetItems.map(item => ({ qs: item.joiner_qs }));
@@ -706,7 +709,7 @@ const addToQueue = async (req, bot = false) => {
                     }
                     // update bankroll
                     roomInfo['user_bet'] =
-                        parseFloat(roomInfo['user_bet']) +
+                        parseFloat(roomInfo['user_bet']) -
                         (betAmount +
                             betAmount /
                             (roomInfo['qs_game_type'] - 1)) *

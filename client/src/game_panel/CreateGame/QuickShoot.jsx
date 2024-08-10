@@ -515,7 +515,7 @@ class QuickShoot extends Component {
             />
             <ButtonBase
               onClick={this.handleSettingsIconClick}
-              className="strategy-btn"
+              className="strategy-btn title"
               style={{
                 boxShadow: 'unset',
                 borderRadius: '30px',

@@ -42,8 +42,8 @@ class HowToPlayModal extends Component {
       >
         <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
           <div className='modal-header'>
-            <h2 className="modal-title">Info</h2>
-            <Button className="btn-close" onClick={this.props.closeModal}>
+            <h2 className="modal-title title">Info</h2>
+            <Button className="btn-close title" onClick={this.props.closeModal}>
               ×
             </Button>
           </div>
@@ -53,7 +53,7 @@ class HowToPlayModal extends Component {
                 <AccordionItemHeading>
                   <AccordionItemButton>
                     <div className="modal-content-wrapper provably-fair">
-                      <h4>About Us</h4>
+                      <h4  className='title'>About Us</h4>
                     </div>
                   </AccordionItemButton>
                 </AccordionItemHeading>
@@ -249,7 +249,7 @@ class HowToPlayModal extends Component {
                 <AccordionItemHeading>
                   <AccordionItemButton>
                     <div className="modal-content-wrapper pot">
-                      <h4>Pot (coming soon!)</h4>
+                      <h4  className='title'>Pot (coming soon!)</h4>
                     </div>
                   </AccordionItemButton>
                 </AccordionItemHeading>
@@ -278,7 +278,7 @@ class HowToPlayModal extends Component {
                 <AccordionItemHeading>
                   <AccordionItemButton>
                     <div className="modal-content-wrapper clips">
-                      <h4>Clips (coming soon!)</h4>
+                      <h4  className='title'>Clips (coming soon!)</h4>
                     </div>
                   </AccordionItemButton>
                 </AccordionItemHeading>
@@ -307,7 +307,7 @@ class HowToPlayModal extends Component {
                 <AccordionItemHeading>
                   <AccordionItemButton>
                     <div className="modal-content-wrapper craps">
-                      <h4>Craps (coming soon!)</h4>
+                      <h4  className='title'>Craps (coming soon!)</h4>
                     </div>
                   </AccordionItemButton>
                 </AccordionItemHeading>
@@ -336,7 +336,7 @@ class HowToPlayModal extends Component {
                 <AccordionItemHeading>
                   <AccordionItemButton>
                     <div className="modal-content-wrapper blackjack">
-                      <h4>Blackjack</h4>
+                      <h4  className='title'>Blackjack</h4>
                     </div>
                   </AccordionItemButton>
                 </AccordionItemHeading>
@@ -369,7 +369,7 @@ class HowToPlayModal extends Component {
                 <AccordionItemHeading>
                   <AccordionItemButton>
                     <div className="modal-content-wrapper roll">
-                      <h4>Roll</h4>
+                      <h4  className='title'>Roll</h4>
                     </div>
                   </AccordionItemButton>
                 </AccordionItemHeading>
@@ -396,7 +396,7 @@ class HowToPlayModal extends Component {
                 <AccordionItemHeading>
                   <AccordionItemButton>
                     <div className="modal-content-wrapper bang">
-                      <h4>Bang!</h4>
+                      <h4  className='title'>Bang!</h4>
                     </div>
                   </AccordionItemButton>
                 </AccordionItemHeading>
@@ -424,7 +424,7 @@ class HowToPlayModal extends Component {
                 <AccordionItemHeading>
                   <AccordionItemButton>
                     <div className="modal-content-wrapper drop-game">
-                      <h4>Drop Game</h4>
+                      <h4  className='title'>Drop Game</h4>
                     </div>
                   </AccordionItemButton>
                 </AccordionItemHeading>
@@ -453,7 +453,7 @@ class HowToPlayModal extends Component {
                 <AccordionItemHeading>
                   <AccordionItemButton>
                     <div className="modal-content-wrapper quick-shoot">
-                      <h4>Quick Shoot</h4>
+                      <h4  className='title'>Quick Shoot</h4>
                     </div>
                   </AccordionItemButton>
                 </AccordionItemHeading>
@@ -481,7 +481,7 @@ class HowToPlayModal extends Component {
                 <AccordionItemHeading>
                   <AccordionItemButton>
                     <div className="modal-content-wrapper brain-game">
-                      <h4>Brain Game</h4>
+                      <h4  className='title'>Brain Game</h4>
                     </div>
                   </AccordionItemButton>
                 </AccordionItemHeading>
@@ -513,7 +513,7 @@ class HowToPlayModal extends Component {
                 <AccordionItemHeading>
                   <AccordionItemButton>
                     <div className="modal-content-wrapper mystery-box">
-                      <h4>Mystery Box</h4>
+                      <h4  className='title'>Mystery Box</h4>
                     </div>
                   </AccordionItemButton>
                 </AccordionItemHeading>
@@ -542,7 +542,7 @@ class HowToPlayModal extends Component {
                 <AccordionItemHeading>
                   <AccordionItemButton>
                     <div className="modal-content-wrapper spleesh">
-                      <h4>
+                      <h4  className='title'>
                         <i>Spleesh!</i>
                       </h4>
                     </div>
@@ -576,7 +576,7 @@ class HowToPlayModal extends Component {
                 <AccordionItemHeading>
                   <AccordionItemButton>
                     <div className="modal-content-wrapper rps">
-                      <h4>RPS</h4>
+                      <h4  className='title'>RPS</h4>
                     </div>
                   </AccordionItemButton>
                 </AccordionItemHeading>
@@ -609,7 +609,7 @@ class HowToPlayModal extends Component {
                 <AccordionItemHeading>
                   <AccordionItemButton>
                     <div className="modal-content-wrapper house-edge">
-                      <h4>FEES</h4>
+                      <h4  className='title'>FEES</h4>
                     </div>
                   </AccordionItemButton>
                 </AccordionItemHeading>
@@ -622,8 +622,8 @@ class HowToPlayModal extends Component {
                       <table id="howto-modal">
                         <tbody>
                           <tr>
-                            <th>HOSTS</th>
-                            <th>JOINERS</th>
+                            <th className='title'>HOSTS</th>
+                            <th className='title'>JOINERS</th>
                           </tr>
                           <tr>
                             <td style={{ color: "rgb(87, 202, 34)" }}>
@@ -637,8 +637,8 @@ class HowToPlayModal extends Component {
                       <table id="howto-modal">
                         <tbody>
                           <tr>
-                            <th>PLATFORM</th>
-                            <th>DP / WD</th>
+                            <th className='title'>PLATFORM</th>
+                            <th className='title'>DP / WD</th>
                           </tr>
                           <tr>
                             <td className="gamemode">-0.5%</td>
@@ -656,7 +656,7 @@ class HowToPlayModal extends Component {
                 <AccordionItemHeading>
                   <AccordionItemButton>
                     <div className="modal-content-wrapper support">
-                      <h4>SUPPORT</h4>
+                      <h4 className='title'>SUPPORT</h4>
                     </div>
                   </AccordionItemButton>
                 </AccordionItemHeading>

@@ -253,7 +253,9 @@ const addToQueue = async (req, bot = false) => {
                             nextItem = await predictNext(allBetItems);
                             break;
                         case 'Innovate':
-                            nextItem = await innovate(allBetItems);
+
+                            const nextState = await innovate(allBetItems)
+                            nextItem = nextState.counterMove;
                             break;
 
                         default:
@@ -435,6 +437,7 @@ const addToQueue = async (req, bot = false) => {
                 bet_item.joiner = user._id;
                 bet_item.joiner_rps = req.body.selected_rps;
                 bet_item.bet_amount = betAmount;
+
                 await saveDocumentWithRetry(bet_item);
                 gameLogArray.push(newGameLog);
 
@@ -591,7 +594,6 @@ const addToQueue = async (req, bot = false) => {
                             nextItem = await getCopyCatItem_qs(allBetItems);
                             break;
                         case 'Markov':
-
                             nextItem = await getNextItemUsingMarkov_qs(allBetItems, roomInfo['qs_game_type']);
                             break;
                         case 'Hidden Markov':
@@ -616,7 +618,7 @@ const addToQueue = async (req, bot = false) => {
 
                     async function getNextItemUsingMarkov_qs(allBetItems, gameType) {
                         if (allBetItems.length <= 3) {
-                            return getRandomItem_qs();
+                            return getRandomItem_qs(roomInfo['qs_game_type']);
                         }
 
                         const transformedItems = allBetItems.map(item => ({ qs: item.joiner_qs }));
@@ -707,7 +709,7 @@ const addToQueue = async (req, bot = false) => {
                     }
                     // update bankroll
                     roomInfo['user_bet'] =
-                        parseFloat(roomInfo['user_bet']) +
+                        parseFloat(roomInfo['user_bet']) -
                         (betAmount +
                             betAmount /
                             (roomInfo['qs_game_type'] - 1)) *

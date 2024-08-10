@@ -244,8 +244,8 @@ class RPS extends Component {
   onAutoPlay = () => {
     if (this.props.rps_list.length > 2) {
       const prevStates = this.props.rps_list;
+const nextRPS = predictNext(prevStates, false);
 
-      const nextRPS = predictNext(prevStates, this.props.rps_list);
       this.onAddRun(nextRPS);
     } else {
       alertModal(
@@ -512,7 +512,7 @@ class RPS extends Component {
             />
             <ButtonBase
               onClick={this.handleSettingsIconClick}
-              className="strategy-btn"
+              className="strategy-btn title"
               style={{
                 boxShadow: 'unset',
                 borderRadius: '30px',

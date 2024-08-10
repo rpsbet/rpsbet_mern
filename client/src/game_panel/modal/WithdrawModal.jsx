@@ -57,6 +57,7 @@ const styles = theme => ({
     fontWeight: 'bold',
     display: 'flex',
     alignItems: 'center',
+    color: props => props.isDarkMode ? '#f9f9f9' : '#333',
   },
   radioGroup: {
     flexDirection: 'row',
@@ -73,7 +74,7 @@ const styles = theme => ({
     marginLeft: '-15px !important',
     background: '#0076ff',
     '&:hover': {
-      outline: '2px solid white', // Add a white solid outline on hover
+      outline: '2px solid white',
     },
   },
   description: {
@@ -93,17 +94,18 @@ const styles = theme => ({
   labelContainer: {
     display: 'flex',
     alignItems: 'center',
+    color: '#333',
   },
   radioInputChecked: {
     '&$radioInput': {
-      outline: '2px solid white', // Add a white solid outline when radio is checked
+      outline: '2px solid white',
     },
   },
   icon: {
     marginRight: theme.spacing(1),
   },
   radioInput: {
-    display: 'none', // Hide the actual radio buttons
+    display: 'none',
   },
   additionalText: {
     color: '#f9f9f9',
@@ -152,7 +154,7 @@ class WithdrawModal extends Component {
       sendAddress: '',
       hoveredSuggestion: null,
       suggestions: [],
-      amount:  Math.floor(props.balance * 100) / 100|| 0,
+      amount: Math.floor(props.balance * 100) / 100 || 0,
       balance: 0,
     };
   }
@@ -270,7 +272,7 @@ class WithdrawModal extends Component {
 
   handleAmountChange = e => {
     e.preventDefault();
-    const amount =  Math.floor(e.target.value * 100) / 100;
+    const amount = Math.floor(e.target.value * 100) / 100;
     this.setState({
       amount: amount,
       web2Amount: amount * 0.568,
@@ -372,7 +374,7 @@ class WithdrawModal extends Component {
         this.props.setBalance(response.data.balance);
         this.props.addNewTransaction(response.data.newTransaction);
         this.setState({ isLoading: false });
-        
+
         this.props.closeModal();
         alertModal(this.props.isDarkMode, response.data.message, '-cat');
 
@@ -467,7 +469,7 @@ class WithdrawModal extends Component {
 
     let icon;
 
- 
+
     if (paymentMethod === 'web2') {
       // Icon for 12 hours
       icon = <FontAwesomeIcon icon={faClock} />;
@@ -499,9 +501,9 @@ class WithdrawModal extends Component {
         >
           <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
             <div className="modal-header">
-              <h2 className="modal-title">  <Icon component={AccountBalanceWallet} className="mr-2" /> {/* Withdraw icon */}
+              <h2 className="modal-title title">  <Icon component={AccountBalanceWallet} className="mr-2" /> {/* Withdraw icon */}
                 WITHDRAW</h2>
-              <Button className="btn-close" onClick={this.props.closeModal}>
+              <Button className="btn-close title" onClick={this.props.closeModal}>
                 ×
               </Button>
             </div>
@@ -570,7 +572,7 @@ class WithdrawModal extends Component {
                           variant="outlined"
                           value={estimatedAmount}
                           InputProps={{
-                            readOnly: 'true',
+                            readOnly: true,
                             endAdornment: 'ETH'
                           }}
                           className="form-control"
@@ -708,7 +710,7 @@ class WithdrawModal extends Component {
                             InputProps={{
                               readOnly: true,
                               endAdornment: isValidCurrency && (
-                                <Typography variant="heading1">{currencyTo.toUpperCase()}</Typography>
+                                <Typography >{currencyTo.toUpperCase()}</Typography>
                               )
                             }}
                             className="form-control"
@@ -805,25 +807,27 @@ class WithdrawModal extends Component {
                           <TableCell>
                             {convertToEth(this.props.gasfee)}
                           </TableCell>
-                          <Tooltip
-                            title="Real-time Gas fee is the cost associated with performing a transaction. It covers network processing and validation."
-                            arrow
-                          >
-                            <IconButton size="small">
-                              <Info />
-                            </IconButton>
-                          </Tooltip>
+                          <TableCell>
+                            <Tooltip
+                              title="Real-time Gas fee is the cost associated with performing a transaction. It covers network processing and validation."
+                              arrow
+                            >
+                              <IconButton size="small">
+                                <Info />
+                              </IconButton>
+                            </Tooltip>
+                          </TableCell>
                         </TableRow>
                       </TableBody>
                     </Table>
                   )}
                   <div className={'disclaimer'}>
-        {paymentMethod === 'web2' ? (
-          <Typography className={disclaimerClass}>Receive within <i style={{fontWeight: 800}}>12</i> hours&nbsp; {icon}</Typography>
-        ) : (
-          <Typography className={disclaimerClass}>Receive within <i style={{fontWeight: 800}}>5</i> minutes&nbsp; {icon}</Typography>
-        )}
-      </div>
+                    {paymentMethod === 'web2' ? (
+                      <Typography className={disclaimerClass}>Receive within <i style={{ fontWeight: 800 }}>12</i> hours&nbsp; {icon}</Typography>
+                    ) : (
+                      <Typography className={disclaimerClass}>Receive within <i style={{ fontWeight: 800 }}>5</i> minutes&nbsp; {icon}</Typography>
+                    )}
+                  </div>
 
                 </div>
               </div>

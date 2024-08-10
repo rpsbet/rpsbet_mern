@@ -157,10 +157,10 @@ class VaultModal extends Component {
       >
         <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
           <div className="modal-header">
-            <h2 className="modal-title">
+            <h2 className="modal-title title">
               <FontAwesomeIcon icon={faLock} className="mr-2" />&nbsp;Vault
             </h2>
-            <Button className="btn-close" onClick={this.props.closeModal}>
+            <Button className="btn-close title" onClick={this.props.closeModal}>
               ×
             </Button>
           </div>

@@ -66,11 +66,11 @@ class BankModal extends Component {
       >
         <div className={`${this.props.isDarkMode ? 'dark_mode' : ''} big-modal`}>
           <div className="modal-header">
-            <h2 className="modal-title">
+            <h2 className="modal-title title">
               <FontAwesomeIcon icon={faCoins} className="mr-2" />
               P2P Lending
             </h2>
-            <Button className="btn-close" onClick={this.props.closeModal}>
+            <Button className="btn-close title" onClick={this.props.closeModal}>
               ×
             </Button>
           </div>
@@ -78,7 +78,7 @@ class BankModal extends Component {
           <div className="modal-body edit-modal-body banking-modal-body">
             <div className="modal-content-wrapper">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h1 className='modal-title'>ALL LOANS</h1>
+                <h1 className='modal-title title'>ALL LOANS</h1>
 
                 <div style={{ width: '50%', textAlign: 'right', padding: '20px' }}>
                   <span>HELP</span>&nbsp;
@@ -108,8 +108,8 @@ class BankModal extends Component {
         {this.state.showPopup && (
           <div className={`${isDarkMode ? 'popup-overlay dark_mode' : 'popup-overlay'}`}>
 
-            <div className="popup">
-              <h2 className='modal-title' style={{ textAlign: 'center', marginBottom: "20px" }}>Loan Information</h2>
+            <div className="popup title">
+              <h2 className='modal-title title' style={{ textAlign: 'center', marginBottom: "20px" }}>Loan Information</h2>
               <div className="popup-content">
                 <img src='../img/loans.svg' style={{ borderRadius: '20px', border: '1px solid aaa9', overflow: 'hidden' }} alt="Loans" />
                 <h3>Peer-to-Peer Loans Overview</h3>

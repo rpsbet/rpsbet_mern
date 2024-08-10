@@ -806,7 +806,7 @@ class CreateGame extends Component {
                     id="rps-game-type-radio"
                     isDarkMode={this.props.isDarkMode}
 
-                    className={`btn-game-type btn-icon ${gameTypeStyleClass[gameType.short_name]} ${selectedGameType === gameType.short_name ? 'active' : ''
+                    className={`btn-game-type title btn-icon ${gameTypeStyleClass[gameType.short_name]} ${selectedGameType === gameType.short_name ? 'active' : ''
                       }`}
                   >
                     <StyledProductImage
@@ -1162,7 +1162,7 @@ class CreateGame extends Component {
             <div className="create-game-panel">
               <div className="game-page">
                 <div className="page-title">
-                  <h2>CREATE {this.state.game_mode} BATTLE</h2>
+                  <h2 className="title">CREATE {this.state.game_mode} BATTLE</h2>
                   {this.state.step === 6 &&
                     this.state.game_mode === 'Brain Game' &&
                     this.state.isPlayingBrain ? (
@@ -1189,7 +1189,7 @@ class CreateGame extends Component {
                     <span>Click the manual icon at the top for help.</span>
                   )}
                 </div>
-                <div className="game-contents">
+                <div className="game-contents title">
                   {(this.state.step !== 5 ||
                     this.state.game_mode !== 'Brain Game' ||
                     !this.state.isPlayingBrain) && (

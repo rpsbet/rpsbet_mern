@@ -33,7 +33,6 @@ import { faCoins, faStore } from '@fortawesome/free-solid-svg-icons';
 
 import DrawerButton from './DrawerButton';
 import SupportButton from './SupportButton';
-import './MainPages.css';
 import ChatPanel from '../ChatPanel/ChatPanel';
 import OpenGamesTable from '../LiveGames/OpenGamesTable';
 import HistoryTable from '../LiveGames/HistoryTable';
@@ -76,7 +75,7 @@ class MainPage extends Component {
       getMyChat
     } = this.props;
     // this.gamesListInterval = setInterval(this.handleRefresh, 100000);
-    const promises = [getRoomList({ pageSize: 7 }), getRoomCount({ game_type: selectedGameType })];  // getGameTypeList()];
+    const promises = [getRoomList({ pageSize: 7 }), getRoomCount({ game_type: selectedGameType })];
     if (isAuthenticated) {
       promises.push(getMyChat());
     }
@@ -87,23 +86,18 @@ class MainPage extends Component {
       this.toggleDrawer();
     }
   }
-  //   componentDidUpdate(prevState) {
-  // if (prevState.selectedMobileTab !== this.state.selectedMobileTab) {
-  //   console.log("WDf",this.state.selectedMobileTab )
-  // }
-  //   }
 
   toggleP2PLending = () => {
     this.setState({
       showP2PLending: !this.state.showP2PLending,
-      showMarketplace: false // Ensure only one component is visible at a time
+      showMarketplace: false
     });
   };
 
   toggleMarketplace = () => {
     this.setState({
       showMarketplace: !this.state.showMarketplace,
-      showP2PLending: false // Ensure only one component is visible at a time
+      showP2PLending: false
     });
   };
 
@@ -209,7 +203,7 @@ class MainPage extends Component {
                 <div style={{ textAlign: "center" }}>
 
                   <Button style={{ width: "100%", padding: "60px" }} onClick={this.toggleP2PLending}>
-                    {this.state.showP2PLending ? '-' : '+'} <h2 className="modal-title">
+                    {this.state.showP2PLending ? '-' : '+'} <h2 className="modal-title title">
                       <FontAwesomeIcon icon={faCoins} className="mr-2" />
                       P2P Lending
                     </h2>
@@ -219,7 +213,7 @@ class MainPage extends Component {
                 <div style={{ textAlign: "center" }}>
 
                   <Button style={{ width: "100%", padding: "60px" }} onClick={this.toggleMarketplace}>
-                    {this.state.showMarketplace ? '-' : '+'}<h2 className="modal-title">
+                    {this.state.showMarketplace ? '-' : '+'}<h2 className="modal-title title">
                       <FontAwesomeIcon icon={faStore} className="mr-2" />
                       Marketplace
                     </h2>

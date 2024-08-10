@@ -21,17 +21,14 @@ const bangCron = async () => {
         isProcessing = false;
       }
 
-      // Calculate the next interval based on the current prediction
       const interval = (nextBangPrediction * 1000) + 7000;
 
-      // Schedule the next execution after the interval
       await delay(interval);
     }
   }
 };
 
 const processOpenRooms = async () => {
-  // Find open rooms with game_type = 'Bang'
   const openRooms = await Room.find({
     status: 'open',
     game_type: '6536a82933e70418b45fbe32',

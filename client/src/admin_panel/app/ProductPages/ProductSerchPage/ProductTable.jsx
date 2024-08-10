@@ -242,8 +242,18 @@ class ProductTable extends Component {
       anchorEl: null,
       sortAnchorEl: null,
       sortCriteria: 'updated_at',
-      itemType: '653ee81117c9f5ee2124564b'
+      itemType: '653ee81117c9f5ee2124564b',
+      _isMounted: false
     };
+  }
+
+  componentDidMount() {
+    this._isMounted = true;
+    this.fetchCustomerInfo();
+  }
+
+  componentWillUnmount() {
+    this._isMounted = false;
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -310,29 +320,33 @@ class ProductTable extends Component {
           if (!this.state.customerInfo[owner.user]) {
             try {
               const info = await acGetCustomerInfo(owner.user);
-              if (info) {
-                this.setState(prevState => ({
-                  customerInfo: {
-                    ...prevState.customerInfo,
-                    [owner.user]: info
-                  }
-                }));
-              } else {
-                this.setState(prevState => ({
-                  customerInfo: {
-                    ...prevState.customerInfo,
-                    [owner.user]: {
-                      username: 'Anon',
-                      avatar: 'default-avatar-url'
+              if (this._isMounted) { // Only update state if component is still mounted
+                if (info) {
+                  this.setState(prevState => ({
+                    customerInfo: {
+                      ...prevState.customerInfo,
+                      [owner.user]: info
                     }
-                  }
-                }));
+                  }));
+                } else {
+                  this.setState(prevState => ({
+                    customerInfo: {
+                      ...prevState.customerInfo,
+                      [owner.user]: {
+                        username: 'Anon',
+                        avatar: 'default-avatar-url'
+                      }
+                    }
+                  }));
+                }
               }
             } catch (error) {
-              console.error(
-                `Error fetching customer info for ${owner.user}:`,
-                error
-              );
+              if (this._isMounted) {
+                console.error(
+                  `Error fetching customer info for ${owner.user}:`,
+                  error
+                );
+              }
             }
           }
         }

@@ -420,19 +420,19 @@ class BrainGame extends Component {
           />
         )}
 
-        <div className="game-contents">
+        <div className="game-contents title">
           <div className="game-info-panel brain-game-play-panel">
             {renderLottieAvatarAnimation(this.props.gameBackground, isLowGraphics)}
 
             <div className="play-panel-header">
-              <div className="timer">
+              <div className="timer title">
                 <div className="timer-title">Timer: </div>
                 <div className="countdown">{remaining_time}</div>
                 <div className="timer-footer">seconds left</div>
                 <div className="timer-footer2">S</div>
               </div>
 
-              <div className="brain-score">
+              <div className="brain-score title">
                 Score: <span>{score}</span>
               </div>
             </div>
@@ -465,10 +465,10 @@ class BrainGame extends Component {
           />
         )}
         <div className="page-title">
-          <h2>Play - Brain Game</h2>
+          <h2 className="title">Play - Brain Game</h2>
         </div>
-        <div className="game-contents">
-          <div className="pre-summary-panel">
+        <div className="game-contents title">
+          <div className="pre-summary-panel title">
             <div className="pre-summary-panel__inner">
               {[...Array(1)].map((_, i) => (
                 <React.Fragment key={i}>

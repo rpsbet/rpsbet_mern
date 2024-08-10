@@ -287,7 +287,7 @@ class MysteryBox extends Component {
                         <i title="Delete Box?" onClick={() => this.onRemoveBox(key)}>
                           -
                         </i>
-                        <span>
+                        <span className="title">
                           {row.box_prize === 0.0 ? 'EMPTY' : convertToCurrency(row.box_prize)}{' '}
                           / {convertToCurrency(row.box_price)}
                         </span>
@@ -296,13 +296,13 @@ class MysteryBox extends Component {
                             loop: true,
                             autoplay: true,
                             animationData:
-      boxList[key].box_prize > boxList[key].box_price
-        ? eth_box
-        : boxList[key].box_prize > 0 && boxList[key].box_price > boxList[key].box_prize
-        ? banana_box
-        : boxList[key].box_prize > 0 && boxList[key].box_price < boxList[key].box_prize
-        ? eth_box
-        : cat_box,
+                              boxList[key].box_prize > boxList[key].box_price
+                                ? eth_box
+                                : boxList[key].box_prize > 0 && boxList[key].box_price > boxList[key].box_prize
+                                  ? banana_box
+                                  : boxList[key].box_prize > 0 && boxList[key].box_price < boxList[key].box_prize
+                                    ? eth_box
+                                    : cat_box,
                           }}
                           height={100} // Set the height of the animation
                           width={100}

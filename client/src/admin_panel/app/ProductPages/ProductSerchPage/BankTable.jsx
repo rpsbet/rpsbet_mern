@@ -3,14 +3,14 @@ import styled from 'styled-components';
 import { connect } from 'react-redux';
 import { alertModal } from '../../../../game_panel/modal/ConfirmAlerts';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import MyLoansModal from '../../../../game_panel/modal/MyLoansModal';
+
 import {
   faClock,
   faSort,
   faFilter,
   faUser, faMoneyBillAlt, faUsers, faMoneyCheckAlt, faChartLine
 } from '@fortawesome/free-solid-svg-icons';
-
-
 import {
   acQueryLoan,
   previousLoans,
@@ -37,6 +37,7 @@ import {
 import { acGetCustomerInfo } from '../../../../redux/Customer/customer.action';
 import Pagination from 'material-ui-flat-pagination';
 import SwapHoriz from '@material-ui/icons/SwapHoriz';
+import AttachMoney from '@material-ui/icons/AttachMoney';
 import { convertToCurrency } from '../../../../util/conversion';
 import { updateDigitToPoint2 } from '../../../../util/helper';
 import Avatar from '../../../../components/Avatar';
@@ -190,50 +191,53 @@ class BankTable extends Component {
     this.state = {
       customerInfo: {},
       showPlayerModal: false,
+      is_mobile: window.innerWidth < 1024 ? true : false,
       selectedCreator: '',
       anchorEl: null,
+      showMyLoansModal: false,
       sortAnchorEl: null,
       sortCriteria: 'updated_at',
       loanType: 'standard',
       loansWithProfit: []
     };
   }
+  
   async componentDidMount() {
     const { acGetCustomerInfo } = this.props;
     await this.props.previousLoans(30, 1, 'loan_amount', 'standard');
     const { prevLoans } = this.props;
 
     try {
-        const loansWithProfit = await Promise.all(prevLoans.map(async loan => {
-            let totalLoanerAmount = 0;
-            let totalPaidBack = 0;
+      const loansWithProfit = await Promise.all(prevLoans.map(async loan => {
+        let totalLoanerAmount = 0;
+        let totalPaidBack = 0;
 
-            await Promise.all(loan.loaners.map(async loaner => {
-                totalLoanerAmount += loaner.amount;
-                const paidBack = parseFloat(loaner.paidBack); // Assuming paidBack is a string
-                totalPaidBack += paidBack;
-                const customerInfo = await acGetCustomerInfo(loaner.user);
+        await Promise.all(loan.loaners.map(async loaner => {
+          totalLoanerAmount += loaner.amount;
+          const paidBack = parseFloat(loaner.paidBack); // Assuming paidBack is a string
+          totalPaidBack += paidBack;
+          const customerInfo = await acGetCustomerInfo(loaner.user);
 
-                loaner.customerInfo = customerInfo; // Attach customer info to loaner
-            }));
-
-            const profit = ((totalLoanerAmount - totalPaidBack) * -1);
-            const customerInfo = await acGetCustomerInfo(loan.lender);
-            return {
-                ...loan,
-                totalLoanerAmount: totalLoanerAmount,
-                totalPaidBack: totalPaidBack,
-                profit: profit,
-                customerInfo: customerInfo
-            };
+          loaner.customerInfo = customerInfo; // Attach customer info to loaner
         }));
 
-        this.setState({ loansWithProfit });
+        const profit = ((totalLoanerAmount - totalPaidBack) * -1);
+        const customerInfo = await acGetCustomerInfo(loan.lender);
+        return {
+          ...loan,
+          totalLoanerAmount: totalLoanerAmount,
+          totalPaidBack: totalPaidBack,
+          profit: profit,
+          customerInfo: customerInfo
+        };
+      }));
+
+      this.setState({ loansWithProfit });
     } catch (error) {
-        console.error('Error fetching customer info:', error);
-        this.setState({ error });
+      console.error('Error fetching customer info:', error);
+      this.setState({ error });
     }
-}
+  }
 
 
   componentDidUpdate(prevProps, prevState) {
@@ -252,6 +256,15 @@ class BankTable extends Component {
     }
   }
 
+  handleOpenMyLoansModal = () => {
+    if (!this.state.showMyLoansModal) {
+      this.setState({ showMyLoansModal: true, anchorEl: null });
+    }
+  };
+
+  handleCloseMyLoansModal = () => {
+    this.setState({ showMyLoansModal: false });
+  };
 
   areLoanersEqual(prevLoaners, currentLoaners) {
     return JSON.stringify(prevLoaners) === JSON.stringify(currentLoaners);
@@ -356,6 +369,7 @@ class BankTable extends Component {
       sortCriteria,
       sortOrder,
       anchorEl,
+      is_mobile,
       sortAnchorEl,
       loansWithProfit,
       loanType
@@ -516,7 +530,7 @@ class BankTable extends Component {
 
 
         <div className="carousel-container" style={{ marginTop: "60px" }}>
-          <Typography variant="h4" align="left" gutterBottom>
+          <Typography variant="h6" align="left" gutterBottom>
             Previous Loans
           </Typography>
           <div className="carousel">
@@ -606,7 +620,19 @@ class BankTable extends Component {
                 </div>
               ))
             }
+
+
+
+            {this.state.showMyLoansModal && is_mobile && (
+              <MyLoansModal
+                modalIsOpen={this.state.showMyLoansModal}
+                closeModal={this.handleCloseMyLoansModal}
+              />
+            )}
+
           </div>
+          <Button className="btn-back" onClick={this.handleOpenMyLoansModal}>Manage Your Loans&nbsp; <AttachMoney /></Button>
+
         </div>
       </MarketplaceContainer>
     );
@@ -632,6 +658,7 @@ const mapDispatchToProps = {
   setCurrentLoanInfo,
   openConfirmLoanModal,
   acGetCustomerInfo
+
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(BankTable);

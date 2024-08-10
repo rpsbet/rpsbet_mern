@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import Modal from 'react-modal';
 import { connect } from 'react-redux';
-import './Modals.css';
 import { userSignUp } from '../../redux/Auth/user.actions';
 import { confirmAlert } from 'react-confirm-alert';
 import 'react-confirm-alert/src/react-confirm-alert.css';
@@ -29,7 +28,7 @@ const customStyles = {
     bottom: 'auto',
     transform: 'translate(-50%, -50%)',
     padding: 0,
-     minWidth: '380px'
+    minWidth: '380px'
   }
 }
 
@@ -54,9 +53,9 @@ class SignupModal extends Component {
     }
   }
   componentDidMount() {
-    this.setState({loaded: true});
+    this.setState({ loaded: true });
   }
-  
+
   componentDidUpdate(prevState) {
     if (!prevState.loaded && this.state.loaded) {
       this.attachFormSubmitHandler();
@@ -170,7 +169,7 @@ class SignupModal extends Component {
           return (
             <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
               <div className='modal-body'>
-                <h2>WELCOME TO RPS.GAME TIGER! 🐯⚔</h2>
+                <h2 className='title'>WELCOME TO RPS.GAME TIGER! 🐯⚔</h2>
                 <p>CLICK YOUR BALANCE TO MAKE A DEPOSIT</p>
               </div>
               <div className="modal-footer">
@@ -217,15 +216,15 @@ class SignupModal extends Component {
             </div>
             <div className='modal-right'>
               <div style={{ borderTopLeftRadius: "0" }} className='modal-header'>
-                <h2 className='modal-title'>
+                <h2 className='modal-title title'>
                   <FontAwesomeIcon icon={faUserPlus} className="mr-2" />
 
                   REGISTER
                 </h2>
-                <Button className="btn-close" onClick={closeModal}>×</Button>
+                <Button className="btn-close title" onClick={closeModal}>×</Button>
               </div>
               <div className="modal-body">
-                <h4>JOIN THE CAT (FIGHT) CLUB! 🥋</h4>
+                <h4 className='title'>JOIN THE CAT (FIGHT) CLUB! 🥋</h4>
                 <form onSubmit={this.onSubmitForm} id="signupForm">
                   <TextField
                     placeholder="e.g. PU55YD35TROY3R"
@@ -245,18 +244,18 @@ class SignupModal extends Component {
                       key="robohash"
                       className={`avatar-option ${avatarMethod === 'robohash' ? 'selected' : ''}`}
                       onClick={() => this.onChangeAvatarMethod({ target: { value: 'robohash' } })}
-                      style={{borderRadius:"0.3em"}}
+                      style={{ borderRadius: "0.3em" }}
                     >
-                      <img width="52px"  height="52px" src="/img/robohashCat.webp" alt="Robohash" />
+                      <img width="52px" height="52px" src="/img/robohashCat.webp" alt="Robohash" />
                     </ButtonBase>
                     <ButtonBase
                       focusRipple
-                      style={{borderRadius:"0.3em"}}
+                      style={{ borderRadius: "0.3em" }}
                       key="jdenticon"
                       className={`avatar-option ${avatarMethod === 'jdenticon' ? 'selected' : ''}`}
                       onClick={() => this.onChangeAvatarMethod({ target: { value: 'jdenticon' } })}
                     >
-                      <img width="52px"   height="52px" src="/img/jdenticon.webp" alt="Jdenticon" />
+                      <img width="52px" height="52px" src="/img/jdenticon.webp" alt="Jdenticon" />
                     </ButtonBase>
                   </div>
                   <TextField
@@ -325,7 +324,7 @@ class SignupModal extends Component {
 
               </div>
               <div style={{ borderBottomLeftRadius: "0" }} className="modal-footer">
-                <Button className="btn-submit" style={{margin: "20px 0 0"}} type="submit" form="signupForm">
+                <Button className="btn-submit" style={{ margin: "20px 0 0" }} type="submit" form="signupForm">
                   Register&nbsp;<span className='roll-tag'>[ ↵ ]</span>
                 </Button>
                 <p className="m-0 sm-text-center">

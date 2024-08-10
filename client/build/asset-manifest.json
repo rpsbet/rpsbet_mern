@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/static/css/main.578c06be.css",
-    "main.js": "/static/js/main.4f021232.js",
+    "main.css": "/static/css/main.3b9aa490.css",
+    "main.js": "/static/js/main.e20ec597.js",
     "static/js/469.95be026d.chunk.js": "/static/js/469.95be026d.chunk.js",
     "static/js/857.d36b7e12.chunk.js": "/static/js/857.d36b7e12.chunk.js",
     "static/js/331.a9ba1ba8.chunk.js": "/static/js/331.a9ba1ba8.chunk.js",
@@ -47,7 +47,6 @@
     "static/media/paper-weapon.gif": "/static/media/paper-weapon.fe7bb975668fdc53d5c7.gif",
     "static/media/ltc.png": "/static/media/ltc.60dc61ace8dba0c8f84a.png",
     "static/media/net_profit.svg": "/static/media/net_profit.b1f332f67ed9debac7c1.svg",
-    "static/media/win.svg": "/static/media/win.1fba7a25412531507ecd.svg",
     "static/media/football.svg": "/static/media/football.9f4ef1953d8988fcd171.svg",
     "static/media/modal-bang.svg": "/static/media/modal-bang.193ad0a0cbb7c8390d31.svg",
     "static/media/modal-roll.svg": "/static/media/modal-roll.b3b28adeda1dd57b08e2.svg",
@@ -112,18 +111,16 @@
     "static/media/rps-logo-ud.svg": "/static/media/rps-logo-ud.8dec074a606a291c8575.svg",
     "static/media/rps-logo-white.svg": "/static/media/rps-logo-white.032a6ce6f40118f58669.svg",
     "static/media/modal-spleesh.svg": "/static/media/modal-spleesh.4250f19fc6e243fb1c56.svg",
-    "static/media/dark-icon-right.svg": "/static/media/dark-icon-right.7b7046e85ba8a70fd384.svg",
-    "static/media/dark-icon-left.svg": "/static/media/dark-icon-left.bd4bda888ed5194e7fe8.svg",
     "static/media/profile-thumbnail-dark.svg": "/static/media/profile-thumbnail-dark.2a9fc745fcffc9fc2053.svg",
     "static/media/btn-paypal-active.svg": "/static/media/btn-paypal-active.070528496e9ebc5ef80f.svg",
     "static/media/btn-paypal.svg": "/static/media/btn-paypal.4ed05cb443934a9fa8a0.svg",
     "static/media/btn-bank-active.svg": "/static/media/btn-bank-active.5c45b7981b5e7971c30a.svg",
     "static/media/btn-bank.svg": "/static/media/btn-bank.8ce60c3913abb5408b9b.svg",
-    "main.578c06be.css.map": "/static/css/main.578c06be.css.map",
-    "main.4f021232.js.map": "/static/js/main.4f021232.js.map"
+    "main.3b9aa490.css.map": "/static/css/main.3b9aa490.css.map",
+    "main.e20ec597.js.map": "/static/js/main.e20ec597.js.map"
   },
   "entrypoints": [
-    "static/css/main.578c06be.css",
-    "static/js/main.4f021232.js"
+    "static/css/main.3b9aa490.css",
+    "static/js/main.e20ec597.js"
   ]
 }

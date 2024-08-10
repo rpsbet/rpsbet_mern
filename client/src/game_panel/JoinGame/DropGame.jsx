@@ -382,7 +382,7 @@ class DropGame extends Component {
     return (
       <div className="game-page">
         <div className="page-title">
-          <h2>PLAY - Drop Game</h2>
+          <h2 className="title">PLAY - Drop Game</h2>
         </div>
         {showImageModal && (
           <ImageResultModal
@@ -401,8 +401,8 @@ class DropGame extends Component {
           // {...this.state.selectedRow}
           />
         )}
-        <div className="game-contents">
-          <div className="pre-summary-panel" ref={this.panelRef}>
+        <div className="game-contents title">
+          <div className="pre-summary-panel title" ref={this.panelRef}>
             <div className="pre-summary-panel__inner">
               {[...Array(1)].map((_, i) => (
                 <React.Fragment key={i}>

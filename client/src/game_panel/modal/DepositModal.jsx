@@ -78,6 +78,7 @@ const styles = theme => ({
     fontWeight: 'bold',
     display: 'flex',
     alignItems: 'center',
+    color: props => props.isDarkMode ? '#f9f9f9' : '#333',
   },
   radioGroup: {
     flexDirection: 'row',
@@ -94,7 +95,7 @@ const styles = theme => ({
     marginLeft: '-15px !important',
     background: '#0076ff',
     '&:hover': {
-      outline: '2px solid white', // Add a white solid outline on hover
+      outline: '2px solid white',
     },
   },
   description: {
@@ -114,17 +115,18 @@ const styles = theme => ({
   labelContainer: {
     display: 'flex',
     alignItems: 'center',
+    color: '#333'
   },
   radioInputChecked: {
     '&$radioInput': {
-      outline: '2px solid white', // Add a white solid outline when radio is checked
+      outline: '2px solid white',
     },
   },
   icon: {
     marginRight: theme.spacing(1),
   },
   radioInput: {
-    display: 'none', // Hide the actual radio buttons
+    display: 'none',
   },
   additionalText: {
     color: '#f9f9f9',
@@ -232,7 +234,7 @@ class DepositModal extends Component {
       }
     });
   };
-  
+
 
 
   async sendTransaction(amount) {
@@ -275,7 +277,7 @@ class DepositModal extends Component {
         price_amount: this.state.web2Amount,
         txtHash: transaction.hash
       });
-      
+
       if (result.data.success) {
         alertModal(this.props.isDarkMode, result.data.message, '-cat');
         this.props.setBalance(result.data.balance);
@@ -429,10 +431,10 @@ class DepositModal extends Component {
         >
           <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
             <div className="modal-header">
-              <h2 className="modal-title">    <Icon component={AccountBalanceWallet} className="mr-2" /> {/* Use Material-UI Icon component */}
+              <h2 className="modal-title title">    <Icon component={AccountBalanceWallet} className="mr-2" /> {/* Use Material-UI Icon component */}
 
                 DEPOSIT</h2>
-              <Button className="btn-close" onClick={this.props.closeModal}>
+              <Button className="btn-close title" onClick={this.props.closeModal}>
                 ×
               </Button>
             </div>
@@ -492,12 +494,12 @@ class DepositModal extends Component {
                           value={price}
                         >
 
-                          <Typography variant="heading1" className={classes.additionalText}>{this.additionalTexts[index].toUpperCase()}</Typography> {/* Add additional text */}
+                          <Typography className={classes.additionalText}>{this.additionalTexts[index].toUpperCase()}</Typography> {/* Add additional text */}
                           <img style={{ width: '50px', display: 'block', margin: 'auto' }} src={this.images[index]} alt={`option-${index}`} />
                           <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignContent: 'center', flexDirection: 'row' }} >
 
-                            <Typography variant="heading2" className={classes.price}>{paymentMethod === 'web2' ? convertToCurrency((price / currencyValue)) : convertToCurrency((price / currencyValue) + (0.119 * (index + 1)))}&nbsp;</Typography>
-                            <Typography variant="heading2" className={classes.price}>{`($${price})`}</Typography>
+                            <Typography className={classes.price}>{paymentMethod === 'web2' ? convertToCurrency((price / currencyValue)) : convertToCurrency((price / currencyValue) + (0.119 * (index + 1)))}&nbsp;</Typography>
+                            <Typography className={classes.price}>{`($${price})`}</Typography>
                           </div>
                         </ButtonBase>
 
@@ -614,11 +616,13 @@ class DepositModal extends Component {
                                 {convertToEth(this.props.balance)}
                                 &nbsp;
                               </TableCell>
-                              <Tooltip title="Your connected wallet's account balance" arrow>
-                                <IconButton size="small">
-                                  <Info />
-                                </IconButton>
-                              </Tooltip>
+                              <TableCell>
+                                <Tooltip title="Your connected wallet's account balance" arrow>
+                                  <IconButton size="small">
+                                    <Info />
+                                  </IconButton>
+                                </Tooltip>
+                              </TableCell>
                             </TableRow>
                             <TableRow>
                               <TableCell>
@@ -627,14 +631,17 @@ class DepositModal extends Component {
                               <TableCell style={{ textAlign: 'center' }}>
                                 {convertToEth(this.props.gasfee)}
                               </TableCell>
-                              <Tooltip
-                                title="Gas fee is the cost associated with performing a transaction. It covers network processing and validation."
-                                arrow
-                              >
-                                <IconButton size="small">
-                                  <Info />
-                                </IconButton>
-                              </Tooltip>
+                              <TableCell>
+                                <Tooltip
+                                  title="Gas fee is the cost associated with performing a transaction. It covers network processing and validation."
+                                  arrow
+                                >
+                                  <IconButton size="small">
+                                    <Info />
+                                  </IconButton>
+                                </Tooltip>
+                              </TableCell>
+
                             </TableRow>
                           </TableBody>
                         </Table>
@@ -695,7 +702,7 @@ class DepositModal extends Component {
                               InputProps={{
                                 readOnly: true,
                                 endAdornment: isValidCurrency && (
-                                  <Typography variant="heading1">{currencyTo.toUpperCase()}</Typography>
+                                  <Typography>{currencyTo.toUpperCase()}</Typography>
                                 )
                               }}
                             />

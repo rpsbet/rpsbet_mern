@@ -52,9 +52,9 @@ class ChangePasswordPage extends Component {
     return (
       <div className="game-page reset-password-page">
         <div className="page-title">
-          <h2 className="main-title desktop-only">Reset Password</h2>
+          <h2 className="main-title desktop-only title">Reset Password</h2>
         </div>
-        <div className="game-contents">
+        <div className="game-contents title">
           <div className="game-info-panel">
             <h3 className="game-sub-title">FRESH NEW PASSWORD!</h3>
             <p>New Password</p>
