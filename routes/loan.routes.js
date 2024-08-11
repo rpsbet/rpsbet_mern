@@ -115,6 +115,9 @@ const calculateCreditScore = (loan, loaner, lender, currentUser) => {
 
   // Update the current user's credit score
   currentUser.credit_score += creditScoreIncrease;
+  if (currentUser.credit_score) {
+    currentUser.credit_score = 0;
+  }
 };
 
 router.post('/payback', auth, async (req, res) => {

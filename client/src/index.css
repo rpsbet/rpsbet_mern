@@ -679,7 +679,7 @@ div.table .table-cell button.btn_join img {
 .contents_wrapper .main-game .main-panel,
 .contents_wrapper {
   padding: 0 6px 8px 16px;
-  background-color: rgba(235, 237, 239, 0.5);
+  background-color: rgba(235, 237, 239, 0.8);
   position: relative;
   overflow-y: scroll;
 }
@@ -3294,7 +3294,7 @@ input {
 }
 
 .history-background {
-  background: linear-gradient(#07ffee46, #0020f14c) !important;
+  background: linear-gradient(#ffb000, #ffffffba) !important;
 }
 
 .result .lottie-progress,
@@ -3936,7 +3936,7 @@ textarea {
   left: 0;
   width: 100%;
   height: 100%;
-  background: radial-gradient(#412852, #495057);
+  background: radial-gradient(#5e0079, #b6b6b633);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -6574,9 +6574,9 @@ div[aria-label="How To Play Modal"] ul {
     color: #3e4554 !important;
   }
 
-  .gamified-container span {
+  /* .gamified-container span {
     color: #3e4554 !important;
-  }
+  } */
 
   .bottom-footer {
     margin-left: 0 !important;
@@ -6962,15 +6962,21 @@ div[aria-label="How To Play Modal"] ul {
     padding: 0 16px 0 50px;
     background-position: 8px center;
   }
-
-  .modal-body .modal-content-wrapper div.modal-content-panel td button {
+  .modal-body .modal-content-wrapper .settings td button {
     margin: 0 !important;
-    padding: 7.5px;
   }
+
+  .modal-body .modal-content-wrapper .settings td ,
+  .modal-body .modal-content-wrapper  .settings{
+    padding: 0px !important;
+  }
+
+  .modal-body .modal-content-wrapper div.modal-content-panel td
 
   .modal-body .modal-content-wrapper div.modal-content-panel td,
   .modal-body .modal-content-wrapper div.modal-content-panel {
-    padding: 0px;
+    padding: 10px;
+    font-size: small;
   }
 
   .modal-footer button {
@@ -7297,6 +7303,7 @@ div[aria-label="How To Play Modal"] ul {
   }
 
   .game-info-panel .qs-image-panel img {
+    height: unset !important;
     border-radius: 14px !important;
   }
 
@@ -7675,6 +7682,6 @@ div[aria-label="How To Play Modal"] ul {
   }
 
   .contents_wrapper {
-    margin-top: 63px;
+    margin-top: 62px;
   }
 }

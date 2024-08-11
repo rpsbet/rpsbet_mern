@@ -158,7 +158,7 @@ const PlaceholderComponent = ({
           variant="contained"
           color="primary"
           startIcon={<FontAwesomeIcon icon={faCrown} />}
-          style={{ backgroundColor: '#f0c040', color: '#fff', textTransform: 'none', fontSize: '16px' }}
+          style={{ background: 'linear-gradient(340deg, #ffb000, #ff5100c7)', color: '#fff', textTransform: 'none', fontSize: '16px' }}
         >
           UNLOCK AT LEVEL 22
         </Button>

@@ -140,7 +140,7 @@ class MainPage extends Component {
         preserveAspectRatio: 'xMidYMid slice'
       }
     };
-    
+
     return (
       (this.state.is_mobile && this.state.selectedMobileTab === 'live_games' && this.state.show_open_game !== 1) ||
         (!this.state.is_mobile && this.props.selectedMainTabIndex === 0) ? (
@@ -166,7 +166,7 @@ class MainPage extends Component {
 
   render() {
     const { isDrawerOpen, isLowGraphics } = this.props;
- 
+
     return (
       <div
         className="main-game"
@@ -285,20 +285,30 @@ class MainPage extends Component {
             (this.state.is_mobile &&
               this.state.selectedMobileTab === 'live_games' &&
               this.state.show_open_game === 0)) && (
-              <OpenGamesTable
-                refreshing={this.state.refreshing}
-                handleRefresh={this.handleRefresh}
-                roomList={this.props.roomList}
-                isAuthenticated={this.props.isAuthenticated}
-                rooms_count={this.props.rooms_count}
-                pageNumber={this.props.pageNumber}
-                balance={this.props.balance}
-                onChangeGameType={this.onChangeGameType}
-                isDarkMode={this.props.isDarkMode}
-                selectedGameType={this.state.selectedGameType}
-                onlineUserList={this.props.onlineUserList}
-                gameTypeList={this.props.gameTypeList}
-              />
+              <>
+                <OpenGamesTable
+                  refreshing={this.state.refreshing}
+                  handleRefresh={this.handleRefresh}
+                  roomList={this.props.roomList}
+                  isAuthenticated={this.props.isAuthenticated}
+                  rooms_count={this.props.rooms_count}
+                  pageNumber={this.props.pageNumber}
+                  balance={this.props.balance}
+                  onChangeGameType={this.onChangeGameType}
+                  isDarkMode={this.props.isDarkMode}
+                  selectedGameType={this.state.selectedGameType}
+                  onlineUserList={this.props.onlineUserList}
+                  gameTypeList={this.props.gameTypeList}
+                />
+                {this.state.is_mobile && (
+                  <>
+                    <h2 className="main-title">AI PANEL</h2>
+
+                    <AiPanel user_id={this.props.user._id} />
+                  </>
+                )}
+              </>
+
             )}
           {((!this.state.is_mobile && this.props.selectedMainTabIndex === 1) ||
             (this.state.is_mobile &&

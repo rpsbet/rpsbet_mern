@@ -63,7 +63,6 @@ const MarketplaceContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 60px
 `;
 
 const ProductGrid = styled.div`

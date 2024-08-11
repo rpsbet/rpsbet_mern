@@ -631,8 +631,9 @@ class BankTable extends Component {
             )}
 
           </div>
-          <Button className="btn-back" onClick={this.handleOpenMyLoansModal}>Manage Your Loans&nbsp; <AttachMoney /></Button>
-
+          {is_mobile && (
+          <Button style={{marginTop: "30px"}} className="btn-back" onClick={this.handleOpenMyLoansModal}>Manage Your Loans&nbsp; <AttachMoney /></Button>
+          )}
         </div>
       </MarketplaceContainer>
     );

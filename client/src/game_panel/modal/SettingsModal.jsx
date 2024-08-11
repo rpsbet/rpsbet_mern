@@ -97,7 +97,7 @@ class SettingsModal extends Component {
 
           <div className="modal-body edit-modal-body">
             <div className="modal-content-wrapper">
-              <div className="modal-content-panel">
+              <div className="modal-content-panel settings">
                 <Table>
                   <TableBody>
                     <TableRow>
