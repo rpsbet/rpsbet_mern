@@ -5,6 +5,7 @@ import { setChatRoomInfo, getMyChat } from '../../redux/Logic/logic.actions';
 import Avatar from "../../components/Avatar";
 import Moment from 'moment';
 import { Button } from '@material-ui/core';
+import { toggleDrawer } from '../../redux/Auth/user.actions';
 
 class MyChat extends Component {
 	constructor(props) {
@@ -123,7 +124,8 @@ const mapStateToProps = state => ({
 
 const mapDispatchToProps = {
 	setChatRoomInfo,
-	getMyChat
+	getMyChat,
+	toggleDrawer
 };
 
 export default connect(

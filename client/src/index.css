@@ -4936,12 +4936,14 @@ button#recentSearches span {
 .sub-panel .lottie-container.crown div {
   top: 38px !important;
 }
+
 .lottie-container.eagle div {
   transform: scale(3);
-left: 0;
-top: 0;
-margin-top: 10px;
+  left: 0;
+  top: 0;
+  margin-top: 10px;
 }
+
 .chat-player .lottie-container.cat div,
 .chat .lottie-container.cat div,
 .modal-body table .lottie-container.cat div,
@@ -6961,9 +6963,14 @@ div[aria-label="How To Play Modal"] ul {
     background-position: 8px center;
   }
 
+  .modal-body .modal-content-wrapper div.modal-content-panel td button {
+    margin: 0 !important;
+    padding: 7.5px;
+  }
+
   .modal-body .modal-content-wrapper div.modal-content-panel td,
   .modal-body .modal-content-wrapper div.modal-content-panel {
-    padding: 10px 5px 5px;
+    padding: 0px;
   }
 
   .modal-footer button {
@@ -7173,8 +7180,16 @@ div[aria-label="How To Play Modal"] ul {
     opacity: 0.7;
   }
 
+#user-bio {
+  position: relative !important;
+  font-size: 0.5em;
+}
 
-
+#user-bio span{
+  top: -20px !important;
+  left: 0px !important;
+  font-size: xx-small;
+}
   .create-game-panel button#l {
     transform: translate(47px, -55px);
 

@@ -23,7 +23,7 @@ import {
   Table, TableHead, TableBody, TableRow, TableCell
 } from '@material-ui/core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faToggleOn, faBrain, faChartLine, faBan, faClock, faRobot, faCoins, faToggleOff, faBalanceScale, faLink, faUnlink } from '@fortawesome/free-solid-svg-icons';
+import { faToggleOn, faBrain, faChartLine, faInfoCircle, faCrown, faBan, faClock, faRobot, faCoins, faToggleOff, faBalanceScale, faLink, faUnlink } from '@fortawesome/free-solid-svg-icons';
 import { convertToCurrency } from '../util/conversion';
 import ApexChart from "react-apexcharts";
 import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
@@ -133,7 +133,37 @@ const PlaceholderComponent = ({
     if (ownRoom) {
       return "No AI available for your own room.";
     }
-    return "Join a room to use AI Play!";
+    return (
+      <div>
+        <div style={{
+          display: 'flex', alignItems: 'center', marginBottom: '16px', borderRadius: '0.4em',
+          boxShadow: 'inset 0 0 6px #c0c0c0',
+          padding: '10px 20px'
+        }}>
+          <h6 style={{
+            margin: '0px 8px 0px 0px',
+            color: '#060607',
+          }}>
+              <FontAwesomeIcon icon={faRobot} style={{ color: '#060607' }} />&nbsp;
+              Q-BOT
+          </h6>
+          <Tooltip title="Autonomously plays (creates and joins games for you) based on your wins and behaviour." arrow>
+            <IconButton size="small">
+              <FontAwesomeIcon icon={faInfoCircle} style={{ color: '#060607' }} />
+            </IconButton>
+          </Tooltip>
+        </div>
+
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={<FontAwesomeIcon icon={faCrown} />}
+          style={{ backgroundColor: '#f0c040', color: '#fff', textTransform: 'none', fontSize: '16px' }}
+        >
+          UNLOCK AT LEVEL 22
+        </Button>
+      </div>
+    );
   };
 
   return (

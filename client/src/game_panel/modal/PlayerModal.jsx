@@ -522,7 +522,7 @@ class PlayerModal extends Component {
                         <h1 className={'player-username'} style={{ marginTop: '60px' }}>
                           {this.state.username}
                         </h1>
-                        <div style={{ position: 'relative', marginTop: '20px', borderBottom: '2px solid', borderTop: '2px solid' }}>
+                        <div id="user-bio" style={{ position: 'relative', marginTop: '20px', borderBottom: '2px solid', borderTop: '2px solid' }}>
                           <div className={'player-username'} style={{ color: this.props.isDarkMode ? "#e5e5e5" : "#333" }}>
                             <span style={{ position: 'absolute', top: '20px', left: '30px', fontSize: "xx-small" }}>USER BIO</span>
                             {isBio ? (

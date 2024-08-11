@@ -31,7 +31,7 @@ const predictNextQs = (qs_list, gameType) => {
   }
 
   if (qs_list.length < 4) {
-    return { move: getRandomItem_qs(gameType), risk: 0 };
+    return getRandomItem_qs(gameType);
   }
 
   const options = [...Array(gameType).keys()];
