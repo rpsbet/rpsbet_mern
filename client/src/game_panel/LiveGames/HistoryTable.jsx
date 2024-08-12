@@ -78,7 +78,6 @@ class HistoryTable extends Component {
     this.setState({ ...settings });
     await this.props.getHistory();
     this.setupSocketConnection();
-
   }
 
   componentWillUnmount() {
@@ -420,7 +419,10 @@ class HistoryTable extends Component {
             (row, key) => (
               <div
               className={`table-row ${(row.creator?._id === this.props.userId || row.joined_user === this.props.userId ) ? 'history-background' : ''} ${key < 50 ? 'slide-in' : ''}`}
-              style={{ animationDelay: `${key * 0.1}s` }}
+              style={{ 
+                animationDelay: `${key * 0.1}s`, 
+                filter: row.status !== 'open' ? 'grayscale(70%)' : 'none'  // Apply grayscale filter if status is "open"
+              }}
                 key={row._id}
               >
                 {' '}
@@ -428,7 +430,7 @@ class HistoryTable extends Component {
                 <div>
                   <div className="table-cell">
                     <div className="room-id">
-                      {row.status}&nbsp;{row.status === 'open' ? <HeartIcon isOpen={true} /> : <HeartIcon isOpen={false} />}
+                      {row.status === 'open' ? row.status : 'finished'}&nbsp;{row.status === 'open' ? <HeartIcon isOpen={true} /> : <HeartIcon isOpen={false} />}
                     </div>
                     { row.ai_mode && (
                       <div className="room-id ai_mode">

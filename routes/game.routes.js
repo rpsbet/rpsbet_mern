@@ -21,7 +21,7 @@ const GameLog = require('../model/GameLog');
 // const BrainGameType = require('../model/BrainGameType');
 const Message = require('../model/Message');
 const Notification = require('../model/Notification');
-
+const QBot = require('../model/QBot');
 const Transaction = require('../model/Transaction');
 const SystemSetting = require('../model/SystemSetting');
 const SpleeshGuess = require('../model/SpleeshGuess');
@@ -232,9 +232,9 @@ router.get('/getattachedrooms', auth, async (req, res) => {
 router.get('/checkAttachment/:room_id', auth, async (req, res) => {
   const { room_id } = req.params;
   const user_id = req.user._id;
-try {
-  // Check if the user is already attached to the room
-  const existingAttachment = await AttachedPlayer.findOne({ user: user_id, room: room_id });
+  try {
+    // Check if the user is already attached to the room
+    const existingAttachment = await AttachedPlayer.findOne({ user: user_id, room: room_id });
 
     if (existingAttachment) {
       return res.json({
@@ -856,7 +856,7 @@ router.put('/rpsbetitems/:itemId', auth, async (req, res) => {
   const { itemId } = req.params;
   const { updatedItem, cellindex } = req.body;
 
-    try {
+  try {
     // Find the RpsBetItem by ID
     const rpsBetItem = await RpsBetItem.findById(itemId);
 
@@ -1094,6 +1094,36 @@ router.delete('/comments/:comment_id', async (req, res) => {
     });
   }
 });
+
+router.get('/topWins', async (req, res) => {
+  try {
+      // Fetch the most recent 250 game logs sorted by created_at in descending order
+      const recentGameLogs = await GameLog.find({})
+          .sort({ created_at: -1 })  // Sort by created_at, most recent first
+          .limit(250)  // Limit to the most recent 250 entries
+          .populate({ 
+              path: 'joined_user', 
+              model: User, 
+              select: '_id avatar accessory totalWagered' 
+          });
+
+      // Sort the recentGameLogs by winnings in descending order and select the top 12
+      const topGameLogs = recentGameLogs
+          .sort((a, b) => b.winnings - a.winnings)  // Sort by winnings in descending order
+          .slice(0, 12);  // Select the top 12 game logs
+
+      // Return the result in the specified format
+      res.json({
+          success: true,
+          pageSize: 12,
+          history: topGameLogs
+      });
+  } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Server Error' });
+  }
+});
+
 
 const getHistory = async (pageSize, my_id, game_type) => {
   try {
@@ -1336,7 +1366,7 @@ router.get('/count', async (req, res) => {
 
 // /api/rooms call
 router.get('/rooms', async (req, res) => {
-  
+
   const pageSize = req.query.pageSize ? parseInt(req.query.pageSize) : 10;
   const game_type = req.query.game_type ? req.query.game_type : 'All';
   const excludeIds = req.query.excludeIds;
@@ -2179,6 +2209,23 @@ router.post('/end_game', auth, async (req, res) => {
       const amount = (hostData.share / 100) * roomInfo.user_bet;
       host.balance += amount;
       await saveDocumentWithRetry(host);
+
+      qbotHost = await QBot.findOne({ user: req.user._id });
+
+      if (!qbotHost) {
+        qbotHost = new QBot({ user: req.user._id });
+      }
+      if (qbotHost.hosting[selectedStrategy]) {
+        qbotHost.hosting[selectedStrategy][aiMode] = (qbotHost.hosting[selectedStrategy][aiMode] || 0) + (roomInfo.host_pr + roomInfo.pr - roomInfo.bet_amount); // Increment the sub-strategy
+        qbotHost.hosting[selectedStrategy].updated_at = new Date();
+      } else {
+        // Initialize the strategy if it doesn't exist
+        qbotHost.hosting[selectedStrategy] = {
+          [aiMode]: newTransactionC.amount,
+          created_at: new Date(),
+          updated_at: new Date()
+        };
+      }
     }
 
     newGameLog = new GameLog({

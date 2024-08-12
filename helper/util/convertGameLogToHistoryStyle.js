@@ -105,7 +105,6 @@ const convertGameLogToHistoryStyle = async gameLogList => {
         const creator_link = `<a href="javascript:void(0)" class="user-link" accessory='${gameLog['creator']['accessory']}' rank='${gameLog['creator']['totalWagered']}' data-userid="${gameLog['creator']['_id']}">${creator_avatar}</a>`;
         temp.history = `${creator_link} withdrew <span style='color: #28a745;'>${convertToCurrency(gameLog['bet_amount'])} ($${(gameLog['bet_amount'] * 0.119)})</span>`;
       }
-
       result.push(temp);
     } catch (e) {
       return;

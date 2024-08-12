@@ -622,7 +622,7 @@ div.table .table-cell button.btn_join img {
   display: inline-flex;
   position: absolute;
   right: 5px;
-  top: 10px;
+  top: 109px;
 }
 
 .refresh-main button {
@@ -837,10 +837,56 @@ div.table.main-history-table .table-row>div>.room-id {
   font-size: 14px;
 }
 
+
+.top-wins .table-cell:first-child {
+  margin-left: 0px;
+}
+
+.top-wins .rank-icon{
+  display: none !important;
+}
+.top-wins a.table-cell{
+  background: linear-gradient(45deg, #a7289a47, #5a11ff33);
+  border-radius: 0.7em;
+  margin-left: 10px;
+  box-shadow: inset -1px 1px 0px #3f74b542;
+}
+
+.top-wins {
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 15px;
+  width: 100%;
+  overflow-y: hidden;
+  overflow-x: auto;
+  -ms-overflow-style: none;  /* Hide scrollbar in IE and Edge */
+  scrollbar-width: none; 
+  height: 54px;
+}
+
+.top-wins .carousel-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.top-wins .carousel-content div {
+  padding: 5px;
+  margin-right: 5px;
+}
+
+div.table .table-row.carousel-content {
+  filter: grayscale(0.7);
+}
+
+div.table .table-row.carousel-content:hover {
+  filter: unset;
+}
+
 div.room-id.ai_mode {
   position: absolute;
-  top: 14px;
-  left: 75px;
+  top: 16px;
+  left: 100px;
   border: 1px solid #f13bfe;
   border-radius: 0.4em;
   color: #f68aff;
@@ -1081,7 +1127,10 @@ div.table .table-row .table-cell img.game-type-icon {
 
 div.table.main-game-table::-webkit-scrollbar,
 div.table.main-history-table::-webkit-scrollbar,
-div.table.my-open-game-table::-webkit-scrollbar {
+div.table.my-open-game-table::-webkit-scrollbar,
+.top-wins::-webkit-scrollbar,
+.recently-closed::-webkit-scrollbar
+ {
   display: none;
 }
 
@@ -1768,6 +1817,8 @@ table td.amount.red {
 .recently-closed {
   display: flex;
   overflow-x: scroll;
+  -ms-overflow-style: none;  /* Hide scrollbar in IE and Edge */
+  scrollbar-width: none; 
 }
 
 .recently-closed .carousel-content .table-cell {
@@ -3540,7 +3591,8 @@ input {
 }
 
 .chat-log-panel .other-message .message-content {
-  background-color: var(--yellow-color);
+  background: linear-gradient(45deg, #3e00e6, #7a0062);
+  border-radius: 16px 16px 16px 0;
 }
 
 .chat-log-panel .message-header {
@@ -3549,10 +3601,6 @@ input {
   display: flex;
   align-items: center;
   margin: 8px 0 24px;
-}
-
-.chat-log-panel .message-header>div {
-  margin: 0 10px;
 }
 
 .chat-header .avatar div {
@@ -4787,6 +4835,10 @@ button#recentSearches span {
   width: 100%;
 }
 
+.loan-details td {
+  color: #fff;
+}
+
 .loan-details td:first-child {
   text-align: left;
   padding-right: 10px;
@@ -5538,7 +5590,6 @@ div.table .table-row .table-cell img.avatar,
 
 .react-confirm-alert .modal-body.alert-body {
   border-radius: 0.6em !important;
-  border: 1px solid #ffffff2d;
 }
 
 .password-modal-body {
@@ -5869,7 +5920,7 @@ div.table .table-row .table-cell img.avatar,
 
 
 .ReactModal__Content {
-  border: 2px solid #6e6e6e !important;
+  border: 2px solid #be17d8 !important;
   border-radius: 7px !important;
   max-width: 80vw !important;
 }
@@ -5983,7 +6034,7 @@ div.table .table-row .table-cell img.avatar,
 
 .modal-footer button {
   height: 55px;
-  background: linear-gradient(350deg, #fa58ff, #c900d8);
+  background: linear-gradient(137deg, #ff5858, #c900d8);
   color: #747f8d;
   padding: 0 20px;
   font-weight: 600;
@@ -6006,7 +6057,7 @@ div.table .table-row .table-cell img.avatar,
   width: 100%;
   height: 40px;
   background: transparent;
-  color: #747f8d;
+  color: #e9ecef;
   border: 1px solid #d3d7db;
   font-weight: 600;
 }
@@ -6090,7 +6141,8 @@ div[role="presentation"] div {
 }
 
 .modal-footer button.tip-button {
-  background: #222 !important;
+  background: linear-gradient(45deg, #9106f8, #0063e3);
+  color: #f9f9f9;
 }
 
 .disclaimer p {
@@ -6607,7 +6659,7 @@ div[aria-label="How To Play Modal"] ul {
 
   .contents_wrapper .main-game .main-panel,
   .contents_wrapper .main-game .sub-panel {
-    padding: 24px 16px;
+    padding: 0 16px 24px;
     width: 100%;
   }
 
@@ -6962,18 +7014,17 @@ div[aria-label="How To Play Modal"] ul {
     padding: 0 16px 0 50px;
     background-position: 8px center;
   }
+
   .modal-body .modal-content-wrapper .settings td button {
     margin: 0 !important;
   }
 
-  .modal-body .modal-content-wrapper .settings td ,
-  .modal-body .modal-content-wrapper  .settings{
+  .modal-body .modal-content-wrapper .settings td,
+  .modal-body .modal-content-wrapper .settings {
     padding: 0px !important;
   }
 
-  .modal-body .modal-content-wrapper div.modal-content-panel td
-
-  .modal-body .modal-content-wrapper div.modal-content-panel td,
+  .modal-body .modal-content-wrapper div.modal-content-panel td .modal-body .modal-content-wrapper div.modal-content-panel td,
   .modal-body .modal-content-wrapper div.modal-content-panel {
     padding: 10px;
     font-size: small;
@@ -7186,16 +7237,17 @@ div[aria-label="How To Play Modal"] ul {
     opacity: 0.7;
   }
 
-#user-bio {
-  position: relative !important;
-  font-size: 0.5em;
-}
+  #user-bio {
+    position: relative !important;
+    font-size: 0.5em;
+  }
 
-#user-bio span{
-  top: -20px !important;
-  left: 0px !important;
-  font-size: xx-small;
-}
+  #user-bio span {
+    top: -20px !important;
+    left: 0px !important;
+    font-size: xx-small;
+  }
+
   .create-game-panel button#l {
     transform: translate(47px, -55px);
 
@@ -7381,7 +7433,7 @@ div[aria-label="How To Play Modal"] ul {
 
   .refresh-main {
     right: 18px;
-    top: 32px;
+    top: 106px;
   }
 
   .chat-input-panel .form-control {

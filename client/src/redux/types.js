@@ -147,6 +147,7 @@ export const SET_CUR_ROOM_INFO = 'SET_CUR_ROOM_INFO';
 export const BET_SUCCESS = 'BET_SUCCESS';
 export const BET_FAIL = 'BET_FAIL';
 export const HISTORY_LOADED = 'HISTORY_LOADED';
+export const TOP_WINS = 'TOP_WINS';
 export const START_LOADING = 'START_LOADING';
 export const START_BET = 'START_BET';
 export const END_BET = 'END_BET';

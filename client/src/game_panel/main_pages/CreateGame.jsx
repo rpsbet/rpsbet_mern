@@ -50,7 +50,7 @@ const StyledProductCard = styled.a`
   position: relative;
   background: ${({ isDarkMode }) =>
     isDarkMode
-      ? 'linear-gradient(156deg, #303438, #cf0c0e)'
+      ? 'linear-gradient(156deg, #8a0290, #cf0c0e)'
       : 'linear-gradient(156deg, #dee2e6, #cf0c0e)'};
   border-radius: 0.3em;
   width: 150px;
@@ -573,14 +573,6 @@ class CreateGame extends Component {
       return;
     };
 
-    // if (game_mode === 'Quick Shoot') {
-    //   alertAndReturn(
-    //     `COMING SOON! FOLLOW US ON X FOR UPDATES: https://x.com/officialrpsgame`
-    //   );
-    //   return true;
-    // }
-
-
     const isMinimumRunsNeeded = (minRuns, list) => {
       if (list.length < minRuns) {
         alertAndReturn('PURR-HAPS IT WOULD BE WISE TO AT LEAST 3 RUNS FOR AI TRAINING DATA');
@@ -619,7 +611,6 @@ class CreateGame extends Component {
         ) {
           this.setState({
             qs_list: [],
-            // rps_list: [],
             winChance: 0,
             step: step > 1 ? step : step + 1
           });
@@ -798,8 +789,8 @@ class CreateGame extends Component {
                 key={index}
                 value={gameType.short_name}
                 control={<Radio
-                  icon={<div style={{ display: 'none' }} />} // Empty div to hide the default radio circle
-                  checkedIcon={<div style={{ display: 'none' }} />} // Hide checked state as well
+                  icon={<div style={{ display: 'none' }} />}
+                  checkedIcon={<div style={{ display: 'none' }} />}
                 />}
                 label={
                   <StyledProductCard

@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import moment from 'moment';
 import ProductPage from '../../admin_panel/app/ProductPages/ProductSerchPage/ProductPage';
 import BankPage from '../../admin_panel/app/ProductPages/ProductSerchPage/BankPage';
 import {
@@ -9,7 +10,8 @@ import {
   clearRoomListCache,
   setCurRoomInfo,
   getMyChat,
-  getGameTypeList
+  getGameTypeList,
+  getWins,
 } from '../../redux/Logic/logic.actions';
 import { toggleDrawer } from '../../redux/Auth/user.actions';
 import MyGamesTable from '../MyGames/MyGamesTable';
@@ -28,15 +30,17 @@ import AiPanel from '../../components/AiPanel';
 import JukeboxPanel from '../../components/JukeboxPanel.jsx';
 import { Tabs, Tab, Drawer, IconButton } from '@material-ui/core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-
-import { faCoins, faStore } from '@fortawesome/free-solid-svg-icons';
-
+import { convertToCurrency } from '../../util/conversion.js';
+import { faCoins, faStore, faLink } from '@fortawesome/free-solid-svg-icons';
+import Avatar from '../../components/Avatar';
+import PlayerModal from '../modal/PlayerModal';
 import DrawerButton from './DrawerButton';
 import SupportButton from './SupportButton';
 import ChatPanel from '../ChatPanel/ChatPanel';
 import OpenGamesTable from '../LiveGames/OpenGamesTable';
 import HistoryTable from '../LiveGames/HistoryTable';
 import Footer from './Footer';
+import { Translate } from '@material-ui/icons';
 
 const customStyles = {
   tabRoot: {
@@ -46,6 +50,18 @@ const customStyles = {
   }
 };
 
+const formatTimeAgo = (date) => {
+  const duration = moment.duration(moment().diff(moment(date)));
+  const seconds = Math.floor(duration.asSeconds());
+  const minutes = Math.floor(duration.asMinutes());
+  const hours = Math.floor(duration.asHours());
+  const days = Math.floor(duration.asDays());
+
+  if (seconds < 60) return `${seconds} s`;
+  if (minutes < 60) return `${minutes} m`;
+  if (hours < 24) return `${hours} h`;
+  return `${days}d`;
+};
 
 class MainPage extends Component {
   constructor(props) {
@@ -70,18 +86,18 @@ class MainPage extends Component {
       getRoomList,
       getRoomCount,
       getHistory,
+      getWins,
       // getGameTypeList,
       isAuthenticated,
       getMyChat
     } = this.props;
     // this.gamesListInterval = setInterval(this.handleRefresh, 100000);
-    const promises = [getRoomList({ pageSize: 7 }), getRoomCount({ game_type: selectedGameType })];
+    const promises = [getRoomList({ pageSize: 7 }), getWins(), getRoomCount({ game_type: selectedGameType })];
     if (isAuthenticated) {
       promises.push(getMyChat());
     }
 
     await Promise.all(promises);
-
     if (this.state.is_mobile && !this.props.isDrawerOpen) {
       this.toggleDrawer();
     }
@@ -145,6 +161,57 @@ class MainPage extends Component {
       (this.state.is_mobile && this.state.selectedMobileTab === 'live_games' && this.state.show_open_game !== 1) ||
         (!this.state.is_mobile && this.props.selectedMainTabIndex === 0) ? (
         <>
+          <div style={{ display: "inline-flex", justifyContent: "center", alignItems: "center" }}>
+
+            <h2 className="main-title recently-closed-title" style={{ padding: "0 0 15px 0" }}>TOP PLAYS</h2>
+          </div>
+          <div className='top-wins'>
+            {this.props.topWins?.map((row) => (
+              <a href={`/join/${row.room}`} className="table-cell">
+                <div key={row.room} className="carousel-content table-row slide-in">
+                  <div style={{ display: "flex", flexDirection: "row" }}>
+                    <a
+                      href="#"
+                      className="player"
+                      onClick={() => handleOpenPlayerModal(row.creator._id)}
+                      style={{ marginRight: "-15px" }}
+                    >
+                      <Avatar
+                        className="avatar"
+                        src={row.joined_user.avatar}
+                        accessory={row.joined_user.accessory}
+                        username={row.joined_user.username}
+                        rank={row.joined_user.totalWagered}
+                        alt=""
+                        darkMode={this.props.isDarkMode}
+                      />
+                      {/* <i
+                          className={`online-status${onlineUserList.includes(row.creator._id) ? ' online' : ''}`}
+                        ></i> */}
+                    </a>
+                  </div>
+
+                  <div className="cell" style={{ lineHeight: '0.5em', marginBottom: "5px", textAlign: "right" }} >
+                    <span style={{ whiteSpace: "nowrap" }}>
+                      +{convertToCurrency(row.winnings)}  </span>
+                    <br />
+                    <span style={{ whiteSpace: "nowrap", fontSize: "xx-small" }}>
+                      {(row.winnings / row.bet_amount).toFixed(2)}x / ${(row.winnings * 0.119).toFixed(2)}
+                    </span>
+
+                  </div>
+                  <div className="cell" style={{ whiteSpace: "nowrap", fontSize: "xx-small", position: "absolute", right: '5px', bottom: '0px' }}>
+                    <span style={{ color: "unset", whiteSpace: "nowrap", fontSize: "xx-small", marginRight: "-5px", paddingBottom: "10px", paddingTop: "5px" }}>
+                      {formatTimeAgo(row.created_at)} ago
+                    </span>
+                  </div>
+
+
+                </div>
+              </a>
+
+            ))}
+          </div>
           <div id="liveStakes">
             {this.props.rooms_count} BATTLES
             <Lottie options={defaultOptions} width={40} />
@@ -286,6 +353,7 @@ class MainPage extends Component {
               this.state.selectedMobileTab === 'live_games' &&
               this.state.show_open_game === 0)) && (
               <>
+
                 <OpenGamesTable
                   refreshing={this.state.refreshing}
                   handleRefresh={this.handleRefresh}
@@ -568,6 +636,7 @@ class MainPage extends Component {
 }
 
 const mapStateToProps = state => ({
+  topWins: state.logic.topWins,
   isAuthenticated: state.auth.isAuthenticated,
   roomList: state.logic.roomList,
   history: state.logic.history,
@@ -589,6 +658,7 @@ const mapDispatchToProps = {
   getRoomList,
   getRoomCount,
   getHistory,
+  getWins,
   setCurRoomInfo,
   getGameTypeList,
   clearRoomListCache,

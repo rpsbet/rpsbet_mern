@@ -131,10 +131,9 @@ class ConfirmLoanModal extends Component {
             <div className={`modal-icon result-icon-trade`}></div>
             <h5>ACCEPT DEBT</h5>
             <div className='thresholds' style={{ padding: '20px', overflow: 'auto' }}>
-              <h6 style={{ color: '#28a745' }} >ELIGIBILITY THRESHOLDS</h6>
               <TableContainer style={{ maxHeight: 150, overflow: 'auto' }}>
                 <Table aria-label="nice-table">
-                  <TableHead style={{ textTransform: "uppercase", position: 'sticky', top: 0, zIndex: 1, backgroundColor: this.props.isDarkMode ? 'black' : 'white' }}>
+                  <TableHead style={{ textTransform: "uppercase", position: 'sticky', top: 0, zIndex: 1, background: this.props.isDarkMode ? 'linear-gradient(45deg, #63077eb5, #f23c3c9c)' : 'white' }}>
                     <TableRow>
                       <TableCell style={{ textAlign: 'center' }}>Rank</TableCell>
                       <TableCell style={{ textAlign: 'center' }}>Max Allowance</TableCell>

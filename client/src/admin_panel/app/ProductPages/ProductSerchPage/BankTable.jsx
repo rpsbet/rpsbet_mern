@@ -65,7 +65,7 @@ const ProductGrid = styled.div`
 `;
 const ProductCard = styled.div`
   position: relative;
-  background: linear-gradient(156deg, #303438, #007bff);
+  background: linear-gradient(156deg, #28a745, #007bff);
   border-radius: 20px;
   padding: 10px;
   display: -ms-flexbox;
@@ -144,7 +144,7 @@ const LoanAmount = styled.h6`
   font-weight: 400;
   line-height: 1.75;
   letter-spacing: 0.00938em;
-  background: linear-gradient(354deg, #007bff75, #494e54);
+  background: linear-gradient(354deg, #007bff75, #00ddff);
   width: 100%;
   border: 1px soli#9c0c0c;
   border-radius: 23%;

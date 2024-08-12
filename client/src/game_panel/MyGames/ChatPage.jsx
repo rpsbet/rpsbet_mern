@@ -300,34 +300,34 @@ class ChatPage extends Component {
                           onClick={() => this.handleOpenPlayerModal(user_id)}
                           style={{ cursor: "pointer", position: "relative" }}
                         >
-                          <Avatar
+                          {/* <Avatar
                             src={avatar}
                             rank={rank}
                             accessory={accessory}
                             className="avatar"
-                          />
+                          /> */}
                         </div>
                       )}
                       <div>
                         <div className="message-time">{row.created_at}</div>
-                        <div className="message_username">
+                        {/* <div className="message_username">
                           {row.from === my_info._id
                             ? my_info.username
                             : username}
-                        </div>
+                        </div> */}
                       </div>
                       {row.from === my_info._id && (
                         <div
                           onClick={() => this.handleOpenPlayerModal(my_info._id)}
                           style={{ cursor: "pointer", position: "relative" }}
                         >
-                          <Avatar
+                          {/* <Avatar
                             src={my_info.avatar}
                             rank={my_info.totalWagered}
                             accessory={my_info.accessory}
                             username={my_info.username}
                             className="avatar"
-                          />
+                          /> */}
                         </div>
                       )}
                     </div>

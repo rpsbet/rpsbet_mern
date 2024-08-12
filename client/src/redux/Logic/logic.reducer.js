@@ -18,6 +18,7 @@ import {
   SET_GAME_MODE,
   SET_CUR_ROOM_INFO,
   SET_URL,
+  TOP_WINS,
   MY_GAMES_LOADED,
   MY_GAMES_LOADED_WITHOUT_STATS,
   MY_GAMES_LOADED_WITH_STATS,
@@ -348,6 +349,11 @@ export default function (state = initialState, action) {
         history: [...payload.history],
         historyTotalPage: payload.pages,
         historyPageNumber: payload.page
+      };
+    case TOP_WINS:
+      return {
+        ...state,
+        topWins: [...payload],
       };
     case MY_GAMES_LOADED:
       return {

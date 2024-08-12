@@ -12,6 +12,7 @@ import {
   TNX_COMPLETE,
   TNX_INCOMPLETE,
   COMMENT_CREATED,
+  TOP_WINS,
   COMMENT_CREATION_FAILED,
   COMMENTS_LOADED,
   COMMENTS_LOAD_FAILED,
@@ -729,6 +730,16 @@ export const getHistory = search_condition => async dispatch => {
     if (res.data.success) {
       dispatch({ type: HISTORY_LOADED, payload: res.data });
       dispatch({ type: TNX_INCOMPLETE });
+
+    }
+  } catch (err) { }
+};
+
+export const getWins = () => async dispatch => {
+  try {
+    const res = await axios.get('/game/topWins');
+    if (res.data.success) {
+      dispatch({ type: TOP_WINS, payload: res.data.history });
 
     }
   } catch (err) { }

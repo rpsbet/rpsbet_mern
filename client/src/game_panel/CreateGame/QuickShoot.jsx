@@ -11,7 +11,7 @@ import { alertModal } from '../modal/ConfirmAlerts';
 import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
 import SettingsRef from '../../components/SettingsRef';
 import { Info } from '@material-ui/icons';
-import { faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faTrash, faRobot } from '@fortawesome/free-solid-svg-icons';
 
 class QuickShoot extends Component {
   constructor(props) {
@@ -537,7 +537,7 @@ class QuickShoot extends Component {
                       {this.state.animation}
                       {this.renderButtons()}
                       <Button id="aiplay" onClick={this.onAutoPlay}>
-                        Test AI Play&nbsp;<span className="roll-tag">[space]</span>
+                      <FontAwesomeIcon icon={faRobot} style={{ color: '#060607' }} />&nbsp;Test AI Play&nbsp;<span className="roll-tag">[space]</span>
                       </Button>
                     </div>
                     <div className="qs-add-run-table">

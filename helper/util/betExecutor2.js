@@ -6,6 +6,7 @@ const GameType = require('../../model/GameType');
 const Room = require('../../model/Room');
 const Notification = require('../../model/Notification');
 const RpsBetItem = require('../../model/RpsBetItem');
+const QBot = require('../../model/QBot');
 const QsBetItem = require('../../model/QsBetItem');
 const Transaction = require('../../model/Transaction');
 const GameLog = require('../../model/GameLog');
@@ -35,8 +36,11 @@ const addToQueue = async (req, bot = false) => {
 
         let responseData = {};
         let gameLogArray = [];
+        let qbot;
+        let qbotHost;
         let user;
         let game_result;
+        let winnings;
         let bet_item;
         let newTransactionAmount = 0;
         let newTransactionJ = new Transaction({
@@ -819,6 +823,54 @@ const addToQueue = async (req, bot = false) => {
                         roomInfo['room_number'];
                 }
             }
+            // Step 1: Clean and format the strings
+            const selectedStrategy = roomInfo['selectedStrategy'].replace(/[\s-]/g, '').toLowerCase();
+            const aiMode = req.user.ai_mode.replace(/[\s-]/g, '').toLowerCase();
+
+            // Step 3: Update the strategy and the relevant sub-strategy
+            if (newTransactionAmount !== 0) {
+                qbot = await QBot.findOne({ user: req.user._id });
+
+                if (!qbot) {
+                    qbot = new QBot({ user: req.user._id });
+                }
+                if (qbot.joining[selectedStrategy]) {
+                    qbot.joining[selectedStrategy][aiMode] = (qbot.joining[selectedStrategy][aiMode] || 0) + newTransactionAmount; // Increment the sub-strategy
+                    qbot.joining[selectedStrategy].updated_at = new Date();
+                } else {
+                    // Initialize the strategy if it doesn't exist
+                    qbot.strategies.joining[selectedStrategy] = {
+                        [aiMode]: newTransactionAmount,
+                        created_at: new Date(),
+                        updated_at: new Date()
+                    };
+                }
+            }
+
+            if (roomInfo.status = 'finished' && newTransactionC && newTransactionC.amount !== 0) {
+                qbotHost = await QBot.findOne({ user: roomInfo['creator'] });
+
+                if (!qbotHost) {
+                    qbotHost = new QBot({ user: roomInfo['creator'] });
+                }
+                if (qbotHost.hosting[selectedStrategy]) {
+                    qbotHost.hosting[selectedStrategy][aiMode] = (qbotHost.hosting[selectedStrategy][aiMode] || 0) + (roomInfo.host_pr + roomInfo.pr - roomInfo.bet_amount); // Increment the sub-strategy
+                    qbotHost.hosting[selectedStrategy].updated_at = new Date();
+                } else {
+                    // Initialize the strategy if it doesn't exist
+                    qbotHost.hosting[selectedStrategy] = {
+                        [aiMode]: newTransactionC.amount,
+                        created_at: new Date(),
+                        updated_at: new Date()
+                    };
+                }
+            }
+
+            // Save the QBot document
+            await saveDocumentWithRetry(qbot);
+
+            // Step 4: Save the QBot document
+            await saveDocumentWithRetry(qbot);
 
             user['balance'] += newTransactionAmount;
             user['gamePlayed']++;

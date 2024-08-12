@@ -3,10 +3,9 @@ import DefaultBetAmountPanel from './DefaultBetAmountPanel';
 import { connect } from 'react-redux';
 import { Button, Tooltip, IconButton, ButtonBase } from '@material-ui/core';
 import { Info } from '@material-ui/icons';
-
 // import { acQueryMyItem } from '../../redux/Item/item.action';
 import styled from 'styled-components';
-import { faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faTrash, faRobot } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
 import SettingsRef from '../../components/SettingsRef';
@@ -32,7 +31,7 @@ const ProductImage = styled.img`
 
 const ProductCard = styled.div`
   position: relative;
-  background: linear-gradient(156deg, #303438, #cf0c0e);
+  background: linear-gradient(156deg, #8a0290, #cf0c0e);
   border-radius: 20px;
   padding: 10px;
   display: -ms-flexbox;
@@ -586,7 +585,7 @@ const nextRPS = predictNext(prevStates, false);
                       variant="contained"
                       onClick={this.onAutoPlay}
                     >
-                      Test AI Play&nbsp;<span className="roll-tag">[space]</span>
+                       <FontAwesomeIcon icon={faRobot} style={{ color: '#060607' }} />&nbsp;Test AI Play&nbsp;<span className="roll-tag">[space]</span>
                     </Button>
                   </div>
                   <div className="rps-add-run-table">
