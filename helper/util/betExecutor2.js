@@ -847,23 +847,24 @@ const addToQueue = async (req, bot = false) => {
             }
 
             if (roomInfo.status === 'finished' && newTransactionC && newTransactionC.amount !== 0) {
-                qbotHost = await QBot.findOne({ user: roomInfo['creator'] });
-
+                let qbotHost = await QBot.findOne({ user: roomInfo['creator'] });
+            
                 if (!qbotHost) {
                     qbotHost = new QBot({ user: roomInfo['creator'] });
                 }
-                if (qbotHost.hosting[selectedStrategy]) {
-                    qbotHost.hosting[selectedStrategy][aiMode] = (qbotHost.hosting[selectedStrategy][aiMode] || 0) + (roomInfo.host_pr + roomInfo.pr - roomInfo.bet_amount); // Increment the sub-strategy
-                    qbotHost.hosting[selectedStrategy].updated_at = new Date();
-                } else {
-                    // Initialize the strategy if it doesn't exist
-                    qbotHost.hosting[selectedStrategy] = {
-                        [aiMode]: newTransactionC.amount,
-                        created_at: new Date(),
-                        updated_at: new Date()
-                    };
+                if (!qbotHost.hosting) {
+                    qbotHost.hosting = {};
                 }
+                if (qbotHost.hosting[selectedStrategy] !== undefined) {
+                    qbotHost.hosting[selectedStrategy] += (roomInfo.host_pr + roomInfo.pr - roomInfo.bet_amount);
+                } else {
+                    qbotHost.hosting[selectedStrategy] = (roomInfo.host_pr + roomInfo.pr - roomInfo.bet_amount);
+                }
+                qbotHost.hosting.updated_at = new Date();
+                qbotHost.updated_at = new Date();
+                await qbotHost.save();
             }
+            
 
             // Save the QBot document
             await saveDocumentWithRetry(qbot);

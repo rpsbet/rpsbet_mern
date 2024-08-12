@@ -231,13 +231,10 @@ function innovate(historicData) {
     return { counterMove: getRandomMove(), risk: 1 };
   }
 
-  console.log("firstJoinerQs", firstJoinerQs)
   const allSame = firstJoinerQs.every(rps => rps === firstJoinerQs[0]);
-console.log("allSame", allSame)
 if (allSame) {
   const lastMove = firstJoinerQs[firstJoinerQs.length - 1];
   const possibleMoves = ['R', 'P', 'S'].filter(move => move !== lastMove);
-  console.log("possibleMoves", possibleMoves)
     return { counterMove: possibleMoves[Math.floor(Math.random() * possibleMoves.length)], risk: 3 };
   } else {
     const previousMove = historicData[historicData.length - 1].rps;

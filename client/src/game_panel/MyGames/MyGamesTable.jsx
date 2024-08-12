@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import { setBalance } from '../../redux/Auth/user.actions';
 import Modal from 'react-modal';
 import axios from '../../util/Api';
+import { Info } from '@material-ui/icons';
 import { Warning, Link } from '@material-ui/icons';
 import SettingsRef from '../../components/SettingsRef';
 import {
@@ -19,7 +20,7 @@ import {
   reCreateRoom
 } from '../../redux/Logic/logic.actions';
 import { getRank } from '../../util/getRank';
-import { faFilter, faSort, faEdit, faPiggyBank, faMoneyCheckAlt } from '@fortawesome/free-solid-svg-icons';
+import { faFilter, faSort, faEdit, faPiggyBank, faMoneyCheckAlt, faInfoCircle } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Battle from '../icons/Battle';
 import blob from '../LottieAnimations/blob.json';
@@ -530,7 +531,9 @@ class MyGamesTable extends Component {
                   STAKE
                 </div>
                 <div className="table-cell winnings" style={{ paddingLeft: "40px" }}>Payout</div>
-                <div className="table-cell bet-info" style={{ paddingLeft: "10px" }}>Net Profit</div>
+                <div className="table-cell bet-info" style={{ paddingLeft: "10px" }}>Net Profit&nbsp;<Tooltip title="NOT INCLUDING AUTO-PAYOUTS">
+                          <Info style={{width: "18px", cursor: "pointer"}}/>
+                          </Tooltip></div>
                 <div className="table-cell winnings">Plays</div>
                 <div className="table-cell winnings desktop-only">Strategy</div>
 
@@ -605,8 +608,11 @@ class MyGamesTable extends Component {
                           )}
                       </div>
                       <div className="table-cell winnings">
-                        <span>{convertToCurrency((row.winnings - row.stake))}</span>
+                        <span>{convertToCurrency((row.winnings - row.stake))}&nbsp;
+                        </span>
+                       
                       </div>
+                      
                       {!this.props.myGamesWithStats ? (
                         <>
                           <div className="table-cell bets" style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>

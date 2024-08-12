@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-// Define the SubStrategySchema first
+// Define the SubStrategySchema for the joining strategies
 const SubStrategySchema = new Schema({
     copycat: {
         type: Number,
@@ -69,8 +69,8 @@ const SubStrategySchema = new Schema({
     }
 });
 
-// Define StrategySchema with nested sub-strategies
-const StrategySchema = new Schema({
+// Define the StrategySchema for the joining field with nested sub-strategies
+const JoiningStrategySchema = new Schema({
     copycat: {
         type: SubStrategySchema,
         default: () => ({})
@@ -137,6 +137,73 @@ const StrategySchema = new Schema({
     }
 });
 
+// Define the simplified StrategySchema for the hosting field
+const HostingStrategySchema = new Schema({
+    copycat: {
+        type: Number,
+        default: 0
+    },
+    hiddenmarkov: {
+        type: Number,
+        default: 0
+    },
+    markov: {
+        type: Number,
+        default: 0
+    },
+    random: {
+        type: Number,
+        default: 0
+    },
+    feedback: {
+        type: Number,
+        default: 0
+    },
+    innovate: {
+        type: Number,
+        default: 0
+    },
+    hertz: {
+        type: Number,
+        default: 0
+    },
+    martingale: {
+        type: Number,
+        default: 0
+    },
+    adam: {
+        type: Number,
+        default: 0
+    },
+    tesla: {
+        type: Number,
+        default: 0
+    },
+    npc: {
+        type: Number,
+        default: 0
+    },
+    sniper: {
+        type: Number,
+        default: 0
+    },
+    skillissue: {
+        type: Number,
+        default: 0
+    },
+    skillissue2: {
+        type: Number,
+        default: 0
+    },
+    created_at: {
+        type: Date,
+        default: Date.now
+    },
+    updated_at: {
+        type: Date,
+        default: Date.now
+    }
+});
 
 // Define QBotSchema with two master branches: joining and hosting
 const QBotSchema = new Schema({
@@ -150,14 +217,14 @@ const QBotSchema = new Schema({
     },
     active: {
         type: Boolean,
-        default: false,
+        default: false
     },
     joining: {
-        type: StrategySchema,
+        type: JoiningStrategySchema,
         default: () => ({})
     },
     hosting: {
-        type: StrategySchema,
+        type: HostingStrategySchema,
         default: () => ({})
     },
     created_at: {

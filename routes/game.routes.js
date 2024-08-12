@@ -1097,30 +1097,30 @@ router.delete('/comments/:comment_id', async (req, res) => {
 
 router.get('/topWins', async (req, res) => {
   try {
-      // Fetch the most recent 250 game logs sorted by created_at in descending order
-      const recentGameLogs = await GameLog.find({})
-          .sort({ created_at: -1 })  // Sort by created_at, most recent first
-          .limit(250)  // Limit to the most recent 250 entries
-          .populate({ 
-              path: 'joined_user', 
-              model: User, 
-              select: '_id avatar accessory totalWagered' 
-          });
-
-      // Sort the recentGameLogs by winnings in descending order and select the top 12
-      const topGameLogs = recentGameLogs
-          .sort((a, b) => b.winnings - a.winnings)  // Sort by winnings in descending order
-          .slice(0, 12);  // Select the top 12 game logs
-
-      // Return the result in the specified format
-      res.json({
-          success: true,
-          pageSize: 12,
-          history: topGameLogs
+    // Fetch the most recent 250 game logs sorted by created_at in descending order
+    const recentGameLogs = await GameLog.find({})
+      .sort({ created_at: -1 })  // Sort by created_at, most recent first
+      .limit(250)  // Limit to the most recent 250 entries
+      .populate({
+        path: 'joined_user',
+        model: User,
+        select: '_id avatar accessory totalWagered'
       });
+
+    // Sort the recentGameLogs by winnings in descending order and select the top 12
+    const topGameLogs = recentGameLogs
+      .sort((a, b) => b.winnings - a.winnings)  // Sort by winnings in descending order
+      .slice(0, 12);  // Select the top 12 game logs
+
+    // Return the result in the specified format
+    res.json({
+      success: true,
+      pageSize: 12,
+      history: topGameLogs
+    });
   } catch (err) {
-      console.error(err);
-      res.status(500).json({ message: 'Server Error' });
+    console.error(err);
+    res.status(500).json({ message: 'Server Error' });
   }
 });
 
@@ -2191,10 +2191,6 @@ router.post('/end_game', auth, async (req, res) => {
       socket.sendNotification(host, notificationData);
     });
 
-    await Promise.all([
-      Notification.insertMany(notifications.map(doc => doc.toObject())),
-      Transaction.insertMany(transactions.map(doc => doc.toObject()))
-    ]);
 
     for (const hostData of roomInfo.hosts) {
       const hostId = hostData.host;
@@ -2205,6 +2201,7 @@ router.post('/end_game', auth, async (req, res) => {
         console.error(`Host with id ${hostId} not found`);
         continue;
       }
+      const selectedStrategy = roomInfo.selectedStrategy.replace(/[\s-]/g, '').toLowerCase();
 
       const amount = (hostData.share / 100) * roomInfo.user_bet;
       host.balance += amount;
@@ -2213,19 +2210,19 @@ router.post('/end_game', auth, async (req, res) => {
       qbotHost = await QBot.findOne({ user: req.user._id });
 
       if (!qbotHost) {
-        qbotHost = new QBot({ user: req.user._id });
+        qbotHost = new QBot({ user: roomInfo['creator'] });
       }
-      if (qbotHost.hosting[selectedStrategy]) {
-        qbotHost.hosting[selectedStrategy][aiMode] = (qbotHost.hosting[selectedStrategy][aiMode] || 0) + (roomInfo.host_pr + roomInfo.pr - roomInfo.bet_amount); // Increment the sub-strategy
-        qbotHost.hosting[selectedStrategy].updated_at = new Date();
+      if (!qbotHost.hosting) {
+        qbotHost.hosting = {};
+      }
+      if (qbotHost.hosting[selectedStrategy] !== undefined) {
+        qbotHost.hosting[selectedStrategy] += (roomInfo.host_pr + roomInfo.pr - roomInfo.bet_amount);
       } else {
-        // Initialize the strategy if it doesn't exist
-        qbotHost.hosting[selectedStrategy] = {
-          [aiMode]: newTransactionC.amount,
-          created_at: new Date(),
-          updated_at: new Date()
-        };
+        qbotHost.hosting[selectedStrategy] = (roomInfo.host_pr + roomInfo.pr - roomInfo.bet_amount);
       }
+
+      qbotHost.hosting.updated_at = new Date();
+      qbotHost.updated_at = new Date();
     }
 
     newGameLog = new GameLog({
@@ -2239,9 +2236,15 @@ router.post('/end_game', auth, async (req, res) => {
       game_result: -100
     });
 
+    await Promise.all([
+      Notification.insertMany(notifications.map(doc => doc.toObject())),
+      Transaction.insertMany(transactions.map(doc => doc.toObject()))
+    ]);
+
     try {
       await saveDocumentWithRetry(newGameLog);
       await saveDocumentWithRetry(roomInfo);
+      await qbotHost.save();
 
     } catch (error) {
       console.error("Error saving:", error);
