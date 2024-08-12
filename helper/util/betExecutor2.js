@@ -847,7 +847,7 @@ const addToQueue = async (req, bot = false) => {
                 }
             }
 
-            if (roomInfo.status = 'finished' && newTransactionC && newTransactionC.amount !== 0) {
+            if (roomInfo.status === 'finished' && newTransactionC && newTransactionC.amount !== 0) {
                 qbotHost = await QBot.findOne({ user: roomInfo['creator'] });
 
                 if (!qbotHost) {
