@@ -257,7 +257,7 @@ const addToQueue = async (req, bot = false) => {
 
                         case 'Innovate':
                             const nextState = await innovate(allBetItems)
-                            nextItem = nextState.move;
+                            nextItem = nextState.counterMove;
 
                             break;
                         default:
@@ -299,7 +299,6 @@ const addToQueue = async (req, bot = false) => {
                         return nextItem;
                     }
                 }
-
                 newGameLog.selected_rps = req.body.selected_rps;
 
                 if (roomInfo['rps_game_type'] === 0) {
