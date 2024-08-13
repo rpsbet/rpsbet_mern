@@ -22,7 +22,7 @@ const saveDocumentWithRetry = require('./retrySave');
 const requestQueue = [];
 let user_access_log = {};
 
-const addToQueue = async (req, bot = false) => {
+const addToQueue = async (req, bot = false, qbot) => {
     try {
         const taxPromise = SystemSetting.findOne({ name: 'commission' });
         const rainPromise = SystemSetting.findOne({ name: 'rain' });
@@ -149,7 +149,8 @@ const addToQueue = async (req, bot = false) => {
                 game_type: roomInfo['game_type'],
                 bet_amount: req.body.bet_amount,
                 game_result: 0,
-                ai_mode: user.ai_mode
+                ai_mode: qbot ? req.body.ai_mode : user.ai_mode,
+                qbot: qbot ? qbot : null
                 // is_anonymous: req.body.is_anonymous
             });
 
@@ -217,7 +218,10 @@ const addToQueue = async (req, bot = false) => {
                             nextItem = await patternBasedAI(allBetItems);
                             break;
                         case 'Feedback':
+                            console.log("called33333333333");
+
                             nextItem = await counterSwitchAI(allBetItems);
+                            console.log("nextItem", nextItem)
                             break;
                         case 'Skill-issue':
                             nextItem = await counterRandomness(allBetItems);
@@ -449,6 +453,7 @@ const addToQueue = async (req, bot = false) => {
                         updated_at: gameLog.updated_at,
                         hosts: gameLog.hosts,
                         ai_mode: gameLog.ai_mode,
+                        qbot: gameLog.qbot,
                     };
 
                     return mergedObject;
@@ -550,7 +555,10 @@ const addToQueue = async (req, bot = false) => {
                             nextItem = await patternBasedAI_qs(allBetItems, roomInfo['qs_game_type']);
                             break;
                         case 'Feedback':
+                            console.log("called22222");
+
                             nextItem = await counterSwitchAI_qs(allBetItems, roomInfo['qs_game_type']);
+                            console.log("nextItem_qs", nextItem)
                             break;
                         case 'Skill-issue':
                             nextItem = await counterRandomness_qs(allBetItems, roomInfo['qs_game_type']);
@@ -747,6 +755,7 @@ const addToQueue = async (req, bot = false) => {
                         updated_at: gameLog.updated_at,
                         hosts: gameLog.hosts,
                         ai_mode: gameLog.ai_mode,
+                        qbot: gameLog.qbot,
                     };
 
                     return mergedObject;
@@ -1018,9 +1027,9 @@ const addToQueue = async (req, bot = false) => {
     }
 };
 
-const executeBet4 = (req, bot = false) => {
+const executeBet4 = (req, bot = false, qbot) => {
     return new Promise((resolve, reject) => {
-        requestQueue.push({ req, bot, resolve, reject });
+        requestQueue.push({ req, bot, qbot, resolve, reject });
         if (requestQueue.length === 1) {
             processQueue();
         }
@@ -1029,9 +1038,9 @@ const executeBet4 = (req, bot = false) => {
 
 const processQueue = async () => {
     while (requestQueue.length > 0) {
-        const { req, bot, resolve, reject } = requestQueue[0];
+        const { req, bot, qbot, resolve, reject } = requestQueue[0];
         try {
-            const result = await addToQueue(req, bot);
+            const result = await addToQueue(req, bot, qbot);
             resolve(result);
         } catch (error) {
             reject(error);

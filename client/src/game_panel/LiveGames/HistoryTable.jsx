@@ -151,7 +151,7 @@ class HistoryTable extends Component {
     }
   }
 
-  
+
 
   attachUserLinkListeners = () => {
     const userLinks = document.querySelectorAll('.user-link');
@@ -174,7 +174,7 @@ class HistoryTable extends Component {
         const portalContainer = document.createElement('div');
         ReactDOM.render(lottieAnimation, portalContainer);
         element.parentNode.insertBefore(portalContainer, element);
-  
+
         // Attach click event listener to the accessory element
         portalContainer.addEventListener('click', () => {
           this.handleOpenPlayerModal(userId);
@@ -186,7 +186,7 @@ class HistoryTable extends Component {
       }
     });
   };
-  
+
 
   handleOpenPlayerModal = creator_id => {
     this.setState({ showPlayerModal: true, selectedCreator: creator_id });
@@ -418,11 +418,11 @@ class HistoryTable extends Component {
           {uniqueHistory.map(
             (row, key) => (
               <div
-              className={`table-row ${(row.creator?._id === this.props.userId || row.joined_user === this.props.userId ) ? 'history-background' : ''} ${key < 50 ? 'slide-in' : ''}`}
-              style={{ 
-                animationDelay: `${key * 0.1}s`, 
-                filter: row.status !== 'open' ? 'grayscale(70%)' : 'none'  // Apply grayscale filter if status is "open"
-              }}
+                className={`table-row ${(row.creator?._id === this.props.userId || row.joined_user === this.props.userId) ? 'history-background' : ''} ${key < 50 ? 'slide-in' : ''}`}
+                style={{
+                  animationDelay: `${key * 0.1}s`,
+                  filter: row.status !== 'open' ? 'grayscale(70%)' : 'none'  // Apply grayscale filter if status is "open"
+                }}
                 key={row._id}
               >
                 {' '}
@@ -432,11 +432,18 @@ class HistoryTable extends Component {
                     <div className="room-id">
                       {row.status === 'open' ? row.status : 'finished'}&nbsp;{row.status === 'open' ? <HeartIcon isOpen={true} /> : <HeartIcon isOpen={false} />}
                     </div>
-                    { row.ai_mode && (
-                      <div className="room-id ai_mode">
-                      {row.ai_mode}
-                    </div>
+                    {row.ai_mode && (
+                      <div id="ai_mode">
+                        <span className="room-id ai_mode">
+                          {row.ai_mode}
+                        </span>
+                        <span className="room-id qbot">
+                          {row.qbot && (<>Q - BOT</>)}
+                        </span>
+                      </div>
+
                     )}
+
                     <div
                       className="desktop-only"
                       dangerouslySetInnerHTML={{ __html: row.history }}

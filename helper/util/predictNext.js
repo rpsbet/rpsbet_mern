@@ -248,7 +248,7 @@ function martingaleStrategy(historicData) {
     const randomMove = ['R', 'P', 'S'][Math.floor(Math.random() * 3)];
     return {
       move: randomMove,
-      lastResult: null
+      lastResult: randomMove
     };
   }
 
@@ -257,10 +257,9 @@ function martingaleStrategy(historicData) {
   const lastResult = getResult(lastAIMove, lastOpponentMove);
 
   const randomMove = ['R', 'P', 'S'][Math.floor(Math.random() * 3)];
-
   return {
     move: randomMove,
-    lastResult: lastResultx
+    lastResult: lastResult
   };
 }
 
@@ -314,6 +313,7 @@ function patternBasedAI(historicData) {
 }
 
 function counterSwitchAI(historicData) {
+  console.log("historicData", historicData)
   if (historicData.length > 0) {
     const lastGame = historicData[historicData.length - 1];
 

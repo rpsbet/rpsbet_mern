@@ -696,6 +696,9 @@ div.table .table-cell button.btn_join img {
   position: relative;
   background: unset;
 }
+.sub-panel .overflowX .lottie-container{
+  display: none;
+}
 
 .main-game h2.main-title {
   font-size: 13px;
@@ -842,10 +845,11 @@ div.table.main-history-table .table-row>div>.room-id {
   margin-left: 0px;
 }
 
-.top-wins .rank-icon{
+.top-wins .rank-icon {
   display: none !important;
 }
-.top-wins a.table-cell{
+
+.top-wins a.table-cell {
   background: linear-gradient(45deg, #a7289a47, #5a11ff33);
   border-radius: 0.7em;
   margin-left: 10px;
@@ -859,8 +863,9 @@ div.table.main-history-table .table-row>div>.room-id {
   width: 100%;
   overflow-y: hidden;
   overflow-x: auto;
-  -ms-overflow-style: none;  /* Hide scrollbar in IE and Edge */
-  scrollbar-width: none; 
+  -ms-overflow-style: none;
+  /* Hide scrollbar in IE and Edge */
+  scrollbar-width: none;
   height: 54px;
 }
 
@@ -883,16 +888,30 @@ div.table .table-row.carousel-content:hover {
   filter: unset;
 }
 
-div.room-id.ai_mode {
+.table-cell #ai_mode {
   position: absolute;
-  top: 16px;
+  top: 12px;
   left: 100px;
+}
+
+span.room-id.ai_mode {
+
   border: 1px solid #f13bfe;
   border-radius: 0.4em;
   color: #f68aff;
   font-size: 0.5em !important;
   padding: 2px 4px;
   background: linear-gradient(45deg, #a341a28c, #6a18ff87);
+}
+
+span.room-id.qbot {
+  margin-left: 10px;
+  border: 1px solid #dab200;
+  border-radius: 0.4em;
+  color: #f1c100;
+  font-size: 0.5em !important;
+  padding: 2px 4px;
+  background: linear-gradient(45deg, #a391418c, #ffe01887);
 }
 
 div.table.main-history-table .table-row .table-cell img.avatar {
@@ -1129,8 +1148,7 @@ div.table.main-game-table::-webkit-scrollbar,
 div.table.main-history-table::-webkit-scrollbar,
 div.table.my-open-game-table::-webkit-scrollbar,
 .top-wins::-webkit-scrollbar,
-.recently-closed::-webkit-scrollbar
- {
+.recently-closed::-webkit-scrollbar {
   display: none;
 }
 
@@ -1817,8 +1835,9 @@ table td.amount.red {
 .recently-closed {
   display: flex;
   overflow-x: scroll;
-  -ms-overflow-style: none;  /* Hide scrollbar in IE and Edge */
-  scrollbar-width: none; 
+  -ms-overflow-style: none;
+  /* Hide scrollbar in IE and Edge */
+  scrollbar-width: none;
 }
 
 .recently-closed .carousel-content .table-cell {
@@ -5817,7 +5836,7 @@ div.table .table-row .table-cell img.avatar,
   margin-top: 20px;
   font-size: 1.5em;
   font-weight: bold;
-  background: linear-gradient(178deg, #7cbcf4, #001339);
+  background: linear-gradient(178deg, #d97cf4, #001339);
   align-items: center;
   border: 3px solid #001339;
   color: #f9f9f9;
@@ -6605,10 +6624,7 @@ div[aria-label="How To Play Modal"] ul {
     min-width: calc(33.33% - 0.8rem);
   }
 
-  div.room-id.ai_mode {
-    top: 17px;
-    left: 83px;
-  }
+ 
 
   .mobile-only a.user-link img {
     width: 16px;

@@ -4,6 +4,7 @@ const User = require('../../model/User.js');
 const RpsBetItem = require('../../model/RpsBetItem.js');
 const QsBetItem = require('../../model/QsBetItem.js')
 const AttachedPlayer = require('../../model/AttachedPlayer.js');
+const QBot = require('../../model/QBot.js');
 const executeBet1 = require('./betExecutor.js');
 const executeBet4 = require('./betExecutor4.js');
 const { predictNext, reinforcementAI, innovate, patternBasedAI, counterSwitchAI, NPC, generatePattern, skillIssue, getRandomMove, martingaleStrategy } = require('./predictNext');
@@ -48,7 +49,6 @@ async function swapQsBetItems(roomId, user) {
     })
       .sort({ created_at: -1 })
       .limit(50);
-
     const swappedQsBetItems = qsBetItems.map(item => ({
       ...item.toObject(),
       qs: item.joiner_qs,
@@ -90,6 +90,129 @@ async function predictNextBetAmount(betArray, penultimateSameAsLast, smoothingFa
   }
 }
 
+// List of valid strategy names in JoiningStrategySchema
+const validJoiningStrategies = [
+  'copycat', 'hiddenmarkov', 'markov', 'random', 'feedback', 'innovate', 'hertz',
+  'martingale', 'adam', 'tesla', 'npc', 'sniper', 'skillissue', 'skillissue2'
+];
+
+// Function to sum all numeric values in nested joining strategies
+const sumJoiningStrategies = (joiningObj) => {
+  let total = 0;
+  for (const strategy in joiningObj) {
+    if (validJoiningStrategies.includes(strategy)) {
+      const subStrategies = joiningObj[strategy];
+      if (typeof subStrategies === 'object') {
+        for (const subStrategy in subStrategies) {
+          const value = subStrategies[subStrategy];
+          if (typeof value === 'number') {
+            total += value;
+          }
+        }
+      }
+    }
+  }
+  return total;
+};
+
+// Function to sum all numeric values in flat hosting strategies
+const sumHostingStrategies = (hostingObj) => {
+  let total = 0;
+  for (const strategy in hostingObj) {
+    const value = hostingObj[strategy];
+    if (typeof value === 'number') {
+      total += value;
+    }
+  }
+  return total;
+};
+
+// Function to choose one of the totals based on their probabilities
+const chooseBasedOnProbability = (joiningTotal, hostingTotal) => {
+  // Calculate probabilities
+  const totalSum = joiningTotal + hostingTotal;
+  const joiningProbability = totalSum > 0 ? joiningTotal / totalSum : 0;
+  const hostingProbability = totalSum > 0 ? hostingTotal / totalSum : 0;
+
+  // Generate a random number between 0 and 1
+  const randomValue = Math.random();
+
+  // Determine which total is chosen based on probability
+  const chosenTotal = randomValue < joiningProbability ? joiningTotal : hostingTotal;
+  const chosenType = randomValue < joiningProbability ? 'joining' : 'hosting';
+
+  return {
+    chosenTotal,
+    chosenType,
+    joiningProbability,
+    hostingProbability,
+    randomValue
+  };
+};
+
+// Function to pick a sub-strategy based on probabilities
+const pickSubStrategy = (joiningObj, joiningTotal) => {
+  const subStrategyValues = [];
+
+  // Collect sub-strategies and their values
+  for (const strategy in joiningObj) {
+    if (validJoiningStrategies.includes(strategy)) {
+      const subStrategies = joiningObj[strategy];
+      if (typeof subStrategies === 'object') {
+        for (const subStrategy in subStrategies) {
+          const value = subStrategies[subStrategy];
+          if (typeof value === 'number' && value > 0) {
+            subStrategyValues.push({
+              parentStrategy: strategy,
+              name: subStrategy,
+              value: value
+            });
+          }
+        }
+      }
+    }
+  }
+
+
+  // Calculate probabilities for each sub-strategy
+  const total = subStrategyValues.reduce((sum, sub) => sum + sub.value, 0);
+  const probabilities = subStrategyValues.map(sub => ({
+    parentStrategy: sub.parentStrategy,
+    name: sub.name,
+    probability: sub.value / total
+  }));
+
+  // Generate a random number and pick a sub-strategy based on probabilities
+  const random = Math.random();
+  let cumulativeProbability = 0;
+  for (const sub of probabilities) {
+    cumulativeProbability += sub.probability;
+    if (random < cumulativeProbability) {
+      return sub;
+    }
+  }
+  return null;
+};
+
+
+const formatStrategyName = (strategy) => {
+  switch (strategy) {
+    case 'skillissue':
+      return 'Skill-issue';
+    case 'skillissue2':
+      return 'Skill-issue-2';
+    case 'copycat':
+      return 'CopyCat';
+    case 'hiddenmarkov':
+      return 'Hidden Markov';
+    case 'npc':
+      return 'NPC';
+    default:
+      return strategy.charAt(0).toUpperCase() + strategy.slice(1);
+  }
+};
+
+
 async function callCronJobs(io) {
   const cronJobs = [
     { userId: '65eafc72aea25957ac8ea60d', betArray: [0.5, 0.1, 25, 0.1, 2, 1, 1, 25, 125, 1, 1.75, 1, 1, 1, 2, 33, 66, 1, 1, 2.5, 10, 25, 50, 180, 1], delay: 0 },
@@ -108,9 +231,11 @@ async function callCronJobs(io) {
     for (const cronJob of cronJobs) {
       const user = await User.findOne({ _id: cronJob.userId });
       const room = await Room.findOne({ joiners: cronJob.userId, status: "open" });
-      const result = await executeCronJob(user, cronJob.betArray, cronJobUserIds, true, room, 'Random');
-      if (result && result.success) {
-        await delay(cronJob.delay);
+      if (user && room) {  // Only proceed if a room is found
+        const result = await executeCronJob(user, cronJob.betArray, cronJobUserIds, true, room, 'Random');
+        if (result && result.success) {
+          await delay(cronJob.delay);
+        }
       }
     }
 
@@ -126,6 +251,68 @@ async function callCronJobs(io) {
       }
     }
 
+    const qBots = await QBot.find({ active: true });
+
+    for (const bot of qBots) {
+
+      const joiningTotal = sumJoiningStrategies(bot.joining);
+      const hostingTotal = sumHostingStrategies(bot.hosting);
+      const result = chooseBasedOnProbability(joiningTotal, hostingTotal);
+
+      if (result.chosenType === 'joining') {
+        const chosenSubStrategy = pickSubStrategy(bot.joining, joiningTotal);
+        if (chosenSubStrategy) {
+          const formattedStrategyName = formatStrategyName(chosenSubStrategy.parentStrategy);
+          const formattedSubStrategyName = formatStrategyName(chosenSubStrategy.name);
+          console.log("room strat", formattedStrategyName)
+          console.log("joining strat", formattedSubStrategyName)
+          const user = await User.findOne({ _id: bot.user });
+          const room = await Room.findOne({
+            status: 'open',
+            selectedStrategy: formattedStrategyName,
+            creator: { $ne: bot.user }
+          });
+
+          const numElements = 6;
+
+          let remainingBalance = user.balance / 10;
+          const qbot_bet_amounts = [];
+
+          for (let i = 0; i < numElements; i++) {
+            const maxBet = remainingBalance - (numElements - i - 1);
+            const bet = Math.floor(Math.random() * (maxBet)) + 1;
+
+            qbot_bet_amounts.push(bet);
+            remainingBalance -= bet;
+
+            if (remainingBalance <= numElements - i - 1) {
+              while (qbot_bet_amounts.length < numElements) {
+                qbot_bet_amounts.push(1);
+                remainingBalance--;
+              }
+              break;
+            }
+          }
+
+          qbot_bet_amounts.sort((a, b) => a - b);
+          if (user && room) {
+            const result = await executeCronJob(user, qbot_bet_amounts, [bot.user.toString()], false, room, formattedSubStrategyName, true);
+
+            if (result && result.success) {
+              await delay(4000);
+            }
+          } else {
+            console.log("non room.")
+          }
+        } else {
+          console.log('No valid sub-strategy found.');
+        }
+      } else if (result.chosenType === 'hosting') {
+        console.log(`Chosen total is from hosting strategies: ${result.chosenTotal}`);
+      }
+    }
+
+
   } catch (error) {
     console.error('Error executing cron jobs:', error);
     // Handle overall error in cron jobs execution
@@ -136,7 +323,7 @@ async function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room = null, ai_mode = null) {
+async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room = null, ai_mode = null, qbot = false) {
   if (!room) {
     return;
   }
@@ -174,7 +361,6 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
         } else {
           // attached RPS (PLAYER)
           const rpsBetItems = await swapRpsBetItems(roomId, user);
-
 
           if (betArray && betArray.length > 0) {
             if (ai_mode === 'Random') {
@@ -228,18 +414,22 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
               }
               predictedBetAmount = await predictNextBetAmount(betArray, 0, 0.01, 0.2);
             } else if (ai_mode === 'Hidden Markov') {
+
               if (rpsBetItems.length > 0) {
                 const transformedItems = rpsBetItems.map(item => ({ rps: item.joiner_rps }));
                 nextState = await predictNext(transformedItems);
               }
               predictedBetAmount = await predictNextBetAmount(betArray, 0, 0.01, 0.2);
+
             } else if (ai_mode === 'Markov') {
               nextState = await predictNext(rpsBetItems, true);
               predictedBetAmount = await predictNextBetAmount(betArray, 0, 0.01, 0.2);
             } else if (ai_mode === 'Martingale') {
               const outcome = await martingaleStrategy(rpsBetItems);
               nextState = outcome.move;
-              predictedBetAmount = outcome.lastResult === 'loss' || outcome.lastResult === 'draw' ? betArray[0].bet_amount * 2 : Math.min(...betArray);
+              predictedBetAmount = outcome.lastResult === 'loss' || outcome.lastResult === 'draw'
+                ? (betArray[0].bet_amount ? betArray[0].bet_amount * 2 : betArray[0] * 2)
+                : Math.min(...betArray);
             } else if (ai_mode === 'Innovate') {
               const randomnessResult = await innovate(rpsBetItems);
               nextState = randomnessResult.counterMove;
@@ -258,6 +448,9 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
             } catch (error) {
               console.error('Error deleting AttachedPlayer document:', error);
             }
+          }
+          if (predictedBetAmount > parseFloat(room.user_bet)) {
+            predictedBetAmount = parseFloat(room.user_bet);
           }
 
 
@@ -281,10 +474,11 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
           predictedBetAmount = await predictNextBetAmount(betArray, penultimateSameAsLast, 0, 0.01, 0.2, room);
 
         } else {
-          // attached qs (PLAYER)
+          // attached / q-bot qs (PLAYER)
           const qsBetItems = await swapQsBetItems(roomId, user);
 
-          if (qsBetItems && qsBetItems.length > 0) {
+          if (betArray && betArray.length > 0) {
+
             if (ai_mode === 'Random') {
               nextState = await getRandomItem_qs(room.qs_game_type);
               predictedBetAmount = await predictNextBetAmount(betArray, 0, 0.01, 0.2);
@@ -332,11 +526,13 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
               nextState = await getCopyCatItem_qs(qsBetItems, room.qs_game_type);
               predictedBetAmount = await predictNextBetAmount(betArray, 0, 0.01, 0.2);
             } else if (ai_mode === 'Hidden Markov') {
+              console.log("caxwled")
               if (qsBetItems.length > 0) {
                 const transformedItems = qsBetItems.map(item => ({ qs: item.joiner_qs }));
                 nextState = await predictNextQs(transformedItems, room.qs_game_type);
               }
               predictedBetAmount = await predictNextBetAmount(betArray, 0, 0.01, 0.2);
+
             } else if (ai_mode === 'Markov') {
               nextState = await predictNextQs(qsBetItems, room.qs_game_type);
               predictedBetAmount = await predictNextBetAmount(betArray, 0, 0.01, 0.2);
@@ -352,13 +548,13 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
               predictedBetAmount = penultimateSameAsLast === 1
                 ? Math.max(predictedBet / 5, 0.1)
                 : predictedBet;
-            }
+              }
           }
 
           if ((predictedBetAmount) / (room.qs_game_type - 1) +
             predictedBetAmount -
-            (room.qs_game_type - 1) * room.user_bet >
-            room.user_bet ||
+            (room.qs_game_type - 1) * parseFloat(room.user_bet) >
+            parseFloat(room.user_bet) ||
             predictedBetAmount > user.balance
           ) {
             try {
@@ -367,9 +563,19 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
               console.error('Error deleting AttachedPlayer document:', error);
             }
           }
+          
+          if ((predictedBetAmount) / (room.qs_game_type - 1) +
+            predictedBetAmount -
+            (room.qs_game_type - 1) * parseFloat(room.user_bet) >
+            parseFloat(room.user_bet) ||
+            predictedBetAmount > parseFloat(room.user_bet)
+          ) {
+            predictedBetAmount = parseFloat(room.user_bet)
+          }
 
         }
       }
+
       const req = {
         params: {
           _id: roomId
@@ -381,20 +587,19 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
           bet_amount: predictedBetAmount,
           selected_qs_position: nextState,
           selected_rps: nextState,
+          ai_mode: ai_mode
         }
       };
-
-      if (parseFloat(room.user_bet) >= 0.1 && predictedBetAmount >= 0 && predictedBetAmount <= parseFloat(room.user_bet) && userIds.some(id => room.joiners.includes(id))) {
-        if (useFirstBetFunction && !isExecutingBet1) {
+      if (parseFloat(room.user_bet) >= 0.1 && predictedBetAmount >= 0 && predictedBetAmount <= parseFloat(room.user_bet)) {
+        if (useFirstBetFunction && !isExecutingBet1 && userIds.some(id => room.joiners.includes(id))) {
           // BOT
           isExecutingBet1 = true;
-          const newBet = await executeBet1(req, true);
+          await executeBet1(req, true);
           isExecutingBet1 = false;
         } else if (!useFirstBetFunction && !isExecutingBet4) {
-          // attached
+          // attached || qbot
           isExecutingBet4 = true;
-
-          const newBet = await executeBet4(req, true);
+          await executeBet4(req, true, qbot);
           isExecutingBet4 = false;
         }
       }
