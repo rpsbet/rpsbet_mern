@@ -393,9 +393,11 @@ export function innovate(historicData) {
 
   // Check if all the first 6 joiner_qs are the same
   const allSame = firstJoinerQs.every(rps => rps === firstJoinerQs[0]);
+  console.log(allSame, firstJoinerQs)
   if (allSame) {
     // Generate a list of possible moves excluding the last joiner_rps value
     const lastMove = firstJoinerQs[0];
+    console.log("lastMove", lastMove)
     // const possibleMoves = ['R', 'P', 'S'].filter(move => move !== lastMove);
     return { counterMove: getBeatingType2(lastMove), risk: 3};
   } else {

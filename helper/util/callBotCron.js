@@ -264,8 +264,7 @@ async function callCronJobs(io) {
         if (chosenSubStrategy) {
           const formattedStrategyName = formatStrategyName(chosenSubStrategy.parentStrategy);
           const formattedSubStrategyName = formatStrategyName(chosenSubStrategy.name);
-          console.log("room strat", formattedStrategyName)
-          console.log("joining strat", formattedSubStrategyName)
+
           const user = await User.findOne({ _id: bot.user });
           const room = await Room.findOne({
             status: 'open',
@@ -275,7 +274,7 @@ async function callCronJobs(io) {
 
           const numElements = 6;
 
-          let remainingBalance = user.balance / 10;
+          let remainingBalance = user.balance / 4;
           const qbot_bet_amounts = [];
 
           for (let i = 0; i < numElements; i++) {
@@ -301,11 +300,7 @@ async function callCronJobs(io) {
             if (result && result.success) {
               await delay(4000);
             }
-          } else {
-            console.log("non room.")
           }
-        } else {
-          console.log('No valid sub-strategy found.');
         }
       } else if (result.chosenType === 'hosting') {
         console.log(`Chosen total is from hosting strategies: ${result.chosenTotal}`);
@@ -526,7 +521,6 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
               nextState = await getCopyCatItem_qs(qsBetItems, room.qs_game_type);
               predictedBetAmount = await predictNextBetAmount(betArray, 0, 0.01, 0.2);
             } else if (ai_mode === 'Hidden Markov') {
-              console.log("caxwled")
               if (qsBetItems.length > 0) {
                 const transformedItems = qsBetItems.map(item => ({ qs: item.joiner_qs }));
                 nextState = await predictNextQs(transformedItems, room.qs_game_type);

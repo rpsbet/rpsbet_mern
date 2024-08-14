@@ -437,9 +437,11 @@ class HistoryTable extends Component {
                         <span className="room-id ai_mode">
                           {row.ai_mode}
                         </span>
-                        <span className="room-id qbot">
-                          {row.qbot && (<>Q - BOT</>)}
-                        </span>
+                        {row.qbot && (<>
+                          <span className="room-id qbot">
+                            Q-BOT
+                          </span>
+                        </>)}
                       </div>
 
                     )}
