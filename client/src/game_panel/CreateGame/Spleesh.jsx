@@ -18,7 +18,6 @@ class Spleesh extends Component {
     this.setState({ winChance });
   };
   createNumberPanel() {
-    // console.log(this.props.spleesh_bet_unit)
     let panel = [];
     for (let i = 1; i <= 10; i++) {
       panel.push(

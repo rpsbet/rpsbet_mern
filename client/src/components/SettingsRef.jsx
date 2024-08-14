@@ -3,6 +3,13 @@ import { Button, Tooltip } from '@material-ui/core';
 import LockIcon from '@material-ui/icons/Lock';
 import { green, yellow } from '@material-ui/core/colors';
 
+// Utility function to decode HTML entities
+const decodeHtmlEntity = (html) => {
+  const txt = document.createElement('textarea');
+  txt.innerHTML = html;
+  return txt.value;
+};
+
 const SettingsRef = ({ strategies, rank, user_id, ai_mode, setSelectedStrategy, settings_panel_opened, settingsRef, selectedStrategy, updateUserStrategy }) => {
   const filteredStrategies = strategies.filter(strategy => strategy.name === (selectedStrategy || ai_mode));
   const sortedStrategies = strategies.sort((a, b) => a.levelToUnlock - b.levelToUnlock);
@@ -102,9 +109,11 @@ const SettingsRef = ({ strategies, rank, user_id, ai_mode, setSelectedStrategy, 
                     {rank < strategy.levelToUnlock && (
                       <LockIcon style={{ color: yellow[500] }} />
                     )}
+                    {/* Render decoded Unicode/HTML entity directly */}
                     {strategy.name} {rank === strategy.levelToUnlock + 1 && (
                       <span style={{ color: green[500] }}>&nbsp;<i>NEW!</i></span>
                     )}
+                    <span style={{ fontSize: '1.2em', marginLeft: "5px" }}>{decodeHtmlEntity(strategy.icon)}</span>
                   </Button>
                 </span>
               </Tooltip>

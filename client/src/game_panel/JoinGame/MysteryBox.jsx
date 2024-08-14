@@ -732,7 +732,6 @@ class MysteryBox extends Component {
                     index={index}
                     key={row._id}
                     onClick={this.onBoxClicked}
-                  // onMouseEnter={() => console.log(row)}
                   >
                     <CardContent>
                       <Typography color="textSecondary">

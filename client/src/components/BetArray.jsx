@@ -160,7 +160,7 @@ const PlaceholderComponent = ({
           startIcon={<FontAwesomeIcon icon={faCrown} />}
           style={{ background: 'linear-gradient(340deg, #ffb000, #ff5100c7)', color: '#fff', textTransform: 'none', fontSize: '16px' }}
         >
-          UNLOCK AT LEVEL 16
+          UNLOCK AT LEVEL 17
         </Button>
       </div>
     );

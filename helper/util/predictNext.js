@@ -313,7 +313,6 @@ function patternBasedAI(historicData) {
 }
 
 function counterSwitchAI(historicData) {
-  console.log("historicData", historicData)
   if (historicData.length > 0) {
     const lastGame = historicData[historicData.length - 1];
 
@@ -364,7 +363,7 @@ function counterRandomness(historicData) {
 
 }
 
-function skillIssue(historicData) {
+function skillissueold(historicData) {
   if (historicData.length < 3) {
     return { counterMove: getRandomMove(), risk: 1 };
   }
@@ -509,7 +508,7 @@ module.exports = {
   patternBasedAI,
   counterSwitchAI,
   NPC,
-  skillIssue,
+  skillissueold,
   innovate,
   counterRandomness,
   martingaleStrategy,

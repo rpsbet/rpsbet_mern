@@ -2969,6 +2969,15 @@ button.btn-submit:active,
   float: right;
 }
 
+.settings tr td:last-child {
+  text-align: right;
+}
+
+td button.subsetting {
+padding-left: 20px !important;
+font-size: small;
+}
+
 .loading-gif-container {
   display: flex;
   justify-content: center;

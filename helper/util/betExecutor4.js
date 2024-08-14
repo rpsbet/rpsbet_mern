@@ -218,15 +218,12 @@ const addToQueue = async (req, bot = false, qbot) => {
                             nextItem = await patternBasedAI(allBetItems);
                             break;
                         case 'Feedback':
-                            console.log("called33333333333");
-
                             nextItem = await counterSwitchAI(allBetItems);
-                            console.log("nextItem", nextItem)
                             break;
-                        case 'Skill-issue':
+                        case 'Skill-issue-old':
                             nextItem = await counterRandomness(allBetItems);
                             break;
-                        case 'Skill-issue-2':
+                        case 'Skill-issue':
                             nextItem = await counterRandomness(allBetItems);
                             break;
                         case 'NPC':
@@ -555,15 +552,12 @@ const addToQueue = async (req, bot = false, qbot) => {
                             nextItem = await patternBasedAI_qs(allBetItems, roomInfo['qs_game_type']);
                             break;
                         case 'Feedback':
-                            console.log("called22222");
-
                             nextItem = await counterSwitchAI_qs(allBetItems, roomInfo['qs_game_type']);
-                            console.log("nextItem_qs", nextItem)
                             break;
-                        case 'Skill-issue':
+                        case 'Skill-issue-old':
                             nextItem = await counterRandomness_qs(allBetItems, roomInfo['qs_game_type']);
                             break;
-                        case 'Skill-issue-2':
+                        case 'Skill-issue':
                             nextItem = await counterRandomness_qs(allBetItems, roomInfo['qs_game_type']);
                             break;
                         case 'NPC':

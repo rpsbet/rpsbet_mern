@@ -6,8 +6,8 @@ import typingSound from './typing-sound.mp3';
 
 class PlaySounds extends Component {
   playSound = (soundPath, volume) => {
-    const { isMuted } = this.props;
-    if (!isMuted) {
+    const { isMuted , gameSounds} = this.props;
+    if (!isMuted || !gameSounds) {
       const audio = new Audio(soundPath);
       audio.volume = volume;
       audio.play();
@@ -31,7 +31,8 @@ class PlaySounds extends Component {
 
 const mapStateToProps = (state) => {
   return {
-    isMuted: state.auth.isMuted, // Adjust this based on your actual state structure
+    isMuted: state.auth.isMuted,
+    gameSounds: state.auth.gameSounds,
   };
 };
 

@@ -146,9 +146,7 @@ class QuickShoot extends Component {
       if (updatedPlayers.length > 5) {
         updatedPlayers.shift();
       }
-      if (!this.props.isMuted) {
-        this.props.playSound('blip');
-      }
+      this.props.playSound('blip');
       // Check if the filtered result is empty
       let filteredQS = data.qs.filter(game => game.joiner === this.props.user_id);
       let qsState = filteredQS.length > 0 ? filteredQS : prevState.qs;
@@ -248,13 +246,13 @@ class QuickShoot extends Component {
   }
 
   updateAnimation = async () => {
-  
+
     let qsIndex = parseInt(this.state.qs[this.state.qs.length - 1].qs);
     let position_short_name = ['center', 'tl', 'tr', 'bl', 'br'];
-    
+
     if (this.props.qs_game_type === 2) {
       position_short_name = ['bl', 'br'];
-      
+
     } else if (this.props.qs_game_type === 3) {
       position_short_name = ['bl', 'center', 'br'];
     } else if (this.props.qs_game_type === 4) {
@@ -295,9 +293,9 @@ class QuickShoot extends Component {
   };
 
   async componentDidUpdate(prevProps, prevState) {
-    const { roomInfo, actionList, is_betting, bgColorChanged  } = this.props;
+    const { roomInfo, actionList, is_betting, bgColorChanged } = this.props;
     const { isPasswordCorrect, qs, qsValueAtLastIndex } = this.state;
-    
+
     if (prevProps.actionList !== actionList) {
       this.setState({
         actionList: actionList
@@ -360,36 +358,27 @@ class QuickShoot extends Component {
       playSound,
       selected_qs_position,
       changeBgColor,
-      isMuted
     } = this.props;
     const { bet_amount } = this.state;
     onChangeState({ result: '' });
- 
+
     const result = await this.props.join({
       bet_amount: parseFloat(bet_amount),
       selected_qs_position: selected_qs_position,
       qs_bet_item_id: qs_bet_item_id
     });
 
-    if (!isMuted) {
-      playSound('ballKick');
-    }
+    playSound('ballKick');
 
     let text;
     let color;
 
     if (result.betResult === 1) {
-      if (!isMuted) {
-
-        playSound('win');
-      }
+      playSound('win');
       text = '+';
       changeBgColor(result.betResult);
     } else {
-      if (!isMuted) {
-
-        playSound('lose');
-      }
+      playSound('lose');
       text = '-';
       changeBgColor(result.betResult);
     }
@@ -616,21 +605,21 @@ class QuickShoot extends Component {
   renderButton(id, position) {
     const { betResult, bgColorChanged, is_betting } = this.props;
     const { qsValueAtLastIndex, showBall } = this.state;
-  
+
     // Initialize the classes array
     let classes = [];
-  
+
     // Add the active class if the position matches
     if (qsValueAtLastIndex === position) {
       classes.push('active');
     }
-  
+
     if (bgColorChanged && qsValueAtLastIndex === position && !is_betting) {
       setTimeout(() => {
         this.setState({ showBall: true }); // setState to show the ball image
       }, 1000);
     }
-  
+
     if (bgColorChanged && betResult === -1 && qsValueAtLastIndex === position) {
       classes.push('lose-bg');
     } else if (betResult === 0 && qsValueAtLastIndex === position) {
@@ -638,28 +627,26 @@ class QuickShoot extends Component {
     } else if (betResult === 1 && qsValueAtLastIndex === position) {
       classes.push('win-bg');
     }
-  
+
     // Add the disabled class if is_betting is true
     if (is_betting) {
       classes.push('disabled');
     }
-  
+
     // Join all classes with a space
     const className = classes.join(' ');
-  
+
     const buttonStyle = {
       opacity: 1,
       position: 'relative' // Ensure position relative to position the ball image
     };
-  
+
     return (
       <IconButton
         id={id}
         onClick={() => {
           this.onBtnBetClick(position);
-          if (!this.props.isMuted) {
-            this.props.playSound('select');
-          }
+          this.props.playSound('select');
         }}
         className={className}
         style={buttonStyle}
@@ -685,7 +672,7 @@ class QuickShoot extends Component {
       </IconButton>
     );
   }
-  
+
 
 
   renderButtons() {
@@ -1215,27 +1202,27 @@ class QuickShoot extends Component {
                       />
                       {this.props.is_mobile && (
                         <AiPanel
-                        qsbetitems={this.props.qsbetitems}
-                        updateUserStrategy={this.props.updateUserStrategy}
-                        strategies={strategies}
-                        betting={betting}
-                        is_betting={is_betting}
-                        predictedBetAmount={predictedBetAmount}
-                        roomId={roomInfo._id}
-                        handleSwitchChange={this.props.handleSwitchChange}
-                        game_type={roomInfo.game_type}
-                        rank={this.props.rank}
-                        user_id={user_id}
-                        ai_mode={ai_mode}
-                        user_balance={balance}
-                        handleDetachAttachChange={handleDetachAttachChange}
-                        attached={attached}
-                        creator_id={roomInfo.creator_id}
-                        getAttachedRooms={getAttachedRooms}
-                        rps_game_type={roomInfo.rps_game_type}
-                        brain_game_type={roomInfo.brain_game_type}
-                        spleesh_bet_unit={roomInfo.spleesh_bet_unit}
-                        isDarkMode={this.props.isDarkMode}
+                          qsbetitems={this.props.qsbetitems}
+                          updateUserStrategy={this.props.updateUserStrategy}
+                          strategies={strategies}
+                          betting={betting}
+                          is_betting={is_betting}
+                          predictedBetAmount={predictedBetAmount}
+                          roomId={roomInfo._id}
+                          handleSwitchChange={this.props.handleSwitchChange}
+                          game_type={roomInfo.game_type}
+                          rank={this.props.rank}
+                          user_id={user_id}
+                          ai_mode={ai_mode}
+                          user_balance={balance}
+                          handleDetachAttachChange={handleDetachAttachChange}
+                          attached={attached}
+                          creator_id={roomInfo.creator_id}
+                          getAttachedRooms={getAttachedRooms}
+                          rps_game_type={roomInfo.rps_game_type}
+                          brain_game_type={roomInfo.brain_game_type}
+                          spleesh_bet_unit={roomInfo.spleesh_bet_unit}
+                          isDarkMode={this.props.isDarkMode}
                         />
                       )}
                     </>
@@ -1274,7 +1261,6 @@ const mapStateToProps = state => ({
   username: state.logic.curRoomInfo.username,
   isLowGraphics: state.auth.isLowGraphics,
   isFocused: state.auth.isFocused,
-  isMuted: state.auth.isMuted,
   isMusicEnabled: state.auth.isMusicEnabled
 });
 

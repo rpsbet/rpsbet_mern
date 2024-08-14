@@ -700,7 +700,7 @@ class JoinGame extends Component {
   startBetting = async betArray => {
     const { isDarkMode, openGamePasswordModal, roomInfo, user_balance, getRpsBetItems, getQsBetItems } = this.props;
     const interval = this.props.ai_mode === 'Adam' || this.props.ai_mode === 'Sniper' ? 4200 :
-      this.props.ai_mode === 'Skill-issue-2' || this.props.ai_mode === 'Innovate' ? 1500 :
+      this.props.ai_mode === 'Skill-issue' || this.props.ai_mode === 'Innovate' ? 1500 :
         3000;
 
     const intervalId = setInterval(async () => {
@@ -739,13 +739,13 @@ class JoinGame extends Component {
                 predictedBetAmount = penultimateSameAsLast === 1
                   ? Math.max(predictedBet / 5, 0.1)
                   : predictedBet;
-              } else if (this.props.ai_mode === 'Skill-issue' || this.props.ai_mode === 'Skill-issue-2') {
+              } else if (this.props.ai_mode === 'Skill-issue-old' || this.props.ai_mode === 'Skill-issue') {
                 const randomnessResult = await counterRandomness_qs(this.props.qsbetitems, roomInfo.qs_game_type);
                 randomItem = randomnessResult.counterMove;
                 const penultimateSameAsLast = randomnessResult.risk;
-                if (this.props.ai_mode === 'Skill-issue') {
+                if (this.props.ai_mode === 'Skill-issue-old') {
                   predictedBetAmount = await this.predictNextBetAmount(betArray, penultimateSameAsLast, 0.01, 0.2);
-                } else if (this.props.ai_mode === 'Skill-issue-2') {
+                } else if (this.props.ai_mode === 'Skill-issue') {
 
                   if (penultimateSameAsLast !== 3) {
                     const outcome = await martingaleStrategy_qs(this.props.qsbetitems, roomInfo.qs_game_type);
@@ -775,7 +775,6 @@ class JoinGame extends Component {
                 predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
               } else if (this.props.ai_mode === 'Markov') {
                 randomItem = await predictNextQs(this.props.qsbetitems, roomInfo.qs_game_type);
-                console.log("randomItem", randomItem)
                 predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
               } else if (this.props.ai_mode === 'Martingale') {
                 const outcome = await martingaleStrategy_qs(this.props.qsbetitems, roomInfo.qs_game_type);
@@ -815,13 +814,13 @@ class JoinGame extends Component {
               } else if (this.props.ai_mode === 'Feedback') {
                 randomItem = await counterSwitchAI(this.props.rpsbetitems);
                 predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
-              } else if (this.props.ai_mode === 'Skill-issue' || this.props.ai_mode === 'Skill-issue-2') {
+              } else if (this.props.ai_mode === 'Skill-issue-old' || this.props.ai_mode === 'Skill-issue') {
                 const randomnessResult = await counterRandomness(this.props.rpsbetitems);
                 randomItem = randomnessResult.counterMove;
                 const penultimateSameAsLast = randomnessResult.risk;
-                if (this.props.ai_mode === 'Skill-issue') {
+                if (this.props.ai_mode === 'Skill-issue-old') {
                   predictedBetAmount = await this.predictNextBetAmount(betArray, penultimateSameAsLast, 0.01, 0.2);
-                } else if (this.props.ai_mode === 'Skill-issue-2') {
+                } else if (this.props.ai_mode === 'Skill-issue') {
                   const outcome = await martingaleStrategy(this.props.rpsbetitems);
                   if (penultimateSameAsLast === 3) {
                     predictedBetAmount = outcome.lastResult === 'loss' || outcome.lastResult === 'draw' ? this.props.rpsbetitems[0].bet_amount * 1.4 : Math.min(...betArray);
@@ -897,7 +896,7 @@ class JoinGame extends Component {
 
   changeBgColor = async result => {
     this.setState({ betResult: result, bgColorChanged: true }, async () => {
-      await new Promise(resolve => setTimeout(resolve, this.props.ai_mode !== "Skill-issue" ? 1000 : 500)); // Wait for 1 second
+      await new Promise(resolve => setTimeout(resolve, this.props.ai_mode !== "Skill-issue-old" ? 1000 : 500)); // Wait for 1 second
       this.setState({ bgColorChanged: false, betResult: null });
     });
   };
@@ -1033,7 +1032,7 @@ class JoinGame extends Component {
 
 
   playSound = sound => {
-    if (!this.props.isMuted) {
+    if (!this.props.isMuted || !this.props.gameSounds) {
       const audio = this.state.sounds[sound];
 
       if (audio && audio.paused !== undefined) {
@@ -1740,6 +1739,7 @@ const mapStateToProps = state => ({
   user_balance: state.auth.user.balance,
   ai_mode: state.auth.user.ai_mode,
   isMuted: state.auth.isMuted,
+  gameSounds: state.auth.gameSounds,
   selectedMainTabIndex: state.logic.selectedMainTabIndex,
   isDrawerOpen: state.auth.isDrawerOpen,
   loading: state.logic.isActiveLoadingOverlay,

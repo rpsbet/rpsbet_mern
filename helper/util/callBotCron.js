@@ -7,8 +7,8 @@ const AttachedPlayer = require('../../model/AttachedPlayer.js');
 const QBot = require('../../model/QBot.js');
 const executeBet1 = require('./betExecutor.js');
 const executeBet4 = require('./betExecutor4.js');
-const { predictNext, reinforcementAI, innovate, patternBasedAI, counterSwitchAI, NPC, generatePattern, skillIssue, getRandomMove, martingaleStrategy } = require('./predictNext');
-const { NPC_qs, patternBasedAI_qs, innovate_qs, getRandomItem_qs, counterSwitchAI_qs, generatePattern_qs, getCopyCatItem_qs, predictNextQs, reinforcementAI_qs, skillIssue_qs, martingaleStrategy_qs } = require('./predictNextQs');
+const { predictNext, reinforcementAI, innovate, patternBasedAI, counterSwitchAI, NPC, generatePattern, skillissueold, getRandomMove, martingaleStrategy } = require('./predictNext');
+const { NPC_qs, patternBasedAI_qs, innovate_qs, getRandomItem_qs, counterSwitchAI_qs, generatePattern_qs, getCopyCatItem_qs, predictNextQs, reinforcementAI_qs, skillissueold_qs, martingaleStrategy_qs } = require('./predictNextQs');
 
 const os = require('os');
 let socketio = null;
@@ -93,7 +93,7 @@ async function predictNextBetAmount(betArray, penultimateSameAsLast, smoothingFa
 // List of valid strategy names in JoiningStrategySchema
 const validJoiningStrategies = [
   'copycat', 'hiddenmarkov', 'markov', 'random', 'feedback', 'innovate', 'hertz',
-  'martingale', 'adam', 'tesla', 'npc', 'sniper', 'skillissue', 'skillissue2'
+  'martingale', 'adam', 'tesla', 'npc', 'sniper', 'skillissueold', 'skillissue'
 ];
 
 // Function to sum all numeric values in nested joining strategies
@@ -197,10 +197,10 @@ const pickSubStrategy = (joiningObj, joiningTotal) => {
 
 const formatStrategyName = (strategy) => {
   switch (strategy) {
+    case 'skillissueold':
+      return 'Skill-issue-old';
     case 'skillissue':
       return 'Skill-issue';
-    case 'skillissue2':
-      return 'Skill-issue-2';
     case 'copycat':
       return 'CopyCat';
     case 'hiddenmarkov':
@@ -375,13 +375,13 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
             } else if (ai_mode === 'Feedback') {
               nextState = await counterSwitchAI(rpsBetItems);
               predictedBetAmount = await predictNextBetAmount(betArray, 0, 0.01, 0.2);
-            } else if (ai_mode === 'Skill-issue' || ai_mode === 'Skill-issue-2') {
-              const randomnessResult = await skillIssue(rpsBetItems);
+            } else if (ai_mode === 'Skill-issue-old' || ai_mode === 'Skill-issue') {
+              const randomnessResult = await skillissueold(rpsBetItems);
               nextState = randomnessResult.counterMove;
               const penultimateSameAsLast = randomnessResult.risk;
-              if (ai_mode === 'Skill-issue') {
+              if (ai_mode === 'Skill-issue-old') {
                 predictedBetAmount = await predictNextBetAmount(betArray, penultimateSameAsLast, 0.01, 0.2);
-              } else if (ai_mode === 'Skill-issue-2') {
+              } else if (ai_mode === 'Skill-issue') {
                 const outcome = await martingaleStrategy(rpsBetItems);
                 if (penultimateSameAsLast === 3) {
                   predictedBetAmount = outcome.lastResult === 'loss' || outcome.lastResult === 'draw' ? betArray[0].bet_amount * 1.4 : Math.min(...betArray);
@@ -492,13 +492,13 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
             } else if (ai_mode === 'Feedback') {
               nextState = await counterSwitchAI_qs(qsBetItems, room.qs_game_type);
               predictedBetAmount = await predictNextBetAmount(betArray, 0, 0.01, 0.2);
-            } else if (ai_mode === 'Skill-issue' || ai_mode === 'Skill-issue-2') {
-              const randomnessResult = await skillIssue_qs(qsBetItems, room.qs_game_type);
+            } else if (ai_mode === 'Skill-issue-old' || ai_mode === 'Skill-issue') {
+              const randomnessResult = await skillissueold_qs(qsBetItems, room.qs_game_type);
               nextState = randomnessResult.counterMove;
               const penultimateSameAsLast = randomnessResult.risk;
-              if (ai_mode === 'Skill-issue') {
+              if (ai_mode === 'Skill-issue-old') {
                 predictedBetAmount = await predictNextBetAmount(betArray, penultimateSameAsLast, 0, 0.01, 0.2, room);
-              } else if (ai_mode === 'Skill-issue-2') {
+              } else if (ai_mode === 'Skill-issue') {
 
                 if (penultimateSameAsLast !== 3) {
                   const outcome = await martingaleStrategy_qs(qsBetItems, room.qs_game_type);

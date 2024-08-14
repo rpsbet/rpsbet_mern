@@ -51,11 +51,11 @@ const SubStrategySchema = new Schema({
         type: Number,
         default: 0
     },
-    skillissue: {
+    skillissueold: {
         type: Number,
         default: 0
     },
-    skillissue2: {
+    skillissue: {
         type: Number,
         default: 0
     },
@@ -119,11 +119,11 @@ const JoiningStrategySchema = new Schema({
         type: SubStrategySchema,
         default: () => ({})
     },
-    skillissue: {
+    skillissueold: {
         type: SubStrategySchema,
         default: () => ({})
     },
-    skillissue2: {
+    skillissue: {
         type: SubStrategySchema,
         default: () => ({})
     },
@@ -187,11 +187,11 @@ const HostingStrategySchema = new Schema({
         type: Number,
         default: 0
     },
-    skillissue: {
+    skillissueold: {
         type: Number,
         default: 0
     },
-    skillissue2: {
+    skillissue: {
         type: Number,
         default: 0
     },

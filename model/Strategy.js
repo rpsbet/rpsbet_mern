@@ -10,6 +10,10 @@ const StrategySchema = new Schema({
     type: String,
     default: ''
   },
+  icon: {
+    type: String,
+    default: ''
+  },
   reasoning: {
     type: Number,
     required: true

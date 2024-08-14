@@ -21,7 +21,6 @@ import AnimatedCursor from './components/AnimatedCursor';
 import buttonHoverSound from './main-select.mp3'; // Replace with the actual path
 import typingSound from './typing-sound.mp3'; // Replace with the actual path
 
-
 const theme = createTheme({
   palette: {
     type: 'dark',
@@ -31,21 +30,27 @@ const theme = createTheme({
   },
 });
 
+// Helper function to check if sounds should play
+const shouldPlaySound = () => {
+  const state = store.getState(); // Get the latest state from the store
+  const { isMuted, clickSounds } = state.auth;
+  return !isMuted && !clickSounds; // Play sound only if `isMuted` is false and `gameSounds` is true
+};
+
 const playSound = () => {
-  const isDocumentClicked = () => {
-    document.removeEventListener('click', isDocumentClicked);
+  if (shouldPlaySound()) {
     const audio = new Audio(buttonHoverSound);
     audio.volume = 0.15;
     audio.play();
-  };
-
-  document.addEventListener('click', isDocumentClicked);
+  }
 };
 
 const playSoundTyping = () => {
-  const audio = new Audio(typingSound);
-  audio.volume = 0.2;
-  audio.play();
+  if (shouldPlaySound()) {
+    const audio = new Audio(typingSound);
+    audio.volume = 0.2;
+    audio.play();
+  }
 };
 
 document.addEventListener('mouseover', (event) => {

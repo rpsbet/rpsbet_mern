@@ -368,7 +368,7 @@ function getCopyCatItem_qs(allBetItems) {
   return copyCatBetItem ? copyCatBetItem.joiner_qs : getRandomItem();
 }
 
-function skillIssue_qs(historicData, qs_game_type) {
+function skillissueold_qs(historicData, qs_game_type) {
   const dataLength = qs_game_type + 3;
   if (historicData.length < 3) {
     return { counterMove: getRandomItem_qs(qs_game_type), risk: 1 };
@@ -434,7 +434,7 @@ module.exports = {
   getCopyCatItem_qs,
   martingaleStrategy_qs,
   innovate_qs,
-  skillIssue_qs,
+  skillissueold_qs,
   counterRandomness_qs,
   generatePattern_qs
 };

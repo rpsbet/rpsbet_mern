@@ -33,7 +33,6 @@ class Summary extends Component {
     }
   }
   pre_summery() {
-    // console.log({ props: this.props });
     let public_max_return = convertToCurrency(this.props.max_prize /* 0.95 */);
     let public_bet_amount = this.props.public_bet_amount;
 

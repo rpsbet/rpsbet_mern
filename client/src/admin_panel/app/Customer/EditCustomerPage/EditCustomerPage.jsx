@@ -86,7 +86,6 @@ class EditCustomerPage extends Component {
 
   onDelete = e => {
     e.preventDefault();
-    console.log(this.state);
 
     if (
       !window.confirm(

@@ -304,9 +304,7 @@ class RPS extends Component {
       if (updatedPlayers.length > 5) {
         updatedPlayers.shift(); // Remove the oldest player
       }
-      if (!this.props.isMuted) {
-        this.props.playSound('blip');
-      }
+      this.props.playSound('blip');
 
       // Check if the filtered result is empty
       let filteredRPS = data.rps.filter(game => game.joiner === this.props.user_id);
@@ -858,7 +856,7 @@ class RPS extends Component {
                       <div className="label your-bet-amount">Bankroll</div>
                     </div>
                     <Tooltip title={isLowBankroll ? "LOW BANKROLL CAN CAUSE A BET TO FAIL" : "A.K.A Liquidity / Pool / Pot"}>
-                      <div className={`value ${isLowBankroll ? 'red-text' : ''}`}  style={{ cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center" }}>
+                      <div className={`value ${isLowBankroll ? 'red-text' : ''}`} style={{ cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center" }}>
                         {convertToCurrency(bankroll)}
                         <InfoIcon style={{ fontSize: 16, marginLeft: 4 }} />
 
@@ -876,9 +874,9 @@ class RPS extends Component {
                       <div>{convertToCurrency(this.state.bet_amount)} x 2  = {convertToCurrency(this.state.bet_amount * 2)}</div>
                       <div>-({this.props.cp} + 1)% = {convertToCurrency(this.state.bet_amount * 2 * ((100 - (this.props.cp + 1)) / 100))}</div>
                     </div>}>
-                      <div className="value"  style={{cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center" }}>
+                      <div className="value" style={{ cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center" }}>
                         {convertToCurrency(this.state.bet_amount * 2 * ((100 - (this.props.cp + 1)) / 100))}
-                      <InfoIcon style={{ fontSize: 16, marginLeft: 4 }} />
+                        <InfoIcon style={{ fontSize: 16, marginLeft: 4 }} />
                       </div>
 
                     </Tooltip>
@@ -891,10 +889,10 @@ class RPS extends Component {
                     <div className="value bankroll">
 
                       <Tooltip title="Current bankroll + Payouts - Initial bankroll">
-                        <div className="value"  style={{cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center" }}>
+                        <div className="value" style={{ cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center" }}>
                           <span style={{ color: (host_pr - roomInfo.total_stakes) > 0 ? 'rgb(87, 202, 34)' : (host_pr - roomInfo.total_stakes) < 0 ? '#ff0000' : 'inherit' }}>
                             {convertToCurrency(host_pr - roomInfo.total_stakes)}
-                            </span>
+                          </span>
                           <InfoIcon style={{ fontSize: 16, marginLeft: 4 }} />
 
                         </div>
@@ -960,7 +958,7 @@ class RPS extends Component {
                         onClick={() =>
                           handleOpenPlayerModal(this.props.creator_id)
                         }
-                       
+
                       >
                         <Avatar
                           className="avatar"
@@ -1111,23 +1109,23 @@ class RPS extends Component {
                 {this.state.players.length !== 0 && (
                   <>
                     {this.state.players.slice(0, 5).map((player, index) => (
-                      <div key={index} style={{ opacity: "0.4", width: "29px", cursor:"pointer" }}>
-                         <a
-                        className="avatar"
-                        onClick={() =>
-                          handleOpenPlayerModal(player._id)
-                        }
-                      >
-                        <Avatar
+                      <div key={index} style={{ opacity: "0.4", width: "29px", cursor: "pointer" }}>
+                        <a
                           className="avatar"
-                          src={player.avatar}
-                          rank={player.totalWagered}
-                          username={player.username}
-                          accessory={player.accessory}
-                          alt=""
-                          darkMode={this.props.isDarkMode}
-                        />
-                      </a>
+                          onClick={() =>
+                            handleOpenPlayerModal(player._id)
+                          }
+                        >
+                          <Avatar
+                            className="avatar"
+                            src={player.avatar}
+                            rank={player.totalWagered}
+                            username={player.username}
+                            accessory={player.accessory}
+                            alt=""
+                            darkMode={this.props.isDarkMode}
+                          />
+                        </a>
 
                       </div>
                     ))}
@@ -1136,7 +1134,7 @@ class RPS extends Component {
                 )}
               </div>
             </div>
-            
+
             {status === 'open' && rps_game_type === 0 ? (
               <>
                 <Tooltip title={!isWatching ? "CLICK TO STOP WATCHING" : "CLICK TO START WATCHING"}>
@@ -1196,7 +1194,7 @@ class RPS extends Component {
                     <div
                       id="rps-radio"
                       style={{ zIndex: 1 }}
-                      className={this.props.ai_mode !== 'Skill-issue-2' ? '' : ''}
+                      className={this.props.ai_mode !== 'Skill-issue' ? '' : ''}
                     >
 
                       <div
@@ -1263,7 +1261,7 @@ class RPS extends Component {
                   <div id="rps-radio" style={{ zIndex: 1 }}>
                     {options.map(({ classname, selection }, index) => (
                       <Button
-                      key={index}
+                        key={index}
                         variant="contained"
                         id={`rps-${classname}`}
                         className={`rps-option ${classname}${joinerRpsValueAtLastIndex === selection ? ' active' : ''}${bgColorChanged && betResult === -1 && joinerRpsValueAtLastIndex === selection ? ' lose-bg' : ''}${betResult === 0 && joinerRpsValueAtLastIndex === selection ? ' draw-bg' : ''}${betResult === 1 && joinerRpsValueAtLastIndex === selection ? ' win-bg' : ''}${this.props.is_betting ? ' disabled' : ''}`} // Add 'disabled' class when this.props.betting is true
@@ -1341,7 +1339,7 @@ class RPS extends Component {
                           spleesh_bet_unit={roomInfo.spleesh_bet_unit}
                           isDarkMode={this.props.isDarkMode}
                         />
-                        
+
                       )}
                     </>
 
@@ -1379,7 +1377,6 @@ const mapStateToProps = state => ({
   isLowGraphics: state.auth.isLowGraphics,
   isMusicEnabled: state.auth.isMusicEnabled,
   isFocused: state.auth.isFocused,
-  isMuted: state.auth.isMuted,
   is_betting: state.logic.is_betting,
 });
 

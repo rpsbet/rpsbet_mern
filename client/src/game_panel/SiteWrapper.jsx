@@ -472,7 +472,7 @@ class SiteWrapper extends Component {
       });
 
       socket.on('SEND_NOTIFICATION', data => {
-        if (!this.props.isMuted) {
+        if (!this.props.isMuted || !this.props.notificationSounds) {
           this.notificationSound.play();
         }
         const currentNotifications = this.state.notifications || [];
@@ -1856,6 +1856,7 @@ const mapStateToProps = state => ({
   balance: state.auth.balance,
   userName: state.auth.userName,
   isMuted: state.auth.isMuted,
+  notificationSounds: state.auth.notificationSounds,
   isNotificationsAllowed: state.auth.isNotificationsAllowed,
   user: state.auth.user,
   unreadMessageCount: state.auth.unreadMessageCount,

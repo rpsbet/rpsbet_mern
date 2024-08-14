@@ -236,7 +236,7 @@ const addToQueue = async (req, bot = false) => {
                         case 'Feedback':
                             nextItem = await counterSwitchAI(allBetItems);
                             break;
-                        case 'Skill-issue':
+                        case 'Skill-issue-old':
                             nextItem = await counterRandomness(allBetItems);
                             break;
                         case 'NPC':
@@ -581,10 +581,10 @@ const addToQueue = async (req, bot = false) => {
                         case 'Feedback':
                             nextItem = await counterSwitchAI_qs(allBetItems, roomInfo['qs_game_type']);
                             break;
-                        case 'Skill-issue':
+                        case 'Skill-issue-old':
                             nextItem = await counterRandomness_qs(allBetItems, roomInfo['qs_game_type']);
                             break;
-                        case 'Skill-issue-2':
+                        case 'Skill-issue':
                             nextItem = await counterRandomness_qs(allBetItems, roomInfo['qs_game_type']);
                             break;
                         case 'NPC':

@@ -215,14 +215,12 @@ class Roll extends Component {
       alertModal(this.props.isDarkMode, 'PURR-HAPS IT WOULD BE WISE TO AT LEAST 3 RUNS FOR AI TRAINING DATA');
       return;
     }
-    // console.log(roll_list)
     const predictedState = this.predictNext(roll_list);
     this.onAddRun(predictedState.roll, predictedState.face);
   };
 
 
   onAddRun = (roll, face) => {
-    // console.log(this.props.face)
     this.props.playSound('boop');
     this.setState({ selected_roll: face });
 

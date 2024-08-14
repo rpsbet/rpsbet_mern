@@ -224,7 +224,6 @@ class Roll extends Component {
               face: data.faces[i]
             }));
             const facesArray = roll_guesses.map(guess => guess.face);
-            // console.log('Faces:', facesArray);
 
             this.startSlider();
             this.props.playSound('sweep');

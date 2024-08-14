@@ -25,6 +25,9 @@ import {
   SET_FOCUSED,
   SET_REFERRAL_CODE,
   TOGGLE_MUTE,
+  TOGGLE_CLICK_SOUNDS,
+  TOGGLE_GAME_SOUNDS,
+  TOGGLE_NOTIFICATION_SOUNDS,
   TOGGLE_LOW_GRAPHICS,
   TOGGLE_MUSIC_ENABLED,
   TOGGLE_DRAWER,
@@ -44,6 +47,9 @@ const initialState = {
   isLowGraphics:
     localStorage.getItem('isLowGraphics') === 'false' ? false : true,
   isMuted: localStorage.getItem('isMuted') === 'true' ? true : false,
+  clickSounds: localStorage.getItem('clickSounds') === 'true' ? true : false,
+  gameSounds: localStorage.getItem('gameSounds') === 'true' ? true : false,
+  notificationSounds: localStorage.getItem('notificationSounds') === 'true' ? true : false,
   isDrawerOpen: localStorage.getItem('isDrawerOpen') === 'false' ? false : true,
   loading: true,
   user: { _id: null, password: '' },
@@ -63,7 +69,7 @@ const initialState = {
   referralCode: null
 };
 
-export default function(state = initialState, action) {
+export default function (state = initialState, action) {
   const { type, payload } = action;
 
   switch (type) {
@@ -85,7 +91,25 @@ export default function(state = initialState, action) {
         ...state,
         isMuted: payload
       };
-      case FETCH_RECENT_TRANSACTIONS_SUCCESS:
+    case TOGGLE_CLICK_SOUNDS:
+      localStorage.setItem('clickSounds', payload);
+      return {
+        ...state,
+        clickSounds: payload
+      };
+    case TOGGLE_GAME_SOUNDS:
+      localStorage.setItem('gameSounds', payload);
+      return {
+        ...state,
+        gameSounds: payload
+      };
+    case TOGGLE_NOTIFICATION_SOUNDS:
+      localStorage.setItem('notificationSounds', payload);
+      return {
+        ...state,
+        notificationSounds: payload
+      };
+    case FETCH_RECENT_TRANSACTIONS_SUCCESS:
       return {
         ...state,
         vaultTransactions: payload,
@@ -96,7 +120,7 @@ export default function(state = initialState, action) {
         ...state,
         isNotificationsAllowed: payload
       };
-      case 'SET_FOCUSED': // Action type dispatched when chat is enabled
+    case 'SET_FOCUSED': // Action type dispatched when chat is enabled
       return {
         ...state,
         isFocused: payload, // Set isChatEnabled to the payload value

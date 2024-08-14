@@ -28,14 +28,15 @@ import {
   SET_FOCUSED,
   SET_NOTIFICATIONS_ALLOWED,
   TOGGLE_MUTE,
+  TOGGLE_CLICK_SOUNDS,
+  TOGGLE_GAME_SOUNDS,
+  TOGGLE_NOTIFICATION_SOUNDS,
   TOGGLE_LOW_GRAPHICS,
   TOGGLE_DRAWER,
   TOGGLE_MUSIC_ENABLED,
   START_LOADING,
   END_LOADING,
-  SET_REFERRAL_CODE,
-  
-
+  SET_REFERRAL_CODE
 } from '../types';
 import axios from '../../util/Api';
 import setAuthToken from '../../util/setAuthToken';
@@ -335,6 +336,15 @@ export const setGasfee = params => async dispatch => {
 
 export const toggleMute = isMuted => dispatch => {
   dispatch({ type: TOGGLE_MUTE, payload: isMuted });
+}
+export const toggleClickounds = clickSounds => dispatch => {
+  dispatch({ type: TOGGLE_CLICK_SOUNDS, payload: clickSounds });
+}
+export const toggleGameSounds = gameSounds => dispatch => {
+  dispatch({ type: TOGGLE_GAME_SOUNDS, payload: gameSounds });
+}
+export const toggleNotificationSounds = notificationSounds => dispatch => {
+  dispatch({ type: TOGGLE_NOTIFICATION_SOUNDS, payload: notificationSounds });
 }
 
 export const toggleLowGraphics = isLowGraphics => dispatch => {

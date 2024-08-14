@@ -113,7 +113,7 @@ class BonusModal extends Component {
     const randomRotation = Math.floor(Math.random() * 360) + 360; // At least 10 full rotations
     this.setState({ spinning: true, rotation: randomRotation, landedNumber: null, showFlash: false });
 
-    if (!this.props.isMuted) {
+    if (!this.props.isMuted || !this.props.gameSounds) {
       const audio = new Audio('/sounds/wheel.mp3');
       audio.play();
     }
@@ -243,6 +243,7 @@ const mapStateToProps = (state) => ({
   isDarkMode: state.auth.isDarkMode,
   isNotificationsAllowed: state.auth.isNotificationsAllowed,
   isMuted: state.auth.isMuted,
+  gameSounds: state.auth.gameSounds,
   isMusicEnabled: state.auth.isMusicEnabled,
   isLowGraphics: state.auth.isLowGraphics,
   loading: state.customerReducer.loading
