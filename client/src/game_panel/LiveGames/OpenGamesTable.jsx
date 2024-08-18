@@ -74,8 +74,6 @@ class OpenGamesTable extends Component {
     this._isMounted = true;
     this.state = {
       selectedGameType: this.props.selectedGameType,
-      showPlayerModal: false,
-      selectedCreator: '',
       mouseDown: false,
       roomList: [],
       fetchedRoomIds: [],
@@ -387,13 +385,6 @@ class OpenGamesTable extends Component {
   //   }
   // };
 
-  handleOpenPlayerModal = creator_id => {
-    this.setState({ showPlayerModal: true, selectedCreator: creator_id });
-  };
-
-  handleClosePlayerModal = () => {
-    this.setState({ showPlayerModal: false });
-  };
 
   handleLike = ({ _id }) => {
     const updatedRoomList = this.state.roomList.map(room => {
@@ -583,11 +574,9 @@ class OpenGamesTable extends Component {
     // const gameTypePanel = this.generateGameTypePanel();
     const {
       // hostNetProfitList,
-      showPlayerModal,
-      selectedCreator,
       isFocused,
     } = this.state;
-    const { isLowGraphics, isDarkMode, recentlyClosed } = this.props;
+    const { showPlayerModal, selectedCreator, isLowGraphics, isDarkMode, recentlyClosed, handleOpenPlayerModal, handleClosePlayerModal } = this.props;
     let recent = recentlyClosed ? this.updateFromNow(recentlyClosed) : [];
     const defaultOptions = {
       loop: this.props.isLowGraphics ? false : true,
@@ -621,7 +610,7 @@ class OpenGamesTable extends Component {
           <PlayerModal
             selectedCreator={selectedCreator}
             modalIsOpen={showPlayerModal}
-            closeModal={this.handleClosePlayerModal}
+            closeModal={handleClosePlayerModal}
           // {...this.state.selectedRow}
           />
         )}
@@ -674,7 +663,7 @@ class OpenGamesTable extends Component {
                             <a
                               className="player"
                               onClick={() =>
-                                this.handleOpenPlayerModal(row.creator_id)
+                                handleOpenPlayerModal(row.creator_id)
                               }
                             >
                               <Avatar
@@ -701,7 +690,7 @@ class OpenGamesTable extends Component {
                                 <div className="hosts" key={index}>
                                   <a
                                     className="player"
-                                    onClick={() => this.handleOpenPlayerModal(host.host._id)}
+                                    onClick={() => handleOpenPlayerModal(host.host._id)}
                                   >
                                     <Avatar
                                       className="avatar desktop-only"
@@ -732,7 +721,7 @@ class OpenGamesTable extends Component {
                                       key={index}
                                       className="player"
                                       onClick={() =>
-                                        this.handleOpenPlayerModal(row.joiners[index])
+                                        handleOpenPlayerModal(row.joiners[index])
                                       }
                                     >
                                       <Avatar
@@ -868,7 +857,7 @@ class OpenGamesTable extends Component {
                             <a
                               className="player"
                               onClick={() =>
-                                this.handleOpenPlayerModal(row.creator_id)
+                                handleOpenPlayerModal(row.creator_id)
                               }
                             >
                               <Avatar
@@ -901,7 +890,7 @@ class OpenGamesTable extends Component {
                                       key={index}
                                       className="player"
                                       onClick={() =>
-                                        this.handleOpenPlayerModal(row.joiners[index])
+                                        handleOpenPlayerModal(row.joiners[index])
                                       }
                                     >
                                       <Avatar
@@ -1009,7 +998,7 @@ class OpenGamesTable extends Component {
                     <a
                       href="#"
                       className="player"
-                      onClick={() => this.handleOpenPlayerModal(row.creator._id)}
+                      onClick={() => handleOpenPlayerModal(row.creator._id)}
                     >
                       <Avatar
                         className="avatar"

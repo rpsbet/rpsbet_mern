@@ -34,7 +34,7 @@ function useEventListener(eventName, handler, element = document) {
     const left = event.clientX - 16; // Adjust to right
     cursorInnerRef.current.style.top = top + 'px';
     cursorInnerRef.current.style.left = left + 'px';
-    if (!props.isMuted || !props.clickSounds) {
+    if (props.isMuted || !props.clickSounds) {
       audio.play();
     }
   };

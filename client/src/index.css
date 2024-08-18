@@ -849,11 +849,14 @@ div.table.main-history-table .table-row>div>.room-id {
   display: none !important;
 }
 
-.top-wins a.table-cell {
+.top-wins div.table-cell {
   background: linear-gradient(45deg, #a7289a47, #5a11ff33);
   border-radius: 0.7em;
   margin-left: 10px;
   box-shadow: inset -1px 1px 0px #3f74b542;
+}
+.top-wins div.table-cell:hover {
+  border: 2px solid #333;
 }
 
 .top-wins {

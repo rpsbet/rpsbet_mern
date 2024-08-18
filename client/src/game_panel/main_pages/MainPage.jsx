@@ -76,6 +76,7 @@ class MainPage extends Component {
       showP2PLending: false,
       showMarketplace: false,
       refreshing: false,
+      selectedCreator: ''
     };
     this.toggleDrawer = this.toggleDrawer.bind(this);
   }
@@ -124,6 +125,14 @@ class MainPage extends Component {
     });
   };
 
+  handleOpenPlayerModal = creator_id => {
+    this.setState({ showPlayerModal: true, selectedCreator: creator_id });
+  };
+
+  handleClosePlayerModal = () => {
+    this.setState({ showPlayerModal: false });
+  };
+
   handleRefresh = async () => {
     this.setState({ refreshing: true }, async () => {
       await this.props.clearRoomListCache();
@@ -162,19 +171,26 @@ class MainPage extends Component {
         (!this.state.is_mobile && this.props.selectedMainTabIndex === 0) ? (
         <>
           <div style={{ display: "inline-flex", justifyContent: "center", alignItems: "center" }}>
-
             <h2 className="main-title recently-closed-title" style={{ padding: "0 0 15px 0" }}>TOP PLAYS</h2>
           </div>
           <div className='top-wins'>
-            {this.props.topWins?.map((row) => (
-              <a href={`/join/${row.room}`} className="table-cell">
-                <div key={row.room} className="carousel-content table-row slide-in">
+            {this.props.topWins?.map((row, index) => (
+              <div
+              key={`table-cell-${index}-${row.room}`}
+                className="table-cell"
+                onClick={() => window.location.href = `/join/${row.room}`}
+                style={{ cursor: 'pointer' }}
+              >
+                <div key={`carousel-content-${index}-${row.room}`} className="carousel-content table-row slide-in">
                   <div style={{ display: "flex", flexDirection: "row" }}>
                     <a
                       href="#"
                       className="player"
-                      onClick={() => handleOpenPlayerModal(row.creator._id)}
-                      style={{ marginRight: "-15px" }}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        this.handleOpenPlayerModal(row.joined_user._id);
+                      }}                      style={{ marginRight: "-15px" }}
                     >
                       <Avatar
                         className="avatar"
@@ -208,7 +224,7 @@ class MainPage extends Component {
 
 
                 </div>
-              </a>
+              </div>
 
             ))}
           </div>
@@ -355,8 +371,12 @@ class MainPage extends Component {
               <>
 
                 <OpenGamesTable
+                  selectedCreator={this.state.selectedCreator}
                   refreshing={this.state.refreshing}
+                  showPlayerModal={this.state.showPlayerModal}
                   handleRefresh={this.handleRefresh}
+                  handleOpenPlayerModal={this.handleOpenPlayerModal}
+                  handleClosePlayerModal={this.handleClosePlayerModal}
                   roomList={this.props.roomList}
                   isAuthenticated={this.props.isAuthenticated}
                   rooms_count={this.props.rooms_count}

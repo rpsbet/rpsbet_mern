@@ -228,6 +228,10 @@
 	font-size: 14px;
   }
 
+  .dark_mode  .top-wins div.table-cell:hover {
+	border: 2px solid #f9f9f9;
+  }
+
 .dark_mode .modal-body .modal-content-wrapper.slots h4 {
 	background-image: url("../public/img/icons/modal-slots-dark.svg");
 }

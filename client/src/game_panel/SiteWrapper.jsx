@@ -485,7 +485,7 @@ class SiteWrapper extends Component {
 
           const options = {
             body: data,
-            silent: false 
+            silent: false
           };
 
           if (Notification.permission === 'granted') {
@@ -562,10 +562,9 @@ class SiteWrapper extends Component {
   };
 
   async componentDidMount() {
-
     try {
       const initialBalance = await this.props.fetchVaultBalance();
-      this.setState({ vaultBal: initialBalance, websiteLoading: true });
+      this.setState({ websiteLoading: true });
       const currentUrl = window.location.pathname;
 
       await Promise.all([
@@ -576,8 +575,10 @@ class SiteWrapper extends Component {
         this.initializeAudio(),
         this.fetchData(),
       ]);
-      this.setState({ websiteLoading: false, notifications: this.props.notifications });
-      if (currentUrl.includes('create')) {
+
+      this.setState({ websiteLoading: false, notifications: this.props.notifications, vaultBal: initialBalance });
+      if (currentUrl && currentUrl.includes('create')) {
+        console.log("sheepah", currentUrl);
         this.setState({ selectedMainTabIndex: this.props.selectMainTab(1) });
       }
 
@@ -1632,9 +1633,9 @@ class SiteWrapper extends Component {
                         onClick={this.handleOpenVaultModal}
                       >
                         Vault&nbsp;
-                        <span style={{border: "2px solid", background: "#1284cc11", color:"#1284ff", padding: "2px 5px", marginLeft:"10px", borderRadius: "0.4em"}}>
+                        <span style={{ border: "2px solid", background: "#1284cc11", color: "#1284ff", padding: "2px 5px", marginLeft: "10px", borderRadius: "0.4em" }}>
                           {this.state.vaultBal ? convertToCurrency(this.state.vaultBal) : 0}
-                          </span>
+                        </span>
                       </Button>
                     </div>
                     <div className="transaction-panel">
@@ -1809,7 +1810,7 @@ class SiteWrapper extends Component {
               )}
               {showVaultModal && (
                 <VaultModal
-                vaultBal={this.state.vaultBal}
+                  vaultBal={this.state.vaultBal}
                   modalIsOpen={showVaultModal}
                   closeModal={this.handleCloseVaultModal}
                 />

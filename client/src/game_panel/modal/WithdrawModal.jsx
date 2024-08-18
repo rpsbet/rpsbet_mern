@@ -137,8 +137,8 @@ class WithdrawModal extends Component {
     this.state = {
       _id: this.props.userInfo._id,
       web2Amount: props.balance,
-      web3Amount: props.balance,
-      web3: props.web3,
+      // web3Amount: props.balance,
+      // web3: props.web3,
       balance: props.balance,
       account: props.account,
       isLoading: false,
@@ -275,8 +275,8 @@ class WithdrawModal extends Component {
     const amount = Math.floor(e.target.value * 100) / 100;
     this.setState({
       amount: amount,
-      web2Amount: amount * 0.568,
-      web3Amount: amount * 0.578
+      web2Amount: amount * 0.109,
+      web3Amount: amount * 0.119
     }, () => {
       this.handleEstimateAmount();
     });
