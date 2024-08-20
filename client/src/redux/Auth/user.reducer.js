@@ -47,7 +47,7 @@ const initialState = {
   isLowGraphics:
     localStorage.getItem('isLowGraphics') === 'false' ? false : true,
   isMuted: localStorage.getItem('isMuted') === 'true' ? true : false,
-  clickSounds: localStorage.getItem('clickSounds') === 'true' ? true : false,
+  clickSounds: localStorage.getItem('clickSounds') === 'false' ? true : false,
   gameSounds: localStorage.getItem('gameSounds') === 'true' ? true : false,
   notificationSounds: localStorage.getItem('notificationSounds') === 'true' ? true : false,
   isDrawerOpen: localStorage.getItem('isDrawerOpen') === 'false' ? false : true,

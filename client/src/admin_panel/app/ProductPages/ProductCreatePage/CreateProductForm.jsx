@@ -213,5 +213,5 @@ const FormContainer = styled.div`
 `;
 
 const CalculationField = styled.div`
-  margin-top: -20px;
+  margin-top: 0px;
 `;

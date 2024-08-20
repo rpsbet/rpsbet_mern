@@ -176,7 +176,7 @@ class MainPage extends Component {
           <div className='top-wins'>
             {this.props.topWins?.map((row, index) => (
               <div
-              key={`table-cell-${index}-${row.room}`}
+                key={`table-cell-${index}-${row.room}`}
                 className="table-cell"
                 onClick={() => window.location.href = `/join/${row.room}`}
                 style={{ cursor: 'pointer' }}
@@ -190,7 +190,7 @@ class MainPage extends Component {
                         event.preventDefault();
                         event.stopPropagation();
                         this.handleOpenPlayerModal(row.joined_user._id);
-                      }}                      style={{ marginRight: "-15px" }}
+                      }} style={{ marginRight: "-15px" }}
                     >
                       <Avatar
                         className="avatar"
@@ -428,7 +428,7 @@ class MainPage extends Component {
 
           {!this.state.is_mobile && this.props.selectedMainTabIndex === 0 && (
             <>
-              <h2 className="main-title desktop-only">HISTORY</h2>
+              <h2 className="main-title desktop-only" style={{marginBottom: "10px"}}>HISTORY</h2>
               <HistoryTable userId={this.props.user._id} />
             </>
           )}
@@ -449,7 +449,7 @@ class MainPage extends Component {
           )}
           {!this.state.is_mobile && this.props.selectedMainTabIndex === 1 && (
             <>
-              <h2 className="main-title desktop-only">YOUR HISTORY</h2>
+              <h2 className="main-title desktop-only" style={{marginBottom: "10px"}}>YOUR HISTORY</h2>
               <MyHistoryTable />
             </>
           )}

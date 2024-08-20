@@ -578,7 +578,6 @@ class SiteWrapper extends Component {
 
       this.setState({ websiteLoading: false, notifications: this.props.notifications, vaultBal: initialBalance });
       if (currentUrl && currentUrl.includes('create')) {
-        console.log("sheepah", currentUrl);
         this.setState({ selectedMainTabIndex: this.props.selectMainTab(1) });
       }
 
@@ -587,13 +586,19 @@ class SiteWrapper extends Component {
 
       if (window.ethereum) {
         window.ethereum.on('chainChanged', () => {
-          this.loadWeb3();
+          setTimeout(() => {
+            this.loadWeb3();
+        }, 3000); 
         });
         window.ethereum.on('accountsChanged', () => {
-          this.loadWeb3();
+          setTimeout(() => {
+            this.loadWeb3();
+        }, 3000); 
         });
 
-        this.loadWeb3();
+        setTimeout(() => {
+          this.loadWeb3();
+      }, 3000); 
       } else {
         alertModal(this.props.isDarkMode, 'NO WEB3 WALLET FOUND IN YOUR BROWSER.');
       }

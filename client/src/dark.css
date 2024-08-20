@@ -61,12 +61,12 @@
 }
 
 .dark_mode .table-gradient {
-	background: linear-gradient(to bottom, rgba(202, 202, 202, 0) 0%, rgb(33 31 40) 100%);
+	background: linear-gradient(185deg, #2e224300, #2c1d3e);
 }
 
 .dark_mode .game-logs-table thead,
 .dark_mode .modal-img {
-	background: linear-gradient(45deg, #8864be96, #dc354599, #8a35dc45);
+	background: linear-gradient(45deg, #8864be96, #9f04b799, #8a35dc45);
 }
 
 .dark_mode .lottie-bg.deep-sea div,
@@ -140,7 +140,7 @@
 }
 
 .dark_mode .chat-msg {
-	background: linear-gradient(176deg, #81009f, #f50057);
+	background: linear-gradient(176deg, #47244536, #3b143c24);
 }
 .dark_mode .history-background {
 	background: linear-gradient(#ff818100, #660024ba) !important;
@@ -191,7 +191,7 @@
 }
 
 .dark_mode .transaction-panel {
-	border-top: 2px solid #d135dc6b;
+	border-top: 2px solid #ff00ed1a;
 }
 
 .dark_mode #footer-container {
@@ -200,12 +200,13 @@
 }
 
 .dark_mode .modal-header {
-	border-bottom: 1px solid #f50057;
+	border-bottom: 1px solid #4500ff;
 }
 
 .dark_mode .modal-footer {
-	border-top: 1px solid #f50057;
-	background: linear-gradient(45deg, #8864be96, #dc354599, #8a35dc45);
+	border-top: 1px solid #4500ff;
+    background: linear-gradient(45deg, #6316d7, #6c00a4, #3a00a3);
+    color: #f9f9f9;
 }
 
 .dark_mode .modal-body table td {
@@ -276,8 +277,8 @@
 .dark_mode .game_header .main_header .header_action_panel button#btn-login,
 .dark_mode #balance button,
 .dark_mode .game-page .game-contents .game-info-panel button.place-bet {
-	background: linear-gradient(0deg, #d81719, #ba00a3) padding-box, linear-gradient(0deg, #d81719, #f50057) border-box;
-	box-shadow: 0 10px 27px rgb(255 0 0 / 10%), inset 0 -3px #d81719, inset 0 2px #ff1fdb;
+	background: linear-gradient(0deg, #fa2222, #ff0000) border-box;
+	box-shadow: 0 10px 27px rgb(255 0 0 / 10%), inset 0 -3px #a20000, inset 0 2px #e60000;
 }
 
 .dark-mode ul[role=menu] {
@@ -312,7 +313,7 @@
 .dark_mode .contents_wrapper .main-game .main-panel,
 .dark_mode .contents_wrapper .main-game .sub-panel {
 	background-color: #0c0c0c;
-	background-image: linear-gradient(-135deg,  #260b2e, #442442 95%), url(../public/img/bgm.webp) !important;
+	background-image: linear-gradient(-135deg,  #260b2e, #2e2444 95%), url(../public/img/bgm.webp) !important;
 }
 
 .dark_mode .avatar-square {
@@ -338,7 +339,7 @@
 }
 
 .dark_mode div.table .table-row {
-	background: linear-gradient(52deg, #06040438, #a0029033);
+	background: linear-gradient(52deg, #06040438, #a0029017);
 	color: #8e9297;
 }
 .dark_mode div.table .table-row.carousel-content {
@@ -376,7 +377,7 @@
 }
 
 .dark_mode .header_panel_contents {
-	background: linear-gradient(45deg, #9e0082, #6f009e);
+	background: linear-gradient(45deg, #3e133b, #220031);
 }
 
 .bow span.game-sub-title {
@@ -403,11 +404,11 @@
 }
 
 .dark_mode .game-page .game-contents {
-	background: radial-gradient(#aa064147, #3a014087);
+	background: radial-gradient(#aa06410f, #3a014057);
 }
 
 .dark_mode .game-page hr {
-	border-color: #c735dc;
+	border-color: #8e35dc57;
 }
 
 .dark_mode .game-page .tiers hr {
@@ -441,14 +442,14 @@
 }
 
 .dark_mode .mat-chat .chat-wrapper {
-	background: linear-gradient(185deg, #201e28, #25092c);
+	background: linear-gradient(185deg, #201e28, #2a1a3b);
 	border-right: 1px solid rgba(40, 38, 55, 0.48);
 }
 
 .dark_mode .modal-body,
 .dark_mode .modal-header {
-	color: #8e9297;
-	background: linear-gradient(45deg, #8864be96, #dc354599, #8a35dc45);
+	color: #fff;
+    background: linear-gradient(45deg, #3f51b5, #9d00bd, #dc35d2);
 }
 
 .dark_mode .modal-body p button,
@@ -461,7 +462,7 @@
 }
 
 .dark_mode .transaction-panel button:hover {
-	background-color: rgb(255 0 0 / 40%);
+	background-color: #ff0000;
 }
 
 .dark_mode .game-type-panel .btn-arrow-left {
@@ -523,7 +524,7 @@
 }
 
 .dark_mode .modal-body .modal-content-wrapper h4 {
-	background-color: #202225;
+	background-color: #a400fe;
 }
 
 .dark_mode .modal-body .modal-content-wrapper.quick-shoot h4 {
@@ -580,7 +581,7 @@
 }
 
 .dark_mode .loading-overlay {
-	background: linear-gradient(#00000087, #ba00a3);
+	background: linear-gradient(#00000087, #543e53);
 }
 
 .dark_mode .btn_join:hover,
@@ -596,7 +597,7 @@
 
 
 .dark_mode #balance {
-	background: linear-gradient(39deg, #730086, #c80a65)
+	background: linear-gradient(39deg, #590000, #ff0000);
 }
 
 .dark_mode .game-page .game-contents .game-info-panel .box-prizes span.opened {

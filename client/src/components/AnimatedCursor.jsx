@@ -23,10 +23,12 @@ function useEventListener(eventName, handler, element = document) {
     };
   }, [eventName, element]);
 }
- function AnimatedCursor(props) {
+
+function AnimatedCursor(props) {
   const [isMouseDown, setIsMouseDown] = useState(false);
   const cursorInnerRef = React.useRef();
   const audio = new Audio(clawCursorSound);
+  audio.volume = 0.3; // Set the volume to 50%
 
   const onMouseDown = (event) => {
     setIsMouseDown(true);
@@ -69,7 +71,6 @@ function useEventListener(eventName, handler, element = document) {
     />
   );
 }
-
 
 const mapStateToProps = state => ({
   auth: state.auth.isAuthenticated,

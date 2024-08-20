@@ -62,7 +62,7 @@ const ProductGrid = styled.div`
 `;
 const ProductCard = styled.div`
   position: relative;
-  background: linear-gradient(156deg, #5b035f, #ffb000);
+  background: linear-gradient(156deg, #df00ff, #ffb000);
   border-radius: 20px;
   padding: 10px;
   display: -ms-flexbox;

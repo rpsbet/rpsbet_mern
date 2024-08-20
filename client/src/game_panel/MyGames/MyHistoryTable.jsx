@@ -81,13 +81,13 @@ class MyHistoryTable extends Component {
     const settings = await this.props.getSettings();
     this.setState({ ...settings });
 
-    const { socket } = this.props;
-    socket.on('UPDATE_RAIN', data => {
-      this.setState(prevState => ({
-        rain: data.rain,
-        prevRain: prevState.rain // Store the previous rain value
-      }));
-    });
+    // const { socket } = this.props;
+    // socket.on('UPDATE_RAIN', data => {
+    //   this.setState(prevState => ({
+    //     rain: data.rain,
+    //     prevRain: prevState.rain // Store the previous rain value
+    //   }));
+    // });
   }
 
   componentDidUpdate(prevProps) {

@@ -113,7 +113,7 @@ const connectWithRetry = async () => {
       useUnifiedTopology: true,
       useFindAndModify: false,
       useCreateIndex: true,
-      poolSize: 20,
+      poolSize: 10,
     });
     console.log('*** MongoDB connected');
   } catch (error) {

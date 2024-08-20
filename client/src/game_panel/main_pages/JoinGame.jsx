@@ -1577,7 +1577,7 @@ class JoinGame extends Component {
                   isDarkMode={this.props.isDarkMode}
                 />
               )}
-            <h2 className="main-title desktop-only">HISTORY</h2>
+            <h2 className="main-title desktop-only" style={{marginBottom: "10px"}}>HISTORY</h2>
             {!is_mobile && selectedMainTabIndex === 0 && <HistoryTable userId={user_id} />}
             <DrawerButton
               open={isDrawerOpen}

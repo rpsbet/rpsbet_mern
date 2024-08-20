@@ -806,7 +806,7 @@ class OpenGamesTable extends Component {
                               <a
                                 className="ml-1"
                                 onClick={() => this.handleCoHost(row)}
-                                style={{ color: "#28a745", padding: "2.5px ", display: "flex", justifyContent: "center", alignItems: "center", background: "linear-gradient(45deg, #28a74544, #33e74533)", border: "2px solid #28a745", cursor: "pointer", borderRadius: "0.3em", display: "inline-flex", verticalAlign: "middle" }}
+                                style={{ color: "rgb(0 255 58)", padding: "2.5px ", display: "flex", justifyContent: "center", alignItems: "center", background: "linear-gradient(45deg, #28a74544, #33e74533)", border: "2px solid rgb(0 255 58)", cursor: "pointer", borderRadius: "0.3em", display: "inline-flex", verticalAlign: "middle" }}
                               >
                                 <AddBoxOutlined style={{ width: "25px" }} /><img style={{ width: "15px" }} src={busdSvg} />
                               </a>

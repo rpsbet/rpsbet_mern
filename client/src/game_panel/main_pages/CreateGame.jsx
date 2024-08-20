@@ -50,7 +50,7 @@ const StyledProductCard = styled.a`
   position: relative;
   background: ${({ isDarkMode }) =>
     isDarkMode
-      ? 'linear-gradient(156deg, #8a0290, #cf0c0e)'
+      ? 'linear-gradient(156deg, #ff0000, #971517)'
       : 'linear-gradient(156deg, #dee2e6, #cf0c0e)'};
   border-radius: 0.3em;
   width: 150px;
@@ -94,7 +94,7 @@ const StyledProductCard = styled.a`
     border: 3px solid #fff;
     filter: brightness(3);
     transition: 0.3s;
-    background: linear-gradient(86deg, #cf0c0e, #ff0333,  #ff0999);
+    background: linear-gradient(86deg, #cf0c0e, #ff0333, #ff0909);
 
   }
     @media (max-width: 600px) {
@@ -1260,13 +1260,7 @@ class CreateGame extends Component {
           </div>
           <div className="sub-panel">
 
-            {!this.state.is_mobile && this.props.selectedMainTabIndex === 0 && (
-              <>
-                <h2 className="main-title desktop-only">HISTORY</h2>
-                <HistoryTable />
-              </>
-            )}
-
+    
             {!this.state.is_mobile && this.props.selectedMainTabIndex === 1 && (
               <>
                 {/* <h2 className="main-title desktop-only">JUKEBOX</h2>
@@ -1274,7 +1268,7 @@ class CreateGame extends Component {
 
                 <h2 className="main-title desktop-only">AI PANEL</h2>
                 <AiPanel user_id={this.props.user_id} />
-                <h2 className="main-title desktop-only">YOUR HISTORY</h2>
+                <h2 className="main-title desktop-only" style={{marginBottom: "10px"}}>YOUR HISTORY</h2>
 
                 <MyHistoryTable />
               </>
