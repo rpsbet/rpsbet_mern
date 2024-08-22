@@ -1,7 +1,5 @@
 const tf = require('@tensorflow/tfjs-node');
 
-import * as tf from '@tensorflow/tfjs';
-
 const calcWinChanceQs = (gameType, rounds) => {
   let probWin = (100 / gameType).toFixed(2);
   let probLose = (100 - probWin).toFixed(2);
