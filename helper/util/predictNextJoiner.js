@@ -1,6 +1,4 @@
 const tf = require('@tensorflow/tfjs-node');
-const { trainModel, predictNextMove } = require('./modelUtils');
-
 
 const getBeatingType2 = (currentState) => {
   const random = Math.random();

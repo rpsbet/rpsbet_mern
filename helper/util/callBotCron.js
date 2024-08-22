@@ -421,7 +421,7 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
                 ? (betArray[0].bet_amount ? betArray[0].bet_amount * 2 : betArray[0] * 2)
                 : Math.min(...betArray);
             } else if (ai_mode === 'Innovate') {
-              const randomnessResult = await innovate_joiner(rpsBetItems, true);
+              const randomnessResult = await innovate(rpsBetItems, true);
               nextState = randomnessResult.counterMove;
               const penultimateSameAsLast = randomnessResult.risk;
               const predictedBet = await predictNextBetAmount(betArray, penultimateSameAsLast, 0, 0.01, 0.2, room);

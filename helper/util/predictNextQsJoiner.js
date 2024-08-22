@@ -1,5 +1,4 @@
 const tf = require('@tensorflow/tfjs-node');
-const { trainModel_qs, predictNextMove_qs } = require('./modelUtils');
 
 import * as tf from '@tensorflow/tfjs';
 
