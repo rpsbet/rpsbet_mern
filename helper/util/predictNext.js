@@ -3,19 +3,16 @@ const { trainModel, predictNextMove } = require('./modelUtils');
 
 const predictNext = (rps_list, markov = false) => {
   const choices = ['R', 'P', 'S'];
-  const smoothingFactor = 0.1; // Smoothing factor to avoid zero probabilities
+  const smoothingFactor = 0.1;
 
   if (rps_list.length <= 1) {
-    // Not enough data, return a random choice
     return choices[Math.floor(Math.random() * 3)];
   }
 
-  // Randomly select a subset of the data for the transition matrix
-  const subsetSize = Math.min(rps_list.length - 1, 10); // Adjust subset size if needed
+  const subsetSize = Math.min(rps_list.length - 1, 10);
   const startIndex = Math.floor(Math.random() * (rps_list.length - subsetSize));
   const subset = rps_list.slice(startIndex, startIndex + subsetSize);
 
-  // Create a simplified 1st-order Markov model transition matrix
   const transitionMatrix = {
     R: { R: 0, P: 0, S: 0 },
     P: { R: 0, P: 0, S: 0 },
@@ -28,7 +25,6 @@ const predictNext = (rps_list, markov = false) => {
     transitionMatrix[currentState][nextState]++;
   }
 
-  // Convert counts to probabilities with smoothing
   Object.keys(transitionMatrix).forEach((fromState) => {
     const totalTransitions = Object.values(transitionMatrix[fromState]).reduce((a, b) => a + b, 0);
     if (totalTransitions > 0) {
@@ -59,8 +55,7 @@ const predictNext = (rps_list, markov = false) => {
     nextState = getBeatingType(nextState);
   }
 
-  // Balance between model prediction and randomness
-  const deviationThreshold = 0.05; // Adjusted to make randomness more impactful
+  const deviationThreshold = 0.05;
   if (Math.random() < deviationThreshold) {
     let randomState;
     do {
@@ -223,25 +218,25 @@ function getRandomNumber(min, max) {
 }
 
 function innovate(historicData) {
-  const numEntries = getRandomNumber(1, 9);
-  const firstEntries = historicData.slice(-numEntries);
+  // const numEntries = getRandomNumber(1, 9);
+  const firstEntries = historicData.slice(-6);
   const firstJoinerQs = firstEntries.map(entry => entry.rps);
 
-  if (firstJoinerQs.length < numEntries || firstJoinerQs.some(entry => !['R', 'P', 'S'].includes(entry))) {
+  if (firstJoinerQs.length < 6 || firstJoinerQs.some(entry => !['R', 'P', 'S'].includes(entry))) {
     return { counterMove: getRandomMove(), risk: 1 };
   }
 
   const allSame = firstJoinerQs.every(rps => rps === firstJoinerQs[0]);
-if (allSame) {
-  const lastMove = firstJoinerQs[firstJoinerQs.length - 1];
-  const possibleMoves = ['R', 'P', 'S'].filter(move => move !== lastMove);
+  // console.log("all", allSame);
+  if (allSame) {
+    const lastMove = firstJoinerQs[firstJoinerQs.length - 1];
+    const possibleMoves = ['R', 'P', 'S'].filter(move => move !== lastMove);
     return { counterMove: possibleMoves[Math.floor(Math.random() * possibleMoves.length)], risk: 3 };
   } else {
     const previousMove = historicData[historicData.length - 1].rps;
     return { counterMove: previousMove, risk: 1 };
   }
 }
-
 
 function martingaleStrategy(historicData) {
   if (historicData.length === 0) {
@@ -263,7 +258,6 @@ function martingaleStrategy(historicData) {
   };
 }
 
-// Function to determine the result of the game based on AI's move and opponent's move
 function getResult(aiMove, opponentMove) {
   if (aiMove === opponentMove) {
     return 'draw';
@@ -460,7 +454,6 @@ function generatePattern(allBetItems) {
   let matchedPattern = null;
   let matchedPatternIndex = -1;
 
-  // Identify the matched pattern from the last three moves
   for (let i = 0; i < patterns.length; i++) {
     const pattern = patterns[i];
     if (pattern.length >= lastThreeMoves.length &&
@@ -475,7 +468,6 @@ function generatePattern(allBetItems) {
     let continuationCount = 0;
     const patternLength = matchedPattern.length;
 
-    // Check for continuation of the matched pattern
     for (let i = allBetItems.length - patternLength; i >= 0; i--) {
       const previousMoves = allBetItems.slice(i, i + patternLength).map(item => item.rps);
       if (previousMoves.length === patternLength &&
@@ -488,7 +480,7 @@ function generatePattern(allBetItems) {
 
     if (continuationCount >= maxContinuation) {
       const movesNotInPattern = ['R', 'P', 'S'].filter(move => !matchedPattern.includes(move));
-      return movesNotInPattern[Math.floor(Math.random() * movesNotInPattern.length)]; // Random choice to break the pattern
+      return movesNotInPattern[Math.floor(Math.random() * movesNotInPattern.length)];
     }
 
     const nextMoveIndex = lastThreeMoves.length % patternLength;
@@ -498,8 +490,6 @@ function generatePattern(allBetItems) {
     return randomMove;
   }
 }
-
-
 
 module.exports = {
   predictNext,

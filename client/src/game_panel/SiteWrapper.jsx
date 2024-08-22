@@ -557,7 +557,7 @@ class SiteWrapper extends Component {
       }
 
     } catch (e) {
-      alertModal(isDarkMode, 'NO CONNECTED WALLET');
+      // alertModal(isDarkMode, 'NO CONNECTED WALLET');
     }
   };
 

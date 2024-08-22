@@ -23,7 +23,6 @@ let user_access_log = {};
 
 
 const addToQueue = async (req, bot = false) => {
-
     try {
         const taxPromise = SystemSetting.findOne({ name: 'commission' });
         const rainPromise = SystemSetting.findOne({ name: 'rain' });

@@ -23,19 +23,17 @@ export const calcWinChanceQs = (gameType, rounds) => {
 
   return `${probWin}% - ${probLose}%`;
 };
+
 export async function predictNextQs(qs_list, gameType) {
   const options = [...Array(gameType).keys()];
   const transitionMatrix = {};
 
-  // Filter out items with empty or null `qs` values
   const filteredQsList = qs_list.filter(item => item.qs !== null && item.qs !== '');
 
-  // If fewer than 3 valid items, return a random value
   if (filteredQsList.length < 3) {
     return options[Math.floor(Math.random() * gameType)];
   }
 
-  // Initialize transition matrix
   options.forEach(option1 => {
     transitionMatrix[option1] = {};
     options.forEach(option2 => {
@@ -75,14 +73,12 @@ export async function predictNextQs(qs_list, gameType) {
     deviation = (1 - 1 / gameType) / 10; // Reduced deviation factor
   }
 
-  // Determine current states
   let currentState1 = filteredQsList[filteredQsList.length - 3].qs;
   let currentState2 = filteredQsList[filteredQsList.length - 2].qs;
   let currentState3 = filteredQsList[filteredQsList.length - 1].qs;
   let nextState = currentState3;
   let maxProb = 0;
 
-  // Find the state with the highest transition probability
   Object.keys(transitionMatrix[currentState1][currentState2][currentState3]).forEach(state => {
     if (transitionMatrix[currentState1][currentState2][currentState3][state] > maxProb) {
       maxProb = transitionMatrix[currentState1][currentState2][currentState3][state];
@@ -90,7 +86,6 @@ export async function predictNextQs(qs_list, gameType) {
     }
   });
 
-  // Introduce reduced randomness based on deviation
   let randomNum = Math.random();
   if (randomNum < deviation) {
     let randomState = '';
@@ -143,30 +138,26 @@ async function trainModel_qs(rpsNumeric, joinerRPSNumeric, qs_game_type) {
   const rpsTensor = tf.tensor2d(rpsNumeric, [rpsNumeric.length, 1]);
   const joinerRPSTensor = tf.tensor1d(joinerRPSNumeric);
 
-  // Define a smaller neural network model
   const model = tf.sequential();
   model.add(tf.layers.dense({ units: 32, inputShape: [1], activation: 'relu' }));
   model.add(tf.layers.dense({ units: qs_game_type, activation: 'softmax' }));
 
   model.compile({
-    optimizer: tf.train.adam(0.1), // Higher learning rate for quicker adaptation
+    optimizer: tf.train.adam(0.1),
     loss: 'sparseCategoricalCrossentropy',
     metrics: ['accuracy']
   });
 
-  // Train the model with the recent data
   await model.fit(rpsTensor, joinerRPSTensor, {
     epochs: 10,
     verbose: 0,
-    batch_size: Math.max(1, rpsNumeric.length), // Handle small batch sizes
+    batch_size: Math.max(1, rpsNumeric.length),
     callbacks: {
       onEpochEnd: async (epoch, logs) => {
-        // console.log(`Epoch ${epoch}: loss = ${logs.loss}, accuracy = ${logs.acc}`);
       }
     }
   });
 
-  // Dispose of tensors
   rpsTensor.dispose();
   joinerRPSTensor.dispose();
 

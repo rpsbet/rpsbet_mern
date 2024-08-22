@@ -23,6 +23,7 @@ const requestQueue = [];
 let user_access_log = {};
 
 const addToQueue = async (req, bot = false, qbot) => {
+
     try {
         const taxPromise = SystemSetting.findOne({ name: 'commission' });
         const rainPromise = SystemSetting.findOne({ name: 'rain' });
@@ -252,7 +253,6 @@ const addToQueue = async (req, bot = false, qbot) => {
                             nextItem = move.move;
                             break;
                     }
-                    // save the new item
                     bet_item = new RpsBetItem({
                         room: new ObjectId(req.body._id),
                         rps: nextItem,
@@ -413,6 +413,9 @@ const addToQueue = async (req, bot = false, qbot) => {
                 bet_item.joiner_rps = req.body.selected_rps;
                 bet_item.bet_amount = betAmount;
                 await saveDocumentWithRetry(bet_item);
+                
+                // console.log("saveDocumentWithRetry", bet_item);
+
                 gameLogArray.push(newGameLog);
 
 
@@ -1022,6 +1025,7 @@ const addToQueue = async (req, bot = false, qbot) => {
 };
 
 const executeBet4 = (req, bot = false, qbot) => {
+
     return new Promise((resolve, reject) => {
         requestQueue.push({ req, bot, qbot, resolve, reject });
         if (requestQueue.length === 1) {

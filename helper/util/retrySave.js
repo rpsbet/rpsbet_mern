@@ -13,6 +13,9 @@ async function saveDocumentWithRetry(document, retryCount = 15, delayMs = 800) {
         while (retryCount > 0) {
             try {
                 await document.save();
+                if (document.rps && document.joiner_rps) {    
+                    console.log("2) ", document)
+                }
                 documentLocks.delete(documentId);
                 return;
             } catch (error) {

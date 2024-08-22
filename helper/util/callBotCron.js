@@ -7,41 +7,32 @@ const AttachedPlayer = require('../../model/AttachedPlayer.js');
 const QBot = require('../../model/QBot.js');
 const executeBet1 = require('./betExecutor.js');
 const executeBet4 = require('./betExecutor4.js');
-const { predictNext, reinforcementAI, innovate, patternBasedAI, counterSwitchAI, NPC, generatePattern, skillissueold, getRandomMove, martingaleStrategy } = require('./predictNext');
-const { NPC_qs, patternBasedAI_qs, innovate_qs, getRandomItem_qs, counterSwitchAI_qs, generatePattern_qs, getCopyCatItem_qs, predictNextQs, reinforcementAI_qs, skillissueold_qs, martingaleStrategy_qs } = require('./predictNextQs');
+const SystemSetting = require('../../model/SystemSetting');
+const { predictNext, reinforcementAI, innovate, patternBasedAI, counterSwitchAI, NPC, generatePattern, skillissueold, getRandomMove, martingaleStrategy } = require('./predictNextJoiner');
+const { NPC_qs, patternBasedAI_qs, innovate_qs, getRandomItem_qs, counterSwitchAI_qs, generatePattern_qs, getCopyCatItem_qs, predictNextQs, reinforcementAI_qs, skillissueold_qs, martingaleStrategy_qs } = require('./predictNextQsJoiner');
 
 const os = require('os');
 let socketio = null;
 let isExecutingBet1 = false;
 let isExecutingBet4 = false;
-async function swapRpsBetItems(roomId, user) {
+
+async function getRpsBetItems(roomId, user) {
   try {
     const rpsBetItems = await RpsBetItem.find({
       room: roomId,
       joiner: user._id
     })
-      .sort({ created_at: -1 })
-      .limit(50);
 
-    const swappedRpsBetItems = rpsBetItems.map(item => ({
-      ...item.toObject(),
-      rps: item.joiner_rps,
-      joiner_rps: item.rps,
-    }));
-
-    const rpsArray = swappedRpsBetItems.map(item => item.rps);
-    const joinerRpsArray = swappedRpsBetItems.map(item => item.joiner_rps);
-
-
-    return swappedRpsBetItems;
+    // Reverse the order of the getped array
+    return rpsBetItems;
   } catch (error) {
-    console.error('Error swapping RPS values:', error);
+    console.error('Error getping RPS values:', error);
     return [];
   }
 }
 
 
-async function swapQsBetItems(roomId, user) {
+async function getQsBetItems(roomId, user) {
   try {
     const qsBetItems = await QsBetItem.find({
       room: roomId,
@@ -49,15 +40,10 @@ async function swapQsBetItems(roomId, user) {
     })
       .sort({ created_at: -1 })
       .limit(50);
-    const swappedQsBetItems = qsBetItems.map(item => ({
-      ...item.toObject(),
-      qs: item.joiner_qs,
-      joiner_qs: item.qs
-    }));
 
-    return swappedQsBetItems;
+    return qsBetItems;
   } catch (error) {
-    console.error('Error swapping QS values:', error);
+    console.error('Error getping QS values:', error);
     return [];
   }
 }
@@ -129,7 +115,6 @@ const sumHostingStrategies = (hostingObj) => {
 
 // Function to choose one of the totals based on their probabilities
 const chooseBasedOnProbability = (joiningTotal, hostingTotal) => {
-  // Calculate probabilities
   const totalSum = joiningTotal + hostingTotal;
   const joiningProbability = totalSum > 0 ? joiningTotal / totalSum : 0;
   const hostingProbability = totalSum > 0 ? hostingTotal / totalSum : 0;
@@ -173,7 +158,6 @@ const pickSubStrategy = (joiningObj, joiningTotal) => {
     }
   }
 
-
   // Calculate probabilities for each sub-strategy
   const total = subStrategyValues.reduce((sum, sub) => sum + sub.value, 0);
   const probabilities = subStrategyValues.map(sub => ({
@@ -182,7 +166,6 @@ const pickSubStrategy = (joiningObj, joiningTotal) => {
     probability: sub.value / total
   }));
 
-  // Generate a random number and pick a sub-strategy based on probabilities
   const random = Math.random();
   let cumulativeProbability = 0;
   for (const sub of probabilities) {
@@ -212,8 +195,21 @@ const formatStrategyName = (strategy) => {
   }
 };
 
-
 async function callCronJobs(io) {
+  let systemSetting = await SystemSetting.findOne({ name: 'last_updated_bot' });
+
+  if (systemSetting) {
+    const lastUpdated = new Date(systemSetting.updated_at);
+    const eightSecondsAgo = new Date();
+    eightSecondsAgo.setSeconds(eightSecondsAgo.getSeconds() - 8);
+
+    // If last updated was within the last 8 seconds, return early
+    if (lastUpdated > eightSecondsAgo) {
+      console.log('Job skipped as last_updated_bot was updated less than 8 seconds ago.');
+      return;
+    }
+  }
+
   const cronJobs = [
     { userId: '65eafc72aea25957ac8ea60d', betArray: [0.5, 0.1, 25, 0.1, 2, 1, 1, 25, 125, 1, 1.75, 1, 1, 1, 2, 33, 66, 1, 1, 2.5, 10, 25, 50, 180, 1], delay: 0 },
     { userId: '65eafa5caea25957ac8ea60b', betArray: [75, 99, 9.5, 9.5, 2, 9.5, 9.5, 2.5, 20, 25, 50, 40, 9.5], delay: 4000 },
@@ -231,7 +227,7 @@ async function callCronJobs(io) {
     for (const cronJob of cronJobs) {
       const user = await User.findOne({ _id: cronJob.userId });
       const room = await Room.findOne({ joiners: cronJob.userId, status: "open" });
-      if (user && room) {  // Only proceed if a room is found
+      if (user && room) {
         const result = await executeCronJob(user, cronJob.betArray, cronJobUserIds, true, room, 'Random');
         if (result && result.success) {
           await delay(cronJob.delay);
@@ -246,7 +242,7 @@ async function callCronJobs(io) {
       if (user && room) {
         const result = await executeCronJob(user, player.bet_amounts, [player.user.toString()], false, room, player.selected_strategy);
         if (result && result.success) {
-          await delay(4000); // Adjust delay as needed
+          await delay(4000);
         }
       }
     }
@@ -310,7 +306,6 @@ async function callCronJobs(io) {
 
   } catch (error) {
     console.error('Error executing cron jobs:', error);
-    // Handle overall error in cron jobs execution
   }
 }
 
@@ -355,7 +350,7 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
 
         } else {
           // attached RPS (PLAYER)
-          const rpsBetItems = await swapRpsBetItems(roomId, user);
+          const rpsBetItems = await getRpsBetItems(roomId, user);
 
           if (betArray && betArray.length > 0) {
             if (ai_mode === 'Random') {
@@ -426,7 +421,7 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
                 ? (betArray[0].bet_amount ? betArray[0].bet_amount * 2 : betArray[0] * 2)
                 : Math.min(...betArray);
             } else if (ai_mode === 'Innovate') {
-              const randomnessResult = await innovate(rpsBetItems);
+              const randomnessResult = await innovate_joiner(rpsBetItems, true);
               nextState = randomnessResult.counterMove;
               const penultimateSameAsLast = randomnessResult.risk;
               const predictedBet = await predictNextBetAmount(betArray, penultimateSameAsLast, 0, 0.01, 0.2, room);
@@ -434,7 +429,6 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
                 ? Math.max(predictedBet / 5, 0.1)
                 : predictedBet;
             }
-
           }
           if (predictedBetAmount > parseFloat(user.balance)) {
             try {
@@ -447,9 +441,6 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
           if (predictedBetAmount > parseFloat(room.user_bet)) {
             predictedBetAmount = parseFloat(room.user_bet);
           }
-
-
-
         }
 
       } else if (gameType.toString() === '62a25d2a723b9f15709d1aeb') {
@@ -457,7 +448,6 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
 
         if (useFirstBetFunction) {
           nextState = await getRandomItem_qs(room.qs_game_type);
-
           const randomValue = Math.random();
           if (randomValue <= 0.6) {
             penultimateSameAsLast = 1;
@@ -470,7 +460,7 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
 
         } else {
           // attached / q-bot qs (PLAYER)
-          const qsBetItems = await swapQsBetItems(roomId, user);
+          const qsBetItems = await getQsBetItems(roomId, user);
 
           if (betArray && betArray.length > 0) {
 
@@ -481,7 +471,6 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
               const nextMove = await reinforcementAI_qs(qsBetItems, room.qs_game_type);
               nextState = nextMove.move;
               predictedBetAmount = await predictNextBetAmount(betArray, nextMove.risk, 0, 0.01, 0.2, room);
-
             } else if (ai_mode === 'Sniper') {
               const nextMove = await reinforcementAI_qs(qsBetItems, room.qs_game_type);
               nextState = nextMove.move;
@@ -499,7 +488,6 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
               if (ai_mode === 'Skill-issue-old') {
                 predictedBetAmount = await predictNextBetAmount(betArray, penultimateSameAsLast, 0, 0.01, 0.2, room);
               } else if (ai_mode === 'Skill-issue') {
-
                 if (penultimateSameAsLast !== 3) {
                   const outcome = await martingaleStrategy_qs(qsBetItems, room.qs_game_type);
                   predictedBetAmount = outcome.lastResult === 'loss' || outcome.lastResult === 'draw' ? betArray[0].bet_amount * 1.4 : Math.min(...betArray);
@@ -542,7 +530,7 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
               predictedBetAmount = penultimateSameAsLast === 1
                 ? Math.max(predictedBet / 5, 0.1)
                 : predictedBet;
-              }
+            }
           }
 
           if ((predictedBetAmount) / (room.qs_game_type - 1) +
@@ -557,7 +545,7 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
               console.error('Error deleting AttachedPlayer document:', error);
             }
           }
-          
+
           if ((predictedBetAmount) / (room.qs_game_type - 1) +
             predictedBetAmount -
             (room.qs_game_type - 1) * parseFloat(room.user_bet) >
@@ -590,11 +578,16 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
           isExecutingBet1 = true;
           await executeBet1(req, true);
           isExecutingBet1 = false;
+          await SystemSetting.updateOne({ name: 'last_updated_bot' }, { updated_at: new Date() });
+
         } else if (!useFirstBetFunction && !isExecutingBet4) {
+
           // attached || qbot
           isExecutingBet4 = true;
           await executeBet4(req, true, qbot);
           isExecutingBet4 = false;
+          await SystemSetting.updateOne({ name: 'last_updated_bot' }, { updated_at: new Date() });
+
         }
       }
     }
@@ -603,7 +596,7 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
   }
 }
 
-cron.schedule('*/14 * * * * *', async () => {
+cron.schedule('*/9 * * * * *', async () => {
   await callCronJobs(socketio);
 });
 
