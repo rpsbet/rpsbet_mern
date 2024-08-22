@@ -310,7 +310,7 @@ function patternBasedAI(historicData) {
 
 }
 
-export function counterSwitchAI(historicData) {
+function counterSwitchAI(historicData) {
   const moves = ['R', 'P', 'S'];
 
   if (historicData.length > 0) {
