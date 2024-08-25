@@ -264,6 +264,10 @@ class SiteWrapper extends Component {
     const { loadMore } = this.state;
     const { transactions, tnxComplete, remainingLoans, betResult } = this.props;
 
+    if (this.props.user !== prevProps.user) {
+      this.setState({ run: !this.props.user.completedTutorials.includes(1) })
+    }
+
     if (prevProps.betResult !== betResult && betResult === 'win') {
       if (!this.props.isLowGraphics) {
         this.playCoinsAnimation();
@@ -585,7 +589,7 @@ class SiteWrapper extends Component {
         this.fetchData(),
       ]);
 
-      this.setState({ websiteLoading: false, notifications: this.props.notifications, vaultBal: initialBalance, run: !this.props.user.completedTutorials.includes(1) });
+      this.setState({ websiteLoading: false, notifications: this.props.notifications, vaultBal: initialBalance});
       if (currentUrl && currentUrl.includes('create')) {
         this.setState({ selectedMainTabIndex: this.props.selectMainTab(1) });
       }
@@ -611,7 +615,6 @@ class SiteWrapper extends Component {
       } else {
         alertModal(this.props.isDarkMode, 'NO WEB3 WALLET FOUND IN YOUR BROWSER.');
       }
-
 
     } catch (error) {
       console.error(error);
