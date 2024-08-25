@@ -179,6 +179,7 @@ class ChatPanel extends Component {
             showSearchPopup: false
           });
           this.handleClearTooltip();
+          this.setState({showEmojiPanel: false, showSearchPopup: false});
         }
       }
     } else {
@@ -231,7 +232,7 @@ class ChatPanel extends Component {
         });
 
         // Close the search popup and clear the search input
-        this.setState({ showSearchPopup: false, searchInput: '' });
+        this.setState({ showSearchPopup: false, showEmojiPanel: false, searchInput: '' });
       }
     } else {
       alertModal(this.props.isDarkMode, "FURR-SST LOG IN!");
@@ -265,7 +266,8 @@ class ChatPanel extends Component {
 
   toggleEmojiPanel = () => {
     this.setState(prevState => ({
-      showEmojiPanel: !prevState.showEmojiPanel
+      showEmojiPanel: !prevState.showEmojiPanel,
+      showSearchPopup: false
     }));
   };
 
@@ -278,7 +280,8 @@ class ChatPanel extends Component {
 
   toggleSearchPopup = () => {
     this.setState(prevState => ({
-      showSearchPopup: !prevState.showSearchPopup
+      showSearchPopup: !prevState.showSearchPopup,
+      showEmojiPanel: false
     }));
   };
 

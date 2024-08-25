@@ -110,13 +110,13 @@ const calculateCreditScore = (loan, loaner, lender, currentUser) => {
   let creditScoreIncrease = paidBack + remainingLoanPeriod;
 
   // Apply a reduction factor (e.g., reduce by 20%)
-  const reductionFactor = 0.20;
+  const reductionFactor = 0.77;
   creditScoreIncrease = creditScoreIncrease * (1 - reductionFactor);
 
   // Update the current user's credit score
   currentUser.credit_score += creditScoreIncrease;
-  if (currentUser.credit_score) {
-    currentUser.credit_score = 0;
+  if (currentUser.credit_score >= 2000) {
+    currentUser.credit_score = 2000;
   }
 };
 
@@ -386,25 +386,25 @@ async function checkLoanEligibility(currentUser, loanAmount) {
   // Threshold categories
   const categories = [
     { creditScoreThreshold: 1000, rankThreshold: 1, accountAgeThresholdInDays: 30, maxAllowance: 10 },
-    { creditScoreThreshold: 1000, rankThreshold: 2, accountAgeThresholdInDays: 30, maxAllowance: 20 },
-    { creditScoreThreshold: 1000, rankThreshold: 3, accountAgeThresholdInDays: 30, maxAllowance: 50 },
-    { creditScoreThreshold: 1000, rankThreshold: 4, accountAgeThresholdInDays: 60, maxAllowance: 100 },
-    { creditScoreThreshold: 1000, rankThreshold: 5, accountAgeThresholdInDays: 60, maxAllowance: 250 },
-    { creditScoreThreshold: 1000, rankThreshold: 6, accountAgeThresholdInDays: 90, maxAllowance: 500 },
-    { creditScoreThreshold: 950, rankThreshold: 7, accountAgeThresholdInDays: 90, maxAllowance: 700 },
-    { creditScoreThreshold: 950, rankThreshold: 8, accountAgeThresholdInDays: 120, maxAllowance: 800 },
-    { creditScoreThreshold: 950, rankThreshold: 9, accountAgeThresholdInDays: 120, maxAllowance: 900 },
-    { creditScoreThreshold: 950, rankThreshold: 10, accountAgeThresholdInDays: 120, maxAllowance: 1000 },
-    { creditScoreThreshold: 1000, rankThreshold: 11, accountAgeThresholdInDays: 120, maxAllowance: 1500 },
-    { creditScoreThreshold: 1000, rankThreshold: 12, accountAgeThresholdInDays: 120, maxAllowance: 2000 },
-    { creditScoreThreshold: 1000, rankThreshold: 13, accountAgeThresholdInDays: 120, maxAllowance: 2500 },
-    { creditScoreThreshold: 1000, rankThreshold: 14, accountAgeThresholdInDays: 120, maxAllowance: 3000 },
-    { creditScoreThreshold: 1000, rankThreshold: 15, accountAgeThresholdInDays: 120, maxAllowance: 3500 },
-    { creditScoreThreshold: 1000, rankThreshold: 16, accountAgeThresholdInDays: 120, maxAllowance: 5000 },
-    { creditScoreThreshold: 950, rankThreshold: 17, accountAgeThresholdInDays: 120, maxAllowance: 6000 },
-    { creditScoreThreshold: 950, rankThreshold: 18, accountAgeThresholdInDays: 120, maxAllowance: 7000 },
-    { creditScoreThreshold: 950, rankThreshold: 19, accountAgeThresholdInDays: 120, maxAllowance: 8000 },
-    { creditScoreThreshold: 950, rankThreshold: 50, accountAgeThresholdInDays: 120, maxAllowance: 10000 }
+    { creditScoreThreshold: 1000, rankThreshold: 2, accountAgeThresholdInDays: 30, maxAllowance: 10 },
+    { creditScoreThreshold: 1000, rankThreshold: 3, accountAgeThresholdInDays: 30, maxAllowance: 10 },
+    { creditScoreThreshold: 1000, rankThreshold: 4, accountAgeThresholdInDays: 30, maxAllowance: 20 },
+    { creditScoreThreshold: 1000, rankThreshold: 5, accountAgeThresholdInDays: 30, maxAllowance: 50 },
+    { creditScoreThreshold: 1000, rankThreshold: 6, accountAgeThresholdInDays: 60, maxAllowance: 100 },
+    { creditScoreThreshold: 1000, rankThreshold: 7, accountAgeThresholdInDays: 60, maxAllowance: 250 },
+    { creditScoreThreshold: 1000, rankThreshold: 8, accountAgeThresholdInDays: 60, maxAllowance: 500 },
+    { creditScoreThreshold: 1000, rankThreshold: 9, accountAgeThresholdInDays: 60, maxAllowance: 700 },
+    { creditScoreThreshold: 1000, rankThreshold: 10, accountAgeThresholdInDays: 60, maxAllowance: 800 },
+    { creditScoreThreshold: 1000, rankThreshold: 11, accountAgeThresholdInDays: 60, maxAllowance: 900 },
+    { creditScoreThreshold: 1000, rankThreshold: 12, accountAgeThresholdInDays: 60, maxAllowance: 1000 },
+    { creditScoreThreshold: 1000, rankThreshold: 13, accountAgeThresholdInDays: 60, maxAllowance: 1500 },
+    { creditScoreThreshold: 1000, rankThreshold: 14, accountAgeThresholdInDays: 60, maxAllowance: 2000 },
+    { creditScoreThreshold: 1000, rankThreshold: 15, accountAgeThresholdInDays: 90, maxAllowance: 4000 },
+    { creditScoreThreshold: 1000, rankThreshold: 16, accountAgeThresholdInDays: 90, maxAllowance: 8000 },
+    { creditScoreThreshold: 1000, rankThreshold: 17, accountAgeThresholdInDays: 90, maxAllowance: 10000 },
+    { creditScoreThreshold: 1000, rankThreshold: 18, accountAgeThresholdInDays: 90, maxAllowance: 20000 },
+    { creditScoreThreshold: 1000, rankThreshold: 19, accountAgeThresholdInDays: 90, maxAllowance: 30000 },
+    { creditScoreThreshold: 1000, rankThreshold: 20, accountAgeThresholdInDays: 90, maxAllowance: 40000 },
   ];
   // Find the starting index based on the user's rank
   const startingIndex = Math.min(rank - 1, categories.length - 1);

@@ -903,7 +903,7 @@ class RPS extends Component {
                   {this.props.rps_game_type === 0 && (
                     <div className="data-item">
                       <div>
-                        <div className="label win-chance">Commission</div>
+                        <div className="label commission">Commission</div>
                       </div>
                       <Tooltip title="Host's Accessory's Commission Power (CP) - Player's Accessory's Battle Power (BP) (MINIMUM 1% TOWARDS PLATFORM)">
                         <div style={{ cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center" }}>

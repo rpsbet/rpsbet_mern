@@ -36,7 +36,9 @@ class MyHistoryTable extends Component {
       showPlayerModal: false,
       copiedRowId: null
     };
+    this.isUnmounted = false;
   }
+
 
   static getDerivedStateFromProps(props, current_state) {
     if (
@@ -57,14 +59,13 @@ class MyHistoryTable extends Component {
   }
 
   updateReminderTime = () => {
-    this.setState({ myHistory: updateFromNow(this.state.myHistory) });
+    if (!this.isUnmounted) {
+      this.setState({ myHistory: updateFromNow(this.state.myHistory) });
+    }
   };
 
   async componentDidMount() {
-    const {
-      getMyHistory,
-      isAuthenticated
-    } = this.props;
+    const { getMyHistory, isAuthenticated } = this.props;
 
     const promises = [];
     if (isAuthenticated) {
@@ -73,21 +74,20 @@ class MyHistoryTable extends Component {
 
     await Promise.all(promises);
 
-    this.updateReminderTime();
-    this.attachUserLinkListeners();
-    this.attachAccessories();
+    if (!this.isUnmounted) {
+      this.updateReminderTime();
+      this.attachUserLinkListeners();
+      this.attachAccessories();
+    }
 
-    this.interval = setInterval(this.updateReminderTime(), 3000);
+    this.interval = setInterval(this.updateReminderTime, 3000);
     const settings = await this.props.getSettings();
-    this.setState({ ...settings });
+    if (!this.isUnmounted) {
+      this.setState({ ...settings });
+    }
 
-    // const { socket } = this.props;
-    // socket.on('UPDATE_RAIN', data => {
-    //   this.setState(prevState => ({
-    //     rain: data.rain,
-    //     prevRain: prevState.rain // Store the previous rain value
-    //   }));
-    // });
+    // Add any socket event listeners here, for example:
+    // this.socket.on('UPDATE_RAIN', this.handleRainUpdate);
   }
 
   componentDidUpdate(prevProps) {
@@ -121,6 +121,7 @@ class MyHistoryTable extends Component {
   };
 
   componentWillUnmount() {
+    this.isUnmounted = true;
     clearInterval(this.interval);
   }
 

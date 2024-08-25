@@ -11,7 +11,7 @@ const LoanerSchema = new Schema({
         default: 0
     },
     paidBack: {
-        type: String,
+        type: Number,
         default: 0
     },
     period: {
@@ -35,7 +35,7 @@ const LoanerSchema = new Schema({
 const LoanSchema = new Schema({
     lender: {
         type: Schema.Types.ObjectId,
-        ref: 'lender',
+        ref: 'User',
         default: null
     },
     loaners: [LoanerSchema],

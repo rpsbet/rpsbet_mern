@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { setBalance } from '../../redux/Auth/user.actions';
+import { setBalance, updateTutorialCompleted } from '../../redux/Auth/user.actions';
 import Modal from 'react-modal';
 import axios from '../../util/Api';
 import { Info } from '@material-ui/icons';
@@ -35,6 +35,8 @@ import Lottie from 'react-lottie';
 import animationData from '../LottieAnimations/add';
 import loadingChart from '../LottieAnimations/loadingChart';
 import pressHold from '../LottieAnimations/pressHold.json';
+import Joyride from 'react-joyride';
+import { tutorialStepsCreate } from '../../util/tutorialStepsCreate';
 
 import { Box, Button, ButtonGroup, Menu, MenuItem, Tooltip, IconButton, TextField, Table, TableBody, TableRow, TableCell, Radio, RadioGroup, FormControlLabel } from '@material-ui/core';
 const gifUrls = ['/img/rock.gif', '/img/paper.gif', '/img/scissors.gif'];
@@ -69,6 +71,8 @@ class MyGamesTable extends Component {
       anchorEl: null,
       closing: false,
       sortAnchorEl: null,
+      run: !this.props.user.completedTutorials.includes(3),
+      currentTutorial: 3,
       selectedSort: 'desc',
       creatingRoom: false,
       myGames: this.props.myGames,
@@ -156,21 +160,21 @@ class MyGamesTable extends Component {
   handleSendTopUp = async () => {
     const { topUpAmount, selectedRow } = this.state;
     const { balance, isDarkMode, setBalance, addNewTransaction } = this.props;
-  
+
     try {
       if (topUpAmount <= 0) {
         alertModal(isDarkMode, 'R U FURR-REAL? TOPUP AMOUNT MUST BE MORE THAN 0!');
         return;
       }
-  
+
       if (topUpAmount > balance) {
         alertModal(isDarkMode, 'NOT ENUFF FUNDS AT THIS MEOWMENT');
         return;
       }
-  
+
       this.setState({ isLoading: true });
       const result = await this.props.topUp(topUpAmount, selectedRow._id);
-  
+
       if (result.success) {
         setBalance(result.balance);
         addNewTransaction(result.newTransaction);
@@ -186,7 +190,7 @@ class MyGamesTable extends Component {
       this.setState({ isLoading: false });
     }
   };
-  
+
   handlePayout = (row) => {
     let paymentMethod = 'automatic';
     let payoutAmount = row.endgame_amount;
@@ -216,15 +220,15 @@ class MyGamesTable extends Component {
   handleSendPayout = async () => {
     const { payoutAmount, selectedRow } = this.state;
     const { isDarkMode, editPayout } = this.props;
-  
+
     try {
       if (payoutAmount <= 0) {
         alertModal(isDarkMode, 'R U FURR-REAL? PAYOUT AMOUNT MUST BE MORE THAN 0!');
         return;
       }
-  
+
       this.setState({ isLoading: true });
-  
+
       const result = await editPayout(payoutAmount, selectedRow._id);
       if (result.success) {
         await this.fetchData();
@@ -239,7 +243,7 @@ class MyGamesTable extends Component {
       this.setState({ isLoading: false });
     }
   };
-  
+
   handlePaymentMethodChange = (event) => {
     const selectedMethod = event.target.value;
     this.setState({ paymentMethod: selectedMethod });
@@ -405,6 +409,17 @@ class MyGamesTable extends Component {
     });
   };
 
+  handleJoyrideCallback = (data) => {
+    const { status, type } = data;
+
+    if (status === 'finished' || status === 'skipped') {
+      const { currentTutorial } = this.state;
+      this.props.updateTutorialCompleted(currentTutorial);
+
+      this.setState({ run: false });
+    }
+  };
+
   handleGameTypeButtonClicked = async short_name => {
     this.setState({ selectedGameType: short_name }, () => {
       this.props.getMyGames({
@@ -480,7 +495,7 @@ class MyGamesTable extends Component {
   }
 
   render() {
-    const { loading, strategies, user, updateRoomStrategy, isLowGraphics } = this.props;
+    const { loading, strategies, user, updateRoomStrategy, isLowGraphics, isDarkMode } = this.props;
     const { isLoading, anchorEl, selectedRow, selectedStrategy, settings_panel_opened, isFocused, selectedFilter, sortAnchorEl, selectedSort } = this.state;
     const defaultOptions = {
       loop: this.props.isLowGraphics ? false : true,
@@ -494,6 +509,44 @@ class MyGamesTable extends Component {
     return (
       <div className="my-open-games">
         <div className="filter-container overflowX">
+          <Joyride
+            steps={tutorialStepsCreate}
+            run={this.state.run}
+            callback={this.handleJoyrideCallback}
+            continuous
+            showProgress
+            showSkipButton
+            styles={{
+              options: {
+                zIndex: 10000,
+                backgroundColor: isDarkMode ? 'rgb(81 48 98 / 60%)' : '#ccc9', // Tooltip background color
+                primaryColor: '#ff0000', // Custom color for buttons and highlights
+                arrowColor: isDarkMode ? 'rgb(81 48 98 / 60%)' : '#ccc9', // Arrow color
+                textColor: isDarkMode ? '#f9f9f9' : '#333', // Text color inside the tooltip
+                width: 300, // Tooltip width
+                padding: 20, // Padding inside the tooltip
+                borderRadius: 5, // Rounded corners for the tooltip
+              },
+
+              buttonClose: {
+                borderRadius: '0.3em', /* Custom border radius */
+                color: isDarkMode ? '#f9f9f9' : '#333',
+              },
+              buttonBack: {
+                borderRadius: '0.3em',
+                color: isDarkMode ? '#f9f9f9' : '#333',
+              },
+              buttonNext: {
+                borderRadius: '0.3em',
+                color: isDarkMode ? '#f9f9f9' : '#333',
+              },
+              buttonSkip: {
+                borderRadius: '0.3em',
+                color: isDarkMode ? '#f9f9f9' : '#333',
+              },
+
+            }}
+          />
 
           {selectedRow && (
 
@@ -532,8 +585,8 @@ class MyGamesTable extends Component {
                 </div>
                 <div className="table-cell winnings" style={{ paddingLeft: "40px" }}>Payout</div>
                 <div className="table-cell bet-info" style={{ paddingLeft: "10px" }}>Net Profit&nbsp;<Tooltip title="NOT INCLUDING AUTO-PAYOUTS">
-                          <Info style={{width: "18px", cursor: "pointer"}}/>
-                          </Tooltip></div>
+                  <Info style={{ width: "18px", cursor: "pointer" }} />
+                </Tooltip></div>
                 <div className="table-cell winnings">Plays</div>
                 <div className="table-cell winnings desktop-only">Strategy</div>
 
@@ -610,9 +663,9 @@ class MyGamesTable extends Component {
                       <div className="table-cell winnings">
                         <span>{convertToCurrency((row.winnings - row.stake))}&nbsp;
                         </span>
-                       
+
                       </div>
-                      
+
                       {!this.props.myGamesWithStats ? (
                         <>
                           <div className="table-cell bets" style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
@@ -1046,7 +1099,8 @@ const mapDispatchToProps = {
   setBalance,
   reCreateRoom,
   editPayout,
-  topUp
+  topUp,
+  updateTutorialCompleted
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(MyGamesTable);

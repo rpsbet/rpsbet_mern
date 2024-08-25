@@ -303,10 +303,9 @@ function containsBot(username) {
 
 router.post('/username', auth, async (req, res) => {
   try {
-    const userId = req.user.id; // Assuming you have a user object in req from the auth middleware
+    const userId = req.user.id;
     const { newUsername } = req.body;
 
-    // Your logic to check for a valid new username
     if (!newUsername || newUsername.trim() === '') {
       return res.json({
         success: false,
@@ -314,7 +313,6 @@ router.post('/username', auth, async (req, res) => {
       });
     }
 
-    // Check if username contains bad language
     if (containsBadLanguage(newUsername)) {
       return res.json({
         success: false,
@@ -329,10 +327,8 @@ router.post('/username', auth, async (req, res) => {
       });
     }
 
-
     const existingUser = await User.findOne({ username: newUsername });
 
-    // Check if the username is already taken
     if (existingUser) {
       return res.json({
         success: false,
@@ -342,7 +338,6 @@ router.post('/username', auth, async (req, res) => {
 
     const user = await User.findById(userId);
 
-    // Check if the user exists
     if (!user) {
       return res.json({
         success: false,
@@ -350,13 +345,8 @@ router.post('/username', auth, async (req, res) => {
       });
     }
 
-    // Update the username
     user.username = newUsername;
-
-    // Save the updated user
     await user.save();
-
-    // Respond with success message
     res.json({
       success: true,
       message: 'USERNAME CHANGED SUCCESSFULLY.<br /><br />REFRESH TO SEE CHANGES...RAWRR. 🐈'
@@ -369,6 +359,45 @@ router.post('/username', auth, async (req, res) => {
     });
   }
 });
+
+router.patch('/tutorial', auth, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { tutorialNumber } = req.body;
+
+    if (!tutorialNumber || !userId) {
+      return res.json({
+        success: false,
+        error: 'Tutorial number is required.'
+      });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { $addToSet: { completedTutorials: tutorialNumber } },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.json({
+        success: false,
+        error: 'User not found.'
+      });
+    }
+
+    res.json({
+      success: true,
+      user
+    });
+  } catch (err) {
+    console.error(err);
+    res.json({
+      success: false,
+      error: err.message
+    });
+  }
+});
+
 
 router.get('/vault-transactions', auth, async (req, res) => {
   try {

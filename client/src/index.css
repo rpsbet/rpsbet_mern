@@ -408,6 +408,98 @@ div.table .table-row .table-cell button:last-child:hover,
   transition: 0.1s;
 }
 
+.cookie-banner {
+  position: fixed;
+  bottom: 20px;
+  z-index: 999;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #292b2c;
+  color: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  max-width: 400px;
+  width: 100%;
+  transition: transform 0.4s ease, opacity 0.4s ease;
+}
+
+.accepted {
+  transform: translateX(-50%) translateY(200%);
+  opacity: 0;
+}
+
+.cookie-title {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.accept-btn {
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-top: 10px;
+  transition: background-color 0.3s ease;
+}
+
+.reward {
+  text-align: center;
+  margin-top: 10px;
+  animation: fade-in 0.8s ease;
+}
+
+.tutorial p {
+  background: linear-gradient(#ff0000, #dc3545);
+  border-radius: 0.3em;
+  padding: 10px 15px;
+  position: relative;
+  display: inline-block;
+  color: white;
+}
+
+.tutorial p::after {
+  content: '';
+  position: absolute;
+  z-index: 9999;
+  bottom: -30px;
+  left: 14%;
+  transform: rotate(100deg) translateX(-50%);
+  border-width: 16px;
+  border-style: solid;
+  border-color: #dc3545 transparent transparent transparent;
+}
+
+.tutorial img {
+  margin-top: -10px;
+  margin-bottom: -40px;
+  width: 110px;
+  height: auto;
+}
+.accordion__button:hover {
+cursor: pointer;
+filter: brightness(1.2);
+border: 2px solid #f9f9f9;
+border-radius: 1em;
+}
+.react-joyride__beacon{
+  border-radius: 6px !important;
+  height: 38px !important;
+  padding: 5px !important;
+}
+
+.emoji {
+  font-size: 40px;
+}
+
+.thanks {
+  margin-top: 10px;
+}
+
+
 .lottie-bg.eagle {
   min-height: 100px;
 }
@@ -696,7 +788,8 @@ div.table .table-cell button.btn_join img {
   position: relative;
   background: unset;
 }
-.sub-panel .overflowX .lottie-container{
+
+.sub-panel .overflowX .lottie-container {
   display: none;
 }
 
@@ -855,6 +948,7 @@ div.table.main-history-table .table-row>div>.room-id {
   margin-left: 10px;
   box-shadow: inset -1px 1px 0px #3f74b542;
 }
+
 .top-wins div.table-cell:hover {
   border: 2px solid #333;
 }
@@ -1976,8 +2070,8 @@ h2.room-history-title {
   margin-top: 0.25rem;
 }
 
-.pre-summary-panel {
-  overflow-x: scroll;
+.pre-summary-panel.title {
+  overflow-x: auto !important;
 }
 
 .pre-summary-panel .data-item {
@@ -2043,8 +2137,8 @@ h6.score {
 .game-page .pre-summary-panel div.created {
   background-image: url('../public/img/created.svg');
   background-repeat: no-repeat;
-  background-position: 0 8px;
-  background-size: 1.54em;
+  background-position: 0 5px;
+  background-size: 1.74em;
 }
 
 .game-page .pre-summary-panel div.room-name {
@@ -2089,6 +2183,12 @@ h6.score {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' fill='none' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%23C438EF'/%3E%3Cg clip-path='url(%23clip0)'%3E%3Cpath fill='%23fff' d='M13.106 15.204c-.342-.239-.708-.434-1.09-.582.509-.463.846-1.11.905-1.836.772-.752 1.784-1.165 2.868-1.165.847 0 1.66.255 2.351.737.248.173.589.113.762-.135.172-.248.112-.589-.136-.761-.342-.24-.708-.434-1.09-.582.56-.511.914-1.247.914-2.064 0-1.538-1.251-2.789-2.789-2.789-1.538 0-2.789 1.251-2.789 2.79 0 .813.35 1.546.908 2.056-.076.03-.152.06-.227.094-.342.15-.664.336-.963.553-.413-1.025-1.417-1.75-2.588-1.75-1.538 0-2.79 1.25-2.79 2.788 0 .812.35 1.543.904 2.053-1.483.556-2.686 1.75-3.176 3.272-.162.504-.076 1.04.236 1.468.313.429.796.675 1.326.675H11.4c.302 0 .547-.245.547-.547 0-.302-.245-.547-.547-.547H6.642c-.177 0-.338-.082-.442-.225-.104-.143-.133-.321-.079-.49.54-1.68 2.19-2.853 4.009-2.853.846 0 1.66.254 2.35.737.248.173.59.112.762-.136.173-.248.112-.588-.136-.761zm2.695-8.083c.935 0 1.695.76 1.695 1.695s-.76 1.695-1.695 1.695c-.934 0-1.695-.76-1.695-1.695s.76-1.695 1.695-1.695zm-5.66 3.742c.935 0 1.696.76 1.696 1.695s-.76 1.695-1.695 1.695-1.695-.76-1.695-1.695c0-.934.76-1.695 1.695-1.695z'/%3E%3C/g%3E%3Cpath fill='%23fff' d='M24.108 15.718C23.027 14.082 21.163 13 19.048 13 15.713 13 13 15.692 13 19s2.713 6 6.048 6h.043c5.787-.172 7.015-6.267 5.017-9.282zM14.11 19c0-.695.147-1.358.411-1.957l1.022.585c-.17.425-.262.888-.262 1.372 0 .484.093.947.262 1.372l-1.022.585c-.264-.6-.411-1.262-.411-1.957zm2.28 0c0-1.454 1.192-2.637 2.658-2.637s2.658 1.183 2.658 2.637-1.192 2.637-2.658 2.637c-1.465 0-2.658-1.183-2.658-2.637zm7.596 0c0 .695-.147 1.358-.411 1.957l-1.022-.585c.17-.425.262-.888.262-1.372 0-.484-.093-.947-.262-1.372l1.022-.585c.264.6.412 1.262.412 1.957zm-4.383 4.868v-1.171c.965-.142 1.812-.648 2.393-1.373l1.023.586c-.797 1.067-2.02 1.803-3.416 1.958zm3.416-7.778l-1.023.586c-.581-.725-1.428-1.23-2.393-1.373v-1.171c1.397.155 2.62.891 3.416 1.958zm-4.526-1.958v1.171c-.965.142-1.811.648-2.393 1.373l-1.023-.586c.797-1.067 2.02-1.803 3.416-1.958zm-3.416 7.778l1.023-.586c.581.725 1.428 1.231 2.393 1.373v1.171c-1.397-.155-2.619-.891-3.416-1.958z'/%3E%3Cdefs%3E%3CclipPath id='clip0'%3E%3Cpath fill='%23fff' d='M0 0H14V14H0z' transform='translate(5 6)'/%3E%3C/clipPath%3E%3C/defs%3E%3C/svg%3E%0A");
 }
 
+.game-page .pre-summary-panel div.chance {
+  background-repeat: no-repeat;
+  background-size: 1.6em;
+  background-position: 0 6px;
+  background-image: url('../public/img/chance.svg');
+}
 .game-page .pre-summary-panel div.public-max-return {
   background-repeat: no-repeat;
   background-size: 1.6em;
@@ -2099,13 +2199,19 @@ h6.score {
 .game-page .pre-summary-panel div.public-interest {
   background-image: url('../public/img/interest.svg');
   background-repeat: no-repeat;
-  background-position: 0 3px;
-  background-size: 1.84em;
+  background-position: 0 5px;
+  background-size: 1.64em;
+}
+.game-page .pre-summary-panel div.commission {
+  background-image: url('../public/img/commission.svg');
+  background-repeat: no-repeat;
+  background-position: 0 5px;
+  background-size: 1.74em;
 }
 
 .game-page .pre-summary-panel div.win-chance {
   background-image: url('../public/img/interest.svg');
-  background-size: 1.6em;
+  background-size: 1.74em;
   background-repeat: no-repeat;
   background-position: 0 6px;
 }
@@ -2976,8 +3082,8 @@ button.btn-submit:active,
 }
 
 td button.subsetting {
-padding-left: 20px !important;
-font-size: small;
+  padding-left: 20px !important;
+  font-size: small;
 }
 
 .loading-gif-container {
@@ -4829,11 +4935,11 @@ button#recentSearches span {
 
 
 .red-gradient {
-  background: linear-gradient(to right, #952323, #c10909);
+  background: linear-gradient(to right, #be00f5, #e10000);
 }
 
 .green-gradient {
-  background: linear-gradient(45deg, #0a7a24, #0a4d00);
+  background: linear-gradient(45deg, #be00f5, #1bcc00);
 }
 
 
@@ -6483,6 +6589,41 @@ div[role="presentation"] div {
   width: 100%;
 }
 
+.contact-info {
+  margin-bottom: 20px;
+}
+
+.contact-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.contact-buttons .btn {
+  margin: 5px 0;
+}
+
+.faqs-section h5 {
+  margin-bottom: 15px;
+  font-size: 1.2em;
+  
+  color: #a3a3a3;
+}
+
+.faqs-section ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.faqs-section li {
+  margin-bottom: 20px;
+}
+
+.faqs-section strong {
+  display: block;
+  margin-bottom: 5px;
+  color: #0dff56;
+}
 div[aria-label="How To Play Modal"] th {
   color: #343a40;
   border-bottom: 5px solid #fff !important;
@@ -6635,7 +6776,7 @@ div[aria-label="How To Play Modal"] ul {
     min-width: calc(33.33% - 0.8rem);
   }
 
- 
+
 
   .mobile-only a.user-link img {
     width: 16px;

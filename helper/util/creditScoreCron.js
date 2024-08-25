@@ -35,7 +35,7 @@ async function checkOutstandingLoans(io) {
               for (const loanerObj of loan.loaners) {
                 if (loanerObj.user.equals(user._id)) {
                   if (
-                    loanerObj.paidBack <= loanerObj.amount &&
+                    parseFloat(loanerObj.paidBack) <= loanerObj.amount &&
                     loan.loan_period > 0 &&
                     (Date.now() - loan.created_at.getTime()) / (1000 * 60 * 60 * 24) > loan.loan_period
                   ) {
@@ -97,8 +97,9 @@ async function checkOutstandingLoans(io) {
           rank: rank,
           replyTo: replyTo,
         };
-
-        socketController.globalChatSend(socketio, data);
+        if (io) {
+          socketController.globalChatSend(socketio, data);
+        }
         systemSetting.updated_at = new Date();
         await systemSetting.save();
       } else {

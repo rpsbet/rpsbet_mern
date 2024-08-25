@@ -18,7 +18,7 @@ if (localStorage.token) {
   setAuthToken(localStorage.token);
 }
 
-const App = props => {
+const App = () => {
   // const { isAuthenticated } = props.auth;
   // const { isAdminAuthenticated } = props.admin_auth;
 
@@ -32,8 +32,10 @@ const App = props => {
   // }, []);
 
   return (
-    <Switch>
-      {/* <Route
+    <>
+
+      <Switch>
+        {/* <Route
         path="/admin/signin"
         render={routeProps =>
           isAdminAuthenticated ? (
@@ -43,7 +45,7 @@ const App = props => {
           )
         }
       /> */}
-      {/* <Route
+        {/* <Route
         path="/admin/signup"
         render={routeProps =>
           isAdminAuthenticated ? (
@@ -53,7 +55,7 @@ const App = props => {
           )
         }
       /> */}
-      {/* <Route
+        {/* <Route
         path="/admin"
         render={routeProps =>
           !isAdminAuthenticated ? (
@@ -64,7 +66,7 @@ const App = props => {
         }
       /> */}
 
-      {/* <Route
+        {/* <Route
         path="/signin"
         render={routeProps =>
           isAuthenticated ? (
@@ -90,23 +92,25 @@ const App = props => {
         render={routeProps => <ResetPasswordPage {...routeProps} />}
       />
       */}
-      <Route
-        path="/changePassword/:code"
-        render={routeProps => <ChangePasswordPage {...routeProps} />}
-      />
-      <Route
-        path="/"
-        render={routeProps => <GameMainRoute {...routeProps} />}
-      />
+        <Route
+          path="/changePassword/:code"
+          render={routeProps => <ChangePasswordPage {...routeProps} />}
+        />
+        <Route
+          path="/"
+          render={routeProps => <GameMainRoute {...routeProps} />}
+        />
 
-      <Route component={Error404Page} />
-    </Switch>
+        <Route component={Error404Page} />
+      </Switch>
+    </>
+
   );
 };
 
 const mapStateToProps = state => ({
   auth: state.auth,
-  admin_auth: state.admin_auth
+  admin_auth: state.admin_auth,
 });
 
 const mapDispatchToProps = { getUser, getAdmin };

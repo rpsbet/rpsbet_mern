@@ -5,7 +5,7 @@ import Moment from 'moment';
 import { getRoomStatisticsData } from '../../redux/Customer/customer.action';
 import { Button, Drawer, LinearProgress } from '@material-ui/core';
 import LoadingOverlay from 'react-loading-overlay';
-import { toggleDrawer } from '../../redux/Auth/user.actions';
+import { toggleDrawer, updateTutorialCompleted } from '../../redux/Auth/user.actions';
 import RPS from '../JoinGame/RPS';
 import Blackjack from '../JoinGame/Blackjack';
 import Spleesh from '../JoinGame/Spleesh';
@@ -55,6 +55,8 @@ import HistoryTable from '../LiveGames/HistoryTable';
 import DrawerButton from './DrawerButton';
 import SupportButton from './SupportButton';
 import Footer from './Footer';
+import Joyride from 'react-joyride';
+import { tutorialStepsGame } from '../../util/tutorialStepsGame';
 import {
   validateIsAuthenticated,
   validateCreatorId,
@@ -97,6 +99,8 @@ class JoinGame extends Component {
       selected_qs_position: 0,
       index: 0,
       qs_game_type: 2,
+      run: false,
+      currentTutorial: 2,
       selected_id: '',
       image: '',
       loading: this.props.loading,
@@ -164,6 +168,12 @@ class JoinGame extends Component {
       this.setState({ betting: true });
     }
     window.addEventListener('unload', this.handleUnload);
+  }
+
+  componentDidUpdate(prevProps) {
+    if (this.props.user !== prevProps.user) {
+      this.setState({ run: !this.props.user.completedTutorials.includes(2) })
+    }
   }
 
   async initializeRoomData(id) {
@@ -1115,7 +1125,16 @@ class JoinGame extends Component {
     }
   };
 
+  handleJoyrideCallback = (data) => {
+    const { status, type } = data;
 
+    if (status === 'finished' || status === 'skipped') {
+      const { currentTutorial } = this.state;
+      this.props.updateTutorialCompleted(currentTutorial);
+
+      this.setState({ run: false });
+    }
+  };
 
   handleOpenPlayerModal = creator_id => {
     this.setState({ showPlayerModal: true, selectedCreator: creator_id });
@@ -1188,6 +1207,7 @@ class JoinGame extends Component {
       rpsbetitems,
       qsbetitems,
       total_wagered,
+      isDarkMode,
       attached,
       getAttachedRooms
     } = this.props;
@@ -1244,8 +1264,47 @@ class JoinGame extends Component {
             )}
 
           <div className="main-panel">
+
             {roomInfo.game_type ? (
               <div className="join-game-panel">
+                <Joyride
+                  steps={tutorialStepsGame}
+                  run={this.state.run}
+                  callback={this.handleJoyrideCallback}
+                  continuous
+                  showProgress
+                  showSkipButton
+                  styles={{
+                    options: {
+                      zIndex: 10000,
+                      backgroundColor: isDarkMode ? 'rgb(81 48 98 / 60%)' : '#ccc9', // Tooltip background color
+                      primaryColor: '#ff0000', // Custom color for buttons and highlights
+                      arrowColor: isDarkMode ? 'rgb(81 48 98 / 60%)' : '#ccc9', // Arrow color
+                      textColor: isDarkMode ? '#f9f9f9' : '#333', // Text color inside the tooltip
+                      width: 300, // Tooltip width
+                      padding: 20, // Padding inside the tooltip
+                      borderRadius: 5, // Rounded corners for the tooltip
+                    },
+
+                    buttonClose: {
+                      borderRadius: '0.3em', /* Custom border radius */
+                      color: isDarkMode ? '#f9f9f9' : '#333',
+                    },
+                    buttonBack: {
+                      borderRadius: '0.3em',
+                      color: isDarkMode ? '#f9f9f9' : '#333',
+                    },
+                    buttonNext: {
+                      borderRadius: '0.3em',
+                      color: isDarkMode ? '#f9f9f9' : '#333',
+                    },
+                    buttonSkip: {
+                      borderRadius: '0.3em',
+                      color: isDarkMode ? '#f9f9f9' : '#333',
+                    },
+
+                  }}
+                />
                 {roomInfo.game_type === 'RPS' && (
                   <RPS
                     changeBgColor={this.changeBgColor}
@@ -1577,7 +1636,7 @@ class JoinGame extends Component {
                   isDarkMode={this.props.isDarkMode}
                 />
               )}
-            <h2 className="main-title desktop-only" style={{marginBottom: "10px"}}>HISTORY</h2>
+            <h2 className="main-title desktop-only" style={{ marginBottom: "10px" }}>HISTORY</h2>
             {!is_mobile && selectedMainTabIndex === 0 && <HistoryTable userId={user_id} />}
             <DrawerButton
               open={isDrawerOpen}
@@ -1735,6 +1794,7 @@ const mapStateToProps = state => ({
   qsbetitems: state.logic.qsbetitems,
   user_id: state.auth.user._id,
   total_wagered: state.auth.user.totalWagered,
+  user: state.auth.user,
   accessory: state.auth.user.accessory,
   user_balance: state.auth.user.balance,
   ai_mode: state.auth.user.ai_mode,
@@ -1774,7 +1834,8 @@ const mapDispatchToProps = {
   openGamePasswordModal,
   getCustomerStatisticsData,
   deductBalanceWhenStartBrainGame,
-  fetchAccessory
+  fetchAccessory,
+  updateTutorialCompleted
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(JoinGame);

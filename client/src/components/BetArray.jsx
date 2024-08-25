@@ -160,7 +160,7 @@ const PlaceholderComponent = ({
           startIcon={<FontAwesomeIcon icon={faCrown} />}
           style={{ background: 'linear-gradient(340deg, #ffb000, #ff5100c7)', color: '#fff', textTransform: 'none', fontSize: '16px' }}
         >
-          UNLOCK AT LEVEL 17
+          UNLOCK AT LEVEL 20
         </Button>
       </div>
     );
@@ -705,7 +705,7 @@ function BetArray({
 
                   <div style={{ display: 'flex', alignItems: 'center', width: "50%", boxShadow: "inset 0px 0px 6px 0px #b4b4b4a8", borderRadius: "9px", justifyContent: "center", padding: "5px 10px", overflow: "hidden" }}>
                     <FontAwesomeIcon icon={betting ? faToggleOn : faToggleOff} style={{ marginRight: '5px' }} />
-                    {betting ? 'AP ON' : 'AP OFF'}
+                    {betting ? 'AIP ON' : 'AIP OFF'}
                   </div>
                 </div>
 

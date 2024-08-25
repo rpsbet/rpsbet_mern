@@ -1260,7 +1260,13 @@ class CreateGame extends Component {
           </div>
           <div className="sub-panel">
 
-    
+            {!this.state.is_mobile && this.props.selectedMainTabIndex === 0 && (
+              <>
+                <h2 className="main-title desktop-only">HISTORY</h2>
+                <HistoryTable />
+              </>
+            )}
+
             {!this.state.is_mobile && this.props.selectedMainTabIndex === 1 && (
               <>
                 {/* <h2 className="main-title desktop-only">JUKEBOX</h2>

@@ -5,12 +5,12 @@ const MessageSchema = new Schema({
   from: {
     type: Schema.Types.ObjectId,
     ref: 'User',
-    index: true // Indexing the 'from' field
+    index: true
   },
   to: {
     type: Schema.Types.ObjectId,
     ref: 'User',
-    index: true // Indexing the 'to' field
+    index: true
   },
   message: {
     type: String,
@@ -27,7 +27,7 @@ const MessageSchema = new Schema({
   updated_at: {
     type: Date,
     default: Date.now,
-    index: true // Indexing the 'updated_at' field
+    index: true
   }
 });
 

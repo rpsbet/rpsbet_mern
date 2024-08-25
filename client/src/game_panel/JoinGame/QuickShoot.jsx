@@ -873,7 +873,7 @@ class QuickShoot extends Component {
                   </div>
                   <div className="data-item">
                     <div>
-                      <div className="label win-chance">Win Chance</div>
+                      <div className="label chance">Win Chance</div>
                     </div>
                     <div className="value">
                       {(((qs_game_type - 1) / qs_game_type) * 100).toFixed(2)}%
@@ -881,7 +881,7 @@ class QuickShoot extends Component {
                   </div>
                   <div className="data-item">
                     <div>
-                      <div className="label win-chance">Commission</div>
+                      <div className="label commission">Commission</div>
                     </div>
                     <Tooltip title="Determined by the Host's equipped accessory">
 

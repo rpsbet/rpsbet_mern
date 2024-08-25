@@ -32,6 +32,7 @@ import {
   TOGGLE_GAME_SOUNDS,
   TOGGLE_NOTIFICATION_SOUNDS,
   TOGGLE_LOW_GRAPHICS,
+  SHOW_COOKIES,
   TOGGLE_DRAWER,
   TOGGLE_MUSIC_ENABLED,
   START_LOADING,
@@ -350,6 +351,11 @@ export const toggleNotificationSounds = notificationSounds => dispatch => {
 export const toggleLowGraphics = isLowGraphics => dispatch => {
   dispatch({ type: TOGGLE_LOW_GRAPHICS, payload: isLowGraphics });
 }
+export const showCookieConsent = showCookieConsent => dispatch => {
+  console.log("Dispatching showCookieConsent with value:", showCookieConsent); // Log the value
+
+  dispatch({ type: SHOW_COOKIES, payload: showCookieConsent });
+}
 
 export const toggleMusic = isMusicEnabled => dispatch => {
   dispatch({ type: TOGGLE_MUSIC_ENABLED, payload: isMusicEnabled });
@@ -411,6 +417,26 @@ export const changeUserName = (newUsername) => async (dispatch) => {
   }
   return { status: 'failed' };
 };
+
+// Tutorial Passed
+export const updateTutorialCompleted = (tutorialNumber) => async (dispatch) => {
+  try {
+    const { data } = await axios.patch('/user/tutorial', { tutorialNumber });
+
+    if (data.success) {
+      dispatch({ type: MSG_SUCCESS, payload: `Completed Tutorial ${tutorialNumber} / 3!` });
+      return data;
+    } else {
+      dispatch({ type: MSG_ERROR, payload: data.error });
+      return data;
+    }
+  } catch (error) {
+    console.log('error', error);
+    dispatch({ type: MSG_WARNING, payload: error.message });
+  }
+  return { status: 'failed' };
+};
+
 
 export const vaultDeposit = (amount) => async (dispatch) => {
   try {
@@ -480,7 +506,7 @@ export const fetchVaultBalance = () => async (dispatch) => {
     if (data.success) {
       return data.vaultBalance;
     } else {
-      dispatch({ type: MSG_ERROR, payload: data.error });
+      // dispatch({ type: MSG_ERROR, payload: data.error });
       return null;
     }
   } catch (error) {

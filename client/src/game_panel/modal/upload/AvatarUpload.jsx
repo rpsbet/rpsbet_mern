@@ -61,7 +61,7 @@ class Upload extends Component {
     return (
       <div className="Upload">
         <div className="Content">
-          <div style={{margin: 'auto'}}>
+          <div style={{margin: '20px auto auto auto'}}>
             <Dropzone
               onFileAdded={this.onFileAdded}
               disabled={this.state.uploading && this.state.successfullUploaded}

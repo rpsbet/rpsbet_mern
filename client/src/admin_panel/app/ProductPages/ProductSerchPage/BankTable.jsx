@@ -531,7 +531,7 @@ class BankTable extends Component {
 
         <div className="carousel-container" style={{ marginTop: "60px" }}>
           <Typography variant="h6" align="left" gutterBottom>
-            Previous Loans
+            PREVIOUS LOANS
           </Typography>
           <div className="carousel">
             {
@@ -543,7 +543,7 @@ class BankTable extends Component {
                       <TableBody>
                         <TableRow>
                           <TableCell>
-                            <FontAwesomeIcon icon={faUser} /> Lender:
+                            <FontAwesomeIcon icon={faUser} /> LENDER:
                           </TableCell>
                           <TableCell>
                             <a
@@ -564,19 +564,19 @@ class BankTable extends Component {
                         </TableRow>
                         <TableRow>
                           <TableCell>
-                            <FontAwesomeIcon icon={faClock} /> Days Left:
+                            <FontAwesomeIcon icon={faClock} /> DAYS LEFT:
                           </TableCell>
                           <TableCell>{loan.outstanding === true ? "OUTSTANDING" : loan.outstanding}</TableCell>
                         </TableRow>
                         <TableRow>
                           <TableCell>
-                            <FontAwesomeIcon icon={faMoneyBillAlt} /> Total Loaner Amount:
+                            <FontAwesomeIcon icon={faMoneyBillAlt} /> TOTAL LOANER AMOUNT:
                           </TableCell>
                           <TableCell>{convertToCurrency(loan.totalLoanerAmount)}</TableCell>
                         </TableRow>
                         <TableRow>
                           <TableCell>
-                            <FontAwesomeIcon icon={faUsers} /> Loaners:
+                            <FontAwesomeIcon icon={faUsers} /> LOANERS:
                           </TableCell>
                           <TableCell>
                             {
@@ -602,13 +602,13 @@ class BankTable extends Component {
                         </TableRow>
                         <TableRow>
                           <TableCell>
-                            <FontAwesomeIcon icon={faMoneyCheckAlt} /> Total Paid Back:
+                            <FontAwesomeIcon icon={faMoneyCheckAlt} /> TOTAL PAID BACK:
                           </TableCell>
                           <TableCell>{convertToCurrency(loan.totalPaidBack)}</TableCell>
                         </TableRow>
                         <TableRow>
                           <TableCell>
-                            <FontAwesomeIcon icon={faChartLine} /> Profit:
+                            <FontAwesomeIcon icon={faChartLine} /> PROFIT:
                           </TableCell>
                           <TableCell className={loan.profit <= 0 ? 'profit-negative' : 'profit-positive'}>
                             {convertToCurrency(loan.profit)}

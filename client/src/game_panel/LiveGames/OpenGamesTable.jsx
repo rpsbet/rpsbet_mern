@@ -589,6 +589,7 @@ class OpenGamesTable extends Component {
     return (
       <>
         <div className="overflowX">
+          
           {/* <div className="game-type-container">
             <div
               className="game-type-panel"
@@ -616,6 +617,7 @@ class OpenGamesTable extends Component {
         )}
 
         <div className="table main-game-table">
+          
           {this.state.isLoading ? (
             <>
               <span style={{ position: "relative", display: "flex", justifyContent: "center", alignItems: "center" }}>Fetching Rooms&nbsp;</span>

@@ -7,7 +7,7 @@ const AttachedPlayer = require('../../model/AttachedPlayer.js');
 const QBot = require('../../model/QBot.js');
 const executeBet1 = require('./betExecutor.js');
 const executeBet4 = require('./betExecutor4.js');
-const SystemSetting = require('../../model/SystemSetting');
+const SystemSetting = require('../../model/SystemSetting.js');
 const { predictNext, reinforcementAI, innovate, patternBasedAI, counterSwitchAI, NPC, generatePattern, skillissueold, getRandomMove, martingaleStrategy } = require('./predictNextJoiner');
 const { NPC_qs, patternBasedAI_qs, innovate_qs, getRandomItem_qs, counterSwitchAI_qs, generatePattern_qs, getCopyCatItem_qs, predictNextQs, reinforcementAI_qs, skillissueold_qs, martingaleStrategy_qs } = require('./predictNextQsJoiner');
 
@@ -196,20 +196,6 @@ const formatStrategyName = (strategy) => {
 };
 
 async function callCronJobs(io) {
-  let systemSetting = await SystemSetting.findOne({ name: 'last_updated_bot' });
-
-  if (systemSetting) {
-    const lastUpdated = new Date(systemSetting.updated_at);
-    const eightSecondsAgo = new Date();
-    eightSecondsAgo.setSeconds(eightSecondsAgo.getSeconds() - 8);
-
-    // If last updated was within the last 8 seconds, return early
-    if (lastUpdated > eightSecondsAgo) {
-      console.log('Job skipped as last_updated_bot was updated less than 8 seconds ago.');
-      return;
-    }
-  }
-
   const cronJobs = [
     { userId: '65eafc72aea25957ac8ea60d', betArray: [0.5, 0.1, 25, 0.1, 2, 1, 1, 25, 125, 1, 1.75, 1, 1, 1, 2, 33, 66, 1, 1, 2.5, 10, 25, 50, 180, 1], delay: 0 },
     { userId: '65eafa5caea25957ac8ea60b', betArray: [75, 99, 9.5, 9.5, 2, 9.5, 9.5, 2.5, 20, 25, 50, 40, 9.5], delay: 4000 },
@@ -224,86 +210,98 @@ async function callCronJobs(io) {
   }
 
   try {
-    for (const cronJob of cronJobs) {
-      const user = await User.findOne({ _id: cronJob.userId });
-      const room = await Room.findOne({ joiners: cronJob.userId, status: "open" });
-      if (user && room) {
-        const result = await executeCronJob(user, cronJob.betArray, cronJobUserIds, true, room, 'Random');
-        if (result && result.success) {
-          await delay(cronJob.delay);
-        }
-      }
-    }
+    let systemSetting = await SystemSetting.findOne({ name: 'last_updated_bot' });
 
-    const attachedPlayers = await AttachedPlayer.find({});
-    for (const player of attachedPlayers) {
-      const user = await User.findOne({ _id: player.user });
-      const room = await Room.findOne({ _id: player.room, status: 'open' });
-      if (user && room) {
-        const result = await executeCronJob(user, player.bet_amounts, [player.user.toString()], false, room, player.selected_strategy);
-        if (result && result.success) {
-          await delay(4000);
-        }
-      }
-    }
+    if (systemSetting) {
+      const lastUpdated = new Date(systemSetting.updated_at);
+      const nineSecondsAgo = new Date();
+      nineSecondsAgo.setSeconds(nineSecondsAgo.getSeconds() - 9);
 
-    const qBots = await QBot.find({ active: true });
+      // If last updated was within the last 8 seconds, return early
+      if (lastUpdated >= nineSecondsAgo) {
 
-    for (const bot of qBots) {
+        for (const cronJob of cronJobs) {
 
-      const joiningTotal = sumJoiningStrategies(bot.joining);
-      const hostingTotal = sumHostingStrategies(bot.hosting);
-      const result = chooseBasedOnProbability(joiningTotal, hostingTotal);
-
-      if (result.chosenType === 'joining') {
-        const chosenSubStrategy = pickSubStrategy(bot.joining, joiningTotal);
-        if (chosenSubStrategy) {
-          const formattedStrategyName = formatStrategyName(chosenSubStrategy.parentStrategy);
-          const formattedSubStrategyName = formatStrategyName(chosenSubStrategy.name);
-
-          const user = await User.findOne({ _id: bot.user });
-          const room = await Room.findOne({
-            status: 'open',
-            selectedStrategy: formattedStrategyName,
-            creator: { $ne: bot.user }
-          });
-
-          const numElements = 6;
-
-          let remainingBalance = user.balance / 4;
-          const qbot_bet_amounts = [];
-
-          for (let i = 0; i < numElements; i++) {
-            const maxBet = remainingBalance - (numElements - i - 1);
-            const bet = Math.floor(Math.random() * (maxBet)) + 1;
-
-            qbot_bet_amounts.push(bet);
-            remainingBalance -= bet;
-
-            if (remainingBalance <= numElements - i - 1) {
-              while (qbot_bet_amounts.length < numElements) {
-                qbot_bet_amounts.push(1);
-                remainingBalance--;
-              }
-              break;
+          const user = await User.findOne({ _id: cronJob.userId });
+          const room = await Room.findOne({ joiners: cronJob.userId, status: "open" });
+          if (user && room) {
+            const result = await executeCronJob(user, cronJob.betArray, cronJobUserIds, true, room, 'Random');
+            if (result && result.success) {
+              await delay(cronJob.delay);
             }
           }
+        }
 
-          qbot_bet_amounts.sort((a, b) => a - b);
+        const attachedPlayers = await AttachedPlayer.find({});
+        for (const player of attachedPlayers) {
+          const user = await User.findOne({ _id: player.user });
+          const room = await Room.findOne({ _id: player.room, status: 'open' });
           if (user && room) {
-            const result = await executeCronJob(user, qbot_bet_amounts, [bot.user.toString()], false, room, formattedSubStrategyName, true);
-
+            const result = await executeCronJob(user, player.bet_amounts, [player.user.toString()], false, room, player.selected_strategy);
             if (result && result.success) {
               await delay(4000);
             }
           }
         }
-      } else if (result.chosenType === 'hosting') {
-        console.log(`Chosen total is from hosting strategies: ${result.chosenTotal}`);
+
+        const qBots = await QBot.find({ active: true });
+
+        for (const bot of qBots) {
+
+          const joiningTotal = sumJoiningStrategies(bot.joining);
+          const hostingTotal = sumHostingStrategies(bot.hosting);
+          const result = chooseBasedOnProbability(joiningTotal, hostingTotal);
+
+          if (result.chosenType === 'joining') {
+            const chosenSubStrategy = pickSubStrategy(bot.joining, joiningTotal);
+            if (chosenSubStrategy) {
+              const formattedStrategyName = formatStrategyName(chosenSubStrategy.parentStrategy);
+              const formattedSubStrategyName = formatStrategyName(chosenSubStrategy.name);
+
+              const user = await User.findOne({ _id: bot.user });
+              const room = await Room.findOne({
+                status: 'open',
+                selectedStrategy: formattedStrategyName,
+                creator: { $ne: bot.user }
+              });
+
+              const numElements = 6;
+
+              let remainingBalance = user.balance / 4;
+              const qbot_bet_amounts = [];
+
+              for (let i = 0; i < numElements; i++) {
+                const maxBet = remainingBalance - (numElements - i - 1);
+                const bet = Math.floor(Math.random() * (maxBet)) + 1;
+
+                qbot_bet_amounts.push(bet);
+                remainingBalance -= bet;
+
+                if (remainingBalance <= numElements - i - 1) {
+                  while (qbot_bet_amounts.length < numElements) {
+                    qbot_bet_amounts.push(1);
+                    remainingBalance--;
+                  }
+                  break;
+                }
+              }
+
+              qbot_bet_amounts.sort((a, b) => a - b);
+              if (user && room) {
+                const result = await executeCronJob(user, qbot_bet_amounts, [bot.user.toString()], false, room, formattedSubStrategyName, true);
+
+                if (result && result.success) {
+                  await delay(4000);
+                }
+              }
+            }
+          } else if (result.chosenType === 'hosting') {
+            console.log(`Chosen total is from hosting strategies: ${result.chosenTotal}`);
+          }
+        }
+
       }
     }
-
-
   } catch (error) {
     console.error('Error executing cron jobs:', error);
   }

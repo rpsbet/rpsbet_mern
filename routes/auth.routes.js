@@ -350,7 +350,6 @@ router.post('/deleteAccount', auth, async (req, res) => {
       console.error("Error saving req.user:", error);
     }
 
-
     return res.json({
       success: true
     });

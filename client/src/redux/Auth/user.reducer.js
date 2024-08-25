@@ -11,6 +11,7 @@ import {
   SET_BALANCE,
   SET_GASFEE,
   SET_AVATAR,
+  SHOW_COOKIES,
   TRANSACTION_LOADED,
   FETCH_RECENT_TRANSACTIONS_SUCCESS,
   SET_SEVEN_DAY_PROFIT,
@@ -47,6 +48,7 @@ const initialState = {
   isLowGraphics:
     localStorage.getItem('isLowGraphics') === 'false' ? false : true,
   isMuted: localStorage.getItem('isMuted') === 'true' ? true : false,
+  showCookieConsent: localStorage.getItem('showCookieConsent') === 'true' ? true : false,
   clickSounds: localStorage.getItem('clickSounds') === 'false' ? true : false,
   gameSounds: localStorage.getItem('gameSounds') === 'true' ? true : false,
   notificationSounds: localStorage.getItem('notificationSounds') === 'true' ? true : false,
@@ -58,6 +60,7 @@ const initialState = {
   gasfee: 0,
   ai_mode: '',
   isActivated: true,
+  completedTutorials: [],
   isFocused: false,
   userName: '',
   liveUrl: null,
@@ -131,6 +134,14 @@ export default function (state = initialState, action) {
         ...state,
         isLowGraphics: payload
       };
+    case SHOW_COOKIES:
+      console.log("Reducer received SHOW_COOKIES with payload:", payload); // Log the payload
+
+      localStorage.setItem('showCookieConsent', payload);
+      return {
+        ...state,
+        showCookieConsent: payload
+      };
     case TOGGLE_MUSIC_ENABLED:
       localStorage.setItem('isMusicEnabled', payload);
       return {
@@ -199,6 +210,7 @@ export default function (state = initialState, action) {
         isAuthenticated: true,
         totalWagered: payload.totalWagered,
         isActivated: payload.is_activated,
+        completedTutorials: payload.completedTutorials,
         loading: false,
         user: { ...payload, password: '' },
         balance: payload.balance
@@ -214,6 +226,7 @@ export default function (state = initialState, action) {
         isAdmin: 0,
         userName: payload.user.username,
         isActivated: payload.user.is_activated,
+        completedTutorials: payload.user.completedTutorials,
         token: payload.token,
         isAuthenticated: true,
         loading: false

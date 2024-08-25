@@ -80,6 +80,8 @@ import Store from './icons/Store.js';
 import StoreHover from './icons/StoreHover';
 import Bank from './icons/Bank.js';
 import BankHover from './icons/BankHover';
+import Joyride from 'react-joyride';
+import { tutorialStepsMain } from '../util/tutorialStepsMain';
 
 import {
   setSocket,
@@ -89,7 +91,8 @@ import {
   setUnreadMessageCount,
   setDarkMode,
   setNotificationsAllowed,
-  fetchVaultBalance
+  fetchVaultBalance,
+  updateTutorialCompleted
 } from '../redux/Auth/user.actions';
 import { openOfferLoanModal } from '../redux/Notification/notification.actions';
 import {
@@ -108,6 +111,7 @@ import {
   readNotifications
 } from '../redux/Logic/logic.actions';
 import { alertModal } from './modal/ConfirmAlerts.jsx';
+import CookieConsent from '../util/cookieConsent';
 import { convertToCurrency } from '../util/conversion';
 
 LoadingOverlay.propTypes = undefined;
@@ -192,6 +196,8 @@ class SiteWrapper extends Component {
       betResult: this.props.betResult,
       showProfileModal: false,
       showPlayerModal: false,
+      run: false,
+      currentTutorial: 1,
       showHowToPlayModal: false,
       vaultBal: 0,
       showMarketplaceModal: false,
@@ -299,16 +305,19 @@ class SiteWrapper extends Component {
     }
   }
 
-  checkBonusTime() {
-    const lastBonus = this.props.user.last_bonus ? new Date(this.props.user.last_bonus) : null;
-    const now = new Date();
-    // Check if last_bonus is within the last 24 hours or if last_bonus is null
-    if (!lastBonus || now - lastBonus > 24 * 60 * 60 * 1000) {
-      this.setState({ showBonusModal: true });
-    }
-  }
+  // checkBonusTime() {
+  //   const lastBonus = this.props.user.last_bonus ? new Date(this.props.user.last_bonus) : null;
+  //   const now = new Date();
+  //   // Check if last_bonus is within the last 24 hours or if last_bonus is null
+  //   if (!lastBonus || now - lastBonus > 24 * 60 * 60 * 1000) {
+  //     this.setState({ showBonusModal: true });
+  //   }
+  // }
 
-
+  isTutorialCompleted = (tutorialId) => {
+    // Check if the current tutorial is in the completedTutorials array
+    return this.props.completedTutorials.includes(tutorialId);
+  };
   playCoinsAnimation() {
     this.setState({ isCoinsAnimation: true });
   }
@@ -507,11 +516,11 @@ class SiteWrapper extends Component {
 
       socket.on('ONLINE_STATUS_UPDATED', data => {
         this.props.updateOnlineUserList(data.user_list);
-        if (this.props.isAuthenticated && !this.state.bonusCheck) {
-          this.setState({ bonusCheck: true }, () => {
-            this.checkBonusTime();
-          });
-        }
+        // if (this.props.isAuthenticated && !this.state.bonusCheck) {
+        //   this.setState({ bonusCheck: true }, () => {
+        //     this.checkBonusTime();
+        //   });
+        // }
       });
 
 
@@ -576,7 +585,7 @@ class SiteWrapper extends Component {
         this.fetchData(),
       ]);
 
-      this.setState({ websiteLoading: false, notifications: this.props.notifications, vaultBal: initialBalance });
+      this.setState({ websiteLoading: false, notifications: this.props.notifications, vaultBal: initialBalance, run: !this.props.user.completedTutorials.includes(1) });
       if (currentUrl && currentUrl.includes('create')) {
         this.setState({ selectedMainTabIndex: this.props.selectMainTab(1) });
       }
@@ -588,17 +597,17 @@ class SiteWrapper extends Component {
         window.ethereum.on('chainChanged', () => {
           setTimeout(() => {
             this.loadWeb3();
-        }, 3000); 
+          }, 3000);
         });
         window.ethereum.on('accountsChanged', () => {
           setTimeout(() => {
             this.loadWeb3();
-        }, 3000); 
+          }, 3000);
         });
 
         setTimeout(() => {
           this.loadWeb3();
-      }, 3000); 
+        }, 3000);
       } else {
         alertModal(this.props.isDarkMode, 'NO WEB3 WALLET FOUND IN YOUR BROWSER.');
       }
@@ -936,6 +945,19 @@ class SiteWrapper extends Component {
     });
   };
 
+  handleJoyrideCallback = (data) => {
+    const { status, type } = data;
+
+    if (status === 'finished' || status === 'skipped') {
+      const { currentTutorial } = this.state;
+      // Mark the current tutorial as completed in the backend
+      this.props.updateTutorialCompleted(currentTutorial);
+
+      // Stop the Joyride after completion
+      this.setState({ run: false });
+    }
+  };
+
   render() {
     const {
       series,
@@ -989,6 +1011,7 @@ class SiteWrapper extends Component {
       children,
       showOfferLoanModal,
       user,
+      showCookieConsent,
       isLowGraphics
     } = this.props;
     const balanceString = balance.toString();
@@ -1004,6 +1027,8 @@ class SiteWrapper extends Component {
     this.secondsRemaining = Math.floor(timeRemaining / 1000);
     return (
       <MuiThemeProvider theme={isDarkMode ? darkTheme : mainTheme}>
+        {showCookieConsent && <CookieConsent />}
+
         {isLive ? (
           <>
             <div className="coming-home-screen" style={{ textAlign: 'center', padding: '50px' }}>
@@ -1422,7 +1447,7 @@ class SiteWrapper extends Component {
                             <ListItemIcon>
                               <Help />
                             </ListItemIcon>
-                            <ListItemText>HELP</ListItemText>
+                            <ListItemText>INFO</ListItemText>
                           </MenuItem>
                           <Divider />
                           <MenuItem
@@ -1843,6 +1868,44 @@ class SiteWrapper extends Component {
               <ConfirmLoanModal />
               <OfferLoanModal socket={this.props.socket} />
               <GamePasswordModal />
+              <Joyride
+                steps={tutorialStepsMain}
+                run={this.state.run}
+                callback={this.handleJoyrideCallback}
+                continuous
+                showProgress
+                showSkipButton
+                styles={{
+                  options: {
+                    zIndex: 10000,
+                    backgroundColor: isDarkMode ? 'rgb(81 48 98 / 60%)' : '#ccc9', // Tooltip background color
+                    primaryColor: '#ff0000', // Custom color for buttons and highlights
+                    arrowColor: isDarkMode ? 'rgb(81 48 98 / 60%)' : '#ccc9', // Arrow color
+                    textColor:  isDarkMode ? '#f9f9f9' : '#333', // Text color inside the tooltip
+                    width: 300, // Tooltip width
+                    padding: 20, // Padding inside the tooltip
+                    borderRadius: 5, // Rounded corners for the tooltip
+                  },
+                  
+                  buttonClose: {
+                    borderRadius: '0.3em', /* Custom border radius */
+                    color: isDarkMode ? '#f9f9f9' : '#333',
+                  },
+                  buttonBack: {
+                    borderRadius: '0.3em',
+                    color: isDarkMode ? '#f9f9f9' : '#333',
+                  },
+                  buttonNext: {
+                    borderRadius: '0.3em',
+                    color: isDarkMode ? '#f9f9f9' : '#333',
+                  },
+                  buttonSkip: {
+                    borderRadius: '0.3em',
+                    color: isDarkMode ? '#f9f9f9' : '#333',
+                  },
+                
+                }}
+              />
             </div>
           </>
         )}
@@ -1878,6 +1941,7 @@ const mapStateToProps = state => ({
   allTimeProfit: state.auth.allTimeProfit,
   notifications: state.logic.notifications,
   isLowGraphics: state.auth.isLowGraphics,
+  showCookieConsent: state.auth.showCookieConsent,
 
 });
 
@@ -1889,6 +1953,7 @@ const mapDispatchToProps = {
   addChatLog,
   getMyGames,
   getMyHistory,
+  updateTutorialCompleted,
   getHistory,
   setUnreadMessageCount,
   addNewTransaction,

@@ -53,7 +53,7 @@ class HowToPlayModal extends Component {
                 <AccordionItemHeading>
                   <AccordionItemButton>
                     <div className="modal-content-wrapper provably-fair">
-                      <h4  className='title'>About Us</h4>
+                      <h4 className='title'>About Us</h4>
                     </div>
                   </AccordionItemButton>
                 </AccordionItemHeading>
@@ -449,34 +449,7 @@ class HowToPlayModal extends Component {
                   </div>
                 </AccordionItemPanel>
               </AccordionItem> 
-              <AccordionItem>
-                <AccordionItemHeading>
-                  <AccordionItemButton>
-                    <div className="modal-content-wrapper quick-shoot">
-                      <h4  className='title'>Quick Shoot</h4>
-                    </div>
-                  </AccordionItemButton>
-                </AccordionItemHeading>
-                <AccordionItemPanel>
-                  <div className="modal-content-wrapper quick-shoot">
-                    <div className="modal-content-panel">
-                      <h5 style={{ color: '#02c526' }}>Objective</h5>
-                      <p>To score a goal past the keeper.</p>
-                    </div>
-                    <div className="modal-content-panel">
-                      <h5>Gameplay</h5>
-                      <ol>
-                        <li>
-                          Enter a predetermined Bet Amount.
-                        </li>
-                        <li>Depending on the game type, you will have 2 - 5 directions to shoot your shot against the AI</li>
-                        <li>Depending on the game type, If you can score past the AI keeper, you will win from 1.25x - 2x your original Bet Amount</li>
-                      </ol>
-                    </div>
-
-                  </div>
-                </AccordionItemPanel>
-              </AccordionItem>
+              
               <AccordionItem>
                 <AccordionItemHeading>
                   <AccordionItemButton>
@@ -575,8 +548,36 @@ class HowToPlayModal extends Component {
               <AccordionItem>
                 <AccordionItemHeading>
                   <AccordionItemButton>
+                    <div className="modal-content-wrapper quick-shoot">
+                      <h4 className='title'>Quick Shoot</h4>
+                    </div>
+                  </AccordionItemButton>
+                </AccordionItemHeading>
+                <AccordionItemPanel>
+                  <div className="modal-content-wrapper quick-shoot">
+                    <div className="modal-content-panel">
+                      <h5 style={{ color: '#02c526' }}>Objective</h5>
+                      <p>To score a goal past the keeper.</p>
+                    </div>
+                    <div className="modal-content-panel">
+                      <h5>Gameplay</h5>
+                      <ol>
+                        <li>
+                          Enter a predetermined Bet Amount.
+                        </li>
+                        <li>Depending on the game type, you will have 2 - 5 directions to shoot your shot against the AI</li>
+                        <li>Depending on the game type, If you can score past the AI keeper, you will win from 1.25x - 2x your original Bet Amount</li>
+                      </ol>
+                    </div>
+
+                  </div>
+                </AccordionItemPanel>
+              </AccordionItem>
+              <AccordionItem>
+                <AccordionItemHeading>
+                  <AccordionItemButton>
                     <div className="modal-content-wrapper rps">
-                      <h4  className='title'>RPS</h4>
+                      <h4 className='title'>RPS</h4>
                     </div>
                   </AccordionItemButton>
                 </AccordionItemHeading>
@@ -609,7 +610,7 @@ class HowToPlayModal extends Component {
                 <AccordionItemHeading>
                   <AccordionItemButton>
                     <div className="modal-content-wrapper house-edge">
-                      <h4  className='title'>FEES</h4>
+                      <h4 className='title'>FEES</h4>
                     </div>
                   </AccordionItemButton>
                 </AccordionItemHeading>
@@ -656,23 +657,46 @@ class HowToPlayModal extends Component {
                 <AccordionItemHeading>
                   <AccordionItemButton>
                     <div className="modal-content-wrapper support">
-                      <h4 className='title'>SUPPORT</h4>
+                      <h4 className='title'>Get Help?</h4>
                     </div>
                   </AccordionItemButton>
                 </AccordionItemHeading>
                 <AccordionItemPanel>
                   <div className="modal-content-wrapper spleesh">
                     <div className="modal-content-panel">
-                      <p>You can simply use the Live Chat panel (find button in the bottom right), or you can reach out to us via one of these:</p>
-                      <Button onClick={() => window.open("https://twitter.com/officialrpsgame", '_blank')}>Twitter</Button>
-                      <Button onClick={() => window.open("https://t.me/rpsfinance", '_blank')}>Telegram</Button>
-                      <Button onClick={() => window.open("https://discord.gg/anMJntW4AD", '_blank')}>Discord</Button>
-
-                      {/* <Button><a href="mailto:lenny@rps.finance">Email</a></Button> */}
+                      <div className="contact-info">
+                        <h5>Support</h5>
+                        <p>If you need assistance or have any questions, you can reach out to us through the following channels:</p>
+                        <div className="contact-buttons">
+                          <Button onClick={() => window.open("https://twitter.com/officialrpsgame", '_blank')}>Twitter</Button>
+                          <Button onClick={() => window.open("https://t.me/rpsfinance", '_blank')}>Telegram</Button>
+                          <Button onClick={() => window.open("https://discord.gg/anMJntW4AD", '_blank')}>Discord</Button>
+                          <Button onClick={() => window.open("mailto:lenny@rps.finance")}>Email</Button>
+                        </div>
+                      </div>
+                      <br />
+                      <div className="faqs-section">
+                        <h5>Frequently Asked Questions</h5>
+                        <ul>
+                          <li><strong>How do I reset my password?</strong> You can reset your password by clicking the "Forgot Password" link on the login page and following the instructions.</li>
+                          <li><strong>Where can I find the latest updates?</strong> For the latest updates, check our Twitter feed or join our Discord channel.</li>
+                          <li><strong>What should I do if I encounter a bug?</strong> Please report any bugs via our support channels, including Twitter, Telegram, or Discord.</li>
+                          <li><strong>How can I participate in beta testing?</strong> Announcements about beta testing opportunities will be made on our social media channels. Stay tuned!</li>
+                          <li><strong>Who can I contact for partnership inquiries?</strong> For partnership inquiries, please email us at lenny@rps.finance.</li>
+                        </ul>
+                      </div>
+                      <br />
+                      <div className="tutorials-section">
+                        <h5>Tutorials</h5>
+                        <p>Looking to get started or need help navigating our platform? Check out our tutorials for step-by-step guides:</p>
+                        <Button onClick={() => window.open("https://yourwebsite.com/tutorials", '_blank')}>View Tutorials</Button>
+                        <Button onClick={() => window.open("https://yourwebsite.com/tutorials", '_blank')}>Video Tutorials</Button>
+                      </div>
                     </div>
                   </div>
                 </AccordionItemPanel>
               </AccordionItem>
+
             </Accordion>
           </div>
         </div>
