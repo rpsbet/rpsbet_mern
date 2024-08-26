@@ -252,11 +252,16 @@ function patternBasedAI_qs(historicData, qs_game_type) {
 
 function counterSwitchAI_qs(historicData, qs_game_type) {
   if (historicData.length > 0) {
-    const lastGame = historicData[0];
+    const lastGame = historicData[historicData.length - 1];
 
-    const lastGameWasWin = lastGame.qs !== lastGame.joiner_qs;
-    const lastGameWasLoss = lastGame.qs === lastGame.joiner_qs;
+    const lastGameWasWin = lastGame.qs === lastGame.joiner_qs;
+    const lastGameWasLoss = lastGame.qs !== lastGame.joiner_qs;
 
+
+    console.log("lastGame2", lastGame)
+    console.log("lastGameWasWin2", lastGameWasWin)
+    console.log("lastGameWasLoss2", lastGameWasLoss)
+    
     if (lastGameWasWin) {
       const repeatProbability = 1;
       if (Math.random() < repeatProbability) {
@@ -295,8 +300,8 @@ function martingaleStrategy_qs(historicData, qs_game_type) {
     };
   }
 
-  const lastOpponentMove = historicData[0].qs;
-  const lastAIMove = historicData[0].joiner_qs;
+  const lastOpponentMove = historicData[historicData.length - 1].qs;
+  const lastAIMove = historicData[historicData.length - 1].joiner_qs;
   const lastResult = getResult(lastAIMove, lastOpponentMove);
 
   const randomMove = getRandomItem_qs(qs_game_type);

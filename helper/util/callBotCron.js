@@ -461,7 +461,6 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
           const qsBetItems = await getQsBetItems(roomId, user);
 
           if (betArray && betArray.length > 0) {
-
             if (ai_mode === 'Random') {
               nextState = await getRandomItem_qs(room.qs_game_type);
               predictedBetAmount = await predictNextBetAmount(betArray, 0, 0.01, 0.2);

@@ -275,10 +275,9 @@ function patternBasedAI_qs(historicData, qs_game_type) {
 function counterSwitchAI_qs(historicData, qs_game_type) {
   if (historicData.length > 0) {
     const lastGame = historicData[0];
-
     const lastGameWasWin = lastGame.joiner_qs !== lastGame.qs;
     const lastGameWasLoss = lastGame.joiner_qs === lastGame.qs;
-
+    
     if (lastGameWasWin) {
       const repeatProbability = 1;
       if (Math.random() < repeatProbability) {

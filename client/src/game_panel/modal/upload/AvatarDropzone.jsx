@@ -179,7 +179,7 @@ class Dropzone extends Component {
                     value={this.state.aiText}
                     onChange={this.handleAITextChange}
                   />
-                  <Grid container spacing={2} direction="row" justify="space-between" alignItems="center">
+                  <Grid container spacing={2} direction="row" justifyContent="space-between" alignItems="center">
                     <Grid item>
                       <Button onClick={this.hideTextfield} fullWidth>Hide</Button>
                     </Grid>

@@ -218,7 +218,6 @@ function getRandomNumber(min, max) {
 }
 
 function innovate(historicData) {
-  // const numEntries = getRandomNumber(1, 9);
   const firstEntries = historicData.slice(-6);
   const firstJoinerQs = firstEntries.map(entry => entry.rps);
 
@@ -227,7 +226,6 @@ function innovate(historicData) {
   }
 
   const allSame = firstJoinerQs.every(rps => rps === firstJoinerQs[0]);
-  // console.log("all", allSame);
   if (allSame) {
     const lastMove = firstJoinerQs[firstJoinerQs.length - 1];
     const possibleMoves = ['R', 'P', 'S'].filter(move => move !== lastMove);

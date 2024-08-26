@@ -290,6 +290,7 @@ class ProfileModal extends Component {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       const img = new Image();
+      img.crossOrigin = 'anonymous'; // Added CORS
       img.src = this.state.avatar;
 
       img.onload = () => {
