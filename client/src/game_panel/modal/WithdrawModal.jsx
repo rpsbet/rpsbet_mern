@@ -341,7 +341,7 @@ class WithdrawModal extends Component {
   createPayoutAndClose = async () => {
     const { amount, currencyTo, sendAddress, extraId } = this.state;
     try {
-      if (this.props.userInfo.dailyWithdrawals > 2500) {
+      if (this.props.userInfo.dailyWithdrawals > 5000) {
         alertModal(
           this.props.isDarkMode,
           `EXCEEDED DAILY WITHDRAWAL LIMIT, TRY AGAIN TOMORROW! (WITHDRAWAL LIMITS DURING LAUNCH PHASE ONLY)`
@@ -394,7 +394,7 @@ class WithdrawModal extends Component {
 
   send = async () => {
     try {
-      if (this.props.userInfo.dailyWithdrawals > 2500) {
+      if (this.props.userInfo.dailyWithdrawals > 5000) {
         alertModal(
           this.props.isDarkMode,
           `EXCEEDED DAILY WITHDRAWAL LIMIT, TRY AGAIN TOMORROW! (WITHDRAWAL LIMITS DURING LAUNCH PHASE ONLY)`

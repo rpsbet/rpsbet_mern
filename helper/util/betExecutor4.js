@@ -48,7 +48,7 @@ const addToQueue = async (req, bot = false, qbot) => {
 
         user = await User.findOne({ _id: req.user._id });
         if (req.body._id) {
-            if (user.dailyWithdrawals > 0.02) {
+            if (user.dailyWithdrawals > 0.5000) {
                 responseData = {
                     success: false,
                     message: 'illregular action',

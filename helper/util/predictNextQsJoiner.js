@@ -281,7 +281,7 @@ function counterSwitchAI_qs(historicData, qs_game_type) {
     if (lastGameWasWin) {
       const repeatProbability = 1;
       if (Math.random() < repeatProbability) {
-        return parseInt(lastGame.qs, 10);
+        return parseInt(lastGame.joiner_qs, 10);
       }
     } else if (lastGameWasLoss) {
       return (parseInt(lastGame.joiner_qs, 10) + 1) % qs_game_type;

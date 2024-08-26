@@ -283,13 +283,11 @@ class QuickShoot extends Component {
         </div>
       )
     });
-    setTimeout(() => {
-      if (position_short_name[qsIndex] === 'center') {
-        this.props.playSound('grunt2');
-      } else {
-        this.props.playSound('grunt')
-      }
-    }, 1000);
+    // if (position_short_name[qsIndex] === 'center') {
+    //   this.props.playSound('grunt2');
+    // } else {
+    //   this.props.playSound('grunt')
+    // }
   };
 
   async componentDidUpdate(prevProps, prevState) {

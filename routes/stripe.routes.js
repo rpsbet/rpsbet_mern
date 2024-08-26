@@ -578,17 +578,17 @@ router.post('/withdraw_request', auth, async (req, res) => {
 
     }
 
-    if (withdrawalLimit > 100) {
+    if (withdrawalLimit > 5000) {
       console.log("Exceeded Daily Withdrawal Limit", req.user);
       return res.json({
         success: false,
         message: 'EXCEEDED DAILY WITHDRAWAL LIMIT (DURING LAUNCH PHASE ONLY!)'
       });
     }
-    if (req.body.amount > 100) {
+    if (req.body.amount > 5000) {
       return res.json({
         success: false,
-        message: 'Maximum Withdrawal Amount is 100 RPS per DAY during Launch'
+        message: 'Maximum Withdrawal Amount is 5000 RPS per DAY during Launch'
       });
     }
 

@@ -257,18 +257,13 @@ function counterSwitchAI_qs(historicData, qs_game_type) {
     const lastGameWasWin = lastGame.qs === lastGame.joiner_qs;
     const lastGameWasLoss = lastGame.qs !== lastGame.joiner_qs;
 
-
-    console.log("lastGame2", lastGame)
-    console.log("lastGameWasWin2", lastGameWasWin)
-    console.log("lastGameWasLoss2", lastGameWasLoss)
-    
     if (lastGameWasWin) {
       const repeatProbability = 1;
       if (Math.random() < repeatProbability) {
         return parseInt(lastGame.qs, 10);
       }
     } else if (lastGameWasLoss) {
-      return (parseInt(lastGame.joiner_qs, 10) + 1) % qs_game_type;
+      return (parseInt(lastGame.qs, 10) + 1) % qs_game_type;
     }
   }
 

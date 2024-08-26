@@ -709,9 +709,9 @@ class JoinGame extends Component {
 
   startBetting = async betArray => {
     const { isDarkMode, openGamePasswordModal, roomInfo, user_balance, getRpsBetItems, getQsBetItems } = this.props;
-    const interval = this.props.ai_mode === 'Adam' || this.props.ai_mode === 'Sniper' ? 4200 :
-      this.props.ai_mode === 'Skill-issue' || this.props.ai_mode === 'Innovate' ? 1500 :
-        3000;
+    const interval = this.props.ai_mode === 'Adam' || this.props.ai_mode === 'Sniper' ? 6200 :
+      this.props.ai_mode === 'Skill-issue' || this.props.ai_mode === 'Innovate' ? 3000 :
+        5000;
 
     const intervalId = setInterval(async () => {
       try {
