@@ -629,8 +629,8 @@ class MyGamesTable extends Component {
                       </div>
                       <div className="table-cell bet-info">
                         <span className="bet-pr">
-                          {convertToCurrency(row.user_bet)}
-                          <span className='desktop-only' style={{ fontSize: '10px' }}> ({((row.share).toFixed(2))}%)</span>
+                          {convertToCurrency(row.user_bet)}<br className='mobile-only' />
+                          <span style={{ fontSize: '10px' }}> ({((row.share).toFixed(2))}%)</span>
                         </span>
 
                         {selectedFilter === 'open' && (

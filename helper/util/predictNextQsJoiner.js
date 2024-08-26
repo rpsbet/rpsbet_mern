@@ -435,6 +435,9 @@ module.exports = {
   patternBasedAI_qs,
   NPC_qs,
   predictNextMove_qs,
+  getRandomItem_qs,
+  generatePattern_qs,
+  innovate_qs,
   martingaleStrategy_qs,
   predictNextQs
 };

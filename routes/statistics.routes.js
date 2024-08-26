@@ -480,6 +480,7 @@ router.get('/get-leaderboards', auth, async (req, res) => {
       'OFFICIALRPSGAME',
       'PimpedPistols',
       'KEKW',
+      '69',
       'smellyfingers',
       'NO BROKIES',
       'SUPPORT',

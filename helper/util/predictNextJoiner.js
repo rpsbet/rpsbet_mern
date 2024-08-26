@@ -515,5 +515,6 @@ module.exports = {
   predictNextMove,
   counterSwitchAI,
   patternBasedAI,
+  getRandomMove,
   reinforcementAI
 };
