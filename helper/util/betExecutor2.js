@@ -733,6 +733,7 @@ const addToQueue = async (req, bot = false) => {
                 bet_item.joiner = req.user;
                 bet_item.joiner_qs = req.body.selected_qs_position;
                 bet_item.bet_amount = betAmount;
+                console.log("bet_item", bet_item);
                 await saveDocumentWithRetry(bet_item);
 
                 newGameLog.qs_game_type = parseFloat(roomInfo.qs_game_type);

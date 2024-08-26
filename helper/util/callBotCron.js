@@ -215,10 +215,9 @@ async function callCronJobs(io) {
     if (systemSetting) {
       const lastUpdated = new Date(systemSetting.updated_at);
       const nineSecondsAgo = new Date();
-      nineSecondsAgo.setSeconds(nineSecondsAgo.getSeconds() - 9);
-
-      // If last updated was within the last 8 seconds, return early
-      if (lastUpdated >= nineSecondsAgo) {
+      nineSecondsAgo.setSeconds(nineSecondsAgo.getSeconds() - 8);
+    
+      if (lastUpdated < nineSecondsAgo) {
 
         for (const cronJob of cronJobs) {
 
@@ -326,7 +325,6 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
       const gameType = room.game_type;
       let nextState;
       let predictedBetAmount;
-
       let penultimateSameAsLast;
       if (gameType.toString() === '62a25d2a723b9f15709d1ae7') {
         // rps BOT
@@ -443,7 +441,6 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
 
       } else if (gameType.toString() === '62a25d2a723b9f15709d1aeb') {
         // QS BOT
-
         if (useFirstBetFunction) {
           nextState = await getRandomItem_qs(room.qs_game_type);
           const randomValue = Math.random();
@@ -593,7 +590,7 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
   }
 }
 
-cron.schedule('*/9 * * * * *', async () => {
+cron.schedule('*/8 * * * * *', async () => {
   await callCronJobs(socketio);
 });
 
