@@ -18,7 +18,8 @@ const customStyles = {
         bottom      : 'auto',
         transform   : 'translate(-50%, -50%)',
         padding: 0,
-        background: 'transparent'
+        background: 'transparent',
+        border: 'none'
     }
 }
 

@@ -37,11 +37,10 @@ import loadingChart from '../LottieAnimations/loadingChart';
 import pressHold from '../LottieAnimations/pressHold.json';
 import Joyride from 'react-joyride';
 import { tutorialStepsCreate } from '../../util/tutorialStepsCreate';
+import { InputAdornment, Button, ButtonGroup, Tooltip, TextField, Table, TableBody, TableRow, TableCell, Radio, RadioGroup, FormControlLabel } from '@material-ui/core';
 
-import { Box, Button, ButtonGroup, Menu, MenuItem, Tooltip, IconButton, TextField, Table, TableBody, TableRow, TableCell, Radio, RadioGroup, FormControlLabel } from '@material-ui/core';
 const gifUrls = ['/img/rock.gif', '/img/paper.gif', '/img/scissors.gif'];
 const randomGifUrl = gifUrls[Math.floor(Math.random() * gifUrls.length)];
-
 
 const customStyles = {
   overlay: {
@@ -90,7 +89,6 @@ class MyGamesTable extends Component {
     this.handleClickOutside = this.handleClickOutside.bind(this);
     this.handleSettingsIconClick = this.handleSettingsIconClick.bind(this);
   }
-
 
   async componentDidMount() {
     await this.fetchData();
@@ -415,7 +413,6 @@ class MyGamesTable extends Component {
     if (status === 'finished' || status === 'skipped') {
       const { currentTutorial } = this.state;
       this.props.updateTutorialCompleted(currentTutorial);
-
       this.setState({ run: false });
     }
   };
@@ -452,7 +449,6 @@ class MyGamesTable extends Component {
         },
         () => {
           document.getElementById('payout').focus();
-
         }
       );
     }
@@ -519,17 +515,16 @@ class MyGamesTable extends Component {
             styles={{
               options: {
                 zIndex: 10000,
-                backgroundColor: isDarkMode ? 'rgb(81 48 98 / 60%)' : '#ccc9', // Tooltip background color
-                primaryColor: '#ff0000', // Custom color for buttons and highlights
-                arrowColor: isDarkMode ? 'rgb(81 48 98 / 60%)' : '#ccc9', // Arrow color
-                textColor: isDarkMode ? '#f9f9f9' : '#333', // Text color inside the tooltip
-                width: 300, // Tooltip width
-                padding: 20, // Padding inside the tooltip
-                borderRadius: 5, // Rounded corners for the tooltip
+                backgroundColor: isDarkMode ? 'rgb(81 48 98 / 60%)' : '#ccc9',
+                primaryColor: '#ff0000',
+                arrowColor: isDarkMode ? 'rgb(81 48 98 / 60%)' : '#ccc9',
+                textColor: isDarkMode ? '#f9f9f9' : '#333',
+                width: 300,
+                padding: 20,
+                borderRadius: 5,
               },
-
               buttonClose: {
-                borderRadius: '0.3em', /* Custom border radius */
+                borderRadius: '0.3em',
                 color: isDarkMode ? '#f9f9f9' : '#333',
               },
               buttonBack: {
@@ -544,7 +539,6 @@ class MyGamesTable extends Component {
                 borderRadius: '0.3em',
                 color: isDarkMode ? '#f9f9f9' : '#333',
               },
-
             }}
           />
 
@@ -1045,7 +1039,11 @@ class MyGamesTable extends Component {
                         variant="filled"
                         autoComplete="off"
                         InputProps={{
-                          endAdornment: 'RPS'
+                          endAdornment: (
+                            <InputAdornment position="end">
+                              &nbsp;RPS
+                            </InputAdornment>
+                          ),
                         }}
                         className="form-control"
                         disabled={this.state.paymentMethod === "manual"}

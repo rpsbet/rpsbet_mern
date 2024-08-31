@@ -28,6 +28,7 @@ const customStyles = {
     transform: 'translate(-50%, -50%)',
     background: 'transparent',
     padding: 0,
+    border: 'none'
   },
 };
 

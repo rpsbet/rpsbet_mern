@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { renderLottieAnimation } from '../../util/LottieAnimations';
 import { acQueryMyItem } from '../../redux/Item/item.action';
-import { Button, TextField, Tooltip } from '@material-ui/core';
+import { Button, TextField, Tooltip, InputAdornment } from '@material-ui/core';
 import { Info } from '@material-ui/icons';
 import styled from 'styled-components';
 import { setFocused } from '../../redux/Auth/user.actions.js'
@@ -192,7 +192,11 @@ class AdvancedSettings extends Component {
                     shrink: true
                   }}
                   InputProps={{
-                    endAdornment: 'RPS'
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        &nbsp;RPS
+                      </InputAdornment>
+                    ),
                   }}
                   onChange={e => {
                     if (this.props.game_mode === 'Mystery Box') {

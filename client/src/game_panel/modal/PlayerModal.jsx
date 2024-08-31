@@ -7,7 +7,6 @@ import { setCurrentOfferTargetInfo } from '../../redux/Loan/loan.action';
 import styled from 'styled-components';
 import { renderLottieAnimation } from '../../util/LottieAnimations';
 import { openOfferLoanModal } from '../../redux/Notification/notification.actions';
-
 import {
   setChatRoomInfo,
   addNewTransaction
@@ -17,6 +16,7 @@ import {
   Button,
   TextField,
   Table,
+  InputAdornment,
   TableBody,
   TableCell,
   TableRow,
@@ -56,7 +56,8 @@ const customStyles = {
     bottom: 'auto',
     transform: 'translate(-50%, -50%)',
     background: 'transparent',
-    padding: 0
+    padding: 0,
+    border: 'none'
   }
 };
 const MarketplaceContainer = styled.div`
@@ -419,6 +420,7 @@ class PlayerModal extends Component {
       'KEKW',
       'smellyfingers',
       'SUPPORT',
+      '69',
       'OFFICIALRPSGAME',
       'SYSTEM',
       'WHALE WATCHERS',
@@ -675,7 +677,11 @@ class PlayerModal extends Component {
                           variant="filled"
                           autoComplete="off"
                           InputProps={{
-                            endAdornment: 'RPS'
+                            endAdornment: (
+                              <InputAdornment position="end">
+                                &nbsp;RPS
+                              </InputAdornment>
+                            ),
                           }}
                           className="form-control"
                         />

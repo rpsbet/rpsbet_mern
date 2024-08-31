@@ -74,10 +74,14 @@ app.use(express.json({ extended: false }));
 app.use(fileUpload());
 app.use(bodyParser.json());
 app.use(session({
-  secret: process.env.SESSION_SECRET, // Single session secret used for signing all cookies
+  secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: true,
-  cookie: { secure: process.env.NODE_ENV === 'production' } // Use secure cookies in production
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    sameSite: 'strict',
+  }
 }));
 
 // Google OAuth 2.0 token verification

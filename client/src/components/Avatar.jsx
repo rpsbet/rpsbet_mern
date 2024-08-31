@@ -47,7 +47,6 @@ class Avatar extends Component {
   // }
 
   static getDerivedStateFromProps(nextProps, prevState) {
-    // Check if any prop values have changed
     if (
       nextProps.src !== prevState.src ||
       nextProps.alt !== prevState.alt ||
@@ -55,18 +54,18 @@ class Avatar extends Component {
       nextProps.username !== prevState.username ||
       nextProps.rank !== prevState.rank
     ) {
-      // If any prop has changed, return the updated state
+     
       return {
         src: nextProps.src,
         alt: nextProps.alt,
         accessory: nextProps.accessory,
         username: nextProps.username,
         rank: nextProps.rank,
-        dominantColor: '3px solid transparent' // Reset dominantColor when props change
+        dominantColor: '3px solid transparent'
       };
     }
 
-    // If no prop has changed, return null
+    
     return null;
   }
 
@@ -147,6 +146,7 @@ class Avatar extends Component {
       'smellyfingers',
       'SUPPORT',
       'OFFICIALRPSGAME',
+      '69',
       'SYSTEM',
       'WHALE WATCHERS',
       'NO BROKIES'

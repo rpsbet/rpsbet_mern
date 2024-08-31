@@ -16,7 +16,7 @@ import { faHeart, faHeartBroken, faStopwatch } from '@fortawesome/free-solid-svg
 import animationData from '../LottieAnimations/live';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUsers } from '@fortawesome/free-solid-svg-icons';
+import { faUsers, faAdjust } from '@fortawesome/free-solid-svg-icons';
 import {
   addNewTransaction,
   coHost
@@ -64,6 +64,7 @@ const customStyles = {
     bottom: 'auto',
     transform: 'translate(-50%, -50%)',
     background: 'transparent',
+    border: 'none',
     padding: 0
   }
 };
@@ -79,7 +80,7 @@ class OpenGamesTable extends Component {
       fetchedRoomIds: [],
       fetchedDataIds: [],
       showPopup: false,
-      // hostNetProfitLists: [],
+      invertFilter: false,
       actionList: null,
       isCoHostModalOpen: false,
       isFocused: false,
@@ -291,20 +292,20 @@ class OpenGamesTable extends Component {
   handleSendCoHost = async () => {
     const { coHostAmount, selectedRow } = this.state;
     const { balance, isDarkMode, setBalance, addNewTransaction, getRoomList, selectedGameType } = this.props;
-  
+
     try {
       if (coHostAmount <= 0) {
         alertModal(isDarkMode, 'R U FURR-REAL? COHOST AMOUNT MUST BE MORE THAN 0!');
         return;
       }
-  
+
       if (coHostAmount > balance) {
         alertModal(isDarkMode, 'NOT ENUFF FUNDS AT THIS MEOWMENT');
         return;
       }
-  
+
       const result = await this.props.coHost(coHostAmount, selectedRow._id);
-  
+
       if (result.success) {
         alertModal(isDarkMode, result.message, '-cat');
         setBalance(result.balance);
@@ -321,7 +322,7 @@ class OpenGamesTable extends Component {
       alertModal(isDarkMode, 'FAILED TRANSACTION');
     }
   };
-  
+
 
   customFromNow(date) {
     const now = Moment();
@@ -550,6 +551,10 @@ class OpenGamesTable extends Component {
     return value >= 0 ? '#57ca22' : 'red';
   };
 
+  toggleInvertFilter = () => {
+    this.setState({ invertFilter: !this.state.invertFilter });
+  };
+
   handleMaxButtonClick = () => {
     if (this.props.balance) {
       const maxPayoutAmount = this.props.balance;
@@ -573,7 +578,7 @@ class OpenGamesTable extends Component {
   render() {
     // const gameTypePanel = this.generateGameTypePanel();
     const {
-      // hostNetProfitList,
+      invertFilter,
       isFocused,
     } = this.state;
     const { showPlayerModal, selectedCreator, isLowGraphics, isDarkMode, recentlyClosed, handleOpenPlayerModal, handleClosePlayerModal } = this.props;
@@ -589,7 +594,7 @@ class OpenGamesTable extends Component {
     return (
       <>
         <div className="overflowX">
-          
+
           {/* <div className="game-type-container">
             <div
               className="game-type-panel"
@@ -617,7 +622,7 @@ class OpenGamesTable extends Component {
         )}
 
         <div className="table main-game-table">
-          
+
           {this.state.isLoading ? (
             <>
               <span style={{ position: "relative", display: "flex", justifyContent: "center", alignItems: "center" }}>Fetching Rooms&nbsp;</span>
@@ -692,7 +697,9 @@ class OpenGamesTable extends Component {
                                 <div className="hosts" key={index}>
                                   <a
                                     className="player"
-                                    onClick={() => handleOpenPlayerModal(host.host._id)}
+                                    onClick={() => {
+                                      handleOpenPlayerModal(host.host);
+                                    }}
                                   >
                                     <Avatar
                                       className="avatar desktop-only"
@@ -706,6 +713,7 @@ class OpenGamesTable extends Component {
                                   </a>
                                 </div>
                               ))}
+
                             {row.hosts.length > 2 && (
                               <div className="hosts avatar-square">
                                 <div className="avatar-count">
@@ -924,7 +932,7 @@ class OpenGamesTable extends Component {
                                 {row.views?.length || 0}
                               </Typography>
                             </div> */}
-                          <div id="view" style={{
+                            <div id="view" style={{
                               filter: isDarkMode ? "brightness(3)" : "none",
                               marginRight: "-5px"
                             }}>
@@ -1198,18 +1206,59 @@ class OpenGamesTable extends Component {
               <div className="popup title">
                 <h2 className='modal-title title' style={{ textAlign: 'center', marginBottom: "20px" }}>Co-Hosting Information</h2>
                 <div className="popup-content">
-                  <img src={'../img/co-host.svg'} style={{ borderRadius: '20px', border: '1px solid aaa9', overflow: 'hidden' }} />
-                  <h3>Co-Hosting Overview</h3>
-                  <p>Co-Hosting, allows you to invest in existing games and own a share of its profits.</p>
-                  <p>Steps to become a co-host:</p>
-                  <ol>
-                    <li>Go To 'Live Battles'</li>
-                    <li>Pick a game from the list (check the mini-charts for steady growth games).</li>
-                    <li>Click the green plus <span style={{ color: 'green' }}>[+]</span> next to the 'WIN' button.</li>
-                    <li>In the Co-Hosting Popup, enter the amount you want to invest and click 'CONTRIBUTE'.</li>
-                    <li>Sit back and wait for automatic payouts (if Host has enabled) or your share value to increase as its bankroll increases.</li>
+                <div style={{ position: 'relative' }}>
+                  <img src={'../img/co-host.svg'} style={{ borderRadius: '20px', border: '1px solid aaa9', overflow: 'hidden', filter: invertFilter ? 'invert(1)' : 'none', }} />
+                  <Button
+                    onClick={this.toggleInvertFilter}
+                    style={{ position: 'absolute', bottom: '10px', right: '10px', borderRadius: "100px", padding: "0" }}
+                  >
+                    <FontAwesomeIcon icon={faAdjust} />
+                  </Button>
+                  </div>
+                  <h3 style={{ fontSize: '24px', fontWeight: '600', marginBottom: '15px', textAlign: 'center', letterSpacing: '0.5px' }}>
+                    Co-Hosting Overview
+                  </h3>
+                  <p style={{ fontSize: '16px', lineHeight: '1.6', marginBottom: '15px', textAlign: 'justify', padding: '0 20px' }}>
+                    Co-Hosting allows you to invest in existing games and own a share of its profits.
+                  </p>
+                  <p style={{ fontSize: '16px', fontWeight: '600', color: '#16e100', marginTop: '20px', marginBottom: '10px', padding: '0 20px' }}>
+                    Steps to become a co-host:
+                  </p>
+                  <ol style={{ fontSize: '16px', lineHeight: '1.6', paddingLeft: '40px', marginBottom: '20px' }}>
+                    <li style={{ marginBottom: '8px' }}>Go To 'Live Battles'</li>
+                    <li style={{ marginBottom: '8px' }}>Pick a game from the list (check the mini-charts for steady growth games).</li>
+                    <li style={{ marginBottom: '8px' }}>
+                      Click the green plus <span style={{ color: '#16e100' }}>[+]</span> next to the 'WIN' button.
+                    </li>
+                    <li style={{ marginBottom: '8px' }}>
+                      In the Co-Hosting Popup, enter the amount you want to invest and click 'CONTRIBUTE'.
+                    </li>
+                    <li style={{ marginBottom: '8px' }}>
+                      Sit back and wait for automatic payouts (if Host has enabled) or your share value to increase as its bankroll increases.
+                    </li>
                   </ol>
-                  <i>PRO TIP: You can track your earnings by searching for 'co-host' in All Transactions by clicking your wallet then View-All.</i>
+                  <i style={{ fontSize: '16px', color: '#ff0000', display: 'block', padding: '0 20px', marginBottom: '30px' }}>
+                    PRO TIP: You can track your earnings by searching for 'co-host' in All Transactions by clicking your wallet then View-All.
+                  </i>
+
+                  {/* New Definitions Section */}
+                  <h3 style={{ fontSize: '24px', fontWeight: '600', marginTop: '30px', marginBottom: '15px', textAlign: 'center', letterSpacing: '0.5px' }}>
+                    Definitions
+                  </h3>
+                  <h4 style={{ fontSize: '20px', fontWeight: '600', color: '#16e100', marginBottom: '10px', padding: '0 20px' }}>
+                    Dividends (Auto-Payouts)
+                  </h4>
+                  <p style={{ fontSize: '16px', lineHeight: '1.6', marginBottom: '15px', textAlign: 'justify', padding: '0 20px' }}>
+                    Dividends are payments made by a company to its shareholders, typically as a distribution of profits. These payments are usually made in cash or additional shares of stock.
+                  </p>
+
+                  <h4 style={{ fontSize: '20px', fontWeight: '600', color: '#16e100', marginBottom: '10px', padding: '0 20px' }}>
+                    Shares (Stake)
+                  </h4>
+                  <p style={{ fontSize: '16px', lineHeight: '1.6', marginBottom: '15px', textAlign: 'justify', padding: '0 20px' }}>
+                    Shares represent units of ownership in a company. When you own shares in a company, you own a portion of it, which may entitle you to vote on company decisions and earn dividends.
+                  </p>
+
                   <Button style={{ display: 'block', margin: 'auto' }} onClick={this.togglePopup}>OK, GOT IT!</Button>
                 </div>
                 <button className="popup-close" onClick={this.togglePopup}>&times;</button>

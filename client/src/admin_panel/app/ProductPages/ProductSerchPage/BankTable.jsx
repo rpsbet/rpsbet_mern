@@ -197,14 +197,14 @@ class BankTable extends Component {
       showMyLoansModal: false,
       sortAnchorEl: null,
       sortCriteria: 'updated_at',
-      loanType: 'standard',
+      loanType: '',
       loansWithProfit: []
     };
   }
   
   async componentDidMount() {
     const { acGetCustomerInfo } = this.props;
-    await this.props.previousLoans(30, 1, 'loan_amount', 'standard');
+    await this.props.previousLoans(30, 1, 'loan_amount', '');
     const { prevLoans } = this.props;
 
     try {
@@ -221,7 +221,7 @@ class BankTable extends Component {
           loaner.customerInfo = customerInfo; // Attach customer info to loaner
         }));
 
-        const profit = ((totalLoanerAmount - totalPaidBack) * -1);
+        const profit = (totalPaidBack * loan.apy) - totalLoanerAmount;
         const customerInfo = await acGetCustomerInfo(loan.lender);
         return {
           ...loan,
@@ -391,11 +391,11 @@ class BankTable extends Component {
             >
               <MenuItem
                 onClick={() =>
-                  this.handleFilterClose('standard')
+                  this.handleFilterClose('FULL')
                 }
-                selected={loanType === 'standard'}
+                selected={loanType === ''}
               >
-                Standard
+                FULL
               </MenuItem>
 
             </Menu>
@@ -480,10 +480,48 @@ class BankTable extends Component {
                             <FontAwesomeIcon icon={faClock} /> Loan Period:
                           </TableCell>
                           <TableCell className="value">
-                            {row.loan_period}
+                            {row.loan_period} Days
                           </TableCell>
                         </TableRow>
+                        <TableRow>
+                            <TableCell>
+                              <FontAwesomeIcon icon={faUsers} />&nbsp;Loaners:
+                            </TableCell>
+                            <TableCell className="value cell-joiners">
+                              {row.loaners && row.loaners.length > 0 ? (
+                                <>
+                                  {row.loaners.slice(0, 2).map((loaner, index) => (
+                                    loaner && loaner.avatar ? (
+                                      <a
+                                        key={loaner._id || index} // Use loaner's _id if available; otherwise, fallback to index
+                                        className="player"
+                                        onClick={() => this.handleOpenPlayerModal(loaner._id)}
+                                      >
+                                        <Avatar
+                                          className="avatar"
+                                          src={loaner.avatar}
+                                          rank={loaner.totalWagered || 0}
+                                          accessory={loaner.accessory || ''}
+                                          alt={loaner.username || 'Unknown User'}
+                                          darkMode={this.props.isDarkMode}
+                                        />
+                                      </a>
+                                    ) : null
+                                  ))}
+                                  {row.loaners.length > 2 && (
+                                    <div className="avatar-square" style={{marginLeft: "20px", zIndex: "0"}}>
+                                      <div className="avatar-count">
+                                        +{row.loaners.length - 2}
+                                      </div>
+                                    </div>
+                                  )}
+                                </>
+                              ) : (
+                                <span>No Loaners</span>
+                              )}
+                            </TableCell>
 
+                          </TableRow>
                       </TableBody>
                     </Table>
                   </TableContainer>
@@ -539,13 +577,13 @@ class BankTable extends Component {
                 <div key={loan._id} className={`carousel-item ${loan.profit <= 0 ? 'red-gradient' : 'green-gradient'}`}
                 >
                   <div className="loan-details">
-                    <Table>
+                    <Table  className="product-detail">
                       <TableBody>
                         <TableRow>
                           <TableCell>
                             <FontAwesomeIcon icon={faUser} /> LENDER:
                           </TableCell>
-                          <TableCell>
+                          <TableCell style={{float:"right"}}>
                             <a
                               className="player"
                               onClick={() => this.handleOpenPlayerModal(loan.lender)}
@@ -566,19 +604,19 @@ class BankTable extends Component {
                           <TableCell>
                             <FontAwesomeIcon icon={faClock} /> DAYS LEFT:
                           </TableCell>
-                          <TableCell>{loan.outstanding === true ? "OUTSTANDING" : loan.outstanding}</TableCell>
+                          <TableCell className="value">{loan.outstanding === true ? "OUTSTANDING" : loan.outstanding}</TableCell>
                         </TableRow>
                         <TableRow>
                           <TableCell>
-                            <FontAwesomeIcon icon={faMoneyBillAlt} /> TOTAL LOANER AMOUNT:
+                            <FontAwesomeIcon icon={faMoneyBillAlt} /> UNPAID FUNDS:
                           </TableCell>
-                          <TableCell>{convertToCurrency(loan.totalLoanerAmount)}</TableCell>
+                          <TableCell className="value">{convertToCurrency(loan.totalLoanerAmount)}</TableCell>
                         </TableRow>
                         <TableRow>
                           <TableCell>
                             <FontAwesomeIcon icon={faUsers} /> LOANERS:
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="cell-joiners" >
                             {
                               loan.loaners.map((loaner, index) => (
                                 <a
@@ -604,13 +642,13 @@ class BankTable extends Component {
                           <TableCell>
                             <FontAwesomeIcon icon={faMoneyCheckAlt} /> TOTAL PAID BACK:
                           </TableCell>
-                          <TableCell>{convertToCurrency(loan.totalPaidBack)}</TableCell>
+                          <TableCell className="value">{convertToCurrency(loan.totalPaidBack)}</TableCell>
                         </TableRow>
                         <TableRow>
                           <TableCell>
                             <FontAwesomeIcon icon={faChartLine} /> PROFIT:
                           </TableCell>
-                          <TableCell className={loan.profit <= 0 ? 'profit-negative' : 'profit-positive'}>
+                          <TableCell className={`value ${loan.profit <= 0 ? 'profit-negative' : 'profit-positive'}`}>
                             {convertToCurrency(loan.profit)}
                           </TableCell>
                         </TableRow>

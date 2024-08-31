@@ -9,6 +9,7 @@ import {
   LOAN_QUERY_ONE,
   MY_LOAN_QUERY,
   MY_LOAN_QUERY_ONE,
+  USER_LOADED,
   SET_OFFER_TARGET_INFO,
   LOADING_LOAN_TABLE,
   PAGINATION_FOR_LOAN,
@@ -187,7 +188,7 @@ export const getLoan = () => async (dispatch, getState) => {
           loan_amount: 0,
           apy: 0,
           loan_period: 0,
-          loan_type: 'standard',
+          loan_type: '',
           startDateTime: new Date(),
           expireDateTime: new Date()
         }

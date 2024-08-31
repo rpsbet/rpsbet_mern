@@ -27,6 +27,7 @@ import {
   Tooltip,
   Icon,
   Typography,
+  InputAdornment,
   RadioGroup,
   Grid,
   Radio,
@@ -54,7 +55,8 @@ const customStyles = {
     bottom: 'auto',
     transform: 'translate(-50%, -50%)',
     padding: 0,
-    background: 'transparent'
+    background: 'transparent',
+    border: 'none'
   }
 };
 
@@ -597,7 +599,11 @@ class DepositModal extends Component {
                             className="form-control"
                             InputProps={{
                               readOnly: true,
-                              endAdornment: 'ETH'
+                              endAdornment: (
+                                <InputAdornment position="end">
+                                  &nbsp;ETH
+                                </InputAdornment>
+                              ),
                             }}
                           />
                           <Tooltip title="Amount is automatically calculated based on selected pack." arrow>

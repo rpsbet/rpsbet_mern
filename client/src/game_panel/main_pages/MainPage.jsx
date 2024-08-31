@@ -288,7 +288,7 @@ class MainPage extends Component {
                   <Button style={{ width: "100%", padding: "60px" }} onClick={this.toggleP2PLending}>
                     {this.state.showP2PLending ? '-' : '+'} <h2 className="modal-title title">
                       <FontAwesomeIcon icon={faCoins} className="mr-2" />
-                      P2P Lending
+                      CENTRAL BANK
                     </h2>
                   </Button>
                   {this.state.showP2PLending && <BankPage />}

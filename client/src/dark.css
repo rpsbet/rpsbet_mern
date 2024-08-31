@@ -18,6 +18,10 @@
 	box-shadow: none;
 }
 
+.dark_mode .top-wins div.table-cell {
+background: linear-gradient(298deg, #4f0068, #3d0066);
+}
+
 .dark_mode .notification p:first-child {
 	color: #e9ecef;
 	font-size: 0.8em !important;
@@ -25,7 +29,7 @@
 }
 
 .dark_mode .popup {
-	background-color: #0c0c0c;
+	background: linear-gradient(45deg, #430088, #c000f2);
 }
 
 .dark_mode .card-hidden,
@@ -44,10 +48,16 @@
 }
 
 .dark_mode .comment-container {
-	border: 1px solid #333;
-	background-color: #15151599;
+	border: none;
+	background-color: rgb(119 0 255);
 }
 
+.dark_mode  .special-message-rent .chat-msg {
+	background: linear-gradient(258deg, #651184, #4b008a) !important;
+}
+.dark_mode  .special-message .chat-msg {
+	background: linear-gradient(-58deg, #41008e, #8106a5);
+}
 
 .dark_mode .comment-footer {
 	display: flex;
@@ -140,10 +150,10 @@
 }
 
 .dark_mode .chat-msg {
-	background: linear-gradient(176deg, #47244536, #3b143c24);
+	background: linear-gradient(176deg, #3d0066, #3c0066);
 }
 .dark_mode .history-background {
-	background: linear-gradient(#ff818100, #660024ba) !important;
+	background: linear-gradient(#ff818100, #9308efba) !important;
 }
 .dark_mode .chat-wrapper .chat-panel .chat-line .sender-name {
 	color: #b9bbbe;
@@ -152,18 +162,6 @@
 .dark_mode .chat-player .avatar {
 	background-color: rgb(45, 45, 45);
 }
-
-.dark_mode .chat-msg,
-.dark_mode div.table .table-row,
-.dark_mode .table-header {
-	border-top: 2px solid #7a00bf4f;
-	border-bottom: 3px solid #34004fad;
-}
-
-.dark_mode .table-header {
-	background: linear-gradient(45deg, #290936, transparent);
-}
-
 
 .dark_mode .cell-likes {
 	text-align: center;
@@ -199,12 +197,7 @@
 	background: #151515;
 }
 
-.dark_mode .modal-header {
-	border-bottom: 1px solid #4500ff;
-}
-
 .dark_mode .modal-footer {
-	border-top: 1px solid #4500ff;
     background: linear-gradient(45deg, #6316d7, #6c00a4, #3a00a3);
     color: #f9f9f9;
 }
@@ -290,7 +283,7 @@
 }
 
 .dark_mode .game_header {
-	background: linear-gradient(45deg, #202028, #280130);
+	background: linear-gradient(45deg, #370068, #4d005d);
 }
 
 .dark_mode .game_header .main_header a.game_logo {
@@ -305,15 +298,10 @@
 	color: #8e9297;
 }
 
-.dark_mode .contents_wrapper .main-game .sub-panel {
-	border-left: 1px solid rgba(40, 38, 55, 0.48);
-}
-
 .dark_mode .contents_wrapper,
 .dark_mode .contents_wrapper .main-game .main-panel,
 .dark_mode .contents_wrapper .main-game .sub-panel {
-	background-color: #0c0c0c;
-	background-image: linear-gradient(-135deg,  #260b2e, #2e2444 95%), url(../public/img/bgm.webp) !important;
+	background-image: linear-gradient(-135deg,   #420068, #3b0067 95%), url(../public/img/bgm.webp) !important;
 }
 
 .dark_mode .avatar-square {
@@ -339,11 +327,11 @@
 }
 
 .dark_mode div.table .table-row {
-	background: linear-gradient(52deg, #06040438, #a0029017);
+	background: linear-gradient(52deg, #441e70, #400068);
 	color: #8e9297;
 }
 .dark_mode div.table .table-row.carousel-content {
-	background: linear-gradient(52deg, #1a1212b6, #ff03ca42);
+	background: linear-gradient(52deg, #54096a, #3f0067);
 }
 
 
@@ -377,7 +365,7 @@
 }
 
 .dark_mode .header_panel_contents {
-	background: linear-gradient(45deg, #3e133b, #220031);
+	background: linear-gradient(45deg, #71247f, #670095);
 }
 
 .bow span.game-sub-title {
@@ -404,7 +392,7 @@
 }
 
 .dark_mode .game-page .game-contents {
-	background: radial-gradient(#aa06410f, #3a014057);
+	background: linear-gradient(#6406aa, #410068);
 }
 
 .dark_mode .game-page hr {
@@ -442,8 +430,7 @@
 }
 
 .dark_mode .mat-chat .chat-wrapper {
-	background: linear-gradient(185deg, #201e28, #2a1a3b);
-	border-right: 1px solid rgba(40, 38, 55, 0.48);
+	background: linear-gradient(185deg, #3b0065, #2e0064);
 }
 
 .dark_mode .modal-body,
@@ -480,7 +467,7 @@
 }
 
 .dark_mode .chat-wrapper .chat-input-panel .emoticon-panel>img:hover {
-	background: #333;
+	border: 2px solid #fff;
 }
 
 .dark_mode .react-confirm-alert-overlay {
@@ -591,10 +578,15 @@
 .dark_mode #btn_next:hover,
 .dark_mode #btn_prev:hover,
 .dark_mode button:hover,
+.dark_mode a:hover,
 .dark_mode .btn-back:hover {
-	box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
+	border: 2px solid #fff !important;
 }
 
+.dark_mode a.player,
+.dark_mode a.chat-player:hover {
+	border: none !important;
+}
 
 .dark_mode #balance {
 	background: linear-gradient(39deg, #590000, #ff0000);
@@ -636,8 +628,7 @@
 
 @media (max-width: 768px) {
 	.dark_mode .chat-wrapper .chat-input-panel {
-		background-color: #212529;
-		border-top: 1px solid #343a40;
+		background: linear-gradient(45deg, #580096, #470065);
 	}
 
 	.dark_mode .game-logs-modal-container {

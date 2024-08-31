@@ -3,7 +3,7 @@ import Modal from 'react-modal';
 import { connect } from 'react-redux';
 import { closeListItemModal } from '../../redux/Notification/notification.actions';
 import { listItem } from '../../redux/Logic/logic.actions';
-import { Button, TextField, Radio, RadioGroup, FormControlLabel } from '@material-ui/core';
+import { Button, TextField, Radio, RadioGroup, FormControlLabel, InputAdornment } from '@material-ui/core';
 import { alertModal } from './ConfirmAlerts';
 
 Modal.setAppElement('#root');
@@ -21,6 +21,7 @@ const customStyles = {
     transform: 'translate(-50%, -50%)',
     padding: 0,
     background: 'transparent',
+    border: 'none'
   },
 };
 
@@ -137,7 +138,11 @@ class ListItemModal extends Component {
                     shrink: true,
                   }}
                   InputProps={{
-                    endAdornment: 'RPS / month',
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        &nbsp;RPS / MONTH
+                      </InputAdornment>
+                    ),
                   }}
                 />
               ) : (
@@ -158,7 +163,11 @@ class ListItemModal extends Component {
                     shrink: true,
                   }}
                   InputProps={{
-                    endAdornment: 'RPS',
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        &nbsp;RPS
+                      </InputAdornment>
+                    ),
                   }}
                 />
               )}

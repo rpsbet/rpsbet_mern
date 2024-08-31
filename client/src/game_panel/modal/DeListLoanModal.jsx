@@ -4,11 +4,11 @@ import { connect } from 'react-redux';
 import {
   closeDeListLoanModal
 } from '../../redux/Notification/notification.actions';
-import { acQueryMyLoan, acQueryLoan} from '../../redux/Loan/loan.action';
+import { acQueryMyLoan, acQueryLoan, acCalculateRemainingLoans } from '../../redux/Loan/loan.action';
 import { Button, TextField } from '@material-ui/core';
 import { alertModal } from './ConfirmAlerts';
-import { setBalance } from '../../redux/Auth/user.actions';
-import { addNewTransaction, deListLoan } from '../../redux/Logic/logic.actions';
+import { getUser } from '../../redux/Auth/user.actions';
+import { deListLoan } from '../../redux/Logic/logic.actions';
 
 Modal.setAppElement('#root');
 
@@ -24,7 +24,8 @@ const customStyles = {
     bottom: 'auto',
     transform: 'translate(-50%, -50%)',
     padding: 0,
-    background: 'transparent'
+    background: 'transparent',
+    border: 'none'
   }
 };
 
@@ -41,12 +42,12 @@ class DeListLoanModal extends Component {
     const response = await deListLoan({ loan_id: loan });
     if (response.success) {
       const { balance, newTransaction, message } = response;
-      closeDeListLoanModal();
       alertModal(isDarkMode, message, '-cat');
-      setBalance(balance);
-      addNewTransaction(newTransaction);
-      await acQueryMyLoan(30, 1, 'loan_amount', 'standard');
-      await acQueryLoan(30, 1, 'loan_amount', 'standard');
+      await acQueryMyLoan(30, 1, 'loan_amount', '');
+      await acQueryLoan(30, 1, 'loan_amount', '');
+      await this.props.acCalculateRemainingLoans();
+      await this.props.getUser(true, 5);
+      closeDeListLoanModal();
     } else {
       alertModal(isDarkMode, response.message);
     }
@@ -101,8 +102,8 @@ const mapStateToProps = state => ({
 const mapDispatchToProps = {
   closeDeListLoanModal,
   deListLoan,
-  setBalance,
-  addNewTransaction,
+  acCalculateRemainingLoans,
+  getUser,
   acQueryMyLoan,
   acQueryLoan
 };

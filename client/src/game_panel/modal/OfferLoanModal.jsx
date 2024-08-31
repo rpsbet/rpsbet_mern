@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import Modal from 'react-modal';
 import { connect } from 'react-redux';
-import { Table, TableBody, Button, TextField, TableCell, TableContainer, TableHead, TableRow, Tooltip } from '@material-ui/core';
+import { Typography, Table, TableBody, Button, TextField, TableCell, TableContainer, TableHead, TableRow, Tooltip, InputAdornment } from '@material-ui/core';
 import { acQueryLoan, acCalculateRemainingLoans, emitLoanOffer, cancelledOffer, reconsiderOffer, offerLoan, createAndLend } from '../../redux/Loan/loan.action';
 import { getUser } from '../../redux/Auth/user.actions';
 import { setBalance } from '../../redux/Auth/user.actions';
@@ -10,8 +10,10 @@ import Lottie from 'react-lottie';
 import spinningIcon from '../LottieAnimations/spinningIcon';
 import { convertToCurrency } from '../../util/conversion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 import { faDollarSign, faCalendarAlt, faMoneyBillWave } from '@fortawesome/free-solid-svg-icons';
-
+import { Info } from '@material-ui/icons';
+import styled from 'styled-components';
 import {
   closeOfferLoanModal
 } from '../../redux/Notification/notification.actions';
@@ -23,22 +25,6 @@ Modal.setAppElement('#root');
 const cellStyles = {
   borderBottom: "none",
   padding: '5px',
-};
-
-const labelCellStyle = {
-  ...cellStyles,
-  textAlign: "left",
-  width: '200px', // Adjust width as needed
-};
-
-const inputCellStyle = {
-  ...cellStyles,
-  textAlign: "right",
-};
-
-const infoTextStyle = {
-  whiteSpace: "nowrap",
-  marginTop: '5px', // Adjust margin as needed
 };
 
 const customStyles = {
@@ -53,9 +39,22 @@ const customStyles = {
     bottom: 'auto',
     transform: 'translate(-50%, -50%)',
     padding: 0,
-    background: 'transparent'
+    background: 'transparent',
+    border: 'none'
   }
 };
+
+const CalculationField = styled.div`
+  margin-top: 0px;
+`;
+
+const WarningContainer = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  border-radius: 5px;
+  margin-top: 10px;
+`;
 
 
 class OfferLoanModal extends Component {
@@ -168,6 +167,23 @@ class OfferLoanModal extends Component {
     });
   }
 
+  calculateNewBalance = (user_balance, loan_amount) => {
+    const newBalance = user_balance - parseFloat(loan_amount);
+    return isNaN(newBalance) ? user_balance : newBalance;
+  };
+
+  calculateInterest = (loan_amount, interestRateText) => {
+    const amount = parseFloat(loan_amount);
+    const interestRate = parseFloat(interestRateText);
+    const interestAmount = (amount * interestRate) / 100;
+    return isNaN(interestAmount) ? 0 : interestAmount;
+  };
+
+  determineLoanType = (user_balance, loan_amount) => {
+    const newBalance = this.calculateNewBalance(user_balance, loan_amount);
+    return newBalance < 0 ? 'FRACTIONAL' : 'FULL';
+  };
+
   createAndLend = async () => {
     const { responseText, loanPeriodText, interestRateText, og } = this.state;
     const { isDarkMode, getUser, closeOfferLoanModal, offerLoan, userInfo, offerInfo } = this.props;
@@ -220,14 +236,17 @@ class OfferLoanModal extends Component {
     this.setState({ interestRateText: parsedValue ? parsedValue[0] : "" });
   };
 
-
+  exceedsReservesLimit = (user_balance, loan_amount) => {
+    const loanAmount = parseFloat(loan_amount);
+    return loanAmount > (user_balance * 10);
+  };
 
   onBtnOkClicked = async e => {
     const { userInfo, closeOfferLoanModal, acQueryLoan, setBalance, addNewTransaction, isDarkMode, offerLoan, offerInfo } = this.props;
     const { responseText, loanPeriodText, interestRateText } = this.state;
 
-    if (parseFloat(responseText) > userInfo.balance) {
-      alertModal(isDarkMode, "Entered loan amount exceeds balance.");
+    if (parseFloat(responseText) > 10 * userInfo.balance) {
+      alertModal(isDarkMode, "PLEASE ENSURE THE LOAN AMOUNT IS NO MORE THAN 10X YOUR BALANCE");
       return;
     }
     if (parseFloat(responseText) < 0.05) {
@@ -271,19 +290,9 @@ class OfferLoanModal extends Component {
     const inputCellStyle = {
       flex: 4,
       border: 'none',
-      paddingTop: '2.5px'
+      padding: '30px 20px'
     };
 
-    const labelCellStyle = {
-      flex: 1,
-      border: 'none'
-    };
-
-    const rowNumberStyle = {
-      flex: 0.5,
-      border: 'none',
-      fontWeight: '800'
-    }
     return (
       <Modal
         isOpen={this.props.isOpen}
@@ -295,18 +304,18 @@ class OfferLoanModal extends Component {
             <div className={`modal-icon result-icon-trade`}></div>
             {this.props.offerInfo.isLender ?
               (
-                <h5>OFFER LOAN TO &nbsp;{this.props.offerInfo.username}</h5>
+                <h5>OFFER LOAN TO {this.props.offerInfo.username}</h5>
               ) : (
-                <h5>LOAN OFFER FROM &nbsp;{this.props.offerInfo.username}</h5>
+                <h5>LOAN OFFER FROM {this.props.offerInfo.username}</h5>
 
               )}
 
-            <div className='thresholds' style={{ padding: '20px', overflow: 'auto' }}>
-              <TableContainer style={{ maxHeight: 150, overflow: 'auto' }}>
+            <div className='thresholds' style={{ padding: '20px', overflow: 'hidden' }}>
+              <TableContainer style={{ borderRadius: "20px", maxHeight: 150, overflow: 'hidden' }}>
                 <Table aria-label="nice-table">
-                  <TableHead style={{ textTransform: "uppercase", position: 'sticky', top: 0, zIndex: 1, backgroundColor: this.props.isDarkMode ? 'black' : 'white' }}>
+                  <TableHead style={{  textTransform: "uppercase", position: 'sticky', top: 0, zIndex: 1, backgroundColor: this.props.isDarkMode ? '#0000006e' : '#e9ecef99' }}>
                     <TableRow>
-                      <TableCell style={{ textAlign: 'center' }}>
+                      <TableCell style={{textAlign: 'center' }}>
                         <div className={'player'} style={{ display: 'flex' }}>
                           <Avatar
                             className="avatar"
@@ -326,9 +335,9 @@ class OfferLoanModal extends Component {
                           ></i>
                         </div>
                         {!cancelled && !waiting ? (
-                          <h6 style={{ color: '#28a745' }}>READY!</h6>
+                          <h6 style={{ color: 'rgb(72 255 4)' }}>READY!</h6>
                         ) : (
-                          <h6 style={{ color: 'grey' }}>WAITING!</h6>
+                          <h6 style={{ color: '#ccc' }}>WAITING!</h6>
                         )}
                       </TableCell>
 
@@ -352,7 +361,7 @@ class OfferLoanModal extends Component {
                                 }`}
                             ></i>
                           </div>
-                          <h6 style={{ color: 'grey' }}>WAITING!</h6>
+                          <h6 style={{ color: '#ccc' }}>WAITING!</h6>
                         </TableCell>
                       ) : (
                         <TableCell>
@@ -394,69 +403,187 @@ class OfferLoanModal extends Component {
               <>
                 <TableContainer style={{ padding: '0 20px 10px' }}>
                   <Table style={{ borderCollapse: 'collapse' }}>
-                    <TableRow style={{ display: 'flex', flexDirection: 'row' }}>
-                      <TableCell style={rowNumberStyle}>1.</TableCell>
-                      <TableCell style={labelCellStyle}>LOAN AMOUNT</TableCell>
+                    <TableRow>
                       <TableCell style={inputCellStyle}>
                         <TextField
                           variant="filled"
+                          label="Loan Amount"
                           value={responseText}
                           onChange={this.handleResponseTextChange}
                           InputProps={{
-                            endAdornment: 'RPS'
+                            endAdornment: (
+                              <InputAdornment position="end">
+                                &nbsp;RPS
+                              </InputAdornment>
+                            ),
                           }}
                           fullWidth
                         />
-                        <div style={infoTextStyle}>
-                          AVAILABLE FUNDS: {convertToCurrency(userInfo.balance)}
-                        </div>
+                      </TableCell>
+                      <TableCell style={{ textAlign: "center" }} >
+                        <Tooltip title="Enter the amount of loan you are lending in RPS">
+                          <Info style={{ cursor: "pointer" }} />
+                        </Tooltip>
                       </TableCell>
                     </TableRow>
 
-                    {/* Table Row for Loan Period */}
-                    <TableRow style={{ display: 'flex', flexDirection: 'row' }}>
-                      <TableCell style={rowNumberStyle}>2.</TableCell>
-                      <TableCell style={labelCellStyle}>LOAN PERIOD</TableCell>
+                    {this.exceedsReservesLimit(userInfo.balance, responseText) && (
+                      <TableRow>
+                        <TableCell colSpan={2}>
+                          <WarningContainer>
+                            <FontAwesomeIcon icon={faExclamationTriangle} style={{ color: '#ff0000', marginRight: '10px' }} />
+                            <Typography variant="body1"  style={{ marginTop: '0' }}>
+                              PLEASE ENSURE THE LOAN AMOUNT IS NO MORE THAN 10X YOUR BALANCE
+                            </Typography>
+                          </WarningContainer>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                    <TableRow>
                       <TableCell style={inputCellStyle}>
                         <TextField
                           variant="filled"
+                          label="Loan Period"
                           value={loanPeriodText}
                           onChange={this.handleLoanPeriodTextChange}
                           InputProps={{
-                            endAdornment: 'DAYS'
+                            endAdornment: (
+                              <InputAdornment position="end">
+                                &nbsp;DAYS
+                              </InputAdornment>
+                            ),
                           }}
                           fullWidth
                         />
+                      </TableCell>
+                      <TableCell style={{ textAlign: "center" }}>
+                        <Tooltip title="Enter the duration for which you want the loan in days">
+                          <Info style={{ cursor: "pointer" }} />
+                        </Tooltip>
                       </TableCell>
                     </TableRow>
 
                     {/* Table Row for Interest Rate */}
-                    <TableRow style={{ display: 'flex', flexDirection: 'row' }}>
-                      <TableCell style={rowNumberStyle}>3.</TableCell>
-                      <TableCell style={labelCellStyle}>INTEREST RATE (%)</TableCell>
+                    <TableRow>
                       <TableCell style={inputCellStyle}>
                         <TextField
                           variant="filled"
+                          label="Interest Rate"
                           value={interestRateText}
                           onChange={this.handleInterestRateTextChange}
                           InputProps={{
-                            endAdornment: '%'
+                            endAdornment: (
+                              <InputAdornment position="end">
+                                &nbsp;%
+                              </InputAdornment>
+                            ),
                           }}
                           fullWidth
                         />
-                        <div style={infoTextStyle}>
-                          NET PROFIT: <span style={{ color: "#28a745" }}>{convertToCurrency(((parseFloat(responseText) / 100) * parseFloat(interestRateText)))}</span>
-                        </div>
+                      </TableCell>
+                      <TableCell style={{ borderBottom: 'none', textAlign: "center" }}>
+                        <Tooltip title="Enter the yielding interest rate for the loan">
+                          <Info style={{ cursor: "pointer" }} />
+                        </Tooltip>
                       </TableCell>
                     </TableRow>
 
+                    <TableRow>
+                      <TableCell>
+                        <CalculationField>
+                          <Typography variant="body1" style={{ fontWeight: 'bold', marginTop: '0' }}>
+                            YOUR BALANCE:
+                          </Typography>
+                        </CalculationField>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body1" style={{ marginTop: '0' }}>
+                          {convertToCurrency(userInfo.balance)}
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow>
+                      <TableCell>
+                        <CalculationField>
+                          <Typography variant="body1" style={{ fontWeight: 'bold', marginTop: '0' }}>
+                            NEW BALANCE:
+                          </Typography>
+                        </CalculationField>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body1" style={{ marginTop: '0' }}>
+                          {this.calculateNewBalance(userInfo.balance, responseText) < 0
+                            ? <>{convertToCurrency(0)} AND {convertToCurrency(Math.abs(this.calculateNewBalance(userInfo.balance, responseText)))} IN DEBT</>
+                            : convertToCurrency(this.calculateNewBalance(userInfo.balance, responseText))
+                          }
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow>
+                      <TableCell>
+                        <CalculationField>
+                          <Typography variant="body1" style={{ fontWeight: 'bold', marginTop: '0' }}>
+                            GROSS PROFIT:
+                          </Typography>
+                        </CalculationField>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body1" style={{ marginTop: '0' }}>
+                          {isNaN(parseFloat(responseText)) || isNaN(parseFloat(interestRateText)) || parseFloat(responseText) <= 0 || parseFloat(interestRateText) <= 0
+                            ? convertToCurrency(0)
+                            : convertToCurrency(this.calculateInterest(responseText, interestRateText) + parseFloat(responseText))
+                          }
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow>
+                      <TableCell>
+                        <CalculationField>
+                          <Typography variant="body1" style={{ fontWeight: 'bold', marginTop: '0' }}>
+                            NET PROFIT:
+                          </Typography>
+                        </CalculationField>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body1" style={{ marginTop: '0' }}>
+                          <span id="interest">(+{convertToCurrency(this.calculateInterest(responseText, interestRateText))})</span>
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow>
+                      <TableCell>
+                        <CalculationField>
+                          <Typography variant="body1" style={{ fontWeight: 'bold', marginTop: '0' }}>
+                            LOAN TYPE:
+                          </Typography>
+                        </CalculationField>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body1" style={{ marginTop: '0' }}>
+                          {this.determineLoanType(userInfo.balance, responseText)}
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+
+                    {parseFloat(interestRateText) > 6 && (
+                      <TableRow>
+                        <TableCell colSpan={2}>
+                          <Typography variant="body1" style={{ color: '#ff0000', fontWeight: 'bold', textAlign: 'center' }}>
+                            Charging an interest rate above 6% may be considered usury and could increase the risk of borrower default. We recommend setting a rate below 6% to mitigate this risk.
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    )}
 
                   </Table>
                 </TableContainer>
 
               </>
             )}
-
             <TableContainer>
               <Table>
                 <TableHead>

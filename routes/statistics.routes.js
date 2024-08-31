@@ -481,6 +481,7 @@ router.get('/get-leaderboards', auth, async (req, res) => {
       'PimpedPistols',
       'KEKW',
       '69',
+      'jadeprice1997',
       'smellyfingers',
       'NO BROKIES',
       'SUPPORT',
@@ -489,9 +490,9 @@ router.get('/get-leaderboards', auth, async (req, res) => {
       'GIGACHAD',
       'SHIBA',
       '🔥 THE DON 🔥 (BOT #1)',
-      '🪨 ROCKY 🪨 (BOT #2)', 
+      '🪨 ROCKY 🪨 (BOT #2)',
       '✂️ CAESAR ✂️ (BOT #4)',
-      '📃 PAPÎER 📃 (BOT #3)' 
+      '📃 PAPÎER 📃 (BOT #3)'
     ];
 
     const leaderboardData = await User.find({

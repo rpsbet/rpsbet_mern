@@ -25,6 +25,7 @@ const customStyles = {
     transform: 'translate(-50%, -50%)',
     background: 'transparent',
     padding: 0,
+    border: 'none'
   },
 };
 
@@ -160,34 +161,34 @@ class DebtsModal extends Component {
                         <TableBody>
                           <TableRow>
                             <TableCell>
-                              <Typography variant="p">Lender:</Typography>
+                              <span>Lender:</span>
                             </TableCell>
                             <TableCell>
-                              <Typography variant="p">{loan.lender}</Typography>
-                            </TableCell>
-                          </TableRow>
-                          <TableRow>
-                            <TableCell>
-                              <Typography variant="p">Paid Back:</Typography>
-                            </TableCell>
-                            <TableCell>
-                              <Typography variant="p">{convertToCurrency(loan.paid_back)}</Typography>
+                              <span>{loan.lender}</span>
                             </TableCell>
                           </TableRow>
                           <TableRow>
                             <TableCell>
-                              <Typography variant="p">Outstanding Debt:</Typography>
+                              <span>Paid Back:</span>
                             </TableCell>
                             <TableCell>
-                              <Typography variant="p">{convertToCurrency(loan.amount)}&nbsp;{`(${loan.apy * 100}%)`}</Typography>
+                              <span>{convertToCurrency(loan.paid_back)}</span>
                             </TableCell>
                           </TableRow>
                           <TableRow>
                             <TableCell>
-                              <Typography variant="p">Days Left:</Typography>
+                              <span>Outstanding Debt:</span>
                             </TableCell>
                             <TableCell>
-                              <Typography variant="p">{`${loan.loan_period} days`}</Typography>
+                              <span>{convertToCurrency(loan.amount)}&nbsp;{`(${loan.apy * 100}%)`}</span>
+                            </TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell>
+                              <span>Days Left:</span>
+                            </TableCell>
+                            <TableCell>
+                              <span>{`${loan.loan_period} days`}</span>
                             </TableCell>
                           </TableRow>
                         </TableBody>

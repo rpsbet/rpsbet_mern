@@ -1415,10 +1415,8 @@ class SiteWrapper extends Component {
                           PaperProps={{
                             style: {
                               width: '200px',
-                              border: isDarkMode
-                                ? '2px solid #212529'
-                                : '2px solid #e5e5e5',
-                              background: isDarkMode ? '#101010' : '#f9f9f9'
+                              border: "none",
+                              background: isDarkMode ? 'linear-gradient(45deg, #7300c8, #620096)' : 'linear-gradient(45deg, #e300ea, #a700ff)'
                             }
                           }}
                           BackdropProps={{
@@ -1785,6 +1783,7 @@ class SiteWrapper extends Component {
                   player_name={userName}
                   balance={balance}
                   isDarkMode={isDarkMode}
+                  remainingLoans={this.state.remainingLoans}
                 />
               )}
               {showMarketplaceModal && (

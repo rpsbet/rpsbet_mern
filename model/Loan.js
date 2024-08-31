@@ -43,6 +43,10 @@ const LoanSchema = new Schema({
         type: Number,
         default: 0
     },
+    fractional_amount: {
+        type: Number,
+        default: 0
+    },
     loan_period: {
         type: Number,
         default: 0
@@ -51,7 +55,7 @@ const LoanSchema = new Schema({
     loan_type: {
         type: String,
         ref: 'loanType',
-        default: 'standard'
+        default: 'FULL'
     },
     apy: {
         type: Number,

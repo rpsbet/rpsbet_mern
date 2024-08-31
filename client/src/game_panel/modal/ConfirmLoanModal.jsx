@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import Modal from 'react-modal';
 import { connect } from 'react-redux';
-import { Table, TableBody, Button, TextField, TableCell, TableContainer, TableHead, TableRow, Tooltip } from '@material-ui/core';
+import { Table, TableBody, Button, TextField, TableCell, TableContainer, TableHead, TableRow, Tooltip, InputAdornment } from '@material-ui/core';
 import { acQueryLoan, acCalculateRemainingLoans } from '../../redux/Loan/loan.action';
 import Lottie from 'react-lottie';
 import { convertToCurrency } from '../../util/conversion';
@@ -31,7 +31,8 @@ const customStyles = {
     bottom: 'auto',
     transform: 'translate(-50%, -50%)',
     padding: 0,
-    background: 'transparent'
+    background: 'transparent',
+    border: 'none'
   }
 };
 
@@ -134,7 +135,7 @@ class ConfirmLoanModal extends Component {
             <div className='thresholds' style={{ padding: '20px', overflow: 'auto' }}>
               <TableContainer style={{ maxHeight: 150, overflow: 'auto' }}>
                 <Table aria-label="nice-table">
-                  <TableHead style={{ textTransform: "uppercase", position: 'sticky', top: 0, zIndex: 1, background: this.props.isDarkMode ? 'linear-gradient(45deg, #63077eb5, #f23c3c9c)' : 'white' }}>
+                  <TableHead style={{ textTransform: "uppercase", position: 'sticky', top: 0, zIndex: 1, background: this.props.isDarkMode ? 'linear-gradient(45deg, #63077eb5, #f23c3c9c)' : 'linear-gradient(45deg, rgba(253, 247, 255, 0.37), rgba(255, 174, 0, 0.56))' }}>
                     <TableRow>
                       <TableCell style={{ textAlign: 'center' }}>Rank</TableCell>
                       <TableCell style={{ textAlign: 'center' }}>Max Allowance</TableCell>
@@ -188,7 +189,11 @@ class ConfirmLoanModal extends Component {
                         onChange={this.handleResponseTextChange}
                         style={{ margin: "10px 0", width: "80%" }}
                         InputProps={{
-                          endAdornment: 'RPS'
+                          endAdornment: (
+                            <InputAdornment position="end">
+                              &nbsp;RPS
+                            </InputAdornment>
+                          ),
                         }}
                       />
                     </TableCell>

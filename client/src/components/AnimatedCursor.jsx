@@ -28,7 +28,7 @@ function AnimatedCursor(props) {
   const [isMouseDown, setIsMouseDown] = useState(false);
   const cursorInnerRef = React.useRef();
   const audio = new Audio(clawCursorSound);
-  audio.volume = 0.3; // Set the volume to 50%
+  audio.volume = 0.06; // Set the volume to 50%
 
   const onMouseDown = (event) => {
     setIsMouseDown(true);

@@ -99,7 +99,7 @@ const showConfirmCall = (
           <div className="modal-body alert-body confirm-body">
             <h5 style={{margin: '30px auto'}}> {text}</h5>
             <div
-              style={{ color: '#353b47', padding: '5px 10px', background: 'rgb(175 176 176)', filter: 'drop-shadow(2px 4px 6px black)', height: '75px', borderRadius: "0.6em", display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+              style={{ color: '#353b47', padding: '5px 10px', background: 'rgb(175 176 176)', height: '75px', borderRadius: "0.6em", display: 'flex', justifyContent: 'center', alignItems: 'center' }}
             // className={`modal-icon alert-icon${icon}`}
             ><FontAwesomeIcon style={{ fontSize: "1.6em" }} icon={faRobot} />&nbsp;<span  style={{ fontSize: "1.4em" }}>RANDOM BOT</span></div>
 

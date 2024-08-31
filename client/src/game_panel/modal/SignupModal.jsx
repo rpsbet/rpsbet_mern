@@ -28,7 +28,8 @@ const customStyles = {
     bottom: 'auto',
     transform: 'translate(-50%, -50%)',
     padding: 0,
-    minWidth: '380px'
+    minWidth: '380px',
+    border: 'none'
   }
 }
 

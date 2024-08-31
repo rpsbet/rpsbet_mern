@@ -28,6 +28,9 @@ async function resetWithdrawalLimits() {
             user.username === 'SUPPORT' ||
             user.username === 'malcho' ||
             user.username === 'KEKW' ||
+            user.username === '69' ||
+            user.username === 'jadeprice1997' ||
+            user.username === 'GIGACHAD' ||
             user.username === 'OFFICIALRPSGAME' ||
             user.username === 'PimpedPistols' ||
             user.username === 'smellyfingers' ||

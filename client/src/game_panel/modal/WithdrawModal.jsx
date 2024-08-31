@@ -21,6 +21,7 @@ import {
   IconButton,
   RadioGroup,
   Radio,
+  InputAdornment,
   FormControlLabel,
   Icon,
   Tooltip,
@@ -126,7 +127,8 @@ const customStyles = {
     bottom: 'auto',
     transform: 'translate(-50%, -50%)',
     padding: 0,
-    background: 'transparent'
+    background: 'transparent',
+    border: 'none'
   }
 };
 
@@ -560,7 +562,11 @@ class WithdrawModal extends Component {
                           value={amount}
                           onChange={this.handleAmountChange}
                           InputProps={{
-                            endAdornment: 'RPS'
+                            endAdornment: (
+                              <InputAdornment position="end">
+                                &nbsp;RPS
+                              </InputAdornment>
+                            ),
                           }}
                           className="form-control"
                         />
@@ -573,7 +579,11 @@ class WithdrawModal extends Component {
                           value={estimatedAmount}
                           InputProps={{
                             readOnly: true,
-                            endAdornment: 'ETH'
+                            endAdornment: (
+                              <InputAdornment position="end">
+                                &nbsp;ETH
+                              </InputAdornment>
+                            ),
                           }}
                           className="form-control"
                         />
@@ -696,7 +706,11 @@ class WithdrawModal extends Component {
                             value={amount}
                             onChange={this.handleAmountChange}
                             InputProps={{
-                              endAdornment: 'RPS'
+                              endAdornment: (
+                                <InputAdornment position="end">
+                                  &nbsp;RPS
+                                </InputAdornment>
+                              ),
                             }}
                             className="form-control"
                           />
@@ -710,8 +724,13 @@ class WithdrawModal extends Component {
                             InputProps={{
                               readOnly: true,
                               endAdornment: isValidCurrency && (
-                                <Typography >{currencyTo.toUpperCase()}</Typography>
-                              )
+                                <InputAdornment position="end">
+                                  &nbsp;
+                                  <Typography variant="body2" component="span">
+                                    {currencyTo.toUpperCase()}
+                                  </Typography>
+                                </InputAdornment>
+                              ),
                             }}
                             className="form-control"
                           />

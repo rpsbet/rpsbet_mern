@@ -51,7 +51,7 @@ const convertGameLogToHistoryStyle = async gameLogList => {
         const userBet = parseFloat(gameLog['room']['user_bet']);
         const multiplier = parseFloat(gameLog['room']['user_bet']) / parseFloat(gameLog['room']['bet_amount']);
         const multiplierDisplay = multiplier.toFixed(2);
-        const color = multiplier < 1 ? '#ffdd15' : '#ff0a28'; // yellow : red
+        const color = multiplier < 1 ? '#ff6701' : '#ff0a28'; // yellow : red
         let room_name = `<a style='color: #b9bbbe;' href="/join/${gameLog['room']['_id']}">${gameLog['game_type']['short_name']}-${gameLog['room']['room_number']}</a>`;
 
         if (gameLog['room']['status'] === 'open') {
@@ -68,7 +68,7 @@ const convertGameLogToHistoryStyle = async gameLogList => {
           } else if (gameLog.game_result === 0) {
             temp.history = `${joined_user_link} split <span style='color: #b9bbbe;'>${convertToCurrency(betAmount * 2)} (1.00X)</span> in ${room_name}`;
           } else {
-            temp.history = `${joined_user_link} lost <span style='color: #ffdd15;'>${convertToCurrency(betAmount)} (0.00X)</span> in ${room_name}`;
+            temp.history = `${joined_user_link} lost <span style='color: #ff6701;'>${convertToCurrency(betAmount)} (0.00X)</span> in ${room_name}`;
           }
         } else if (gameLog['game_type']['game_type_name'] === 'Quick Shoot') {
           if (gameLog.game_result === 1) {
@@ -79,7 +79,7 @@ const convertGameLogToHistoryStyle = async gameLogList => {
           } else if (gameLog.game_result === -100) {
             temp.history = `${creator_link} rugged <span style='color: ${color};'>${convertToCurrency(userBet)} (${multiplierDisplay}x)</span> in ${room_name}`;
           } else {
-            temp.history = `${joined_user_link} lost <span style='color: #ffdd15;'>${convertToCurrency(betAmount)} (0.00X)</span> in ${room_name}`;
+            temp.history = `${joined_user_link} lost <span style='color: #ff6701;'>${convertToCurrency(betAmount)} (0.00X)</span> in ${room_name}`;
           }
         }
       } else if (gameLog.game_result === 666) {

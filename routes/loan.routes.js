@@ -15,14 +15,191 @@ const Notification = require('../model/Notification');
 const User = require('../model/User');
 const Transaction = require('../model/Transaction');
 
-let user_access_log = {};
+
+router.post('/create-and-lend', auth, async (req, res) => {
+  try {
+    const { loan_amount, loan_period, apy, lender } = req.body;
+    const parsedLoanAmount = parseFloat(loan_amount);
+    const parsedLoanPeriod = parseFloat(loan_period);
+    const parsedApy = parseFloat(apy);
+    const currentUser = await User.findOne({ _id: req.user._id });
+
+    const accessAllowed = await check_access_time(currentUser._id);
+    if (!accessAllowed) {
+      return res.json({
+        success: false,
+        message: 'irregular action',
+        betResult: -1000
+      });
+    }
+
+    const isEligible = await checkLoanEligibility(currentUser, loan_amount);
+
+    if (!isEligible) {
+      return res.json({
+        success: false,
+        message: 'This account is currently not eligible for loaning this amount. Try again another time or another amount.',
+      });
+    }
+
+
+    if (!loan_amount || !loan_period || !apy || !lender) {
+      return res.json({
+        success: false,
+        error: 'Please enter all fields'
+      });
+    }
+
+    if (isNaN(parsedLoanAmount) || parsedLoanAmount <= 0 ||
+      isNaN(parsedLoanPeriod) || parsedLoanPeriod <= 0 ||
+      isNaN(parsedApy) || parsedApy <= 0) {
+      return res.json({
+        success: false,
+        message: 'Loan amount, loan period, and APY must be valid positive numbers',
+      });
+    }
+
+    const originalLender = await User.findOne({ _id: lender });
+    if (!originalLender || originalLender.balance <= 0) {
+      return res.json({
+        success: false,
+        message: 'Insufficient funds or lender not found',
+      });
+    }
+
+    let loanType = 'FULL';
+    let updatedBalance = originalLender.balance - parsedLoanAmount;
+    let remainingAmount = parsedLoanAmount;
+    let oldBalance = originalLender.balance;
+
+    if (updatedBalance < 0) {
+      loanType = 'FRACTIONAL';
+      remainingAmount = -updatedBalance;
+      updatedBalance = 0
+    }
+
+    let newTransactionJ = new Transaction({
+      user: currentUser._id,
+      amount: parsedLoanAmount,
+      description: `Loan from ${originalLender.username}`,
+    });
+
+    let newTransactionC = new Transaction({
+      user: originalLender._id,
+      amount: -parsedLoanAmount,
+      description: `Loan created for ${currentUser.username}`,
+    });
+
+    let loanMessage = loanType === 'FRACTIONAL'
+      ? `Fractional Loan created ${convertToCurrency(oldBalance)}`
+      : `Loan created ${convertToCurrency(parsedLoanAmount)}`;
+
+    let notificationJ = new Notification({
+      from: originalLender._id,
+      to: currentUser._id,
+      room: '',
+      message: `Loan received ${convertToCurrency(parsedLoanAmount)}`,
+      is_read: false
+    });
+
+    let notificationC = new Notification({
+      from: currentUser._id,
+      to: originalLender._id,
+      room: '',
+      message: loanMessage,
+      is_read: false
+    });
+
+    const loanObj = new Loan({
+      lender: originalLender._id,
+      loan_amount: parsedLoanAmount,
+      loan_type: loanType,
+      loan_period: parsedLoanPeriod,
+      apy: parsedApy / 100,
+      fractional_amount: loanType === 'FRACTIONAL' ? parsedLoanAmount / originalLender.balance : 0
+    });
+
+    if (loanType === 'FRACTIONAL') {
+      loanObj.loaners.push({
+        user: lender,
+        amount: remainingAmount,
+        apy: parsedApy / 100,
+        period: parsedLoanPeriod,
+        paidBack: 0,
+        created_at: Date.now(),
+        updated_at: Date.now()
+      });
+      newTransactionC.amount = -oldBalance;
+      newTransactionC.description = `Fractional loan created`;
+    }
+
+    loanObj.loaners.push({
+      user: currentUser._id,
+      amount: parsedLoanAmount + (parsedLoanAmount * parsedApy / 100),
+      apy: parsedApy / 100,
+      period: parsedLoanPeriod,
+      paidBack: 0,
+      created_at: Date.now(),
+      updated_at: Date.now()
+    });
+
+    currentUser.balance += parsedLoanAmount;
+    originalLender.balance = updatedBalance;
+
+    await Promise.all([
+      saveDocumentWithRetry(newTransactionC),
+      saveDocumentWithRetry(newTransactionJ),
+      saveDocumentWithRetry(notificationC),
+      saveDocumentWithRetry(notificationJ),
+      saveDocumentWithRetry(loanObj),
+      saveDocumentWithRetry(currentUser),
+      saveDocumentWithRetry(originalLender)
+    ]);
+
+    socket.sendNotification(currentUser._id, {
+      message: notificationJ.message,
+      username: originalLender.username,
+      avatar: originalLender.avatar,
+      accessory: originalLender.accessory,
+      rank: originalLender.totalWagered,
+      created_at: moment().format('YYYY-MM-DD HH:mm'),
+      created_at_str: moment().format('LLL'),
+      updated_at: moment().format('YYYY-MM-DD HH:mm'),
+    });
+
+    socket.sendNotification(originalLender._id, {
+      message: notificationC.message,
+      username: currentUser.username,
+      avatar: currentUser.avatar,
+      accessory: currentUser.accessory,
+      rank: currentUser.totalWagered,
+      created_at: moment().format('YYYY-MM-DD HH:mm'),
+      created_at_str: moment().format('LLL'),
+      updated_at: moment().format('YYYY-MM-DD HH:mm'),
+    });
+
+    res.json({
+      success: true,
+      balance: currentUser.balance,
+      newTransaction: newTransactionJ,
+      message: `LOAN 🤝 RECEIVED FROM ${originalLender.username} (${loanType})`,
+    });
+
+  } catch (err) {
+    console.error('Error:', err);
+    res.json({
+      success: false,
+      message: "An error occurred during the loan creation and lending process",
+      error: err.message,
+    });
+  }
+});
 
 router.post('/create', auth, async (req, res) => {
   try {
     const { _id, loan_amount, loan_period, apy } = req.body;
     const currentUser = req.user;
 
-    // Check if all required fields are provided
     if (!loan_amount || !loan_period || !apy) {
       return res.json({
         success: false,
@@ -30,90 +207,158 @@ router.post('/create', auth, async (req, res) => {
       });
     }
 
-    // Check if loan amount is a valid number and not zero
-    if (isNaN(parseFloat(loan_amount)) || parseFloat(loan_amount) <= 0) {
+    const accessAllowed = await check_access_time(currentUser._id);
+    if (!accessAllowed) {
+      return res.json({
+        success: false,
+        message: 'irregular action',
+        betResult: -1000
+      });
+    }
+
+    const isEligible = await checkLoanEligibility(currentUser, loan_amount);
+
+    if (!isEligible) {
+      return res.json({
+        success: false,
+        message: 'This account is currently not eligible for loaning this amount. Try again another time or another amount.',
+      });
+    }
+
+    const parsedLoanAmount = parseFloat(loan_amount);
+    const parsedLoanPeriod = parseFloat(loan_period);
+    const parsedApy = parseFloat(apy);
+
+    if (isNaN(parsedLoanAmount) || parsedLoanAmount <= 0) {
       return res.json({
         success: false,
         message: 'Loan amount must be a valid positive number',
       });
     }
 
-    // Check if the user has sufficient funds for the loan
-    if (currentUser.balance < parseFloat(loan_amount)) {
-      return res.json({
-        success: false,
-        message: 'Insufficient funds',
-      });
-    }
-
-    // Ensure loan period and APY are valid values
-    if (isNaN(parseFloat(loan_period)) || parseFloat(loan_period) <= 0 || isNaN(parseFloat(apy)) || parseFloat(apy) <= 0) {
+    if (isNaN(parsedLoanPeriod) || parsedLoanPeriod <= 0 || isNaN(parsedApy) || parsedApy <= 0) {
       return res.json({
         success: false,
         message: 'Loan period and APY must be valid positive numbers',
       });
     }
 
+    if (currentUser.balance * 10 < parsedLoanAmount) {
+      return res.json({
+        success: false,
+        message: 'Insufficient funds',
+      });
+    }
+
     const newTransaction = new Transaction({
-      user: currentUser,
-      amount: -parseFloat(loan_amount),
-      description: `Loan created`,
+      user: currentUser._id,
+      amount: -parsedLoanAmount,
+      description: 'Loan created',
     });
 
-    let loanObj = new Loan({
+    let loanType = 'FULL';
+    let remainingAmount = parsedLoanAmount;
+    let updatedBalance = currentUser.balance - parsedLoanAmount;
+    let oldBalance = currentUser.balance;
+    if (updatedBalance < 0) {
+      remainingAmount = -updatedBalance;
+      updatedBalance = 0;
+      loanType = 'FRACTIONAL';
+    }
+
+    currentUser.balance = updatedBalance;
+
+    const notificationMessage = loanType === 'FRACTIONAL'
+      ? `Fractional loan created: ${convertToCurrency(oldBalance)}`
+      : `Loan created: ${convertToCurrency(parsedLoanAmount)}`;
+
+    const notification = new Notification({
+      from: currentUser._id,
+      to: currentUser._id,
+      room: '',
+      message: notificationMessage,
+      is_read: false
+    });
+
+    const notificationData = {
+      message: notification.message,
+      username: currentUser.username,
+      avatar: currentUser.avatar,
+      accessory: currentUser.accessory,
+      rank: currentUser.totalWagered,
+      created_at: moment().format('YYYY-MM-DD HH:mm'),
+      created_at_str: moment().format('LLL'),
+      updated_at: moment().format('YYYY-MM-DD HH:mm'),
+    };
+
+    const loanObj = new Loan({
       lender: _id,
-      loan_amount: loan_amount,
-      loan_period: loan_period,
-      apy: apy / 100
+      loan_amount: parsedLoanAmount,
+      loan_period: parsedLoanPeriod,
+      apy: parsedApy / 100,
+      loan_type: loanType,
+      fractional_amount: loanType === 'FRACTIONAL' ? parsedLoanAmount / oldBalance : 0
     });
 
-    currentUser.balance -= parseFloat(loan_amount);
+    if (loanType === 'FRACTIONAL') {
+      loanObj.loaners.push({
+        user: currentUser._id,
+        amount: remainingAmount,
+        apy: parsedApy / 100,
+        period: parsedLoanPeriod,
+        paidBack: 0,
+        created_at: Date.now(),
+        updated_at: Date.now()
+      });
 
-    const savePromises = [
-      loanObj.save(),
-      currentUser.save(),
-      newTransaction.save()
-    ];
+      newTransaction.amount = -oldBalance;
+      newTransaction.description = `Fractional loan created`;
+    } else {
+      newTransaction.description = `Loan created`;
+    }
 
-    await Promise.all(savePromises);
+    socket.sendNotification(currentUser._id, notificationData);
+
+    await Promise.all([
+      saveDocumentWithRetry(loanObj),
+      saveDocumentWithRetry(currentUser),
+      saveDocumentWithRetry(newTransaction),
+      saveDocumentWithRetry(notification),
+    ]);
+
 
     res.json({
       success: true,
-      message: 'NEW LOAN CREATED'
+      message: 'NEW LOAN CREATED',
+      balance: currentUser.balance,
     });
   } catch (err) {
     res.json({
       success: false,
-      err: err
+      error: err.message
     });
   }
 });
 
 
 const calculateCreditScore = (loan, loaner, lender, currentUser) => {
-  // Calculate the number of days since the loan was created
   const loanCreatedAt = new Date(loan.loaners[loaner].created_at);
   const daysSinceLoanCreated = Math.floor((Date.now() - loanCreatedAt.getTime()) / (1000 * 60 * 60 * 24));
 
-  // Calculate the remaining loan period and cap it at 30 days
   const loanPeriod = parseFloat(loan.loaners[loaner].period);
   let remainingLoanPeriod = loanPeriod - daysSinceLoanCreated;
   remainingLoanPeriod = Math.min(remainingLoanPeriod, 30);
 
-  // Check if the current user has the lender in their list of lenders
   if (!currentUser.lenders.includes(loan.lender)) {
     currentUser.lenders.push(loan.lender);
   }
 
-  // Calculate the credit score increase
   const paidBack = parseFloat(loan.loaners[loaner].paidBack);
   let creditScoreIncrease = paidBack + remainingLoanPeriod;
 
-  // Apply a reduction factor (e.g., reduce by 20%)
   const reductionFactor = 0.77;
   creditScoreIncrease = creditScoreIncrease * (1 - reductionFactor);
 
-  // Update the current user's credit score
   currentUser.credit_score += creditScoreIncrease;
   if (currentUser.credit_score >= 2000) {
     currentUser.credit_score = 2000;
@@ -126,6 +371,8 @@ router.post('/payback', auth, async (req, res) => {
     const loan = await Loan.findOne({ _id: loanId });
     const currentUser = await User.findOne({ _id: req.user._id });
 
+    let amount = parseFloat(paybackAmount);
+
     if (!loan) {
       return res.json({
         success: false,
@@ -133,7 +380,6 @@ router.post('/payback', auth, async (req, res) => {
       });
     }
 
-    // Find the loaner's index in the loaners sub-array
     const loanerIndex = loan.loaners.findIndex((loanerObj) => loanerObj.user.equals(currentUser._id));
 
     if (loanerIndex === -1) {
@@ -143,102 +389,119 @@ router.post('/payback', auth, async (req, res) => {
       });
     }
 
-    if (currentUser.balance <= parseFloat(paybackAmount)) {
+    if (currentUser.balance < amount) {
       return res.json({
         success: false,
         message: 'Insufficient funds',
       });
     }
 
-    // Check if the paybackAmount is valid
-    if (parseFloat(paybackAmount) <= 0 || parseFloat(paybackAmount) > parseFloat(loan.loaners[loanerIndex].amount)) {
+    if (amount <= 0 || amount > loan.loaners[loanerIndex].amount) {
       return res.json({
         success: false,
-        message: 'IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!',
+        message: 'Invalid amount. Please enter a valid number.',
       });
     }
 
     const lender = await User.findOne({ _id: loan.lender });
+    const isLenderSameAsCurrentUser = lender._id.equals(currentUser._id);
 
+    // Transactions and notifications for the current user
     const newTransactionC = new Transaction({
-      user: currentUser,
-      amount: -parseFloat(paybackAmount),
-      description: `Repayed loan to ${lender.username}`,
-    });
-
-    const newTransactionJ = new Transaction({
-      user: lender._id,
-      amount: parseFloat(paybackAmount),
-      description: `Received loan repayment from ${currentUser.username}`,
+      user: currentUser._id,
+      amount: -amount,
+      description: `Repayed loan${isLenderSameAsCurrentUser ? '' : ` to ${lender.username}`}`,
     });
 
     const notificationC = new Notification({
       from: lender._id,
       to: currentUser._id,
       room: '',
-      message: `Repayed ${convertToCurrency(paybackAmount)} loan to ${lender.username}`,
+      message: `Repayed ${convertToCurrency(amount)} loan${isLenderSameAsCurrentUser ? '' : ` to ${lender.username}`}`,
       is_read: false
     });
 
-    const notificationJ = new Notification({
-      from: currentUser._id,
-      to: lender._id,
-      room: '',
-      message: `Received ${convertToCurrency(paybackAmount)} loan repayment from ${currentUser.username}`,
-      is_read: false
-    });
+    let notificationDataC = null;
+    if (!isLenderSameAsCurrentUser) {
+      notificationDataC = {
+        message: notificationC.message,
+        username: lender.username,
+        avatar: lender.avatar,
+        accessory: lender.accessory,
+        rank: lender.totalWagered,
+        created_at: moment().format('YYYY-MM-DD HH:mm'),
+        created_at_str: moment().format('LLL'),
+        updated_at: moment().format('YYYY-MM-DD HH:mm'),
+      };
+    }
 
-    const notificationDataC = {
-      message: notificationJ.message,
-      username: lender.username,
-      avatar: lender.avatar,
-      accessory: lender.accessory,
-      rank: lender.totalWagered,
-      created_at: moment().format('YYYY-MM-DD HH:mm'),
-      created_at_str: moment().format('LLL'),
-      updated_at: moment().format('YYYY-MM-DD HH:mm'),
-    };
+    // Only update lender if they are different from the current user
+    if (!isLenderSameAsCurrentUser) {
+      lender.balance += amount;
 
-    const notificationDataJ = {
-      message: notificationC.message,
-      username: currentUser.username,
-      avatar: currentUser.avatar,
-      accessory: currentUser.accessory,
-      rank: currentUser.totalWagered,
-      created_at: moment().format('YYYY-MM-DD HH:mm'),
-      created_at_str: moment().format('LLL'),
-      updated_at: moment().format('YYYY-MM-DD HH:mm'),
-    };
+      // Transaction and notification for the lender
+      const newTransactionJ = new Transaction({
+        user: lender._id,
+        amount: amount,
+        description: `Received loan repayment from ${currentUser.username}`,
+      });
 
-    lender.balance += parseFloat(paybackAmount);
-    currentUser.balance -= parseFloat(paybackAmount);
+      const notificationJ = new Notification({
+        from: currentUser._id,
+        to: lender._id,
+        room: '',
+        message: `Received ${convertToCurrency(amount)} loan repayment from ${currentUser.username}`,
+        is_read: false
+      });
+
+      const notificationDataJ = {
+        message: notificationJ.message,
+        username: currentUser.username,
+        avatar: currentUser.avatar,
+        accessory: currentUser.accessory,
+        rank: currentUser.totalWagered,
+        created_at: moment().format('YYYY-MM-DD HH:mm'),
+        created_at_str: moment().format('LLL'),
+        updated_at: moment().format('YYYY-MM-DD HH:mm'),
+      };
+
+      await Promise.all([
+        saveDocumentWithRetry(notificationJ),
+        saveDocumentWithRetry(newTransactionJ),
+      ]);
+
+      socket.sendNotification(lender._id, notificationDataJ);
+    }
+
+    currentUser.balance -= amount;
 
     // Update loan and loaner information
-    loan.loaners[loanerIndex].paidBack = parseFloat(loan.loaners[loanerIndex].paidBack) + parseFloat(paybackAmount);
-    loan.loaners[loanerIndex].amount -= parseFloat(paybackAmount);
+    loan.loaners[loanerIndex].paidBack += amount;
+    loan.loaners[loanerIndex].amount -= amount;
 
-    if (loan.loaners[loanerIndex].amount <= 0.05) {
-      calculateCreditScore(loan, loanerIndex, lender, currentUser);
-      loan.loaners.splice(loanerIndex, 1);
+    // Only calculate credit score if the lender is different from the current user
+    if (!isLenderSameAsCurrentUser) {
+      if (loan.loaners[loanerIndex].amount <= 0.05) {
+        calculateCreditScore(loan, loanerIndex, lender, currentUser);
+        // loan.loaners.splice(loanerIndex, 1);
+      }
     }
 
     await Promise.all([
       saveDocumentWithRetry(notificationC),
-      saveDocumentWithRetry(notificationJ),
       saveDocumentWithRetry(currentUser),
       saveDocumentWithRetry(lender),
       saveDocumentWithRetry(loan),
       saveDocumentWithRetry(newTransactionC),
-      saveDocumentWithRetry(newTransactionJ),
     ]);
 
-    socket.sendNotification(currentUser._id, notificationDataJ);
-    socket.sendNotification(lender._id, notificationDataC);
+    if (notificationDataC) {
+      socket.sendNotification(currentUser._id, notificationDataC);
+    }
 
- 
     return res.json({
       success: true,
-      message: `Loan ${convertToCurrency(paybackAmount)} paid back successfully`,
+      message: `Loan ${convertToCurrency(amount)} paid back successfully`,
       balance: currentUser.balance,
       newTransaction: newTransactionC,
     });
@@ -252,7 +515,7 @@ router.post('/payback', auth, async (req, res) => {
   }
 });
 
-// Calculate the sum of (amount - paidBack) for matching loans
+
 router.get('/calculate-remaining-loans', auth, async (req, res) => {
   try {
     const currentUser = req.user._id;
@@ -337,9 +600,9 @@ router.post('/reconsider-offer', auth, async (req, res) => {
 
 async function calculateRemainingLoans(currentUser) {
   try {
-    const matchingLoans = await Loan.find({ 'loaners.user': currentUser._id });
+    const matchingLoans = await Loan.find({ 'loaners.user': currentUser._id, 'loaners.amount': { $gt: 0 } });
     let remainingAmount = 0;
-    let userLoans = []; // Include this array to store loan details
+    let userLoans = [];
 
     for (const loan of matchingLoans) {
       const lender = await User.findOne({ _id: loan.lender });
@@ -353,7 +616,6 @@ async function calculateRemainingLoans(currentUser) {
         remainingAmount += (parseFloat(loanerInfo.amount));
       }
 
-      // Include loan details in the userLoans array
       userLoans.push({
         _id: loan._id,
         amount: loanerInfo.amount,
@@ -380,10 +642,8 @@ async function checkLoanEligibility(currentUser, loanAmount) {
   const accountAgeInMilliseconds = currentDate - accountCreatedAt;
   const accountAgeInDays = accountAgeInMilliseconds / (24 * 60 * 60 * 1000);
 
-  // Calculate remaining loans using the function directly
   const { remainingAmount } = await calculateRemainingLoans(currentUser);
 
-  // Threshold categories
   const categories = [
     { creditScoreThreshold: 1000, rankThreshold: 1, accountAgeThresholdInDays: 30, maxAllowance: 10 },
     { creditScoreThreshold: 1000, rankThreshold: 2, accountAgeThresholdInDays: 30, maxAllowance: 10 },
@@ -406,24 +666,21 @@ async function checkLoanEligibility(currentUser, loanAmount) {
     { creditScoreThreshold: 1000, rankThreshold: 19, accountAgeThresholdInDays: 90, maxAllowance: 30000 },
     { creditScoreThreshold: 1000, rankThreshold: 20, accountAgeThresholdInDays: 90, maxAllowance: 40000 },
   ];
-  // Find the starting index based on the user's rank
   const startingIndex = Math.min(rank - 1, categories.length - 1);
 
-  // Iterate from the starting index to the end of the categories array
   for (let i = startingIndex; i < categories.length; i++) {
     const category = categories[i];
 
-    // Check eligibility against each category using remainingAmount
     if (
       creditScore >= category.creditScoreThreshold &&
       rank >= category.rankThreshold &&
       accountAgeInDays >= category.accountAgeThresholdInDays &&
       (remainingAmount + parseFloat(loanAmount)) <= category.maxAllowance
     ) {
-      return true; // Eligible for this category
+      return true;
     }
   }
-  return false; // Not eligible for any category
+  return false;
 }
 
 
@@ -457,7 +714,6 @@ router.post('/lend', auth, async (req, res) => {
         message: 'Loaner not found or not available for loan',
       });
     }
-    // exceeded loan_amount
     if (parseFloat(responseText) > parseFloat(loan.loan_amount)) {
       return res.json({
         success: false,
@@ -465,7 +721,6 @@ router.post('/lend', auth, async (req, res) => {
       });
     }
 
-    // Check loan eligibility
     const isEligible = await checkLoanEligibility(currentUser, responseText);
 
     if (!isEligible) {
@@ -481,7 +736,6 @@ router.post('/lend', auth, async (req, res) => {
       description: `Loan from ${originalLender.username}`,
     });
 
-    // Create notifications
     const notificationJ = new Notification({
       from: originalLender._id,
       to: currentUser._id,
@@ -519,8 +773,7 @@ router.post('/lend', auth, async (req, res) => {
       created_at_str: moment().format('LLL'),
       updated_at: moment().format('YYYY-MM-DD HH:mm'),
     };
-    
-    // Update the loan's loaners array to increment count for the new loaner
+
     const newLoanLoaner = {
       user: currentUser._id,
       paidBack: 0,
@@ -533,7 +786,6 @@ router.post('/lend', auth, async (req, res) => {
     loan.loan_amount -= parseFloat(responseText);
 
     currentUser.balance += parseFloat(responseText);
-    // Check if the new loaner already exists in the loaners array
     const newLoanerIndex = loan.loaners.findIndex((loanerObj) => loanerObj.user.equals(currentUser._id));
     if (newLoanerIndex !== -1) {
       loan.loaners[newLoanerIndex].period += (loan.loan_period - loan.loaners[newLoanerIndex].period) + loan.loan_period;
@@ -604,13 +856,11 @@ router.post('/offer-loan', auth, async (req, res) => {
 router.get('/my-loans', auth, async (req, res) => {
   const pagination = req.query.pagination ? parseInt(req.query.pagination) : 10;
   const page = req.query.page ? parseInt(req.query.page) : 1;
-  const sort = 'loan_amount';
   const loanTypeFilter = req.query.loanType;
   const userId = req.user._id;
 
   try {
-    let query = { lender: userId, loan_amount: { $gt: 0 } }; // Initialize the query object with loan_amount > 0
-
+    let query = { lender: userId, loan_amount: { $gt: 0 } };
     if (loanTypeFilter) {
       query['loan_type'] = loanTypeFilter;
     }
@@ -622,15 +872,27 @@ router.get('/my-loans', auth, async (req, res) => {
 
     const count = await Loan.countDocuments(query);
 
-    const loan_list = loans.map((loan) => ({
-      _id: loan._id,
-      loan_amount: loan.loan_amount,
-      apy: loan.apy,
-      loan_period: loan.loan_period,
-      loan_type: loan.loan_type,
-      created_at: loan.created_at,
+    const loan_list = await Promise.all(loans.map(async (loan) => {
+      const loaners = await Promise.all(
+        loan.loaners.map(async (loaner) => {
+          const user = await User.findById(loaner.user, 'avatar _id totalWagered accessory');
+          return user;
+        })
+      );
+
+      return {
+        _id: loan._id,
+        loan_amount: loan.loan_amount,
+        loaners: loaners,
+        fractional_amount: loan.fractional_amount,
+        apy: loan.apy,
+        loan_period: loan.loan_period,
+        loan_type: loan.loan_type,
+        created_at: loan.created_at,
+      };
     }));
 
+    // Respond with the transformed loans and pagination data
     res.json({
       success: true,
       query: req.query,
@@ -646,9 +908,20 @@ router.get('/my-loans', auth, async (req, res) => {
   }
 });
 
+
 router.post('/withdraw-loan', auth, async (req, res) => {
   try {
     const { loan_id } = req.body;
+    const currentUser = await User.findById(req.user._id);
+
+    const accessAllowed = await check_access_time(currentUser._id);
+    if (!accessAllowed) {
+      return res.json({
+        success: false,
+        message: 'Irregular action',
+        betResult: -1000
+      });
+    }
 
     const loan = await Loan.findOne({ _id: loan_id });
     if (!loan) {
@@ -658,27 +931,63 @@ router.post('/withdraw-loan', auth, async (req, res) => {
       });
     }
 
-    // Get the current user
-    const currentUser = await User.findById(req.user._id);
-    const amount = loan.loan_amount
-    // Add loan amount to user balance
+    let amount = loan.loan_amount;
+    if (loan.loan_type === 'FRACTIONAL') {
+      amount = loan.loan_amount * (loan.fractional_amount / 100);
+    }
+
+    // Update loan amount to 0
+    loan.loan_amount = 0;
+
+    // Update loaner amounts to 0
+    const updatedLoaners = loan.loaners.map(async (loaner) => {
+      if (loaner.user.toString() === currentUser._id.toString()) {
+        loaner.amount = 0;
+        await saveDocumentWithRetry(loaner);
+      }
+    });
+    await Promise.all(updatedLoaners);
+
     currentUser.balance += amount;
 
-    // Save the user balance changes
-    await currentUser.save();
-
-    // Create a new transaction for the loan amount
     const newTransaction = new Transaction({
-      user: currentUser,
+      user: currentUser._id,
       amount: amount,
       description: `Loan withdrawal`,
     });
 
-    // Save the new transaction
-    await Loan.findByIdAndDelete(loan_id);
-    await newTransaction.save();
+    const notification = new Notification({
+      from: currentUser._id,
+      to: currentUser._id,
+      room: '',
+      message: `Loan withdrawal ${convertToCurrency(amount)}`,
+      is_read: false
+    });
 
-    // Remove the loan from the database
+    const notificationData = {
+      message: notification.message,
+      username: currentUser.username,
+      avatar: currentUser.avatar,
+      accessory: currentUser.accessory,
+      rank: currentUser.totalWagered,
+      created_at: moment().format('YYYY-MM-DD HH:mm'),
+      created_at_str: moment().format('LLL'),
+      updated_at: moment().format('YYYY-MM-DD HH:mm'),
+    };
+
+    await Promise.all([
+      saveDocumentWithRetry(newTransaction),
+      saveDocumentWithRetry(notification),
+      saveDocumentWithRetry(currentUser),
+      saveDocumentWithRetry(loan),
+    ]);
+
+    socket.sendNotification(currentUser._id, notificationData);
+
+    // Delete the loan if it has no loaners
+    if (loan.loaners.length === 0) {
+      await Loan.findByIdAndDelete(loan_id);
+    }
 
     return res.json({
       success: true,
@@ -688,24 +997,24 @@ router.post('/withdraw-loan', auth, async (req, res) => {
     });
   } catch (err) {
     console.error('Error:', err);
-    res.json({
+    return res.json({
       success: false,
       message: "An error occurred while withdrawing the loan",
       error: err.message,
     });
   }
 });
+
+
 router.get('/previous-loans', async (req, res) => {
   try {
-    // Query to find loans where loan_amount > 0 and at least one loaner exists,
-    // sorted by created_at in descending order, and limit to 9 results
-    const query = { 
-      loan_amount: 0, 
-      'loaners.0': { $exists: true } 
+    const query = {
+      loan_amount: 0,
+      'loaners.0': { $exists: true }
     };
     const loans = await Loan.find(query)
-                            .sort({ created_at: -1 }) // Sort by created_at descending
-                            .limit(20); // Limit to 9 documents
+      .sort({ created_at: -1 })
+      .limit(20);
 
     let loan_list = [];
     const currentDate = new Date();
@@ -718,11 +1027,9 @@ router.get('/previous-loans', async (req, res) => {
         const loanerCreatedAt = new Date(loaner.created_at);
         const loanerPeriodInDays = loaner.period;
 
-        // Calculate the due date
         const loanerDueDate = new Date(loanerCreatedAt);
         loanerDueDate.setDate(loanerDueDate.getDate() + loanerPeriodInDays);
 
-        // Calculate the time difference in days
         const timeDiffInMs = loanerDueDate - currentDate;
         const timeDiffInDays = loanerPeriodInDays - ((currentDate - loanerCreatedAt) / (1000 * 60 * 60 * 24));
 
@@ -792,7 +1099,6 @@ router.get('/previous-loans', async (req, res) => {
 //   }
 // });
 
-
 // /api/loans call
 router.get('/', async (req, res) => {
   const pagination = req.query.pagination ? parseInt(req.query.pagination) : 10;
@@ -804,7 +1110,7 @@ router.get('/', async (req, res) => {
   const loanTypeFilter = req.query.loanType;
 
   try {
-    let query = { 'loan_amount': { $gt: 0 } };
+    let query = { loan_amount: { $gt: 0 } };
     if (loanTypeFilter) {
       query['loan_type'] = loanTypeFilter;
     }
@@ -812,31 +1118,37 @@ router.get('/', async (req, res) => {
     const loans = await Loan.find(query)
       .skip(pagination * page - pagination)
       .limit(pagination);
+
     const count = await Loan.countDocuments(query);
     let loan_list = [];
 
     for (const loan of loans) {
+      const loaners = await Promise.all(
+        loan.loaners.map(async (loaner) => {
+          const user = await User.findById(loaner.user, 'avatar _id totalWagered accessory');
+          return user;
+        })
+      );
 
-      // for (const loaner of loan.loaners) {
       loan_list.push({
         _id: loan._id,
         lender: loan.lender,
-
         loan_amount: loan.loan_amount,
-
+        fractional_amount: loan.fractional_amount,
         loan_type: loan.loan_type,
         loan_period: loan.loan_period,
         apy: loan.apy,
         created_at: loan.created_at,
+        loaners: loaners, // Include the loaners in the response
       });
-
-      // }
     }
+
     if (sort === 'created_at') {
       loan_list.sort((a, b) => a.created_at - b.created_at);
     } else {
       loan_list.sort((a, b) => a.loan_amount - b.loan_amount);
     }
+
     res.json({
       success: true,
       query: req.query,
@@ -845,168 +1157,14 @@ router.get('/', async (req, res) => {
       pages: Math.ceil(count / pagination),
     });
   } catch (err) {
-    console.error('Error:', err); // Add an error log statement.
-    res.json({
-      success: false,
-      err: err,
-    });
-  }
-});
-
-
-
-router.post('/create-and-lend', auth, async (req, res) => {
-  try {
-    const { loan_amount, loan_period, apy, lender } = req.body;
-    const currentUser = await User.findOne({ _id: req.user._id });
-
-    // Check if all required fields are provided
-    if (!loan_amount || !loan_period || !apy || !lender) {
-      return res.json({
-        success: false,
-        error: 'Please enter all fields'
-      });
-    }
-
-    // Validate loan amount, loan period, and APY
-    const parsedLoanAmount = parseFloat(loan_amount);
-    const parsedLoanPeriod = parseFloat(loan_period);
-    const parsedApy = parseFloat(apy);
-
-    if (isNaN(parsedLoanAmount) || parsedLoanAmount <= 0 ||
-      isNaN(parsedLoanPeriod) || parsedLoanPeriod <= 0 ||
-      isNaN(parsedApy) || parsedApy <= 0) {
-      return res.json({
-        success: false,
-        message: 'Loan amount, loan period, and APY must be valid positive numbers',
-      });
-    }
-
-    const originalLender = await User.findOne({ _id: lender });
-
-    // Check if the lender has sufficient funds for the loan
-    if (!originalLender || originalLender.balance < parsedLoanAmount) {
-      return res.json({
-        success: false,
-        message: 'Insufficient funds or lender not found',
-      });
-    }
-
-    // Create new transactions
-    const newTransactionJ = new Transaction({
-      user: currentUser._id,
-      amount: parsedLoanAmount,
-      description: 'Loan received',
-    });
-
-    const newTransactionC = new Transaction({
-      user: originalLender._id,
-      amount: -parsedLoanAmount,
-      description: 'Loan created',
-    });
-
-    // Create notifications
-    const notificationJ = new Notification({
-      from: originalLender._id,
-      to: currentUser._id,
-      room: '',
-      message: `Loan received ${convertToCurrency(parsedLoanAmount)}`,
-      is_read: false
-    });
-
-    const notificationC = new Notification({
-      from: currentUser._id,
-      to: originalLender._id,
-      room: '',
-      message: `Loan created ${convertToCurrency(parsedLoanAmount)} for ${currentUser.username}`,
-      is_read: false
-    });
-
-    const notificationDataJ = {
-      message: notificationJ.message,
-      username: originalLender.username,
-      avatar: originalLender.avatar,
-      accessory: originalLender.accessory,
-      rank: originalLender.totalWagered,
-      created_at: moment().format('YYYY-MM-DD HH:mm'),
-      created_at_str: moment().format('LLL'),
-      updated_at: moment().format('YYYY-MM-DD HH:mm'),
-    };
-
-    const notificationDataC = {
-      message: notificationC.message,
-      username: currentUser.username,
-      avatar: currentUser.avatar,
-      accessory: currentUser.accessory,
-      rank: currentUser.totalWagered,
-      created_at: moment().format('YYYY-MM-DD HH:mm'),
-      created_at_str: moment().format('LLL'),
-      updated_at: moment().format('YYYY-MM-DD HH:mm'),
-    };
-
-    // Create a new loan
-    const loanObj = new Loan({
-      lender: originalLender,
-      loan_amount: 0,
-      loan_type: 'standard',
-      loan_period: parsedLoanPeriod,
-      apy: parsedApy / 100
-    });
-
-    const accessAllowed = await check_access_time(currentUser._id);
-    if (!accessAllowed) {
-      return res.json({
-        success: false,
-        message: 'irregular action',
-        betResult: -1000
-      });
-    }
-
-    // Update user balances
-    currentUser.balance += parsedLoanAmount;
-    originalLender.balance -= parsedLoanAmount;
-
-    // Set loan details
-    loanObj.loaners = [{
-      user: currentUser._id,
-      apy: loanObj.apy,
-      paidBack: 0,
-      period: parsedLoanPeriod,
-      amount: parsedLoanAmount * (1 + loanObj.apy),
-      created_at: Date.now(),
-      updated_at: Date.now()
-    }];
-
-    // Save documents and send notifications
-    await Promise.all([
-      saveDocumentWithRetry(newTransactionC),
-      saveDocumentWithRetry(newTransactionJ),
-      saveDocumentWithRetry(notificationC),
-      saveDocumentWithRetry(notificationJ),
-      saveDocumentWithRetry(loanObj),
-      saveDocumentWithRetry(currentUser),
-      saveDocumentWithRetry(originalLender)
-    ]);
-
-    socket.sendNotification(currentUser._id, notificationDataJ);
-    socket.sendNotification(originalLender._id, notificationDataC);
-
-    res.json({
-      success: true,
-      balance: currentUser.balance,
-      newTransaction: newTransactionJ,
-      message: `LOAN 🤝 RECEIVED FROM ${originalLender.username}`,
-    });
-
-  } catch (err) {
     console.error('Error:', err);
     res.json({
       success: false,
-      message: "An error occurred during the loan creation and lending process",
-      error: err.message,
+      err: err.message,
     });
   }
 });
+
 
 
 module.exports = router;

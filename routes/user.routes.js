@@ -723,7 +723,7 @@ router.post('/add-bonus', auth, async (req, res) => {
     const newTransaction = new Transaction({
       user: user._id,
       amount: number,
-      description: `Bonus added: ${number}`,
+      description: `Bonus added`,
       room: ''
     });
 

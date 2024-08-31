@@ -421,7 +421,7 @@ class HistoryTable extends Component {
                 className={`table-row ${(row.creator?._id === this.props.userId || row.joined_user === this.props.userId) ? 'history-background' : ''} ${key < 50 ? 'slide-in' : ''}`}
                 style={{
                   animationDelay: `${key * 0.1}s`,
-                  filter: row.status !== 'open' ? 'grayscale(70%)' : 'none'  // Apply grayscale filter if status is "open"
+                  filter: row.status !== 'open' ? 'opacity(60%)' : 'none'  // Apply grayscale filter if status is "open"
                 }}
                 key={row._id}
               >

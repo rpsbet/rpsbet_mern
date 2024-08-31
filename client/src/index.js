@@ -40,7 +40,7 @@ const shouldPlaySound = () => {
 const playSound = () => {
   if (shouldPlaySound()) {
     const audio = new Audio(buttonHoverSound);
-    audio.volume = 0.05;
+    audio.volume = 0.03;
     audio.play();
   }
 };
@@ -48,7 +48,7 @@ const playSound = () => {
 const playSoundTyping = () => {
   if (shouldPlaySound()) {
     const audio = new Audio(typingSound);
-    audio.volume = 0.05;
+    audio.volume = 0.03;
     audio.play();
   }
 };

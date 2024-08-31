@@ -51,7 +51,7 @@ const StyledProductCard = styled.a`
   background: ${({ isDarkMode }) =>
     isDarkMode
       ? 'linear-gradient(156deg, #ff0000, #971517)'
-      : 'linear-gradient(156deg, #dee2e6, #cf0c0e)'};
+      : 'linear-gradient(156deg, #fd23e4, #cf0c0e)'};
   border-radius: 0.3em;
   width: 150px;
   justify-content: center;
@@ -123,8 +123,6 @@ const StyledProductImage = styled.img`
   object-fit: contain; /* Ensures the image covers the entire container */
   border-radius: 10px;
 `;
-
-
 
 const customStyles = {
   tabRoot: {
@@ -804,7 +802,7 @@ class CreateGame extends Component {
                       src={`/img/gametype/icons/${gameType.short_name}.svg`}
                       alt={gameType.game_type_name}
                     />
-                    <span>{gameType.game_type_name}</span>
+                    <span style={{color: "#f9f9f9"}}>{gameType.game_type_name}</span>
                   </StyledProductCard>
                 }
               />

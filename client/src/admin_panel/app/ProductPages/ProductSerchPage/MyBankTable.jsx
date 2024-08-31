@@ -9,6 +9,8 @@ import {
   faFilter,
   faClock,
   faUsers,
+  faTags,
+  faPiggyBank,
   faCalendar
 } from '@fortawesome/free-solid-svg-icons';
 import {
@@ -42,6 +44,7 @@ import { acGetCustomerInfo } from '../../../../redux/Customer/customer.action';
 import SwapHoriz from '@material-ui/icons/SwapHoriz';
 import { convertToCurrency } from '../../../../util/conversion';
 import { alertModal } from '../../../../game_panel/modal/ConfirmAlerts';
+import Avatar from '../../../../components/Avatar';
 import PlayerModal from '../../../../game_panel/modal/PlayerModal';
 const MarketplaceContainer = styled.div`
   display: flex;
@@ -66,7 +69,7 @@ const ProductGrid = styled.div`
 `;
 const ProductCard = styled.div`
   position: relative;
-  background: linear-gradient(156deg, #303438, #28a745);
+  background: linear-gradient(156deg,  #28a745, #007bff);
   border-radius: 20px;
   padding: 10px;
   display: -ms-flexbox;
@@ -138,7 +141,7 @@ const LoanAmount = styled.h6`
   font-weight: 400;
   line-height: 1.75;
   letter-spacing: 0.00938em;
-  background: linear-gradient(354deg, #00b03775, #494e54);
+  background: linear-gradient(354deg,#007bff75,#00ddff);
   width: 100%;
   border: 1px soli#9c0c0c;
   border-radius: 23%;
@@ -191,7 +194,7 @@ class MyBankTable extends Component {
       sortAnchorEl: null,
       sortCriteria: 'updated_at',
       _id: this.props.userInfo._id,
-      loanType: 'standard'
+      loanType: ''
     };
   }
 
@@ -313,9 +316,7 @@ class MyBankTable extends Component {
       sortAnchorEl,
       loanType,
     } = this.state;
-    const loanTypeMap = {
-      'standard': 'Standard',
-    };
+
     this.fetchCustomerInfo();
     return (
       <MarketplaceContainer>
@@ -332,11 +333,11 @@ class MyBankTable extends Component {
             >
               <MenuItem
                 onClick={() =>
-                  this.handleFilterClose('standard')
+                  this.handleFilterClose('FULL')
                 }
-                selected={loanType === 'standard'}
+                selected={loanType === 'FULL'}
               >
-                Standard
+                FULL
               </MenuItem>
 
             </Menu>
@@ -368,71 +369,123 @@ class MyBankTable extends Component {
 
             {showPlayerModal && (
               <PlayerModal
-              selectedCreator={selectedCreator}
-              modalIsOpen={showPlayerModal}
-              closeModal={this.handleClosePlayerModal}
+                selectedCreator={selectedCreator}
+                modalIsOpen={showPlayerModal}
+                closeModal={this.handleClosePlayerModal}
               />
-              )}
+            )}
 
-            {data.map(row => (
-              <ProductCard
-              key={row._id}
-              onClick={() => {
-                setCurrentLoanId(row._id);
-                history.push(`/loan/${row._id}`);
-              }}
-              >
-                <CommissionPower>{row.apy * 100}%</CommissionPower>
+            {data.map(row => {
+              // Calculate reserves based on loan type
+              const reserves = row.loan_type === 'FRACTIONAL'
+                ? (row.loan_amount * (row.fractional_amount / 100))
+                : row.loan_amount;
 
-                <ProductInfo>
-                  <LoanAmount>{convertToCurrency(row.loan_amount)}</LoanAmount>
-                  <TableContainer>
-                    <Table id="my-products" className="product-detail">
-                      <TableBody>
-                        <TableRow>
-                          <TableCell>
-                            <FontAwesomeIcon icon={faCalendar} /> Loan Period
-                          </TableCell>
-                          <TableCell className="value">{row.loan_period} days</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell>
-                            <FontAwesomeIcon icon={faUsers} /> Loaners:
-                          </TableCell>
-                          <TableCell className="value">{row.loaners}</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell>
-                            <FontAwesomeIcon icon={faClock} /> Created:
-                          </TableCell>
-                          <TableCell  className="value">
-                          {moment(row.created_at).fromNow()}
-                          </TableCell>
-                        </TableRow>
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-                </ProductInfo>
+              return (
+                <ProductCard
+                  key={row._id}
+                  onClick={() => {
+                    setCurrentLoanId(row._id);
+                    history.push(`/loan/${row._id}`);
+                  }}
+                >
+                  <CommissionPower>{row.apy * 100}%</CommissionPower>
 
-               
+                  <ProductInfo>
+                    <LoanAmount>{convertToCurrency(row.loan_amount)}</LoanAmount>
+                    <TableContainer>
+                      <Table id="my-products" className="product-detail">
+                        <TableBody>
+                          <TableRow>
+                            <TableCell>
+                              <FontAwesomeIcon icon={faCalendar} />&nbsp;Loan Period:
+                            </TableCell>
+                            <TableCell className="value">{row.loan_period} days</TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell>
+                              <FontAwesomeIcon icon={faUsers} />&nbsp;Loaners:
+                            </TableCell>
+                            <TableCell className="value cell-joiners">
+                              {row.loaners && row.loaners.length > 0 ? (
+                                <>
+                                  {row.loaners.slice(0, 2).map((loaner, index) => (
+                                    loaner && loaner.avatar ? (
+                                      <a
+                                        key={loaner._id || index} // Use loaner's _id if available; otherwise, fallback to index
+                                        className="player"
+                                        onClick={() => this.handleOpenPlayerModal(loaner._id)}
+                                      >
+                                        <Avatar
+                                          className="avatar"
+                                          src={loaner.avatar}
+                                          rank={loaner.totalWagered || 0}
+                                          accessory={loaner.accessory || ''}
+                                          alt={loaner.username || 'Unknown User'}
+                                          darkMode={this.props.isDarkMode}
+                                        />
+                                      </a>
+                                    ) : null
+                                  ))}
+                                  {row.loaners.length > 2 && (
+                                    <div className="avatar-square" style={{marginLeft: "20px", zIndex: "0"}}>
+                                      <div className="avatar-count">
+                                        +{row.loaners.length - 2}
+                                      </div>
+                                    </div>
+                                  )}
+                                </>
+                              ) : (
+                                <span>No Loaners</span>
+                              )}
+                            </TableCell>
 
-                <DeListLoanButton>
-                  {row.onSale === 0 ? null : (
-                    <Tooltip title="Withdraw Funds">
-                      <IconButton
-                        className="btn-back"
-                        onClick={() => {
-                          setCurrentLoanId(row._id);
-                          openDeListLoanModal();
-                        }}
-                      >
-                        WITHDRAW <SwapHoriz />
-                      </IconButton>
-                    </Tooltip>
-                  )}
-                </DeListLoanButton>
-              </ProductCard>
-            ))}
+                          </TableRow>
+                          <TableRow>
+                            <TableCell>
+                              <FontAwesomeIcon icon={faTags} />&nbsp;Loan Type:
+                            </TableCell>
+                            <TableCell className="value">{row.loan_type}</TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell>
+                              <FontAwesomeIcon icon={faPiggyBank} />&nbsp;Reserves:
+                            </TableCell>
+                            <TableCell className="value">
+                              {convertToCurrency(reserves)}
+                            </TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell>
+                              <FontAwesomeIcon icon={faClock} />&nbsp;Created:
+                            </TableCell>
+                            <TableCell className="value">{moment(row.created_at).fromNow()}</TableCell>
+                          </TableRow>
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </ProductInfo>
+
+                  <DeListLoanButton>
+                    {row.onSale === 0 ? null : (
+                      <Tooltip title="Withdraw Funds">
+                        <IconButton
+                          className="btn-back"
+                          onClick={() => {
+                            setCurrentLoanId(row._id);
+                            openDeListLoanModal();
+                          }}
+                        >
+                          WITHDRAW <SwapHoriz />
+                        </IconButton>
+                      </Tooltip>
+                    )}
+                  </DeListLoanButton>
+                </ProductCard>
+              );
+            })}
+
+
           </ProductGrid>
         ) : (
           <LinearContainer>
