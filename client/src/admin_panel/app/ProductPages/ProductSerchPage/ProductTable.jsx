@@ -386,11 +386,12 @@ class ProductTable extends Component {
     };
     this.fetchCustomerInfo();
     return (
-      <MarketplaceContainer>
+      <MarketplaceContainer style={{padding: "0 20px 20px 20px", background:"rgb(170 170 170 / 6%)", borderBottomRightRadius: "20px", borderBottomLeftRadius: "20px"}}>
         {itemType === '653ee81117c9f5ee2124564b' && (
           <img id="marketplace-banner" src={'/img/accessory-banner.svg'} />
         )}
-        <FilterSortContainer>
+        <FilterSortContainer className='desktop-only'>
+          
           <div className="filters">
             <Button onClick={this.handleFilterClick}>
               Filter&nbsp;
@@ -616,7 +617,7 @@ class ProductTable extends Component {
             <LinearProgress color="secondary" />
           </LinearContainer>
         )}
-        <PaginationContainer>
+        <PaginationContainer className='desktop-only'>
           <Pagination
             limit={1}
             offset={page - 1}

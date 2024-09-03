@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { Button } from '@material-ui/core';
+import { Button, TextField, Grid, Typography } from '@material-ui/core';
 import Modal from 'react-modal';
 import BankPage from '../../admin_panel/app/ProductPages/ProductSerchPage/BankPage';
 import { Help } from '@material-ui/icons';
@@ -10,6 +10,9 @@ import { warningMsgBar, infoMsgBar } from '../../redux/Notification/notification
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCoins, faAdjust } from '@fortawesome/free-solid-svg-icons';
 import { convertToCurrency } from '../../util/conversion';
+import { getNativePrices } from '../../redux/Setting/setting.action';
+import ReactApexChart from 'react-apexcharts';
+import RpsPriceChart from '../../components/RpsPriceChart';
 
 Modal.setAppElement('#root');
 
@@ -39,9 +42,11 @@ class BankModal extends Component {
       showPopup: false,
       sortCriteria: 'updated_at',
       loanType: '',
-      invertFilter: false,
+    
     };
   }
+
+
 
   handleOpenMyLoansModal = () => {
     if (!this.state.showMyLoansModal) {
@@ -61,9 +66,13 @@ class BankModal extends Component {
     this.setState({ invertFilter: !this.state.invertFilter });
   };
 
+
   render() {
-    const { isDarkMode } = this.props;
+    const { isDarkMode, getNativePrices } = this.props;
     const { invertFilter } = this.state;
+   
+
+
     return (
       <Modal
         isOpen={this.props.modalIsOpen}
@@ -84,7 +93,9 @@ class BankModal extends Component {
 
           <div className="modal-body edit-modal-body banking-modal-body">
             <div className="modal-content-wrapper">
+             <RpsPriceChart getNativePrices={getNativePrices}/>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+
                 <h1 className="modal-title title">PRIVATE LENDERS</h1>
 
                 <div style={{ width: '50%', textAlign: 'right', padding: '20px' }}>
@@ -174,7 +185,7 @@ class BankModal extends Component {
                 </ol>
 
                 {/* New Definitions Section */}
-                <h3 style={{ fontSize: '24px', fontWeight: '600',  marginTop: '30px', marginBottom: '15px', textAlign: 'center', letterSpacing: '0.5px' }}>
+                <h3 style={{ fontSize: '24px', fontWeight: '600', marginTop: '30px', marginBottom: '15px', textAlign: 'center', letterSpacing: '0.5px' }}>
                   Definitions
                 </h3>
                 <h4 style={{ fontSize: '20px', fontWeight: '600', color: '#16e100', marginBottom: '10px', padding: '0 20px' }}>
@@ -220,6 +231,7 @@ const mapStateToProps = (state) => ({
 
 const mapDispatchToProps = {
   warningMsgBar,
+  getNativePrices,
   infoMsgBar,
 };
 

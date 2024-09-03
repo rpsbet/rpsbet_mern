@@ -3,6 +3,7 @@ import {
   GAMETYPE_LOADED,
   STRATEGIES_LOADED,
   RECENTLY_CLOSED_LOADED,
+  TOP_WITHDRAWALS_LOADED,
   ROOMINFO_LOADED,
   START_LOADING,
   END_LOADING,
@@ -744,6 +745,15 @@ export const getWins = () => async dispatch => {
     }
   } catch (err) { }
 };
+export const getWithdrawals = () => async dispatch => {
+  try {
+    const res = await axios.get('/game/topWithdrawals');
+    if (res.data.success) {
+      dispatch({ type: TOP_WITHDRAWALS_LOADED, payload: res.data.history });
+
+    }
+  } catch (err) { }
+};
 
 
 export const getRpsBetItems = (room_id) => async dispatch => {
@@ -837,6 +847,7 @@ export const getRecentlyClosed = () => async dispatch => {
   } catch (err) {
   }
 };
+
 export const getStrategies = () => async dispatch => {
   try {
     const res = await axios.get('/game/strategies');

@@ -4,8 +4,11 @@ const convertToCurrency = require('./conversion');
 const convertGameLogToHistoryStyle = async gameLogList => {
   
   let result = [];
-  
   gameLogList.forEach(gameLog => {
+    if (gameLog.game_result === 3 && gameLog.hosts && gameLog.hosts.length === 0) {
+      return;
+    }
+
     let room_name;
     if (gameLog.game_result === 3000 || gameLog.game_result === 333 || gameLog.game_result === 666) {
       room_name = `<a style='color: #b9bbbe;' href="/join/${gameLog['room']['_id']}">${gameLog['game_type']['short_name']}-${gameLog['room']['room_number']}</a>`;
@@ -23,6 +26,7 @@ const convertGameLogToHistoryStyle = async gameLogList => {
         joined_user: gameLog['joined_user'] ? gameLog['joined_user']['_id'] : null,
         created_at: gameLog['created_at'],
         ai_mode: gameLog.ai_mode ? gameLog.ai_mode : '',
+        hosts: gameLog.hosts ?  gameLog.hosts : '',
         qbot: gameLog.qbot ? gameLog.qbot : '',
         status: gameLog['room'] ? gameLog['room']['status'] : 'completed'
       };

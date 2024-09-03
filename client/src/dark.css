@@ -6,7 +6,9 @@
 .dark_mode div.main-page-nav-button-group button.active,
 .dark_mode .game-panel-panel .btn-game-type:hover .game-type-name,
 .dark_mode div.table.main-history-table .table-row>div,
-.dark_mode .modal-body input  {
+.dark_mode .modal-body input,
+.dark_mode .player span,
+.dark_mode .chat-log-panel .message-header  {
 	color: #f9f9f9 !important;
 }
 
@@ -597,11 +599,11 @@ background: linear-gradient(298deg, #4f0068, #3d0066);
 }
 
 .dark_mode .chat-page {
-	background: linear-gradient(45deg, #231526, transparent);
+	background: linear-gradient(45deg, #8900ff, #ff0000);
 }
 
 .dark_mode .chat-page .chat-header {
-	background: linear-gradient(45deg, #19121f, transparent);
+	background: linear-gradient(45deg, #8900ff, transparent);
 }
 
 .dark_mode .chat-page .chat-header button.btn-back {
@@ -609,8 +611,7 @@ background: linear-gradient(298deg, #4f0068, #3d0066);
 }
 
 .dark_mode .chat-page .chat-input-panel {
-	background: linear-gradient(45deg, #65005b, #2c162e);
-	border-top: 1px solid #773296;
+	background: linear-gradient(45deg, #ab009a, #5e0085);
 }
 
 .dark_mode .chat-page .chat-input-panel .emoticon-panel {

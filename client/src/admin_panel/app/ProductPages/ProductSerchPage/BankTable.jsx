@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import { alertModal } from '../../../../game_panel/modal/ConfirmAlerts';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import MyLoansModal from '../../../../game_panel/modal/MyLoansModal';
-
+import RpsPriceChart from '../../../../components/RpsPriceChart';
 import {
   faClock,
   faSort,
@@ -42,6 +42,7 @@ import { convertToCurrency } from '../../../../util/conversion';
 import { updateDigitToPoint2 } from '../../../../util/helper';
 import Avatar from '../../../../components/Avatar';
 import PlayerModal from '../../../../game_panel/modal/PlayerModal';
+import { getNativePrices } from '../../../../redux/Setting/setting.action';
 const MarketplaceContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -359,7 +360,8 @@ class BankTable extends Component {
       setCurrentLoanId,
       setCurrentLoanInfo,
       openConfirmLoanModal,
-      isLowGraphics
+      isLowGraphics,
+      getNativePrices
     } = this.props;
 
     const {
@@ -377,8 +379,8 @@ class BankTable extends Component {
 
     this.fetchCustomerInfo();
     return (
-      <MarketplaceContainer>
-        <FilterSortContainer>
+      <MarketplaceContainer style={{padding: "20px", background:"rgb(170 170 170 / 6%)", borderRadius: "20px"}}>
+        <FilterSortContainer  className=" desktop-only">
           <div className="filters">
             <Button onClick={this.handleFilterClick}>
               Filter&nbsp;
@@ -422,6 +424,12 @@ class BankTable extends Component {
             </Menu>
           </div>
         </FilterSortContainer>
+        {is_mobile && (
+          <>
+          <Button style={{marginBottom: "30px"}} className="btn-submit" onClick={this.handleOpenMyLoansModal}>Manage Your Loans&nbsp; <AttachMoney /></Button>
+          <RpsPriceChart getNativePrices={getNativePrices}/>
+          </>
+          )}
         {!loading ? (
           <ProductGrid>
             {showPlayerModal && (
@@ -567,10 +575,10 @@ class BankTable extends Component {
         </PaginationContainer> */}
 
 
-        <div className="carousel-container" style={{ marginTop: "60px" }}>
-          <Typography variant="h6" align="left" gutterBottom>
+        <div className="carousel-container" style={{ marginTop: "30px" }}>
+          <h6 className='title'>
             PREVIOUS LOANS
-          </Typography>
+          </h6>
           <div className="carousel">
             {
               loansWithProfit.map(loan => (
@@ -669,9 +677,7 @@ class BankTable extends Component {
             )}
 
           </div>
-          {is_mobile && (
-          <Button style={{marginTop: "30px"}} className="btn-back" onClick={this.handleOpenMyLoansModal}>Manage Your Loans&nbsp; <AttachMoney /></Button>
-          )}
+          
         </div>
       </MarketplaceContainer>
     );
@@ -696,8 +702,8 @@ const mapDispatchToProps = {
   previousLoans,
   setCurrentLoanInfo,
   openConfirmLoanModal,
-  acGetCustomerInfo
-
+  acGetCustomerInfo,
+getNativePrices
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(BankTable);

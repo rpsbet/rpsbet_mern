@@ -1416,6 +1416,7 @@ class SiteWrapper extends Component {
                             style: {
                               width: '200px',
                               border: "none",
+                              filter: isDarkMode ? "unset": "hue-rotate(25deg)",
                               background: isDarkMode ? 'linear-gradient(45deg, #7300c8, #620096)' : 'linear-gradient(45deg, #e300ea, #a700ff)'
                             }
                           }}

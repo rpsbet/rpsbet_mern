@@ -5,6 +5,7 @@ import {
   GAMETYPE_LOADED,
   STRATEGIES_LOADED,
   RECENTLY_CLOSED_LOADED,
+  TOP_WITHDRAWALS_LOADED,
   ROOMINFO_LOADED,
   START_LOADING,
   END_LOADING,
@@ -304,6 +305,7 @@ export default function (state = initialState, action) {
         ...state,
         recentlyClosed: payload
       };
+
     case SET_CHAT_ROOM_INFO:
       return {
         ...state,
@@ -354,6 +356,11 @@ export default function (state = initialState, action) {
       return {
         ...state,
         topWins: [...payload],
+      };
+    case TOP_WITHDRAWALS_LOADED:
+      return {
+        ...state,
+        topWithdrawals: [...payload],
       };
     case MY_GAMES_LOADED:
       return {

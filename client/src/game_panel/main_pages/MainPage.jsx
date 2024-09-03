@@ -11,8 +11,10 @@ import {
   setCurRoomInfo,
   getMyChat,
   getGameTypeList,
+  getWithdrawals,
   getWins,
 } from '../../redux/Logic/logic.actions';
+import { Info } from '@material-ui/icons';
 import { toggleDrawer } from '../../redux/Auth/user.actions';
 import MyGamesTable from '../MyGames/MyGamesTable';
 import MyHistoryTable from '../MyGames/MyHistoryTable';
@@ -28,7 +30,7 @@ import animationData from '../LottieAnimations/live';
 import { Button } from '@material-ui/core';
 import AiPanel from '../../components/AiPanel';
 import JukeboxPanel from '../../components/JukeboxPanel.jsx';
-import { Tabs, Tab, Drawer, IconButton } from '@material-ui/core';
+import { Tabs, Tab, Drawer, IconButton, Tooltip } from '@material-ui/core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { convertToCurrency } from '../../util/conversion.js';
 import { faCoins, faStore, faLink } from '@fortawesome/free-solid-svg-icons';
@@ -50,6 +52,14 @@ const customStyles = {
   }
 };
 
+const calculateDaysUntilNextMonth = () => {
+  const now = moment();
+  const nextMonth = now.clone().add(1, 'months').startOf('month');
+  const daysUntilNextMonth = nextMonth.diff(now, 'days');
+  return daysUntilNextMonth > 0 ? `${daysUntilNextMonth}d` : '0d';
+};
+
+
 const formatTimeAgo = (date) => {
   const duration = moment.duration(moment().diff(moment(date)));
   const seconds = Math.floor(duration.asSeconds());
@@ -62,6 +72,7 @@ const formatTimeAgo = (date) => {
   if (hours < 24) return `${hours} h`;
   return `${days}d`;
 };
+
 
 class MainPage extends Component {
   constructor(props) {
@@ -76,7 +87,8 @@ class MainPage extends Component {
       showP2PLending: false,
       showMarketplace: false,
       refreshing: false,
-      selectedCreator: ''
+      selectedCreator: '',
+           remainingDays: calculateDaysUntilNextMonth()
     };
     this.toggleDrawer = this.toggleDrawer.bind(this);
   }
@@ -88,12 +100,13 @@ class MainPage extends Component {
       getRoomCount,
       getHistory,
       getWins,
+      getWithdrawals,
       // getGameTypeList,
       isAuthenticated,
       getMyChat
     } = this.props;
     // this.gamesListInterval = setInterval(this.handleRefresh, 100000);
-    const promises = [getRoomList({ pageSize: 7 }), getWins(), getRoomCount({ game_type: selectedGameType })];
+    const promises = [getRoomList({ pageSize: 7 }), getWins(), getWithdrawals(), getRoomCount({ game_type: selectedGameType })];
     if (isAuthenticated) {
       promises.push(getMyChat());
     }
@@ -102,6 +115,7 @@ class MainPage extends Component {
     if (this.state.is_mobile && !this.props.isDrawerOpen) {
       this.toggleDrawer();
     }
+
   }
 
   toggleP2PLending = () => {
@@ -213,6 +227,74 @@ class MainPage extends Component {
                     <br />
                     <span style={{ whiteSpace: "nowrap", fontSize: "xx-small" }}>
                       {(row.winnings / row.bet_amount).toFixed(2)}x / ${(row.winnings * 0.119).toFixed(2)}
+                    </span>
+
+                  </div>
+                  <div className="cell" style={{ whiteSpace: "nowrap", fontSize: "xx-small", position: "absolute", right: '5px', bottom: '0px' }}>
+                    <span style={{ color: "unset", whiteSpace: "nowrap", fontSize: "xx-small", marginRight: "-5px", paddingBottom: "10px", paddingTop: "5px" }}>
+                      {formatTimeAgo(row.created_at)} ago
+                    </span>
+                  </div>
+
+
+                </div>
+              </div>
+
+            ))}
+          </div>
+          <div style={{ display: "inline-flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+          <h2 className="main-title recently-closed-title" style={{ padding: "0 0 15px 0" }}>
+          TOP WITHDRAWALS (NEXT WITHDRAWAL OPEN IN {this.state.remainingDays})
+        </h2>
+            <Tooltip
+              style={{ float: "right", right: "20px" }}
+              title={'WITHDRAWALS OPEN ON THE 1ST OF EVERY MONTH, VERIFIED USERS HAVE PRIORITY 1 DAY EARLY.'}
+              placement="top"
+            >
+              <Info style={{ cursor: "pointer", width: "20px", height: "20px", transform: "translateY(-8px" }} />
+            </Tooltip>
+          </div>
+
+          <div className='top-wins' style={{ marginBottom: "20px" }}>
+            {this.props.topWithdrawals?.map((row, index) => (
+              <div
+                key={`table-cell-${index}-${row.room}`}
+                className="table-cell"
+                onClick={() => window.location.href = `/join/${row.room}`}
+                style={{ cursor: 'pointer' }}
+              >
+                <div key={`carousel-content-${index}-${row.room}`} className="carousel-content table-row slide-in">
+                  <div style={{ display: "flex", flexDirection: "row" }}>
+                    <a
+                      href="#"
+                      className="player"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        this.handleOpenPlayerModal(row.user_id._id);
+                      }} style={{ marginRight: "-15px" }}
+                    >
+                      <Avatar
+                        className="avatar"
+                        src={row.user_id.avatar}
+                        accessory={row.user_id.accessory}
+                        username={row.user_id.username}
+                        rank={row.user_id.totalWagered}
+                        alt=""
+                        darkMode={this.props.isDarkMode}
+                      />
+                      {/* <i
+                          className={`online-status${onlineUserList.includes(row.creator._id) ? ' online' : ''}`}
+                        ></i> */}
+                    </a>
+                  </div>
+
+                  <div className="cell" style={{ lineHeight: '0.5em', marginBottom: "5px", textAlign: "right" }} >
+                    <span style={{ color: "#00ff3a", whiteSpace: "nowrap" }}>
+                      +{convertToCurrency(row.amount)}  </span>
+                    <br />
+                    <span style={{ color: "#00ff3a", whiteSpace: "nowrap", fontSize: "xx-small" }}>
+                      ${(row.amount * 0.119).toFixed(2)}
                     </span>
 
                   </div>
@@ -428,7 +510,7 @@ class MainPage extends Component {
 
           {!this.state.is_mobile && this.props.selectedMainTabIndex === 0 && (
             <>
-              <h2 className="main-title desktop-only" style={{marginBottom: "10px"}}>HISTORY</h2>
+              <h2 className="main-title desktop-only" style={{ marginBottom: "10px" }}>HISTORY</h2>
               <HistoryTable userId={this.props.user._id} />
             </>
           )}
@@ -449,7 +531,7 @@ class MainPage extends Component {
           )}
           {!this.state.is_mobile && this.props.selectedMainTabIndex === 1 && (
             <>
-              <h2 className="main-title desktop-only" style={{marginBottom: "10px"}}>YOUR HISTORY</h2>
+              <h2 className="main-title desktop-only" style={{ marginBottom: "10px" }}>YOUR HISTORY</h2>
               <MyHistoryTable />
             </>
           )}
@@ -657,6 +739,7 @@ class MainPage extends Component {
 
 const mapStateToProps = state => ({
   topWins: state.logic.topWins,
+  topWithdrawals: state.logic.topWithdrawals,
   isAuthenticated: state.auth.isAuthenticated,
   roomList: state.logic.roomList,
   history: state.logic.history,
@@ -679,6 +762,7 @@ const mapDispatchToProps = {
   getRoomCount,
   getHistory,
   getWins,
+  getWithdrawals,
   setCurRoomInfo,
   getGameTypeList,
   clearRoomListCache,

@@ -15,6 +15,7 @@ const Room = require('../model/Room');
 const GameType = require('../model/GameType');
 const Strategy = require('../model/Strategy');
 const GameLog = require('../model/GameLog');
+const Receipt = require('../model/Receipt');
 // const RoomBoxPrize = require('../model/RoomBoxPrize');
 // const Question = require('../model/Question');
 // const Answer = require('../model/Answer');
@@ -1124,6 +1125,36 @@ router.get('/topWins', async (req, res) => {
   }
 });
 
+router.get('/topWithdrawals', async (req, res) => {
+  try {
+    // Fetch all withdrawals
+    const topWds = await Receipt.find({ payment_type: "Withdrawal" })
+      .limit(250) // Get more records first
+      .populate({
+        path: 'user_id', // Use the field name 'user_id' to populate User
+        model: User,
+        select: '_id avatar accessory totalWagered'
+      });
+
+
+    const sortedWithdrawals = topWds
+      .map(withdrawal => ({
+        ...withdrawal.toObject(),
+        amount: Math.abs(withdrawal.amount) // Convert amount to positive
+      }))
+      .sort((a, b) => b.amount - a.amount) // Sort by positive amounts in descending order
+      .slice(0, 12); // Limit results to top 12
+
+    res.json({
+      success: true,
+      pageSize: 12,
+      history: sortedWithdrawals
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server Error' });
+  }
+});
 
 const getHistory = async (pageSize, my_id, game_type) => {
   try {

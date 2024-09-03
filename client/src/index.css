@@ -693,22 +693,30 @@ div.table .table-cell button.btn_join img {
   top: 0 !important;
   right: 0 !important;
   margin-top: -30px;
+
+
 }
 
 .refresh-main {
   display: inline-flex;
   position: absolute;
   right: 5px;
-  top: 109px;
+  top: 211px;
+  background: linear-gradient(#e9e9e922, #fff3f31b);
+  border-radius: 0.6em;
 }
+
 
 .refresh-main button {
   padding: 2px !important;
   height: 30px !important;
+
 }
 
 .refresh-main button span {
   color: #b9bbbe !important;
+  padding:0 10px !important;
+
 }
 
 .refresh-main button span svg {
@@ -923,7 +931,7 @@ div.table.main-history-table .table-row>div>.room-id {
 }
 
 .top-wins div.table-cell {
-  background: linear-gradient(298deg, #aaaaaa, #d4d4d4);
+  background: linear-gradient(298deg, #e5e5e5, #dddddd);
   border-radius: 0.7em;
   margin-left: 10px;
 }
@@ -3462,7 +3470,7 @@ input {
 }
 
 .history-background {
-  background: linear-gradient(#ffb000, #ffffffba) !important;
+  background: linear-gradient(#c9c9c9, #e1e1e1) !important;
 }
 
 .result .lottie-progress,
@@ -3771,7 +3779,7 @@ input {
 }
 
 .chat-msg {
-  background: linear-gradient(348deg, #bfbfbf, #e7e7f3);
+  background: linear-gradient(348deg, #f1f1f1, #e7e7f3);
   padding: 1.75rem 0.4rem 0.75rem 1rem;
   border-radius: 7px;
   margin-bottom: 20px;
@@ -7989,7 +7997,7 @@ div[aria-label="How To Play Modal"] ul {
 
   .refresh-main {
     right: 18px;
-    top: 106px;
+    top: 208px;
   }
 
   .chat-input-panel .form-control {
