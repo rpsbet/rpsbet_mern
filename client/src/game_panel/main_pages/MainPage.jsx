@@ -244,7 +244,7 @@ class MainPage extends Component {
           </div>
           <div style={{ display: "inline-flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
           <h2 className="main-title recently-closed-title" style={{ padding: "0 0 15px 0" }}>
-          TOP WITHDRAWALS (NEXT WITHDRAWAL OPEN IN {this.state.remainingDays})
+          TOP WITHDRAWALS (NEXT WITHDRAWAL IN {this.state.remainingDays})
         </h2>
             <Tooltip
               style={{ float: "right", right: "20px" }}

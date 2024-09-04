@@ -690,8 +690,8 @@ class HowToPlayModal extends Component {
                       <div className="tutorials-section">
                         <h5>Tutorials</h5>
                         <p>Looking to get started or need help navigating our platform? Check out our tutorials for step-by-step guides:</p>
-                        <Button onClick={() => window.open("https://yourwebsite.com/tutorials", '_blank')}>View Tutorials</Button>
-                        <Button onClick={() => window.open("https://yourwebsite.com/tutorials", '_blank')}>Video Tutorials</Button>
+                        {/* <Button onClick={() => window.open("https://rps.game/tutorials", '_blank')}>View Tutorials</Button> */}
+                        <Button onClick={() => window.open("https://www.youtube.com/watch?v=fJ-Yv3AMdiE", '_blank')}>Video Tutorial</Button>
                       </div>
                     </div>
                   </div>

@@ -1442,7 +1442,10 @@ class SiteWrapper extends Component {
                             <ListItemIcon>
                               <Star />
                             </ListItemIcon>
-                            <ListItemText>THE WHEEL</ListItemText>
+                            <ListItemText>CORN WHEEL</ListItemText>
+                            <ListItemIcon>
+                            <img style={{ transform: "translate(-93px, 4px)", width:"20px", zIndex: 0 }} src="../img/icons/corn.svg" />
+                            </ListItemIcon>
                           </MenuItem>
 
                           <MenuItem onClick={this.handleOpenHowToPlayModal}>

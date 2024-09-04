@@ -175,7 +175,9 @@ class BonusModal extends Component {
       >
         <div className={isDarkMode ? 'dark_mode' : ''}>
           <div className="modal-header">
-            <h2 className="modal-title title"> <FontAwesomeIcon icon={faStar} />&nbsp;THE WHEEL</h2>
+            <h2 className="modal-title title"> <FontAwesomeIcon icon={faStar} />&nbsp;CORN WHEEL</h2>
+            <img style={{ transform: "rotate(167deg) scaleY(-1) translate(10px, 7px) rotate(5deg)", width: "40px", zIndex: 0 }} src="../img/icons/corn.svg" />
+
             <Button className="btn-close title" onClick={this.props.closeModal}>
               ×
             </Button>
@@ -186,7 +188,7 @@ class BonusModal extends Component {
               <div className="modal-content-panel">
                 <div style={{ textAlign: 'center', padding: '5px', border: '3px solid #f9f9f9', borderRadius: '4px', background: 'linear-gradient(0deg, rgb(57 40 167), rgba(202, 185, 141, 0.45))', margin: '0 0 20px', }}>
 
-                  <span style={{ color: 'rgb(222, 226, 230)' }}><FontAwesomeIcon icon={faClock} />&nbsp;Next Bonus Arrives...</span>
+                  <span style={{ color: 'rgb(222, 226, 230)' }}><FontAwesomeIcon icon={faClock} />&nbsp;Next Corn Arrives...</span>
                   <h5 style={{ color: "#ffb000" }}>{remainingTime}</h5>
                 </div>
                 <div className="wheel" style={{ transform: `rotate(${this.state.rotation}deg)`, overflow: 'hidden' }}>
@@ -224,7 +226,7 @@ class BonusModal extends Component {
               >
                 {totalWagered < 2500 ? 'RANK TOO LOW' : (
                   <>
-                    SPIN!&nbsp;<FontAwesomeIcon icon={faSyncAlt} />
+                    SPIN!&nbsp;<FontAwesomeIcon icon={faSyncAlt} /> <img style={{ transform: "rotate(167deg) scaleY(-1) translate(10px, 7px) rotate(5deg)", width: "40px", zIndex: 0 }} src="../img/icons/corn.svg" />
                   </>
                 )}
               </Button>
