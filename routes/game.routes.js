@@ -1124,7 +1124,6 @@ router.get('/topWins', async (req, res) => {
     res.status(500).json({ message: 'Server Error' });
   }
 });
-
 router.get('/topWithdrawals', async (req, res) => {
   try {
     // Fetch all withdrawals
@@ -1133,11 +1132,16 @@ router.get('/topWithdrawals', async (req, res) => {
       .populate({
         path: 'user_id', // Use the field name 'user_id' to populate User
         model: User,
-        select: '_id avatar accessory totalWagered'
+        select: '_id avatar accessory totalWagered username' // Include 'username' in the select to filter by username
       });
 
+    const filteredWithdrawals = topWds
+      .filter(withdrawal => 
+        withdrawal.user_id && // Ensure the user is populated
+        !['OFFICIALRPSGAME', 'PimpedPistols', '69'].includes(withdrawal.user_id.username) // Exclude certain usernames
+      );
 
-    const sortedWithdrawals = topWds
+    const sortedWithdrawals = filteredWithdrawals
       .map(withdrawal => ({
         ...withdrawal.toObject(),
         amount: Math.abs(withdrawal.amount) // Convert amount to positive

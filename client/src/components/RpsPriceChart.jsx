@@ -10,7 +10,7 @@ class RpsPriceChart extends Component {
     this.state = {
         usdValue: '',
         rpsValue: '',
-        conversionRate: 0.033,
+        conversionRate: 0.0133,
         pricesData: [],
         datesData: [],
         futurePriceIndex: null,
@@ -59,24 +59,24 @@ class RpsPriceChart extends Component {
   };
 
   handleUSDChange = (event) => {
-    const usdValue = event.target.value;
+    const usdValue = parseFloat(event.target.value) || 0; // Ensure it's a number
     this.setState({ usdValue }, this.updateRPSValue);
   };
-
+  
   handleRPSChange = (event) => {
-    const rpsValue = event.target.value;
+    const rpsValue = parseFloat(event.target.value) || 0; // Ensure it's a number
     this.setState({ rpsValue }, this.updateUSDValue);
   };
 
   updateRPSValue = () => {
     const { usdValue, conversionRate } = this.state;
-    const rpsValue = (usdValue * conversionRate).toFixed(2);
+    const rpsValue = (parseFloat(usdValue) / conversionRate).toFixed(4);
     this.setState({ rpsValue });
   };
-
+  
   updateUSDValue = () => {
     const { rpsValue, conversionRate } = this.state;
-    const usdValue = (rpsValue / conversionRate).toFixed(2);
+    const usdValue = (parseFloat(rpsValue) * conversionRate).toFixed(4);
     this.setState({ usdValue });
   };
 
@@ -136,7 +136,7 @@ class RpsPriceChart extends Component {
               show: true,
             },
             y: {
-              formatter: (value) => value.toFixed(3), // Format y-axis values if needed
+              formatter: (value) => value.toFixed(2), // Format y-axis values if needed
             },
             background: '#333', // Dark background color for tooltip
             borderColor: '#666', // Optional: Darker border color for tooltip

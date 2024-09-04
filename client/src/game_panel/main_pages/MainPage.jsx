@@ -88,7 +88,7 @@ class MainPage extends Component {
       showMarketplace: false,
       refreshing: false,
       selectedCreator: '',
-           remainingDays: calculateDaysUntilNextMonth()
+      remainingDays: calculateDaysUntilNextMonth()
     };
     this.toggleDrawer = this.toggleDrawer.bind(this);
   }
@@ -226,7 +226,7 @@ class MainPage extends Component {
                       +{convertToCurrency(row.winnings)}  </span>
                     <br />
                     <span style={{ whiteSpace: "nowrap", fontSize: "xx-small" }}>
-                      {(row.winnings / row.bet_amount).toFixed(2)}x / ${(row.winnings * 0.033).toFixed(2)}
+                      {(row.winnings / row.bet_amount).toFixed(2)}x / ${(row.winnings * 0.0133).toFixed(2)}
                     </span>
 
                   </div>
@@ -243,9 +243,9 @@ class MainPage extends Component {
             ))}
           </div>
           <div style={{ display: "inline-flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
-          <h2 className="main-title recently-closed-title" style={{ padding: "0 0 15px 0" }}>
-          TOP WITHDRAWALS (NEXT WITHDRAWAL IN {this.state.remainingDays})
-        </h2>
+            <h2 className="main-title recently-closed-title" style={{ padding: "0 0 15px 0" }}>
+              TOP WITHDRAWALS (NEXT WITHDRAWAL IN {this.state.remainingDays})
+            </h2>
             <Tooltip
               style={{ float: "right", right: "20px" }}
               title={'WITHDRAWALS OPEN ON THE 1ST OF EVERY MONTH, VERIFIED USERS HAVE PRIORITY 1 DAY EARLY.'}
@@ -294,9 +294,23 @@ class MainPage extends Component {
                       +{convertToCurrency(row.amount)}  </span>
                     <br />
                     <span style={{ color: "#00ff3a", whiteSpace: "nowrap", fontSize: "xx-small" }}>
-                      ${(row.amount * 0.033).toFixed(2)}
-                    </span>
+                      {(() => {
+                        const createdAt = new Date(row.created_at);
+                        const currentDate = new Date();
+                        const daysOld = (currentDate - createdAt) / (1000 * 60 * 60 * 24); // Calculate days difference
 
+                        let conversionRate = 0.0133; // Default conversion rate
+
+                        if (daysOld > 60) {
+                          conversionRate = 0.889; // If more than 60 days old
+                        } else if (daysOld > 30) {
+                          conversionRate = 0.119; // If more than 30 days old
+                        }
+
+                        // Apply the conversion rate and display the amount
+                        return `$${(row.amount * conversionRate).toFixed(2)}`;
+                      })()}
+                    </span>
                   </div>
                   <div className="cell" style={{ whiteSpace: "nowrap", fontSize: "xx-small", position: "absolute", right: '5px', bottom: '0px' }}>
                     <span style={{ color: "unset", whiteSpace: "nowrap", fontSize: "xx-small", marginRight: "-5px", paddingBottom: "10px", paddingTop: "5px" }}>

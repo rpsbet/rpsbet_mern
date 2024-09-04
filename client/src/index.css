@@ -952,7 +952,9 @@ div.table.main-history-table .table-row>div>.room-id {
   scrollbar-width: none;
   height: 54px;
 }
-
+.top-wins .verified {
+  display: none;
+}
 .top-wins .carousel-content {
   display: flex;
   justify-content: center;
