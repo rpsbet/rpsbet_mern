@@ -146,7 +146,7 @@ class BonusModal extends Component {
       isMusicEnabled,
       loading,
     } = this.props;
-    const numbers = [1.25, 0.20, 0.10, 0.4, 2.50, 1, 0.50, 1.5, 5, 2];
+    const numbers = [125, 20, 10, 4, 25, 1, 50, 15, 50, 20];
     // const markerStyle = {
     //   transform: `rotate(180deg)`,
     // };
@@ -222,9 +222,9 @@ class BonusModal extends Component {
               <Button
                 className="spin-button"
                 onClick={this.spinWheel}
-                disabled={this.state.spinning || totalWagered < 2500}
+                disabled={this.state.spinning || totalWagered < 6000}
               >
-                {totalWagered < 2500 ? 'RANK TOO LOW' : (
+                {totalWagered < 6000 ? 'RANK TOO LOW' : (
                   <>
                     SPIN!&nbsp;<FontAwesomeIcon icon={faSyncAlt} /> <img style={{ transform: "rotate(167deg) scaleY(-1) translate(10px, 7px) rotate(5deg)", width: "40px", zIndex: 0 }} src="../img/icons/corn.svg" />
                   </>
