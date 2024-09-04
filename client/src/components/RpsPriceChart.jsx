@@ -10,7 +10,7 @@ class RpsPriceChart extends Component {
     this.state = {
         usdValue: '',
         rpsValue: '',
-        conversionRate: 0.119, // Example rate: 1 USD = 0.119 RPS
+        conversionRate: 0.033,
         pricesData: [],
         datesData: [],
         futurePriceIndex: null,

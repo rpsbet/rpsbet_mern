@@ -328,7 +328,7 @@ class SettingsModal extends Component {
                               setNotificationsAllowed(!isNotificationsAllowed)
                             }
                           >
-                            <NotificationsActive />&nbsp; ALLOW NOTIFICATIONS
+                            <NotificationsActive />&nbsp; NOTIFICATIONS ON
                           </Button>
                         ) : (
                           <Button
@@ -336,8 +336,7 @@ class SettingsModal extends Component {
                               setNotificationsAllowed(!isNotificationsAllowed)
                             }
                           >
-                            <NotificationsOff />&nbsp; DON'T ALLOW
-                            NOTIFICATIONS
+                            <NotificationsOff />&nbsp; NOTIFICATIONS OFF
                           </Button>
                         )}
                       </TableCell>

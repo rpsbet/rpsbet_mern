@@ -226,7 +226,7 @@ class MainPage extends Component {
                       +{convertToCurrency(row.winnings)}  </span>
                     <br />
                     <span style={{ whiteSpace: "nowrap", fontSize: "xx-small" }}>
-                      {(row.winnings / row.bet_amount).toFixed(2)}x / ${(row.winnings * 0.119).toFixed(2)}
+                      {(row.winnings / row.bet_amount).toFixed(2)}x / ${(row.winnings * 0.033).toFixed(2)}
                     </span>
 
                   </div>
@@ -294,7 +294,7 @@ class MainPage extends Component {
                       +{convertToCurrency(row.amount)}  </span>
                     <br />
                     <span style={{ color: "#00ff3a", whiteSpace: "nowrap", fontSize: "xx-small" }}>
-                      ${(row.amount * 0.119).toFixed(2)}
+                      ${(row.amount * 0.033).toFixed(2)}
                     </span>
 
                   </div>

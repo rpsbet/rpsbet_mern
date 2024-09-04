@@ -7520,6 +7520,10 @@ div[aria-label="How To Play Modal"] ul {
     height: 160px;
   }
 
+  .modal-footer button.btn-back {
+    margin: 10px 0px 0px 5px;
+  }
+
   .popup {
     height: 100%;
     padding: 0px;
