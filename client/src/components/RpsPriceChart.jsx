@@ -136,7 +136,7 @@ class RpsPriceChart extends Component {
               show: true,
             },
             y: {
-              formatter: (value) => value.toFixed(2), // Format y-axis values if needed
+              formatter: (value) => value.toFixed(4), // Format y-axis values if needed
             },
             background: '#333', // Dark background color for tooltip
             borderColor: '#666', // Optional: Darker border color for tooltip

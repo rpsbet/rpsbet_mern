@@ -54,7 +54,7 @@ class ProfileModal extends Component {
       _id: this.props.userInfo._id,
       actorType: 'Both',
       gameType: 'All',
-      timeType: '1',
+      timeType: '24',
       referralCode: '',
       rewards: this.props.userInfo.rewards,
       username: this.props.userInfo.username,

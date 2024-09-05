@@ -463,7 +463,7 @@ class QuickShoot extends Component {
   };
 
   onChangeState(e) {
-    this.setState({ bet_amount: e.target.value }, this.updatePotentialReturn);
+    this.setState({ bet_amount: e.target.value,  }, this.updatePotentialReturn);
   }
 
   onBtnBetClick = (position) => {

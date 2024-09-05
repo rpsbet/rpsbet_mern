@@ -73,8 +73,6 @@ export const getQueue = () => async (dispatch) => {
 export const getNativePrices = () => async (dispatch) => {
   try {
     const response = await axios.get('/settings/native-prices');
-    console.log(response)
-    
     if (response.data.success) {
       return response.data.prices;
     } else {

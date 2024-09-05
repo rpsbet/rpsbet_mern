@@ -339,12 +339,12 @@ const addToQueue = async (req, bot = false) => {
                             betAmount * 2 * ((100 - commission) / 100);
 
                         newGameLog.commission =
-                            betAmount * 2 * ((commission - parseFloat(tax.value)) / 100);
+                            betAmount * 2 * (commission / 100);
 
                         // update rtb count
                         rain.value =
                             parseFloat(rain.value) +
-                            betAmount * 2 * ((commission - parseFloat(tax.value)) / 100);
+                            betAmount * 2 * (commission / 100);
 
                         // update platform earnings (0.5%)
                         platform.value =
@@ -356,8 +356,8 @@ const addToQueue = async (req, bot = false) => {
 
                         roomInfo['host_pr'] -= betAmount;
                         roomInfo['user_bet'] -= betAmount;
-                        roomInfo['user_bet'] = parseFloat(roomInfo['user_bet']) + (betAmount * 2 * ((commission - parseFloat(tax.value)) / 100));
-                        roomInfo['host_pr'] = parseFloat(roomInfo['host_pr']) + (betAmount * 2 * ((commission - parseFloat(tax.value)) / 100));
+                        roomInfo['user_bet'] = parseFloat(roomInfo['user_bet']) + (betAmount * 2 * (commission / 100));
+                        roomInfo['host_pr'] = parseFloat(roomInfo['host_pr']) + (betAmount * 2 * (commission / 100));
 
                         // send notification
                         message.message =
@@ -704,23 +704,29 @@ const addToQueue = async (req, bot = false) => {
                             (roomInfo['qs_game_type'] - 1)) *
                         ((100 - commission) / 100);
                     roomInfo['host_pr'] -=
-                        betAmount / (roomInfo['qs_game_type'] - 1);
+                        (betAmount +
+                            betAmount /
+                            (roomInfo['qs_game_type'] - 1)) *
+                        ((100 - commission) / 100) - betAmount;
 
                     roomInfo['user_bet'] -=
-                        betAmount / (roomInfo['qs_game_type'] - 1);
+                        (betAmount +
+                            betAmount /
+                            (roomInfo['qs_game_type'] - 1)) *
+                        ((100 - commission) / 100) - betAmount;
 
                     newGameLog.commission =
                         (betAmount +
                             betAmount /
                             (roomInfo['qs_game_type'] - 1)) *
-                        ((commission - 0.5) / 100);
+                        (commission / 100);
                     // update rain
                     rain.value =
                         parseFloat(rain.value) +
                         (betAmount +
                             betAmount /
                             (roomInfo['qs_game_type'] - 1)) *
-                        ((commission - 0.5) / 100);
+                        (commission / 100);
                     // update platform stat (0.5%)
                     platform.value =
                         parseFloat(platform.value) +
@@ -739,7 +745,7 @@ const addToQueue = async (req, bot = false) => {
                         (betAmount +
                             betAmount /
                             (roomInfo['qs_game_type'] - 1)) *
-                        ((commission - 0.5) / 100);
+                        (commission / 100);
 
                     message.message =
                         'Won ' +
@@ -1003,8 +1009,8 @@ const addToQueue = async (req, bot = false) => {
                 '62b9ef88a5409449f63f7ccb',
                 '65eafb7daea25957ac8ea60c'
             ];
-            
-            
+
+
             const shouldSave = roomInfo.joiners.some(joiner => requiredIds.includes(String(joiner)));
 
             roomInfo.battles = roomInfo.battles + 1;
@@ -1060,7 +1066,7 @@ const addToQueue = async (req, bot = false) => {
                 console.error("Error saving newTransactionJ", error);
             }
         }
-        
+
         responseData = {
             success: true,
             message: 'successful bet',

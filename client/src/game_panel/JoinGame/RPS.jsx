@@ -20,6 +20,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faRobot, faMoneyBillWave, faBrain, faBan } from '@fortawesome/free-solid-svg-icons';
 import ViewIcon from '@material-ui/icons/Visibility';
 import InfoIcon from '@material-ui/icons/Info';
+import WarningIcon from '@material-ui/icons/Warning';
 import SwordsIcon from '@material-ui/icons/VisibilityOff';
 import {
   getRpsBetItems,
@@ -186,8 +187,7 @@ class RPS extends Component {
   }
 
   onChangeState(e) {
-    this.setState({ bet_amount: e.target.value });
-    this.setState({ potential_return: e.target.value * 2 });
+    this.setState({ bet_amount: e.target.value, isMax: false, potential_return: e.target.value * 2 });
   }
   handleOpenModal = () => {
     this.setState({ modalOpen: true });
@@ -818,6 +818,8 @@ class RPS extends Component {
       }, flashingDuration);
     }
     const isLowBankroll = bankroll <= 1;
+    const isHighCommission = this.props.cp > 6;
+    const isLowProfit = (host_pr - roomInfo.total_stakes) > 0;
 
     return (
       <div className="game-page">
@@ -858,7 +860,12 @@ class RPS extends Component {
                     <Tooltip title={isLowBankroll ? "LOW BANKROLL CAN CAUSE A BET TO FAIL" : "A.K.A Liquidity / Pool / Pot"}>
                       <div className={`value ${isLowBankroll ? 'red-text' : ''}`} style={{ cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center" }}>
                         {convertToCurrency(bankroll)}
-                        <InfoIcon style={{ fontSize: 16, marginLeft: 4 }} />
+                        {!isLowBankroll ? (
+                          <InfoIcon style={{ fontSize: 16, marginLeft: 4 }} />
+                        ) : (
+                          <WarningIcon style={{ fontSize: 16, marginLeft: 4 }} />
+                        )
+                        }
 
                       </div>
                     </Tooltip>
@@ -890,10 +897,15 @@ class RPS extends Component {
 
                       <Tooltip title="Current bankroll + Payouts - Initial bankroll">
                         <div className="value" style={{ cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center" }}>
-                          <span style={{ color: (host_pr - roomInfo.total_stakes) > 0 ? 'rgb(87, 202, 34)' : (host_pr - roomInfo.total_stakes) < 0 ? '#ff0000' : 'inherit' }}>
+                          <span className={`value ${!isLowProfit ? 'red-text' : ''}`} >
                             {convertToCurrency(host_pr - roomInfo.total_stakes)}
                           </span>
-                          <InfoIcon style={{ fontSize: 16, marginLeft: 4 }} />
+                          {isLowProfit ? (
+                            <InfoIcon style={{ color:"#00ff3a", fontSize: 16, marginLeft: 4 }} />
+                          ) : (
+                            <WarningIcon style={{ color: "red", fontSize: 16, marginLeft: 4 }} />
+                          )
+                          }
 
                         </div>
                       </Tooltip>
@@ -905,11 +917,18 @@ class RPS extends Component {
                       <div>
                         <div className="label commission">Commission</div>
                       </div>
-                      <Tooltip title="Host's Accessory's Commission Power (CP) - Player's Accessory's Battle Power (BP) (MINIMUM 1% TOWARDS PLATFORM)">
+                      <Tooltip title="Host's Accessory's Commission Power (CP) - Player's Accessory's Battle Power (BP) (MINIMUM 1% TOWARDS PLATFORM). Aim for 6% or Less.">
                         <div style={{ cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center" }}>
 
-                          <div className="value">{this.props.cp < 1 ? 1 : this.props.cp}% </div>
-                          <InfoIcon style={{ fontSize: 16, marginLeft: 4 }} />
+                          <div className={`value ${isHighCommission ? 'red-text' : ''}`} style={{ cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center" }}>
+                            <div className="value">{this.props.cp < 1 ? 1 : this.props.cp}% </div>
+                            {!isHighCommission ? (
+                              <InfoIcon style={{ fontSize: 16, marginLeft: 4 }} />
+                            ) : (
+                              <WarningIcon style={{ fontSize: 16, marginLeft: 4 }} />
+                            )
+                            }
+                          </div>
                         </div>
                       </Tooltip>
                     </div>

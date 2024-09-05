@@ -160,6 +160,21 @@ export const acGetCustomerInfo = _id => async dispatch => {
     dispatch({ type: MSG_WARNING, payload: error });
   }
 };
+// export const getPlatformPercentages = () => async dispatch => {
+//   try {
+//     const { data } = await api.get('/statistics/platform-percentages');
+
+//     if (data.success) {
+//       console.log("Platform Percentages:", data.data); // For Debugging
+//       return data.data;  // Return the percentages
+//     } else {
+//       dispatch({ type: MSG_ERROR, payload: data.message });
+//     }
+//   } catch (error) {
+//     console.log('Error fetching platform percentages:', error);
+//     dispatch({ type: MSG_WARNING, payload: error.message || 'An error occurred' });
+//   }
+// };
 
 
 export const fetchLeaderboardsData = () => async (dispatch) => {

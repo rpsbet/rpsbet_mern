@@ -248,7 +248,7 @@ class MainPage extends Component {
             </h2>
             <Tooltip
               style={{ float: "right", right: "20px" }}
-              title={'WITHDRAWALS OPEN ON THE 1ST OF EVERY MONTH, VERIFIED USERS HAVE PRIORITY 1 DAY EARLY.'}
+              title={'WITHDRAWALS OPEN ON THE 1ST OF EVERY MONTH, VERIFIED USERS HAVE PRIORITY 1 DAY EARLY. POOL $1k - $10k IN PRIZES'}
               placement="top"
             >
               <Info style={{ cursor: "pointer", width: "20px", height: "20px", transform: "translateY(-8px" }} />

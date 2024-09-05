@@ -63,6 +63,7 @@ class LeaderboardsModal extends Component {
 
   async componentDidMount() {
     await this.props.fetchLeaderboardsData()
+    // const result = await this.props.getPlatformPercentages()
   }
 
   handleOpenPlayerModal = creator_id => {
@@ -219,7 +220,8 @@ const mapStateToProps = state => ({
 });
 
 const mapDispatchToProps = {
-  fetchLeaderboardsData
+  fetchLeaderboardsData,
+  // getPlatformPercentages
 };
 
 export default connect(

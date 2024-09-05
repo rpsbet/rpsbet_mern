@@ -35,6 +35,7 @@ async function resetWithdrawalLimits() {
             user.username === 'PimpedPistols' ||
             user.username === 'smellyfingers' ||
             user.username === 'Bearbland11' ||
+            user.username === 'jimbobjocorn' ||
             user.username === 'annyeong' ||
             user.username === '🔥 THE DON 🔥 (BOT #1)' ||
             user.username === '🪨 ROCKY 🪨 (BOT #2)' ||
@@ -47,7 +48,7 @@ async function resetWithdrawalLimits() {
           // Check if the user has the credit_score field
           if ('dailyWithdrawals' in user) {
             // Ensure credit score doesn't go below a certain threshold (e.g., 0)
-            if (user.balance < 400) {
+            if (user.balance < 50000) {
               user.dailyWithdrawals = 0;
               await user.save();
             } else {

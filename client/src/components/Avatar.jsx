@@ -209,7 +209,7 @@ class Avatar extends Component {
               width: '100%',
               height: '100%',
               zIndex: '-1',
-              border: isBot ? '3px solid red' : isSystem ? '3px solid grey' : borderColor,
+              // border: isBot ? '3px solid red' : isSystem ? '3px solid grey' : borderColor,
               boxShadow: isBot
                 ? 'none'
                 : isSystem

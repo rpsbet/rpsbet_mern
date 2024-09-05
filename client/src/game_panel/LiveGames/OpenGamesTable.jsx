@@ -941,7 +941,7 @@ class OpenGamesTable extends Component {
                                 {row.battles}
                               </Typography>
                             </div>
-                            <div>
+                            {/* <div>
                               <IconButton color="inherit" onClick={() => this.handleLike(row)}>
                                 {row.likes?.includes(this.props.user._id) ? (
                                   <>
@@ -972,7 +972,7 @@ class OpenGamesTable extends Component {
                               <Typography variant="body1">
                                 {row.likes?.length || 0}
                               </Typography>
-                            </div>
+                            </div> */}
                           </div>
                         </div>
                       </div>

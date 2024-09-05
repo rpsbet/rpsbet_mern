@@ -101,7 +101,7 @@ export default function BetAmountInput(props) {
           ref={betAmountRef}
           disabled={disabledButtons || false}
           label={bangGame ? "MULTIPLIER" : ""}
-          value={betAmount}
+          value={betAmount.toFixed(2)}
           onChange={onChangeState}
           placeholder={bangGame ? "1.29x" : "BET AMOUNT"}
           inputProps={{

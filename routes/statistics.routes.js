@@ -2,7 +2,7 @@ const express = require('express');
 
 const router = express.Router();
 const auth = require('../middleware/auth');
-
+const mongoose = require('mongoose');
 // User Model
 const User = require('../model/User');
 const Receipt = require('../model/Receipt');
@@ -38,24 +38,6 @@ router.get('/get-customer-statistics', async (req, res) => {
     if (gameType === '62a25d2a723b9f15709d1ae7') {
       transactionConditions.$and.push({ description: /RPS/i });
     }
-    //  else if (gameType === '62a25d2a723b9f15709d1ae8') {
-    //   transactionConditions.$and.push({ description: /S!/i });
-    // } else if (gameType === '62a25d2a723b9f15709d1ae9') {
-    //   transactionConditions.$and.push({ description: /BG/i });
-    // } else if (gameType === '62a25d2a723b9f15709d1aea') {
-    //   transactionConditions.$and.push({ description: /MB/i });
-    // } else if (gameType === '62a25d2a723b9f15709d1aeb') {
-    //   transactionConditions.$and.push({ description: /QS/i });
-    // } else if (gameType === '63dac60ba1316a1e70a468ab') {
-    //   transactionConditions.$and.push({ description: /DG/i });
-    // } else if (gameType === '6536a82933e70418b45fbe32') {
-    //   transactionConditions.$and.push({ description: /B!/i });
-    // } else if (gameType === '6536946933e70418b45fbe2f') {
-    //   transactionConditions.$and.push({ description: /R/i });
-    // } else if (gameType === '656cd55bb2c2d9dfb59a4bfa') {
-    //   transactionConditions.$and.push({ description: /BJ/i });
-    // }
-
     if (actorType === 'As Host') {
       gameLogsQuery.$and.push({ joined_user: { $ne: _id } });
     } else if (actorType === 'As Player') {
@@ -87,17 +69,13 @@ router.get('/get-customer-statistics', async (req, res) => {
     const receipts = await Receipt.find({ user_id: _id }).select(
       'payment_type amount'
     );
-    const transactions = await Transaction.find({
-      user: _id,
-      ...transactionConditions
-    });
 
     // Define the base query
     let query = GameLog.find(gameLogsQuery)
       .select(
-        'creator joined_user selected_drop room game_type bet_amount created_at game_result'
+        'creator joined_user selected_drop room game_type bet_amount commission created_at game_result'
       )
-      .sort({ created_at: -1 })
+      .sort({ created_at: 1 })
       .populate([
         { path: 'creator', model: User, select: '_id username' },
         { path: 'joined_user', model: User, select: '_id username' },
@@ -135,21 +113,12 @@ router.get('/get-customer-statistics', async (req, res) => {
     for (const receipt of receipts) {
       if (receipt.payment_type === 'Deposit') {
         statistics.deposit += receipt.amount;
-      } else if (receipt.payment_type === 'Withdraw') {
+      } else if (receipt.payment_type === 'Withdrawal') {
         statistics.withdraw += receipt.amount;
       }
     }
 
-    for (const transaction of transactions) {
-      if (
-        transaction.description !== 'deposit' &&
-        transaction.description !== 'withdraw'
-      ) {
-        statistics.gameProfit += transaction.amount;
-      }
-    }
-
-    const tax = await SystemSetting.findOne({ name: 'commission' });
+    const tax = await SystemSetting.findOne({ name: 'commission' }).select('value');
     const userIds = gameLogs.map(log => log.creator);
     const users = await User.find({ _id: { $in: userIds } }).select(
       'accessory username avatar'
@@ -175,11 +144,9 @@ router.get('/get-customer-statistics', async (req, res) => {
       const userId = creator._id.toString();
       const creatorUser = accessoryMap.get(userId);
       const accessory = creatorUser ? creatorUser.accessory : null;
-      const item = accessory
-        ? await Item.findOne({ image: accessory }).select('CP')
-        : { CP: parseFloat(tax.value) };
-      const commission = item.CP;
 
+
+      const commission = gameLog.commission;
       if (!room) {
         continue;
       }
@@ -189,8 +156,8 @@ router.get('/get-customer-statistics', async (req, res) => {
       const creatorId = creator ? creator._id : null;
       const joinedUserId = joined_user ? joined_user._id : null;
 
-      const isHost = creator && creator._id.toString() === _id;
-      const isJoined = joined_user && joined_user._id.toString() === _id;
+      const isHost = creator && creator._id.toString() === req.query._id;
+      const isJoined = joined_user && joined_user._id.toString() === req.query._id;
 
       if (isHost) {
         statistics.gameHosted++;
@@ -212,25 +179,36 @@ router.get('/get-customer-statistics', async (req, res) => {
         profit = isHost ? 0 - bet_amount : bet_amount * 2 - bet_amount;
         net_profit = 0 - bet_amount * commission;
       } else if (game_type && game_type.short_name === 'QS') {
-        profit =
-          isHost && game_result === -1
-            ? bet_amount * 2
-            : isJoined && game_result === 1
-              ? bet_amount + bet_amount / (room.qs_game_type - 1)
-              : 0 - bet_amount / (room.qs_game_type - 1);
-        net_profit =
-          isHost && game_result === -1
-            ? bet_amount * 2
-            : isJoined && game_result === 1
-              ? (bet_amount + bet_amount / (room.qs_game_type - 1)) *
-              ((100 - commission) / 100) -
-              bet_amount
-              : isJoined && game_result === -1
-                ? 0 - bet_amount
-                : 0 -
-                bet_amount / (room.qs_game_type - 1) +
-                (bet_amount + bet_amount / (room.qs_game_type - 1)) *
-                ((commission - 0.5) / 100);
+        if (isHost) {
+          // As host
+          if (game_result === 1) {
+            profit = -bet_amount;
+            net_profit -= -1 * ((-1 * bet_amount / (room.qs_game_type - 1)) + commission);
+            statistics.gameProfit -= bet_amount / (room.qs_game_type - 1);
+
+          } else {
+            // loss
+            profit = bet_amount;
+            net_profit += (bet_amount * (100 - parseFloat(tax.value)) / 100);
+            statistics.gameProfit += bet_amount * (100 - parseFloat(tax.value)) / 100;
+          }
+
+        } else {
+
+          // As player
+         if (game_result === 1) {
+            profit = bet_amount + bet_amount / (room.qs_game_type - 1);
+            net_profit += ((bet_amount + bet_amount / (room.qs_game_type - 1)) - commission) - gameLog.bet_amount;
+            statistics.gameProfit += ((bet_amount + bet_amount / (room.qs_game_type - 1)) - commission) - gameLog.bet_amount;
+
+          } else {
+            // loss
+            profit = -gameLog.bet_amount;
+            net_profit -= gameLog.bet_amount;
+            statistics.gameProfit -= gameLog.bet_amount;
+          }
+
+        }
       } else if (game_type && game_type.short_name === 'DG') {
         if (game_result === 0) {
           profit = 0;
@@ -263,26 +241,48 @@ router.get('/get-customer-statistics', async (req, res) => {
           ? bet_amount - game_result
           : game_result - bet_amount;
       }
-      // rps & bg
+      // rps
       else {
-        if (game_result === 0) {
-          profit = 0;
-          net_profit = 0;
+
+        if (isHost) {
+          // As host
+          if (game_result === 0) {
+            profit = 0;
+            net_profit -= (bet_amount * 2 * (100 - parseFloat(tax.value)) / 100) / 2;
+            statistics.gameProfit -= (bet_amount * 2 * (100 - parseFloat(tax.value)) / 100) / 2;
+
+          } else if (game_result === 1) {
+            profit = -bet_amount;
+            net_profit -= -1 * ((-1 * bet_amount) + commission);
+            statistics.gameProfit -= bet_amount + commission;
+
+          } else {
+            // loss
+            profit = bet_amount;
+            net_profit += (bet_amount * (100 - parseFloat(tax.value)) / 100);
+            statistics.gameProfit += bet_amount * (100 - parseFloat(tax.value)) / 100;
+          }
+
         } else {
-          profit =
-            isHost && game_result === -1
-              ? bet_amount * 2
-              : isJoined && game_result === 1
-                ? bet_amount * 2
-                : 0 - bet_amount;
-          net_profit =
-            isHost && game_result === -1
-              ? bet_amount * 2
-              : isJoined && game_result === 1
-                ? bet_amount * 2 * ((100 - commission) / 100) - bet_amount
-                : isJoined && game_result === -1
-                  ? 0 - bet_amount
-                  : 0 - bet_amount + 2 * bet_amount * ((commission - 0.5) / 100);
+
+          // As player
+          if (game_result === 0) {
+            profit = 0;
+            net_profit -= (bet_amount * 2 * (100 - parseFloat(tax.value)) / 100) / 2;
+            statistics.gameProfit -= (bet_amount * 2 * (100 - parseFloat(tax.value)) / 100) / 2;
+
+          } else if (game_result === 1) {
+            profit = bet_amount * 2;
+            net_profit += ((bet_amount * 2) - commission) - bet_amount;
+            statistics.gameProfit += ((bet_amount * 2) - commission) - bet_amount;
+
+          } else {
+            // loss
+            profit = -bet_amount;
+            net_profit -= bet_amount;
+            statistics.gameProfit -= bet_amount;
+          }
+
         }
       }
       const roomId = room._id.toString();
@@ -516,6 +516,72 @@ router.get('/get-leaderboards', auth, async (req, res) => {
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
+// router.get('/platform-percentages', auth, async (req, res) => {
+//   try {
+//     // Excluded user_id
+//     const excludedUserId = mongoose.Types.ObjectId('63f627662fa1b221f3a06305');
+
+//     // Aggregate total deposits and withdrawals, handling negative values and excluding specific user_id
+//     const [totalDeposits, totalWithdrawals] = await Promise.all([
+//       Receipt.aggregate([
+//         { 
+//           $match: { 
+//             payment_type: 'Deposit',
+//             user_id: { $ne: excludedUserId } // Exclude specific user_id
+//           } 
+//         },
+//         { 
+//           $group: { 
+//             _id: null, 
+//             totalAmount: { $sum: "$amount" } 
+//           } 
+//         }
+//       ]),
+//       Receipt.aggregate([
+//         { 
+//           $match: { 
+//             payment_type: { $in: ['Withdraw', 'Withdrawal'] },
+//             user_id: { $ne: excludedUserId } // Exclude specific user_id
+//           } 
+//         },
+//         { 
+//           $group: { 
+//             _id: null, 
+//             totalAmount: { $sum: { $abs: "$amount" } } // Sum the absolute values of withdrawals
+//           } 
+//         }
+//       ])
+//     ]);
+
+//     // Extract the total amounts (if no data found, default to 0)
+//     const totalDepositAmount = totalDeposits[0]?.totalAmount || 0;
+//     const totalWithdrawalAmount = totalWithdrawals[0]?.totalAmount || 0;
+
+//     const totalTransactions = totalDepositAmount + totalWithdrawalAmount;
+
+//     // Calculate percentages
+//     let depositPercentage = 0;
+//     let withdrawalPercentage = 0;
+
+//     if (totalTransactions > 0) {
+//       depositPercentage = (totalDepositAmount / totalTransactions) * 100;
+//       withdrawalPercentage = (totalWithdrawalAmount / totalTransactions) * 100;
+//     }
+
+//     // Return the result
+//     res.json({
+//       success: true,
+//       data: {
+//         depositPercentage: depositPercentage.toFixed(2),
+//         withdrawalPercentage: withdrawalPercentage.toFixed(2)
+//       }
+//     });
+//   } catch (error) {
+//     console.error('Error in /platform-percentages route:', error);
+//     res.status(500).json({ success: false, message: 'Internal server error' });
+//   }
+// });
+
 router.get('/get-room-statistics', async (req, res) => {
   try {
     const room_id = req.query.room_id;
