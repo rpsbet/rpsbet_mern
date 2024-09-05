@@ -196,7 +196,7 @@ router.get('/get-customer-statistics', async (req, res) => {
         } else {
 
           // As player
-         if (game_result === 1) {
+          if (game_result === 1) {
             profit = bet_amount + bet_amount / (room.qs_game_type - 1);
             net_profit += ((bet_amount + bet_amount / (room.qs_game_type - 1)) - commission) - gameLog.bet_amount;
             statistics.gameProfit += ((bet_amount + bet_amount / (room.qs_game_type - 1)) - commission) - gameLog.bet_amount;
@@ -467,6 +467,66 @@ router.get('/get-total-statistics', auth, async (req, res) => {
       success: false,
       err: message
     });
+  }
+});
+
+router.post('/get-spending-habit', async (req, res) => {
+  try {
+    const { _id } = req.body;
+
+    if (!_id) {
+      return res.status(400).json({ success: false, message: 'User ID is required' });
+    }
+
+    const user = await User.findById(_id).select(
+      '_id totalWagered profitAllTimeHigh totalProfit gamePlayed'
+    );
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    const averageWager = user.gamePlayed > 0 ? user.totalWagered / user.gamePlayed : 0;
+    const difference = parseFloat(user.profitAllTimeHigh - averageWager);
+    const postProfit = user.totalProfit > 0;
+
+    const profitValue = Number(postProfit); 
+    const determineStatus = (difference, profitValue) => {
+      let status;
+
+      switch (true) {
+        case difference > 6000 && profitValue === 1:
+          status = 'very good';
+          break;
+
+        case difference > 3000 && profitValue === 1:
+          status = 'good';
+          break;
+
+        case difference > 1000:
+          status = 'average';
+          break;
+
+        case difference > 100:
+          status = 'bad';
+          break;
+
+        default:
+          status = 'very bad';
+      }
+
+      return status;
+    };
+
+    const status = determineStatus(difference, profitValue);
+
+    return res.json({
+      success: true,
+      status: status,
+    });
+  } catch (error) {
+    console.error('Error in /get-spending-habit route:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
 

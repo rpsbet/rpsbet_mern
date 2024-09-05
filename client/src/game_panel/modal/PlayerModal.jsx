@@ -34,7 +34,8 @@ import axios from '../../util/Api';
 
 import {
   acGetCustomerInfo,
-  getCustomerStatisticsData
+  getCustomerStatisticsData,
+  getSpendingHabit
 } from '../../redux/Customer/customer.action';
 import {
   queryProducts
@@ -195,6 +196,7 @@ class PlayerModal extends Component {
       message: '',
       gameType: 'All',
       timeType: '24',
+      status: '',
       productArray: [],
       isTipModalOpen: false,
       tipAmount: '',
@@ -306,6 +308,12 @@ class PlayerModal extends Component {
 
   async componentDidMount() {
     await this.fetchStatisticsData();
+    const data = await this.props.getSpendingHabit(this.state._id); // Dispatching the action
+    if (data) {
+      this.setState({
+        status: data.status,
+      });
+    } 
     await this.props.queryProducts(127, 1, this.state._id);
   }
 
@@ -346,6 +354,23 @@ class PlayerModal extends Component {
 
 
     });
+  };
+
+  getStatusDetails = (status) => {
+    switch (status) {
+      case 'very good':
+        return { color: 'rgb(118 221 119)', title: 'JEWISH JEDI', message: 'Your spending habits are outstanding!', progress: 100 };
+      case 'good':
+        return { color: 'rgb(3 221 255)', title: 'SEASONED CZAR', message: 'Your spending habits are commendable.', progress: 80 };
+      case 'average':
+        return { color: '#ffc107', title: 'UNCONSCIOUS COMPETENT', message: 'You’re doing fine, but bitch don’t get too comfortable.', progress: 60 };
+      case 'bad':
+        return { color: '#fd7e14', title: 'PEASANT PUPPET', message: 'Consider revisiting your spending strategy.', progress: 40 };
+      case 'very bad':
+        return { color: '#dc3545', title: 'MISERABLE MULE', message: 'Your spending habits make you miserable.', progress: 20 };
+      default:
+        return { color: '#6c757d', title: 'Unknown', message: 'Unable to determine spending habits.', progress: 0 };
+    }
   };
 
   handleOpenChat = e => {
@@ -411,7 +436,7 @@ class PlayerModal extends Component {
   }
 
   render() {
-    const { isLoading, loading, bio } = this.state;
+    const { isLoading, loading, bio, status } = this.state;
     const { productArray, isLowGraphics } = this.props;
     const isBot = this.state.username.toUpperCase().includes('BOT');
     const systemUsernames = [
@@ -429,8 +454,12 @@ class PlayerModal extends Component {
 
     const isSystem = systemUsernames.includes(this.state.username);
     const isBio = /^https?:\/\//.test(this.state.bio);
+    const { color, title, message, progress } = this.getStatusDetails(status);
 
-
+    const barStyle = {
+      width: `${progress}%`,
+      backgroundColor: progress <= 50 ? 'yellow' : 'red'
+    };
     return (
       <>
         {isLoading && (
@@ -559,11 +588,16 @@ class PlayerModal extends Component {
 
                   )}
                 </div>
+              
                 {loading ? null : (
                   <div className="user-statistics">
                     <StatisticsForm
                       onDropdownChange={this.handleDropdownChange}
                       username={this.state.username}
+                      title={title}
+                      barStyle={barStyle}
+                      color={color}
+                      message={message}
                       actorType={this.state.actorType}
                       gameType={this.state.gameType}
                       timeType={this.state.timeType}
@@ -772,6 +806,7 @@ const mapDispatchToProps = {
   setChatRoomInfo,
   setBalance,
   queryProducts,
+  getSpendingHabit,
   addNewTransaction,
   openOfferLoanModal,
   setCurrentOfferTargetInfo

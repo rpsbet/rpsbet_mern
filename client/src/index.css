@@ -5431,6 +5431,79 @@ button#recentSearches span {
 .cell .green {
   color: #77dd77 !important;
 }
+.hexagon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 200px;
+  height: 115px;
+  /* background-color: #f0f0f0; */
+  position: relative;
+  margin: 0 auto;
+}
+
+.hexagon:before,
+.hexagon:after {
+  content: "";
+  position: absolute;
+  width: 0;
+  border-left: 100px solid transparent;
+  border-right: 100px solid transparent;
+}
+
+.hexagon:before {
+  border-bottom: 57.5px solid #e6e6e648;
+  top: -57.5px;
+}
+
+.hexagon:after {
+  border-top: 57.5px solid #e6e6e648;
+  bottom: -57.5px;
+}
+
+.hex-content {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+}
+
+.hexagon .value {
+  background-color: #4caf50;
+  height: 100%;
+  border-radius: 5px;
+}
+
+.hexagon h2{
+  font-size: 1em !important;
+  text-transform: uppercase;
+  background: #fff1;
+  border-radius: 10px 10px 0 0;
+padding-top: 5px;
+padding-left: 5px;
+padding-right: 5px;
+  padding-bottom: 5px;
+  margin-bottom: 10px;
+font-family: 'Mitr', sans-serif !important;
+
+}
+
+.hexagon .payout-bar {
+  width: 90%;
+  filter: invert(1);
+  height: 10px;
+  border-radius: 5px;
+}
+
+.hexagon .message {
+  margin-top: 10px;
+
+  font-size: 10px;
+}
 
 .creditScore {
   display: flex;

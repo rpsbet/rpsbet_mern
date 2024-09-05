@@ -351,7 +351,11 @@ class StatisticsForm extends React.Component {
       averageGamesPlayedPerRoom,
       averageProfit,
       profitAllTimeHigh,
-      profitAllTimeLow
+      profitAllTimeLow,
+      message,
+      title,
+      barStyle,
+      color
     } = this.props;
     const { creditScore, hexagon } = this.state;
 
@@ -378,6 +382,22 @@ class StatisticsForm extends React.Component {
               <TableRow>
                 <TableCell><b style={{ opacity: "0.6", fontSize: '0.9em', fontWeight: '500' }}>RANK</b></TableCell>
                 <TableCell> <div className="stars" style={{ display: "flex", justifyContent: "center" }}>{this.getRank(this.props.rank)}</div></TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell><b style={{ opacity: "0.6", fontSize: '0.9em', fontWeight: '500' }}>SPENDING</b></TableCell>
+                <TableCell>
+                  <div className="hexagon">
+                    <div className="hex-content">
+                      <h2 style={{ color }}>{title}</h2>
+                      <div className="payout-bar">
+                        <div className="value" style={barStyle}></div>
+                      </div>
+                      <div className="message">
+                        {message}
+                      </div>
+                    </div>
+                  </div>
+                </TableCell>
               </TableRow>
               <TableRow>
                 <TableCell><b style={{ opacity: "0.6", fontSize: '0.9em', fontWeight: '500' }}>CREDIT SCORE</b></TableCell>

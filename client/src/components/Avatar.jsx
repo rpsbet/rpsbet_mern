@@ -164,7 +164,8 @@ class Avatar extends Component {
       'WHALE WATCHERS',
       'NO BROKIES',
       'Tydrellinbg',
-      'Bearbland11'
+      'Bearbland11',
+      'jimbobjocorn'
     ];
 
     const isVerified = verifiedUsernames.includes(username);

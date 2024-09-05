@@ -11,7 +11,8 @@ import {
 } from '../../redux/Auth/user.actions';
 import {
   getCustomerStatisticsData,
-  acGetCustomerInfo
+  acGetCustomerInfo,
+  getSpendingHabit
 } from '../../redux/Customer/customer.action';
 import { alertModal } from './ConfirmAlerts';
 import FileCopyIcon from '@material-ui/icons/FileCopy';
@@ -68,6 +69,7 @@ class ProfileModal extends Component {
       loading: this.props.loading,
       password: '',
       passwordConfirmation: '',
+    status: '',
       showPlayerModal: false,
       selectedCreator: '',
       avatar: this.props.userInfo.avatar,
@@ -102,6 +104,12 @@ class ProfileModal extends Component {
   async componentDidMount() {
     const { userInfo } = this.props;
     const { rewards } = userInfo;
+    const data = await this.props.getSpendingHabit(userInfo._id); // Dispatching the action
+    if (data) {
+      this.setState({
+        status: data.status,
+      });
+    } 
     rewards.forEach(async reward => {
       const info = await this.props.acGetCustomerInfo(reward.user);
       if (info) {
@@ -129,6 +137,34 @@ class ProfileModal extends Component {
     this.setState({
       ...result
     });
+  };
+
+  refreshStatus = async () => {
+    const { _id } = this.state;
+    const data = await this.props.getSpendingHabit(_id);
+
+    if (data) {
+      this.setState({
+        status: data.status,
+      });
+    }
+  };
+
+  getStatusDetails = (status) => {
+    switch (status) {
+      case 'very good':
+        return { color: 'rgb(118 221 119)', title: 'JEWISH JEDI', message: 'Your spending habits are outstanding!', progress: 100 };
+      case 'good':
+        return { color: 'rgb(3 221 255)', title: 'SEASONED CZAR', message: 'Your spending habits are commendable.', progress: 80 };
+      case 'average':
+        return { color: '#ffc107', title: 'UNCONSCIOUS COMPETENT', message: 'You’re doing fine, but there’s room for improvement.', progress: 60 };
+      case 'bad':
+        return { color: '#fd7e14', title: 'PEASANT PUPPET', message: 'Consider revisiting your spending strategy.', progress: 40 };
+      case 'very bad':
+        return { color: '#dc3545', title: 'MISERABLE MULE', message: 'Your spending habits need serious improvement.', progress: 20 };
+      default:
+        return { color: '#6c757d', title: 'Unknown', message: 'Unable to determine spending habits.', progress: 0 };
+    }
   };
 
   handleChangeUsername = event => {
@@ -364,6 +400,7 @@ class ProfileModal extends Component {
       balance,
       gamePlayed,
       gameHosted,
+      status,
       gameJoined,
       showPlayerModal,
       selectedCreator,
@@ -381,6 +418,11 @@ class ProfileModal extends Component {
       copied
     } = this.state;
     const isLink = /^https?:\/\//.test(this.state.link);
+    const { color, title, message, progress } = this.getStatusDetails(status);
+    const barStyle = {
+      width: `${progress}%`,
+      backgroundColor: progress <= 50 ? 'yellow' : 'green'
+    };
     return (
       <Modal
         isOpen={modalIsOpen}
@@ -580,6 +622,9 @@ class ProfileModal extends Component {
                 </div>
               </div>
             )}
+            <div>
+            
+          </div>
             {activeTab === 1 && (
               <div className="user-statistics">
                 <StatisticsForm
@@ -587,6 +632,10 @@ class ProfileModal extends Component {
                   username={username}
                   dateJoined={dateJoined}
                   creditScore={creditScore}
+                  title={title}
+                  color={color}
+                  barStyle={barStyle}
+                  message={message}
                   gameLogList={gameLogList}
                   actorType={actorType}
                   gameType={gameType}
@@ -793,6 +842,7 @@ const mapDispatchToProps = {
   getUser,
   changeLink,
   changeUserName,
+  getSpendingHabit,
   getCustomerStatisticsData,
   acGetCustomerInfo
 };

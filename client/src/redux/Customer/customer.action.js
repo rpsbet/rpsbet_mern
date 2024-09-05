@@ -145,6 +145,22 @@ export const fetchId = username => async dispatch => {
     return null; // Return null if there's an error
   }
 };
+export const getSpendingHabit = _id => async dispatch => {
+  try {
+    const { data } = await api.post('/statistics/get-spending-habit', { _id }); // Changed to POST
+
+    if (data.success) {
+      return data; // Return the data directly if the request is successful
+    } else {
+      dispatch({ type: MSG_ERROR, payload: data.message });
+      return null; // Return null if the response indicates failure
+    }
+  } catch (error) {
+    console.error('Error in getSpendingHabit:', error);
+    dispatch({ type: MSG_WARNING, payload: error });
+    return null; // Return null if there's an error
+  }
+};
 
 export const acGetCustomerInfo = _id => async dispatch => {
   try {
