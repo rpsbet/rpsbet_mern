@@ -469,7 +469,6 @@ router.get('/get-total-statistics', auth, async (req, res) => {
     });
   }
 });
-
 router.post('/get-spending-habit', async (req, res) => {
   try {
     const { _id } = req.body;
@@ -487,30 +486,47 @@ router.post('/get-spending-habit', async (req, res) => {
     }
 
     const averageWager = user.gamePlayed > 0 ? user.totalWagered / user.gamePlayed : 0;
-    const difference = parseFloat(user.profitAllTimeHigh - averageWager);
-    const postProfit = user.totalProfit > 0;
+    const profitAllTimeHigh = parseFloat(user.profitAllTimeHigh);
 
-    const profitValue = Number(postProfit); 
-    const determineStatus = (difference, profitValue) => {
+    // Calculate percentage thresholds
+    const tenPercent = profitAllTimeHigh * 0.1;
+    const twentyPercent = profitAllTimeHigh * 0.2;
+    const thirtyPercent = profitAllTimeHigh * 0.3;
+    const fortyPercent = profitAllTimeHigh * 0.4;
+
+    const postProfit = user.totalProfit > 0;
+    const profitValue = Number(postProfit);
+
+    const determineStatus = (averageWager, profitAllTimeHigh, profitValue) => {
       let status;
 
+      // If either averageWager or profitAllTimeHigh is 0, return 'very bad'
+      if (averageWager === 0 || profitAllTimeHigh === 0) {
+        return 'very bad';
+      }
+
       switch (true) {
-        case difference > 6000 && profitValue === 1:
+        // Very good: 10% or less
+        case averageWager <= tenPercent && profitValue === 1:
           status = 'very good';
           break;
 
-        case difference > 3000 && profitValue === 1:
+        // Good: Between 10% and 20%
+        case averageWager <= twentyPercent:
           status = 'good';
           break;
 
-        case difference > 1000:
+        // Average: Between 20% and 30%
+        case averageWager <= thirtyPercent:
           status = 'average';
           break;
 
-        case difference > 100:
+        // Bad: Between 30% and 40%
+        case averageWager <= fortyPercent:
           status = 'bad';
           break;
 
+        // Very bad: More than 40%
         default:
           status = 'very bad';
       }
@@ -518,7 +534,7 @@ router.post('/get-spending-habit', async (req, res) => {
       return status;
     };
 
-    const status = determineStatus(difference, profitValue);
+    const status = determineStatus(averageWager, profitAllTimeHigh, profitValue);
 
     return res.json({
       success: true,
@@ -529,6 +545,7 @@ router.post('/get-spending-habit', async (req, res) => {
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
+
 
 router.get('/get-leaderboards', auth, async (req, res) => {
   try {

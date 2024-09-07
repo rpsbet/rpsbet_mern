@@ -5,7 +5,8 @@ import Elevation from '../../../../Styles/Elevation';
 import moment from 'moment';
 import './style.css';
 import rankIcon from '../../../../game_panel/LottieAnimations/rankIcon.json';
-import { Button, Table, TableBody, TableCell, TableRow } from '@material-ui/core';
+import InfoIcon from '@material-ui/icons/Info';
+import { Button, Tooltip, Table, TableBody, TableCell, TableRow } from '@material-ui/core';
 import { FormControl, MenuItem, Select } from '@material-ui/core';
 import { Link as LinkIcon } from '@material-ui/icons';
 import { convertToCurrency } from '../../../../util/conversion';
@@ -393,7 +394,11 @@ class StatisticsForm extends React.Component {
                         <div className="value" style={barStyle}></div>
                       </div>
                       <div className="message">
-                        {message}
+                        {message}  <Tooltip title={"Calculated using your average wager and All-Time-High"} placement="top">
+                      <a style={{padding: "5px", cursor: "pointer"}}>
+                        <InfoIcon style={{width: "12px"}}  />
+                      </a>
+                    </Tooltip>
                       </div>
                     </div>
                   </div>
@@ -422,6 +427,7 @@ class StatisticsForm extends React.Component {
             </TableBody>
           </Table>
         </div>
+
         <div className="statistics-container">
           <div>
             <div className="statistics-panel">
