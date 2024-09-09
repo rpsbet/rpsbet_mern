@@ -96,14 +96,40 @@ async function verify(token) {
 
 
 // Login route
+// Login route with user lookup based on extracted username and conditional creation
 app.post('/auth/google', async (req, res) => {
   const token = req.body.token;
   try {
-    const user = await verify(token);
+    // Verify the Google token
+    const googleUser = await verify(token);
+
+    // Extract relevant information from the payload
+    const { sub: email, picture } = googleUser;
+
+    // Extract the username by removing the "@gmail.com" part
+    let username = email.split('@')[0];
+
+    // Check if a user with this username exists in the database
+    let user = await User.findOne({ username });
+
+    if (!user) {
+      // If no user with this username, create a new user account
+      user = new User({
+        username,  // Use the extracted username
+        avatar: picture,
+        // Add other fields as needed
+      });
+      
+      // Save the new user to the database
+      await user.save();
+    }
+
     // Create a session or token for the user
     req.session.user = user;
+
     res.json({ success: true, user });
   } catch (error) {
+    console.error('Google OAuth Error:', error);
     res.status(401).json({ success: false, error: 'Invalid token' });
   }
 });
