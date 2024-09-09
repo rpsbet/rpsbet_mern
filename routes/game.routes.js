@@ -3051,7 +3051,6 @@ async function saveDoc(document, retries = 0) {
   }
 }
 
-
 router.post('/topUp', auth, async (req, res) => {
   try {
     const rowId = req.body.rowId;
@@ -3145,19 +3144,53 @@ router.post('/topUp', auth, async (req, res) => {
       });
     }
 
-    // Update balances and save transactions
-    room.bet_amount += topUpAmount;
-    room.host_pr += topUpAmount;
-    room.endgame_amount += topUpAmount;
-    room.user_bet = parseFloat(room.user_bet) + topUpAmount;
+    // Before updating the total bet, calculate old values for all hosts
+    const oldValuation = parseFloat(room.user_bet);
+    const newTotalBet = oldValuation + topUpAmount;
+
+    // Update the user's balance
     req.user.balance -= topUpAmount;
+
+    // Check if the user is already a host
+    const existingHostIndex = room.hosts.findIndex(host => host.host.equals(req.user._id));
+
+    if (existingHostIndex === -1) {
+      // If the user is not an existing host, add them as a new host
+      const newShare = (topUpAmount / newTotalBet) * 100;
+      const newHost = {
+        host: req.user._id,
+        stake: topUpAmount,
+        initial_stake: topUpAmount,
+        share: newShare,
+        accessory: req.user.accessory,
+        username: req.user.username,
+        avatar: req.user.avatar,
+        rank: req.user.totalWagered
+      };
+      room.hosts.push(newHost);
+    } else {
+      // If the user is already a host, update their stake
+      const host = room.hosts[existingHostIndex];
+      host.stake += topUpAmount;
+      host.initial_stake += topUpAmount;
+      // Recalculate the share for the existing host
+      host.share = ((host.stake / newTotalBet) * 100);
+    }
+
+    // Recalculate the shares for all other hosts based on the new total bet
     room.hosts.forEach(host => {
-      if (host.host.equals(req.user._id)) {
-        host.stake += topUpAmount;
+      if (!host.host.equals(req.user._id)) {
+        host.share = ((host.stake / newTotalBet) * 100);
       }
-      host.share = (host.stake / room.bet_amount) * 100;
     });
 
+    // Update room properties
+    room.bet_amount = newTotalBet;
+    room.host_pr += topUpAmount;
+    room.endgame_amount += topUpAmount;
+    room.user_bet = newTotalBet;
+
+    // Save changes to the room, user, and transaction
     const savePromises = [
       saveDoc(room),
       saveDoc(req.user),

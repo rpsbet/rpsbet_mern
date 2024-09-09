@@ -37,11 +37,13 @@ async function updateRoomInterests(io) {
             }
           };
           let userBet = parseFloat(bonusRoom.user_bet);
-          const interest = userBet * 1.00001;
-          bonusRoom.user_bet = interest.toString();
-          bonusRoom.pr = bonusRoom.pr + (userBet * 0.0001);
+          const newInterest = userBet * 1.0001;  // 10x the original interest calculation
+          const interestAdded = newInterest - userBet;  // Calculate the actual interest added
+          
+          bonusRoom.user_bet = newInterest.toString();  // Update the user_bet with the new interest
+          bonusRoom.pr = bonusRoom.pr + interestAdded;  // Increase the pr by the actual interest added
+          
           await saveDocumentWithRetry(bonusRoom);
-
           if (req.io.sockets) {
             req.io.sockets.emit(`UPDATED_BANKROLL2_${bonusRoom._id}`, {
               bankroll: bonusRoom.user_bet,

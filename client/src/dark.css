@@ -416,7 +416,7 @@ background: linear-gradient(298deg, #4f0068, #3d0066);
 }
 
 .dark_mode .game-page .game-contents .summary-panel .summary-info {
-	background-color: #74357a;
+	background-color: #ff36b45e;
 }
 
 .dark_mode .brain-game-play-panel .play-panel-header .timer {

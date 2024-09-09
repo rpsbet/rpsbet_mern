@@ -632,50 +632,13 @@ class JoinGame extends Component {
       auth,
       isDarkMode,
       user_id,
-      getCustomerStatisticsData,
       roomInfo,
-      rpsbetitems,
-      qsbetitems
     } = this.props;
     const { betting } = this.state;
 
-    const game_type = roomInfo.game_type;
-    let gameType;
     let betArray = [];
 
-    if (game_type === 'RPS') {
-      gameType = '62a25d2a723b9f15709d1ae7';
-      if (!validateLocalStorageLength(rpsbetitems, isDarkMode)) {
-        return;
-      }
-
-      if (rpsbetitems && rpsbetitems.length > 0) {
-        betArray = rpsbetitems.map(item => item.bet_amount);
-      }
-    } else if (game_type === 'Quick Shoot') {
-      gameType = '62a25d2a723b9f15709d1aeb';
-      if (!validateLocalStorageLength(qsbetitems, isDarkMode)) {
-        return;
-      }
-
-      if (qsbetitems && qsbetitems.length > 0) {
-        betArray = qsbetitems.map(item => item.bet_amount);
-      }
-      // } else if (game_type === 'Spleesh!') {
-      //   gameType = '62a25d2a723b9f15709d1ae8';
-      // } else if (game_type === 'Brain Game') {
-      //   gameType = '62a25d2a723b9f15709d1ae9'
-      // } else if (game_type === 'Mystery Box') {
-      //   gameType = '62a25d2a723b9f15709d1aea';
-      // } else if (game_type === 'Drop Game') {
-      //   gameType = '63dac60ba1316a1e70a468ab';
-      // } else if (game_type === 'Bang!') {
-      //   gameType = '6536a82933e70418b45fbe32'.$and.push({ description: /B!/i });
-      // } else if (game_type === 'Roll') {
-      //   gameType = '6536946933e70418b45fbe2f'.$and.push({ description: /R/i });
-      // } else if (game_type === 'BlackJack') {
-      //   gameType = '656cd55bb2c2d9dfb59a4bfa'.$and.push({ description: /BJ/i });
-    }
+  
     if (!validateIsAuthenticated(auth, isDarkMode)) {
       return;
     }

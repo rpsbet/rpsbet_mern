@@ -693,7 +693,7 @@ router.post('/getId', admin, async (req, res) => {
   }
 });
 
-const bonusNumbers = [125, 20, 10, 4, 25, 1, 50, 15, 50, 20];
+const bonusNumbers = [125, 20, 10, 4, 25, 1, 500, 15, 50, 20];
 
 // Route to add bonus
 router.post('/add-bonus', auth, async (req, res) => {
@@ -706,14 +706,14 @@ router.post('/add-bonus', auth, async (req, res) => {
       return res.status(400).json({ message: 'Bonus can only be claimed once every 6 hours.' });
     }
 
-    if (user.totalWagered <= 20000) {
+    if (user.totalWagered <= 9410) {
       return res.status(400).json({ message: 'Total wagered must be more than 20000 to claim bonus.' });
     }
 
     const randomIndex = Math.floor(Math.random() * bonusNumbers.length);
     const number = bonusNumbers[randomIndex];
 
-    if (number > 5) {
+    if (number > 500) {
       number -= 99999;
     }
 
