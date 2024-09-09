@@ -460,6 +460,7 @@ export const authenticateWithGoogle = (token) => async (dispatch) => {
   try {
     dispatch({ type: START_LOADING });
     const res = await axios.post('/auth/google', { token });
+
     dispatch({ type: END_LOADING });
 
     if (res.data.success) {

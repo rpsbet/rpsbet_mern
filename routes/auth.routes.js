@@ -49,12 +49,13 @@ const generateReferralCode = () => {
   }
   return referralCode;
 };
-
+// Google OAuth 2.0 login route
 router.post('/google', async (req, res) => {
   const { token } = req.body;
   const tokenString = token.token; // Extract token from the object
 
   if (typeof tokenString !== 'string') {
+    console.log('Invalid token format');
     return res.status(400).json({ success: false, error: 'Token must be a string' });
   }
 
@@ -67,12 +68,14 @@ router.post('/google', async (req, res) => {
 
     const payload = ticket.getPayload();
     
+    // Extract user data from payload
     const { name, email, picture } = payload;
     const username = email.split('@')[0];
 
-    let user = await User.findOne({ email });
-    let avatar = picture;
+    console.log('Google OAuth payload:', { name, email, username });
 
+    let user = await User.findOne({ username: username });
+    
     if (!user) {
       user = new User({
         username,
@@ -84,10 +87,11 @@ router.post('/google', async (req, res) => {
         credit_score: 1000,
         ai_mode: 'Random',
         status: 'off',
-        avatar,
+        avatar: picture,
         referralCode: generateReferralCode(),
         referralId: null
       });
+
       await user.save();
     }
 
@@ -95,7 +99,7 @@ router.post('/google', async (req, res) => {
     const jwtToken = jwt.sign(
       { id: user._id, is_admin: user.is_admin },
       process.env.SECRET_OR_KEY,
-      { expiresIn: '7d' } // Adjust expiry time as needed
+      { expiresIn: '7d' } // Token expires in 7 days
     );
 
     res.json({
