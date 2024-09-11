@@ -98,30 +98,33 @@ class MyLoansModal extends Component {
     const accountAgeInMilliseconds = currentDate - accountCreatedAt;
     return Math.floor(accountAgeInMilliseconds / (24 * 60 * 60 * 1000));
   };
-  getHighlightedRowIndex = (categories, rank, accountAgeInDays, loanAmount, remainingAmount) => {
-    const totalLoanAmount = remainingAmount + loanAmount;
+  getHighlightedRowIndex = (categories, rank, accountAgeInDays) => {
+    const currentRank = getRank(rank);
+    console.log('Current Rank:', currentRank, 'Account Age:', accountAgeInDays);
+    
     let bestCategoryIndex = -1;
   
     for (let i = 0; i < categories.length; i++) {
       const category = categories[i];
-      // Check for exact match
-      if (
-        getRank(rank) >= category.rankThreshold &&
-        accountAgeInDays >= category.accountAgeThresholdInDays &&
-        totalLoanAmount <= category.maxAllowance
-      ) {
-        return i; // Return index if exact match is found
-      }
-      // Track the best match based on account age if no exact match
-      if (accountAgeInDays >= category.accountAgeThresholdInDays) {
+  
+      // Log category details for better debugging
+      console.log(`Category ${i}:`, {
+        rankThreshold: category.rankThreshold,
+        accountAgeThresholdInDays: category.accountAgeThresholdInDays
+      });
+  
+      // Check if the current rank and account age match or exceed the category thresholds
+      if (currentRank >= category.rankThreshold && accountAgeInDays >= category.accountAgeThresholdInDays) {
+        // Keep track of the best match (highest index that matches the criteria)
         bestCategoryIndex = i;
+        console.log(`Best match so far: index ${i}`);
       }
     }
   
-    // Return the best category index if no exact match was found
+    // Log the final selected index before returning
+    console.log('Final selected index:', bestCategoryIndex);
     return bestCategoryIndex;
   };
-
   onSubmitFrom = async () => {
     const { loan_amount, loan_period, apy } = this.state;
     // e.preventDefault();
@@ -139,18 +142,15 @@ class MyLoansModal extends Component {
   };
 
   render() {
-    const { totalWagered, remainingLoans, isDarkMode, created_at, loan_amount, loan_period, apy } = this.props;
+    const { totalWagered, remainingLoans, isDarkMode, created_at, apy } = this.props;
 
-    let rank = getRank(totalWagered);
+    let rank = (totalWagered);
     const accountAgeInDays = this.getAccountAgeInDays(created_at);
-    const remainingAmount = remainingLoans;
 
     const highlightedRowIndex = this.getHighlightedRowIndex(
       categories,
       rank,
       accountAgeInDays,
-      loan_amount,
-      remainingAmount
     );
 
     return (

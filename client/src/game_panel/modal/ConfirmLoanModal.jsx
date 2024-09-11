@@ -81,27 +81,21 @@ class ConfirmLoanModal extends Component {
     const accountAgeInMilliseconds = currentDate - accountCreatedAt;
     return Math.floor(accountAgeInMilliseconds / (24 * 60 * 60 * 1000));
   };
-  getHighlightedRowIndex = (categories, rank, accountAgeInDays, loanAmount, remainingAmount) => {
-    const totalLoanAmount = remainingAmount + loanAmount;
+  getHighlightedRowIndex = (categories, rank, accountAgeInDays) => {
+    const currentRank = getRank(rank);
+    
     let bestCategoryIndex = -1;
   
     for (let i = 0; i < categories.length; i++) {
       const category = categories[i];
-      // Check for exact match
-      if (
-        getRank(rank) >= category.rankThreshold &&
-        accountAgeInDays >= category.accountAgeThresholdInDays &&
-        totalLoanAmount <= category.maxAllowance
-      ) {
-        return i; // Return index if exact match is found
-      }
-      // Track the best match based on account age if no exact match
-      if (accountAgeInDays >= category.accountAgeThresholdInDays) {
+  
+      // Check if the current rank and account age match or exceed the category thresholds
+      if (currentRank >= category.rankThreshold && accountAgeInDays >= category.accountAgeThresholdInDays) {
+        // Keep track of the best match (highest index that matches the criteria)
         bestCategoryIndex = i;
       }
     }
   
-    // Return the best category index if no exact match was found
     return bestCategoryIndex;
   };
   handleResponseTextChange = (e) => {
@@ -153,24 +147,14 @@ class ConfirmLoanModal extends Component {
   render() {
     const { expanded, responseText } = this.state;
     const { loan_amount, loan_period, apy, rank, created_at, remainingLoans, isDarkMode } = this.props;
-    console.log("loan:", loan_amount)
     const tableCellStyle = { textAlign: 'center' };
     const accountAgeInDays = this.getAccountAgeInDays(created_at);
-    const remainingAmount = remainingLoans;
 
     const highlightedRowIndex = this.getHighlightedRowIndex(
       categories,
       rank,
       accountAgeInDays,
-      loan_amount,
-      remainingAmount
     );
-
-    // Debug logs
-    console.log('Rank:', getRank(rank));
-    console.log('Account Age in Days:', accountAgeInDays);
-    console.log('Total Loan Amount:', remainingAmount + loan_amount);
-    console.log('Highlighted Row Index:', highlightedRowIndex);
 
     return (
       <Modal
@@ -203,6 +187,7 @@ class ConfirmLoanModal extends Component {
                   </TableHead>
                   <TableBody>
                     {categories.map((category, index) => (
+                      
                       <TableRow
                         key={index}
                         style={{

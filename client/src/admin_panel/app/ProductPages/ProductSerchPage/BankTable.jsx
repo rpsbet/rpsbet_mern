@@ -166,9 +166,9 @@ const LinearContainer = styled.div`
 
 const APY = styled.span`
   position: absolute;
-  top: 20px;
+  top: -3px;
   padding: 0 10px;
-  right: 10px;
+  right: 0;
   height: 30px;
   background: #28a745;
   border-radius: 10px;
@@ -202,7 +202,7 @@ class BankTable extends Component {
       loansWithProfit: []
     };
   }
-  
+
   async componentDidMount() {
     const { acGetCustomerInfo } = this.props;
     await this.props.previousLoans(30, 1, 'loan_amount', '');
@@ -379,8 +379,8 @@ class BankTable extends Component {
 
     this.fetchCustomerInfo();
     return (
-      <MarketplaceContainer style={{padding: "20px", background:"rgb(170 170 170 / 6%)", borderRadius: "20px"}}>
-        <FilterSortContainer  className=" desktop-only">
+      <MarketplaceContainer style={{ padding: "20px", background: "rgb(170 170 170 / 6%)", borderRadius: "20px" }}>
+        <FilterSortContainer className=" desktop-only">
           <div className="filters">
             <Button onClick={this.handleFilterClick}>
               Filter&nbsp;
@@ -426,10 +426,10 @@ class BankTable extends Component {
         </FilterSortContainer>
         {is_mobile && (
           <>
-          <Button style={{marginBottom: "30px"}} className="btn-submit" onClick={this.handleOpenMyLoansModal}>Manage Your Loans&nbsp; <AttachMoney /></Button>
-          <RpsPriceChart getNativePrices={getNativePrices}/>
+            <Button style={{ marginBottom: "30px" }} className="btn-submit" onClick={this.handleOpenMyLoansModal}>Manage Your Loans&nbsp; <AttachMoney /></Button>
+            <RpsPriceChart getNativePrices={getNativePrices} />
           </>
-          )}
+        )}
         {!loading ? (
           <ProductGrid>
             {showPlayerModal && (
@@ -453,7 +453,7 @@ class BankTable extends Component {
                   history.push(`/loan/${row._id}`);
                 }}
               >
-                <APY>{updateDigitToPoint2(row.apy) * 100}%</APY>
+              <APY>{(row.apy * 100).toFixed(2)}%</APY>
 
 
                 <ProductCreator>
@@ -492,44 +492,44 @@ class BankTable extends Component {
                           </TableCell>
                         </TableRow>
                         <TableRow>
-                            <TableCell>
-                              <FontAwesomeIcon icon={faUsers} />&nbsp;Loaners:
-                            </TableCell>
-                            <TableCell className="value cell-joiners">
-                              {row.loaners && row.loaners.length > 0 ? (
-                                <>
-                                  {row.loaners.slice(0, 2).map((loaner, index) => (
-                                    loaner && loaner.avatar ? (
-                                      <a
-                                        key={loaner._id || index} // Use loaner's _id if available; otherwise, fallback to index
-                                        className="player"
-                                        onClick={() => this.handleOpenPlayerModal(loaner._id)}
-                                      >
-                                        <Avatar
-                                          className="avatar"
-                                          src={loaner.avatar}
-                                          rank={loaner.totalWagered || 0}
-                                          accessory={loaner.accessory || ''}
-                                          alt={loaner.username || 'Unknown User'}
-                                          darkMode={this.props.isDarkMode}
-                                        />
-                                      </a>
-                                    ) : null
-                                  ))}
-                                  {row.loaners.length > 2 && (
-                                    <div className="avatar-square" style={{marginLeft: "20px", zIndex: "0"}}>
-                                      <div className="avatar-count">
-                                        +{row.loaners.length - 2}
-                                      </div>
+                          <TableCell>
+                            <FontAwesomeIcon icon={faUsers} />&nbsp;Loaners:
+                          </TableCell>
+                          <TableCell className="value cell-joiners">
+                            {row.loaners && row.loaners.length > 0 ? (
+                              <>
+                                {row.loaners.slice(0, 2).map((loaner, index) => (
+                                  loaner && loaner.avatar ? (
+                                    <a
+                                      key={loaner._id || index} // Use loaner's _id if available; otherwise, fallback to index
+                                      className="player"
+                                      onClick={() => this.handleOpenPlayerModal(loaner._id)}
+                                    >
+                                      <Avatar
+                                        className="avatar"
+                                        src={loaner.avatar}
+                                        rank={loaner.totalWagered || 0}
+                                        accessory={loaner.accessory || ''}
+                                        alt={loaner.username || 'Unknown User'}
+                                        darkMode={this.props.isDarkMode}
+                                      />
+                                    </a>
+                                  ) : null
+                                ))}
+                                {row.loaners.length > 2 && (
+                                  <div className="avatar-square" style={{ marginLeft: "20px", zIndex: "0" }}>
+                                    <div className="avatar-count">
+                                      +{row.loaners.length - 2}
                                     </div>
-                                  )}
-                                </>
-                              ) : (
-                                <span>No Loaners</span>
-                              )}
-                            </TableCell>
+                                  </div>
+                                )}
+                              </>
+                            ) : (
+                              <span>No Loaners</span>
+                            )}
+                          </TableCell>
 
-                          </TableRow>
+                        </TableRow>
                       </TableBody>
                     </Table>
                   </TableContainer>
@@ -585,13 +585,13 @@ class BankTable extends Component {
                 <div key={loan._id} className={`carousel-item ${loan.profit <= 0 ? 'red-gradient' : 'green-gradient'}`}
                 >
                   <div className="loan-details">
-                    <Table  className="product-detail">
+                    <Table className="product-detail">
                       <TableBody>
                         <TableRow>
                           <TableCell>
                             <FontAwesomeIcon icon={faUser} /> LENDER:
                           </TableCell>
-                          <TableCell style={{float:"right"}}>
+                          <TableCell style={{ float: "right" }}>
                             <a
                               className="player"
                               onClick={() => this.handleOpenPlayerModal(loan.lender)}
@@ -677,7 +677,7 @@ class BankTable extends Component {
             )}
 
           </div>
-          
+
         </div>
       </MarketplaceContainer>
     );
@@ -703,7 +703,7 @@ const mapDispatchToProps = {
   setCurrentLoanInfo,
   openConfirmLoanModal,
   acGetCustomerInfo,
-getNativePrices
+  getNativePrices
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(BankTable);

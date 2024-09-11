@@ -389,7 +389,7 @@ class MyBankTable extends Component {
                     history.push(`/loan/${row._id}`);
                   }}
                 >
-                  <CommissionPower>{row.apy * 100}%</CommissionPower>
+                  <CommissionPower>{(row.apy * 100).toFixed(2)}%</CommissionPower>
 
                   <ProductInfo>
                     <LoanAmount>{convertToCurrency(row.loan_amount)}</LoanAmount>
