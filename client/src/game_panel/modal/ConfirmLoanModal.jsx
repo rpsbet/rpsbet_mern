@@ -75,23 +75,55 @@ class ConfirmLoanModal extends Component {
     }));
   };
 
+  getAccountAgeInDays = (createdAt) => {
+    const accountCreatedAt = new Date(createdAt);
+    const currentDate = new Date();
+    const accountAgeInMilliseconds = currentDate - accountCreatedAt;
+    return Math.floor(accountAgeInMilliseconds / (24 * 60 * 60 * 1000));
+  };
+  getHighlightedRowIndex = (categories, rank, accountAgeInDays, loanAmount, remainingAmount) => {
+    const totalLoanAmount = remainingAmount + loanAmount;
+    let bestCategoryIndex = -1;
+  
+    for (let i = 0; i < categories.length; i++) {
+      const category = categories[i];
+      // Check for exact match
+      if (
+        getRank(rank) >= category.rankThreshold &&
+        accountAgeInDays >= category.accountAgeThresholdInDays &&
+        totalLoanAmount <= category.maxAllowance
+      ) {
+        return i; // Return index if exact match is found
+      }
+      // Track the best match based on account age if no exact match
+      if (accountAgeInDays >= category.accountAgeThresholdInDays) {
+        bestCategoryIndex = i;
+      }
+    }
+  
+    // Return the best category index if no exact match was found
+    return bestCategoryIndex;
+  };
   handleResponseTextChange = (e) => {
     const inputValue = e.target.value;
     const parsedValue = inputValue.match(/^\d*\.?\d*$/);
     this.setState({ responseText: parsedValue ? parsedValue[0] : "" });
   };
 
-  onBtnOkClicked = async e => {
+  onBtnOkClicked = async () => {
     const { item, lender, closeConfirmLoanModal, acCalculateRemainingLoans, loan_amount, acQueryLoan, setBalance, addNewTransaction, isDarkMode, confirmLoan } = this.props;
     const { responseText } = this.state;
+
     if (parseFloat(responseText) > loan_amount) {
       alertModal(isDarkMode, "Entered loan amount exceeds the allowed amount.");
       return;
     }
+
     if (parseFloat(responseText) < 0.05) {
       alertModal(isDarkMode, "MEOWNIMUM IS 0.05 RPS");
       return;
     }
+
     const response = await confirmLoan({
       loan_id: item,
       loanAmount: loan_amount,
@@ -114,14 +146,31 @@ class ConfirmLoanModal extends Component {
     }
   };
 
-  onBtnCancelClicked = e => {
+  onBtnCancelClicked = () => {
     this.props.closeConfirmLoanModal();
   };
 
   render() {
     const { expanded, responseText } = this.state;
-    const { loan_amount, loan_period, apy, rank } = this.props;
+    const { loan_amount, loan_period, apy, rank, created_at, remainingLoans, isDarkMode } = this.props;
+    console.log("loan:", loan_amount)
     const tableCellStyle = { textAlign: 'center' };
+    const accountAgeInDays = this.getAccountAgeInDays(created_at);
+    const remainingAmount = remainingLoans;
+
+    const highlightedRowIndex = this.getHighlightedRowIndex(
+      categories,
+      rank,
+      accountAgeInDays,
+      loan_amount,
+      remainingAmount
+    );
+
+    // Debug logs
+    console.log('Rank:', getRank(rank));
+    console.log('Account Age in Days:', accountAgeInDays);
+    console.log('Total Loan Amount:', remainingAmount + loan_amount);
+    console.log('Highlighted Row Index:', highlightedRowIndex);
 
     return (
       <Modal
@@ -135,18 +184,32 @@ class ConfirmLoanModal extends Component {
             <div className='thresholds' style={{ padding: '20px', overflow: 'auto' }}>
               <TableContainer style={{ maxHeight: 150, overflow: 'auto' }}>
                 <Table aria-label="nice-table">
-                  <TableHead style={{ textTransform: "uppercase", position: 'sticky', top: 0, zIndex: 1, background: this.props.isDarkMode ? 'linear-gradient(45deg, #63077eb5, #f23c3c9c)' : 'linear-gradient(45deg, rgba(253, 247, 255, 0.37), rgba(255, 174, 0, 0.56))' }}>
+                  <TableHead
+                    style={{
+                      textTransform: "uppercase",
+                      position: "sticky",
+                      top: 0,
+                      zIndex: 1,
+                      background: isDarkMode
+                        ? "linear-gradient(45deg, #63077eb5, #f23c3c9c)"
+                        : "linear-gradient(45deg, rgba(253, 247, 255, 0.37), rgba(255, 174, 0, 0.56))"
+                    }}
+                  >
                     <TableRow>
-                      <TableCell style={{ textAlign: 'center' }}>Rank</TableCell>
-                      <TableCell style={{ textAlign: 'center' }}>Max Allowance</TableCell>
+                      <TableCell style={{ textAlign: "center" }}>Rank</TableCell>
+                      <TableCell style={{ textAlign: "center" }}>Account Age</TableCell>
+                      <TableCell style={{ textAlign: "center" }}>Max Allowance</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
                     {categories.map((category, index) => (
-                      <TableRow key={index} style={{
-                        background: getRank(rank) === category.rankThreshold ? '#28a745' : ''
-                      }}>
-                        <TableCell style={{ padding: '0', textAlign: 'center', }}>
+                      <TableRow
+                        key={index}
+                        style={{
+                          background: highlightedRowIndex === index ? '#28a745' : ''
+                        }}
+                      >
+                        <TableCell style={{ padding: '0', textAlign: 'center' }}>
                           <Lottie
                             options={{
                               loop: true,
@@ -156,9 +219,17 @@ class ConfirmLoanModal extends Component {
                             style={{
                               height: '22px',
                               width: '22px',
-                              display: 'inline-block',
+                              display: 'inline-block'
                             }}
-                          />&nbsp;<span style={{ transform: 'translateY(4px)' }}>{category.rankThreshold}</span>
+                          />
+                          &nbsp;<span style={{ transform: 'translateY(4px)' }}>{category.rankThreshold}</span>
+                        </TableCell>
+                        <TableCell style={{ textAlign: 'center', padding: '0' }}>
+                          <span>
+                            {category.accountAgeThresholdInDays >= 30
+                              ? `${category.accountAgeThresholdInDays} days (${Math.floor(category.accountAgeThresholdInDays / 30)} month${Math.floor(category.accountAgeThresholdInDays / 30) > 1 ? 's' : ''})`
+                              : `${category.accountAgeThresholdInDays} days`}
+                          </span>
                         </TableCell>
                         <TableCell style={{ textAlign: 'center', padding: '0' }}>
                           <span>{convertToCurrency(category.maxAllowance)}</span>
@@ -172,7 +243,6 @@ class ConfirmLoanModal extends Component {
             <TableContainer>
               <Table>
                 <TableBody>
-
                   <TableRow>
                     <TableCell style={{ width: "20%", textAlign: "right", borderBottom: "none" }}>
                       <span style={{ whiteSpace: "nowrap" }}>AVAILABLE FUNDS:</span>
@@ -180,8 +250,7 @@ class ConfirmLoanModal extends Component {
                     <TableCell style={{ borderBottom: "none", textAlign: "right", color: 'red' }}>
                       {convertToCurrency(loan_amount)}
                     </TableCell>
-                    <TableCell >
-
+                    <TableCell>
                       <TextField
                         label="Loan"
                         variant="filled"
@@ -199,7 +268,6 @@ class ConfirmLoanModal extends Component {
                     </TableCell>
                   </TableRow>
                 </TableBody>
-
               </Table>
             </TableContainer>
             <TableContainer>
@@ -207,13 +275,13 @@ class ConfirmLoanModal extends Component {
                 <TableHead>
                   <TableRow>
                     <TableCell style={tableCellStyle}>
-                      Loan Amount <FontAwesomeIcon icon={faDollarSign} />
+                      Loan Amount
                     </TableCell>
                     <TableCell style={tableCellStyle}>
-                      Days Left <FontAwesomeIcon icon={faCalendarAlt} />
+                      Days Left
                     </TableCell>
                     <TableCell style={tableCellStyle}>
-                      Payback Amount <FontAwesomeIcon icon={faMoneyBillWave} />
+                      Payback Amount
                     </TableCell>
                   </TableRow>
                 </TableHead>
@@ -315,12 +383,14 @@ class ConfirmLoanModal extends Component {
 const mapStateToProps = state => ({
   isDarkMode: state.auth.isDarkMode,
   rank: state.auth.totalWagered,
+  created_at: state.auth.user.created_at,
   isOpen: state.snackbar.showConfirmLoanModal,
   title: state.snackbar.title,
   item: state.loanReducer._id,
   lender: state.loanReducer.data.lender,
   loan_amount: state.loanReducer.data.loan_amount,
   loan_period: state.loanReducer.data.loan_period,
+  remainingLoans: state.loanReducer.remainingLoans,
   apy: state.loanReducer.data.apy,
   alertMessage: state.snackbar.alertMessage,
   alertType: state.snackbar.alertType,
@@ -331,9 +401,9 @@ const mapDispatchToProps = {
   confirmLoan,
   getUser,
   setBalance,
-  acCalculateRemainingLoans,
   addNewTransaction,
-  acQueryLoan
+  acCalculateRemainingLoans,
+  acQueryLoan,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(ConfirmLoanModal);

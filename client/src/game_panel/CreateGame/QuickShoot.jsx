@@ -491,6 +491,7 @@ class QuickShoot extends Component {
             qs_game_type={qs_game_type}
             onChangeState={onChangeState}
             bet_amount={bet_amount}
+            defaultBetAmounts={defaultBetAmounts}
           />
         )}
 

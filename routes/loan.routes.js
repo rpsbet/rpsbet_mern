@@ -632,10 +632,17 @@ async function calculateRemainingLoans(currentUser) {
     throw new Error('An error occurred while calculating remaining loans');
   }
 }
-
 async function checkLoanEligibility(currentUser, loanAmount) {
+
+  // Convert loanAmount to a number
+  const loanAmountFloat = parseFloat(loanAmount);
+  if (isNaN(loanAmountFloat)) {
+    return false; // Return false if loanAmount is not a valid number
+  }
+  
+
   const creditScore = currentUser.credit_score;
-  const rank = Math.floor(Math.log2(parseFloat(currentUser.totalWagered) + 1) / 1.2) + 1;;
+  const rank = Math.floor(Math.log2(parseFloat(currentUser.totalWagered) + 1) / 1.2) + 1;
 
   const accountCreatedAt = new Date(currentUser.created_at);
   const currentDate = new Date();
@@ -666,24 +673,29 @@ async function checkLoanEligibility(currentUser, loanAmount) {
     { creditScoreThreshold: 1000, rankThreshold: 19, accountAgeThresholdInDays: 90, maxAllowance: 300000 },
     { creditScoreThreshold: 1000, rankThreshold: 20, accountAgeThresholdInDays: 90, maxAllowance: 400000 },
   ];
-  const startingIndex = Math.min(rank - 1, categories.length - 1);
 
-  for (let i = startingIndex; i < categories.length; i++) {
+  let bestMatch = null;
+  let startingIndex = Math.min(rank - 1, categories.length - 1);
+  for (let i = startingIndex; i >= 0; i--) {
     const category = categories[i];
+
+    const totalLoanAmount = remainingAmount + loanAmountFloat;
 
     if (
       creditScore >= category.creditScoreThreshold &&
       rank >= category.rankThreshold &&
-      accountAgeInDays >= category.accountAgeThresholdInDays &&
-      (remainingAmount + parseFloat(loanAmount)) <= category.maxAllowance
+      totalLoanAmount <= category.maxAllowance
     ) {
-      return true;
+      if (accountAgeInDays >= category.accountAgeThresholdInDays) {
+        return true; // Return true if the best match is found with valid account age
+      } else {
+        bestMatch = bestMatch || category;
+      }
     }
   }
+
   return false;
 }
-
-
 router.post('/lend', auth, async (req, res) => {
   try {
     const { loan_id, lender, responseText } = req.body;
@@ -720,7 +732,7 @@ router.post('/lend', auth, async (req, res) => {
         message: 'Not enough available funds!',
       });
     }
-
+    
     const isEligible = await checkLoanEligibility(currentUser, responseText);
 
     if (!isEligible) {

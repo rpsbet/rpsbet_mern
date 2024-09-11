@@ -92,7 +92,35 @@ class MyLoansModal extends Component {
     }
   };
 
-
+  getAccountAgeInDays = (createdAt) => {
+    const accountCreatedAt = new Date(createdAt);
+    const currentDate = new Date();
+    const accountAgeInMilliseconds = currentDate - accountCreatedAt;
+    return Math.floor(accountAgeInMilliseconds / (24 * 60 * 60 * 1000));
+  };
+  getHighlightedRowIndex = (categories, rank, accountAgeInDays, loanAmount, remainingAmount) => {
+    const totalLoanAmount = remainingAmount + loanAmount;
+    let bestCategoryIndex = -1;
+  
+    for (let i = 0; i < categories.length; i++) {
+      const category = categories[i];
+      // Check for exact match
+      if (
+        getRank(rank) >= category.rankThreshold &&
+        accountAgeInDays >= category.accountAgeThresholdInDays &&
+        totalLoanAmount <= category.maxAllowance
+      ) {
+        return i; // Return index if exact match is found
+      }
+      // Track the best match based on account age if no exact match
+      if (accountAgeInDays >= category.accountAgeThresholdInDays) {
+        bestCategoryIndex = i;
+      }
+    }
+  
+    // Return the best category index if no exact match was found
+    return bestCategoryIndex;
+  };
 
   onSubmitFrom = async () => {
     const { loan_amount, loan_period, apy } = this.state;
@@ -111,9 +139,19 @@ class MyLoansModal extends Component {
   };
 
   render() {
-    const { totalWagered, remainingLoans, isDarkMode } = this.props;
+    const { totalWagered, remainingLoans, isDarkMode, created_at, loan_amount, loan_period, apy } = this.props;
 
     let rank = getRank(totalWagered);
+    const accountAgeInDays = this.getAccountAgeInDays(created_at);
+    const remainingAmount = remainingLoans;
+
+    const highlightedRowIndex = this.getHighlightedRowIndex(
+      categories,
+      rank,
+      accountAgeInDays,
+      loan_amount,
+      remainingAmount
+    );
 
     return (
       <Modal
@@ -174,40 +212,62 @@ class MyLoansModal extends Component {
               <div className="modal-content-wrapper">
                 <div className="modal-content-panel">
                 <TableContainer style={{ maxHeight: 150, overflow: 'auto' }}>
-                  <Table aria-label="nice-table">
-                    <TableHead style={{ textTransform: "uppercase", position: 'sticky', top: 0, zIndex: 1, background: this.props.isDarkMode ? 'linear-gradient(45deg, #63077eb5, #f23c3c9c)' : 'linear-gradient(45deg, rgb(253 247 255 / 37%), #ffae008f)' }}>
-                      <TableRow>
-                        <TableCell style={{ textAlign: 'center' }}>Rank</TableCell>
-                        <TableCell style={{ textAlign: 'center' }}>Max Allowance</TableCell>
+                <Table aria-label="nice-table">
+                  <TableHead
+                    style={{
+                      textTransform: "uppercase",
+                      position: "sticky",
+                      top: 0,
+                      zIndex: 1,
+                      background: isDarkMode
+                        ? "linear-gradient(45deg, #63077eb5, #f23c3c9c)"
+                        : "linear-gradient(45deg, rgba(253, 247, 255, 0.37), rgba(255, 174, 0, 0.56))"
+                    }}
+                  >
+                    <TableRow>
+                      <TableCell style={{ textAlign: "center" }}>Rank</TableCell>
+                      <TableCell style={{ textAlign: "center" }}>Account Age</TableCell>
+                      <TableCell style={{ textAlign: "center" }}>Max Allowance</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {categories.map((category, index) => (
+                      <TableRow
+                        key={index}
+                        style={{
+                          background: highlightedRowIndex === index ? '#28a745' : ''
+                        }}
+                      >
+                        <TableCell style={{ padding: '0', textAlign: 'center' }}>
+                          <Lottie
+                            options={{
+                              loop: true,
+                              autoplay: true,
+                              animationData: rankIcon
+                            }}
+                            style={{
+                              height: '22px',
+                              width: '22px',
+                              display: 'inline-block'
+                            }}
+                          />
+                          &nbsp;<span style={{ transform: 'translateY(4px)' }}>{category.rankThreshold}</span>
+                        </TableCell>
+                        <TableCell style={{ textAlign: 'center', padding: '0' }}>
+                          <span>
+                            {category.accountAgeThresholdInDays >= 30
+                              ? `${category.accountAgeThresholdInDays} days (${Math.floor(category.accountAgeThresholdInDays / 30)} month${Math.floor(category.accountAgeThresholdInDays / 30) > 1 ? 's' : ''})`
+                              : `${category.accountAgeThresholdInDays} days`}
+                          </span>
+                        </TableCell>
+                        <TableCell style={{ textAlign: 'center', padding: '0' }}>
+                          <span>{convertToCurrency(category.maxAllowance)}</span>
+                        </TableCell>
                       </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {categories.map((category, index) => (
-                        <TableRow key={index} style={{
-                          background: getRank(rank) === category.rankThreshold ? '#28a745' : ''
-                        }}>
-                          <TableCell style={{ padding: '0', textAlign: 'center', }}>
-                            <Lottie
-                              options={{
-                                loop: true,
-                                autoplay: true,
-                                animationData: rankIcon
-                              }}
-                              style={{
-                                height: '22px',
-                                width: '22px',
-                                display: 'inline-block',
-                              }}
-                            />&nbsp;<span style={{ transform: 'translateY(4px)' }}>{category.rankThreshold}</span>
-                          </TableCell>
-                          <TableCell style={{ textAlign: 'center', padding: '0' }}>
-                            <span>{convertToCurrency(category.maxAllowance)}</span>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
                   <ProductCreatePage updateTextField={this.updateTextField} />
                 </div>
               </div>
@@ -228,6 +288,10 @@ const mapStateToProps = state => ({
   _id: state.auth.user._id,
   // productName: state.loanReducer.productName,
   // price: state.loanReducer.price,
+  created_at: state.auth.user.created_at,
+  loan_amount: state.loanReducer.data.loan_amount,
+  loan_period: state.loanReducer.data.loan_period,
+  remainingLoans: state.loanReducer.remainingLoans,
   totalWagered: state.auth.totalWagered,
   isDarkMode: state.auth.isDarkMode,
   loading: state.loanReducer.loading
