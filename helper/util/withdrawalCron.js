@@ -48,7 +48,7 @@ async function resetWithdrawalLimits() {
           // Check if the user has the credit_score field
           if ('dailyWithdrawals' in user) {
             // Ensure credit score doesn't go below a certain threshold (e.g., 0)
-            if (user.balance < 50000) {
+            if (user.balance < 500000) {
               user.dailyWithdrawals = 0;
               await user.save();
             } else {

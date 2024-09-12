@@ -587,13 +587,13 @@ const addToQueue = async (req, bot = false) => {
                             nextItem = await counterRandomness_qs(allBetItems, roomInfo['qs_game_type']);
                             break;
                         case 'NPC':
-                            nextItem = await NPC_qs(allBetItems);
+                            nextItem = await NPC_qs(allBetItems, roomInfo['qs_game_type']);
                             break;
                         case 'Tesla':
                             nextItem = await generatePattern_qs(allBetItems, roomInfo['qs_game_type']);
                             break;
                         case 'CopyCat':
-                            nextItem = await getCopyCatItem_qs(allBetItems);
+                            nextItem = await getCopyCatItem_qs(allBetItems, roomInfo['qs_game_type']);
                             break;
                         case 'Markov':
 

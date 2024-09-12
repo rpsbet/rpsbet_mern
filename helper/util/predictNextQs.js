@@ -363,9 +363,15 @@ function generatePattern_qs(allBetItems, qs_game_type) {
   }
 }
 
-function getCopyCatItem_qs(allBetItems) {
-  const copyCatBetItem = allBetItems.find(item => item.joiner_qs);
-  return copyCatBetItem ? copyCatBetItem.joiner_qs : getRandomItem();
+function getCopyCatItem_qs(allBetItems, qs_game_type) {
+  const copyCatBetItem = [...allBetItems].reverse().find(item => item.joiner_qs);
+  if (copyCatBetItem) {
+    if (copyCatBetItem.qs && copyCatBetItem.qs.trim() !== '') {
+      return copyCatBetItem.joiner_qs;
+    }
+  }
+  const randomItem_qs = getRandomItem_qs(qs_game_type);
+  return randomItem_qs;
 }
 
 function skillissueold_qs(historicData, qs_game_type) {

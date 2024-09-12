@@ -72,7 +72,6 @@ router.post('/google', async (req, res) => {
     const { name, email, picture } = payload;
     const username = email.split('@')[0];
 
-    console.log('Google OAuth payload:', { name, email, username });
 
     let user = await User.findOne({ username: username });
     

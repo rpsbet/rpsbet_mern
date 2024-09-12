@@ -738,7 +738,7 @@ router.post('/lend', auth, async (req, res) => {
     if (!isEligible) {
       return res.json({
         success: false,
-        message: 'This account is currently not eligible for loaning this amount. Try again another time or another amount.',
+        message: 'This account is currently not eligible for this amount. Check your account Age or Try again another time at a later rank.',
       });
     }
 

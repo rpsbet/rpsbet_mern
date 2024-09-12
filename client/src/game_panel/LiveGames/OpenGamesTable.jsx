@@ -319,7 +319,7 @@ class OpenGamesTable extends Component {
         alertModal(isDarkMode, result.message);
       }
     } catch (e) {
-      alertModal(isDarkMode, 'FAILED TRANSACTION');
+      alertModal(isDarkMode, 'ROOM TOO BUSY, TRY AGAIN LATER');
     }
   };
 

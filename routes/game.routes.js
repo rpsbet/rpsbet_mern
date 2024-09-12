@@ -2845,13 +2845,13 @@ router.post('/coHost', auth, async (req, res) => {
     const rowId = req.body.rowId;
     const room = await Room.findOne({ _id: rowId });
     const gameType = await GameType.findOne({ _id: room.game_type });
-
     if (!room) {
       return res.json({
         success: false,
         message: 'ROOM NOT FOUND'
       });
     }
+    console.log("Sdsd");
 
     const accessAllowed = await check_access_time(req.user._id);
     if (!accessAllowed) {
@@ -2861,6 +2861,7 @@ router.post('/coHost', auth, async (req, res) => {
         betResult: -1000
       });
     }
+    console.log("sss", accessAllowed);
 
     const tenSecondsAgo = new Date(Date.now() - 10000);
     if (room.updated_at > tenSecondsAgo) {
@@ -2870,6 +2871,7 @@ router.post('/coHost', auth, async (req, res) => {
       });
     }
 
+    console.log("Sdsd", tenSecondsAgo);
 
     if (room.status === 'finished') {
       return res.json({
