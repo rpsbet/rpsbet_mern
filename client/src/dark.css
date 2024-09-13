@@ -204,8 +204,11 @@ background: linear-gradient(298deg, #4f0068, #3d0066);
     color: #f9f9f9;
 }
 
-.dark_mode .modal-body table td {
-	border-bottom: 1px solid rgb(186 59 79) !important;
+.dark_mode .modal-body  .table table td,
+.dark_mode .modal-body .table table th {
+	border-bottom: 2px solid #f9f9f9 !important;
+    padding: 20px 20px !important;
+    background: #f9f9f911;
 }
 
 .dark_mode .modal-body .modal-content-wrapper.drop-game h4 {

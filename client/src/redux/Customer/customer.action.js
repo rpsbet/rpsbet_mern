@@ -13,6 +13,8 @@ import {
   ACTIVITY_QUERY,
   ROOM_STATISTICS_LOADED,
   LOAD_LEADERBOARDS,
+  LOADING_EQUITY_CHART,
+  LOAD_EQUITY_CHART,
   LOADING_LEADERBOARDS_TABLE
 } from '../types';
 
@@ -192,6 +194,28 @@ export const acGetCustomerInfo = _id => async dispatch => {
 //   }
 // };
 
+export const fetchEquityDistribution = () => async (dispatch) => {
+  console.log("Fetching equity distribution...");
+  dispatch({ type: LOADING_EQUITY_CHART, payload: true });
+
+  try {
+    const { data } = await api.get('/statistics/get-equity-distribution');
+
+    if (data.success) {
+      dispatch({
+        type: LOAD_EQUITY_CHART,
+        payload: {
+          equityChart: data.equityDistribution // Ensure the payload has equityChart property
+        }
+      });
+      console.log("Data received:", data);
+    }
+    dispatch({ type: LOADING_EQUITY_CHART, payload: false });
+  } catch (error) {
+    console.error('Error fetching equity distribution:', error);
+    dispatch({ type: LOADING_EQUITY_CHART, payload: false });
+  }
+};
 
 export const fetchLeaderboardsData = () => async (dispatch) => {
   dispatch({ type: LOADING_LEADERBOARDS_TABLE, payload: true });
@@ -210,6 +234,23 @@ export const fetchLeaderboardsData = () => async (dispatch) => {
   } catch (error) {
     console.log('error***', error);
     // dispatch({ payload: 'An error occurred while fetching leaderboards data' });
+  }
+};
+
+export const getMarketingStat = () => async (dispatch) => {
+
+  try {
+    const { data } = await api.get('statistics/get-marketing-stat');
+    console.log("data", data)
+    if (data.success) {
+      return data;
+    } else {
+      return (false)
+      // dispatch({ payload: data.message });
+    }
+  } catch (error) {
+    console.log('error***', error);
+    // dispatch({ payload: 'An error occurred while getting marketing strat' });
   }
 };
 

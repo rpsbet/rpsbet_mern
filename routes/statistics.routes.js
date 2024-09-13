@@ -9,6 +9,7 @@ const Receipt = require('../model/Receipt');
 const Transaction = require('../model/Transaction');
 const Item = require('../model/Item');
 const GameLog = require('../model/GameLog');
+const Vault = require('../model/Vault');
 const Room = require('../model/Room');
 const GameType = require('../model/GameType');
 const SystemSetting = require('../model/SystemSetting');
@@ -546,6 +547,229 @@ router.post('/get-spending-habit', async (req, res) => {
   }
 });
 
+router.get('/get-equity-distribution', async (req, res) => {
+  try {
+    const ignoredUsernames = [
+      'WHALE WATCHERS',
+      'OFFICIALRPSGAME',
+      'pimpedpistols',
+      'KEKW',
+      '69',
+      'jadeprice1997',
+      'smellyfingers',
+      'NO BROKIES',
+      'lennybeadle',
+      'SUPPORT',
+      'rrr',
+      'twat',
+      'SYSTEM',
+      'GIGACHAD',
+      'SHIBA',
+      '🔥 THE DON 🔥 (BOT #1)',
+      '🪨 ROCKY 🪨 (BOT #2)',
+      '✂️ CAESAR ✂️ (BOT #4)',
+      '📃 PAPÎER 📃 (BOT #3)'
+    ];
+
+    // Get the date for two months ago
+    const twoMonthsAgo = new Date();
+    twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
+
+    // Find all users who have been active in the last 2 months and are not ignored
+    const users = await User.find({
+      username: { $nin: ignoredUsernames },
+      last_seen: { $gte: twoMonthsAgo }
+    });
+
+    // Initialize total balance to 0
+    let totalBalance = 0;
+
+    // Fetch balances for each user
+    const userBalances = await Promise.all(users.map(async (user) => {
+      const vault = await Vault.findOne({ user: user._id });
+
+      // Calculate the total balance by adding user balance and vault balance
+      const userBalance = user.balance + (vault ? vault.balance : 0);
+
+      // If the user's balance is greater than or equal to 1000, return user info
+      if (userBalance >= 1000) {
+        return {
+          _id: user._id,
+          username: user.username,
+          avatar: user.avatar,
+          accessory: user.accessory,
+          totalWagered: user.totalWagered,
+          totalBalance: userBalance
+        };
+      }
+
+      // If the user's balance is less than 1000, return null
+      return null;
+    }));
+
+    // Filter out any null values (i.e., users with balance < 1000)
+    const validUserBalances = userBalances.filter(user => user !== null);
+
+    // Calculate the total balance across all valid users
+    totalBalance = validUserBalances.reduce((acc, user) => acc + user.totalBalance, 0);
+
+    // If there are no valid users with balance, return an empty equity distribution
+    if (totalBalance === 0) {
+      return res.json({ success: true, equityDistribution: [] });
+    }
+
+    // Map over valid users to calculate their equity percentage
+    const equityDistribution = validUserBalances
+      .map(user => ({
+        _id: user._id,
+        username: user.username,
+        avatar: user.avatar,
+        accessory: user.accessory,
+        totalWagered: user.totalWagered,
+        equityPercentage: (user.totalBalance / totalBalance) * 100
+      }))
+      .filter(user => user.equityPercentage > 0);
+
+    // Return the equity distribution as a JSON response
+    res.json({
+      success: true,
+      equityDistribution
+    });
+  } catch (error) {
+    // Handle any errors and return a 500 response
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+router.get('/get-marketing-stat', async (req, res) => {
+  try {
+    const ignoredUsernames = [
+      'WHALE WATCHERS',
+      'OFFICIALRPSGAME',
+      'pimpedpistols',
+      'KEKW',
+      '69',
+      'jadeprice1997',
+      'smellyfingers',
+      'NO BROKIES',
+      'lennybeadle',
+      'SUPPORT',
+      'rrr',
+      'twat',
+      'SYSTEM',
+      'GIGACHAD',
+      'SHIBA',
+      '🔥 THE DON 🔥 (BOT #1)',
+      '🪨 ROCKY 🪨 (BOT #2)',
+      '✂️ CAESAR ✂️ (BOT #4)',
+      '📃 PAPÎER 📃 (BOT #3)'
+    ];
+
+    const totalPlayersResult = await User.aggregate([
+      {
+        $lookup: {
+          from: 'vaults',
+          localField: '_id',
+          foreignField: 'user',
+          as: 'vault'
+        }
+      },
+      {
+        $unwind: { path: '$vault', preserveNullAndEmptyArrays: true }
+      },
+      {
+        $project: {
+          username: 1,
+          totalBalance: {
+            $add: ['$balance', { $ifNull: ['$vault.balance', 0] }]
+          },
+          gamePlayed: 1
+        }
+      },
+      {
+        $match: {
+          username: { $nin: ignoredUsernames }
+        }
+      },
+      {
+        $sort: { totalBalance: -1 }
+      },
+      {
+        $count: 'totalCount'
+      }
+    ]);
+
+    const totalPlayers = totalPlayersResult.length > 0 ? totalPlayersResult[0].totalCount : 0;
+
+    const top1PercentThreshold = totalPlayers > 0 ? Math.ceil(totalPlayers * 0.005) : 0;
+
+    if (top1PercentThreshold === 0) {
+      return res.json({ success: true, message: 'Not enough players to determine top 1%.' });
+    }
+
+
+    const top1PercentPlayers = await User.aggregate([
+      {
+        $lookup: {
+          from: 'vaults',
+          localField: '_id',
+          foreignField: 'user',
+          as: 'vault'
+        }
+      },
+      {
+        $unwind: { path: '$vault', preserveNullAndEmptyArrays: true }
+      },
+      {
+        $project: {
+          username: 1,
+          totalBalance: {
+            $add: ['$balance', { $ifNull: ['$vault.balance', 0] }]
+          },
+          gamePlayed: 1
+        }
+      },
+      {
+        $match: {
+          username: { $nin: ignoredUsernames }
+        }
+      },
+      {
+        $sort: { totalBalance: -1 }
+      },
+      {
+        $limit: top1PercentThreshold
+      }
+    ]);
+
+    const avgGamePlayed = top1PercentPlayers.length > 0 ? (top1PercentPlayers.reduce((sum, player) => sum + player.gamePlayed, 0) / top1PercentPlayers.length) : 0;
+    // console.log("Average gamePlayed for top 1% players:", avgGamePlayed);
+
+    const lastPlayerTotalBalance = top1PercentPlayers.length > 0 ? top1PercentPlayers[top1PercentPlayers.length - 1].totalBalance : 0;
+    // console.log("Total balance of the last player in the top 1%:", lastPlayerTotalBalance);
+
+    const top1PercentUsernames = top1PercentPlayers.map(player => player.username);
+    // console.log("Top 1% player usernames:", top1PercentUsernames);
+
+    const totalUsersWithGamePlayed = await User.countDocuments({ gamePlayed: { $gt: 0 } });
+
+    if (totalUsersWithGamePlayed === 0) {
+      return res.json({ success: true, message: 'No users with game played found.' });
+    }
+    const chanceOfReachingBalance = avgGamePlayed > 0 ? (lastPlayerTotalBalance / avgGamePlayed) * 100 : 0;
+
+    const message = `New players have a ${chanceOfReachingBalance.toFixed(2)}% chance of reaching the top 0.005% of players after playing an average of ${avgGamePlayed.toFixed(2)} games`;
+    res.json({
+      success: true,
+      message
+    });
+
+  } catch (error) {
+    console.error("An error occurred:", error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
 
 router.get('/get-leaderboards', auth, async (req, res) => {
   try {
@@ -555,7 +779,7 @@ router.get('/get-leaderboards', auth, async (req, res) => {
     const ignoredUsernames = [
       'WHALE WATCHERS',
       'OFFICIALRPSGAME',
-      'PimpedPistols',
+      'pimpedpistols',
       'KEKW',
       '69',
       'jadeprice1997',

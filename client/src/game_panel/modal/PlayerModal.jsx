@@ -440,7 +440,7 @@ class PlayerModal extends Component {
     const { productArray, isLowGraphics } = this.props;
     const isBot = this.state.username.toUpperCase().includes('BOT');
     const systemUsernames = [
-      'PimpedPistols',
+      'pimpedpistols',
       'GIGACHAD',
       'KEKW',
       'smellyfingers',

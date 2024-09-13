@@ -32,7 +32,7 @@ async function resetWithdrawalLimits() {
             user.username === 'jadeprice1997' ||
             user.username === 'GIGACHAD' ||
             user.username === 'OFFICIALRPSGAME' ||
-            user.username === 'PimpedPistols' ||
+            user.username === 'pimpedpistols' ||
             user.username === 'smellyfingers' ||
             user.username === 'Bearbland11' ||
             user.username === 'jimbobjocorn' ||

@@ -1138,7 +1138,7 @@ router.get('/topWithdrawals', async (req, res) => {
     const filteredWithdrawals = topWds
       .filter(withdrawal => 
         withdrawal.user_id && // Ensure the user is populated
-        !['OFFICIALRPSGAME', 'PimpedPistols', '69'].includes(withdrawal.user_id.username) // Exclude certain usernames
+        !['OFFICIALRPSGAME', 'pimpedpistols', '69'].includes(withdrawal.user_id.username) // Exclude certain usernames
       );
 
     const sortedWithdrawals = filteredWithdrawals

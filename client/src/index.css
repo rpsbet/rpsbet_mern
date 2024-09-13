@@ -5150,6 +5150,25 @@ a.player:hover {
   margin-right: 0.5rem;
 }
 
+.modal-body .marketing-message p {
+  position: relative;
+  padding: 15px;
+  background: linear-gradient(45deg, #6900df, #93008c11);
+  border-left: 4px solid #c734ff;
+  font-size: 1em !important;
+  line-height: 1.2;
+  color: #ffe7e7;
+  margin-top: 30px !important;
+  margin-bottom: 60px;
+  z-index: 2;
+  border-radius: 16px;
+}
+
+.marketing-message strong {
+  font-weight: bold;
+  color: #c734ff; /* Highlight numbers */
+  font-size: 1.2em !important; /* Make numbers slightly larger */
+}
 
 
 .game-contents .game-info-panel .bet-amount button,
@@ -7645,6 +7664,17 @@ div[aria-label="How To Play Modal"] ul {
   .modal-body.edit-modal-body button.btn-close {
     top: 2px;
     right: 16px;
+  }
+  h4.title {
+    font-size: 1em !important;
+    padding: 2.5px 20px !important;
+
+  }
+
+  .modal-body table {
+    overflow-x: scroll;
+    width: 100%;
+    display: block;
   }
 
   .modal-body .modal-edit-panel {

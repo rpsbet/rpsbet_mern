@@ -140,7 +140,7 @@ class Avatar extends Component {
 
     const isBot = username.toUpperCase().includes('BOT');
     const systemUsernames = [
-      'PimpedPistols',
+      'pimpedpistols',
       'GIGACHAD',
       'KEKW',
       'smellyfingers',
@@ -154,7 +154,7 @@ class Avatar extends Component {
     const isSystem = systemUsernames.includes(username);
 
     const verifiedUsernames = [
-      'PimpedPistols',
+      'pimpedpistols',
       'KEKW',
       'GIGACHAD',
       'smellyfingers',

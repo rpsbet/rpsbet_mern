@@ -7,7 +7,9 @@ import {
   ADD_MAIN_INFO,
   ACTIVITY_QUERY,
   LOADING_LEADERBOARDS_TABLE,
-  LOAD_LEADERBOARDS
+  LOAD_LEADERBOARDS,
+  LOADING_EQUITY_CHART,
+  LOAD_EQUITY_CHART
 } from '../types';
 
 const initialState = {
@@ -26,6 +28,8 @@ const initialState = {
   activity_pages: 1,
   activity_page: 1,
   totalActivities: 0,
+  equityChart: [],
+  loadingEquityChart: false,
 };
 
 export default (state = initialState, { type, payload }) => {
@@ -44,6 +48,14 @@ export default (state = initialState, { type, payload }) => {
         ...state,
         leaderboards: payload.leaderboards
       };
+      case LOADING_EQUITY_CHART:
+        return { ...state, loadingEquityChart: payload };
+      
+      case LOAD_EQUITY_CHART:
+        return {
+          ...state,
+          equityChart: payload.equityChart // Ensure payload.equityChart is used
+        };
     case ACTIVITY_QUERY:
       return {
         ...state,
