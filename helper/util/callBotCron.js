@@ -53,6 +53,7 @@ async function getQsBetItems(roomId, user) {
 
 async function predictNextBetAmount(betArray, penultimateSameAsLast, smoothingFactor = 0.01, randomnessFactor = 0.2, threshold = 0.0005, room) {
   const allStates = Array.from(new Set(betArray));
+  console.log("allStates", allStates)
   if (penultimateSameAsLast !== 0) {
     if (penultimateSameAsLast >= 3) {
       const maxState = Math.max(...allStates);
@@ -245,264 +246,289 @@ async function callCronJobs(io) {
           }
         }
 
-        const qBots = await QBot.find({ active: true });
+        // const qBots = await QBot.find({ active: true });
 
-        for (const bot of qBots) {
+        // for (const bot of qBots) {
 
-          const joiningTotal = sumJoiningStrategies(bot.joining);
-          const hostingTotal = sumHostingStrategies(bot.hosting);
-          console.log(joiningTotal, hostingTotal)
-          const result = chooseBasedOnProbability(joiningTotal, hostingTotal);
+        //   const joiningTotal = sumJoiningStrategies(bot.joining);
+        //   const hostingTotal = sumHostingStrategies(bot.hosting);
+        //   console.log(joiningTotal, hostingTotal)
+        //   const result = chooseBasedOnProbability(joiningTotal, hostingTotal);
 
-          if (result.chosenType === 'joining') {
-            const chosenSubStrategy = pickSubStrategy(bot.joining, joiningTotal);
-            if (chosenSubStrategy) {
-              const formattedStrategyName = formatStrategyName(chosenSubStrategy.parentStrategy);
-              const formattedSubStrategyName = formatStrategyName(chosenSubStrategy.name);
-              const user = await User.findOne({ _id: bot.user });
-              const room = await Room.findOne({
-                status: 'open',
-                selectedStrategy: formattedStrategyName,
-                creator: { $ne: bot.user }
-              });
-              const numElements = 6;
-              let remainingBalance = user.balance;
-              const qbot_bet_amounts = [];
+        //   if (result.chosenType === 'joining') {
+        //     const chosenSubStrategy = pickSubStrategy(bot.joining, joiningTotal);
+        //     if (chosenSubStrategy) {
+        //       const formattedStrategyName = formatStrategyName(chosenSubStrategy.parentStrategy);
+        //       const formattedSubStrategyName = formatStrategyName(chosenSubStrategy.name);
+        //       const user = await User.findOne({ _id: bot.user });
+        //       const room = await Room.findOne({
+        //         status: 'open',
+        //         selectedStrategy: formattedStrategyName,
+        //         creator: { $ne: bot.user }
+        //       });
+        //       const numElements = 6;
+        //       let remainingBalance = user.balance;
+        //       const qbot_bet_amounts = [];
 
-              for (let i = 0; i < numElements; i++) {
+        //       for (let i = 0; i < numElements; i++) {
 
-                const maxBet = remainingBalance - (numElements - i - 1);
-                const bet = Math.floor(Math.random() * (maxBet)) + 1;
+        //         const maxBet = remainingBalance - (numElements - i - 1);
+        //         const bet = Math.floor(Math.random() * (maxBet)) + 1;
 
-                qbot_bet_amounts.push(bet);
-                remainingBalance -= bet;
+        //         qbot_bet_amounts.push(bet);
+        //         remainingBalance -= bet;
 
-                if (remainingBalance <= numElements - i - 1) {
-                  while (qbot_bet_amounts.length < numElements) {
-                    qbot_bet_amounts.push(1);
-                    remainingBalance--;
-                  }
-                  break;
-                }
-              }
+        //         if (remainingBalance <= numElements - i - 1) {
+        //           while (qbot_bet_amounts.length < numElements) {
+        //             qbot_bet_amounts.push(1);
+        //             remainingBalance--;
+        //           }
+        //           break;
+        //         }
+        //       }
 
-              qbot_bet_amounts.sort((a, b) => a - b);
-              if (user && room) {
-                const result = await executeCronJob(user, qbot_bet_amounts, [bot.user.toString()], false, room, formattedSubStrategyName, true);
+        //       qbot_bet_amounts.sort((a, b) => a - b);
+        //       if (user && room) {
+        //         const result = await executeCronJob(user, qbot_bet_amounts, [bot.user.toString()], false, room, formattedSubStrategyName, true);
 
-                if (result && result.success) {
-                  await delay(4000);
-                }
-              }
-            }
-          } else if (result.chosenType === 'hosting') {
-            try {
+        //         if (result && result.success) {
+        //           await delay(4000);
+        //         }
+        //       }
+        //     }
+        //   } else if (result.chosenType === 'hosting') {
+        //     try {
 
-              const description = '';
-              const endgame_type = false;
-              const rps_list = [];
-              const qs_list = [];
-              const rps_game_type = 0;
-              const user = await User.findOne({ _id: bot.user });
-              const room = await Room.findOne({
-                status: 'open',
-                creator: { $in: [bot.user] }
-              });
+        //       const description = '';
+        //       const endgame_type = false;
+        //       const rps_list = [];
+        //       const qs_list = [];
+        //       const rps_game_type = 0;
+        //       const user = await User.findOne({ _id: bot.user });
+        //       const rooms = await Room.find({
+        //         status: 'open',
+        //         creator: { $in: [bot.user] }
+        //       });
 
-              // if (room) {
-              //   console.log("room already open")
-              //   return;
-              // }
+        //       console.log('rooms.length', rooms.length);
+        //       if (rooms.length > 3) {
+        //         console.log('Too many open rooms.');
+        //         return;
+        //       }
+        //       console.log("dcscdcs")
+        //       let room = null;
+        //       let ai_mode;
 
-              const numElements = 3;
-              let remainingBalance = user.balance;
-              const qbot_bet_amounts = [];
+        //       // Pick a random room if there are rooms available
+        //       if (rooms.length > 0) {
+        //         const randomIndex = Math.floor(Math.random() * rooms.length);
+        //         room = rooms[randomIndex];
+        //         console.log(`Random room selected: ${room.room_number}`);
+        //       } else {
+        //         console.log('No open rooms found for this bot.');
+        //       }
 
-              for (let i = 0; i < numElements; i++) {
-                const maxBet = remainingBalance - (numElements - i - 1);
-                const bet = Math.floor(Math.random() * (maxBet)) + 1;
+        //       if (room && room.host_pr < room.user_bet) {
+        //         const currentTime = new Date();
+        //         const roomLastUpdated = new Date(room.updated_at);
+        //         const timeDifferenceInMinutes = (currentTime - roomLastUpdated) / 1000 / 60;
 
-                qbot_bet_amounts.push(bet);
-                remainingBalance -= bet;
+        //         if (timeDifferenceInMinutes < 5 && timeDifferenceInMinutes > 1) {
+        //           const validStrategies = Object.keys(hostingStrategies).filter(key => hostingStrategies[key] > 0);
 
-                if (remainingBalance <= numElements - i - 1) {
-                  while (qbot_bet_amounts.length < numElements) {
-                    qbot_bet_amounts.push(1);
-                    remainingBalance--;
-                  }
-                  break;
-                }
-              }
+        //           if (validStrategies.length > 0) {
+        //             const randomIndex = Math.floor(Math.random() * validStrategies.length);
+        //             ai_mode = validStrategies[randomIndex];
+        //             console.log(`Room ${room._id} updated with new ai_mode: ${ai_mode}`);
+        //           } else {
+        //             const allStrategies = Object.keys(hostingStrategies);
+        //             ai_mode = allStrategies[Math.floor(Math.random() * allStrategies.length)];
+        //             console.log("No valid strategies found, using fallback random ai_mode:", ai_mode);
+        //           }
 
-              qbot_bet_amounts.sort((a, b) => a - b);
-              let bet_amount = await predictNextBetAmount(qbot_bet_amounts, 0, 0, 0.01, 0.2);
+        //           room.selectedStrategy = ai_mode;
+        //           await room.save();
+        //           return;
+        //         }
+        //       }
+
+        //       const numElements = 3;
+        //       let remainingBalance = user.balance;
+        //       const qbot_bet_amounts = [];
+
+        //       for (let i = 0; i < numElements; i++) {
+        //         const maxBet = remainingBalance - (numElements - i - 1);
+        //         const bet = Math.floor(Math.random() * maxBet) + 1;
+
+        //         qbot_bet_amounts.push(bet);
+        //         remainingBalance -= bet;
+
+        //         if (remainingBalance <= numElements - i - 1) {
+        //           while (qbot_bet_amounts.length < numElements) {
+        //             qbot_bet_amounts.push(1);
+        //             remainingBalance--;
+        //           }
+        //           break;
+        //         }
+        //       }
+
+        //       qbot_bet_amounts.sort((a, b) => a - b);
+        //       let bet_amount = await predictNextBetAmount(qbot_bet_amounts, 0, 0, 0.01, 0.2);
+        //       console.log("parseFloat(bet_amount)", parseFloat(bet_amount));
+
+        //       if (bet_amount <= 0) {
+        //         return;
+        //       }
+        //       if (bet_amount < 500) {
+        //         bet_amount = 500;
+        //       }
+
+        //       if (user.username.includes('BOT')) {
+        //         return;
+        //       }
+
+        //       if (bet_amount > user.balance) {
+        //         return;
+        //       }
+
+        //       if (user.dailyWithdrawals > 5000) {
+        //         return;
+        //       }
+
+        //       const game_types = [
+        //         1,
+        //         5
+        //       ];
+
+        //       const game_type = game_types[Math.floor(Math.random() * game_types.length)];
+
+        //       const gameType = await GameType.findOne({
+        //         game_type_id: (game_type)
+        //       });
+        //       let host_pr = 0;
+        //       let user_bet = 0;
+        //       let pr = 0;
+        //       if (game_type === '1') {
+        //         // RPS
+        //         host_pr = parseFloat(bet_amount);
+        //         user_bet = parseFloat(bet_amount);
+        //         pr = user_bet * 2;
+        //       } else if (game_type === '5') {
+        //         // Quick Shoot
+        //         host_pr = parseFloat(bet_amount);
+        //         user_bet = parseFloat(bet_amount);
+        //       }
+
+        //       const roomCount = await Room.countDocuments({});
+        //       const newRoom = new Room({
+        //         creator: user,
+        //         joiners: [],
+        //         bet_amount: parseFloat(bet_amount),
+        //         rps_list: rps_list,
+        //         description: description,
+        //         selectedStrategy: ai_mode,
+        //         qs_list: qs_list,
+        //         hosts: [{ host: user._id, avatar: user.avatar, username: user.username, accessory: user.accessory, rank: user.totalWagered, share: 100, stake: parseFloat(bet_amount) }],
+        //         game_type: gameType,
+        //         user_bet,
+        //         pr: 0,
+        //         endgame_amount: endgame_type ? endgame_amount : parseFloat(bet_amount),
+        //         endgame_type: endgame_type,
+        //         host_pr,
+        //         room_number: roomCount + 1,
+        //         status: 'open',
+        //         description,
+        //       });
+        //       try {
+        //         // await saveDocumentWithRetry(newRoom);
+        //         console.log("new room created")
+        //       } catch (error) {
+        //         console.error("Error saving newRoom:", error);
+        //       }
+
+        //       if (game_type === '1') {
+        //         for (const rps of rps_list) {
+        //           const newRps = new RpsBetItem({
+        //             room: newRoom,
+        //             rps: rps.rps
+        //           });
+        //           try {
+        //             await saveDocumentWithRetry(newRps);
+        //           } catch (error) {
+        //             console.error("Error saving newRps:", error);
+        //           }
+
+        //           if (rps_game_type === 1) {
+
+        //             const item = await Item.findOne({ productName: rps.rps });
+        //             if (item) {
+        //               // Find the owner entry for the current user
+        //               const owner = item.owners.find(owner => owner.user.toString() === user._id.toString());
+
+        //               if (owner && owner.count >= 1) {
+        //                 owner.count -= 1;
+        //                 try {
+        //                   await saveDocumentWithRetry(item);
+        //                 } catch (error) {
+        //                   console.error("Error saving item:", error);
+        //                 }
+        //               } else {
+        //                 console.log("You do not own enough items for the RRPS gametype.");
+        //                 return;
+        //               }
+        //             } else {
+        //               console.log("Item not found for the RRPS gametype.");
+        //               return;
+        //             }
+        //           }
+        //         }
+        //       } else if (game_type === '5') {
+        //         for (const qs of qs_list) {
+        //           const newQs = new QsBetItem({
+        //             room: newRoom,
+        //             qs: qs.qs
+        //           });
+        //           try {
+        //             await saveDocumentWithRetry(newQs);
+        //           } catch (error) {
+        //             console.error("Error saving newRps:", error);
+        //           }
+        //         }
+        //       }
 
 
-              if (bet_amount <= 0) {
-                return res.json({
-                  success: false,
-                  message: 'IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!'
-                });
-              }
-              if (bet_amount < 500) {
-                bet_amount = 500;
-              }
-
-              if (user.username.includes('BOT')) {
-                return res.json({
-                  success: false,
-                  message: 'DO NOT HAVE PURRMISSION'
-                });
-              }
-
-              if (bet_amount > user.balance) {
-                return res.json({
-                  success: false,
-                  message: "NOT ENUFF FUNDS AT THIS MEOWMENT"
-                });
-              }
-
-              if (user.dailyWithdrawals > 5000) {
-                return res.json({
-                  success: false,
-                  message: "Exceeded Daily Withdrawal Limit. Unable to Create a room. Please try again tomorrow! (During Launch Phase only)"
-                });
-              }
-
-              const game_types = [
-                1,
-                5
-              ];
-
-              const game_type = game_types[Math.floor(Math.random() * game_types.length)];
-
-              const gameType = await GameType.findOne({
-                game_type_id: (game_type)
-              });
-              console.log("game_type", game_type)
-              console.log("gameType", gameType)
-              let host_pr = 0;
-              let user_bet = 0;
-              let pr = 0;
-              if (game_type === '1') {
-                // RPS
-                host_pr = parseFloat(bet_amount);
-                user_bet = parseFloat(bet_amount);
-                pr = user_bet * 2;
-              } else if (game_type === '5') {
-                // Quick Shoot
-                host_pr = parseFloat(bet_amount);
-                user_bet = parseFloat(bet_amount);
-              }
-
-              const roomCount = await Room.countDocuments({});
-
-              const newRoom = new Room({
-                creator: user,
-                joiners: [],
-                rps_list: rps_list,
-                description: description,
-                qs_list: qs_list,
-                hosts: [{ host: user._id, avatar: user.avatar, username: user.username, accessory: user.accessory, rank: user.totalWagered, share: 100, stake: parseFloat(bet_amount) }],
-                game_type: gameType,
-                user_bet,
-                pr: 0,
-                endgame_amount: endgame_type ? endgame_amount : parseFloat(bet_amount),
-                endgame_type: endgame_type,
-                host_pr,
-                room_number: roomCount + 1,
-                status: 'open',
-                description,
-              });
-              try {
-                await saveDocumentWithRetry(newRoom);
-              } catch (error) {
-                console.error("Error saving newRoom:", error);
-              }
-
-              if (game_type === '1') {
-                for (const rps of rps_list) {
-                  const newRps = new RpsBetItem({
-                    room: newRoom,
-                    rps: rps.rps
-                  });
-                  try {
-                    await saveDocumentWithRetry(newRps);
-                  } catch (error) {
-                    console.error("Error saving newRps:", error);
-                  }
-
-                  if (rps_game_type === 1) {
-
-                    const item = await Item.findOne({ productName: rps.rps });
-                    if (item) {
-                      // Find the owner entry for the current user
-                      const owner = item.owners.find(owner => owner.user.toString() === user._id.toString());
-
-                      if (owner && owner.count >= 1) {
-                        owner.count -= 1;
-                        try {
-                          await saveDocumentWithRetry(item);
-                        } catch (error) {
-                          console.error("Error saving item:", error);
-                        }
-                      } else {
-                        console.log("You do not own enough items for the RRPS gametype.");
-                        return;
-                      }
-                    } else {
-                      console.log("Item not found for the RRPS gametype.");
-                      return;
-                    }
-                  }
-                }
-              } else if (game_type === '5') {
-                for (const qs of qs_list) {
-                  const newQs = new QsBetItem({
-                    room: newRoom,
-                    qs: qs.qs
-                  });
-                  try {
-                    await saveDocumentWithRetry(newQs);
-                  } catch (error) {
-                    console.error("Error saving newRps:", error);
-                  }
-                }
-              }
+        //       const newTransaction = new Transaction({
+        //         user: user,
+        //         amount: 0,
+        //         description: 'created ' + gameType.short_name + '-' + newRoom.room_number,
+        //         room: newRoom._id
+        //       });
 
 
-              const newTransaction = new Transaction({
-                user: user,
-                amount: 0,
-                description: 'created ' + gameType.short_name + '-' + newRoom.room_number,
-                room: newRoom._id
-              });
+        //       user.balance -= bet_amount;
+        //       newTransaction.amount -= bet_amount;
 
+        //       try {
+        //         await saveDocumentWithRetry(user);
+        //         await saveDocumentWithRetry(room);
+        //         await saveDocumentWithRetry(newTransaction);
+        //       } catch (error) {
+        //         console.error("Error saving:", error);
+        //       }
+        //       // const rooms = await getRoomList(7, 'All');
+        //       // req.io.sockets.emit('UPDATED_ROOM_LIST', {
+        //       //   pageSize: rooms.pageSize,
+        //       //   roomList: rooms.rooms,
+        //       //   total: rooms.count
+        //       // });
 
-              user.balance -= bet_amount;
-              newTransaction.amount -= bet_amount;
+        //     } catch (err) {
+        //       console.error('Error saving room:', err);
 
-              try {
-                await saveDocumentWithRetry(user);
-                await saveDocumentWithRetry(room);
-                await saveDocumentWithRetry(newTransaction);
-              } catch (error) {
-                console.error("Error saving:", error);
-              }
-              // const rooms = await getRoomList(7, 'All');
-              // req.io.sockets.emit('UPDATED_ROOM_LIST', {
-              //   pageSize: rooms.pageSize,
-              //   roomList: rooms.rooms,
-              //   total: rooms.count
-              // });
+        //     }
 
-            } catch (err) {
-              console.error('Error saving room:', err);
-
-            }
-
-          }
-        }
+        //   }
+        // }
 
       }
     }

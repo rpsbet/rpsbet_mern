@@ -195,7 +195,6 @@ export const acGetCustomerInfo = _id => async dispatch => {
 // };
 
 export const fetchEquityDistribution = () => async (dispatch) => {
-  console.log("Fetching equity distribution...");
   dispatch({ type: LOADING_EQUITY_CHART, payload: true });
 
   try {
@@ -208,7 +207,6 @@ export const fetchEquityDistribution = () => async (dispatch) => {
           equityChart: data.equityDistribution // Ensure the payload has equityChart property
         }
       });
-      console.log("Data received:", data);
     }
     dispatch({ type: LOADING_EQUITY_CHART, payload: false });
   } catch (error) {
@@ -241,7 +239,6 @@ export const getMarketingStat = () => async (dispatch) => {
 
   try {
     const { data } = await api.get('statistics/get-marketing-stat');
-    console.log("data", data)
     if (data.success) {
       return data;
     } else {

@@ -639,6 +639,8 @@ const addToQueue = async (req, bot = false) => {
 
                     roomInfo['user_bet'] =
                         parseFloat(roomInfo['user_bet']) + parseFloat(req.body.bet_amount);
+                    roomInfo['host_pr'] =
+                        parseFloat(roomInfo['host_pr']) + parseFloat(req.body.bet_amount);
                     if (
                         roomInfo['endgame_type'] &&
                         roomInfo['user_bet'] >= roomInfo['endgame_amount']
@@ -651,8 +653,10 @@ const addToQueue = async (req, bot = false) => {
                             creator: roomInfo['creator'],
                             joined_user: roomInfo['creator'],
                             game_type: roomInfo['game_type'],
+                            endgame_amount: roomInfo['endgame_amount'],
                             bet_amount: roomInfo['host_pr'],
                             user_bet: roomInfo['user_bet'],
+                            hosts: roomInfo.hosts,
                             is_anonymous: roomInfo['is_anonymous'],
                             game_result: 3
                         });
@@ -715,13 +719,7 @@ const addToQueue = async (req, bot = false) => {
                             rain: rain.value
                         });
                     }
-                    // update bankroll
-                    roomInfo['user_bet'] =
-                        parseFloat(roomInfo['user_bet']) -
-                        (betAmount +
-                            betAmount /
-                            (roomInfo['qs_game_type'] - 1)) *
-                        (commission / 100);
+                
 
                     message.message =
                         'Won ' +

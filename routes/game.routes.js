@@ -1183,7 +1183,6 @@ const getHistory = async (pageSize, my_id, game_type) => {
       .populate({ path: 'game_type', model: GameType, select: 'short_name game_type_name' })
       .populate({ path: 'creator', model: User, select: '_id avatar accessory totalWagered' })
       .populate({ path: 'joined_user', model: User, select: '_id avatar accessory totalWagered' });
-
     const countQuery = GameLog.countDocuments(search_condition);
 
     const [gameLogList, count] = await Promise.all([gameLogQuery, countQuery]);

@@ -72,12 +72,6 @@ class LeaderboardsModal extends Component {
     // const result = await this.props.getPlatformPercentages()
   }
 
-  componentDidUpdate(prevProps) {
-    if (prevProps.equityChart !== this.props.equityChart) {
-      console.log('Updated equityChart:', this.props.equityChart);
-    }
-  }
-
   handleOpenPlayerModal = creator_id => {
     this.setState({ showPlayerModal: true, selectedCreator: creator_id });
   };
@@ -228,7 +222,7 @@ class LeaderboardsModal extends Component {
                     equityChart && equityChart.length > 0 ? (
                       <Chart options={chartOptions} series={chartSeries} type="pie" width="500" />
                     ) : (
-                      <div>Calculating Equities</div>
+                      <div>Calculating Equities...</div>
                     )
                   )}
                   <div className="marketing-message">

@@ -638,6 +638,8 @@ const addToQueue = async (req, bot = false) => {
 
                     roomInfo['user_bet'] =
                         parseFloat(roomInfo['user_bet']) + parseFloat(req.body.bet_amount);
+                    roomInfo['host_pr'] =
+                        parseFloat(roomInfo['host_pr']) + parseFloat(req.body.bet_amount);
                     if (
                         roomInfo['endgame_type'] &&
                         roomInfo['user_bet'] >= roomInfo['endgame_amount']
@@ -652,10 +654,12 @@ const addToQueue = async (req, bot = false) => {
                             game_type: roomInfo['game_type'],
                             bet_amount: roomInfo['host_pr'],
                             user_bet: roomInfo['user_bet'],
+                            endgame_amount: roomInfo['endgame_amount'],
+                            hosts: roomInfo.hosts,
                             is_anonymous: roomInfo['is_anonymous'],
                             game_result: 3
                         });
-                        await newGameLogC.save();
+                        saveDocumentWithRetry(newGameLogC);
                         roomInfo['user_bet'] = parseFloat(
                             roomInfo['endgame_amount']
                         ); /* (roomInfo['user_bet'] -  roomInfo['bet_amount']) */
@@ -671,7 +675,7 @@ const addToQueue = async (req, bot = false) => {
                         roomInfo['game_type']['short_name'] +
                         '-' +
                         roomInfo['room_number'];
-                } else {
+                } else {    
                     game_result = 1;
                     newTransactionAmount +=
                         (betAmount +
@@ -689,7 +693,6 @@ const addToQueue = async (req, bot = false) => {
                             betAmount /
                             (roomInfo['qs_game_type'] - 1)) *
                         ((100 - commission) / 100) - betAmount;
-
                     newGameLog.commission =
                         (betAmount +
                             betAmount /
@@ -714,14 +717,7 @@ const addToQueue = async (req, bot = false) => {
                             rain: rain.value
                         });
                     }
-                    // update bankroll
-                    roomInfo['user_bet'] =
-                        parseFloat(roomInfo['user_bet']) -
-                        (betAmount +
-                            betAmount /
-                            (roomInfo['qs_game_type'] - 1)) *
-                        (commission / 100);
-
+                    
                     message.message =
                         'Won ' +
                         convertToCurrency(

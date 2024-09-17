@@ -16,6 +16,7 @@ import { getQsLottieAnimation } from '../../util/helper';
 import { updateRoomBot, kickBots, endGame } from '../../redux/Logic/logic.actions';
 import { setSpectateMode } from '../../redux/Auth/user.actions';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import WarningIcon from '@material-ui/icons/Warning';
 import { faRobot, faMoneyBillWave, faBrain, faBan } from '@fortawesome/free-solid-svg-icons';
 import {
   Button,
@@ -791,6 +792,9 @@ class QuickShoot extends Component {
     } else if (qs_game_type === 5) {
       arrayName = 'qs_array_5';
     }
+
+    const isLowProfit = (host_pr - roomInfo.total_stakes) > 0;
+
     const isLowBankroll = bankroll <= 1;
     return (
       <div className="game-page">
@@ -886,25 +890,41 @@ class QuickShoot extends Component {
                       <div className="value">{this.props.cp}% </div>
                     </Tooltip>
                   </div>
-                  {roomInfo.endgame_amount > 0 && (
+                  {this.props.endgame_type && (
                     <div className="data-item">
                       <div>
                         <div className="label created">Auto-Payout</div>
                       </div>
-                      <div className="payout-bar">
-                        <div className="value" style={barStyle}></div>
-                      </div>
+                      <Tooltip title="Automatic dividends paid out to Hosts & CoHosts upon meeting the set payout threshold">
+                        <div style={{ cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center" }}>
+
+                          <div className="payout-bar">
+                            <div className="value" style={barStyle}></div>
+                          </div>
+                          <InfoIcon style={{ fontSize: 16, marginLeft: 4 }} />
+                        </div>
+
+                      </Tooltip>
                     </div>
                   )}
-                  <div className="data-item">
+                   <div className="data-item">
                     <div>
                       <div className="label net-profit">Room Profit</div>
                     </div>
                     <div className="value bankroll">
 
                       <Tooltip title="Current bankroll + Payouts - Initial bankroll">
-                        <div className="value" style={{ color: (roomInfo.pr - roomInfo.total_stakes) > 0 ? 'rgb(87, 202, 34)' : (roomInfo.pr - roomInfo.total_stakes) < 0 ? '#ff0000' : 'inherit' }}>
-                          {convertToCurrency(roomInfo.pr - roomInfo.total_stakes)}
+                        <div className="value" style={{ cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center" }}>
+                          <span className={`value ${!isLowProfit ? 'red-text' : ''}`} >
+                            {convertToCurrency(host_pr - roomInfo.total_stakes)}
+                          </span>
+                          {isLowProfit ? (
+                            <InfoIcon style={{ color:"#00ff3a", fontSize: 16, marginLeft: 4 }} />
+                          ) : (
+                            <WarningIcon style={{ color: "red", fontSize: 16, marginLeft: 4 }} />
+                          )
+                          }
+
                         </div>
                       </Tooltip>
 

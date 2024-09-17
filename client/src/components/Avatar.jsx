@@ -234,7 +234,7 @@ class Avatar extends Component {
               color: isDarkMode ? '#2d2d2d' : '#f9f9f9',
               borderRadius: '5px',
               fontSize: '0.55em',
-              boxShadow: `0 0px 2px 0px ${rankColor || 'transparent'}, 0 0 1px ${shadedColor || 'transparent'}`,
+              // boxShadow: `0 0px 2px 0px ${rankColor || 'transparent'}, 0 0 1px ${shadedColor || 'transparent'}`,
               fontWeight: 'bold',
               display: 'flex',
               justifyContent: 'center',
