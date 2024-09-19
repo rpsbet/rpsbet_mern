@@ -1095,25 +1095,48 @@ router.delete('/comments/:comment_id', async (req, res) => {
     });
   }
 });
+const ignoredUsernames = [
+  'WHALE WATCHERS',
+  'OFFICIALRPSGAME',
+  'pimpedpistols',
+  'KEKW',
+  '69',
+  'jadeprice1997',
+  'smellyfingers',
+  'NO BROKIES',
+  'lennybeadle',
+  'SUPPORT',
+  'rrr',
+  'twat',
+  'SYSTEM',
+  'GIGACHAD',
+  'SHIBA',
+  '🔥 THE DON 🔥 (BOT #1)',
+  '🪨 ROCKY 🪨 (BOT #2)',
+  '✂️ CAESAR ✂️ (BOT #4)',
+  '📃 PAPÎER 📃 (BOT #3)'
+];
 
 router.get('/topWins', async (req, res) => {
   try {
-    // Fetch the most recent 250 game logs sorted by created_at in descending order
     const recentGameLogs = await GameLog.find({})
-      .sort({ created_at: -1 })  // Sort by created_at, most recent first
-      .limit(250)  // Limit to the most recent 250 entries
+      .sort({ created_at: -1 })
+      .limit(250)
       .populate({
         path: 'joined_user',
         model: User,
-        select: '_id avatar accessory totalWagered'
+        select: '_id avatar username accessory totalWagered'
       });
 
-    // Sort the recentGameLogs by winnings in descending order and select the top 12
-    const topGameLogs = recentGameLogs
-      .sort((a, b) => b.winnings - a.winnings)  // Sort by winnings in descending order
-      .slice(0, 12);  // Select the top 12 game logs
+    const filteredLogs = recentGameLogs.filter(log => {
+      const username = log.joined_user?.username;
+      return !ignoredUsernames.includes(username);
+    });
 
-    // Return the result in the specified format
+    const topGameLogs = filteredLogs
+      .sort((a, b) => b.winnings - a.winnings)
+      .slice(0, 12);
+
     res.json({
       success: true,
       pageSize: 12,
@@ -1126,19 +1149,18 @@ router.get('/topWins', async (req, res) => {
 });
 router.get('/topWithdrawals', async (req, res) => {
   try {
-    // Fetch all withdrawals
     const topWds = await Receipt.find({ payment_type: "Withdrawal" })
-      .limit(250) // Get more records first
+      .limit(250)
       .populate({
-        path: 'user_id', // Use the field name 'user_id' to populate User
+        path: 'user_id',
         model: User,
-        select: '_id avatar accessory totalWagered username' // Include 'username' in the select to filter by username
+        select: '_id avatar accessory totalWagered username'
       });
 
     const filteredWithdrawals = topWds
       .filter(withdrawal => 
-        withdrawal.user_id && // Ensure the user is populated
-        !['OFFICIALRPSGAME', 'pimpedpistols', '69'].includes(withdrawal.user_id.username) // Exclude certain usernames
+        withdrawal.user_id && 
+        !['OFFICIALRPSGAME', 'pimpedpistols', '69'].includes(withdrawal.user_id.username)
       );
 
     const sortedWithdrawals = filteredWithdrawals
@@ -2179,6 +2201,7 @@ router.post('/end_game', auth, async (req, res) => {
     }
 
     roomInfo.status = 'finished';
+    await saveDocumentWithRetry(roomInfo);
 
     const notifications = [];
     const transactions = [];
@@ -2221,8 +2244,8 @@ router.post('/end_game', auth, async (req, res) => {
         updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
         is_read: false
       };
-
       socket.sendNotification(host, notificationData);
+
     });
 
 
@@ -2277,7 +2300,6 @@ router.post('/end_game', auth, async (req, res) => {
 
     try {
       await saveDocumentWithRetry(newGameLog);
-      await saveDocumentWithRetry(roomInfo);
       await qbotHost.save();
 
     } catch (error) {
@@ -2540,6 +2562,60 @@ router.get('/my_chat', auth, async (req, res) => {
     res.json({
       success: false,
       message: err
+    });
+  }
+});
+
+router.patch('/qbotStatus', auth, async (req, res) => {
+  try {
+    const { userId, isActive } = req.body;
+    if (!userId || typeof isActive !== 'boolean') {
+      return res.status(400).json({
+        success: false,
+        message: 'User ID and isActive status are required'
+      });
+    }
+
+    // Find QBot record by userId and update the active status
+    const qbot = await QBot.findOneAndUpdate(
+      { user: userId }, // Find QBot entry by user
+      { active: isActive }, // Update the active field
+      { new: true, upsert: true } // Return updated document or create a new one if not found
+    );
+
+    res.json({
+      success: true,
+      isActive: qbot.active // Return the updated active status
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      success: false,
+      message: err.message
+    });
+  }
+});
+
+router.post('/qbotStatus', auth, async (req, res) => {
+  try {
+    const { userId } = req.body;
+      if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: 'User ID is required'
+      });
+    }
+    
+    const isActive = await QBot.findOne({ user: userId, active: true });
+    res.json({
+      success: true,
+      isActive: !!isActive // Return true if QBot is found, false otherwise
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      success: false,
+      message: err.message
     });
   }
 });

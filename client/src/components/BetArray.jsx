@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { connect } from 'react-redux';
-import { getRpsBetItems, getQsBetItems, updateRpsBetItems, updateQsBetItems } from '../redux/Logic/logic.actions';
+import { getRpsBetItems, getQsBetItems, updateRpsBetItems, updateQsBetItems, getQbot, updateQbot } from '../redux/Logic/logic.actions';
 import { setFocused } from '../redux/Auth/user.actions';
 import { useDispatch } from 'react-redux';
 import { Info } from '@material-ui/icons';
@@ -25,6 +25,7 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faToggleOn, faBrain, faChartLine, faInfoCircle, faCrown, faBan, faClock, faRobot, faCoins, faToggleOff, faBalanceScale, faLink, faUnlink } from '@fortawesome/free-solid-svg-icons';
 import { convertToCurrency } from '../util/conversion';
+import { getRank } from '../util/getRank.js';
 import ApexChart from "react-apexcharts";
 import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
 import TableChartOutlinedIcon from '@material-ui/icons/TableChartOutlined';
@@ -124,44 +125,99 @@ const SideTabs = ({ selectedTab, handleTabChange }) => (
 );
 
 
-const PlaceholderComponent = ({
-  selectedTab,
-  handleTabChange,
-  ownRoom
-}) => {
+const PlaceholderComponent = ({ selectedTab, handleTabChange, getQbot, ownRoom, user_id, totalWagered, game_type }) => {
+  const [betting, setBetting] = useState(false);
+  const [rank, setRank] = useState(null);
+  const [isActive, setIsActive] = useState(false);
+  const [timerValue, setTimerValue] = useState(2000);
+  
+
+  // useEffect(() => {
+  //   const fetchRank = async () => {
+  //     const userRank = await getRank(totalWagered);
+  //     setRank(userRank);
+  //   };
+  //   fetchRank();
+  // }, [totalWagered]);
+
+  // useEffect(() => {
+  //   const fetchQbotStatus = async () => {
+  //     try {
+  //       const qbotStatus = await getQbot(user_id);
+
+  //       setIsActive(qbotStatus.isActive);
+  //       setBetting(qbotStatus.isActive);
+  //     } catch (err) {
+  //       console.error('Error fetching Q-bot status', err);
+  //     }
+  //   };
+  //   fetchQbotStatus();
+  // }, [user_id]);
+
+  const handleSwitchChange = async (event) => {
+    const newBettingStatus = event.target.checked;
+    setBetting(newBettingStatus);
+    try {
+      await updateQbot(user_id, newBettingStatus);
+      setIsActive(newBettingStatus);
+    } catch (err) {
+      console.error('Error updating Q-bot status', err);
+      setBetting(isActive); // Revert betting state in case of failure
+    }
+  };
+
   const getTextForTab = () => {
     if (ownRoom) {
       return "No AI available for your own room.";
     }
+
     return (
       <div>
-        <div style={{
-          display: 'flex', alignItems: 'center', marginBottom: '16px', borderRadius: '0.4em',
-          boxShadow: 'inset 0 0 6px #c0c0c0',
-          padding: '10px 20px'
-        }}>
-          <h6 style={{
-            margin: '0px 8px 0px 0px',
-            color: '#060607',
-          }}>
-              <FontAwesomeIcon icon={faRobot} style={{ color: '#060607' }} />&nbsp;
-              Q-BOT
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', borderRadius: '0.4em', boxShadow: 'inset 0 0 6px #c0c0c0', padding: '10px 20px' }}>
+          <h6 style={{ margin: '0px 8px 0px 0px', color: '#060607' }}>
+            <FontAwesomeIcon icon={faRobot} style={{ color: '#060607' }} />&nbsp;
+            Q-BOT <span style={{ background: "linear-gradient(45deg, #fc00ff, #ff0000)", padding: "0px 10px", color: "#fff", borderRadius: "0.3em" }}>BETA</span>
           </h6>
-          <Tooltip title="Autonomously plays (creates and joins games for you) based on your wins and behaviour." arrow>
+          <Tooltip title="Utilize leveraging with Q-Bot which plays autonomously for you (manages games for you, including game creation, changing strategies and joining) based on your wins and behaviour." arrow>
             <IconButton size="small">
               <FontAwesomeIcon icon={faInfoCircle} style={{ color: '#060607' }} />
             </IconButton>
           </Tooltip>
         </div>
 
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<FontAwesomeIcon icon={faCrown} />}
-          style={{ background: 'linear-gradient(340deg, #ffb000, #ff5100c7)', color: '#fff', textTransform: 'none', fontSize: '16px' }}
-        >
-          UNLOCK AT LEVEL 20
-        </Button>
+        {rank >= 20 ? (
+          <div style={{ display: "inline-flex", flexDirection: "row", alignItems: "center", justifyContent: "center", width: "50%", padding: "10px" }}>
+            <Tooltip title="TOGGLE AI PLAY BETTING">
+              <Switch
+                id="aiplay-switch"
+                checked={betting}
+                onChange={handleSwitchChange}
+              />
+            </Tooltip>
+
+            {betting ? (
+              <div id="stop">
+                <Lottie options={{ /* Lottie animation options */ }} width={32} />
+              </div>
+            ) : (
+              <div>{timerValue !== 2000 ? <span>{(timerValue / 2000).toFixed(2)}s</span> : null}</div>
+            )}
+
+            <div style={{ display: 'flex', alignItems: 'center', width: "50%", boxShadow: "inset 0px 0px 6px 0px #b4b4b4a8", borderRadius: "9px", justifyContent: "center", padding: "5px 10px", overflow: "hidden" }}>
+              <FontAwesomeIcon icon={betting ? faToggleOn : faToggleOff} style={{ marginRight: '5px' }} />
+              {betting ? 'AIP ON' : 'AIP OFF'}
+            </div>
+          </div>
+        ) : (
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<FontAwesomeIcon icon={faCrown} />}
+            style={{ background: 'linear-gradient(340deg, #ffb000, #ff5100c7)', color: '#fff', textTransform: 'none', fontSize: '16px' }}
+          >
+            UNLOCK AT LEVEL 20
+          </Button>
+        )}
       </div>
     );
   };
@@ -207,7 +263,9 @@ function BetArray({
   room_id,
   user,
   strategies,
-  game_type
+  game_type,
+  getQbot,
+  totalWagered,
 }) {
   const dispatch = useDispatch();
 
@@ -599,11 +657,14 @@ function BetArray({
         handleTabChange={handleTabChange}
         selectedTab={selectedTab}
         ownRoom={false}
+        user_id={user_id}
+        totalWagered={totalWagered}
         settingsRef={settingsRef}
+        getQbot={getQbot}
         settings_panel_opened={settings_panel_opened}
       />
     );
-  } else if (creator_id === user_id) {
+  } else if (creator_id === user_id && typeof room_id !== 'undefined') {
     return (
       <PlaceholderComponent
         handleSettingsIconClick={handleSettingsIconClick}
@@ -611,6 +672,9 @@ function BetArray({
         selectedTab={selectedTab}
         ownRoom={true}
         settingsRef={settingsRef}
+        totalWagered={totalWagered}
+        getQbot={getQbot}
+        user_id={user_id}
         settings_panel_opened={settings_panel_opened}
       />
     );
@@ -1091,6 +1155,8 @@ const mapStateToProps = (state) => ({
   rpsbetitems: state.logic.rpsbetitems,
   qsbetitems: state.logic.qsbetitems,
   user_balance: state.auth.user.balance,
+  user_id: state.auth.user._id,
+  totalWagered: state.auth.user.totalWagered,
 });
 
 const mapDispatchToProps = {
@@ -1098,6 +1164,7 @@ const mapDispatchToProps = {
   updateRpsBetItems,
   getQsBetItems,
   updateQsBetItems,
+  getQbot,
   setFocused,
 };
 

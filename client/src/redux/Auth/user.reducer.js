@@ -123,10 +123,10 @@ export default function (state = initialState, action) {
         ...state,
         isNotificationsAllowed: payload
       };
-    case 'SET_FOCUSED': // Action type dispatched when chat is enabled
+    case SET_FOCUSED:
       return {
         ...state,
-        isFocused: payload, // Set isChatEnabled to the payload value
+        isFocused: payload,
       };
     case TOGGLE_LOW_GRAPHICS:
       localStorage.setItem('isLowGraphics', payload);
@@ -135,8 +135,6 @@ export default function (state = initialState, action) {
         isLowGraphics: payload
       };
     case SHOW_COOKIES:
-      console.log("Reducer received SHOW_COOKIES with payload:", payload); // Log the payload
-
       localStorage.setItem('showCookieConsent', payload);
       return {
         ...state,

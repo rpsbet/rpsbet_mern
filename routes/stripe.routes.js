@@ -425,7 +425,7 @@ router.post('/create_payout', auth, async (req, res) => {
         bet_amount: amount,
         selected_rps: '',
         commission: 0,
-        game_result: 0,
+        game_result: 777,
         winnings: 0,
         endgame_amount: 0,
         host_pr: 0,

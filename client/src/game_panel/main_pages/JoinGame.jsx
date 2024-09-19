@@ -30,7 +30,6 @@ import {
   setCurRoomInfo,
   loadRoomInfo,
   fetchAccessory,
-  // getMyHistory,
   getHistory,
   getGameTypeList,
   updateUserStrategy,
@@ -41,7 +40,7 @@ import {
   attachPlayerToRoom,
   detachPlayerFromRoom,
   checkPlayerAttachment,
-  getAttachedRooms
+  getAttachedRooms,
 } from '../../redux/Logic/logic.actions';
 import { predictNext, reinforcementAI, innovate, martingaleStrategy, patternBasedAI, counterSwitchAI, generatePattern, counterRandomness, NPC } from '../../util/predictNext';
 import { predictNextQs, reinforcementAI_qs, innovate_qs, martingaleStrategy_qs, patternBasedAI_qs, counterSwitchAI_qs, generatePattern_qs, counterRandomness_qs, NPC_qs, getCopyCatItem_qs, getRandomItem_qs } from '../../util/predictNextQs';
@@ -167,15 +166,16 @@ class JoinGame extends Component {
     if (this.props.attached) {
       this.setState({ betting: true });
     }
+
     window.addEventListener('unload', this.handleUnload);
   }
 
   componentDidUpdate(prevProps) {
-    if (this.props.user !== prevProps.user) {
-      this.setState({ run: !this.props.user.completedTutorials.includes(2) })
+    // Check if the user has changed and if qBotStatus has not already been fetched
+    if (this.props.user !== prevProps.user && !this.state.qBotFetched) {
+      this.setState({ run: !this.props.user.completedTutorials.includes(2) });
     }
   }
-
   async initializeRoomData(id) {
     try {
       await Promise.all([
@@ -1154,7 +1154,7 @@ class JoinGame extends Component {
       selected_id,
       showAnimation,
       loading,
-      result
+      result,
     } = this.state;
     const {
       open,

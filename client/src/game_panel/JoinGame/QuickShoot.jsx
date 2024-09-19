@@ -13,7 +13,7 @@ import ViewIcon from '@material-ui/icons/Visibility';
 import SwordsIcon from '@material-ui/icons/VisibilityOff';
 import InfoIcon from '@material-ui/icons/Info';
 import { getQsLottieAnimation } from '../../util/helper';
-import { updateRoomBot, kickBots, endGame } from '../../redux/Logic/logic.actions';
+import { updateRoomBot, kickBots, endGame, getQbot } from '../../redux/Logic/logic.actions';
 import { setSpectateMode } from '../../redux/Auth/user.actions';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import WarningIcon from '@material-ui/icons/Warning';
@@ -82,6 +82,7 @@ class QuickShoot extends Component {
       startedPlaying: false,
       prev_qs: [],
       bet_amount: 1,
+      isQbot: false,
       players: [],
       botsCount: 0,
       potential_return: 1.25,
@@ -105,7 +106,12 @@ class QuickShoot extends Component {
     this.setupSocket();
 
     const botsCount = await this.props.getRoomBotCount(this.props.roomInfo._id);
-    this.setState({ botsCount: botsCount });
+    const qBotStatus = await this.props.getQbot(this.props.roomInfo.creator_id);
+    console.log("qBotStatus", qBotStatus);
+    this.setState({
+      botsCount: botsCount,
+      isQbot: qBotStatus,
+    });
   }
 
   setupSocket() {
@@ -728,6 +734,7 @@ class QuickShoot extends Component {
       host_pr,
       qs,
       players,
+      isQbot,
       prev_qs
     } = this.state;
     const {
@@ -965,6 +972,9 @@ class QuickShoot extends Component {
                           darkMode={isDarkMode}
                         />
                       </a>
+                      {isQbot && (<span  style={{ fontSize: "xx-small", position: "absolute", top: "65px", border: "1px solid rgb(255, 208, 0)", background:"linear-gradient(45deg, #7a5958, #a27955)", borderRadius: "4px", color: "rgb(255, 208, 0)", padding: "0px 5px", lineHeight: "20px", marginLeft:"7.5px" }} >
+                       Q-BOT
+                      </span>)}
                     </div>
                   </div>
                   <div className="data-item">
@@ -1287,6 +1297,7 @@ const mapDispatchToProps = {
   getRoomBotCount,
   getQsBetItems,
   updateRoomBot,
+  getQbot,
   kickBots,
   setSpectateMode,
   endGame,

@@ -24,6 +24,7 @@ import WarningIcon from '@material-ui/icons/Warning';
 import SwordsIcon from '@material-ui/icons/VisibilityOff';
 import {
   getRpsBetItems,
+  getQbot,
   getRoomBotCount,
 } from '../../redux/Logic/logic.actions';
 import {
@@ -166,6 +167,7 @@ class RPS extends Component {
       intervalDuration: 500,
       roomsCount: 0,
       startedPlaying: false,
+      isQbot: false,
       advanced_status: '',
       status: this.props.roomInfo.status,
       isMax: false,
@@ -219,8 +221,14 @@ class RPS extends Component {
     this.setupSocket();
 
     const botsCount = await this.props.getRoomBotCount(this.props.roomInfo._id);
-    this.setState({ botsCount: botsCount });
+    const qBotStatus = await this.props.getQbot(this.props.roomInfo.creator_id);
+    this.setState({
+      botsCount: botsCount,
+      isQbot: qBotStatus,
+    });
   }
+
+
 
   setupSocket() {
     document.addEventListener('keydown', this.handleKeyPress);
@@ -765,7 +773,8 @@ class RPS extends Component {
       prev_rps,
       host_pr,
       status,
-      intervalDuration
+      intervalDuration,
+      isQbot
     } = this.state;
     const {
       bgColorChanged,
@@ -901,7 +910,7 @@ class RPS extends Component {
                             {convertToCurrency(host_pr - roomInfo.total_stakes)}
                           </span>
                           {isLowProfit ? (
-                            <InfoIcon style={{ color:"#00ff3a", fontSize: 16, marginLeft: 4 }} />
+                            <InfoIcon style={{ color: "#00ff3a", fontSize: 16, marginLeft: 4 }} />
                           ) : (
                             <WarningIcon style={{ color: "red", fontSize: 16, marginLeft: 4 }} />
                           )
@@ -989,6 +998,9 @@ class RPS extends Component {
                           darkMode={isDarkMode}
                         />
                       </a>
+                      {isQbot && (<span  style={{ fontSize: "xx-small", position: "absolute", top: "65px", border: "1px solid rgb(255, 208, 0)", background:"linear-gradient(45deg, #7a5958, #a27955)", borderRadius: "4px", color: "rgb(255, 208, 0)", padding: "0px 5px", lineHeight: "20px", marginLeft:"7.5px" }} >
+                       Q-BOT
+                      </span>)}
                     </div>
                   </div>
                   <div className="data-item">
@@ -1405,6 +1417,7 @@ const mapDispatchToProps = {
   updateRoomBot,
   kickBots,
   setSpectateMode,
+  getQbot,
   endGame,
   getRpsBetItems,
   getRoomBotCount

@@ -809,7 +809,7 @@ export const editPayout = (amount, rowId) => async dispatch => {
     if (result.data.success) {
       dispatch({ type: MSG_SUCCESS, payload: "UPDATED PAYOUT SETTINGS" });
       return result.data;
-    } 
+    }
   } catch (e) {
     dispatch({ type: MSG_ERROR, payload: 'UNABLE TO EDIT PAYOUT SETTINGS' });
   }
@@ -820,7 +820,7 @@ export const topUp = (amount, rowId) => async dispatch => {
     if (result.data.success) {
       dispatch({ type: MSG_SUCCESS, payload: "TOP UP SUCCESSFUL" });
       return result.data;
-    } 
+    }
   } catch (e) {
     dispatch({ type: MSG_ERROR, payload: 'UNABLE TO TOP UP' });
   }
@@ -832,7 +832,7 @@ export const coHost = (amount, rowId) => async dispatch => {
     if (result.data.success) {
       dispatch({ type: MSG_SUCCESS, payload: "YOU ARE NOW A CO-HOST!" });
       return result.data;
-    } 
+    }
   } catch (e) {
     dispatch({ type: MSG_ERROR, payload: 'UNABLE TO CO-HOST' });
   }
@@ -1143,6 +1143,32 @@ export const getMyHistory = search_condition => async dispatch => {
     }
   } catch (err) {
     console.log(err);
+  }
+};
+
+export const getQbot = (userId) => async dispatch => {
+  try {
+    const res = await axios.post('/game/qbotStatus', { userId });
+    console.log(res.data.isActive)
+    if (res.data.success) {
+      return res.data.isActive;
+    }
+  } catch (err) {
+    console.log(err);
+    return false;
+  }
+};
+
+export const updateQbot = (userId, isActive) => async dispatch => {
+  try {
+    const res = await axios.patch('/game/qbotStatus', { userId, isActive });
+
+    if (res.data.success) {
+      return res.data.isActive; // Return updated isActive value
+    }
+  } catch (err) {
+    console.error(err);
+    return false;
   }
 };
 

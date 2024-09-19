@@ -2,7 +2,7 @@ const avatarUtils = require('./getRank');
 const convertToCurrency = require('./conversion');
 
 const convertGameLogToHistoryStyle = async gameLogList => {
-  
+
   let result = [];
   gameLogList.forEach(gameLog => {
     if (gameLog.game_result === 3 && gameLog.hosts && gameLog.hosts.length === 0) {
@@ -14,8 +14,8 @@ const convertGameLogToHistoryStyle = async gameLogList => {
       room_name = `<a style='color: #b9bbbe;' href="/join/${gameLog['room']['_id']}">${gameLog['game_type']['short_name']}-${gameLog['room']['room_number']}</a>`;
     } else {
       room_name = gameLog['room'] ?
-      gameLog['game_type']['short_name'] + '-' + gameLog['room']['room_number'] :
-      'Withdrawal';
+        gameLog['game_type']['short_name'] + '-' + gameLog['room']['room_number'] :
+        'Withdrawal';
     }
     try {
       let temp = {
@@ -26,11 +26,11 @@ const convertGameLogToHistoryStyle = async gameLogList => {
         joined_user: gameLog['joined_user'] ? gameLog['joined_user']['_id'] : null,
         created_at: gameLog['created_at'],
         ai_mode: gameLog.ai_mode ? gameLog.ai_mode : '',
-        hosts: gameLog.hosts ?  gameLog.hosts : '',
+        hosts: gameLog.hosts ? gameLog.hosts : '',
         qbot: gameLog.qbot ? gameLog.qbot : '',
         status: gameLog['room'] ? gameLog['room']['status'] : 'completed'
       };
-      if (gameLog['room'] && gameLog.game_result !== 3000 && gameLog.game_result !== 333 && gameLog.game_result !== 666) {
+      if (gameLog.game_result !== 3000 && gameLog.game_result !== 333 && gameLog.game_result !== 666 && gameLog.game_result !== 777) {
 
         const joined_user_avatar = `<img class='avatar' data-userid="${gameLog['joined_user']['_id']}" src='${gameLog['joined_user']['avatar']}'  alt='' onerror='this.src="/img/profile-thumbnail.svg"' style="border: ${avatarUtils.getBorderByRank(gameLog['joined_user']['totalWagered'])}" />`;
         const maxHostsToShow = 3;
@@ -76,7 +76,7 @@ const convertGameLogToHistoryStyle = async gameLogList => {
           }
         } else if (gameLog['game_type']['game_type_name'] === 'Quick Shoot') {
           if (gameLog.game_result === 1) {
-            temp.history = `${joined_user_link} won <span style='color: #ff0a28;'>${convertToCurrency(gameLog['winnings'] + gameLog['bet_amount'])} (${( gameLog['bet_amount'] / (gameLog['qs_game_type'] - 1) +
+            temp.history = `${joined_user_link} won <span style='color: #ff0a28;'>${convertToCurrency(gameLog['winnings'] + gameLog['bet_amount'])} (${(gameLog['bet_amount'] / (gameLog['qs_game_type'] - 1) +
               gameLog['bet_amount']).toFixed(2)}X)</span> (${convertToCurrency(gameLog['commission'])} RTB) in ${room_name}`;
           } else if (gameLog.game_result === 3) {
             temp.history = `${hostContainer} received a <span style='color: #ff0a28;'>${convertToCurrency(gameLog['user_bet'] - gameLog.endgame_amount)}</span> Auto-Payout in ${room_name}`;
@@ -104,11 +104,11 @@ const convertGameLogToHistoryStyle = async gameLogList => {
         const creator_link = `<a href="javascript:void(0)" class="user-link" accessory='${gameLog['creator']['accessory']}' rank='${gameLog['creator']['totalWagered']}' data-userid="${gameLog['creator']['_id']}">${creator_avatar}</a>`;
         temp.history = `${creator_link} Co-Hosted ${room_name} <span style='color: #28a745;'>${convertToCurrency(gameLog['bet_amount'])}</span>`;
 
-      } else {
+      } else if (gameLog.game_result === 777) {
         // Withdrawal log
         const creator_avatar = `<img class='avatar' data-userid="${gameLog['creator']['_id']}" src='${gameLog['creator']['avatar']}' alt='' onerror='this.src="/img/profile-thumbnail.svg"' style="border: ${avatarUtils.getBorderByRank(gameLog['creator']['totalWagered'])}" />`;
         const creator_link = `<a href="javascript:void(0)" class="user-link" accessory='${gameLog['creator']['accessory']}' rank='${gameLog['creator']['totalWagered']}' data-userid="${gameLog['creator']['_id']}">${creator_avatar}</a>`;
-        temp.history = `${creator_link} withdrew <span style='color: #28a745;'>${convertToCurrency(gameLog['bet_amount'])} ($${(gameLog['bet_amount'] *  0.0133)})</span>`;
+        temp.history = `${creator_link} withdrew <span style='color: #28a745;'>${convertToCurrency(gameLog['bet_amount'])} ($${(gameLog['bet_amount'] * 0.0133)})</span>`;
       }
       result.push(temp);
     } catch (e) {

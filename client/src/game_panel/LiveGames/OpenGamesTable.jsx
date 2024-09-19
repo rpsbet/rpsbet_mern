@@ -5,7 +5,8 @@ import {
   getRoomList,
   setCurRoomInfo,
   fetchMoreRooms,
-  getRecentlyClosed
+  getRecentlyClosed,
+  getQbot
 } from '../../redux/Logic/logic.actions';
 import { Box, Button, Typography, IconButton, ButtonGroup, TextField, Table, TableBody, TableCell, TableRow, Tooltip } from '@material-ui/core';
 import { Warning, Add, Remove, Visibility } from '@material-ui/icons';
@@ -77,6 +78,7 @@ class OpenGamesTable extends Component {
       selectedGameType: this.props.selectedGameType,
       mouseDown: false,
       roomList: [],
+      qBotStatuses: {},
       fetchedRoomIds: [],
       fetchedDataIds: [],
       showPopup: false,
@@ -206,6 +208,13 @@ class OpenGamesTable extends Component {
     await this.props.getRecentlyClosed();
     window.addEventListener('load', this.handleLoad);
     window.addEventListener('scroll', this.handleScroll);
+
+    const qBotStatuses = {};
+    for (const room of this.state.roomList) {
+      const isQbot = await this.props.getQbot(room.creator_id);
+      qBotStatuses[room.creator_id] = isQbot;
+    }
+    this.setState({ qBotStatuses });
   }
 
 
@@ -663,6 +672,25 @@ class OpenGamesTable extends Component {
                         {row.game_type.game_type_name}
                       </div> */}
                               <div className="cell-game-id">{'#' + row.index}</div>
+                              {this.state.qBotStatuses[row.creator_id] && (
+                                <span
+                                  style={{
+                                    fontSize: "xx-small",
+                                    position: "absolute",
+                                    top: "37px",
+                                    left: "110px",
+                                    border: "1px solid rgb(255, 208, 0)",
+                                    background: "linear-gradient(45deg, #7a5958, #a27955)",
+                                    borderRadius: "4px",
+                                    color: "rgb(255, 208, 0)",
+                                    padding: "0px 5px",
+                                    lineHeight: "20px",
+                                    marginLeft: "7.5px"
+                                  }}
+                                >
+                                  Q-BOT
+                                </span>
+                              )}
                             </div>
                           </div>
                           <div className="table-cell desktop-only cell-user-name">
@@ -997,6 +1025,25 @@ class OpenGamesTable extends Component {
                         {row.game_type.game_type_name}
                       </div>
                       <div className="cell">{'-' + row.room_number}</div>
+                      {this.state.qBotStatuses[row.creator_id] && (
+                        <span
+                          style={{
+                            fontSize: "xx-small",
+                            position: "absolute",
+                            top: "23px",
+                            left: "112px",
+                            border: "1px solid rgb(255, 208, 0)",
+                            background: "linear-gradient(45deg, #7a5958, #a27955)",
+                            borderRadius: "4px",
+                            color: "rgb(255, 208, 0)",
+                            padding: "0px 5px",
+                            lineHeight: "20px",
+                            marginLeft: "7.5px"
+                          }}
+                        >
+                          Q-BOT
+                        </span>
+                      )}
                     </a>
                     <div className="cell">
                       {row.status}&nbsp;{<FontAwesomeIcon icon={faHeartBroken} />}
@@ -1206,14 +1253,14 @@ class OpenGamesTable extends Component {
               <div className="popup title">
                 <h2 className='modal-title title' style={{ textAlign: 'center', marginBottom: "20px" }}>Co-Hosting Information</h2>
                 <div className="popup-content">
-                <div style={{ position: 'relative' }}>
-                  <img src={'../img/co-host.svg'} style={{ borderRadius: '20px', border: '1px solid aaa9', overflow: 'hidden', filter: invertFilter ? 'invert(1)' : 'none', }} />
-                  <Button
-                    onClick={this.toggleInvertFilter}
-                    style={{ position: 'absolute', bottom: '10px', right: '10px', borderRadius: "100px", padding: "0" }}
-                  >
-                    <FontAwesomeIcon icon={faAdjust} />
-                  </Button>
+                  <div style={{ position: 'relative' }}>
+                    <img src={'../img/co-host.svg'} style={{ borderRadius: '20px', border: '1px solid aaa9', overflow: 'hidden', filter: invertFilter ? 'invert(1)' : 'none', }} />
+                    <Button
+                      onClick={this.toggleInvertFilter}
+                      style={{ position: 'absolute', bottom: '10px', right: '10px', borderRadius: "100px", padding: "0" }}
+                    >
+                      <FontAwesomeIcon icon={faAdjust} />
+                    </Button>
                   </div>
                   <h3 style={{ fontSize: '24px', fontWeight: '600', marginBottom: '15px', textAlign: 'center', letterSpacing: '0.5px' }}>
                     Co-Hosting Overview
@@ -1290,6 +1337,7 @@ const mapDispatchToProps = {
   getRecentlyClosed,
   setBalance,
   fetchMoreRooms,
+  getQbot,
   addNewTransaction,
   coHost
 };
