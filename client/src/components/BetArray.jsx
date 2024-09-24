@@ -299,7 +299,7 @@ const PlaceholderComponent = ({ selectedTab, myGames, updateQbot, handleTabChang
                     {33 > 0 ? (
                       <>
                         <FontAwesomeIcon icon={faCoins} style={{ marginRight: '5px' }} />
-                        TRIED&nbsp;{convertToCurrency(33)}
+                        COMING SOON&nbsp;{convertToCurrency(33)}
                       </>
                     ) : (
                       <>
