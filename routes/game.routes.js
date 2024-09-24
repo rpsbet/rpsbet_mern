@@ -1993,7 +1993,6 @@ router.get('/my_games', auth, async (req, res) => {
     const excludeRoomStats = req.query.excludeRoomStats;
     let rooms;
     if (excludeRoomStats === "true") {
-
       rooms = await getMyRooms(
         req.user._id,
         pageSize,
@@ -2582,6 +2581,8 @@ router.patch('/qbotStatus', auth, async (req, res) => {
       { active: isActive }, // Update the active field
       { new: true, upsert: true } // Return updated document or create a new one if not found
     );
+
+    console.log(qbot)
 
     res.json({
       success: true,

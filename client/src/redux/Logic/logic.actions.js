@@ -1044,9 +1044,9 @@ export const getGameTypeList = () => async dispatch => {
   }
 };
 export const getMyGames = search_condition => async dispatch => {
+  console.log("search_condition", search_condition)
   try {
     dispatch({ type: START_LOADING });
-
 
     const resWithoutRoomStats = await axios.get('/game/my_games', {
       params: { ...search_condition, excludeRoomStats: true }
@@ -1149,7 +1149,6 @@ export const getMyHistory = search_condition => async dispatch => {
 export const getQbot = (userId) => async dispatch => {
   try {
     const res = await axios.post('/game/qbotStatus', { userId });
-    console.log(res.data.isActive)
     if (res.data.success) {
       return res.data.isActive;
     }

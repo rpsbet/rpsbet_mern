@@ -108,16 +108,16 @@ class MyLoansModal extends Component {
       const category = categories[i];
   
       // Log category details for better debugging
-      console.log(`Category ${i}:`, {
-        rankThreshold: category.rankThreshold,
-        accountAgeThresholdInDays: category.accountAgeThresholdInDays
-      });
+      // console.log(`Category ${i}:`, {
+      //   rankThreshold: category.rankThreshold,
+      //   accountAgeThresholdInDays: category.accountAgeThresholdInDays
+      // });
   
       // Check if the current rank and account age match or exceed the category thresholds
       if (currentRank >= category.rankThreshold && accountAgeInDays >= category.accountAgeThresholdInDays) {
         // Keep track of the best match (highest index that matches the criteria)
         bestCategoryIndex = i;
-        console.log(`Best match so far: index ${i}`);
+        // console.log(`Best match so far: index ${i}`);
       }
     }
   

@@ -185,7 +185,7 @@ class ProfileModal extends Component {
   };
 
   containsBadLanguage = (username) => {
-    const explicitWords = ['nigger', 'nigga', 'nigg3r', 'n1gger', 'coon', 'c00n', 'paki', 'chink', 'n i g g e r', 'BOT', 'B0T', 'bot', 'BoT'];
+    const explicitWords = ['admin', 'ADMIN', 'RPSGAME', 'rps.game', 'rpsdotgame', 'system', 'support', 'BOT', 'B0T', 'bot', 'BoT'];
     const lowercasedUsername = username.toLowerCase();
 
     return explicitWords.some((word) => lowercasedUsername.includes(word));
@@ -197,7 +197,7 @@ class ProfileModal extends Component {
       if (this.containsBadLanguage(newUsername)) {
         alertModal(
           this.props.isDarkMode,
-          `HMMMmmmmmmmm ---___---`
+          `Username contains reserved words.`
         );
         return;
       }
@@ -234,7 +234,7 @@ class ProfileModal extends Component {
       if (this.containsBadLanguage(link)) {
         alertModal(
           this.props.isDarkMode,
-          `HMMMmmmmmmmm ---___---`
+          `Bio contains reserved words.`
         );
         return;
       }

@@ -115,13 +115,6 @@ router.post('/', async (req, res) => {
     if (containsBadLanguage(username)) {
       return res.json({
         success: false,
-        error: 'SEND A PICTURE OF YOUR ID TO SUPPORT SO WE CAN VERIFY YOUR PASS FOR THESE WORDS'
-      });
-    }
-
-    if (containsBot(username)) {
-      return res.json({
-        success: false,
         error: 'USERNAME CONTAINS RESERVED WORDS'
       });
     }
@@ -288,14 +281,7 @@ verifyRecaptcha = async (token) => {
 
 
 function containsBadLanguage(username) {
-  const explicitWords = ['nigger', 'nigga', 'nigg3r', 'n1gger', 'coon', 'c00n', 'paki', 'chink', 'ni99er'];
-  const lowercasedUsername = username.toLowerCase();
-
-  return explicitWords.some((word) => lowercasedUsername.includes(word));
-};
-
-function containsBot(username) {
-  const explicitWords = ['BOT', 'B0T', 'bot', 'BoT', 'Admin', 'support'];
+  const explicitWords = ['admin', 'ADMIN', 'RPSGAME', 'rps.game', 'rpsdotgame', 'system', 'support', 'BOT', 'B0T', 'bot', 'BoT'];
   const lowercasedUsername = username.toLowerCase();
 
   return explicitWords.some((word) => lowercasedUsername.includes(word));
@@ -316,16 +302,10 @@ router.post('/username', auth, async (req, res) => {
     if (containsBadLanguage(newUsername)) {
       return res.json({
         success: false,
-        error: 'SEND A PICTURE OF YOUR ID TO SUPPORT SO WE CAN VERIFY YOUR PASS FOR THESE WORDS'
-      });
-    }
-
-    if (containsBot(newUsername)) {
-      return res.json({
-        success: false,
         error: 'USERNAME CONTAINS RESERVED WORDS'
       });
     }
+
 
     const existingUser = await User.findOne({ username: newUsername });
 

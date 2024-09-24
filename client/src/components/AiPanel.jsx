@@ -4,7 +4,6 @@ import BetArray from './BetArray';
 
 const AiPanel = ({ isDarkMode, creator_id, rank, attached, handleDetachAttachChange, is_betting, rpsbetitems, qsbetitems, predictedBetAmount, roomId, ai_mode, user_balance, user_id, updateUserStrategy, strategies, game_type, brain_game_type, spleesh_bet_unit, qs_game_type, betting, handleSwitchChange, getAttachedRooms }) => {
   let list;
-  
   switch (game_type) {
     case 'Quick Shoot':
       list = qsbetitems;
