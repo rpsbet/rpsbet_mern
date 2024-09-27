@@ -278,7 +278,7 @@ class WithdrawModal extends Component {
     this.setState({
       amount: amount,
       web2Amount: amount *  0.0123,
-      web3Amount: amount * 0.0133
+      web3Amount: amount * 0.000363
     }, () => {
       this.handleEstimateAmount();
     });
@@ -343,7 +343,7 @@ class WithdrawModal extends Component {
   createPayoutAndClose = async () => {
     const { amount, currencyTo, sendAddress, extraId } = this.state;
     try {
-      if (this.props.userInfo.dailyWithdrawals > 5000) {
+      if (this.props.userInfo.dailyWithdrawals > 5000000) {
         alertModal(
           this.props.isDarkMode,
           `EXCEEDED DAILY WITHDRAWAL LIMIT, TRY AGAIN TOMORROW! (WITHDRAWAL LIMITS DURING LAUNCH PHASE ONLY)`
@@ -357,10 +357,10 @@ class WithdrawModal extends Component {
         );
         return;
       }
-      if (this.state.amount >= 20000) {
+      if (this.state.amount >= 5000000) {
         alertModal(
           this.props.isDarkMode,
-          `MAXIMUM PER DAY IS 20000 RPS DURING LAUNCH PHASE`
+          `MAXIMUM PER DAY IS 5000000 RPS DURING LAUNCH PHASE`
         );
         return;
       }
@@ -396,7 +396,7 @@ class WithdrawModal extends Component {
 
   send = async () => {
     try {
-      if (this.props.userInfo.dailyWithdrawals > 20000) {
+      if (this.props.userInfo.dailyWithdrawals > 5000000) {
         alertModal(
           this.props.isDarkMode,
           `EXCEEDED DAILY WITHDRAWAL LIMIT, TRY AGAIN TOMORROW! (WITHDRAWAL LIMITS DURING LAUNCH PHASE ONLY)`
@@ -410,10 +410,10 @@ class WithdrawModal extends Component {
         );
         return;
       }
-      if (this.state.amount >= 20000) {
+      if (this.state.amount >= 5000000) {
         alertModal(
           this.props.isDarkMode,
-          `MAXIMUM PER DAY IS 20000 RPS DURING LAUNCH PHASE`
+          `MAXIMUM PER DAY IS 5000000 RPS DURING LAUNCH PHASE`
         );
         return;
       }

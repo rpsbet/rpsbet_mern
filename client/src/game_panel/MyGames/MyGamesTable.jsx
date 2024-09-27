@@ -70,7 +70,7 @@ class MyGamesTable extends Component {
       anchorEl: null,
       closing: false,
       sortAnchorEl: null,
-      run: !this.props.user.completedTutorials.includes(3),
+      run: !(this.props.user?.completedTutorials?.includes(3)),
       currentTutorial: 3,
       selectedSort: 'desc',
       creatingRoom: false,

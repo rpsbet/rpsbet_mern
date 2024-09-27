@@ -673,7 +673,7 @@ router.post('/getId', admin, async (req, res) => {
   }
 });
 
-const bonusNumbers = [125, 20, 10, 4, 25, 1, 500, 15, 50, 20];
+const bonusNumbers = [12.5, 2, 10, 4, 2.5, 1, 5, 15, 5, 20];
 
 // Route to add bonus
 router.post('/add-bonus', auth, async (req, res) => {

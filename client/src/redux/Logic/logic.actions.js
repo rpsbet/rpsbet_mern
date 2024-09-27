@@ -1044,7 +1044,6 @@ export const getGameTypeList = () => async dispatch => {
   }
 };
 export const getMyGames = search_condition => async dispatch => {
-  console.log("search_condition", search_condition)
   try {
     dispatch({ type: START_LOADING });
 

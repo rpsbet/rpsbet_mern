@@ -31,6 +31,7 @@ router.get('/', async (req, res) => {
     });
   }
 });
+
 router.get('/native-prices', async (req, res) => {
   try {
     const prices = await NativePrice.find({});

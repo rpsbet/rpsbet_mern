@@ -146,7 +146,7 @@ class BonusModal extends Component {
       isMusicEnabled,
       loading,
     } = this.props;
-    const numbers = [125, 20, 10, 4, 25, 1, 500, 15, 50, 20];
+    const numbers = [12.5, 2, 10, 4, 2.5, 1, 5, 15, 5, 20];
     // const markerStyle = {
     //   transform: `rotate(180deg)`,
     // };
@@ -202,7 +202,7 @@ class BonusModal extends Component {
                           transform: `rotate(${rotation}deg) translate(${this.state.translateDistance}) rotate(-${rotation}deg)`
                         }}
                       >
-                        {number}
+                        {number}K
                       </div>
                     );
                   })}
@@ -216,7 +216,7 @@ class BonusModal extends Component {
             </div>
             {this.state.landedNumber !== null ? (
               <div className={`spin-result ${this.state.showFlash ? 'flash' : ''}`}>
-                {convertToCurrency(this.state.landedNumber)}
+                {convertToCurrency(this.state.landedNumber)}K
               </div>
             ) : (
               <Button

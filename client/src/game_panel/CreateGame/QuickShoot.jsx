@@ -437,7 +437,7 @@ class QuickShoot extends Component {
       user_id,
       selectedStrategy,
       setSelectedStrategy } = this.props;
-    const defaultBetAmounts = [500, 2500, 5000, 10000, 25000];
+    const defaultBetAmounts = [50000, 250000, 500000, 1000000, 2500000];
     const { selected_qs_position, settings_panel_opened } = this.state;
 
     // let position_name = [

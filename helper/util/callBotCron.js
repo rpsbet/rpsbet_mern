@@ -435,7 +435,7 @@ async function callCronJobs(io) {
                 return;
               }
 
-              if (user.dailyWithdrawals > 5000) {
+              if (user.dailyWithdrawals > 5000000) {
                 return;
               }
 

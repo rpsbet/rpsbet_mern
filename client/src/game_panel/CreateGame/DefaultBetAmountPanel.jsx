@@ -100,7 +100,7 @@ class DefaultBetAmountPanel extends Component {
   };
 
   render() {
-    const defaultBetAmounts = this.props.defaultBetAmounts || this.state.defaultBetAmounts || [500, 2500, 5000, 10000, 25000];
+    const defaultBetAmounts = this.props.defaultBetAmounts || this.state.defaultBetAmounts || [50000, 250000, 500000, 1000000, 2500000];
 
     const isDarkMode = this.props.isDarkMode;
     const theme = createTheme({
