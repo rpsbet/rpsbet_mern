@@ -165,21 +165,20 @@ class WithdrawModal extends Component {
     const result = await this.props.getCustomerStatisticsData(this.state._id);
     await this.handleGetPaymentMethods();
 
-    await this.handleEstimateAmount();
-    this.setState({
-      ...result
-    });
+    // await this.handleEstimateAmount();
+    // this.setState({
+    //   ...result
+    // });
 
     const params = { addressTo: this.state.account };
     this.props.setGasfee(params);
   }
 
-  componentDidUpdate(prevState) {
-    if (prevState.paymentMethod !== this.state.paymentMethod) {
-      this.handleEstimateAmount();
-    }
-
-  }
+  // componentDidUpdate(prevState) {
+  //   if (prevState.paymentMethod !== this.state.paymentMethod) {
+  //     this.handleEstimateAmount();
+  //   }
+  // }
   handleSuggestionMouseEnter = suggestion => {
     this.setState({
       hoveredSuggestion: suggestion,
@@ -277,7 +276,7 @@ class WithdrawModal extends Component {
     const amount = Math.floor(e.target.value * 100) / 100;
     this.setState({
       amount: amount,
-      web2Amount: amount *  0.0123,
+      web2Amount: amount *  0.000273,
       web3Amount: amount * 0.000293
     }, () => {
       this.handleEstimateAmount();
