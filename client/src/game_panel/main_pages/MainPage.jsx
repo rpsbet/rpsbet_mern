@@ -208,10 +208,10 @@ class MainPage extends Component {
                     >
                       <Avatar
                         className="avatar"
-                        src={row.joined_user.avatar}
-                        accessory={row.joined_user.accessory}
-                        username={row.joined_user.username}
-                        rank={row.joined_user.totalWagered}
+                        src={row.joined_user?.avatar || 'default-avatar-url'}  // Provide a default if avatar is not available
+                        accessory={row.joined_user?.accessory || 'default-accessory'}  // Provide a default if accessory is not available
+                        username={row.joined_user?.username || 'Unknown'}  // Provide a default username
+                        rank={row.joined_user?.totalWagered || 0}  // Provide a default rank if not available
                         alt=""
                         darkMode={this.props.isDarkMode}
                       />
