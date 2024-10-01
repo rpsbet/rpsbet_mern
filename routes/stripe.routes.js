@@ -313,17 +313,17 @@ router.post('/create_payout', auth, async (req, res) => {
       });
     }
 
-    if (withdrawalLimit >= 500000) {
+    if (withdrawalLimit >= 5000000) {
       return res.json({
         success: false,
         message: 'EXCEEDED DAILY WITHDRAWAL LIMIT (DURING LAUNCH PHASE ONLY!)'
       });
     }
 
-    if (amount > 500000) {
+    if (amount > 5000000) {
       return res.json({
         success: false,
-        message: 'Maximum Withdrawal Amount is 500000 RPS per DAY during Launch'
+        message: 'Maximum Withdrawal Amount is 5000000 RPS per DAY during Launch'
       });
     }
 
