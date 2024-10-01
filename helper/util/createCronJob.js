@@ -25,8 +25,9 @@ async function checkConfirmations(io) {
   try {
     const currentBlock = await provider.getBlockNumber();
     const pendingTransactions = await Transaction.find({ status: 'pending' }); // web3
-    const processingTransactions = await Transaction.find({ status: 'processing' }); // web2
-
+    const processingTransactions = await Transaction.find({
+      status: { $in: ['processing', 'in_process'] } // Checks for both statuses
+    });
     let referralOwner = null;
     if (io) {
       socketio = io;
@@ -154,7 +155,7 @@ async function checkConfirmations(io) {
     // Process web2 transactions (deposits)
     // Process web2 transactions (deposits)
     for (const transaction of processingTransactions) {
-      const FIVE_SECONDS = 10 * 1000; // 5 seconds in milliseconds
+      const FIVE_SECONDS = 5 * 1000; // 5 seconds in milliseconds
       const now = new Date();
       const updatedAt = new Date(transaction.updated_at);
 
@@ -164,18 +165,29 @@ async function checkConfirmations(io) {
         continue; // Skip this transaction
       }
 
+      // Ensure the transaction is not already processed
+      if (transaction.status === 'completed') {
+        console.log(`Transaction ${transaction._id} is already completed. Skipping...`);
+        continue;
+      }
+
       let isDeposit = transaction.description === 'deposit';
       let isWithdraw = transaction.description === 'withdraw';
 
       const paymentId = transaction.hash;
       if (isDeposit && paymentId) {
         try {
+          // Mark the transaction as "in process" to avoid duplicates
+          transaction.status = 'in_process';
+          await saveDocumentWithRetry(transaction);
+
           const response = await axios.get(`https://api.nowpayments.io/v1/payment/${paymentId}`, {
             headers: {
               'x-api-key': API_KEY,
               'Content-Type': 'application/json',
             },
           });
+
           const paymentStatus = response.data.payment_status;
           if (paymentStatus === 'finished') {
             const user = await User.findById(transaction.user);
