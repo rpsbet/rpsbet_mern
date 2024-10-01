@@ -151,58 +151,61 @@ async function checkConfirmations(io) {
       }
     }
 
-    // Importing required libraries
-    const moment = require('moment');
+    const TIME_THRESHOLD = 3; // 10 seconds
 
-    // Define the threshold time in seconds for considering recent transactions
-    const TIME_THRESHOLD = 3; // 3 seconds
-
-    // Process web2 transactions (deposits)
     for (const transaction of processingTransactions) {
       let isDeposit = transaction.description === 'deposit';
       let isWithdraw = transaction.description === 'withdraw';
-
+    
       const paymentId = transaction.hash;
       if (isDeposit && paymentId) {
         try {
-          // Check for a similar recent transaction (same paymentId, processed within the last TIME_THRESHOLD seconds)
+          // Step 1: Check for a recent transaction
           const recentTransaction = await Transaction.findOne({
             paymentId: paymentId,
-            status: 'completed', // Modify if necessary to fit your transaction logic
+            status: 'completed',
             updated_at: { $gte: moment().subtract(TIME_THRESHOLD, 'seconds').toDate() }
           });
-
-          // If a recent similar transaction exists, skip processing it again
+    
+          // If a similar recent transaction exists, skip processing it again
           if (recentTransaction) {
-            console.log('Similar transaction processed recently, skipping...', paymentId);
+            console.log('Recent similar transaction found, skipping processing for payment ID:', paymentId);
             continue; // Skip to the next transaction
           }
-
-          // Process the transaction as usual
+    
+          // Step 2: Mark transaction as "processing" before making external API calls to avoid race conditions
+          if (transaction.status !== 'processing') {
+            transaction.status = 'processing';
+            await saveDocumentWithRetry(transaction); // Save transaction status as "processing"
+          } else {
+            console.log('Transaction already in progress, skipping...', paymentId);
+            continue; // Skip if the transaction is already marked as "processing"
+          }
+    
+          // Step 3: Process the transaction via the external API
           const response = await axios.get(`https://api.nowpayments.io/v1/payment/${paymentId}`, {
             headers: {
               'x-api-key': API_KEY,
               'Content-Type': 'application/json',
             },
           });
-
+    
           const paymentStatus = response.data.payment_status;
           if (paymentStatus === 'finished') {
             const user = await User.findById(transaction.user);
             const referralId = user.referralId;
-
+    
             if (user) {
+              // Step 4: Update the balance
               transaction.status = 'completed';
               user.balance += transaction.amount;
-
-              // You don't need to update processedAt, as updated_at will be automatically updated when you save the transaction
-
-              // Referral reward logic remains unchanged...
+    
+              // Referral logic unchanged
               let referralOwner = null;
               if (referralId) {
                 referralOwner = await User.findOne({ referralId });
               }
-
+    
               if (referralOwner) {
                 const index = referralOwner.rewards.findIndex(reward => reward.user.equals(user._id));
                 if (index !== -1) {
@@ -210,7 +213,7 @@ async function checkConfirmations(io) {
                 } else {
                   referralOwner.rewards.push({ user: user._id, amount: transaction.amount * 0.05 });
                 }
-
+    
                 referralOwner.balance += transaction.amount * 0.05;
                 const newTransaction = new Transaction({
                   user: referralOwner._id,
@@ -218,14 +221,14 @@ async function checkConfirmations(io) {
                   description: `Referral rewards from ${user.username}.`,
                   room: ''
                 });
-
+    
                 let notificationJ = new Notification({
                   from: user._id,
                   to: referralOwner._id,
                   room: '',
                   message: `Received ${convertToCurrency(transaction.amount)} in referral rewards.`
                 });
-
+    
                 const notificationDataJ = {
                   message: notificationJ.message,
                   username: user.username,
@@ -237,7 +240,7 @@ async function checkConfirmations(io) {
                   updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
                   is_read: false
                 };
-
+    
                 try {
                   await saveDocumentWithRetry(referralOwner);
                   await saveDocumentWithRetry(newTransaction);
@@ -247,36 +250,45 @@ async function checkConfirmations(io) {
                   console.error("Error saving referral related documents:", error);
                 }
               }
-
-              // Create a notification for the user
-              let notification = new Notification({
+    
+              // Step 5: Prevent duplicate notifications by locking this process
+              let notification = await Notification.findOne({
+                message: `Deposit successful, received ${convertToCurrency(transaction.amount)}`,
                 from: user._id,
-                to: user._id,
-                room: '',
-                message: `Deposit successful, received ${convertToCurrency(transaction.amount)}`
+                to: user._id
               });
-
-              const notificationData = {
-                message: notification.message,
-                username: user.username,
-                avatar: user.avatar,
-                accessory: user.accessory,
-                rank: user.totalWagered,
-                created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
-                created_at_str: moment(new Date()).format('LLL'),
-                updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
-                is_read: false
-              };
-
-              try {
-                await saveDocumentWithRetry(transaction); // updated_at will be automatically updated here
-                await saveDocumentWithRetry(user);
-                await saveDocumentWithRetry(notification);
-                socketController.sendNotification(user._id, notificationData);
-              } catch (error) {
-                console.error("Error saving notification:", error);
+    
+              // Only send notification if it doesn't already exist
+              if (!notification) {
+                notification = new Notification({
+                  from: user._id,
+                  to: user._id,
+                  room: '',
+                  message: `Deposit successful, received ${convertToCurrency(transaction.amount)}`
+                });
+    
+                const notificationData = {
+                  message: notification.message,
+                  username: user.username,
+                  avatar: user.avatar,
+                  accessory: user.accessory,
+                  rank: user.totalWagered,
+                  created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+                  created_at_str: moment(new Date()).format('LLL'),
+                  updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+                  is_read: false
+                };
+    
+                try {
+                  await saveDocumentWithRetry(transaction); // Save transaction as completed
+                  await saveDocumentWithRetry(user);
+                  await saveDocumentWithRetry(notification); // Save notification
+                  socketController.sendNotification(user._id, notificationData); // Send notification
+                } catch (error) {
+                  console.error("Error saving notification:", error);
+                }
               }
-
+    
               console.log('Deposit transaction processed successfully.', transaction.amount);
             }
           }
