@@ -156,7 +156,7 @@ class WithdrawModal extends Component {
       sendAddress: '',
       hoveredSuggestion: null,
       suggestions: [],
-      amount: Math.floor(props.balance * 100) / 100 || 0,
+      amount: 0,
       balance: 0,
     };
   }
@@ -175,7 +175,7 @@ class WithdrawModal extends Component {
   }
 
   // componentDidUpdate(prevState) {
-  //   if (prevState.paymentMethod !== this.state.paymentMethod) {
+  //   if (prevState.estimatedAmount !== this.state.estimatedAmount) {
   //     this.handleEstimateAmount();
   //   }
   // }
