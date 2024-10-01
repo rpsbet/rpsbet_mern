@@ -151,6 +151,12 @@ async function checkConfirmations(io) {
       }
     }
 
+    // Importing required libraries
+    const moment = require('moment');
+
+    // Define the threshold time in seconds for considering recent transactions
+    const TIME_THRESHOLD = 3; // 3 seconds
+
     // Process web2 transactions (deposits)
     for (const transaction of processingTransactions) {
       let isDeposit = transaction.description === 'deposit';
@@ -159,20 +165,39 @@ async function checkConfirmations(io) {
       const paymentId = transaction.hash;
       if (isDeposit && paymentId) {
         try {
+          // Check for a similar recent transaction (same paymentId, processed within the last TIME_THRESHOLD seconds)
+          const recentTransaction = await Transaction.findOne({
+            paymentId: paymentId,
+            status: 'completed', // Modify if necessary to fit your transaction logic
+            updated_at: { $gte: moment().subtract(TIME_THRESHOLD, 'seconds').toDate() }
+          });
+
+          // If a recent similar transaction exists, skip processing it again
+          if (recentTransaction) {
+            console.log('Similar transaction processed recently, skipping...', paymentId);
+            continue; // Skip to the next transaction
+          }
+
+          // Process the transaction as usual
           const response = await axios.get(`https://api.nowpayments.io/v1/payment/${paymentId}`, {
             headers: {
               'x-api-key': API_KEY,
               'Content-Type': 'application/json',
             },
           });
+
           const paymentStatus = response.data.payment_status;
           if (paymentStatus === 'finished') {
             const user = await User.findById(transaction.user);
             const referralId = user.referralId;
+
             if (user) {
               transaction.status = 'completed';
               user.balance += transaction.amount;
 
+              // You don't need to update processedAt, as updated_at will be automatically updated when you save the transaction
+
+              // Referral reward logic remains unchanged...
               let referralOwner = null;
               if (referralId) {
                 referralOwner = await User.findOne({ referralId });
@@ -223,6 +248,7 @@ async function checkConfirmations(io) {
                 }
               }
 
+              // Create a notification for the user
               let notification = new Notification({
                 from: user._id,
                 to: user._id,
@@ -243,7 +269,7 @@ async function checkConfirmations(io) {
               };
 
               try {
-                await saveDocumentWithRetry(transaction);
+                await saveDocumentWithRetry(transaction); // updated_at will be automatically updated here
                 await saveDocumentWithRetry(user);
                 await saveDocumentWithRetry(notification);
                 socketController.sendNotification(user._id, notificationData);
@@ -257,9 +283,7 @@ async function checkConfirmations(io) {
         } catch (error) {
           console.error("Error processing transaction:", error);
         }
-
       } else if (isWithdraw && paymentId) {
-
         const response = await axios.get(`https://api.nowpayments.io/v1/payout/${paymentId}`, {
           headers: {
             'x-api-key': API_KEY,
@@ -268,7 +292,6 @@ async function checkConfirmations(io) {
         });
         const paymentStatus = response.data.withdrawals[0].status;
         if (paymentStatus === 'FINISHED') {
-
           transaction.status = 'complete';
           try {
             await saveDocumentWithRetry(transaction);
