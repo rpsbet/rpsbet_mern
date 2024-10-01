@@ -278,7 +278,7 @@ class WithdrawModal extends Component {
     this.setState({
       amount: amount,
       web2Amount: amount *  0.0123,
-      web3Amount: amount * 0.000363
+      web3Amount: amount * 0.000293
     }, () => {
       this.handleEstimateAmount();
     });

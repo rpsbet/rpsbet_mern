@@ -226,7 +226,7 @@ class MainPage extends Component {
                       +{convertToCurrency(row.winnings)}  </span>
                     <br />
                     <span style={{ whiteSpace: "nowrap", fontSize: "xx-small" }}>
-                      {(row.winnings / row.bet_amount).toFixed(2)}x / ${(row.winnings * 0.000363).toFixed(2)}
+                      {(row.winnings / row.bet_amount).toFixed(2)}x / ${(row.winnings * 0.000293).toFixed(2)}
                     </span>
 
                   </div>
@@ -299,7 +299,7 @@ class MainPage extends Component {
                         const currentDate = new Date();
                         const daysOld = (currentDate - createdAt) / (1000 * 60 * 60 * 24); // Calculate days difference
 
-                        let conversionRate = 0.000363; // Default conversion rate
+                        let conversionRate = 0.000293; // Default conversion rate
 
                         if (daysOld > 60) {
                           conversionRate = 0.889; // If more than 60 days old
