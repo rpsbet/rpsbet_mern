@@ -108,7 +108,7 @@ const convertGameLogToHistoryStyle = async gameLogList => {
         // Withdrawal log
         const creator_avatar = `<img class='avatar' data-userid="${gameLog['creator']['_id']}" src='${gameLog['creator']['avatar']}' alt='' onerror='this.src="/img/profile-thumbnail.svg"' style="border: ${avatarUtils.getBorderByRank(gameLog['creator']['totalWagered'])}" />`;
         const creator_link = `<a href="javascript:void(0)" class="user-link" accessory='${gameLog['creator']['accessory']}' rank='${gameLog['creator']['totalWagered']}' data-userid="${gameLog['creator']['_id']}">${creator_avatar}</a>`;
-        temp.history = `${creator_link} withdrew <span style='color: #28a745;'>${convertToCurrency(gameLog['bet_amount'])} ($${(gameLog['bet_amount'] * 0.000293)})</span>`;
+        temp.history = `${creator_link} withdrew <span style='color: #28a745;'>${convertToCurrency(gameLog['bet_amount'])} ($${(gameLog['bet_amount'] * 0.000166)})</span>`;
       }
       result.push(temp);
     } catch (e) {

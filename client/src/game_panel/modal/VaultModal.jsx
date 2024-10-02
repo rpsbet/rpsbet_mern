@@ -182,7 +182,7 @@ class VaultModal extends Component {
                     decimals={2}
                     useEasing={true}
                     useGrouping={true}
-                  /> (${(vaultBal * 0.000293).toFixed(2)})
+                  /> (${(vaultBal * 0.000166).toFixed(2)})
                 </p>
                 <TextField
                   label="Enter Amount"
