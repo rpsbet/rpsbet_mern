@@ -252,7 +252,6 @@ async function callCronJobs(io) {
           const joiningTotal = sumJoiningStrategies(bot.joining);
           const hostingTotal = sumHostingStrategies(bot.hosting);
           const result = chooseBasedOnProbability(joiningTotal, hostingTotal);
-
           if (result.chosenType === 'joining') {
             const chosenSubStrategy = pickSubStrategy(bot.joining, joiningTotal);
             if (chosenSubStrategy) {
@@ -310,26 +309,19 @@ async function callCronJobs(io) {
 
               let room = null;
               let ai_mode;
-
               if (rooms.length > 0) {
+                // Filter the rooms based on condition
                 const filteredRooms = rooms.filter(room => room.host_pr <= room.bet_amount);
               
                 if (filteredRooms.length > 0) {
-                  const sortedRooms = filteredRooms.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
-              
-                  const mostRecentRoom = sortedRooms[0];
-              
-                  const now = new Date();
-                  const updatedAt = new Date(mostRecentRoom.updated_at);
-                  const timeDifferenceInMinutes = (now - updatedAt) / (1000 * 60);
-              
-                  if (timeDifferenceInMinutes > 3) {
-                    return;
-                  }
-              
-                  room = mostRecentRoom;
+                  // Pick a random room from the filtered list
+                  const randomRoom = filteredRooms[Math.floor(Math.random() * filteredRooms.length)];
+             
+                  // Set the selected random room
+                  room = randomRoom;
                 }
               }
+
               const hostingStrategies = bot.hosting;
               const plainHostingStrategies = hostingStrategies.toObject ? hostingStrategies.toObject() : hostingStrategies;
               const validStrategies = Object.keys(plainHostingStrategies).filter(key =>
@@ -341,43 +333,58 @@ async function callCronJobs(io) {
               );
 
               if (rooms.length >= 3) {
-                
-                if (room) {
-                  const currentTime = new Date();
-                  const roomLastUpdated = new Date(room.updated_at);
-                  const timeDifferenceInMinutes = (currentTime - roomLastUpdated) / 1000 / 60;
-
-                  if (timeDifferenceInMinutes < 0.5 && timeDifferenceInMinutes > 0.02 ) {
-
-                    let attempts = 0;
-                    const maxAttempts = 10;
-
-                    while (attempts < maxAttempts) {
-                      let newStrategy;
-
-                      if (validStrategies.length > 0) {
-                        const randomIndex = Math.floor(Math.random() * validStrategies.length);
-                        newStrategy = formatStrategyName(validStrategies[randomIndex]);
-                      } else {
-                        const allStrategies = Object.keys(hostingStrategies);
-                        newStrategy = formatStrategyName(allStrategies[Math.floor(Math.random() * allStrategies.length)]);
+                for (const room of rooms) {
+              
+                  if (room) {
+                    const currentTime = new Date();
+                    const roomLastUpdated = new Date(room.updated_at);
+                    const timeDifferenceInMinutes = (currentTime - roomLastUpdated) / 1000 / 60;
+              
+                    // Check if the room was updated within the last 0.5 minutes (30 seconds)
+                    if (timeDifferenceInMinutes > 0.4) {
+                      let attempts = 0;
+                      const maxAttempts = 10;
+              
+                      while (attempts < maxAttempts) {
+                        let newStrategy;
+              
+                        // Select valid strategy or random one from all strategies
+                        if (validStrategies.length > 0) {
+                          const randomIndex = Math.floor(Math.random() * validStrategies.length);
+                          newStrategy = formatStrategyName(validStrategies[randomIndex]);
+                        } else {
+                          const allStrategies = Object.keys(hostingStrategies);
+                          newStrategy = formatStrategyName(allStrategies[Math.floor(Math.random() * allStrategies.length)]);
+                        }
+              
+                        // Ensure that the new strategy is different from the current one
+                        if (room.selectedStrategy !== newStrategy) {
+                          room.selectedStrategy = newStrategy;
+                          room.updated_at = Date.now();
+              
+                          // Add a debug log to confirm strategy change
+              
+                          // Save the updated room to the database
+                          try {
+                            await room.save();
+                          } catch (error) {
+                            console.error(`Failed to save room ${room.room_number}:`, error);
+                          }
+                          break; // Exit the loop if strategy is updated successfully
+                        }
+              
+                        attempts++;
+              
+                        // Log when attempts exceed maximum tries
+                        if (attempts >= maxAttempts) {
+                          break;
+                        }
                       }
-
-                      if (room.selectedStrategy !== newStrategy) {
-                        room.selectedStrategy = newStrategy;
-                        await room.save();
-                        return;
-                      }
-
-                      attempts++;
-
-                      // If we've tried the maximum number of attempts, log and return
-                      if (attempts >= maxAttempts) {
-                        return;
-                      }
-                    }
-                  }
+                    } 
+                  } 
                 }
+              
+                // Return after all rooms have been processed
                 return;
               }
 
@@ -857,7 +864,6 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
 cron.schedule('*/8 * * * * *', async () => {
   await callCronJobs(socketio);
 });
-
 module.exports = {
   callCronJobs,
 };
