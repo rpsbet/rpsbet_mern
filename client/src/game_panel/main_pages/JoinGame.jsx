@@ -1410,6 +1410,7 @@ class JoinGame extends Component {
                     result={result}
                     gameResult={this.state.gameResult}
                     getAttachedRooms={getAttachedRooms}
+                    endgame_type={roomInfo.endgame_type}
                     attached={attached}
                     updateUserStrategy={this.props.updateUserStrategy}
                     borderColor={borderColor}

@@ -340,8 +340,8 @@ async function callCronJobs(io) {
                     const roomLastUpdated = new Date(room.updated_at);
                     const timeDifferenceInMinutes = (currentTime - roomLastUpdated) / 1000 / 60;
               
-                    // Check if the room was updated within the last 0.5 minutes (30 seconds)
-                    if (timeDifferenceInMinutes > 0.4) {
+                    // Check if the room was updated within the last 0.25 minutes (15 seconds)
+                    if (timeDifferenceInMinutes > 0.25) {
                       let attempts = 0;
                       const maxAttempts = 10;
               
@@ -361,8 +361,6 @@ async function callCronJobs(io) {
                         if (room.selectedStrategy !== newStrategy) {
                           room.selectedStrategy = newStrategy;
                           room.updated_at = Date.now();
-              
-                          // Add a debug log to confirm strategy change
               
                           // Save the updated room to the database
                           try {

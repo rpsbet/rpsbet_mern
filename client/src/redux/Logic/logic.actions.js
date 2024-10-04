@@ -552,7 +552,8 @@ export const confirmTrade = data => async dispatch => {
     const res = await axios.post('/item/trade/', data);
     if (res.data.success) {
       dispatch({ type: MSG_SUCCESS, payload: "GREAAT SUCCESS!!" });
-
+      dispatch({ type: TNX_COMPLETE });
+      
       return res.data;
     } else {
       return res.data;

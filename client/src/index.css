@@ -5418,6 +5418,9 @@ button#recentSearches span {
 .cell .red {
   color: #ff0000 !important;
 }
+.green-text{
+  color: #00ff3a !important;
+}
 
 .white {
   stroke: #ffffff;

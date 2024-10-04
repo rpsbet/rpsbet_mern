@@ -10,6 +10,8 @@ import { alertModal } from '../modal/ConfirmAlerts';
 import { setBalance } from '../../redux/Auth/user.actions';
 import { acQueryItem } from '../../redux/Item/item.action';
 import { convertToCurrency } from '../../util/conversion';
+import Lottie from 'react-lottie';
+import progress from '../LottieAnimations/progress.json';
 
 Modal.setAppElement('#root');
 
@@ -38,68 +40,91 @@ class ConfirmTradeModal extends Component {
       item: '',
       owner: '',
       price: 0,
-      productName: ''
+      productName: '',
+      loading: false
     };
   }
+ 
   onBtnOkClicked = async e => {
     const { item, owner, closeConfirmTradeModal, setBalance, addNewTransaction, isDarkMode, confirmTrade, acQueryItem } = this.props;
-
+  
+    // Set loading to true before starting the async operation
+    this.setState({ loading: true });
+  
     const response = await confirmTrade({ item_id: item, owner: owner });
-
+  
     if (response.success) {
       const { balance, newTransaction, message } = response;
-
-      closeConfirmTradeModal();
-      alertModal(isDarkMode, message, '-cat');
+  
+      // Handle success: Update balance, transaction and close the modal
       setBalance(balance);
       addNewTransaction(newTransaction);
-      acQueryItem(30, 1, 'price', '653ee81117c9f5ee2124564b');
+      acQueryItem(40, 1, 'price', '653ee81117c9f5ee2124564b');
+      alertModal(isDarkMode, message, '-cat');
     } else {
-      closeConfirmTradeModal();
+      // Handle failure: Show error message
       alertModal(isDarkMode, response.message);
     }
+  
+    // Close modal and reset loading state
+    closeConfirmTradeModal();
+    this.setState({ loading: false });
   };
-
-
 
   onBtnCancelClicked = e => {
     this.props.closeConfirmTradeModal();
   };
 
   render() {
-    const { isOpen, isDarkMode, productName, price, closeConfirmTradeModal, rentOption } = this.props;
-
+    const { isOpen, isDarkMode, productName, price, closeConfirmTradeModal, rentOption, tnxComplete } = this.props;
+    const { loading } = this.state;
+    const defaultOptions = {
+      loop: true,
+      autoplay: true,
+      animationData: progress,
+      rendererSettings: {
+        preserveAspectRatio: 'xMidYMid slice'
+      }
+    };
     return (
       <Modal isOpen={isOpen} style={customStyles}>
         <div className={isDarkMode ? 'dark_mode' : ''}>
           <div className="modal-body alert-body password-modal-body">
-            <div className={`modal-icon result-icon-trade`}></div>
-            <h5>
-              {rentOption ? 'RENT ' : 'PURCHASE '}
-              <span style={{ color: "#ffd000" }}> 1 x '{productName}' </span>?
-            </h5>
-            <h6>
-              Click {rentOption ? 'RENT' : 'TRADE'} to{' '}
-              {rentOption ? (
-                <span>
-                  pay {convertToCurrency(price)} per month
-                </span>
-              ) : (
-                <span>
-                  exchange for [{convertToCurrency(price)}]
-                </span>
-              )}
-            </h6>
+            {!loading ? (
+              <>
+                <div className={`modal-icon result-icon-trade`}></div>
+                <h5>
+                  {rentOption ? 'RENT ' : 'PURCHASE '}
+                  <span style={{ color: '#ffd000' }}> 1 x '{productName}' </span>?
+                </h5>
+                <h6>
+                  Click {rentOption ? 'RENT' : 'TRADE'} to{' '}
+                  {rentOption ? (
+                    <span>pay {convertToCurrency(price)} per month</span>
+                  ) : (
+                    <span>exchange for [{convertToCurrency(price)}]</span>
+                  )}
+                </h6>
+              </>
+            ) : (
+              // Display Lottie animation when tnxComplete is false (processing trade)
+              <div className="loading-animation-container">
+                <Lottie options={defaultOptions} height={40} width={210} />
+                <h5 style={{ color: '#ffd000' }}>PROCESSING TRADE...</h5>
+              </div>
+            )}
+          </div>
 
-          </div>
-          <div className="modal-footer">
-            <Button className="btn-submit" onClick={this.onBtnOkClicked}>
-              {rentOption ? 'RENT' : 'TRADE'}
-            </Button>
-            <Button className="btn-back" onClick={closeConfirmTradeModal}>
-              Cancel
-            </Button>
-          </div>
+          {!loading && (
+            <div className="modal-footer">
+              <Button className="btn-submit" onClick={this.onBtnOkClicked}>
+                {rentOption ? 'RENT' : 'TRADE'}
+              </Button>
+              <Button className="btn-back" onClick={closeConfirmTradeModal}>
+                Cancel
+              </Button>
+            </div>
+          )}
         </div>
       </Modal>
     );

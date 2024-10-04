@@ -458,8 +458,8 @@ class QuickShoot extends Component {
   updatePotentialReturn = () => {
     this.setState({
       potential_return:
-        this.state.bet_amount / (this.props.qs_game_type - 1) +
-        parseFloat(this.state.bet_amount) /* 0.95 */
+        (this.state.bet_amount / (this.props.qs_game_type - 1) +
+          parseFloat(this.state.bet_amount) - this.state.bet_amount)/* 0.95 */
     });
   };
 
@@ -470,7 +470,7 @@ class QuickShoot extends Component {
   };
 
   onChangeState(e) {
-    this.setState({ bet_amount: e.target.value,  }, this.updatePotentialReturn);
+    this.setState({ bet_amount: e.target.value, }, this.updatePotentialReturn);
   }
 
   onBtnBetClick = (position) => {
@@ -801,7 +801,7 @@ class QuickShoot extends Component {
     }
 
     const isLowProfit = (host_pr - roomInfo.total_stakes) > 0;
-
+    const isHighCommission = this.props.cp > 15;
     const isLowBankroll = bankroll <= 1;
     return (
       <div className="game-page">
@@ -848,7 +848,12 @@ class QuickShoot extends Component {
                     <Tooltip title={isLowBankroll ? "LOW BANKROLL CAN CAUSE A BET TO FAIL" : "A.K.A Liquidity / Pool / Pot"}>
                       <div className={`value ${isLowBankroll ? 'red-text' : ''}`}>
                         {convertToCurrency(bankroll)}
-                        {isLowBankroll && <InfoIcon style={{ fontSize: 16, marginLeft: 4 }} />}
+                        {!isLowBankroll ? (
+                          <InfoIcon style={{ fontSize: 16, marginLeft: 4 }} />
+                        ) : (
+                          <WarningIcon style={{ fontSize: 16, marginLeft: 4 }} />
+                        )
+                        }
                       </div>
                     </Tooltip>
                   </div>
@@ -862,21 +867,40 @@ class QuickShoot extends Component {
                         <div>
                           <span>EXPLANATION: </span>
                           <p>
-                            {this.props.qs_game_type} * your Bet Amount, then deduct Host(s)'s(') commission, if any, (which is Returned to Bankroll or RTB)
-                            and finally deduct 1% platform tax.
+                            {this.props.qs_game_type} * your Bet Amount, then deduct Host(s)'s(')
+                            commission, if any, (which is Returned to Bankroll or RTB) and
+                            finally deduct 2.5% platform tax.
                           </p>
                           <span>CALCULATION: </span>
-                          <div>{convertToCurrency(bet_amount)} x 2 = {convertToCurrency(bet_amount * 2)}</div>
                           <div>
-                            -({cp} + 1)% = {convertToCurrency(bet_amount * 2 * ((100 - (cp + 1)) / 100))}
+                            {convertToCurrency(bet_amount)} x 2 = {convertToCurrency(bet_amount * 2)}
+                          </div>
+                          <div>
+                            -({cp} + 2.5)% ={' '}
+                            {convertToCurrency(
+                              bet_amount * 2 * ((100 - (cp + 2.5)) / 100)
+                            )}
                           </div>
                         </div>
                       }
                     >
-                      <div className="value">
+                      <div
+                        className="value"
+                        style={{
+                          color:
+                            (bet_amount / (qs_game_type - 1) + parseFloat(bet_amount)) *
+                              (1 - (this.props.cp + 2.5) / 100) -
+                              bet_amount > 0
+                              ? '#00ff3a'
+                              : 'red',
+                        }}
+                      >
                         {convertToCurrency(
-                          (bet_amount / (qs_game_type - 1) + parseFloat(bet_amount)) * (1 - ((this.props.cp + 1) / 100))
+                          (bet_amount / (qs_game_type - 1) + parseFloat(bet_amount)) *
+                          (1 - ((this.props.cp + 2.5) / 100)) -
+                          bet_amount
                         )}
+                        <InfoIcon style={{ fontSize: 16, marginLeft: 4 }} />
                       </div>
                     </Tooltip>
                   </div>
@@ -892,9 +916,19 @@ class QuickShoot extends Component {
                     <div>
                       <div className="label commission">Commission</div>
                     </div>
-                    <Tooltip title="Determined by the Host's equipped accessory">
+                    <Tooltip title="Host's Accessory's Commission Power (CP) - Player's Accessory's Battle Power (BP) (MINIMUM 2.5% TOWARDS PLATFORM)">
+                      <div style={{ cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center" }}>
 
-                      <div className="value">{this.props.cp}% </div>
+                        <div className={`value ${isHighCommission ? 'red-text' : ''}`} style={{ cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center" }}>
+                          <div className="value">{this.props.cp < 1 ? 1 : this.props.cp}% </div>
+                          {!isHighCommission ? (
+                            <InfoIcon style={{ fontSize: 16, marginLeft: 4 }} />
+                          ) : (
+                            <WarningIcon style={{ fontSize: 16, marginLeft: 4 }} />
+                          )
+                          }
+                        </div>
+                      </div>
                     </Tooltip>
                   </div>
                   {this.props.endgame_type && (
@@ -914,7 +948,7 @@ class QuickShoot extends Component {
                       </Tooltip>
                     </div>
                   )}
-                   <div className="data-item">
+                  <div className="data-item">
                     <div>
                       <div className="label net-profit">Room Profit</div>
                     </div>
@@ -922,11 +956,11 @@ class QuickShoot extends Component {
 
                       <Tooltip title="Current bankroll + Payouts - Initial bankroll">
                         <div className="value" style={{ cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center" }}>
-                          <span className={`value ${!isLowProfit ? 'red-text' : ''}`} >
+                          <span className={`value ${!isLowProfit ? 'red-text' : 'green-text'}`} >
                             {convertToCurrency(host_pr - roomInfo.total_stakes)}
                           </span>
                           {isLowProfit ? (
-                            <InfoIcon style={{ color:"#00ff3a", fontSize: 16, marginLeft: 4 }} />
+                            <InfoIcon style={{ color: "#00ff3a", fontSize: 16, marginLeft: 4 }} />
                           ) : (
                             <WarningIcon style={{ color: "red", fontSize: 16, marginLeft: 4 }} />
                           )
@@ -972,8 +1006,8 @@ class QuickShoot extends Component {
                           darkMode={isDarkMode}
                         />
                       </a>
-                      {isQbot && (<span  style={{ fontSize: "xx-small", position: "absolute", top: "65px", border: "1px solid rgb(255, 208, 0)", background:"linear-gradient(45deg, #7a5958, #a27955)", borderRadius: "4px", color: "rgb(255, 208, 0)", padding: "0px 5px", lineHeight: "20px", marginLeft:"7.5px" }} >
-                       Q-BOT
+                      {isQbot && (<span style={{ fontSize: "xx-small", position: "absolute", top: "65px", border: "1px solid rgb(255, 208, 0)", background: "linear-gradient(45deg, #7a5958, #a27955)", borderRadius: "4px", color: "rgb(255, 208, 0)", padding: "0px 5px", lineHeight: "20px", marginLeft: "7.5px" }} >
+                        Q-BOT
                       </span>)}
                     </div>
                   </div>

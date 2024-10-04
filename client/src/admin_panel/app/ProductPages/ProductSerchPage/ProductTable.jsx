@@ -364,7 +364,7 @@ class ProductTable extends Component {
       setCurrentProductId,
       setCurrentProductInfo,
       openConfirmTradeModal,
-      isLowGraphics
+      isLowGraphics,
     } = this.props;
 
     const {
@@ -641,7 +641,8 @@ const mapStateToProps = state => ({
   showConfirmTradeModal: state.snackbar.showConfirmTradeModal,
   isDarkMode: state.auth.isDarkMode,
   user: state.auth.user._id,
-  isLowGraphics: state.auth.isLowGraphics
+  
+  isLowGraphics: state.auth.isLowGraphics,
 });
 
 const mapDispatchToProps = {
@@ -649,7 +650,7 @@ const mapDispatchToProps = {
   setCurrentProductId,
   setCurrentProductInfo,
   openConfirmTradeModal,
-  acGetCustomerInfo
+  acGetCustomerInfo,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(ProductTable);

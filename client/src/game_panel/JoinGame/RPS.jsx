@@ -827,7 +827,7 @@ class RPS extends Component {
       }, flashingDuration);
     }
     const isLowBankroll = bankroll <= 1;
-    const isHighCommission = this.props.cp > 6;
+    const isHighCommission = this.props.cp > 16;
     const isLowProfit = (host_pr - roomInfo.total_stakes) > 0;
 
     return (
@@ -883,20 +883,57 @@ class RPS extends Component {
                     <div>
                       <div className="label your-max-return">Your Return</div>
                     </div>
-                    <Tooltip title={<div>
-                      <span>EXPLANATION: </span>
-                      <p>2x your Bet Amount, then deduct Host(s)'s(') commission, if any, (which is Returned to Bankroll or RTB) and finally deduct 1% platform tax.</p>
-                      <span>CALCULATION: </span>
-                      <div>{convertToCurrency(this.state.bet_amount)} x 2  = {convertToCurrency(this.state.bet_amount * 2)}</div>
-                      <div>-({this.props.cp} + 1)% = {convertToCurrency(this.state.bet_amount * 2 * ((100 - (this.props.cp + 1)) / 100))}</div>
-                    </div>}>
-                      <div className="value" style={{ cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center" }}>
-                        {convertToCurrency(this.state.bet_amount * 2 * ((100 - (this.props.cp + 1)) / 100))}
+                    <Tooltip
+                      title={
+                        <div>
+                          <span>EXPLANATION: </span>
+                          <p>
+                            2x your Bet Amount, then deduct Host(s)'s(') commission, if any,
+                            (which is Returned to Bankroll or RTB) and finally deduct 2.5%
+                            platform tax.
+                          </p>
+                          <span>CALCULATION: </span>
+                          <div>{convertToCurrency(this.state.bet_amount)} x 2 ={' '}
+                            {convertToCurrency(this.state.bet_amount * 2)}
+                          </div>
+                          <div>
+                            -({this.props.cp} + 2.5)% ={' '}
+                            {convertToCurrency(
+                              this.state.bet_amount * 2 * ((100 - (this.props.cp + 2.5)) / 100)
+                            )}
+                          </div>
+                        </div>
+                      }
+                    >
+                      <div
+                        className="value"
+                        style={{
+                          cursor: 'pointer',
+                          display: 'flex',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          color:
+                            (this.state.bet_amount * 2 * ((100 - (this.props.cp + 2.5)) / 100)) -
+                              this.state.bet_amount > 0
+                              ? '#00ff3a'
+                              : 'red',
+                        }}
+                      >
+                        {convertToCurrency(
+                          this.state.bet_amount * 2 * ((100 - (this.props.cp + 2.5)) / 100) -
+                          this.state.bet_amount
+                        )}
                         <InfoIcon style={{ fontSize: 16, marginLeft: 4 }} />
                       </div>
-
                     </Tooltip>
-
+                  </div>
+                  <div className="data-item">
+                    <div>
+                      <div className="label chance">Win Chance</div>
+                    </div>
+                    <div className="value">
+                      {33}%
+                    </div>
                   </div>
                   <div className="data-item">
                     <div>
@@ -906,7 +943,7 @@ class RPS extends Component {
 
                       <Tooltip title="Current bankroll + Payouts - Initial bankroll">
                         <div className="value" style={{ cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center" }}>
-                          <span className={`value ${!isLowProfit ? 'red-text' : ''}`} >
+                          <span className={`value ${!isLowProfit ? 'red-text' : 'green-text'}`} >
                             {convertToCurrency(host_pr - roomInfo.total_stakes)}
                           </span>
                           {isLowProfit ? (
@@ -926,7 +963,7 @@ class RPS extends Component {
                       <div>
                         <div className="label commission">Commission</div>
                       </div>
-                      <Tooltip title="Host's Accessory's Commission Power (CP) - Player's Accessory's Battle Power (BP) (MINIMUM 1% TOWARDS PLATFORM). Aim for 6% or Less.">
+                      <Tooltip title="Host's Accessory's Commission Power (CP) - Player's Accessory's Battle Power (BP) (MINIMUM 2.5% TOWARDS PLATFORM)">
                         <div style={{ cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center" }}>
 
                           <div className={`value ${isHighCommission ? 'red-text' : ''}`} style={{ cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center" }}>
@@ -998,8 +1035,8 @@ class RPS extends Component {
                           darkMode={isDarkMode}
                         />
                       </a>
-                      {isQbot && (<span  style={{ fontSize: "xx-small", position: "absolute", top: "65px", border: "1px solid rgb(255, 208, 0)", background:"linear-gradient(45deg, #7a5958, #a27955)", borderRadius: "4px", color: "rgb(255, 208, 0)", padding: "0px 5px", lineHeight: "20px", marginLeft:"7.5px" }} >
-                       Q-BOT
+                      {isQbot && (<span style={{ fontSize: "xx-small", position: "absolute", top: "65px", border: "1px solid rgb(255, 208, 0)", background: "linear-gradient(45deg, #7a5958, #a27955)", borderRadius: "4px", color: "rgb(255, 208, 0)", padding: "0px 5px", lineHeight: "20px", marginLeft: "7.5px" }} >
+                        Q-BOT
                       </span>)}
                     </div>
                   </div>

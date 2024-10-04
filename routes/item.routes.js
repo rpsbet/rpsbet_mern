@@ -157,9 +157,10 @@ router.post('/return', auth, async (req, res) => {
 
 
 router.post('/trade', auth, async (req, res) => {
+  console.log("called")
   try {
     const { item_id, owner } = req.body;
-
+console.log("2", item_id, owner )
     // Find the item using the new model
     const item = await Item.findOne({ _id: item_id });
     if (!item) {
