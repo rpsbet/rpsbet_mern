@@ -226,7 +226,25 @@ class MainPage extends Component {
                       +{convertToCurrency(row.winnings)}  </span>
                     <br />
                     <span style={{ whiteSpace: "nowrap", fontSize: "xx-small" }}>
-                      {(row.winnings / row.bet_amount).toFixed(2)}x / ${(row.winnings * 0.000166).toFixed(2)}
+                      {(() => {
+                        const createdAt = new Date(row.created_at);
+                        const currentDate = new Date('2024-10-05');  // Hardcoded date
+                        const daysOld = (currentDate - createdAt) / (1000 * 60 * 60 * 24); // Calculate days difference
+
+                        let conversionRate = 0.000313; // Default conversion rate
+
+                        if (createdAt > currentDate) {
+                          // If createdAt is ahead of currentDate, set conversionRate to 0.116
+                          conversionRate = 0.116;
+                        } else if (daysOld > 60) {
+                          conversionRate = 0.889; // If more than 60 days old
+                        } else if (daysOld > 30) {
+                          conversionRate = 0.119; // If more than 30 days old
+                        }
+
+                        // Apply the conversion rate and display the amount
+                        return <> {(row.winnings / row.bet_amount).toFixed(2)}x / ${(row.winnings * conversionRate).toFixed(2)}</>;
+                      })()}
                     </span>
 
                   </div>
@@ -299,7 +317,7 @@ class MainPage extends Component {
                         const currentDate = new Date();
                         const daysOld = (currentDate - createdAt) / (1000 * 60 * 60 * 24); // Calculate days difference
 
-                        let conversionRate = 0.000166; // Default conversion rate
+                        let conversionRate = 0.000313; // Default conversion rate
 
                         if (daysOld > 60) {
                           conversionRate = 0.889; // If more than 60 days old

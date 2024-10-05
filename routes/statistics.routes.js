@@ -591,8 +591,8 @@ router.get('/get-equity-distribution', async (req, res) => {
       // Calculate the total balance by adding user balance and vault balance
       const userBalance = user.balance + (vault ? vault.balance : 0);
 
-      // If the user's balance is greater than or equal to 1000, return user info
-      if (userBalance >= 1000) {
+      // If the user's balance is greater than or equal to 10, return user info
+      if (userBalance >= 10) {
         return {
           _id: user._id,
           username: user.username,
@@ -603,11 +603,9 @@ router.get('/get-equity-distribution', async (req, res) => {
         };
       }
 
-      // If the user's balance is less than 1000, return null
       return null;
     }));
 
-    // Filter out any null values (i.e., users with balance < 1000)
     const validUserBalances = userBalances.filter(user => user !== null);
 
     // Calculate the total balance across all valid users

@@ -246,7 +246,6 @@ async function callCronJobs(io) {
         }
 
         const qBots = await QBot.find({ active: true });
-
         for (const bot of qBots) {
 
           const joiningTotal = sumJoiningStrategies(bot.joining);
@@ -340,6 +339,7 @@ async function callCronJobs(io) {
                     const roomLastUpdated = new Date(room.updated_at);
                     const timeDifferenceInMinutes = (currentTime - roomLastUpdated) / 1000 / 60;
               
+
                     // Check if the room was updated within the last 0.25 minutes (15 seconds)
                     if (timeDifferenceInMinutes > 0.25) {
                       let attempts = 0;
@@ -381,9 +381,8 @@ async function callCronJobs(io) {
                     } 
                   } 
                 }
-              
+                continue;
                 // Return after all rooms have been processed
-                return;
               }
 
               const randomIndex = Math.floor(Math.random() * validStrategies.length);
@@ -433,17 +432,16 @@ async function callCronJobs(io) {
               }
 
               if (user.username.includes('BOT')) {
-                return;
+                continue;
               }
 
               if (bet_amount > user.balance) {
-                return;
+                continue;
               }
 
-              if (user.dailyWithdrawals > 5000000) {
-                return;
+              if (user.dailyWithdrawals > 3000) {
+                continue;
               }
-
               const game_types = [
                 1,
                 5
@@ -550,17 +548,20 @@ async function callCronJobs(io) {
               }
               // const rooms = await getRoomList(7, 'All');
               // req.io.sockets.emit('UPDATED_ROOM_LIST', {
-              //   pageSize: rooms.pageSize,
-              //   roomList: rooms.rooms,
-              //   total: rooms.count
-              // });
-
-            } catch (err) {
+                //   pageSize: rooms.pageSize,
+                //   roomList: rooms.rooms,
+                //   total: rooms.count
+                // });
+                console.log('swse')
+                
+              } catch (err) {
               console.error('Error saving room:', err);
-
+              
             }
-
+            console.log('sse')
+            
           }
+          console.log('finishe')
         }
 
       }

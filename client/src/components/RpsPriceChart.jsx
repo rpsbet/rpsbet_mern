@@ -10,7 +10,7 @@ class RpsPriceChart extends Component {
     this.state = {
         usdValue: '',
         rpsValue: '',
-        conversionRate: 0.000166,
+        conversionRate: 0.166,
         pricesData: [],
         datesData: [],
         futurePriceIndex: null,

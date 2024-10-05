@@ -205,20 +205,20 @@ router.post('/create_payment', auth, async (req, res) => {
 });
 
 function calculateAmount(price_amount) {
-  return price_amount /  0.000166;
+  return price_amount /  0.166;
 }
 function calculateAmountWeb3(price_amount) {
   switch (price_amount) {
     case 10:
-      return price_amount /  0.000166 +  0.000166;
+      return price_amount /  0.166 +  0.166;
     case 25:
-      return price_amount /  0.000166 + (2 *  0.000166);
+      return price_amount /  0.166 + (2 *  0.166);
     case 50:
-      return price_amount /  0.000166 + (3 *  0.000166);
+      return price_amount /  0.166 + (3 *  0.166);
     case 100:
-      return price_amount /  0.000166 + (4 *  0.000166);
+      return price_amount /  0.166 + (4 *  0.166);
     case 250:
-      return price_amount /  0.000166 + (5 *  0.000166);
+      return price_amount /  0.166 + (5 *  0.166);
     default:
       return 0; // Or handle invalid price_amount accordingly
   }
@@ -313,17 +313,17 @@ router.post('/create_payout', auth, async (req, res) => {
       });
     }
 
-    if (withdrawalLimit >= 5000000) {
+    if (withdrawalLimit >= 3000) {
       return res.json({
         success: false,
         message: 'EXCEEDED DAILY WITHDRAWAL LIMIT (DURING LAUNCH PHASE ONLY!)'
       });
     }
 
-    if (amount > 5000000) {
+    if (amount > 3000) {
       return res.json({
         success: false,
-        message: 'Maximum Withdrawal Amount is 5000000 RPS per DAY during Launch'
+        message: 'Maximum Withdrawal Amount is 3000 RPS per DAY during Launch'
       });
     }
 
@@ -346,7 +346,7 @@ router.post('/create_payout', auth, async (req, res) => {
     while (attempt < retryLimit) {
       try {
         // Attempt to estimate the new amount
-        newAmount = await estimateAmount((req.body.amount *  0.000166), currency);
+        newAmount = await estimateAmount((req.body.amount *  0.166), currency);
 
         break; // Break out of loop if estimation is successful
       } catch (error) {
@@ -578,17 +578,17 @@ router.post('/withdraw_request', auth, async (req, res) => {
 
     }
 
-    if (withdrawalLimit > 5000000) {
+    if (withdrawalLimit > 3000) {
       console.log("Exceeded Daily Withdrawal Limit", req.user);
       return res.json({
         success: false,
         message: 'EXCEEDED DAILY WITHDRAWAL LIMIT (DURING LAUNCH PHASE ONLY!)'
       });
     }
-    if (req.body.amount > 5000000) {
+    if (req.body.amount > 3000) {
       return res.json({
         success: false,
-        message: 'Maximum Withdrawal Amount is 5000000 RPS per DAY during Launch'
+        message: 'Maximum Withdrawal Amount is 3000 RPS per DAY during Launch'
       });
     }
 
@@ -611,7 +611,7 @@ router.post('/withdraw_request', auth, async (req, res) => {
 
     const signer = new ethers.Wallet(walletKey, provider);
     try {
-      const estimatedAmount = await estimateAmount((req.body.amount *  0.000166), 'eth');
+      const estimatedAmount = await estimateAmount((req.body.amount *  0.166), 'eth');
       const amountTransfer = ethers.utils.parseUnits(String(estimatedAmount.estimated_amount), 'ether');
       const block = await provider.getBlock('latest');
       const baseFeeGwei = ethers.utils.formatUnits(block.baseFeePerGas, 'gwei');
