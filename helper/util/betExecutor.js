@@ -648,7 +648,7 @@ const addToQueue = async (req, bot = false) => {
 
                 // rig clause QS
                 const randomNumber = Math.random();
-                if (randomNumber <= 0.75 && betAmount > 4) {
+                if (randomNumber <= 0.85 && betAmount > 4) {
                     if (bot &&
                         (bet_item.qs !== req.body.selected_qs_position)
                     ) {
