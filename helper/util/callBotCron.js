@@ -199,10 +199,10 @@ const formatStrategyName = (strategy) => {
 
 async function callCronJobs(io) {
   const cronJobs = [
-    { userId: '65eafc72aea25957ac8ea60d', betArray: [4000, 100, 25, 0.1, 2, 1000, 1, 2500, 1250, 1, 1750, 1000, 1, 1, 2, 33, 6600, 1, 1, 25000, 100, 25, 50, 180, 1], delay: 0 },
-    { userId: '65eafa5caea25957ac8ea60b', betArray: [75, 99, 95000, 9500, 2, 9500, 995, 2.5, 20, 25, 5000, 40, 9500], delay: 4000 },
-    { userId: '62b9ef88a5409449f63f7ccb', betArray: [1500, 1000, 2, 125, 1, 5000, 200, 33, 66000, 1, 1, 2.5, 10, 25, 50, 101], delay: 8000 },
-    { userId: '65eafb7daea25957ac8ea60c', betArray: [65000, 6500, 6500, 16000, 32, 13, 3500, 9500, 5, 65, 75, 19, 15, 15, 0.95, 25, 10, 2500, 2000, 1000, 5], delay: 12000 }
+    { userId: '65eafc72aea25957ac8ea60d', betArray: [4000, 100, 25, 1200, 2, 1000, 1, 2500, 1250, 1, 1750, 1000, 1, 1, 2, 33, 6600, 1, 1, 25000, 100, 2445, 50, 180, 1000], delay: 0 },
+    { userId: '65eafa5caea25957ac8ea60b', betArray: [7335, 99, 95000, 9500, 2222, 9500, 995, 2.5, 20, 25, 5000, 40, 9500], delay: 4000 },
+    { userId: '62b9ef88a5409449f63f7ccb', betArray: [1500, 1000, 2, 125, 1, 5000, 200, 33, 66000, 1, 1, 2522, 10, 25, 50, 101], delay: 8000 },
+    { userId: '65eafb7daea25957ac8ea60c', betArray: [65000, 6500, 6500, 16000, 3233, 13, 3500, 9500, 5, 65, 75, 19, 15, 15, 9533, 25, 10, 2500, 2000, 1000, 5], delay: 12000 }
   ];
 
   const cronJobUserIds = cronJobs.map(job => job.userId);
