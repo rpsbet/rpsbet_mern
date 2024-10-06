@@ -627,7 +627,7 @@ class MyGamesTable extends Component {
                           <span style={{ fontSize: '10px' }}> ({((row.share).toFixed(2))}%)</span>
                         </span>
 
-                        {selectedFilter === 'open' && (
+                        {/* {selectedFilter === 'open' && (
 
                           <a
                             className="ml-1"
@@ -636,7 +636,7 @@ class MyGamesTable extends Component {
                           >
                             <AddCircleOutline />
                           </a>
-                        )}
+                        )} */}
                       </div>
 
                       <div className="table-cell endgame">
