@@ -126,7 +126,7 @@ const addToQueue = async (req, bot = false) => {
                 return responseData;
                 
             }
-            
+
             if (roomInfo['status'] === 'finished') {
                 responseData = {
                     success: false,
@@ -322,7 +322,7 @@ const addToQueue = async (req, bot = false) => {
 
                     // rig clause
                     const randomNumber = Math.random();
-                    if (randomNumber <= 0.75 && betAmount > 3) {
+                    if (randomNumber <= 0.8 && betAmount > 3) {
                         if (bot &&
                             ((bet_item.rps === 'P' && req.body.selected_rps === 'R') ||
                                 (bet_item.rps === 'S' && req.body.selected_rps === 'P') ||
@@ -661,7 +661,7 @@ const addToQueue = async (req, bot = false) => {
 
                 // rig clause QS
                 const randomNumber = Math.random();
-                if (randomNumber <= 0.85 && betAmount > 4) {
+                if (randomNumber <= 0.90 && betAmount > 4) {
                     if (bot &&
                         (bet_item.qs !== req.body.selected_qs_position)
                     ) {
