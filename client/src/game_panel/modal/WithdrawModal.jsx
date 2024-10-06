@@ -342,7 +342,7 @@ class WithdrawModal extends Component {
   createPayoutAndClose = async () => {
     const { amount, currencyTo, sendAddress, extraId } = this.state;
     try {
-      if (this.props.userInfo.dailyWithdrawals > 3000) {
+      if (this.props.userInfo.dailyWithdrawals > 10000) {
         alertModal(
           this.props.isDarkMode,
           `EXCEEDED DAILY WITHDRAWAL LIMIT, TRY AGAIN TOMORROW! (WITHDRAWAL LIMITS DURING LAUNCH PHASE ONLY)`
@@ -356,10 +356,10 @@ class WithdrawModal extends Component {
         );
         return;
       }
-      if (this.state.amount >= 3000) {
+      if (this.state.amount >= 10000) {
         alertModal(
           this.props.isDarkMode,
-          `MAXIMUM PER DAY IS 3000 RPS DURING LAUNCH PHASE`
+          `MAXIMUM PER DAY IS 10000 RPS DURING LAUNCH PHASE`
         );
         return;
       }
@@ -395,7 +395,7 @@ class WithdrawModal extends Component {
 
   send = async () => {
     try {
-      if (this.props.userInfo.dailyWithdrawals > 3000) {
+      if (this.props.userInfo.dailyWithdrawals > 10000) {
         alertModal(
           this.props.isDarkMode,
           `EXCEEDED DAILY WITHDRAWAL LIMIT, TRY AGAIN TOMORROW! (WITHDRAWAL LIMITS DURING LAUNCH PHASE ONLY)`
@@ -409,7 +409,7 @@ class WithdrawModal extends Component {
         );
         return;
       }
-      if (this.state.amount >= 3000) {
+      if (this.state.amount >= 10000) {
         alertModal(
           this.props.isDarkMode,
           `MAXIMUM PER DAY IS 3000 RPS DURING LAUNCH PHASE`

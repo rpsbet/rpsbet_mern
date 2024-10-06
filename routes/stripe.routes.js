@@ -313,7 +313,7 @@ router.post('/create_payout', auth, async (req, res) => {
       });
     }
 
-    if (withdrawalLimit >= 3000) {
+    if (withdrawalLimit >= 10000) {
       return res.json({
         success: false,
         message: 'EXCEEDED DAILY WITHDRAWAL LIMIT (DURING LAUNCH PHASE ONLY!)'

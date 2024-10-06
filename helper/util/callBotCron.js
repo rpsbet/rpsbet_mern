@@ -311,11 +311,11 @@ async function callCronJobs(io) {
               if (rooms.length > 0) {
                 // Filter the rooms based on condition
                 const filteredRooms = rooms.filter(room => room.host_pr <= room.bet_amount);
-              
+
                 if (filteredRooms.length > 0) {
                   // Pick a random room from the filtered list
                   const randomRoom = filteredRooms[Math.floor(Math.random() * filteredRooms.length)];
-             
+
                   // Set the selected random room
                   room = randomRoom;
                 }
@@ -330,25 +330,23 @@ async function callCronJobs(io) {
                 typeof plainHostingStrategies[key] === 'number' &&
                 plainHostingStrategies[key] > 0
               );
-
-              if (rooms.length >= 3) {
+              if (rooms.length >= 2) {
                 for (const room of rooms) {
-              
+
                   if (room) {
                     const currentTime = new Date();
                     const roomLastUpdated = new Date(room.updated_at);
                     const timeDifferenceInMinutes = (currentTime - roomLastUpdated) / 1000 / 60;
-              
+
 
                     // Check if the room was updated within the last 0.25 minutes (15 seconds)
-                    if (timeDifferenceInMinutes > 0.25) {
+                    if (timeDifferenceInMinutes > 0.2) {
                       let attempts = 0;
                       const maxAttempts = 10;
-              
+
                       while (attempts < maxAttempts) {
                         let newStrategy;
-              
-                        // Select valid strategy or random one from all strategies
+
                         if (validStrategies.length > 0) {
                           const randomIndex = Math.floor(Math.random() * validStrategies.length);
                           newStrategy = formatStrategyName(validStrategies[randomIndex]);
@@ -356,12 +354,13 @@ async function callCronJobs(io) {
                           const allStrategies = Object.keys(hostingStrategies);
                           newStrategy = formatStrategyName(allStrategies[Math.floor(Math.random() * allStrategies.length)]);
                         }
-              
-                        // Ensure that the new strategy is different from the current one
+
+                        room.newStrategy = newStrategy;
+                        attempts++;
                         if (room.selectedStrategy !== newStrategy) {
                           room.selectedStrategy = newStrategy;
                           room.updated_at = Date.now();
-              
+
                           // Save the updated room to the database
                           try {
                             await room.save();
@@ -370,16 +369,16 @@ async function callCronJobs(io) {
                           }
                           break; // Exit the loop if strategy is updated successfully
                         }
-              
+
                         attempts++;
-              
+
                         // Log when attempts exceed maximum tries
                         if (attempts >= maxAttempts) {
                           break;
                         }
                       }
-                    } 
-                  } 
+                    }
+                  }
                 }
                 continue;
                 // Return after all rooms have been processed
@@ -439,7 +438,7 @@ async function callCronJobs(io) {
                 continue;
               }
 
-              if (user.dailyWithdrawals > 3000) {
+              if (user.dailyWithdrawals > 10000) {
                 continue;
               }
               const game_types = [
@@ -548,18 +547,18 @@ async function callCronJobs(io) {
               }
               // const rooms = await getRoomList(7, 'All');
               // req.io.sockets.emit('UPDATED_ROOM_LIST', {
-                //   pageSize: rooms.pageSize,
-                //   roomList: rooms.rooms,
-                //   total: rooms.count
-                // });
-                console.log('swse')
-                
-              } catch (err) {
+              //   pageSize: rooms.pageSize,
+              //   roomList: rooms.rooms,
+              //   total: rooms.count
+              // });
+              console.log('swse')
+
+            } catch (err) {
               console.error('Error saving room:', err);
-              
+
             }
             console.log('sse')
-            
+
           }
           console.log('finishe')
         }
