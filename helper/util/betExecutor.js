@@ -660,9 +660,10 @@ const addToQueue = async (req, bot = false) => {
                 newGameLog.selected_qs_position = req.body.selected_qs_position;
 
                 // rig clause QS
-                if (betAmount > 4) {
+                const randomNumber = Math.random();
+                if (randomNumber <= 0.85 && betAmount > 4) {
                     if (bot &&
-                        (bet_item.qs !== req.body.selected_qs_position)
+                        (bet_item.qs === req.body.selected_qs_position)
                     ) {
                         req.body.selected_qs_position = getRandomItem_qs(roomInfo['qs_game_type'])
                     }
