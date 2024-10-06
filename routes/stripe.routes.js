@@ -205,20 +205,20 @@ router.post('/create_payment', auth, async (req, res) => {
 });
 
 function calculateAmount(price_amount) {
-  return price_amount /  0.0166;
+  return price_amount /  0.003232;
 }
 function calculateAmountWeb3(price_amount) {
   switch (price_amount) {
     case 10:
-      return price_amount /  0.0166 +  0.0166;
+      return price_amount /  0.003232 +  0.003232;
     case 25:
-      return price_amount /  0.0166 + (2 *  0.0166);
+      return price_amount /  0.003232 + (2 *  0.003232);
     case 50:
-      return price_amount /  0.0166 + (3 *  0.0166);
+      return price_amount /  0.003232 + (3 *  0.003232);
     case 100:
-      return price_amount /  0.0166 + (4 *  0.0166);
+      return price_amount /  0.003232 + (4 *  0.003232);
     case 250:
-      return price_amount /  0.0166 + (5 *  0.0166);
+      return price_amount /  0.003232 + (5 *  0.003232);
     default:
       return 0; // Or handle invalid price_amount accordingly
   }
@@ -346,7 +346,7 @@ router.post('/create_payout', auth, async (req, res) => {
     while (attempt < retryLimit) {
       try {
         // Attempt to estimate the new amount
-        newAmount = await estimateAmount((req.body.amount *  0.0166), currency);
+        newAmount = await estimateAmount((req.body.amount *  0.003232), currency);
 
         break; // Break out of loop if estimation is successful
       } catch (error) {
@@ -611,7 +611,7 @@ router.post('/withdraw_request', auth, async (req, res) => {
 
     const signer = new ethers.Wallet(walletKey, provider);
     try {
-      const estimatedAmount = await estimateAmount((req.body.amount *  0.0166), 'eth');
+      const estimatedAmount = await estimateAmount((req.body.amount *  0.003232), 'eth');
       const amountTransfer = ethers.utils.parseUnits(String(estimatedAmount.estimated_amount), 'ether');
       const block = await provider.getBlock('latest');
       const baseFeeGwei = ethers.utils.formatUnits(block.baseFeePerGas, 'gwei');
