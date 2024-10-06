@@ -78,7 +78,7 @@ const addToQueue = async (req, bot = false) => {
             let betAmount = parseFloat(req.body.bet_amount);
 
             roomInfo = await Room.findOne({ _id: req.body._id })
-                .select('room_number battles selectedStrategy qs_game_type game_type rps_game_type joiners creator bet_amount user_bet pr host_pr endgame_type endgame_amount is_private room_password status hosts')
+                .select('room_number updated_at battles selectedStrategy qs_game_type game_type rps_game_type joiners creator bet_amount user_bet pr host_pr endgame_type endgame_amount is_private room_password status hosts')
                 .populate({
                     path: 'creator',
                     model: User,
@@ -104,6 +104,17 @@ const addToQueue = async (req, bot = false) => {
                     betResult: -101
                 };
                 return responseData;
+            }
+            const tenSecondsAgo = new Date(Date.now() - 1500);
+            if (roomInfo['updated_at'] > tenSecondsAgo) {
+                responseData = {
+                    success: false,
+                    message: 'ROOM TOO BUSY, TRY AGAIN LATER',
+                    betResult: -1200
+                };
+
+                return responseData;
+                
             }
 
             if (roomInfo['status'] === 'finished') {

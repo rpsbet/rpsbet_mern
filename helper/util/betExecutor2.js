@@ -105,6 +105,18 @@ const addToQueue = async (req, bot = false) => {
                 return responseData;
             }
 
+            const tenSecondsAgo = new Date(Date.now() - 1500);
+            if (roomInfo['updated_at'] > tenSecondsAgo) {
+                responseData = {
+                    success: false,
+                    message: 'ROOM TOO BUSY, TRY AGAIN LATER',
+                    betResult: -1200
+                };
+
+                return responseData;
+                
+            }
+
             if (roomInfo['status'] === 'finished') {
                 responseData = {
                     success: false,

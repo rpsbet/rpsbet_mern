@@ -2937,17 +2937,14 @@ router.post('/coHost', auth, async (req, res) => {
         betResult: -1000
       });
     }
-    console.log("sss", accessAllowed);
 
-    const tenSecondsAgo = new Date(Date.now() - 10000);
+    const tenSecondsAgo = new Date(Date.now() - 3000);
     if (room.updated_at > tenSecondsAgo) {
       return res.json({
         success: false,
         message: 'ROOM TOO BUSY, TRY AGAIN LATER'
       });
     }
-
-    console.log("Sdsd", tenSecondsAgo);
 
     if (room.status === 'finished') {
       return res.json({
@@ -3157,8 +3154,8 @@ router.post('/topUp', auth, async (req, res) => {
         message: 'THIS BATTLE HAS ENDED ALREADY'
       });
     }
-
-    const tenSecondsAgo = new Date(Date.now() - 10000);
+    
+    const tenSecondsAgo = new Date(Date.now() - 3000);
     if (room.updated_at > tenSecondsAgo) {
       return res.json({
         success: false,
@@ -3169,14 +3166,12 @@ router.post('/topUp', auth, async (req, res) => {
     const now = new Date(); // Use current date for now
     const userBalance = req.user.balance;
     const topUpAmount = parseFloat(req.body.amount); // Parse amount as a float
-
     if (isNaN(topUpAmount) || topUpAmount <= 0) {
       return res.json({
         success: false,
         message: 'IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!'
       });
     }
-
     if (userBalance < topUpAmount) {
       return res.json({
         success: false,
@@ -3223,7 +3218,7 @@ router.post('/topUp', auth, async (req, res) => {
     }
 
     // Before updating the total bet, calculate old values for all hosts
-    const oldValuation = parseFloat(room.user_bet);
+    const oldValuation = parseFloat(room.bet_amount);
     const newTotalBet = oldValuation + topUpAmount;
 
     // Update the user's balance

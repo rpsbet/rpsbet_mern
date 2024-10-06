@@ -215,6 +215,7 @@ class OpenGamesTable extends Component {
       qBotStatuses[room.creator_id] = isQbot;
     }
     this.setState({ qBotStatuses });
+    this.props.handleRefresh();
   }
 
 
@@ -226,29 +227,56 @@ class OpenGamesTable extends Component {
   componentDidUpdate(prevProps, prevState) {
     const roomIds = this.props.roomList.map(room => room._id);
 
+    // Check if roomList has changed
     if (prevProps.roomList !== this.props.roomList) {
+      // Check for significant changes in user_bet (30% or more) or if roomList length has changed
+      const significantChange = this.props.roomList.some((room, index) => {
+        const prevRoom = prevProps.roomList.find(prevRoom => prevRoom._id === room._id);
+  
+        if (prevRoom) {
+          const previousBet = parseFloat(prevRoom.user_bet);
+          const newBet = parseFloat(room.user_bet);
+          
+          // Ensure both values are valid numbers before calculating the change
+          if (!isNaN(previousBet) && !isNaN(newBet) && previousBet !== 0) {
+            const change = Math.abs(newBet - previousBet) / previousBet;
+            return change >= 0.3; // 30% or more change
+          }
+        }
+        return false; // No previous room found, or invalid bet values
+      }) || prevProps.roomList.length !== this.props.roomList.length;
+  
       this.setState(prevState => ({
-        roomList: [...prevState.roomList, ...this.props.roomList.filter(room => !prevState.fetchedRoomIds.includes(room._id))],
+        roomList: [
+          ...prevState.roomList,
+          ...this.props.roomList.filter(room => !prevState.fetchedRoomIds.includes(room._id))
+        ],
         fetchedRoomIds: [...prevState.fetchedRoomIds, ...roomIds],
         isLoading: false,
         loaded: true
       }));
+  
       this.setState({
         roomList: this.props.roomList
-      })
-    }
-
-    // if (this.props.rooms_count !== prevProps.roomList.length) {
-    //   this.props.handleRefresh();
-    // }
-
-    if (prevProps.refreshing !== this.props.refreshing) {
-      if (this.props.refreshing) {
-        this.setState({
-          roomList: []
-        })
+      });
+  
+  
+      // Call handleRefresh if there was a significant change or roomList length change
+      if (significantChange) {
+        this.props.handleRefresh();
       }
     }
+    // if (this.state.isLoading && this.state.isLoading !== prevState.isLoading) {
+    //   console.log("ceded");
+    // }
+
+    // if (prevProps.refreshing !== this.props.refreshing) {
+    //   if (this.props.refreshing) {
+    //     this.setState({
+    //       roomList: []
+    //     })
+    //   }
+    // }
 
     if (prevProps.selectedGameType !== this.props.selectedGameType) {
       this.setState({ isLoading: true });
@@ -632,7 +660,7 @@ class OpenGamesTable extends Component {
 
         <div className="table main-game-table">
 
-          {this.state.isLoading ? (
+          {/* {this.state.isLoading ? (
             <>
               <span style={{ position: "relative", display: "flex", justifyContent: "center", alignItems: "center" }}>Fetching Rooms&nbsp;</span>
 
@@ -641,335 +669,168 @@ class OpenGamesTable extends Component {
               </div>
             </>
           ) : (
+            <> */}
+          {(this.props.roomList.length === 0 && !this.state.isLoading && !this.props.loading) ? (
+            <div className="dont-have-game-msg">
+              <div>NO LIVE BATTLES, GO TO 'MANAGE' TO CREATE ONE</div>
+            </div>
+          ) : (
             <>
-              {(this.props.roomList.length === 0 && !this.state.isLoading && !this.props.loading) ? (
-                <div className="dont-have-game-msg">
-                  <div>NO LIVE BATTLES, GO TO 'MANAGE' TO CREATE ONE</div>
-                </div>
-              ) : (
-                <>
-                  {this.state.roomList.map(
-                    (row, key) => (
-                      <div
-                        className={`table-row ${key < 10 ? 'slide-in' : 'slide-in'}`}
-                        style={{ animationDelay: `${key * 0.1}s` }}
-                        key={row._id}
-                      >
-                        {' '}
-                        {/* {renderLottieAvatarAnimation(
+              {this.state.roomList.map(
+                (row, key) => (
+                  <div
+                    className={`table-row ${key < 10 ? 'slide-in' : 'slide-in'}`}
+                    style={{ animationDelay: `${key * 0.1}s` }}
+                    key={row._id}
+                  >
+                    {' '}
+                    {/* {renderLottieAvatarAnimation(
                         row.gameBackground,
                         isLowGraphics
                       )} */}
+                    <div>
+                      <div className="table-cell cell-room-info">
+                        <img
+                          src={`/img/gametype/icons/${row.game_type.short_name}.svg`}
+                          alt=""
+                          className="game-type-icon"
+                        />
                         <div>
-                          <div className="table-cell cell-room-info">
-                            <img
-                              src={`/img/gametype/icons/${row.game_type.short_name}.svg`}
-                              alt=""
-                              className="game-type-icon"
-                            />
-                            <div>
-                              {/* <div className="cell-game-type">
+                          {/* <div className="cell-game-type">
                         {row.game_type.game_type_name}
                       </div> */}
-                              <div className="cell-game-id">{'#' + row.index}</div>
-                              {this.state.qBotStatuses[row.creator_id] && (
-                                <span
-                                  style={{
-                                    fontSize: "xx-small",
-                                    position: "absolute",
-                                    top: "37px",
-                                    left: "110px",
-                                    border: "1px solid rgb(255, 208, 0)",
-                                    background: "linear-gradient(45deg, #7a5958, #a27955)",
-                                    borderRadius: "4px",
-                                    color: "rgb(255, 208, 0)",
-                                    padding: "0px 5px",
-                                    lineHeight: "20px",
-                                    marginLeft: "7.5px"
-                                  }}
-                                >
-                                  Q-BOT
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <div className="table-cell desktop-only cell-user-name">
-
-                            <a
-                              className="player"
-                              onClick={() =>
-                                handleOpenPlayerModal(row.creator_id)
-                              }
-                            >
-                              <Avatar
-                                className="avatar desktop-only"
-                                src={row.creator_avatar}
-                                accessory={row.accessory}
-                                username={row.username}
-                                rank={row.rank}
-                                alt=""
-                                darkMode={this.props.isDarkMode}
-                              />
-                            </a>
-                            <i
-                              className={`online-status${this.props.onlineUserList.filter(
-                                user => user === row.creator_id
-                              ).length > 0
-                                ? ' online'
-                                : ''
-                                }`}
-                            ></i>
-                            {row.hosts && row.hosts
-                              .slice(1, 2)
-                              .map((host, index) => (
-                                <div className="hosts" key={index}>
-                                  <a
-                                    className="player"
-                                    onClick={() => {
-                                      handleOpenPlayerModal(host.host);
-                                    }}
-                                  >
-                                    <Avatar
-                                      className="avatar desktop-only"
-                                      src={host.avatar}
-                                      accessory={host.accessory}
-                                      username={host.username}
-                                      rank={host.rank}
-                                      alt=""
-                                      darkMode={isDarkMode}
-                                    />
-                                  </a>
-                                </div>
-                              ))}
-
-                            {row.hosts.length > 2 && (
-                              <div className="hosts avatar-square">
-                                <div className="avatar-count">
-                                  +{row.hosts.length - 2}
-                                </div>
-                              </div>
-                            )}
-                            {row.joiners && row.joiners.length > 0 ? (
-                              <div className="table-cell avatar desktop-only cell-joiners">
-                                <Battle />
-                                {row.joiner_avatars
-                                  .slice(0, 2)
-                                  .map((joiner, index) => (
-                                    <a
-                                      key={index}
-                                      className="player"
-                                      onClick={() =>
-                                        handleOpenPlayerModal(row.joiners[index])
-                                      }
-                                    >
-                                      <Avatar
-                                        className="avatar desktop-only"
-                                        key={index}
-                                        accessory={joiner.accessory}
-                                        src={joiner.avatar}
-                                        username={joiner.username}
-                                        rank={joiner.rank}
-                                        alt=""
-                                        darkMode={this.props.isDarkMode}
-                                      />
-                                    </a>
-                                  ))}
-                                {row.joiner_avatars.length > 2 && (
-                                  <div className="avatar-square">
-                                    <div className="avatar-count">
-                                      +{row.joiner_avatars.length - 2}
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            ) : null}
-                          </div>
-
-
-                          <div className="table-cell desktop-only cell-likes title">
-                            {/* <div id="view">
-                              <Visibility style={{ fontSize: '1rem' }} />
-                              <Typography variant="body1">
-                                {row.views?.length || 0}
-                              </Typography>
-                            </div> */}
-                            <div id="view" style={{
-                              filter: isDarkMode ? "brightness(3)" : "none"
-                            }}>
-                              <Battle width="24px" />
-                              <Typography variant="body1">
-                                {row.battles}
-                              </Typography>
-                            </div>
-
-                            {/* <div>
-                              <IconButton color="inherit" onClick={() => this.handleLike(row)}>
-                                {row.likes?.includes(this.props.user._id) ? (
-                                  <>
-                                    {!row.likeAnimation && (
-                                      <ThumbUp
-                                        style={{ fontSize: '1rem', color: 'red' }}
-                                      />
-                                    )}
-                                    {row.likeAnimation && (
-                                      <Lottie
-                                        options={{
-                                          loop: isLowGraphics ? false : true,
-                                          autoplay: isLowGraphics ? false : true,
-                                          animationData: like
-                                        }}
-                                        style={{
-                                          width: '32px',
-                                          height: '38px',
-                                          margin: '-26px -8px -20px -8px'
-                                        }}
-                                      />
-                                    )}
-                                  </>
-                                ) : (
-                                  <ThumbUpOutlined style={{ fontSize: '1rem' }} />
-                                )}
-                              </IconButton>
-                              <Typography variant="body1">
-                                {row.likes?.length || 0}
-                              </Typography>
-                            </div> */}
-                          </div>
-                          <div
-                            className="table-cell cell-action"
-                            onClick={() => this.handleView(row)}
-                          >
-                            {row.creator_id !== this.props.user._id && (
-
-                              <a
-                                className="ml-1"
-                                onClick={() => this.handleCoHost(row)}
-                                style={{ color: "rgb(0 255 58)", padding: "2.5px ", display: "flex", justifyContent: "center", alignItems: "center", background: "linear-gradient(45deg, #28a74544, #33e74533)", border: "2px solid rgb(0 255 58)", cursor: "pointer", borderRadius: "0.3em", display: "inline-flex", verticalAlign: "middle" }}
-                              >
-                                <AddBoxOutlined style={{ width: "25px" }} /><img style={{ width: "15px" }} src={busdSvg} />
-                              </a>
-                            )}
-                            <Button
-                              className="btn_join"
-                              onClick={event => {
-                                event.currentTarget.classList.add('active');
-                                this.joinRoom(event);
+                          <div className="cell-game-id">{'#' + row.index}</div>
+                          {this.state.qBotStatuses[row.creator_id] && (
+                            <span
+                              style={{
+                                fontSize: "xx-small",
+                                position: "absolute",
+                                top: "37px",
+                                left: "110px",
+                                border: "1px solid rgb(255, 208, 0)",
+                                background: "linear-gradient(45deg, #7a5958, #a27955)",
+                                borderRadius: "4px",
+                                color: "rgb(255, 208, 0)",
+                                padding: "0px 5px",
+                                lineHeight: "20px",
+                                marginLeft: "7.5px"
                               }}
-                              data-id={row._id}
-                              // data-endgame-amount={row.endgame_amount}
-                              data-creator-id={row.creator_id}
-                              data-room-status={row.status}
-                              data-game-type={row.game_type.game_type_name}
-                              data-bet-amount={row.user_bet}
-                            // data-spleesh-bet-unit={row.spleesh_bet_unit}
-                            // data-box-price={row.box_price}
-                            // data-brain-game-type-id={
-                            //   row.brain_game_type ? row.brain_game_type._id : ''
-                            // }
-                            // data-brain-game-type-name={
-                            //   row.brain_game_type
-                            //     ? row.brain_game_type.game_type_name
-                            //     : ''
-                            // }
-                            // data-brain-game-score={
-                            //   row.brain_game_score ? row.brain_game_score : 0
-                            // }
                             >
-                              {row.is_private && (
-                                <img
-                                  src="/img/icon-lock.png"
-                                  alt=""
-                                  className="lock-icon"
-                                />
-                              )}
-                              {row.game_type.game_type_name !== 'Spleesh!' &&
-                                // row.game_type.game_type_name !== 'Drop Game' &&
-                                row.game_type.game_type_name !== 'Mystery Box' && (
-                                  <>WIN&nbsp;{convertToCurrency(row.user_bet)}</>
-                                )}
-                            </Button>
-                          </div>
+                              Q-BOT
+                            </span>
+                          )}
                         </div>
-                        <div className="mobile-only" style={{ marginTop: '7.5px', marginBottom: '-5px' }}>
-                          <div className="table-cell cell-user-name">
-                            <a
-                              className="player"
-                              onClick={() =>
-                                handleOpenPlayerModal(row.creator_id)
-                              }
-                            >
-                              <Avatar
-                                className="avatar"
-                                src={row.creator_avatar}
-                                accessory={row.accessory}
-                                username={row.username}
-                                rank={row.rank}
-                                alt=""
-                                darkMode={this.props.isDarkMode}
-                              />
-                              {/* <span>{row.creator}</span> */}
-                              <i
-                                className={`online-status${this.props.onlineUserList.filter(
-                                  user => user === row.creator_id
-                                ).length > 0
-                                  ? ' online'
-                                  : ''
-                                  }`}
-                              ></i>
-                            </a>
-                            {row.joiners && row.joiners.length > 0 ? (
-                              <div className="table-cell mobile-only cell-joiners">
-                                <Battle />
-                                {row.joiner_avatars
-                                  .slice(0, 3)
-                                  .map((joiner_avatar, index) => (
+                      </div>
+                      <div className="table-cell desktop-only cell-user-name">
 
-                                    <a
-                                      key={index}
-                                      className="player"
-                                      onClick={() =>
-                                        handleOpenPlayerModal(row.joiners[index])
-                                      }
-                                    >
-                                      <Avatar
-                                        className="avatar mobile-only"
-                                        key={index}
-                                        src={joiner_avatar.avatar}
-                                        rank={joiner_avatar.rank}
-                                        username={joiner_avatar.username}
-                                        alt=""
-                                        accessory={joiner_avatar.accessory}
-                                        darkMode={this.props.isDarkMode}
-                                      />
-                                    </a>
-                                  ))}
-                                {row.joiner_avatars.length > 3 && (
-                                  <div className="avatar-square">
-                                    <div className="avatar-count">
-                                      +{row.joiner_avatars.length - 3}
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            ) : null}
+                        <a
+                          className="player"
+                          onClick={() =>
+                            handleOpenPlayerModal(row.creator_id)
+                          }
+                        >
+                          <Avatar
+                            className="avatar desktop-only"
+                            src={row.creator_avatar}
+                            accessory={row.accessory}
+                            username={row.username}
+                            rank={row.rank}
+                            alt=""
+                            darkMode={this.props.isDarkMode}
+                          />
+                        </a>
+                        <i
+                          className={`online-status${this.props.onlineUserList.filter(
+                            user => user === row.creator_id
+                          ).length > 0
+                            ? ' online'
+                            : ''
+                            }`}
+                        ></i>
+                        {row.hosts && row.hosts
+                          .slice(1, 2)
+                          .map((host, index) => (
+                            <div className="hosts" key={index}>
+                              <a
+                                className="player"
+                                onClick={() => {
+                                  handleOpenPlayerModal(host.host);
+                                }}
+                              >
+                                <Avatar
+                                  className="avatar desktop-only"
+                                  src={host.avatar}
+                                  accessory={host.accessory}
+                                  username={host.username}
+                                  rank={host.rank}
+                                  alt=""
+                                  darkMode={isDarkMode}
+                                />
+                              </a>
+                            </div>
+                          ))}
+
+                        {row.hosts.length > 2 && (
+                          <div className="hosts avatar-square">
+                            <div className="avatar-count">
+                              +{row.hosts.length - 2}
+                            </div>
                           </div>
-                          <div className="table-cell mobile-only cell-likes title">
-                            {/* <div id="view">
+                        )}
+                        {row.joiners && row.joiners.length > 0 ? (
+                          <div className="table-cell avatar desktop-only cell-joiners">
+                            <Battle />
+                            {row.joiner_avatars
+                              .slice(0, 2)
+                              .map((joiner, index) => (
+                                <a
+                                  key={index}
+                                  className="player"
+                                  onClick={() =>
+                                    handleOpenPlayerModal(row.joiners[index])
+                                  }
+                                >
+                                  <Avatar
+                                    className="avatar desktop-only"
+                                    key={index}
+                                    accessory={joiner.accessory}
+                                    src={joiner.avatar}
+                                    username={joiner.username}
+                                    rank={joiner.rank}
+                                    alt=""
+                                    darkMode={this.props.isDarkMode}
+                                  />
+                                </a>
+                              ))}
+                            {row.joiner_avatars.length > 2 && (
+                              <div className="avatar-square">
+                                <div className="avatar-count">
+                                  +{row.joiner_avatars.length - 2}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ) : null}
+                      </div>
+
+
+                      <div className="table-cell desktop-only cell-likes title">
+                        {/* <div id="view">
                               <Visibility style={{ fontSize: '1rem' }} />
                               <Typography variant="body1">
                                 {row.views?.length || 0}
                               </Typography>
                             </div> */}
-                            <div id="view" style={{
-                              filter: isDarkMode ? "brightness(3)" : "none",
-                              marginRight: "-5px"
-                            }}>
-                              <Battle width="24px" />
-                              <Typography variant="body1">
-                                {row.battles}
-                              </Typography>
-                            </div>
-                            {/* <div>
+                        <div id="view" style={{
+                          filter: isDarkMode ? "brightness(3)" : "none"
+                        }}>
+                          <Battle width="24px" />
+                          <Typography variant="body1">
+                            {row.battles}
+                          </Typography>
+                        </div>
+
+                        {/* <div>
                               <IconButton color="inherit" onClick={() => this.handleLike(row)}>
                                 {row.likes?.includes(this.props.user._id) ? (
                                   <>
@@ -1001,84 +862,251 @@ class OpenGamesTable extends Component {
                                 {row.likes?.length || 0}
                               </Typography>
                             </div> */}
-                          </div>
-                        </div>
                       </div>
-                    ),
-                    this
-                  )}</>
-              )}
-              <div style={{ display: "inline-flex", justifyContent: "center", alignItems: "center" }}>
+                      <div
+                        className="table-cell cell-action"
+                        onClick={() => this.handleView(row)}
+                      >
+                        {row.creator_id !== this.props.user._id && (
 
-                <h2 className="main-title recently-closed-title" style={{ paddingTop: "5px" }}>RECENTLY ENDED</h2> <Lottie style={{ filter: 'grayscale(1)' }} options={defaultOptions} width={40} />
-              </div>
-              <div className='recently-closed'>
-                {recent?.map((row) => (
-                  <div key={row._id} className="carousel-content table-row slide-in">
-                    <a href={`/join/${row._id}`} className="table-cell">
-                      <img
-                        src={`/img/gametype/icons/${row.game_type.short_name}.svg`}
-                        alt=""
-                        className="game-type-icon"
-                      />
-                      <div className="cell">
-                        {row.game_type.game_type_name}
-                      </div>
-                      <div className="cell">{'-' + row.room_number}</div>
-                      {this.state.qBotStatuses[row.creator_id] && (
-                        <span
-                          style={{
-                            fontSize: "xx-small",
-                            position: "absolute",
-                            top: "23px",
-                            left: "112px",
-                            border: "1px solid rgb(255, 208, 0)",
-                            background: "linear-gradient(45deg, #7a5958, #a27955)",
-                            borderRadius: "4px",
-                            color: "rgb(255, 208, 0)",
-                            padding: "0px 5px",
-                            lineHeight: "20px",
-                            marginLeft: "7.5px"
+                          <a
+                            className="ml-1"
+                            onClick={() => this.handleCoHost(row)}
+                            style={{ color: "rgb(0 255 58)", padding: "2.5px ", display: "flex", justifyContent: "center", alignItems: "center", background: "linear-gradient(45deg, #28a74544, #33e74533)", border: "2px solid rgb(0 255 58)", cursor: "pointer", borderRadius: "0.3em", display: "inline-flex", verticalAlign: "middle" }}
+                          >
+                            <AddBoxOutlined style={{ width: "25px" }} /><img style={{ width: "15px" }} src={busdSvg} />
+                          </a>
+                        )}
+                        <Button
+                          className="btn_join"
+                          onClick={event => {
+                            event.currentTarget.classList.add('active');
+                            this.joinRoom(event);
                           }}
+                          data-id={row._id}
+                          // data-endgame-amount={row.endgame_amount}
+                          data-creator-id={row.creator_id}
+                          data-room-status={row.status}
+                          data-game-type={row.game_type.game_type_name}
+                          data-bet-amount={row.user_bet}
+                        // data-spleesh-bet-unit={row.spleesh_bet_unit}
+                        // data-box-price={row.box_price}
+                        // data-brain-game-type-id={
+                        //   row.brain_game_type ? row.brain_game_type._id : ''
+                        // }
+                        // data-brain-game-type-name={
+                        //   row.brain_game_type
+                        //     ? row.brain_game_type.game_type_name
+                        //     : ''
+                        // }
+                        // data-brain-game-score={
+                        //   row.brain_game_score ? row.brain_game_score : 0
+                        // }
                         >
-                          Q-BOT
-                        </span>
-                      )}
-                    </a>
-                    <div className="cell">
-                      {row.status}&nbsp;{<FontAwesomeIcon icon={faHeartBroken} />}
+                          {row.is_private && (
+                            <img
+                              src="/img/icon-lock.png"
+                              alt=""
+                              className="lock-icon"
+                            />
+                          )}
+                          {row.game_type.game_type_name !== 'Spleesh!' &&
+                            // row.game_type.game_type_name !== 'Drop Game' &&
+                            row.game_type.game_type_name !== 'Mystery Box' && (
+                              <>WIN&nbsp;{convertToCurrency(row.user_bet)}</>
+                            )}
+                        </Button>
+                      </div>
                     </div>
-                    <div className="cell">{row.from_now}&nbsp;{<FontAwesomeIcon icon={faStopwatch} />}</div>
-                    <div className={"cell"}>
-                      <span className={`${this.getColorClass(row.host_pr - row.bet_amount)}`}>{convertToCurrency(row.host_pr - row.bet_amount)}</span>
-                    </div>
-                    <a
-                      href="#"
-                      className="player"
-                      onClick={() => handleOpenPlayerModal(row.creator._id)}
-                    >
-                      <Avatar
-                        className="avatar"
-                        src={row.creator.avatar}
-                        accessory={row.creator.accessory}
-                        username={row.creator.username}
-                        rank={row.creator.totalWagered}
-                        alt=""
-                        darkMode={this.props.isDarkMode}
-                      />
-                      <i
-                        className={`online-status${this.props.onlineUserList.filter((user) => user === row.creator._id).length > 0
-                          ? ' online'
-                          : ''
-                          }`}
-                      ></i>
-                    </a>
-                  </div>
-                ))}
-              </div>
-            </>
+                    <div className="mobile-only" style={{ marginTop: '7.5px', marginBottom: '-5px' }}>
+                      <div className="table-cell cell-user-name">
+                        <a
+                          className="player"
+                          onClick={() =>
+                            handleOpenPlayerModal(row.creator_id)
+                          }
+                        >
+                          <Avatar
+                            className="avatar"
+                            src={row.creator_avatar}
+                            accessory={row.accessory}
+                            username={row.username}
+                            rank={row.rank}
+                            alt=""
+                            darkMode={this.props.isDarkMode}
+                          />
+                          {/* <span>{row.creator}</span> */}
+                          <i
+                            className={`online-status${this.props.onlineUserList.filter(
+                              user => user === row.creator_id
+                            ).length > 0
+                              ? ' online'
+                              : ''
+                              }`}
+                          ></i>
+                        </a>
+                        {row.joiners && row.joiners.length > 0 ? (
+                          <div className="table-cell mobile-only cell-joiners">
+                            <Battle />
+                            {row.joiner_avatars
+                              .slice(0, 3)
+                              .map((joiner_avatar, index) => (
 
+                                <a
+                                  key={index}
+                                  className="player"
+                                  onClick={() =>
+                                    handleOpenPlayerModal(row.joiners[index])
+                                  }
+                                >
+                                  <Avatar
+                                    className="avatar mobile-only"
+                                    key={index}
+                                    src={joiner_avatar.avatar}
+                                    rank={joiner_avatar.rank}
+                                    username={joiner_avatar.username}
+                                    alt=""
+                                    accessory={joiner_avatar.accessory}
+                                    darkMode={this.props.isDarkMode}
+                                  />
+                                </a>
+                              ))}
+                            {row.joiner_avatars.length > 3 && (
+                              <div className="avatar-square">
+                                <div className="avatar-count">
+                                  +{row.joiner_avatars.length - 3}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ) : null}
+                      </div>
+                      <div className="table-cell mobile-only cell-likes title">
+                        {/* <div id="view">
+                              <Visibility style={{ fontSize: '1rem' }} />
+                              <Typography variant="body1">
+                                {row.views?.length || 0}
+                              </Typography>
+                            </div> */}
+                        <div id="view" style={{
+                          filter: isDarkMode ? "brightness(3)" : "none",
+                          marginRight: "-5px"
+                        }}>
+                          <Battle width="24px" />
+                          <Typography variant="body1">
+                            {row.battles}
+                          </Typography>
+                        </div>
+                        {/* <div>
+                              <IconButton color="inherit" onClick={() => this.handleLike(row)}>
+                                {row.likes?.includes(this.props.user._id) ? (
+                                  <>
+                                    {!row.likeAnimation && (
+                                      <ThumbUp
+                                        style={{ fontSize: '1rem', color: 'red' }}
+                                      />
+                                    )}
+                                    {row.likeAnimation && (
+                                      <Lottie
+                                        options={{
+                                          loop: isLowGraphics ? false : true,
+                                          autoplay: isLowGraphics ? false : true,
+                                          animationData: like
+                                        }}
+                                        style={{
+                                          width: '32px',
+                                          height: '38px',
+                                          margin: '-26px -8px -20px -8px'
+                                        }}
+                                      />
+                                    )}
+                                  </>
+                                ) : (
+                                  <ThumbUpOutlined style={{ fontSize: '1rem' }} />
+                                )}
+                              </IconButton>
+                              <Typography variant="body1">
+                                {row.likes?.length || 0}
+                              </Typography>
+                            </div> */}
+                      </div>
+                    </div>
+                  </div>
+                ),
+                this
+              )}</>
           )}
+          <div style={{ display: "inline-flex", justifyContent: "center", alignItems: "center" }}>
+
+            <h2 className="main-title recently-closed-title" style={{ paddingTop: "5px" }}>RECENTLY ENDED</h2> <Lottie style={{ filter: 'grayscale(1)' }} options={defaultOptions} width={40} />
+          </div>
+          <div className='recently-closed'>
+            {recent?.map((row) => (
+              <div key={row._id} className="carousel-content table-row slide-in">
+                <a href={`/join/${row._id}`} className="table-cell">
+                  <img
+                    src={`/img/gametype/icons/${row.game_type.short_name}.svg`}
+                    alt=""
+                    className="game-type-icon"
+                  />
+                  <div className="cell">
+                    {row.game_type.game_type_name}
+                  </div>
+                  <div className="cell">{'-' + row.room_number}</div>
+                  {this.state.qBotStatuses[row.creator_id] && (
+                    <span
+                      style={{
+                        fontSize: "xx-small",
+                        position: "absolute",
+                        top: "23px",
+                        left: "112px",
+                        border: "1px solid rgb(255, 208, 0)",
+                        background: "linear-gradient(45deg, #7a5958, #a27955)",
+                        borderRadius: "4px",
+                        color: "rgb(255, 208, 0)",
+                        padding: "0px 5px",
+                        lineHeight: "20px",
+                        marginLeft: "7.5px"
+                      }}
+                    >
+                      Q-BOT
+                    </span>
+                  )}
+                </a>
+                <div className="cell">
+                  {row.status}&nbsp;{<FontAwesomeIcon icon={faHeartBroken} />}
+                </div>
+                <div className="cell">{row.from_now}&nbsp;{<FontAwesomeIcon icon={faStopwatch} />}</div>
+                <div className={"cell"}>
+                  <span className={`${this.getColorClass(row.host_pr - row.bet_amount)}`}>{convertToCurrency(row.host_pr - row.bet_amount)}</span>
+                </div>
+                <a
+                  href="#"
+                  className="player"
+                  onClick={() => handleOpenPlayerModal(row.creator._id)}
+                >
+                  <Avatar
+                    className="avatar"
+                    src={row.creator.avatar}
+                    accessory={row.creator.accessory}
+                    username={row.creator.username}
+                    rank={row.creator.totalWagered}
+                    alt=""
+                    darkMode={this.props.isDarkMode}
+                  />
+                  <i
+                    className={`online-status${this.props.onlineUserList.filter((user) => user === row.creator._id).length > 0
+                      ? ' online'
+                      : ''
+                      }`}
+                  ></i>
+                </a>
+              </div>
+            ))}
+          </div>
+          {/* </>
+
+          )} */}
 
           {this.props.loading && (!this.state.isLoading) && (
             <>
