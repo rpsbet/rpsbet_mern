@@ -340,7 +340,7 @@ async function callCronJobs(io) {
 
 
                     // Check if the room was updated within the last 0.25 minutes (15 seconds)
-                    if (timeDifferenceInMinutes > 0.2) {
+                    // if (timeDifferenceInMinutes > 0.2) {
                       let attempts = 0;
                       const maxAttempts = 10;
 
@@ -377,7 +377,7 @@ async function callCronJobs(io) {
                           break;
                         }
                       }
-                    }
+                    // }
                   }
                 }
                 continue;
