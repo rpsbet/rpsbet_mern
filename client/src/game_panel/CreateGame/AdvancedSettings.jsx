@@ -2,7 +2,15 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { renderLottieAnimation } from '../../util/LottieAnimations';
 import { acQueryMyItem } from '../../redux/Item/item.action';
-import { Button, TextField, Tooltip, InputAdornment } from '@material-ui/core';
+import {
+  Button,
+  TextField,
+  Tooltip,
+  InputAdornment,
+  Slider,
+  FormControlLabel,
+  Radio
+} from '@material-ui/core';
 import { Info } from '@material-ui/icons';
 import styled from 'styled-components';
 import { setFocused } from '../../redux/Auth/user.actions.js'
@@ -15,6 +23,36 @@ const ProductGrid = styled.div`
   max-width: 100%;
   margin: 20px 0;
 `;
+import { makeStyles } from '@material-ui/core/styles';
+
+
+const useStyles = makeStyles({
+  redTooltip: {
+    backgroundColor: 'red',
+    color: 'white',
+    fontSize: '1em',
+    padding: 8,
+  },
+  slider: {
+    color: 'red',
+    height: 8,
+    '& .MuiSlider-thumb': {
+      backgroundColor: 'red',
+      border: '2px solid red',
+      height: 24,
+      width: 24,
+      '&:focus, &:hover, &:active': {
+        boxShadow: '0 0 0 8px rgba(255, 0, 0, 0.16)',
+      },
+    },
+    '& .MuiSlider-track': {
+      height: 8,
+    },
+    '& .MuiSlider-rail': {
+      height: 8,
+    },
+  },
+});
 
 const ProductCard = styled.div`
   position: relative;
@@ -62,12 +100,18 @@ const ProductCard = styled.div`
 class AdvancedSettings extends Component {
   constructor(props) {
     super(props);
+    // Initializing the stopLossValue based on lower and upper limits from props
     this.state = {
       selectedBackgroundId: null,
+      stopLossValue: [
+        props.lowerLimit || props.endgame_amount * 0.25 || 0,
+        props.upperLimit || props.endgame_amount * 1.25 || 100,
+      ],
     };
   }
 
   async componentDidMount() {
+    console.log("bet", this.props.bet_amount);
     const { acQueryMyItem } = this.props;
     await acQueryMyItem(100, 1, 'price', '653ee7df17c9f5ee2124564a');
   }
@@ -75,11 +119,24 @@ class AdvancedSettings extends Component {
   onFocusHandler = () => {
     this.props.setFocused(true);
   }
+
   onBlurHandler = () => {
     this.props.setFocused(false);
   }
 
+  handleSliderChange = (event, newValue) => {
+    this.setState({ stopLossValue: newValue });
+    this.props.onChangeState({ stopLossValue: newValue });
+  }
+
   render() {
+    const classes = useStyles;
+    const { lowerLimit, upperLimit, endgame_amount } = this.props;
+
+    // Debugging: Check if limits are correctly received
+    console.log('Lower Limit:', lowerLimit);
+    console.log('Upper Limit:', upperLimit);
+
     return (
       <div id="advanced_panel">
         {this.props.child_step === 1 && (
@@ -117,7 +174,7 @@ class AdvancedSettings extends Component {
                 <img
                   width="20px"
                   src={'/img/icons/private.svg'}
-                  alt={`{Private} Game`}
+                  alt={`Private Game`}
                 />
                 Private
               </Button>
@@ -140,13 +197,15 @@ class AdvancedSettings extends Component {
 
         {this.props.child_step === 2 && (
           <div className="game-info-panel payout-info-panel">
-            <h3 className="game-sub-title">Payout&nbsp;<Tooltip
-              style={{ position: "absolute", right: "20px" }}
-              title={'Choose Automatic to be paid into your balance each time the set threshold has been reached'}
-              placement="top"
-            >
-              <Info style={{ cursor: "pointer", float: "right" }} />
-            </Tooltip></h3>
+            <h3 className="game-sub-title">Payout&nbsp;
+              <Tooltip
+                style={{ position: "absolute", right: "20px" }}
+                title={'Choose Automatic to be paid into your balance each time the set threshold has been reached'}
+                placement="top"
+              >
+                <Info style={{ cursor: "pointer", float: "right" }} />
+              </Tooltip>
+            </h3>
             <div className="select-buttons-panel bet-amounts">
               <Button
                 className={!this.props.endgame_type ? ' active' : ''}
@@ -157,7 +216,7 @@ class AdvancedSettings extends Component {
                 <img
                   width="20px"
                   src={'/img/icons/manual.svg'}
-                  alt={`{Private} Game`}
+                  alt={`Manual Game`}
                 />
                 Manual
               </Button>
@@ -170,14 +229,11 @@ class AdvancedSettings extends Component {
                 <img
                   width="20px"
                   src={'/img/icons/automatic.svg'}
-                  alt={`{Private} Game`}
+                  alt={`Automatic Game`}
                 />
                 Automatic
               </Button>
-              <div
-                className={`edit-amount-panel ${this.props.endgame_type ? '' : 'hidden'
-                  }`}
-              >
+              <div className={`edit-amount-panel ${this.props.endgame_type ? '' : 'hidden'}`}>
                 <TextField
                   type="text"
                   variant="filled"
@@ -199,34 +255,82 @@ class AdvancedSettings extends Component {
                     ),
                   }}
                   onChange={e => {
+                    const value = e.target.value;
+                    const lowerLimit = value * 0.25;
+                    const upperLimit = value * 1.25;
+
                     if (this.props.game_mode === 'Mystery Box') {
                       this.props.onChangeState({
-                        endgame_amount: e.target.value,
+                        endgame_amount: value,
+                        lowerLimit,
+                        upperLimit,
                         winChance: this.props.calcMysteryBoxEV(
                           this.props.box_list,
-                          e.target.value,
+                          value,
                           this.props.max_return
                         )
                       });
                     } else if (this.props.game_mode === 'Spleesh!') {
                       this.props.onChangeState({
-                        endgame_amount: e.target.value,
+                        endgame_amount: value,
+                        lowerLimit,
+                        upperLimit,
                         winChance: this.props.calculateEV(
                           this.props.bet_amount,
-                          e.target.value,
+                          value,
                           this.props.spleesh_bet_unit
                         )
                       });
                     } else {
                       this.props.onChangeState({
-                        endgame_amount: e.target.value
+                        endgame_amount: value,
+                        lowerLimit,
+                        upperLimit
                       });
                     }
-                    // this.calcWinChance(this.state.boxList, e.target.value);
                   }}
                   placeholder="PAYOUT"
                 />
               </div>
+
+              {/* Stop Loss Section */}
+              {/* {this.props.endgame_type && (
+                <div className="stop-loss-panel">
+                  <FormControlLabel
+                    control={<Radio />}
+                    label="Stop Loss"
+                  />
+                  <Slider
+                    className={classes.slider}
+                    onChange={this.handleSliderChange}
+                    value={this.state.stopLossValue}
+                    min={this.props.lowerLimit || endgame_amount * 0.25 || 0}
+                    max={this.props.upperLimit || endgame_amount * 1.25 || 100}
+                    valueLabelDisplay="auto"
+                    ValueLabelComponent={(props) => (
+                      <Tooltip {...props} classes={{ tooltip: classes.redTooltip }} />
+                    )}
+                  />
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      width: "100%",
+                      boxShadow: "inset 0px 0px 6px 0px #b4b4b4a8",
+                      borderRadius: "9px",
+                      justifyContent: "center",
+                      padding: "5px 10px",
+                      overflow: "hidden",
+                      pointerEvents: this.props.ai_mode === "Martingale" ? "none" : "auto",
+                      filter: this.props.ai_mode === "Martingale" ? "grayscale(100%)" : "none"
+                    }}
+                  >
+                    <span style={{ fontSize: "x-small", color: "#ff0000" }}>
+                      {`Lower Limit: ${this.props.lowerLimit || endgame_amount * 0.25 || 0}, Upper Limit: ${this.props.upperLimit || endgame_amount * 1.25 || 100}`}
+                    </span>
+                  </div>
+                </div>
+              )} */}
             </div>
           </div>
         )}

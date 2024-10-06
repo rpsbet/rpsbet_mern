@@ -36,35 +36,33 @@ const customStyles = {
   },
 };
 
-
 const categories = [
-  { creditScoreThreshold: 700, rankThreshold: 1, accountAgeThresholdInDays: 30, maxAllowance: 10 },
-  { creditScoreThreshold: 700, rankThreshold: 2, accountAgeThresholdInDays: 30, maxAllowance: 20 },
-  { creditScoreThreshold: 700, rankThreshold: 3, accountAgeThresholdInDays: 30, maxAllowance: 30 },
-  { creditScoreThreshold: 700, rankThreshold: 4, accountAgeThresholdInDays: 30, maxAllowance: 40 },
-  { creditScoreThreshold: 700, rankThreshold: 5, accountAgeThresholdInDays: 30, maxAllowance: 50 },
-  { creditScoreThreshold: 700, rankThreshold: 6, accountAgeThresholdInDays: 60, maxAllowance: 80 },
-  { creditScoreThreshold: 700, rankThreshold: 7, accountAgeThresholdInDays: 60, maxAllowance: 100 },
-  { creditScoreThreshold: 700, rankThreshold: 8, accountAgeThresholdInDays: 60, maxAllowance: 150 },
-  { creditScoreThreshold: 700, rankThreshold: 9, accountAgeThresholdInDays: 60, maxAllowance: 200 },
-  { creditScoreThreshold: 700, rankThreshold: 10, accountAgeThresholdInDays: 60, maxAllowance: 250 },
-  { creditScoreThreshold: 700, rankThreshold: 11, accountAgeThresholdInDays: 60, maxAllowance: 300 },
-  { creditScoreThreshold: 700, rankThreshold: 12, accountAgeThresholdInDays: 60, maxAllowance: 400 },
-  { creditScoreThreshold: 700, rankThreshold: 13, accountAgeThresholdInDays: 60, maxAllowance: 500 },
-  { creditScoreThreshold: 700, rankThreshold: 14, accountAgeThresholdInDays: 60, maxAllowance: 600 },
-  { creditScoreThreshold: 700, rankThreshold: 15, accountAgeThresholdInDays: 90, maxAllowance: 700 },
-  { creditScoreThreshold: 700, rankThreshold: 16, accountAgeThresholdInDays: 90, maxAllowance: 800 },
-  { creditScoreThreshold: 700, rankThreshold: 17, accountAgeThresholdInDays: 90, maxAllowance: 900 },
-  { creditScoreThreshold: 700, rankThreshold: 18, accountAgeThresholdInDays: 90, maxAllowance: 1000 },
-  { creditScoreThreshold: 700, rankThreshold: 19, accountAgeThresholdInDays: 90, maxAllowance: 1500 },
-  { creditScoreThreshold: 700, rankThreshold: 20, accountAgeThresholdInDays: 90, maxAllowance: 2000 },
-  { creditScoreThreshold: 700, rankThreshold: 21, accountAgeThresholdInDays: 90, maxAllowance: 2500 },
-  { creditScoreThreshold: 700, rankThreshold: 22, accountAgeThresholdInDays: 90, maxAllowance: 3000 },
-  { creditScoreThreshold: 700, rankThreshold: 23, accountAgeThresholdInDays: 90, maxAllowance: 4000 },
-  { creditScoreThreshold: 700, rankThreshold: 24, accountAgeThresholdInDays: 90, maxAllowance: 5000 },
-  { creditScoreThreshold: 700, rankThreshold: 25, accountAgeThresholdInDays: 120, maxAllowance: 6000 },
+  { creditScoreThreshold: 700, rankThreshold: 1, accountAgeThresholdInDays: 30, maxAllowance: 100 },
+  { creditScoreThreshold: 700, rankThreshold: 2, accountAgeThresholdInDays: 30, maxAllowance: 200 },
+  { creditScoreThreshold: 700, rankThreshold: 3, accountAgeThresholdInDays: 30, maxAllowance: 300 },
+  { creditScoreThreshold: 700, rankThreshold: 4, accountAgeThresholdInDays: 30, maxAllowance: 400 },
+  { creditScoreThreshold: 700, rankThreshold: 5, accountAgeThresholdInDays: 30, maxAllowance: 500 },
+  { creditScoreThreshold: 700, rankThreshold: 6, accountAgeThresholdInDays: 30, maxAllowance: 800 },
+  { creditScoreThreshold: 700, rankThreshold: 7, accountAgeThresholdInDays: 30, maxAllowance: 1000 },
+  { creditScoreThreshold: 700, rankThreshold: 8, accountAgeThresholdInDays: 30, maxAllowance: 1500 },
+  { creditScoreThreshold: 700, rankThreshold: 9, accountAgeThresholdInDays: 30, maxAllowance: 2000 },
+  { creditScoreThreshold: 700, rankThreshold: 10, accountAgeThresholdInDays: 30, maxAllowance: 2500 },
+  { creditScoreThreshold: 700, rankThreshold: 11, accountAgeThresholdInDays: 30, maxAllowance: 3000 },
+  { creditScoreThreshold: 700, rankThreshold: 12, accountAgeThresholdInDays: 30, maxAllowance: 4000 },
+  { creditScoreThreshold: 700, rankThreshold: 13, accountAgeThresholdInDays: 30, maxAllowance: 5000 },
+  { creditScoreThreshold: 700, rankThreshold: 14, accountAgeThresholdInDays: 30, maxAllowance: 6000 },
+  { creditScoreThreshold: 700, rankThreshold: 15, accountAgeThresholdInDays: 30, maxAllowance: 7000 },
+  { creditScoreThreshold: 700, rankThreshold: 16, accountAgeThresholdInDays: 30, maxAllowance: 8000 },
+  { creditScoreThreshold: 700, rankThreshold: 17, accountAgeThresholdInDays: 30, maxAllowance: 9000 },
+  { creditScoreThreshold: 700, rankThreshold: 18, accountAgeThresholdInDays: 30, maxAllowance: 10000 },
+  { creditScoreThreshold: 700, rankThreshold: 19, accountAgeThresholdInDays: 30, maxAllowance: 15000 },
+  { creditScoreThreshold: 700, rankThreshold: 20, accountAgeThresholdInDays: 30, maxAllowance: 20000 },
+  { creditScoreThreshold: 700, rankThreshold: 21, accountAgeThresholdInDays: 60, maxAllowance: 25000 },
+  { creditScoreThreshold: 700, rankThreshold: 22, accountAgeThresholdInDays: 90, maxAllowance: 30000 },
+  { creditScoreThreshold: 700, rankThreshold: 23, accountAgeThresholdInDays: 90, maxAllowance: 40000 },
+  { creditScoreThreshold: 700, rankThreshold: 24, accountAgeThresholdInDays: 90, maxAllowance: 50000 },
+  { creditScoreThreshold: 700, rankThreshold: 25, accountAgeThresholdInDays: 120, maxAllowance: 60000 },
 ];
-
 
 class MyLoansModal extends Component {
   constructor(props) {
@@ -105,7 +103,6 @@ class MyLoansModal extends Component {
   };
   getHighlightedRowIndex = (categories, rank, accountAgeInDays) => {
     const currentRank = getRank(rank);
-    console.log('Current Rank:', currentRank, 'Account Age:', accountAgeInDays);
     
     let bestCategoryIndex = -1;
   
@@ -127,7 +124,6 @@ class MyLoansModal extends Component {
     }
   
     // Log the final selected index before returning
-    console.log('Final selected index:', bestCategoryIndex);
     return bestCategoryIndex;
   };
   onSubmitFrom = async () => {

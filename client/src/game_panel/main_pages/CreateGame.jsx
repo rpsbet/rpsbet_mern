@@ -180,7 +180,9 @@ class CreateGame extends Component {
       aveMultiplier: 0,
       score: 0,
       youtubeUrl: '',
-
+      lowerLimit: 0,
+      upperLimit: 0,
+      stopLossValue: 0,
       gameBackground: '',
       ai_mode: this.props.user.ai_mode,
       videoId: '',
@@ -1215,6 +1217,9 @@ class CreateGame extends Component {
                       calcMysteryBoxEV={this.calcMysteryBoxEV}
                       spleesh_bet_unit={this.state.spleesh_bet_unit}
                       onChangeState={this.onChangeState}
+                      lowerLimit={this.state.lowerLimit}
+                      upperLimit={this.state.upperLimit}
+                      stopLossValue={this.state.stopLossValue}
                       winChance={this.state.winChance}
                       bet_amount={this.state.bet_amount}
                       is_private={this.state.is_private}
