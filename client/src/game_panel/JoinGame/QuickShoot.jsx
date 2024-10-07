@@ -107,7 +107,6 @@ class QuickShoot extends Component {
 
     const botsCount = await this.props.getRoomBotCount(this.props.roomInfo._id);
     const qBotStatus = await this.props.getQbot(this.props.roomInfo.creator_id);
-    console.log("qBotStatus", qBotStatus);
     this.setState({
       botsCount: botsCount,
       isQbot: qBotStatus,

@@ -111,7 +111,6 @@ class AdvancedSettings extends Component {
   }
 
   async componentDidMount() {
-    console.log("bet", this.props.bet_amount);
     const { acQueryMyItem } = this.props;
     await acQueryMyItem(100, 1, 'price', '653ee7df17c9f5ee2124564a');
   }
