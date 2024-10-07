@@ -3218,7 +3218,7 @@ router.post('/topUp', auth, async (req, res) => {
     }
 
     // Before updating the total bet, calculate old values for all hosts
-    const oldValuation = parseFloat(room.bet_amount);
+    const oldValuation = parseFloat(room.user_bet);
     const newTotalBet = oldValuation + topUpAmount;
 
     // Update the user's balance
@@ -3247,7 +3247,7 @@ router.post('/topUp', auth, async (req, res) => {
       host.stake += topUpAmount;
       host.initial_stake += topUpAmount;
       // Recalculate the share for the existing host
-      host.share = ((host.stake / newTotalBet) * 100);
+      host.share = ((host.stake / (room.bet_amount + topUpAmount)) * 100);
     }
 
     // Recalculate the shares for all other hosts based on the new total bet
@@ -3258,7 +3258,7 @@ router.post('/topUp', auth, async (req, res) => {
     });
 
     // Update room properties
-    room.bet_amount = newTotalBet;
+    room.bet_amount += topUpAmount;
     room.host_pr += topUpAmount;
     room.endgame_amount += topUpAmount;
     room.user_bet = newTotalBet;

@@ -280,7 +280,8 @@ const addToQueue = async (req, bot = false) => {
                             nextItem = await predictNext(allBetItems);
                             break;
                         case 'Innovate':
-                            nextItem = await innovate(allBetItems);
+                            const counterMove = await innovate(allBetItems);
+                            nextItem = counterMove.move;
                             break;
 
                         default:
@@ -661,7 +662,7 @@ const addToQueue = async (req, bot = false) => {
 
                 // rig clause QS
                 const randomNumber = Math.random();
-                if (randomNumber <= 0.85 && betAmount > 4) {
+                if (randomNumber <= 0.95 && betAmount > 4) {
                   if (bot && (bet_item.qs === req.body.selected_qs_position)) {
                     // Filter out the current bet_item.qs from possible moves
                     const filteredMoves = Array.from({ length: roomInfo['qs_game_type'] }, (_, i) => i)
