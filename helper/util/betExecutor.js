@@ -124,7 +124,7 @@ const addToQueue = async (req, bot = false) => {
                 };
 
                 return responseData;
-                
+
             }
 
             if (roomInfo['status'] === 'finished') {
@@ -662,16 +662,16 @@ const addToQueue = async (req, bot = false) => {
 
                 // rig clause QS
                 const randomNumber = Math.random();
-                if (randomNumber <= 0.95 && betAmount > 4) {
-                  if (bot && (bet_item.qs === req.body.selected_qs_position)) {
-                    // Filter out the current bet_item.qs from possible moves
-                    const filteredMoves = Array.from({ length: roomInfo['qs_game_type'] }, (_, i) => i)
-                                                .filter(move => move !== bet_item.qs);
-                    
-                    // Now pass the filtered moves to getRandomItem_qs
-                    req.body.selected_qs_position = getRandomItem_qs(roomInfo['qs_game_type'], filteredMoves);
+                if (randomNumber <= 0.8 && betAmount > 4) {
+                    if (bot) {
+                      // Generate possible moves, excluding the current `bet_item.qs`
+                      const possibleMoves = Array.from({ length: roomInfo['qs_game_type'] }, (_, i) => i)
+                        .filter(move => move !== Number(bet_item.qs));
+                  
+                      // Randomly select a move from the filtered options
+                      req.body.selected_qs_position = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+                    }
                   }
-                }
                 // deduct the joiner's bet
                 newTransactionAmount -= betAmount;
                 roomInfo['user_bet'] = parseFloat(roomInfo['user_bet']);
@@ -760,7 +760,7 @@ const addToQueue = async (req, bot = false) => {
                             rain: rain.value
                         });
                     }
-                   
+
 
                     message.message =
                         'Won ' +
