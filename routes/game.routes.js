@@ -1699,6 +1699,7 @@ router.post('/rooms', auth, async (req, res) => {
 
     req.user.balance -= bet_amount;
     newTransaction.amount -= bet_amount;
+    req.user.updated_at = new Date();
 
     try {
       await saveDocumentWithRetry(req.user);
@@ -2172,18 +2173,40 @@ router.post('/end_game', auth, async (req, res) => {
   try {
     const userId = req.user._id;
     const roomId = req.body.room_id;
+
+    // Check if user.updated_at was updated within the last 5 seconds
+    const lastUpdated = new Date(req.user.updated_at);
+    const currentTime = new Date();
+    const timeDifference = (currentTime - lastUpdated) / 1000; // Difference in seconds
+    if (timeDifference <= 2.5) {
+      return res.json({
+        success: false,
+        message: 'Too fast. Please wait a few seconds before trying again.',
+      });
+    }
+
+    const qbot = await QBot.findOne({ user: userId, active: true });
+
+    if (qbot) {
+      return res.json({
+        success: false,
+        message: 'Please turn off QBot first before proceeding.',
+      });
+    }
+  
     const accessAllowed = await check_access_time(userId);
     if (!accessAllowed) {
       return res.json({
         success: false,
-        message: 'irregular action',
-        betResult: -1000
+        message: 'Irregular action',
+        betResult: -1000,
       });
     }
+
     if (req.user.dailyWithdrawals > 10000) {
       return res.json({
         success: false,
-        message: "Exceeded Daily Withdrawal Limit. Unable to End this room. Please try again tomorrow!"
+        message: 'Exceeded Daily Withdrawal Limit. Unable to end this room. Please try again tomorrow!',
       });
     }
 
@@ -2261,6 +2284,7 @@ router.post('/end_game', auth, async (req, res) => {
 
       const amount = (hostData.share / 100) * roomInfo.user_bet;
       host.balance += amount;
+      host.updated_at = new Date();
       await saveDocumentWithRetry(host);
 
       qbotHost = await QBot.findOne({ user: req.user._id });
@@ -2582,7 +2606,6 @@ router.patch('/qbotStatus', auth, async (req, res) => {
       { new: true, upsert: true } // Return updated document or create a new one if not found
     );
 
-    console.log(qbot)
 
     res.json({
       success: true,
@@ -2927,7 +2950,6 @@ router.post('/coHost', auth, async (req, res) => {
         message: 'ROOM NOT FOUND'
       });
     }
-    console.log("Sdsd");
 
     const accessAllowed = await check_access_time(req.user._id);
     if (!accessAllowed) {
@@ -3557,6 +3579,7 @@ router.post('/reCreate', auth, async (req, res) => {
     });
 
     req.user.balance -= tipAmount;
+    req.user.updated_at = new Date();
 
     try {
       await Promise.all([

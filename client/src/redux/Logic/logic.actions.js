@@ -1096,10 +1096,11 @@ export const endGame = (room_id, callback) => async dispatch => {
 
       dispatch({ type: NEW_TRANSACTION, payload: res.data.newTransaction });
       dispatch({ type: MSG_SUCCESS, payload: "GAME HAS NOW ENDED" });
+    } else {
+      dispatch({ type: MSG_ERROR, payload: res.data.message });
     }
   } catch (err) {
     console.log(err);
-    dispatch({ type: MSG_ERROR, payload: 'SOMETHING WENT WRONG, TRY AGAIN LATER' });
 
   } finally {
     dispatch({ type: END_LOADING });

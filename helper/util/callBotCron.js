@@ -551,16 +551,13 @@ async function callCronJobs(io) {
               //   roomList: rooms.rooms,
               //   total: rooms.count
               // });
-              console.log('swse')
 
             } catch (err) {
               console.error('Error saving room:', err);
 
             }
-            console.log('sse')
 
           }
-          console.log('finishe')
         }
 
       }
