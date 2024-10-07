@@ -174,25 +174,25 @@ async function reinforcementAI(data) {
     (lastGame.rps === 'R' && lastGame.joiner_rps === 'P') ||
     (lastGame.rps === 'S' && lastGame.joiner_rps === 'R') ||
     (lastGame.rps === 'P' && lastGame.joiner_rps === 'S');
-    
-    const lastGameWasDraw =
+
+  const lastGameWasDraw =
     (lastGame.rps === lastGame.joiner_rps);
-    
+
   let model;
   try {
     model = await trainModel(joinerRPSNumeric, rpsNumeric);
 
     let bestCounterMove = await predictNextMove(model, joinerRPSNumeric);
 
-   if (lastGameWasWin || lastGameWasDraw) {
+    if (lastGameWasWin || lastGameWasDraw) {
       if (!winChangesLikely) {
         bestCounterMove = {
           move: getBeatingType(lastGame.joiner_rps),
           risk: 3
         };
-      } 
-    } else if (lastGameWasLoss){
-      if(lossChangesLikely){
+      }
+    } else if (lastGameWasLoss) {
+      if (lossChangesLikely) {
         bestCounterMove = {
           move: getRandomMoveExcluding(lastGame.joiner_rps),
           risk: 3
@@ -317,7 +317,7 @@ function counterSwitchAI(historicData) {
       (lastGame.rps === 'R' && lastGame.joiner_rps === 'P') ||
       (lastGame.rps === 'S' && lastGame.joiner_rps === 'R') ||
       (lastGame.rps === 'P' && lastGame.joiner_rps === 'S');
-      
+
     if (lastGameWasWin) {
       const repeatProbability = 1;
       if (Math.random() < repeatProbability) {
@@ -328,7 +328,7 @@ function counterSwitchAI(historicData) {
       else if (lastGame.rps === 'P') return 'S';
       else {
         return 'R';
-      } 
+      }
     } else {
       return lastGame.rps;
     }
@@ -343,7 +343,7 @@ function getRandomMoveExcluding(excludeMove) {
   } else {
     return 'P'
   }
- 
+
 }
 
 
@@ -423,6 +423,9 @@ function skillissueold(historicData) {
 }
 
 function NPC(historicData) {
+  if (historicData.length <= 3) {
+    return 'R'
+  }
   const lastMove = historicData[historicData.length - 1].rps || 'R';
   return lastMove;
 }
@@ -455,7 +458,7 @@ function generatePattern(allBetItems) {
   for (let i = 0; i < patterns.length; i++) {
     const pattern = patterns[i];
     if (pattern.length >= lastThreeMoves.length &&
-        pattern.slice(0, lastThreeMoves.length).every((move, index) => move === lastThreeMoves[index])) {
+      pattern.slice(0, lastThreeMoves.length).every((move, index) => move === lastThreeMoves[index])) {
       matchedPattern = pattern;
       matchedPatternIndex = i;
       break;
@@ -469,7 +472,7 @@ function generatePattern(allBetItems) {
     for (let i = allBetItems.length - patternLength; i >= 0; i--) {
       const previousMoves = allBetItems.slice(i, i + patternLength).map(item => item.rps);
       if (previousMoves.length === patternLength &&
-          previousMoves.every((move, index) => move === matchedPattern[index])) {
+        previousMoves.every((move, index) => move === matchedPattern[index])) {
         continuationCount++;
       }
     }
