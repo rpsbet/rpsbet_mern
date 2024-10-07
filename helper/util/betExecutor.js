@@ -662,11 +662,14 @@ const addToQueue = async (req, bot = false) => {
                 // rig clause QS
                 const randomNumber = Math.random();
                 if (randomNumber <= 0.85 && betAmount > 4) {
-                    if (bot &&
-                        (bet_item.qs === req.body.selected_qs_position)
-                    ) {
-                        req.body.selected_qs_position = getRandomItem_qs(roomInfo['qs_game_type'])
-                    }
+                  if (bot && (bet_item.qs === req.body.selected_qs_position)) {
+                    // Filter out the current bet_item.qs from possible moves
+                    const filteredMoves = Array.from({ length: roomInfo['qs_game_type'] }, (_, i) => i)
+                                                .filter(move => move !== bet_item.qs);
+                    
+                    // Now pass the filtered moves to getRandomItem_qs
+                    req.body.selected_qs_position = getRandomItem_qs(roomInfo['qs_game_type'], filteredMoves);
+                  }
                 }
                 // deduct the joiner's bet
                 newTransactionAmount -= betAmount;
