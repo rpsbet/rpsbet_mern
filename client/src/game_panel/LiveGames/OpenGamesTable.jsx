@@ -230,13 +230,13 @@ class OpenGamesTable extends Component {
     // Check if roomList has changed
     if (prevProps.roomList !== this.props.roomList) {
       // Check for significant changes in user_bet (30% or more) or if roomList length has changed
-      const significantChange = this.props.roomList.some((room, index) => {
+      const significantChange = this.props.roomList.slice(0, 5).some((room, index) => {
         const prevRoom = prevProps.roomList.find(prevRoom => prevRoom._id === room._id);
-  
+
         if (prevRoom) {
           const previousBet = parseFloat(prevRoom.user_bet);
           const newBet = parseFloat(room.user_bet);
-          
+
           // Ensure both values are valid numbers before calculating the change
           if (!isNaN(previousBet) && !isNaN(newBet) && previousBet !== 0) {
             const change = Math.abs(newBet - previousBet) / previousBet;
@@ -244,8 +244,8 @@ class OpenGamesTable extends Component {
           }
         }
         return false; // No previous room found, or invalid bet values
-      }) || prevProps.roomList.length !== this.props.roomList.length;
-  
+      }) || prevProps.roomList.length !== this.props.roomList.length && this.props.roomList.length === this.state.roomList.length;
+
       this.setState(prevState => ({
         roomList: [
           ...prevState.roomList,
@@ -255,12 +255,10 @@ class OpenGamesTable extends Component {
         isLoading: false,
         loaded: true
       }));
-  
+
       this.setState({
         roomList: this.props.roomList
       });
-  
-  
       // Call handleRefresh if there was a significant change or roomList length change
       if (significantChange) {
         this.props.handleRefresh();
