@@ -207,7 +207,9 @@ class OpenGamesTable extends Component {
     this.props.getRoomList({ pageSize: 7 });
     await this.props.getRecentlyClosed();
     window.addEventListener('load', this.handleLoad);
-    window.addEventListener('scroll', this.handleScroll);
+    this.debouncedHandleScroll = this.debounce(this.handleScroll, 300);
+
+    window.addEventListener('scroll', this.debouncedHandleScroll);
 
     const qBotStatuses = {};
     for (const room of this.state.roomList) {
@@ -220,7 +222,7 @@ class OpenGamesTable extends Component {
 
 
   componentWillUnmount() {
-    window.removeEventListener('scroll', this.handleScroll);
+    window.removeEventListener('scroll', this.debouncedHandleScroll);
     window.removeEventListener('load', this.handleLoad);
   }
 
@@ -228,7 +230,7 @@ class OpenGamesTable extends Component {
     const roomIds = this.props.roomList.map(room => room._id);
 
     // Check if roomList has changed
-    if (prevProps.roomList !== this.props.roomList) {
+    if (prevProps.roomList !== this.props.roomList && this.state.roomList.length <= this.props.roomList.length) {
       // Check for significant changes in user_bet (30% or more) or if roomList length has changed
       const significantChange = this.props.roomList.slice(0, 5).some((room, index) => {
         const prevRoom = prevProps.roomList.find(prevRoom => prevRoom._id === room._id);
@@ -259,6 +261,7 @@ class OpenGamesTable extends Component {
       this.setState({
         roomList: this.props.roomList
       });
+    
       // Call handleRefresh if there was a significant change or roomList length change
       if (significantChange) {
         this.props.handleRefresh();
@@ -288,15 +291,23 @@ class OpenGamesTable extends Component {
   handleScroll = async () => {
     const { loading, selectedGameType, rooms_count, roomList } = this.props;
     const { fetchedRoomIds } = this.state;
+    
+    // Get the table element
     const tableElement = document.querySelector('.table.main-game-table');
-
+    
     if (tableElement) {
       const { bottom } = tableElement.getBoundingClientRect();
       const viewportHeight = window.innerHeight;
-      const offset = 100;
+      const offset = 100; // Set a small offset for better UX
+  
+      // Check if the table is near the bottom of the viewport
       const isTableNearBottom = bottom <= viewportHeight + offset;
-
-      if (!loading && isTableNearBottom && rooms_count !== roomList.length) {
+  
+      // Check if the document is already at the bottom
+      const isAtBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight;
+  
+      // Only fetch more rooms if the table is near the bottom or at the bottom
+      if (!loading && (isTableNearBottom || isAtBottom)) {
         await this.props.fetchMoreRooms({
           pageSize: roomList.length + 3,
           game_type: selectedGameType,
@@ -306,6 +317,14 @@ class OpenGamesTable extends Component {
     }
   };
 
+  debounce = (func, delay) => {
+    let debounceTimer;
+    return function(...args) {
+      const context = this;
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => func.apply(context, args), delay);
+    };
+  };
 
   handleCoHost = (row) => {
     this.setState({ isCoHostModalOpen: true, selectedRow: row });
