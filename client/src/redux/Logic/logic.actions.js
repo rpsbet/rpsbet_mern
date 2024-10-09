@@ -178,19 +178,24 @@ export const bet = bet_info => async dispatch => {
         amount: res.data.newTransaction.amount
       };
     } else {
+      
       if (res.data.betResult === -100) {
         history.push('/');
+      dispatch({ type: MSG_WARNING, payload: 'THIS BATTLE HAS NOW ENDED' });
+
         return {
           status: 'failed',
           message: 'THIS BATTLE HAS NOW ENDED'
         };
       } else if (res.data.betResult === -102) {
+        dispatch({ type: MSG_WARNING, payload: 'THIS ROOM IS BUSY' });
+
         return {
           status: 'failed',
           message: res.data.message
         };
       } else {
-        dispatch({ type: MSG_WARNING, payload: 'ONE SEC, G' });
+        dispatch({ type: MSG_WARNING, payload: 'THIS ROOM IS BUSY' });
         return {
           status: 'failed',
           message: 'SLOW DOWN BLUD!'
@@ -236,17 +241,21 @@ export const bet2 = bet_info => async dispatch => {
     } else {
       if (res.data.betResult === -100) {
         history.push('/');
+      dispatch({ type: MSG_WARNING, payload: 'THIS BATTLE HAS NOW ENDED' });
+
         return {
           status: 'failed',
           message: 'THIS BATTLE HAS NOW ENDED'
         };
       } else if (res.data.betResult === -102) {
+        dispatch({ type: MSG_WARNING, payload: 'THIS ROOM IS BUSY' });
+
         return {
           status: 'failed',
           message: res.data.message
         };
       } else {
-        dispatch({ type: MSG_WARNING, payload: 'ONE SEC, G' });
+        dispatch({ type: MSG_WARNING, payload: 'THIS ROOM IS BUSY' });
         return {
           status: 'failed',
           message: 'SLOW DOWN BLUD!'
@@ -280,17 +289,21 @@ export const bet3 = bet_info => async dispatch => {
     } else {
       if (res.data.betResult === -100) {
         history.push('/');
+      dispatch({ type: MSG_WARNING, payload: 'THIS BATTLE HAS NOW ENDED' });
+
         return {
           status: 'failed',
           message: 'THIS BATTLE HAS NOW ENDED'
         };
       } else if (res.data.betResult === -102) {
+        dispatch({ type: MSG_WARNING, payload: 'THIS ROOM IS BUSY' });
+
         return {
           status: 'failed',
           message: res.data.message
         };
       } else {
-        dispatch({ type: MSG_WARNING, payload: 'ONE SEC, G' });
+        dispatch({ type: MSG_WARNING, payload: 'THIS ROOM IS BUSY' });
         return {
           status: 'failed',
           message: 'SLOW DOWN BLUD!'

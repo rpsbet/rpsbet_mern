@@ -109,7 +109,7 @@ const addToQueue = async (req, bot = false, qbot) => {
                 return responseData;
             }
 
-            const tenSecondsAgo = new Date(Date.now() - 1500);
+            const tenSecondsAgo = new Date(Date.now() - 500);
             if (roomInfo['updated_at'] > tenSecondsAgo) {
                 responseData = {
                     success: false,

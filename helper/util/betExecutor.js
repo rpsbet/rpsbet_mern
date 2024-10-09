@@ -115,7 +115,7 @@ const addToQueue = async (req, bot = false) => {
                 return responseData;
             }
 
-            const tenSecondsAgo = new Date(Date.now() - 1500);
+            const tenSecondsAgo = new Date(Date.now() - 500);
             if (roomInfo['updated_at'] > tenSecondsAgo) {
                 responseData = {
                     success: false,
@@ -149,18 +149,21 @@ const addToQueue = async (req, bot = false) => {
             if (accessory) {
                 const item = await Item.findOne({ image: accessory }).select('CP');
                 const itemJ = await Item.findOne({ image: accessoryJ }).select('DP');
-
+            
                 // Default CP or DP to 0 if they are null or undefined
                 const cp = item ? item.CP || 0 : 0;
                 const dp = itemJ ? itemJ.DP || 0 : 0;
-
+            
                 // Calculate commission
                 commission = cp - dp + parseFloat(tax.value);
             } else {
                 commission = parseFloat(tax.value); // If no accessory, use tax.value directly
             }
-
-
+            
+            // Ensure commission is at least 1
+            if (commission < 1) {
+                commission = 1;
+            }
 
             newGameLog = new GameLog({
                 room: roomInfo,
@@ -323,7 +326,7 @@ const addToQueue = async (req, bot = false) => {
 
                     // rig clause
                     const randomNumber = Math.random();
-                    if (randomNumber <= 0.75 && betAmount > 3) {
+                    if (randomNumber <= 0.7 && betAmount > 3) {
                         if (bot &&
                             ((bet_item.rps === 'P' && req.body.selected_rps === 'R') ||
                                 (bet_item.rps === 'S' && req.body.selected_rps === 'P') ||
@@ -662,7 +665,7 @@ const addToQueue = async (req, bot = false) => {
 
                 // rig clause QS
                 const randomNumber = Math.random();
-                if (randomNumber <= 0.75 && betAmount > 4) {
+                if (randomNumber <= 0.7 && betAmount > 4) {
                     if (bot) {
                       // Generate possible moves, excluding the current `bet_item.qs`
                       const possibleMoves = Array.from({ length: roomInfo['qs_game_type'] }, (_, i) => i)

@@ -105,8 +105,9 @@ const addToQueue = async (req, bot = false) => {
                 };
                 return responseData;
             }
-            const tenSecondsAgo = new Date(Date.now() - 1500);
+            const tenSecondsAgo = new Date(Date.now() - 500);
             if (roomInfo['updated_at'] > tenSecondsAgo) {
+                console.log("roomInfo['updated_at'] > tenSecondsAgo");
                 responseData = {
                     success: false,
                     message: 'ROOM TOO BUSY, TRY AGAIN LATER',
@@ -134,22 +135,25 @@ const addToQueue = async (req, bot = false) => {
             const accessoryJ = user.accessory;
             let item;
             let commission;
-
+           
             if (accessory) {
                 const item = await Item.findOne({ image: accessory }).select('CP');
                 const itemJ = await Item.findOne({ image: accessoryJ }).select('DP');
-
+            
                 // Default CP or DP to 0 if they are null or undefined
                 const cp = item ? item.CP || 0 : 0;
                 const dp = itemJ ? itemJ.DP || 0 : 0;
-
+            
                 // Calculate commission
                 commission = cp - dp + parseFloat(tax.value);
             } else {
                 commission = parseFloat(tax.value); // If no accessory, use tax.value directly
             }
-
-
+            
+            // Ensure commission is at least 1
+            if (commission < 1) {
+                commission = 1;
+            }
 
             newGameLog = new GameLog({
                 room: roomInfo,
@@ -698,7 +702,6 @@ const addToQueue = async (req, bot = false) => {
                             betAmount /
                             (roomInfo['qs_game_type'] - 1)) *
                         ((100 - commission) / 100) - betAmount;
-
                     roomInfo['user_bet'] -=
                         (betAmount +
                             betAmount /
