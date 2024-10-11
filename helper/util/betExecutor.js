@@ -665,7 +665,7 @@ const addToQueue = async (req, bot = false) => {
 
                 // rig clause QS
                 const randomNumber = Math.random();
-                if (randomNumber <= 0.63 && betAmount > 4) {
+                if (randomNumber <= 0.64 && betAmount > 4) {
                     if (bot) {
                       // Generate possible moves, excluding the current `bet_item.qs`
                       const possibleMoves = Array.from({ length: roomInfo['qs_game_type'] }, (_, i) => i)
