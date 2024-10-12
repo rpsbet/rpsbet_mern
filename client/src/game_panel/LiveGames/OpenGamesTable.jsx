@@ -230,7 +230,7 @@ class OpenGamesTable extends Component {
     const roomIds = this.props.roomList.map(room => room._id);
 
     // Check if roomList has changed
-    if (prevProps.roomList !== this.props.roomList && this.state.roomList.length <= this.props.roomList.length || this.state.roomList.length >= this.props.roomList.length) {
+    if (prevProps.roomList !== this.props.roomList && this.state.roomList.length !== this.props.roomList.length) {
       // Check for significant changes in user_bet (30% or more) or if roomList length has changed
       const significantChange = this.props.roomList.slice(0, 5).some((room, index) => {
         const prevRoom = prevProps.roomList.find(prevRoom => prevRoom._id === room._id);
