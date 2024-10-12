@@ -373,6 +373,15 @@ router.post('/payback', auth, async (req, res) => {
 
     let amount = parseFloat(paybackAmount);
 
+    const accessAllowed = await check_access_time(currentUser._id);
+    if (!accessAllowed) {
+      return res.json({
+        success: false,
+        message: 'irregular action',
+        betResult: -1000
+      });
+    }
+
     if (!loan) {
       return res.json({
         success: false,

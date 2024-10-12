@@ -199,10 +199,10 @@ class VaultModal extends Component {
 
                   <tbody>
                     {vaultTransactions.map((transaction) => (
-                      <tr key={transaction._id} className={transaction.description.includes('withdrawal') ? 'withdrawal' : 'deposit'}>
-                        <td>{transaction.description.includes('withdrawal') ? '-' : '+'}</td>
-                        <td>{convertToCurrency(transaction.amount)}</td>
-                        <td>{new Date(transaction.created_at).toLocaleString()}</td>
+                      <tr key={transaction?._id} className={transaction?.description.includes('withdrawal') ? 'withdrawal' : 'deposit'}>
+                        <td>{transaction?.description.includes('withdrawal') ? '-' : '+'}</td>
+                        <td>{convertToCurrency(transaction?.amount)}</td>
+                        <td>{new Date(transaction?.created_at).toLocaleString()}</td>
                       </tr>
                     ))}
                   </tbody>

@@ -14,7 +14,7 @@ const admin = require('../middleware/admin');
 const socket = require('../socketController');
 const saveDocumentWithRetry = require('../helper/util/retrySave');
 const convertToCurrency = require('../helper/util/conversion');
-
+const check_access_time = require('../helper/util/checkAccessTime');
 // User Model
 const User = require('../model/User');
 const Transaction = require('../model/Transaction');
@@ -406,6 +406,7 @@ router.get('/vault-transactions', auth, async (req, res) => {
 
 
 router.post('/deposit', auth, async (req, res) => {
+
   try {
     const userId = req.user.id;
     const balance = req.user.balance;
@@ -413,7 +414,17 @@ router.post('/deposit', auth, async (req, res) => {
     if (!userId) {
       return res.json({ success: false, error: 'NO USER FOUND' });
     }
+    
+    const accessAllowed = await check_access_time(req.user._id);
+    if (!accessAllowed) {
+        responseData = {
+            success: false,
+            message: 'TOO FAST',
+            betResult: -100
+        };
 
+        return responseData;
+    }
     const parsedAmount = parseFloat(amount);
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
       return res.json({ success: false, error: 'INVALID AMOUNT' });
@@ -436,7 +447,6 @@ router.post('/deposit', auth, async (req, res) => {
     }
 
     vault.balance += parsedAmount;
-
     const newTransaction = new Transaction({
       user: userId,
       amount: -parsedAmount,
@@ -493,6 +503,17 @@ router.post('/withdraw', auth, async (req, res) => {
 
     if (!userId) {
       return res.json({ success: false, error: 'NO USER FOUND' });
+    }
+
+    const accessAllowed = await check_access_time(req.user._id);
+    if (!accessAllowed) {
+        responseData = {
+            success: false,
+            message: 'TOO FAST',
+            betResult: -100
+        };
+
+        return responseData;
     }
 
     const parsedAmount = parseFloat(amount);
