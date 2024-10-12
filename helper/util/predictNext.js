@@ -44,12 +44,18 @@ const predictNext = (rps_list, markov = false) => {
   let nextState = currentState;
   let maxProb = 0;
 
-  Object.keys(transitionMatrix[currentState]).forEach((state) => {
-    if (transitionMatrix[currentState][state] > maxProb) {
-      maxProb = transitionMatrix[currentState][state];
-      nextState = state;
-    }
-  });
+  if (transitionMatrix[currentState]) {
+    Object.keys(transitionMatrix[currentState]).forEach((state) => {
+      if (transitionMatrix[currentState][state] > maxProb) {
+        maxProb = transitionMatrix[currentState][state];
+        nextState = state;
+      }
+    });
+  } else {
+    console.warn(`Warning: No transition data available for state ${currentState}`);
+    nextState = Object.keys(transitionMatrix)[0] || getRandomMove();
+  }
+
 
   if (markov) {
     nextState = getBeatingType(nextState);
