@@ -171,16 +171,19 @@ async function checkConfirmations(io) {
         continue;
       }
 
+      const currentTime = new Date();
+      const twoHoursAgo = new Date(currentTime.getTime() - (10 * 60 * 60 * 1000)); // 10 hours ago
+      
       let isDeposit = transaction.description === 'deposit';
       let isWithdraw = transaction.description === 'withdraw';
-
       const paymentId = transaction.hash;
-      if (isDeposit && paymentId) {
+      
+      // Ensure the transaction is a deposit with a valid paymentId and created within the last 10 hours
+      if (isDeposit && paymentId && new Date(transaction.created_at) >= twoHoursAgo) {
         try {
           // Mark the transaction as "in process" to avoid duplicates
           transaction.status = 'in_process';
           await saveDocumentWithRetry(transaction);
-
           const response = await axios.get(`https://api.nowpayments.io/v1/payment/${paymentId}`, {
             headers: {
               'x-api-key': API_KEY,

@@ -437,6 +437,7 @@ router.post('/create_payout', auth, async (req, res) => {
       try {
         await newGameLog.save();
       } catch (error) {
+        console.log('Eerr:', error);
         console.error('Error saving game log:', error);
         return res.status(500).json({
           success: false,
