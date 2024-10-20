@@ -1162,7 +1162,7 @@ class SiteWrapper extends Component {
             <img className="desktop-only" style={{ maxWidth: "150px", marginBottom: '60px' }} src="../img/dark-game-logo.svg" />
 
             <p style={{ textTransform: 'uppercase', color: "#fff" }}>GET RICH 💰 OR DIE 🩸 😼</p>
-            <div className="countdown" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '0.5em',height: '400px', overflow: 'hidden' }}>
+            <div className="countdown" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '0.5em', height: '400px', overflow: 'hidden' }}>
               <div
                 className="countdown-side"
                 style={{
@@ -1189,7 +1189,7 @@ class SiteWrapper extends Component {
                     frameborder="0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowfullscreen
-                    style={{borderRadius:"10px", border: "3px solid rgb(98 3 172)"}}
+                    style={{ borderRadius: "10px", border: "3px solid rgb(98 3 172)" }}
                   ></iframe>
                 </div>
                 <Countdown
@@ -1392,7 +1392,7 @@ class SiteWrapper extends Component {
                   />
                 </Tabs>
               ) : (
-                <div style={{ padding: "48px" }}>
+                <div style={{ padding: width < 600 ? "0" : "48px" }}>
                 </div>
               )}
               <div className="header_action_panel">
@@ -1651,10 +1651,24 @@ class SiteWrapper extends Component {
                       </MenuItem>
                       <Divider />
                       <MenuItem
+                        onClick={() => {
+                          // Use history.push if using react-router, or window.location.href for a direct navigation
+                          // window.location.href = '/investors'; // Direct navigation
+                          // Alternatively, use this if you're using react-router's history object:
+                          history.push('/investors');
+                        }}
+                      >
+                        <ListItemIcon>
+                          <ExitToApp size="small" />
+                        </ListItemIcon>
+                        <ListItemText>$RPS 🚀🚀🚀</ListItemText>
+                      </MenuItem>
+                      <MenuItem
                         onClick={e => {
                           this.handleLogout(true);
                         }}
                       >
+
                         <ListItemIcon>
                           <ExitToApp size="small" />
                         </ListItemIcon>

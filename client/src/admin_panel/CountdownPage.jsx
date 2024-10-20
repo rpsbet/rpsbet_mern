@@ -154,7 +154,6 @@ const COUNTDOWN_BUTTONS = [
   { label: 'Buy', section: 'buy' },
   { label: 'About', section: 'about' },
 ];
-
 const generateRandomPositions = (buttonsCount) => {
   const positions = [];
   const buttonWidth = 150;
@@ -163,8 +162,22 @@ const generateRandomPositions = (buttonsCount) => {
   const centerX = width / 2;
   const centerY = height / 2;
 
-  const horizontalScatterDistance = width < 600 ? 300 : 800;
-  const verticalScatterDistance = width < 600 ? 270 : 300;
+  // If width is less than 600px, use fixed positions
+  if (width < 600) {
+    const fixedPositions = [
+      { top: 500, left: 320 },
+      { top: 560, left: 340 },
+      { top: 380, left: 160 },
+      { top: 400, left: 230 },
+      { top: 400, left: 380 },
+      // Add more fixed positions as needed for your buttons
+    ];
+    return fixedPositions.slice(0, buttonsCount); // Return only the needed positions
+  }
+
+  // For larger screens, use scatter logic
+  const horizontalScatterDistance = 800;
+  const verticalScatterDistance = 300;
   const maxAttempts = 100;
 
   for (let i = 0; i < buttonsCount; i++) {
@@ -189,6 +202,7 @@ const generateRandomPositions = (buttonsCount) => {
     if (attempts < maxAttempts) {
       positions.push(newPosition);
     } else {
+      // Fallback position in case of collision
       positions.push({
         top: centerY - buttonHeight / 2 + (i * (buttonHeight + margin)) % (verticalScatterDistance / 2),
         left: centerX - buttonWidth / 2 + (i * (buttonWidth + margin)) % (horizontalScatterDistance / 2),
@@ -854,7 +868,7 @@ const CountdownPage = ({
                 src={remote}
                 alt="Remote Control"
               />
-              <Lottie options={catOptions} style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translateY(40%)' }} height={'auto'} width={'300px'} isClickToPauseDisabled={true} />
+              <Lottie options={catOptions} style={{ position: 'absolute', left: '50%', top: '50%', transform: width < 600 ? 'translateY(30%)' : 'translateY(40%)' }} height={'auto'} width={'300px'} isClickToPauseDisabled={true} />
             </div>
             {COUNTDOWN_BUTTONS.map((button, index) => (
               <Zoom in={true} timeout={index * 200} key={button.label}>
@@ -881,7 +895,7 @@ const CountdownPage = ({
 
           {/* Footer */}
           <div style={{position: "absolute", bottom: "0", display:"flex", textAlign:"left", flexDirection: "column", padding: "30px", justifyContent: "center", alignContent: "center"}} >
-            <div className="social-icons" style={{ display: 'flex', alignItems: 'center' }}>
+            <div className="countdown social-icons" style={{ display: 'flex', alignItems: 'center' }}>
               {/* <a href="https://discord.gg/anMJntW4AD">
                             <FontAwesomeIcon icon={faDiscord} />
                         </a> */}<span>CHECK SOCIALS FOR UPDATES ►</span>
@@ -901,7 +915,7 @@ const CountdownPage = ({
                         <FontAwesomeIcon icon={faTwitch} />
                     </a> */}
             </div>
-            <div>
+            <div className="countdown">
 
               <a className={classes.link} href="https://blog.rps.game/">Blog</a>&nbsp;✗&nbsp;
               {/* <a className={classes.link} href="#">Faq</a>&nbsp;✗&nbsp; */}
