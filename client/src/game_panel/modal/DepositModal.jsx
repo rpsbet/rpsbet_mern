@@ -13,7 +13,8 @@ import WalletIcon from '@material-ui/icons/AccountBalanceWallet';
 import FileCopyIcon from '@material-ui/icons/FileCopy';
 import QRCode from 'qrcode.react';
 import {
-  faGasPump
+  faGasPump,
+  faExternalLinkAlt
 } from '@fortawesome/free-solid-svg-icons';
 import {
   Button,
@@ -144,11 +145,11 @@ class DepositModal extends Component {
       web2Amount: 10,
       sendAmount: 0,
       sendAddress: '',
-      selectedOption: 0,
+      selectedOption: '',
       currencyTo: 'ltc',
       web3: props.web3,
-      balance: props.balance,
-      account: props.account,
+      balance: props.balance || 0,
+      account: props.account || "",
       isLoading: false,
       estimatedPrice: null,
       paymentMethod: 'web2',
@@ -158,29 +159,44 @@ class DepositModal extends Component {
       payinExtraId: '',
       loading: true,
       hoveredSuggestion: null,
-      currencyValue:  0.06222,
+      currencyValue: 0.03222,
       copied: false,
       paymentId: ''
     };
 
-    this.options = [10, 25, 50, 100, 250];
+    this.options = [25, 50, 100, 250, 500, 1000];
     this.images = [
       '/img/icons/coins-xs.svg',
       '/img/icons/coins-s.svg',
       '/img/icons/coins-m.svg',
       '/img/icons/coins-l.svg',
       '/img/icons/coins-xl.svg',
+      '/img/icons/coins-xxl.svg',
     ];
-    this.additionalTexts = ['shy guy', 'casual', 'flipper', 'baller', 'investor'];
+    this.additionalTexts = ['shy guy', 'casual', 'flipper', 'baller', 'investor', 'jew'];
 
   }
-
   async componentDidMount() {
     const params = { addressTo: this.state.account };
+
+    // Check if any parameter is empty or undefined
+    // Proceed if parameters are valid (non-empty)
     await this.handleGetPaymentMethods();
     this.props.setGasfee(params);
+    if (!params.addressTo) {
+      console.error('Missing or empty parameters, skipping execution.');
+      return;
+    }
+
     this.getAddress();
   }
+
+  componentDidUpdate(prevProps) {
+    if (prevProps.account !== this.props.account) {
+      this.setState({ account: this.props.account });
+    }
+  }
+
 
   handleAmountChange = e => {
     e.preventDefault();
@@ -393,9 +409,9 @@ class DepositModal extends Component {
 
   render() {
     const { account, paymentMethod, paymentId, payinExtraId, amount, sendAddress, sendAmount, copied, currencyTo, isValidCurrency, suggestions, hoveredSuggestion, selectedOption, currencyValue } = this.state;
-    const { classes } = this.props;
+    const { classes, user_id } = this.props;
     const isConnected = !!account;
-
+    const isBlurred = !user_id;
     let description = '';
 
     switch (paymentMethod) {
@@ -413,7 +429,7 @@ class DepositModal extends Component {
     return (
       <>
         <LoadingOverlay
-          active={true}
+          active={this.state.isLoading ? true : false}
           spinner
           text="Creating Block..."
           styles={{
@@ -435,15 +451,21 @@ class DepositModal extends Component {
             <div className="modal-header">
               <h2 className="modal-title title">    <Icon component={AccountBalanceWallet} className="mr-2" /> {/* Use Material-UI Icon component */}
 
-                DEPOSIT</h2>
+                DEPOSIT (PRIVATE SALE)</h2>
               <Button className="btn-close title" onClick={this.props.closeModal}>
                 ×
               </Button>
             </div>
-            <div className="modal-body edit-modal-body deposit-modal-body">
+            {isBlurred && (
+              <div className="login-first">
+                LOGIN FURRST&nbsp;<Warning width="20pt" />
+              </div>
+            )}
+            <div className={`modal-body edit-modal-body deposit-modal-body ${isBlurred ? 'blur' : ''}`}>
               <div className="modal-content-wrapper">
                 <div className="modal-content-panel">
                   <div className={classes.root}>
+
                     <h4 className={classes.radioLabel}>Select Payment Method:</h4>
                     <div className={classes.paymentMethodContainer}>
 
@@ -500,7 +522,7 @@ class DepositModal extends Component {
                           <img style={{ width: '50px', display: 'block', margin: 'auto' }} src={this.images[index]} alt={`option-${index}`} />
                           <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignContent: 'center', flexDirection: 'row' }} >
 
-                            <Typography className={classes.price}>{paymentMethod === 'web2' ? convertToCurrency((price / currencyValue)) : convertToCurrency((price / currencyValue) + (0.06222 * (index + 1)))}&nbsp;</Typography>
+                            <Typography className={classes.price}>{paymentMethod === 'web2' ? convertToCurrency((price / currencyValue)) : convertToCurrency((price / currencyValue) + (0.03222 * (index + 1)))}&nbsp;</Typography>
                             <Typography className={classes.price}>{`($${price})`}</Typography>
                           </div>
                         </ButtonBase>
@@ -530,7 +552,7 @@ class DepositModal extends Component {
                               <TextField
                                 label="Account"
                                 variant="filled"
-                                value="Connect Wallet"
+                                value="NO WALLET CONNECTED"
                                 InputProps={{
                                   readOnly: true
                                 }}
@@ -555,26 +577,16 @@ class DepositModal extends Component {
                                 </IconButton>
                               </Tooltip>
                             ) : (
-                              <Tooltip title="How do I connect?" arrow>
-                                <a
-                                  href="your_connect_wallet_link_here"
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    textDecoration: 'none'
-                                  }}
-                                >
-                                  <IconButton size="small">
+                              <Tooltip title="Connect Web3 Wallet?" arrow>
 
-                                    <Info />
-                                    <Link
-                                      fontSize="small"
-                                      style={{ marginLeft: '4px' }}
-                                    />
-                                  </IconButton>
-                                </a>
+                                <IconButton onClick={this.props.loadWeb3} size="small">
+
+                                  <Info />
+                                  <Link
+                                    fontSize="small"
+                                    style={{ marginLeft: '4px' }}
+                                  />
+                                </IconButton>
                               </Tooltip>
                             )}
                           </div>
@@ -812,16 +824,20 @@ class DepositModal extends Component {
                 </div>
               </div>
             </div>
-            <div className="modal-footer">
-              <Button className="btn-submit" onClick={paymentMethod === 'web3' ? this.send : this.createPaymentAndClose}>
-                {paymentMethod === 'web3' ? 'Deposit' : 'I have paid'}
-              </Button>
+            {!isBlurred && (
+
+              <div className="modal-footer">
+                <Button className="btn-submit" onClick={paymentMethod === 'web3' ? this.send : this.createPaymentAndClose}>
+                  {paymentMethod === 'web3' ? 'Deposit' : 'I have paid'}
+                </Button>
 
 
-              <Button className="btn-back" onClick={this.props.closeModal}>
-                CANCEL
-              </Button>
-            </div>
+                <Button className="btn-back" onClick={this.props.closeModal}>
+                  CANCEL
+                </Button>
+              </div>
+            )}
+
           </div>
         </Modal>
       </>

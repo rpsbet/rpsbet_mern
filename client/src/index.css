@@ -1122,10 +1122,6 @@ div.table.my-chat-table .table-row .table-cell[title='Unread message']:hover:act
   cursor: pointer;
 }
 
-.countdown-side {
-  background: linear-gradient(45deg, #da4ae2, #7b09ac) !important;
-}
-
 .countdown-side div div {
   margin-top: -30px;
   color: var(--white-color) !important;
@@ -1133,13 +1129,11 @@ div.table.my-chat-table .table-row .table-cell[title='Unread message']:hover:act
 
 .countdown-side div div div {
   padding: 10px;
-  filter: hue-rotate(120deg);
   border-radius: 0.3em;
-  text-shadow: 0 0 2px #da4ae2;
 }
 
 .countdown-side div div div:first-child {
-  background: linear-gradient(transparent, #ffb2ff);
+  background: linear-gradient(transparent, #4d0484);
   margin-bottom: -20px !important;
   padding-bottom: 0 !important;
   border-bottom-left-radius: 0 !important;
@@ -1147,24 +1141,88 @@ div.table.my-chat-table .table-row .table-cell[title='Unread message']:hover:act
 }
 
 .countdown-side div div div:last-child {
-  background: linear-gradient(0deg, transparent, #b3e0ff, #ffb2ff);
+  background: linear-gradient(0deg, transparent, #7602d0, #8d18eb);
   margin-top: 20px !important;
   width: 100px;
   text-transform: uppercase;
 }
 
+.countdown-side {
+  background:linear-gradient(45deg, #830aff, #9500ffbf, #35015e);
+
+  opacity: 1; /* Set initial opacity */
+  transition: opacity 0.5s ease; /* Smooth transition for opacity */
+}
+
 .countdown-side:hover {
-  background: linear-gradient(-45deg, #8e07d7, #ae00b8, #b3e0ff) !important;
+  opacity: 0.7; /* Reduce opacity on hover */
+}
+
+
+.highlight {
+  background: linear-gradient(45deg, #ff6347, #ffcc33);
+  padding: 0 5px;
+  border-radius: 5px;
+  color: white;
+}
+.speech-bubble {
+  position: relative;
+  background: #f0f0f0; /* Light background for the speech bubble */
+  border-radius: 10px;
+  padding: 15px;
+  font-size: 1.2em;
+  font-style: italic;
+  text-align: center;
+  max-width: 300px;
+  margin: 20px auto;
+  color: #333; /* Text color */
+  border: 2px solid #ccc; /* Optional border */
+}
+
+.speech-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 10px 10px 0;
+  border-style: solid;
+  border-color: #f0f0f0 transparent;
+  display: block;
+  width: 0;
+}
+
+.speech-bubble::before {
+  content: '';
+  position: absolute;
+  bottom: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 12px 12px 0;
+  border-style: solid;
+  border-color: #ccc transparent;
+  display: block;
+  width: 0;
+}
+
+.countdown-side:hover ~ .youtube-side {
+  opacity: 0.7; /* Reduce opacity of youtube-side when hovering over countdown-side */
 }
 
 .youtube-side {
-  background: linear-gradient(45deg, var(--secondary-color), #ff8c00, #ffd700) !important;
+  background: linear-gradient(-45deg, #8e07d7e6, #7900b8e8, #5d03a3);
+
+  opacity: 1; /* Set initial opacity */
+  transition: opacity 0.5s ease; /* Smooth transition for opacity */
 }
 
 .youtube-side:hover {
-  background: linear-gradient(-45deg, #ff8c00, var(--secondary-color), #ff7e1c) !important;
+  opacity: 0.7; /* Reduce opacity on hover */
 }
 
+.youtube-side:hover ~ .countdown-side {
+  opacity: 0.7; /* Reduce opacity of countdown-side when hovering over youtube-side */
+}
 .tag.hot {
   color: #4d00c9;
   background-color: #4d00c944;
@@ -4913,10 +4971,10 @@ table#runs th {
   overflow-x: hidden;
 }
 
-.coming-home-screen {
+/* .coming-home-screen {
   background-image: url('https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/65abf45f3f6ffd7ffad37174_blur-screen.webp');
   background-size: cover;
-}
+} */
 
 
 .qs-add-run-panel #runs {
@@ -5846,7 +5904,7 @@ div[role='tablist'] {
 }
 
 .game_header .main_header {
-  padding: 0 24px;
+  padding: 0px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -6405,6 +6463,24 @@ div.table .table-row .table-cell img.avatar,
   color: #fffebd;
 }
 
+.blur {
+  filter: blur(5px); /* Adjust the blur amount as needed */
+  transition: filter 0.3s ease; /* Optional: Add a smooth transition */
+}
+
+.login-first {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #f9f9f9;
+  font-size: 22px;
+  background: #ff0000;
+  border-radius: 10px;
+  z-index: 999;
+  padding: 10px 20px;
+}
+
 .transaction-table .deposit {
   background: linear-gradient(43deg, #0fb54c, #048f01);
   color: #8cffad;
@@ -6827,6 +6903,19 @@ div[role="presentation"] div {
 .AvatarDropzone img {
   width: 130px;
   height: 130px;
+}
+
+@keyframes fadeInOut {
+  0%, 100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.fading-text {
+  animation: fadeInOut 1s ease-in-out infinite; /* Adjust duration as needed */
 }
 
 .user-statistics div {
@@ -7774,6 +7863,7 @@ div[aria-label="How To Play Modal"] ul {
 
   .game_header .main_header {
     padding: 8px 16px;
+    height: 60px;
   }
 
   div.table div.table-row div.table-cell button {

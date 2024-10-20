@@ -26,6 +26,7 @@ import { setBalance } from '../../redux/Auth/user.actions';
 
 import busdSvg from '../JoinGame/busd.svg';
 // import { renderLottieAvatarAnimation } from '../../util/LottieAvatarAnimations';
+
 import Avatar from '../../components/Avatar';
 import AddBoxOutlined from '@material-ui/icons/AddBoxOutlined';
 // import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';

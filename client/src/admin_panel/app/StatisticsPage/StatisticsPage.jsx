@@ -20,7 +20,7 @@ class PalletPage extends Component {
   };
 
   async componentDidMount() {
-    this.props.setUrl(this.props.match.path);
+    // this.props.setUrl(this.props.match.path);
     const result = await this.props.getStatisticsData();
     this.setState({...result});
   }

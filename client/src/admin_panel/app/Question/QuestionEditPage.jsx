@@ -36,7 +36,7 @@ class QuestionEditPage extends Component {
       this.props.setCurrentQuestionInfo({ _id: this.props.match.params._id });
     }
 
-    this.props.setUrl(this.props.match.path);
+    // this.props.setUrl(this.props.match.path);
     this.props.getQuestion();
   }
 

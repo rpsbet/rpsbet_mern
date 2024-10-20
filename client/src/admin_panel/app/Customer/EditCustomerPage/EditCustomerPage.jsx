@@ -48,7 +48,7 @@ class EditCustomerPage extends Component {
       this.setState({ _id: customer_id });
     }
 
-    this.props.setUrl(this.props.match.path);
+    // this.props.setUrl(this.props.match.path);
     const user = await this.props.acGetCustomerInfo(customer_id);
     if (user)
       this.setState({

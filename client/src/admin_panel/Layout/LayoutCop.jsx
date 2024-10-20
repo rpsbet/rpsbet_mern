@@ -56,7 +56,7 @@ const useStyles = makeStyles(theme => ({
 }));
 
 function ClippedDrawer(props) {
-  const { activeUrl, isAdmin, userName } = props;
+  // const { isAdmin, userName } = props;
   const classes = useStyles();
 
   const [mobileOpen, setMobileOpen] = React.useState(false);
@@ -87,7 +87,7 @@ function ClippedDrawer(props) {
         </ListSubheader>
       }
     >
-      <ListItem button onClick={() => navPush('/admin/question')}>
+      {/* <ListItem button onClick={() => navPush('/admin/question')}>
         <ListItemIcon>
           <RedeemIcon color={activeUrl.includes('/admin/question') ? 'secondary' : 'inherit'} />
         </ListItemIcon>
@@ -116,7 +116,7 @@ function ClippedDrawer(props) {
           <SettingsIcon color={activeUrl === '/admin/settings' ? 'secondary' : 'inherit'} />
         </ListItemIcon>
         <ListItemTextEl inputcolor={activeUrl === '/admin/settings' ? 'true' : 'false'} primary="System Settings" />
-      </ListItem>
+      </ListItem> */}
     </List>
   );
 
@@ -164,7 +164,7 @@ function ClippedDrawer(props) {
           </Typography>
           <div className={classes.grow}></div>
           <Typography noWrap align="right">
-            {userName}
+            {/* {userName} */}
           </Typography>
         </Toolbar>
       </AppBar>
@@ -176,7 +176,7 @@ function ClippedDrawer(props) {
         }}
       >
         <div className={classes.toolbar} />
-        {isAdmin ? rdAdminMenu() : ''}
+        {/* {isAdmin ? rdAdminMenu() : ''} */}
         <Divider />
         {rdProfileMenu()}
       </Drawer>
@@ -188,9 +188,9 @@ function ClippedDrawer(props) {
 }
 
 const mapStateToProps = state => ({
-    activeUrl: state.admin_auth.liveUrl,
-    isAdmin: state.admin_auth.isAdmin,
-    userName: state.admin_auth.userName
+  // activeUrl: state.admin_auth.liveUrl,
+    // isAdmin: state.admin_auth.isAdmin,
+    // userName: state.admin_auth.userName
   });
   
 const mapDispatchToProps = {

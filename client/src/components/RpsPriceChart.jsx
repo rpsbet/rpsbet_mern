@@ -83,7 +83,15 @@ class RpsPriceChart extends Component {
   render() {
     const { isDarkMode } = this.props;
     const { usdValue, rpsValue, conversionRate, pricesData, datesData, futurePriceIndex } = this.state;
-
+    const baseColor = '#c734ff'; // Base color (e.g., a shade of purple)
+    const chartColors = [
+      `${baseColor}BF`, // 75% opacity
+      `${baseColor}99`, // 60% opacity
+      `${baseColor}80`, // 50% opacity
+      `${baseColor}66`, // 40% opacity
+      `${baseColor}33`, // 20% opacity
+      `${baseColor}1A`, // 10% opacity
+    ];
     const chartData = {
         options: {
           chart: {
@@ -100,7 +108,7 @@ class RpsPriceChart extends Component {
             width: 9,
             dashArray: futurePriceIndex !== null ? [0, futurePriceIndex, 5] : 0, // Dashed line for future price if available
           },
-          colors: ['#FF0000', '#FFD800'], // Two colors: past/present and future
+          colors: chartColors, // Two colors: past/present and future
           xaxis: {
             categories: datesData,
             labels: {

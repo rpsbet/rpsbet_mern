@@ -16,6 +16,7 @@ import {
 import Footer from './main_pages/Footer';
 import { Info } from '@material-ui/icons';
 import Countdown from 'react-countdown';
+import { withRouter } from 'react-router-dom';
 
 import SettingsModal from './modal/SettingsModal.jsx';
 import BonusModal from './modal/BonusModal.jsx';
@@ -81,6 +82,10 @@ import StoreHover from './icons/StoreHover';
 import Bank from './icons/Bank.js';
 import BankHover from './icons/BankHover';
 import Joyride from 'react-joyride';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faExternalLinkAlt,
+} from '@fortawesome/free-solid-svg-icons';
 import { tutorialStepsMain } from '../util/tutorialStepsMain';
 
 import {
@@ -180,10 +185,12 @@ function updateFromNow(transactions) {
   return result;
 }
 
+
+
 class SiteWrapper extends Component {
   constructor(props) {
     super(props);
-
+    const currentPath = window.location.pathname;
     this.state = {
       endpoint:
         process.env.NODE_ENV === 'production'
@@ -197,6 +204,8 @@ class SiteWrapper extends Component {
       showProfileModal: false,
       showPlayerModal: false,
       run: false,
+      isInvestorsPage: location.pathname.startsWith('/investors'),
+      isPlayer: location.pathname.startsWith('/play'),
       currentTutorial: 1,
       showHowToPlayModal: false,
       vaultBal: 0,
@@ -208,7 +217,7 @@ class SiteWrapper extends Component {
       showSignupModal: false,
       showVerificationModal: false,
       showWithdrawModal: false,
-      showDepositModal: false,
+      showDepositModal: currentPath === '/deposit/' || currentPath === '/deposit',
       showInventoryModal: false,
       showVaultModal: false,
       showResetPasswordModal: false,
@@ -216,7 +225,16 @@ class SiteWrapper extends Component {
       notifications: [],
       showNotifications: false,
       loadMore: 10,
-      isLive: false,
+      isLive: true,
+      blurValue: 3,
+      isCountdownHovered: false,
+      isYoutubeHovered: false,
+      countdownWidth: '50%', // Initial width for countdown side
+      youtubeWidth: '50%', // Initial width for youtube side
+      countdownOpacity: 1,
+      currentGif: '',
+      youtubeOpacity: 1,
+      tokenModalOpen: location.pathname.startsWith('/investors') ? false : true,
       showAllGameLogs: false,
       transactions: [],
       isHovered: false,
@@ -239,6 +257,12 @@ class SiteWrapper extends Component {
       web3balance: 0
     };
     this.initSocket = this.initSocket.bind(this);
+    this.gifs = [
+      'https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExNGR4N2N1YXZwaHY4eDB1OWY3aTBybzJ2dXp2MGJiamcwcDJwbjVxayZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/6ABLpFTPng3euH1XE6/giphy.gif',
+      'https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExZHNvM3VjN3FicHN1ZjM1ZnIwNGtrMGUyZjNiOWQzb3hrZXhxeG9vbSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/6Jrp4ZD9B1z7VjrKhq/giphy.gif',
+      'https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExdnNza2NvZTdsZ3AwOWlweGJmYmV1cGc5anhyeW1rZ2NpM3l1cWc4YyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/UxVOH4FZjQ9wBk1hJa/giphy.gif',
+      'https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExeXZ5YjY4ZWhnY2NmMjY4N205aHRnOW1wenF6bzFjcTZuanllNzdoZiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/MNNLoVzRBXiW7ndcqb/giphy.gif'
+    ];
   }
   static getDerivedStateFromProps(props, currentState) {
     const { balance, betResult, userName, notifications } = props;
@@ -267,6 +291,7 @@ class SiteWrapper extends Component {
     if (this.props.user !== prevProps.user) {
       this.setState({ run: !this.props.user.completedTutorials.includes(1) })
     }
+
 
     if (prevProps.betResult !== betResult && betResult === 'win') {
       if (!this.props.isLowGraphics) {
@@ -325,6 +350,16 @@ class SiteWrapper extends Component {
   playCoinsAnimation() {
     this.setState({ isCoinsAnimation: true });
   }
+
+  handleMouseMove = (event) => {
+    const { clientX } = event; // Get cursor's x position
+    const { innerWidth } = window; // Get the window's width
+
+    // Map cursor position to blur value (adjust min/max values as necessary)
+    const blurValue = Math.max(0, Math.min(10, 10 * (1 - clientX / (innerWidth - 290))));
+
+    this.setState({ blurValue });
+  };
 
   stopCoinsAnimationAfterDelay() {
     setTimeout(() => {
@@ -396,6 +431,63 @@ class SiteWrapper extends Component {
       window.speechSynthesis.speak(utterance);
     }
   }
+
+  handleCountdownHover = () => {
+    this.setState({
+      countdownWidth: '60%', // Increase width of countdown side
+      youtubeWidth: '40%', // Decrease width of youtube side
+      youtubeOpacity: 0.7, // Reduce opacity of youtube side
+    });
+  };
+
+  changeBackgroundGif = () => {
+    // Randomly select a GIF from the array
+    const randomIndex = Math.floor(Math.random() * this.gifs.length);
+    this.setState({ currentGif: this.gifs[randomIndex] });
+  };
+  handleCountdownButtonClick = () => {
+    this.changeBackgroundGif(); // Change the background GIF
+    setTimeout(() => {
+      history.push('/investors');
+      this.closeTokenModal();
+    }, 1000);
+  };
+
+  // Handle click for youtube button
+  handleYoutubeButtonClick = () => {
+    this.changeBackgroundGif(); // Change the background GIF
+    setTimeout(() => {
+      this.handleOpenLoginModal();
+      this.closeTokenModal();
+    }, 1000); // Redirect after 1 second
+    history.push('/');
+  };
+
+  handleCountdownLeave = () => {
+    this.setState({
+      countdownWidth: '50%', // Reset width of countdown side
+      youtubeWidth: '50%', // Reset width of youtube side
+      youtubeOpacity: 1, // Reset opacity of youtube side
+    });
+  };
+
+  handleYoutubeHover = () => {
+    this.setState({
+      youtubeWidth: '60%', // Increase width of youtube side
+      countdownWidth: '40%', // Decrease width of countdown side
+      countdownOpacity: 0.7, // Reduce opacity of countdown side
+    });
+  };
+
+  handleYoutubeLeave = () => {
+    this.setState({
+      youtubeWidth: '50%', // Reset width of youtube side
+      countdownWidth: '50%', // Reset width of countdown side
+      countdownOpacity: 1, // Reset opacity of countdown side
+    });
+  };
+
+
 
   handleClickMenu = e => {
     this.setState({ anchorEl: e.currentTarget });
@@ -577,9 +669,9 @@ class SiteWrapper extends Component {
   async componentDidMount() {
     try {
       const initialBalance = await this.props.fetchVaultBalance();
-      this.setState({ websiteLoading: true });
+      this.setState({ websiteLoading: true, isInvestorsPage: location.pathname.startsWith('/investors'), isPlayer: location.pathname.startsWith('/play') });
       const currentUrl = window.location.pathname;
-
+      window.addEventListener('mousemove', this.handleMouseMove);
       await Promise.all([
         this.props.getNotifications(),
         this.props.getUser(),
@@ -589,7 +681,8 @@ class SiteWrapper extends Component {
         this.fetchData(),
       ]);
 
-      this.setState({ websiteLoading: false, notifications: this.props.notifications, vaultBal: initialBalance});
+
+      this.setState({ websiteLoading: false, notifications: this.props.notifications, vaultBal: initialBalance });
       if (currentUrl && currentUrl.includes('create')) {
         this.setState({ selectedMainTabIndex: this.props.selectMainTab(1) });
       }
@@ -597,23 +690,26 @@ class SiteWrapper extends Component {
       setInterval(() => this.fetchData(), 2000);
       this.interval = setInterval(this.updateReminderTime, 3000);
 
-      if (window.ethereum) {
-        window.ethereum.on('chainChanged', () => {
-          setTimeout(() => {
-            this.loadWeb3();
-          }, 3000);
-        });
-        window.ethereum.on('accountsChanged', () => {
-          setTimeout(() => {
-            this.loadWeb3();
-          }, 3000);
-        });
+      // if (window.ethereum) {
+      //   window.ethereum.on('chainChanged', () => {
+      //     setTimeout(() => {
+      //       this.loadWeb3();
+      //     }, 3000);
+      //   });
+      //   window.ethereum.on('accountsChanged', () => {
+      //     setTimeout(() => {
+      //       this.loadWeb3();
+      //     }, 3000);
+      //   });
 
-        setTimeout(() => {
-          this.loadWeb3();
-        }, 3000);
-      } else {
-        alertModal(this.props.isDarkMode, 'NO WEB3 WALLET FOUND IN YOUR BROWSER.');
+      //   setTimeout(() => {
+      //     this.loadWeb3();
+      //   }, 3000);
+      // } else {
+      //   alertModal(this.props.isDarkMode, 'NO WEB3 WALLET FOUND IN YOUR BROWSER.');
+      // }
+      if (this.state.isPlayer) {
+        this.closeTokenModal();
       }
 
     } catch (error) {
@@ -688,6 +784,7 @@ class SiteWrapper extends Component {
     clearInterval(this.interval);
     clearInterval(this.timer);
     clearInterval(this.historyInterval);
+    window.removeEventListener('mousemove', this.handleMouseMove);
 
     if (window.ethereum) {
       window.ethereum.removeListener('chainChanged', this.loadWeb3);
@@ -878,6 +975,12 @@ class SiteWrapper extends Component {
     );
   };
 
+  closeTokenModal = event => {
+    this.setState(
+      { tokenModalOpen: false }
+    );
+  };
+
   handleSortClick = event => {
     this.setState({ sortAnchorEl: event.currentTarget });
   };
@@ -969,6 +1072,7 @@ class SiteWrapper extends Component {
       searchAnchorEl,
       hoverTabIndex,
       websiteLoading,
+      currentGif,
       balance,
       searchQuery,
       sortType,
@@ -979,6 +1083,7 @@ class SiteWrapper extends Component {
       web3account,
       transactions,
       web3balance,
+      blurValue,
       userName,
       showInventoryModal,
       showVaultModal,
@@ -1004,6 +1109,9 @@ class SiteWrapper extends Component {
       showBonusModal,
       isLive,
       notifications,
+      tokenModalOpen,
+      isInvestorsPage,
+      countdownWidth, youtubeWidth, countdownOpacity, youtubeOpacity
     } = this.state;
     const {
       isMuted,
@@ -1020,11 +1128,11 @@ class SiteWrapper extends Component {
     const balanceString = balance.toString();
     const decimalIndex = balanceString.indexOf('.');
     const numDecimals = decimalIndex !== -1 ? Math.min(2, balanceString.length - decimalIndex - 1) : 0;
-
+    const width = window.innerWidth;
     const notificationsArray = updateFromNow(Object.values(notifications));
-    const valentinesDay = new Date(`${new Date().getFullYear()}-05-19T00:00:00`);
+    const halloween = new Date(`${new Date().getFullYear()}-10-31T00:00:00`);
     const currentDate = new Date();
-    const timeRemaining = valentinesDay - currentDate;
+    const timeRemaining = halloween - currentDate;
     const unreadNotificationsCount = notifications.filter(notification => !notification.is_read).length;
 
     this.secondsRemaining = Math.floor(timeRemaining / 1000);
@@ -1032,180 +1140,264 @@ class SiteWrapper extends Component {
       <MuiThemeProvider theme={isDarkMode ? darkTheme : mainTheme}>
         {showCookieConsent && <CookieConsent />}
 
-        {isLive ? (
-          <>
-            <div className="coming-home-screen" style={{ textAlign: 'center', padding: '50px' }}>
-              <img style={{ maxWidth: "150px", marginBottom: '60px' }} src="../img/dark-game-logo.svg" />
+        {(width >= 600 && isLive && tokenModalOpen && !isAuthenticated) && (
+          <div
+            className="coming-home-screen"
+            style={{
+              position: 'fixed',
+              width: '100%',
+              height: '100%',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              textAlign: 'center',
+              padding: '50px',
+              zIndex: '999',
+              backdropFilter: `blur(${blurValue}px)`,
+              background: `url(${currentGif})`,
+              backgroundSize: '100vw',
+              backgroundPosition: 'center',
+            }}
+          >
+            <img className="desktop-only" style={{ maxWidth: "150px", marginBottom: '60px' }} src="../img/dark-game-logo.svg" />
 
-              <p style={{ textTransform: 'uppercase', color: "#fff" }}>GET RICH 💰 OR DIE 🩸 😼</p>
-              <div className="countdown" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <div className="countdown-side" style={{ width: "50%", padding: '50px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', height: '400px' }} >
-
-                  <img style={{ width: "420px", border: '0.6em solid #6002a6', borderRadius: '2em' }} src="../img/coming-soon.svg" />
-                  <Countdown
-                    date={valentinesDay}
-                    renderer={({ days, hours, minutes, seconds, completed }) => (
-                      <div style={{ zIndex: '1', height: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        {!completed ? (
-                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                            <div style={{ fontSize: '2em', fontWeight: 'bold', marginBottom: '5px' }}>{days}</div>
-                            <div style={{ fontSize: '1.2em', color: '#666' }}>days</div>
-                          </div>
-                        ) : (
-                          <div style={{ fontSize: '2em', color: '#e91e63', fontWeight: 'bold' }}>Countdown completed!</div>
-                        )}
-
-                        {!completed ? (
-                          <div style={{ margin: '0 20px', fontSize: '2em', fontWeight: 'bold' }}>:</div>
-                        ) : null}
-
-                        {!completed ? (
-                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                            <div style={{ fontSize: '2em', fontWeight: 'bold', marginBottom: '5px' }}>{hours}</div>
-                            <div style={{ fontSize: '1.2em', color: '#666' }}>hours</div>
-                          </div>
-                        ) : null}
-
-                        {!completed ? (
-                          <div className="desktop-only" style={{ margin: '0 20px', fontSize: '2em', fontWeight: 'bold' }}>:</div>
-                        ) : null}
-
-                        {!completed ? (
-                          <div className="desktop-only" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                            <div style={{ fontSize: '2em', fontWeight: 'bold', marginBottom: '5px' }}>{minutes}</div>
-                            <div style={{ fontSize: '1.2em', color: '#666' }}>minutes</div>
-                          </div>
-                        ) : null}
-
-                        {!completed ? (
-                          <div className="desktop-only" style={{ margin: '0 20px', fontSize: '2em', fontWeight: 'bold' }}>:</div>
-                        ) : null}
-
-                        {!completed ? (
-                          <div className="desktop-only" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                            <div style={{ fontSize: '2em', fontWeight: 'bold', marginBottom: '5px' }}>{seconds}</div>
-                            <div style={{ fontSize: '1.2em', color: '#666' }}>seconds</div>
-                          </div>
-                        ) : null}
-                      </div>
-                    )}
-                  />
+            <p style={{ textTransform: 'uppercase', color: "#fff" }}>GET RICH 💰 OR DIE 🩸 😼</p>
+            <div className="countdown" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '0.5em',height: '400px', overflow: 'hidden' }}>
+              <div
+                className="countdown-side"
+                style={{
+                  width: countdownWidth, // Dynamic width based on state
+                  padding: '30px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  flexDirection: 'column',
+                  height: '400px',
+                  opacity: countdownOpacity, // Set dynamic opacity
+                  transition: 'width 0.5s ease, opacity 0.5s ease', // Smooth transition for width and opacity
+                  boxSizing: 'border-box',
+                }}
+                onMouseEnter={this.handleCountdownHover} // Handle hover state
+                onMouseLeave={this.handleCountdownLeave}
+              >
+                <div >
+                  <iframe
+                    width="400"
+                    height="215"
+                    src="https://www.youtube.com/embed/fJ-Yv3AMdiE"
+                    title="YouTube video player"
+                    frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen
+                    style={{borderRadius:"10px", border: "3px solid rgb(98 3 172)"}}
+                  ></iframe>
                 </div>
-                <div className="youtube-side" style={{ padding: '50px', height: '400px', width: '50%' }}>
-                  <h5 style={{ color: '#fff', marginBottom: '10px' }}>WATCH TRAILER & USER GUIDE</h5>
-                  <hr style={{ borderColor: '#fff' }} />
+                <Countdown
+                  date={halloween}
+                  renderer={({ days, hours, minutes, seconds, completed }) => (
+                    <div style={{ zIndex: '1', height: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {!completed ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                          <div style={{ fontSize: '2.2em', fontWeight: 'bold', marginBottom: '5px' }}>{days}</div>
+                          <div style={{ fontSize: '0.5em', color: '#666' }}>days</div>
+                        </div>
+                      ) : (
+                        <div style={{ fontSize: '2em', color: '#e91e63', fontWeight: 'bold' }}>Countdown completed!</div>
+                      )}
 
-                  <div >
-                    <iframe
-                      width="460"
-                      height="215"
-                      src="https://www.youtube.com/embed/fJ-Yv3AMdiE"
-                      title="YouTube video player"
-                      frameborder="0"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowfullscreen
-                    ></iframe>
-                  </div>
+                      {!completed ? (
+                        <div style={{ margin: '0 20px', fontSize: '2em', fontWeight: 'bold' }}>:</div>
+                      ) : null}
+
+                      {!completed ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                          <div style={{ fontSize: '2.2em', fontWeight: 'bold', marginBottom: '5px' }}>{hours}</div>
+                          <div style={{ fontSize: '0.5em', color: '#666' }}>hours</div>
+                        </div>
+                      ) : null}
+
+                      {!completed ? (
+                        <div className="desktop-only" style={{ margin: '0 20px', fontSize: '2em', fontWeight: 'bold' }}>:</div>
+                      ) : null}
+
+                      {!completed ? (
+                        <div className="desktop-only" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                          <div style={{ fontSize: '2.2em', fontWeight: 'bold', marginBottom: '5px' }}>{minutes}</div>
+                          <div style={{ fontSize: '0.5em', color: '#666' }}>minutes</div>
+                        </div>
+                      ) : null}
+
+                      {!completed ? (
+                        <div className="desktop-only" style={{ margin: '0 20px', fontSize: '2em', fontWeight: 'bold' }}>:</div>
+                      ) : null}
+
+                      {!completed ? (
+                        <div className="desktop-only" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                          <div style={{ fontSize: '2.2em', fontWeight: 'bold', marginBottom: '5px' }}>{seconds}</div>
+                          <div style={{ fontSize: '0.5em', color: '#666' }}>seconds</div>
+                        </div>
+                      ) : null}
+                    </div>
+                  )}
+                />
+                <Button
+                  style={{
+                    marginTop: '20px',
+                    padding: '10px 20px',
+                    backgroundColor: 'rgb(98 3 172)',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '5px',
+                    cursor: 'pointer',
+                  }}
+                  onClick={this.handleCountdownButtonClick}
+                >
+                  Investor Portal
+                </Button>
+              </div>
+              <div
+                className="youtube-side"
+                style={{
+                  width: youtubeWidth, // Dynamic width based on state
+                  padding: '30px',
+                  height: '400px',
+                  opacity: youtubeOpacity, // Set dynamic opacity
+                  transition: 'width 0.5s ease, opacity 0.5s ease', // Smooth transition for width and opacity
+                  boxSizing: 'border-box',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}
+                onMouseEnter={this.handleYoutubeHover} // Handle hover state
+                onMouseLeave={this.handleYoutubeLeave}
+              >
+                {/* <h5 style={{ color: '#fff', marginBottom: '10px' }}>WATCH TRAILER & USER GUIDE</h5>
+                <hr style={{ borderColor: '#fff' }} /> */}
+                <div style={{ width: "100%", display: "flex", justifyContent: "center", alignItems: "center" }}>
+
+                  <img style={{ width: "400px", border: "3px solid rgb(98 3 172)", borderRadius: "12px" }} src="../img/giant-login-2.svg" />
                 </div>
+
+                <Button
+                  style={{
+                    marginTop: '20px',
+                    padding: '10px 20px',
+                    backgroundColor: 'rgb(98 3 172)',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '5px',
+                    cursor: 'pointer',
+                  }}
+                  onClick={this.handleYoutubeButtonClick}
+                >
+                  Game Portal
+                </Button>
               </div>
             </div>
-            <Footer className="footer"
-              open={this.props.isDrawerOpen}
-              style={{ marginLeft: '0' }}
-            />
-          </>
-        ) : (
-          <>
-            <div className={`site_wrapper row ${isDarkMode ? 'dark_mode' : ''}`}>
-              {websiteLoading && (
-                <div
-                  className="loading-overlay"
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column'
-                  }}
+            {/* <Footer className="footer"
+                open={this.props.isDrawerOpen}
+                style={{ marginLeft: '0' }}
+              /> */}
+          </div>
+        )}
+        <div className={`site_wrapper row ${isDarkMode ? 'dark_mode' : ''}`}>
+          {websiteLoading && (
+            <div
+              className="loading-overlay"
+              style={{
+                display: 'flex',
+                flexDirection: 'column'
+              }}
+            >
+              <img src={randomGifUrl} alt="Loading" />
+              <span
+                style={{
+                  marginTop: '10px',
+                  color: '#fff'
+                }}
+              >
+                {`Connecting...`}
+              </span>
+              <Lottie
+                options={{
+                  loop: true,
+                  autoplay: true,
+                  animationData: progress
+                }}
+                style={{
+                  marginTop: '-40px',
+                  filter: `hue-rotate(${hueRotateValue}deg)`,
+                  width: '300px',
+                  height: '100px'
+                }}
+              />
+            </div>
+          )}
+          <div className="game_header">
+            <div className="main_header">
+              <a
+                className="game_logo"
+                href="#"
+                onClick={e => {
+                  history.push('/');
+                }}
+              >
+                {' '}
+              </a>
+              {!isInvestorsPage ? (
+
+                <Tabs
+                  value={selectedMainTabIndex}
+                  onChange={this.handleMainTabChange}
+                  TabIndicatorProps={{ style: { background: '#ff0000' } }}
+                  className="main-game-page-tabs desktop-only"
                 >
-                  <img src={randomGifUrl} alt="Loading" />
-                  <span
-                    style={{
-                      marginTop: '10px',
-                      color: '#fff'
-                    }}
-                  >
-                    {`Connecting...`}
-                  </span>
-                  <Lottie
-                    options={{
-                      loop: true,
-                      autoplay: true,
-                      animationData: progress
-                    }}
-                    style={{
-                      marginTop: '-40px',
-                      filter: `hue-rotate(${hueRotateValue}deg)`,
-                      width: '300px',
-                      height: '100px'
-                    }}
+                  <Tab
+                    className={`custom-tab ${hoverTabIndex === 0 || selectedMainTabIndex === 0
+                      ? 'fade-animation fade-in'
+                      : 'fade-animation fade-out'
+                      }`}
+                    label="PVP"
+                    labelplacement="left"
+                    icon={
+                      hoverTabIndex === 0 || selectedMainTabIndex === 0 ? (
+                        <BattleHover />
+                      ) : (
+                        <Battle />
+                      )
+                    }
+                    style={customStyles.tabRoot}
+                    onMouseEnter={() => this.handleMouseEnter(0)}
+                    onMouseLeave={this.handleMouseLeave}
                   />
+
+                  <Tab
+                    className={`custom-tab ${hoverTabIndex === 1 || selectedMainTabIndex === 1
+                      ? 'fade-animation fade-in'
+                      : 'fade-animation fade-out'
+                      }`}
+                    label="Manage"
+                    labelplacement="left"
+                    icon={
+                      hoverTabIndex === 1 || selectedMainTabIndex === 1 ? (
+                        <ManageHover />
+                      ) : (
+                        <Manage />
+                      )
+                    }
+                    style={customStyles.tabRoot}
+                    onMouseEnter={() => this.handleMouseEnter(1)}
+                    onMouseLeave={this.handleMouseLeave}
+                  />
+                </Tabs>
+              ) : (
+                <div style={{ padding: "48px" }}>
                 </div>
               )}
-              <div className="game_header">
-                <div className="main_header">
-                  <a
-                    className="game_logo"
-                    href="#"
-                    onClick={e => {
-                      history.push('/');
-                    }}
-                  >
-                    {' '}
-                  </a>
-                  <Tabs
-                    value={selectedMainTabIndex}
-                    onChange={this.handleMainTabChange}
-                    TabIndicatorProps={{ style: { background: '#ff0000' } }}
-                    className="main-game-page-tabs desktop-only"
-                  >
-                    <Tab
-                      className={`custom-tab ${hoverTabIndex === 0 || selectedMainTabIndex === 0
-                        ? 'fade-animation fade-in'
-                        : 'fade-animation fade-out'
-                        }`}
-                      label="PVP"
-                      labelplacement="left"
-                      icon={
-                        hoverTabIndex === 0 || selectedMainTabIndex === 0 ? (
-                          <BattleHover />
-                        ) : (
-                          <Battle />
-                        )
-                      }
-                      style={customStyles.tabRoot}
-                      onMouseEnter={() => this.handleMouseEnter(0)}
-                      onMouseLeave={this.handleMouseLeave}
-                    />
-
-                    <Tab
-                      className={`custom-tab ${hoverTabIndex === 1 || selectedMainTabIndex === 1
-                        ? 'fade-animation fade-in'
-                        : 'fade-animation fade-out'
-                        }`}
-                      label="Manage"
-                      labelplacement="left"
-                      icon={
-                        hoverTabIndex === 1 || selectedMainTabIndex === 1 ? (
-                          <ManageHover />
-                        ) : (
-                          <Manage />
-                        )
-                      }
-                      style={customStyles.tabRoot}
-                      onMouseEnter={() => this.handleMouseEnter(1)}
-                      onMouseLeave={this.handleMouseLeave}
-                    />
-                  </Tabs>
-
-                  <div className="header_action_panel">
+              <div className="header_action_panel">
+                {!isInvestorsPage && (
+                  <>
                     <a
                       href="#"
                       className="desktop-only"
@@ -1280,641 +1472,645 @@ class SiteWrapper extends Component {
                         <Notifications />
                       )}
                     </a>
-                    {isAuthenticated ? (
-                      <>
-                        <div id="balance" className='title'>
+                  </>
 
-
-                          <div style={{ display: "inline" }}
-                            onMouseEnter={this.handleDollarEnter}
-                            onMouseLeave={this.handleDollarLeave}
-                          >
-                            {isHovered ? (
-                              `$${(balance *  0.06222).toFixed(numDecimals)}`
-                            ) : (
-                              <>
-                                <InlineSVG
-                                  id="busd"
-                                  src={busdSvg}
-                                />
-                                <CountUp
-                                  start={oldBalance}
-                                  end={balance}
-                                  separator=","
-                                  decimal="."
-                                  decimals={numDecimals}
-                                  duration={40.5}
-                                  redraw={true}
-                                  preserveValue={true}
-                                  onEnd={() => {
-                                    this.setState({ oldBalance: balance });
-                                  }}
-                                />
-                              </>
-
-                            )}
-                          </div>
-
-                          {(isCoinsAnimation && !isLowGraphics) &&
-                            <Lottie
-                              options={{
-                                loop: isLowGraphics ? false : true,
-                                autoplay: isCoinsAnimation,
-                                animationData: coins,
-                                rendererSettings: {
-                                  preserveAspectRatio: 'xMidYMid slice',
-                                },
-                              }}
-                              style={{
-                                marginTop: '-0px',
-                                position: `absolute`,
-                                width: '100px',
-                                height: '100px'
-                              }}
-                            />
-                          }
-                          <Button
-                            id="wallet-btn"
-                            style={{
-                              minWidth: '32px',
-                              maxHeight: '33px',
-                              borderRadius: '0.25em'
-                            }}
-                            onClick={this.handleBalanceClick}
-                          >
-                            <AccountBalanceWallet
-                              style={{
-                                position: 'relative',
-                                zIndex: '1',
-                                width: '18px',
-                                height: '18px',
-                                margin: '0 5px 0 10px'
-                              }}
-                            />
-                            <span
-                              id="wallet-text"
-                              style={{
-                                position: 'relative',
-                                zIndex: '1',
-                                fontSize: '0.6em',
-                                paddingRight: '10px'
-                              }}
-                            >
-                              Wallet
-                            </span>
-                          </Button>
-                        </div>
-                        <a
-                          href="#"
-                          className="mobile-only"
-                          onClick={e => {
-                            e.preventDefault();
-                            this.handleNotificationsClick();
-                          }}
-                          id="btn_notifications"
-                          onMouseEnter={() => this.handleMouseEnter(3)}
-                          onMouseLeave={this.handleMouseLeave}
-                        >
-                          {hoverTabIndex === 3 ? (
-                            <NotificationsHover width="18pt" />
-                          ) : (
-                            <Notifications />
-                          )}
-                        </a>
-                        <Button
-                          area-constrols="profile-menu"
-                          aria-haspopup="true"
-                          onClick={this.handleClickMenu}
-                          className="profile-menu"
-                        >
-                          <Avatar
-                            src={user.avatar}
-                            rank={user.totalWagered}
-                            accessory={user.accessory}
-                            alt=""
-                            username={user.username}
-                            className="avatar"
-                            darkMode={isDarkMode}
-                          />
-                          <ArrowDropDown />
-                        </Button>
-                        <Menu
-                          id="profile-menu"
-                          anchorEl={anchorEl}
-                          getContentAnchorEl={null}
-                          open={Boolean(anchorEl)}
-                          onClose={this.handleCloseMenu}
-                          anchorOrigin={{
-                            vertical: 'bottom',
-                            horizontal: 'center'
-                          }}
-                          transformOrigin={{
-                            vertical: 'top',
-                            horizontal: 'center'
-                          }}
-                          PaperProps={{
-                            style: {
-                              width: '200px',
-                              border: "none",
-                              filter: isDarkMode ? "unset": "hue-rotate(25deg)",
-                              background: isDarkMode ? 'linear-gradient(45deg, #7300c8, #620096)' : 'linear-gradient(45deg, #e300ea, #a700ff)'
-                            }
-                          }}
-                          BackdropProps={{
-                            invisible: true
-                          }}
-                        >
-                          <MenuItem onClick={this.handleOpenProfileModal}>
-                            <ListItemIcon>
-                              <PersonOutline />
-                            </ListItemIcon>
-                            <ListItemText>PROFILE</ListItemText>
-                          </MenuItem>
-
-                          <Divider />
-                          <MenuItem onClick={this.handleOpenSettingsModal}>
-                            <ListItemIcon>
-                              <Settings />
-                            </ListItemIcon>
-                            <ListItemText>SETTINGS</ListItemText>
-                          </MenuItem>
-                          <MenuItem onClick={this.handleBonusModal}>
-                            <ListItemIcon>
-                              <Star />
-                            </ListItemIcon>
-                            <ListItemText>CORN WHEEL</ListItemText>
-                            <ListItemIcon>
-                            <img style={{ transform: "translate(-93px, 4px)", width:"20px", zIndex: 0 }} src="../img/icons/corn.svg" />
-                            </ListItemIcon>
-                          </MenuItem>
-
-                          <MenuItem onClick={this.handleOpenHowToPlayModal}>
-                            <ListItemIcon>
-                              <Help />
-                            </ListItemIcon>
-                            <ListItemText>INFO</ListItemText>
-                          </MenuItem>
-                          <Divider />
-                          <MenuItem
-                            onClick={e => {
-                              this.handleLogout(true);
-                            }}
-                          >
-                            <ListItemIcon>
-                              <ExitToApp size="small" />
-                            </ListItemIcon>
-                            <ListItemText>LOG OUT</ListItemText>
-                          </MenuItem>
-                        </Menu>
-                      </>
-                    ) : (
-                      <>
-                        <Button id="btn-login" onClick={this.handleOpenLoginModal}>
-                          Login
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                </div>
-                <div
-                  id="notifications"
-                  className={showNotifications ? '' : 'hidden'}
-                  onClick={this.handleNotificationsClick}
-                >
-                  <div className="arrow-up"></div>
-                  <div className="header_panel_contents">
-                    {<h2 className='title'>NOTIFICATIONS</h2>}
-                    {
-                      <div className="notification-element">
-                        {notificationsArray.length > 0 ? (
-                          notificationsArray.map((notification, index) => (
-
-                            <div className={`notification-container ${notification.is_read ? 'read' : ''}`} key={index}>
-                              <a
-                                className="player"
-                                onClick={() =>
-                                  this.handleOpenPlayerModal(notification._id)
-                                }
-                                style={{ display: 'flex', flexDirection: 'row' }}
-                              >
-                                <Avatar
-                                  src={notification.avatar}
-                                  rank={notification.rank}
-                                  accessory={notification.accessory}
-                                  username={notification.username}
-                                  className="avatar"
-                                />
-                              </a>
-                              <a href={`/join/${notification.room}/`} style={{ width: "100%" }}>
-
-                                {!notification.is_read && <div className="red-dot" />}
-                                <div className="notification" style={{ width: "70%", display: 'inline-block' }}>
-                                  <p
-                                    dangerouslySetInnerHTML={{
-                                      __html: notification.message
-                                    }}
-                                  />
-                                  <p className="fromNow">{notification.from_now}</p>
-                                </div>
-                              </a>
-                            </div>
-                          ))
-                        ) : (
-                          <p>No notifications available.</p>
-                        )}
-
-
-                      </div>
-                    }
-                  </div>
-                </div>
-                {showAllGameLogs && (
-                  <AllTransactionsModal
-                    modalIsOpen={showAllGameLogs}
-                    isDarkMode={isDarkMode}
-                    close={this.toggleAllTransactions}
-                    sortType={sortType}
-                    sortAnchorEl={sortAnchorEl}
-                    searchAnchorEl={searchAnchorEl}
-                    filterAnchorEl={filterAnchorEl}
-                    filterType={filterType}
-                    user={user._id}
-                    transactions={transactions}
-                    tnxComplete={tnxComplete}
-                    handleSortClick={this.handleSortClick}
-                    handleFilterClick={this.handleFilterClick}
-                    handleFilterClose={this.handleFilterClose}
-                    handleSortClose={this.handleSortClose}
-                    handleSearchClose={this.handleSearchClose}
-                    searchQuery={searchQuery}
-                    onSearchQueryChange={this.onSearchQueryChange}
-                    handleSearchClick={this.handleSearchClick}
-                    handleLoadMore={this.handleLoadMore}
-                    oneDayProfit={this.props.oneDayProfit}
-                    sevenDayProfit={this.props.sevenDayProfit}
-                    allTimeProfit={this.props.allTimeProfit}
-                  />
                 )}
+                {isAuthenticated ? (
+                  <>
+                    <div id="balance" className='title'>
 
-                <div
-                  id="game_logs"
-                  className={this.state.showGameLog ? '' : 'hidden'}
-                  onClick={this.handleBalanceClick}
-                >
-                  <div className="arrow-up"></div>
-                  <div className="header_panel_contents">
-                    {
-                      <Tooltip
-                        style={{ position: "absolute", right: "20px" }}
-                        title={
+
+                      <div style={{ display: "inline" }}
+                        onMouseEnter={this.handleDollarEnter}
+                        onMouseLeave={this.handleDollarLeave}
+                      >
+                        {isHovered ? (
+                          `$${(balance * 0.06222).toFixed(numDecimals)}`
+                        ) : (
                           <>
-                            <h6 style={{ marginBottom: "0.5rem" }}>WHY DO MY WINNINGS APPEAR LESS?</h6>
-                            <p style={{ marginBottom: "0.5rem" }}>
-                              You see less as this is net profit (
-                              <span style={{ fontWeight: "bold", color: "#28a745" }}>winning amount</span> -
-                              <span style={{ fontWeight: "bold", color: "#ff0000" }}> bet amount</span>)
-                              and receive less due to:
-                            </p>
-                            <ul style={{ paddingLeft: "1rem", marginBottom: "0.5rem" }}>
-                              <li>RTB fees awarded to the Host (0% - 15% returned to bankroll dependent on their accessory)</li>
-                              <li>1% towards platform fees</li>
-                            </ul>
-                            <p style={{ marginBottom: "0.5rem" }}>
-                              For example, if you win <strong>{convertToCurrency(0.2)}</strong> but bet <strong>{convertToCurrency(0.1)}</strong>,
-                              then you might see:
-                            </p>
-                            <p style={{ marginBottom: "0.5rem" }}>
-                              <strong>{convertToCurrency(0.2)} * 0.88 </strong>
-                              (12% RTB) - <strong>{convertToCurrency(0.1)}</strong> (net profit)
-                              = <strong>{convertToCurrency(0.076)}</strong> (final calculation).
-                            </p>
+                            <InlineSVG
+                              id="busd"
+                              src={busdSvg}
+                            />
+                            <CountUp
+                              start={oldBalance}
+                              end={balance}
+                              separator=","
+                              decimal="."
+                              decimals={numDecimals}
+                              duration={40.5}
+                              redraw={true}
+                              preserveValue={true}
+                              onEnd={() => {
+                                this.setState({ oldBalance: balance });
+                              }}
+                            />
                           </>
-                        }
-                        placement="top"
-                      >
-                        <Info style={{ cursor: "pointer", float: "right" }} />
-                      </Tooltip>
-                    }
 
-
-                    <h2 className='title'>BALANCE HISTORY</h2>
-
-                    {
-                      <div>
-                        <table id="balance-history">
-                          <tbody>
-                            {transactions.length === 0 ? (
-                              <tr>
-                                <td>...</td>
-                              </tr>
-                            ) : (
-                              transactions.slice(0, 5).map((row, key) => (
-                                <tr key={key}>
-                                  {row.hash ? (
-                                    <a href={`https://etherscan.io/tx/${row.hash}`} rel="noopener noreferrer">
-                                      <td className={`amount ${row.status === "waiting" || row.status === "pending" ? 'grey' : (row.amount > 0 ? 'green' : 'red')}`}>
-                                        {row.amount > 0 ? (
-                                          <>
-                                            {'+ '}
-                                            {convertToCurrency(row.amount, true)}
-                                          </>
-                                        ) : (
-                                          <>
-                                            {'- '}
-                                            {convertToCurrency(Math.abs(row.amount), true)}
-                                          </>
-                                        )}
-                                      </td>
-                                      <td className="fromNow">{row.from_now}</td>
-                                    </a>
-                                  ) : (
-                                    <>
-                                      <td className={`amount ${row.status === "waiting" || row.status === "pending" ? 'grey' : (row.amount > 0 ? 'green' : 'red')}`}>
-                                        {row.amount > 0 ? (
-                                          <>
-                                            {'+ '}
-                                            {convertToCurrency(row.amount, true)}
-                                          </>
-                                        ) : (
-                                          <>
-                                            {'- '}
-                                            {convertToCurrency(Math.abs(row.amount), true)}
-                                          </>
-                                        )}
-                                      </td>
-                                      <td className="fromNow">{row.from_now}</td>
-                                    </>
-                                  )}
-                                </tr>
-                              ))
-                            )}
-                          </tbody>
-                        </table>
-                        <Button onClick={this.toggleAllTransactions}>ALL TRANSACTIONS</Button>
+                        )}
                       </div>
-                    }
 
-                    <div className="transaction-panel">
+                      {(isCoinsAnimation && !isLowGraphics) &&
+                        <Lottie
+                          options={{
+                            loop: isLowGraphics ? false : true,
+                            autoplay: isCoinsAnimation,
+                            animationData: coins,
+                            rendererSettings: {
+                              preserveAspectRatio: 'xMidYMid slice',
+                            },
+                          }}
+                          style={{
+                            marginTop: '-0px',
+                            position: `absolute`,
+                            width: '100px',
+                            height: '100px'
+                          }}
+                        />
+                      }
                       <Button
-                        className="btn-inventory title"
-                        // isDarkMode={isDarkMode}
-                        onClick={this.handleOpenInventoryModal}
+                        id="wallet-btn"
+                        style={{
+                          minWidth: '32px',
+                          maxHeight: '33px',
+                          borderRadius: '0.25em'
+                        }}
+                        onClick={this.handleBalanceClick}
                       >
-                        Inventory
-                      </Button>
-                      <Button
-                        className="btn-vault title"
-                        // isDarkMode={isDarkMode}
-                        onClick={this.handleOpenVaultModal}
-                      >
-                        Vault&nbsp;
-                        <span style={{ border: "2px solid", background: "#1284cc11", color: "#1284ff", padding: "2px 5px", marginLeft: "10px", borderRadius: "0.4em" }}>
-                          {this.state.vaultBal ? convertToCurrency(this.state.vaultBal) : 0}
+                        <AccountBalanceWallet
+                          style={{
+                            position: 'relative',
+                            zIndex: '1',
+                            width: '18px',
+                            height: '18px',
+                            margin: '0 5px 0 10px'
+                          }}
+                        />
+                        <span
+                          id="wallet-text"
+                          style={{
+                            position: 'relative',
+                            zIndex: '1',
+                            fontSize: '0.6em',
+                            paddingRight: '10px'
+                          }}
+                        >
+                          Wallet
                         </span>
                       </Button>
                     </div>
-                    <div className="transaction-panel">
-                      {this.state.remainingLoans > 0 ? (
-                        <Button
-                          className="btn-withdraw debt title"
-                          onClick={this.handleOpenDebtsModal}
-                        // isDarkMode={isDarkMode}
-                        >
-                          <div>{convertToCurrency(this.state.remainingLoans)} IN DEBT</div>
-                        </Button>
+                    <a
+                      href="#"
+                      className="mobile-only"
+                      onClick={e => {
+                        e.preventDefault();
+                        this.handleNotificationsClick();
+                      }}
+                      id="btn_notifications"
+                      onMouseEnter={() => this.handleMouseEnter(3)}
+                      onMouseLeave={this.handleMouseLeave}
+                    >
+                      {hoverTabIndex === 3 ? (
+                        <NotificationsHover width="18pt" />
                       ) : (
-                        <Button
-                          className="btn-withdraw title"
-                          onClick={this.handleOpenWithdrawModal}
-                        // isDarkMode={isDarkMode}
-                        >
-                          Withdraw
-                        </Button>
+                        <Notifications />
                       )}
+                    </a>
+                    <Button
+                      area-constrols="profile-menu"
+                      aria-haspopup="true"
+                      onClick={this.handleClickMenu}
+                      className="profile-menu"
+                    >
+                      <Avatar
+                        src={user.avatar}
+                        rank={user.totalWagered}
+                        accessory={user.accessory}
+                        alt=""
+                        username={user.username}
+                        className="avatar"
+                        darkMode={isDarkMode}
+                      />
+                      <ArrowDropDown />
+                    </Button>
+                    <Menu
+                      id="profile-menu"
+                      anchorEl={anchorEl}
+                      getContentAnchorEl={null}
+                      open={Boolean(anchorEl)}
+                      onClose={this.handleCloseMenu}
+                      anchorOrigin={{
+                        vertical: 'bottom',
+                        horizontal: 'center'
+                      }}
+                      transformOrigin={{
+                        vertical: 'top',
+                        horizontal: 'center'
+                      }}
+                      PaperProps={{
+                        style: {
+                          width: '200px',
+                          border: "none",
+                          filter: isDarkMode ? "unset" : "hue-rotate(25deg)",
+                          background: isDarkMode ? 'linear-gradient(45deg, #7300c8, #620096)' : 'linear-gradient(45deg, #e300ea, #a700ff)'
+                        }
+                      }}
+                      BackdropProps={{
+                        invisible: true
+                      }}
+                    >
+                      <MenuItem onClick={this.handleOpenProfileModal}>
+                        <ListItemIcon>
+                          <PersonOutline />
+                        </ListItemIcon>
+                        <ListItemText>PROFILE</ListItemText>
+                      </MenuItem>
 
-                      <Button
-                        className="btn-deposit title"
-                        onClick={this.handleOpenDepositModal}
-                      // isDarkMode={isDarkMode}
+                      <Divider />
+                      <MenuItem onClick={this.handleOpenSettingsModal}>
+                        <ListItemIcon>
+                          <Settings />
+                        </ListItemIcon>
+                        <ListItemText>SETTINGS</ListItemText>
+                      </MenuItem>
+                      <MenuItem onClick={this.handleBonusModal}>
+                        <ListItemIcon>
+                          <Star />
+                        </ListItemIcon>
+                        <ListItemText>CORN WHEEL</ListItemText>
+                        <ListItemIcon>
+                          <img style={{ transform: "translate(-93px, 4px)", width: "20px", zIndex: 0 }} src="../img/icons/corn.svg" />
+                        </ListItemIcon>
+                      </MenuItem>
+
+                      <MenuItem onClick={this.handleOpenHowToPlayModal}>
+                        <ListItemIcon>
+                          <Help />
+                        </ListItemIcon>
+                        <ListItemText>INFO</ListItemText>
+                      </MenuItem>
+                      <Divider />
+                      <MenuItem
+                        onClick={e => {
+                          this.handleLogout(true);
+                        }}
                       >
-                        Deposit
-                      </Button>
-                      <hr />
-                      {web3account ? (
-                        <>
-                          <input
-                            id="wallet-address"
-                            type="text"
-                            value={web3account}
-                            readOnly
-                          />
-                          <Button className="connect title" onClick={this.disconnectWeb3}>
-                            Disconnect
-                          </Button>
-                        </>
-                      ) : (
-                        <Button className="connect title" onClick={this.loadWeb3}>
-                          Wallet Not connected
-                        </Button>
-                      )}
-                    </div>
+                        <ListItemIcon>
+                          <ExitToApp size="small" />
+                        </ListItemIcon>
+                        <ListItemText>LOG OUT</ListItemText>
+                      </MenuItem>
+                    </Menu>
+                  </>
+                ) : (
+                  <>
+                    <Button id="btn-login" onClick={this.handleOpenLoginModal}>
+                      Login
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+            <div
+              id="notifications"
+              className={showNotifications ? '' : 'hidden'}
+              onClick={this.handleNotificationsClick}
+            >
+              <div className="arrow-up"></div>
+              <div className="header_panel_contents">
+                {<h2 className='title'>NOTIFICATIONS</h2>}
+                {
+                  <div className="notification-element">
+                    {notificationsArray.length > 0 ? (
+                      notificationsArray.map((notification, index) => (
+
+                        <div className={`notification-container ${notification.is_read ? 'read' : ''}`} key={index}>
+                          <a
+                            className="player"
+                            onClick={() =>
+                              this.handleOpenPlayerModal(notification._id)
+                            }
+                            style={{ display: 'flex', flexDirection: 'row' }}
+                          >
+                            <Avatar
+                              src={notification.avatar}
+                              rank={notification.rank}
+                              accessory={notification.accessory}
+                              username={notification.username}
+                              className="avatar"
+                            />
+                          </a>
+                          <a href={`/join/${notification.room}/`} style={{ width: "100%" }}>
+
+                            {!notification.is_read && <div className="red-dot" />}
+                            <div className="notification" style={{ width: "70%", display: 'inline-block' }}>
+                              <p
+                                dangerouslySetInnerHTML={{
+                                  __html: notification.message
+                                }}
+                              />
+                              <p className="fromNow">{notification.from_now}</p>
+                            </div>
+                          </a>
+                        </div>
+                      ))
+                    ) : (
+                      <p>No notifications available.</p>
+                    )}
+
+
                   </div>
+                }
+              </div>
+            </div>
+            {showAllGameLogs && (
+              <AllTransactionsModal
+                modalIsOpen={showAllGameLogs}
+                isDarkMode={isDarkMode}
+                close={this.toggleAllTransactions}
+                sortType={sortType}
+                sortAnchorEl={sortAnchorEl}
+                searchAnchorEl={searchAnchorEl}
+                filterAnchorEl={filterAnchorEl}
+                filterType={filterType}
+                user={user._id}
+                transactions={transactions}
+                tnxComplete={tnxComplete}
+                handleSortClick={this.handleSortClick}
+                handleFilterClick={this.handleFilterClick}
+                handleFilterClose={this.handleFilterClose}
+                handleSortClose={this.handleSortClose}
+                handleSearchClose={this.handleSearchClose}
+                searchQuery={searchQuery}
+                onSearchQueryChange={this.onSearchQueryChange}
+                handleSearchClick={this.handleSearchClick}
+                handleLoadMore={this.handleLoadMore}
+                oneDayProfit={this.props.oneDayProfit}
+                sevenDayProfit={this.props.sevenDayProfit}
+                allTimeProfit={this.props.allTimeProfit}
+              />
+            )}
+
+            <div
+              id="game_logs"
+              className={this.state.showGameLog ? '' : 'hidden'}
+              onClick={this.handleBalanceClick}
+            >
+              <div className="arrow-up"></div>
+              <div className="header_panel_contents">
+                {
+                  <Tooltip
+                    style={{ position: "absolute", right: "20px" }}
+                    title={
+                      <>
+                        <h6 style={{ marginBottom: "0.5rem" }}>WHY DO MY WINNINGS APPEAR LESS?</h6>
+                        <p style={{ marginBottom: "0.5rem" }}>
+                          You see less as this is net profit (
+                          <span style={{ fontWeight: "bold", color: "#28a745" }}>winning amount</span> -
+                          <span style={{ fontWeight: "bold", color: "#ff0000" }}> bet amount</span>)
+                          and receive less due to:
+                        </p>
+                        <ul style={{ paddingLeft: "1rem", marginBottom: "0.5rem" }}>
+                          <li>RTB fees awarded to the Host (0% - 15% returned to bankroll dependent on their accessory)</li>
+                          <li>1% towards platform fees</li>
+                        </ul>
+                        <p style={{ marginBottom: "0.5rem" }}>
+                          For example, if you win <strong>{convertToCurrency(0.2)}</strong> but bet <strong>{convertToCurrency(0.1)}</strong>,
+                          then you might see:
+                        </p>
+                        <p style={{ marginBottom: "0.5rem" }}>
+                          <strong>{convertToCurrency(0.2)} * 0.88 </strong>
+                          (12% RTB) - <strong>{convertToCurrency(0.1)}</strong> (net profit)
+                          = <strong>{convertToCurrency(0.076)}</strong> (final calculation).
+                        </p>
+                      </>
+                    }
+                    placement="top"
+                  >
+                    <Info style={{ cursor: "pointer", float: "right" }} />
+                  </Tooltip>
+                }
+
+
+                <h2 className='title'>BALANCE HISTORY</h2>
+
+                {
+                  <div>
+                    <table id="balance-history">
+                      <tbody>
+                        {transactions.length === 0 ? (
+                          <tr>
+                            <td>...</td>
+                          </tr>
+                        ) : (
+                          transactions.slice(0, 5).map((row, key) => (
+                            <tr key={key}>
+                              {row.hash ? (
+                                <a href={`https://etherscan.io/tx/${row.hash}`} rel="noopener noreferrer">
+                                  <td className={`amount ${row.status === "waiting" || row.status === "pending" ? 'grey' : (row.amount > 0 ? 'green' : 'red')}`}>
+                                    {row.amount > 0 ? (
+                                      <>
+                                        {'+ '}
+                                        {convertToCurrency(row.amount, true)}
+                                      </>
+                                    ) : (
+                                      <>
+                                        {'- '}
+                                        {convertToCurrency(Math.abs(row.amount), true)}
+                                      </>
+                                    )}
+                                  </td>
+                                  <td className="fromNow">{row.from_now}</td>
+                                </a>
+                              ) : (
+                                <>
+                                  <td className={`amount ${row.status === "waiting" || row.status === "pending" ? 'grey' : (row.amount > 0 ? 'green' : 'red')}`}>
+                                    {row.amount > 0 ? (
+                                      <>
+                                        {'+ '}
+                                        {convertToCurrency(row.amount, true)}
+                                      </>
+                                    ) : (
+                                      <>
+                                        {'- '}
+                                        {convertToCurrency(Math.abs(row.amount), true)}
+                                      </>
+                                    )}
+                                  </td>
+                                  <td className="fromNow">{row.from_now}</td>
+                                </>
+                              )}
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                    <Button onClick={this.toggleAllTransactions}>ALL TRANSACTIONS</Button>
+                  </div>
+                }
+
+                <div className="transaction-panel">
+                  <Button
+                    className="btn-inventory title"
+                    // isDarkMode={isDarkMode}
+                    onClick={this.handleOpenInventoryModal}
+                  >
+                    Inventory
+                  </Button>
+                  <Button
+                    className="btn-vault title"
+                    // isDarkMode={isDarkMode}
+                    onClick={this.handleOpenVaultModal}
+                  >
+                    Vault&nbsp;
+                    <span style={{ border: "2px solid", background: "#1284cc11", color: "#1284ff", padding: "2px 5px", marginLeft: "10px", borderRadius: "0.4em" }}>
+                      {this.state.vaultBal ? convertToCurrency(this.state.vaultBal) : 0}
+                    </span>
+                  </Button>
+                </div>
+                <div className="transaction-panel">
+                  {this.state.remainingLoans > 0 ? (
+                    <Button
+                      className="btn-withdraw debt title"
+                      onClick={this.handleOpenDebtsModal}
+                    // isDarkMode={isDarkMode}
+                    >
+                      <div>{convertToCurrency(this.state.remainingLoans)} IN DEBT</div>
+                    </Button>
+                  ) : (
+                    <Button
+                      className="btn-withdraw title"
+                      onClick={this.handleOpenWithdrawModal}
+                    // isDarkMode={isDarkMode}
+                    >
+                      Withdraw
+                    </Button>
+                  )}
+
+                  <Button
+                    className="btn-deposit title"
+                    onClick={this.handleOpenDepositModal}
+                  // isDarkMode={isDarkMode}
+                  >
+                    Deposit
+                  </Button>
+                  <hr />
+                  {web3account ? (
+                    <>
+                      <input
+                        id="wallet-address"
+                        type="text"
+                        value={web3account}
+                        readOnly
+                      />
+                      <Button className="connect title" onClick={this.disconnectWeb3}>
+                        Disconnect
+                      </Button>
+                    </>
+                  ) : (
+                    <Button className="connect title" onClick={this.loadWeb3}>
+                      CONNECT WALLET&nbsp;<FontAwesomeIcon icon={faExternalLinkAlt} />
+                    </Button>
+                  )}
                 </div>
               </div>
-
-              <div className="game_wrapper">
-                <div className="contents_wrapper">{children}</div>
-              </div>
-
-              {showProfileModal && (
-                <ProfileModal
-                  modalIsOpen={showProfileModal}
-                  closeModal={this.handleCloseProfileModal}
-                  player_name={userName}
-                  balance={balance}
-                  accessory={user.accessory}
-                  avatar={user.avatar}
-                  totalWagered={user.totalWagered}
-                  selectedCreator={user._id}
-                />
-              )}
-              {showPlayerModal && (
-                <PlayerModal
-                  selectedCreator={selectedCreator}
-                  modalIsOpen={showPlayerModal}
-                  closeModal={this.handleClosePlayerModal}
-                />
-              )}
-              {showSettingsModal && (
-                <SettingsModal
-                  modalIsOpen={showSettingsModal}
-                  closeModal={this.handleCloseSettingsModal}
-                  handleMute={this.handleMute}
-                  handleUnmute={this.handleUnmute}
-                />
-              )}
-              {showBonusModal && (
-                <BonusModal
-                  modalIsOpen={showBonusModal}
-                  closeModal={this.handleCloseBonusModal}
-                  handleMute={this.handleMute}
-                  handleUnmute={this.handleUnmute}
-                  user={this.props.user}
-                />
-              )}
-              {showLeaderboardsModal && (
-                <LeaderboardsModal
-                  modalIsOpen={showLeaderboardsModal}
-                  closeModal={this.handleCloseLeaderboardsModal}
-                  player_name={userName}
-                  balance={balance}
-                  isDarkMode={isDarkMode}
-                />
-              )}
-              {showHowToPlayModal && (
-                <HowToPlayModal
-                  modalIsOpen={showHowToPlayModal}
-                  closeModal={this.handleCloseHowToPlayModal}
-                  player_name={userName}
-                  balance={balance}
-                  isDarkMode={isDarkMode}
-                />
-              )}
-              {showBankModal && (
-                <BankModal
-                  modalIsOpen={showBankModal}
-                  closeModal={this.handleCloseBankModal}
-                  player_name={userName}
-                  balance={balance}
-                  isDarkMode={isDarkMode}
-                  remainingLoans={this.state.remainingLoans}
-                />
-              )}
-              {showMarketplaceModal && (
-                <MarketplaceModal
-                  modalIsOpen={showMarketplaceModal}
-                  closeModal={this.handleCloseMarketplaceModal}
-                  player_name={userName}
-                  balance={balance}
-                  isDarkMode={isDarkMode}
-                />
-              )}
-              {showLoginModal && (
-                <LoginModal
-                  modalIsOpen={showLoginModal}
-                  closeModal={this.handleCloseLoginModal}
-                  openSignupModal={this.handleOpenSignupModal}
-                  openVerificationModal={this.handleOpenVerificationModal}
-                  initSocket={this.initSocket}
-                  openResetPasswordModal={this.handleOpenResetPasswordModal}
-                />
-              )}
-              {showDebtsModal && (
-                <DebtsModal
-                  modalIsOpen={showDebtsModal}
-                  closeModal={this.handleCloseDebtsModal}
-                  openDebtsModal={this.handleOpenDebtsModal}
-                />
-              )}
-              {showSignupModal && (
-                <SignupModal
-                  modalIsOpen={showSignupModal}
-                  closeModal={this.handleCloseSignupModal}
-                  openLoginModal={this.handleOpenLoginModal}
-                />
-              )}
-              {showVerificationModal && (
-                <VerificationModal
-                  modalIsOpen={showVerificationModal}
-                  closeModal={this.handleCloseVerificationModal}
-                />
-              )}
-              {showDepositModal && (
-                <DepositModal
-                  modalIsOpen={showDepositModal}
-                  closeModal={this.handleCloseDepositModal}
-                  web3={web3}
-                  balance={web3balance}
-                  account={web3account}
-                />
-              )}
-              {showInventoryModal && (
-                <InventoryModal
-                  modalIsOpen={showInventoryModal}
-                  closeModal={this.handleCloseInventoryModal}
-                />
-              )}
-              {showVaultModal && (
-                <VaultModal
-                  vaultBal={this.state.vaultBal}
-                  modalIsOpen={showVaultModal}
-                  closeModal={this.handleCloseVaultModal}
-                />
-              )}
-              {showWithdrawModal && (
-                <WithdrawModal
-                  modalIsOpen={showWithdrawModal}
-                  closeModal={this.handleCloseWithdrawModal}
-                  balance={balance}
-                  web3={web3}
-                  account={web3account}
-                />
-              )}
-              {showResetPasswordModal && (
-                <ResetPasswordModal
-                  modalIsOpen={showResetPasswordModal}
-                  closeModal={this.handleCloseResetPasswordModal}
-                  openLoginModal={this.handleOpenLoginModal}
-                />
-              )}
-              <ListItemModal />
-              <DeListItemModal />
-              <ConfirmTradeModal />
-              <DeListLoanModal />
-              <ConfirmLoanModal />
-              <OfferLoanModal socket={this.props.socket} />
-              <GamePasswordModal />
-              <Joyride
-                steps={tutorialStepsMain}
-                run={this.state.run}
-                callback={this.handleJoyrideCallback}
-                continuous
-                showProgress
-                showSkipButton
-                styles={{
-                  options: {
-                    zIndex: 10000,
-                    backgroundColor: isDarkMode ? 'rgb(81 48 98 / 60%)' : '#ccc9', // Tooltip background color
-                    primaryColor: '#ff0000', // Custom color for buttons and highlights
-                    arrowColor: isDarkMode ? 'rgb(81 48 98 / 60%)' : '#ccc9', // Arrow color
-                    textColor:  isDarkMode ? '#f9f9f9' : '#333', // Text color inside the tooltip
-                    width: 300, // Tooltip width
-                    padding: 20, // Padding inside the tooltip
-                    borderRadius: 5, // Rounded corners for the tooltip
-                  },
-                  
-                  buttonClose: {
-                    borderRadius: '0.3em', /* Custom border radius */
-                    color: isDarkMode ? '#f9f9f9' : '#333',
-                  },
-                  buttonBack: {
-                    borderRadius: '0.3em',
-                    color: isDarkMode ? '#f9f9f9' : '#333',
-                  },
-                  buttonNext: {
-                    borderRadius: '0.3em',
-                    color: isDarkMode ? '#f9f9f9' : '#333',
-                  },
-                  buttonSkip: {
-                    borderRadius: '0.3em',
-                    color: isDarkMode ? '#f9f9f9' : '#333',
-                  },
-                
-                }}
-              />
             </div>
-          </>
-        )}
+          </div>
+
+          <div className="game_wrapper">
+            <div className="contents_wrapper">{children}</div>
+          </div>
+
+          {showProfileModal && (
+            <ProfileModal
+              modalIsOpen={showProfileModal}
+              closeModal={this.handleCloseProfileModal}
+              player_name={userName}
+              balance={balance}
+              accessory={user.accessory}
+              avatar={user.avatar}
+              totalWagered={user.totalWagered}
+              selectedCreator={user._id}
+            />
+          )}
+          {showPlayerModal && (
+            <PlayerModal
+              selectedCreator={selectedCreator}
+              modalIsOpen={showPlayerModal}
+              closeModal={this.handleClosePlayerModal}
+            />
+          )}
+          {showSettingsModal && (
+            <SettingsModal
+              modalIsOpen={showSettingsModal}
+              closeModal={this.handleCloseSettingsModal}
+              handleMute={this.handleMute}
+              handleUnmute={this.handleUnmute}
+            />
+          )}
+          {showBonusModal && (
+            <BonusModal
+              modalIsOpen={showBonusModal}
+              closeModal={this.handleCloseBonusModal}
+              handleMute={this.handleMute}
+              handleUnmute={this.handleUnmute}
+              user={this.props.user}
+            />
+          )}
+          {showLeaderboardsModal && (
+            <LeaderboardsModal
+              modalIsOpen={showLeaderboardsModal}
+              closeModal={this.handleCloseLeaderboardsModal}
+              player_name={userName}
+              balance={balance}
+              isDarkMode={isDarkMode}
+            />
+          )}
+          {showHowToPlayModal && (
+            <HowToPlayModal
+              modalIsOpen={showHowToPlayModal}
+              closeModal={this.handleCloseHowToPlayModal}
+              player_name={userName}
+              balance={balance}
+              isDarkMode={isDarkMode}
+            />
+          )}
+          {showBankModal && (
+            <BankModal
+              modalIsOpen={showBankModal}
+              closeModal={this.handleCloseBankModal}
+              player_name={userName}
+              balance={balance}
+              isDarkMode={isDarkMode}
+              remainingLoans={this.state.remainingLoans}
+            />
+          )}
+          {showMarketplaceModal && (
+            <MarketplaceModal
+              modalIsOpen={showMarketplaceModal}
+              closeModal={this.handleCloseMarketplaceModal}
+              player_name={userName}
+              balance={balance}
+              isDarkMode={isDarkMode}
+            />
+          )}
+          {showLoginModal && (
+            <LoginModal
+              modalIsOpen={showLoginModal}
+              closeModal={this.handleCloseLoginModal}
+              openSignupModal={this.handleOpenSignupModal}
+              openVerificationModal={this.handleOpenVerificationModal}
+              initSocket={this.initSocket}
+              openResetPasswordModal={this.handleOpenResetPasswordModal}
+            />
+          )}
+          {showDebtsModal && (
+            <DebtsModal
+              modalIsOpen={showDebtsModal}
+              closeModal={this.handleCloseDebtsModal}
+              openDebtsModal={this.handleOpenDebtsModal}
+            />
+          )}
+          {showSignupModal && (
+            <SignupModal
+              modalIsOpen={showSignupModal}
+              closeModal={this.handleCloseSignupModal}
+              openLoginModal={this.handleOpenLoginModal}
+            />
+          )}
+          {showVerificationModal && (
+            <VerificationModal
+              modalIsOpen={showVerificationModal}
+              closeModal={this.handleCloseVerificationModal}
+            />
+          )}
+          {showDepositModal && (
+            <DepositModal
+              modalIsOpen={showDepositModal}
+              closeModal={this.handleCloseDepositModal}
+              web3={web3}
+              loadWeb3={this.loadWeb3}
+              balance={web3balance}
+              account={web3account}
+            />
+          )}
+          {showInventoryModal && (
+            <InventoryModal
+              modalIsOpen={showInventoryModal}
+              closeModal={this.handleCloseInventoryModal}
+            />
+          )}
+          {showVaultModal && (
+            <VaultModal
+              vaultBal={this.state.vaultBal}
+              modalIsOpen={showVaultModal}
+              closeModal={this.handleCloseVaultModal}
+            />
+          )}
+          {showWithdrawModal && (
+            <WithdrawModal
+              modalIsOpen={showWithdrawModal}
+              closeModal={this.handleCloseWithdrawModal}
+              balance={balance}
+              web3={web3}
+              account={web3account}
+            />
+          )}
+          {showResetPasswordModal && (
+            <ResetPasswordModal
+              modalIsOpen={showResetPasswordModal}
+              closeModal={this.handleCloseResetPasswordModal}
+              openLoginModal={this.handleOpenLoginModal}
+            />
+          )}
+          <ListItemModal />
+          <DeListItemModal />
+          <ConfirmTradeModal />
+          <DeListLoanModal />
+          <ConfirmLoanModal />
+          <OfferLoanModal socket={this.props.socket} />
+          <GamePasswordModal />
+          <Joyride
+            steps={tutorialStepsMain}
+            run={this.state.run}
+            callback={this.handleJoyrideCallback}
+            continuous
+            showProgress
+            showSkipButton
+            styles={{
+              options: {
+                zIndex: 10000,
+                backgroundColor: isDarkMode ? 'rgb(81 48 98 / 60%)' : '#ccc9', // Tooltip background color
+                primaryColor: '#ff0000', // Custom color for buttons and highlights
+                arrowColor: isDarkMode ? 'rgb(81 48 98 / 60%)' : '#ccc9', // Arrow color
+                textColor: isDarkMode ? '#f9f9f9' : '#333', // Text color inside the tooltip
+                width: 300, // Tooltip width
+                padding: 20, // Padding inside the tooltip
+                borderRadius: 5, // Rounded corners for the tooltip
+              },
+
+              buttonClose: {
+                borderRadius: '0.3em', /* Custom border radius */
+                color: isDarkMode ? '#f9f9f9' : '#333',
+              },
+              buttonBack: {
+                borderRadius: '0.3em',
+                color: isDarkMode ? '#f9f9f9' : '#333',
+              },
+              buttonNext: {
+                borderRadius: '0.3em',
+                color: isDarkMode ? '#f9f9f9' : '#333',
+              },
+              buttonSkip: {
+                borderRadius: '0.3em',
+                color: isDarkMode ? '#f9f9f9' : '#333',
+              },
+
+            }}
+          />
+        </div>
+        {/* </> */}
+        {/* )} */}
       </MuiThemeProvider>
     );
   }

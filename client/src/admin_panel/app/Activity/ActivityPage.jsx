@@ -7,7 +7,7 @@ import { queryActivity } from '../../../redux/Customer/customer.action';
 
 class ActivityPage extends Component {
   componentDidMount() {
-    this.props.setUrl(this.props.match.path);
+    // this.props.setUrl(this.props.match.path);
     this.props.queryActivity(10, 1);
   }
 

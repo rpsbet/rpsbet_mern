@@ -11,19 +11,19 @@ import EditCustomerPage from './Customer/EditCustomerPage/EditCustomerPage';
 import QuestionPage from './Question/QuestionPage';
 import QuestionEditPage from './Question/QuestionEditPage';
 import SettingsPage from './SettingsPage/SettingsPage';
+import CountdownPage from '../CountdownPage'
 
 export class AppMainRoute extends Component {
   render() {
     const { match } = this.props;
-
     return (
-      <LayoutCop>
+      // <SiteWrapper>
         <Switch>
-          <Route 
+          {/* <Route 
             exact
             path={`${match.path}`}
             component={CustomersPage}
-          />
+          /> */}
           <Route
             exact
             path={`${match.path}/customers`}
@@ -39,6 +39,11 @@ export class AppMainRoute extends Component {
             path={`${match.path}/activities`}
             component={ActivityPage}
           />
+          <Route 
+            
+            path={`/investors`}
+            component={CountdownPage}
+            />
           <Route 
             exact
             path={`${match.path}/question`}
@@ -81,7 +86,7 @@ export class AppMainRoute extends Component {
           />
           
         </Switch>
-      </LayoutCop>
+      //  </SiteWrapper>
     );
   }
 }

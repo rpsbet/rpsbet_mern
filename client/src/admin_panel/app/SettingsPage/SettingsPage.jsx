@@ -11,7 +11,7 @@ class SettingsPage extends Component {
   };
 
   async componentDidMount() {
-    this.props.setUrl(this.props.match.path);
+    // this.props.setUrl(this.props.match.path);
     const settings = await this.props.getSettings();
     this.setState({ ...settings });
   }

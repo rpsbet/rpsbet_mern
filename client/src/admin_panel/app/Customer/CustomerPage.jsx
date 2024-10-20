@@ -51,7 +51,7 @@ class CustomerPage extends Component {
   }
 
   componentDidMount() {
-    this.props.setUrl(this.props.match.path);
+    // this.props.setUrl(this.props.match.path);
     this.props.queryCustomer(10, 1, false);
   }
 

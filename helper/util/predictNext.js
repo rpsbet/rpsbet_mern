@@ -6,12 +6,16 @@ const predictNext = (rps_list, markov = false) => {
   const smoothingFactor = 0.1;
 
   if (rps_list.length <= 1) {
-    return choices[Math.floor(Math.random() * 3)];
+    const randomChoice = choices[Math.floor(Math.random() * 3)];
+    console.log(`Not enough data. Random choice: ${randomChoice}`);
+    return randomChoice;
   }
 
   const subsetSize = Math.min(rps_list.length - 1, 10);
   const startIndex = Math.floor(Math.random() * (rps_list.length - subsetSize));
   const subset = rps_list.slice(startIndex, startIndex + subsetSize);
+
+  console.log(`Subset selected for analysis: ${JSON.stringify(subset)}`);
 
   const transitionMatrix = {
     R: { R: 0, P: 0, S: 0 },
@@ -19,12 +23,16 @@ const predictNext = (rps_list, markov = false) => {
     S: { R: 0, P: 0, S: 0 },
   };
 
+  // Populate transition matrix
   for (let i = 0; i < subset.length - 1; i++) {
     const currentState = subset[i].rps;
     const nextState = subset[i + 1].rps;
     transitionMatrix[currentState][nextState]++;
   }
 
+  console.log('Raw transition matrix counts:', transitionMatrix);
+
+  // Normalize transition matrix with smoothing
   Object.keys(transitionMatrix).forEach((fromState) => {
     const totalTransitions = Object.values(transitionMatrix[fromState]).reduce((a, b) => a + b, 0);
     if (totalTransitions > 0) {
@@ -32,12 +40,13 @@ const predictNext = (rps_list, markov = false) => {
         transitionMatrix[fromState][toState] = (transitionMatrix[fromState][toState] + smoothingFactor) / (totalTransitions + smoothingFactor * 3);
       });
     } else {
-      // If no transitions, initialize with equal probability
       Object.keys(transitionMatrix[fromState]).forEach((toState) => {
         transitionMatrix[fromState][toState] = 1 / 3;
       });
     }
   });
+
+  console.log('Normalized transition matrix with smoothing:', transitionMatrix);
 
   // Predict next state based on the last observed state
   const currentState = rps_list[rps_list.length - 1].rps;
@@ -46,33 +55,39 @@ const predictNext = (rps_list, markov = false) => {
 
   if (transitionMatrix[currentState]) {
     Object.keys(transitionMatrix[currentState]).forEach((state) => {
-      if (transitionMatrix[currentState][state] > maxProb) {
-        maxProb = transitionMatrix[currentState][state];
+      const prob = transitionMatrix[currentState][state];
+      console.log(`Transition probability from ${currentState} to ${state}: ${prob}`);
+      if (prob > maxProb) {
+        maxProb = prob;
         nextState = state;
       }
     });
   } else {
     console.warn(`Warning: No transition data available for state ${currentState}`);
-    nextState = Object.keys(transitionMatrix)[0] || getRandomMove();
+    nextState = Object.keys(transitionMatrix)[0] || choices[Math.floor(Math.random() * 3)];
   }
 
+  console.log(`Predicted next state: ${nextState} with probability ${maxProb}`);
 
   if (markov) {
     nextState = getBeatingType(nextState);
+    console.log(`Markov prediction (beating type): ${nextState}`);
   }
 
+  // Add a random deviation
   const deviationThreshold = 0.05;
   if (Math.random() < deviationThreshold) {
     let randomState;
     do {
       randomState = choices[Math.floor(Math.random() * 3)];
     } while (randomState === currentState);
+    console.log(`Random deviation applied. New state: ${randomState}`);
     nextState = randomState;
   }
 
+  console.log(`Final predicted next state: ${nextState}`);
   return nextState;
-}
-
+};
 
 
 const getBeatingType = (currentState) => {

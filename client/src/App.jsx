@@ -6,7 +6,9 @@ import { getUser } from './redux/Auth/user.actions';
 import { getAdmin } from './redux/AdminAuth/admin.actions';
 
 import GameMainRoute from './game_panel/app/Game.routes';
+import AppMainRoute from './admin_panel/app/App.routes';
 import ChangePasswordPage from './game_panel/main_pages/ChangePasswordPage';
+import DepositModal from './game_panel/modal/DepositModal'
 
 import AdminSignInPage from './admin_panel/auth/SignInPage';
 import AdminSignUpPage from './admin_panel/auth/SignUpPage';
@@ -27,7 +29,7 @@ const App = () => {
   //     props.getAdmin();
   //   } else if (isAuthenticated) {
   //     // console.log('App.jsx');
-  //     // props.getUser();
+  //     props.getUser();
   //   }
   // }, []);
 
@@ -95,6 +97,21 @@ const App = () => {
         <Route
           path="/changePassword/:code"
           render={routeProps => <ChangePasswordPage {...routeProps} />}
+        />
+        <Route
+          exact
+          path="/investors"
+          render={routeProps => <AppMainRoute {...routeProps} />}
+        />
+        {/* Route for /investors/deposit */}
+        <Route
+          path="/investors/deposit"
+          render={routeProps => (
+            <>
+              <AppMainRoute {...routeProps} /> {/* This renders the base page */}
+              <DepositModal {...routeProps} />   {/* Modal on top of /investors */}
+            </>
+          )}
         />
         <Route
           path="/"

@@ -8,6 +8,9 @@ import { faSignInAlt } from '@fortawesome/free-solid-svg-icons';
 import { setFocused, userSignIn, getUser, authenticateWithGoogle } from '../../redux/Auth/user.actions';
 import { getMyGames, getMyHistory, getMyChat, getNotifications } from '../../redux/Logic/logic.actions';
 import history from '../../redux/history';
+import {
+  faExternalLinkAlt,
+} from '@fortawesome/free-solid-svg-icons';
 
 Modal.setAppElement('#root');
 
@@ -35,7 +38,8 @@ class LoginModal extends Component {
     this.state = {
       email: props.email,
       password: props.password,
-      showVerificationModal: false
+      showVerificationModal: false,
+      isInvestorsPage: location.pathname.startsWith('/investors'),
     };
   }
 
@@ -71,6 +75,7 @@ class LoginModal extends Component {
       const buttonElement = document.getElementById('googleSignInButton');
       this.initializeGoogleSignIn();
     }, 100);
+    this.setState({ isInvestorsPage: location.pathname.startsWith('/investors') });
 
   }
 
@@ -112,7 +117,7 @@ class LoginModal extends Component {
     const jwt = response.credential;
 
     // Dispatch the authentication action
-    this.props.authenticateWithGoogle({token: jwt})
+    this.props.authenticateWithGoogle({ token: jwt })
       .then(result => {
         if (result.status === 'success') {
 
@@ -140,11 +145,21 @@ class LoginModal extends Component {
     this.props.getNotifications();
     this.props.getMyHistory();
     this.props.getMyChat();
-    history.push('/');
+
+    // Check if the current URL is '/investors'
+    const currentPath = window.location.pathname; // Get the current URL path
+
+    if (currentPath.startsWith('/investors')) { // Checks if the URL starts with /investors
+      history.push('/investors'); // Push to /investors if the user is already there
+    } else {
+      history.push('/'); // Otherwise, push to home
+    }
+
     this.props.closeModal();
-  }
+  };
 
   render() {
+    const { isInvestorsPage } = this.state;
     return (
       <Modal
         closeTimeoutMS={500}
@@ -163,7 +178,7 @@ class LoginModal extends Component {
             </Button>
           </div>
           <div className="modal-img title">
-            <img style={{ maxWidth: "95%", margin: "10px", overflow: "hidden" }} src="/img/giant-login.svg" alt="Login" />
+            <img style={{ width: "100%", margin: "0px", overflow: "hidden" }} src="/img/giant-login.svg" alt="Login" />
           </div>
           <div className="modal-body" style={{ paddingTop: "0", paddingBottom: "5px" }}>
             <form onSubmit={this.onSubmitForm}>
@@ -200,18 +215,18 @@ class LoginModal extends Component {
             </form>
           </div>
           <div className="modal-footer" style={{ margin: "flex", flexDirection: "column" }}>
-            <div style={{ margin: "flex", flexDirection: "row", display:"flex", width: "calc(100% - 10px)", marginLeft:"-2.5px", justifyContent:"space-between"}}>
+            <div style={{ margin: "flex", flexDirection: "row", display: "flex", width: "calc(100% - 10px)", marginLeft: "-2.5px", justifyContent: "space-between" }}>
 
               <Button
-                onClick={this.onSubmitForm} className="btn-submit login" style={{ marginTop: "0px", padding: "10px"}} >
+                onClick={this.onSubmitForm} className="btn-submit login" style={{ marginTop: "0px", padding: "10px" }} >
                 Login&nbsp;<span className='roll-tag'>[ ↵ ]</span>
               </Button>
-            <div id="googleSignInButton"></div>
+              <div id="googleSignInButton"></div>
             </div>
 
 
             <Button
-              style={{  width: "calc(100% - 10px)", margin: "10px 0 0 -10px" }}
+              style={{ width: "calc(100% - 10px)", margin: "10px 0 0 -10px" }}
               className="btn-back"
               onClick={e => {
                 this.props.closeModal();
@@ -220,6 +235,31 @@ class LoginModal extends Component {
             >
               NEWBIE?{' '}GET REGISTERED →
             </Button>
+            {!isInvestorsPage ? (
+
+              <a
+                style={{ textAlign: 'center',  padding: '5px', textDecoration: 'underline', color: "#ffd000", width: "calc(100% - 10px)", margin: "10px 0 0 -10px" }}
+                className="btn-back"
+                onClick={e => {
+                  this.props.closeModal();
+                  history.push('/investors');
+                }}
+              >
+                INVESTOR? ($RPS PORTAL)&nbsp;<FontAwesomeIcon icon={faExternalLinkAlt} />
+              </a>
+            ) : (
+              <a
+                style={{ textAlign: 'center', padding: '5px', textDecoration: 'underline',  color: "#ffd000", width: "calc(100% - 10px)", margin: "10px 0 0 -10px" }}
+                className="btn-back"
+                onClick={e => {
+                  this.props.closeModal();
+                  history.push('/play');
+                }}
+              >
+                Play RPS.Game&nbsp;<FontAwesomeIcon icon={faExternalLinkAlt} />
+              </a>
+            )}
+
           </div>
         </div>
       </Modal>

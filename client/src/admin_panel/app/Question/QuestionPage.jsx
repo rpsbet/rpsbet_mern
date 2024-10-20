@@ -7,7 +7,7 @@ import { queryQuestion } from '../../../redux/Question/question.action'
 
 class QuestionPage extends Component {
   componentDidMount() {
-    this.props.setUrl(this.props.match.path);
+    // this.props.setUrl(this.props.match.path);
     this.props.queryQuestion(10, 1);
   }
 

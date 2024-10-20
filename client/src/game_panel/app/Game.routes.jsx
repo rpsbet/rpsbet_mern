@@ -13,7 +13,6 @@ import ProfilePage from '../main_pages/ProfilePage';
 export class GameMainRoute extends Component {
   render() {
     const { match } = this.props;
-
     return (
       <SiteWrapper>
         <Switch>
@@ -47,6 +46,7 @@ export class GameMainRoute extends Component {
             path={`${match.path}profile/:user_id`}
             component={ProfilePage}
           />
+   
           <Route
             exact
             path={`${match.path}leaderboards`}
