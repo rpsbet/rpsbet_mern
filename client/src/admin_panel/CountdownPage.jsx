@@ -163,7 +163,29 @@ const generateRandomPositions = (buttonsCount) => {
   const centerY = height / 2;
 
   // If width is less than 600px, use fixed positions
-  if (width < 600) {
+  if (width < 600 && height < 700) {
+
+    const fixedPositions = [
+      { top: 280, left: 280 },
+      { top: 340, left: 300 },
+      { top: 160, left: 120 },
+      { top: 180, left: 190 },
+      { top: 180, left: 340 },
+      // Add more fixed positions as needed for your buttons
+    ];
+    return fixedPositions.slice(0, buttonsCount); // Return only the needed positions
+  } else if (width < 600 && height < 900) {
+    const fixedPositions = [
+      { top: 400, left: 320 },
+      { top: 460, left: 340 },
+      { top: 280, left: 160 },
+      { top: 300, left: 230 },
+      { top: 300, left: 380 },
+      // Add more fixed positions as needed for your buttons
+    ];
+    return fixedPositions.slice(0, buttonsCount); // Return only the needed positions
+  } else if (width < 600) {
+
     const fixedPositions = [
       { top: 500, left: 320 },
       { top: 560, left: 340 },
