@@ -166,11 +166,11 @@ const generateRandomPositions = (buttonsCount) => {
   if (width < 600 && height < 700) {
 
     const fixedPositions = [
-      { top: 280, left: 280 },
-      { top: 340, left: 300 },
-      { top: 160, left: 120 },
-      { top: 180, left: 190 },
-      { top: 180, left: 340 },
+      { top: 240, left: 280 },
+      { top: 300, left: 300 },
+      { top: 120, left: 120 },
+      { top: 140, left: 190 },
+      { top: 140, left: 340 },
       // Add more fixed positions as needed for your buttons
     ];
     return fixedPositions.slice(0, buttonsCount); // Return only the needed positions
@@ -886,11 +886,11 @@ const CountdownPage = ({
             <div style={{ position: 'relative' }}>
               <img
                 className="scroll-animation"
-                style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(71px, 346px)', width: "50px", animationDelay: '0.8s', filter: 'opacity(0.25)' }}
+                style={{ position: 'absolute', left: '50%', top: '50%', transform: width < 600 ? 'translate(1px, 346px)' : 'translate(71px, 346px)', width: "50px", animationDelay: '0.8s', filter: 'opacity(0.25)' }}
                 src={remote}
                 alt="Remote Control"
               />
-              <Lottie options={catOptions} style={{ position: 'absolute', left: '50%', top: '50%', transform: width < 600 ? 'translateY(30%)' : 'translateY(40%)' }} height={'auto'} width={'300px'} isClickToPauseDisabled={true} />
+              <Lottie options={catOptions} style={{ position: 'absolute', left: '50%', top:  width < 600 && height < 900 ? '-50%' : '50%', transform: width < 600 ? 'translateY(0%)' : 'translateY(40%)' }} height={'auto'} width={'300px'} isClickToPauseDisabled={true} />
             </div>
             {COUNTDOWN_BUTTONS.map((button, index) => (
               <Zoom in={true} timeout={index * 200} key={button.label}>
