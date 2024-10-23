@@ -146,7 +146,7 @@ class BonusModal extends Component {
       isMusicEnabled,
       loading,
     } = this.props;
-    const numbers = [50, 1, 10, 3, 25, 1, 5, 15, 5, 2];
+    const numbers = [500, 10, 100, 30, 250, 10, 50, 150, 50, 20];
     // const markerStyle = {
     //   transform: `rotate(180deg)`,
     // };

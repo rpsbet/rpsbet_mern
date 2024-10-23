@@ -276,8 +276,8 @@ class WithdrawModal extends Component {
     const amount = Math.floor(e.target.value * 100) / 100;
     this.setState({
       amount: amount,
-      web2Amount: amount *  0.000273,
-      web3Amount: amount * 0.06222
+      web2Amount: amount * 0.006022,
+      web3Amount: amount * 0.006222
     }, () => {
       this.handleEstimateAmount();
     });
@@ -342,7 +342,7 @@ class WithdrawModal extends Component {
   createPayoutAndClose = async () => {
     const { amount, currencyTo, sendAddress, extraId } = this.state;
     try {
-      if (this.props.userInfo.dailyWithdrawals > 10000) {
+      if (this.props.userInfo.dailyWithdrawals > 100000) {
         alertModal(
           this.props.isDarkMode,
           `EXCEEDED DAILY WITHDRAWAL LIMIT, TRY AGAIN TOMORROW! (WITHDRAWAL LIMITS DURING LAUNCH PHASE ONLY)`
@@ -395,7 +395,7 @@ class WithdrawModal extends Component {
 
   send = async () => {
     try {
-      if (this.props.userInfo.dailyWithdrawals > 10000) {
+      if (this.props.userInfo.dailyWithdrawals > 100000) {
         alertModal(
           this.props.isDarkMode,
           `EXCEEDED DAILY WITHDRAWAL LIMIT, TRY AGAIN TOMORROW! (WITHDRAWAL LIMITS DURING LAUNCH PHASE ONLY)`

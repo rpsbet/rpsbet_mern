@@ -1500,7 +1500,7 @@ router.post('/rooms', auth, async (req, res) => {
       });
     }
 
-    if (req.user.dailyWithdrawals > 10000) {
+    if (req.user.dailyWithdrawals > 100000) {
       return res.json({
         success: false,
         message: "Exceeded Daily Withdrawal Limit. Unable to Create a room. Please try again tomorrow! (During Launch Phase only)"
@@ -2203,7 +2203,7 @@ router.post('/end_game', auth, async (req, res) => {
       });
     }
 
-    if (req.user.dailyWithdrawals > 10000) {
+    if (req.user.dailyWithdrawals > 100000) {
       return res.json({
         success: false,
         message: 'Exceeded Daily Withdrawal Limit. Unable to end this room. Please try again tomorrow!',
@@ -3431,7 +3431,7 @@ router.post('/tip', auth, async (req, res) => {
         message: 'IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!'
       });
     }
-    if (req.user.dailyWithdrawals > 10000) {
+    if (req.user.dailyWithdrawals > 100000) {
       return res.json({
         success: false,
         message: 'UNABLE TO TIP TODAY, PLEASE CHECK BACK TOMORROW!'

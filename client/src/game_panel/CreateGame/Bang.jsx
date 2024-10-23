@@ -273,7 +273,7 @@ class Bang extends Component {
   };
 
   render() {
-    const defaultBetAmounts = [50, 250, 500, 1000, 2500];
+    const defaultBetAmounts = [500, 2500, 5000, 25000, 100000];
     const generateRandomMultiplier = () => {
       const isBetweenOneAndTwo = Math.random() <= 0.8;
       if (isBetweenOneAndTwo) {

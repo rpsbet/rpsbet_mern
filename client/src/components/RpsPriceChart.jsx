@@ -10,7 +10,7 @@ class RpsPriceChart extends Component {
     this.state = {
         usdValue: '',
         rpsValue: '',
-        conversionRate: 0.06222,
+        conversionRate: 0.006222,
         pricesData: [],
         datesData: [],
         futurePriceIndex: null,
@@ -174,7 +174,7 @@ class RpsPriceChart extends Component {
       };
     return (
       <div style={{ display: 'flex', flexDirection: "column", justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1 className="modal-title title">RPS PRICE</h1>
+        <h1 className="modal-title title">RPS PRICE (pre-launch)</h1>
         <div
           style={{
             width: '100%',

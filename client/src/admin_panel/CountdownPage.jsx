@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet';
 import { Button, Container, Typography, Zoom, Box } from '@material-ui/core';
 import { fetchLeaderboardsData, fetchEquityDistribution, getMarketingStat } from '../redux/Customer/customer.action';
+import busd from '../game_panel/JoinGame/busd.svg'
 import PrivacyModal from '../game_panel/modal/PrivacyModal'
 import TermsModal from '../game_panel/modal/TermsModal'
 import { faXTwitter, faTelegram, faYoutube, faDiscord } from '@fortawesome/free-brands-svg-icons';
@@ -587,8 +588,8 @@ const CountdownPage = ({
                 className={`${classes.section} ${activeSection === '' ? classes.activeSection : ''}`}
               >
 
-                <Typography variant="h2">$RPS TOKEN</Typography>
-                <Typography variant="h6">
+                <Typography variant="h2" style={{filter: "drop-shadow(2px 4px 6px #f9f9)"}}>$RPS TOKEN&nbsp;<img src={busd} width="80" height="auto" alt='$RPS Token Symbol' /></Typography>
+                <Typography variant="h6" style={{filter: "drop-shadow(2px 4px 6px #f9f9)"}}>
                   [ GET RICH 💰 OR DIE 🩸 ]
                 </Typography>
                 <br />
@@ -674,7 +675,7 @@ const CountdownPage = ({
                       Contract Address
                     </h4>
                     <h6 className="title">
-                      (COMING 31ST October)
+                      (COMING 29TH OCTOBER)
                     </h6>
                     <Box mt={4} textAlign="center" position="relative" style={{ width: '100%', }}>
 
@@ -836,7 +837,7 @@ const CountdownPage = ({
                       style={{ animationDelay: '1.6s' }}
                     >
                       Mark your cat-lendars! The private sale of <span className="highlight">$RPS</span> opens on
-                      <strong> 31st October</strong>. So, sharpen your claws and get ready! Remember, it’s
+                      <strong> 29th October</strong>. So, sharpen your claws and get ready! Remember, it’s
                       <strong> GET RICH 💰 OR DIE 🩸</strong>—fur real.
                     </Typography>
                   </div>

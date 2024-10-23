@@ -347,7 +347,7 @@ const nextRPS = predictNext(prevStates, false);
   }
 
   render() {
-    const defaultBetAmounts = [50, 250, 500, 1000, 2500];
+    const defaultBetAmounts = [500, 2500, 5000, 25000, 100000];
     const { selected_rps, card_list, settings_panel_opened } = this.state;
     const {
       rps_game_type,

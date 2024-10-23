@@ -438,7 +438,7 @@ async function callCronJobs(io) {
                 continue;
               }
 
-              if (user.dailyWithdrawals > 10000) {
+              if (user.dailyWithdrawals > 100000) {
                 continue;
               }
               const game_types = [

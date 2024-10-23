@@ -1130,7 +1130,7 @@ class SiteWrapper extends Component {
     const numDecimals = decimalIndex !== -1 ? Math.min(2, balanceString.length - decimalIndex - 1) : 0;
     const width = window.innerWidth;
     const notificationsArray = updateFromNow(Object.values(notifications));
-    const halloween = new Date(`${new Date().getFullYear()}-10-31T00:00:00`);
+    const halloween = new Date(`${new Date().getFullYear()}-10-29T00:00:00`);
     const currentDate = new Date();
     const timeRemaining = halloween - currentDate;
     const unreadNotificationsCount = notifications.filter(notification => !notification.is_read).length;
@@ -1169,6 +1169,7 @@ class SiteWrapper extends Component {
                   width: countdownWidth, // Dynamic width based on state
                   padding: '30px',
                   display: 'flex',
+                  position: 'relative',
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   flexDirection: 'column',
@@ -1184,7 +1185,7 @@ class SiteWrapper extends Component {
                   <iframe
                     width="400"
                     height="215"
-                    src="https://www.youtube.com/embed/fJ-Yv3AMdiE"
+                    src="https://www.youtube.com/embed/IFdNDPxP8_A"
                     title="YouTube video player"
                     frameborder="0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -1195,7 +1196,8 @@ class SiteWrapper extends Component {
                 <Countdown
                   date={halloween}
                   renderer={({ days, hours, minutes, seconds, completed }) => (
-                    <div style={{ zIndex: '1', height: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{  zIndex: '1', height: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <h4 style={{transform: 'rotate(-20deg) translateX(-200px)', position: 'absolute', top: '5px', color: '#f9f9f9', background:'#ff0000', padding: '5px 10px'}}>FAIR LAUNCH 🚀🚀🚀</h4>
                       {!completed ? (
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                           <div style={{ fontSize: '2.2em', fontWeight: 'bold', marginBottom: '5px' }}>{days}</div>
@@ -1485,7 +1487,7 @@ class SiteWrapper extends Component {
                         onMouseLeave={this.handleDollarLeave}
                       >
                         {isHovered ? (
-                          `$${(balance * 0.06222).toFixed(numDecimals)}`
+                          `$${(balance * 0.006222).toFixed(numDecimals)}`
                         ) : (
                           <>
                             <InlineSVG

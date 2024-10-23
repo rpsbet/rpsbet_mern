@@ -260,7 +260,7 @@ class Roll extends Component {
   };
   render() {
 
-    const defaultBetAmounts = [50, 250, 500, 1000, 2500];
+    const defaultBetAmounts = [500, 2500, 5000, 25000, 100000];
 
     return this.props.step === 1 ? (
 
