@@ -7966,9 +7966,13 @@ div[aria-label="How To Play Modal"] ul {
   .countdown.social-icons span {
     font-size: 0.7em !important;
     height: 22px;
+    padding: 0 2.5px;
   }
   .countdown.social-icons svg {
-    width: 35px !important;
+    width: 20px !important;
+    height: 12px !important;
+    margin: 0!important;
+
   }
   .social-icons svg {
     width: 45px !important;

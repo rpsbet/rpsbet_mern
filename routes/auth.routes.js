@@ -73,7 +73,7 @@ router.post('/google', async (req, res) => {
     const username = email.split('@')[0];
 
 
-    let user = await User.findOne({ username: username });
+    let user = await User.findOne({ email: email });
     
     if (!user) {
       user = new User({
@@ -82,6 +82,7 @@ router.post('/google', async (req, res) => {
         bio: '',
         totalWagered: 0,
         balance: 0,
+        email: email,
         rewards: [],
         credit_score: 1000,
         ai_mode: 'Random',

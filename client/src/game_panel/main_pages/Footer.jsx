@@ -140,7 +140,7 @@ class Footer extends Component {
 
         return (
             <div className={bottomFooterClasses} style={this.props.style}>
-            <div id="footer-container" className={classes.footerContainer}>
+                <div id="footer-container" className={classes.footerContainer}>
                     {showLeaderboardsModal && (
                         <LeaderboardsModal
                             modalIsOpen={showLeaderboardsModal}
@@ -150,20 +150,20 @@ class Footer extends Component {
                             isDarkMode={isDarkMode}
                         />
                     )}
-                    <div className="social-icons" style={{display: 'flex', alignItems: 'center'}}>
+                    <div className="social-icons" style={{ display: 'flex', alignItems: 'center' }}>
                         {/* <a href="https://discord.gg/anMJntW4AD">
                             <FontAwesomeIcon icon={faDiscord} />
                         </a> */}<span>CHECK SOCIALS FOR UPDATES ►</span>
                         <a href="https://x.com/officialrpsgame">
                             <FontAwesomeIcon icon={faXTwitter} />
                         </a>
-                        {/* <a href="https://t.me/rpsfinance">
+                        <a href="https://t.me/rpsfinance">
                             <FontAwesomeIcon icon={faTelegram} />
-                        </a> */}
+                        </a>
                         <a href="https://www.youtube.com/channel/UCikMJVhTSPUYcGSWEdAj6cQ">
-                        <FontAwesomeIcon icon={faYoutube} />
-                    </a> 
-                   {/* <a href="https://www.instagram.com/rps.game/">
+                            <FontAwesomeIcon icon={faYoutube} />
+                        </a>
+                        {/* <a href="https://www.instagram.com/rps.game/">
                         <FontAwesomeIcon icon={faInstagram} />
                     </a>
                     <a href="https://www.twitch.tv/rpsbet">
@@ -175,7 +175,7 @@ class Footer extends Component {
                         <img className={classes.availableCurrency} src={btc} alt="BTC" />
                         <img className={classes.availableCurrency} src={eth} alt="ETH" />
                         <img className={classes.availableCurrency} src={ltc} alt="LTC" />
-<span>+ 50 MORE!</span>
+                        <span>+ 50 MORE!</span>
                     </div>
                     <div className={classes.proof}>
                         {/* <p>Proof of Funds</p>

@@ -451,7 +451,7 @@ class DepositModal extends Component {
             <div className="modal-header">
               <h2 className="modal-title title">    <Icon component={AccountBalanceWallet} className="mr-2" /> {/* Use Material-UI Icon component */}
 
-                DEPOSIT (PRIVATE SALE)</h2>
+                DEPOSIT</h2>
               <Button className="btn-close title" onClick={this.props.closeModal}>
                 ×
               </Button>

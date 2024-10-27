@@ -35,6 +35,8 @@ import {
   ArrowDropDown,
   ExitToApp,
   PersonOutline,
+  MonetizationOn,
+  ShoppingCart,
   Help,
   Settings,
   Star
@@ -1661,7 +1663,7 @@ class SiteWrapper extends Component {
                         }}
                       >
                         <ListItemIcon>
-                          <ExitToApp size="small" />
+                          <MonetizationOn size="small" />
                         </ListItemIcon>
                         <ListItemText>$RPS 🚀🚀🚀</ListItemText>
                       </MenuItem>

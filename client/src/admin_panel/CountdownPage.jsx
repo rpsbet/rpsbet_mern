@@ -5,6 +5,7 @@ import { fetchLeaderboardsData, fetchEquityDistribution, getMarketingStat } from
 import busd from '../game_panel/JoinGame/busd.svg'
 import PrivacyModal from '../game_panel/modal/PrivacyModal'
 import TermsModal from '../game_panel/modal/TermsModal'
+import MerchModal from '../game_panel/modal/MerchModal'
 import { faXTwitter, faTelegram, faYoutube, faDiscord } from '@fortawesome/free-brands-svg-icons';
 import bnb from '../game_panel/icons/bnb.png';
 import btc from '../game_panel/icons/btc.png';
@@ -259,11 +260,21 @@ const CountdownPage = ({
   const [message, setMessage] = useState('');
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
-
-  // Handlers to open and close modals
   const handleOpenTermsModal = () => setShowTermsModal(true);
   const handleCloseTermsModal = () => setShowTermsModal(false);
 
+  const [showMerchModal, setShowMerchModal] = useState(false);
+
+  const openMerchModal = () => {
+    setShowMerchModal(true);
+  };
+
+  const closeMerchModal = () => {
+    setShowMerchModal(false);
+  };
+  
+
+ 
   const handleOpenPrivacyModal = () => setShowPrivacyModal(true);
   const handleClosePrivacyModal = () => setShowPrivacyModal(false);
 
@@ -294,7 +305,7 @@ const CountdownPage = ({
       breakpoint: 480,
       options: {
         chart: {
-          width: 200
+          width: 400
         }
       }
     }],
@@ -348,7 +359,7 @@ const CountdownPage = ({
         toolbar: { show: false },
         background: 'transparent',
       },
-      labels: ['Team (20%)', 'Marketing (10%)', 'Private Sale (10%)', 'Ecosystem (60%)'],
+      labels: ['Dev (5%)', 'Marketing (5%)', 'Platform (20%)', 'Ecosystem (70%)'],
       colors: chartColors, // Custom colors for each category
       stroke: {
         width: 0,
@@ -395,7 +406,7 @@ const CountdownPage = ({
         mode: 'dark', // Dark mode theme
       },
     },
-    series: [20, 10, 10, 60], // Tokenomics distribution percentages
+    series: [5, 5, 20, 70], // Tokenomics distribution percentages
   };
 
   const COUNTDOWN_BUTTONS = [
@@ -405,6 +416,8 @@ const CountdownPage = ({
     { label: 'Buy', section: 'buy', icon: <AttachMoneyIcon /> },
     { label: 'About', section: 'about', icon: <DescriptionIcon /> },
   ];
+
+
 
   useEffect(() => {
     const updateStyles = () => {
@@ -588,8 +601,8 @@ const CountdownPage = ({
                 className={`${classes.section} ${activeSection === '' ? classes.activeSection : ''}`}
               >
 
-                <Typography variant="h2" style={{filter: "drop-shadow(2px 4px 6px #f9f9)"}}>$RPS TOKEN&nbsp;<img src={busd} width="80" height="auto" alt='$RPS Token Symbol' /></Typography>
-                <Typography variant="h6" style={{filter: "drop-shadow(2px 4px 6px #f9f9)"}}>
+                <Typography variant="h2" style={{ filter: "drop-shadow(2px 4px 6px #f9f9)" }}>$RPS TOKEN&nbsp;<img src={busd} width="80" height="auto" alt='$RPS Token Symbol' /></Typography>
+                <Typography variant="h6" style={{ filter: "drop-shadow(2px 4px 6px #f9f9)" }}>
                   [ GET RICH 💰 OR DIE 🩸 ]
                 </Typography>
                 <br />
@@ -643,7 +656,7 @@ const CountdownPage = ({
                     Current $RPS Holders
                   </h4>
                   <h6 className="title">
-                    (ECO-SYSTEM)
+                    (PLATFORM)
                   </h6>
                   <br />
                   {loadingEquityChart ? (
@@ -659,7 +672,7 @@ const CountdownPage = ({
                   ) : (
                     // Display the pie chart only if equityChart data is available
                     equityChart && equityChart.length > 0 ? (
-                      <Chart options={chartOptions} series={chartSeries} type="pie" width="400" />
+                      <Chart options={chartOptions} series={chartSeries} type="pie" width="600" />
                     ) : (
                       <div>Calculating Equities...</div>
                     )
@@ -817,7 +830,7 @@ const CountdownPage = ({
                       <span className="highlight">RPS.Game</span> offers financial tools that are typically gate-kept by the Elite,
                       but we’ve opened the door for <span className="highlight">EVERYONE</span>—whether you're a fat cat or a stray.
                       Using <span className="highlight">$RPS</span>, we’ve got a solution to inflation by capping the total supply
-                      at <strong>100 million tokens</strong>. Just think of it as a ball of yarn with a limit on how much it can unravel!
+                      at <strong>1 Billion tokens</strong>. Just think of it as a ball of yarn with a limit on how much it can unravel!
                     </Typography>
 
                     <Typography
@@ -826,8 +839,8 @@ const CountdownPage = ({
                       className="scroll-animation"
                       style={{ animationDelay: '1.4s' }}
                     >
-                      The token distribution? We’re giving 30% to the team (for their paw-some efforts), 60% to the community
-                      (you cool cats), and the rest... well, that’s still in the litter box for now.
+                      The token distribution? We’re giving 5% to the team (for their paw-some efforts), 20% to the Platform, 70% to the eco-system
+                      (you cool cats), and the final 5%... well, marketing.
                     </Typography>
 
                     <Typography
@@ -836,11 +849,12 @@ const CountdownPage = ({
                       className="scroll-animation"
                       style={{ animationDelay: '1.6s' }}
                     >
-                      Mark your cat-lendars! The private sale of <span className="highlight">$RPS</span> opens on
-                      <strong> 29th October</strong>. So, sharpen your claws and get ready! Remember, it’s
+                      Mark your cat-lendars! The Pump.Fun FAIR LAUNCH of <span className="highlight">$RPS</span> opens on
+                      <strong> 29th October 00:00 CEST</strong>. So, sharpen your claws and get ready! Remember, it’s
                       <strong> GET RICH 💰 OR DIE 🩸</strong>—fur real.
                     </Typography>
                   </div>
+
                 </div>
                 <div id="" className={classes.footerContainer}>
 
@@ -861,12 +875,21 @@ const CountdownPage = ({
                     </p>
                   </div>
                 </div>
+
+
                 {showTermsModal && (
                   <TermsModal
                     modalIsOpen={showTermsModal}
                     closeModal={handleCloseTermsModal}
                     isDarkMode={isDarkMode}
                   />
+                )}
+                {showMerchModal && (
+                 <MerchModal
+                 modalIsOpen={showMerchModal}
+                 closeModal={closeMerchModal}
+                 isDarkMode={isDarkMode}
+               />
                 )}
                 {showPrivacyModal && (
                   <PrivacyModal
@@ -891,7 +914,7 @@ const CountdownPage = ({
                 src={remote}
                 alt="Remote Control"
               />
-              <Lottie options={catOptions} style={{ position: 'absolute', left: '50%', top:  width < 600 && height < 900 ? '-50%' : '50%', transform: width < 600 ? 'translateY(0%)' : 'translateY(40%)' }} height={'auto'} width={'300px'} isClickToPauseDisabled={true} />
+              <Lottie options={catOptions} style={{ position: 'absolute', left: '50%', top: width < 600 && height < 900 ? '-50%' : '50%', transform: width < 600 ? 'translateY(0%)' : 'translateY(40%)' }} height={'auto'} width={'300px'} isClickToPauseDisabled={true} />
             </div>
             {COUNTDOWN_BUTTONS.map((button, index) => (
               <Zoom in={true} timeout={index * 200} key={button.label}>
@@ -917,7 +940,10 @@ const CountdownPage = ({
           </div>
 
           {/* Footer */}
-          <div style={{position: "absolute", bottom: "0", display:"flex", textAlign:"left", flexDirection: "column", padding: "30px", justifyContent: "center", alignContent: "center"}} >
+          <div style={{ position: "absolute", bottom: "0", display: "flex", textAlign: "left", flexDirection: "column", padding: "30px", justifyContent: "center", alignContent: "center" }} >
+          <a onClick={openMerchModal}  style={{ cursor: "pointer"}}>Merch ► 💍 🎩 💎 🩱 👠 👞 🥽</a>
+
+
             <div className="countdown social-icons" style={{ display: 'flex', alignItems: 'center' }}>
               {/* <a href="https://discord.gg/anMJntW4AD">
                             <FontAwesomeIcon icon={faDiscord} />
@@ -925,9 +951,9 @@ const CountdownPage = ({
               <a href="https://x.com/officialrpsgame">
                 <FontAwesomeIcon icon={faXTwitter} />
               </a>
-              {/* <a href="https://t.me/rpsfinance">
+              <a href="https://t.me/rpsfinance">
                             <FontAwesomeIcon icon={faTelegram} />
-                        </a> */}
+                        </a>
               <a href="https://www.youtube.com/channel/UCikMJVhTSPUYcGSWEdAj6cQ">
                 <FontAwesomeIcon icon={faYoutube} />
               </a>
@@ -942,6 +968,13 @@ const CountdownPage = ({
 
               <a className={classes.link} href="https://blog.rps.game/">Blog</a>&nbsp;✗&nbsp;
               {/* <a className={classes.link} href="#">Faq</a>&nbsp;✗&nbsp; */}
+              <a className={classes.link}
+                // href="/#"
+                id="merch"
+                onClick={openMerchModal}
+              >
+                Merch
+              </a>&nbsp;✗&nbsp;
               <a className={classes.link}
                 // href="/#"
                 id="terms"
