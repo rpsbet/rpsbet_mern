@@ -688,7 +688,7 @@ const CountdownPage = ({
                       Contract Address
                     </h4>
                     <h6 className="title">
-                      (COMING 29TH OCTOBER)
+                      (COMING 1ST NOVEMBER)
                     </h6>
                     <Box mt={4} textAlign="center" position="relative" style={{ width: '100%', }}>
 
@@ -850,7 +850,7 @@ const CountdownPage = ({
                       style={{ animationDelay: '1.6s' }}
                     >
                       Mark your cat-lendars! The Pump.Fun FAIR LAUNCH of <span className="highlight">$RPS</span> opens on
-                      <strong> 29th October 00:00 CEST</strong>. So, sharpen your claws and get ready! Remember, it’s
+                      <strong> 1st November 00:00 CEST</strong>. So, sharpen your claws and get ready! Remember, it’s
                       <strong> GET RICH 💰 OR DIE 🩸</strong>—fur real.
                     </Typography>
                   </div>
