@@ -513,7 +513,7 @@ const CountdownPage = ({
     // Check if the section is 'buy'
     if (section === 'buy') {
       setShowDepositModal(true);
-      window.location.href = '/investors/deposit'; // Navigate to /investors/deposit
+      window.location.href = 'https://pump.fun/BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump'; // Navigate to /investors/deposit
       return; // Stop further execution
     }
 
@@ -604,6 +604,8 @@ const CountdownPage = ({
                 <Typography variant="h2" style={{ filter: "drop-shadow(2px 4px 6px #f9f9)" }}>$RPS TOKEN&nbsp;<img src={busd} width="80" height="auto" alt='$RPS Token Symbol' /></Typography>
                 <Typography variant="h6" style={{ filter: "drop-shadow(2px 4px 6px #f9f9)" }}>
                   [ GET RICH 💰 OR DIE 🩸 ]
+                  [TOKEN ADDRESS:]
+                  [BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump]
                 </Typography>
                 <br />
                 <Typography variant="body1" className="fading-text">
@@ -688,7 +690,7 @@ const CountdownPage = ({
                       Contract Address
                     </h4>
                     <h6 className="title">
-                      (COMING 1ST NOVEMBER)
+                    BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump
                     </h6>
                     <Box mt={4} textAlign="center" position="relative" style={{ width: '100%', }}>
 
