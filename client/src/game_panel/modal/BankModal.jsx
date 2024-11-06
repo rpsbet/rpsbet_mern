@@ -10,9 +10,9 @@ import { warningMsgBar, infoMsgBar } from '../../redux/Notification/notification
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCoins, faAdjust } from '@fortawesome/free-solid-svg-icons';
 import { convertToCurrency } from '../../util/conversion';
-import { getNativePrices } from '../../redux/Setting/setting.action';
 import ReactApexChart from 'react-apexcharts';
 import RpsPriceChart from '../../components/RpsPriceChart';
+const tokenMintAddress = process.env.token;
 
 Modal.setAppElement('#root');
 
@@ -45,8 +45,6 @@ class BankModal extends Component {
     
     };
   }
-
-
 
   handleOpenMyLoansModal = () => {
     if (!this.state.showMyLoansModal) {
@@ -93,7 +91,7 @@ class BankModal extends Component {
 
           <div className="modal-body edit-modal-body banking-modal-body">
             <div className="modal-content-wrapper">
-             <RpsPriceChart getNativePrices={getNativePrices}/>
+             <RpsPriceChart tokenMintAddress={tokenMintAddress}/>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
 
                 <h1 className="modal-title title">PRIVATE LENDERS</h1>
@@ -231,7 +229,6 @@ const mapStateToProps = (state) => ({
 
 const mapDispatchToProps = {
   warningMsgBar,
-  getNativePrices,
   infoMsgBar,
 };
 

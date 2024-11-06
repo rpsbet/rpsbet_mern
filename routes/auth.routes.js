@@ -28,7 +28,6 @@ const { resetPassword } = require('../helper/mailer');
 // eslint-disable-next-line consistent-return
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-
 const generateRandomPassword = (length = 12) => {
   const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
   let password = "";

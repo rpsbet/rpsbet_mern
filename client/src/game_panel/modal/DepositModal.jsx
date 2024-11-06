@@ -6,14 +6,18 @@ import axios from '../../util/Api';
 import { alertModal } from '../modal/ConfirmAlerts';
 import { setBalance, setGasfee } from '../../redux/Auth/user.actions';
 import { addNewTransaction } from '../../redux/Logic/logic.actions';
-import { ethers } from 'ethers';
+import { Connection, Transaction, PublicKey } from '@solana/web3.js';
+import { getMint, getAssociatedTokenAddress, createTransferInstruction } from '@solana/spl-token';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import QRCodeIcon from '@material-ui/icons/CropFreeOutlined';
 import WalletIcon from '@material-ui/icons/AccountBalanceWallet';
 import FileCopyIcon from '@material-ui/icons/FileCopy';
 import QRCode from 'qrcode.react';
+import { token } from '../../config/index.js';
+
 import {
   faGasPump,
+  faBolt,
   faExternalLinkAlt
 } from '@fortawesome/free-solid-svg-icons';
 import {
@@ -37,10 +41,9 @@ import {
 } from '@material-ui/core';
 import { Info, Warning, AccountBalanceWallet, Link, FiberManualRecord } from '@material-ui/icons';
 import { convertToCurrency } from '../../util/conversion';
-import { convertToEth } from '../../util/eth_conversion.js';
-import { tokenAddr, adminWallet } from '../../config/index.js';
 import { withStyles } from '@material-ui/core/styles';
-
+import { Buffer } from 'buffer';
+window.Buffer = window.Buffer || Buffer;
 
 Modal.setAppElement('#root');
 
@@ -142,29 +145,30 @@ class DepositModal extends Component {
 
     this.state = {
       amount: 0,
-      web2Amount: 10,
+      web2Amount: 25,
       sendAmount: 0,
       sendAddress: '',
-      selectedOption: '',
+      selectedOption: 0,
       currencyTo: 'ltc',
       web3: props.web3,
-      balance: props.balance || 0,
-      account: props.account || "",
+      balance: props.tokenBalance || 0,
+      account: props.account || null,
       isLoading: false,
       estimatedPrice: null,
-      paymentMethod: 'web2',
+      paymentMethod: 'web3',
       currencies: [],
       isValidCurrency: true,
       suggestions: [],
       payinExtraId: '',
       loading: true,
       hoveredSuggestion: null,
+      tokenPrice: null,
       currencyValue: 0.03222,
       copied: false,
       paymentId: ''
     };
 
-    this.options = [25, 50, 100, 250, 500, 1000];
+    this.options = [25, 50, 250, 500, 2500, 5000];
     this.images = [
       '/img/icons/coins-xs.svg',
       '/img/icons/coins-s.svg',
@@ -176,27 +180,25 @@ class DepositModal extends Component {
     this.additionalTexts = ['shy guy', 'casual', 'flipper', 'baller', 'investor', 'jew'];
 
   }
+
   async componentDidMount() {
-    const params = { addressTo: this.state.account };
+    if (this.state.account) {
+      const params = { addressTo: this.state.account.publicKey.toString() };
 
-    // Check if any parameter is empty or undefined
-    // Proceed if parameters are valid (non-empty)
-    await this.handleGetPaymentMethods();
-    this.props.setGasfee(params);
-    if (!params.addressTo) {
-      console.error('Missing or empty parameters, skipping execution.');
-      return;
+      await this.handleGetPaymentMethods();
+      this.props.setGasfee(params);
+
+      if (!params.addressTo) {
+        console.error('Missing or empty parameters, skipping execution.');
+        return;
+      }
+
+      this.getAddress();
+    } else {
+      console.error("Account not initialized, skipping setGasfee");
     }
-
-    this.getAddress();
+    await this.getPrice();
   }
-
-  componentDidUpdate(prevProps) {
-    if (prevProps.account !== this.props.account) {
-      this.setState({ account: this.props.account });
-    }
-  }
-
 
   handleAmountChange = e => {
     e.preventDefault();
@@ -253,47 +255,68 @@ class DepositModal extends Component {
     });
   };
 
-
-
-  async sendTransaction(amount) {
-    try {
-      const ethAmountInWei = ethers.utils.parseEther(amount.toString());
-      const transaction = await signer.sendTransaction({
-        to: adminWallet,
-        value: ethAmountInWei
-      });
-
-      await transaction.wait();
-    } catch (error) {
-      console.error('Error sending transaction:', error);
-    }
-  }
-
   send = async () => {
-
-    if (this.state.amount > this.props.balance) {
+    if (this.state.amount > this.props.tokenBalance) {
       alertModal(this.props.isDarkMode, `NOT ENUFF FUNDS AT THIS MEOWMENT`);
       return;
     }
 
     try {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
-      const amountInWei = ethers.utils.parseEther(this.state.amount.toString());
+      const getProviderUrl = await axios.get('/stripe/get_provider_url');
 
+      const providerUrl = getProviderUrl.data.providerUrl;
+      const connection = new Connection(providerUrl, 'confirmed');
+
+      // Ensure fromWallet is correctly initialized
+      const fromWallet = this.state.account; // Ensure this is the wallet object with sign capability
+
+      // Check if fromWallet is defined and has a publicKey
+      if (!fromWallet || !fromWallet.publicKey) {
+        console.error('From wallet is not initialized correctly:', fromWallet);
+        return;
+      }
+
+      const tokenMintAddress = new PublicKey('BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump');
+
+      // Fetch token mint info
+      const mintInfo = await getMint(connection, tokenMintAddress);
+      const decimals = mintInfo.decimals;
+
+      // Convert the amount to the smallest unit
+      const amountInSmallestUnit = Math.floor(this.state.amount * Math.pow(10, decimals));
+
+      // Get associated token accounts
+      const fromTokenAccount = await getAssociatedTokenAddress(tokenMintAddress, fromWallet.publicKey);
+
+      const getAdminWallet = await axios.get('/stripe/get_admin_wallet');
+
+      const adminWallet = getAdminWallet.data.adminWallet;
+      const toTokenAccount = await getAssociatedTokenAddress(tokenMintAddress, new PublicKey(adminWallet));
       this.setState({ isLoading: true });
 
-      // Send transaction
-      const transaction = await signer.sendTransaction({
-        to: adminWallet,
-        value: amountInWei
-      });
-      await transaction.wait();
+      // Create transaction
+      const transaction = new Transaction().add(
+        createTransferInstruction(
+          fromTokenAccount,
+          toTokenAccount,
+          fromWallet.publicKey,
+          amountInSmallestUnit
+        )
+      );
+
+      // Fetch the latest blockhash
+      const { blockhash } = await connection.getLatestBlockhash();
+      transaction.recentBlockhash = blockhash; // Set the blockhash
+      transaction.feePayer = fromWallet.publicKey;
+      const signature = await window.solana.signAndSendTransaction(transaction);
+      await connection.confirmTransaction(signature);
 
       const result = await axios.post('/stripe/deposit_successed/', {
+        account: this.state.account,
         amount: this.state.amount,
         price_amount: this.state.web2Amount,
-        txtHash: transaction.hash
+        tokenMintAddress: tokenMintAddress,
+        txtHash: signature
       });
 
       if (result.data.success) {
@@ -304,18 +327,14 @@ class DepositModal extends Component {
         this.props.closeModal();
       } else {
         this.setState({ isLoading: false });
-        alertModal(
-          this.props.isDarkMode,
-          `Something went wrong. Please try again later or contact support.`
-        );
+        alertModal(this.props.isDarkMode, `Something went wrong. Please try again later or contact support.`);
       }
     } catch (e) {
-      console.error(e);
+      console.error('Error sending transaction:', e);
       this.setState({ isLoading: false });
       alertModal(this.props.isDarkMode, `FAILED TRANSACTION`);
     }
   };
-
 
   handleSuggestionMouseEnter = suggestion => {
     this.setState({
@@ -374,31 +393,41 @@ class DepositModal extends Component {
   };
 
   getPrice = async () => {
-    const { web2Amount } = this.state;
+    const { web2Amount } = this.state; // Extract web2Amount from the component's state
     // Set loading state to true
     this.setState({ loading: true });
-    try {
-      const response = await axios.post('/stripe/get_price', { web2Amount, currencyTo: 'eth' });
 
+    try {
+      // Fetch estimated token price from your server, including web2Amount in the request body
+      const response = await axios.post('/stripe/get_token_price', {
+        tokenMintAddress: token,
+        web2Amount: web2Amount // Include web2Amount in the request
+      });
+
+      // Destructure tokenPrice and numberOfTokens (totalAmount) from the response data
+      const { tokenPrice, numberOfTokens } = response.data;
+
+      // Update component's state with tokenPrice and total number of tokens after deduction
       this.setState({
-        amount: response.data.estimated_amount
+        tokenPrice: tokenPrice, // Set the extracted token price
+        amount: numberOfTokens // Set the total calculated number of tokens
       });
 
     } catch (error) {
       console.error(error);
-      // Handle error
+      // Handle error (e.g., show an alert or message to the user)
     } finally {
       // Reset loading state to false whether the request succeeds or fails
       this.setState({ loading: false });
     }
   };
 
-
   createPaymentAndClose = async () => {
+
     const { web2Amount, paymentId } = this.state;
     const { user_id } = this.props;
     try {
-      const response = await axios.post('/stripe/create_payment', { price_amount: web2Amount, payment_id: paymentId, user_id });
+      const response = await axios.post('/stripe/create_payment', { price_amount: web2Amount, payment_id: paymentId, user_id, tokenMintAddress: token });
       alertModal(this.props.isDarkMode, response.data.message, "-cat");
       this.props.closeModal();
     } catch (error) {
@@ -408,7 +437,7 @@ class DepositModal extends Component {
   };
 
   render() {
-    const { account, paymentMethod, paymentId, payinExtraId, amount, sendAddress, sendAmount, copied, currencyTo, isValidCurrency, suggestions, hoveredSuggestion, selectedOption, currencyValue } = this.state;
+    const { tokenPrice, account, paymentMethod, paymentId, payinExtraId, amount, sendAddress, sendAmount, copied, currencyTo, isValidCurrency, suggestions, hoveredSuggestion, selectedOption, currencyValue } = this.state;
     const { classes, user_id } = this.props;
     const isConnected = !!account;
     const isBlurred = !user_id;
@@ -419,7 +448,20 @@ class DepositModal extends Component {
         description = 'Via Manual Transfer (50+ Cryptocurrencies supported)';
         break;
       case 'web3':
-        description = 'Via Connect Wallet (Metamask recommended), ETH MAINNET only, lowest fees';
+        description = <>Via Connect Wallet (Phantom Wallet recommended), $RPS only, lowest fees.<br />
+          Buy/Swap tokens on&nbsp;
+          <a
+            style={{
+              textDecoration: "underline",
+              color: "#3f51b5"
+            }}
+            href="https://raydium.io/swap/?inputMint=sol&outputMint=BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Raydium
+          </a>.
+        </>;
         break;
       default:
         description = '';
@@ -466,7 +508,7 @@ class DepositModal extends Component {
                 <div className="modal-content-panel">
                   <div className={classes.root}>
 
-                    <h4 className={classes.radioLabel}>Select Payment Method:</h4>
+                    <h4 className={classes.radioLabel}>Select Deposit Method:</h4>
                     <div className={classes.paymentMethodContainer}>
 
                       <RadioGroup
@@ -477,28 +519,33 @@ class DepositModal extends Component {
                         className={classes.radioGroup}
                       >
                         <FormControlLabel
-                          value="web2"
+                          value="web3"
                           control={<Radio color="primary" />}
                           label={
-                            <div className={classes.labelContainer}>
-                              <QRCodeIcon className={classes.icon} />
-                              <span>Web2</span>
+                            <div className={classes.labelContainer} style={{ position: 'relative' }}>
+                              <WalletIcon className={classes.icon} />
+                              <span>$RPS</span>
+                              {paymentMethod === 'web3' && (
+                                <span className='roll-tag' style={{ position: 'absolute', transform: "translateY(30px)", filter: 'invert(1)', letterSpacing: '0.1em' }}>
+                                  FASTEST&nbsp;
+                                  <FontAwesomeIcon icon={faBolt} style={{ marginLeft: '0.2em' }} />
+                                </span>
+                              )}
                             </div>
                           }
                           className={classes.radioLabel}
                         />
                         <FormControlLabel
-                          value="web3"
+                          value="web2"
                           control={<Radio color="primary" />}
                           label={
                             <div className={classes.labelContainer}>
-                              <WalletIcon className={classes.icon} />
-                              <span>Web3</span>
+                              <QRCodeIcon className={classes.icon} />
+                              <span>Other currencies</span>
                             </div>
                           }
                           className={classes.radioLabel}
                         />
-
                       </RadioGroup>
                     </div>
                     <Typography variant="body2" className={classes.description}>{description}</Typography>
@@ -507,28 +554,36 @@ class DepositModal extends Component {
                   <p className='step-tag'>{paymentMethod === 'web2' ? 'Step 1 out of 4' : paymentMethod === 'web3' ? 'Step 1 out of 3' : ''}</p>
                   <Typography>
                     CHOOSE PACK
-                  </Typography>                  <Grid container style={{ margin: '0 auto 15px auto' }} spacing={3}>
-                    {this.options.map((price, index) => (
-                      <Grid item xs={12} sm={6} md={6} lg={6} key={index}>
-                        <ButtonBase
-                          // className={classes.radioInput}
-                          className={`${classes.customButton} ${selectedOption === index ? "selected" : ""}`}
+                  </Typography>
+                  <Grid container style={{ margin: '0 auto 15px auto' }} spacing={3}>
+                    {this.options.map((price, index) => {
+                      const tokenAmount = tokenPrice ? (price / tokenPrice) : 0;
 
-                          onClick={() => this.handleOptionChange(index)}
-                          value={price}
-                        >
-
-                          <Typography className={classes.additionalText}>{this.additionalTexts[index].toUpperCase()}</Typography> {/* Add additional text */}
-                          <img style={{ width: '50px', display: 'block', margin: 'auto' }} src={this.images[index]} alt={`option-${index}`} />
-                          <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignContent: 'center', flexDirection: 'row' }} >
-
-                            <Typography className={classes.price}>{paymentMethod === 'web2' ? convertToCurrency((price / currencyValue)) : convertToCurrency((price / currencyValue) + (0.03222 * (index + 1)))}&nbsp;</Typography>
-                            <Typography className={classes.price}>{`($${price})`}</Typography>
-                          </div>
-                        </ButtonBase>
-
-                      </Grid>
-                    ))}
+                      return (
+                        <Grid item xs={12} sm={6} md={6} lg={6} key={index}>
+                          <ButtonBase
+                            className={`${classes.customButton} ${this.state.selectedOption === index ? "selected" : ""}`}
+                            onClick={() => this.handleOptionChange(index)}
+                            value={price}
+                          >
+                            <Typography className={classes.additionalText}>
+                              {this.additionalTexts[index].toUpperCase()}
+                            </Typography>
+                            <img style={{ width: '50px', display: 'block', margin: 'auto' }} src={this.images[index]} alt={`option-${index}`} />
+                            <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignContent: 'center', flexDirection: 'row' }}>
+                              <Typography className={classes.price}>
+                                {paymentMethod === 'web2'
+                                  ? convertToCurrency((tokenAmount - (tokenAmount * 0.008)))
+                                  : convertToCurrency(tokenAmount)}&nbsp;
+                              </Typography>
+                              <Typography className={classes.price}>
+                                {`($${price})`}
+                              </Typography>
+                            </div>
+                          </ButtonBase>
+                        </Grid>
+                      );
+                    })}
                   </Grid>
                   {paymentMethod === 'web3' ? (
                     <>
@@ -542,7 +597,8 @@ class DepositModal extends Component {
                               <TextField
                                 label="Account"
                                 variant="filled"
-                                value={account}
+                                // Ensure you are accessing the correct property here
+                                value={account?.publicKey ? account.publicKey.toString() : ''} // Adjust this line
                                 InputProps={{
                                   readOnly: true
                                 }}
@@ -579,7 +635,7 @@ class DepositModal extends Component {
                             ) : (
                               <Tooltip title="Connect Web3 Wallet?" arrow>
 
-                                <IconButton onClick={this.props.loadWeb3} size="small">
+                                <IconButton onClick={this.props.loadSolanaWallet} size="small">
 
                                   <Info />
                                   <Link
@@ -613,7 +669,7 @@ class DepositModal extends Component {
                               readOnly: true,
                               endAdornment: (
                                 <InputAdornment position="end">
-                                  &nbsp;ETH
+                                  &nbsp;RPS
                                 </InputAdornment>
                               ),
                             }}
@@ -631,7 +687,7 @@ class DepositModal extends Component {
                                 <Typography style={{ whiteSpace: 'nowrap' }}>WALLET BALANCE:</Typography>
                               </TableCell>
                               <TableCell style={{ textAlign: 'center' }}>
-                                {convertToEth(this.props.balance)}
+                                {convertToCurrency(this.props.tokenBalance)} RPS
                                 &nbsp;
                               </TableCell>
                               <TableCell>
@@ -647,7 +703,7 @@ class DepositModal extends Component {
                                 <Typography style={{ whiteSpace: 'nowrap' }}> <FontAwesomeIcon icon={faGasPump} />&nbsp;&nbsp;GAS FEE:</Typography>
                               </TableCell>
                               <TableCell style={{ textAlign: 'center' }}>
-                                {convertToEth(this.props.gasfee)}
+                                {this.props.gasfee.toFixed(6)} SOL
                               </TableCell>
                               <TableCell>
                                 <Tooltip
@@ -819,7 +875,9 @@ class DepositModal extends Component {
                     </div>
                   )}
                   <div className="disclaimer">
-                    <Typography>RECEIVE WITHIN 1 - 3 MINUTES</Typography>
+                    <Typography>
+                      {paymentMethod === 'web3' ? "RECEIVE WITHIN < 30 SECONDS" : "RECEIVE WITHIN 3 - 6 MINUTES"}
+                    </Typography>
                   </div>
                 </div>
               </div>

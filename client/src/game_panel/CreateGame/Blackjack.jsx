@@ -464,7 +464,7 @@ class Blackjack extends Component {
     this.setState({ bet_amount: new_state.selected_bet_amount });
   };
   render() {
-    const defaultBetAmounts = [500, 2500, 5000, 25000, 100000];
+    const defaultBetAmounts = [50000, 250000, 500000, 2500000, 10000000]
     const { score, cards, scoreAnimation } = this.state;
 
     return this.props.step === 1 ? (

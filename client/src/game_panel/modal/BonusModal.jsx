@@ -130,6 +130,14 @@ class BonusModal extends Component {
     }, 4000);
 
   }
+  formatNumber = (number) => {
+    if (number >= 1000000) {
+      return (number / 1000000) + 'M'; // For millions
+    } else if (number >= 1000) {
+      return (number / 1000) + 'K'; // For thousands
+    }
+    return number; // For numbers less than 1000
+  };
 
 
   render() {
@@ -146,7 +154,7 @@ class BonusModal extends Component {
       isMusicEnabled,
       loading,
     } = this.props;
-    const numbers = [500, 10, 100, 30, 250, 10, 50, 150, 50, 20];
+    const numbers = [50000, 10000, 10000, 3000, 25000, 1000, 5000, 15000, 5000, 2000];
     // const markerStyle = {
     //   transform: `rotate(180deg)`,
     // };
@@ -202,7 +210,7 @@ class BonusModal extends Component {
                           transform: `rotate(${rotation}deg) translate(${this.state.translateDistance}) rotate(-${rotation}deg)`
                         }}
                       >
-                        {number}
+                        {this.formatNumber(number)} {/* Render formatted number */}
                       </div>
                     );
                   })}

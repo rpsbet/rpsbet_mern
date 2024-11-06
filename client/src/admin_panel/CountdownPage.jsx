@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet';
 import { Button, Container, Typography, Zoom, Box } from '@material-ui/core';
+import OpenInNewIcon from '@material-ui/icons/OpenInNew';
 import { fetchLeaderboardsData, fetchEquityDistribution, getMarketingStat } from '../redux/Customer/customer.action';
 import busd from '../game_panel/JoinGame/busd.svg'
 import PrivacyModal from '../game_panel/modal/PrivacyModal'
@@ -25,8 +26,6 @@ import animationData from '../game_panel/LottieAnimations/quantum-goal.json'; //
 import catBack from '../game_panel/LottieAnimations/cat-back.json'; // Import your Lottie animation
 import ApexCharts from 'react-apexcharts';
 import centerImage from './logo.webp';
-import DepositModal from '../game_panel/modal/DepositModal'
-import Web3 from 'web3';
 import { connect } from 'react-redux';
 import { useHistory } from 'react-router-dom';
 import SiteWrapper from '../game_panel/SiteWrapper';
@@ -149,13 +148,6 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 
-
-const COUNTDOWN_BUTTONS = [
-  { label: 'Tokenomics', section: 'tokenomics' },
-  { label: 'Chart', section: 'chart' },
-  { label: 'Buy', section: 'buy' },
-  { label: 'About', section: 'about' },
-];
 const generateRandomPositions = (buttonsCount) => {
   const positions = [];
   const buttonWidth = 150;
@@ -272,9 +264,9 @@ const CountdownPage = ({
   const closeMerchModal = () => {
     setShowMerchModal(false);
   };
-  
 
- 
+
+
   const handleOpenPrivacyModal = () => setShowPrivacyModal(true);
   const handleClosePrivacyModal = () => setShowPrivacyModal(false);
 
@@ -464,45 +456,7 @@ const CountdownPage = ({
   useEffect(() => {
     setButtonPositions(generateRandomPositions(COUNTDOWN_BUTTONS.length));
   }, []);
-  useEffect(() => {
-    setButtonPositions(generateRandomPositions(COUNTDOWN_BUTTONS.length));
 
-    // Show DepositModal if current path matches '/deposit/' or '/deposit'
-    const currentPath = location.pathname;
-    if (currentPath === '/investors/deposit/' || currentPath === '/investors/deposit') {
-      setShowDepositModal(true);
-    } else {
-      setShowDepositModal(false);
-    }
-  }, [location.pathname]);
-
-  const handleCloseDepositModal = () => {
-    setShowDepositModal(false);
-    history.push('/investors'); // Redirect to /investors
-  };
-
-  const loadWeb3 = async () => {
-    try {
-      if (window.ethereum) {
-        const web3Instance = new Web3(window.ethereum);
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-
-        if (accounts.length > 0) {
-          const ethBalance = await web3Instance.eth.getBalance(accounts[0]);
-          const tokenAmount = web3Instance.utils.fromWei(ethBalance, 'ether');
-          setWeb3(web3Instance);
-          setWeb3Account(accounts[0]);
-          setWeb3Balance(tokenAmount);
-        } else {
-          alertModal(isDarkMode, 'NO ACCOUNTS AVAILABLE. PLEASE MAKE SURE YOU\'RE LOGGED INTO METAMASK.');
-        }
-      } else {
-        alertModal(isDarkMode, 'NO WEB3 WALLET FOUND IN YOUR BROWSER.');
-      }
-    } catch (e) {
-      alertModal(isDarkMode, 'NO CONNECTED WALLET');
-    }
-  };
 
   const handleButtonClick = (section) => {
     if (section === 'play') {
@@ -513,7 +467,12 @@ const CountdownPage = ({
     // Check if the section is 'buy'
     if (section === 'buy') {
       setShowDepositModal(true);
-      window.location.href = 'https://pump.fun/BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump'; // Navigate to /investors/deposit
+      window.location.href = 'https://raydium.io/swap/?inputMint=sol&outputMint=BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump'; // Navigate to /investors/deposit
+      return; // Stop further execution
+    }
+    if (section === 'chart') {
+      setShowDepositModal(true);
+      window.location.href = 'https://dexscreener.com/solana/BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump'; // Navigate to /investors/deposit
       return; // Stop further execution
     }
 
@@ -562,16 +521,7 @@ const CountdownPage = ({
           <title>Gamified Countdown Page</title>
           <meta name="description" content="Explore our Web3 platform with sections on Tokenomics, Charts, and more!" />
         </Helmet>
-        {showDepositModal && (
-          <DepositModal
-            modalIsOpen={showDepositModal}
-            closeModal={handleCloseDepositModal}
-            web3={web3}
-            loadWeb3={loadWeb3}
-            balance={web3balance}
-            account={web3account}
-          />
-        )}
+
 
         {/* Conditionally show either the Lottie animation or a static background */}
         <div style={{ width: '100%', height: '100%', position: 'fixed', top: 0, zIndex: 0, filter: 'opacity(0.3)' }}>
@@ -690,7 +640,7 @@ const CountdownPage = ({
                       Contract Address
                     </h4>
                     <h6 className="title">
-                    BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump
+                      BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump
                     </h6>
                     <Box mt={4} textAlign="center" position="relative" style={{ width: '100%', }}>
 
@@ -745,24 +695,6 @@ const CountdownPage = ({
             </Zoom>
 
 
-            <Zoom in={activeSection === 'chart'}>
-
-              <section id="chart" className={`${classes.section} ${activeSection === 'chart' ? classes.activeSection : ''}`}>
-                <Typography variant="h2" className={classes.title}>
-                  Live Token Chart</Typography>
-                <Typography variant="body1">Chart coming soon...</Typography>
-              </section>
-            </Zoom>
-            <Zoom in={activeSection === 'buy'}>
-
-              <section id="buy" className={`${classes.section} ${activeSection === 'buy' ? classes.activeSection : ''}`}>
-                <Typography variant="h2" className={classes.title}>
-                  Buy Tokens</Typography>
-                <Button variant="contained" onClick={{ setShowDepositModal }} color="primary">
-                  Buy Now
-                </Button>
-              </section>
-            </Zoom>
             <Zoom in={activeSection === 'about'}>
               <section
                 id="about"
@@ -887,11 +819,11 @@ const CountdownPage = ({
                   />
                 )}
                 {showMerchModal && (
-                 <MerchModal
-                 modalIsOpen={showMerchModal}
-                 closeModal={closeMerchModal}
-                 isDarkMode={isDarkMode}
-               />
+                  <MerchModal
+                    modalIsOpen={showMerchModal}
+                    closeModal={closeMerchModal}
+                    isDarkMode={isDarkMode}
+                  />
                 )}
                 {showPrivacyModal && (
                   <PrivacyModal
@@ -943,7 +875,7 @@ const CountdownPage = ({
 
           {/* Footer */}
           <div style={{ position: "absolute", bottom: "0", display: "flex", textAlign: "left", flexDirection: "column", padding: "30px", justifyContent: "center", alignContent: "center" }} >
-          <a onClick={openMerchModal}  style={{ cursor: "pointer"}}>Merch ► 💍 🎩 💎 🩱 👠 👞 🥽</a>
+            <a onClick={openMerchModal} style={{ cursor: "pointer" }}>Merch ► 💍 🎩 💎 🩱 👠 👞 🥽</a>
 
 
             <div className="countdown social-icons" style={{ display: 'flex', alignItems: 'center' }}>
@@ -954,8 +886,8 @@ const CountdownPage = ({
                 <FontAwesomeIcon icon={faXTwitter} />
               </a>
               <a href="https://t.me/rpsfinance">
-                            <FontAwesomeIcon icon={faTelegram} />
-                        </a>
+                <FontAwesomeIcon icon={faTelegram} />
+              </a>
               <a href="https://www.youtube.com/channel/UCikMJVhTSPUYcGSWEdAj6cQ">
                 <FontAwesomeIcon icon={faYoutube} />
               </a>

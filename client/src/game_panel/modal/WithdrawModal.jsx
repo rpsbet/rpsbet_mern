@@ -5,11 +5,13 @@ import { setBalance, setGasfee } from '../../redux/Auth/user.actions';
 import { addNewTransaction } from '../../redux/Logic/logic.actions';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
+  faBolt,
   faGasPump,
   faTachometerAlt,
   faClock
 } from '@fortawesome/free-solid-svg-icons';
 import { getCustomerStatisticsData } from '../../redux/Customer/customer.action';
+import { Connection, Transaction, PublicKey } from '@solana/web3.js';
 import Modal from 'react-modal';
 import {
   Button,
@@ -36,6 +38,7 @@ import { alertModal } from '../modal/ConfirmAlerts';
 import { convertToEth } from '../../util/eth_conversion';
 import { convertToCurrency } from '../../util/conversion';
 import { withStyles } from '@material-ui/core/styles';
+import { token } from '../../config/index.js';
 
 
 const styles = theme => ({
@@ -147,7 +150,7 @@ class WithdrawModal extends Component {
       estimatedAmount: 0,
       totalWagered: 0,
       deposit: 0,
-      paymentMethod: 'web2',
+      paymentMethod: 'web3',
       extraId: '',
       validAddress: true,
       currencies: [],
@@ -276,8 +279,8 @@ class WithdrawModal extends Component {
     const amount = Math.floor(e.target.value * 100) / 100;
     this.setState({
       amount: amount,
-      web2Amount: amount * 0.006022,
-      web3Amount: amount * 0.006222
+      web2Amount: amount - (amount * 0.0088),
+      web3Amount: amount
     }, () => {
       this.handleEstimateAmount();
     });
@@ -298,7 +301,6 @@ class WithdrawModal extends Component {
       this.setState({ currencies });
     } catch (error) {
       console.error('Error in generating deposit address:', error);
-      // Handle error
     }
   };
 
@@ -307,42 +309,38 @@ class WithdrawModal extends Component {
       const { paymentMethod, web2Amount, web3Amount, currencyTo } = this.state;
       let amountToSend;
 
-      // Determine which amount to use based on the payment method
       if (paymentMethod === 'web2') {
         amountToSend = web2Amount;
       } else if (paymentMethod === 'web3') {
         amountToSend = web3Amount
       } else {
-        // Handle unexpected payment methods
         throw new Error('Unsupported payment method');
       }
 
       if (amountToSend === 0) {
         return;
       }
-      // Make GET request to estimate the amount
+
       const response = await axios.get('/stripe/estimate_amount', {
         params: {
           web2Amount: amountToSend,
           currencyTo: currencyTo,
+          token
         },
       });
 
-      // Extract the estimated amount from the response data
       const estimatedAmount = response.data.estimated_amount - this.props.gasfee;
 
-      // Update the component state with the estimated amount
       this.setState({ estimatedAmount });
     } catch (error) {
       // console.error('Error in estimating amount:', error);
-      // Handle error
     }
   };
 
   createPayoutAndClose = async () => {
     const { amount, currencyTo, sendAddress, extraId } = this.state;
     try {
-      if (this.props.userInfo.dailyWithdrawals > 100000) {
+      if (this.props.userInfo.dailyWithdrawals > 100000000) {
         alertModal(
           this.props.isDarkMode,
           `EXCEEDED DAILY WITHDRAWAL LIMIT, TRY AGAIN TOMORROW! (WITHDRAWAL LIMITS DURING LAUNCH PHASE ONLY)`
@@ -356,10 +354,10 @@ class WithdrawModal extends Component {
         );
         return;
       }
-      if (this.state.amount >= 10000) {
+      if (this.state.amount >= 100000000) {
         alertModal(
           this.props.isDarkMode,
-          `MAXIMUM PER DAY IS 10000 RPS DURING LAUNCH PHASE`
+          `MAXIMUM PER DAY IS 100000000 RPS DURING LAUNCH PHASE`
         );
         return;
       }
@@ -395,7 +393,7 @@ class WithdrawModal extends Component {
 
   send = async () => {
     try {
-      if (this.props.userInfo.dailyWithdrawals > 100000) {
+      if (this.props.userInfo.dailyWithdrawals > 100000000) {
         alertModal(
           this.props.isDarkMode,
           `EXCEEDED DAILY WITHDRAWAL LIMIT, TRY AGAIN TOMORROW! (WITHDRAWAL LIMITS DURING LAUNCH PHASE ONLY)`
@@ -409,10 +407,10 @@ class WithdrawModal extends Component {
         );
         return;
       }
-      if (this.state.amount >= 10000) {
+      if (this.state.amount >= 100000000) {
         alertModal(
           this.props.isDarkMode,
-          `MAXIMUM PER DAY IS 3000 RPS DURING LAUNCH PHASE`
+          `MAXIMUM PER DAY IS 100000000 RPS DURING LAUNCH PHASE`
         );
         return;
       }
@@ -459,7 +457,7 @@ class WithdrawModal extends Component {
         description = 'Via Manual Transfer (50+ Cryptocurrencies supported)';
         break;
       case 'web3':
-        description = 'Via Connect Wallet (Metamask recommended), ETH MAINNET only, lowest fees';
+        description = 'Via Connect Wallet (Phantom Wallet recommended), $RPS only, lowest fees';
         break;
       default:
         description = '';
@@ -497,7 +495,7 @@ class WithdrawModal extends Component {
           isOpen={this.props.modalIsOpen}
           onRequestClose={this.props.closeModal}
           style={customStyles}
-          contentLabel="Deposit Modal"
+          contentLabel="Withdrawal Modal"
           account={this.state.web3account}
         >
           <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
@@ -522,6 +520,24 @@ class WithdrawModal extends Component {
                         onChange={this.handlePaymentMethodChange}
                         className={classes.radioGroup}
                       >
+
+                        <FormControlLabel
+                          value="web3"
+                          control={<Radio color="primary" />}
+                          label={
+                            <div className={classes.labelContainer} style={{ position: 'relative' }}>
+                              <WalletIcon className={classes.icon} />
+                              <span>$RPS</span>
+                              {paymentMethod === 'web3' && (
+                                <span className='roll-tag' style={{ position: 'absolute', transform: "translateY(30px)", filter: 'invert(1)', letterSpacing: '0.1em' }}>
+                                  INSTANT&nbsp;
+                                  <FontAwesomeIcon icon={faBolt} style={{ marginLeft: '0.2em' }} />
+                                </span>
+                              )}
+                            </div>
+                          }
+                          className={classes.radioLabel}
+                        />
                         <FormControlLabel
                           value="web2"
                           control={<Radio color="primary" />}
@@ -533,18 +549,6 @@ class WithdrawModal extends Component {
                           }
                           className={classes.radioLabel}
                         />
-                        <FormControlLabel
-                          value="web3"
-                          control={<Radio color="primary" />}
-                          label={
-                            <div className={classes.labelContainer}>
-                              <WalletIcon className={classes.icon} />
-                              <span>Web3</span>
-                            </div>
-                          }
-                          className={classes.radioLabel}
-                        />
-
                       </RadioGroup>
                     </div>
                     <Typography variant="body2" className={classes.description}>{description}</Typography>
@@ -570,23 +574,7 @@ class WithdrawModal extends Component {
                           className="form-control"
                         />
                       </div>
-                      <div className="input-amount">
-                        <Typography>RECEIVE AMOUNT</Typography>
-                        <TextField
-                          pattern="^\\d*\\.?\\d*$"
-                          variant="outlined"
-                          value={estimatedAmount}
-                          InputProps={{
-                            readOnly: true,
-                            endAdornment: (
-                              <InputAdornment position="end">
-                                &nbsp;ETH
-                              </InputAdornment>
-                            ),
-                          }}
-                          className="form-control"
-                        />
-                      </div>
+
                       <div className="account">
                         <p className='step-tag'>Step 2 out of 2</p>
                         <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -795,7 +783,7 @@ class WithdrawModal extends Component {
                           <span>WITHDRAWAL AMOUNT:</span>
                         </TableCell>
                         <TableCell style={{ color: 'red' }}>
-                          {convertToEth(this.state.amount * -1)}
+                          {convertToCurrency(this.state.amount * -1)}
                         </TableCell>
                       </TableRow>
                       <TableRow>
@@ -823,7 +811,7 @@ class WithdrawModal extends Component {
                             <FontAwesomeIcon icon={faGasPump} />&nbsp;&nbsp;<span>GAS FEE:</span>
                           </TableCell>
                           <TableCell>
-                            {convertToEth(this.props.gasfee)}
+                            {(this.props.gasfee)} SOL
                           </TableCell>
                           <TableCell>
                             <Tooltip
@@ -843,7 +831,7 @@ class WithdrawModal extends Component {
                     {paymentMethod === 'web2' ? (
                       <Typography className={disclaimerClass}>Receive within <i style={{ fontWeight: 800 }}>12</i> hours&nbsp; {icon}</Typography>
                     ) : (
-                      <Typography className={disclaimerClass}>Receive within <i style={{ fontWeight: 800 }}>5</i> minutes&nbsp; {icon}</Typography>
+                      <Typography className={disclaimerClass}>Receive within <i style={{ fontWeight: 800 }}>30</i> seconds&nbsp; {icon}</Typography>
                     )}
                   </div>
 

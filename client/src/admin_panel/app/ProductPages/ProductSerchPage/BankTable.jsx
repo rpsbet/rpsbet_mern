@@ -5,6 +5,8 @@ import { alertModal } from '../../../../game_panel/modal/ConfirmAlerts';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import MyLoansModal from '../../../../game_panel/modal/MyLoansModal';
 import RpsPriceChart from '../../../../components/RpsPriceChart';
+import { token } from '../../../../config/index.js';
+
 import {
   faClock,
   faSort,
@@ -42,7 +44,7 @@ import { convertToCurrency } from '../../../../util/conversion';
 import { updateDigitToPoint2 } from '../../../../util/helper';
 import Avatar from '../../../../components/Avatar';
 import PlayerModal from '../../../../game_panel/modal/PlayerModal';
-import { getNativePrices } from '../../../../redux/Setting/setting.action';
+
 const MarketplaceContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -361,7 +363,6 @@ class BankTable extends Component {
       setCurrentLoanInfo,
       openConfirmLoanModal,
       isLowGraphics,
-      getNativePrices
     } = this.props;
 
     const {
@@ -427,7 +428,7 @@ class BankTable extends Component {
         {is_mobile && (
           <>
             <Button style={{ marginBottom: "30px" }} className="btn-submit" onClick={this.handleOpenMyLoansModal}>Manage Your Loans&nbsp; <AttachMoney /></Button>
-            <RpsPriceChart getNativePrices={getNativePrices} />
+            <RpsPriceChart tokenMintAddress={token} />
           </>
         )}
         {!loading ? (
@@ -703,7 +704,6 @@ const mapDispatchToProps = {
   setCurrentLoanInfo,
   openConfirmLoanModal,
   acGetCustomerInfo,
-  getNativePrices
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(BankTable);

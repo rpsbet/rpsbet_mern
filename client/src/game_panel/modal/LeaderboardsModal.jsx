@@ -126,7 +126,7 @@ class LeaderboardsModal extends Component {
         breakpoint: 480,
         options: {
           chart: {
-            width: 200
+            width: 400
           }
         }
       }],
@@ -208,7 +208,7 @@ class LeaderboardsModal extends Component {
                 <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
 
                   <h4 className="title">
-                    Top RPS Holders
+                    Top Players (Balances)
                   </h4>
                   <br />
                   {loadingEquityChart ? (

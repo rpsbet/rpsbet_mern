@@ -7,7 +7,7 @@ import { convertToCurrency } from '../../util/conversion';
 import ReactDOM from 'react-dom';
 import { renderLottieAvatarAnimation } from '../../util/LottieAvatarAnimations';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHeart, faHeartBroken, faStopwatch } from '@fortawesome/free-solid-svg-icons';
+import { faHeart, faHeartBroken, faStopwatch, faArrowCircleDown } from '@fortawesome/free-solid-svg-icons';
 
 import FileCopyIcon from '@material-ui/icons/FileCopy';
 import {
@@ -322,7 +322,6 @@ class HistoryTable extends Component {
       game_type: this.state.selectedGameType
     });
   };
-
   render() {
     const { isLowGraphics } = this.props;
     // const gameTypePanel = this.generateGameTypePanel();
@@ -417,6 +416,7 @@ class HistoryTable extends Component {
           )}
           {uniqueHistory.map(
             (row, key) => (
+
               <div
                 className={`table-row ${(row.creator?._id === this.props.userId || row.joined_user === this.props.userId) ? 'history-background' : ''} ${key < 50 ? 'slide-in' : ''}`}
                 style={{
@@ -430,8 +430,19 @@ class HistoryTable extends Component {
                 <div>
                   <div className="table-cell">
                     <div className="room-id">
-                      {row.status === 'open' ? row.status : 'finished'}&nbsp;{row.status === 'open' ? <HeartIcon isOpen={true} /> : <HeartIcon isOpen={false} />}
-                    </div>
+                      {row.status === 'open' ? (
+                        <>
+                          {row.status}  <HeartIcon isOpen={true} /> 
+                        </>
+                      ) : row.room_name === 'Withdrawal' ? (
+                        <>
+                          MONEY OUT <FontAwesomeIcon icon={faArrowCircleDown} />
+                        </>
+                      ) : (
+                        <>
+                          finished  <HeartIcon isOpen={false} /> 
+                        </>
+                      )}                    </div>
                     {row.ai_mode && (
                       <div id="ai_mode">
                         <span className="room-id ai_mode">

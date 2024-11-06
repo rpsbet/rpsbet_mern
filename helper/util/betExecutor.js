@@ -54,7 +54,7 @@ const addToQueue = async (req, bot = false) => {
 
 
         if (req.body._id) {
-            if (user.dailyWithdrawals > 100000) {
+            if (user.dailyWithdrawals > 100000000) {
                 responseData = {
                     success: false,
                     message: 'illregular action',

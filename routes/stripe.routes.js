@@ -5,26 +5,28 @@ const auth = require('../middleware/auth');
 const sendgrid = require('../helper/sendgrid');
 const Receipt = require('../model/Receipt');
 const GameLog = require('../model/GameLog');
-const Transaction = require('../model/Transaction');
+const gameTransaction = require('../model/Transaction');
 const { newTransaction } = require('../socketController');
 const stripe = require('stripe')('sk_live_B8xrL7Gp2elKyanYJ0Zi5IqS00EKxOnhjP');
 const { ethers } = require('ethers');
+const { Connection, Keypair, Transaction, PublicKey, sendAndConfirmTransaction } = require('@solana/web3.js');
+const { getAssociatedTokenAddress, TOKEN_PROGRAM_ID, createTransferInstruction } = require('@solana/spl-token'); // Import from spl-token package
+
+const bs58 = require('bs58');
 // const ganacheEndpoint = 'http://localhost:7544';
 const jwt = require('jsonwebtoken');
 // const provider = new JsonRpcProvider(ganacheEndpoint); 
-const { JsonRpcProvider } = require('@ethersproject/providers');
 const { getAddress } = require('ethers/lib/utils');
-const provider = new JsonRpcProvider(process.env.PROVIDER_URL);
+// const { createTestAccount } = require('nodemailer');
+const connection = new Connection(process.env.PROVIDER_URL);
 const walletKey = process.env.wk;
 const API_KEY = process.env.API_KEY;
 
+// Replace with your actual token mint address
+const tokenMintAddress = process.env.token;
+const TOKEN_DECIMALS = 6;
+const TOKEN_MULTIPLIER = 10 ** TOKEN_DECIMALS;
 
-async function getWalletBalance(signer) {
-  const walletAddress = await signer.getAddress();
-  const balance = await signer.provider.getBalance(walletAddress);
-  const balanceInEther = ethers.utils.formatEther(balance);
-  return balanceInEther;
-}
 
 // **************************************** //
 // ************ GLOBAL FUNCTIONS ********** //
@@ -53,7 +55,7 @@ async function calculateRemainingLoans(currentUser) {
 router.get('/estimate_amount', auth, async (req, res) => {
   try {
     const { web2Amount, currencyTo } = req.query;
-    const estimatedAmount = await estimateAmount(web2Amount, currencyTo);
+    const estimatedAmount = await estimateAmount(web2Amount, currencyTo, tokenMintAddress);
     res.json(estimatedAmount);
   } catch (error) {
     res.status(500).json({
@@ -163,15 +165,55 @@ router.get('/get_currencies', async (req, res) => {
   }
 });
 
+router.get('/get_admin_wallet', async (req, res) => {
+  try {
+    const adminWallet = process.env.adminWallet;
+    
+    if (!adminWallet) {
+      return res.status(500).json({
+        success: false,
+        message: 'Admin wallet address is not set in environment variables',
+      });
+    }
+
+    // Respond with the admin wallet address as a JSON object
+    res.json({ adminWallet });
+  } catch (error) {
+    console.error('Error getting adminWallet:', error);
+    res.status(500).json({
+      success: false,
+      message: 'An error occurred while getting adminWallet',
+    });
+  }
+});
+router.get('/get_provider_url', async (req, res) => {
+  try {
+    const providerUrl = process.env.PROVIDER_URL;
+    
+    if (!providerUrl) {
+      return res.status(500).json({
+        success: false,
+        message: 'Provider URL is not set in environment variables',
+      });
+    }
+
+    res.json({ providerUrl });
+  } catch (error) {
+    console.error('Error getting providerUrl:', error);
+    res.status(500).json({
+      success: false,
+      message: 'An error occurred while getting providerUrl',
+    });
+  }
+});
 
 // DEPOSIT
 router.post('/create_payment', auth, async (req, res) => {
   try {
-    // Extract payment details from request body
-    const { price_amount, payment_id, user_id } = req.body;
+    const { price_amount, payment_id, user_id, tokenMintAddress } = req.body;
+
     if (payment_id !== null) {
-      // Prevent double spending
-      const usedTransactions = await Transaction.find({
+      const usedTransactions = await gameTransaction.find({
         hash: payment_id,
       });
 
@@ -179,14 +221,24 @@ router.post('/create_payment', auth, async (req, res) => {
         return res.status(400).send('Transaction has already been used');
       }
     }
-    const newTransaction = new Transaction({
+
+
+    const response = await axios.get(`https://api.dexscreener.com/latest/dex/tokens/${tokenMintAddress}`);
+    const tokenPrice = parseFloat(response.data.pairs[0]?.priceUsd);
+
+    if (tokenPrice == null || isNaN(tokenPrice)) {
+      console.error('Token price not found or invalid');
+      return res.status(404).json({ success: false, message: 'Token price not found or invalid.' });
+    }
+
+    const rpsAmount = calculateAmountSol(price_amount, tokenPrice);
+    const newTransaction = new gameTransaction({
       user: user_id,
-      amount: calculateAmount(price_amount),
+      amount: rpsAmount - (rpsAmount * 0.008),
       description: 'deposit',
       hash: payment_id,
     });
 
-    // Mark the transaction as pending (to be confirmed by the cron job)
     newTransaction.status = 'processing';
 
     await newTransaction.save();
@@ -204,30 +256,28 @@ router.post('/create_payment', auth, async (req, res) => {
   }
 });
 
-function calculateAmount(price_amount) {
-  return price_amount /  0.006222;
-}
-function calculateAmountWeb3(price_amount) {
+function calculateAmountSol(price_amount, tokenPrice) {
   switch (price_amount) {
-    case 10:
-      return price_amount /  0.006222 +  0.006222;
     case 25:
-      return price_amount /  0.006222 + (2 *  0.006222);
+      return price_amount / tokenPrice;
     case 50:
-      return price_amount /  0.006222 + (3 *  0.006222);
-    case 100:
-      return price_amount /  0.006222 + (4 *  0.006222);
+      return price_amount / tokenPrice;
     case 250:
-      return price_amount /  0.006222 + (5 *  0.006222);
+      return price_amount / tokenPrice;
+    case 500:
+      return price_amount / tokenPrice;
+    case 2500:
+      return price_amount / tokenPrice;
+    case 5000:
+      return price_amount / tokenPrice;
     default:
-      return 0; // Or handle invalid price_amount accordingly
+      return 0;
   }
 }
 
 router.post('/generate_address', auth, async (req, res) => {
   try {
 
-    // Extract payment details from request body
     const { web2Amount, currencyTo } = req.body;
 
     const payload = {
@@ -236,7 +286,6 @@ router.post('/generate_address', auth, async (req, res) => {
       pay_currency: currencyTo,
     };
 
-    // Make POST request to NowPayments API to create payment
     const response = await axios.post('https://api.nowpayments.io/v1/payment', payload, {
       headers: {
         'x-api-key': API_KEY,
@@ -244,7 +293,6 @@ router.post('/generate_address', auth, async (req, res) => {
       },
     });
 
-    // Extract payment data from response
     const paymentData = response.data;
 
     res.json(paymentData);
@@ -257,27 +305,33 @@ router.post('/generate_address', auth, async (req, res) => {
   }
 });
 
-router.post('/get_price', auth, async (req, res) => {
+router.post('/get_token_price', auth, async (req, res) => {
   try {
-    // Extract payment details from request body
-    const { web2Amount, currencyTo } = req.body;
+    const { tokenMintAddress, web2Amount } = req.body;
+    const targetMintAddress = process.env.token;
+    if (tokenMintAddress !== targetMintAddress) {
+      return res.status(400).json({
+        success: false,
+        message: 'This token mint address is not supported.',
+      });
+    }
 
-    // Make GET request to NowPayments API to get estimated price
-    const response = await axios.get(`https://api.nowpayments.io/v1/estimate?amount=${web2Amount}&currency_from=usd&currency_to=${currencyTo}`, {
-      headers: {
-        'x-api-key': API_KEY,
-      },
-    });
+    const response = await axios.get(`https://api.dexscreener.com/latest/dex/tokens/${tokenMintAddress}`);
+    const tokenPrice = parseFloat(response.data.pairs[0]?.priceUsd);
+    if (tokenPrice == null || isNaN(tokenPrice)) {
+      return res.status(404).json({
+        success: false,
+        message: 'Token price not found or invalid.',
+      });
+    }
 
-    // Extract estimated price data from response
-    const estimatedPriceData = response.data;
-
-    res.json(estimatedPriceData);
+    const numberOfTokens = web2Amount / tokenPrice;
+    res.json({ tokenPrice, numberOfTokens });
   } catch (error) {
-    console.error('Error getting estimated price:', error);
+    console.error('Error getting token price:', error.message || error);
     res.status(500).json({
       success: false,
-      message: 'An error occurred while getting estimated price',
+      message: 'An error occurred while getting the token price',
     });
   }
 });
@@ -313,17 +367,17 @@ router.post('/create_payout', auth, async (req, res) => {
       });
     }
 
-    if (withdrawalLimit >= 10000) {
+    if (withdrawalLimit >= 100000000) {
       return res.json({
         success: false,
         message: 'EXCEEDED DAILY WITHDRAWAL LIMIT (DURING LAUNCH PHASE ONLY!)'
       });
     }
 
-    if (amount > 3000) {
+    if (amount > 100000000) {
       return res.json({
         success: false,
-        message: 'Maximum Withdrawal Amount is 3000 RPS per DAY during Launch'
+        message: 'Maximum Withdrawal Amount is 100000000 RPS per DAY during Launch'
       });
     }
 
@@ -334,9 +388,9 @@ router.post('/create_payout', auth, async (req, res) => {
         message: 'EXISTING LOANS, CANNOT WITHDRAW'
       });
     }
-    const email = 'lennybeadle@gmail.com';
-    const password = 'Utrecht2156$';
-    // Extract JWT token from authorization header
+    const email = process.env.email;
+    const password = process.env.password;
+
     const token = await getJWTToken(email, password);
     let newAmount;
     const retryLimit = 3;
@@ -345,8 +399,8 @@ router.post('/create_payout', auth, async (req, res) => {
 
     while (attempt < retryLimit) {
       try {
-        // Attempt to estimate the new amount
-        newAmount = await estimateAmount((req.body.amount *  0.006222), currency);
+
+        newAmount = await estimateAmount((req.body.amount), currency);
 
         break; // Break out of loop if estimation is successful
       } catch (error) {
@@ -363,7 +417,6 @@ router.post('/create_payout', auth, async (req, res) => {
       }
     }
 
-    // Construct payload for NowPayments API
     const payload = {
       ipn_callback_url: 'https://nowpayments.io', // You may adjust this as needed
       withdrawals: [
@@ -377,7 +430,7 @@ router.post('/create_payout', auth, async (req, res) => {
       ]
     };
 
-   
+
     const response = await axios.post('https://api.nowpayments.io/v1/payout', payload, {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -386,8 +439,7 @@ router.post('/create_payout', auth, async (req, res) => {
       }
     });
 
-    // Save transaction and receipt after successful withdrawal
-    const newTransaction = new Transaction({
+    const newTransaction = new gameTransaction({
       user: req.user._id,
       address: address,
       amount: -amount,
@@ -462,7 +514,6 @@ router.post('/create_payout', auth, async (req, res) => {
   }
 });
 
-// Function to get the JWT token from NOWPayments
 const getJWTToken = async (email, password) => {
   try {
     const response = await axios.post('https://api.nowpayments.io/v1/auth', {
@@ -475,56 +526,44 @@ const getJWTToken = async (email, password) => {
   }
 };
 
-
 // **************************************** //
-// ************* WEB3 ********************* //
+// ************* SOLANA ******************** //
 // **************************************** //
-
 router.post('/deposit_successed', auth, async (req, res) => {
   try {
-    const { amount, price_amount, txtHash } = req.body;
+    let { amount, price_amount, txtHash, account, tokenMintAddress } = req.body;
 
-    // Validate the input
-    if (!amount || !txtHash) {
+    if (typeof txtHash === 'object' && txtHash.signature) {
+      txtHash = txtHash.signature;
+    }
+
+    if (!amount || !txtHash || !account) {
+      console.error('Invalid input:', { amount, txtHash, account });
       return res.status(400).send('Invalid input');
     }
 
-    // Prevent double spending
-    const usedTransactions = await Transaction.find({
-      hash: txtHash,
-    });
-
+    const usedTransactions = await gameTransaction.find({ hash: txtHash });
     if (usedTransactions.length > 0) {
+      console.error('Transaction has already been used:', txtHash);
       return res.status(400).send('Transaction has already been used');
     }
 
-    // Query the Ethereum network to get transaction details
-    const tx = await provider.getTransaction(txtHash);
+    const response = await axios.get(`https://api.dexscreener.com/latest/dex/tokens/${tokenMintAddress}`);
+    const tokenPrice = parseFloat(response.data.pairs[0]?.priceUsd);
 
-    // Check if the transaction exists and is confirmed
-    if (!tx || !tx.blockNumber) {
-      return res.status(404).send('Transaction not found or not confirmed');
+    if (tokenPrice == null || isNaN(tokenPrice)) {
+      console.error('Token price not found or invalid');
+      return res.status(404).json({ success: false, message: 'Token price not found or invalid.' });
     }
 
-    // Check if the transaction matches with the amount and the addresses
-    const signer = new ethers.Wallet(walletKey, provider);
-    const wamount = ethers.utils.parseUnits(amount.toString(), 'ether');
-
-    if (Number(tx.value) != Number(wamount) || tx.to !== signer.address) {
-      return res.status(400).send('Transaction does not match with input');
-    }
-    const rpsAmount = calculateAmountWeb3(price_amount)
-    // The cron job will periodically check for confirmations and update the balance
-    // No need to update the balance here
-    const newTransaction = new Transaction({
+    const rpsAmount = calculateAmountSol(price_amount, tokenPrice);
+    const newTransaction = new gameTransaction({
       user: req.user._id,
       amount: rpsAmount,
       description: 'deposit',
       hash: txtHash,
+      status: 'pending'
     });
-
-    // Mark the transaction as pending (to be confirmed by the cron job)
-    newTransaction.status = 'pending';
 
     await newTransaction.save();
 
@@ -537,188 +576,198 @@ router.post('/deposit_successed', auth, async (req, res) => {
 
     await receipt.save();
 
+    if (!req.user.accounts.includes(account.publicKey)) {
+      req.user.accounts.push(account.publicKey);
+      await req.user.save();
+      console.log("Added new wallet address to user:", account);
+    }
+
     res.json({
       success: true,
       balance: req.user.balance + rpsAmount,
       newTransaction,
-      message: `Deposit received! Please wait for confirmations.<br />View transaction details <a href="https://etherscan.io/tx/${txtHash}" target="_blank">here</a>.`,
+      message: `Deposit received! Confirmation is pending. <br />View transaction details <a href="https://explorer.solana.com/tx/${txtHash}" target="_blank">here</a>.`,
     });
   } catch (err) {
-    console.log('error in deposit_successed', err);
+    console.log('Error in deposit_successed:', err);
     res.json({
       success: false,
-      message: err,
+      message: err.message || 'An unexpected error occurred',
     });
   }
 });
 
 router.post('/withdraw_request', auth, async (req, res) => {
-
-  let tx;
   try {
     const username = req.user.username;
     const totalWagered = req.user.totalWagered;
 
     if (username.includes('BOT')) {
-      return res.json({
-        success: false,
-        message: 'DO NOT HAVE PERMISSION'
-      });
+      return res.json({ success: false, message: 'DO NOT HAVE PERMISSION' });
     }
     if (totalWagered === 0) {
-      return res.json({
-        success: false,
-        message: 'ACCOUNT TOO NEW'
-      });
+      return res.json({ success: false, message: 'ACCOUNT TOO NEW' });
     }
 
     const balance = req.user.balance;
     const withdrawalLimit = req.user.dailyWithdrawals;
 
     if (balance < req.body.amount) {
-
+      return res.json({ success: false, message: 'Insufficient balance' });
     }
-
-    if (withdrawalLimit > 3000) {
+    if (withdrawalLimit > 100000000) {
       console.log("Exceeded Daily Withdrawal Limit", req.user);
-      return res.json({
-        success: false,
-        message: 'EXCEEDED DAILY WITHDRAWAL LIMIT (DURING LAUNCH PHASE ONLY!)'
-      });
+      return res.json({ success: false, message: 'EXCEEDED DAILY WITHDRAWAL LIMIT (DURING LAUNCH PHASE ONLY!)' });
     }
-    if (req.body.amount > 3000) {
-      return res.json({
-        success: false,
-        message: 'Maximum Withdrawal Amount is 3000 RPS per DAY during Launch'
-      });
+    if (req.body.amount > 100000000) {
+      return res.json({ success: false, message: 'Maximum Withdrawal Amount is 100000000 RPS per DAY during Launch' });
     }
 
     const remainingLoanAmount = await calculateRemainingLoans(req.user);
     if (remainingLoanAmount > 0) {
-      return res.json({
-        success: false,
-        message: 'EXISTING LOANS, CANNOT WITHDRAW'
-      });
+      return res.json({ success: false, message: 'EXISTING LOANS, CANNOT WITHDRAW' });
     }
 
     const toAddress = req.body.addressTo;
-    if (!toAddress || !toAddress.startsWith('0x')) {
+    if (!toAddress) {
       console.log("Invalid 'to' address");
-      return res.json({
-        success: false,
-        message: "No wallet connected / wrong network."
-      });
+      return res.json({ success: false, message: "Invalid Solana wallet address." });
     }
 
-    const signer = new ethers.Wallet(walletKey, provider);
+    let secretKey;
     try {
-      const estimatedAmount = await estimateAmount((req.body.amount *  0.006222), 'eth');
-      const amountTransfer = ethers.utils.parseUnits(String(estimatedAmount.estimated_amount), 'ether');
-      const block = await provider.getBlock('latest');
-      const baseFeeGwei = ethers.utils.formatUnits(block.baseFeePerGas, 'gwei');
-      const priorityFeeGwei = '2.5';
-      const gasLimit = await provider.estimateGas({
-        to: req.body.addressTo,
-        value: amountTransfer
+      secretKey = bs58.default.decode(walletKey);
+    } catch (error) {
+      console.error("Failed to decode walletKey:", error);
+      return res.json({ success: false, message: 'Failed to decode wallet key' });
+    }
+
+    // Check if the secretKey has the correct size (64 bytes)
+    if (secretKey.length !== 64) {
+      return res.json({ success: false, message: 'Invalid secret key size. Must be 64 bytes.' });
+    }
+
+    const walletKeyPair = Keypair.fromSecretKey(secretKey);
+
+    const connection = new Connection(process.env.PROVIDER_URL);
+    const amountInTokens = Math.floor(req.body.amount * TOKEN_MULTIPLIER);
+
+    const fromTokenAccount = await getAssociatedTokenAddress(
+      new PublicKey(tokenMintAddress),
+      walletKeyPair.publicKey,
+      false,
+      TOKEN_PROGRAM_ID
+    );
+
+    const toTokenAccount = await getAssociatedTokenAddress(
+      new PublicKey(tokenMintAddress),
+      new PublicKey(toAddress),
+      false,
+      TOKEN_PROGRAM_ID
+    );
+    // Create a transaction and add the transfer instruction
+    const transaction = new Transaction().add(
+      createTransferInstruction(
+        fromTokenAccount,
+        toTokenAccount,
+        walletKeyPair.publicKey,
+        amountInTokens,
+        [],
+        TOKEN_PROGRAM_ID
+      )
+    );
+
+    try {
+      req.user.balance -= req.body.amount;
+      await req.user.save();
+      const signature = await sendAndConfirmTransaction(connection, transaction, [walletKeyPair]);
+
+      const receipt = new Receipt({
+        user_id: req.user._id,
+        payment_method: 'Web3',
+        payment_type: 'Withdraw',
+        amount: req.body.amount,
       });
+      await receipt.save();
 
-      // Calculate gas fee in wei
-      const gasPrice = ethers.utils.parseUnits(baseFeeGwei, 'gwei')
-        .add(ethers.utils.parseUnits(priorityFeeGwei, 'gwei'));
-      const gasFee = gasPrice.mul(gasLimit);
-      const balanceInEther = await getWalletBalance(signer);
-      const balanceWei = ethers.utils.parseEther(balanceInEther);
-      // Subtract gas fee from balance in wei
-      const differenceWei = balanceWei.sub(gasFee);
+      const newTransaction = new gameTransaction({
+        user: req.user,
+        amount: -req.body.amount,
+        description: 'withdraw',
+        status: 'completed',
+        hash: signature 
+      });
+      await newTransaction.save();
 
-      // console.log("Balance in Wei:", balanceWei.toString());
-      // console.log("Gas Fee in Wei:", gasFee.toString());
-      // console.log("Difference in Wei:", differenceWei.toString());
-      if (differenceWei.lt(0)) {
-        console.log("Insufficient funds to cover gas fee");
-        return res.json({
-          success: false,
-          message: 'Insufficient funds to cover gas fee'
-        });
-      }
-
-      const real = amountTransfer.sub(gasFee);
-      const realEth = ethers.utils.formatEther(real);
-
-      // console.log("Sending transaction...", real);
-
-      req.user.balance = req.user.balance - req.body.amount;
+       // Create and save
+       const newGameLog = new GameLog({
+        room: null,
+        creator: req.user._id,
+        joined_user: null,
+        game_type: null,
+        bet_amount: req.body.amount,
+        selected_rps: '',
+        commission: 0,
+        game_result: 777,
+        winnings: 0,
+        endgame_amount: 0,
+        host_pr: 0,
+        user_bet: 0,
+        status: 'complete',
+        hosts: []
+      });
 
       try {
-        await req.user.save();
-      } catch (saveError) {
-        console.error('Failed to save user balance:', saveError);
-        return res.json({
+        await newGameLog.save();
+      } catch (error) {
+        console.log('Err:', error);
+        console.error('Error saving game log:', error);
+        return res.status(500).json({
           success: false,
-          message: 'Failed to save user balance'
+          message: 'Failed to save game log'
         });
       }
 
-      tx = await signer.sendTransaction({
-        to: req.body.addressTo,
-        value: real,
-        gasLimit: ethers.utils.hexlify(gasLimit),
-        gasPrice: ethers.utils.hexlify(gasPrice)
+      return res.json({
+        success: true,
+        balance: req.user.balance,
+        newTransaction,
+        message: `Withdrawal request received and is complete. 🤑 Much Wow.<br /> View the transaction details on Solana Explorer using this <a href="https://explorer.solana.com/tx/${signature}" target="_blank">transaction link</a>.`
       });
-
-      console.log("Transaction hash:", tx.hash);
-
-      const receipt = await tx.wait();
-
-      console.log("Transaction mined in block:", receipt.blockNumber);
-
-    } catch (e) {
-      console.log(e);
+    } catch (saveError) {
+      console.error('Error saving transaction documents:', saveError);
       return res.json({
         success: false,
-        message: 'Failed in sending transaction'
+        message: 'Failed to save transaction records'
       });
     }
 
-    const receipt = new Receipt({
-      user_id: req.user._id,
-      payment_method: 'Web3',
-      payment_type: 'Withdraw',
-      amount: req.body.amount,
-    });
-
-    await receipt.save();
-    const newTransaction = new Transaction({
-      user: req.user,
-      amount: -req.body.amount,
-      description: 'withdraw',
-      status: 'completed',
-      hash: tx.hash
-    });
-
-    // req.user.balance = await getWalletBalance(signer);
-
-    await newTransaction.save();
-    return res.json({
-      success: true,
-      balance: req.user.balance,
-      newTransaction,
-      message: `Withdrawal request received and is pending confirmation. 🤑 Much Wow.<br /> View the transaction details on the blockchain using this <a href="https://etherscan.io/tx/${tx.hash}" target="_blank">transaction link</a>.`
-    });
   } catch (e) {
     console.log('ERROR in withdraw send transaction', e);
-    return res.json({
-      success: false,
-      message: 'Failed to initiate withdrawal'
-    });
+    return res.json({ success: false, message: 'Failed to initiate withdrawal' });
   }
 });
 
 async function estimateAmount(web2Amount, currencyTo) {
+
   try {
+    // Step 1: Get the token price from Dexscreener
+    const priceResponse = await axios.get(`https://api.dexscreener.com/latest/dex/tokens/${tokenMintAddress}`);
+    const tokenPrice = parseFloat(priceResponse.data.pairs[0]?.priceUsd);
+    
+    if (tokenPrice == null || isNaN(tokenPrice)) {
+      console.error("Token price not found or invalid.");
+      throw new Error('Token price not found or invalid.');
+    }
+
+
+    // Step 2: Calculate the adjusted amount
+    const adjustedAmount = tokenPrice * web2Amount;
+
+    // Step 3: Estimate the converted amount using NowPayments
     const response = await axios.get(`https://api.nowpayments.io/v1/estimate`, {
       params: {
-        amount: web2Amount,
+        amount: adjustedAmount,
         currency_from: 'usd',
         currency_to: currencyTo,
       },
@@ -727,38 +776,29 @@ async function estimateAmount(web2Amount, currencyTo) {
         'Content-Type': 'application/json',
       },
     });
+
     return response.data;
+
   } catch (error) {
-    console.error('Error estimating amount: ', web2Amount, currencyTo);
+    console.error('Error estimating amount:', error.message);
     throw new Error('Failed to estimate amount.');
   }
 }
 
 router.post('/get_gasfee', auth, async (req, res) => {
-  // console.log("Qd", process.env)
-  const amount = req.body.amount ? req.body.amount : "0";
-  const amountTransfer = ethers.utils.parseUnits(amount, 'ether');
-
   try {
-    const block = await provider.getBlock('latest')
-    const baseFeeGwei = ethers.utils.formatUnits(block.baseFeePerGas, 'gwei')
-    const priorityFeeGwei = '2.5';
-    const gasLimit = await provider.estimateGas({
-      to: req.body.addressTo,
-      value: amountTransfer
-    });
+    const connection = new Connection(process.env.PROVIDER_URL);
 
-    // Calculate gas fee in wei
-    const gasFee = ethers.utils.parseUnits(baseFeeGwei, 'gwei')
-      .add(ethers.utils.parseUnits(priorityFeeGwei, 'gwei')).mul(gasLimit);
+    const { feeCalculator } = await connection.getRecentBlockhash();
 
-    const gasFeeEth = ethers.utils.formatEther(gasFee);
+    const gasFeeSol = feeCalculator.lamportsPerSignature / 1e9; // 1 SOL = 1 billion lamports
 
-    return res.json({ data: gasFeeEth });
+    return res.json({ data: gasFeeSol });
   } catch (error) {
+    console.error('Error fetching Solana gas fee:', error);
     return res.status(400).send(error.message);
   }
-})
+});
 
 
 module.exports = router;

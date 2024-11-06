@@ -1,230 +1,143 @@
-// src/components/RpsPriceChart.js
-
 import React, { Component } from 'react';
-import { TextField, Grid, Typography } from '@material-ui/core';
-import ReactApexChart from 'react-apexcharts';
+import { Typography, Card, Button, CardContent, Grid, Box } from '@material-ui/core';
+import MonetizationOnIcon from '@material-ui/icons/MonetizationOn';
+import TrendingUpIcon from '@material-ui/icons/TrendingUp';
+import TrendingDownIcon from '@material-ui/icons/TrendingDown';
+import axios from '../util/Api';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faChartLine } from '@fortawesome/free-solid-svg-icons'; // Import the chart line icon
+
 
 class RpsPriceChart extends Component {
   constructor(props) {
     super(props);
     this.state = {
-        usdValue: '',
-        rpsValue: '',
-        conversionRate: 0.006222,
-        pricesData: [],
-        datesData: [],
-        futurePriceIndex: null,
+      conversionRate: null,
+      liquidityUsd: null,
+      marketCap: null,
+      priceChanges: {
+        m5: 0,
+        h1: 0,
+        h6: 0,
+        h24: 0,
+      },
+      volume: {
+        m5: 0,
+        h1: 0,
+        h6: 0,
+        h24: 0,
+      },
+      loading: true,
     };
   }
 
-  componentDidMount() {
-    this.fetchPricesData();
+  async componentDidMount() {
+    this.fetchTokenDetails();
   }
 
-  fetchPricesData = async () => {
+  async fetchTokenDetails() {
+    const { tokenMintAddress } = this.props;
     try {
-      const prices = await this.props.getNativePrices();
-      const mergedPricesData = [];
-      const datesData = [];
-      let futurePriceIndex = null;
+      const response = await axios.get(`https://api.dexscreener.com/latest/dex/tokens/${tokenMintAddress}`);
+      const priceData = response.data.pairs?.[0];
 
-      const currentDate = new Date();
-      prices.forEach((price, index) => {
-        const priceDate = new Date(price.createdAt);
-        datesData.push(
-          priceDate.toLocaleDateString('en-US', {
-            month: 'short',
-            year: 'numeric',
-          })
-        );
-
-        if (priceDate <= currentDate) {
-          mergedPricesData.push(price.rate);
-        } else {
-          if (futurePriceIndex === null) {
-            futurePriceIndex = mergedPricesData.length; // The future price will start from here
-          }
-          mergedPricesData.push(price.rate); // Add the future price
-        }
-      });
-
-      this.setState({
-        pricesData: mergedPricesData,
-        datesData,
-        futurePriceIndex,
-      });
+      if (priceData) {
+        this.setState({
+          conversionRate: priceData.priceUsd,
+          liquidityUsd: priceData.liquidity?.usd || 0,
+          marketCap: priceData.marketCap || 0,
+          priceChanges: priceData.priceChange,
+          volume: priceData.volume,
+          loading: false,
+        });
+      } else {
+        console.error("No pair data available for this token.");
+        this.setState({ loading: false });
+      }
     } catch (error) {
-      console.error('Error fetching prices:', error);
+      console.error("Error fetching token details:", error);
+      this.setState({ loading: false });
     }
-  };
-
-  handleUSDChange = (event) => {
-    const usdValue = parseFloat(event.target.value) || 0; // Ensure it's a number
-    this.setState({ usdValue }, this.updateRPSValue);
-  };
-  
-  handleRPSChange = (event) => {
-    const rpsValue = parseFloat(event.target.value) || 0; // Ensure it's a number
-    this.setState({ rpsValue }, this.updateUSDValue);
-  };
-
-  updateRPSValue = () => {
-    const { usdValue, conversionRate } = this.state;
-    const rpsValue = (parseFloat(usdValue) / conversionRate).toFixed(4);
-    this.setState({ rpsValue });
-  };
-  
-  updateUSDValue = () => {
-    const { rpsValue, conversionRate } = this.state;
-    const usdValue = (parseFloat(rpsValue) * conversionRate).toFixed(4);
-    this.setState({ usdValue });
-  };
+  }
 
   render() {
-    const { isDarkMode } = this.props;
-    const { usdValue, rpsValue, conversionRate, pricesData, datesData, futurePriceIndex } = this.state;
-    const baseColor = '#c734ff'; // Base color (e.g., a shade of purple)
-    const chartColors = [
-      `${baseColor}BF`, // 75% opacity
-      `${baseColor}99`, // 60% opacity
-      `${baseColor}80`, // 50% opacity
-      `${baseColor}66`, // 40% opacity
-      `${baseColor}33`, // 20% opacity
-      `${baseColor}1A`, // 10% opacity
-    ];
-    const chartData = {
-        options: {
-          chart: {
-            animations: { enabled: true },
-            toolbar: { show: false },
-            zoom: { enabled: false },
-            background: 'transparent',
-          },
-          grid: {
-            borderColor: '#e7e7e7',
-          },
-          stroke: {
-            curve: 'smooth',
-            width: 9,
-            dashArray: futurePriceIndex !== null ? [0, futurePriceIndex, 5] : 0, // Dashed line for future price if available
-          },
-          colors: chartColors, // Two colors: past/present and future
-          xaxis: {
-            categories: datesData,
-            labels: {
-              style: {
-                colors: '#fff',
-                fontSize: '12px',
-              },
-            },
-          },
-          yaxis: {
-            labels: {
-              style: {
-                colors: '#fff',
-                fontSize: '12px',
-              },
-            },
-          },
-          dataLabels: { enabled: false },
-          tooltip: {
-            enabled: true,
-            theme: 'dark', // Set tooltip theme to dark
-            style: {
-              fontSize: '12px',
-              fontFamily: 'Helvetica, Arial, sans-serif',
-            },
-            marker: {
-              show: true,
-            },
-            onDatasetHover: {
-              highlightDataSeries: true,
-            },
-            x: {
-              show: true,
-            },
-            y: {
-              formatter: (value) => value.toFixed(4), // Format y-axis values if needed
-            },
-            background: '#333', // Dark background color for tooltip
-            borderColor: '#666', // Optional: Darker border color for tooltip
-            borderWidth: 1, // Optional: Border width for tooltip
-          },
-          fill: {
-            type: 'gradient',
-            gradient: {
-              shade: 'dark',
-              gradientToColors: ['#ffd000', '#FF0000'],
-              shadeIntensity: 1,
-              opacityFrom: 0.9,
-              opacityTo: 0.4,
-              stops: [0, 100],
-            },
-          },
-          theme: {
-            mode: isDarkMode ? 'dark' : 'light',
-          },
-        },
-        series: [
-          {
-            name: 'RPS Prices',
-            data: pricesData,
-          },
-        ],
-      };
+    const { conversionRate, liquidityUsd, marketCap, priceChanges, volume, loading } = this.state;
+
+    if (loading) return <p>Loading token data...</p>;
+
     return (
-      <div style={{ display: 'flex', flexDirection: "column", justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1 className="modal-title title">RPS PRICE (pre-launch)</h1>
-        <div
-          style={{
-            width: '100%',
-            background: 'linear-gradient(45deg, #ab69ff, #dc3545)',
-            borderRadius: '15px',
-            padding: '20px',
-            boxShadow: '0px 4px 15px rgba(0, 0, 0, 0.15)',
-            margin: '20px 0 45px',
-          }}
-        >
-          <div style={{ padding: '20px' }}>
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  label="USD"
-                  variant="outlined"
-                  fullWidth
-                  value={usdValue}
-                  onChange={this.handleUSDChange}
-                  type="number"
-                />
+      <>
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '20px' }}>
+          <Card style={{ width: '100%', borderRadius: '9px', boxShadow: '0px 4px 15px rgba(0, 0, 0, 0.15)', backgroundColor: 'unset', background: 'linear-gradient(-45deg, #3f51b5,  #6c0066)' }}>
+            <CardContent style={{ textAlign: 'center' }}>
+              <Box display="flex" justifyContent="space-around" style={{ marginBottom: '20px' }}>
+                <Typography variant="body6" color="textSecondary">Price (USD):</Typography>
+                <Typography variant="body6" style={{ fontWeight: 'bold', color: '#4CAF50' }}>${conversionRate}</Typography>
+              </Box>
+              <Grid container spacing={3}>
+                {/* Liquidity */}
+                <Grid item xs={6} sm={6} md={3}>
+                  <Box display="flex" alignItems="center" justifyContent="center">
+                    <MonetizationOnIcon style={{ color: '#FFC107' }} />
+                    <Typography variant="body6" style={{ marginLeft: '5px' }}>Liquidity:</Typography>
+                  </Box>
+                  <Typography variant="h6" style={{ fontWeight: 'bold', color: '#FF9800' }}>${liquidityUsd}</Typography>
+                </Grid>
+
+                {/* Market Cap */}
+                <Grid item xs={6} sm={6} md={3}>
+                  <Box display="flex" alignItems="center" justifyContent="center">
+                    <MonetizationOnIcon style={{ color: '#03A9F4' }} />
+                    <Typography variant="body6" style={{ marginLeft: '5px' }}>MC:</Typography>
+                  </Box>
+                  <Typography variant="h6" style={{ fontWeight: 'bold', color: '#0288D1' }}>${marketCap}</Typography>
+                </Grid>
+
+                {/* 24h Price Change */}
+                <Grid item xs={6} sm={6} md={3}>
+                  <Box display="flex" alignItems="center" justifyContent="center">
+                    <TrendingUpIcon style={{ color: '#4CAF50' }} />
+                    <Typography variant="body6" style={{ marginLeft: '5px' }}>24h Price:</Typography>
+                  </Box>
+                  <Typography variant="h6" style={{ fontWeight: 'bold', color: priceChanges.h24 >= 0 ? '#4CAF50' : '#F44336' }}>
+                    {priceChanges.h24}%
+                  </Typography>
+                </Grid>
+
+                {/* Volume 24h */}
+                <Grid item xs={6} sm={6} md={3}>
+                  <Box display="flex" alignItems="center" justifyContent="center">
+                    <TrendingDownIcon style={{ color: '#E91E63' }} />
+                    <Typography variant="body6" style={{ marginLeft: '5px' }}>Volume 24h:</Typography>
+                  </Box>
+                  <Typography variant="h6" style={{ fontWeight: 'bold', color: '#FF4081' }}>${volume.h24}</Typography>
+                </Grid>
               </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  label="RPS"
-                  variant="outlined"
-                  fullWidth
-                  value={rpsValue}
-                  onChange={this.handleRPSChange}
-                  type="number"
-                />
-              </Grid>
-            </Grid>
-            <Typography variant="body2" color="textSecondary" style={{ marginTop: '10px' }}>
-              Current Conversion Rate: 1 USD = {conversionRate} RPS
-            </Typography>
-          </div>
-          {pricesData.length > 0 && datesData.length > 0 ? (
-            <ReactApexChart
-              options={chartData.options}
-              series={chartData.series}
-              type="line"
-              height={200} // Increased height for better visibility
-              width="100%" // Full width of the container
-            />
-          ) : (
-            <p>Loading chart data...</p>
-          )}
+            </CardContent>
+
+          </Card>
         </div>
-      </div>
+        <div style={{ margin: '-45px auto 0', width: '100%', display: 'flex', justifyContent: 'center' }}>
+          <Button
+            style={{
+              background: "#ffd000",
+              color: "#000", // Text color for contrast
+              border: "none", // Remove default border
+              borderRadius: "5px", // Rounded corners
+              padding: "0px 20px", // Padding for better touch area
+              fontSize: "xx-small", // Font size for readability
+              cursor: "pointer", // Cursor pointer on hover
+              transition: "background 0.3s ease", // Smooth background change on hover
+            }}
+            onClick={() => window.open("https://dexscreener.com/solana/BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump", "_blank")}
+            onMouseOver={(e) => e.currentTarget.style.background = "#fbc02d"} // Change color on hover
+            onMouseOut={(e) => e.currentTarget.style.background = "#ffd000"} // Revert color on mouse leave
+          >
+            Live Chart&nbsp;      <FontAwesomeIcon icon={faChartLine} style={{ fontSize: "18px", color: "#000" }} /> {/* Font Awesome Icon */}
+
+          </Button>
+        </div>
+      </>
     );
   }
 }

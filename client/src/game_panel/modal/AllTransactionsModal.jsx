@@ -312,7 +312,7 @@ class AllTransactionsModal extends Component {
                         ) : (
                           transactions.map((transaction, index) => (
                             <TableRow key={transaction._id}>
-                              <TableCell className={`amount ${transaction.status === "waiting" || transaction.status === "pending" ? 'grey' : (transaction.amount > 0 ? 'green' : 'red')}`}>
+                              <TableCell className={`amount ${transaction.status === "waiting" || transaction.status === "pending" ||  transaction.status === "processing" ||  transaction.status === "in_process" ? 'grey' : (transaction.amount > 0 ? 'green' : 'red')}`}>
                                 {transaction.amount > 0 ? (
                                   <> + {convertToCurrency(transaction.amount)}</>
                                 ) : (

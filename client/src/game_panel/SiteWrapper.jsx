@@ -17,7 +17,7 @@ import Footer from './main_pages/Footer';
 import { Info } from '@material-ui/icons';
 import Countdown from 'react-countdown';
 import { withRouter } from 'react-router-dom';
-
+import axios from '../util/Api';
 import SettingsModal from './modal/SettingsModal.jsx';
 import BonusModal from './modal/BonusModal.jsx';
 import { connect } from 'react-redux';
@@ -28,7 +28,7 @@ import progress from './LottieAnimations/progress.json';
 import coins from './LottieAnimations/coins.json';
 import InlineSVG from 'react-inlinesvg';
 import busdSvg from './JoinGame/busd.svg';
-
+import { token } from '../config/index.js';
 import AllTransactionsModal from './modal/AllTransactionsModal.jsx';
 import {
   AccountBalanceWallet,
@@ -45,7 +45,9 @@ import history from '../redux/history';
 import socketIOClient from 'socket.io-client';
 import Moment from 'moment';
 import Avatar from '../components/Avatar';
-import Web3 from 'web3';
+import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
+import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+
 import ProfileModal from './modal/ProfileModal';
 import PlayerModal from './modal/PlayerModal';
 import HowToPlayModal from './modal/HowToPlayModal';
@@ -187,8 +189,6 @@ function updateFromNow(transactions) {
   return result;
 }
 
-
-
 class SiteWrapper extends Component {
   constructor(props) {
     super(props);
@@ -252,11 +252,13 @@ class SiteWrapper extends Component {
       showSettingsModal: false,
       showBonusModal: false,
       showDeposits: false,
-      web3: null,
       bonusCheck: false,
-      web3account: '',
       remainingLoans: this.props.remainingLoans,
-      web3balance: 0
+      // web3: null,
+      // walletAddress: '',
+      walletAddress: '',
+      tokenBalance: 0,
+      solanaBalance: 0
     };
     this.initSocket = this.initSocket.bind(this);
     this.gifs = [
@@ -362,6 +364,24 @@ class SiteWrapper extends Component {
 
     this.setState({ blurValue });
   };
+
+  async fetchTokenDetails() {
+    try {
+      const response = await axios.get(`https://api.dexscreener.com/latest/dex/tokens/${token}`);
+      const priceData = response.data.pairs?.[0];  // Extract token pair details
+
+      if (priceData) {
+        // Update the state with the conversion rate (price in USD)
+        this.setState({
+          conversionRate: priceData.priceUsd,  // This is the price of the token in USD
+        });
+      } else {
+        console.error("No pair data available for this token.");
+      }
+    } catch (error) {
+      console.error("Error fetching token details:", error);
+    }
+  }
 
   stopCoinsAnimationAfterDelay() {
     setTimeout(() => {
@@ -582,14 +602,26 @@ class SiteWrapper extends Component {
         if (!this.props.isMuted || !this.props.notificationSounds) {
           this.notificationSound.play();
         }
+
         const currentNotifications = this.state.notifications || [];
         currentNotifications.unshift(data);
         this.setState({
           notifications: currentNotifications
         });
 
-        if (this.props.isNotificationsAllowed && window.Notification) {
+        // Check if the new notification message contains "Deposit"
+        const message = data.message; // Assuming 'data' has a 'message' property
 
+        // First condition: check if the message contains the word "Deposit"
+        if (message.includes("Deposit")) {
+         
+          this.props.getUser(true, 5);
+          
+        } else {
+          console.log("No deposit in message.");
+        }
+
+        if (this.props.isNotificationsAllowed && window.Notification) {
           const options = {
             body: data,
             silent: false
@@ -607,6 +639,7 @@ class SiteWrapper extends Component {
           }
         }
       });
+
 
       socket.on('SET_UNREAD_MESSAGE_COUNT', data => {
         this.props.setUnreadMessageCount(data);
@@ -640,31 +673,46 @@ class SiteWrapper extends Component {
 
   }
 
-  loadWeb3 = async () => {
-    const { isDarkMode } = this.props;
+  loadSolanaWallet = async () => {
     try {
-      if (window.ethereum) {
-        const web3 = new Web3(window.ethereum);
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      if (window.solana && window.solana.isPhantom) {
+        await window.solana.connect();
+        const walletAddress = window.solana.publicKey.toString();
+        const response = await axios.get('/stripe/get_provider_url');
+        const providerUrl = response.data.providerUrl;
 
-        if (accounts.length > 0) {
+        const solanaConnection = new Connection(providerUrl, 'confirmed');
+        const solBalance = await solanaConnection.getBalance(new PublicKey(walletAddress));
+        const tokenAccounts = await solanaConnection.getParsedTokenAccountsByOwner(
+          new PublicKey(walletAddress),
+          { programId: TOKEN_PROGRAM_ID }
+        );
 
-          const ethBalance = await web3.eth.getBalance(accounts[0]);
-          const tokenAmount = web3.utils.fromWei(ethBalance, 'ether');
-          this.setState({
-            web3: web3,
-            web3account: accounts[0],
-            web3balance: tokenAmount
-          });
-        } else {
-          alertModal(isDarkMode, 'NO ACCOUNTS AVAILABLE. PLEASE MAKE SURE YOU\'RE LOGGED INTO METAMASK.');
+        tokenAccounts.value.forEach(tokenAccountInfo => {
+          const { mint, tokenAmount } = tokenAccountInfo.account.data.parsed.info;
+        });
+
+        const specificTokenAccount = tokenAccounts.value.find(
+          tokenAccount => tokenAccount.account.data.parsed.info.mint === token.toString()
+        );
+
+        let tokenBalance = 0;
+        if (specificTokenAccount) {
+          tokenBalance = specificTokenAccount.account.data.parsed.info.tokenAmount.uiAmount;
         }
-      } else {
-        alertModal(isDarkMode, 'NO WEB3 WALLET FOUND IN YOUR BROWSER.');
-      }
 
-    } catch (e) {
-      // alertModal(isDarkMode, 'NO CONNECTED WALLET');
+        // Set account as an object containing publicKey
+        this.setState({
+          walletAddress,
+          account: { publicKey: new PublicKey(walletAddress) }, // Updated line
+          solanaBalance: solBalance / LAMPORTS_PER_SOL,
+          tokenBalance: tokenBalance || 0
+        });
+      } else {
+        alert('No Solana wallet found. Please install Phantom.');
+      }
+    } catch (error) {
+      console.error('Failed to connect to Solana wallet or fetch token balance:', error);
     }
   };
 
@@ -681,8 +729,9 @@ class SiteWrapper extends Component {
         this.props.acCalculateRemainingLoans(),
         this.initializeAudio(),
         this.fetchData(),
-      ]);
+        this.fetchTokenDetails()
 
+      ]);
 
       this.setState({ websiteLoading: false, notifications: this.props.notifications, vaultBal: initialBalance });
       if (currentUrl && currentUrl.includes('create')) {
@@ -692,24 +741,8 @@ class SiteWrapper extends Component {
       setInterval(() => this.fetchData(), 2000);
       this.interval = setInterval(this.updateReminderTime, 3000);
 
-      // if (window.ethereum) {
-      //   window.ethereum.on('chainChanged', () => {
-      //     setTimeout(() => {
-      //       this.loadWeb3();
-      //     }, 3000);
-      //   });
-      //   window.ethereum.on('accountsChanged', () => {
-      //     setTimeout(() => {
-      //       this.loadWeb3();
-      //     }, 3000);
-      //   });
+      this.loadSolanaWallet();
 
-      //   setTimeout(() => {
-      //     this.loadWeb3();
-      //   }, 3000);
-      // } else {
-      //   alertModal(this.props.isDarkMode, 'NO WEB3 WALLET FOUND IN YOUR BROWSER.');
-      // }
       if (this.state.isPlayer) {
         this.closeTokenModal();
       }
@@ -788,17 +821,12 @@ class SiteWrapper extends Component {
     clearInterval(this.historyInterval);
     window.removeEventListener('mousemove', this.handleMouseMove);
 
-    if (window.ethereum) {
-      window.ethereum.removeListener('chainChanged', this.loadWeb3);
-      window.ethereum.removeListener('accountsChanged', this.loadWeb3);
-    }
-    this.isUnmounted = true;
   }
 
   handleLogout = clear_token => {
     this.setState({
-      web3account: null,
-      web3balance: null,
+      walletAddress: null,
+      solanaBalance: null,
       anchorEl: null,
       showGameLog: false
     });
@@ -1048,8 +1076,8 @@ class SiteWrapper extends Component {
 
   disconnectWeb3 = async () => {
     this.setState({
-      web3account: null,
-      web3balance: null
+      walletAddress: null,
+      solanaBalance: null
     });
   };
 
@@ -1082,10 +1110,12 @@ class SiteWrapper extends Component {
       isHovered,
       web3,
       oldBalance,
-      web3account,
+      tokenBalance,
+      account,
+      walletAddress, solanaBalance,
       transactions,
-      web3balance,
       blurValue,
+      conversionRate,
       userName,
       showInventoryModal,
       showVaultModal,
@@ -1198,8 +1228,8 @@ class SiteWrapper extends Component {
                 <Countdown
                   date={halloween}
                   renderer={({ days, hours, minutes, seconds, completed }) => (
-                    <div style={{  zIndex: '1', height: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <h4 style={{transform: 'rotate(-20deg) translateX(-200px)', position: 'absolute', top: '5px', color: '#f9f9f9', background:'#ff0000', padding: '5px 10px'}}>FAIR LAUNCH 🚀🚀🚀</h4>
+                    <div style={{ zIndex: '1', height: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <h4 style={{ transform: 'rotate(-20deg) translateX(-200px)', position: 'absolute', top: '5px', color: '#f9f9f9', background: '#ff0000', padding: '5px 10px' }}>FAIR LAUNCH 🚀🚀🚀</h4>
                       {!completed ? (
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                           <div style={{ fontSize: '2.2em', fontWeight: 'bold', marginBottom: '5px' }}>{days}</div>
@@ -1489,7 +1519,8 @@ class SiteWrapper extends Component {
                         onMouseLeave={this.handleDollarLeave}
                       >
                         {isHovered ? (
-                          `$${(balance * 0.006222).toFixed(numDecimals)}`
+                          // When hovered, show the balance in USD by multiplying with the conversionRate (token price in USD)
+                          `$${(balance * conversionRate).toFixed(numDecimals)}`
                         ) : (
                           <>
                             <InlineSVG
@@ -1510,7 +1541,6 @@ class SiteWrapper extends Component {
                               }}
                             />
                           </>
-
                         )}
                       </div>
 
@@ -1823,26 +1853,48 @@ class SiteWrapper extends Component {
                         ) : (
                           transactions.slice(0, 5).map((row, key) => (
                             <tr key={key}>
-                              {row.hash ? (
-                                <a href={`https://etherscan.io/tx/${row.hash}`} rel="noopener noreferrer">
-                                  <td className={`amount ${row.status === "waiting" || row.status === "pending" ? 'grey' : (row.amount > 0 ? 'green' : 'red')}`}>
-                                    {row.amount > 0 ? (
-                                      <>
-                                        {'+ '}
-                                        {convertToCurrency(row.amount, true)}
-                                      </>
-                                    ) : (
-                                      <>
-                                        {'- '}
-                                        {convertToCurrency(Math.abs(row.amount), true)}
-                                      </>
-                                    )}
-                                  </td>
-                                  <td className="fromNow">{row.from_now}</td>
-                                </a>
+                              {row.hash && row.hash.length !== 10 ? (
+                                <>
+                                  {row.status !== "processing" ? (
+                                    <a href={`https://explorer.solana.com/tx/${row.hash}?cluster=mainnet`} rel="noopener noreferrer" target="_blank">
+                                      <td className={`amount ${row.status === "waiting" || row.status === "pending" || row.status === "processing" ? 'grey' : (row.amount > 0 ? 'green' : 'red')}`}>
+                                        {row.amount > 0 ? (
+                                          <>
+                                            {'+ '}
+                                            {convertToCurrency(row.amount, true)}
+                                          </>
+                                        ) : (
+                                          <>
+                                            {'- '}
+                                            {convertToCurrency(Math.abs(row.amount), true)}
+                                          </>
+                                        )}
+                                      </td>
+                                      <td className="fromNow">{row.from_now}</td>
+                                    </a>
+                                  ) : (
+                                    <>
+                                      <td className={`amount grey`} >
+                                        {row.amount > 0 ? (
+                                          <>
+                                            {'+ '}
+                                            {convertToCurrency(row.amount, true)}
+                                          </>
+                                        ) : (
+                                          <>
+                                            {'- '}
+                                            {convertToCurrency(Math.abs(row.amount), true)}
+                                          </>
+                                        )}
+                                      </td>
+                                      <td className="fromNow">{row.from_now}</td>
+                                    </>
+                                  )}
+                                </>
+
                               ) : (
                                 <>
-                                  <td className={`amount ${row.status === "waiting" || row.status === "pending" ? 'grey' : (row.amount > 0 ? 'green' : 'red')}`}>
+                                  <td className={`amount ${row.status === "waiting" || row.status === "pending" || row.status === "processing" || row.status === "in_process" ? 'grey' : (row.amount > 0 ? 'green' : 'red')}`}>
                                     {row.amount > 0 ? (
                                       <>
                                         {'+ '}
@@ -1913,12 +1965,12 @@ class SiteWrapper extends Component {
                     Deposit
                   </Button>
                   <hr />
-                  {web3account ? (
+                  {walletAddress ? (
                     <>
                       <input
                         id="wallet-address"
                         type="text"
-                        value={web3account}
+                        value={walletAddress}
                         readOnly
                       />
                       <Button className="connect title" onClick={this.disconnectWeb3}>
@@ -1926,7 +1978,7 @@ class SiteWrapper extends Component {
                       </Button>
                     </>
                   ) : (
-                    <Button className="connect title" onClick={this.loadWeb3}>
+                    <Button className="connect title" onClick={this.loadSolanaWallet}>
                       CONNECT WALLET&nbsp;<FontAwesomeIcon icon={faExternalLinkAlt} />
                     </Button>
                   )}
@@ -2047,9 +2099,10 @@ class SiteWrapper extends Component {
               modalIsOpen={showDepositModal}
               closeModal={this.handleCloseDepositModal}
               web3={web3}
-              loadWeb3={this.loadWeb3}
-              balance={web3balance}
-              account={web3account}
+              loadSolanaWallet={this.loadSolanaWallet}
+              tokenBalance={tokenBalance}
+              balance={solanaBalance}
+              account={account}
             />
           )}
           {showInventoryModal && (
@@ -2063,6 +2116,7 @@ class SiteWrapper extends Component {
               vaultBal={this.state.vaultBal}
               modalIsOpen={showVaultModal}
               closeModal={this.handleCloseVaultModal}
+              conversionRate={conversionRate}
             />
           )}
           {showWithdrawModal && (
@@ -2071,7 +2125,7 @@ class SiteWrapper extends Component {
               closeModal={this.handleCloseWithdrawModal}
               balance={balance}
               web3={web3}
-              account={web3account}
+              account={walletAddress}
             />
           )}
           {showResetPasswordModal && (

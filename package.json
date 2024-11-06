@@ -20,6 +20,8 @@
   "license": "ISC",
   "dependencies": {
     "@fortawesome/free-brands-svg-icons": "^6.3.0",
+    "@solana/spl-token": "^0.4.9",
+    "@solana/web3.js": "^1.95.4",
     "@svgr/core": "^8.1.0",
     "@svgr/webpack": "^8.1.0",
     "@tensorflow/tfjs": "^4.17.0",
@@ -28,6 +30,8 @@
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.2",
     "browser-image-compression": "^2.0.2",
+    "bs58": "^6.0.0",
+    "buffer": "^6.0.3",
     "canvas": "^2.11.2",
     "chart.js": "^4.3.0",
     "chroma-js": "^2.4.2",
