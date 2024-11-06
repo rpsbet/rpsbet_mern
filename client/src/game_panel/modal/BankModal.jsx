@@ -12,7 +12,7 @@ import { faCoins, faAdjust } from '@fortawesome/free-solid-svg-icons';
 import { convertToCurrency } from '../../util/conversion';
 import ReactApexChart from 'react-apexcharts';
 import RpsPriceChart from '../../components/RpsPriceChart';
-const tokenMintAddress = process.env.token;
+import { token } from '../../config/index.js';
 
 Modal.setAppElement('#root');
 
@@ -91,7 +91,7 @@ class BankModal extends Component {
 
           <div className="modal-body edit-modal-body banking-modal-body">
             <div className="modal-content-wrapper">
-             <RpsPriceChart tokenMintAddress={tokenMintAddress}/>
+             <RpsPriceChart tokenMintAddress={token}/>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
 
                 <h1 className="modal-title title">PRIVATE LENDERS</h1>

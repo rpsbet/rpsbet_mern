@@ -40,7 +40,6 @@ class RpsPriceChart extends Component {
     try {
       const response = await axios.get(`https://api.dexscreener.com/latest/dex/tokens/${tokenMintAddress}`);
       const priceData = response.data.pairs?.[0];
-
       if (priceData) {
         this.setState({
           conversionRate: priceData.priceUsd,
