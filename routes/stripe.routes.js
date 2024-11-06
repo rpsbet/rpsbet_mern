@@ -10,7 +10,7 @@ const { newTransaction } = require('../socketController');
 const stripe = require('stripe')('sk_live_B8xrL7Gp2elKyanYJ0Zi5IqS00EKxOnhjP');
 const { ethers } = require('ethers');
 const { Connection, Keypair, Transaction, PublicKey, sendAndConfirmTransaction } = require('@solana/web3.js');
-const { getAssociatedTokenAddress, TOKEN_PROGRAM_ID, createTransferInstruction } = require('@solana/spl-token'); // Import from spl-token package
+const { getAssociatedTokenAddress, TOKEN_PROGRAM_ID, createTransferInstruction, createAssociatedTokenAccount } = require('@solana/spl-token'); // Import from spl-token package
 
 const bs58 = require('bs58');
 // const ganacheEndpoint = 'http://localhost:7544';
@@ -168,7 +168,7 @@ router.get('/get_currencies', async (req, res) => {
 router.get('/get_admin_wallet', async (req, res) => {
   try {
     const adminWallet = process.env.adminWallet;
-    
+
     if (!adminWallet) {
       return res.status(500).json({
         success: false,
@@ -189,7 +189,7 @@ router.get('/get_admin_wallet', async (req, res) => {
 router.get('/get_provider_url', async (req, res) => {
   try {
     const providerUrl = process.env.PROVIDER_URL;
-    
+
     if (!providerUrl) {
       return res.status(500).json({
         success: false,
@@ -659,12 +659,28 @@ router.post('/withdraw_request', auth, async (req, res) => {
       TOKEN_PROGRAM_ID
     );
 
-    const toTokenAccount = await getAssociatedTokenAddress(
+    // Ensure recipient's token account exists or create one
+    let toTokenAccount = await getAssociatedTokenAddress(
       new PublicKey(tokenMintAddress),
       new PublicKey(toAddress),
       false,
       TOKEN_PROGRAM_ID
     );
+
+    // Check if the recipient's token account exists
+    const toAccountInfo = await connection.getAccountInfo(toTokenAccount);
+    if (!toAccountInfo) {
+      // Create recipient's associated token account if it doesn't exist
+      console.log('Recipient token account does not exist, creating it now...');
+      await createAssociatedTokenAccount(
+        connection,
+        walletKeyPair,
+        new PublicKey(tokenMintAddress),
+        new PublicKey(toAddress),
+        TOKEN_PROGRAM_ID
+      );
+    }
+
     // Create a transaction and add the transfer instruction
     const transaction = new Transaction().add(
       createTransferInstruction(
@@ -695,12 +711,11 @@ router.post('/withdraw_request', auth, async (req, res) => {
         amount: -req.body.amount,
         description: 'withdraw',
         status: 'completed',
-        hash: signature 
+        hash: signature
       });
       await newTransaction.save();
 
-       // Create and save
-       const newGameLog = new GameLog({
+      const newGameLog = new GameLog({
         room: null,
         creator: req.user._id,
         joined_user: null,
@@ -754,7 +769,7 @@ async function estimateAmount(web2Amount, currencyTo) {
     // Step 1: Get the token price from Dexscreener
     const priceResponse = await axios.get(`https://api.dexscreener.com/latest/dex/tokens/${tokenMintAddress}`);
     const tokenPrice = parseFloat(priceResponse.data.pairs[0]?.priceUsd);
-    
+
     if (tokenPrice == null || isNaN(tokenPrice)) {
       console.error("Token price not found or invalid.");
       throw new Error('Token price not found or invalid.');
