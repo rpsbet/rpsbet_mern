@@ -10,6 +10,9 @@ import {
 } from '../../redux/Logic/logic.actions';
 import { Box, Button, Typography, IconButton, ButtonGroup, TextField, Table, TableBody, TableCell, TableRow, Tooltip } from '@material-ui/core';
 import { Warning, Add, Remove, Visibility } from '@material-ui/icons';
+import TrendingUpOutlined from '@material-ui/icons/TrendingUpOutlined';
+import TrendingDownOutlined from '@material-ui/icons/TrendingDownOutlined';
+
 // import ReactApexChart from 'react-apexcharts';
 import { Help } from '@material-ui/icons';
 import Moment from 'moment';
@@ -17,7 +20,7 @@ import { faHeart, faHeartBroken, faStopwatch } from '@fortawesome/free-solid-svg
 import animationData from '../LottieAnimations/live';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUsers, faAdjust } from '@fortawesome/free-solid-svg-icons';
+import { faAdjust } from '@fortawesome/free-solid-svg-icons';
 import {
   addNewTransaction,
   coHost
@@ -28,7 +31,7 @@ import busdSvg from '../JoinGame/busd.svg';
 // import { renderLottieAvatarAnimation } from '../../util/LottieAvatarAnimations';
 
 import Avatar from '../../components/Avatar';
-import AddBoxOutlined from '@material-ui/icons/AddBoxOutlined';
+import ShowChartOutlined from '@material-ui/icons/ShowChartOutlined';
 // import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 // import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import Modal from 'react-modal';
@@ -262,7 +265,7 @@ class OpenGamesTable extends Component {
       this.setState({
         roomList: this.props.roomList
       });
-    
+
       // Call handleRefresh if there was a significant change or roomList length change
       if (significantChange) {
         this.props.handleRefresh();
@@ -292,21 +295,21 @@ class OpenGamesTable extends Component {
   handleScroll = async () => {
     const { loading, selectedGameType, rooms_count, roomList } = this.props;
     const { fetchedRoomIds } = this.state;
-    
+
     // Get the table element
     const tableElement = document.querySelector('.table.main-game-table');
-    
+
     if (tableElement) {
       const { bottom } = tableElement.getBoundingClientRect();
       const viewportHeight = window.innerHeight;
       const offset = 100; // Set a small offset for better UX
-  
+
       // Check if the table is near the bottom of the viewport
       const isTableNearBottom = bottom <= viewportHeight + offset;
-  
+
       // Check if the document is already at the bottom
       const isAtBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight;
-  
+
       // Only fetch more rooms if the table is near the bottom or at the bottom
       if (!loading && (isTableNearBottom || isAtBottom)) {
         await this.props.fetchMoreRooms({
@@ -320,7 +323,7 @@ class OpenGamesTable extends Component {
 
   debounce = (func, delay) => {
     let debounceTimer;
-    return function(...args) {
+    return function (...args) {
       const context = this;
       clearTimeout(debounceTimer);
       debounceTimer = setTimeout(() => func.apply(context, args), delay);
@@ -885,16 +888,15 @@ class OpenGamesTable extends Component {
                         className="table-cell cell-action"
                         onClick={() => this.handleView(row)}
                       >
-                        {row.creator_id !== this.props.user._id && (
 
-                          <a
-                            className="ml-1"
-                            onClick={() => this.handleCoHost(row)}
-                            style={{ color: "rgb(0 255 58)", padding: "2.5px ", display: "flex", justifyContent: "center", alignItems: "center", background: "linear-gradient(45deg, #28a74544, #33e74533)", border: "2px solid rgb(0 255 58)", cursor: "pointer", borderRadius: "0.3em", display: "inline-flex", verticalAlign: "middle" }}
-                          >
-                            <AddBoxOutlined style={{ width: "25px" }} /><img style={{ width: "15px" }} src={busdSvg} />
-                          </a>
-                        )}
+                        <a
+                          className="ml-1"
+                          onClick={() => this.handleCoHost(row)}
+                          style={{ color: "rgb(0 255 58)", padding: "2.5px ", display: "flex", justifyContent: "center", alignItems: "center", background: "linear-gradient(45deg, #28a74544, #33e74533)", border: "2px solid rgb(0 255 58)", cursor: "pointer", borderRadius: "0.3em", display: "inline-flex", verticalAlign: "middle" }}
+                        >
+                          <span style={{ marginLeft: "5px", fontSize: "15px" }}>Trade&nbsp;</span>
+                          <ShowChartOutlined style={{ width: "25px" }} />
+                        </a>
                         <Button
                           className="btn_join"
                           onClick={event => {
@@ -1142,8 +1144,8 @@ class OpenGamesTable extends Component {
           <div className={`${this.props.isDarkMode ? 'dark_mode' : ''} big-modal`}>
             <div className="modal-header">
               <h2 className="modal-title title">
-                <FontAwesomeIcon icon={faUsers} className="mr-2" />
-                CO-HOST
+                <ShowChartOutlined className="mr-2" />
+                Trade
               </h2>
               <Button className="btn-close title" onClick={this.handleCloseCoHostModal}>
                 ×
@@ -1261,10 +1263,16 @@ class OpenGamesTable extends Component {
                           <TableCell style={{ color: 'red' }}>
                             {this.state.selectedRow.hosts && this.state.selectedRow.hosts.some(host => host.host === this.props.user._id) ? (
                               <>
-                                {(`
-                                ${(((((this.state.selectedRow.hosts.find(host => host.host === this.props.user._id).share) / 100) *
-                                    parseFloat(this.state.selectedRow.user_bet)) + parseFloat(this.state.coHostAmount || 0)) / (parseFloat(this.state.selectedRow.user_bet) + parseFloat(this.state.coHostAmount || 0)) * 100).toFixed(2)}%
-                                `)}
+                                {(() => {
+                                  const host = this.state.selectedRow.hosts.find(host => host.host === this.props.user._id);
+                                  const currentShare = host ? host.share : 0;
+                                  const currentBankroll = parseFloat(this.state.selectedRow.user_bet);
+                                  const newAmount = parseFloat(this.state.coHostAmount || 0);
+
+                                  // New share calculation based on bonding curve (update formula as per backend)
+                                  const newShare = ((((currentShare / 100) * currentBankroll) + newAmount) / (currentBankroll + newAmount)) * 100;
+                                  return `${newShare.toFixed(2)}%`;
+                                })()}
                               </>
                             ) : (
                               <>
@@ -1272,7 +1280,6 @@ class OpenGamesTable extends Component {
                               </>
                             )}
                           </TableCell>
-
                         ) : (
                           null
                         )}
@@ -1284,13 +1291,16 @@ class OpenGamesTable extends Component {
             </div>
             <div className="modal-footer">
               <Button className="btn-submit" onClick={this.handleSendCoHost}>
-                CONTRIBUTE
+                BUY<TrendingUpOutlined style={{ color: '#fff', marginLeft: '8px' }} /> {/* Green for "up" */}
+
               </Button>
               <Button
                 className="btn-back"
+                style={{ border: 'unset', background: 'linear-gradient(357deg, #00ff17, #28a745)', boxShadow: '0 -0.5px 0px #359b1f, 0 -3px #146e1a inset, 0 2px #28a745 inset', }}
                 onClick={this.handleCloseCoHostModal}
               >
-                Cancel
+                SELL<TrendingDownOutlined style={{ color: '#fff', marginLeft: '4px' }} /> {/* Red for "down" */}
+
               </Button>
             </div>
           </div>

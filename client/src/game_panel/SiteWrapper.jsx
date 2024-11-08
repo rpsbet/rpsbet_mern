@@ -1217,7 +1217,7 @@ class SiteWrapper extends Component {
                   <iframe
                     width="400"
                     height="215"
-                    src="https://www.youtube.com/embed/IFdNDPxP8_A"
+                    src="https://www.youtube.com/embed/4jb0Oq8zrXc"
                     title="YouTube video player"
                     frameborder="0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -1229,14 +1229,15 @@ class SiteWrapper extends Component {
                   date={halloween}
                   renderer={({ days, hours, minutes, seconds, completed }) => (
                     <div style={{ zIndex: '1', height: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <h4 style={{ transform: 'rotate(-20deg) translateX(-200px)', position: 'absolute', top: '5px', color: '#f9f9f9', background: '#ff0000', padding: '5px 10px' }}>FAIR LAUNCH 🚀🚀🚀</h4>
+                      <h4 style={{ transform: 'rotate(-20deg) translateX(-200px)', position: 'absolute', top: '5px', color: '#f9f9f9', background: '#ff0000', padding: '5px 10px' }}>$RPS 🚀🚀🚀</h4>
                       {!completed ? (
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                           <div style={{ fontSize: '2.2em', fontWeight: 'bold', marginBottom: '5px' }}>{days}</div>
                           <div style={{ fontSize: '0.5em', color: '#666' }}>days</div>
                         </div>
                       ) : (
-                        <div style={{ fontSize: '2em', color: '#e91e63', fontWeight: 'bold' }}>Countdown completed!</div>
+                        null
+                        // <div style={{ fontSize: '2em', color: '#e91e63', fontWeight: 'bold' }}>Countdown completed!</div>
                       )}
 
                       {!completed ? (

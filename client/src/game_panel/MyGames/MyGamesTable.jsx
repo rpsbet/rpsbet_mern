@@ -721,7 +721,7 @@ class MyGamesTable extends Component {
                                     onClick={() => this.unstake(row.winnings, row._id)}
 
                                   >
-                                    Unstake
+                                    SELL
                                   </Button>
                                 ) : (
                                   <Button

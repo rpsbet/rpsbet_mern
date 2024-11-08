@@ -1158,8 +1158,8 @@ router.get('/topWithdrawals', async (req, res) => {
       });
 
     const filteredWithdrawals = topWds
-      .filter(withdrawal => 
-        withdrawal.user_id && 
+      .filter(withdrawal =>
+        withdrawal.user_id &&
         !['OFFICIALRPSGAME', 'pimpedpistols', '69'].includes(withdrawal.user_id.username)
       );
 
@@ -2193,7 +2193,7 @@ router.post('/end_game', auth, async (req, res) => {
         message: 'Please turn off QBot first before proceeding.',
       });
     }
-  
+
     const accessAllowed = await check_access_time(userId);
     if (!accessAllowed) {
       return res.json({
@@ -2366,6 +2366,7 @@ router.post('/unstake', auth, async (req, res) => {
     const userId = req.user._id;
     const roomId = req.body.room_id;
 
+    // Check if action is allowed based on access time
     const accessAllowed = await check_access_time(userId);
     if (!accessAllowed) {
       return res.json({
@@ -2379,8 +2380,16 @@ router.post('/unstake', auth, async (req, res) => {
       .populate({ path: 'creator', model: User })
       .populate({ path: 'game_type', model: GameType });
 
+    if (!roomInfo) {
+      return res.json({
+        success: false,
+        message: 'Room not found'
+      });
+    }
+
     const gameType = await GameType.findOne({ _id: roomInfo.game_type });
 
+    // Check if the game has already ended
     if (roomInfo.status === 'finished') {
       return res.json({
         success: false,
@@ -2391,7 +2400,6 @@ router.post('/unstake', auth, async (req, res) => {
 
     // Find the host's share index
     const hostIndex = roomInfo.hosts.findIndex(host => host.host.equals(userId));
-
     if (hostIndex === -1) {
       return res.json({
         success: false,
@@ -2399,11 +2407,11 @@ router.post('/unstake', auth, async (req, res) => {
       });
     }
 
-    const oldAmount = roomInfo.hosts[hostIndex].share / 100 * roomInfo.user_bet;
-    // Deduct the unstake amount from the host's share
-    const unstakeAmount = oldAmount;
+    // Calculate the unstake amount based on the initial stake amount
+    const unstakeAmount = roomInfo.hosts[hostIndex].initial_stake;
     req.user.balance += unstakeAmount;
 
+    // Create a transaction log for the unstake
     const newTransaction = new Transaction({
       user: userId,
       amount: unstakeAmount,
@@ -2411,6 +2419,7 @@ router.post('/unstake', auth, async (req, res) => {
       room: roomId
     });
 
+    // Create a game log entry for tracking
     const newGameLog = new GameLog({
       room: roomInfo._id,
       creator: userId,
@@ -2422,8 +2431,8 @@ router.post('/unstake', auth, async (req, res) => {
       commission: 0,
       game_result: 666,
       winnings: 0,
-      endgame_amount: roomInfo.hosts[hostIndex].initial_stake,
-      host_pr: oldAmount,
+      endgame_amount: unstakeAmount,
+      host_pr: unstakeAmount,
       user_bet: 0,
       status: 'open',
       hosts: []
@@ -2439,40 +2448,44 @@ router.post('/unstake', auth, async (req, res) => {
       });
     }
 
-    // Update room's user_bet and remove the host entry from the array
-    roomInfo.user_bet = parseFloat(roomInfo.user_bet) - unstakeAmount;
+    // Update room data after unstake
+    roomInfo.user_bet -= unstakeAmount;
     roomInfo.host_pr -= unstakeAmount;
     roomInfo.endgame_amount -= unstakeAmount;
     roomInfo.hosts.splice(hostIndex, 1);
 
-    // Recalculate shares for other hosts
-    const totalShares = roomInfo.hosts.reduce((total, host) => total + host.share, 0);
-    roomInfo.hosts.forEach(host => {
-      host.share = (host.share / totalShares) * 100;
+    // Recalculate remaining hosts' shares if there are still other hosts
+    if (roomInfo.hosts.length > 0) {
+      const remainingBankroll = roomInfo.hosts.reduce((total, host) => total + host.initial_stake, 0);
 
-      const message = `${req.user.username} is no longer a Co-Host of ${gameType.short_name +
-        '-' +
-        roomInfo.room_number}, your new Share is ${(host.share).toFixed(2)}%`;
+      roomInfo.hosts.forEach(host => {
+        host.share = (host.initial_stake / remainingBankroll) * 100;
+      });
 
-      const notificationData = {
-        _id: userId,
-        message: message,
-        username: req.user.username,
-        avatar: req.user.avatar,
-        accessory: req.user.accessory,
-        room: roomInfo._id,
-        rank: req.user.totalWagered,
-        created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
-        created_at_str: moment(new Date()).format('LLL'),
-        updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
-        is_read: false
-      };
+      // Send notifications to remaining hosts
+      roomInfo.hosts.forEach(host => {
+        const message = `${req.user.username} sold in ${gameType.short_name}-${roomInfo.room_number}, your new Share is ${(host.share).toFixed(2)}%`;
 
-      socket.sendNotification(host.host, notificationData);
+        const notificationData = {
+          _id: userId,
+          message: message,
+          username: req.user.username,
+          avatar: req.user.avatar,
+          accessory: req.user.accessory,
+          room: roomInfo._id,
+          rank: req.user.totalWagered,
+          created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+          created_at_str: moment(new Date()).format('LLL'),
+          updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+          is_read: false
+        };
 
-    });
+        socket.sendNotification(host.host, notificationData);
+      });
+    }
 
     try {
+      // Save updates to room and user balance, and log the transaction
       await Promise.all([
         saveDocumentWithRetry(roomInfo),
         saveDocumentWithRetry(req.user),
@@ -2482,7 +2495,7 @@ router.post('/unstake', auth, async (req, res) => {
       console.error("Error saving documents:", error);
     }
 
-    // Retrieve the user's updated room list
+    // Retrieve the user's updated room list for the response
     const myRooms = await getMyRooms(userId);
 
     res.json({
@@ -2492,6 +2505,7 @@ router.post('/unstake', auth, async (req, res) => {
       newTransaction
     });
 
+    // Broadcast the updated room list
     const rooms = await getRoomList(7, 'All');
     req.io.sockets.emit('UPDATED_ROOM_LIST', {
       total: rooms.count,
@@ -2499,9 +2513,10 @@ router.post('/unstake', auth, async (req, res) => {
       pageSize: rooms.pageSize
     });
   } catch (err) {
+    console.error('ERROR in unstake:', err);
     res.json({
       success: false,
-      message: err.toString()
+      message: 'Failed to process unstake request'
     });
   }
 });
@@ -2623,13 +2638,13 @@ router.patch('/qbotStatus', auth, async (req, res) => {
 router.post('/qbotStatus', auth, async (req, res) => {
   try {
     const { userId } = req.body;
-      if (!userId) {
+    if (!userId) {
       return res.status(400).json({
         success: false,
         message: 'User ID is required'
       });
     }
-    
+
     const isActive = await QBot.findOne({ user: userId, active: true });
     res.json({
       success: true,
@@ -2944,6 +2959,7 @@ router.post('/coHost', auth, async (req, res) => {
     const rowId = req.body.rowId;
     const room = await Room.findOne({ _id: rowId });
     const gameType = await GameType.findOne({ _id: room.game_type });
+
     if (!room) {
       return res.json({
         success: false,
@@ -2960,14 +2976,15 @@ router.post('/coHost', auth, async (req, res) => {
       });
     }
 
-    const tenSecondsAgo = new Date(Date.now() - 3000);
-    if (room.updated_at > tenSecondsAgo) {
-      return res.json({
-        success: false,
-        message: 'ROOM TOO BUSY, TRY AGAIN LATER'
-      });
-    }
+    const threeSecondsAgo = new Date(Date.now() - 3000);
+    console.log("room.updated_at < threeSecondsAgo ", room.updated_at < threeSecondsAgo);
 
+    // if (room.updated_at > threeSecondsAgo) {
+    //   return res.json({
+    //     success: false,
+    //     message: 'ROOM TOO BUSY, TRY AGAIN LATER'
+    //   });
+    // }
     if (room.status === 'finished') {
       return res.json({
         success: false,
@@ -3024,7 +3041,6 @@ router.post('/coHost', auth, async (req, res) => {
       });
     }
 
-
     const description = `Co-hosted room ${gameType.short_name}-${room.room_number}`;
 
     const existingHostIndex = room.hosts.findIndex(host => host.host.equals(req.user._id));
@@ -3034,10 +3050,21 @@ router.post('/coHost', auth, async (req, res) => {
     room.host_pr += coHostAmount;
     room.endgame_amount += coHostAmount;
     req.user.balance -= coHostAmount;
+
     let newShare;
-    // Check if the user is not already a host
+
+    // Bonding curve: Price per share increases as more money is added to the bankroll.
+    // Use bonding curve factor only if there are at least 3 hosts
+
+    // Determine the share price based on total bankroll and host count
+    const totalBankroll = parseFloat(room.user_bet);
+    const hostCount = room.hosts.length + 1; // Adding 1 to include the new host
+    const baseSharePrice = totalBankroll / hostCount;
+
+    // Calculate shares directly without bonding curve for consistency
     if (existingHostIndex === -1) {
-      newShare = coHostAmount / parseFloat(room.user_bet) * 100;
+      // New host
+      newShare = (coHostAmount / baseSharePrice) * 100;
       const newHost = {
         host: req.user._id,
         share: newShare,
@@ -3050,19 +3077,28 @@ router.post('/coHost', auth, async (req, res) => {
       };
       room.hosts.push(newHost);
     } else {
-      // Update existing host's share
-      newShare = ((((room.hosts[existingHostIndex].share / 100) * oldValuation) + coHostAmount) / parseFloat(room.user_bet) * 100);
-      room.hosts[existingHostIndex].share = newShare;
-      room.hosts[existingHostIndex].initial_stake += coHostAmount;
-      room.hosts[existingHostIndex].stake = coHostAmount;
+      // Update existing host
+      const host = room.hosts[existingHostIndex];
+      host.share = (((host.share / 100) * oldValuation + coHostAmount) / totalBankroll) * 100;
+      host.initial_stake += coHostAmount;
+      host.stake = coHostAmount;
     }
+    // Step 1: Recalculate the total shares of all hosts
+    let totalShares = 0;
+    room.hosts.forEach(host => {
+      totalShares += host.share;
+    });
 
-    // Recalculate shares for all hosts
+    // Step 2: Normalize the shares so they sum to 100%
+    const normalizationFactor = 100 / totalShares;
+
+    room.hosts.forEach(host => {
+      host.share *= normalizationFactor; // Normalize the share to ensure they sum to 100%
+    });
+
+    // Step 3: Send notifications and save data
     room.hosts.forEach(host => {
       if (!host.host.equals(req.user._id)) {
-        // console.log("host.share before update:", host.share);
-        host.share = ((host.share / 100) * oldValuation) / parseFloat(room.user_bet) * 100;
-
         const message = `${req.user.username} now shares ${(newShare).toFixed(2)}% of ${gameType.short_name +
           '-' +
           room.room_number}, your new Share is ${(host.share).toFixed(2)}%`;
@@ -3074,6 +3110,7 @@ router.post('/coHost', auth, async (req, res) => {
           message: message,
           is_read: false
         });
+
         try {
           saveDocumentWithRetry(temp);
         } catch (error) {
@@ -3095,10 +3132,8 @@ router.post('/coHost', auth, async (req, res) => {
         };
 
         socket.sendNotification(host.host, notificationData);
-
       }
     });
-
 
     const newTransaction = new Transaction({
       created_at: now,
@@ -3118,8 +3153,6 @@ router.post('/coHost', auth, async (req, res) => {
       console.error("Error saving documents:", error);
     }
 
-
-
     return res.json({
       success: true,
       balance: req.user.balance,
@@ -3134,19 +3167,6 @@ router.post('/coHost', auth, async (req, res) => {
     });
   }
 });
-
-
-async function saveDoc(document, retries = 0) {
-  try {
-    await document.save();
-  } catch (err) {
-    if (retries < MAX_RETRIES) {
-      return saveDocumentWithRetry(document, retries + 1);
-    } else {
-      throw err;
-    }
-  }
-}
 
 router.post('/topUp', auth, async (req, res) => {
   try {
@@ -3176,83 +3196,49 @@ router.post('/topUp', auth, async (req, res) => {
         message: 'THIS BATTLE HAS ENDED ALREADY'
       });
     }
-    
-    const tenSecondsAgo = new Date(Date.now() - 3000);
-    if (room.updated_at > tenSecondsAgo) {
-      return res.json({
-        success: false,
-        message: 'ROOM TOO BUSY, TRY AGAIN LATER'
-      });
-    }
 
-    const now = new Date(); // Use current date for now
     const userBalance = req.user.balance;
-    const topUpAmount = parseFloat(req.body.amount); // Parse amount as a float
+    const topUpAmount = parseFloat(req.body.amount);
+
     if (isNaN(topUpAmount) || topUpAmount <= 0) {
       return res.json({
         success: false,
-        message: 'IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!'
+        message: 'Please enter a valid amount'
       });
     }
     if (userBalance < topUpAmount) {
       return res.json({
         success: false,
-        message: 'NOT ENUFF FUNDS AT THIS MEOWMENT'
+        message: 'Insufficient funds'
       });
     }
 
     const description = `Topped Up room ${gameType.short_name}-${room.room_number}`;
-
-    const newTransactionJ = new Transaction({
-      created_at: now,
+    const newTransaction = new Transaction({
+      created_at: new Date(),
       user: req.user._id,
       amount: -topUpAmount,
       description
     });
 
-    // Create and save a new game log
-    const newGameLog = new GameLog({
-      room: room._id,
-      creator: req.user._id,
-      joined_user: null,
-      game_type: room.game_type,
-      bet_amount: topUpAmount,
-      selected_rps: '',
-      ai_mode: '',
-      commission: 0,
-      game_result: 3000,
-      winnings: 0,
-      endgame_amount: 0,
-      host_pr: 0,
-      user_bet: 0,
-      status: 'open',
-      hosts: []
-    });
-
-    try {
-      await newGameLog.save();
-    } catch (error) {
-      console.error('Error saving game log:', error);
-      return res.status(500).json({
-        success: false,
-        message: 'Failed to save game log'
-      });
-    }
-
-    // Before updating the total bet, calculate old values for all hosts
     const oldValuation = parseFloat(room.user_bet);
     const newTotalBet = oldValuation + topUpAmount;
-
-    // Update the user's balance
     req.user.balance -= topUpAmount;
 
-    // Check if the user is already a host
+    // Add the user as a host if not already present, or update their stake
     const existingHostIndex = room.hosts.findIndex(host => host.host.equals(req.user._id));
+    let newShare;
+
+    // Apply bonding curve only if the bankroll exceeds a certain threshold
+    const bondingCurveThreshold = 1000; // Example threshold
+    const bondingCurveFactor = newTotalBet > bondingCurveThreshold ? 1.2 : 1.0;
+    const baseSharePrice = newTotalBet / (room.hosts.length + 1);
+    const newSharePrice = baseSharePrice * bondingCurveFactor;
 
     if (existingHostIndex === -1) {
-      // If the user is not an existing host, add them as a new host
-      const newShare = (topUpAmount / newTotalBet) * 100;
-      const newHost = {
+      // New host joining, calculate their share
+      newShare = (topUpAmount / newSharePrice) * 100;
+      room.hosts.push({
         host: req.user._id,
         stake: topUpAmount,
         initial_stake: topUpAmount,
@@ -3261,50 +3247,46 @@ router.post('/topUp', auth, async (req, res) => {
         username: req.user.username,
         avatar: req.user.avatar,
         rank: req.user.totalWagered
-      };
-      room.hosts.push(newHost);
+      });
     } else {
-      // If the user is already a host, update their stake
+      // Update existing host stake and recalculate their share minimally
       const host = room.hosts[existingHostIndex];
       host.stake += topUpAmount;
-      host.initial_stake += topUpAmount;
-      // Recalculate the share for the existing host
-      host.share = ((host.stake / (room.bet_amount + topUpAmount)) * 100);
+      host.share = ((host.stake / newTotalBet) * 100);
     }
 
-    // Recalculate the shares for all other hosts based on the new total bet
-    room.hosts.forEach(host => {
-      if (!host.host.equals(req.user._id)) {
-        host.share = ((host.stake / newTotalBet) * 100);
-      }
-    });
+    // Minimize normalization adjustments
+    let totalShares = room.hosts.reduce((sum, host) => sum + host.share, 0);
 
-    // Update room properties
+    if (totalShares !== 100) {
+      const normalizationFactor = 100 / totalShares;
+      room.hosts.forEach(host => {
+        host.share *= normalizationFactor;
+      });
+    }
+
     room.bet_amount += topUpAmount;
     room.host_pr += topUpAmount;
     room.endgame_amount += topUpAmount;
     room.user_bet = newTotalBet;
 
-    // Save changes to the room, user, and transaction
-    const savePromises = [
-      saveDoc(room),
-      saveDoc(req.user),
-      saveDoc(newTransactionJ)
-    ];
-
-    await Promise.all(savePromises);
+    await Promise.all([
+      saveDocumentWithRetry(room),
+      saveDocumentWithRetry(req.user),
+      saveDocumentWithRetry(newTransaction)
+    ]);
 
     return res.json({
       success: true,
       balance: req.user.balance,
-      newTransaction: newTransactionJ,
+      newTransaction,
       message: 'Top Up was successful. Bankroll increased!'
     });
-  } catch (e) {
-    console.log('ERROR in top_up_request', e);
+  } catch (error) {
+    console.error('Error in top_up_request', error);
     return res.json({
       success: false,
-      message: 'Failed to initiate top-up'
+      message: 'Failed to process top-up'
     });
   }
 });
