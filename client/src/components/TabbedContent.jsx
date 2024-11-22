@@ -12,7 +12,8 @@ import DescriptionIcon from '@material-ui/icons/Description';
 import HistoryIcon from '@material-ui/icons/History';
 import CommentIcon from '@material-ui/icons/Comment';
 import BarChartIcon from '@material-ui/icons/BarChart';
-
+import SwapHorizIcon from '@material-ui/icons/SwapHoriz';
+import CoHostModal from '../game_panel/modal/CoHostModal';
 
 function updateFromNow(history) {
   if (!history) {
@@ -117,6 +118,7 @@ class TabbedContent extends Component {
     this.setState({ selectedTab: newValue });
   };
 
+
   render() {
     const { selectedTab } = this.state;
     const { roomInfo, isLowGraphics, classes, isDarkMode } = this.props;
@@ -130,8 +132,13 @@ class TabbedContent extends Component {
         >
           <Tab
             classes={{ selected: classes.activeTab }}
-            icon={<DescriptionIcon />}
-            label="Description"
+            icon={<SwapHorizIcon />} // Updated to SwapHorizIcon
+            label="Trade" // Updated label
+          />
+          <Tab
+            classes={{ selected: classes.activeTab }}
+            icon={<HistoryIcon />}
+            label="History"
           />
           <Tab
             classes={{ selected: classes.activeTab }}
@@ -143,37 +150,79 @@ class TabbedContent extends Component {
             icon={<BarChartIcon />}
             label="Leaderboards"
           />
-          <Tab
-            classes={{ selected: classes.activeTab }}
-            icon={<HistoryIcon />}
-            label="History"
-          />
         </Tabs>
         <div>
           {selectedTab === 0 && (
             <div className="room-leaderboards-panel">
-              <h2 className="room-history-title">Description</h2>
+
+              <h2 className="room-history-title">Chart & Trading</h2>
               <div className="description-container" style={{ background: isDarkMode ? 'linear-gradient(45deg,  rgb(119 0 255), rgba(40, 40, 40, 0.15))' : 'linear-gradient(45deg, #d81719, #f3f3f326)' }}>
-                <p className="description-text" style={{ color: this.props.isDarkMode ? '#f9f9f9' : '#010101' }}>
-                  {this.props.roomInfo.description}
-                </p>
+                <Typography
+                  variant="body2"
+                  className="description-text"
+                  style={{
+                    color: this.props.isDarkMode ? "#f9f9f9" : "#010101",
+                  }}
+                >
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "8px" }}>
+                    {this.props.roomInfo.description ? (
+                      this.props.roomInfo.description.split(",").map((tag, index) => (
+                        <a
+                          key={index}
+                          href={`https://twitter.com/search?q=%23${tag.trim()}`} // Twitter search URL with the tag
+                          target="_blank" // Open in a new tab
+                          rel="noopener noreferrer" // Security for opening in a new tab
+                          style={{
+                            backgroundColor: this.props.isDarkMode ? "#333" : "#e0e0e0",
+                            color: this.props.isDarkMode ? "#f9f9f9" : "#010101",
+                            padding: "6px 12px",
+                            borderRadius: "8px",
+                            fontSize: "0.875rem",
+                            fontWeight: 500,
+                            display: "inline-block",
+                            textDecoration: "none", // Remove underline
+                          }}
+                        >
+                          #{tag.trim()} {/* Add the # symbol before each tag */}
+                        </a>
+                      ))
+                    ) : (
+                      <span>No tags available</span> // Optional fallback message
+                    )}
+                  </div>
+                </Typography>
               </div>
-            </div>
-          )}
-
-          {selectedTab === 3 && (
-            <RoomHistory roomId={roomInfo._id} getRoomInfo={this.props.getRoomInfo} roomInfo={roomInfo} isLowGraphics={isLowGraphics} />
-          )}
-          {selectedTab === 1 && (
-            <div className="room-leaderboards-panel">
-              <h2 className="room-history-title">Comments</h2>
-
-              <Comments
-                roomId={roomInfo._id}
+              <CoHostModal
+                isDarkMode={this.props.isDarkMode}
+                coHostAmount={0}
+                selectedRow={this.props.roomInfo}
+                balance={this.props.balance}
+                user={this.props.user}
+                togglePopup={this.togglePopup}
+                handleClose={this.handleCloseCoHostModal}
+                handleSendCoHost={this.props.handleSendCoHost}
+                handleCoHostAmountChange={this.handleCoHostAmountChange}
+                has_joined={this.props.has_joined}
               />
             </div>
           )}
+
+          {selectedTab === 1 && (
+            <RoomHistory roomId={roomInfo._id} getRoomInfo={this.props.getRoomInfo} roomInfo={roomInfo} isLowGraphics={isLowGraphics} />
+          )}
           {selectedTab === 2 && (
+            <div className='room-leaderboards-panel '>
+              <h2 className="room-history-title">Comments</h2>
+              <div className="glass-container" style={{ padding: "30px", marginTop: "20px" }}>
+
+                <Comments
+                  roomId={roomInfo._id}
+                />
+              </div>
+            </div>
+
+          )}
+          {selectedTab === 3 && (
             <div className="room-leaderboards-panel">
               <h2 className="room-history-title">Leaderboards</h2>
 

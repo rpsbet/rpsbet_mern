@@ -547,6 +547,69 @@ router.post('/get-spending-habit', async (req, res) => {
   }
 });
 
+router.get('/get-receipt-statistics', async (req, res) => {
+  try {
+    const receipts = await Receipt.find();
+
+    // Group receipts by user_id and calculate the withdraws and deposits
+    const userTransactions = {};
+
+    receipts.forEach((receipt) => {
+      const userId = receipt.user_id;
+      if (!userTransactions[userId]) {
+        userTransactions[userId] = { withdraws: 0, deposits: 0 };
+      }
+
+      const amount = Math.abs(receipt.amount); // Make the amount positive before processing
+
+      if (receipt.payment_type.includes('Withdraw')) {
+        userTransactions[userId].withdraws += amount;
+      } else if (receipt.payment_type.includes('Deposit')) {
+        userTransactions[userId].deposits += amount;
+      }
+    });
+
+    // Calculate the net difference for each user
+    const userSums = Object.values(userTransactions).map((transaction) => {
+      return transaction.withdraws - transaction.deposits;
+    });
+
+    // Categorize the users based on their sums
+    const categories = {
+      overTenMillion: 0,
+      betweenOneAndTenMillion: 0,
+      betweenZeroAndOneMillion: 0,
+      lessThanZero: 0,
+    };
+
+    userSums.forEach((sum) => {
+      if (sum > 10_000_000) {
+        categories.overTenMillion += 1;
+      } else if (sum > 1_000_000) {
+        categories.betweenOneAndTenMillion += 1;
+      } else if (sum >= 0) {
+        categories.betweenZeroAndOneMillion += 1;
+      } else {
+        categories.lessThanZero += 1;
+      }
+    });
+
+    // Calculate the percentages
+    const totalUsers = userSums.length;
+    const receiptChart = {
+      overTenMillion: (categories.overTenMillion / totalUsers) * 100,
+      betweenOneAndTenMillion: (categories.betweenOneAndTenMillion / totalUsers) * 100,
+      betweenZeroAndOneMillion: (categories.betweenZeroAndOneMillion / totalUsers) * 100,
+      lessThanZero: (categories.lessThanZero / totalUsers) * 100,
+    };
+
+    res.json({ success: true, receiptChart });
+  } catch (error) {
+    console.error('Error fetching receipt statistics:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
 router.get('/get-equity-distribution', async (req, res) => {
   try {
     const ignoredUsernames = [
@@ -592,7 +655,7 @@ router.get('/get-equity-distribution', async (req, res) => {
       const userBalance = user.balance + (vault ? vault.balance : 0);
 
       // If the user's balance is greater than or equal to 10, return user info
-      if (userBalance >= 10) {
+      if (userBalance >= 1000000) {
         return {
           _id: user._id,
           username: user.username,

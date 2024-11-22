@@ -81,7 +81,7 @@ class Comments extends Component {
         const { comments } = this.state;
 
         return (
-            <div>
+            <div >
                 {this.state.showPlayerModal && (
                     <PlayerModal
                         selectedCreator={this.state.selectedCreator}

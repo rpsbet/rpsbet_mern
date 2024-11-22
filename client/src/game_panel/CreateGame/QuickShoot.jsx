@@ -460,29 +460,33 @@ class QuickShoot extends Component {
       <>
         {step === 2 && (
           <div className="game-info-panel">
-            <h3 className="game-sub-title">Choose a Game Type</h3>
-            <div className="qs-game-type-panel">
-              {[2, 3, 4, 5].map(i => (
-                <button
-                  key={i}
-                  className={qs_game_type === i ? ' active' : ''}
-                  onClick={() => {
-                    onChangeState({
-                      qs_game_type: i,
-                      max_return: bet_amount * Number(i),
-                      public_bet_amount: convertToCurrency(
-                        bet_amount * Number(i - 1)
-                      ),
-                      selected_qs_position: 0
-                    });
-                  }}
-                >
-                  {i}x
-                </button>
-              ))}
+            <div className=' glass-container'>
+
+              <h3 className="game-sub-title progress-title">Choose a Game Type</h3>
+              <div className="qs-game-type-panel">
+                {[2, 3, 4, 5].map(i => (
+                  <button
+                    key={i}
+                    className={qs_game_type === i ? ' active' : ''}
+                    onClick={() => {
+                      onChangeState({
+                        qs_game_type: i,
+                        max_return: bet_amount * Number(i),
+                        public_bet_amount: convertToCurrency(
+                          bet_amount * Number(i - 1)
+                        ),
+                        selected_qs_position: 0
+                      });
+                    }}
+                  >
+                    {i}x
+                  </button>
+                ))}
+              </div>
+              <p className="tip">Your multiplier</p>
             </div>
-            <p className="tip">Your multiplier</p>
           </div>
+
         )}
 
         {step === 1 && (
@@ -497,90 +501,95 @@ class QuickShoot extends Component {
 
         {step === 3 && (
           <div className="game-info-panel">
-            <h3 className="game-sub-title">Strategy&nbsp;<Tooltip
-              style={{ position: "absolute", right: "20px" }}
-              title={'The strategy determines how your AI will play, includes patterns, reasoning and predictability.'}
-              placement="top"
-            >
-              <Info style={{ cursor: "pointer", float: "right" }} />
-            </Tooltip></h3>
-            <SettingsRef
-              strategies={strategies}
-              ai_mode={ai_mode}
-              user_id={user_id}
-              rank={rank}
-              settings_panel_opened={settings_panel_opened}
-              setSelectedStrategy={setSelectedStrategy}
-              settingsRef={this.settingsRef}
-              selectedStrategy={selectedStrategy}
-            />
-            <ButtonBase
-              onClick={this.handleSettingsIconClick}
-              className="strategy-btn title"
-              style={{
-                boxShadow: 'unset',
-                borderRadius: '30px',
-                background: 'transparent',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <span style={{ marginRight: '5px' }}>{selectedStrategy}</span>
-              <SettingsOutlinedIcon />
-            </ButtonBase>
-            {(selectedStrategy === 'Hidden Markov') ? (
-              <>
-                <div className="game-info-panel">
-                  <div className="qs-add-run-panel">
-                    <div className="qs-add-run-form">
-                      <h3 className="game-sub-title">Choose WHERE TO SAVE</h3>
-                      {this.state.animation}
-                      {this.renderButtons()}
-                      <Button id="aiplay" onClick={this.onAutoPlay}>
-                      <FontAwesomeIcon icon={faRobot} style={{ color: '#060607' }} />&nbsp;Test AI Play&nbsp;<span className="roll-tag">[space]</span>
-                      </Button>
-                    </div>
-                    <div className="qs-add-run-table">
-                      <h3 className="game-sub-title">Pattern Table</h3>
+            <div className='glass-container'>
 
-                      <table id="runs">
-                        <tbody>
-                          {qs_list && this.state.qs_list.length > 0 ? (
-                            qs_list.map((qs, index) => (
-                              <tr key={index}>
-                                <td>{index + 1}</td>
-                                <td>{qs.qs}</td>
-                                <td>
-                                  <HighlightOffIcon id="delete"
-                                    onClick={() => this.onRemoveItem(index)}
-                                  />
+              <h3 className="game-sub-title">Strategy&nbsp;<Tooltip
+                style={{ position: "absolute", right: "20px" }}
+                title={'The strategy determines how your AI will play, includes patterns, reasoning and predictability.'}
+                placement="top"
+              >
+                <Info style={{ cursor: "pointer", float: "right" }} />
+              </Tooltip></h3>
+              <SettingsRef
+                strategies={strategies}
+                ai_mode={ai_mode}
+                user_id={user_id}
+                rank={rank}
+                settings_panel_opened={settings_panel_opened}
+                setSelectedStrategy={setSelectedStrategy}
+                settingsRef={this.settingsRef}
+                selectedStrategy={selectedStrategy}
+              />
+              <ButtonBase
+                onClick={this.handleSettingsIconClick}
+                className="strategy-btn title"
+                style={{
+                  boxShadow: 'unset',
+                  borderRadius: '30px',
+                  background: 'transparent',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <span style={{ marginRight: '5px' }}>{selectedStrategy}</span>
+                <SettingsOutlinedIcon />
+              </ButtonBase>
+              {(selectedStrategy === 'Hidden Markov') ? (
+                <>
+                  <div className="game-info-panel">
+
+                    <div className="qs-add-run-panel">
+                      <div className="qs-add-run-form">
+                        <h3 className="game-sub-title">Choose WHERE TO SAVE</h3>
+                        {this.state.animation}
+                        {this.renderButtons()}
+                        <Button id="aiplay" onClick={this.onAutoPlay}>
+                          <FontAwesomeIcon icon={faRobot} style={{ color: '#060607' }} />&nbsp;Test AI Play&nbsp;<span className="roll-tag">[space]</span>
+                        </Button>
+                      </div>
+                      <div className="qs-add-run-table">
+                        <h3 className="game-sub-title">Pattern Table</h3>
+
+                        <table id="runs">
+                          <tbody>
+                            {qs_list && this.state.qs_list.length > 0 ? (
+                              qs_list.map((qs, index) => (
+                                <tr key={index}>
+                                  <td>{index + 1}</td>
+                                  <td>{qs.qs}</td>
+                                  <td>
+                                    <HighlightOffIcon id="delete"
+                                      onClick={() => this.onRemoveItem(index)}
+                                    />
+                                  </td>
+                                </tr>
+                              ))
+                            ) : (
+                              <tr>
+                                <td id="add-run" colSpan="3">
+                                  Your pattern will be displayed here
                                 </td>
                               </tr>
-                            ))
-                          ) : (
-                            <tr>
-                              <td id="add-run" colSpan="3">
-                                Your pattern will be displayed here
-                              </td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
-                      <IconButton style={{ background: "transparent", boxShadow: "none" }} color="secondary" onClick={this.handleReset}>
-                        <FontAwesomeIcon icon={faTrash} /> {/* Use the faRedo icon */}
-                      </IconButton>
+                            )}
+                          </tbody>
+                        </table>
+                        <IconButton style={{ background: "transparent", boxShadow: "none" }} color="secondary" onClick={this.handleReset}>
+                          <FontAwesomeIcon icon={faTrash} /> {/* Use the faRedo icon */}
+                        </IconButton>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </>
+                </>
 
-            ) : (
-              <div style={{ padding: "30px", fontSize: "0.6em" }}>
-                (No Pattern Needed)
-              </div>
-            )}
+              ) : (
+                <div style={{ padding: "30px", fontSize: "0.6em" }}>
+                  (No Pattern Needed)
+                </div>
+              )}
+            </div>
           </div>
+
         )}
       </>
     );

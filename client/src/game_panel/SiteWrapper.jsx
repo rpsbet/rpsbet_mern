@@ -227,7 +227,7 @@ class SiteWrapper extends Component {
       notifications: [],
       showNotifications: false,
       loadMore: 10,
-      isLive: true,
+      isLive: false,
       blurValue: 3,
       isCountdownHovered: false,
       isYoutubeHovered: false,
@@ -708,8 +708,6 @@ class SiteWrapper extends Component {
           solanaBalance: solBalance / LAMPORTS_PER_SOL,
           tokenBalance: tokenBalance || 0
         });
-      } else {
-        alert('No Solana wallet found. Please install Phantom.');
       }
     } catch (error) {
       console.error('Failed to connect to Solana wallet or fetch token balance:', error);
@@ -1337,7 +1335,7 @@ class SiteWrapper extends Component {
           </div>
         )}
         <div className={`site_wrapper row ${isDarkMode ? 'dark_mode' : ''}`}>
-          {websiteLoading && (
+          {/* {websiteLoading && (
             <div
               className="loading-overlay"
               style={{
@@ -1368,7 +1366,7 @@ class SiteWrapper extends Component {
                 }}
               />
             </div>
-          )}
+          )} */}
           <div className="game_header">
             <div className="main_header">
               <a
@@ -1393,7 +1391,7 @@ class SiteWrapper extends Component {
                       ? 'fade-animation fade-in'
                       : 'fade-animation fade-out'
                       }`}
-                    label="PVP"
+                    label="ALL GAMES"
                     labelplacement="left"
                     icon={
                       hoverTabIndex === 0 || selectedMainTabIndex === 0 ? (
@@ -1412,7 +1410,7 @@ class SiteWrapper extends Component {
                       ? 'fade-animation fade-in'
                       : 'fade-animation fade-out'
                       }`}
-                    label="Manage"
+                    label="Your Games"
                     labelplacement="left"
                     icon={
                       hoverTabIndex === 1 || selectedMainTabIndex === 1 ? (

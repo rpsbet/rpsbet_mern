@@ -30,8 +30,6 @@ async function deleteChat() {
           console.log(`${deletedMessages.deletedCount} messages deleted.`);
 
         }
-      } else {
-        console.log("Last chat deletion was less than 24 hours ago. Skipping deletion.");
       }
     } else {
       console.log("System setting for chat last updated not found.");
@@ -64,8 +62,6 @@ async function deleteBetItems() {
 
             console.log(`${deletedItems.deletedCount} ${itemType} deleted.`);
           }
-        } else {
-          console.log(`Last ${itemType} deletion was less than 24 hours ago. Skipping deletion.`);
         }
       } else {
         console.log(`System setting for ${itemType} last updated not found.`);
@@ -110,8 +106,6 @@ async function deleteNotifications() {
         }
         systemSetting.updated_at = new Date();
         await systemSetting.save();
-      } else {
-        console.log("Last notification deletion was less than 24 hours ago. Skipping deletion.");
       }
     } else {
       console.log("System setting for last updated not found.");

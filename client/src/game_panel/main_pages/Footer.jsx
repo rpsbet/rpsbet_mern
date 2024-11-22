@@ -4,6 +4,7 @@ import history from '../../redux/history';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXTwitter, faTelegram, faYoutube, faDiscord } from '@fortawesome/free-brands-svg-icons';
 import bscscan from '../icons/etherscan-logo.svg';
+import sol from '../icons/sol.png';
 import bnb from '../icons/bnb.png';
 import btc from '../icons/btc.png';
 import eth from '../icons/eth.png';
@@ -171,6 +172,7 @@ class Footer extends Component {
                     </a> */}
                     </div>
                     <div className={classes.currencies}>
+                        <img className={classes.availableCurrency} src={sol} alt="SOL" />
                         <img className={classes.availableCurrency} src={bnb} alt="BNB" />
                         <img className={classes.availableCurrency} src={btc} alt="BTC" />
                         <img className={classes.availableCurrency} src={eth} alt="ETH" />

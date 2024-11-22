@@ -90,7 +90,7 @@ const convertGameLogToHistoryStyle = async gameLogList => {
         // unstaked log
         const creator_avatar = `<img class='avatar' data-userid="${gameLog['creator']['_id']}" src='${gameLog['creator']['avatar']}' alt='' onerror='this.src="/img/profile-thumbnail.svg"' style="border: ${avatarUtils.getBorderByRank(gameLog['creator']['totalWagered'])}" />`;
         const creator_link = `<a href="javascript:void(0)" class="user-link" accessory='${gameLog['creator']['accessory']}' rank='${gameLog['creator']['totalWagered']}' data-userid="${gameLog['creator']['_id']}">${creator_avatar}</a>`;
-        temp.history = `${creator_link} Sold <span style='color: #ffd000;'>${convertToCurrency(gameLog['bet_amount'])} (${convertToCurrency(((gameLog['host_pr'] / gameLog['endgame_amount'])))}X)</span> in ${room_name}`;
+        temp.history = `${creator_link} Jeeted <span style='color: #ffd000;'>${convertToCurrency(gameLog['bet_amount'])} (${convertToCurrency(((gameLog['host_pr'] / gameLog['endgame_amount'])))}X)</span> in ${room_name}`;
 
       } else if (gameLog.game_result === 3000) {
         // topup log
@@ -102,7 +102,7 @@ const convertGameLogToHistoryStyle = async gameLogList => {
         // coHost log
         const creator_avatar = `<img class='avatar' data-userid="${gameLog['creator']['_id']}" src='${gameLog['creator']['avatar']}' alt='' onerror='this.src="/img/profile-thumbnail.svg"' style="border: ${avatarUtils.getBorderByRank(gameLog['creator']['totalWagered'])}" />`;
         const creator_link = `<a href="javascript:void(0)" class="user-link" accessory='${gameLog['creator']['accessory']}' rank='${gameLog['creator']['totalWagered']}' data-userid="${gameLog['creator']['_id']}">${creator_avatar}</a>`;
-        temp.history = `${creator_link} Bought <span style='color: #007bff;'>${convertToCurrency(gameLog['bet_amount'])}</span> in ${room_name}`;
+        temp.history = `${creator_link} Pumped <span style='color: #007bff;'>${convertToCurrency(gameLog['bet_amount'])}</span> in ${room_name}`;
 
       } else if (gameLog.game_result === 777) {
         // Withdrawal log

@@ -8,6 +8,7 @@ import PrivacyModal from '../game_panel/modal/PrivacyModal'
 import TermsModal from '../game_panel/modal/TermsModal'
 import MerchModal from '../game_panel/modal/MerchModal'
 import { faXTwitter, faTelegram, faYoutube, faDiscord } from '@fortawesome/free-brands-svg-icons';
+import sol from '../game_panel/icons/sol.png';
 import bnb from '../game_panel/icons/bnb.png';
 import btc from '../game_panel/icons/btc.png';
 import eth from '../game_panel/icons/eth.png'
@@ -56,10 +57,11 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   bottomBackground: {
-    backgroundImage: 'url(https://svgshare.com/i/1BgF.svg)', // Bottom background image
-    backgroundSize: 'cover',
-    backgroundPosition: '90% 50%',
-    height: '100%', // Half of the screen height
+    backgroundImage: `url('/img/bottom-bg.svg')`, // Bottom background image
+    backgroundSize: width < 768 && height > 800 ? '800vw' : '175vw', // Adjust background size based on screen width
+    backgroundPosition: width > 768 ? '94% 110%' : '84% 120%', // Adjust position for larger vs smaller screens
+    backgroundRepeat: 'no-repeat',
+    height: '100%', // Adjust height for larger vs smaller screens
     width: '100%',
     position: 'fixed',
     bottom: 0,
@@ -98,7 +100,7 @@ const useStyles = makeStyles((theme) => ({
     left: width < 600 ? '-100px' : '-50px',
   },
   gravestone: {
-    backgroundImage: 'url(https://svgshare.com/i/1BdF.svg)',
+    backgroundImage: `url('/img/grave.svg')`,
     backgroundSize: 'contain',
     backgroundPosition: 'center',
     backgroundRepeat: 'no-repeat',
@@ -351,7 +353,7 @@ const CountdownPage = ({
         toolbar: { show: false },
         background: 'transparent',
       },
-      labels: ['Dev (5%)', 'Marketing (5%)', 'Platform (20%)', 'Ecosystem (70%)'],
+      labels: ['Dev (5%)', 'Platform (20%)', 'Ecosystem (75%)'],
       colors: chartColors, // Custom colors for each category
       stroke: {
         width: 0,
@@ -398,7 +400,7 @@ const CountdownPage = ({
         mode: 'dark', // Dark mode theme
       },
     },
-    series: [5, 5, 20, 70], // Tokenomics distribution percentages
+    series: [5, 20, 75], // Tokenomics distribution percentages
   };
 
   const COUNTDOWN_BUTTONS = [
@@ -467,12 +469,13 @@ const CountdownPage = ({
     // Check if the section is 'buy'
     if (section === 'buy') {
       setShowDepositModal(true);
-      window.location.href = 'https://raydium.io/swap/?inputMint=sol&outputMint=BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump'; // Navigate to /investors/deposit
+      window.open('https://raydium.io/swap/?inputMint=sol&outputMint=BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump', '_blank'); // Open in new tab
       return; // Stop further execution
     }
+
     if (section === 'chart') {
       setShowDepositModal(true);
-      window.location.href = 'https://dexscreener.com/solana/BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump'; // Navigate to /investors/deposit
+      window.open('https://dexscreener.com/solana/BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump', '_blank'); // Open in new tab
       return; // Stop further execution
     }
 
@@ -551,14 +554,14 @@ const CountdownPage = ({
                 className={`${classes.section} ${activeSection === '' ? classes.activeSection : ''}`}
               >
 
-                <Typography variant="h2" style={{ filter: "drop-shadow(2px 4px 6px #f9f9)" }}>$RPS TOKEN&nbsp;<img src={busd} width="80" height="auto" alt='$RPS Token Symbol' /></Typography>
-                <Typography variant="h6" style={{ filter: "drop-shadow(2px 4px 6px #f9f9)" }}>
-                  [ GET RICH 💰 OR DIE 🩸 ]
-                  [TOKEN ADDRESS:]
-                  [BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump]
+                <Typography variant="h2" style={{ filter: "drop-shadow(2px 4px 6px #f9f9)" }}>$RPS&nbsp;<img src={busd} width="80" height="auto" alt='$RPS Token Symbol' /></Typography>
+                <Typography variant="h6" style={{ filter: "drop-shadow(2px 4px 6px #f9f9)", marginBottom: "20px" }}>
+                  [ GET RICH 💰 OR DIE 🩸 ] <br />
                 </Typography>
+                <h6>TOKEN ADDRESS:</h6>
+                {`[${'BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump'.slice(0, 7)}...${'BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump'.slice(-10)}]`}
                 <br />
-                <Typography variant="body1" className="fading-text">
+                <Typography variant="body1" className="fading-text" style={{ marginTop: "20px" }}>
                   Click the Gravestones below to choose a life path...
                 </Typography>
               </section>
@@ -642,53 +645,7 @@ const CountdownPage = ({
                     <h6 className="title">
                       BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump
                     </h6>
-                    <Box mt={4} textAlign="center" position="relative" style={{ width: '100%', }}>
 
-                      <Box
-                        sx={{
-
-                          display: 'inline-block',
-                          position: 'relative',
-                          border: '1px solid #ccc',
-                          borderRadius: '8px',
-                          padding: '10px 20px',
-                          backgroundColor: '#333', // Adjust according to your theme
-                          filter: 'blur(2px)',
-                          pointerEvents: 'none', // Disable interaction
-                          opacity: 0.6, // Optional: makes it more blurred
-                        }}
-                      >
-                        0x123456...12345678
-                      </Box>
-                      <Box
-                        sx={{
-                          position: 'absolute',
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          bottom: 0,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          backgroundColor: 'rgba(255, 255, 255, 0.7)', // Optional: Overlay color
-                          borderRadius: '8px',
-                        }}
-                      >
-                        <Typography variant="h6" style={{ color: '#350554' }}>
-                          Coming Soon
-                        </Typography>
-                      </Box>
-                      <Button
-                        variant="outlined"
-                        style={{
-                          marginTop: '2px',
-                          marginBottom: '4px',
-                          pointerEvents: 'none', // Disable button interaction
-                        }}
-                      >
-                        <CopyAll />
-                      </Button>
-                    </Box>
                   </div>
                 </div>
               </section>
@@ -794,6 +751,7 @@ const CountdownPage = ({
 
 
                   <div className={classes.currencies}>
+                    <img className={classes.availableCurrency} src={sol} alt="SOL" />
                     <img className={classes.availableCurrency} src={bnb} alt="BNB" />
                     <img className={classes.availableCurrency} src={btc} alt="BTC" />
                     <img className={classes.availableCurrency} src={eth} alt="ETH" />
@@ -844,11 +802,11 @@ const CountdownPage = ({
             <div style={{ position: 'relative' }}>
               <img
                 className="scroll-animation"
-                style={{ position: 'absolute', left: '50%', top: '50%', transform: width < 600 ? 'translate(1px, 346px)' : 'translate(71px, 346px)', width: "50px", animationDelay: '0.8s', filter: 'opacity(0.25)' }}
+                style={{ position: 'absolute', left: '50%', top: '50%', transform: width < 600 ? 'translate(1px, 346px)' : 'translate(71px, 446px)', width: "50px", animationDelay: '0.8s', filter: 'opacity(0.25)' }}
                 src={remote}
                 alt="Remote Control"
               />
-              <Lottie options={catOptions} style={{ position: 'absolute', left: '50%', top: width < 600 && height < 900 ? '-50%' : '50%', transform: width < 600 ? 'translateY(0%)' : 'translateY(40%)' }} height={'auto'} width={'300px'} isClickToPauseDisabled={true} />
+              <Lottie options={catOptions} style={{ position: 'absolute', left: '50%', top: width < 600 && height < 900 ? '-50%' : '50%', transform: width < 600 ? 'translateY(0%)' : 'translateY(60%)' }} height={'auto'} width={'300px'} isClickToPauseDisabled={true} />
             </div>
             {COUNTDOWN_BUTTONS.map((button, index) => (
               <Zoom in={true} timeout={index * 200} key={button.label}>

@@ -21,8 +21,6 @@ import {
   SET_URL,
   TOP_WINS,
   MY_GAMES_LOADED,
-  MY_GAMES_LOADED_WITHOUT_STATS,
-  MY_GAMES_LOADED_WITH_STATS,
   MY_HISTORY_LOADED,
   SET_CHAT_ROOM_INFO,
   UPDATE_BET_RESULT,
@@ -49,7 +47,9 @@ import {
   COMMENTS_LOADED,
   COMMENTS_LOAD_FAILED,
   COMMENT_DELETED,
-  COMMENT_DELETION_FAILED
+  COMMENT_DELETION_FAILED,
+  TRANSACTION_CANDLES_LOADED, // Add this action type
+  TRANSACTION_CANDLES_ERROR,
 } from '../types';
 
 const initialState = {
@@ -66,6 +66,9 @@ const initialState = {
   rooms_count: 0,
   spleesh_guesses: [],
   drop_guesses: [],
+  candles: [], // Add this state to hold the candles data
+  transactions: [], // Add this state to hold the candles data
+  transactionCandlesError: null,
   bangs: [],
   is_betting: false,
   rolls: [],
@@ -76,8 +79,8 @@ const initialState = {
   historyPageNumber: 1,
   gameTypeList: [
     { game_type_id: 1, game_type_name: 'RPS', short_name: 'RPS', _id: '62a25d2a723b9f15709d1ae7', created_at: '2018-06-09T20:50:50.217Z' },
-    { game_type_id: 5, game_type_name: 'Quick Shoot', short_name: 'QS', _id: '62a25d2a723b9f15709d1aeb', created_at: '2020-06-09T20:50:50.219Z',},
-    { game_type_id: 3, game_type_name: 'Brain Game', short_name: 'BG', _id: '62a25d2a723b9f15709d1ae9', created_at: '2029-06-09T20:50:50.219Z', },
+    { game_type_id: 5, game_type_name: 'Quick Shoot', short_name: 'QS', _id: '62a25d2a723b9f15709d1aeb', created_at: '2020-06-09T20:50:50.219Z', },
+    // { game_type_id: 3, game_type_name: 'Brain Game', short_name: 'BG', _id: '62a25d2a723b9f15709d1ae9', created_at: '2029-06-09T20:50:50.219Z', },
     // { game_type_id: 6, game_type_name: 'Drop Game', short_name: 'DG', _id: '63dac60ba1316a1e70a468ab', created_at: '2023-02-01T20:50:50.217Z', },
     // { game_type_id: 2, game_type_name: 'Spleesh!', short_name: 'S!', _id: '62a25d2a723b9f15709d1ae8', created_at: '2024-06-09T20:50:50.218Z'},
     // {game_type_id: 4, game_type_name: 'Mystery Box', short_name: 'MB', _id: '62a25d2a723b9f15709d1aea', created_at: '2022-06-09T20:50:50.219Z',},
@@ -160,15 +163,26 @@ export default function (state = initialState, action) {
         betResult: payload.betResult,
         roomStatus: payload.roomStatus
       };
-      case UPDATE_BET_RESULT:
-        if (payload && typeof payload === 'object') {
-          return {
-            ...state,
-            betResult: payload.betResult, // Assuming betResult is a single value, not an array
-          };
-        }
-        return state;
-      
+    case UPDATE_BET_RESULT:
+      if (payload && typeof payload === 'object') {
+        return {
+          ...state,
+          betResult: payload.betResult, // Assuming betResult is a single value, not an array
+        };
+      }
+      return state;
+    case TRANSACTION_CANDLES_LOADED:
+      return {
+        ...state,
+        candles: payload.candles, // Store the candles data in the state
+        transactions: payload.transactions, // Store the candles data in the state
+        transactionCandlesError: null, // Clear any previous error
+      };
+    case TRANSACTION_CANDLES_ERROR:
+      return {
+        ...state,
+        transactionCandlesError: payload, // Store the error message if any
+      };
     case SPLEESH_GUESSES:
       return {
         ...state,
@@ -225,56 +239,56 @@ export default function (state = initialState, action) {
         ...state,
         is_betting: false
       };
-      case COMMENT_CREATED:
-        return {
-          ...state,
-          posted: payload,
-        };
-      case COMMENT_CREATION_FAILED:
-        return {
-          ...state,
-          error: action.payload
-        };
-      case COMMENTS_LOADED:
-        return {
-          ...state,
-          comments: action.payload,
-          error: null
-        };
-      case QSBETITEMS_LOADED:
-        return {
-          ...state,
-          qsbetitems: action.payload.data,
-          error: null
-        };
-      case RPSBETITEMS_LOADED:
-        return {
-          ...state,
-          rpsbetitems: action.payload.data,
-          error: null
-        };
-      case COMMENTS_LOAD_FAILED:
-        return {
-          ...state,
-          error: action.payload
-        };
-      case ATTACHED:
-        return {
-          ...state,
-          attached: payload,
-          error: null
-        };
-      case COMMENT_DELETED:
-        return {
-          ...state,
-          comments: state.comments.filter(comment => comment._id !== action.payload),
-          error: null
-        };
-      case COMMENT_DELETION_FAILED:
-        return {
-          ...state,
-          error: action.payload
-        };
+    case COMMENT_CREATED:
+      return {
+        ...state,
+        posted: payload,
+      };
+    case COMMENT_CREATION_FAILED:
+      return {
+        ...state,
+        error: action.payload
+      };
+    case COMMENTS_LOADED:
+      return {
+        ...state,
+        comments: action.payload,
+        error: null
+      };
+    case QSBETITEMS_LOADED:
+      return {
+        ...state,
+        qsbetitems: action.payload.data,
+        error: null
+      };
+    case RPSBETITEMS_LOADED:
+      return {
+        ...state,
+        rpsbetitems: action.payload.data,
+        error: null
+      };
+    case COMMENTS_LOAD_FAILED:
+      return {
+        ...state,
+        error: action.payload
+      };
+    case ATTACHED:
+      return {
+        ...state,
+        attached: payload,
+        error: null
+      };
+    case COMMENT_DELETED:
+      return {
+        ...state,
+        comments: state.comments.filter(comment => comment._id !== action.payload),
+        error: null
+      };
+    case COMMENT_DELETION_FAILED:
+      return {
+        ...state,
+        error: action.payload
+      };
     case TNX_INCOMPLETE:
       return {
         ...state,
@@ -368,17 +382,6 @@ export default function (state = initialState, action) {
         myGames: payload.myGames,
         // myGamesTotalPage: payload.pages,
         myGamesPageNumber: payload.page
-      };
-
-    case MY_GAMES_LOADED_WITHOUT_STATS:
-      return {
-        ...state,
-        myGamesWithStats: false
-      };
-    case MY_GAMES_LOADED_WITH_STATS:
-      return {
-        ...state,
-        myGamesWithStats: true
       };
     case MY_HISTORY_LOADED:
       return {

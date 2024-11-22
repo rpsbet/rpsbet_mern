@@ -6,6 +6,7 @@ const moment = require('moment');
 const auth = require('../middleware/auth');
 const admin = require('../middleware/admin');
 const { v4: uuidv4 } = require('uuid');
+const axios = require('axios');
 
 const Comment = require('../model/Comment');
 
@@ -45,6 +46,7 @@ const check_access_time = require('../helper/util/checkAccessTime');
 let semaphore2 = 1;
 let semaphore3 = 1;
 const roomLocks = {};
+const tokenMintAddress = process.env.token;
 
 let user_access_log = {};
 router.get('/game_types', async (req, res) => {
@@ -88,7 +90,7 @@ router.get('/recently-closed', async (req, res) => {
       .populate({ path: 'game_type', model: GameType, select: 'short_name game_type_name' })
       .populate({ path: 'creator', model: User, select: '_id avatar username accessory totalWagered' })
       .sort({ created_at: -1 })
-      .limit(9);
+      .limit(27);
 
     if (rooms.length > 0) {
       res.json({
@@ -280,7 +282,7 @@ router.patch('/attachPlayer/:room_id', auth, async (req, res) => {
       return res.json({
         success: false,
         already_finished: true,
-        message: 'THIS BATTLE HAS ENDED ALREADY'
+        message: 'THIS GAME HAS ENDED ALREADY'
       });
     }
 
@@ -334,7 +336,7 @@ router.patch('/rooms/:room_id', async (req, res) => {
       return res.json({
         success: false,
         already_finished: true,
-        message: 'THIS BATTLE HAS ENDED ALREADY'
+        message: 'THIS GAME HAS ENDED ALREADY'
       });
     }
     // Function to find a random bot
@@ -674,6 +676,15 @@ router.get('/room/:id', async (req, res) => {
         creator_avatar: creator['avatar'],
         rank: creator['totalWagered'],
         accessory: creator['accessory'],
+        hosts: room.hosts.map(host => ({
+          host: host['host'],
+          username: host['username'],
+          avatar: host['avatar'],
+          rank: host['rank'],
+          accessory: host['accessory'],
+          stake: host['stake'],
+          share: host['share']
+        })),
         // aveMultiplier: room['aveMultiplier'],
         // creator_name: creator['username'],
         endgame_amount: room['endgame_amount'],
@@ -702,12 +713,7 @@ router.get('/room/:id', async (req, res) => {
         // box_list: boxPrizeList,
         status: room['status'],
         rps_bet_item_id: rpsBetItem ? rpsBetItem.id : null,
-        // drop_bet_item_id: dropBetItem ? dropBetItem.id : null,
-        // bang_bet_item_id: bangBetItem ? bangBetItem.id : null,
-        // roll_bet_item_id: rollBetItem ? rollBetItem.id : null,
-        // bj_bet_item_id: bjBetItem ? bjBetItem.id : null,
         qs_bet_item_id: qsBetItem ? qsBetItem.id : null,
-        // new_host_pr: room['new_host_pr'],
         is_private: room['is_private'],
         youtubeUrl: room['youtubeUrl'],
         gameBackground: room['gameBackground'],
@@ -1840,185 +1846,31 @@ async function getRoomNetProfits(room_id) {
   }
 }
 
-const getMyRoomsWithStats = async (
-  user_id,
-  pageSize,
-  game_type,
-  status = 'open',
-  sort = 'desc'
-) => {
-  const searchCondition = {
-    $or: [
-      { creator: user_id },
-      { 'hosts.host': user_id }
-    ]
-  };
-
-  if (status !== undefined) {
-    searchCondition.status = status;
-  }
-  if (game_type !== 'All') {
-    const gameType = await GameType.findOne({ short_name: game_type });
-    searchCondition.game_type = gameType._id;
-  }
-  if (status === 'finished') {
-    searchCondition.joiners = { $exists: true, $ne: [] };
-  }
-
-  const rooms = await Room.find(searchCondition)
-    .populate({ path: 'game_type', model: GameType })
-    .limit(pageSize);
-
-  const count = await Room.countDocuments(searchCondition);
-
-  const result = await Promise.all(rooms.map(async (room) => {
-    try {
-      const temp = {
-        _id: room._id,
-        game_type: room.game_type,
-        bet_amount: room.bet_amount,
-        rps_list: room.rps_list,
-        qs_list: room.qs_list,
-        pr: room.host_pr,
-        user_bet: room.user_bet,
-        winnings: '',
-        share: (() => {
-          const matchingHost = room.hosts.find(host => host.host.toString() === user_id.toString());
-          if (matchingHost) {
-            return matchingHost.share;
-          } else {
-            return 0;
-          }
-        })(),
-        stake: (() => {
-          const matchingHost = room.hosts.find(host => host.host.toString() === user_id.toString());
-          if (matchingHost) {
-            return matchingHost.stake;
-          } else {
-            return 0;
-          }
-        })(),
-        index: room.room_number,
-        endgame_type: room.endgame_type,
-        endgame_amount: room.endgame_amount,
-        is_private: room.is_private,
-        selectedStrategy: room.selectedStrategy,
-        status: room.status,
-        created_at: room.created_at,
-        coHost: false,
-        net_profit: 0,
-        bets: 0
-      };
-
-      const roomStatistics = await getRoomNetProfits(room._id);
-      if (roomStatistics.room_info && roomStatistics.room_info.length > 0) {
-        const { net_profit, bets } = roomStatistics.room_info[0];
-        temp.net_profit = net_profit;
-        temp.bets = bets;
-      }
-
-      const gameLogCount = await GameLog.countDocuments({ room: room._id });
-
-      if (gameLogCount === 0) {
-        temp.winnings = temp.bet_amount;
-      } else {
-        switch (room.game_type.game_type_id) {
-          case 1: // RPS
-            temp.winnings = room.user_bet;
-            break;
-          // case 2: // Spleesh!
-          //   // temp.bet_amount = (room.user_bet === 0 && room.bet_amount === room.pr) ? room.pr : temp.bet_amount;
-          //   // temp.winnings = parseFloat(room.user_bet) + parseFloat(room.host_pr) + temp.bet_amount;
-          //   temp.winnings = parseFloat(room.user_bet);
-          //   break;
-          // case 3: // Brain Game
-          //   temp.winnings = room.pr;
-          //   break;
-          // case 4: // Mystery Box
-          //   temp.winnings = parseFloat(room.user_bet) + parseFloat(room.host_pr);
-          //   break;
-          // case 5: // Quick Shoot
-          // case 6: // Drop Game
-          //   temp.winnings = room.user_bet;
-          //   break;
-          // case 7: // Bang!
-          // case 8: // Roll
-          // case 9: // Blackjack
-          //   temp.winnings = updateDigitToPoint2(room.user_bet);
-          //   break;
-          default:
-            break;
-        }
-      }
-
-      const isCoHost = room.hosts.find(host => host.host.toString() === user_id.toString());
-      if (isCoHost) {
-        const hostShare = isCoHost.share;
-        temp.winnings = (hostShare / 100) * parseFloat(room.user_bet);
-        if (room.creator.toString() !== user_id.toString()) {
-          temp.coHost = true;
-        }
-      }
-
-      return temp;
-    } catch (e) {
-      console.log(e.toString());
-    }
-  }));
-
-  // Sorting
-  const sortingMap = {
-    'asc': (a, b) => a.created_at - b.created_at,
-    'desc': (a, b) => b.created_at - a.created_at,
-    'net_profit_asc': (a, b) => a.net_profit - b.net_profit,
-    'net_profit_desc': (a, b) => b.net_profit - a.net_profit,
-    'bets_asc': (a, b) => a.bets - b.bets,
-    'bets_desc': (a, b) => b.bets - a.bets
-  };
-
-  result.sort(sortingMap[sort] || sortingMap['desc']);
-
-  return { rooms: result, count };
-};
-
 
 router.get('/my_games', auth, async (req, res) => {
   try {
-    // const pageSize = req.query.pageSize
-    //   ? parseInt(req.query.pageSize)
-    //   : 10;
-    const pageSize = 10;
+    const pageSize = 50;
     const game_type = req.query.game_type ? req.query.game_type : 'All';
     const status = req.query.status;
     const sort = req.query.sort ? req.query.sort : 'desc';
-    const excludeRoomStats = req.query.excludeRoomStats;
-    let rooms;
-    if (excludeRoomStats === "true") {
-      rooms = await getMyRooms(
-        req.user._id,
-        pageSize,
-        game_type,
-        status,
-        sort
-      );
 
-    } else {
-      rooms = await getMyRoomsWithStats(
-        req.user._id,
-        pageSize,
-        game_type,
-        status,
-        sort
-      );
-    }
-
+    // Call only the getMyRooms function
+    const { rooms, count } = await getMyRooms(
+      req.user._id,
+      pageSize,
+      game_type,
+      status,
+      sort
+    );
+    // Respond with the results
     res.json({
       success: true,
       pageSize: pageSize,
-      myGames: rooms.rooms,
-      total: rooms.count,
+      myGames: rooms,
+      total: count,
     });
   } catch (err) {
+    // Handle error case
     res.json({
       success: false,
       message: err.toString()
@@ -2028,16 +1880,13 @@ router.get('/my_games', auth, async (req, res) => {
 
 const getMyRooms = async (
   user_id,
-  pageSize = 10,
+  pageSize,
   game_type = 'All',
   status = 'open',
   sort = 'desc',
 ) => {
   const search_condition = {
-    $or: [
-      { creator: user_id },
-      { 'hosts.host': user_id }
-    ]
+    'hosts': { $elemMatch: { host: user_id, share: { $gt: 0 } } }
   };
 
   if (status) {
@@ -2062,8 +1911,21 @@ const getMyRooms = async (
   for (const room of rooms) {
 
     try {
+      const isCoHost = room.hosts.find(
+        host => host.host.toString() === user_id.toString() && host.share === 100
+      );
+      const gameLogCount = await GameLog.countDocuments({ room: room._id });
+      const creatorDetails = await User.findById(room.creator).select('avatar totalWagered accessory');
+      const creatorAvatar = creatorDetails?.avatar || ''; // Default to empty string if not found
+      const creatorTotalWagered = creatorDetails?.totalWagered || 0; // Default to 0 if not found
+      const creatorAccessory = creatorDetails?.accessory || ''; // Default to empty string if not found
+
       let temp = {
         _id: room._id,
+        creator_id: room.creator,
+        creator_avatar: creatorAvatar,
+        rank: creatorTotalWagered,
+        accessory: creatorAccessory,
         game_type: room.game_type,
         bet_amount: room.bet_amount,
         rps_list: room.rps_list,
@@ -2085,6 +1947,14 @@ const getMyRooms = async (
             return 0;
           }
         })(),
+        initial_stake: (() => {
+          const matchingHost = room.hosts.find(host => host.host.toString() === user_id.toString());
+          if (matchingHost) {
+            return matchingHost.initial_stake;
+          } else {
+            return 0;
+          }
+        })(),
         pr: room.host_pr,
         winnings: '',
         index: room.room_number,
@@ -2093,13 +1963,14 @@ const getMyRooms = async (
         is_private: room.is_private,
         status: room.status,
         created_at: room.created_at,
+        coHost: isCoHost,
         selectedStrategy: room.selectedStrategy,
         // statistics: '',
         net_profit: '',
-        bets: ''
+        battles: gameLogCount,
+        hosts: room.hosts
       };
 
-      const gameLogCount = await GameLog.countDocuments({ room: room._id });
 
       if (gameLogCount === 0) {
         temp.winnings = temp.bet_amount;
@@ -2134,12 +2005,12 @@ const getMyRooms = async (
         temp.winnings = updateDigitToPoint2(room.user_bet);
       }
 
-      const isCoHost = room.hosts.find(host => host.host.toString() === user_id.toString());
+
       if (isCoHost) {
         const hostShare = isCoHost.share;
         temp.winnings = (hostShare / 100) * parseFloat(room.user_bet);
         if (room.creator.toString() !== user_id.toString()) {
-          temp.coHost = true;
+          temp.coHost = isCoHost;
         }
       }
 
@@ -2168,25 +2039,23 @@ const getMyRooms = async (
   };
 };
 
-
 router.post('/end_game', auth, async (req, res) => {
   try {
     const userId = req.user._id;
     const roomId = req.body.room_id;
 
-    // Check if user.updated_at was updated within the last 5 seconds
     const lastUpdated = new Date(req.user.updated_at);
     const currentTime = new Date();
     const timeDifference = (currentTime - lastUpdated) / 1000; // Difference in seconds
-    if (timeDifference <= 2.5) {
+    if (timeDifference <= 1.5) {
       return res.json({
         success: false,
         message: 'Too fast. Please wait a few seconds before trying again.',
       });
     }
 
-    const qbot = await QBot.findOne({ user: userId, active: true });
-
+    // Check if QBot is active for the user
+    const qbot = await QBot.findOne({ user: userId, active: true }).select("_id");
     if (qbot) {
       return res.json({
         success: false,
@@ -2194,6 +2063,7 @@ router.post('/end_game', auth, async (req, res) => {
       });
     }
 
+    // Check if action is allowed based on access time
     const accessAllowed = await check_access_time(userId);
     if (!accessAllowed) {
       return res.json({
@@ -2203,6 +2073,7 @@ router.post('/end_game', auth, async (req, res) => {
       });
     }
 
+    // Check daily withdrawal limit
     if (req.user.dailyWithdrawals > 100000000) {
       return res.json({
         success: false,
@@ -2210,48 +2081,63 @@ router.post('/end_game', auth, async (req, res) => {
       });
     }
 
+    // Fetch room information with specific fields
     const roomInfo = await Room.findOne({ _id: roomId })
-      .populate({ path: 'creator', model: User })
-      .populate({ path: 'game_type', model: GameType });
+      .populate({ path: 'creator', model: User, select: 'username _id' })
+      .populate({ path: 'game_type', model: GameType, select: 'short_name' })
+      .select('status hosts user_bet host_pr pr bet_amount room_number selectedStrategy');
 
     if (roomInfo.status === 'finished') {
       return res.json({
         success: false,
         already_finished: true,
-        message: 'THIS BATTLE HAS ALREADY ENDED'
+        message: 'THIS GAME HAS ALREADY ENDED'
       });
     }
 
+    // Mark room as finished and save
     roomInfo.status = 'finished';
     await saveDocumentWithRetry(roomInfo);
 
-    const notifications = [];
-    const transactions = [];
+    for (const hostData of roomInfo.hosts) {
+      const hostId = hostData.host;
 
-    roomInfo.hosts.forEach(async (hostData) => {
-      const host = hostData.host;
-      const share = hostData.share;
-      const amount = (share / 100) * roomInfo.user_bet;
-      const message = `Earned ${convertToCurrency(amount)} from ending ` +
-        `${roomInfo.game_type.short_name}-${roomInfo.room_number}`;
+      // Fetch host data with specific fields
+      const host = await User.findById(hostId).select('balance updated_at');
+      if (!host) {
+        console.error(`Host with id ${hostId} not found`);
+        continue;
+      }
 
-      let notification = new Notification({
-        from: userId,
-        to: host,
-        room: roomInfo._id,
-        message: message,
-        is_read: false
-      });
+      const selectedStrategy = roomInfo.selectedStrategy.replace(/[\s-]/g, '').toLowerCase();
+      const amount = (hostData.share / 100) * parseFloat(roomInfo.user_bet);
 
-      const newTransaction = new Transaction({
-        user: host,
-        amount: amount,
-        description: `ended ${roomInfo.game_type.short_name}-${roomInfo.room_number}`,
-        room: roomId
-      });
+      // Update host balance
+      host.balance += amount;
+      host.updated_at = new Date();
+      await saveDocumentWithRetry(host);
 
-      notifications.push(notification);
-      transactions.push(newTransaction);
+      // Fetch or create QBot entry for the host
+      let qbotHost = await QBot.findOne({ user: req.user._id }).select('hosting updated_at');
+      if (!qbotHost) {
+        qbotHost = new QBot({ user: roomInfo.creator._id });
+      }
+      if (!qbotHost.hosting) {
+        qbotHost.hosting = {};
+      }
+
+      // Update QBot hosting data for the selected strategy
+      qbotHost.hosting[selectedStrategy] = (qbotHost.hosting[selectedStrategy] || 0) +
+        (roomInfo.host_pr + roomInfo.pr - roomInfo.bet_amount);
+      qbotHost.updated_at = new Date();
+
+      await saveDocumentWithRetry(qbotHost);
+
+    }
+
+    // Send notifications to each host about the game ending
+    roomInfo.hosts.forEach(host => {
+      const message = `You ended your game ${roomInfo.game_type.short_name}-${roomInfo.room_number}. Received ${(host.share / 100 * roomInfo.user_bet).toFixed(2)}.`;
 
       const notificationData = {
         _id: userId,
@@ -2259,87 +2145,47 @@ router.post('/end_game', auth, async (req, res) => {
         username: req.user.username,
         avatar: req.user.avatar,
         accessory: req.user.accessory,
-        room: roomId,
+        room: roomInfo._id,
         rank: req.user.totalWagered,
         created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
         created_at_str: moment(new Date()).format('LLL'),
         updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
         is_read: false
       };
-      socket.sendNotification(host, notificationData);
 
+      socket.sendNotification(host.host, notificationData);
     });
 
-
-    for (const hostData of roomInfo.hosts) {
-      const hostId = hostData.host;
-      const host = await User.findById(hostId);
-
-      if (!host) {
-        // Handle error if host is not found
-        console.error(`Host with id ${hostId} not found`);
-        continue;
-      }
-      const selectedStrategy = roomInfo.selectedStrategy.replace(/[\s-]/g, '').toLowerCase();
-
-      const amount = (hostData.share / 100) * roomInfo.user_bet;
-      host.balance += amount;
-      host.updated_at = new Date();
-      await saveDocumentWithRetry(host);
-
-      qbotHost = await QBot.findOne({ user: req.user._id });
-
-      if (!qbotHost) {
-        qbotHost = new QBot({ user: roomInfo['creator'] });
-      }
-      if (!qbotHost.hosting) {
-        qbotHost.hosting = {};
-      }
-      if (qbotHost.hosting[selectedStrategy] !== undefined) {
-        qbotHost.hosting[selectedStrategy] += (roomInfo.host_pr + roomInfo.pr - roomInfo.bet_amount);
-      } else {
-        qbotHost.hosting[selectedStrategy] = (roomInfo.host_pr + roomInfo.pr - roomInfo.bet_amount);
-      }
-
-      qbotHost.hosting.updated_at = new Date();
-      qbotHost.updated_at = new Date();
-    }
-
-    newGameLog = new GameLog({
-      room: roomInfo,
-      creator: roomInfo.creator,
-      joined_user: roomInfo.creator,
-      game_type: roomInfo.game_type,
+    // Create a GameLog entry with specific fields
+    const newGameLog = new GameLog({
+      room: roomInfo._id,
+      creator: roomInfo.creator._id,
+      joined_user: roomInfo.creator._id,
+      game_type: roomInfo.game_type._id,
       bet_amount: roomInfo.host_pr,
       hosts: roomInfo.hosts,
-      // is_anonymous: roomInfo.is_anonymous,
       game_result: -100
     });
 
-    await Promise.all([
-      Notification.insertMany(notifications.map(doc => doc.toObject())),
-      Transaction.insertMany(transactions.map(doc => doc.toObject()))
-    ]);
-
-    try {
-      await saveDocumentWithRetry(newGameLog);
-      await qbotHost.save();
-
-    } catch (error) {
-      console.error("Error saving:", error);
-    }
-
     const myRooms = await getMyRooms(userId);
 
+    // Create a new transaction with specific fields
     const newTransactionC = new Transaction({
       user: userId,
-      amount: roomInfo.hosts[0].share * roomInfo.user_bet,
+      amount: roomInfo.hosts[0].share / 100 * parseFloat(roomInfo.user_bet),
       description: `ended ${roomInfo.game_type.short_name}-${roomInfo.room_number}`,
       room: roomId
     });
 
-    const rooms = await getRoomList(7, 'All');
+    try {
+      await saveDocumentWithRetry(newGameLog);
+      await saveDocumentWithRetry(newTransactionC);
+    } catch (error) {
+      console.error("Error saving:", error);
+    }
 
+    // Emit updated room list
+    const rooms = await getRoomList(7, 'All');
     req.io.sockets.emit('UPDATED_ROOM_LIST', {
       total: rooms.count,
       roomList: rooms.rooms,
@@ -2353,18 +2199,204 @@ router.post('/end_game', auth, async (req, res) => {
       newTransaction: newTransactionC
     });
   } catch (err) {
+    console.error('ERROR in end_game:', err);
     res.json({
       success: false,
       already_finished: false,
-      message: err
+      message: err.message
     });
   }
 });
 
+// buy route
+router.post('/coHost', auth, async (req, res) => {
+  try {
+    const rowId = req.body.rowId;
+    const room = await Room.findOne({ _id: rowId });
+    const gameType = await GameType.findOne({ _id: room.game_type });
+
+    if (!room) {
+      return res.json({
+        success: false,
+        message: 'ROOM NOT FOUND'
+      });
+    }
+
+    const accessAllowed = await check_access_time(req.user._id);
+    if (!accessAllowed) {
+      return res.json({
+        success: false,
+        message: 'irregular action',
+        betResult: -1000
+      });
+    }
+
+    if (room.status === 'finished') {
+      return res.json({
+        success: false,
+        already_finished: true,
+        message: 'THIS GAME HAS ENDED ALREADY'
+      });
+    }
+
+    const now = moment().format('LLL');
+    const userBalance = req.user.balance;
+    let coHostAmount = parseFloat(req.body.amount);
+
+    if (isNaN(coHostAmount) || coHostAmount <= 0) {
+      return res.json({
+        success: false,
+        message: 'INVALID AMOUNT! PLEASE ENTER A VALID NUMBER.'
+      });
+    }
+
+    if (userBalance < coHostAmount) {
+      return res.json({
+        success: false,
+        message: 'INSUFFICIENT FUNDS!'
+      });
+    }
+
+    // Deduct 2.5% fee
+    const fee = coHostAmount * 0.025;
+    const amountAfterFee = coHostAmount - fee;
+
+    // Update room's bankroll and user's balance
+    room.user_bet = parseFloat(room.user_bet) + coHostAmount;
+    room.host_pr += coHostAmount;
+    room.endgame_amount += coHostAmount;
+    req.user.balance -= coHostAmount;
+
+    const existingHostIndex = room.hosts.findIndex(host => host.host.equals(req.user._id));
+    const totalBankroll = parseFloat(room.user_bet);
+
+    // Calculate base share without any boost
+    const baseShare = (amountAfterFee / totalBankroll) * 100;
+
+    // Calculate a boost factor that grows with investment size
+    const maxBoostFactor = 1.8; // Example: set a maximum boost cap
+    const minBoostFactor = 1.025; // Minimum boost factor
+    const boostFactor = minBoostFactor + ((coHostAmount / totalBankroll) * (maxBoostFactor - minBoostFactor));
+    const boostedShare = baseShare * boostFactor;
+
+    console.log(`Boost factor applied: ${boostFactor.toFixed(2)} for co-host amount: ${coHostAmount}`);
+
+    // Handle host addition or update
+    if (existingHostIndex === -1) {
+      // Add new co-host with boosted share
+      const newHost = {
+        host: req.user._id,
+        share: boostedShare,
+        accessory: req.user.accessory,
+        username: req.user.username,
+        avatar: req.user.avatar,
+        rank: req.user.totalWagered,
+        initial_stake: coHostAmount,
+        stake: amountAfterFee
+      };
+      room.hosts.push(newHost);
+    } else {
+      // Update existing host's share
+      const host = room.hosts[existingHostIndex];
+      const updatedShare = (((host.share / 100) * totalBankroll + amountAfterFee) / totalBankroll) * 100;
+      host.share = updatedShare * boostFactor;
+      host.initial_stake += coHostAmount;
+      host.stake = amountAfterFee;
+    }
+
+    // Normalize shares to ensure they total 100%
+    let totalShares = 0;
+    room.hosts.forEach(host => totalShares += host.share);
+    const normalizationFactor = 100 / totalShares;
+    room.hosts.forEach(host => host.share *= normalizationFactor);
+
+    // Notifications
+    room.hosts.forEach(host => {
+      if (!host.host.equals(req.user._id)) {
+        const message = `${req.user.username} now shares ${(boostedShare).toFixed(2)}% of ${gameType.short_name +
+          '-' +
+          room.room_number}, your new Share is ${(host.share).toFixed(2)}%`;
+
+        const temp = new Notification({
+          from: req.user._id,
+          to: host.host,
+          room: room._id,
+          message: message,
+          is_read: false
+        });
+
+        try {
+          saveDocumentWithRetry(temp);
+        } catch (error) {
+          console.error("Error saving temp:", error);
+        }
+
+        const notificationData = {
+          _id: req.user._id,
+          message: message,
+          username: req.user.username,
+          avatar: req.user.avatar,
+          accessory: req.user.accessory,
+          room: room._id,
+          rank: req.user.totalWagered,
+          created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+          created_at_str: moment(new Date()).format('LLL'),
+          updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+          is_read: false
+        };
+
+        socket.sendNotification(host.host, notificationData);
+      }
+    });
+
+    const newTransaction = new Transaction({
+      created_at: now,
+      user: req.user._id,
+      amount: -coHostAmount,
+      description: `Pumped ${coHostAmount} into ${gameType.short_name}-${room.room_number}`,
+      room: room._id
+    });
+
+    try {
+      await Promise.all([
+        saveDocumentWithRetry(room),
+        saveDocumentWithRetry(req.user),
+        saveDocumentWithRetry(newTransaction)
+      ]);
+    } catch (error) {
+      console.error("Error saving documents:", error);
+    }
+
+    return res.json({
+      success: true,
+      balance: req.user.balance,
+      newTransaction,
+      message: 'YOU ARE NOW A CO-HOST AND SHARE PROFITS/LOSSES WITH THE HOST.'
+    });
+  } catch (error) {
+    console.log('ERROR in coHost:', error);
+    return res.json({
+      success: false,
+      message: 'FAILED TO INITIATE CO-HOST ARRANGEMENT.'
+    });
+  }
+});
+
+
+// sell route
+// sell route
 router.post('/unstake', auth, async (req, res) => {
   try {
     const userId = req.user._id;
     const roomId = req.body.room_id;
+    const stakeAmount = req.body.stake_amount;  // Get the stake amount the user wants to unstake
+
+    if (stakeAmount <= 0) {
+      return res.json({
+        success: false,
+        message: 'Invalid unstake amount'
+      });
+    }
 
     // Check if action is allowed based on access time
     const accessAllowed = await check_access_time(userId);
@@ -2394,7 +2426,7 @@ router.post('/unstake', auth, async (req, res) => {
       return res.json({
         success: false,
         already_finished: true,
-        message: 'THIS BATTLE HAS NOW ENDED'
+        message: 'THIS GAME HAS NOW ENDED'
       });
     }
 
@@ -2407,15 +2439,25 @@ router.post('/unstake', auth, async (req, res) => {
       });
     }
 
-    // Calculate the unstake amount based on the initial stake amount
-    const unstakeAmount = roomInfo.hosts[hostIndex].initial_stake;
-    req.user.balance += unstakeAmount;
+    // Calculate the unstake amount based on the stake amount
+    const userStake = roomInfo.hosts[hostIndex].stake;
+
+    if (stakeAmount > userStake) {
+      return res.json({
+        success: false,
+        message: 'Unstake amount exceeds your current stake'
+      });
+    }
+
+    const unstakeAmount = stakeAmount;
+    roomInfo.hosts[hostIndex].stake -= unstakeAmount;  // Decrease the host's stake by the unstaked amount
+    req.user.balance += unstakeAmount;  // Add the unstaked amount to the user's balance
 
     // Create a transaction log for the unstake
     const newTransaction = new Transaction({
       user: userId,
       amount: unstakeAmount,
-      description: `Unstaked from ${roomInfo.game_type.short_name}-${roomInfo.room_number}`,
+      description: `Jeeted ${stakeAmount} in ${roomInfo.game_type.short_name}-${roomInfo.room_number}`,
       room: roomId
     });
 
@@ -2452,37 +2494,35 @@ router.post('/unstake', auth, async (req, res) => {
     roomInfo.user_bet -= unstakeAmount;
     roomInfo.host_pr -= unstakeAmount;
     roomInfo.endgame_amount -= unstakeAmount;
-    roomInfo.hosts.splice(hostIndex, 1);
 
-    // Recalculate remaining hosts' shares if there are still other hosts
-    if (roomInfo.hosts.length > 0) {
-      const remainingBankroll = roomInfo.hosts.reduce((total, host) => total + host.initial_stake, 0);
+    // Recalculate the remaining host shares
+    const remainingBankroll = roomInfo.user_bet; // Updated bankroll after unstake
+    roomInfo.hosts.forEach(host => {
+      if (host.stake > 0) {
+        host.share = (host.stake / remainingBankroll) * 100;
+      }
+    });
 
-      roomInfo.hosts.forEach(host => {
-        host.share = (host.initial_stake / remainingBankroll) * 100;
-      });
+    // Send notifications to remaining hosts
+    roomInfo.hosts.forEach(host => {
+      const message = `${req.user.username} jeeted ${stakeAmount} in ${gameType.short_name}-${roomInfo.room_number}, your new Share is ${(host.share).toFixed(2)}%`;
 
-      // Send notifications to remaining hosts
-      roomInfo.hosts.forEach(host => {
-        const message = `${req.user.username} sold in ${gameType.short_name}-${roomInfo.room_number}, your new Share is ${(host.share).toFixed(2)}%`;
+      const notificationData = {
+        _id: userId,
+        message: message,
+        username: req.user.username,
+        avatar: req.user.avatar,
+        accessory: req.user.accessory,
+        room: roomInfo._id,
+        rank: req.user.totalWagered,
+        created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+        created_at_str: moment(new Date()).format('LLL'),
+        updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+        is_read: false
+      };
 
-        const notificationData = {
-          _id: userId,
-          message: message,
-          username: req.user.username,
-          avatar: req.user.avatar,
-          accessory: req.user.accessory,
-          room: roomInfo._id,
-          rank: req.user.totalWagered,
-          created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
-          created_at_str: moment(new Date()).format('LLL'),
-          updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
-          is_read: false
-        };
-
-        socket.sendNotification(host.host, notificationData);
-      });
-    }
+      socket.sendNotification(host.host, notificationData);
+    });
 
     try {
       // Save updates to room and user balance, and log the transaction
@@ -2954,216 +2994,134 @@ router.post('/get_chat_room_info', auth, async (req, res) => {
   }
 });
 
-router.post('/coHost', auth, async (req, res) => {
+const getTimeBucket = (timeRange) => {
+  switch (timeRange) {
+    case '1m':
+      return 1;
+    case '15m':
+      return 15;
+    case '4h':
+      return 4 * 60;
+    case '24h':
+      return 24 * 60;
+    default:
+      return 1;
+  }
+};
+
+router.get('/candles/:room', async (req, res) => {
   try {
-    const rowId = req.body.rowId;
-    const room = await Room.findOne({ _id: rowId });
-    const gameType = await GameType.findOne({ _id: room.game_type });
+    const room = req.params.room;
 
-    if (!room) {
+    const { timeRange = '1m' } = req.query;
+    const bucketSize = getTimeBucket(timeRange);
+    let startDate = moment().subtract(4, 'hours').startOf('second').toDate();
+
+    // Fetch the first transaction that includes "created", "Pumped", or "Jeeted" in the description
+    const transactions = await Transaction.find({
+      room: room,
+      // description: { $regex:  'created|Pumped|Jeeted', $options: 'i' }, // Match any of these words
+    }).sort({ created_at: 1 });
+    if (transactions.length === 0) {
+      console.warn("[DEBUG] No transaction with 'created', 'Pumped' or 'Jeeted' description found.");
       return res.json({
         success: false,
-        message: 'ROOM NOT FOUND'
+        message: "No transactions found with 'created', 'Pumped', or 'Jeeted' descriptions.",
       });
     }
 
-    const accessAllowed = await check_access_time(req.user._id);
-    if (!accessAllowed) {
-      return res.json({
+    // Assuming the first transaction (created) is used as the initial value for candles
+    const firstTransaction = transactions[0];
+
+    const response = await axios.get(`https://api.dexscreener.com/latest/dex/tokens/${tokenMintAddress}`);
+    const tokenPrice = parseFloat(response.data.pairs[0]?.priceUsd);
+    if (tokenPrice == null || isNaN(tokenPrice)) {
+      return res.status(404).json({
         success: false,
-        message: 'irregular action',
-        betResult: -1000
+        message: 'Token price not found or invalid.',
       });
     }
 
-    const threeSecondsAgo = new Date(Date.now() - 3000);
-    console.log("room.updated_at < threeSecondsAgo ", room.updated_at < threeSecondsAgo);
+    // Aggregate the transaction data for candlestick chart
+    const candles = await Transaction.aggregate([
+      {
+        $match: {
+          room: room,
+          created_at: { $gte: startDate },
+        },
+      },
+      {
+        $project: {
+          timeBucket: {
+            $floor: {
+              $divide: [
+                { $toLong: "$created_at" },
+                bucketSize * 1000,
+              ],
+            },
+          },
+          amount: 1,
+          created_at: 1,
+        },
+      },
+      {
+        $group: {
+          _id: "$timeBucket",
+          open: { $first: "$amount" },
+          high: { $max: "$amount" },
+          low: { $min: "$amount" },
+          close: { $last: "$amount" },
+          volume: { $sum: { $abs: "$amount" } },
+          sellVolume: { $sum: { $abs: "$amount" } },
+          startTime: { $min: "$created_at" },
+        },
+      },
+      {
+        $sort: { startTime: -1 },
+      },
+      {
+        $limit: 2,
+      },
+    ]);
 
-    // if (room.updated_at > threeSecondsAgo) {
-    //   return res.json({
-    //     success: false,
-    //     message: 'ROOM TOO BUSY, TRY AGAIN LATER'
-    //   });
-    // }
-    if (room.status === 'finished') {
-      return res.json({
-        success: false,
-        already_finished: true,
-        message: 'THIS BATTLE HAS ENDED ALREADY'
-      });
-    }
+    const finalCandles = [];
+    let previousClose = firstTransaction.amount;
 
-    const now = moment().format('LLL');
-    const userBalance = req.user.balance;
-    const coHostAmount = parseFloat(req.body.amount);
-
-    if (isNaN(coHostAmount) || coHostAmount <= 0) {
-      return res.json({
-        success: false,
-        message: 'INVALID AMOUNT! PLEASE ENTER A VALID NUMBER.'
-      });
-    }
-
-    req.user.balance = req.user.balance || 0;
-
-    if (userBalance < coHostAmount) {
-      return res.json({
-        success: false,
-        message: 'INSUFFICIENT FUNDS!'
-      });
-    }
-
-    const newGameLog = new GameLog({
-      room: room._id,
-      creator: req.user._id,
-      joined_user: null,
-      game_type: room.game_type,
-      bet_amount: coHostAmount,
-      selected_rps: '',
-      ai_mode: '',
-      commission: 0,
-      game_result: 333,
-      winnings: 0,
-      endgame_amount: 0,
-      host_pr: 0,
-      user_bet: 0,
-      status: 'open',
-      hosts: []
-    });
-
-    try {
-      await newGameLog.save();
-    } catch (error) {
-      console.error('Error saving game log:', error);
-      return res.status(500).json({
-        success: false,
-        message: 'Failed to save game log'
-      });
-    }
-
-    const description = `Co-hosted room ${gameType.short_name}-${room.room_number}`;
-
-    const existingHostIndex = room.hosts.findIndex(host => host.host.equals(req.user._id));
-
-    const oldValuation = parseFloat(room.user_bet);
-    room.user_bet = parseFloat(room.user_bet) + coHostAmount;
-    room.host_pr += coHostAmount;
-    room.endgame_amount += coHostAmount;
-    req.user.balance -= coHostAmount;
-
-    let newShare;
-
-    // Bonding curve: Price per share increases as more money is added to the bankroll.
-    // Use bonding curve factor only if there are at least 3 hosts
-
-    // Determine the share price based on total bankroll and host count
-    const totalBankroll = parseFloat(room.user_bet);
-    const hostCount = room.hosts.length + 1; // Adding 1 to include the new host
-    const baseSharePrice = totalBankroll / hostCount;
-
-    // Calculate shares directly without bonding curve for consistency
-    if (existingHostIndex === -1) {
-      // New host
-      newShare = (coHostAmount / baseSharePrice) * 100;
-      const newHost = {
-        host: req.user._id,
-        share: newShare,
-        accessory: req.user.accessory,
-        username: req.user.username,
-        avatar: req.user.avatar,
-        rank: req.user.totalWagered,
-        initial_stake: coHostAmount,
-        stake: coHostAmount
+    candles.reverse().forEach((candle, index) => {
+      const adjustedCandle = {
+        _id: candle._id,
+        open: index === 0 ? firstTransaction.amount : previousClose,
+        high: candle.high,
+        low: candle.low,
+        close: -candle.close || tokenPrice,
+        volume: candle.volume || 0,
+        sellVolume: candle.sellVolume || 0,
+        startTime: candle.startTime,
       };
-      room.hosts.push(newHost);
-    } else {
-      // Update existing host
-      const host = room.hosts[existingHostIndex];
-      host.share = (((host.share / 100) * oldValuation + coHostAmount) / totalBankroll) * 100;
-      host.initial_stake += coHostAmount;
-      host.stake = coHostAmount;
-    }
-    // Step 1: Recalculate the total shares of all hosts
-    let totalShares = 0;
-    room.hosts.forEach(host => {
-      totalShares += host.share;
+
+      previousClose = adjustedCandle.close;
+      finalCandles.push(adjustedCandle);
     });
 
-    // Step 2: Normalize the shares so they sum to 100%
-    const normalizationFactor = 100 / totalShares;
+    // Include the relevant transactions in the response
+    const transactionData = transactions
+      .reverse()
+      .map((transaction) => ({
+        description: transaction.description,
+        amount: transaction.amount,
+        created_at: transaction.created_at,
+      }));
 
-    room.hosts.forEach(host => {
-      host.share *= normalizationFactor; // Normalize the share to ensure they sum to 100%
-    });
-
-    // Step 3: Send notifications and save data
-    room.hosts.forEach(host => {
-      if (!host.host.equals(req.user._id)) {
-        const message = `${req.user.username} now shares ${(newShare).toFixed(2)}% of ${gameType.short_name +
-          '-' +
-          room.room_number}, your new Share is ${(host.share).toFixed(2)}%`;
-
-        const temp = new Notification({
-          from: req.user._id,
-          to: host.host,
-          room: room._id,
-          message: message,
-          is_read: false
-        });
-
-        try {
-          saveDocumentWithRetry(temp);
-        } catch (error) {
-          console.error("Error saving temp:", error);
-        }
-
-        const notificationData = {
-          _id: req.user._id,
-          message: message,
-          username: req.user.username,
-          avatar: req.user.avatar,
-          accessory: req.user.accessory,
-          room: room._id,
-          rank: req.user.totalWagered,
-          created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
-          created_at_str: moment(new Date()).format('LLL'),
-          updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
-          is_read: false
-        };
-
-        socket.sendNotification(host.host, notificationData);
-      }
-    });
-
-    const newTransaction = new Transaction({
-      created_at: now,
-      user: req.user._id,
-      amount: -coHostAmount,
-      description,
-      room: room._id
-    });
-
-    try {
-      await Promise.all([
-        saveDocumentWithRetry(room),
-        saveDocumentWithRetry(req.user),
-        saveDocumentWithRetry(newTransaction)
-      ]);
-    } catch (error) {
-      console.error("Error saving documents:", error);
-    }
-
-    return res.json({
+    res.json({
       success: true,
-      balance: req.user.balance,
-      newTransaction,
-      message: 'YOU ARE NOW A CO-HOST AND SHARE PROFITS/LOSSES WITH THE HOST.'
+      candles: finalCandles,
+      transactions: transactionData,
     });
-  } catch (error) {
-    console.log('ERROR in coHost:', error);
-    return res.json({
+  } catch (err) {
+    console.error(`[ERROR] An error occurred: ${err.message}`);
+    res.json({
       success: false,
-      message: 'FAILED TO INITIATE CO-HOST ARRANGEMENT.'
+      err: err.message,
     });
   }
 });
@@ -3193,7 +3151,7 @@ router.post('/topUp', auth, async (req, res) => {
     if (room.status !== 'open') {
       return res.json({
         success: false,
-        message: 'THIS BATTLE HAS ENDED ALREADY'
+        message: 'THIS GAME HAS ENDED ALREADY'
       });
     }
 
@@ -3233,8 +3191,8 @@ router.post('/topUp', auth, async (req, res) => {
     const bondingCurveThreshold = 1000; // Example threshold
     const bondingCurveFactor = newTotalBet > bondingCurveThreshold ? 1.2 : 1.0;
     const baseSharePrice = newTotalBet / (room.hosts.length + 1);
-    const newSharePrice = baseSharePrice * bondingCurveFactor;
 
+    const newSharePrice = baseSharePrice * bondingCurveFactor;
     if (existingHostIndex === -1) {
       // New host joining, calculate their share
       newShare = (topUpAmount / newSharePrice) * 100;
@@ -3310,7 +3268,7 @@ router.post('/editPayout', auth, async (req, res) => {
     if (room.status !== 'open') {
       return res.json({
         success: false,
-        message: 'THIS BATTLE HAS ENDED ALREADY'
+        message: 'THIS GAME HAS ENDED ALREADY'
       });
     }
 

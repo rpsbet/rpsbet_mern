@@ -16,11 +16,12 @@ import {
   editPayout,
   setGameMode,
   createRoom,
-  topUp,
-  reCreateRoom
+  reCreateRoom,
+  getRoomList,
+  coHost
 } from '../../redux/Logic/logic.actions';
 import { getRank } from '../../util/getRank';
-import { faFilter, faSort, faEdit, faPiggyBank, faMoneyCheckAlt, faInfoCircle } from '@fortawesome/free-solid-svg-icons';
+import { faFilter, faSort, faEdit, faPiggyBank, faMoneyCheckAlt } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Battle from '../icons/Battle';
 import blob from '../LottieAnimations/blob.json';
@@ -36,6 +37,7 @@ import animationData from '../LottieAnimations/add';
 import loadingChart from '../LottieAnimations/loadingChart';
 import pressHold from '../LottieAnimations/pressHold.json';
 import Joyride from 'react-joyride';
+import CoHostModal from '../modal/CoHostModal';
 import { tutorialStepsCreate } from '../../util/tutorialStepsCreate';
 import { InputAdornment, Button, ButtonGroup, Tooltip, TextField, Table, TableBody, TableRow, TableCell, Radio, RadioGroup, FormControlLabel } from '@material-ui/core';
 
@@ -75,9 +77,9 @@ class MyGamesTable extends Component {
       selectedSort: 'desc',
       creatingRoom: false,
       myGames: this.props.myGames,
+      isCoHostModalOpen: false,
       isLoading: true,
       selectedStrategy: null,
-      isTopUpModalOpen: false,
       isPayoutModalOpen: false,
       selectedRow: null,
       paymentMethod: 'manual',
@@ -91,6 +93,7 @@ class MyGamesTable extends Component {
   }
 
   async componentDidMount() {
+    console.log("this.props.myGames", this.props.myGames)
     await this.fetchData();
     document.addEventListener('mousedown', this.handleClickOutside);
   }
@@ -107,21 +110,64 @@ class MyGamesTable extends Component {
       this.fetchData();
     }
 
-    if (
-      this.props.myGamesWithStats !== prevProps.myGamesWithStats) {
-      this.setState({ myGames: this.props.myGames, isLoading: false })
-    }
-
     if (prevProps.myGames !== this.props.myGames) {
       this.setState({ myGames: this.props.myGames, isLoading: false });
     }
   }
 
+
+  handleCoHost = (row) => {
+    console.log("WEfef", row)
+    this.setState({ isCoHostModalOpen: true, selectedRow: row });
+  };
+
+  handleCloseCoHostModal = () => {
+    this.setState({ isCoHostModalOpen: false });
+  };
+
+  handleCoHostAmountChange = event => {
+    this.setState({ coHostAmount: event.target.value });
+  };
+
+
+  handleSendCoHost = async () => {
+    const { coHostAmount, selectedRow } = this.state;
+    const { balance, isDarkMode, setBalance, addNewTransaction, getRoomList, selectedGameType } = this.props;
+
+    try {
+      if (coHostAmount <= 0) {
+        alertModal(isDarkMode, 'R U FURR-REAL? COHOST AMOUNT MUST BE MORE THAN 0!');
+        return;
+      }
+
+      if (coHostAmount > balance) {
+        alertModal(isDarkMode, 'NOT ENUFF FUNDS AT THIS MEOWMENT');
+        return;
+      }
+
+      const result = await this.props.coHost(coHostAmount, selectedRow._id);
+
+      if (result.success) {
+        alertModal(isDarkMode, result.message, '-cat');
+        setBalance(result.balance);
+        addNewTransaction(result.newTransaction);
+        await getRoomList({
+          pageSize: this.state.roomList.length,
+          game_type: selectedGameType,
+        });
+      } else {
+        alertModal(isDarkMode, result.message);
+      }
+    } catch (e) {
+      alertModal(isDarkMode, 'ROOM TOO BUSY, TRY AGAIN LATER');
+    }
+  };
+
   handleSettingsIconClick = (row) => {
-    if (!row.coHost) {
+    if (row.coHost) {
       this.setState({ settings_panel_opened: !this.state.settings_panel_opened, selectedRow: row });
     } else {
-      alertModal(this.props.isDarkMode, "YOU ARE NOT THE HOST, UNABLE TO CHANGE STRATEGY.");
+      alertModal(this.props.isDarkMode, "YOU MUST OWN 100% TO CHANGE STRATEGY.");
     }
   };
 
@@ -143,51 +189,6 @@ class MyGamesTable extends Component {
     });
   };
 
-  handleTopUp = (row) => {
-    this.setState({ isTopUpModalOpen: true, selectedRow: row });
-  };
-
-  handleCloseTopUpModal = () => {
-    this.setState({ isTopUpModalOpen: false });
-  };
-
-  handleTopUpAmountChange = event => {
-    this.setState({ topUpAmount: event.target.value });
-  };
-
-  handleSendTopUp = async () => {
-    const { topUpAmount, selectedRow } = this.state;
-    const { balance, isDarkMode, setBalance, addNewTransaction } = this.props;
-
-    try {
-      if (topUpAmount <= 0) {
-        alertModal(isDarkMode, 'R U FURR-REAL? TOPUP AMOUNT MUST BE MORE THAN 0!');
-        return;
-      }
-
-      if (topUpAmount > balance) {
-        alertModal(isDarkMode, 'NOT ENUFF FUNDS AT THIS MEOWMENT');
-        return;
-      }
-
-      this.setState({ isLoading: true });
-      const result = await this.props.topUp(topUpAmount, selectedRow._id);
-
-      if (result.success) {
-        setBalance(result.balance);
-        addNewTransaction(result.newTransaction);
-        await this.fetchData();
-        alertModal(isDarkMode, result.message, '-cat');
-        this.handleCloseTopUpModal();
-      } else {
-        alertModal(isDarkMode, result.message);
-      }
-    } catch (e) {
-      alertModal(isDarkMode, 'ROOM IS TOO BUSY, TRY AGAIN LATER');
-    } finally {
-      this.setState({ isLoading: false });
-    }
-  };
 
   handlePayout = (row) => {
     let paymentMethod = 'automatic';
@@ -377,7 +378,7 @@ class MyGamesTable extends Component {
     });
   };
 
-  unstake = async (winnings, room_id) => {
+  unstake = async (winnings, room_id, stakeAmount) => {
     this.setState(prevState => ({
       [room_id]: {
         ...prevState[room_id],
@@ -385,7 +386,8 @@ class MyGamesTable extends Component {
       }
     }), async () => {
       try {
-        await this.props.unstake(room_id);
+        // Pass the stake amount to the backend
+        await this.props.unstake(room_id, stakeAmount);
         await this.props.getMyGames({
           game_type: this.state.selectedGameType,
           status: this.state.selectedFilter,
@@ -492,7 +494,7 @@ class MyGamesTable extends Component {
 
   render() {
     const { loading, strategies, user, updateRoomStrategy, isLowGraphics, isDarkMode } = this.props;
-    const { isLoading, anchorEl, selectedRow, selectedStrategy, settings_panel_opened, isFocused, selectedFilter, sortAnchorEl, selectedSort } = this.state;
+    const { isLoading, anchorEl, coHostAmount, selectedRow, selectedStrategy, settings_panel_opened, isFocused, selectedFilter, sortAnchorEl, selectedSort } = this.state;
     const defaultOptions = {
       loop: this.props.isLowGraphics ? false : true,
       autoplay: this.props.isLowGraphics ? false : true,
@@ -561,7 +563,7 @@ class MyGamesTable extends Component {
               className="btn-create-room"
               onClick={this.handleCreateBtnClicked}
             >
-              CREATE
+              START NEW GAME
             </Button>
           </div>
         </div>
@@ -571,14 +573,14 @@ class MyGamesTable extends Component {
           </div>
         ) : (
           <div className="table my-open-game-table">
-            {this.props.myGames.length > 0 && (
+            {this.props.myGames && this.props.myGames.length > 0 && (
               <div className="table-header">
                 <div className="table-cell room-id">Room ID</div>
                 <div className="table-cell payout" style={{ paddingLeft: "100px", paddingRight: "20px" }}>
                   STAKE
                 </div>
                 <div className="table-cell winnings" style={{ paddingLeft: "40px" }}>Payout</div>
-                <div className="table-cell bet-info" style={{ paddingLeft: "10px" }}>Net Profit&nbsp;<Tooltip title="NOT INCLUDING AUTO-PAYOUTS">
+                <div className="table-cell bet-info" style={{ paddingLeft: "10px" }}>Net Profit&nbsp;<Tooltip title="NOT INCLUDING FEES">
                   <Info style={{ width: "18px", cursor: "pointer" }} />
                 </Tooltip></div>
                 <div className="table-cell winnings">Plays</div>
@@ -587,11 +589,11 @@ class MyGamesTable extends Component {
                 <div className="table-cell action desktop-only">Action</div>
               </div>
             )}
-            {this.state.myGames.length === 0 ? (
+            {this.props.myGames && this.props.myGames.length === 0 ? (
               <div className="dont-have-game-msg">
                 <Lottie options={defaultOptions} width={50} />
                 <span>
-                  CLICK "CREATE"
+                  CLICK "START NEW GAME"
                 </span>
               </div>
             ) : (
@@ -626,24 +628,13 @@ class MyGamesTable extends Component {
                           {convertToCurrency(row.user_bet)}<br className='mobile-only' />
                           <span style={{ fontSize: '10px' }}> ({((row.share).toFixed(2))}%)</span>
                         </span>
-
-                        {selectedFilter === 'open' && (
-
-                          <a
-                            className="ml-1"
-                            onClick={() => this.handleTopUp(row)}
-                            style={{ color: "#ffb000", cursor: "pointer", borderRadius: "30px", display: "inline-flex", verticalAlign: "middle", marginBottom: "4px" }}
-                          >
-                            <AddCircleOutline />
-                          </a>
-                        )}
                       </div>
 
                       <div className="table-cell endgame">
                         <span className="end-amount">
                           {!row.endgame_type ? "M" : convertToCurrency(row.endgame_amount)}
                         </span>
-                        {(!row.coHost) &&
+                        {(row.coHost) &&
                           (selectedFilter === 'open') && (
                             <a
                               className="ml-1"
@@ -655,39 +646,19 @@ class MyGamesTable extends Component {
                           )}
                       </div>
                       <div className="table-cell winnings">
-                        <span>{convertToCurrency((row.winnings - row.stake))}&nbsp;
+                        <span>{row.coHost ? convertToCurrency((row.share / 100 * parseFloat(row.user_bet)) - row.stake) : convertToCurrency((row.share / 100 * parseFloat(row.user_bet)) - row.stake)}&nbsp;
                         </span>
 
                       </div>
 
-                      {!this.props.myGamesWithStats ? (
-                        <>
+                   
                           <div className="table-cell bets" style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
+                          
                             <Battle width="24px" />
                             &nbsp;
-                            <Lottie
-                              options={{
-                                loop: isLowGraphics ? false : true,
-                                autoplay: isLowGraphics ? false : true,
-                                animationData: loadingChart
-                              }}
-                              style={{
-                                width: '32px'
-                              }}
-                            />
-                          </div>
-                        </>
-                      ) : (
-                        <>
-
-                          <div className="table-cell bets">
-                            <Battle width="24px" />
-                            &nbsp;
-                            <span>{row.bets}</span>
+                            <span>{row.battles}</span>
                           </div>
 
-                        </>
-                      )}
                       <div className="table-cell winnings desktop-only">
 
                         <Tooltip title="CHANGE AI PLAY STRATEGY">
@@ -715,13 +686,12 @@ class MyGamesTable extends Component {
                               <span style={{ color: 'red' }}>closing...</span>
                             ) : (
                               <div>
-                                {row.coHost ? (
+                                {!row.coHost ? (
                                   <Button
                                     className="btn_withdraw btn_end"
-                                    onClick={() => this.unstake(row.winnings, row._id)}
-
+                                    onClick={() => this.handleCoHost(row)}
                                   >
-                                    SELL
+                                    TRADE
                                   </Button>
                                 ) : (
                                   <Button
@@ -795,10 +765,10 @@ class MyGamesTable extends Component {
                                 {row.coHost ? (
                                   <Button
                                     className="btn_withdraw btn_end"
-                                    onClick={() => this.unstake(row.winnings, row._id)}
+                                    onClick={() => this.handleCoHost(row)}
 
                                   >
-                                    Unstake
+                                    TRADE
                                   </Button>
                                 ) : (
                                   <Button
@@ -852,131 +822,23 @@ class MyGamesTable extends Component {
         )}
 
         <Modal
-          isOpen={this.state.isTopUpModalOpen}
-          onRequestClose={this.handleCloseTopUpModal}
+          isOpen={this.state.isCoHostModalOpen}
+          onRequestClose={this.handleCloseCoHostModal}
           style={customStyles}
-          contentLabel="TopUp Modal"
+          contentLabel="CoHost Modal"
         >
-          <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
-            <div className="modal-header">
-              <h2 className="modal-title title">
-                <FontAwesomeIcon icon={faPiggyBank} className="mr-2" />
-
-                STAKE
-              </h2>
-              <Button className="btn-close title" onClick={this.handleCloseTopUpModal}>
-                ×
-              </Button>
-            </div>
-            <div className="modal-body">
-              <div className="modal-content-wrapper">
-                <div className="modal-content-panel">
-                  <div className="input-amount">
-                    <TextField
-                      label="Amount"
-                      value={this.state.topUpAmount || ''}
-                      onChange={this.handleTopUpAmountChange}
-                      type="number"
-                      variant="filled"
-                      autoComplete="off"
-                      id="payout"
-                      className="form-control"
-                      InputProps={{
-                        onFocus: this.handleFocus,
-                        endAdornment: !this.state.isFocused ? ' RPS ' : (
-                          <ButtonGroup
-                            className={this.state.isFocused ? 'fade-in' : 'fade-out'}
-                          >
-                            <Button
-                              variant="contained"
-                              color="secondary"
-                              onClick={() => this.handleMaxButtonClick()}
-                              style={{ marginRight: '-10px' }}
-                            >
-                              Max
-                            </Button>
-                          </ButtonGroup>
-                        ),
-                      }}
-                    />
-
-                  </div>
-                  <Table>
-                    <TableBody>
-                      <TableRow>
-                        <TableCell>
-                          <span>IN-GAME BALANCE:</span>
-                        </TableCell>
-                        <TableCell>
-                          {convertToCurrency(this.props.balance || 0)}
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>
-                          <span>TOP-UP AMOUNT:</span>
-                        </TableCell>
-                        <TableCell style={{ color: 'red' }}>
-                          {convertToCurrency((this.state.topUpAmount || 0) * -1)}
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>
-                          <span>CURRENT BANKROLL:</span>
-                        </TableCell>
-                        <TableCell style={{ color: "#ffb000" }}>
-                          {this.state.selectedRow ? (
-                            convertToCurrency(parseFloat(this.state.selectedRow.user_bet || 0))
-                          ) : (
-                            null
-                          )}
-                        </TableCell>
-
-                      </TableRow>
-
-                      <TableRow>
-                        <TableCell>
-                          <span>NEW BALANCE:</span>
-                        </TableCell>
-                        <TableCell>
-                          {convertToCurrency(
-                            (this.props.balance || 0) - (this.state.topUpAmount || 0)
-                          )}
-                          &nbsp;
-                          {(this.props.balance || 0) - (this.state.topUpAmount || 0) < 0 && <Warning width="15pt" />}
-                        </TableCell>
-
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>
-                          <span>NEW BANKROLL:</span>
-                        </TableCell>
-                        <TableCell style={{ color: "#ffb000" }}>
-                          {this.state.selectedRow ? (
-                            convertToCurrency(
-                              parseFloat(this.state.selectedRow.user_bet || 0) + (parseFloat(this.state.topUpAmount || 0))
-                            )
-                          ) : (
-                            null
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
-            </div>
-            <div className="modal-footer">
-              <Button className="btn-submit" onClick={this.handleSendTopUp}>
-                TOP-UP
-              </Button>
-              <Button
-                className="btn-back"
-                onClick={this.handleCloseTopUpModal}
-              >
-                Cancel
-              </Button>
-            </div>
-          </div>
+          <CoHostModal
+            isDarkMode={this.props.isDarkMode}
+            coHostAmount={coHostAmount}
+            selectedRow={selectedRow}
+            balance={this.props.balance}
+            user={this.props.user}
+            togglePopup={this.togglePopup}
+            handleClose={this.handleCloseCoHostModal}
+            handleSendCoHost={this.handleSendCoHost}
+            handleCoHostAmountChange={this.handleCoHostAmountChange}
+            has_joined={false}
+          />
         </Modal>
         <Modal
           isOpen={this.state.isPayoutModalOpen}
@@ -1075,7 +937,6 @@ const mapStateToProps = state => ({
   isDarkMode: state.auth.isDarkMode,
   isLowGraphics: state.auth.isLowGraphics,
   myGames: state.logic.myGames,
-  myGamesWithStats: state.logic.myGamesWithStats,
   pageNumber: state.logic.myGamesPageNumber,
   socket: state.auth.socket,
   game_mode: state.logic.game_mode,
@@ -1097,7 +958,6 @@ const mapDispatchToProps = {
   setBalance,
   reCreateRoom,
   editPayout,
-  topUp,
   updateTutorialCompleted
 };
 

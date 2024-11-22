@@ -153,7 +153,7 @@ class DefaultBetAmountPanel extends Component {
    
     const formattedBetAmount = this.formatBetAmount(bet_amount);
     return (
-      <div className="default-bet-amount-panel game-info-panel">
+      <div className="default-bet-amount-panel game-info-panel glass-container"  style={{ marginBottom: "30px", padding: "30px 60px 60px 60px" }}>
         <h3 className="game-sub-title">BANKROLL&nbsp;<Tooltip
                         style={{ position: "absolute", right: "20px" }}
                         title={'Liquidity / pot / pool of money for the game'}

@@ -34,7 +34,6 @@ class RoomHistory extends React.Component {
       const newNumToShow = numToShow + 10;
 
       await getRoomInfo(roomId, newNumToShow, true);
-
       this.setState({ numToShow: newNumToShow });
     } catch (error) {
       console.error('Error loading more data:', error);

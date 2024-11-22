@@ -173,8 +173,7 @@ class WithdrawModal extends Component {
     //   ...result
     // });
 
-    const params = { addressTo: this.state.account };
-    this.props.setGasfee(params);
+   
   }
 
   // componentDidUpdate(prevState) {
@@ -263,7 +262,7 @@ class WithdrawModal extends Component {
     if (isWeb3Payment) {
       this.setState({
         paymentMethod: selectedPaymentMethod,
-        currencyTo: 'eth'
+        currencyTo: 'sol'
       });
     } else {
       // Otherwise, set only the paymentMethod state
@@ -284,6 +283,11 @@ class WithdrawModal extends Component {
     }, () => {
       this.handleEstimateAmount();
     });
+    const params = {
+      addressTo: this.state.account,
+      amount: amount // Assuming you have the withdrawal amount in your state
+    };
+    this.props.setGasfee(params);
   };
 
   handleExtraId = e => {

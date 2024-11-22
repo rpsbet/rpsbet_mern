@@ -189,7 +189,6 @@ router.get('/profit', auth, async (req, res) => {
 // @access  Private
 // Calculate profits without including transactions with 'withdraw' or 'deposit' in the description
 router.get('/user', auth, async (req, res) => {
-
   try {
     const { loadMore, filterType, search, sortBy } = req.query;
     const queryLimit = parseInt(loadMore) ? 10 + parseInt(loadMore) : 5;

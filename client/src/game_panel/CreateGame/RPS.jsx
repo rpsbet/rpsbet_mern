@@ -243,7 +243,7 @@ class RPS extends Component {
   onAutoPlay = () => {
     if (this.props.rps_list.length > 2) {
       const prevStates = this.props.rps_list;
-const nextRPS = predictNext(prevStates, false);
+      const nextRPS = predictNext(prevStates, false);
 
       this.onAddRun(nextRPS);
     } else {
@@ -492,141 +492,145 @@ const nextRPS = predictNext(prevStates, false);
         )} */}
         {step === 2 && rps_game_type === 0 && (
           <div className="game-info-panel">
-            <h3 className="game-sub-title">Strategy&nbsp;<Tooltip
-              style={{ position: "absolute", right: "20px" }}
-              title={'The strategy determines how your AI will play, includes patterns, reasoning and predictability.'}
-              placement="top"
-            >
-              <Info style={{ cursor: "pointer", float: "right" }} />
-            </Tooltip></h3>
-            <SettingsRef
-              strategies={strategies}
-              ai_mode={ai_mode}
-              user_id={user_id}
-              rank={rank}
-              settings_panel_opened={settings_panel_opened}
-              setSelectedStrategy={setSelectedStrategy}
-              settingsRef={this.settingsRef}
-              selectedStrategy={selectedStrategy}
-            />
-            <ButtonBase
-              onClick={this.handleSettingsIconClick}
-              className="strategy-btn title"
-              style={{
-                boxShadow: 'unset',
-                borderRadius: '30px',
-                background: 'transparent',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <span style={{ marginRight: '5px' }}>{selectedStrategy}</span>
-              <SettingsOutlinedIcon />
-            </ButtonBase>
-            {(selectedStrategy === 'Hidden Markov') ? (
-              <>
-                <div className="rps-add-run-panel">
-                  <div className="rps-add-run-form">
-                    <h3 className="game-sub-title">Select: R - P - S! </h3>
-                    <div id="rps-radio">
-                      <Button
-                        className={'rock' + (selected_rps === 'R' ? ' active' : '')}
-                        variant="contained"
-                        onClick={() => {
+            <div className='glass-container'>
 
-                          this.onAddRun('R');
-                          const currentActive = document.querySelector('.active');
-                          if (currentActive) {
-                            currentActive.style.animation = 'none';
-                            void currentActive.offsetWidth;
-                            currentActive.style.animation =
-                              'pulse 0.2s ease-in-out ';
-                          }
-                        }}
-                      ><span className="roll-tag">[R]</span></Button>
-                      <Button
-                        className={
-                          'paper' + (selected_rps === 'P' ? ' active' : '')
-                        }
-                        variant="contained"
-                        onClick={() => {
+              <h3 className="game-sub-title">Strategy&nbsp;<Tooltip
+                style={{ position: "absolute", right: "20px" }}
+                title={'The strategy determines how your AI will play, includes patterns, reasoning and predictability.'}
+                placement="top"
+              >
+                <Info style={{ cursor: "pointer", float: "right" }} />
+              </Tooltip></h3>
+              <SettingsRef
+                strategies={strategies}
+                ai_mode={ai_mode}
+                user_id={user_id}
+                rank={rank}
+                settings_panel_opened={settings_panel_opened}
+                setSelectedStrategy={setSelectedStrategy}
+                settingsRef={this.settingsRef}
+                selectedStrategy={selectedStrategy}
+              />
+              <ButtonBase
+                onClick={this.handleSettingsIconClick}
+                className="strategy-btn title"
+                style={{
+                  boxShadow: 'unset',
+                  borderRadius: '30px',
+                  background: 'transparent',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <span style={{ marginRight: '5px' }}>{selectedStrategy}</span>
+                <SettingsOutlinedIcon />
+              </ButtonBase>
+              {(selectedStrategy === 'Hidden Markov') ? (
+                <>
+                  <div className="rps-add-run-panel">
+                    <div className="rps-add-run-form">
+                      <h3 className="game-sub-title">Select: R - P - S! </h3>
+                      <div id="rps-radio">
+                        <Button
+                          className={'rock' + (selected_rps === 'R' ? ' active' : '')}
+                          variant="contained"
+                          onClick={() => {
 
-                          this.onAddRun('P');
-                          const currentActive = document.querySelector('.active');
-                          if (currentActive) {
-                            currentActive.style.animation = 'none';
-                            void currentActive.offsetWidth;
-                            currentActive.style.animation =
-                              'pulse 0.2s ease-in-out ';
+                            this.onAddRun('R');
+                            const currentActive = document.querySelector('.active');
+                            if (currentActive) {
+                              currentActive.style.animation = 'none';
+                              void currentActive.offsetWidth;
+                              currentActive.style.animation =
+                                'pulse 0.2s ease-in-out ';
+                            }
+                          }}
+                        ><span className="roll-tag">[R]</span></Button>
+                        <Button
+                          className={
+                            'paper' + (selected_rps === 'P' ? ' active' : '')
                           }
-                        }}
-                      ><span className="roll-tag">[P]</span></Button>
+                          variant="contained"
+                          onClick={() => {
+
+                            this.onAddRun('P');
+                            const currentActive = document.querySelector('.active');
+                            if (currentActive) {
+                              currentActive.style.animation = 'none';
+                              void currentActive.offsetWidth;
+                              currentActive.style.animation =
+                                'pulse 0.2s ease-in-out ';
+                            }
+                          }}
+                        ><span className="roll-tag">[P]</span></Button>
+                        <Button
+                          className={
+                            'scissors' + (selected_rps === 'S' ? ' active' : '')
+                          }
+                          variant="contained"
+                          onClick={() => {
+                            this.onAddRun('S');
+                            const currentActive = document.querySelector('.active');
+                            if (currentActive) {
+                              currentActive.style.animation = 'none';
+                              void currentActive.offsetWidth;
+                              currentActive.style.animation =
+                                'pulse 0.2s ease-in-out ';
+                            }
+                          }}
+                        ><span className="roll-tag">[S]</span></Button>
+                      </div>
+
                       <Button
-                        className={
-                          'scissors' + (selected_rps === 'S' ? ' active' : '')
-                        }
+                        id="aiplay"
                         variant="contained"
-                        onClick={() => {
-                          this.onAddRun('S');
-                          const currentActive = document.querySelector('.active');
-                          if (currentActive) {
-                            currentActive.style.animation = 'none';
-                            void currentActive.offsetWidth;
-                            currentActive.style.animation =
-                              'pulse 0.2s ease-in-out ';
-                          }
-                        }}
-                      ><span className="roll-tag">[S]</span></Button>
+                        onClick={this.onAutoPlay}
+                      >
+                        <FontAwesomeIcon icon={faRobot} style={{ color: '#060607' }} />&nbsp;Test AI Play&nbsp;<span className="roll-tag">[space]</span>
+                      </Button>
                     </div>
-
-                    <Button
-                      id="aiplay"
-                      variant="contained"
-                      onClick={this.onAutoPlay}
-                    >
-                       <FontAwesomeIcon icon={faRobot} style={{ color: '#060607' }} />&nbsp;Test AI Play&nbsp;<span className="roll-tag">[space]</span>
-                    </Button>
-                  </div>
-                  <div className="rps-add-run-table">
-                    <h3 className="game-sub-title">Pattern Table</h3>
-                    <table id="runs">
-                      <tbody>
-                        {rps_list && rps_list.length > 0 ? (
-                          rps_list.map((rps, index) => (
-                            <tr key={index}>
-                              <td>{index + 1}</td>
-                              <td>{rps.rps}</td>
-                              <td>
-                                <HighlightOffIcon
-                                  id="delete"
-                                  onClick={() => this.onRemoveItem(index)}
-                                />
+                    <div className="rps-add-run-table">
+                      <h3 className="game-sub-title">Pattern Table</h3>
+                      <table id="runs">
+                        <tbody>
+                          {rps_list && rps_list.length > 0 ? (
+                            rps_list.map((rps, index) => (
+                              <tr key={index}>
+                                <td>{index + 1}</td>
+                                <td>{rps.rps}</td>
+                                <td>
+                                  <HighlightOffIcon
+                                    id="delete"
+                                    onClick={() => this.onRemoveItem(index)}
+                                  />
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td id="add-run" colSpan="4">
+                                Your pattern will be displayed here
                               </td>
                             </tr>
-                          ))
-                        ) : (
-                          <tr>
-                            <td id="add-run" colSpan="4">
-                              Your pattern will be displayed here
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                    <IconButton style={{ background: "transparent", boxShadow: "none" }} color="secondary" onClick={this.handleReset}>
-                      <FontAwesomeIcon icon={faTrash} /> {/* Use the faRedo icon */}
-                    </IconButton>
+                          )}
+                        </tbody>
+                      </table>
+                      <IconButton style={{ background: "transparent", boxShadow: "none" }} color="secondary" onClick={this.handleReset}>
+                        <FontAwesomeIcon icon={faTrash} /> {/* Use the faRedo icon */}
+                      </IconButton>
+                    </div>
                   </div>
-                </div>
-              </>
+                </>
 
-            ) : (
-              <div style={{ padding: "30px", fontSize: "0.6em" }}>
-                (No Pattern Needed)
-              </div>
-            )}
+              ) : (
+                <div style={{ padding: "30px", fontSize: "0.6em" }}>
+                  (No Pattern Needed)
+                </div>
+              )}
+            </div>
           </div>
+
         )}
       </>
     );

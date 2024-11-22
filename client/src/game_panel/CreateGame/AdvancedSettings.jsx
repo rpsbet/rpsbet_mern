@@ -133,167 +133,172 @@ class AdvancedSettings extends Component {
     const { lowerLimit, upperLimit, endgame_amount } = this.props;
 
     // Debugging: Check if limits are correctly received
-    console.log('Lower Limit:', lowerLimit);
-    console.log('Upper Limit:', upperLimit);
+    // console.log('Lower Limit:', lowerLimit);
+    // console.log('Upper Limit:', upperLimit);
 
     return (
       <div id="advanced_panel">
         {this.props.child_step === 1 && (
           <div className="game-privacy-panel game-info-panel">
-            <h3 className="game-sub-title">Privacy&nbsp;<Tooltip
-              style={{ position: "absolute", right: "20px" }}
-              title={'Set private to require players enter a password to play'}
-              placement="top"
-            >
-              <Info style={{ cursor: "pointer", float: "right" }} />
-            </Tooltip></h3>
-            <div className="radio-button-group bet-amounts">
-              <Button
-                className={!this.props.is_private ? ' active' : ''}
-                onClick={() => {
-                  this.props.onChangeState({
-                    is_private: false,
-                    room_password: ''
-                  });
-                }}
+            <div className='glass-container'>
+
+              <h3 className="game-sub-title">Privacy&nbsp;<Tooltip
+                style={{ position: "absolute", right: "20px" }}
+                title={'Set private to require players enter a password to play'}
+                placement="top"
               >
-                <img
-                  width="20px"
-                  src={'/img/icons/public.svg'}
-                  alt={`Public Game`}
+                <Info style={{ cursor: "pointer", float: "right" }} />
+              </Tooltip></h3>
+              <div className="radio-button-group bet-amounts">
+                <Button
+                  className={!this.props.is_private ? ' active' : ''}
+                  onClick={() => {
+                    this.props.onChangeState({
+                      is_private: false,
+                      room_password: ''
+                    });
+                  }}
+                >
+                  <img
+                    width="20px"
+                    src={'/img/icons/public.svg'}
+                    alt={`Public Game`}
+                  />
+                  Public
+                </Button>
+                <Button
+                  className={this.props.is_private ? ' active' : ''}
+                  onClick={() => {
+                    this.props.onChangeState({ is_private: true });
+                  }}
+                >
+                  <img
+                    width="20px"
+                    src={'/img/icons/private.svg'}
+                    alt={`Private Game`}
+                  />
+                  Private
+                </Button>
+                <TextField
+                  type="text"
+                  id="betamount"
+                  variant="filled"
+                  InputLabelProps={{
+                    shrink: true
+                  }}
+                  value={this.props.room_password}
+                  onChange={e => {
+                    this.props.onChangeState({ room_password: e.target.value });
+                  }}
+                  className={this.props.is_private === true ? '' : ' hidden'}
                 />
-                Public
-              </Button>
-              <Button
-                className={this.props.is_private ? ' active' : ''}
-                onClick={() => {
-                  this.props.onChangeState({ is_private: true });
-                }}
-              >
-                <img
-                  width="20px"
-                  src={'/img/icons/private.svg'}
-                  alt={`Private Game`}
-                />
-                Private
-              </Button>
-              <TextField
-                type="text"
-                id="betamount"
-                variant="filled"
-                InputLabelProps={{
-                  shrink: true
-                }}
-                value={this.props.room_password}
-                onChange={e => {
-                  this.props.onChangeState({ room_password: e.target.value });
-                }}
-                className={this.props.is_private === true ? '' : ' hidden'}
-              />
+              </div>
             </div>
+
           </div>
         )}
 
         {this.props.child_step === 2 && (
           <div className="game-info-panel payout-info-panel">
-            <h3 className="game-sub-title">Payout&nbsp;
-              <Tooltip
-                style={{ position: "absolute", right: "20px" }}
-                title={'Choose Automatic to be paid into your balance each time the set threshold has been reached'}
-                placement="top"
-              >
-                <Info style={{ cursor: "pointer", float: "right" }} />
-              </Tooltip>
-            </h3>
-            <div className="select-buttons-panel bet-amounts">
-              <Button
-                className={!this.props.endgame_type ? ' active' : ''}
-                onClick={() => {
-                  this.props.onChangeState({ endgame_type: false });
-                }}
-              >
-                <img
-                  width="20px"
-                  src={'/img/icons/manual.svg'}
-                  alt={`Manual Game`}
-                />
-                Manual
-              </Button>
-              <Button
-                className={this.props.endgame_type ? ' active' : ''}
-                onClick={() => {
-                  this.props.onChangeState({ endgame_type: true });
-                }}
-              >
-                <img
-                  width="20px"
-                  src={'/img/icons/automatic.svg'}
-                  alt={`Automatic Game`}
-                />
-                Automatic
-              </Button>
-              <div className={`edit-amount-panel ${this.props.endgame_type ? '' : 'hidden'}`}>
-                <TextField
-                  type="text"
-                  variant="filled"
-                  name="endgame_amount"
-                  id="endgame_amount"
-                  value={this.props.endgame_amount}
-                  inputProps={{
-                    pattern: '[0-9]*',
-                    maxLength: 9
+            <div className="glass-container">
+              <h3 className="game-sub-title">Payout&nbsp;
+                <Tooltip
+                  style={{ position: "absolute", right: "20px" }}
+                  title={'Choose Automatic to be paid into your balance each time the set threshold has been reached'}
+                  placement="top"
+                >
+                  <Info style={{ cursor: "pointer", float: "right" }} />
+                </Tooltip>
+              </h3>
+              <div className="select-buttons-panel bet-amounts">
+                <Button
+                  className={!this.props.endgame_type ? ' active' : ''}
+                  onClick={() => {
+                    this.props.onChangeState({ endgame_type: false });
                   }}
-                  InputLabelProps={{
-                    shrink: true
+                >
+                  <img
+                    width="20px"
+                    src={'/img/icons/manual.svg'}
+                    alt={`Manual Game`}
+                  />
+                  Manual
+                </Button>
+                <Button
+                  className={this.props.endgame_type ? ' active' : ''}
+                  onClick={() => {
+                    this.props.onChangeState({ endgame_type: true });
                   }}
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        &nbsp;RPS
-                      </InputAdornment>
-                    ),
-                  }}
-                  onChange={e => {
-                    const value = e.target.value;
-                    const lowerLimit = value * 0.25;
-                    const upperLimit = value * 1.25;
+                >
+                  <img
+                    width="20px"
+                    src={'/img/icons/automatic.svg'}
+                    alt={`Automatic Game`}
+                  />
+                  Automatic
+                </Button>
+                <div className={`edit-amount-panel ${this.props.endgame_type ? '' : 'hidden'}`}>
+                  <TextField
+                    type="text"
+                    variant="filled"
+                    name="endgame_amount"
+                    id="endgame_amount"
+                    value={this.props.endgame_amount}
+                    inputProps={{
+                      pattern: '[0-9]*',
+                      maxLength: 9
+                    }}
+                    InputLabelProps={{
+                      shrink: true
+                    }}
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          &nbsp;RPS
+                        </InputAdornment>
+                      ),
+                    }}
+                    onChange={e => {
+                      const value = e.target.value;
+                      const lowerLimit = value * 0.25;
+                      const upperLimit = value * 1.25;
 
-                    if (this.props.game_mode === 'Mystery Box') {
-                      this.props.onChangeState({
-                        endgame_amount: value,
-                        lowerLimit,
-                        upperLimit,
-                        winChance: this.props.calcMysteryBoxEV(
-                          this.props.box_list,
-                          value,
-                          this.props.max_return
-                        )
-                      });
-                    } else if (this.props.game_mode === 'Spleesh!') {
-                      this.props.onChangeState({
-                        endgame_amount: value,
-                        lowerLimit,
-                        upperLimit,
-                        winChance: this.props.calculateEV(
-                          this.props.bet_amount,
-                          value,
-                          this.props.spleesh_bet_unit
-                        )
-                      });
-                    } else {
-                      this.props.onChangeState({
-                        endgame_amount: value,
-                        lowerLimit,
-                        upperLimit
-                      });
-                    }
-                  }}
-                  placeholder="PAYOUT"
-                />
-              </div>
+                      if (this.props.game_mode === 'Mystery Box') {
+                        this.props.onChangeState({
+                          endgame_amount: value,
+                          lowerLimit,
+                          upperLimit,
+                          winChance: this.props.calcMysteryBoxEV(
+                            this.props.box_list,
+                            value,
+                            this.props.max_return
+                          )
+                        });
+                      } else if (this.props.game_mode === 'Spleesh!') {
+                        this.props.onChangeState({
+                          endgame_amount: value,
+                          lowerLimit,
+                          upperLimit,
+                          winChance: this.props.calculateEV(
+                            this.props.bet_amount,
+                            value,
+                            this.props.spleesh_bet_unit
+                          )
+                        });
+                      } else {
+                        this.props.onChangeState({
+                          endgame_amount: value,
+                          lowerLimit,
+                          upperLimit
+                        });
+                      }
+                    }}
+                    placeholder="PAYOUT"
+                  />
+                </div>
 
-              {/* Stop Loss Section */}
-              {/* {this.props.endgame_type && (
+                {/* Stop Loss Section */}
+                {/* {this.props.endgame_type && (
                 <div className="stop-loss-panel">
                   <FormControlLabel
                     control={<Radio />}
@@ -330,7 +335,9 @@ class AdvancedSettings extends Component {
                   </div>
                 </div>
               )} */}
+              </div>
             </div>
+
           </div>
         )}
 
@@ -402,31 +409,35 @@ class AdvancedSettings extends Component {
         )} */}
         {this.props.child_step === 3 && (
           <div className="game-background-panel game-info-panel">
-            <h3 className="game-sub-title">Add Description?&nbsp;<Tooltip
-              style={{ position: "absolute", right: "20px" }}
-              title={'Include a description to your game.'}
-              placement="top"
-            >
-              <Info style={{ cursor: "pointer", float: "right" }} />
-            </Tooltip></h3>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <TextField
-                label="Description"
-                value={this.props.description}
-                placeholder='e.g. Play 50 Games and receive 10 RPS TIP!'
-                onChange={this.props.handleDescriptionChange}
-                fullWidth
-                multiline
-                onFocus={this.onFocusHandler}
-                onBlur={this.onBlurHandler}
-                minRows={2}
-                variant="filled"
+            <div className="glass-container">
+
+              <h3 className="game-sub-title">Tags&nbsp;<Tooltip
+                style={{ position: "absolute", right: "20px" }}
+                title={'Add tags to your game.'}
+                placement="top"
+              >
+                <Info style={{ cursor: "pointer", float: "right" }} />
+              </Tooltip></h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <TextField
+                  label="Add Tags"
+                  value={this.props.description}
+                  placeholder='e.g. crypto, money, web3, moonshot'
+                  onChange={this.props.handleDescriptionChange}
+                  fullWidth
+                  multiline
+                  onFocus={this.onFocusHandler}
+                  onBlur={this.onBlurHandler}
+                  minRows={2}
+                  variant="filled"
 
 
-              />&nbsp;<FontAwesomeIcon icon={faPenSquare} />
+                />&nbsp;<FontAwesomeIcon icon={faPenSquare} />
 
+              </div>
             </div>
           </div>
+
         )}
       </div>
     );

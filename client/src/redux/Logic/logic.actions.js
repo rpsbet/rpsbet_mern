@@ -37,8 +37,6 @@ import {
   SET_CUR_ROOM_INFO,
   SET_URL,
   MY_GAMES_LOADED,
-  MY_GAMES_LOADED_WITHOUT_STATS,
-  MY_GAMES_LOADED_WITH_STATS,
   MY_HISTORY_LOADED,
   SET_CHAT_ROOM_INFO,
   SET_NOTIFICATIONS_ROOM_INFO,
@@ -56,7 +54,8 @@ import {
   NOTIFICATIONS_LOADED,
   GLOBAL_CHAT_RECEIVED,
   SET_GLOBAL_CHAT,
-  FETCH_ACCESSORY_SUCCESS
+  TRANSACTION_CANDLES_LOADED,
+  TRANSACTION_CANDLES_ERROR
 } from '../types';
 import axios from '../../util/Api';
 import history from '../history';
@@ -181,11 +180,11 @@ export const bet = bet_info => async dispatch => {
       
       if (res.data.betResult === -100) {
         history.push('/');
-      dispatch({ type: MSG_WARNING, payload: 'THIS BATTLE HAS NOW ENDED' });
+      dispatch({ type: MSG_WARNING, payload: 'THIS GAME HAS NOW ENDED' });
 
         return {
           status: 'failed',
-          message: 'THIS BATTLE HAS NOW ENDED'
+          message: 'THIS GAME HAS NOW ENDED'
         };
       } else if (res.data.betResult === -102) {
         dispatch({ type: MSG_WARNING, payload: 'THIS ROOM IS BUSY' });
@@ -241,11 +240,11 @@ export const bet2 = bet_info => async dispatch => {
     } else {
       if (res.data.betResult === -100) {
         history.push('/');
-      dispatch({ type: MSG_WARNING, payload: 'THIS BATTLE HAS NOW ENDED' });
+      dispatch({ type: MSG_WARNING, payload: 'THIS GAME HAS NOW ENDED' });
 
         return {
           status: 'failed',
-          message: 'THIS BATTLE HAS NOW ENDED'
+          message: 'THIS GAME HAS NOW ENDED'
         };
       } else if (res.data.betResult === -102) {
         dispatch({ type: MSG_WARNING, payload: 'THIS ROOM IS BUSY' });
@@ -289,11 +288,11 @@ export const bet3 = bet_info => async dispatch => {
     } else {
       if (res.data.betResult === -100) {
         history.push('/');
-      dispatch({ type: MSG_WARNING, payload: 'THIS BATTLE HAS NOW ENDED' });
+      dispatch({ type: MSG_WARNING, payload: 'THIS GAME HAS NOW ENDED' });
 
         return {
           status: 'failed',
-          message: 'THIS BATTLE HAS NOW ENDED'
+          message: 'THIS GAME HAS NOW ENDED'
         };
       } else if (res.data.betResult === -102) {
         dispatch({ type: MSG_WARNING, payload: 'THIS ROOM IS BUSY' });
@@ -338,7 +337,7 @@ export const bet4 = bet_info => async dispatch => {
         history.push('/');
         return {
           status: 'failed',
-          message: 'THIS BATTLE HAS NOW ENDED'
+          message: 'THIS GAME HAS NOW ENDED'
         };
       } else if (res.data.betResult === -102) {
         return {
@@ -1057,30 +1056,21 @@ export const getGameTypeList = () => async dispatch => {
     dispatch({ type: MSG_GAMETYPE_LOAD_FAILED, payload: err });
   }
 };
+
 export const getMyGames = search_condition => async dispatch => {
   try {
     dispatch({ type: START_LOADING });
 
-    const resWithoutRoomStats = await axios.get('/game/my_games', {
-      params: { ...search_condition, excludeRoomStats: true }
+    // Call the backend API to fetch rooms
+    const res = await axios.get('/game/my_games', {
+      params: { ...search_condition }
     });
-
-    if (resWithoutRoomStats.data.success) {
-      dispatch({ type: MY_GAMES_LOADED_WITHOUT_STATS });
-      dispatch({ type: MY_GAMES_LOADED, payload: { ...resWithoutRoomStats.data } });
-
-
-      const resWithRoomStats = await axios.get('/game/my_games', {
-        params: { ...search_condition, excludeRoomStats: false }
-      });
-
-      if (resWithRoomStats.data.success) {
-        dispatch({ type: MY_GAMES_LOADED, payload: { ...resWithRoomStats.data } });
-        dispatch({ type: MY_GAMES_LOADED_WITH_STATS });
-      } else {
-        dispatch({ type: MSG_GAMETYPE_LOAD_FAILED });
-      }
+console.log("ASdasds", res.data)
+    if (res.data.success) {
+      // Dispatch the success action with the payload from the API response
+      dispatch({ type: MY_GAMES_LOADED, payload: { ...res.data } });
     } else {
+      // Handle failure case
       dispatch({ type: MSG_GAMETYPE_LOAD_FAILED });
     }
   } catch (err) {
@@ -1157,6 +1147,34 @@ export const getMyHistory = search_condition => async dispatch => {
     }
   } catch (err) {
     console.log(err);
+  }
+};
+
+export const getTransactionCandles = (room, timeFrame) => async (dispatch) => {
+  try {
+    const res = await axios.get(`/game/candles/${room.roomId}`, {
+      params: { timeFrame }
+    });
+
+    // console.log('API Response for Candles:', res.data); // Log the response to check the structure
+
+    if (res.data.success) {
+      dispatch({
+        type: 'TRANSACTION_CANDLES_LOADED',
+        payload: res.data || [],
+      });
+    } else {
+      dispatch({
+        type: 'TRANSACTION_CANDLES_ERROR',
+        payload: res.data.err || 'Error fetching candles data.',
+      });
+    }
+  } catch (err) {
+    console.error('Error fetching candles data:', err); // Log the error
+    dispatch({
+      type: 'TRANSACTION_CANDLES_ERROR',
+      payload: err.message || 'Error fetching candles data.',
+    });
   }
 };
 

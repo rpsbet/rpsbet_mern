@@ -52,7 +52,7 @@ const predictNext = (rps_list, markov = false) => {
   if (transitionMatrix[currentState]) {
     Object.keys(transitionMatrix[currentState]).forEach((state) => {
       const prob = transitionMatrix[currentState][state];
-      console.log(`Transition probability from ${currentState} to ${state}: ${prob}`);
+      // console.log(`Transition probability from ${currentState} to ${state}: ${prob}`);
       if (prob > maxProb) {
         maxProb = prob;
         nextState = state;

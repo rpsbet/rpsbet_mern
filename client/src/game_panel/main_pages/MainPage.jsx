@@ -3,6 +3,8 @@ import { connect } from 'react-redux';
 import moment from 'moment';
 import ProductPage from '../../admin_panel/app/ProductPages/ProductSerchPage/ProductPage';
 import BankPage from '../../admin_panel/app/ProductPages/ProductSerchPage/BankPage';
+import axios from '../../util/Api';
+import { token } from '../../config/index.js';
 import {
   getRoomList,
   getHistory,
@@ -86,11 +88,17 @@ class MainPage extends Component {
       isDrawerOpen: true,
       showP2PLending: false,
       showMarketplace: false,
+      tokenPrice: null, // Store the token price fetched once
+      loading: true,
       refreshing: false,
       selectedCreator: '',
       remainingDays: calculateDaysUntilNextMonth()
     };
     this.toggleDrawer = this.toggleDrawer.bind(this);
+    this.isComponentMounted = false;
+    this.pollingInterval = null;
+    this.handleVisibilityChange = this.handleVisibilityChange.bind(this); // Bind the method
+
   }
 
   async componentDidMount() {
@@ -101,12 +109,17 @@ class MainPage extends Component {
       getHistory,
       getWins,
       getWithdrawals,
-      // getGameTypeList,
       isAuthenticated,
-      getMyChat
+      getMyChat,
     } = this.props;
-    // this.gamesListInterval = setInterval(this.handleRefresh, 100000);
-    const promises = [getRoomList({ pageSize: 7 }), getWins(), getWithdrawals(), getRoomCount({ game_type: selectedGameType })];
+
+    this.isComponentMounted = true;
+
+    const promises = [
+      getWins(),
+      getWithdrawals(),
+      getRoomCount({ game_type: selectedGameType }),
+    ];
     if (isAuthenticated) {
       promises.push(getMyChat());
     }
@@ -116,6 +129,38 @@ class MainPage extends Component {
       this.toggleDrawer();
     }
 
+    try {
+      const response = await axios.post('/stripe/get_token_price', {
+        tokenMintAddress: token, // Replace `token` with your actual token address
+        web2Amount: 1,           // Use a default amount to fetch the token price
+      });
+      const { tokenPrice } = response.data;
+      this.setState({
+        tokenPrice,
+        loading: false,
+      });
+    } catch (error) {
+      console.error('Error fetching token price:', error);
+      this.setState({ loading: false });
+    }
+
+    document.addEventListener("visibilitychange", this.handleVisibilityChange);
+    this.pollingInterval = setInterval(() => this.handleRefresh(), 10000);
+  }
+
+  componentWillUnmount() {
+    this.isComponentMounted = false;
+    clearInterval(this.pollingInterval);
+    document.removeEventListener("visibilitychange", this.handleVisibilityChange);
+  }
+
+  handleVisibilityChange() {
+    if (document.visibilityState === "visible" && !this.pollingInterval) {
+      this.pollingInterval = setInterval(() => this.handleRefresh(), 10000);
+    } else if (document.visibilityState === "hidden" && this.pollingInterval) {
+      clearInterval(this.pollingInterval);
+      this.pollingInterval = null;
+    }
   }
 
   toggleP2PLending = () => {
@@ -148,12 +193,19 @@ class MainPage extends Component {
   };
 
   handleRefresh = async () => {
+    console.log("called");
     this.setState({ refreshing: true }, async () => {
       await this.props.clearRoomListCache();
-      await this.props.getRoomCount();
-      await this.props.getRoomList({ pageSize: 7 });
-      this.setState({ refreshing: false });
-    })
+      const roomCount = await this.props.getRoomCount();
+      const roomList = await this.props.getRoomList({ pageSize: 7 });
+  
+      // Only update state if the data has changed
+      if (JSON.stringify(this.props.roomList) !== JSON.stringify(roomList)) {
+        this.setState({ refreshing: false });
+      }
+  
+      console.log("called2", roomList);
+    });
   };
 
   onChangeGameType = async (newType, callback) => {
@@ -166,6 +218,8 @@ class MainPage extends Component {
   toggleDrawer = () => {
     this.props.toggleDrawer(!this.props.isDrawerOpen);
   };
+
+
 
   getActiveTabText = () => {
     if (this.state.selectedMobileTab === 'marketplace') {
@@ -192,11 +246,14 @@ class MainPage extends Component {
               <div
                 key={`table-cell-${index}-${row.room}`}
                 className="table-cell"
-                onClick={() => window.location.href = `/join/${row.room}`}
+                onClick={() => (window.location.href = `/join/${row.room}`)}
                 style={{ cursor: 'pointer' }}
               >
-                <div key={`carousel-content-${index}-${row.room}`} className="carousel-content table-row slide-in">
-                  <div style={{ display: "flex", flexDirection: "row" }}>
+                <div
+                  key={`carousel-content-${index}-${row.room}`}
+                  className="carousel-content table-row slide-in"
+                >
+                  <div style={{ display: 'flex', flexDirection: 'row' }}>
                     <a
                       href="#"
                       className="player"
@@ -204,73 +261,88 @@ class MainPage extends Component {
                         event.preventDefault();
                         event.stopPropagation();
                         this.handleOpenPlayerModal(row.joined_user._id);
-                      }} style={{ marginRight: "-15px" }}
+                      }}
+                      style={{ marginRight: '-15px' }}
                     >
                       <Avatar
                         className="avatar"
-                        src={row.joined_user?.avatar || 'default-avatar-url'}  // Provide a default if avatar is not available
-                        accessory={row.joined_user?.accessory || 'default-accessory'}  // Provide a default if accessory is not available
-                        username={row.joined_user?.username || 'Unknown'}  // Provide a default username
-                        rank={row.joined_user?.totalWagered || 0}  // Provide a default rank if not available
+                        src={row.joined_user?.avatar || 'default-avatar-url'} // Provide a default if avatar is not available
+                        accessory={row.joined_user?.accessory || 'default-accessory'} // Provide a default if accessory is not available
+                        username={row.joined_user?.username || 'Unknown'} // Provide a default username
+                        rank={row.joined_user?.totalWagered || 0} // Provide a default rank if not available
                         alt=""
                         darkMode={this.props.isDarkMode}
                       />
-                      {/* <i
-                          className={`online-status${onlineUserList.includes(row.creator._id) ? ' online' : ''}`}
-                        ></i> */}
                     </a>
                   </div>
 
-                  <div className="cell" style={{ lineHeight: '0.5em', marginBottom: "5px", textAlign: "right" }} >
-                    <span style={{ whiteSpace: "nowrap" }}>
-                      +{convertToCurrency(row.winnings)}  </span>
+                  <div
+                    className="cell"
+                    style={{
+                      lineHeight: '0.5em',
+                      marginBottom: '5px',
+                      textAlign: 'right',
+                    }}
+                  >
+                    <span style={{ whiteSpace: 'nowrap' }}>
+                      +{convertToCurrency(row.winnings)}
+                    </span>
                     <br />
-                    <span style={{ whiteSpace: "nowrap", fontSize: "xx-small" }}>
+                    <span style={{ whiteSpace: 'nowrap', fontSize: 'xx-small' }}>
                       {(() => {
-                        const createdAt = new Date(row.created_at);
-                        const currentDate = new Date('2024-10-05');  // Hardcoded date
-                        const daysOld = (currentDate - createdAt) / (1000 * 60 * 60 * 24); // Calculate days difference
+                        const { tokenPrice } = this.state; // Fetch the token price from state
 
-                        let conversionRate = 0.000313; // Default conversion rate
+                        if (!tokenPrice) return 'Calculating...'; // Gracefully handle missing price
 
-                        if (createdAt > currentDate) {
-                          // If createdAt is ahead of currentDate, set conversionRate to 0.116
-                          conversionRate = 0.116;
-                        } else if (daysOld > 60) {
-                          conversionRate = 0.889; // If more than 60 days old
-                        } else if (daysOld > 30) {
-                          conversionRate = 0.119; // If more than 30 days old
-                        }
-
-                        // Apply the conversion rate and display the amount
-                        return <> {(row.winnings / row.bet_amount).toFixed(2)}x / ${(row.winnings * conversionRate).toFixed(2)}</>;
+                        // Display the winnings as (multiplier)x / converted USD
+                        return (
+                          <>
+                            {(row.winnings / row.bet_amount).toFixed(2)}x / $
+                            {(row.winnings * tokenPrice).toFixed(2)}
+                          </>
+                        );
                       })()}
                     </span>
-
                   </div>
-                  <div className="cell" style={{ whiteSpace: "nowrap", fontSize: "xx-small", position: "absolute", right: '5px', bottom: '0px' }}>
-                    <span style={{ color: "unset", whiteSpace: "nowrap", fontSize: "xx-small", marginRight: "-5px", paddingBottom: "10px", paddingTop: "5px" }}>
+
+                  <div
+                    className="cell"
+                    style={{
+                      whiteSpace: 'nowrap',
+                      fontSize: 'xx-small',
+                      position: 'absolute',
+                      right: '5px',
+                      bottom: '0px',
+                    }}
+                  >
+                    <span
+                      style={{
+                        color: 'unset',
+                        whiteSpace: 'nowrap',
+                        fontSize: 'xx-small',
+                        marginRight: '-5px',
+                        paddingBottom: '10px',
+                        paddingTop: '5px',
+                      }}
+                    >
                       {formatTimeAgo(row.created_at)} ago
                     </span>
                   </div>
-
-
                 </div>
               </div>
-
             ))}
           </div>
           <div style={{ display: "inline-flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
             <h2 className="main-title recently-closed-title" style={{ padding: "0 0 15px 0" }}>
-              TOP WITHDRAWALS (NEXT WITHDRAWAL IN {this.state.remainingDays})
+              TOP WITHDRAWALS
             </h2>
-            <Tooltip
+            {/* <Tooltip
               style={{ float: "right", right: "20px" }}
               title={'WITHDRAWALS OPEN ON THE 1ST OF EVERY MONTH, VERIFIED USERS HAVE PRIORITY 1 DAY EARLY. POOL $1k - $10k IN PRIZES'}
               placement="top"
             >
               <Info style={{ cursor: "pointer", width: "20px", height: "20px", transform: "translateY(-8px" }} />
-            </Tooltip>
+            </Tooltip> */}
           </div>
 
           <div className='top-wins' style={{ marginBottom: "20px" }}>
@@ -278,11 +350,14 @@ class MainPage extends Component {
               <div
                 key={`table-cell-${index}-${row.room}`}
                 className="table-cell"
-                onClick={() => window.location.href = `/join/${row.room}`}
+                onClick={() => (window.location.href = `/join/${row.room}`)}
                 style={{ cursor: 'pointer' }}
               >
-                <div key={`carousel-content-${index}-${row.room}`} className="carousel-content table-row slide-in">
-                  <div style={{ display: "flex", flexDirection: "row" }}>
+                <div
+                  key={`carousel-content-${index}-${row.room}`}
+                  className="carousel-content table-row slide-in"
+                >
+                  <div style={{ display: 'flex', flexDirection: 'row' }}>
                     <a
                       href="#"
                       className="player"
@@ -290,7 +365,8 @@ class MainPage extends Component {
                         event.preventDefault();
                         event.stopPropagation();
                         this.handleOpenPlayerModal(row.user_id._id);
-                      }} style={{ marginRight: "-15px" }}
+                      }}
+                      style={{ marginRight: '-15px' }}
                     >
                       <Avatar
                         className="avatar"
@@ -301,49 +377,61 @@ class MainPage extends Component {
                         alt=""
                         darkMode={this.props.isDarkMode}
                       />
-                      {/* <i
-                          className={`online-status${onlineUserList.includes(row.creator._id) ? ' online' : ''}`}
-                        ></i> */}
                     </a>
                   </div>
 
-                  <div className="cell" style={{ lineHeight: '0.5em', marginBottom: "5px", textAlign: "right" }} >
-                    <span style={{ color: "#00ff3a", whiteSpace: "nowrap" }}>
-                      +{convertToCurrency(row.amount)}  </span>
+                  <div
+                    className="cell"
+                    style={{
+                      lineHeight: '0.5em',
+                      marginBottom: '5px',
+                      textAlign: 'right',
+                    }}
+                  >
+                    <span style={{ color: '#00ff3a', whiteSpace: 'nowrap' }}>
+                      +{convertToCurrency(row.amount)}{' '}
+                    </span>
                     <br />
-                    <span style={{ color: "#00ff3a", whiteSpace: "nowrap", fontSize: "xx-small" }}>
-                      {(() => {
-                        const createdAt = new Date(row.created_at);
-                        const currentDate = new Date();
-                        const daysOld = (currentDate - createdAt) / (1000 * 60 * 60 * 24); // Calculate days difference
-
-                        let conversionRate = 0.000313; // Default conversion rate
-
-                        if (daysOld > 60) {
-                          conversionRate = 0.889; // If more than 60 days old
-                        } else if (daysOld > 30) {
-                          conversionRate = 0.119; // If more than 30 days old
-                        }
-
-                        // Apply the conversion rate and display the amount
-                        return `$${(row.amount * conversionRate).toFixed(2)}`;
-                      })()}
+                    <span
+                      style={{
+                        color: '#00ff3a',
+                        whiteSpace: 'nowrap',
+                        fontSize: 'xx-small',
+                      }}
+                    >
+                      ${((row.amount * this.state.tokenPrice) || 0).toFixed(2)}
                     </span>
                   </div>
-                  <div className="cell" style={{ whiteSpace: "nowrap", fontSize: "xx-small", position: "absolute", right: '5px', bottom: '0px' }}>
-                    <span style={{ color: "unset", whiteSpace: "nowrap", fontSize: "xx-small", marginRight: "-5px", paddingBottom: "10px", paddingTop: "5px" }}>
+
+                  <div
+                    className="cell"
+                    style={{
+                      whiteSpace: 'nowrap',
+                      fontSize: 'xx-small',
+                      position: 'absolute',
+                      right: '5px',
+                      bottom: '0px',
+                    }}
+                  >
+                    <span
+                      style={{
+                        color: 'unset',
+                        whiteSpace: 'nowrap',
+                        fontSize: 'xx-small',
+                        marginRight: '-5px',
+                        paddingBottom: '10px',
+                        paddingTop: '5px',
+                      }}
+                    >
                       {formatTimeAgo(row.created_at)} ago
                     </span>
                   </div>
-
-
                 </div>
               </div>
-
             ))}
           </div>
           <div id="liveStakes">
-            {this.props.rooms_count} BATTLES
+            {this.props.rooms_count} GAMES
             <Lottie options={defaultOptions} width={40} />
           </div>
 
@@ -355,7 +443,7 @@ class MainPage extends Component {
           </div>
         </>
       ) : (
-        'Your Battles'
+        'Your Games'
       )
     );
   };
@@ -363,6 +451,8 @@ class MainPage extends Component {
 
   render() {
     const { isDrawerOpen, isLowGraphics } = this.props;
+    const { tokenPrice, loading } = this.state;
+
 
     return (
       <div
@@ -486,6 +576,7 @@ class MainPage extends Component {
 
                 <OpenGamesTable
                   selectedCreator={this.state.selectedCreator}
+                  tokenPrice={this.state.tokenPrice}
                   refreshing={this.state.refreshing}
                   showPlayerModal={this.state.showPlayerModal}
                   handleRefresh={this.handleRefresh}
@@ -594,7 +685,7 @@ class MainPage extends Component {
                   d="M24.9 25.945c2.625-2.578 4.1-6.076 4.1-9.722 0-3.647-1.475-7.144-4.1-9.723M7.1 25.945C4.476 23.367 3 19.87 3 16.223 3 12.576 4.475 9.079 7.1 6.5M21 22.5c1.92-1.658 3-3.906 3-6.25s-1.08-4.592-3-6.25M14 17.678v-3.356c0-.79.871-1.268 1.537-.844l2.637 1.678c.618.393.618 1.295 0 1.688l-2.637 1.678c-.666.424-1.537-.055-1.537-.844zM11 22.5c-1.92-1.658-3-3.906-3-6.25s1.08-4.592 3-6.25"
                 />
               </svg>
-              {this.state.selectedMobileTab === 'live_games' && 'LIVE BATTLES'}&nbsp;
+              {this.state.selectedMobileTab === 'live_games' && 'LIVE GAMES'}&nbsp;
             </Button>
             <Button
               className={`mobile-tab-my ${this.state.selectedMobileTab === 'my_games' ? 'active' : ''
@@ -628,7 +719,7 @@ class MainPage extends Component {
                   d="M18.651 12.702l-.674.33.674-.33zm-.294-.602l.674-.33c-.126-.257-.387-.42-.674-.42v.75zm-3.714 0v-.75c-.287 0-.548.163-.674.42l.674.33zm7.607-4.75v4.302h1.5V7.35h-1.5zm-2.925 5.022l-.294-.601-1.348.658.294.602 1.348-.659zm-.968-1.022h-3.714v1.5h3.714v-1.5zm-4.388.42l-.294.602 1.348.66.294-.603-1.348-.658zm-3.219-.118V7.35h-1.5v4.302h1.5zm2.036-6.402h7.428v-1.5h-7.428v1.5zm-.49 8c-.838 0-1.546-.7-1.546-1.598h-1.5c0 1.695 1.348 3.098 3.046 3.098v-1.5zm8.408 0c-.576 0-1.113-.333-1.379-.878l-1.348.66c.512 1.046 1.565 1.718 2.727 1.718v-1.5zm1.546-1.598c0 .899-.708 1.598-1.546 1.598v1.5c1.698 0 3.046-1.403 3.046-3.098h-1.5zm-8.575.72c-.266.545-.803.878-1.38.878v1.5c1.163 0 2.216-.672 2.728-1.719l-1.348-.659zM23.75 7.35c0-1.972-1.567-3.6-3.536-3.6v1.5c1.109 0 2.036.924 2.036 2.1h1.5zm-13 0c0-1.176.928-2.1 2.036-2.1v-1.5c-1.969 0-3.536 1.628-3.536 3.6h1.5zm1.571 1.7h2.786v-1.5h-2.786v1.5zm.643-2.175v2.85h1.5v-2.85h-1.5zM19.75 8.1h.929V6.6h-.929v1.5zM17.893 10h.928V8.5h-.928V10z"
                 />
               </svg>
-              {this.state.selectedMobileTab === 'my_games' && 'YOUR BATTLES'}&nbsp;
+              {this.state.selectedMobileTab === 'my_games' && 'YOUR GAMES'}&nbsp;
             </Button>
             <button
               className={`mobile-tab-marketplace ${this.state.selectedMobileTab === 'marketplace' ? 'active' : ''

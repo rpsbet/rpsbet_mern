@@ -64,8 +64,6 @@ async function resetWithdrawalLimits() {
         }
         systemSetting.updated_at = new Date();
         await systemSetting.save();
-      } else {
-        console.log("Last wd check was less than 24 hours ago. Skipping.");
       }
     } else {
       console.log("System setting for last updated not found.");

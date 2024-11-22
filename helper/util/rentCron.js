@@ -235,8 +235,6 @@ async function checkRentalPayments(io) {
         socketController.globalChatSend(socketio, data);
         systemSetting.updated_at = new Date();
         await systemSetting.save();
-      } else {
-        console.log("Last rental check was less than 24 hours ago. Skipping.");
       }
     } else {
       console.log("System setting for last updated not found.");

@@ -102,8 +102,6 @@ async function checkOutstandingLoans(io) {
         }
         systemSetting.updated_at = new Date();
         await systemSetting.save();
-      } else {
-        console.log("Last credit score check was less than 24 hours ago. Skipping.");
       }
     } else {
       console.log("System setting last updated not found.");

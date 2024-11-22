@@ -842,7 +842,7 @@ class QuickShoot extends Component {
 
                   <div className="data-item">
                     <div>
-                      <div className="label your-bet-amount">Bankroll</div>
+                      <div className="label your-bet-amount">LIQUIDITY</div>
                     </div>
                     <Tooltip title={isLowBankroll ? "LOW BANKROLL CAN CAUSE A BET TO FAIL" : "A.K.A Liquidity / Pool / Pot"}>
                       <div className={`value ${isLowBankroll ? 'red-text' : ''}`}>
@@ -913,7 +913,7 @@ class QuickShoot extends Component {
                   </div>
                   <div className="data-item">
                     <div>
-                      <div className="label commission">Commission</div>
+                      <div className="label commission">Tax</div>
                     </div>
                     <Tooltip title="Host's Accessory's Commission Power (CP) - Player's Accessory's Battle Power (BP) (MINIMUM 2.5% TOWARDS PLATFORM)">
                       <div style={{ cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center" }}>

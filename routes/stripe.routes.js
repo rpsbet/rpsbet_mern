@@ -9,8 +9,9 @@ const gameTransaction = require('../model/Transaction');
 const { newTransaction } = require('../socketController');
 const stripe = require('stripe')('sk_live_B8xrL7Gp2elKyanYJ0Zi5IqS00EKxOnhjP');
 const { ethers } = require('ethers');
-const { Connection, Keypair, Transaction, PublicKey, sendAndConfirmTransaction } = require('@solana/web3.js');
+const { Connection, Keypair, Transaction, PublicKey, SystemProgram, sendAndConfirmTransaction } = require('@solana/web3.js');
 const { getAssociatedTokenAddress, TOKEN_PROGRAM_ID, createTransferInstruction, createAssociatedTokenAccount } = require('@solana/spl-token'); // Import from spl-token package
+const saveDocumentWithRetry = require('../helper/util/retrySave');
 
 const bs58 = require('bs58');
 // const ganacheEndpoint = 'http://localhost:7544';
@@ -602,6 +603,7 @@ router.post('/withdraw_request', auth, async (req, res) => {
     const username = req.user.username;
     const totalWagered = req.user.totalWagered;
 
+    // Permission checks
     if (username.includes('BOT')) {
       return res.json({ success: false, message: 'DO NOT HAVE PERMISSION' });
     }
@@ -612,6 +614,7 @@ router.post('/withdraw_request', auth, async (req, res) => {
     const balance = req.user.balance;
     const withdrawalLimit = req.user.dailyWithdrawals;
 
+    // Balance and limit checks
     if (balance < req.body.amount) {
       return res.json({ success: false, message: 'Insufficient balance' });
     }
@@ -634,6 +637,7 @@ router.post('/withdraw_request', auth, async (req, res) => {
       return res.json({ success: false, message: "Invalid Solana wallet address." });
     }
 
+    // Decode wallet key
     let secretKey;
     try {
       secretKey = bs58.default.decode(walletKey);
@@ -642,13 +646,14 @@ router.post('/withdraw_request', auth, async (req, res) => {
       return res.json({ success: false, message: 'Failed to decode wallet key' });
     }
 
-    // Check if the secretKey has the correct size (64 bytes)
+    // Validate secret key size
     if (secretKey.length !== 64) {
       return res.json({ success: false, message: 'Invalid secret key size. Must be 64 bytes.' });
     }
 
     const walletKeyPair = Keypair.fromSecretKey(secretKey);
 
+    // Create connection and fetch latest blockhash
     const connection = new Connection(process.env.PROVIDER_URL);
     const amountInTokens = Math.floor(req.body.amount * TOKEN_MULTIPLIER);
 
@@ -659,7 +664,6 @@ router.post('/withdraw_request', auth, async (req, res) => {
       TOKEN_PROGRAM_ID
     );
 
-    // Ensure recipient's token account exists or create one
     let toTokenAccount = await getAssociatedTokenAddress(
       new PublicKey(tokenMintAddress),
       new PublicKey(toAddress),
@@ -667,10 +671,8 @@ router.post('/withdraw_request', auth, async (req, res) => {
       TOKEN_PROGRAM_ID
     );
 
-    // Check if the recipient's token account exists
     const toAccountInfo = await connection.getAccountInfo(toTokenAccount);
     if (!toAccountInfo) {
-      // Create recipient's associated token account if it doesn't exist
       console.log('Recipient token account does not exist, creating it now...');
       await createAssociatedTokenAccount(
         connection,
@@ -681,8 +683,12 @@ router.post('/withdraw_request', auth, async (req, res) => {
       );
     }
 
-    // Create a transaction and add the transfer instruction
-    const transaction = new Transaction().add(
+    // Fetch latest blockhash
+    const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+    const transaction = new Transaction({
+      recentBlockhash: blockhash,
+      feePayer: walletKeyPair.publicKey,
+    }).add(
       createTransferInstruction(
         fromTokenAccount,
         toTokenAccount,
@@ -694,26 +700,55 @@ router.post('/withdraw_request', auth, async (req, res) => {
     );
 
     try {
+      // Deduct balance and save user data
       req.user.balance -= req.body.amount;
-      await req.user.save();
-      const signature = await sendAndConfirmTransaction(connection, transaction, [walletKeyPair]);
+      await saveDocumentWithRetry(req.user);
 
+      let retries = 3;
+      let success = false;
+      let signature;
+
+      // Retry logic for blockhash expiration
+      while (retries > 0 && !success) {
+        try {
+          signature = await connection.sendTransaction(transaction, [walletKeyPair]);
+          await connection.confirmTransaction({
+            signature,
+            blockhash,
+            lastValidBlockHeight,
+          });
+          success = true;
+        } catch (err) {
+          console.log('Retrying transaction due to:', err.message);
+          if (err.message.includes('blockhash expired')) {
+            const newBlockhash = await connection.getLatestBlockhash();
+            transaction.recentBlockhash = newBlockhash.blockhash;
+          }
+          retries -= 1;
+        }
+      }
+
+      if (!success) {
+        throw new Error('Transaction failed after retries.');
+      }
+
+      // Save records
       const receipt = new Receipt({
         user_id: req.user._id,
         payment_method: 'Web3',
         payment_type: 'Withdraw',
         amount: req.body.amount,
       });
-      await receipt.save();
+      await saveDocumentWithRetry(receipt);
 
       const newTransaction = new gameTransaction({
         user: req.user,
         amount: -req.body.amount,
         description: 'withdraw',
         status: 'completed',
-        hash: signature
+        hash: signature,
       });
-      await newTransaction.save();
+      await saveDocumentWithRetry(newTransaction);
 
       const newGameLog = new GameLog({
         room: null,
@@ -729,34 +764,23 @@ router.post('/withdraw_request', auth, async (req, res) => {
         host_pr: 0,
         user_bet: 0,
         status: 'complete',
-        hosts: []
+        hosts: [],
       });
-
-      try {
-        await newGameLog.save();
-      } catch (error) {
-        console.log('Err:', error);
-        console.error('Error saving game log:', error);
-        return res.status(500).json({
-          success: false,
-          message: 'Failed to save game log'
-        });
-      }
+      await saveDocumentWithRetry(newGameLog);
 
       return res.json({
         success: true,
         balance: req.user.balance,
         newTransaction,
-        message: `Withdrawal request received and is complete. 🤑 Much Wow.<br /> View the transaction details on Solana Explorer using this <a href="https://explorer.solana.com/tx/${signature}" target="_blank">transaction link</a>.`
+        message: `Withdrawal request received and is complete. 🤑 Much Wow.<br /> View the transaction details on Solana Explorer using this <a href="https://explorer.solana.com/tx/${signature}" target="_blank">transaction link</a>.`,
       });
     } catch (saveError) {
       console.error('Error saving transaction documents:', saveError);
       return res.json({
         success: false,
-        message: 'Failed to save transaction records'
+        message: 'Failed to save transaction records',
       });
     }
-
   } catch (e) {
     console.log('ERROR in withdraw send transaction', e);
     return res.json({ success: false, message: 'Failed to initiate withdrawal' });
@@ -802,18 +826,49 @@ async function estimateAmount(web2Amount, currencyTo) {
 
 router.post('/get_gasfee', auth, async (req, res) => {
   try {
+    const { amount, addressTo } = req.body;
+
+    if (!amount || !addressTo) {
+      return res.status(400).json({ success: false, message: 'Amount and recipient address are required' });
+    }
+
     const connection = new Connection(process.env.PROVIDER_URL);
 
-    const { feeCalculator } = await connection.getRecentBlockhash();
+    // Fetch the latest blockhash
+    const { blockhash } = await connection.getLatestBlockhash();
 
-    const gasFeeSol = feeCalculator.lamportsPerSignature / 1e9; // 1 SOL = 1 billion lamports
+    // Generate a keypair for the fee payer (this is a dummy and will not be used for actual transactions)
+    const feePayer = Keypair.generate();
 
-    return res.json({ data: gasFeeSol });
+    // Convert amount (if it's in SOL, convert to lamports)
+    const lamports = typeof amount === 'number' ? amount * 1e9 : 0;  // Convert SOL to lamports if the amount is in SOL
+
+    // Create a transaction to calculate the fee
+    const transaction = new Transaction({ recentBlockhash: blockhash, feePayer: feePayer.publicKey });
+
+    // Add the transfer instruction with the specified amount
+    transaction.add(
+      SystemProgram.transfer({
+        fromPubkey: Keypair.generate().publicKey,
+        toPubkey: new PublicKey(addressTo),
+        lamports: lamports,
+      })
+    );
+
+    // Get fee for the transaction message
+    const fee = await connection.getFeeForMessage(transaction.compileMessage());
+    if (fee === null) {
+      throw new Error("Unable to fetch fee. The blockhash might be expired or invalid.");
+    }
+    
+    // Convert fee to SOL
+    const gasFeeSol = fee / 1e9; // 1 SOL = 1 billion lamports
+
+    return res.json({ success: true, data: gasFeeSol });
   } catch (error) {
     console.error('Error fetching Solana gas fee:', error);
-    return res.status(400).send(error.message);
+    return res.status(400).json({ success: false, message: error.message });
   }
 });
-
 
 module.exports = router;

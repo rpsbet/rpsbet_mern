@@ -383,6 +383,9 @@ background: linear-gradient(298deg, #4f0068, #3d0066);
 	color: #72757a;
 }
 
+.dark_mode .glass-container {
+	background: rgba(170, 170, 170, 0.06);
+}
 
 .dark_mode .arrow-up {
 	border-bottom: 10px solid #101010;
@@ -393,7 +396,7 @@ background: linear-gradient(298deg, #4f0068, #3d0066);
 }
 
 .dark_mode .contents_wrapper .game-page .page-title span {
-	color: #72767d;
+	color: #b9bbbe;
 }
 
 .dark_mode .game-page .game-contents {

@@ -6,30 +6,20 @@ import {
   setCurRoomInfo,
   fetchMoreRooms,
   getRecentlyClosed,
-  getQbot
+  getQbot,
+  addNewTransaction,
+  coHost
 } from '../../redux/Logic/logic.actions';
-import { Box, Button, Typography, IconButton, ButtonGroup, TextField, Table, TableBody, TableCell, TableRow, Tooltip } from '@material-ui/core';
+import { Box, Button, Typography } from '@material-ui/core';
 import { Warning, Add, Remove, Visibility } from '@material-ui/icons';
-import TrendingUpOutlined from '@material-ui/icons/TrendingUpOutlined';
-import TrendingDownOutlined from '@material-ui/icons/TrendingDownOutlined';
-
-// import ReactApexChart from 'react-apexcharts';
-import { Help } from '@material-ui/icons';
 import Moment from 'moment';
 import { faHeart, faHeartBroken, faStopwatch } from '@fortawesome/free-solid-svg-icons';
 import animationData from '../LottieAnimations/live';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAdjust } from '@fortawesome/free-solid-svg-icons';
-import {
-  addNewTransaction,
-  coHost
-} from '../../redux/Logic/logic.actions';
 import { setBalance } from '../../redux/Auth/user.actions';
-
-import busdSvg from '../JoinGame/busd.svg';
 // import { renderLottieAvatarAnimation } from '../../util/LottieAvatarAnimations';
-
+import CoHostModal from '../modal/CoHostModal';
 import Avatar from '../../components/Avatar';
 import ShowChartOutlined from '@material-ui/icons/ShowChartOutlined';
 // import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
@@ -38,7 +28,6 @@ import Modal from 'react-modal';
 import { convertToCurrency } from '../../util/conversion';
 import Lottie from 'react-lottie';
 import { getRoomStatisticsData } from '../../redux/Customer/customer.action';
-// import blob from '../LottieAnimations/blob.json';
 import Battle from '../icons/Battle';
 import axios from '../../util/Api';
 
@@ -52,8 +41,8 @@ import {
 import { alertModal } from '../modal/ConfirmAlerts';
 import PlayerModal from '../modal/PlayerModal';
 
+import blob from '../LottieAnimations/blob.json';
 import like from '../LottieAnimations/like.json';
-import loadingChart from '../LottieAnimations/loadingChart.json';
 import history from '../../redux/history';
 const gifUrls = ['/img/rock.gif', '/img/paper.gif', '/img/scissors.gif'];
 const randomGifUrl = gifUrls[Math.floor(Math.random() * gifUrls.length)];
@@ -85,7 +74,6 @@ class OpenGamesTable extends Component {
       qBotStatuses: {},
       fetchedRoomIds: [],
       fetchedDataIds: [],
-      showPopup: false,
       invertFilter: false,
       actionList: null,
       isCoHostModalOpen: false,
@@ -234,7 +222,7 @@ class OpenGamesTable extends Component {
     const roomIds = this.props.roomList.map(room => room._id);
 
     // Check if roomList has changed
-    if (prevProps.roomList !== this.props.roomList && this.state.roomList.length !== this.props.roomList.length) {
+    if (prevProps.roomList[0] !== this.props.roomList[0]) {
       // Check for significant changes in user_bet (30% or more) or if roomList length has changed
       const significantChange = this.props.roomList.slice(0, 5).some((room, index) => {
         const prevRoom = prevProps.roomList.find(prevRoom => prevRoom._id === room._id);
@@ -246,7 +234,7 @@ class OpenGamesTable extends Component {
           // Ensure both values are valid numbers before calculating the change
           if (!isNaN(previousBet) && !isNaN(newBet) && previousBet !== 0) {
             const change = Math.abs(newBet - previousBet) / previousBet;
-            return change >= 0.3; // 30% or more change
+            return change >= 0.01; // 30% or more change
           }
         }
         return false; // No previous room found, or invalid bet values
@@ -271,9 +259,6 @@ class OpenGamesTable extends Component {
         this.props.handleRefresh();
       }
     }
-    // if (this.state.isLoading && this.state.isLoading !== prevState.isLoading) {
-    //   console.log("ceded");
-    // }
 
     // if (prevProps.refreshing !== this.props.refreshing) {
     //   if (this.props.refreshing) {
@@ -339,13 +324,9 @@ class OpenGamesTable extends Component {
   };
 
   handleCoHostAmountChange = event => {
-
     this.setState({ coHostAmount: event.target.value });
   };
 
-  togglePopup = () => {
-    this.setState({ showPopup: !this.state.showPopup });
-  };
 
   handleSendCoHost = async () => {
     const { coHostAmount, selectedRow } = this.state;
@@ -372,7 +353,6 @@ class OpenGamesTable extends Component {
           pageSize: this.state.roomList.length,
           game_type: selectedGameType,
         });
-        this.handleCloseCoHostModal();
       } else {
         alertModal(isDarkMode, result.message);
       }
@@ -537,7 +517,7 @@ class OpenGamesTable extends Component {
     const bet_amount = e.currentTarget.getAttribute('data-betAmount');
 
     if (e.currentTarget.getAttribute('data-roomStatus') === 'finished') {
-      alertModal(this.props.isDarkMode, `THIS BATTLE HAS NOW ENDED`);
+      alertModal(this.props.isDarkMode, `THIS GAME HAS NOW ENDED`);
       return;
     }
 
@@ -613,31 +593,12 @@ class OpenGamesTable extends Component {
     this.setState({ invertFilter: !this.state.invertFilter });
   };
 
-  handleMaxButtonClick = () => {
-    if (this.props.balance) {
-      const maxPayoutAmount = this.props.balance;
-      const roundedMaxPayoutAmount = Math.floor(maxPayoutAmount * 1e6) / 1e6;
-
-      this.setState(
-        {
-          coHostAmount: roundedMaxPayoutAmount,
-        },
-        () => {
-          document.getElementById('payout').focus();
-        }
-      );
-    }
-  };
-
-  handleFocus = () => {
-    this.setState({ isFocused: true });
-  };
-
   render() {
     // const gameTypePanel = this.generateGameTypePanel();
     const {
       invertFilter,
-      isFocused,
+      selectedRow,
+      coHostAmount
     } = this.state;
     const { showPlayerModal, selectedCreator, isLowGraphics, isDarkMode, recentlyClosed, handleOpenPlayerModal, handleClosePlayerModal } = this.props;
     let recent = recentlyClosed ? this.updateFromNow(recentlyClosed) : [];
@@ -693,7 +654,7 @@ class OpenGamesTable extends Component {
             <> */}
           {(this.props.roomList.length === 0 && !this.state.isLoading && !this.props.loading) ? (
             <div className="dont-have-game-msg">
-              <div>NO LIVE BATTLES, GO TO 'MANAGE' TO CREATE ONE</div>
+              <div>NO LIVE GAMES, GO TO 'MANAGE' TO CREATE ONE</div>
             </div>
           ) : (
             <>
@@ -721,13 +682,13 @@ class OpenGamesTable extends Component {
                         {row.game_type.game_type_name}
                       </div> */}
                           <div className="cell-game-id">{'#' + row.index}</div>
-                          {this.state.qBotStatuses[row.creator_id] && (
+                          {this.state.qBotStatuses[row.creator_id] ? (
                             <span
                               style={{
                                 fontSize: "xx-small",
                                 position: "absolute",
-                                top: "37px",
-                                left: "110px",
+                                top: "47px",
+                                left: "120px",
                                 border: "1px solid rgb(255, 208, 0)",
                                 background: "linear-gradient(45deg, #7a5958, #a27955)",
                                 borderRadius: "4px",
@@ -739,6 +700,25 @@ class OpenGamesTable extends Component {
                             >
                               Q-BOT
                             </span>
+                          ) : (
+                            <div style={{ position: 'relative' }}>
+                              <Lottie
+                                options={{
+                                  loop: false,
+                                  autoplay: false,
+                                  animationData: blob
+                                }}
+                                style={{
+                                  width: '32px',
+                                  height: '38px',
+                                  left: '55px',
+                                  position: 'absolute',
+                                  top: '-30px'
+                                  // margin: '-26px -8px -20px -8px'
+                                }}
+                              />
+                            </div>
+
                           )}
                         </div>
                       </div>
@@ -842,11 +822,20 @@ class OpenGamesTable extends Component {
                                 {row.views?.length || 0}
                               </Typography>
                             </div> */}
-                        <div id="view" style={{
-                          filter: isDarkMode ? "brightness(3)" : "none"
-                        }}>
-                          <Battle width="24px" />
-                          <Typography variant="body1">
+                        <div id="view" style={{ filter: isDarkMode ? "brightness(3)" : "none" }}>
+                          <Typography variant="body2" className="label">
+                            Liquidity
+                          </Typography>
+                          <Typography variant="body1" className="number">
+                            {convertToCurrency(row.user_bet)}
+                          </Typography>
+                        </div>
+
+                        <div id="view" style={{ filter: isDarkMode ? "brightness(3)" : "none" }}>
+                          <Typography variant="body2" className="label">
+                            Battles
+                          </Typography>
+                          <Typography variant="body1" className="number">
                             {row.battles}
                           </Typography>
                         </div>
@@ -930,11 +919,8 @@ class OpenGamesTable extends Component {
                               className="lock-icon"
                             />
                           )}
-                          {row.game_type.game_type_name !== 'Spleesh!' &&
-                            // row.game_type.game_type_name !== 'Drop Game' &&
-                            row.game_type.game_type_name !== 'Mystery Box' && (
-                              <>WIN&nbsp;{convertToCurrency(row.user_bet)}</>
-                            )}
+
+                          PLAY <span style={{ marginLeft: "2.5px", filter: "brightness(3)" }}><Battle width="20px" /></span>
                         </Button>
                       </div>
                     </div>
@@ -1061,68 +1047,84 @@ class OpenGamesTable extends Component {
             <h2 className="main-title recently-closed-title" style={{ paddingTop: "5px" }}>RECENTLY ENDED</h2> <Lottie style={{ filter: 'grayscale(1)' }} options={defaultOptions} width={40} />
           </div>
           <div className='recently-closed'>
-            {recent?.map((row) => (
-              <div key={row._id} className="carousel-content table-row slide-in">
-                <a href={`/join/${row._id}`} className="table-cell">
-                  <img
-                    src={`/img/gametype/icons/${row.game_type.short_name}.svg`}
-                    alt=""
-                    className="game-type-icon"
-                  />
+            {recent?.map((row) => {
+              const hostPrizeMinusBetAmount = row.host_pr - row.bet_amount;
+
+              // Skip the item if the calculated value is 0
+              if (hostPrizeMinusBetAmount === 0) return null;
+
+              return (
+                <div key={row._id} className="carousel-content table-row slide-in">
+                  <a href={`/join/${row._id}`} className="table-cell">
+                    <img
+                      src={`/img/gametype/icons/${row.game_type.short_name}.svg`}
+                      alt=""
+                      className="game-type-icon"
+                    />
+                    <div className="cell">{row.game_type.game_type_name}</div>
+                    <div className="cell">{'-' + row.room_number}</div>
+                    {this.state.qBotStatuses[row.creator_id] && (
+                      <span
+                        style={{
+                          fontSize: 'xx-small',
+                          position: 'absolute',
+                          top: '23px',
+                          left: '112px',
+                          border: '1px solid rgb(255, 208, 0)',
+                          background: 'linear-gradient(45deg, #7a5958, #a27955)',
+                          borderRadius: '4px',
+                          color: 'rgb(255, 208, 0)',
+                          padding: '0px 5px',
+                          lineHeight: '20px',
+                          marginLeft: '7.5px',
+                        }}
+                      >
+                        Q-BOT
+                      </span>
+                    )}
+                  </a>
                   <div className="cell">
-                    {row.game_type.game_type_name}
+                    {row.status}&nbsp;
+                    {<FontAwesomeIcon icon={faHeartBroken} />}
                   </div>
-                  <div className="cell">{'-' + row.room_number}</div>
-                  {this.state.qBotStatuses[row.creator_id] && (
-                    <span
-                      style={{
-                        fontSize: "xx-small",
-                        position: "absolute",
-                        top: "23px",
-                        left: "112px",
-                        border: "1px solid rgb(255, 208, 0)",
-                        background: "linear-gradient(45deg, #7a5958, #a27955)",
-                        borderRadius: "4px",
-                        color: "rgb(255, 208, 0)",
-                        padding: "0px 5px",
-                        lineHeight: "20px",
-                        marginLeft: "7.5px"
-                      }}
-                    >
-                      Q-BOT
+                  <div className="cell">
+                    {row.from_now}&nbsp;{<FontAwesomeIcon icon={faStopwatch} />}
+                  </div>
+                  <div className={"cell"}>
+                    <span className={`${this.getColorClass(hostPrizeMinusBetAmount)}`}>
+                      {convertToCurrency(hostPrizeMinusBetAmount)}
                     </span>
-                  )}
-                </a>
-                <div className="cell">
-                  {row.status}&nbsp;{<FontAwesomeIcon icon={faHeartBroken} />}
+                    <span
+                      className={`${this.getColorClass(hostPrizeMinusBetAmount)}`}
+                      style={{ fontSize: 'xx-small', marginLeft: '5px' }}
+                    >
+                      (${(hostPrizeMinusBetAmount * this.props.tokenPrice).toFixed(2)})
+                    </span>
+                  </div>
+                  <a
+                    href="#"
+                    className="player"
+                    onClick={() => handleOpenPlayerModal(row.creator._id)}
+                  >
+                    <Avatar
+                      className="avatar"
+                      src={row.creator.avatar}
+                      accessory={row.creator.accessory}
+                      username={row.creator.username}
+                      rank={row.creator.totalWagered}
+                      alt=""
+                      darkMode={this.props.isDarkMode}
+                    />
+                    <i
+                      className={`online-status${this.props.onlineUserList.filter((user) => user === row.creator._id).length > 0
+                        ? ' online'
+                        : ''
+                        }`}
+                    ></i>
+                  </a>
                 </div>
-                <div className="cell">{row.from_now}&nbsp;{<FontAwesomeIcon icon={faStopwatch} />}</div>
-                <div className={"cell"}>
-                  <span className={`${this.getColorClass(row.host_pr - row.bet_amount)}`}>{convertToCurrency(row.host_pr - row.bet_amount)}</span>
-                </div>
-                <a
-                  href="#"
-                  className="player"
-                  onClick={() => handleOpenPlayerModal(row.creator._id)}
-                >
-                  <Avatar
-                    className="avatar"
-                    src={row.creator.avatar}
-                    accessory={row.creator.accessory}
-                    username={row.creator.username}
-                    rank={row.creator.totalWagered}
-                    alt=""
-                    darkMode={this.props.isDarkMode}
-                  />
-                  <i
-                    className={`online-status${this.props.onlineUserList.filter((user) => user === row.creator._id).length > 0
-                      ? ' online'
-                      : ''
-                      }`}
-                  ></i>
-                </a>
-              </div>
-            ))}
+              );
+            })}
           </div>
           {/* </>
 
@@ -1141,233 +1143,18 @@ class OpenGamesTable extends Component {
           style={customStyles}
           contentLabel="CoHost Modal"
         >
-          <div className={`${this.props.isDarkMode ? 'dark_mode' : ''} big-modal`}>
-            <div className="modal-header">
-              <h2 className="modal-title title">
-                <ShowChartOutlined className="mr-2" />
-                Trade
-              </h2>
-              <Button className="btn-close title" onClick={this.handleCloseCoHostModal}>
-                ×
-              </Button>
-            </div>
-            <div className="modal-body">
-              <div className="modal-content-wrapper">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <h1 className='modal-title title'>BECOME A CO-HOST</h1>
-                  <div style={{ width: '50%', textAlign: 'right', padding: '20px' }}>
-                    <span>HELP</span>&nbsp;
-                    <span>
-                      <Help style={{ width: '16', marginTop: '-3px', cursor: 'pointer' }} onClick={this.togglePopup} />
-                    </span>
-                  </div>
-                </div>
-                <div className="modal-content-panel">
-                  <div className="input-amount">
-                    <TextField
-                      label="Amount"
-                      value={this.state.coHostAmount || 0}
-                      onChange={this.handleCoHostAmountChange}
-                      pattern="^\\d*\\.?\\d*$"
-                      variant="filled"
-                      type="number"
-                      autoComplete="off"
-                      id="payout"
-                      className="form-control"
-                      InputProps={{
-                        onFocus: this.handleFocus,
-                        endAdornment: !this.state.isFocused ? ' RPS ' : (
-                          <ButtonGroup
-                            className={isFocused ? 'fade-in' : 'fade-out'}
-                          >
-                            <Button
-                              onClick={() => this.handleMaxButtonClick()}
-                              style={{ marginRight: '-10px' }}
-                            >
-                              Max
-                            </Button>
-                          </ButtonGroup>
-                        ),
-                      }}
-                    />
-                  </div>
-                  <Table>
-                    <TableBody>
-                      <TableRow>
-                        <TableCell>
-                          <span>IN-GAME BALANCE:</span>
-                        </TableCell>
-                        <TableCell>
-                          {convertToCurrency(this.props.balance)}
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>
-                          <span>NEW BALANCE:</span>
-                        </TableCell>
-                        <TableCell>
-                          {convertToCurrency(
-                            (this.props.balance || 0) - (this.state.coHostAmount || 0)
-                          )}
-                          &nbsp;
-                          {((this.props.balance || 0) - (this.state.coHostAmount || 0)) < 0 && <Warning width="15pt" />}
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>
-                          <span>CURRENT BANKROLL:</span>
-                        </TableCell>
-                        <TableCell style={{ color: "#ffb000" }}>
-                          {this.state.selectedRow ? (
-                            convertToCurrency(this.state.selectedRow.user_bet)
-                          ) : (
-                            null
-                          )}
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>
-                          <span>NEW BANKROLL:</span>
-                        </TableCell>
-                        <TableCell style={{ color: "#ffb000" }}>
-                          {this.state.selectedRow ? (
-                            convertToCurrency(parseFloat(this.state.selectedRow.user_bet) + parseFloat(this.state.coHostAmount || 0))
-                          ) : (
-                            null
-                          )}
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>
-                          <span>CURRENT SHARE:</span>
-                        </TableCell>
-                        {this.state.selectedRow ? (
-                          <TableCell style={{ color: 'red' }}>
-                            {this.state.selectedRow.hosts && this.state.selectedRow.hosts.some(host => host.host === this.props.user._id) ? (
-                              <>
-                                {`${(this.state.selectedRow.hosts.find(host => host.host === this.props.user._id).share).toFixed(2)}%`}
-                              </>
-                            ) : (
-                              convertToCurrency('0')
-                            )}
-                          </TableCell>
-                        ) : (
-                          null
-                        )}
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>
-                          <span>NEW SHARE:</span>
-                        </TableCell>
-                        {this.state.selectedRow ? (
-                          <TableCell style={{ color: 'red' }}>
-                            {this.state.selectedRow.hosts && this.state.selectedRow.hosts.some(host => host.host === this.props.user._id) ? (
-                              <>
-                                {(() => {
-                                  const host = this.state.selectedRow.hosts.find(host => host.host === this.props.user._id);
-                                  const currentShare = host ? host.share : 0;
-                                  const currentBankroll = parseFloat(this.state.selectedRow.user_bet);
-                                  const newAmount = parseFloat(this.state.coHostAmount || 0);
-
-                                  // New share calculation based on bonding curve (update formula as per backend)
-                                  const newShare = ((((currentShare / 100) * currentBankroll) + newAmount) / (currentBankroll + newAmount)) * 100;
-                                  return `${newShare.toFixed(2)}%`;
-                                })()}
-                              </>
-                            ) : (
-                              <>
-                                {(((parseFloat(this.state.coHostAmount || 0)) / (parseFloat(this.state.coHostAmount || 0) + parseFloat(this.state.selectedRow.user_bet))) * 100).toFixed(2)}%
-                              </>
-                            )}
-                          </TableCell>
-                        ) : (
-                          null
-                        )}
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
-            </div>
-            <div className="modal-footer">
-              <Button className="btn-submit" onClick={this.handleSendCoHost}>
-                BUY<TrendingUpOutlined style={{ color: '#fff', marginLeft: '8px' }} /> {/* Green for "up" */}
-
-              </Button>
-              <Button
-                className="btn-back"
-                style={{ border: 'unset', background: 'linear-gradient(357deg, #00ff17, #28a745)', boxShadow: '0 -0.5px 0px #359b1f, 0 -3px #146e1a inset, 0 2px #28a745 inset', }}
-                onClick={this.handleCloseCoHostModal}
-              >
-                SELL<TrendingDownOutlined style={{ color: '#fff', marginLeft: '4px' }} /> {/* Red for "down" */}
-
-              </Button>
-            </div>
-          </div>
-          {this.state.showPopup && (
-            <div className={`${isDarkMode ? 'popup-overlay dark_mode' : 'popup-overlay'}`}>
-              <div className="popup title">
-                <h2 className='modal-title title' style={{ textAlign: 'center', marginBottom: "20px" }}>Co-Hosting Information</h2>
-                <div className="popup-content">
-                  <div style={{ position: 'relative' }}>
-                    <img src={'../img/co-host.svg'} style={{ borderRadius: '20px', border: '1px solid aaa9', overflow: 'hidden', filter: invertFilter ? 'invert(1)' : 'none', }} />
-                    <Button
-                      onClick={this.toggleInvertFilter}
-                      style={{ position: 'absolute', bottom: '10px', right: '10px', borderRadius: "100px", padding: "0" }}
-                    >
-                      <FontAwesomeIcon icon={faAdjust} />
-                    </Button>
-                  </div>
-                  <h3 style={{ fontSize: '24px', fontWeight: '600', marginBottom: '15px', textAlign: 'center', letterSpacing: '0.5px' }}>
-                    Co-Hosting Overview
-                  </h3>
-                  <p style={{ fontSize: '16px', lineHeight: '1.6', marginBottom: '15px', textAlign: 'justify', padding: '0 20px' }}>
-                    Co-Hosting allows you to invest in existing games and own a share of its profits.
-                  </p>
-                  <p style={{ fontSize: '16px', fontWeight: '600', color: '#16e100', marginTop: '20px', marginBottom: '10px', padding: '0 20px' }}>
-                    Steps to become a co-host:
-                  </p>
-                  <ol style={{ fontSize: '16px', lineHeight: '1.6', paddingLeft: '40px', marginBottom: '20px' }}>
-                    <li style={{ marginBottom: '8px' }}>Go To 'Live Battles'</li>
-                    <li style={{ marginBottom: '8px' }}>Pick a game from the list (check the mini-charts for steady growth games).</li>
-                    <li style={{ marginBottom: '8px' }}>
-                      Click the green plus <span style={{ color: '#16e100' }}>[+]</span> next to the 'WIN' button.
-                    </li>
-                    <li style={{ marginBottom: '8px' }}>
-                      In the Co-Hosting Popup, enter the amount you want to invest and click 'CONTRIBUTE'.
-                    </li>
-                    <li style={{ marginBottom: '8px' }}>
-                      Sit back and wait for automatic payouts (if Host has enabled) or your share value to increase as its bankroll increases.
-                    </li>
-                  </ol>
-                  <i style={{ fontSize: '16px', color: '#ff0000', display: 'block', padding: '0 20px', marginBottom: '30px' }}>
-                    PRO TIP: You can track your earnings by searching for 'co-host' in All Transactions by clicking your wallet then View-All.
-                  </i>
-
-                  {/* New Definitions Section */}
-                  <h3 style={{ fontSize: '24px', fontWeight: '600', marginTop: '30px', marginBottom: '15px', textAlign: 'center', letterSpacing: '0.5px' }}>
-                    Definitions
-                  </h3>
-                  <h4 style={{ fontSize: '20px', fontWeight: '600', color: '#16e100', marginBottom: '10px', padding: '0 20px' }}>
-                    Dividends (Auto-Payouts)
-                  </h4>
-                  <p style={{ fontSize: '16px', lineHeight: '1.6', marginBottom: '15px', textAlign: 'justify', padding: '0 20px' }}>
-                    Dividends are payments made by a company to its shareholders, typically as a distribution of profits. These payments are usually made in cash or additional shares of stock.
-                  </p>
-
-                  <h4 style={{ fontSize: '20px', fontWeight: '600', color: '#16e100', marginBottom: '10px', padding: '0 20px' }}>
-                    Shares (Stake)
-                  </h4>
-                  <p style={{ fontSize: '16px', lineHeight: '1.6', marginBottom: '15px', textAlign: 'justify', padding: '0 20px' }}>
-                    Shares represent units of ownership in a company. When you own shares in a company, you own a portion of it, which may entitle you to vote on company decisions and earn dividends.
-                  </p>
-
-                  <Button style={{ display: 'block', margin: 'auto' }} onClick={this.togglePopup}>OK, GOT IT!</Button>
-                </div>
-                <button className="popup-close" onClick={this.togglePopup}>&times;</button>
-              </div>
-            </div>
-          )}
+          <CoHostModal
+            isDarkMode={this.props.isDarkMode}
+            coHostAmount={coHostAmount}
+            selectedRow={selectedRow}
+            balance={this.props.balance}
+            user={this.props.user}
+            togglePopup={this.togglePopup}
+            handleClose={this.handleCloseCoHostModal}
+            handleSendCoHost={this.handleSendCoHost}
+            handleCoHostAmountChange={this.handleCoHostAmountChange}
+            has_joined={false}
+          />
         </Modal>
       </>
     )

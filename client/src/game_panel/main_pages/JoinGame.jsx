@@ -5,7 +5,7 @@ import Moment from 'moment';
 import { getRoomStatisticsData } from '../../redux/Customer/customer.action';
 import { Button, Drawer, LinearProgress } from '@material-ui/core';
 import LoadingOverlay from 'react-loading-overlay';
-import { toggleDrawer, updateTutorialCompleted } from '../../redux/Auth/user.actions';
+import { toggleDrawer, updateTutorialCompleted, setBalance } from '../../redux/Auth/user.actions';
 import RPS from '../JoinGame/RPS';
 import Blackjack from '../JoinGame/Blackjack';
 import Spleesh from '../JoinGame/Spleesh';
@@ -41,6 +41,9 @@ import {
   detachPlayerFromRoom,
   checkPlayerAttachment,
   getAttachedRooms,
+  addNewTransaction,
+  coHost,
+  getRoomList
 } from '../../redux/Logic/logic.actions';
 import { predictNext, reinforcementAI, innovate, martingaleStrategy, patternBasedAI, counterSwitchAI, generatePattern, counterRandomness, NPC } from '../../util/predictNext';
 import { predictNextQs, reinforcementAI_qs, innovate_qs, martingaleStrategy_qs, patternBasedAI_qs, counterSwitchAI_qs, generatePattern_qs, counterRandomness_qs, NPC_qs, getCopyCatItem_qs, getRandomItem_qs } from '../../util/predictNextQs';
@@ -109,6 +112,7 @@ class JoinGame extends Component {
       betResult: null,
       result: 0,
       productName: '',
+      coHostAmount: 0,
       bankroll: '',
       intervalId: null,
       predictedBetAmount: 0,
@@ -1099,6 +1103,39 @@ class JoinGame extends Component {
     }
   };
 
+  handleSendCoHost = async () => {
+    const { coHostAmount } = this.state;
+    const { user_balance, roomInfo, isDarkMode, setBalance, addNewTransaction, getRoomList } = this.props;
+
+    try {
+      if (coHostAmount <= 0) {
+        alertModal(isDarkMode, 'R U FURR-REAL? COHOST AMOUNT MUST BE MORE THAN 0!');
+        return;
+      }
+
+      if (coHostAmount > user_balance) {
+        alertModal(isDarkMode, 'NOT ENUFF FUNDS AT THIS MEOWMENT');
+        return;
+      }
+
+      const result = await this.props.coHost(coHostAmount, roomInfo._id);
+
+      if (result.success) {
+        alertModal(isDarkMode, result.message, '-cat');
+        setBalance(result.balance);
+        addNewTransaction(result.newTransaction);
+        await getRoomList({
+          pageSize: this.state.roomList.length,
+          game_type: roomInfo.game_type,
+        });
+      } else {
+        alertModal(isDarkMode, result.message);
+      }
+    } catch (e) {
+      alertModal(isDarkMode, 'ROOM TOO BUSY, TRY AGAIN LATER');
+    }
+  };
+
   handleOpenPlayerModal = creator_id => {
     this.setState({ showPlayerModal: true, selectedCreator: creator_id });
   };
@@ -1127,11 +1164,11 @@ class JoinGame extends Component {
     (this.state.is_mobile && this.state.selectedMobileTab === 'live_games') ||
       (!this.state.is_mobile && this.props.selectedMainTabIndex === 0) ? (
       <div id="liveStakes">
-        {this.props.roomCount} LIVE BATTLES
+        {this.props.roomCount} LIVE GAMES
         <Lottie options={defaultOptions} width={40} />
       </div>
     ) : (
-      'Your Battles'
+      'Your Games'
     );
 
   render() {
@@ -1166,6 +1203,7 @@ class JoinGame extends Component {
       user_balance,
       strategies,
       ai_mode,
+      user,
       selectedMainTabIndex,
       rpsbetitems,
       qsbetitems,
@@ -1213,12 +1251,16 @@ class JoinGame extends Component {
                 onChange={this.showOpenGameOrHistory}
                 TabIndicatorProps={{ style: { background: '#ff0000' } }}
                 className="main-game-page-tabs"
+                isDarkMode={isDarkMode}
+                selectedRow={roomInfo}
+                balance={user_balance}
+                user={user}
               >
                 <Tab
                   label={
                     selectedMobileTab === 'live_games'
                       ? 'Live Battles'
-                      : 'Your Battles'
+                      : 'Your Games'
                   }
                   style={customStyles.tabRoot}
                 />
@@ -1549,10 +1591,15 @@ class JoinGame extends Component {
             <TabbedContent
               actionList={actionList}
               roomInfo={roomInfo}
+              user={this.props.user_id}
               getRoomData={this.getRoomData}
               getRoomInfo={this.props.getRoomInfo}
+              balance={this.props.user_balance}
               isLowGraphics={this.props.isLowGraphics}
               isDarkMode={this.props.isDarkMode}
+              handleCoHostAmountChange={this.onChangeState}
+              handleSendCoHost={this.handleSendCoHost}
+              has_joined={true}
             />
             <div>
               {((!is_mobile && selectedMainTabIndex === 1) ||
@@ -1636,7 +1683,7 @@ class JoinGame extends Component {
                     d="M24.9 25.945c2.625-2.578 4.1-6.076 4.1-9.722 0-3.647-1.475-7.144-4.1-9.723M7.1 25.945C4.476 23.367 3 19.87 3 16.223 3 12.576 4.475 9.079 7.1 6.5M21 22.5c1.92-1.658 3-3.906 3-6.25s-1.08-4.592-3-6.25M14 17.678v-3.356c0-.79.871-1.268 1.537-.844l2.637 1.678c.618.393.618 1.295 0 1.688l-2.637 1.678c-.666.424-1.537-.055-1.537-.844zM11 22.5c-1.92-1.658-3-3.906-3-6.25s1.08-4.592 3-6.25"
                   />
                 </svg>
-                {selectedMobileTab === 'live_games' && 'LIVE BATTLES'}
+                {selectedMobileTab === 'live_games' && 'LIVE GAMES'}
               </Button>
               <Button
                 className={`mobile-tab-my ${selectedMobileTab === 'my_games' ? 'active' : ''
@@ -1666,7 +1713,7 @@ class JoinGame extends Component {
                     d="M18.651 12.702l-.674.33.674-.33zm-.294-.602l.674-.33c-.126-.257-.387-.42-.674-.42v.75zm-3.714 0v-.75c-.287 0-.548.163-.674.42l.674.33zm7.607-4.75v4.302h1.5V7.35h-1.5zm-2.925 5.022l-.294-.601-1.348.658.294.602 1.348-.659zm-.968-1.022h-3.714v1.5h3.714v-1.5zm-4.388.42l-.294.602 1.348.66.294-.603-1.348-.658zm-3.219-.118V7.35h-1.5v4.302h1.5zm2.036-6.402h7.428v-1.5h-7.428v1.5zm-.49 8c-.838 0-1.546-.7-1.546-1.598h-1.5c0 1.695 1.348 3.098 3.046 3.098v-1.5zm8.408 0c-.576 0-1.113-.333-1.379-.878l-1.348.66c.512 1.046 1.565 1.718 2.727 1.718v-1.5zm1.546-1.598c0 .899-.708 1.598-1.546 1.598v1.5c1.698 0 3.046-1.403 3.046-3.098h-1.5zm-8.575.72c-.266.545-.803.878-1.38.878v1.5c1.163 0 2.216-.672 2.728-1.719l-1.348-.659zM23.75 7.35c0-1.972-1.567-3.6-3.536-3.6v1.5c1.109 0 2.036.924 2.036 2.1h1.5zm-13 0c0-1.176.928-2.1 2.036-2.1v-1.5c-1.969 0-3.536 1.628-3.536 3.6h1.5zm1.571 1.7h2.786v-1.5h-2.786v1.5zm.643-2.175v2.85h1.5v-2.85h-1.5zM19.75 8.1h.929V6.6h-.929v1.5zM17.893 10h.928V8.5h-.928V10z"
                   />
                 </svg>
-                {selectedMobileTab === 'my_games' && 'YOUR BATTLES'}
+                {selectedMobileTab === 'my_games' && 'YOUR GAMES'}
               </Button>
               <button
                 className={`mobile-tab-marketplace ${selectedMobileTab === 'marketplace' ? 'active' : ''
@@ -1787,7 +1834,11 @@ const mapDispatchToProps = {
   attachPlayerToRoom,
   checkPlayerAttachment,
   updateUserStrategy,
+  addNewTransaction,
+  setBalance,
+  coHost,
   // getMyHistory,
+  getRoomList,
   getRoomStatisticsData,
   getHistory,
   getAttachedRooms,

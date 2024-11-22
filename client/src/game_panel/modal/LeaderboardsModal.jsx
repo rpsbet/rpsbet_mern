@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import Modal from 'react-modal';
 import { connect } from 'react-redux';
-import { fetchLeaderboardsData, fetchEquityDistribution, getMarketingStat } from '../../redux/Customer/customer.action';
+import { fetchLeaderboardsData, fetchReceiptStatistics, fetchEquityDistribution, getMarketingStat } from '../../redux/Customer/customer.action';
 import Chart from 'react-apexcharts';
 import PlayerModal from '../modal/PlayerModal';
 import Avatar from '../../components/Avatar';
@@ -59,17 +59,30 @@ class LeaderboardsModal extends Component {
     sortOrder: 'desc',
     showPlayerModal: false,
     selectedCreator: '',
-    message: ''
+    message: '',
+    equityChartData: [], // Added state to store equity chart data
+    receiptChartData: [], // Added state to store receipt chart data
+    loadingEquityChartData: true, // Flag to check if data is loading
+    loadingReceiptChartData: true, // Flag to check if data is loading
+    isMobile: window.innerWidth <= 480,
   };
 
-
-
   async componentDidMount() {
+    // Fetch all the necessary data
     await this.props.fetchLeaderboardsData();
     await this.props.fetchEquityDistribution();
+    await this.props.fetchReceiptStatistics();
+
     const marketingStat = await this.props.getMarketingStat();
-    this.setState({ message: marketingStat.message });
-    // const result = await this.props.getPlatformPercentages()
+    console.log("this.props.receiptChart", this.props.receiptChart, this.props.loadingReceiptChart)
+    // Set the fetched data to state
+    this.setState({
+      message: marketingStat.message,
+      equityChartData: this.props.equityChart || [], // Store equity chart data
+      receiptChartData: this.props.receiptChart || [], // Store receipt chart data
+      loadingEquityChartData: this.props.loadingEquityChart || false, // Set loading flag to false after data is loaded
+      loadingReceiptChartData: this.props.loadingReceiptChart || false, // Set loading flag to false after data is loaded
+    });
   }
 
   handleOpenPlayerModal = creator_id => {
@@ -92,17 +105,10 @@ class LeaderboardsModal extends Component {
     }));
   };
 
-
   render() {
-    const {
-      sortField,
-      sortOrder,
-      showPlayerModal,
-      selectedCreator,
-      message
-    } = this.state;
-
-    const { leaderboards, isDarkMode, loading, equityChart, loadingEquityChart } = this.props;
+    const { sortField, sortOrder, showPlayerModal, selectedCreator, message, isMobile } = this.state;
+    const { leaderboards, isDarkMode, loading } = this.props;
+    const { equityChartData, receiptChartData, loadingEquityChartData, loadingReceiptChartData } = this.state;
 
     // Define a base color and create shades for it
     const baseColor = '#c734ff'; // Base color (e.g., a shade of purple)
@@ -114,19 +120,82 @@ class LeaderboardsModal extends Component {
       `${baseColor}33`, // 20% opacity
       `${baseColor}1A`, // 10% opacity
     ];
+    const chartWidth = isMobile ? '320px' : '400px';
+    const receiptChartOptions = {
+      chart: {
+        type: 'pie',
+        background: isDarkMode ? '#121212' : '#ffffff', // Adjust background based on dark mode
+      },
+      labels: [
+        'Made over 10M',
+        'Made over 1M',
+        'Made over 0',
+        'Not profitable',
+      ],
+      responsive: [
+        {
+          breakpoint: 480,
+          options: {
+            chart: {
+              width: chartWidth,
+            },
+          },
+        },
+      ],
+      colors: chartColors,
+      legend: {
+        show: false, // Hide the legend inside the chart for consistency
+      },
+      plotOptions: {
+        pie: {
+          donut: {
+            size: '70%', // Adjust the size of the donut chart
+            labels: {
+              show: false, // Hide the center label
+            },
+          },
+        },
+      },
+      dataLabels: {
+        enabled: true,
+        formatter: (value, { seriesIndex }) => `${value.toFixed(2)}%`, // Show percentage
+        style: {
+          colors: ['#ffffff'], // Data label color
+          fontSize: '14px', // Adjust font size
+          fontWeight: 600, // Adjust font weight
+        },
+      },
+      tooltip: {
+        custom: function ({ seriesIndex, w }) {
+          const labels = [
+            'Made over 10M',
+            'Made over 1M',
+            'Made over 0',
+            'Not profitable',
+          ];
+          return `
+            <div style="display: flex; align-items: center;">
+              <span style="color: ${baseColor};">${labels[seriesIndex]}: ${w.globals.series[seriesIndex].toFixed(2)}%</span>
+            </div>
+          `;
+        },
+        theme: isDarkMode ? 'dark' : 'light', // Adjust theme based on mode
+        useHTML: true, // Allow HTML rendering in the tooltip
+      },
+    };
 
-    // Handle case when equityChart is undefined or empty
+    // Handle case when equityChartData is undefined or empty
     const chartOptions = {
       chart: {
         type: 'pie',
         background: isDarkMode ? '#121212' : '#ffffff', // Adjust background based on dark mode
       },
-      labels: equityChart && equityChart.length > 0 ? equityChart.map(user => user.username.toUpperCase()) : [], // Use username as label
+      labels: equityChartData && equityChartData.length > 0 ? equityChartData.map(user => user.username.toUpperCase()) : [], // Use username as label
       responsive: [{
         breakpoint: 480,
         options: {
           chart: {
-            width: 400
+            width: chartWidth
           }
         }
       }],
@@ -147,7 +216,7 @@ class LeaderboardsModal extends Component {
       dataLabels: {
         enabled: true,
         formatter: (value, { seriesIndex }) => {
-          const user = equityChart[seriesIndex];
+          const user = equityChartData[seriesIndex];
           return `${value.toFixed(2)}%`; // Show username and percentage
         },
         style: {
@@ -158,7 +227,7 @@ class LeaderboardsModal extends Component {
       },
       tooltip: {
         custom: function ({ seriesIndex, w }) {
-          const user = equityChart[seriesIndex];
+          const user = equityChartData[seriesIndex];
           return `
             <div style="display: flex; align-items: center;">
               <img src="${user.avatar}" alt="${user.username}" style="width: 24px; height: 24px; border-radius: 50%; margin-right: 8px;" />
@@ -171,7 +240,15 @@ class LeaderboardsModal extends Component {
       },
     };
 
-    const chartSeries = equityChart && equityChart.length > 0 ? equityChart.map(user => user.equityPercentage) : [];
+    const chartSeries = equityChartData && equityChartData.length > 0 ? equityChartData.map(user => user.equityPercentage) : [];
+    const receiptChartSeries = receiptChartData
+      ? [
+        receiptChartData.overTenMillion,
+        receiptChartData.betweenOneAndTenMillion,
+        receiptChartData.betweenZeroAndOneMillion,
+        receiptChartData.lessThanZero,
+      ]
+      : [];
     // Sort the leaderboards data based on current sorting options
     const sortedLeaderboards = [...leaderboards].sort((a, b) => {
       const aValue = a[this.state.sortField];
@@ -205,33 +282,61 @@ class LeaderboardsModal extends Component {
           <div className="modal-body leaderboards-modal edit-modal-body">
             <div className="modal-content-wrapper">
               <div className="modal-content-panel">
-                <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
-
-                  <h4 className="title">
-                    Top Players (Balances)
-                  </h4>
-                  <br />
-                  {loadingEquityChart ? (
-                    <>
-                      <div>Loading Distribution...</div>
-                      <LinearProgress color='secondary' />
-                    </>
-
-                  ) : (
-                    // Display the pie chart only if equityChart data is available
-                    equityChart && equityChart.length > 0 ? (
-                      <Chart options={chartOptions} series={chartSeries} type="pie" width="500" />
-                    ) : (
-                      <div>Calculating Equities...</div>
-                    )
+                <div className="marketing-message">
+                  <p dangerouslySetInnerHTML={{ __html: message.replace(/(\d+(\.\d+)?%?)/g, '<strong>$1</strong>') }} />
+                  {!loadingEquityChartData && (
+                    <img className=" desktop-only" style={{ position: "absolute", bottom: "-50px", right: "50px", filter: "hue-rotate(272deg)" }} src={happyCat} width={"80px"} alt="Caesar the car" />
                   )}
-                  <div className="marketing-message">
-                    <p dangerouslySetInnerHTML={{ __html: message.replace(/(\d+(\.\d+)?%?)/g, '<strong>$1</strong>') }} />
-                    {!loadingEquityChart && (
-                      <img className=" desktop-only" style={{ position: "absolute", bottom: "-50px", right: "50px", filter: "hue-rotate(272deg)" }} src={happyCat} width={"80px"} alt="Caesar the car" />
-                    )}
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", background: "rgba(170, 170, 170, 0.06)", borderRadius: "20px", padding: "30px 10px", marginBottom: "30px" }}>
+
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: window.innerWidth > 768 ? "row" : "column", // Row for desktop, column for mobile
+                      justifyContent: "center",
+                      alignItems: "center",
+                      gap: "2rem", // Add some spacing between charts
+                    }}
+                  >
+                    <div style={{ textAlign: "center" }}>
+                      <h5 className="title">Equity Distribution (in-game)</h5>
+                      {loadingEquityChartData ? (
+                        <div style={{ marginTop: "20px" }}>
+                          <LinearProgress color="secondary" />
+                        </div>
+                      ) : (
+                        chartSeries.length > 0 && (
+                          <Chart
+                            options={chartOptions}
+                            series={chartSeries ? chartSeries : []}
+                            type="pie"
+                            width="350"
+                          />
+                        )
+                      )}
+                    </div>
+
+                    <div style={{ textAlign: "center" }}>
+                      <h5 className="title">Profit Distribution ($RPS)</h5>
+                      {loadingReceiptChartData ? (
+                        <div style={{ marginTop: "20px" }}>
+                          <LinearProgress color="secondary" />
+                        </div>
+                      ) : (
+                        receiptChartSeries.length > 0 && (
+                          <Chart
+                            options={receiptChartOptions}
+                            series={receiptChartSeries ? receiptChartSeries : []}
+                            type="pie"
+                            width="350"
+                          />
+                        )
+                      )}
+                    </div>
                   </div>
                 </div>
+
                 <div className='table'>
                   <h4 className="title">
                     All-time Leaderboards
@@ -317,7 +422,7 @@ class LeaderboardsModal extends Component {
             </div>
           </div>
         </div>
-      </Modal>
+      </Modal >
     );
   }
 }
@@ -327,15 +432,18 @@ const mapStateToProps = state => ({
   user_id: state.auth.user._id,
   isDarkMode: state.auth.isDarkMode,
   equityChart: state.customerReducer.equityChart,
+  receiptChart: state.customerReducer.receiptChart,
   leaderboards: state.customerReducer.leaderboards,
   loading: state.customerReducer.loading,
   loadingEquityChart: state.customerReducer.loadingEquityChart,
+  loadingReceiptChart: state.customerReducer.loadingReceiptChart,
 
 });
 
 const mapDispatchToProps = {
   fetchLeaderboardsData,
   fetchEquityDistribution,
+  fetchReceiptStatistics,
   getMarketingStat,
   // getPlatformPercentages
 };

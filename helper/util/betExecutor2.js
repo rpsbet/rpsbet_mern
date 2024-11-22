@@ -120,7 +120,7 @@ const addToQueue = async (req, bot = false) => {
             if (roomInfo['status'] === 'finished') {
                 responseData = {
                     success: false,
-                    message: 'THIS BATTLE HAS NOW ENDED',
+                    message: 'THIS GAME HAS NOW ENDED',
                     betResult: -100
                 };
 
@@ -683,7 +683,7 @@ const addToQueue = async (req, bot = false) => {
                         ); /* (roomInfo['user_bet'] -  roomInfo['bet_amount']) */
                     }
 
-                    bet_item.joiner = req.user;
+                    bet_item.joiner = req.user._id;
                     bet_item.joiner_qs = req.body.selected_qs_position;
 
                     message.message =
@@ -751,7 +751,7 @@ const addToQueue = async (req, bot = false) => {
                         roomInfo['room_number'];
                 }
 
-                bet_item.joiner = req.user;
+                bet_item.joiner = req.user._id;
                 bet_item.joiner_qs = req.body.selected_qs_position;
                 bet_item.bet_amount = betAmount;
 

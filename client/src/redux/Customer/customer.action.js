@@ -15,6 +15,8 @@ import {
   LOAD_LEADERBOARDS,
   LOADING_EQUITY_CHART,
   LOAD_EQUITY_CHART,
+  LOAD_RECEIPT_CHART,
+  LOADING_RECEIPT_CHART,
   LOADING_LEADERBOARDS_TABLE
 } from '../types';
 
@@ -194,23 +196,50 @@ export const acGetCustomerInfo = _id => async dispatch => {
 //   }
 // };
 
+export const fetchReceiptStatistics = () => async (dispatch) => {
+  dispatch({ type: LOADING_RECEIPT_CHART, payload: true });
+
+  try {
+    const response = await api.get('/statistics/get-receipt-statistics');
+    const data = response?.data;
+
+    if (data?.success) {
+      dispatch({
+        type: LOAD_RECEIPT_CHART,
+        payload: {
+          receiptChart: data?.receiptChart ?? [], // Default to an empty array if null/undefined
+        },
+      });
+    } else {
+      console.warn('Unexpected API response format:', data);
+    }
+  } catch (error) {
+    console.error('Error fetching receipt statistics:', error.message);
+  } finally {
+    dispatch({ type: LOADING_RECEIPT_CHART, payload: false });
+  }
+};
+
 export const fetchEquityDistribution = () => async (dispatch) => {
   dispatch({ type: LOADING_EQUITY_CHART, payload: true });
 
   try {
-    const { data } = await api.get('/statistics/get-equity-distribution');
+    const response = await api.get('/statistics/get-equity-distribution');
+    const data = response?.data;
 
-    if (data.success) {
+    if (data?.success) {
       dispatch({
         type: LOAD_EQUITY_CHART,
         payload: {
-          equityChart: data.equityDistribution // Ensure the payload has equityChart property
-        }
+          equityChart: data?.equityDistribution ?? [], // Default to an empty array if null/undefined
+        },
       });
+    } else {
+      console.warn('Unexpected API response format:', data);
     }
-    dispatch({ type: LOADING_EQUITY_CHART, payload: false });
   } catch (error) {
-    console.error('Error fetching equity distribution:', error);
+    console.error('Error fetching equity distribution:', error.message);
+  } finally {
     dispatch({ type: LOADING_EQUITY_CHART, payload: false });
   }
 };

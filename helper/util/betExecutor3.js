@@ -107,7 +107,7 @@ const addToQueue = async (req, bot = false) => {
             }
             const tenSecondsAgo = new Date(Date.now() - 500);
             if (roomInfo['updated_at'] > tenSecondsAgo) {
-                console.log("roomInfo['updated_at'] > tenSecondsAgo");
+                // console.log("roomInfo['updated_at'] > tenSecondsAgo");
                 responseData = {
                     success: false,
                     message: 'ROOM TOO BUSY, TRY AGAIN LATER',
@@ -121,7 +121,7 @@ const addToQueue = async (req, bot = false) => {
             if (roomInfo['status'] === 'finished') {
                 responseData = {
                     success: false,
-                    message: 'THIS BATTLE HAS NOW ENDED',
+                    message: 'THIS GAME HAS NOW ENDED',
                     betResult: -100
                 };
 
@@ -680,7 +680,7 @@ const addToQueue = async (req, bot = false) => {
                         ); /* (roomInfo['user_bet'] -  roomInfo['bet_amount']) */
                     }
 
-                    bet_item.joiner = req.user;
+                    bet_item.joiner = req.user._id;
                     bet_item.joiner_qs = req.body.selected_qs_position;
 
                     message.message =
@@ -745,7 +745,7 @@ const addToQueue = async (req, bot = false) => {
                         roomInfo['room_number'];
                 }
 
-                bet_item.joiner = req.user;
+                bet_item.joiner = req.user._id;
                 bet_item.joiner_qs = req.body.selected_qs_position;
                 bet_item.bet_amount = betAmount;
                 await saveDocumentWithRetry(bet_item);

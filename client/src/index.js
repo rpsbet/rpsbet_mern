@@ -53,32 +53,32 @@ const playSoundTyping = () => {
   }
 };
 
-document.addEventListener('mouseover', (event) => {
-  const target = event.target;
-  const isButtonOrLink = target.tagName === 'BUTTON' || target.tagName === 'A' || (target.getAttribute('role') === 'button');
+// document.addEventListener('mouseover', (event) => {
+//   const target = event.target;
+//   const isButtonOrLink = target.tagName === 'BUTTON' || target.tagName === 'A' || (target.getAttribute('role') === 'button');
   
-  if (isButtonOrLink) {
-    playSound();
-  }
-});
+//   if (isButtonOrLink) {
+//     playSound();
+//   }
+// });
 
-document.addEventListener('focus', (event) => {
-  const target = event.target;
-  const isButtonOrLink = target.tagName === 'BUTTON' || target.tagName === 'A' || (target.getAttribute('role') === 'button');
+// document.addEventListener('focus', (event) => {
+//   const target = event.target;
+//   const isButtonOrLink = target.tagName === 'BUTTON' || target.tagName === 'A' || (target.getAttribute('role') === 'button');
   
-  if (isButtonOrLink) {
-    playSound();
-  }
-});
+//   if (isButtonOrLink) {
+//     playSound();
+//   }
+// });
 
-document.addEventListener('input', (event) => {
-  const target = event.target;
+// document.addEventListener('input', (event) => {
+//   const target = event.target;
 
-  // Check if the target is an input or textarea
-  if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
-    playSoundTyping();
-  }
-});
+//   // Check if the target is an input or textarea
+//   if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+//     playSoundTyping();
+//   }
+// });
 
 ReactDOM.render(
   <React.Fragment>

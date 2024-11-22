@@ -9,7 +9,9 @@ import {
   LOADING_LEADERBOARDS_TABLE,
   LOAD_LEADERBOARDS,
   LOADING_EQUITY_CHART,
-  LOAD_EQUITY_CHART
+  LOADING_RECEIPT_CHART,
+  LOAD_EQUITY_CHART,
+  LOAD_RECEIPT_CHART
 } from '../types';
 
 const initialState = {
@@ -29,7 +31,9 @@ const initialState = {
   activity_page: 1,
   totalActivities: 0,
   equityChart: [],
+  receiptChart: [],
   loadingEquityChart: false,
+  loadingReceiptChart: false,
 };
 
 export default (state = initialState, { type, payload }) => {
@@ -48,14 +52,21 @@ export default (state = initialState, { type, payload }) => {
         ...state,
         leaderboards: payload.leaderboards
       };
-      case LOADING_EQUITY_CHART:
-        return { ...state, loadingEquityChart: payload };
-      
-      case LOAD_EQUITY_CHART:
-        return {
-          ...state,
-          equityChart: payload.equityChart // Ensure payload.equityChart is used
-        };
+    case LOADING_EQUITY_CHART:
+      return { ...state, loadingEquityChart: payload };
+    case LOADING_RECEIPT_CHART:
+      return { ...state, loadingReceiptChart: payload };
+
+    case LOAD_EQUITY_CHART:
+      return {
+        ...state,
+        equityChart: payload.equityChart // Ensure payload.equityChart is used
+      };
+    case LOAD_RECEIPT_CHART:
+      return {
+        ...state,
+        receiptChart: payload.receiptChart // Ensure payload.equityChart is used
+      };
     case ACTIVITY_QUERY:
       return {
         ...state,
