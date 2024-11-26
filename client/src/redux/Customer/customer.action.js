@@ -317,9 +317,8 @@ export const getRoomStatisticsData = (room_id, limit) => async dispatch => {
     });
 
     if (data.success) {
-      // console.log(data)
       dispatch({ type: ROOM_STATISTICS_LOADED, payload: data });
-
+      
     } else {
       dispatch({ type: MSG_ERROR, payload: data.message });
     }

@@ -8,7 +8,6 @@ import { Warning, Link } from '@material-ui/icons';
 import SettingsRef from '../../components/SettingsRef';
 import {
   getMyGames,
-  endGame,
   unstake,
   addNewTransaction,
   getStrategies,
@@ -18,6 +17,7 @@ import {
   createRoom,
   reCreateRoom,
   getRoomList,
+  endGame,
   coHost
 } from '../../redux/Logic/logic.actions';
 import { getRank } from '../../util/getRank';
@@ -93,7 +93,6 @@ class MyGamesTable extends Component {
   }
 
   async componentDidMount() {
-    console.log("this.props.myGames", this.props.myGames)
     await this.fetchData();
     document.addEventListener('mousedown', this.handleClickOutside);
   }
@@ -117,7 +116,6 @@ class MyGamesTable extends Component {
 
 
   handleCoHost = (row) => {
-    console.log("WEfef", row)
     this.setState({ isCoHostModalOpen: true, selectedRow: row });
   };
 
@@ -136,7 +134,7 @@ class MyGamesTable extends Component {
 
     try {
       if (coHostAmount <= 0) {
-        alertModal(isDarkMode, 'R U FURR-REAL? COHOST AMOUNT MUST BE MORE THAN 0!');
+        alertModal(isDarkMode, 'R U FURR-REAL? AMOUNT MUST BE MORE THAN 0!');
         return;
       }
 
@@ -146,14 +144,12 @@ class MyGamesTable extends Component {
       }
 
       const result = await this.props.coHost(coHostAmount, selectedRow._id);
-
       if (result.success) {
         alertModal(isDarkMode, result.message, '-cat');
         setBalance(result.balance);
         addNewTransaction(result.newTransaction);
         await getRoomList({
-          pageSize: this.state.roomList.length,
-          game_type: selectedGameType,
+          game_type: 'All',
         });
       } else {
         alertModal(isDarkMode, result.message);
@@ -386,7 +382,6 @@ class MyGamesTable extends Component {
       }
     }), async () => {
       try {
-        // Pass the stake amount to the backend
         await this.props.unstake(room_id, stakeAmount);
         await this.props.getMyGames({
           game_type: this.state.selectedGameType,
@@ -583,7 +578,7 @@ class MyGamesTable extends Component {
                 <div className="table-cell bet-info" style={{ paddingLeft: "10px" }}>Net Profit&nbsp;<Tooltip title="NOT INCLUDING FEES">
                   <Info style={{ width: "18px", cursor: "pointer" }} />
                 </Tooltip></div>
-                <div className="table-cell winnings">Plays</div>
+                <div className="table-cell winnings">TNXS</div>
                 <div className="table-cell winnings desktop-only">Strategy</div>
 
                 <div className="table-cell action desktop-only">Action</div>
@@ -597,7 +592,7 @@ class MyGamesTable extends Component {
                 </span>
               </div>
             ) : (
-              this.state.myGames.map(
+              this.props.myGames.map(
                 (row, key) => (
                   <div
                     className={`table-row ${key < 10 ? 'slide-in' : 'slide-in'}`}
@@ -646,18 +641,18 @@ class MyGamesTable extends Component {
                           )}
                       </div>
                       <div className="table-cell winnings">
-                        <span>{row.coHost ? convertToCurrency((row.share / 100 * parseFloat(row.user_bet)) - row.stake) : convertToCurrency((row.share / 100 * parseFloat(row.user_bet)) - row.stake)}&nbsp;
+                        <span>{row.coHost ? convertToCurrency((row.share / 100 * parseFloat(row.user_bet)) - row.initial_stake) : convertToCurrency((row.share / 100 * parseFloat(row.user_bet)) - row.initial_stake)}&nbsp;
                         </span>
 
                       </div>
 
-                   
-                          <div className="table-cell bets" style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
-                          
-                            <Battle width="24px" />
-                            &nbsp;
-                            <span>{row.battles}</span>
-                          </div>
+
+                      <div className="table-cell bets" style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
+
+                        <Battle width="24px" />
+                        &nbsp;
+                        <span>{row.battles}</span>
+                      </div>
 
                       <div className="table-cell winnings desktop-only">
 
@@ -947,17 +942,18 @@ const mapStateToProps = state => ({
 });
 
 const mapDispatchToProps = {
-  endGame,
   unstake,
   createRoom,
   getMyGames,
   getStrategies,
+  coHost,
   addNewTransaction,
   setGameMode,
   updateRoomStrategy,
   setBalance,
   reCreateRoom,
   editPayout,
+  endGame,
   updateTutorialCompleted
 };
 

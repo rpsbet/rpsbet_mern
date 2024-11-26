@@ -91,7 +91,7 @@ class BankModal extends Component {
 
           <div className="modal-body edit-modal-body banking-modal-body">
             <div className="modal-content-wrapper">
-             <RpsPriceChart tokenMintAddress={token}/>
+             <RpsPriceChart isDarkMode={this.props.isDarkMode} tokenMintAddress={token}/>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
 
                 <h1 className="modal-title title">PRIVATE LENDERS</h1>

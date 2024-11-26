@@ -2274,7 +2274,7 @@ router.post('/coHost', auth, async (req, res) => {
     const baseShare = (amountAfterFee / totalBankroll) * 100;
 
     // Calculate a boost factor that grows with investment size
-    const maxBoostFactor = 1.8; // Example: set a maximum boost cap
+    const maxBoostFactor = 1.6; // Example: set a maximum boost cap
     const minBoostFactor = 1.025; // Minimum boost factor
     const boostFactor = minBoostFactor + ((coHostAmount / totalBankroll) * (maxBoostFactor - minBoostFactor));
     const boostedShare = baseShare * boostFactor;
@@ -2301,7 +2301,7 @@ router.post('/coHost', auth, async (req, res) => {
       const updatedShare = (((host.share / 100) * totalBankroll + amountAfterFee) / totalBankroll) * 100;
       host.share = updatedShare * boostFactor;
       host.initial_stake += coHostAmount;
-      host.stake = amountAfterFee;
+      host.stake += amountAfterFee;
     }
 
     // Normalize shares to ensure they total 100%
@@ -2353,7 +2353,7 @@ router.post('/coHost', auth, async (req, res) => {
       created_at: now,
       user: req.user._id,
       amount: -coHostAmount,
-      description: `Pumped ${coHostAmount} into ${gameType.short_name}-${room.room_number}`,
+      description: `Pumped ${gameType.short_name}-${room.room_number}`,
       room: room._id
     });
 
@@ -2365,6 +2365,35 @@ router.post('/coHost', auth, async (req, res) => {
       ]);
     } catch (error) {
       console.error("Error saving documents:", error);
+    }
+
+    // Add a game log entry similar to unstake
+    const newGameLog = new GameLog({
+      room: room._id,
+      creator: req.user._id,
+      joined_user: null,
+      game_type: gameType,
+      bet_amount: coHostAmount,
+      selected_rps: '',
+      ai_mode: '',
+      commission: 0,
+      game_result: 444,  // Set game_result to 444 for co-host action
+      winnings: 0,
+      endgame_amount: coHostAmount,
+      host_pr: coHostAmount,
+      user_bet: 0,
+      status: 'open',
+      hosts: room.hosts
+    });
+
+    try {
+      await newGameLog.save();
+    } catch (error) {
+      console.error('Error saving game log:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to save game log'
+      });
     }
 
     return res.json({
@@ -2381,7 +2410,6 @@ router.post('/coHost', auth, async (req, res) => {
     });
   }
 });
-
 
 // sell route
 // sell route
@@ -2403,7 +2431,7 @@ router.post('/unstake', auth, async (req, res) => {
     if (!accessAllowed) {
       return res.json({
         success: false,
-        message: 'irregular action',
+        message: 'Irregular action',
         betResult: -1000
       });
     }
@@ -2449,15 +2477,40 @@ router.post('/unstake', auth, async (req, res) => {
       });
     }
 
-    const unstakeAmount = stakeAmount;
+    const unstakeAmount = parseFloat(stakeAmount);
     roomInfo.hosts[hostIndex].stake -= unstakeAmount;  // Decrease the host's stake by the unstaked amount
-    req.user.balance += unstakeAmount;  // Add the unstaked amount to the user's balance
+    roomInfo.hosts[hostIndex].initial_stake -= unstakeAmount;  // Decrease the host's initial stake
+    req.user.balance = parseFloat(req.user.balance) + unstakeAmount;  // Add the unstaked amount to the user's balance
+
+    // If the unstake amount equals the total stake, remove the host from the room
+    if (roomInfo.hosts[hostIndex].stake === 0) {
+      roomInfo.hosts.splice(hostIndex, 1);
+    }
+
+    // If only one host remains, set that host's share to 100%
+    if (roomInfo.hosts.length === 1) {
+      roomInfo.hosts[0].share = 100;
+    } else {
+      // Recalculate the remaining host shares
+      const remainingBankroll = roomInfo.user_bet; // Updated bankroll after unstake
+      roomInfo.hosts.forEach(host => {
+        if (host.stake > 0) {
+          host.share = (host.stake / remainingBankroll) * 100;
+        }
+      });
+      
+      // Normalize shares to ensure they total 100%
+      let totalShares = 0;
+      roomInfo.hosts.forEach(host => totalShares += host.share);
+      const normalizationFactor = 100 / totalShares;
+      roomInfo.hosts.forEach(host => host.share *= normalizationFactor);
+    }
 
     // Create a transaction log for the unstake
     const newTransaction = new Transaction({
       user: userId,
       amount: unstakeAmount,
-      description: `Jeeted ${stakeAmount} in ${roomInfo.game_type.short_name}-${roomInfo.room_number}`,
+      description: `Jeeted ${roomInfo.game_type.short_name}-${roomInfo.room_number}`,
       room: roomId
     });
 
@@ -2471,7 +2524,7 @@ router.post('/unstake', auth, async (req, res) => {
       selected_rps: '',
       ai_mode: '',
       commission: 0,
-      game_result: 666,
+      game_result: 666, // Setting a generic game result for unstake action
       winnings: 0,
       endgame_amount: unstakeAmount,
       host_pr: unstakeAmount,
@@ -2480,6 +2533,7 @@ router.post('/unstake', auth, async (req, res) => {
       hosts: []
     });
 
+    // Save the game log
     try {
       await newGameLog.save();
     } catch (error) {
@@ -2495,17 +2549,9 @@ router.post('/unstake', auth, async (req, res) => {
     roomInfo.host_pr -= unstakeAmount;
     roomInfo.endgame_amount -= unstakeAmount;
 
-    // Recalculate the remaining host shares
-    const remainingBankroll = roomInfo.user_bet; // Updated bankroll after unstake
-    roomInfo.hosts.forEach(host => {
-      if (host.stake > 0) {
-        host.share = (host.stake / remainingBankroll) * 100;
-      }
-    });
-
     // Send notifications to remaining hosts
     roomInfo.hosts.forEach(host => {
-      const message = `${req.user.username} jeeted ${stakeAmount} in ${gameType.short_name}-${roomInfo.room_number}, your new Share is ${(host.share).toFixed(2)}%`;
+      const message = `${req.user.username} jeeted ${convertToCurrency(stakeAmount)} in ${gameType.short_name}-${roomInfo.room_number}, your new Share is ${(host.share).toFixed(2)}%`;
 
       const notificationData = {
         _id: userId,
@@ -2524,8 +2570,8 @@ router.post('/unstake', auth, async (req, res) => {
       socket.sendNotification(host.host, notificationData);
     });
 
+    // Save updates to room and user balance, and log the transaction
     try {
-      // Save updates to room and user balance, and log the transaction
       await Promise.all([
         saveDocumentWithRetry(roomInfo),
         saveDocumentWithRetry(req.user),
@@ -3406,25 +3452,29 @@ router.post('/tip', auth, async (req, res) => {
 
     const newTransactionJ = new Transaction({
       created_at: now,
-      user: userToTip,
+      user: userToTip._id,
       amount: tipAmount,
       description
     });
 
+    let tipMessage = req.body.message ? `"${req.body.message}"` : ''; // Add quotes only if a message exists
+
     let notification = new Notification({
       from: req.user._id,
-      to: userToTip,
+      to: userToTip._id,
       room: '',
-      message: `Tipped you ${convertToCurrency(tipAmount)} "${req.body.message}"`,
+      message: `Tipped you ${convertToCurrency(tipAmount)} ${tipMessage}`,
       is_read: false
-    })
+    });
+
     let notificationC = new Notification({
-      from: req.user._id,
-      to: userToTip,
+      from: userToTip,
+      to: req.user._id,
       room: '',
-      message: `You Tipped ${userToTip.username} ${convertToCurrency(tipAmount)} "${req.body.message}"`,
+      message: `You Tipped ${convertToCurrency(tipAmount)} ${tipMessage}`,
       is_read: false
-    })
+    });
+
     const notificationData = {
       message: notification.message,
       username: req.user.username,
@@ -3435,10 +3485,22 @@ router.post('/tip', auth, async (req, res) => {
       created_at_str: moment(new Date()).format('LLL'),
       updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
     };
+    const notificationDataC = {
+      message: notificationC.message,
+      username: userToTip.username,
+      avatar: userToTip.avatar,
+      accessory: userToTip.accessory,
+      rank: userToTip.totalWagered,
+      created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+      created_at_str: moment(new Date()).format('LLL'),
+      updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+    };
 
     try {
       await saveDocumentWithRetry(notification);
+      await saveDocumentWithRetry(notificationC);
       socket.sendNotification(userToTip._id, notificationData);
+      socket.sendNotification(req.user._id, notificationDataC);
     } catch (error) {
       console.error("Error saving tip notification:", error);
     }

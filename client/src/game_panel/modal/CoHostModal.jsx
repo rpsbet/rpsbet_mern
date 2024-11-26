@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { connect } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import Moment from 'moment';
-import { getTransactionCandles } from '../../redux/Logic/logic.actions';
+import { getTransactionCandles, unstake, addNewTransaction, getMyGames } from '../../redux/Logic/logic.actions';
+import { setBalance } from '../../redux/Auth/user.actions'
 import Chart from "react-apexcharts";
 import { Box, Tooltip, Typography, Button, TextField, TableHead, Table, TableBody, TableCell, TableRow, ButtonGroup } from "@material-ui/core";
 import { ShowChartOutlined, TrendingUpOutlined, TrendingDownOutlined } from "@material-ui/icons";
@@ -21,27 +22,18 @@ function CoHostModal({
   handleSendCoHost,
   has_joined,
   handleCoHostAmountChange,
-  getTransactionCandles,
-  transactionCandles,
-  transactions
 }) {
+  const dispatch = useDispatch();
+  const [closingRooms, setClosingRooms] = useState({});
   const [timeFrame, setTimeFrame] = useState('1m'); // Default to 1 minute
   const [showPlayerModal, setShowPlayerModal] = useState(false);
   const [selectedCreator, setSelectedCreator] = useState('');
 
   const [isFocused, setIsFocused] = useState(false);
   const [isButtonGroupVisible, setIsButtonGroupVisible] = useState(false);
-  
-  useEffect(() => {
-    if (isFocused) {
-      setIsButtonGroupVisible(true);
-    } else {
-      const timeoutId = setTimeout(() => {
-        setIsButtonGroupVisible(false);
-      }, 0); // Adjust the timeout value as needed
-      return () => clearTimeout(timeoutId);
-    }
-  }, [isFocused]);
+
+  const transactionCandles = useSelector(state => state.logic.candles);
+  const transactions = useSelector(state => state.auth.transactions);
 
   const convertToChartCurrency = (input) => {
     let number = Number(input);
@@ -76,32 +68,14 @@ function CoHostModal({
     }
   };
 
-  const handleOpenPlayerModal = (creator_id) => {
-    setSelectedCreator(creator_id);
-    setShowPlayerModal(true);
-  };
-
-  const handleClosePlayerModal = () => {
-    setShowPlayerModal(false);
-  };
-
-  const calculatePercentageChange = (current, original) => {
-    if (original === 0) return 'N/A';
-    return (((current - original) / original) * 100).toFixed(2);
-  };
-
-  const liquidityPercentageChange = calculatePercentageChange(
-    selectedRow.winnings ? selectedRow.winnings : parseFloat(selectedRow.user_bet),
-    selectedRow.bet_amount
-  );
 
   useEffect(() => {
     if (selectedRow?._id) {
-      getTransactionCandles({ roomId: selectedRow?._id, timeFrame: timeFrame });
+      dispatch(getTransactionCandles({ roomId: selectedRow._id, timeFrame })); // Single object parameter
     }
-  }, [getTransactionCandles, selectedRow?._id, timeFrame]);
+  }, [dispatch, selectedRow?._id, timeFrame]);
   let chartData = [];
-  if (transactionCandles.length > 0) {
+  if (transactionCandles && transactionCandles.length > 0) {
     let lastCandle = transactionCandles[0];
 
     chartData.push({
@@ -309,9 +283,42 @@ function CoHostModal({
       palette: 'palette1', // Default palette for the chart
     },
   };
-const totalShare = Array.isArray(selectedRow.hosts)
-          ? selectedRow.hosts.reduce((acc, host) => acc + host.share, 0)
-          : 0;
+
+  useEffect(() => {
+    if (isFocused) {
+      setIsButtonGroupVisible(true);
+    } else {
+      const timeoutId = setTimeout(() => {
+        setIsButtonGroupVisible(false);
+      }, 0); // Adjust the timeout value as needed
+      return () => clearTimeout(timeoutId);
+    }
+  }, [isFocused]);
+
+
+  const handleOpenPlayerModal = (creator_id) => {
+    setSelectedCreator(creator_id);
+    setShowPlayerModal(true);
+  };
+
+  const handleClosePlayerModal = () => {
+    setShowPlayerModal(false);
+  };
+
+  const calculatePercentageChange = (current, original) => {
+    if (original === 0) return 'N/A';
+    return (((current - original) / original) * 100).toFixed(2);
+  };
+
+  const liquidityPercentageChange = calculatePercentageChange(
+    selectedRow.winnings ? selectedRow.winnings : parseFloat(selectedRow.user_bet),
+    selectedRow.bet_amount
+  );
+
+
+  const totalShare = Array.isArray(selectedRow.hosts)
+    ? selectedRow.hosts.reduce((acc, host) => acc + host.share, 0)
+    : 0;
 
   const formatRelativeTime = (date) => {
     const now = Moment();
@@ -320,7 +327,34 @@ const totalShare = Array.isArray(selectedRow.hosts)
 
     const days = diff.days();
     const hours = diff.hours();
-    return `${days}d ${hours}h ago`;
+    const minutes = diff.minutes();
+    const seconds = diff.seconds();
+
+    if (days > 1) {
+      return `${days}d ${hours}h ago`;
+    }
+
+    if (days === 1) {
+      return hours > 0 ? `${days}d ${hours}h ago` : `${days}d ago`;
+    }
+
+    if (hours > 1) {
+      return `${hours}h ${minutes}m ago`;
+    }
+
+    if (hours === 1) {
+      return minutes > 0 ? `${hours}h ${minutes}m ago` : `${hours}h ago`;
+    }
+
+    if (minutes > 1) {
+      return `${minutes}m ago`;
+    }
+
+    if (minutes === 1) {
+      return `${minutes}m ${seconds}s ago`;
+    }
+
+    return `${seconds}s ago`;
   };
 
   const handleFocus = () => {
@@ -345,6 +379,50 @@ const totalShare = Array.isArray(selectedRow.hosts)
   const handleMaxButtonClick = () => {
     const simulatedEvent = { target: { value: balance } };
     handleCoHostAmountChange(simulatedEvent);
+  };
+
+  const handleUnstake = async (winnings, room_id, stakeAmount) => {
+    setClosingRooms(prevState => ({
+      ...prevState,
+      [room_id]: true
+    }));
+
+    try {
+
+      // Ensure winnings is a valid number
+      const parsedWinnings = parseFloat(winnings);
+      if (isNaN(parsedWinnings)) {
+        console.error("Invalid winnings value", winnings);
+        return; // Exit if winnings are invalid
+      }
+
+      // Ensure balance is a valid number (assuming 'balance' comes from Redux or props)
+      const parsedBalance = parseFloat(balance);
+      if (isNaN(parsedBalance)) {
+        console.error("Invalid balance value", balance);
+        return; // Exit if balance is invalid
+      }
+
+      // Perform unstake and update state
+      await dispatch(unstake(room_id, stakeAmount));
+
+      // Fetch updated games
+      await dispatch(getMyGames({ game_type: 'All', status: 'open', sort: 'desc' }));
+
+      // Add new transaction
+      await dispatch(addNewTransaction({ amount: parsedWinnings, room_id }));
+
+      const jim = parsedBalance + parsedWinnings;
+      await dispatch(setBalance(jim));
+
+    } catch (error) {
+      console.error('Error unstaking from room:', error);
+    } finally {
+      setClosingRooms(prevState => ({
+        ...prevState,
+        [room_id]: false
+      }));
+    }
   };
 
   return (
@@ -378,10 +456,13 @@ const totalShare = Array.isArray(selectedRow.hosts)
               <Box
                 sx={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(4, 1fr)',
+                  gridTemplateColumns: 'repeat(4, 1fr)', // Default 1x4 on desktop
                   gap: 3,
                   marginBottom: '20px',
                   alignItems: 'center',
+                  '@media (max-width: 600px)': {
+                    gridTemplateColumns: 'repeat(2, 1fr)', // Change to 2x2 on mobile
+                  },
                 }}
               >
                 {/* Liquidity Column */}
@@ -391,7 +472,32 @@ const totalShare = Array.isArray(selectedRow.hosts)
                       <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
                         LIQUIDITY
                       </Typography>
-                      <Typography variant="h6">{!selectedRow.winnings ? parseFloat(selectedRow.user_bet) : convertToCurrency(selectedRow.winnings)}</Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            color:
+                              liquidityPercentageChange > 0
+                                ? '#fff'
+                                : liquidityPercentageChange < 0
+                                  ? 'red'
+                                  : 'text.primary',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                          }}
+                        >
+                          {liquidityPercentageChange === 0 && null}
+                          {' '}{!selectedRow.winnings
+                            ? parseFloat(selectedRow.user_bet)
+                            : convertToCurrency(selectedRow.winnings)}
+                          {liquidityPercentageChange > 0 && (
+                            <TrendingUpOutlined sx={{ marginRight: 1, color: 'green' }} />
+                          )}
+                          {liquidityPercentageChange < 0 && (
+                            <TrendingDownOutlined sx={{ marginRight: 1, color: 'red' }} />
+                          )}
+                        </Typography>
+                      </Box>
                     </Box>
                   </Tooltip>
                 </Box>
@@ -405,7 +511,7 @@ const totalShare = Array.isArray(selectedRow.hosts)
                           const percentage = totalShare > 0 ? ((host.share / totalShare) * 100).toFixed(2) : 0;
                           return (
                             <Typography key={index} variant="body2">
-                              Host {index + 1}: {percentage}%
+                              {index === 0 ? 'Dev' : `Co-Host ${index + 1}`}: {percentage}%
                             </Typography>
                           );
                         })}
@@ -427,7 +533,9 @@ const totalShare = Array.isArray(selectedRow.hosts)
                   <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
                     BATTLES
                   </Typography>
-                  <Typography variant="h6">{selectedRow.battles ? selectedRow.battles : selectedRow.game_log_list.length}</Typography>
+                  <Typography variant="h6">
+                    {selectedRow.battles ? selectedRow.battles : (selectedRow.game_log_list?.length || 0)}
+                  </Typography>
                 </Box>
 
                 {/* Created By Column */}
@@ -456,55 +564,83 @@ const totalShare = Array.isArray(selectedRow.hosts)
               type="candlestick"
               height={350}
             />
-            <div className="input-amount">
-              <TextField
-                label="Amount"
-                value={coHostAmount || 0}
-                onChange={handleCoHostAmountChange}
-                pattern="^\\d*\\.?\\d*$"
-                variant="filled"
-                type="number"
-                autoComplete="off"
-                id="payout"
-                className="form-control"
-                InputProps={{
-                  onFocus: handleFocus,
-                  // onBlur: handleBlur,
-                  endAdornment: (
-                    <ButtonGroup
-                      className={isButtonGroupVisible ? 'fade-in' : 'fade-out'}
-                    // style={{ visibility: isButtonGroupVisible ? 'visible' : 'hidden' }}
-                    >
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={handle2xButtonClick}
-                        style={{ marginRight: "5px", padding: "7.5px" }}
+            <div style={{ display: "flex", flexDirection: "row", justifyContent: "center", alignItems: "center" }}>
+              <div className="input-amount" >
+                <TextField
+                  label="Amount"
+                  value={coHostAmount || 0}
+                  onChange={handleCoHostAmountChange}
+                  pattern="^\\d*\\.?\\d*$"
+                  variant="filled"
+                  type="number"
+                  autoComplete="off"
+                  id="payout"
+                  className="form-control"
+                  InputProps={{
+                    onFocus: handleFocus,
+                    // onBlur: handleBlur,
+                    endAdornment: (
+                      <ButtonGroup
+                        className={isButtonGroupVisible ? 'fade-in' : 'fade-out'}
+                      // style={{ visibility: isButtonGroupVisible ? 'visible' : 'hidden' }}
                       >
-                        2x
-                      </Button>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={handleHalfXButtonClick}
-                        style={{ marginRight: "5px", padding: "7.5px" }}
-                      >
-                        1/2x
-                      </Button>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={handleMaxButtonClick}
-                        style={{ padding: "7.5px" }}
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          onClick={handle2xButtonClick}
+                          style={{ marginRight: "5px", padding: "7.5px" }}
+                        >
+                          2x
+                        </Button>
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          onClick={handleHalfXButtonClick}
+                          style={{ marginRight: "5px", padding: "7.5px" }}
+                        >
+                          1/2x
+                        </Button>
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          onClick={handleMaxButtonClick}
+                          style={{ padding: "7.5px" }}
 
-                      >
-                        Max
-                      </Button>
-                    </ButtonGroup>
-                  ),
-                }}
-              />
+                        >
+                          Max
+                        </Button>
+                      </ButtonGroup>
+                    ),
+                  }}
+                />
+                {has_joined && (
+
+                  <div className={"desktop-only"} style={{ paddingTop: "20px ", display: "flex", flexDirection: "row", justifyContent: "center", alignItems: "center" }} >
+                    <Button style={{ padding: "0 10px", marginRight: "10px" }} className={`button-submit ${has_joined ? 'desktop-only' : ''}`} onClick={handleSendCoHost}>
+                      PUMP
+                      <TrendingUpOutlined style={{ color: "#fff", marginLeft: "8px", background: "linear-gradient(357deg, #ff0000, rgb(244 38 38))" }} />
+                    </Button>
+                    <Button
+                      className="btn-back"
+                      onClick={() =>
+                        handleUnstake(
+                          selectedRow?.winnings ?? parseFloat(selectedRow?.user_bet || 0),
+                          selectedRow?._id,
+                          coHostAmount
+                        )
+                      }
+                      style={{ border: "unset", padding: "0 10px", background: "linear-gradient(357deg, #00ff17, #28a745)" }}
+                    >
+                      JEET
+                      <TrendingDownOutlined style={{ color: "#fff", marginLeft: "4px", background: "linear-gradient(357deg, #00ff17, #28a745)" }} />
+                    </Button>
+                  </div>
+                )}
+
+              </div>
+
             </div>
+
 
             {/* Balance Table Section */}
             <Table>
@@ -513,7 +649,7 @@ const totalShare = Array.isArray(selectedRow.hosts)
                   <TableCell>BALANCE:</TableCell>
                   <TableCell style={{ textAlign: 'right' }}>{convertToCurrency(balance)}</TableCell>
                 </TableRow>
-                {/* <TableRow>
+                <TableRow>
                   <TableCell>NEW BALANCE:</TableCell>
                   <TableCell style={{ textAlign: 'right' }}>
                     {convertToCurrency((balance || 0) - (coHostAmount || 0))}
@@ -534,30 +670,72 @@ const totalShare = Array.isArray(selectedRow.hosts)
                       ? convertToCurrency(parseFloat(selectedRow.user_bet) + parseFloat(coHostAmount || 0))
                       : null}
                   </TableCell>
-                </TableRow>*/}
+                </TableRow>
                 <TableRow>
-                <TableCell>CURRENT SHARE:</TableCell>
-                <TableCell style={{ color: "red", textAlign: 'right' }}>
-                  {Array.isArray(selectedRow.hosts) && selectedRow.hosts.some((host) => host.host === user._id)
-                    ? `${selectedRow.hosts.find((host) => host.host === user._id).share.toFixed(2)}%`
-                    : convertToCurrency("0")}
-                </TableCell>
-              </TableRow>
+                  <TableCell>CURRENT SHARE:</TableCell>
+                  <TableCell style={{ color: "yellow", textAlign: 'right' }}>
+                    {Array.isArray(selectedRow.hosts) && selectedRow.hosts.length > 0 && selectedRow.hosts.some((host) => host.host === user._id) ? (
+                      <>
+                        {
+                          (() => {
+                            const userHost = selectedRow.hosts.find((host) => host.host === user._id);
+                            if (userHost) {
+                              return <>{userHost.share.toFixed(2)}% ({convertToCurrency(userHost.stake)})</>;
+                            } else {
+                              return convertToCurrency(0); // In case the host is not found, fallback to 0
+                            }
+                          })()
+                        }
+                      </>
+                    ) : convertToCurrency(0)}
+                  </TableCell>
+                </TableRow>
 
-              <TableRow>
-                <TableCell>NEW SHARE:</TableCell>
-                <TableCell style={{ color: "red", textAlign: 'right' }}>
-                  {(() => {
-                    const host = Array.isArray(selectedRow.hosts) ? selectedRow.hosts.find((host) => host.host === user._id) : null;
-                    const currentShare = host ? host.share : 0;
-                    const currentBankroll = parseFloat(selectedRow?.user_bet || 0);
-                    const newShare =
-                      (((currentShare / 100) * currentBankroll + coHostAmount) / (currentBankroll + coHostAmount)) *
-                      100;
-                    return `${newShare.toFixed(2)}%`;
-                  })()}
-                </TableCell>
-              </TableRow>
+                <TableRow>
+                  <TableCell>NEW SHARE:</TableCell>
+                  <TableCell style={{ color: "yellow", textAlign: 'right' }}>
+                    {(() => {
+                      if (!selectedRow || !Array.isArray(selectedRow.hosts)) return "0%";
+
+                      const userHost = selectedRow.hosts.find((host) => host.host === user._id);
+                      const userStake = userHost ? parseFloat(userHost.stake) : 0; // User's current stake
+
+                      const coHostAmountFloat = parseFloat(coHostAmount || 0);
+                      const currentBankroll = parseFloat(selectedRow.user_bet || 0);
+
+                      // Deduct 2.5% fee (same logic as backend)
+                      const fee = coHostAmountFloat * 0.025;
+                      const amountAfterFee = coHostAmountFloat - fee;
+
+                      // Total bankroll before adding new contribution
+                      const totalBankroll = currentBankroll;
+
+                      if (totalBankroll === 0) return "0%"; // Prevent division by zero
+
+                      // Calculate total stake including new user's stake (after fee)
+                      const totalStakeIncludingUser = selectedRow.hosts.reduce((total, host) => {
+                        return total + parseFloat(host.stake);
+                      }, 0) + amountAfterFee; // Total stake + user's amountAfterFee
+
+                      // Calculate the user's new stake (including the co-host amount)
+                      const newUserStake = userStake + amountAfterFee;
+
+                      // Calculate new share for the user if they were to buy
+                      const newUserShareBuy = (newUserStake / totalStakeIncludingUser) * 100;
+
+                      // Calculate new share for the user if they were to sell
+                      const newUserStakeAfterSell = userStake - amountAfterFee;
+                      const newTotalStakeAfterSell = totalStakeIncludingUser - amountAfterFee;
+                      const newUserShareSell = (newUserStakeAfterSell / newTotalStakeAfterSell) * 100;
+
+                      // Fix for minor discrepancies (to ensure the share doesn't go slightly over 100% due to rounding)
+                      const buyShare = `${Math.min(newUserShareBuy.toFixed(2), 100).toString()}%`;
+                      const sellShare = `${Math.min(newUserShareSell.toFixed(2), 100).toString()}%`;
+
+                      return `~${buyShare} or ~${sellShare}`;
+                    })()}
+                  </TableCell>
+                </TableRow>
               </TableBody>
             </Table>
           </div>
@@ -568,16 +746,54 @@ const totalShare = Array.isArray(selectedRow.hosts)
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell style={{ textAlign: 'left', paddingLeft: '40px', textTransform: 'uppercase' }}>Description</TableCell>
-                    <TableCell style={{ textAlign: 'center', textTransform: 'uppercase' }}>Amount</TableCell>
-                    <TableCell style={{ textAlign: 'right', textTransform: 'uppercase', paddingRight: '40px' }}>Date</TableCell>
+                    <TableCell
+                      style={{
+                        textAlign: 'left',
+                        paddingLeft: '40px',
+                        textTransform: 'uppercase',
+                        position: 'sticky',
+                        top: 0,
+                        zIndex: 1,
+                        fontSize: '14px',  // Smaller font for mobile
+                        minWidth: '120px'   // Ensure it fits well on small screens
+                      }}
+                    >
+                      Description
+                    </TableCell>
+                    <TableCell
+                      style={{
+                        textAlign: 'center',
+                        textTransform: 'uppercase',
+                        position: 'sticky',
+                        top: 0,
+                        zIndex: 1,
+                        fontSize: '14px',
+                        minWidth: '100px'
+                      }}
+                    >
+                      Amount
+                    </TableCell>
+                    <TableCell
+                      style={{
+                        textAlign: 'right',
+                        textTransform: 'uppercase',
+                        paddingRight: '40px',
+                        position: 'sticky',
+                        top: 0,
+                        zIndex: 1,
+                        fontSize: '14px',
+                        minWidth: '120px'
+                      }}
+                    >
+                      Date
+                    </TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {transactions.length > 0 ? (
                     transactions.map((transaction, index) => {
                       // Check if description contains any of the keywords
-                      let descriptionText = transaction.description;
+                      let descriptionText = transaction.description || '';
                       if (descriptionText.toLowerCase().includes('joined')) {
                         descriptionText = 'Bet';
                       } else if (descriptionText.toLowerCase().includes('created')) {
@@ -614,23 +830,34 @@ const totalShare = Array.isArray(selectedRow.hosts)
       </div>
 
       {/* Footer Actions */}
-      <div className="modal-footer">
+      <div className={`modal-footer ${has_joined ? 'mobile-only' : ''}`}>
         <Button className="btn-submit" onClick={handleSendCoHost}>
           PUMP
           <TrendingUpOutlined style={{ color: "#fff", marginLeft: "8px" }} />
         </Button>
-        <Button className="btn-back" onClick={handleClose} style={{ border: "unset", background: "linear-gradient(357deg, #00ff17, #28a745)" }}>
+        <Button
+          className="btn-back"
+          onClick={() =>
+            handleUnstake(
+              selectedRow?.winnings ?? parseFloat(selectedRow?.user_bet || 0), // Use winnings if available, otherwise fallback
+              selectedRow?._id,
+              coHostAmount
+            )
+          }
+          style={{ border: "unset", background: "linear-gradient(357deg, #00ff17, #28a745)" }}
+        >
           JEET
           <TrendingDownOutlined style={{ color: "#fff", marginLeft: "4px" }} />
         </Button>
       </div>
+
     </div >
+
+    
   );
+  
 }
 
-const mapStateToProps = state => ({
-  transactionCandles: state.logic.candles,
-  transactions: state.logic.transactions,
-});
 
-export default connect(mapStateToProps, { getTransactionCandles })(CoHostModal);
+
+export default CoHostModal;

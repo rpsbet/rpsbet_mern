@@ -352,8 +352,6 @@ export const toggleLowGraphics = isLowGraphics => dispatch => {
   dispatch({ type: TOGGLE_LOW_GRAPHICS, payload: isLowGraphics });
 }
 export const showCookieConsent = showCookieConsent => dispatch => {
-  console.log("Dispatching showCookieConsent with value:", showCookieConsent); // Log the value
-
   dispatch({ type: SHOW_COOKIES, payload: showCookieConsent });
 }
 

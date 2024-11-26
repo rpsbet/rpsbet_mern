@@ -16,7 +16,7 @@ import {
   getWithdrawals,
   getWins,
 } from '../../redux/Logic/logic.actions';
-import { Info } from '@material-ui/icons';
+
 import { toggleDrawer } from '../../redux/Auth/user.actions';
 import MyGamesTable from '../MyGames/MyGamesTable';
 import MyHistoryTable from '../MyGames/MyHistoryTable';
@@ -193,18 +193,14 @@ class MainPage extends Component {
   };
 
   handleRefresh = async () => {
-    console.log("called");
     this.setState({ refreshing: true }, async () => {
       await this.props.clearRoomListCache();
       const roomCount = await this.props.getRoomCount();
       const roomList = await this.props.getRoomList({ pageSize: 7 });
-  
       // Only update state if the data has changed
       if (JSON.stringify(this.props.roomList) !== JSON.stringify(roomList)) {
         this.setState({ refreshing: false });
       }
-  
-      console.log("called2", roomList);
     });
   };
 
@@ -233,6 +229,10 @@ class MainPage extends Component {
         preserveAspectRatio: 'xMidYMid slice'
       }
     };
+
+    const totalUserBet = this.props.roomList.reduce((total, room) => {
+      return total + (parseFloat(room.user_bet) || 0); // Ensure user_bet is parsed as a number and handle missing values
+    }, 0);
 
     return (
       (this.state.is_mobile && this.state.selectedMobileTab === 'live_games' && this.state.show_open_game !== 1) ||
@@ -435,11 +435,8 @@ class MainPage extends Component {
             <Lottie options={defaultOptions} width={40} />
           </div>
 
-          <div className="refresh-main">
-            <IconButton color="primary" onClick={this.handleRefresh}>
-              <span>GET LATEST GAMES</span>
-              <RefreshIcon />
-            </IconButton>
+          <div className="refresh-main roll-tag">
+          <span>Total Liquidity: {convertToCurrency(totalUserBet)}</span>
           </div>
         </>
       ) : (
@@ -641,11 +638,11 @@ class MainPage extends Component {
             open={this.props.isDrawerOpen}
             toggleDrawer={this.toggleDrawer}
           />
-          <SupportButton
+          {/* <SupportButton
             open={this.props.isSupportOpen}
           // toggleDrawer={this.toggleDrawer}
-          />
-          {!this.state.is_mobile && this.props.selectedMainTabIndex === 1 && (
+          />*/}
+          {!this.state.is_mobile && this.props.selectedMainTabIndex === 1 && ( 
             <>
               <h2 className="main-title desktop-only">AI PANEL</h2>
 

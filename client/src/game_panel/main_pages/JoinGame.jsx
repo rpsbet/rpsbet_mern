@@ -66,6 +66,8 @@ import {
   validateLocalStorageLength,
   validateBankroll
 } from '../modal/betValidations';
+import { alertModal } from '../modal/ConfirmAlerts'
+
 
 function updateFromNow(history) {
   const result = JSON.parse(JSON.stringify(history));
@@ -1026,7 +1028,11 @@ class JoinGame extends Component {
         this.setState({ currentSound: audio });
       }
     }
+  };
 
+
+  handleCoHostAmountChange = event => {
+    this.setState({ coHostAmount: event.target.value });
   };
 
   playSoundLoop = sound => {
@@ -1109,7 +1115,7 @@ class JoinGame extends Component {
 
     try {
       if (coHostAmount <= 0) {
-        alertModal(isDarkMode, 'R U FURR-REAL? COHOST AMOUNT MUST BE MORE THAN 0!');
+        alertModal(isDarkMode, 'R U FURR-REAL? AMOUNT MUST BE MORE THAN 0!');
         return;
       }
 
@@ -1592,12 +1598,13 @@ class JoinGame extends Component {
               actionList={actionList}
               roomInfo={roomInfo}
               user={this.props.user_id}
+              coHostAmount={this.state.coHostAmount}
               getRoomData={this.getRoomData}
               getRoomInfo={this.props.getRoomInfo}
               balance={this.props.user_balance}
               isLowGraphics={this.props.isLowGraphics}
               isDarkMode={this.props.isDarkMode}
-              handleCoHostAmountChange={this.onChangeState}
+              handleCoHostAmountChange={this.handleCoHostAmountChange}
               handleSendCoHost={this.handleSendCoHost}
               has_joined={true}
             />
@@ -1653,10 +1660,10 @@ class JoinGame extends Component {
               open={isDrawerOpen}
               toggleDrawer={this.toggleDrawer}
             />
-            <SupportButton
+            {/* <SupportButton
               open={this.props.isSupportOpen}
             // toggleDrawer={this.toggleDrawer}
-            />
+            /> */}
             {!is_mobile && selectedMainTabIndex === 1 && <MyHistoryTable />}
           </div>
           {!is_mobile && (

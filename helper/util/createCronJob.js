@@ -231,9 +231,7 @@ async function checkConfirmations(io) {
             const expectedAmountInUSD = transaction.amount; // Calculate expected amount based on token price
             const amountInUSD = response.data.pay_amount * solPrice; // This should be the amount received in USD
             const tokenAmount = amountInUSD / tokenPrice;
-            console.log("tokenAmount", tokenAmount)
 
-            
             // Check if the amount is within the defined epsilon range
             if (Math.abs(tokenAmount - expectedAmountInUSD) < margin) {
               transaction.status = 'completed';

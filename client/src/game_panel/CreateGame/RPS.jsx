@@ -492,7 +492,7 @@ class RPS extends Component {
         )} */}
         {step === 2 && rps_game_type === 0 && (
           <div className="game-info-panel">
-            <div className='glass-container'>
+            <div className='glass-container' style={{display: "flex", flexDirection: "column"}}>
 
               <h3 className="game-sub-title">Strategy&nbsp;<Tooltip
                 style={{ position: "absolute", right: "20px" }}

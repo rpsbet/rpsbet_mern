@@ -614,11 +614,7 @@ class SiteWrapper extends Component {
 
         // First condition: check if the message contains the word "Deposit"
         if (message.includes("Deposit")) {
-         
           this.props.getUser(true, 5);
-          
-        } else {
-          console.log("No deposit in message.");
         }
 
         if (this.props.isNotificationsAllowed && window.Notification) {

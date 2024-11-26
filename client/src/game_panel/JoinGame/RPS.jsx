@@ -15,7 +15,7 @@ import PlayerModal from '../modal/PlayerModal';
 import AiPanel from '../../components/AiPanel';
 import loadingChart from '../LottieAnimations/loadingChart.json';
 import { YouTubeVideo } from '../../components/YoutubeVideo';
-import { updateRoomBot, kickBots, endGame } from '../../redux/Logic/logic.actions';
+import { updateRoomBot, kickBots} from '../../redux/Logic/logic.actions';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faRobot, faMoneyBillWave, faBrain, faBan } from '@fortawesome/free-solid-svg-icons';
 import ViewIcon from '@material-ui/icons/Visibility';
@@ -1455,7 +1455,6 @@ const mapDispatchToProps = {
   kickBots,
   setSpectateMode,
   getQbot,
-  endGame,
   getRpsBetItems,
   getRoomBotCount
 };

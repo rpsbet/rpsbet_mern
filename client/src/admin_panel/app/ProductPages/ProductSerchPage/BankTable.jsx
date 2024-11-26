@@ -428,7 +428,7 @@ class BankTable extends Component {
         {is_mobile && (
           <>
             <Button style={{ marginBottom: "30px" }} className="btn-submit" onClick={this.handleOpenMyLoansModal}>Manage Your Loans&nbsp; <AttachMoney /></Button>
-            <RpsPriceChart tokenMintAddress={token} />
+            <RpsPriceChart isDarkMode={this.props.isDarkMode} tokenMintAddress={token} />
           </>
         )}
         {!loading ? (

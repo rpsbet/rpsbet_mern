@@ -1333,6 +1333,5 @@ const mapDispatchToProps = {
   getQbot,
   kickBots,
   setSpectateMode,
-  endGame,
 };
 export default connect(mapStateToProps, mapDispatchToProps)(QuickShoot);

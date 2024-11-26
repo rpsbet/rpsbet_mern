@@ -74,7 +74,6 @@ class LeaderboardsModal extends Component {
     await this.props.fetchReceiptStatistics();
 
     const marketingStat = await this.props.getMarketingStat();
-    console.log("this.props.receiptChart", this.props.receiptChart, this.props.loadingReceiptChart)
     // Set the fetched data to state
     this.setState({
       message: marketingStat.message,

@@ -752,7 +752,7 @@ const CountdownPage = ({
 
                   <div className={classes.currencies}>
                     <img className={classes.availableCurrency} src={sol} alt="SOL" />
-                    <img className={classes.availableCurrency} src={bnb} alt="BNB" />
+                    {/* <img className={classes.availableCurrency} src={bnb} alt="BNB" /> */}
                     <img className={classes.availableCurrency} src={btc} alt="BTC" />
                     <img className={classes.availableCurrency} src={eth} alt="ETH" />
                     <img className={classes.availableCurrency} src={ltc} alt="LTC" />

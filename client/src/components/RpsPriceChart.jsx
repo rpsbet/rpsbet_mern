@@ -67,8 +67,13 @@ class RpsPriceChart extends Component {
     return (
       <>
         <div style={{ display: 'flex', justifyContent: 'center', padding: '20px' }}>
-          <Card style={{ width: '100%', borderRadius: '9px', boxShadow: '0px 4px 15px rgba(0, 0, 0, 0.15)', backgroundColor: 'unset', background: 'linear-gradient(-45deg, #3f51b5,  #6c0066)' }}>
-            <CardContent style={{ textAlign: 'center' }}>
+          <Card style={{ width: '100%', 
+                filter: !this.props.isDarkMode ? 'invert(1)' : 'none', borderRadius: '9px', boxShadow: '0px 4px 15px rgba(0, 0, 0, 0.15)', backgroundColor: 'unset', background: 'linear-gradient(-45deg, #3f51b5,  #6c0066)' }}>
+            <CardContent
+              style={{
+                textAlign: 'center',
+              }}
+            >
               <Box display="flex" justifyContent="space-around" style={{ marginBottom: '20px' }}>
                 <Typography variant="body6" color="textSecondary">Price (USD):</Typography>
                 <Typography variant="body6" style={{ fontWeight: 'bold', color: '#4CAF50' }}>${conversionRate}</Typography>

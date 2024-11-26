@@ -1065,7 +1065,6 @@ export const getMyGames = search_condition => async dispatch => {
     const res = await axios.get('/game/my_games', {
       params: { ...search_condition }
     });
-console.log("ASdasds", res.data)
     if (res.data.success) {
       // Dispatch the success action with the payload from the API response
       dispatch({ type: MY_GAMES_LOADED, payload: { ...res.data } });
@@ -1110,9 +1109,10 @@ export const endGame = (room_id, callback) => async dispatch => {
   }
 };
 
-export const unstake = (room_id, callback) => async dispatch => {
+export const unstake = (room_id, stake_amount, callback) => async dispatch => {
   try {
-    const res = await axios.post('/game/unstake', { room_id });
+    const res = await axios.post('/game/unstake', { room_id, stake_amount });
+
     if (res.data.success) {
       dispatch({
         type: MY_GAMES_LOADED,
@@ -1123,17 +1123,19 @@ export const unstake = (room_id, callback) => async dispatch => {
         }
       });
       dispatch({ type: NEW_TRANSACTION, payload: res.data.newTransaction });
-      dispatch({ type: MSG_SUCCESS, payload: "GREAAT SUCCESS!!" });
+      dispatch({ type: MSG_SUCCESS, payload: "GREAT SUCCESS!!" });
 
+      if (callback) callback(null, res.data);
     } else {
       if (res.data.already_finished) {
-        // dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'warning', title: 'Warning!', message: res.data.message} });
+        // Handle if game already finished
       }
+      if (callback) callback(res.data.message);
     }
   } catch (err) {
-    console.log(err);
+    console.error(err);
     dispatch({ type: MSG_ERROR, payload: 'SOMETHING WENT WRONG, TRY AGAIN LATER' });
-
+    if (callback) callback(err);
   }
 };
 
@@ -1150,13 +1152,12 @@ export const getMyHistory = search_condition => async dispatch => {
   }
 };
 
-export const getTransactionCandles = (room, timeFrame) => async (dispatch) => {
+export const getTransactionCandles = ({ roomId, timeFrame }) => async (dispatch) => { 
   try {
-    const res = await axios.get(`/game/candles/${room.roomId}`, {
+    const res = await axios.get(`/game/candles/${roomId}`, {
       params: { timeFrame }
     });
 
-    // console.log('API Response for Candles:', res.data); // Log the response to check the structure
 
     if (res.data.success) {
       dispatch({
@@ -1164,13 +1165,14 @@ export const getTransactionCandles = (room, timeFrame) => async (dispatch) => {
         payload: res.data || [],
       });
     } else {
+      console.error('Error fetching candles data:', res.data.err);
       dispatch({
         type: 'TRANSACTION_CANDLES_ERROR',
         payload: res.data.err || 'Error fetching candles data.',
       });
     }
   } catch (err) {
-    console.error('Error fetching candles data:', err); // Log the error
+    console.error('Error fetching candles data:', err);
     dispatch({
       type: 'TRANSACTION_CANDLES_ERROR',
       payload: err.message || 'Error fetching candles data.',

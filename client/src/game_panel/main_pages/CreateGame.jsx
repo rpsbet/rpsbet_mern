@@ -1,13 +1,13 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { Button, Tabs, Tab, Drawer, RadioGroup, Radio, Grid, FormControlLabel } from '@material-ui/core';
+import { Button, Tabs, Tab, Drawer, RadioGroup, Radio, Tooltip, FormControlLabel } from '@material-ui/core';
 import styled from 'styled-components';
 import Lottie from 'react-lottie';
 import Footer from './Footer';
 import Summary from '../CreateGame/Summary';
 import AdvancedSettings from '../CreateGame/AdvancedSettings';
 import JukeboxPanel from '../../components/JukeboxPanel.jsx';
-
+import { Info } from '@material-ui/icons';
 // import MyGamesTable from '../MyGames/MyGamesTable';
 import LoadingOverlay from 'react-loading-overlay';
 import MyHistoryTable from '../MyGames/MyHistoryTable';
@@ -781,8 +781,15 @@ class CreateGame extends Component {
 
     // if (this.props.gameTypeList !== 'All') {
     return (
-      <div  style={{ background: "rgba(170, 170, 170, 0.06)", borderRadius: "20px", marginBottom: "30px" }}>
-        <RadioGroup value={selectedGameType} onChange={this.handleChange}>
+      <div  style={{ marginBottom: "30px" }}>
+        <RadioGroup className="glass-container" value={selectedGameType} onChange={this.handleChange}>
+          <h3 className="game-sub-title">Select a Collateral&nbsp;<Tooltip
+                style={{ position: "absolute", right: "20px" }}
+                title={'Select a game-mode to use as collateral against your capital.'}
+                placement="top"
+              >
+                <Info style={{ cursor: "pointer", float: "right" }} />
+              </Tooltip></h3>
           <StyledRadioGrid>
             {gameTypeList.map((gameType, index) => (
               <FormControlLabel
@@ -1287,10 +1294,10 @@ class CreateGame extends Component {
               open={this.props.isDrawerOpen}
               toggleDrawer={this.toggleDrawer}
             />
-            <SupportButton
+            {/* <SupportButton
               open={this.props.isSupportOpen}
             // toggleDrawer={this.toggleDrawer}
-            />
+            /> */}
           </div>
           {!this.state.is_mobile && (
             <div className="mobile-only main-page-nav-button-group">

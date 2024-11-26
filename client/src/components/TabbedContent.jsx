@@ -120,7 +120,7 @@ class TabbedContent extends Component {
 
 
   render() {
-    const { selectedTab } = this.state;
+    const { selectedTab, coHostAmount } = this.state;
     const { roomInfo, isLowGraphics, classes, isDarkMode } = this.props;
 
     return (
@@ -194,14 +194,14 @@ class TabbedContent extends Component {
               </div>
               <CoHostModal
                 isDarkMode={this.props.isDarkMode}
-                coHostAmount={0}
+                coHostAmount={this.props.coHostAmount}
                 selectedRow={this.props.roomInfo}
                 balance={this.props.balance}
                 user={this.props.user}
                 togglePopup={this.togglePopup}
                 handleClose={this.handleCloseCoHostModal}
                 handleSendCoHost={this.props.handleSendCoHost}
-                handleCoHostAmountChange={this.handleCoHostAmountChange}
+                handleCoHostAmountChange={this.props.handleCoHostAmountChange}
                 has_joined={this.props.has_joined}
               />
             </div>

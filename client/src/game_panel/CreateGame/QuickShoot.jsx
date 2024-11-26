@@ -501,7 +501,7 @@ class QuickShoot extends Component {
 
         {step === 3 && (
           <div className="game-info-panel">
-            <div className='glass-container'>
+            <div className='glass-container' style={{display: "flex", flexDirection: "column"}}>
 
               <h3 className="game-sub-title">Strategy&nbsp;<Tooltip
                 style={{ position: "absolute", right: "20px" }}

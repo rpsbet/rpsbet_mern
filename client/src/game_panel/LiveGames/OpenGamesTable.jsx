@@ -334,7 +334,7 @@ class OpenGamesTable extends Component {
 
     try {
       if (coHostAmount <= 0) {
-        alertModal(isDarkMode, 'R U FURR-REAL? COHOST AMOUNT MUST BE MORE THAN 0!');
+        alertModal(isDarkMode, 'R U FURR-REAL? AMOUNT MUST BE MORE THAN 0!');
         return;
       }
 
@@ -883,7 +883,7 @@ class OpenGamesTable extends Component {
                           onClick={() => this.handleCoHost(row)}
                           style={{ color: "rgb(0 255 58)", padding: "2.5px ", display: "flex", justifyContent: "center", alignItems: "center", background: "linear-gradient(45deg, #28a74544, #33e74533)", border: "2px solid rgb(0 255 58)", cursor: "pointer", borderRadius: "0.3em", display: "inline-flex", verticalAlign: "middle" }}
                         >
-                          <span style={{ marginLeft: "5px", fontSize: "15px" }}>Trade&nbsp;</span>
+                          <span className="desktop-only" style={{ marginLeft: "5px", fontSize: "15px" }}>Trade&nbsp;</span>
                           <ShowChartOutlined style={{ width: "25px" }} />
                         </a>
                         <Button

@@ -669,9 +669,9 @@ class HowToPlayModal extends Component {
                         <h5>Support</h5>
                         <p>If you need assistance or have any questions, you can reach out to us through the following channels:</p>
                         <div className="contact-buttons">
-                          <Button onClick={() => window.open("https://twitter.com/officialrpsgame", '_blank')}>Twitter</Button>
+                          <Button onClick={() => window.open("https://twitter.com/officialrpsgame", '_blank')}>X</Button>
                           <Button onClick={() => window.open("https://t.me/rpsfinance", '_blank')}>Telegram</Button>
-                          <Button onClick={() => window.open("https://discord.gg/anMJntW4AD", '_blank')}>Discord</Button>
+                          {/* <Button onClick={() => window.open("https://discord.gg/anMJntW4AD", '_blank')}>Discord</Button> */}
                           <Button onClick={() => window.open("mailto:lenny@rps.finance")}>Email</Button>
                         </div>
                       </div>

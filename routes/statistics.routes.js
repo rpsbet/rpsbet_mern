@@ -974,11 +974,19 @@ router.get('/get-room-statistics', async (req, res) => {
         continue; // Skip processing this game log
       }
 
+      // Fetch the joiner user data
       const joiner = await User.findOne({ _id: joined_user }).select('_id avatar accessory username totalWagered');
+
+      // Skip if the joiner does not exist
+      if (!joiner) {
+        continue;
+      }
 
       const { _id, avatar, accessory, username, totalWagered } = joiner;
 
-      const commission = accessory ? (await Item.findOne({ image: accessory }).select('CP')).CP : parseFloat(tax.value);
+      const commission = accessory
+        ? (await Item.findOne({ image: accessory }).select('CP')).CP
+        : parseFloat(tax.value);
 
       let net_profit = calculateNetProfit(game_type?.short_name, bet_amount, game_result, selected_drop, commission);
 
@@ -1018,7 +1026,6 @@ router.get('/get-room-statistics', async (req, res) => {
       net_profit_values: player.net_profit_values,
       bets_values: player.bets_values
     }));
-
 
     room_info.sort((a, b) => b.net_profit - a.net_profit);
 

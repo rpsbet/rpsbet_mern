@@ -96,7 +96,6 @@ export const adminSignOut = body => async dispatch => {
 };
 
 export const setUrl = url => dispatch => {
-  console.log("SDs")
   dispatch({ type: SET_URL, payload: url });
 };
 
