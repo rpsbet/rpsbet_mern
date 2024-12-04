@@ -709,6 +709,7 @@ router.get('/room/:id', async (req, res) => {
         selectedStrategy: room['selectedStrategy'],
         qs_nation: room['qs_nation'],
         rps_game_type: room['rps_game_type'],
+        qs_game_type: room['qs_game_type'],
         room_history: roomHistory,
         // box_list: boxPrizeList,
         status: room['status'],
@@ -1127,7 +1128,7 @@ router.get('/topWins', async (req, res) => {
   try {
     const recentGameLogs = await GameLog.find({})
       .sort({ created_at: -1 })
-      .limit(250)
+      .limit(20)
       .populate({
         path: 'joined_user',
         model: User,
@@ -1153,30 +1154,34 @@ router.get('/topWins', async (req, res) => {
     res.status(500).json({ message: 'Server Error' });
   }
 });
+
 router.get('/topWithdrawals', async (req, res) => {
   try {
-    const topWds = await Receipt.find({ payment_type: "Withdrawal" })
-      .limit(250)
+    // Fetch and sort withdrawals by amount in descending order
+    const topWds = await Receipt.find({ payment_type: { $regex: /Withdraw/i } }) // Match "withdraw" case-insensitively
+      .sort({ amount: -1 }) // Sort by amount in descending order
       .populate({
         path: 'user_id',
         model: User,
         select: '_id avatar accessory totalWagered username'
       });
 
+    // Filter unwanted usernames
     const filteredWithdrawals = topWds
       .filter(withdrawal =>
         withdrawal.user_id &&
         !['OFFICIALRPSGAME', 'pimpedpistols', '69'].includes(withdrawal.user_id.username)
       );
 
+    // Map and limit results to top 12
     const sortedWithdrawals = filteredWithdrawals
       .map(withdrawal => ({
         ...withdrawal.toObject(),
         amount: Math.abs(withdrawal.amount) // Convert amount to positive
       }))
-      .sort((a, b) => b.amount - a.amount) // Sort by positive amounts in descending order
-      .slice(0, 12); // Limit results to top 12
+      .slice(0, 12); // Limit to top 12 after filtering
 
+    // Respond with the top withdrawals
     res.json({
       success: true,
       pageSize: 12,
@@ -1237,11 +1242,10 @@ const getRoomList = async (pageSize, game_type, excludeIds = []) => {
 
   try {
     const preRooms = await Room.find(search_condition)
-      .select('_id creator battles username joiners game_type gameBackground is_private bet_amount user_bet pr host_pr status room_number created_at likes views hosts')
+      .select('_id creator battles username joiners game_type qs_game_type gameBackground is_private bet_amount user_bet pr host_pr status room_number created_at updated_at likes views hosts')
       .populate({ path: 'creator', model: User, select: 'avatar totalWagered username accessory status' })
       .populate({ path: 'game_type', model: GameType })
-      .limit(pageSize)
-    // .populate({ path: 'brain_game_type', model: BrainGameType });
+      .limit(pageSize);
 
     const result = await Promise.all(preRooms.map(async (room) => {
       try {
@@ -1272,17 +1276,18 @@ const getRoomList = async (pageSize, game_type, excludeIds = []) => {
           username: room.creator?.username || '',
           creator_status: room.creator?.status || '',
           game_type: room.game_type,
+          qs_game_type: room.qs_game_type,
           bet_amount: room.bet_amount,
           selectedStrategy: room.selectedStrategy,
           pr: room.pr,
           user_bet: parseFloat(room.user_bet),
           winnings: '',
-          // spleesh_bet_unit: room.spleesh_bet_unit,
           is_private: room.is_private,
           gameBackground: room.gameBackground,
           status: room.status,
           index: room.room_number,
           created_at: moment(room.created_at).format('YYYY-MM-DD HH:mm'),
+          updated_at: room.updated_at, // Add updated_at for sorting
           likes: room.likes,
           views: room.views,
           battles: room.battles,
@@ -1334,14 +1339,11 @@ const getRoomList = async (pageSize, game_type, excludeIds = []) => {
 
     const filteredResults = result.filter((temp) => temp !== null);
 
-    // Sort by battles array length
-    filteredResults.sort((a, b) => {
-      return b.battles.length - a.battles.length;
-    });
+    // Sort by updated_at in descending order (most recent first)
+    filteredResults.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
 
     // Apply the limit after sorting
     const limitedResults = filteredResults.slice(0, pageSize);
-
     return {
       rooms: limitedResults,
     };
@@ -2267,6 +2269,8 @@ router.post('/coHost', auth, async (req, res) => {
     room.endgame_amount += coHostAmount;
     req.user.balance -= coHostAmount;
 
+    room.updated_at = moment(new Date()).format('YYYY-MM-DD HH:mm');
+
     const existingHostIndex = room.hosts.findIndex(host => host.host.equals(req.user._id));
     const totalBankroll = parseFloat(room.user_bet);
 
@@ -2412,7 +2416,7 @@ router.post('/coHost', auth, async (req, res) => {
 });
 
 // sell route
-// sell route
+
 router.post('/unstake', auth, async (req, res) => {
   try {
     const userId = req.user._id;
@@ -2548,6 +2552,7 @@ router.post('/unstake', auth, async (req, res) => {
     roomInfo.user_bet -= unstakeAmount;
     roomInfo.host_pr -= unstakeAmount;
     roomInfo.endgame_amount -= unstakeAmount;
+    roomInfo.updated_at = moment(new Date()).format('YYYY-MM-DD HH:mm');
 
     // Send notifications to remaining hosts
     roomInfo.hosts.forEach(host => {

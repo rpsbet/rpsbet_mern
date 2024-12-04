@@ -366,11 +366,6 @@ async function callCronJobs(io) {
                 for (const room of rooms) {
 
                   if (room) {
-                    const currentTime = new Date();
-                    const roomLastUpdated = new Date(room.updated_at);
-                    const timeDifferenceInMinutes = (currentTime - roomLastUpdated) / 1000 / 60;
-
-
                     // Check if the room was updated within the last 0.25 minutes (15 seconds)
                     // if (timeDifferenceInMinutes > 0.2) {
                     let attempts = 0;
@@ -391,7 +386,6 @@ async function callCronJobs(io) {
                       attempts++;
                       if (room.selectedStrategy !== newStrategy) {
                         room.selectedStrategy = newStrategy;
-                        room.updated_at = Date.now();
 
                         // Save the updated room to the database
                         try {
@@ -888,7 +882,7 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
   }
 }
 
-cron.schedule('*/8 * * * * *', async () => {
+cron.schedule('*/9 * * * * *', async () => {
   await callCronJobs(socketio);
 });
 module.exports = {

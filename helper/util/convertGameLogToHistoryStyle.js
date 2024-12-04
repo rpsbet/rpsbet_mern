@@ -76,7 +76,7 @@ const convertGameLogToHistoryStyle = async gameLogList => {
           }
         } else if (gameLog['game_type']['game_type_name'] === 'Quick Shoot') {
           if (gameLog.game_result === 1) {
-            temp.history = `${joined_user_link} won <span style='color: #ff0a28;'>${convertToCurrency(gameLog['winnings'] + gameLog['bet_amount'])} (${(gameLog['bet_amount'] / (gameLog['qs_game_type'] - 1) +
+            temp.history = `${joined_user_link} won <span style='color: #ff0a28;'>${convertToCurrency(gameLog['winnings'] + gameLog['bet_amount'])} (${(gameLog['winnings'] / 
               gameLog['bet_amount']).toFixed(2)}X)</span> (${convertToCurrency(gameLog['commission'])} RTB) in ${room_name}`;
           } else if (gameLog.game_result === 3) {
             temp.history = `${hostContainer} received a <span style='color: #ff0a28;'>${convertToCurrency(gameLog['user_bet'] - gameLog.endgame_amount)}</span> Auto-Payout in ${room_name}`;
