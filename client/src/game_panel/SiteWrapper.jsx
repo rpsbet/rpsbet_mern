@@ -35,6 +35,7 @@ import {
   ArrowDropDown,
   ExitToApp,
   PersonOutline,
+  Dashboard,
   MonetizationOn,
   ShoppingCart,
   Help,
@@ -1882,6 +1883,9 @@ class SiteWrapper extends Component {
 
                       <Divider />
                       <MenuItem className="desktop-only" onClick={this.handleDashboard}>
+                      <ListItemIcon>
+                          <Dashboard />
+                        </ListItemIcon>
                         <ListItemText>DASHBOARD</ListItemText> {/* You can also add an icon here */}
                       </MenuItem>
                       <MenuItem onClick={this.handleOpenSettingsModal}>

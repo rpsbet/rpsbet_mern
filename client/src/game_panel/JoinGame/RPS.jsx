@@ -1205,7 +1205,7 @@ class RPS extends Component {
               </div>
             </div>
 
-            {status === 'open' && rps_game_type === 0 ? (
+            {status === 'open' ? (
               <>
                 <Tooltip title={!isWatching ? "CLICK TO STOP WATCHING" : "CLICK TO START WATCHING"}>
                   <IconButton className="spectate title" onClick={this.handleSpectateMode}>

@@ -125,7 +125,7 @@ const AdvancedSettings = (props) => {
             </Tooltip>
           </div>
           <div className="grid-item content" style={{justifyItems: "center",}}>
-            <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: "center", width: '100%' }}>
               <TextField
                 label="Add Tags"
                 value={props.description}
