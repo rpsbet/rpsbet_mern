@@ -191,7 +191,7 @@ const SettingsRef = ({
                         &nbsp;<i>NEW!</i>
                       </span>
                     )}
-                    <span style={{ fontSize: '1.2em', marginLeft: '5px' }}>
+                    <span style={{ fontSize: '1.1em', marginLeft: '5px' }}>
                       {decodeHtmlEntity(strategy.icon)}
                     </span>
                   </Button>

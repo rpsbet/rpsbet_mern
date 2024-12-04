@@ -13,10 +13,9 @@ import {
   setCurRoomInfo,
   getMyChat,
   getGameTypeList,
-  getWithdrawals,
-  getWins,
+  getTokenPrice
 } from '../../redux/Logic/logic.actions';
-
+import history from '../../redux/history.js';
 import { toggleDrawer } from '../../redux/Auth/user.actions';
 import MyGamesTable from '../MyGames/MyGamesTable';
 import MyHistoryTable from '../MyGames/MyHistoryTable';
@@ -62,20 +61,6 @@ const calculateDaysUntilNextMonth = () => {
 };
 
 
-const formatTimeAgo = (date) => {
-  const duration = moment.duration(moment().diff(moment(date)));
-  const seconds = Math.floor(duration.asSeconds());
-  const minutes = Math.floor(duration.asMinutes());
-  const hours = Math.floor(duration.asHours());
-  const days = Math.floor(duration.asDays());
-
-  if (seconds < 60) return `${seconds} s`;
-  if (minutes < 60) return `${minutes} m`;
-  if (hours < 24) return `${hours} h`;
-  return `${days}d`;
-};
-
-
 class MainPage extends Component {
   constructor(props) {
     super(props);
@@ -88,7 +73,6 @@ class MainPage extends Component {
       isDrawerOpen: true,
       showP2PLending: false,
       showMarketplace: false,
-      tokenPrice: null, // Store the token price fetched once
       loading: true,
       refreshing: false,
       selectedCreator: '',
@@ -107,45 +91,53 @@ class MainPage extends Component {
       getRoomList,
       getRoomCount,
       getHistory,
-      getWins,
-      getWithdrawals,
       isAuthenticated,
       getMyChat,
+      getTokenPrice, // Import the action
     } = this.props;
-
+  
     this.isComponentMounted = true;
-
+  
+    if (window.location.pathname === '/dashboard') {
+      this.setState({
+        selectedMobileTab: 'my_games',
+        showOpenGame: 0, // Show "My Games" (not history) initially
+      });
+    }
+  
     const promises = [
-      getWins(),
-      getWithdrawals(),
       getRoomCount({ game_type: selectedGameType }),
     ];
     if (isAuthenticated) {
       promises.push(getMyChat());
     }
-
+  
+    getTokenPrice(token);
+  
     await Promise.all(promises);
+  
     if (this.state.is_mobile && !this.props.isDrawerOpen) {
       this.toggleDrawer();
     }
-
-    try {
-      const response = await axios.post('/stripe/get_token_price', {
-        tokenMintAddress: token, // Replace `token` with your actual token address
-        web2Amount: 1,           // Use a default amount to fetch the token price
-      });
-      const { tokenPrice } = response.data;
-      this.setState({
-        tokenPrice,
-        loading: false,
-      });
-    } catch (error) {
-      console.error('Error fetching token price:', error);
-      this.setState({ loading: false });
-    }
-
+  
     document.addEventListener("visibilitychange", this.handleVisibilityChange);
     this.pollingInterval = setInterval(() => this.handleRefresh(), 10000);
+  }
+
+  componentDidUpdate(prevProps) {
+    const { location } = this.props;
+  
+    if (location.pathname === '/dashboard' && location.pathname !== prevProps.location.pathname) {
+      this.setState({
+        selectedMobileTab: 'my_games',
+        showOpenGame: 0, // Show "My Games" tab
+      });
+    } else if ((location.pathname === '/dashboard' && location.pathname !== prevProps.location.pathname) && location.pathname === '/' ) {
+      this.setState({
+        // selectedMobileTab: 'live_games',
+        showOpenGame: 1, // Show "Live Games" tab
+      });
+    }
   }
 
   componentWillUnmount() {
@@ -215,6 +207,11 @@ class MainPage extends Component {
     this.props.toggleDrawer(!this.props.isDrawerOpen);
   };
 
+  
+  handleCreateBtnClicked = () => {
+    history.push('/create');
+  };
+
 
 
   getActiveTabText = () => {
@@ -238,205 +235,23 @@ class MainPage extends Component {
       (this.state.is_mobile && this.state.selectedMobileTab === 'live_games' && this.state.show_open_game !== 1) ||
         (!this.state.is_mobile && this.props.selectedMainTabIndex === 0) ? (
         <>
-          <div style={{ display: "inline-flex", justifyContent: "center", alignItems: "center" }}>
-            <h2 className="main-title recently-closed-title" style={{ padding: "0 0 15px 0" }}>TOP PLAYS</h2>
-          </div>
-          <div className='top-wins'>
-            {this.props.topWins?.map((row, index) => (
-              <div
-                key={`table-cell-${index}-${row.room}`}
-                className="table-cell"
-                onClick={() => (window.location.href = `/join/${row.room}`)}
-                style={{ cursor: 'pointer' }}
-              >
-                <div
-                  key={`carousel-content-${index}-${row.room}`}
-                  className="carousel-content table-row slide-in"
-                >
-                  <div style={{ display: 'flex', flexDirection: 'row' }}>
-                    <a
-                      href="#"
-                      className="player"
-                      onClick={(event) => {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        this.handleOpenPlayerModal(row.joined_user._id);
-                      }}
-                      style={{ marginRight: '-15px' }}
-                    >
-                      <Avatar
-                        className="avatar"
-                        src={row.joined_user?.avatar || 'default-avatar-url'} // Provide a default if avatar is not available
-                        accessory={row.joined_user?.accessory || 'default-accessory'} // Provide a default if accessory is not available
-                        username={row.joined_user?.username || 'Unknown'} // Provide a default username
-                        rank={row.joined_user?.totalWagered || 0} // Provide a default rank if not available
-                        alt=""
-                        darkMode={this.props.isDarkMode}
-                      />
-                    </a>
-                  </div>
-
-                  <div
-                    className="cell"
-                    style={{
-                      lineHeight: '0.5em',
-                      marginBottom: '5px',
-                      textAlign: 'right',
-                    }}
-                  >
-                    <span style={{ whiteSpace: 'nowrap' }}>
-                      +{convertToCurrency(row.winnings)}
-                    </span>
-                    <br />
-                    <span style={{ whiteSpace: 'nowrap', fontSize: 'xx-small' }}>
-                      {(() => {
-                        const { tokenPrice } = this.state; // Fetch the token price from state
-
-                        if (!tokenPrice) return 'Calculating...'; // Gracefully handle missing price
-
-                        // Display the winnings as (multiplier)x / converted USD
-                        return (
-                          <>
-                            {(row.winnings / row.bet_amount).toFixed(2)}x / $
-                            {(row.winnings * tokenPrice).toFixed(2)}
-                          </>
-                        );
-                      })()}
-                    </span>
-                  </div>
-
-                  <div
-                    className="cell"
-                    style={{
-                      whiteSpace: 'nowrap',
-                      fontSize: 'xx-small',
-                      position: 'absolute',
-                      right: '5px',
-                      bottom: '0px',
-                    }}
-                  >
-                    <span
-                      style={{
-                        color: 'unset',
-                        whiteSpace: 'nowrap',
-                        fontSize: 'xx-small',
-                        marginRight: '-5px',
-                        paddingBottom: '10px',
-                        paddingTop: '5px',
-                      }}
-                    >
-                      {formatTimeAgo(row.created_at)} ago
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div style={{ display: "inline-flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
-            <h2 className="main-title recently-closed-title" style={{ padding: "0 0 15px 0" }}>
-              TOP WITHDRAWALS
-            </h2>
-            {/* <Tooltip
-              style={{ float: "right", right: "20px" }}
-              title={'WITHDRAWALS OPEN ON THE 1ST OF EVERY MONTH, VERIFIED USERS HAVE PRIORITY 1 DAY EARLY. POOL $1k - $10k IN PRIZES'}
-              placement="top"
+          <div className="create-room-btn-panel">
+            <Button
+              className="btn-create-room"
+              onClick={this.handleCreateBtnClicked}
             >
-              <Info style={{ cursor: "pointer", width: "20px", height: "20px", transform: "translateY(-8px" }} />
-            </Tooltip> */}
+              START NEW GAME +
+            </Button>
           </div>
 
-          <div className='top-wins' style={{ marginBottom: "20px" }}>
-            {this.props.topWithdrawals?.map((row, index) => (
-              <div
-                key={`table-cell-${index}-${row.room}`}
-                className="table-cell"
-                onClick={() => (window.location.href = `/join/${row.room}`)}
-                style={{ cursor: 'pointer' }}
-              >
-                <div
-                  key={`carousel-content-${index}-${row.room}`}
-                  className="carousel-content table-row slide-in"
-                >
-                  <div style={{ display: 'flex', flexDirection: 'row' }}>
-                    <a
-                      href="#"
-                      className="player"
-                      onClick={(event) => {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        this.handleOpenPlayerModal(row.user_id._id);
-                      }}
-                      style={{ marginRight: '-15px' }}
-                    >
-                      <Avatar
-                        className="avatar"
-                        src={row.user_id.avatar}
-                        accessory={row.user_id.accessory}
-                        username={row.user_id.username}
-                        rank={row.user_id.totalWagered}
-                        alt=""
-                        darkMode={this.props.isDarkMode}
-                      />
-                    </a>
-                  </div>
 
-                  <div
-                    className="cell"
-                    style={{
-                      lineHeight: '0.5em',
-                      marginBottom: '5px',
-                      textAlign: 'right',
-                    }}
-                  >
-                    <span style={{ color: '#00ff3a', whiteSpace: 'nowrap' }}>
-                      +{convertToCurrency(row.amount)}{' '}
-                    </span>
-                    <br />
-                    <span
-                      style={{
-                        color: '#00ff3a',
-                        whiteSpace: 'nowrap',
-                        fontSize: 'xx-small',
-                      }}
-                    >
-                      ${((row.amount * this.state.tokenPrice) || 0).toFixed(2)}
-                    </span>
-                  </div>
-
-                  <div
-                    className="cell"
-                    style={{
-                      whiteSpace: 'nowrap',
-                      fontSize: 'xx-small',
-                      position: 'absolute',
-                      right: '5px',
-                      bottom: '0px',
-                    }}
-                  >
-                    <span
-                      style={{
-                        color: 'unset',
-                        whiteSpace: 'nowrap',
-                        fontSize: 'xx-small',
-                        marginRight: '-5px',
-                        paddingBottom: '10px',
-                        paddingTop: '5px',
-                      }}
-                    >
-                      {formatTimeAgo(row.created_at)} ago
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
+          <div className="refresh-main roll-tag">
+            <span>Total Liquidity: {convertToCurrency(totalUserBet)}</span>
           </div>
+
           <div id="liveStakes">
             {this.props.rooms_count} GAMES
             <Lottie options={defaultOptions} width={40} />
-          </div>
-
-          <div className="refresh-main roll-tag">
-          <span>Total Liquidity: {convertToCurrency(totalUserBet)}</span>
           </div>
         </>
       ) : (
@@ -447,8 +262,8 @@ class MainPage extends Component {
 
 
   render() {
-    const { isDrawerOpen, isLowGraphics } = this.props;
-    const { tokenPrice, loading } = this.state;
+    const { isDrawerOpen, isLowGraphics, selectedMainTabIndex } = this.props;
+    const { tokenPrice, is_mobile, loading, selectedMobileTab, showOpenGame } = this.state;
 
 
     return (
@@ -475,13 +290,6 @@ class MainPage extends Component {
           )}
         {this.state.is_mobile &&
           this.state.selectedMobileTab === 'marketplace' && (
-            // <Drawer
-            //   className="mat-chat"
-            //   style={{ display: this.props.isDrawerOpen ? 'flex' : 'none' }}
-            //   variant="persistent"
-            //   anchor="left"
-            //   open={isDrawerOpen}
-            // >
             <>
               <div style={{ padding: '30px' }}>
                 <div style={{ textAlign: "center" }}>
@@ -506,7 +314,6 @@ class MainPage extends Component {
                 </div>
               </div>
             </>
-            // </Drawer>
           )}
         {this.state.is_mobile &&
           (this.state.selectedMobileTab === 'live_games' ||
@@ -565,11 +372,10 @@ class MainPage extends Component {
           )}
         <div className="main-panel">
           <h2 className="main-title">{this.getActiveTabText()}</h2>
-          {((!this.state.is_mobile && this.props.selectedMainTabIndex === 0) ||
-            (this.state.is_mobile &&
-              this.state.selectedMobileTab === 'live_games' &&
-              this.state.show_open_game === 0)) && (
-              <>
+          {((!is_mobile && selectedMainTabIndex === 0) ||
+        (is_mobile && selectedMobileTab === 'live_games' && this.state.show_open_game === 0)) &&
+        location.pathname !== '/dashboard' && (
+          <>
 
                 <OpenGamesTable
                   selectedCreator={this.state.selectedCreator}
@@ -600,26 +406,18 @@ class MainPage extends Component {
               </>
 
             )}
-          {((!this.state.is_mobile && this.props.selectedMainTabIndex === 1) ||
-            (this.state.is_mobile &&
-              this.state.selectedMobileTab === 'my_games' &&
-              this.state.show_open_game === 0)) && (
-              <MyGamesTable gameTypeList={this.props.gameTypeList} />
-            )}
+          {selectedMobileTab === 'my_games' && showOpenGame === 0 && (
+            <MyGamesTable />
+          )}
           {this.state.is_mobile &&
             this.state.selectedMobileTab === 'live_games' &&
             this.state.show_open_game === 1 && <HistoryTable userId={this.props.user._id} />}
-          {this.state.is_mobile &&
-            this.state.selectedMobileTab === 'my_games' &&
-            this.state.show_open_game === 1 && <MyHistoryTable />}
+          {selectedMobileTab === 'my_games' && showOpenGame === 1 && (
+            <MyHistoryTable />
+          )}
         </div>
         <div className="sub-panel">
-          {/* {!this.state.is_mobile && (
-            <>
-              <h2 className="main-title desktop-only">JUKEBOX</h2>
-              <JukeboxPanel isMusicEnabled={this.props.isMusicEnabled} />
-            </>
-          )} */}
+
 
           {!this.state.is_mobile && this.props.selectedMainTabIndex === 0 && (
             <>
@@ -642,7 +440,7 @@ class MainPage extends Component {
             open={this.props.isSupportOpen}
           // toggleDrawer={this.toggleDrawer}
           />*/}
-          {!this.state.is_mobile && this.props.selectedMainTabIndex === 1 && ( 
+          {!this.state.is_mobile && this.props.selectedMainTabIndex === 1 && (
             <>
               <h2 className="main-title desktop-only">AI PANEL</h2>
 
@@ -858,8 +656,6 @@ class MainPage extends Component {
 }
 
 const mapStateToProps = state => ({
-  topWins: state.logic.topWins,
-  topWithdrawals: state.logic.topWithdrawals,
   isAuthenticated: state.auth.isAuthenticated,
   roomList: state.logic.roomList,
   history: state.logic.history,
@@ -881,8 +677,7 @@ const mapDispatchToProps = {
   getRoomList,
   getRoomCount,
   getHistory,
-  getWins,
-  getWithdrawals,
+  getTokenPrice,
   setCurRoomInfo,
   getGameTypeList,
   clearRoomListCache,

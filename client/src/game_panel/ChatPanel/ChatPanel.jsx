@@ -407,9 +407,9 @@ class ChatPanel extends Component {
             onMouseLeave={this.handleMouseLeave}
           />
         </Tabs>
-        <div id="online-banner">
+        {/* <div id="online-banner">
           <span>[{this.props.onlineUserList.length}] users online</span>
-        </div>
+        </div> */}
         {selected_tab_index === 0 ? (
           <MyChat is_mobile={this.props.is_mobile} toggleDrawer={this.props.toggleDrawer}/>
         ) : (

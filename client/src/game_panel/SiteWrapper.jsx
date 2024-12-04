@@ -11,7 +11,8 @@ import {
   ListItemIcon,
   ListItemText,
   Divider,
-  Tooltip
+  Tooltip,
+  Typography
 } from '@material-ui/core';
 import Footer from './main_pages/Footer';
 import { Info } from '@material-ui/icons';
@@ -28,7 +29,6 @@ import progress from './LottieAnimations/progress.json';
 import coins from './LottieAnimations/coins.json';
 import InlineSVG from 'react-inlinesvg';
 import busdSvg from './JoinGame/busd.svg';
-import { token } from '../config/index.js';
 import AllTransactionsModal from './modal/AllTransactionsModal.jsx';
 import {
   AccountBalanceWallet,
@@ -91,6 +91,7 @@ import {
   faExternalLinkAlt,
 } from '@fortawesome/free-solid-svg-icons';
 import { tutorialStepsMain } from '../util/tutorialStepsMain';
+import { token } from '../config/index.js';
 
 import {
   setSocket,
@@ -117,7 +118,9 @@ import {
   setGlobalChat,
   updateBetResult,
   getNotifications,
-  readNotifications
+  readNotifications,
+  getWithdrawals,
+  getWins,
 } from '../redux/Logic/logic.actions';
 import { alertModal } from './modal/ConfirmAlerts.jsx';
 import CookieConsent from '../util/cookieConsent';
@@ -188,6 +191,20 @@ function updateFromNow(transactions) {
   }
   return result;
 }
+
+const formatTimeAgo = (date) => {
+  const duration = Moment.duration(Moment().diff(Moment(date)));
+  const seconds = Math.floor(duration.asSeconds());
+  const minutes = Math.floor(duration.asMinutes());
+  const hours = Math.floor(duration.asHours());
+  const days = Math.floor(duration.asDays());
+
+  if (seconds < 60) return `${seconds} s`;
+  if (minutes < 60) return `${minutes} m`;
+  if (hours < 24) return `${hours} h`;
+  return `${days}d`;
+};
+
 
 class SiteWrapper extends Component {
   constructor(props) {
@@ -723,7 +740,7 @@ class SiteWrapper extends Component {
         this.props.acCalculateRemainingLoans(),
         this.initializeAudio(),
         this.fetchData(),
-        this.fetchTokenDetails()
+        this.fetchTokenDetails(),
 
       ]);
 
@@ -736,6 +753,7 @@ class SiteWrapper extends Component {
       this.interval = setInterval(this.updateReminderTime, 3000);
 
       this.loadSolanaWallet();
+      this.fetchInitialData();
 
       if (this.state.isPlayer) {
         this.closeTokenModal();
@@ -744,6 +762,39 @@ class SiteWrapper extends Component {
     } catch (error) {
       console.error(error);
     }
+
+    this.props.getWithdrawals();
+    this.props.getWins();
+  }
+  async fetchInitialData() {
+    const { getWins, getWithdrawals } = this.props;
+    const promises = [getWins(), getWithdrawals()];
+    await Promise.all(promises);
+  }
+
+  async initializeWebsiteData() {
+    const { getNotifications, getUser, acCalculateRemainingLoans, fetchData, fetchTokenDetails } = this.props;
+    await Promise.all([
+      getNotifications(),
+      getUser(),
+      this.initSocket(),
+      acCalculateRemainingLoans(),
+      this.initializeAudio(),
+      fetchData(),
+      fetchTokenDetails()
+    ]);
+  }
+
+  handleCreatePage() {
+    const currentUrl = window.location.pathname;
+    if (currentUrl.includes('create')) {
+      this.setState({ selectedMainTabIndex: this.props.selectMainTab(1) });
+    }
+  }
+
+  setIntervals() {
+    setInterval(() => this.fetchData(), 2000);
+    this.interval = setInterval(this.updateReminderTime, 3000);
   }
 
 
@@ -1075,6 +1126,14 @@ class SiteWrapper extends Component {
     });
   };
 
+  handleDashboard = () => {
+    history.push('/dashboard');
+    this.setState({
+      selectedMainTabIndex: 1, // Adjust this index to the appropriate one for "Dashboard"
+    });
+  };
+
+
   handleJoyrideCallback = (data) => {
     const { status, type } = data;
 
@@ -1149,7 +1208,8 @@ class SiteWrapper extends Component {
       showOfferLoanModal,
       user,
       showCookieConsent,
-      isLowGraphics
+      isLowGraphics,
+      tokenPrice
     } = this.props;
     const balanceString = balance.toString();
     const decimalIndex = balanceString.indexOf('.');
@@ -1375,51 +1435,216 @@ class SiteWrapper extends Component {
                 {' '}
               </a>
               {!isInvestorsPage ? (
+                <div className='desktop-only' style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", width: "30%", marginTop: "10px" }}>
+                  {/* TOP PLAYS Carousel */}
+                  <div style={{ flex: "1", maxWidth: "50%", paddingRight: "10px" }}>
+                  <span className='roll-tag' style={{position: "absolute", top: "5px"}}>Wins</span>
+                    <div className="top-wins">
+                      {this.props.topWins?.map((row, index) => (
+                        <div
+                          key={`table-cell-${index}-${row.room}`}
+                          className="table-cell"
+                          onClick={() => (window.location.href = `/join/${row.room}`)}
+                          style={{ cursor: 'pointer' }}
+                        >
+                          <div key={`carousel-content-${index}-${row.room}`} className="carousel-content table-row slide-in">
+                            <div style={{ display: 'flex', flexDirection: 'row' }}>
+                              <a
+                                href="#"
+                                className="player"
+                                onClick={(event) => {
+                                  event.preventDefault();
+                                  event.stopPropagation();
+                                  this.handleOpenPlayerModal(row.joined_user._id);
+                                }}
+                                style={{ marginRight: '-15px' }}
+                              >
+                                <Avatar
+                                  className="avatar"
+                                  src={row.joined_user?.avatar || 'default-avatar-url'}
+                                  accessory={row.joined_user?.accessory || 'default-accessory'}
+                                  username={row.joined_user?.username || 'Unknown'}
+                                  rank={row.joined_user?.totalWagered || 0}
+                                  alt=""
+                                  darkMode={this.props.isDarkMode}
+                                />
+                              </a>
+                            </div>
 
-                <Tabs
-                  value={selectedMainTabIndex}
-                  onChange={this.handleMainTabChange}
-                  TabIndicatorProps={{ style: { background: '#ff0000' } }}
-                  className="main-game-page-tabs desktop-only"
-                >
-                  <Tab
-                    className={`custom-tab ${hoverTabIndex === 0 || selectedMainTabIndex === 0
-                      ? 'fade-animation fade-in'
-                      : 'fade-animation fade-out'
-                      }`}
-                    label="ALL GAMES"
-                    labelplacement="left"
-                    icon={
-                      hoverTabIndex === 0 || selectedMainTabIndex === 0 ? (
-                        <BattleHover />
-                      ) : (
-                        <Battle />
-                      )
-                    }
-                    style={customStyles.tabRoot}
-                    onMouseEnter={() => this.handleMouseEnter(0)}
-                    onMouseLeave={this.handleMouseLeave}
-                  />
+                            <div className="cell" style={{ lineHeight: '0.5em', marginBottom: '5px', textAlign: 'right', padding: "5px 5px 15px 5px" }}>
+                              <span style={{ whiteSpace: 'nowrap' }}>+{convertToCurrency(row.winnings)}</span>
+                              <br />
+                              <span style={{ whiteSpace: 'nowrap', fontSize: 'xx-small' }}>
+                                {(() => {
+                                  if (!tokenPrice) return convertToCurrency(row.winnings);
+                                  return (
+                                    <>
+                                      {(row.winnings / row.bet_amount).toFixed(2)}x / $
+                                      {(row.winnings * tokenPrice).toFixed(2)}
+                                    </>
+                                  );
+                                })()}
+                              </span>
+                            </div>
 
-                  <Tab
-                    className={`custom-tab ${hoverTabIndex === 1 || selectedMainTabIndex === 1
-                      ? 'fade-animation fade-in'
-                      : 'fade-animation fade-out'
-                      }`}
-                    label="Your Games"
-                    labelplacement="left"
-                    icon={
-                      hoverTabIndex === 1 || selectedMainTabIndex === 1 ? (
-                        <ManageHover />
-                      ) : (
-                        <Manage />
-                      )
-                    }
-                    style={customStyles.tabRoot}
-                    onMouseEnter={() => this.handleMouseEnter(1)}
-                    onMouseLeave={this.handleMouseLeave}
-                  />
-                </Tabs>
+                            <div
+                              className="cell"
+                              style={{
+                                whiteSpace: 'nowrap',
+                                fontSize: 'xx-small',
+                                position: 'absolute',
+                                right: '5px',
+                                bottom: '0px',
+                              }}
+                            >
+                              <span
+                                style={{
+                                  color: 'unset',
+                                  whiteSpace: 'nowrap',
+                                  fontSize: 'xx-small',
+                                  marginRight: '-5px',
+                                  paddingBottom: '10px',
+                                  paddingTop: '5px',
+                                }}
+                              >
+                                {formatTimeAgo(row.created_at)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* TOP WITHDRAWALS Carousel */}
+                  <div style={{ flex: "1", maxWidth: "50%", paddingLeft: "10px" }}>
+                    <span className='roll-tag'  style={{position: "absolute", top: "5px"}}>WDS</span>
+                    <div className="top-wins" style={{ marginBottom: "20px" }}>
+                      {this.props.topWithdrawals?.map((row, index) => (
+                        <div
+                          key={`table-cell-${index}-${row.room}`}
+                          className="table-cell"
+                          onClick={() => (window.location.href = `/join/${row.room}`)}
+                          style={{ cursor: 'pointer' }}
+                        >
+                          <div key={`carousel-content-${index}-${row.room}`} className="carousel-content table-row slide-in">
+                            <div style={{ display: 'flex', flexDirection: 'row' }}>
+                              <a
+                                href="#"
+                                className="player"
+                                onClick={(event) => {
+                                  event.preventDefault();
+                                  event.stopPropagation();
+                                  this.handleOpenPlayerModal(row.user_id._id);
+                                }}
+                                style={{ marginRight: '-15px' }}
+                              >
+                                <Avatar
+                                  className="avatar"
+                                  src={row.user_id.avatar}
+                                  accessory={row.user_id.accessory}
+                                  username={row.user_id.username}
+                                  rank={row.user_id.totalWagered}
+                                  alt=""
+                                  darkMode={this.props.isDarkMode}
+                                />
+                              </a>
+                            </div>
+
+                            <div className="cell" style={{ lineHeight: '0.5em', marginBottom: '5px', textAlign: 'right', padding: "5px 5px 15px 5px" }}>
+                              <span style={{ color: '#00ff3a', whiteSpace: 'nowrap' }}>+{convertToCurrency(row.amount)}</span>
+                              <br />
+                              <span
+                                style={{
+                                  color: '#00ff3a',
+                                  whiteSpace: 'nowrap',
+                                  fontSize: 'xx-small',
+                                }}
+                              >
+                                ${((row.amount * tokenPrice) || 0).toFixed(2)}
+                              </span>
+                            </div>
+
+                            <div
+                              className="cell"
+                              style={{
+                                whiteSpace: 'nowrap',
+                                fontSize: 'xx-small',
+                                position: 'absolute',
+                                right: '5px',
+                                bottom: '0px',
+                              }}
+                            >
+                              <span
+                                style={{
+                                  color: 'unset',
+                                  whiteSpace: 'nowrap',
+                                  fontSize: 'xx-small',
+                                  marginRight: '-5px',
+                                  paddingBottom: '10px',
+                                  paddingTop: '5px',
+                                }}
+                              >
+                                {formatTimeAgo(row.created_at)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                // <Tabs
+                //   value={selectedMainTabIndex}
+                //   onChange={this.handleMainTabChange}
+                //   TabIndicatorProps={{
+                //     style: {
+                //       display: 'none', // Hide the bottom border (indicator)
+                //     },
+                //   }}
+                //   className="main-game-page-tabs desktop-only"
+                // >
+                //   <Tab
+                //     className={`custom-tab ${hoverTabIndex === 0 || selectedMainTabIndex === 0
+                //       ? 'fade-animation fade-in'
+                //       : 'fade-animation fade-out'
+                //       }`}
+                //     label="ALL GAMES"
+                //     labelplacement="left"
+                //     icon={
+                //       hoverTabIndex === 0 || selectedMainTabIndex === 0 ? (
+                //         <BattleHover />
+                //       ) : (
+                //         <Battle />
+                //       )
+                //     }
+                //     style={customStyles.tabRoot}
+                //     sx={{
+                //       borderBottom: 'none', // Removes the bottom border
+                //     }}
+                //     onMouseEnter={() => this.handleMouseEnter(0)}
+                //     onMouseLeave={this.handleMouseLeave}
+                //   />
+
+                //   <Tab
+                //     className={`custom-tab ${hoverTabIndex === 1 || selectedMainTabIndex === 1
+                //       ? 'fade-animation fade-in'
+                //       : 'fade-animation fade-out'
+                //       }`}
+                //     label="Your Games"
+                //     labelplacement="left"
+                //     icon={
+                //       hoverTabIndex === 1 || selectedMainTabIndex === 1 ? (
+                //         <ManageHover />
+                //       ) : (
+                //         <Manage />
+                //       )
+                //     }
+                //     style={customStyles.tabRoot}
+                //     onMouseEnter={() => this.handleMouseEnter(1)}
+                //     onMouseLeave={this.handleMouseLeave}
+                //   />
+                // </Tabs>
               ) : (
                 <div style={{ padding: width < 600 ? "0" : "48px" }}>
                 </div>
@@ -1656,6 +1881,9 @@ class SiteWrapper extends Component {
                       </MenuItem>
 
                       <Divider />
+                      <MenuItem className="desktop-only" onClick={this.handleDashboard}>
+                        <ListItemText>DASHBOARD</ListItemText> {/* You can also add an icon here */}
+                      </MenuItem>
                       <MenuItem onClick={this.handleOpenSettingsModal}>
                         <ListItemIcon>
                           <Settings />
@@ -2184,6 +2412,9 @@ class SiteWrapper extends Component {
 }
 
 const mapStateToProps = state => ({
+  topWins: state.logic.topWins,
+  topWithdrawals: state.logic.topWithdrawals,
+  tokenPrice: state.logic.tokenPrice,
   isAuthenticated: state.auth.isAuthenticated,
   showDeListLoanModal: state.snackbar.showDeListLoanModal,
   showListItemModal: state.snackbar.showListItemModal,
@@ -2239,7 +2470,9 @@ const mapDispatchToProps = {
   getProfitData,
   openOfferLoanModal,
   setCurrentOfferTargetInfo,
-  fetchVaultBalance
+  fetchVaultBalance,
+  getWins,
+  getWithdrawals,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(SiteWrapper);

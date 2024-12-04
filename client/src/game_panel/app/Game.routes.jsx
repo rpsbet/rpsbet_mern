@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { Route, Switch } from 'react-router-dom';
 import CreateGame from '../main_pages/CreateGame';
+import RPS from '../CreateGame/RPS'
+import QuickShoot from '../CreateGame/QuickShoot'
 import SiteWrapper from '../SiteWrapper';
 import MainPage from '../main_pages/MainPage';
 import JoinGame from '../main_pages/JoinGame';
@@ -9,6 +11,7 @@ import ChatPage from '../MyGames/ChatPage';
 import ChangePasswordPage from '../main_pages/ChangePasswordPage';
 import LeaderboardsModal from '../modal/LeaderboardsModal';
 import ProfilePage from '../main_pages/ProfilePage';
+import MyGames from '../MyGames/MyGamesTable';
 
 export class GameMainRoute extends Component {
   render() {
@@ -16,22 +19,33 @@ export class GameMainRoute extends Component {
     return (
       <SiteWrapper>
         <Switch>
-          <Route 
+          <Route
             exact
             path={`${match.path}create/:game_type_name`}
             component={CreateGame}
           />
-          <Route 
+          <Route
             exact
             path={`${match.path}create/`}
             component={CreateGame}
           />
-          <Route 
+          <Route
+            exact
+            path={`${match.path}/create/quick-shoot/`}
+            component={QuickShoot}
+          />
+          <Route
+            exact
+            path={`${match.path}/create/rps/`}
+            component={RPS}
+          />
+
+          <Route
             exact
             path={`${match.path}join/:id`}
             component={JoinGame}
           />
-          <Route 
+          <Route
             exact
             path={`${match.path}chat/:id`}
             component={ChatPage}
@@ -46,13 +60,20 @@ export class GameMainRoute extends Component {
             path={`${match.path}profile/:user_id`}
             component={ProfilePage}
           />
-   
           <Route
             exact
             path={`${match.path}leaderboards`}
             component={LeaderboardsModal}
           />
-          <Route 
+
+          {/* New /dashboard route */}
+          <Route
+            exact
+            path={`${match.path}dashboard`}
+            component={MainPage} // Use the MyGames component here for the Dashboard
+          />
+
+          <Route
             path={`${match.path}`}
             component={MainPage}
           />

@@ -12,20 +12,21 @@ class DefaultBetAmountPanel extends Component {
     super(props);
     this.state = {
       isFocused: false,
-      is_other: false    };
+      is_other: false
+    };
 
 
 
 
-  // Add corresponding image sources for each bet amount
-  this.images = [
-    '/img/icons/coins-xs.svg',
-    '/img/icons/coins-s.svg',
-    '/img/icons/coins-m.svg',
-    '/img/icons/coins-l.svg',
-    '/img/icons/coins-xl.svg',
+    // Add corresponding image sources for each bet amount
+    this.images = [
+      '/img/icons/coins-xs.svg',
+      '/img/icons/coins-s.svg',
+      '/img/icons/coins-m.svg',
+      '/img/icons/coins-l.svg',
+      '/img/icons/coins-xl.svg',
 
-  ];
+    ];
   }
 
   handleHalfXButtonClick = () => {
@@ -38,21 +39,21 @@ class DefaultBetAmountPanel extends Component {
     document.getElementById("betAmount").focus();
 
   }
-  
+
   handle2xButtonClick = () => {
     const multipliedBetAmount = this.props.bet_amount * 2;
     const updatedBetAmount = Math.min(multipliedBetAmount, this.props.balance);
-  
+
     const newState = {
       bet_amount: updatedBetAmount
     };
-  
+
     this.props.onChangeState(newState);
     document.getElementById("betAmount").focus();
   }
-  
-  
-  
+
+
+
 
   handleMaxButtonClick = () => {
     const maxBetAmount = Math.floor(this.props.balance * 100000) / 100000; // round down to 2 decimal places
@@ -147,20 +148,20 @@ class DefaultBetAmountPanel extends Component {
       },
     });
 
-    const {isFocused, is_other} = this.state;
-    
-    const {bet_amount, game_type, onChangeState, qs_game_type} = this.props;
-   
+    const { isFocused, is_other } = this.state;
+
+    const { bet_amount, game_type, onChangeState, qs_game_type } = this.props;
+
     const formattedBetAmount = this.formatBetAmount(bet_amount);
     return (
-      <div className="default-bet-amount-panel game-info-panel glass-container"  style={{ marginBottom: "30px", padding: "30px 60px 60px 60px" }}>
-        <h3 className="game-sub-title">BANKROLL&nbsp;<Tooltip
-                        style={{ position: "absolute", right: "20px" }}
-                        title={'Liquidity / pot / pool of money for the game'}
-                        placement="top"
-                      >
-                        <Info style={{ cursor: "pointer", float: "right" }} />
-                      </Tooltip></h3>
+      <div className="default-bet-amount-panel" style={{ marginBottom: "30px", }}>
+        <h3 className="game-sub-title roll-tag">LIQUIDITY&nbsp;<Tooltip
+          style={{ position: "absolute", right: "20px" }}
+          title={'Liquidity / pot / pool of money for the game'}
+          placement="top"
+        >
+          <Info style={{ cursor: "pointer", float: "right" }} />
+        </Tooltip></h3>
         <div className="bet-amounts">
           {defaultBetAmounts.map((amount, index) => (
             <Button
@@ -190,7 +191,7 @@ class DefaultBetAmountPanel extends Component {
               }}
               key={index}
             >
-            <img width="20px" src={this.images[index]} alt={`Bet Amount: ${amount}`} />
+              <img width="20px" src={this.images[index]} alt={`Bet Amount: ${amount}`} />
 
               {convertToCurrency(amount)}
             </Button>
@@ -207,83 +208,83 @@ class DefaultBetAmountPanel extends Component {
         <div
           className={`edit-amount-panel ${is_other ? '' : 'hidden'}`}
         >
-            <div className='bet-amount'> 
-          <ThemeProvider theme={theme}>
+          <div className='bet-amount'>
+            <ThemeProvider theme={theme}>
 
-          
-          <TextField
-            type="text"
-            name="betamount"
-            id="betAmount"
-            variant="filled"
-            value={bet_amount}
-            inputProps={{
-              pattern: '^\\d*\\.?\\d*$',
-              maxLength: 9
-            }}
-            InputLabelProps={{
-              shrink: true
-            }}
-            InputProps={{
-              onFocus: this.handleFocus,
-              onBlur: this.handleBlur,
-              endAdornment: (
-                <ButtonGroup
-                  className={isFocused ? 'fade-in' : 'fade-out'}
-                >
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={() => this.handle2xButtonClick()}
-                    style={{ marginTop: '8px' }}
-                  >
-                    2x
-                  </Button>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={() => this.handleHalfXButtonClick()}
-                    style={{ marginTop: '8px' }}
-                  >
-                    1/2x
-                  </Button>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={() => this.handleMaxButtonClick()}
-                    style={{ marginTop: '8px' }}
-                  >
-                    Max
-                  </Button>
-                </ButtonGroup>
-              ),
-            }}
-            onChange={e => {
-              if (this.props.game_type === 'Brain Game') {
-                this.props.onChangeState({ bet_amount: e.target.value });
-              } else if (this.props.game_type === 'Quick Shoot') {
-                this.props.onChangeState({
-                  bet_amount: e.target.value,
-                  public_bet_amount: convertToCurrency(
-                    // updateDigitToPoint2(
-                      (this.props.qs_game_type - 1) *
-                        (parseInt(e.target.value) || '')
-                    // )
+
+              <TextField
+                type="text"
+                name="betamount"
+                id="betAmount"
+                variant="filled"
+                value={bet_amount}
+                inputProps={{
+                  pattern: '^\\d*\\.?\\d*$',
+                  maxLength: 9
+                }}
+                InputLabelProps={{
+                  shrink: true
+                }}
+                InputProps={{
+                  onFocus: this.handleFocus,
+                  onBlur: this.handleBlur,
+                  endAdornment: (
+                    <ButtonGroup
+                      className={isFocused ? 'fade-in' : 'fade-out'}
+                    >
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => this.handle2xButtonClick()}
+                        style={{ marginTop: '8px' }}
+                      >
+                        2x
+                      </Button>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => this.handleHalfXButtonClick()}
+                        style={{ marginTop: '8px' }}
+                      >
+                        1/2x
+                      </Button>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => this.handleMaxButtonClick()}
+                        style={{ marginTop: '8px' }}
+                      >
+                        Max
+                      </Button>
+                    </ButtonGroup>
                   ),
-                  max_return: this.props.qs_game_type * e.target.value
-                });
-              } else {
-                this.props.onChangeState({
-                  bet_amount: e.target.value,
-                  max_return: (parseInt(e.target.value) || 0) * 2 /* * 0.95 */
-                });
-              }
-            }}
-          /></ThemeProvider>
-           </div>
-           
+                }}
+                onChange={e => {
+                  if (this.props.game_type === 'Brain Game') {
+                    this.props.onChangeState({ bet_amount: e.target.value });
+                  } else if (this.props.game_type === 'Quick Shoot') {
+                    this.props.onChangeState({
+                      bet_amount: e.target.value,
+                      public_bet_amount: convertToCurrency(
+                        // updateDigitToPoint2(
+                        (this.props.qs_game_type - 1) *
+                        (parseInt(e.target.value) || '')
+                        // )
+                      ),
+                      max_return: this.props.qs_game_type * e.target.value
+                    });
+                  } else {
+                    this.props.onChangeState({
+                      bet_amount: e.target.value,
+                      max_return: (parseInt(e.target.value) || 0) * 2 /* * 0.95 */
+                    });
+                  }
+                }}
+              /></ThemeProvider>
+          </div>
+
         </div>
-        
+
       </div>
     );
   }

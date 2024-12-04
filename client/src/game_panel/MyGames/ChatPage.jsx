@@ -23,9 +23,17 @@ import {
   getGameTypeList
 } from '../../redux/Logic/logic.actions';
 import { toggleDrawer } from '../../redux/Auth/user.actions';
-import { Button, Tabs, Tab, Drawer } from '@material-ui/core';
+import { Button, Tabs, Tab, Drawer, withStyles } from '@material-ui/core';
 import Lottie from 'react-lottie';
 import animationData from '../LottieAnimations/live';
+
+const styles = {
+  drawerPaper: {
+    backgroundColor: "transparent !important", // Override default background
+    boxShadow: "none !important", // Remove shadow
+    border: "none", // Optional: remove borders
+  },
+};
 
 const moment = require('moment');
 
@@ -216,10 +224,13 @@ class ChatPage extends Component {
         {((is_mobile && selectedMobileTab === 'chat') || !is_mobile) && (
           <Drawer
             className="mat-chat"
-            style={{ display: isDrawerOpen ? 'flex' : 'none' }}
+            style={{ display: isDrawerOpen ? "flex" : "none" }}
             variant="persistent"
             anchor="left"
             open={isDrawerOpen}
+            classes={{
+              paper: classes.drawerPaper, // Use the custom styles
+            }}
           >
             <ChatPanel is_mobile={is_mobile} toggleDrawer={this.toggleDrawer} />
           </Drawer>
@@ -264,7 +275,7 @@ class ChatPage extends Component {
             <a
               className="player"
               onClick={() => this.handleOpenPlayerModal(user_id)}
-              style={{ display: 'flex', flexDirection: 'row' , marginLeft:"45px"}}
+              style={{ display: 'flex', flexDirection: 'row', marginLeft: "45px" }}
             >
               <Avatar
                 src={avatar}

@@ -6,6 +6,7 @@ import Lottie from 'react-lottie';
 import Footer from './Footer';
 import Summary from '../CreateGame/Summary';
 import AdvancedSettings from '../CreateGame/AdvancedSettings';
+import DefaultBetAmountPanel from '../CreateGame/DefaultBetAmountPanel.jsx';
 import JukeboxPanel from '../../components/JukeboxPanel.jsx';
 import { Info } from '@material-ui/icons';
 // import MyGamesTable from '../MyGames/MyGamesTable';
@@ -46,76 +47,6 @@ import { alertModal, confirmModalCreate } from '../modal/ConfirmAlerts';
 
 import { convertToCurrency } from '../../util/conversion';
 
-const StyledProductCard = styled.a`
-  position: relative;
-  background: ${({ isDarkMode }) =>
-    isDarkMode
-      ? 'linear-gradient(156deg, #ff0000, #971517)'
-      : 'linear-gradient(156deg, #fd23e4, #cf0c0e)'};
-  border-radius: 0.3em;
-  width: 150px;
-  justify-content: center;
-  text-align: center;
-  padding: 10px;
-  display: -ms-flexbox;
-  display: flex;
-  -webkit-flex-direction: column;
-  -ms-flex-direction: column;
-  flex-direction: column;
-  -webkit-align-items: center;
-  -webkit-box-align: center;
-  -ms-flex-align: center;
-  align-items: center;
-  cursor: pointer;
-  -webkit-transition: -webkit-transform 0.2s;
-  -webkit-transition: transform 0.2s;
-  transition: transform 0.2s;
-  position: relative;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    // border-radius:10px;
-    opacity: 0;
-    transition: opacity 0.2s;
-  }
-
-  &:hover::before {
-    opacity: 1;
-  }
-
-  &:hover {
-    transform: translateY(-10px);
-    border: 3px solid #fff;
-    filter: brightness(3);
-    transition: 0.3s;
-    background: linear-gradient(86deg, #cf0c0e, #ff0333, #ff0909);
-
-  }
-    @media (max-width: 600px) {
-    padding: 18px; /* Reduced padding for mobile */
-  }
-`;
-
-const StyledRadioGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Adjust for larger screens */
-  gap: 10px;
-  max-width: 100%;
-  margin: 20px auto;
-  padding: 20px;
-  
-  /* Ensure one item per row on mobile */
-  @media (max-width: 600px) {
-    grid-template-columns: 1fr; /* Single column layout on mobile */
-    padding: 10px; /* Adjust padding for mobile */
-  }
-`;
 
 const StyledProductImage = styled.img`
   width: 50px;
@@ -153,7 +84,8 @@ class CreateGame extends Component {
       step: 1,
       child_step: 1,
       game_type: 1,
-      game_mode: this.props.game_mode,
+      game_mode: 'RPS',
+      selectedGameType: 'RPS',
       isPlayingBrain: false,
       rps_list: [],
       drop_list: [],
@@ -165,14 +97,13 @@ class CreateGame extends Component {
       qs_game_type: 2,
       qs_nation: 0,
       selected_qs_position: 0,
-      bet_amount: 0,
+      bet_amount: 10,
       endgame_amount: 0,
       spleesh_bet_unit: 0.01,
       max_return: 0,
       creatingRoom: false,
       max_prize: 0,
       winChance: 0,
-      selectedGameType: this.props.game_mode,
       lowest_box_price: 0,
       public_bet_amount: convertToCurrency(0),
       is_private: false,
@@ -212,13 +143,13 @@ class CreateGame extends Component {
 
   static getDerivedStateFromProps(props, current_state) {
     if (
-      current_state.game_mode !== props.game_mode ||
+      // current_state.game_mode !== props.game_mode ||
       current_state.balance !== props.balance ||
       current_state.brain_game_type !== props.brain_game_type
     ) {
       return {
         ...current_state,
-        game_mode: props.game_mode,
+        // game_mode: props.game_mode,
         brain_game_type: props.brain_game_type,
         balance: props.balance
       };
@@ -228,6 +159,21 @@ class CreateGame extends Component {
 
 
   async componentDidMount() {
+
+    const path = window.location.pathname; // Get the full pathname
+
+    if (path === '/create/rps') {
+      this.setState({
+        selectedGameType: 'RPS',
+        game_mode: 'RPS', // Set the game mode for RPS
+      });
+    } else if (path === '/create/quick-shoot') {
+      this.setState({
+        selectedGameType: 'Quick Shoot',
+        game_mode: 'Quick Shoot', // Set the game mode for Quick Shoot
+      });
+    }
+
     document.addEventListener('keydown', this.handleKeyPress);
 
     Object.values(this.state.sounds).forEach(sound => {
@@ -237,7 +183,7 @@ class CreateGame extends Component {
     this.IsAuthenticatedReroute();
     this.props.getHistory();
 
-    const gameTypeName = this.props.match.params.game_type_name;
+    const gameTypeName = this.props.match.params.game_type_name || 'RPS';
 
     this.props.getGameTypeList();
     await this.props.setGameMode(gameTypeName);
@@ -455,21 +401,13 @@ class CreateGame extends Component {
   };
 
   onSkipButtonClicked = () => {
-    if ((this.state.step === 3) || this.state.step === 4 || this.state.step === 5) {
-
-      if (this.state.child_step === 2 && this.state.game_mode === 'Mystery Box') {
-        if (this.state.max_return > this.state.bet_amount * 4) {
-          alertModal(this.props.isDarkMode, `TOO PURRROFITABLE! GAME IS UNFAIR`);
-          return;
-        }
-      }
+    if ((this.state.step === 2)) {
       this.setState({
         is_private: false,
         youtubeUrl: '',
         gameBackground: '',
         endgame_type: false,
         step: this.state.step + 1,
-        child_step: this.state.child_step + 1
       });
     }
     return;
@@ -546,169 +484,76 @@ class CreateGame extends Component {
       });
     }
   };
-
   onNextButtonClicked = () => {
     const {
       step,
       game_mode,
-      child_step,
       bet_amount,
       balance,
       qs_list,
       rps_list,
-      spleesh_bet_unit,
       endgame_amount,
       max_return,
       room_password,
-      rps_game_type,
-      endgame_type,
       is_private,
-      selectedStrategy
+      endgame_type,
+      selectedStrategy,
     } = this.state;
-
+  
     const { isDarkMode } = this.props;
-
-    const alertAndReturn = message => {
+  
+    const alertAndReturn = (message) => {
       alertModal(isDarkMode, message);
       return;
     };
-
-    const isMinimumRunsNeeded = (minRuns, list) => {
-      if (list.length < minRuns) {
+  
+    // Step 1: Minimum runs, bet amount, and balance checks
+    if (step === 1) {
+      if (parseFloat(bet_amount) <= 0 || isNaN(parseFloat(bet_amount))) {
+        alertAndReturn("YOU DIDN'T BET (CAT) SHIT!!!");
+        return;
+      }
+      if (parseFloat(bet_amount) < 10) {
+        alertAndReturn("MEOWNIMUM BET IS 10 RPS!");
+        return;
+      }
+      if (bet_amount > balance) {
+        alertAndReturn('NOT ENUFF FUNDS AT THIS MEOWMENT');
+        return;
+      }
+  
+      const list = game_mode === 'Quick Shoot' || game_mode === 'QS' ? qs_list : rps_list;
+      if (
+        selectedStrategy === 'Hidden Markov' &&
+        list.length < 3
+      ) {
         alertAndReturn('PURR-HAPS IT WOULD BE WISE TO AT LEAST 3 RUNS FOR AI TRAINING DATA');
-        return true;
+        return;
       }
-      return false;
-    };
-    if (step < 5) {
-
-      if (step === 2) {
-        if (
-          (child_step === 1) &&
-          (parseFloat(bet_amount) <= 0 || isNaN(parseFloat(bet_amount)))
-        ) {
-          alertAndReturn("YOU DIDN'T BET (CAT) SHIT!!!");
-          return;
-        }
-        if (
-          (child_step === 1) &&
-          (parseFloat(bet_amount) < 10 || isNaN(parseFloat(bet_amount)))
-        ) {
-          alertAndReturn("MEOWNIMUM BET IS 10 RPS!");
-          return;
-        }
-
-
-        if (bet_amount > balance) {
-          alertAndReturn('NOT ENUFF FUNDS AT THIS MEOWMENT');
-          return;
-        }
-
-        if (
-          (game_mode === 'Quick Shoot') &&
-          child_step === 1 &&
-          (qs_list.length > 0)
-        ) {
-          this.setState({
-            qs_list: [],
-            winChance: 0,
-            step: step > 1 ? step : step + 1
-          });
-          return;
-        }
-
-        let list;
-        if (game_mode === 'Quick Shoot') {
-          list = this.state.qs_list;
-        } else if (game_mode === 'Bang!') {
-          list = this.state.bang_list;
-        } else if (game_mode === 'Blackjack') {
-          list = this.state.bj_list;
-        } else if (game_mode === 'Drop Game') {
-          list = this.state.drop_list;
-        } else {
-          list = this.state[`${game_mode.toLowerCase()}_list`];
-        }
-
-        if (
-          ((['Drop Game', 'Bang!', 'Roll', 'Blackjack'].includes(game_mode) &&
-            child_step === 2) ||
-            (
-              ((game_mode === 'RPS' && rps_game_type === 0 && child_step === 2 && selectedStrategy === 'Hidden Markov') ||
-                (game_mode === 'Quick Shoot' &&
-                  child_step === 3 && selectedStrategy === 'Hidden Markov')) &&
-              isMinimumRunsNeeded(3, list)
-            ))) {
-          return;
-        }
-
-        if (
-          // (game_mode === 'RPS' && child_step < 3) ||
-          (game_mode === 'Quick Shoot' && child_step < 3) ||
-          (game_mode !== 'Mystery Box' && child_step === 1)
-        ) {
-          this.setState({
-            child_step: child_step + 1
-          });
-          return;
-        } else {
-          // move to step 3
-          this.setState({
-            step: step + 1,
-            child_step: 1
-          });
-          return;
-        }
-      }
-      else if (child_step === 2 && step !== 1) {
-        if (
-          game_mode === 'Spleesh!' &&
-          ((spleesh_bet_unit === 0.001 && endgame_amount < 0.044) ||
-            (spleesh_bet_unit === 0.01 && endgame_amount < 0.44) ||
-            (spleesh_bet_unit === 0.1 && endgame_amount < 4.4))
-        ) {
-          alertAndReturn(
-            `TOO PURRROFITABLE! MINIMUM PAYOUT IS ${44 * spleesh_bet_unit}`
-          );
-          return;
-        } else if (
-          game_mode === 'Mystery Box' &&
-          (max_return > bet_amount * 4 || endgame_amount < bet_amount)
-        ) {
-          if (max_return > bet_amount * 4) {
-            alertAndReturn('TOO PURRROFITABLE! GAME IS UNFAIR');
-          } else {
-            alertAndReturn('THIS GAME REQUIRES A PAYOUT MORE THAN BET AMOUNT');
-          }
-          return;
-        } else if (isNaN(endgame_amount)) {
-          alertAndReturn('IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!');
-          return;
-        } else if (endgame_type && endgame_amount < parseFloat(bet_amount)) {
-          alertAndReturn('CANNOT BE LOWER THAN BANKROLL');
-          return;
-        }
-        this.setState({
-          child_step: child_step + 1
-        });
-      } else if (child_step === 1 && step !== 1) {
-        if (is_private === true && room_password === '') {
-          alertAndReturn('SET THE PASSWORD TO JOIN YOUR GAME!');
-          return;
-        }
-        if (endgame_amount === 0) {
-          this.setState({ endgame_type: false });
-        }
-        this.setState({
-          child_step: child_step + 1
-        });
-      }
-      this.setState({
-        step: step > 3 && child_step < 3 ? step : step + 1,
-        child_step: step === 1 ? child_step : child_step + 1
-      });
     }
-    return;
+  
+    // Step 2: Checks related to endgame and private games
+    if (step === 2) {
+      if (isNaN(endgame_amount)) {
+        alertAndReturn('IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!');
+        return;
+      }
+      if (endgame_type && endgame_amount < parseFloat(bet_amount)) {
+        alertAndReturn('CANNOT BE LOWER THAN BANKROLL');
+        return;
+      }
+      if (is_private && !room_password) {
+        alertAndReturn('SET THE PASSWORD TO JOIN YOUR GAME!');
+        return;
+      }
+  
+      if (endgame_amount === 0) {
+        this.setState({ endgame_type: false });
+      }
+    }
+  
+    // Increment step by 1
+    this.setState({ step: step + 1 });
   };
 
   playSound = sound => {
@@ -740,102 +585,56 @@ class CreateGame extends Component {
     }
   };
 
+
   handleChange = (event) => {
     const { gameTypeList } = this.props;
     const selectedShortName = event.target.value;
-
-    // Find the game type object based on the short_name
     const selectedGame = gameTypeList.find(game => game.short_name === selectedShortName);
 
     if (selectedGame) {
       const selectedGameName = selectedGame.game_type_name;
+      const urlFriendlyGameName = selectedGameName.toLowerCase().replace(/\s+/g, '-');
+      const url = `/create/${urlFriendlyGameName}`;
 
-      // Update the URL with the game_type_name
-      const url = `/create/${selectedGameName}`;
-
-      // Update the state and call setGameMode
-      this.setState({ selectedGameType: event.target.value });
+      this.setState({ selectedGameType: event.target.value, game_mode: event.target.value, step: 1 });
       this.props.setGameMode(selectedGameName);
       history.push(url);
     }
   };
 
 
+  // step1 = () => {
+  //   const { } = this.state;
+
+  //   // if (this.props.gameTypeList !== 'All') {
+  //   return (
+  //     <DefaultBetAmountPanel
+  //       bet_amount={bet_amount}
+  //       onChangeState={this.onChangeState}
+  //       game_type={game_type}
+  //       defaultBetAmounts={defaultBetAmounts}
+  //     />
+  //   );
+  //   // }
+  // };
+
   step1 = () => {
-    const gameTypeStyleClass = {
-      RPS: 'rps',
-      'S!': 'spleesh',
-      MB: 'mystery-box',
-      BG: 'brain-game',
-      QS: 'quick-shoot',
-      DG: 'drop-game',
-      'B!': 'bang',
-      R: 'roll',
-      BJ: 'blackjack'
-    };
+    const defaultBetAmounts = [50000, 250000, 500000, 2500000, 10000000];
 
-    const { gameTypeList } = this.props;
-    const { selectedGameType } = this.state;
-
-    if (!gameTypeList) return null;
-
-    // if (this.props.gameTypeList !== 'All') {
-    return (
-      <div  style={{ marginBottom: "30px" }}>
-        <RadioGroup className="glass-container" value={selectedGameType} onChange={this.handleChange}>
-          <h3 className="game-sub-title">Select a Collateral&nbsp;<Tooltip
-                style={{ position: "absolute", right: "20px" }}
-                title={'Select a game-mode to use as collateral against your capital.'}
-                placement="top"
-              >
-                <Info style={{ cursor: "pointer", float: "right" }} />
-              </Tooltip></h3>
-          <StyledRadioGrid>
-            {gameTypeList.map((gameType, index) => (
-              <FormControlLabel
-                key={index}
-                value={gameType.short_name}
-                control={<Radio
-                  icon={<div style={{ display: 'none' }} />}
-                  checkedIcon={<div style={{ display: 'none' }} />}
-                />}
-                label={
-                  <StyledProductCard
-                    id="rps-game-type-radio"
-                    isDarkMode={this.props.isDarkMode}
-
-                    className={`btn-game-type title btn-icon ${gameTypeStyleClass[gameType.short_name]} ${selectedGameType === gameType.short_name ? 'active' : ''
-                      }`}
-                  >
-                    <StyledProductImage
-                      src={`/img/gametype/icons/${gameType.short_name}.svg`}
-                      alt={gameType.game_type_name}
-                    />
-                    <span style={{color: "#f9f9f9"}}>{gameType.game_type_name}</span>
-                  </StyledProductCard>
-                }
-              />
-            ))}
-          </StyledRadioGrid>
-        </RadioGroup>
-      </div>
-    );
-    // }
-  };
-
-  step2 = () => {
-    const { game_mode, child_step, selectedStrategy } = this.state;
-
+    const { game_mode, bet_amount, game_type, child_step, selectedStrategy, selectedGameType } = this.state;
     switch (game_mode) {
       case 'RPS':
         return (
           <RPS
             setSelectedStrategy={this.setSelectedStrategy}
             selectedStrategy={selectedStrategy}
+            selectedGameType={selectedGameType}
             ai_mode={this.props.user.ai_mode}
             user_id={this.props.user._id}
             rank={getRank(this.props.user.totalWagered)}
+            defaultBetAmounts={defaultBetAmounts}
             playSound={this.playSound}
+            handleChange={this.handleChange}
             strategies={this.props.strategies}
             onChangeState={this.onChangeState}
             rps_list={this.state.rps_list}
@@ -857,6 +656,7 @@ class CreateGame extends Component {
             calculateEV={this.calculateEV}
             onChangeState={this.onChangeState}
             bet_amount={this.state.bet_amount}
+            defaultBetAmounts={defaultBetAmounts}
             spleesh_bet_unit={this.state.spleesh_bet_unit}
             is_private={this.state.is_private}
             room_password={this.state.room_password}
@@ -900,6 +700,7 @@ class CreateGame extends Component {
             endgame_amount={this.state.endgame_amount}
           />
         );
+      case 'QS':
       case 'Quick Shoot':
         return (
           <QuickShoot
@@ -907,6 +708,7 @@ class CreateGame extends Component {
             selectedStrategy={selectedStrategy}
             ai_mode={this.props.user.ai_mode}
             playSound={this.playSound}
+            selectedGameType={selectedGameType}
             onChangeState={this.onChangeState}
             qs_list={this.state.qs_list}
             user_id={this.props.user._id}
@@ -915,6 +717,7 @@ class CreateGame extends Component {
             endgame_type={this.state.endgame_type}
             strategies={this.props.strategies}
             winChance={this.state.winChance}
+            handleChange={this.handleChange}
             room_password={this.state.room_password}
             endgame_amount={this.state.endgame_amount}
             qs_game_type={this.state.qs_game_type}
@@ -995,7 +798,8 @@ class CreateGame extends Component {
         );
 
       default:
-        this.props.setGameMode(game_mode)
+        this.props.setGameMode(game_mode);
+
         return this.step1();
     }
   };
@@ -1005,8 +809,7 @@ class CreateGame extends Component {
     const { isLowGraphics } = this.props;
     return (
       <>
-        <hr />
-        <div className="action-panel">
+        <div className="action-panel" style={{ display: "flex", justifyContent: "space-between", width: "100%", bottom: "20%", zIndex: 999 }} >
           {
             this.state.step === 1 ? (
               <span></span>
@@ -1015,7 +818,7 @@ class CreateGame extends Component {
                 Previous&nbsp;<span className="roll-tag">[Esc]</span>
               </Button>
             )}
-          {(this.state.step === 3 || this.state.step === 4) && (
+          {(this.state.step === 2) && (
             <Button id="btn_skip" onClick={this.onSkipButtonClicked}>
               Skip&nbsp;<span className="roll-tag">[Shift]</span>
             </Button>
@@ -1048,7 +851,7 @@ class CreateGame extends Component {
 
             )}
 
-          {this.state.step === 5 && this.state.game_mode !== 'Brain Game' && (
+          {this.state.step === 3 && this.state.game_mode !== 'Brain Game' && (
             <>
               <div style={{ position: 'relative', marginLeft: '-37.5%' }}>
                 <Button id="btn_bet" onClick={this.onCreateRoom}>
@@ -1071,7 +874,7 @@ class CreateGame extends Component {
               </div>
             </>
           )}
-          {this.state.step < 5 && (
+          {this.state.step < 3 && (
             <Button id="btn_next" onClick={this.onNextButtonClicked}>
               Next&nbsp;<span className="roll-tag">[Enter]</span>
             </Button>
@@ -1084,7 +887,7 @@ class CreateGame extends Component {
   getActiveTabText = () =>
     (this.state.is_mobile && this.state.selectedMobileTab === 'live_games') ||
       (!this.state.is_mobile && this.props.selectedMainTabIndex === 0) ? (
-      <div id="liveStakes">{this.props.roomCount} LIVE GAMES</div>
+      <a onClick={() => history.push('/')} id="liveStakes">{this.props.roomCount} LIVE GAMES</a>
     ) : (
       'Your Games'
     );
@@ -1188,9 +991,7 @@ class CreateGame extends Component {
                   )}
                 </div>
                 <div className="game-contents title">
-                  {(this.state.step !== 5 ||
-                    this.state.game_mode !== 'Brain Game' ||
-                    !this.state.isPlayingBrain) && (
+                  {(this.state.step === 2 ) && (
                       <Summary
                         bet_amount={this.state.bet_amount}
                         max_return={this.state.max_return}
@@ -1216,8 +1017,7 @@ class CreateGame extends Component {
                       />
                     )}
                   {this.state.step === 1 && this.step1()}
-                  {this.state.step === 2 && this.step2()}
-                  {(this.state.step === 3 || this.state.step === 4) && (
+                  {(this.state.step === 2) && (
                     <AdvancedSettings
                       calculateEV={this.calculateEV}
                       max_return={this.state.max_return}
@@ -1263,10 +1063,10 @@ class CreateGame extends Component {
                         videoId={this.state.videoId}
                       />
                     )}
-                  {this.state.step !== 6 && this.action_panel()}
                 </div>
               </div>
             </div>
+            {this.state.step !== 4 && this.action_panel()}
           </div>
           <div className="sub-panel">
 
@@ -1284,7 +1084,7 @@ class CreateGame extends Component {
 
                 <h2 className="main-title desktop-only">AI PANEL</h2>
                 <AiPanel user_id={this.props.user_id} />
-                <h2 className="main-title desktop-only" style={{marginBottom: "10px"}}>YOUR HISTORY</h2>
+                <h2 className="main-title desktop-only" style={{ marginBottom: "10px" }}>YOUR HISTORY</h2>
 
                 <MyHistoryTable />
               </>

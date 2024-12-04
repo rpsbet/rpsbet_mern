@@ -1,8 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { Button, Tooltip, IconButton, ButtonBase } from '@material-ui/core';
+import { Button, Tooltip, FormControlLabel, RadioGroup, Radio, IconButton, ButtonBase } from '@material-ui/core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import DefaultBetAmountPanel from './DefaultBetAmountPanel';
 import { getQsLottieAnimation } from '../../util/helper';
 import Lottie from 'react-lottie';
 import { convertToCurrency } from '../../util/conversion';
@@ -12,6 +11,71 @@ import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
 import SettingsRef from '../../components/SettingsRef';
 import { Info } from '@material-ui/icons';
 import { faTrash, faRobot } from '@fortawesome/free-solid-svg-icons';
+import styled from 'styled-components';
+import DefaultBetAmountPanel from './DefaultBetAmountPanel';
+
+const StyledRadioGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px; /* Reduced gap for a subtle appearance */
+  margin: 10px auto;
+  padding: 15px;
+  width: 100%;
+  max-width: 800px;
+
+  /* Adjust grid layout for smaller screens */
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    padding: 10px;
+  }
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr; /* Single column on mobile */
+    gap: 8px;
+  }
+`;
+
+const StyledProductCard = styled.a`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5em;
+
+  padding: 12px;
+  width: 150px; /* Slightly smaller */
+  text-align: center;
+  text-decoration: none;
+  color: ${({ isDarkMode }) => (isDarkMode ? '#ddd' : '#444')};
+  box-shadow: none; /* No box-shadow for reduced prominence */
+  transition: background 0.2s ease;
+
+
+  span {
+    margin-top: 8px;
+    font-size: 0.9rem; /* Reduced font size */
+    font-weight: 400; /* Regular font weight for subtlety */
+    color: ${({ isDarkMode }) => (isDarkMode ? '#ddd' : '#444')};
+  }
+
+  @media (max-width: 768px) {
+    width: 130px;
+    padding: 10px;
+  }
+
+  @media (max-width: 480px) {
+    width: 100%;
+    padding: 8px;
+  }
+`;
+
+const StyledProductImage = styled.img`
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  margin-bottom: 6px; /* Reduced margin */
+  opacity: 0.85; /* Lower opacity for a muted look */
+`;
 
 class QuickShoot extends Component {
   constructor(props) {
@@ -146,27 +210,22 @@ class QuickShoot extends Component {
   };
 
   calcWinChance = (gameType, rounds) => {
-    // Calculate base probabilities
     let probWin = (100 / gameType).toFixed(2);
     let probLose = (100 - probWin).toFixed(2);
 
-    // Initialize the frequency of each unique qs value to 0
     const freq = {};
     for (let i = 0; i < gameType; i++) {
       freq[i] = 0;
     }
 
-    // Count the frequency of each unique qs value
     rounds.forEach(round => {
       freq[round.qs]++;
     });
 
-    // Calculate the range of frequencies
     const freqValues = Object.values(freq);
     const range = Math.max(...freqValues) - Math.min(...freqValues);
 
-    // Adjust probabilities based on the range of frequencies
-    const sensitivityFactor = (range / 100) * gameType; // You can adjust this value to increase or decrease sensitivity
+    const sensitivityFactor = (range / 100) * gameType;
     const adjustmentFactor = (range / gameType) * sensitivityFactor;
     probWin = (+probWin - adjustmentFactor).toFixed(2);
     probLose = (+probLose + adjustmentFactor).toFixed(2);
@@ -178,7 +237,6 @@ class QuickShoot extends Component {
     const winAmount = betAmount * (gameType - 1);
     const loseAmount = betAmount;
 
-    // Extract the probWin and probLose values from the winLoseProb string
     const [probWin, probLose] = winLoseProb.split(" - ").map(prob => parseFloat(prob));
 
     const ev = (probWin * winAmount - probLose * loseAmount) / 100;
@@ -188,7 +246,7 @@ class QuickShoot extends Component {
   predictNext = (qs_list, gameType) => {
     const options = [...Array(gameType).keys()];
     const transitionMatrix = {};
-    const randomnessFactor = 0.15; // Adjust this value to control the level of randomness
+    const randomnessFactor = 0.15;
 
     options.forEach(option1 => {
       transitionMatrix[option1] = {};
@@ -203,12 +261,10 @@ class QuickShoot extends Component {
       });
     });
 
-    // Count transitions
     for (let i = 0; i < qs_list.length - 3; i++) {
       transitionMatrix[qs_list[i].qs][qs_list[i + 1].qs][qs_list[i + 2].qs][qs_list[i + 3].qs]++;
     }
 
-    // Normalize transition probabilities
     Object.keys(transitionMatrix).forEach(fromState1 => {
       Object.keys(transitionMatrix[fromState1]).forEach(fromState2 => {
         Object.keys(transitionMatrix[fromState1][fromState2]).forEach(fromState3 => {
@@ -220,17 +276,14 @@ class QuickShoot extends Component {
       });
     });
 
-    // Calculate winChance and deviation
     const winChance = this.calcWinChance(gameType, qs_list);
     const targetProbability = 100 / gameType;
     const deviation = Math.abs(winChance - targetProbability);
 
-    // Choose next state based on transition probabilities and deviation
     let currentState1 = qs_list[qs_list.length - 3].qs;
     let currentState2 = qs_list[qs_list.length - 2].qs;
     let currentState3 = qs_list[qs_list.length - 1].qs;
 
-    // Weighted random choice based on transition probabilities
     const weightedOptions = [];
     Object.entries(transitionMatrix[currentState1][currentState2][currentState3]).forEach(([state, prob]) => {
       for (let i = 0; i < Math.floor(prob * 100); i++) {
@@ -428,7 +481,8 @@ class QuickShoot extends Component {
   };
 
   render() {
-    const { step, strategies, qs_game_type,
+    const {
+      step, strategies, qs_game_type,
       bet_amount,
       qs_list,
       onChangeState,
@@ -436,34 +490,79 @@ class QuickShoot extends Component {
       rank,
       user_id,
       selectedStrategy,
+      selectedGameType,
+      gameTypeList,
       setSelectedStrategy } = this.props;
-    const defaultBetAmounts = [50000, 250000, 500000, 2500000, 10000000];
-    const { selected_qs_position, settings_panel_opened } = this.state;
+    const { settings_panel_opened } = this.state;
 
-    // let position_name = [
-    //   'Center',
-    //   'Top-Left',
-    //   'Top-Right',
-    //   'Bottom-Left',
-    //   'Bottom-Right'
-    // ];
-
-    // if (this.props.qs_game_type === 2) {
-    //   position_name = ['Left', 'Right'];
-    // } else if (this.props.qs_game_type === 3) {
-    //   position_name = ['Bottom-Left', 'Center', 'Bottom-Right'];
-    // } else if (this.props.qs_game_type === 4) {
-    //   position_name = ['Top-Left', 'Top-Right', 'Bottom-Left', 'Bottom-Right'];
-    // }
+    const gameTypeStyleClass = {
+      RPS: 'rps',
+      'S!': 'spleesh',
+      MB: 'mystery-box',
+      BG: 'brain-game',
+      QS: 'quick-shoot',
+      DG: 'drop-game',
+      'B!': 'bang',
+      R: 'roll',
+      BJ: 'blackjack'
+    };
 
     return (
       <>
-        {step === 2 && (
+        {step === 1 && (
           <div className="game-info-panel">
             <div className=' glass-container'>
+              <div style={{ marginBottom: "30px" }}>
+                <RadioGroup value={selectedGameType} onChange={this.props.handleChange}>
+                  <h3 className="game-sub-title roll-tag">Switch Collateral&nbsp;<Tooltip
+                    style={{ position: "absolute", right: "20px" }}
+                    title={'Select a game-mode to use as collateral against your capital.'}
+                    placement="top"
+                  >
+                    <Info style={{ cursor: "pointer", float: "right" }} />
+                  </Tooltip></h3>
+                  <StyledRadioGrid>
+                    {gameTypeList.map((gameType, index) => (
+                      <FormControlLabel
+                        key={index}
+                        value={gameType.short_name}
+                        control={<Radio
+                          icon={<div style={{ display: 'none' }} />}
+                          checkedIcon={<div style={{ display: 'none' }} />}
+                        />}
+                        label={
+                          <StyledProductCard
+                            id="rps-game-type-radio"
+                            isDarkMode={this.props.isDarkMode}
 
-              <h3 className="game-sub-title progress-title">Choose a Game Type</h3>
-              <div className="qs-game-type-panel">
+                            className={`btn-game-type title btn-icon ${gameTypeStyleClass[gameType.short_name]} ${selectedGameType === gameType.short_name ? 'active' : ''
+                              }`}
+                          >
+                            <StyledProductImage
+                              src={`/img/gametype/icons/${gameType.short_name}.svg`}
+                              alt={gameType.game_type_name}
+                            />
+                            <span style={{ color: "#f9f9f9" }}>{gameType.game_type_name}</span>
+                          </StyledProductCard>
+                        }
+                      />
+                    ))}
+                  </StyledRadioGrid>
+                </RadioGroup>
+              </div>
+              <DefaultBetAmountPanel
+                bet_amount={this.props.bet_amount}
+                onChangeState={this.props.onChangeState}
+                game_type={this.props.game_type}
+                defaultBetAmounts={this.props.defaultBetAmounts}
+              />
+              <h3 className="game-sub-title roll-tag">Choose a Game Type&nbsp;<Tooltip
+                style={{ position: "absolute", right: "20px" }}
+                title={'Select the multiplier of the player, 5x is typically the safest option for the Host.'}
+                placement="top"
+              ><Info style={{ cursor: "pointer", float: "right" }} /></Tooltip>
+              </h3>
+              <div className="qs-game-type-panel" style={{ textAlign: "center", marginBottom: "30px" }}>
                 {[2, 3, 4, 5].map(i => (
                   <button
                     key={i}
@@ -483,65 +582,55 @@ class QuickShoot extends Component {
                   </button>
                 ))}
               </div>
-              <p className="tip">Your multiplier</p>
-            </div>
-          </div>
 
-        )}
-
-        {step === 1 && (
-          <DefaultBetAmountPanel
-            game_type="Quick Shoot"
-            qs_game_type={qs_game_type}
-            onChangeState={onChangeState}
-            bet_amount={bet_amount}
-            defaultBetAmounts={defaultBetAmounts}
-          />
-        )}
-
-        {step === 3 && (
-          <div className="game-info-panel">
-            <div className='glass-container' style={{display: "flex", flexDirection: "column"}}>
-
-              <h3 className="game-sub-title">Strategy&nbsp;<Tooltip
+              <h3 className="game-sub-title roll-tag">Strategy&nbsp;<Tooltip
                 style={{ position: "absolute", right: "20px" }}
                 title={'The strategy determines how your AI will play, includes patterns, reasoning and predictability.'}
                 placement="top"
               >
                 <Info style={{ cursor: "pointer", float: "right" }} />
               </Tooltip></h3>
-              <SettingsRef
-                strategies={strategies}
-                ai_mode={ai_mode}
-                user_id={user_id}
-                rank={rank}
-                settings_panel_opened={settings_panel_opened}
-                setSelectedStrategy={setSelectedStrategy}
-                settingsRef={this.settingsRef}
-                selectedStrategy={selectedStrategy}
-              />
-              <ButtonBase
-                onClick={this.handleSettingsIconClick}
-                className="strategy-btn title"
-                style={{
-                  boxShadow: 'unset',
-                  borderRadius: '30px',
-                  background: 'transparent',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <span style={{ marginRight: '5px' }}>{selectedStrategy}</span>
-                <SettingsOutlinedIcon />
-              </ButtonBase>
+              <div style={{ marginBottom: "30px", display: "flex", justifyContent: "center" }}>
+
+                <SettingsRef
+                  strategies={strategies}
+                  ai_mode={ai_mode}
+                  user_id={user_id}
+                  rank={rank}
+                  settings_panel_opened={settings_panel_opened}
+                  setSelectedStrategy={setSelectedStrategy}
+                  settingsRef={this.settingsRef}
+                  selectedStrategy={selectedStrategy}
+                />
+                <Button
+                  onClick={this.handleSettingsIconClick}
+                  className="strategy-btn title"
+                  style={{
+                    boxShadow: 'unset',
+                    background: 'transparent',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <span style={{ marginRight: '5px' }}>{selectedStrategy}</span>
+                  <SettingsOutlinedIcon />
+                </Button>
+              </div>
               {(selectedStrategy === 'Hidden Markov') ? (
                 <>
-                  <div className="game-info-panel">
+                      <h3 className="game-sub-title roll-tag">Choose WHERE TO SAVE&nbsp;<Tooltip
+                        style={{ position: "absolute", right: "20px" }}
+                        title={'Click the on-screen buttons and try to shoot.'}
+                        placement="top"
+                      >
+                        <Info style={{ cursor: "pointer", float: "right" }} />
+                      </Tooltip>
+                      </h3>
+                  <div style={{ display: "flex", justifyContent: "center", flexDirection: "column", alignItems:"center" }}>
 
                     <div className="qs-add-run-panel">
                       <div className="qs-add-run-form">
-                        <h3 className="game-sub-title">Choose WHERE TO SAVE</h3>
                         {this.state.animation}
                         {this.renderButtons()}
                         <Button id="aiplay" onClick={this.onAutoPlay}>
@@ -580,15 +669,17 @@ class QuickShoot extends Component {
                       </div>
                     </div>
                   </div>
+
                 </>
 
               ) : (
-                <div style={{ padding: "30px", fontSize: "0.6em" }}>
+                <div style={{ padding: "30px", fontSize: "0.6em", textAlign: "center" }}>
                   (No Pattern Needed)
                 </div>
               )}
             </div>
           </div>
+
 
         )}
       </>
@@ -598,7 +689,8 @@ class QuickShoot extends Component {
 const mapStateToProps = state => ({
   auth: state.auth.isAuthenticated,
   isDarkMode: state.auth.isDarkMode,
-  isFocused: state.auth.isFocused
+  isFocused: state.auth.isFocused,
+  gameTypeList: state.logic.gameTypeList,
 });
 
 export default connect(mapStateToProps)(QuickShoot);

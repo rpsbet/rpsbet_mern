@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
-import { TwitterShareButton, TwitterIcon } from 'react-share';
+import { TwitterShareButton } from 'react-share';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faXTwitter } from '@fortawesome/free-brands-svg-icons';
 import { FaClipboard } from 'react-icons/fa';
 import { Tooltip } from '@material-ui/core';
 import FileCopy from '@material-ui/icons/FileCopy';
@@ -59,7 +61,7 @@ export default class Share extends Component {
           title={`1v1 ME RPS, P*SSIES: ⚔`} // ${this.props.roomInfo.room_name}
           className="Demo__some-network__share-button"
         >
-          <TwitterIcon size={32} round />
+             <FontAwesomeIcon icon={faXTwitter} />
         </TwitterShareButton>
         <a
           className={styles.join('')}

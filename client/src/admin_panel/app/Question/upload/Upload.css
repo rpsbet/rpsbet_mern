@@ -78,7 +78,7 @@ button {
   -ms-user-select: none;
   user-select: none;
   border: 0;
-  border-radius: 2px;
+  border-radius: 0.5em;
   background: rgba(103, 58, 183, 1);
   color: #fff;
   outline: 0;

@@ -8,10 +8,17 @@
 .dark_mode div.table.main-history-table .table-row>div,
 .dark_mode .modal-body input,
 .dark_mode .player span,
-.dark_mode .chat-log-panel .message-header  {
+.dark_mode .chat-log-panel .message-header,
+.dark_mode .label,
+.dark_mode .filter-container  {
 	color: #f9f9f9 !important;
 }
-
+.dark_mode .label.green-text {
+	color: #00ff3a !important;
+  }
+.dark_mode .label.red-text {
+	color: #ff0000 !important;
+  }
 .dark_mode .modal-body .modal-content-wrapper div.modal-content-panel input,
 .dark_mode input,
 .dark_mode input:focus {
@@ -21,7 +28,7 @@
 }
 
 .dark_mode .top-wins div.table-cell {
-background: linear-gradient(298deg, #4f0068, #3d0066);
+	background: linear-gradient(298deg, #4f0068, #3d0066);
 }
 
 .dark_mode .notification p:first-child {
@@ -54,10 +61,11 @@ background: linear-gradient(298deg, #4f0068, #3d0066);
 	background-color: rgb(119 0 255);
 }
 
-.dark_mode  .special-message-rent .chat-msg {
+.dark_mode .special-message-rent .chat-msg {
 	background: linear-gradient(258deg, #651184, #4b008a) !important;
 }
-.dark_mode  .special-message .chat-msg {
+
+.dark_mode .special-message .chat-msg {
 	background: linear-gradient(-58deg, #41008e, #8106a5);
 }
 
@@ -132,10 +140,11 @@ background: linear-gradient(298deg, #4f0068, #3d0066);
 	background-image: linear-gradient(to right bottom,
 			#7f05a4,
 			#520049);
-			cursor: grab;
+	cursor: grab;
 }
+
 .dark_mode ::-webkit-scrollBar-thumb :active {
-			cursor: grabbing;
+	cursor: grabbing;
 }
 
 .dark_mode h2.room-history-title {
@@ -144,7 +153,7 @@ background: linear-gradient(298deg, #4f0068, #3d0066);
 
 .dark_mode div.main-page-nav-button-group {
 	border-top: 1px solid #55006d;
-    background: linear-gradient(45deg, #450077, #4a2742);
+	background: linear-gradient(45deg, #450077, #4a2742);
 }
 
 .dark_mode .tooltip.reply .tooltip-content {
@@ -154,9 +163,11 @@ background: linear-gradient(298deg, #4f0068, #3d0066);
 .dark_mode .chat-msg {
 	background: linear-gradient(176deg, #3d0066, #3c0066);
 }
+
 .dark_mode .history-background {
 	background: linear-gradient(#ff818100, #9308efba) !important;
 }
+
 .dark_mode .chat-wrapper .chat-panel .chat-line .sender-name {
 	color: #b9bbbe;
 }
@@ -200,15 +211,15 @@ background: linear-gradient(298deg, #4f0068, #3d0066);
 }
 
 .dark_mode .modal-footer {
-    background: linear-gradient(45deg, #6316d7, #6c00a4, #3a00a3);
-    color: #f9f9f9;
+	background: linear-gradient(45deg, #6316d7, #6c00a4, #3a00a3);
+	color: #f9f9f9;
 }
 
-.dark_mode .modal-body  .table table td,
+.dark_mode .modal-body .table table td,
 .dark_mode .modal-body .table table th {
 	border-bottom: 2px solid #f9f9f9 !important;
-    padding: 20px 20px !important;
-    background: #f9f9f911;
+	padding: 20px 20px !important;
+	background: #f9f9f911;
 }
 
 .dark_mode .modal-body .modal-content-wrapper.drop-game h4 {
@@ -222,14 +233,15 @@ background: linear-gradient(298deg, #4f0068, #3d0066);
 .dark_mode .modal-body .modal-content-wrapper.roll h4 {
 	background-image: url("../public/img/icons/modal-roll-dark-mode.svg");
 }
-.dark_mode .top-wins .carousel-content div{
-	color: #8e9297;
-	font-size: 14px;
-  }
 
-  .dark_mode  .top-wins div.table-cell:hover {
+.dark_mode .top-wins .carousel-content div {
+	color: #8e9297;
+	font-size: 12px;
+}
+
+.dark_mode .top-wins div.table-cell:hover {
 	border: 2px solid #f9f9f9;
-  }
+}
 
 .dark_mode .modal-body .modal-content-wrapper.slots h4 {
 	background-image: url("../public/img/icons/modal-slots-dark.svg");
@@ -283,13 +295,17 @@ background: linear-gradient(298deg, #4f0068, #3d0066);
 	background-color: #2f3136;
 }
 
+
 .dark_mode .chat-wrapper .chat-input-panel {
 	border-top: 1px solid #78748d26;
 }
 
+
 .dark_mode .game_header {
-	background: linear-gradient(45deg, #370068, #4d005d);
+	background: none;
 }
+
+
 
 .dark_mode .game_header .main_header a.game_logo {
 	background-image: url("../public/img/dark-game-logo.svg")
@@ -306,7 +322,7 @@ background: linear-gradient(298deg, #4f0068, #3d0066);
 .dark_mode .contents_wrapper,
 .dark_mode .contents_wrapper .main-game .main-panel,
 .dark_mode .contents_wrapper .main-game .sub-panel {
-	background-image: linear-gradient(-135deg,   #420068, #3b0067 95%), url(../public/img/bgm.webp) !important;
+	background: #420068 !important;
 }
 
 .dark_mode .avatar-square {
@@ -335,6 +351,7 @@ background: linear-gradient(298deg, #4f0068, #3d0066);
 	background: linear-gradient(52deg, #441e70, #400068);
 	color: #8e9297;
 }
+
 .dark_mode div.table .table-row.carousel-content {
 	background: linear-gradient(52deg, #54096a, #3f0067);
 }
@@ -365,9 +382,6 @@ background: linear-gradient(298deg, #4f0068, #3d0066);
 	background: linear-gradient(0deg, #1a142054, #0f0f10);
 }
 
-.dark_mode {
-	background: rgba(0, 0, 0, 0.5);
-}
 
 .dark_mode .header_panel_contents {
 	background: linear-gradient(45deg, #71247f, #670095);
@@ -437,18 +451,14 @@ background: linear-gradient(298deg, #4f0068, #3d0066);
 	border: 0;
 }
 
-.dark_mode .mat-chat .chat-wrapper {
-	background: linear-gradient(185deg, #3b0065, #2e0064);
-}
-
 .dark_mode .modal-body,
 .dark_mode .modal-header {
 	color: #fff;
-    background: linear-gradient(45deg, #3f51b5, #9d00bd, #dc35d2);
+	background: linear-gradient(45deg, #3f51b5, #9d00bd, #dc35d2);
 }
 
 .dark_mode .modal-body p button,
-.dark_mode .modal-body p span {
+.dark_mode .modal-body p span{
 	color: rgb(78, 78, 78) !important;
 }
 

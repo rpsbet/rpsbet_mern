@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/static/css/main.9b4b342a.css",
-    "main.js": "/static/js/main.8706e144.js",
+    "main.css": "/static/css/main.03ee0877.css",
+    "main.js": "/static/js/main.1c04b0f1.js",
     "static/js/469.95be026d.chunk.js": "/static/js/469.95be026d.chunk.js",
     "static/js/857.d36b7e12.chunk.js": "/static/js/857.d36b7e12.chunk.js",
     "static/js/331.a9ba1ba8.chunk.js": "/static/js/331.a9ba1ba8.chunk.js",
@@ -35,13 +35,13 @@
     "static/js/707.392a1829.chunk.js": "/static/js/707.392a1829.chunk.js",
     "static/js/721.db6ae7bb.chunk.js": "/static/js/721.db6ae7bb.chunk.js",
     "static/js/123.5dc58e4f.chunk.js": "/static/js/123.5dc58e4f.chunk.js",
+    "static/js/212.9f59430c.chunk.js": "/static/js/212.9f59430c.chunk.js",
     "static/js/135.df8d2326.chunk.js": "/static/js/135.df8d2326.chunk.js",
     "static/js/48.67598260.chunk.js": "/static/js/48.67598260.chunk.js",
     "static/media/rock-weapon.gif": "/static/media/rock-weapon.46a971ad30a5f08cf592.gif",
     "static/media/scissors-weapon.gif": "/static/media/scissors-weapon.1c5e9a58de5e68e7d65a.gif",
     "static/media/cat_bg.svg": "/static/media/cat_bg.74be7505d574df53253f256b2d51fea1.svg",
     "static/media/interest.svg": "/static/media/interest.790485a3ec4e3b5b0d47.svg",
-    "static/media/bgm.webp": "/static/media/bgm.81a8af68afee804121c0.webp",
     "static/media/created.svg": "/static/media/created.fb2628b78cf9e4aaae3c.svg",
     "static/media/chance.svg": "/static/media/chance.b7e61c3b286a0cf121dc.svg",
     "static/media/bgl.webp": "/static/media/bgl.8df37d3ccdcc3710d62b.webp",
@@ -125,11 +125,11 @@
     "static/media/btn-paypal.svg": "/static/media/btn-paypal.4ed05cb443934a9fa8a0.svg",
     "static/media/btn-bank-active.svg": "/static/media/btn-bank-active.5c45b7981b5e7971c30a.svg",
     "static/media/btn-bank.svg": "/static/media/btn-bank.8ce60c3913abb5408b9b.svg",
-    "main.9b4b342a.css.map": "/static/css/main.9b4b342a.css.map",
-    "main.8706e144.js.map": "/static/js/main.8706e144.js.map"
+    "main.03ee0877.css.map": "/static/css/main.03ee0877.css.map",
+    "main.1c04b0f1.js.map": "/static/js/main.1c04b0f1.js.map"
   },
   "entrypoints": [
-    "static/css/main.9b4b342a.css",
-    "static/js/main.8706e144.js"
+    "static/css/main.03ee0877.css",
+    "static/js/main.1c04b0f1.js"
   ]
 }

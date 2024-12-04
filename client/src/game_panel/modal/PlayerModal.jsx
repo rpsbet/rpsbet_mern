@@ -554,12 +554,11 @@ class PlayerModal extends Component {
                         </h1>
                         <div id="user-bio" style={{ position: 'relative', marginTop: '20px', borderBottom: '2px solid', borderTop: '2px solid' }}>
                           <div className={'player-username'} style={{ color: this.props.isDarkMode ? "#e5e5e5" : "#333" }}>
-                            <span style={{ position: 'absolute', top: '20px', left: '30px', fontSize: "xx-small" }}>USER BIO</span>
                             {isBio ? (
                               <a
                                 href={bio}
                                 style={{
-                                  fontSize: "1.2em",
+                                  fontSize: "1.1em",
                                   marginBottom: '2px',
                                   color: this.props.isDarkMode ? "#e5e5e5" : "#333"
                                 }}
@@ -571,7 +570,7 @@ class PlayerModal extends Component {
                             ) : (
                               <span
                                 style={{
-                                  fontSize: "1.2em",
+                                  fontSize: "1.1em",
                                   marginBottom: '20px',
                                   paddingBottom: '10px',
                                   color: this.props.isDarkMode ? "#e5e5e5" : "#333"

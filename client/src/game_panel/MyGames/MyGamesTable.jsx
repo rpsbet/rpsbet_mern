@@ -553,14 +553,7 @@ class MyGamesTable extends Component {
               updateUserStrategy={updateRoomStrategy}
             />
           )}
-          <div className="create-room-btn-panel">
-            <Button
-              className="btn-create-room"
-              onClick={this.handleCreateBtnClicked}
-            >
-              START NEW GAME
-            </Button>
-          </div>
+
         </div>
         {isLoading && loading ? (
           <div className="loading-gif-container">
@@ -569,18 +562,30 @@ class MyGamesTable extends Component {
         ) : (
           <div className="table my-open-game-table">
             {this.props.myGames && this.props.myGames.length > 0 && (
-              <div className="table-header">
+              <div
+                className="table-header"
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr 1fr 2fr 1fr 2fr 2fr", // Define column widths
+                  gap: "10px", // Spacing between cells
+                  alignItems: "center",
+                  padding: "10px 20px",
+                  fontWeight: "bold",
+                  textAlign: "center",
+                }}
+              >
+                <div className="table-cell mobile-only"></div>
                 <div className="table-cell room-id">Room ID</div>
-                <div className="table-cell payout" style={{ paddingLeft: "100px", paddingRight: "20px" }}>
-                  STAKE
+                <div className="table-cell "></div>
+                <div className="table-cell winnings">LQY / SHARE</div>
+                <div className="table-cell payout">Payout</div>
+                <div className="table-cell bet-info">
+                  Net Profit&nbsp;
+                  <Tooltip title="NOT INCLUDING FEES">
+                    <Info style={{ width: "18px", cursor: "pointer" }} />
+                  </Tooltip>
                 </div>
-                <div className="table-cell winnings" style={{ paddingLeft: "40px" }}>Payout</div>
-                <div className="table-cell bet-info" style={{ paddingLeft: "10px" }}>Net Profit&nbsp;<Tooltip title="NOT INCLUDING FEES">
-                  <Info style={{ width: "18px", cursor: "pointer" }} />
-                </Tooltip></div>
-                <div className="table-cell winnings">TNXS</div>
-                <div className="table-cell winnings desktop-only">Strategy</div>
-
+                <div className="table-cell winnings ">PLAYS</div>
                 <div className="table-cell action desktop-only">Action</div>
               </div>
             )}
@@ -588,7 +593,7 @@ class MyGamesTable extends Component {
               <div className="dont-have-game-msg">
                 <Lottie options={defaultOptions} width={50} />
                 <span>
-                  CLICK "START NEW GAME"
+                  You Have No Games
                 </span>
               </div>
             ) : (
@@ -621,7 +626,7 @@ class MyGamesTable extends Component {
                       <div className="table-cell bet-info">
                         <span className="bet-pr">
                           {convertToCurrency(row.user_bet)}<br className='mobile-only' />
-                          <span style={{ fontSize: '10px' }}> ({((row.share).toFixed(2))}%)</span>
+                          <span style={{ fontSize: '10px' }}> / {((row.share).toFixed(2))}%</span>
                         </span>
                       </div>
 
@@ -757,7 +762,7 @@ class MyGamesTable extends Component {
                               <span style={{ color: 'red' }}>closing...</span>
                             ) : (
                               <div>
-                                {row.coHost ? (
+                                {!row.coHost ? (
                                   <Button
                                     className="btn_withdraw btn_end"
                                     onClick={() => this.handleCoHost(row)}

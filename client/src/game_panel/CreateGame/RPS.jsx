@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
-import DefaultBetAmountPanel from './DefaultBetAmountPanel';
 import { connect } from 'react-redux';
-import { Button, Tooltip, IconButton, ButtonBase } from '@material-ui/core';
+import { Button, Tooltip, RadioGroup, IconButton, ButtonBase, Radio, FormControlLabel } from '@material-ui/core';
 import { Info } from '@material-ui/icons';
 // import { acQueryMyItem } from '../../redux/Item/item.action';
 import styled from 'styled-components';
@@ -12,6 +11,71 @@ import SettingsRef from '../../components/SettingsRef';
 import HighlightOffIcon from '@material-ui/icons/HighlightOff';
 import { alertModal } from '../modal/ConfirmAlerts';
 import { predictNext } from '../../util/predictNext';
+import DefaultBetAmountPanel from './DefaultBetAmountPanel';
+
+const StyledRadioGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px; /* Reduced gap for a subtle appearance */
+  margin: 10px auto;
+  padding: 15px;
+  width: 100%;
+  max-width: 800px;
+
+  /* Adjust grid layout for smaller screens */
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    padding: 10px;
+  }
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr; /* Single column on mobile */
+    gap: 8px;
+  }
+`;
+
+const StyledProductCard = styled.a`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 0.5em;
+  padding: 12px;
+  width: 150px; /* Slightly smaller */
+  text-align: center;
+  text-decoration: none;
+  color: ${({ isDarkMode }) => (isDarkMode ? '#ddd' : '#444')};
+  box-shadow: none; /* No box-shadow for reduced prominence */
+  transition: background 0.2s ease;
+
+
+  span {
+    margin-top: 8px;
+    font-size: 0.9rem; /* Reduced font size */
+    font-weight: 400; /* Regular font weight for subtlety */
+    color: ${({ isDarkMode }) => (isDarkMode ? '#ddd' : '#444')};
+  }
+
+  @media (max-width: 768px) {
+    width: 130px;
+    padding: 10px;
+  }
+
+  @media (max-width: 480px) {
+    width: 100%;
+    padding: 8px;
+  }
+`;
+
+const StyledProductImage = styled.img`
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  margin-bottom: 6px; /* Reduced margin */
+  opacity: 0.85; /* Lower opacity for a muted look */
+`;
+
 const ProductGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
@@ -150,7 +214,7 @@ class RPS extends Component {
     super(props);
     this.state = {
       selected_rps: '',
-      bet_amount: 10.0,
+      bet_amount: this.props.bet_amount,
       winChance: 33,
       card_list: {},
       rps_list: [],
@@ -347,7 +411,6 @@ class RPS extends Component {
   }
 
   render() {
-    const defaultBetAmounts = [50000, 250000, 500000, 2500000, 10000000];
     const { selected_rps, card_list, settings_panel_opened } = this.state;
     const {
       rps_game_type,
@@ -362,18 +425,27 @@ class RPS extends Component {
       selectedStrategy,
       setSelectedStrategy
     } = this.props;
+
+
+    const gameTypeStyleClass = {
+      RPS: 'rps',
+      'S!': 'spleesh',
+      MB: 'mystery-box',
+      BG: 'brain-game',
+      QS: 'quick-shoot',
+      DG: 'drop-game',
+      'B!': 'bang',
+      R: 'roll',
+      BJ: 'blackjack'
+    };
+
+    const { gameTypeList } = this.props;
+    const { selectedGameType } = this.props;
+
+    if (!gameTypeList) return null;
     return (
       <>
-        {step === 1 && (
-          <div className="game-info-panel">
-            <DefaultBetAmountPanel
-              bet_amount={bet_amount}
-              onChangeState={onChangeState}
-              game_type="RPS"
-              defaultBetAmounts={defaultBetAmounts}
-            />
-          </div>
-        )}
+
         {/* {step === 2 && (
           <div className="game-info-panel">
             <h3 className="game-sub-title">Select Mode:</h3>
@@ -490,12 +562,58 @@ class RPS extends Component {
             <p className="tip">RRPS CARDS AVAILABLE VIA THE MARKETPLACE</p>
           </div>
         )} */}
-        {step === 2 && rps_game_type === 0 && (
+        {step === 1 && rps_game_type === 0 && (
           <div className="game-info-panel">
-            <div className='glass-container' style={{display: "flex", flexDirection: "column"}}>
+            <div className='glass-container' style={{ display: "flex", flexDirection: "column" }}>
+              <div>
 
-              <h3 className="game-sub-title">Strategy&nbsp;<Tooltip
-                style={{ position: "absolute", right: "20px" }}
+                <div style={{ marginBottom: "30px" }}>
+                  <RadioGroup value={selectedGameType} onChange={this.props.handleChange}>
+                    <h3 className="game-sub-title roll-tag">Switch Collateral&nbsp;<Tooltip
+                      style={{ position: "absolute", right: "20px" }}
+                      title={'Select a game-mode to use as collateral against your capital.'}
+                      placement="top"
+                    >
+                      <Info style={{ cursor: "pointer", float: "right" }} />
+                    </Tooltip></h3>
+                    <StyledRadioGrid>
+                      {gameTypeList.map((gameType, index) => (
+                        <FormControlLabel
+                          key={index}
+                          value={gameType.short_name}
+                          control={<Radio
+                            icon={<div style={{ display: 'none' }} />}
+                            checkedIcon={<div style={{ display: 'none' }} />}
+                          />}
+                          label={
+                            <StyledProductCard
+                              id="rps-game-type-radio"
+                              isDarkMode={this.props.isDarkMode}
+
+                              className={`btn-game-type title btn-icon ${gameTypeStyleClass[gameType.short_name]} ${selectedGameType === gameType.short_name ? 'active' : ''
+                                }`}
+                            >
+                              <StyledProductImage
+                                src={`/img/gametype/icons/${gameType.short_name}.svg`}
+                                alt={gameType.game_type_name}
+                              />
+                              <span style={{ color: "#f9f9f9" }}>{gameType.game_type_name}</span>
+                            </StyledProductCard>
+                          }
+                        />
+                      ))}
+                    </StyledRadioGrid>
+                  </RadioGroup>
+                </div>
+              </div>
+              <DefaultBetAmountPanel
+                bet_amount={this.props.bet_amount}
+                onChangeState={this.props.onChangeState}
+                game_type={this.props.game_type}
+                defaultBetAmounts={this.props.defaultBetAmounts}
+              />
+              <h3 className="game-sub-title roll-tag">Strategy&nbsp;<Tooltip
+                style={{ position: "absolute", right: "20px", marginBottom: "30px" }}
                 title={'The strategy determines how your AI will play, includes patterns, reasoning and predictability.'}
                 placement="top"
               >
@@ -511,12 +629,11 @@ class RPS extends Component {
                 settingsRef={this.settingsRef}
                 selectedStrategy={selectedStrategy}
               />
-              <ButtonBase
+              <Button
                 onClick={this.handleSettingsIconClick}
                 className="strategy-btn title"
                 style={{
                   boxShadow: 'unset',
-                  borderRadius: '30px',
                   background: 'transparent',
                   display: 'flex',
                   alignItems: 'center',
@@ -525,12 +642,18 @@ class RPS extends Component {
               >
                 <span style={{ marginRight: '5px' }}>{selectedStrategy}</span>
                 <SettingsOutlinedIcon />
-              </ButtonBase>
+              </Button>
               {(selectedStrategy === 'Hidden Markov') ? (
                 <>
                   <div className="rps-add-run-panel">
                     <div className="rps-add-run-form">
-                      <h3 className="game-sub-title">Select: R - P - S! </h3>
+                      <h3 className="game-sub-title roll-tag">Select: R - P - S! &nbsp;<Tooltip
+                        style={{ position: "absolute", right: "20px", marginBottom: "30px" }}
+                        title={'Train the AI with some custom data.'}
+                        placement="top"
+                      >
+                        <Info style={{ cursor: "pointer", float: "right" }} />
+                      </Tooltip></h3>
                       <div id="rps-radio">
                         <Button
                           className={'rock' + (selected_rps === 'R' ? ' active' : '')}
@@ -624,7 +747,7 @@ class RPS extends Component {
                 </>
 
               ) : (
-                <div style={{ padding: "30px", fontSize: "0.6em" }}>
+                <div style={{ padding: "30px", fontSize: "0.6em", textAlign: "center" }}>
                   (No Pattern Needed)
                 </div>
               )}
@@ -641,7 +764,8 @@ const mapStateToProps = state => ({
   auth: state.auth.isAuthenticated,
   isDarkMode: state.auth.isDarkMode,
   data: state.itemReducer.myItemArray,
-  isFocused: state.auth.isFocused
+  isFocused: state.auth.isFocused,
+  gameTypeList: state.logic.gameTypeList,
 
 });
 

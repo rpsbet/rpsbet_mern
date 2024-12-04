@@ -8,6 +8,8 @@ import Moment from 'moment';
 import { acQueryMyItem } from '../../redux/Item/item.action';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
 import ReactApexChart from 'react-apexcharts';
+import { Info } from '@material-ui/icons';
+
 import Avatar from '../../components/Avatar';
 import progress from '../LottieAnimations/progress.json';
 import pressHold from '../LottieAnimations/pressHold.json';
@@ -15,7 +17,7 @@ import PlayerModal from '../modal/PlayerModal';
 import AiPanel from '../../components/AiPanel';
 import loadingChart from '../LottieAnimations/loadingChart.json';
 import { YouTubeVideo } from '../../components/YoutubeVideo';
-import { updateRoomBot, kickBots} from '../../redux/Logic/logic.actions';
+import { updateRoomBot, kickBots } from '../../redux/Logic/logic.actions';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faRobot, faMoneyBillWave, faBrain, faBan } from '@fortawesome/free-solid-svg-icons';
 import ViewIcon from '@material-ui/icons/Visibility';
@@ -1207,7 +1209,7 @@ class RPS extends Component {
               <>
                 <Tooltip title={!isWatching ? "CLICK TO STOP WATCHING" : "CLICK TO START WATCHING"}>
                   <IconButton className="spectate title" onClick={this.handleSpectateMode}>
-                    {isWatching ? <>PLAY&nbsp;<SwordsIcon /></> : <>SPECTATE&nbsp;<ViewIcon /></>}
+                    {isWatching ? <>PLAYING&nbsp;<SwordsIcon /></> : <>SPECTATING&nbsp;<ViewIcon /></>}
 
                   </IconButton>
                 </Tooltip>
@@ -1318,15 +1320,24 @@ class RPS extends Component {
                     </div>
                   )}
                   {!startedPlaying ? (
-                    <h3 style={{ zIndex: 9 }} className="game-sub-title">
-                      Select: R - P - S!
-                    </h3>
+                    <h3 style={{ zIndex: 9 }} className="game-sub-title roll-tag">Select: R - P - S! &nbsp;<Tooltip
+                      style={{ position: "absolute", right: "20px", marginBottom: "30px" }}
+                      title={'Play against the AI, at the same time, train your AI.'}
+                      placement="top"
+                    >
+                      <Info style={{ cursor: "pointer", float: "right" }} />
+                    </Tooltip></h3>
                   ) : (
-                    <h3 style={{ zIndex: 9 }} className="game-sub-title fade-out">
-                      Select: R - P - S!
-                    </h3>
+
+                    <h3 style={{ zIndex: 9 }} className="game-sub-title roll-tag fade-out">Select: R - P - S! &nbsp;<Tooltip
+                      style={{ position: "absolute", right: "20px", marginBottom: "30px" }}
+                      title={'Play against the AI, at the same time, train your AI.'}
+                      placement="top"
+                    >
+                      <Info style={{ cursor: "pointer", float: "right" }} />
+                    </Tooltip></h3>
                   )}
-                  <div id="rps-radio" style={{ zIndex: 1 }}>
+                  <div id="rps-radio" style={{ zIndex: 1, marginTop: "45px" }}>
                     {options.map(({ classname, selection }, index) => (
                       <Button
                         key={index}
@@ -1363,13 +1374,13 @@ class RPS extends Component {
                           <span className="button-text">&nbsp;KICK BOTS?</span>
                         </Button>
                       )}
-                      <Button
+                      {/* <Button
                         onClick={this.handleEndClick}
                         className="hover-text-button special-button"
                       >
                         <FontAwesomeIcon className="button-icon" icon={faMoneyBillWave} />
                         <span className="button-text">&nbsp;QUICK RUG&nbsp;{convertToCurrency(bankroll)}&nbsp;&nbsp;&nbsp;</span>
-                      </Button>
+                      </Button> */}
                     </div>
                   ) : (
                     <>

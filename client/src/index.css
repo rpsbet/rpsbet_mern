@@ -1,14 +1,15 @@
 /* @import url('https://fonts.googleapis.com/css?family=Lato:400,700'); */
 @import url('https://fonts.googleapis.com/css2?family=Days+One&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Days+One&family=Mitr&display=swap');
+
 /* @font-face {
   font-family: "Prototype";
   src: url("/fonts/prototype-webfont.woff") format("woff");
 } */
-
 #root {
-  background-color: #2b2b2b;
+  background-color: #420068;
 }
+
 
 :root {
   --primary-color: #48ff00;
@@ -63,16 +64,6 @@
 
   to {
     filter: brightness(1.5);
-  }
-}
-
-@keyframes pulse {
-  from {
-    transform: scale(0.9);
-  }
-
-  to {
-    transform: scale(2);
   }
 }
 
@@ -133,6 +124,48 @@ button.btn {
 
 #wallet-btn:hover::before {
   opacity: 0.4 !important;
+}
+
+.grid-container {
+  display: grid;
+  grid-template-columns: 1fr 3fr;
+  /* Two columns: labels and content */
+  gap: 20px;
+  /* Space between grid items */
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.grid-item {
+  display: flex;
+  align-items: center;
+}
+
+.grid-item.label {
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+}
+
+.grid-item.content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.radio-button-group {
+  display: flex;
+  gap: 10px;
+}
+
+
+.text-field-container {
+  display: flex;
+  align-items: center;
+}
+
+.text-field-container .fa-pen-square {
+  margin-left: 10px;
 }
 
 .bet-amount .MuiOutlinedInput-root {
@@ -201,7 +234,7 @@ a:hover {
 }
 
 .no-rooms {
-  font-size: 1.2em;
+  font-size: 1.1em;
   color: #666;
   text-align: center;
   width: 100%;
@@ -265,6 +298,10 @@ div.table .table-row .table-cell button:last-child:before,
   justify-content: flex-start;
 }
 
+a {
+  border-radius: 0.5em;
+}
+
 #roll button {
   height: 95px !important;
   width: 100px;
@@ -288,14 +325,14 @@ div.table .table-row .table-cell button:last-child,
 .game_header .main_header .header_action_panel button#btn-login,
 #balance button,
 .game-page .game-contents .game-info-panel button.place-bet,
-.create-game-panel .game-page .game-contents .game-info-panel button,
 .spectate,
 #rps-radio div.active {
   padding: 0 10px;
   margin-left: 15px;
   border-radius: 0.25em;
   color: var(--white-color);
-  font-size: 0.8em !important;
+  font-size: 0.6em !important;
+  line-height: 0.6em !important;
   overflow: hidden;
   font-weight: 600;
   background: linear-gradient(0deg, #d81719, #f50057) padding-box,
@@ -365,7 +402,7 @@ div.table .table-row .table-cell button.active,
 .game_header .main_header .header_action_panel button#btn-login:active,
 div.table .table-row .table-cell button:last-child:active,
 .btn-create-room:focus,
-.btn-create-room.active,
+/* .btn-create-room.active, */
 #rps-radio div.active {
   background-color: var(--secondary-color);
   box-shadow: none !important;
@@ -374,6 +411,7 @@ div.table .table-row .table-cell button:last-child:active,
 .boxes-panel.boxes-join p {
   margin-top: 0 !important;
 }
+
 
 div.table .table-row .table-cell button span,
 .create-room-btn-panel button.btn-create-room span,
@@ -605,19 +643,15 @@ div.table .table-cell button.btn_join img {
 }
 
 .create-room-btn-panel button.btn-create-room {
-  margin-top: -2.5px;
+  margin: 15px auto;
   color: var(--white-color);
-  padding: 6px 12px !important;
+  padding: 10px 20px !important;
   overflow: hidden;
-  width: 100%;
-  height: 100px !important;
-  font-size: 15px;
+  font-size: 1.4em;
   border-radius: 0.25em;
   font-weight: 600;
-  background: linear-gradient(0deg, #d81719, #a60014) padding-box,
-    linear-gradient(0deg, #a60014, #d81719) border-box;
-  box-shadow: 0 10px 27px rgb(255 0 0 / 10%), inset 0 -3px #af0000,
-    inset 0 2px #ff2525 !important;
+  background: unset;
+  box-shadow: unset !important;
 }
 
 .roll-tag {
@@ -662,6 +696,10 @@ div.table .table-cell button.btn_join img {
   border: 3px solid #ffd000 !important;
 }
 
+.main-panel div.table .table-row:hover {
+  border: 2px solid #f9f9f9;
+}
+
 .lottie-container-btn_bet {
   opacity: 0;
   transition: opacity 0.3s;
@@ -703,7 +741,7 @@ div.table .table-cell button.btn_join img {
   display: inline-flex;
   position: absolute;
   right: 5px;
-  top: 220px;
+  top: 90px;
   background: linear-gradient(#e9e9e922, #fff3f31b);
   border-radius: 0.6em;
 }
@@ -766,7 +804,7 @@ div.table .table-cell button.btn_join img {
 .contents_wrapper .main-game .main-panel,
 .contents_wrapper {
   padding: 0 6px 8px 16px;
-  background-color: rgba(235, 237, 239, 0.8);
+  background: rgba(235, 237, 239, 0.8);
   position: relative;
   overflow-y: scroll;
 }
@@ -894,22 +932,34 @@ div.table.my-chat-table .table-cell button.btn_join {
 /*********** TABLES ****************/
 /***********************************/
 
+.main-panel div.table .table-row {
+  padding: 2.5em;
+
+}
 div.table .table-row {
   border-radius: 6px;
+  padding: 0.5em;
   background: linear-gradient(109deg, #e9e9e9, #dcdcdc);
-  padding: 0.9em;
   margin-bottom: 10px;
   color: #86868b;
-  font-size: 1em;
   overflow: hidden;
+}
+.sub-panel div.table .table-row div.desktop-only{
+  font-size: 0.85em !important;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
 }
 
 div.table .table-row>div,
 .table-header {
   width: 100%;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
+}
+
+div.table .table-row.slide-in>div {
+  justify-content: space-between;
 }
 
 div.table.main-history-table .table-row>div {
@@ -934,8 +984,9 @@ div.table.main-history-table .table-row>div>.room-id {
 
 .top-wins div.table-cell {
   background: linear-gradient(298deg, #e5e5e5, #dddddd);
-  border-radius: 0.7em;
+  border-radius: 0.5em;
   margin-left: 10px;
+  margin-top: 10px;
 }
 
 .top-wins div.table-cell:hover {
@@ -946,7 +997,7 @@ div.table.main-history-table .table-row>div>.room-id {
   display: flex;
   flex-direction: row;
   margin-bottom: 15px;
-  width: 100%;
+  width: 90%;
   overflow-y: hidden;
   overflow-x: auto;
   -ms-overflow-style: none;
@@ -970,6 +1021,11 @@ div.table.main-history-table .table-row>div>.room-id {
   margin-right: 5px;
 }
 
+.top-wins .carousel-content div .avatar {
+  width: 32px;
+  height: 32px;
+}
+
 div.table .table-row.carousel-content {
   filter: opacity(0.6);
 }
@@ -980,8 +1036,8 @@ div.table .table-row.carousel-content:hover {
 
 .table-cell #ai_mode {
   position: absolute;
-  top: 12px;
-  left: 100px;
+  top: 5px;
+  left: 90px;
 }
 
 span.room-id.ai_mode {
@@ -1179,7 +1235,7 @@ div.table.my-chat-table .table-row .table-cell[title='Unread message']:hover:act
   /* Light background for the speech bubble */
   border-radius: 10px;
   padding: 15px;
-  font-size: 1.2em;
+  font-size: 1.1em;
   font-style: italic;
   text-align: center;
   max-width: 300px;
@@ -1409,8 +1465,8 @@ button.lose-bg,
 }
 
 .glass-container {
-  border-radius: 20px;
-  padding: 0 20px 20px 20px;
+  border-radius: 0.5em;
+  padding: 45px;
   background: #0000001f
 }
 
@@ -1429,7 +1485,7 @@ button.win-bg,
   filter: unset !important;
 }
 
-.game-page .game-contents .game-info-panel .qs-buttons button.ball {
+.game-page .game-contents .qs-buttons button.ball {
   background: url('../public/img/football.svg') !important;
   background-size: 30px !important;
   background-repeat: no-repeat !important;
@@ -1640,7 +1696,10 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info {
   align-items: center;
   /* Center align the content */
   gap: 8px;
-  /* Add some space between label and number */
+  margin: 0 auto 10px;
+}
+#view .liquidity {
+  color: rgb(3, 255, 59) !important;
 }
 
 .cell-likes #view {
@@ -1650,7 +1709,7 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info {
 
 .cell-likes #view p:first-child {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   /* Stack the label above the number */
   justify-content: center;
   align-items: center;
@@ -1665,15 +1724,19 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info {
 }
 
 .cell-likes .number {
-  font-size: 1.2rem;
+  font-size: 1rem;
   /* Larger size for the number */
   font-weight: bold;
-  height: 50px;
 }
 
 .cell-likes svg {
-  width: 27px !important;
-  height: 27px !important;
+  width: 24px !important;
+  height: 24px !important;
+}
+.cell-likes .chart-arrow svg {
+  width: 15px !important;
+  height: 15px !important;
+  margin: 0;
 }
 
 .contents_wrapper .main-game h2 span {
@@ -1689,6 +1752,7 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info {
 
 .filter-container {
   display: flex;
+  color: #333;
 }
 
 .filter-container .filters {
@@ -1892,7 +1956,8 @@ div.table.my-history-table .table-row .table-cell img.avatar {
   line-height: 1.5;
 }
 
-.description-text div, #coHost-amount{
+.description-text div,
+#coHost-amount {
   margin-top: 0 !important;
 }
 
@@ -2107,7 +2172,7 @@ h2.room-history-title {
   background-repeat: no-repeat;
   background-position: left center;
   padding-left: 56px;
-  font-size: 1.2em;
+  font-size: 1.1em;
   height: 30px;
   line-height: 30px;
   font-weight: bold;
@@ -2184,7 +2249,7 @@ h2.room-history-title {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem !important;
+  padding: 0.9rem !important;
   background-color: #f2f2f20a;
   margin-top: 0.25rem;
 }
@@ -2205,7 +2270,7 @@ h2.room-history-title {
 
 .pre-summary-panel .label {
   font-weight: bold;
-  font-size: 0.75em;
+  font-size: 0.65em;
   padding-left: 25px;
   white-space: nowrap;
   padding-top: 0px;
@@ -2366,7 +2431,7 @@ h6.score {
 }
 
 .slide-in {
-  animation: slideIn 0.5s ease-in-out;
+  animation: slideIn 0.25s ease-in-out;
   animation-fill-mode: both;
 }
 
@@ -2384,12 +2449,12 @@ input {
   font-size: 16px;
   color: #343a40;
   line-height: 5px;
-  margin: 0 0 30px;
+  margin: 0 0 15px;
   display: flex;
   justify-content: center;
   align-items: center;
   font-weight: 700;
-  padding-top: 30px;
+  /* padding-top: 15px; */
 }
 
 .game-page .game-contents p {
@@ -2402,9 +2467,11 @@ input {
 .game-page .game-contents .game-info-panel {
   display: flex;
   flex-direction: column;
+  max-height: calc(70vh);
   align-items: center;
   overflow: hidden;
   min-height: 150px;
+  overflow-y: scroll;
   padding: 30px 10px;
 }
 
@@ -2625,7 +2692,6 @@ input {
 .bet-amount button.active,
 .game-page .game-contents .game-info-panel #rps-radio button.active {
   color: var(--white-color);
-  background-image: linear-gradient(to top, #dc3545, #f50000);
   box-shadow: none !important;
   border: 3px solid var(--yellow-color);
 }
@@ -2641,10 +2707,8 @@ input {
 .game-page .game-contents .game-info-panel #rps-radio button:focus,
 .create-game-panel .game-page .game-contents .game-info-panel button:focus,
 .bet-amount button:focus,
-.spectate:focus,
-.game-page .game-contents .game-info-panel #rps-radio button:active {
+.spectate:focus {
   transform: translateY(0px);
-  background-image: linear-gradient(to top, var(--secondary-color), #db0000);
   box-shadow: none !important;
   border: 3px solid var(--yellow-color);
 }
@@ -2666,6 +2730,8 @@ input {
   margin-bottom: 20px;
   display: flex;
 }
+
+
 
 .game-page .game-contents .game-info-panel .create-box-panel button {
   white-space: nowrap;
@@ -2848,6 +2914,9 @@ input {
   border-radius: 12px;
   display: flex;
   padding-bottom: 15px;
+  margin-top: 30px;
+  border: 2px solid #333;
+  padding: 30px;
 }
 
 .rps-add-run-panel>div.rps-add-run-form {
@@ -2964,20 +3033,6 @@ svg#delete:hover {
   filter: brightness(1.2);
   transform: translateY(-4px);
   animation: pulse 0.2s ease-in-out;
-}
-
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-  }
-
-  50% {
-    transform: scale(1.02);
-  }
-
-  100% {
-    transform: scale(1);
-  }
 }
 
 #rps-radio button:before {
@@ -3622,19 +3677,6 @@ input {
   margin-left: -10px;
 }
 
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-  }
-
-  50% {
-    transform: scale(1.04);
-  }
-
-  100% {
-    transform: scale(1);
-  }
-}
 
 .brain-game-play-panel .play-panel-header .timer .timer-footer2 {
   font-size: 14px;
@@ -3801,6 +3843,14 @@ input {
   overflow-y: scroll;
   width: 270px;
 }
+
+[class^="MuiPaper-root"] {
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  /* Optional: remove borders */
+}
+
 
 /*** GLOBAL CHAT ***/
 .chat-msg,
@@ -4013,7 +4063,7 @@ input {
 }
 
 .chat-wrapper .chat-panel .chat-line .chat-msg {
-  font-size: 0.75em;
+  font-size: 0.65em;
   font-weight: 600;
   width: 100%;
   color: #72767d;
@@ -4218,7 +4268,6 @@ div.table.my-chat-table .table-row .table-cell:last-child {
 
 
 .mat-chat .chat-wrapper {
-  background: linear-gradient(348deg, #dfdfdf, #f1f1f1);
   padding-top: 73px;
   overflow: hidden;
   padding-bottom: 30px;
@@ -4469,7 +4518,7 @@ div.table.my-chat-table .table-row .table-cell:last-child {
 }
 
 .data-item .value {
-  font-size: large !important;
+  font-size: 0.9em !important;
 }
 
 .data-item .value.host {
@@ -4590,7 +4639,7 @@ div[class*="makeStyles-info"] {
 }
 
 svg {
-  font-size: 1.3em;
+  font-size: 1.1em;
 }
 
 .row {
@@ -4870,7 +4919,6 @@ a:hover,
 button:hover,
 .btn-back:hover {
   border: 2px solid #1b1b1b !important;
-  border-radius: 0.3em;
   box-shadow: 0 10px 20px #e9ecef1f, 0 6px 6px hsla(220, 13%, 95%, 0.18);
 }
 
@@ -4883,19 +4931,7 @@ a.chat-player:hover,
   border: none !important;
   box-shadow: none !important;
   transform: translateY(-1px);
-  animation: pulse 0.1s ease-in-out 0.1s alternate;
 }
-
-@keyframes pulse {
-  0% {
-    transform: translateY(-1px);
-  }
-
-  100% {
-    transform: translateY(-2px);
-  }
-}
-
 
 h1,
 h2,
@@ -5211,9 +5247,16 @@ div.table .table-row .table-cell img.game-type-icon {
 
 }
 
+#liveStakes {
+  padding: 2.5px 5px;
+  cursor: pointer;
+  margin-left: -10px;
+}
+
 #liveStakes div {
   position: absolute;
   height: auto !important;
+
   margin-top: -13px !important;
   display: inline-block !important;
 }
@@ -5339,7 +5382,7 @@ a.player:hover {
   font-weight: bold;
   color: #c734ff;
   /* Highlight numbers */
-  font-size: 1.2em !important;
+  font-size: 1.1em !important;
   /* Make numbers slightly larger */
 }
 
@@ -5411,11 +5454,6 @@ circle {
   background-position: right center;
 }
 
-.create-game-panel {
-  height: 80vh;
-  overflow-y: scroll;
-}
-
 .btn_send_message:hover {
   color: #75b1e8;
 }
@@ -5447,7 +5485,6 @@ circle {
 
 
 .game_header {
-  position: fixed;
   width: 100%;
   z-index: 2;
   background: linear-gradient(45deg, #f8f9fa, #b1b1b1);
@@ -5587,12 +5624,16 @@ button#recentSearches span {
   stroke: #ff6961;
 }
 
+.label.red-text,
 .red-text,
 .cell .red {
   color: #ff0000 !important;
 }
 
 .green-text {
+  color: #00ff3a !important;
+}
+.label.green-text {
   color: #00ff3a !important;
 }
 
@@ -6334,6 +6375,7 @@ div.table .table-row .table-cell img.avatar,
 .trade-container {
   margin: 30px 0;
 }
+
 .trade-container .modal-content-panel {
   padding: 30px;
 }
@@ -6357,7 +6399,6 @@ div.table .table-row .table-cell img.avatar,
 }
 
 .contents_wrapper {
-  margin-top: 70px;
   overflow-y: auto;
   padding: 0 !important;
 }
@@ -6440,7 +6481,7 @@ div.table .table-row .table-cell img.avatar,
 }
 
 .modal-body.result-body h1 {
-  font-size: 1.2em;
+  font-size: 1.1em;
   font-weight: 700;
 }
 
@@ -6628,7 +6669,7 @@ div.table .table-row .table-cell img.avatar,
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2em;
+  font-size: 1.1em;
   color: #fff;
   transform-origin: center;
 }
@@ -6636,7 +6677,7 @@ div.table .table-row .table-cell img.avatar,
 .spin-button {
   margin-top: 20px;
   padding: 10px 20px;
-  font-size: 1.2em;
+  font-size: 1.1em;
   cursor: pointer;
   width: 100%;
   border: 3px solid !important;
@@ -6729,7 +6770,7 @@ div.table .table-row .table-cell img.avatar,
 
 .ReactModal__Overlay {
   opacity: 0;
-  transition: opacity 500ms ease-in-out;
+  /* transition: opacity 500ms ease-in-out; */
 }
 
 .modal_action_panel {
@@ -6782,7 +6823,7 @@ div.table .table-row .table-cell img.avatar,
 }
 
 .modal-title {
-  font-size: 1.2rem !important;
+  font-size: 1.1rem !important;
   text-transform: uppercase;
   margin: 15px auto 10px 15px;
   color: #060607;
@@ -7314,7 +7355,7 @@ div[role="presentation"] div {
 
 .faqs-section h5 {
   margin-bottom: 15px;
-  font-size: 1.2em;
+  font-size: 1.1em;
 
   color: #a3a3a3;
 }
@@ -7529,6 +7570,11 @@ div[aria-label="How To Play Modal"] ul {
     border-bottom: none;
     width: 100%;
     overflow-x: auto;
+  }
+
+  .grid-container {
+    grid-template-columns: repeat(2, 1fr);
+    /* 2 columns for medium screens */
   }
 
   .main-game h2.main-title {
@@ -7812,7 +7858,7 @@ div[aria-label="How To Play Modal"] ul {
 
   h1.player-username {
     margin-top: 90px !important;
-    font-size: 1.2em;
+    font-size: 1.1em;
   }
 
   p.player-username {
@@ -7862,6 +7908,11 @@ div[aria-label="How To Play Modal"] ul {
   .modal-body {
     max-width: 95vw;
     min-width: 300px;
+  }
+
+  div.table .table-row {
+    width: 100%;
+    margin-bottom: 0;
   }
 
   .AvatarButtonPanel button:first-child {
@@ -7940,6 +7991,7 @@ div[aria-label="How To Play Modal"] ul {
     padding: 16px;
   }
 
+
   .react-confirm-alert .modal-body.alert-body.confirm-body {
     padding: 32px;
   }
@@ -7969,6 +8021,11 @@ div[aria-label="How To Play Modal"] ul {
     width: 15px !important;
     left: 17px;
     transform: translateY(3px);
+  }
+
+  .grid-container {
+    grid-template-columns: 1fr;
+    /* Single column for smaller screens */
   }
 
   .game-logs-modal-container .summary {

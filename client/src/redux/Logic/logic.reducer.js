@@ -14,6 +14,7 @@ import {
   ROOMS_LOADED,
   ROOMS_COUNT,
   BET_SUCCESS,
+  SET_TOKEN_PRICE,
   MSG_CREATE_ROOM_FAIL,
   MSG_CREATE_ROOM_SUCCESS,
   SET_GAME_MODE,
@@ -62,6 +63,7 @@ const initialState = {
   error: null,
   roomList: [],
   history: [],
+  tokenPrice: null,
   amount: 0,
   rooms_count: 0,
   spleesh_guesses: [],
@@ -157,6 +159,11 @@ const initialState = {
 export default function (state = initialState, action) {
   const { type, payload } = action;
   switch (type) {
+    case SET_TOKEN_PRICE:
+      return {
+        ...state,
+        tokenPrice: payload, // Update tokenPrice in the state
+      };
     case BET_SUCCESS:
       return {
         ...state,

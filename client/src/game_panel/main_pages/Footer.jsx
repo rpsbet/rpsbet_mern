@@ -30,7 +30,7 @@ const styles = (theme) => ({
         padding: '40px 20px 10px',
         bottom: 0,
         left: 0,
-        width: props => props.open ? 'calc(100vw - 275px)' : 'calc(100vw - 20px)',
+        width: props => props.open ? 'calc(100vw - 275px)' : 'calc(100vw - 5px)',
         zIndex: 2,
     },
     address: {

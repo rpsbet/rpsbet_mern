@@ -32,10 +32,10 @@ class Summary extends Component {
     //   this.state.winChance = 42;
     }
   }
+
   pre_summery() {
     let public_max_return = convertToCurrency(this.props.max_prize /* 0.95 */);
     let public_bet_amount = this.props.public_bet_amount;
-
     if (this.props.game_mode === 'Spleesh!') {
       public_bet_amount = (
         <>
@@ -174,7 +174,7 @@ class Summary extends Component {
     }
 
     return (
-      <div className="summary-panel">
+      <div className="summary-panel glass-container">
         <h3 className="game-sub-title">Room Summary</h3>
         <div className="summary-info">
           <div className="summary-item">
@@ -297,7 +297,7 @@ class Summary extends Component {
   render() {
     if (this.props.step === 1) {
       return <></>;
-    } else if (this.props.step === 5) {
+    } else if (this.props.step === 3) {
       return this.total_summery();
     }
     return this.pre_summery();

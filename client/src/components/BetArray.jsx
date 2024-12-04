@@ -229,28 +229,80 @@ const PlaceholderComponent = ({ selectedTab, myGames, updateQbot, handleTabChang
         </div>
 
         {rank >= 19 ? (
-          <div style={{ display: "inline-flex", flexDirection: "row", alignItems: "center", justifyContent: "center", width: "100%" }}>
-            <Tooltip title="TOGGLE AI PLAY BETTING">
-              <Switch
-                id="aiplay-switch"
-                checked={betting}
-                onChange={handleSwitchChange}
-              />
-            </Tooltip>
+          <>
+            <div style={{ display: "inline-flex", flexDirection: "row", alignItems: "center", justifyContent: "center", width: "100%", marginBottom: "10px" }}>
+              {/* AI Play Betting Switch */}
+              <Tooltip title="TOGGLE AI PLAY HOSTING">
+                <Switch
+                  id="aiplay-switch"
+                  checked={betting}
+                  onChange={handleSwitchChange}
+                />
+              </Tooltip>
 
-            {betting ? (
-              <div id="stop" style={{ marginRight: "15px" }}>
-                <Lottie options={defaultOptions} width={32} />
+              {betting ? (
+                <div id="stop" style={{ marginRight: "15px" }}>
+                  <Lottie options={defaultOptions} width={32} />
+                </div>
+              ) : (
+                <div>{timerValue !== 2000 ? <span>{(timerValue / 2000).toFixed(2)}s</span> : null}</div>
+              )}
+
+              <div style={{ fontSize: "small", display: 'flex', alignItems: 'center', width: "100%", boxShadow: "inset 0px 0px 6px 0px #b4b4b4a8", borderRadius: "9px", justifyContent: "center", padding: "5px 10px", overflow: "hidden" }}>
+                <FontAwesomeIcon icon={betting ? faToggleOn : faToggleOff} style={{ marginRight: '5px' }} />
+                {betting ? 'HOSTING ON' : 'Q-BOT OFF'}
               </div>
-            ) : (
-              <div>{timerValue !== 2000 ? <span>{(timerValue / 2000).toFixed(2)}s</span> : null}</div>
-            )}
-
-            <div style={{ display: 'flex', alignItems: 'center', width: "100%", boxShadow: "inset 0px 0px 6px 0px #b4b4b4a8", borderRadius: "9px", justifyContent: "center", padding: "5px 10px", overflow: "hidden" }}>
-              <FontAwesomeIcon icon={betting ? faToggleOn : faToggleOff} style={{ marginRight: '5px' }} />
-              {betting ? 'Q-BOT ON' : 'Q-BOT OFF'}
             </div>
-          </div>
+            <div style={{ display: "inline-flex", flexDirection: "row", alignItems: "center", justifyContent: "center", width: "100%", marginBottom: "10px" }}>
+              {/* AI Play Betting Switch */}
+              <Tooltip title="TOGGLE AI BETTING">
+                <Switch
+                  id="aiplay-switch"
+                  checked={!betting}
+                  onChange={handleSwitchChange}
+                  disabled
+                />
+              </Tooltip>
+
+              {betting ? (
+                <div id="stop" style={{ marginRight: "15px", width: "60px" }}>
+                  {/* <Lottie options={defaultOptions} width={32} /> */}
+                </div>
+              ) : (
+                <div>{timerValue !== 2000 ? <span>{(timerValue / 2000).toFixed(2)}s</span> : null}</div>
+              )}
+
+              <div style={{ fontSize: "small", display: 'flex', alignItems: 'center', width: "100%", boxShadow: "inset 0px 0px 6px 0px #b4b4b4a8", borderRadius: "9px", justifyContent: "center", padding: "5px 10px", overflow: "hidden" }}>
+                <FontAwesomeIcon icon={betting ? faToggleOn : faToggleOff} style={{ marginRight: '5px' }} />
+                {!betting ? 'BETTING ON' : 'BETTING OFF'}
+              </div>
+            </div>
+            <div style={{ display: "inline-flex", flexDirection: "row", alignItems: "center", justifyContent: "center", width: "100%" }}>
+              {/* AI Play Betting Switch */}
+              <Tooltip title="TOGGLE AI TRADING">
+                <Switch
+                  id="aiplay-switch"
+                  checked={!betting}
+                  onChange={handleSwitchChange}
+                  disabled
+                />
+              </Tooltip>
+
+              {betting ? (
+                <div id="stop" style={{ marginRight: "15px", width: "60px" }}>
+                  {/* <Lottie options={defaultOptions} width={32} /> */}
+                </div>
+              ) : (
+                <div>{timerValue !== 2000 ? <span>{(timerValue / 2000).toFixed(2)}s</span> : null}</div>
+              )}
+
+              <div style={{ fontSize: "small", display: 'flex', alignItems: 'center', width: "100%", boxShadow: "inset 0px 0px 6px 0px #b4b4b4a8", borderRadius: "9px", justifyContent: "center", padding: "5px 10px", overflow: "hidden" }}>
+                <FontAwesomeIcon icon={betting ? faToggleOn : faToggleOff} style={{ marginRight: '5px' }} />
+                {!betting ? 'TRADING ON' : 'TRADING OFF'}
+              </div>
+            </div>
+          </>
+
         ) : (
           <Button
             variant="contained"
@@ -261,6 +313,7 @@ const PlaceholderComponent = ({ selectedTab, myGames, updateQbot, handleTabChang
             UNLOCK AT LEVEL 19
           </Button>
         )}
+
       </div>
     );
   };
@@ -320,39 +373,39 @@ const PlaceholderComponent = ({ selectedTab, myGames, updateQbot, handleTabChang
         )}
         {selectedTab === 1 && (
           <>
-  {/* Coming Soon Overlay */}
+            {/* Coming Soon Overlay */}
             <div className="gamified-container" >
-          <div style={{ position: "relative", width: "100%" }}>
-  <div style={{
-    position: "absolute",
-    top: "0",
-    left: "0",
-    right: "0",
-    bottom: "0",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.6)", // Dark overlay
-    color: "#fff",
-    fontSize: "2em",
-    zIndex: "2"
-  }}>
-    Coming Soon
-  </div>
-              <Grid item style={{filter:"blur(3px)"}}>
-                <h2 className="gamified-heading">Q-BOT Net Profit&nbsp;
-                  <Tooltip title="TOTAL Q-BOT NET PROFIT (AFTER TAX)">
-                    <Info style={{ width: "18px", marginTop: "-3px", cursor: "pointer" }} />
-                  </Tooltip>
-                </h2>
-                <div style={{ textAlign: "center", color: "#f9f9f9", background: "linear-gradient(45deg, #00ff6b, #84bd00)", padding: "5px 15px", fontSize: "1.2em", marginTop: "15px", borderRadius: "0.3em" }}>
-                  <span>+ {convertToCurrency(44343.02)}</span>
+              <div style={{ position: "relative", width: "100%" }}>
+                <div style={{
+                  position: "absolute",
+                  top: "0",
+                  left: "0",
+                  right: "0",
+                  bottom: "0",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  backgroundColor: "rgba(0, 0, 0, 0.6)", // Dark overlay
+                  color: "#fff",
+                  fontSize: "2em",
+                  zIndex: "2"
+                }}>
+                  Coming Soon
                 </div>
-                <div className="gamified-content" style={{marginTop: "20px"}}>
-                  <ApexChart options={chartOptions} series={chartSeries} type="line" height={350} />
-                </div>
-              </Grid>
-            </div>
+                <Grid item style={{ filter: "blur(3px)" }}>
+                  <h2 className="gamified-heading">Q-BOT Net Profit&nbsp;
+                    <Tooltip title="TOTAL Q-BOT NET PROFIT (AFTER TAX)">
+                      <Info style={{ width: "18px", marginTop: "-3px", cursor: "pointer" }} />
+                    </Tooltip>
+                  </h2>
+                  <div style={{ textAlign: "center", color: "#f9f9f9", background: "linear-gradient(45deg, #00ff6b, #84bd00)", padding: "5px 15px", fontSize: "1.1em", marginTop: "15px", borderRadius: "0.3em" }}>
+                    <span>+ {convertToCurrency(44343.02)}</span>
+                  </div>
+                  <div className="gamified-content" style={{ marginTop: "20px" }}>
+                    <ApexChart options={chartOptions} series={chartSeries} type="line" height={350} />
+                  </div>
+                </Grid>
+              </div>
             </div>
           </>
         )}
@@ -974,7 +1027,7 @@ function BetArray({
                       <Tooltip title="CHANGE AI PLAY STRATEGY">
                         <IconButton
                           id="btn-rps-settings"
-                          style={{ borderRadius: "200px" }}
+                          style={{ borderRadius: "0.5em" }}
                           onClick={handleSettingsIconClick}
                         >
                           <span style={{ fontSize: "0.5em" }}>EDIT</span><SettingsOutlinedIcon

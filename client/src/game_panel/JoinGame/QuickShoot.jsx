@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import Share from '../../components/Share';
 import ReactApexChart from 'react-apexcharts';
+import { Info } from '@material-ui/icons';
 import Moment from 'moment';
 import Avatar from '../../components/Avatar';
 import progress from '../LottieAnimations/progress.json';
@@ -104,7 +105,6 @@ class QuickShoot extends Component {
     document.addEventListener('keydown', this.handleKeyPress);
     this.setState({ intervalId: setInterval(this.toggleBlueishHue, this.state.intervalDuration) });
     this.setupSocket();
-
     const botsCount = await this.props.getRoomBotCount(this.props.roomInfo._id);
     const qBotStatus = await this.props.getQbot(this.props.roomInfo.creator_id);
     this.setState({
@@ -1119,7 +1119,7 @@ class QuickShoot extends Component {
               <>
                 <Tooltip title={!isWatching ? "CLICK TO STOP WATCHING" : "CLICK TO START WATCHING"}>
                   <IconButton className="spectate title" onClick={this.handleSpectateMode}>
-                    {isWatching ? <>PLAY&nbsp;<SwordsIcon /></> : <>SPECTATE&nbsp;<ViewIcon /></>}
+                    {isWatching ? <>PLAYING&nbsp;<SwordsIcon /></> : <>SPECTATING&nbsp;<ViewIcon /></>}
 
                   </IconButton>
                 </Tooltip>
@@ -1172,7 +1172,13 @@ class QuickShoot extends Component {
               isLowGraphics
             )} */}
                   {!startedPlaying &&
-                    <h3 className="game-sub-title">Choose WHERE TO SHOOT</h3>
+                    <h3 style={{ zIndex: 9 }} className="game-sub-title roll-tag">Choose WHERE TO SHOOT &nbsp;<Tooltip
+                    style={{ position: "absolute", right: "20px", marginBottom: "30px" }}
+                    title={'Play against the AI, at the same time, train your AI.'}
+                    placement="top"
+                  >
+                    <Info style={{ cursor: "pointer", float: "right" }} />
+                  </Tooltip></h3>
                   }
 
                   <div
@@ -1241,13 +1247,13 @@ class QuickShoot extends Component {
                           <span className="button-text">&nbsp;KICK BOTS?</span>
                         </Button>
                       )}
-                      <Button
+                      {/* <Button
                         onClick={this.handleEndClick}
                         className="hover-text-button special-button"
                       >
                         <FontAwesomeIcon className="button-icon" icon={faMoneyBillWave} />
                         <span className="button-text">&nbsp;QUICK RUG&nbsp;{convertToCurrency(bankroll)}&nbsp;&nbsp;&nbsp;</span>
-                      </Button>
+                      </Button> */}
                     </div>
                   ) : (
                     <>

@@ -12,6 +12,7 @@ import {
   ATTACHED,
   TNX_COMPLETE,
   TNX_INCOMPLETE,
+  SET_TOKEN_PRICE,
   COMMENT_CREATED,
   TOP_WINS,
   COMMENT_CREATION_FAILED,
@@ -77,7 +78,7 @@ export const createRoom = room_info => async dispatch => {
     } else {
       dispatch({ type: MSG_WARNING, payload: res.data.message });
     }
-    history.push('/');
+    history.push('/dashboard');
   } catch (err) {
     dispatch({ type: MSG_WARNING, payload: err });
   }
@@ -148,6 +149,24 @@ export function updateRollGuesses() {
       });
   };
 }
+
+export const getTokenPrice = (tokenMintAddress) => async (dispatch) => {
+  try {
+    const response = await axios.post('/stripe/get_token_price', {
+      tokenMintAddress, // Replace with the actual token address
+      web2Amount: 1,    // Default amount to fetch the token price
+    });
+
+    const { tokenPrice } = response.data;
+
+    dispatch({
+      type: SET_TOKEN_PRICE,
+      payload: tokenPrice, // Send token price to the reducer
+    });
+  } catch (error) {
+    console.error('Error fetching token price:', error);
+  }
+};
 
 // join game
 export const bet = bet_info => async dispatch => {
