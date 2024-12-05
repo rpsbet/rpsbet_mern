@@ -91,7 +91,7 @@ class Comments extends Component {
                 )}
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <TextField
-                        label="Add a comment"
+                        label="Reply"
                         value={this.state.newComment}
                         onChange={this.handleCommentChange}
                         fullWidth

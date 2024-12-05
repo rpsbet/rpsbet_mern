@@ -70,7 +70,8 @@ class MainPage extends Component {
       selectedMobileTab: 'live_games',
       show_open_game: 0,
       selectedGameType: 'All',
-      isDrawerOpen: true,
+      highlightedRooms: new Set(),
+      isDrawerOpen: this.props.isDrawerOpen,
       showP2PLending: false,
       showMarketplace: false,
       loading: true,
@@ -95,44 +96,44 @@ class MainPage extends Component {
       getMyChat,
       getTokenPrice, // Import the action
     } = this.props;
-  
+
     this.isComponentMounted = true;
-  
+
     if (window.location.pathname === '/dashboard') {
       this.setState({
         selectedMobileTab: 'my_games',
         showOpenGame: 0, // Show "My Games" (not history) initially
       });
     }
-  
+
     const promises = [
       getRoomCount({ game_type: selectedGameType }),
     ];
     if (isAuthenticated) {
       promises.push(getMyChat());
     }
-  
+
     getTokenPrice(token);
-  
+
     await Promise.all(promises);
-  
+
     if (this.state.is_mobile && !this.props.isDrawerOpen) {
       this.toggleDrawer();
     }
-  
+
     document.addEventListener("visibilitychange", this.handleVisibilityChange);
-    this.pollingInterval = setInterval(() => this.handleRefresh(), 10000);
+    this.pollingInterval = setInterval(() => this.handleRefresh(), 1200);
   }
 
   componentDidUpdate(prevProps) {
     const { location } = this.props;
-  
+
     if (location.pathname === '/dashboard' && location.pathname !== prevProps.location.pathname) {
       this.setState({
         selectedMobileTab: 'my_games',
         showOpenGame: 0, // Show "My Games" tab
       });
-    } else if ((location.pathname === '/dashboard' && location.pathname !== prevProps.location.pathname) && location.pathname === '/' ) {
+    } else if ((location.pathname === '/dashboard' && location.pathname !== prevProps.location.pathname) && location.pathname === '/') {
       this.setState({
         // selectedMobileTab: 'live_games',
         showOpenGame: 1, // Show "Live Games" tab
@@ -148,7 +149,7 @@ class MainPage extends Component {
 
   handleVisibilityChange() {
     if (document.visibilityState === "visible" && !this.pollingInterval) {
-      this.pollingInterval = setInterval(() => this.handleRefresh(), 10000);
+      this.pollingInterval = setInterval(() => this.handleRefresh(), 2000);
     } else if (document.visibilityState === "hidden" && this.pollingInterval) {
       clearInterval(this.pollingInterval);
       this.pollingInterval = null;
@@ -207,12 +208,15 @@ class MainPage extends Component {
     this.props.toggleDrawer(!this.props.isDrawerOpen);
   };
 
-  
+
   handleCreateBtnClicked = () => {
     history.push('/create');
   };
 
+  setHighlightedRooms = (rooms) => {
+      this.setState({ highlightedRooms: new Set(rooms) });
 
+  };
 
   getActiveTabText = () => {
     if (this.state.selectedMobileTab === 'marketplace') {
@@ -373,14 +377,15 @@ class MainPage extends Component {
         <div className="main-panel">
           <h2 className="main-title">{this.getActiveTabText()}</h2>
           {((!is_mobile && selectedMainTabIndex === 0) ||
-        (is_mobile && selectedMobileTab === 'live_games' && this.state.show_open_game === 0)) &&
-        location.pathname !== '/dashboard' && (
-          <>
+            (is_mobile && selectedMobileTab === 'live_games' && this.state.show_open_game === 0)) &&
+            location.pathname !== '/dashboard' && (
+              <>
 
                 <OpenGamesTable
                   selectedCreator={this.state.selectedCreator}
                   tokenPrice={this.state.tokenPrice}
                   refreshing={this.state.refreshing}
+                  highlightedRooms={this.state.highlightedRooms}
                   showPlayerModal={this.state.showPlayerModal}
                   handleRefresh={this.handleRefresh}
                   handleOpenPlayerModal={this.handleOpenPlayerModal}
@@ -411,7 +416,7 @@ class MainPage extends Component {
           )}
           {this.state.is_mobile &&
             this.state.selectedMobileTab === 'live_games' &&
-            this.state.show_open_game === 1 && <HistoryTable userId={this.props.user._id} />}
+            this.state.show_open_game === 1 && <HistoryTable setHighlightedRooms={this.setHighlightedRooms} userId={this.props.user._id} />}
           {selectedMobileTab === 'my_games' && showOpenGame === 1 && (
             <MyHistoryTable />
           )}
@@ -429,7 +434,7 @@ class MainPage extends Component {
           {!this.state.is_mobile && this.props.selectedMainTabIndex === 0 && (
             <>
               <h2 className="main-title desktop-only" style={{ marginBottom: "10px" }}>HISTORY</h2>
-              <HistoryTable userId={this.props.user._id} />
+              <HistoryTable setHighlightedRooms={this.setHighlightedRooms} userId={this.props.user._id} />
             </>
           )}
           <DrawerButton

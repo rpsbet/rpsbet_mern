@@ -9,7 +9,7 @@ const showAlert = (isDarkMode, text, icon) => {
   confirmAlert({
     customUI: ({ onClose }) => {
       return (
-        <div style={{ borderRadius: "0.6em" }} className={isDarkMode ? 'dark_mode' : ''}>
+        <div style={{ borderRadius: "0.5em" }} className={isDarkMode ? 'dark_mode' : ''}>
           <div className="modal-body alert-body">
             <Button className="btn-close title" onClick={onClose}>
               ×
@@ -98,10 +98,10 @@ const showConfirmCall = (
         <div style={{ borderRadius: "0.6em" }} className={isDarkMode ? 'dark_mode' : ''}>
           <div className="modal-body alert-body confirm-body">
             <h5 style={{margin: '30px auto'}}> {text}</h5>
-            <div
-              style={{ color: '#353b47', padding: '5px 10px', background: 'rgb(175 176 176)', height: '75px', borderRadius: "0.6em", display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+            <div className='glass-container'
+              style={{  padding: '5px 10px', height: '75px', borderRadius: "0.5em", display: 'flex', justifyContent: 'center', alignItems: 'center' }}
             // className={`modal-icon alert-icon${icon}`}
-            ><FontAwesomeIcon style={{ fontSize: "1.6em" }} icon={faRobot} />&nbsp;<span  style={{ fontSize: "1.4em" }}>RANDOM BOT</span></div>
+            ><FontAwesomeIcon style={{ fontSize: "1em" }} icon={faRobot} />&nbsp;<span  style={{ fontSize: "0.9em" }}>RANDOM BOT</span></div>
 
             <div className="modal-footer">
               <Button

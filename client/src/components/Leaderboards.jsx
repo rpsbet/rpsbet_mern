@@ -25,7 +25,6 @@ const styles = theme => ({
     width: '150px',
     padding: '8px 15px',
     fontSize: '16px',
-    background: '#191a1d'
   },
   dropdownStyle: {}
 });

@@ -20,6 +20,7 @@ const convertGameLogToHistoryStyle = async gameLogList => {
     try {
       let temp = {
         _id: gameLog._id,
+        room_id: gameLog['room']['_id'],
         room_name: room_name,
         history: '',
         creator: gameLog['creator']['_id'],

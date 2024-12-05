@@ -1102,62 +1102,37 @@ router.delete('/comments/:comment_id', async (req, res) => {
     });
   }
 });
-const ignoredUsernames = [
-  'WHALE WATCHERS',
-  'OFFICIALRPSGAME',
-  'pimpedpistols',
-  'KEKW',
-  '69',
-  'jadeprice1997',
-  'smellyfingers',
-  'NO BROKIES',
-  'lennybeadle',
-  'SUPPORT',
-  'rrr',
-  'twat',
-  'SYSTEM',
-  'GIGACHAD',
-  'SHIBA',
-  '🔥 THE DON 🔥 (BOT #1)',
-  '🪨 ROCKY 🪨 (BOT #2)',
-  '✂️ CAESAR ✂️ (BOT #4)',
-  '📃 PAPÎER 📃 (BOT #3)'
-];
 
 router.get('/topWins', async (req, res) => {
   try {
+
     const recentGameLogs = await GameLog.find({})
       .sort({ created_at: -1 })
-      .limit(20)
+      .limit(4)
       .populate({
         path: 'joined_user',
         model: User,
         select: '_id avatar username accessory totalWagered'
       });
 
-    const filteredLogs = recentGameLogs.filter(log => {
-      const username = log.joined_user?.username;
-      return !ignoredUsernames.includes(username);
-    });
-
-    const topGameLogs = filteredLogs
+    const topGameLogs = recentGameLogs
       .sort((a, b) => b.winnings - a.winnings)
-      .slice(0, 12);
+      .slice(0, 4);
+
 
     res.json({
       success: true,
-      pageSize: 12,
+      pageSize: 4,
       history: topGameLogs
     });
   } catch (err) {
-    console.error(err);
+    console.error("Error in '/topWins' endpoint:", err);
     res.status(500).json({ message: 'Server Error' });
   }
 });
 
 router.get('/topWithdrawals', async (req, res) => {
   try {
-    // Fetch and sort withdrawals by amount in descending order
     const topWds = await Receipt.find({ payment_type: { $regex: /Withdraw/i } }) // Match "withdraw" case-insensitively
       .sort({ amount: -1 }) // Sort by amount in descending order
       .populate({
@@ -1179,12 +1154,12 @@ router.get('/topWithdrawals', async (req, res) => {
         ...withdrawal.toObject(),
         amount: Math.abs(withdrawal.amount) // Convert amount to positive
       }))
-      .slice(0, 12); // Limit to top 12 after filtering
+      .slice(0, 4); // Limit to top 12 after filtering
 
     // Respond with the top withdrawals
     res.json({
       success: true,
-      pageSize: 12,
+      pageSize: 4,
       history: sortedWithdrawals
     });
   } catch (err) {
@@ -2283,7 +2258,6 @@ router.post('/coHost', auth, async (req, res) => {
     const boostFactor = minBoostFactor + ((coHostAmount / totalBankroll) * (maxBoostFactor - minBoostFactor));
     const boostedShare = baseShare * boostFactor;
 
-    console.log(`Boost factor applied: ${boostFactor.toFixed(2)} for co-host amount: ${coHostAmount}`);
 
     // Handle host addition or update
     if (existingHostIndex === -1) {
@@ -2726,22 +2700,25 @@ router.patch('/qbotStatus', auth, async (req, res) => {
   }
 });
 
-router.post('/qbotStatus', auth, async (req, res) => {
+// Use GET for fetching the QBot status based on userId
+router.get('/qbotStatus', auth, async (req, res) => {
   try {
-    const { userId } = req.body;
+    const { userId } = req.query; // Using query parameters instead of body
     if (!userId) {
       return res.status(400).json({
         success: false,
         message: 'User ID is required'
       });
     }
-
-    const isActive = await QBot.findOne({ user: userId, active: true });
+    const isActive = await QBot.findOne(
+      { user: userId, active: true },
+      'active'
+    );
     res.json({
       success: true,
       isActive: !!isActive // Return true if QBot is found, false otherwise
     });
-  } catch (err) {
+  } catch (err) { 
     console.error(err);
     res.status(500).json({
       success: false,

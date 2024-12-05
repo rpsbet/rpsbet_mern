@@ -137,9 +137,7 @@
 }
 
 .dark_mode ::-webkit-scrollBar-thumb {
-	background-image: linear-gradient(to right bottom,
-			#7f05a4,
-			#520049);
+	background-image: linear-gradient(to right bottom, #d139ff, #ff4242);
 	cursor: grab;
 }
 
@@ -302,7 +300,7 @@
 
 
 .dark_mode .game_header {
-	background: none;
+	background: #420068;
 }
 
 

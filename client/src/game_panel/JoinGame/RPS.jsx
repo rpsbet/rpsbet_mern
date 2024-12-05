@@ -854,7 +854,7 @@ class RPS extends Component {
           />
         )}
         <div className="game-contents title">
-          <div className="pre-summary-panel title" ref={this.panelRef}>
+          <div className="pre-summary-panel title" style={{overflow: 'hidden'}} ref={this.panelRef}>
             <div className="pre-summary-panel__inner">
               {[...Array(1)].map((_, i) => (
                 <React.Fragment key={i}>

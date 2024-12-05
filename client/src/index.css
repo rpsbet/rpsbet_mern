@@ -6,10 +6,6 @@
   font-family: "Prototype";
   src: url("/fonts/prototype-webfont.woff") format("woff");
 } */
-#root {
-  background-color: #420068;
-}
-
 
 :root {
   --primary-color: #48ff00;
@@ -29,12 +25,12 @@
 /*****************/
 .fade-in {
   opacity: 1;
-  transition: opacity 0.3s ease-in-out;
+  transition: opacity 0.1s;
 }
 
 .fade-out {
   opacity: 0;
-  transition: opacity 0.3s ease-in-out;
+  transition: opacity 0.1s;
 }
 
 @keyframes fade-in {
@@ -127,15 +123,12 @@ button.btn {
 }
 
 .grid-container {
-  display: grid;
-  grid-template-columns: 1fr 3fr;
-  /* Two columns: labels and content */
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr);
   gap: 20px;
-  /* Space between grid items */
   padding: 20px;
   border-radius: 8px;
 }
-
 .grid-item {
   display: flex;
   align-items: center;
@@ -169,14 +162,13 @@ button.btn {
 }
 
 .bet-amount .MuiOutlinedInput-root {
-  animation-duration: 0.3s;
-  animation-timing-function: ease-in-out;
+  animation-duration: 0.1s;
   animation-name: fade-out;
 }
 
 .bet-amount .MuiButtonGroup-root.fade-out {
   opacity: 0;
-  transition: opacity 0.3s ease-in-out;
+  transition: opacity 0.1s;
 }
 
 .bet-amount .MuiOutlinedInput-root:focus-within~.MuiButtonGroup-root {
@@ -277,9 +269,9 @@ div.table .table-row .table-cell button:last-child:before,
 #rps-radio div.active {
   opacity: 0.9;
   border: unset;
-  transition: 0.3s;
+  transition: 0.1s;
   margin-left: 5px !important;
-  transform: translateY(20px) rotate(180deg) !important;
+  transform: translateY(10px) rotate(180deg) !important;
 }
 
 #rps-radio div {
@@ -365,13 +357,13 @@ div.table .table-row .table-cell button:last-child,
 }
 
 .hover-text-button .button-icon {
-  font-size: 1.6em;
-  transition: opacity 0.3s ease-in-out;
+  font-size: 1.3em;
+  transition: opacity 0.1s;
 }
 
 .hover-text-button .button-text {
   opacity: 0;
-  transition: opacity 0.5s ease-in-out;
+  transition: opacity 0.1s;
   position: absolute;
   left: 100%;
   top: 50%;
@@ -445,7 +437,7 @@ div.table .table-row .table-cell button:last-child:hover,
   text-align: center;
   max-width: 400px;
   width: 100%;
-  transition: transform 0.4s ease, opacity 0.4s ease;
+  transition: transform 0.4s, opacity 0.4s;
 }
 
 .accepted {
@@ -466,7 +458,7 @@ div.table .table-row .table-cell button:last-child:hover,
   cursor: pointer;
   font-size: 16px;
   margin-top: 10px;
-  transition: background-color 0.3s ease;
+  transition: background-color 0.1s ease;
 }
 
 .reward {
@@ -702,7 +694,7 @@ div.table .table-cell button.btn_join img {
 
 .lottie-container-btn_bet {
   opacity: 0;
-  transition: opacity 0.3s;
+  transition: opacity 0.1s;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -718,7 +710,7 @@ div.table .table-cell button.btn_join img {
 .copy-btn svg {
   opacity: 0.8;
   transform: scale(0.75);
-  transition: 0.3s ease all;
+  transition: 0.1s ease all;
 }
 
 .copy-btn a:hover {
@@ -768,7 +760,7 @@ div.table .table-cell button.btn_join img {
   cursor: pointer;
   color: white;
   font-weight: bold;
-  transition: 0.3s ease all;
+  transition: 0.1s ease all;
 }
 
 .copy-btn:focus {
@@ -822,6 +814,16 @@ div.table .table-cell button.btn_join img {
 
 .sub-panel .overflowX .lottie-container {
   display: none;
+}
+
+.main-game.join .modal-footer {
+  padding: 0;
+  background: none;
+}
+.main-game.join .modal-footer button{
+  margin-top: 0;
+  margin-bottom: 0;
+  border-radius: 6px !important;
 }
 
 .main-game h2.main-title {
@@ -914,7 +916,7 @@ div.table.my-chat-table .table-cell button.btn_join {
 
 .debt:hover {
   background-color: #ff0000dd !important;
-  transition: 0.3s;
+  transition: 0.1s;
   transform: translateY(-2) !important;
 }
 
@@ -1104,7 +1106,6 @@ div.table.my-chat-table .table-row .table-cell[title='Unread message'] {
   z-index: 2;
   padding: 0;
   box-shadow: 0px 0px 7px #87000d;
-  transition: transform 0.1s ease-in-out;
 }
 
 div.table.my-chat-table .table-row .table-cell[title='Unread message']:hover {
@@ -1212,7 +1213,7 @@ div.table.my-chat-table .table-row .table-cell[title='Unread message']:hover:act
 
   opacity: 1;
   /* Set initial opacity */
-  transition: opacity 0.5s ease;
+  transition: opacity 0.1s ease;
   /* Smooth transition for opacity */
 }
 
@@ -1282,7 +1283,7 @@ div.table.my-chat-table .table-row .table-cell[title='Unread message']:hover:act
 
   opacity: 1;
   /* Set initial opacity */
-  transition: opacity 0.5s ease;
+  transition: opacity 0.1s ease;
   /* Smooth transition for opacity */
 }
 
@@ -1365,7 +1366,8 @@ div.table.main-history-table::-webkit-scrollbar,
 div.table.my-open-game-table::-webkit-scrollbar,
 .top-wins::-webkit-scrollbar,
 .recently-closed::-webkit-scrollbar,
-.carousel::-webkit-scrollbar {
+.carousel::-webkit-scrollbar,
+.leaderboards-content table::-webkit-scrollbar {
   display: none;
 }
 
@@ -1621,9 +1623,12 @@ div.table.my-open-game-table {
 }
 
 div.table.main-game-table .table-row .table-cell.cell-room-info {
-  width: 10%;
+  width: 100%;
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  padding-bottom: 15px;
+  z-index: 2;
 }
 
 .table-cell.cell-room-info .cell-game-type {
@@ -1633,12 +1638,11 @@ div.table.main-game-table .table-row .table-cell.cell-room-info {
 }
 
 .table-cell.cell-room-info .cell-game-id {
-  font-size: 14px;
-  line-height: 17px;
+  font-size: 0.8em;
+  width: 100%;
 }
 
 div.table.main-game-table .table-row .table-cell.cell-user-name {
-  width: 40%;
   display: flex;
   justify-content: center;
   text-align: center;
@@ -1828,7 +1832,7 @@ input[type="number"] {
 .animation-container {
   opacity: 0;
   transform: translate(-10px, -100%) rotate(90deg);
-  transition: opacity 0.5s ease-in-out, transform 1s ease-in-out;
+  transition: opacity 0.1s ease-in-out, transform 1s ease-in-out;
 }
 
 .animation-container.animate {
@@ -2472,7 +2476,7 @@ input {
   overflow: hidden;
   min-height: 150px;
   overflow-y: scroll;
-  padding: 30px 10px;
+  padding: 30px 10px 0;
 }
 
 #bj-radio {
@@ -3051,7 +3055,7 @@ svg#delete:hover {
 
 #rps-radio button.active,
 #roll button.active {
-  transition: 0.3s;
+  transition: 0.1s;
   transform: translateY(-20px) !important;
 }
 
@@ -3095,7 +3099,7 @@ button.btn-submit,
 #btn-signup,
 .send-msg,
 button.btn-submit {
-  box-shadow: 0 -0.5px 0px #f70000, 0 -3px #990000 inset, 0 2px #ff0000 inset !important;
+  box-shadow: 0 -0.5px 0px #f70000, 0 -3px #990000 inset, 0 2px #ff0000 inset;
 }
 
 .create-game-panel .game-page .game-contents .action-panel button:hover,
@@ -3177,7 +3181,7 @@ button.btn-submit:active,
 }
 
 .tiers button:hover {
-  transition: 0.3s;
+  transition: 0.1s;
   cursor: pointer;
   transform: translateY(-4px);
   filter: brightness(1.25);
@@ -4011,7 +4015,7 @@ input {
 
 .tooltip.reply .tooltip-content button:hover {
   opacity: 1;
-  transition: 0.3s;
+  transition: 0.1s;
 }
 
 .tooltip.reply .tooltip-content {
@@ -4111,7 +4115,7 @@ input {
 .gif-results img {
   width: 100%;
   cursor: pointer;
-  transition: transform 0.3s ease;
+  transition: transform 0.1s ease;
 }
 
 .gif-results img:hover {
@@ -4130,7 +4134,7 @@ input {
 .search-popup,
 .chat-wrapper .chat-input-panel .emoticon-panel {
   opacity: 0;
-  transition: height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+  transition: height 0.1s ease-in-out, opacity 0.1s ease-in-out;
   height: 0;
   display: none;
   position: absolute;
@@ -4153,7 +4157,7 @@ input {
 
 .chat-wrapper .chat-input-panel .emoticon-panel.active,
 .search-popup.active {
-  transition: height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+  transition: height 0.1s ease-in-out, opacity 0.1s ease-in-out;
   height: 300px;
   opacity: 1;
   overflow-y: scroll;
@@ -4419,7 +4423,7 @@ div.table.my-chat-table .table-row .table-cell:last-child {
 
 .chat-page .chat-input-panel .emoticon-panel>span:hover {
   transform: translateY(-2px);
-  transition: 0.3s;
+  transition: 0.1s;
 }
 
 .chat-page .chat-input-panel button {
@@ -4489,7 +4493,7 @@ div.table.my-chat-table .table-row .table-cell:last-child {
 }
 
 .leaderboards-page table tr {
-  background-color: rgb(119 0 255);
+  background-color: transparent;
 }
 
 .leaderboards-page table th {
@@ -4498,8 +4502,10 @@ div.table.my-chat-table .table-row .table-cell:last-child {
   white-space: nowrap;
 }
 
+table td {
+  border-bottom: 1px solid #969696 !important;
+}
 .leaderboards-page table td {
-  border-top: 1px solid #202225;
   color: var(--white-color);
   text-align: center;
   vertical-align: middle;
@@ -4700,7 +4706,7 @@ textarea {
 }
 
 .btn {
-  transition: 0.3s ease-in-out;
+  transition: 0.1s ease-in-out;
 }
 
 
@@ -5434,6 +5440,9 @@ circle {
   fill: #495057 !important;
 }
 
+div[role="presentation"] ul {
+  background: blueviolet !important;
+}
 
 .share-options button.react-share__ShareButton {
   opacity: 0.8;
@@ -5516,7 +5525,7 @@ button#recentSearches span {
 }
 
 .hover-translate {
-  transition: transform 0.3s ease;
+  transition: transform 0.1s ease;
 }
 
 .dial {
@@ -5762,7 +5771,7 @@ button#recentSearches span {
 #signupForm .selected {
   border: 3px solid #ffd000;
   box-shadow: 0 0 5px #ffd00077;
-  transition: all 0.3s;
+  transition: all 0.1s;
   height: 52px !important;
 }
 
@@ -5780,7 +5789,7 @@ button#recentSearches span {
 .selected {
   border: 2px solid #ffd000 !important;
   box-shadow: 0 0 5px #ffd00077;
-  transition: all 0.3s;
+  transition: all 0.1s;
 }
 
 .main-game-page-tabs button span {
@@ -5965,7 +5974,7 @@ button#recentSearches span {
   border: 3px solid #dee2e6;
   color: #f8f9fa;
   width: 40px;
-  margin-left: 100px;
+  margin-left: 55px;
   display: flex;
   position: absolute;
   justify-content: center;
@@ -5976,7 +5985,7 @@ button#recentSearches span {
 }
 
 .fade-animation {
-  transition: opacity 0.3s ease-in-out;
+  transition: opacity 0.1s ease-in-out;
 }
 
 .fade-animation.fade-in {
@@ -6045,7 +6054,6 @@ button#recentSearches span {
 
 div[role='tablist'] {
   min-height: unset !important;
-  overflow-x: auto;
 }
 
 .countdown-bar {
@@ -6194,10 +6202,21 @@ div[role='tablist'] {
 }
 
 .table.main-game-table .table-row:hover {
-  filter: brightness(1.04);
-  transition: 0.2s;
   z-index: 999;
   cursor: pointer;
+}
+
+
+@keyframes flicker {
+  0%, 100% { background: transparent; }
+  50% { background: rgb(0, 218, 29); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  50% { transform: translateX(-6px); }
+  75% { transform: translateX(-6px); }
 }
 
 #wallet-btn {
@@ -6278,7 +6297,7 @@ div[role='tablist'] {
   left: 50%;
   width: 0;
   height: 2px;
-  transition: width 0.3s ease-in-out, left 0.3s ease-in-out;
+  transition: width 0.1s ease-in-out, left 0.1s ease-in-out;
   transform: translateX(-50%);
 }
 
@@ -6435,11 +6454,12 @@ div.table .table-row .table-cell img.avatar,
 /**********************/
 
 .react-confirm-alert-overlay {
-  background: rgba(19, 19, 19, 0.2) !important;
+  opacity: 1 !important;
+  background: transparent !important;
 }
 
 .react-confirm-alert .modal-body.alert-body {
-  border-radius: 0.6em !important;
+  border-radius: 0.5em !important;
 }
 
 .password-modal-body {
@@ -6447,10 +6467,6 @@ div.table .table-row .table-cell img.avatar,
 
 }
 
-.react-confirm-alert .modal-body.alert-body.result-body {
-  animation: pulse 1s ease-in-out infinite;
-  min-width: unset !important;
-}
 
 .react-confirm-alert .modal-footer {
   border-top: unset !important;
@@ -6630,7 +6646,7 @@ div.table .table-row .table-cell img.avatar,
 .blur {
   filter: blur(5px);
   /* Adjust the blur amount as needed */
-  transition: filter 0.3s ease;
+  transition: filter 0.1s ease;
   /* Optional: Add a smooth transition */
 }
 
@@ -6768,10 +6784,9 @@ div.table .table-row .table-cell img.avatar,
   display: block;
 }
 
-.ReactModal__Overlay {
+/* .ReactModal__Overlay {
   opacity: 0;
-  /* transition: opacity 500ms ease-in-out; */
-}
+} */
 
 .modal_action_panel {
   padding-top: 20px;
@@ -6780,13 +6795,13 @@ div.table .table-row .table-cell img.avatar,
   row-gap: 10px;
 }
 
-.ReactModal__Overlay--after-open {
+/* .ReactModal__Overlay--after-open {
   opacity: 1;
 }
 
 .ReactModal__Overlay--before-close {
   opacity: 0;
-}
+} */
 
 
 .ReactModal__Content {
@@ -6863,6 +6878,7 @@ div.table .table-row .table-cell img.avatar,
 .modal-body button,
 .modal-body button.btn-back {
   margin-left: 5px;
+  border-radius: 0.25em !important;
 }
 
 .modal-body .btn-back {
@@ -8046,7 +8062,7 @@ div[aria-label="How To Play Modal"] ul {
   }
 
   .game_header {
-    height: 62px;
+    height: 60px;
   }
 
   .game_header .main_header {
@@ -8179,6 +8195,11 @@ div[aria-label="How To Play Modal"] ul {
   .game-type-panel .btn-game-type {
     font-size: 1em !important;
 
+  }
+
+  .avatar-square {
+position: relative;
+    margin-left: 0;
   }
 
   .join-game-panel,
@@ -8729,7 +8750,5 @@ div[aria-label="How To Play Modal"] ul {
     font-size: 1em !important;
   }
 
-  .contents_wrapper {
-    margin-top: 62px;
-  }
+ 
 }

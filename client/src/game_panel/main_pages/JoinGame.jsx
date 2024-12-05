@@ -1231,7 +1231,7 @@ class JoinGame extends Component {
       <>
 
         <div
-          className="main-game"
+          className="main-game join"
           style={{
             gridTemplateColumns: this.props.isDrawerOpen
               ? '260px calc(100% - 610px) 350px'

@@ -102,15 +102,35 @@ class HistoryTable extends Component {
     }
   }
 
-  handleNewLog = data => {
+  handleNewLog = (data) => {
+  
     const newLog = data.newLog[0];
-
-    this.setState(prevState => {
-      const updatedHistory = [newLog, ...prevState.history.slice(0, 29)]; // Prepend newLog and then slice
-      const finalHistory = updateFromNow(updatedHistory.slice(0, 30));
-      return {
-        history: finalHistory
-      };
+    
+    if (!newLog) {
+      console.warn("No valid log data received.");
+      return;
+    }
+  
+    const { room_id } = newLog;
+  
+    if (!room_id) {
+      console.warn("No room_id found in new log data:", newLog);
+      return;
+    }
+  
+    if (this.props.setHighlightedRooms) {
+      this.props.setHighlightedRooms(new Set([room_id]));
+  
+      setTimeout(() => {
+        this.props.setHighlightedRooms(new Set());
+      }, 4000);
+    }
+  
+    this.setState((prevState) => {
+      const updatedHistory = [newLog, ...prevState.history.slice(0, 29)]; // Prepend newLog and limit to 30 entries
+      const finalHistory = updateFromNow(updatedHistory);
+  
+      return { history: finalHistory };
     }, () => {
       this.attachUserLinkListeners();
       this.attachAccessories();

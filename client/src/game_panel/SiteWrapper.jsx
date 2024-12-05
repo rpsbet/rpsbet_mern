@@ -556,6 +556,7 @@ class SiteWrapper extends Component {
       });
 
       socket.on('UPDATED_ROOM_LIST', async data => {
+        console.log("data", data);
         await this.props.setRoomList(data);
         await this.props.getMyHistory();
         await this.props.getHistory();
@@ -765,7 +766,8 @@ class SiteWrapper extends Component {
     }
 
     this.props.getWithdrawals();
-    this.props.getWins();
+    await this.props.getWins();
+
   }
   async fetchInitialData() {
     const { getWins, getWithdrawals } = this.props;
@@ -835,7 +837,7 @@ class SiteWrapper extends Component {
   }
   async fetchData() {
     const { transactions } = this.props;
-
+console.log(transactions.length)
     const categories = [];
     const data = [];
     let currentBalance = 0;
@@ -849,9 +851,8 @@ class SiteWrapper extends Component {
         color: transaction.amount >= 0 ? 'green' : 'red'
       });
     });
-
     this.setState({
-      balance: currentBalance,
+      balance: this.state.balance,
       oldBalance: this.state.balance,
       transactions: transactions,
     });
@@ -1392,38 +1393,7 @@ class SiteWrapper extends Component {
           </div>
         )}
         <div className={`site_wrapper row ${isDarkMode ? 'dark_mode' : ''}`}>
-          {/* {websiteLoading && (
-            <div
-              className="loading-overlay"
-              style={{
-                display: 'flex',
-                flexDirection: 'column'
-              }}
-            >
-              <img src={randomGifUrl} alt="Loading" />
-              <span
-                style={{
-                  marginTop: '10px',
-                  color: '#fff'
-                }}
-              >
-                {`Connecting...`}
-              </span>
-              <Lottie
-                options={{
-                  loop: true,
-                  autoplay: true,
-                  animationData: progress
-                }}
-                style={{
-                  marginTop: '-40px',
-                  filter: `hue-rotate(${hueRotateValue}deg)`,
-                  width: '300px',
-                  height: '100px'
-                }}
-              />
-            </div>
-          )} */}
+         
           <div className="game_header">
             <div className="main_header">
               <a

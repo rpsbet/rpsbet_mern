@@ -8,10 +8,11 @@ import {
   getRecentlyClosed,
   getQbot,
   addNewTransaction,
-  coHost
+  coHost,
 } from '../../redux/Logic/logic.actions';
 import { TrendingUpOutlined, TrendingDownOutlined } from "@material-ui/icons";
 import { Grid, Tooltip, Typography } from '@material-ui/core';
+import { Skeleton } from "@material-ui/lab";
 import { Warning, Add, Remove, Visibility } from '@material-ui/icons';
 import FilterListIcon from "@material-ui/icons/FilterList";
 import Moment from 'moment';
@@ -75,18 +76,18 @@ class OpenGamesTable extends Component {
 
   async componentDidMount() {
     await this.props.getRoomList({ pageSize: 7 });
-    await this.props.getRecentlyClosed();
+    const qBotStatuses = {};
+    for (const room of this.state.roomList) {
+      const isQbot = await this.props.getQbot(room.creator_id);
+      console.log("done one", isQbot)
+      qBotStatuses[room.creator_id] = isQbot;
+    }
+    this.setState({ qBotStatuses });
     window.addEventListener('load', this.handleLoad);
     this.debouncedHandleScroll = this.debounce(this.handleScroll, 300);
 
     window.addEventListener('scroll', this.debouncedHandleScroll);
 
-    const qBotStatuses = {};
-    for (const room of this.state.roomList) {
-      const isQbot = await this.props.getQbot(room.creator_id);
-      qBotStatuses[room.creator_id] = isQbot;
-    }
-    this.setState({ qBotStatuses });
     this.props.handleRefresh();
   }
 
@@ -97,37 +98,36 @@ class OpenGamesTable extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const roomIds = this.props.roomList.map(room => room._id);
+    const roomIds = new Set(this.state.roomList.map(room => room._id));
 
-    if (prevProps.roomList[0] !== this.props.roomList[0]) {
-      const significantChange = this.props.roomList.slice(0, 5).some((room, index) => {
+    if (prevProps.roomList !== this.props.roomList) {
+      // Filter out duplicate rooms
+      const newRooms = this.props.roomList.filter(room => !roomIds.has(room._id));
+
+      // Check for significant changes
+      const significantChange = newRooms.some((room) => {
         const prevRoom = prevProps.roomList.find(prevRoom => prevRoom._id === room._id);
 
         if (prevRoom) {
           const previousBet = parseFloat(prevRoom.user_bet);
           const newBet = parseFloat(room.user_bet);
 
-          // Ensure both values are valid numbers before calculating the change
           if (!isNaN(previousBet) && !isNaN(newBet) && previousBet !== 0) {
             const change = Math.abs(newBet - previousBet) / previousBet;
-            return change >= 0.01; // 30% or more change
+            return change >= 0.01; // Detect significant change
           }
         }
-        return false; // No previous room found, or invalid bet values
-      }) || prevProps.roomList.length !== this.props.roomList.length && this.props.roomList.length === this.state.roomList.length;
+        return false;
+      });
 
-      this.setState(prevState => ({
-        roomList: [
-          ...prevState.roomList,
-          ...this.props.roomList.filter(room => !prevState.fetchedRoomIds.includes(room._id))
-        ],
-        fetchedRoomIds: [...prevState.fetchedRoomIds, ...roomIds],
-        isLoading: false,
-        loaded: true
-      }));
+      // Simply merge the rooms without sorting by updated_at
+      const mergedRooms = [...this.state.roomList, ...newRooms];
 
+
+      // Update state with merged rooms
       this.setState({
-        roomList: this.props.roomList
+        roomList: mergedRooms,
+        highlightedRooms: this.props.highlightedRooms,
       });
 
       if (significantChange) {
@@ -379,17 +379,22 @@ class OpenGamesTable extends Component {
     return value >= 0 ? '#57ca22' : 'red';
   };
 
-  handleFilterChange = (filterOption) => {
+  handleFilterChange = async (filterOption) => {
     this.setState({ filter: filterOption });
-  };
+    if (filterOption) {
+      await this.props.getRecentlyClosed();
+    }
 
+  };
   render() {
     const {
       coHostAmount,
       selectedRow,
-      filter
+      filter,
+      isLoading,
+      roomList
     } = this.state;
-    const { showPlayerModal, selectedCreator, roomList, isDarkMode, recentlyClosed, handleOpenPlayerModal, handleClosePlayerModal } = this.props;
+    const { loading, showPlayerModal, selectedCreator, isDarkMode, recentlyClosed, handleOpenPlayerModal, handleClosePlayerModal } = this.props;
     let recent = recentlyClosed ? this.updateFromNow(recentlyClosed) : [];
     const isLiveGames = filter === "Live Games";
     const defaultOptions = {
@@ -427,80 +432,146 @@ class OpenGamesTable extends Component {
           <>
             <div className="table main-game-table">
 
-              {(this.props.roomList.length === 0 && !this.state.isLoading && !this.props.loading) ? (
+              {(roomList.length === 0 && !isLoading && !loading) ? (
                 <div className="dont-have-game-msg">
                   <div>NO LIVE GAMES, GO TO 'MANAGE' TO CREATE ONE</div>
                 </div>
               ) : (
                 <Grid container className="grid-container" spacing={1} style={{ padding: "20px", width: "100%" }}>
-                  {this.state.roomList.map(
-                    (row, key) => (
+                  {roomList.length === 0 ? (
+                    // Render Skeletons if loading
+                    Array.from({ length: 5 }).map((_, index) => (
+                      <Grid item xs={12} sm={6} md={4} key={index}>
+                        <Skeleton variant="rect" width="100%" height={100} />
+                        <Skeleton width="60%" />
+                        <Skeleton width="40%" />
+                      </Grid>
+                    ))
+                  ) : (
+                    roomList.map((row, key) => (
                       <div
-
                         key={row._id}
-
-                        className={`table-row ${key < 10 ? 'slide-in' : 'slide-in'}`}
-                        style={{ animationDelay: `${key * 0.1}s` }}
-                        onClick={() => this.joinRoom({
-                          id: row._id,
-                          creatorId: row.creator_id,
-                          roomStatus: row.status,
-                          gameType: row.game_type.game_type_name,
-                          betAmount: row.user_bet,
-                          qsGameType: row.qs_game_type,
-                          pr: row.pr,
-                          host_pr: row.host_pr
-                        })}
-
+                        className={`table-row ${key < 10 ? "slide-in" : "slide-in"}`}
+                        style={{
+                          animation: this.state.highlightedRooms.has(row._id)
+                            ? "flicker 0.4s 2, shake 0.5s"
+                            : "none",
+                          animationDelay: `${key * 0.1}s`,
+                        }}
+                        onClick={() =>
+                          this.joinRoom({
+                            id: row._id,
+                            creatorId: row.creator_id,
+                            roomStatus: row.status,
+                            gameType: row.game_type.game_type_name,
+                            betAmount: row.user_bet,
+                            qsGameType: row.qs_game_type,
+                            pr: row.pr,
+                            host_pr: row.host_pr,
+                          })
+                        }
                       >
                         {' '}
 
                         <div className="" style={{ display: 'flex', flexDirection: 'column' }}>
                           {/* Room Info Row */}
+                          <div>
+                            {this.state.qBotStatuses[row.creator_id] ? (
+                              <span
+                                style={{
+                                  transform: "translateX(-30px)",
+                                  fontSize: "xx-small",
+                                  position: "absolute",
+                                  border: "1px solid rgb(255, 208, 0)",
+                                  background: "linear-gradient(45deg, #7a5958, #a27955)",
+                                  borderRadius: "4px",
+                                  color: "rgb(255, 208, 0)",
+                                  padding: "0px 5px",
+                                  lineHeight: "20px",
+                                  marginLeft: "7.5px"
+                                }}
+                              >
+                                Q-BOT
+                              </span>
+                            ) : (
+                              <div >
+                                <Lottie
+                                  options={{
+                                    loop: false,
+                                    autoplay: false,
+                                    animationData: blob
+                                  }}
+                                  style={{
+                                    width: '32px',
+                                    transform: "translateX(-30px)",
+                                    height: '38px',
+                                    position: "absolute",
+                                    filter: 'invert(1)'
+                                  }}
+                                />
+                              </div>
+                            )}
+                          </div>
                           <div className="table-cell cell-room-info">
                             <img
                               src={`/img/gametype/icons/${row.game_type.short_name}.svg`}
                               alt=""
                               className="game-type-icon"
                             />
-                            <div>
-                              <div className="cell-game-id">{'#' + row.index}</div>
-                              {this.state.qBotStatuses[row.creator_id] ? (
-                                <span
-                                  style={{
-                                    fontSize: "xx-small",
-                                    position: "absolute",
-                                    top: "22px",
-                                    left: "14px",
-                                    border: "1px solid rgb(255, 208, 0)",
-                                    background: "linear-gradient(45deg, #7a5958, #a27955)",
-                                    borderRadius: "4px",
-                                    color: "rgb(255, 208, 0)",
-                                    padding: "0px 5px",
-                                    lineHeight: "20px",
-                                    marginLeft: "7.5px"
-                                  }}
-                                >
-                                  Q-BOT
-                                </span>
-                              ) : (
-                                <div >
-                                  <Lottie
-                                    options={{
-                                      loop: false,
-                                      autoplay: false,
-                                      animationData: blob
-                                    }}
+                            <div className="cell-game-id">{'#' + row.index}</div>
+
+                            <div
+                              style={{
+                                display: 'flex',                // Use Flexbox for a row layout
+                                alignItems: 'center',           // Vertically align items
+                                justifyContent: 'flex-start',   // Align items to the left (default behavior)
+                                gap: '10px',                    // Space between the items
+                              }}
+                            >
+                              {/* Co-host button */}
+                              <a
+                                className="ml-1"
+                                onClick={(event) => {
+                                  event.preventDefault(); // Prevent default anchor tag behavior
+                                  event.stopPropagation();
+                                  this.handleCoHost(row); // Call the function with the row
+                                }}
+                                style={{
+                                  color: "rgb(0 255 58)",
+                                  padding: "8px 12px",
+                                  display: "flex",
+                                  justifyContent: "center",
+                                  alignItems: "center",
+                                  background: "linear-gradient(45deg, #28a74544, #33e74533)",
+                                  border: "2px solid rgb(0 255 58)",
+                                  cursor: "pointer",
+                                  borderRadius: "0.3em",
+                                  fontSize: "14px",
+                                  textDecoration: "none", // Remove default anchor styles
+                                }}
+                              >
+                                <ShowChartOutlined style={{ width: "20px" }} />
+                              </a>
+
+                              {row.is_private && (
+                                <Tooltip title="A password is required to battle this room." arrow>
+                                  <div
                                     style={{
-                                      width: '32px',
-                                      height: '38px',
-                                      position: "absolute",
-                                      top: "10px",
-                                      left: "15px",
+                                      display: "flex",
+                                      justifyContent: "center",
+                                      alignItems: "center",
+                                      padding: "8px",
+                                      borderRadius: "0.3em", // Matching border radius to co-host button
+                                      backgroundColor: "#f1f1f1", // Light background color for the icon
+                                      border: "2px solid #cccccc", // Subtle border
+                                      cursor: "default", // Add cursor pointer to indicate interactivity
                                     }}
-                                  />
-                                </div>
+                                  >
+                                    <LockOutlined style={{ color: "#808080", fontSize: "18px" }} />
+                                  </div>
+                                </Tooltip>
                               )}
+
                             </div>
                           </div>
 
@@ -533,7 +604,7 @@ class OpenGamesTable extends Component {
                                 }`}
                             ></i>
                             {row.hosts && row.hosts
-                              .slice(1, 2)
+                              .slice(1, 1)
                               .map((host, index) => (
                                 <div className="hosts" key={index}>
                                   <a
@@ -555,10 +626,10 @@ class OpenGamesTable extends Component {
                                 </div>
                               ))}
 
-                            {row.hosts.length > 2 && (
+                            {row.hosts.length > 1 && (
                               <div className="hosts avatar-square">
                                 <div className="avatar-count">
-                                  +{row.hosts.length - 2}
+                                  +{row.hosts.length - 1}
                                 </div>
                               </div>
                             )}
@@ -566,14 +637,16 @@ class OpenGamesTable extends Component {
                               <div className="table-cell avatar desktop-only cell-joiners">
                                 <Battle />
                                 {row.joiner_avatars
-                                  .slice(0, 2)
+                                  .slice(0, 1)
                                   .map((joiner, index) => (
                                     <a
                                       key={index}
                                       className="player"
-                                      onClick={() =>
-                                        handleOpenPlayerModal(row.joiners[index])
-                                      }
+                                      onClick={(event) => {
+                                        event.preventDefault(); // Prevent default behavior (if needed)
+                                        event.stopPropagation(); // Prevent the event from propagating further
+                                        handleOpenPlayerModal(row.joiners[index]); // Call the function with the correct argument
+                                      }}
                                     >
                                       <Avatar
                                         className="avatar desktop-only"
@@ -587,10 +660,10 @@ class OpenGamesTable extends Component {
                                       />
                                     </a>
                                   ))}
-                                {row.joiner_avatars.length > 2 && (
+                                {row.joiner_avatars.length > 1 && (
                                   <div className="avatar-square">
                                     <div className="avatar-count">
-                                      +{row.joiner_avatars.length - 2}
+                                      +{row.joiner_avatars.length - 1}
                                     </div>
                                   </div>
                                 )}
@@ -679,61 +752,6 @@ class OpenGamesTable extends Component {
                               </Typography>
                             </div>
                           </div>
-
-                          {/* Action Row */}
-                          <div
-                            className="table-cell desktop-only cell-action"
-                            style={{
-                              display: 'flex',                // Use Flexbox for a row layout
-                              alignItems: 'center',           // Vertically align items
-                              justifyContent: 'flex-start',   // Align items to the left (default behavior)
-                              gap: '10px',                    // Space between the items
-                            }}
-                          >
-                            {/* Co-host button */}
-                            <a
-                              className="ml-1"
-                              onClick={(event) => {
-                                event.preventDefault(); // Prevent default anchor tag behavior
-                                event.stopPropagation();
-                                this.handleCoHost(row); // Call the function with the row
-                              }}
-                              style={{
-                                color: "rgb(0 255 58)",
-                                padding: "8px 12px",
-                                display: "flex",
-                                justifyContent: "center",
-                                alignItems: "center",
-                                background: "linear-gradient(45deg, #28a74544, #33e74533)",
-                                border: "2px solid rgb(0 255 58)",
-                                cursor: "pointer",
-                                borderRadius: "0.3em",
-                                fontSize: "14px",
-                                textDecoration: "none", // Remove default anchor styles
-                              }}
-                            >
-                              <ShowChartOutlined style={{ width: "20px" }} />
-                            </a>
-
-                            {row.is_private && (
-                              <Tooltip title="A password is required to battle this room." arrow>
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    justifyContent: "center",
-                                    alignItems: "center",
-                                    padding: "8px",
-                                    borderRadius: "0.3em", // Matching border radius to co-host button
-                                    backgroundColor: "#f1f1f1", // Light background color for the icon
-                                    border: "2px solid #cccccc", // Subtle border
-                                    cursor: "default", // Add cursor pointer to indicate interactivity
-                                  }}
-                                >
-                                  <LockOutlined style={{ color: "#808080", fontSize: "18px" }} />
-                                </div>
-                              </Tooltip>
-                            )}
-                          </div>
                         </div>
                         <div className="mobile-only" style={{ marginTop: '7.5px', marginBottom: '-5px' }}>
                           <div className="table-cell cell-user-name">
@@ -771,9 +789,11 @@ class OpenGamesTable extends Component {
                                     <a
                                       key={index}
                                       className="player"
-                                      onClick={() =>
-                                        handleOpenPlayerModal(row.joiners[index])
-                                      }
+                                      onClick={(event) => {
+                                        event.preventDefault(); // Prevent default anchor tag behavior
+                                        event.stopPropagation(); // Prevent the event from bubbling up
+                                        handleOpenPlayerModal(row.joiners[index]); // Call the function with the correct argument
+                                      }}
                                     >
                                       <Avatar
                                         className="avatar mobile-only"
@@ -800,17 +820,9 @@ class OpenGamesTable extends Component {
 
                         </div>
                       </div>
-                    ),
-                    this
+                    ))
                   )}
                 </Grid>
-              )}
-
-              {this.props.loading && (!this.state.isLoading) && (
-                <>
-                  <div className="loading-spinner">
-                  </div>
-                </>
               )}
             </div>
           </>
@@ -829,53 +841,68 @@ class OpenGamesTable extends Component {
         {/* Show Recently Ended if the filter is "Recently Ended" */}
         {!isLiveGames && (
           <Grid container spacing={2}>
-            {recent.map((row) => {
-              const hostPrizeMinusBetAmount = row.host_pr - row.bet_amount;
-
-              return (
-                <Grid item xs={6} sm={4} md={3} lg={3} xl={3} key={row._id}>
-                  <div
-                    className="carousel-content table-row slide-in glass-container"
-                    style={{
-                      padding: '25px',
-                      color: 'white',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      borderRadius: '8px',
-                    }}
-                  >
-                    <a href={`/join/${row._id}`} className="table-cell">
-                      <img
-                        src={`/img/gametype/icons/${row.game_type.short_name}.svg`}
-                        alt=""
-                        className="game-type-icon"
-                        width={32}
-                        style={{ marginRight: "5px" }}
-                      />
-                      <span className="cell">{row.game_type.short_name + '-' + row.room_number}</span>
-                    </a>
-                    <div className="cell">
-                      {row.status} <FontAwesomeIcon icon={faHeartBroken} />
-                    </div>
-                    <div className="cell">
-                      {row.from_now} <FontAwesomeIcon icon={faStopwatch} />
-                    </div>
-                    <div className="cell">
-                      <span className={`${this.getColorClass(hostPrizeMinusBetAmount)}`}>
-                        {convertToCurrency(hostPrizeMinusBetAmount)}
-                      </span>
-                      <span
-                        className={`${this.getColorClass(hostPrizeMinusBetAmount)}`}
-                        style={{ fontSize: 'xx-small', marginLeft: '5px' }}
-                      >
-                        (${(hostPrizeMinusBetAmount * this.props.tokenPrice).toFixed(2)})
-                      </span>
-                    </div>
+            {recent.length === 0 ? (
+              // Show skeletons if there's no data or it's still loading
+              Array.from({ length: 4 }).map((_, index) => (
+                <Grid item xs={6} sm={4} md={3} lg={3} xl={3} key={index}>
+                  <div className="carousel-content table-row slide-in glass-container">
+                    <Skeleton variant="rect" width="100%" height={200} />
+                    <Skeleton width="60%" />
+                    <Skeleton width="40%" />
+                    <Skeleton width="80%" />
                   </div>
                 </Grid>
-              );
-            })}
+              ))
+            ) : (
+              // Show actual content if there's data
+              recent.map((row) => {
+                const hostPrizeMinusBetAmount = row.host_pr - row.bet_amount;
+
+                return (
+                  <Grid item xs={6} sm={4} md={3} lg={3} xl={3} key={row._id}>
+                    <div
+                      className="carousel-content table-row slide-in glass-container"
+                      style={{
+                        padding: '25px',
+                        color: 'white',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        borderRadius: '8px',
+                      }}
+                    >
+                      <a href={`/join/${row._id}`} className="table-cell">
+                        <img
+                          src={`/img/gametype/icons/${row.game_type.short_name}.svg`}
+                          alt=""
+                          className="game-type-icon"
+                          width={32}
+                          style={{ marginRight: "5px" }}
+                        />
+                        <span className="cell">{row.game_type.short_name + '-' + row.room_number}</span>
+                      </a>
+                      <div className="cell">
+                        {row.status} <FontAwesomeIcon icon={faHeartBroken} />
+                      </div>
+                      <div className="cell">
+                        {row.from_now} <FontAwesomeIcon icon={faStopwatch} />
+                      </div>
+                      <div className="cell">
+                        <span className={`${this.getColorClass(hostPrizeMinusBetAmount)}`}>
+                          {convertToCurrency(hostPrizeMinusBetAmount)}
+                        </span>
+                        <span
+                          className={`${this.getColorClass(hostPrizeMinusBetAmount)}`}
+                          style={{ fontSize: 'xx-small', marginLeft: '5px' }}
+                        >
+                          (${(hostPrizeMinusBetAmount * this.props.tokenPrice).toFixed(2)})
+                        </span>
+                      </div>
+                    </div>
+                  </Grid>
+                );
+              })
+            )}
           </Grid>
         )}
         <Modal

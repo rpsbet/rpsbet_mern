@@ -387,7 +387,6 @@ export default function (state = initialState, action) {
       return {
         ...state,
         myGames: payload.myGames,
-        // myGamesTotalPage: payload.pages,
         myGamesPageNumber: payload.page
       };
     case MY_HISTORY_LOADED:

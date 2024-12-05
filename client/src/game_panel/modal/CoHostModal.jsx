@@ -377,8 +377,17 @@ function CoHostModal({
   };
 
   const handleMaxButtonClick = () => {
-    const simulatedEvent = { target: { value: balance } };
-    handleCoHostAmountChange(simulatedEvent);
+    // Find the host in selectedRow.hosts who matches the user._id
+    const userHost = selectedRow.hosts.find((host) => host.host === user._id);
+  
+    // Check if userHost exists and has a stake
+    if (userHost) {
+      // Create a simulated event with the stake value from userHost.stake
+      const simulatedEvent = { target: { value: userHost.stake } };
+      
+      // Call handleCoHostAmountChange with the simulated event
+      handleCoHostAmountChange(simulatedEvent);
+    }
   };
 
   const handleUnstake = async (winnings, room_id, stakeAmount) => {
@@ -650,30 +659,15 @@ function CoHostModal({
                   <TableCell style={{ textAlign: 'right' }}>{convertToCurrency(balance)}</TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell>NEW BALANCE:</TableCell>
-                  <TableCell style={{ textAlign: 'right' }}>
-                    {convertToCurrency((balance || 0) - (coHostAmount || 0))}
-                    &nbsp;
-                    {((balance || 0) - (coHostAmount || 0)) < 0 && <Warning width="15pt" />}
-                  </TableCell>
-                </TableRow>
-                <TableRow>
                   <TableCell>CURRENT BANKROLL:</TableCell>
                   <TableCell style={{ color: "#ffb000", textAlign: 'right' }}>
                     {selectedRow ? convertToCurrency(selectedRow.user_bet) : null}
                   </TableCell>
                 </TableRow>
-                <TableRow>
-                  <TableCell>NEW BANKROLL:</TableCell>
-                  <TableCell style={{ color: "#ffb000", textAlign: 'right' }}>
-                    {selectedRow
-                      ? convertToCurrency(parseFloat(selectedRow.user_bet) + parseFloat(coHostAmount || 0))
-                      : null}
-                  </TableCell>
-                </TableRow>
+               
                 <TableRow>
                   <TableCell>CURRENT SHARE:</TableCell>
-                  <TableCell style={{ color: "yellow", textAlign: 'right' }}>
+                  <TableCell style={{ color: "rgb(255, 176, 0)", textAlign: 'right' }}>
                     {Array.isArray(selectedRow.hosts) && selectedRow.hosts.length > 0 && selectedRow.hosts.some((host) => host.host === user._id) ? (
                       <>
                         {
@@ -693,7 +687,7 @@ function CoHostModal({
 
                 <TableRow>
                   <TableCell>NEW SHARE:</TableCell>
-                  <TableCell style={{ color: "yellow", textAlign: 'right' }}>
+                  <TableCell style={{ color: "rgb(255, 176, 0)", textAlign: 'right' }}>
                     {(() => {
                       if (!selectedRow || !Array.isArray(selectedRow.hosts)) return "0%";
 
@@ -836,7 +830,7 @@ function CoHostModal({
           <TrendingUpOutlined style={{ color: "#fff", marginLeft: "8px" }} />
         </Button>
         <Button
-          className="btn-back"
+          className="btn-submit"
           onClick={() =>
             handleUnstake(
               selectedRow?.winnings ?? parseFloat(selectedRow?.user_bet || 0), // Use winnings if available, otherwise fallback
@@ -844,7 +838,7 @@ function CoHostModal({
               coHostAmount
             )
           }
-          style={{ border: "unset", background: "linear-gradient(357deg, #00ff17, #28a745)" }}
+          style={{ marginLeft: "10px", border: "unset", background: "linear-gradient(357deg, #00ff17, #28a745)", boxShadow: "rgb(37 184 65) 0px -0.5px 0px, rgb(34, 117, 52) 0px -3px inset, rgb(80, 191, 98) 0px 2px inset" }}
         >
           JEET
           <TrendingDownOutlined style={{ color: "#fff", marginLeft: "4px" }} />

@@ -20,6 +20,7 @@
   "license": "ISC",
   "dependencies": {
     "@fortawesome/free-brands-svg-icons": "^6.3.0",
+    "@material-ui/lab": "^4.0.0-alpha.61",
     "@solana/spl-token": "^0.4.9",
     "@solana/web3.js": "^1.95.4",
     "@svgr/core": "^8.1.0",

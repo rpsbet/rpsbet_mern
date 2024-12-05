@@ -1,6 +1,5 @@
 const tf = require('@tensorflow/tfjs-node');
 const { trainModel, predictNextMove } = require('./modelUtils');
-
 const predictNext = (rps_list, markov = false) => {
   const choices = ['R', 'P', 'S'];
   const smoothingFactor = 0.1;
@@ -14,7 +13,6 @@ const predictNext = (rps_list, markov = false) => {
   const startIndex = Math.floor(Math.random() * (rps_list.length - subsetSize));
   const subset = rps_list.slice(startIndex, startIndex + subsetSize);
 
-
   const transitionMatrix = {
     R: { R: 0, P: 0, S: 0 },
     P: { R: 0, P: 0, S: 0 },
@@ -23,11 +21,19 @@ const predictNext = (rps_list, markov = false) => {
 
   // Populate transition matrix
   for (let i = 0; i < subset.length - 1; i++) {
-    const currentState = subset[i].rps;
-    const nextState = subset[i + 1].rps;
+    let currentState = subset[i].rps;
+    let nextState = subset[i + 1].rps;
+
+    // Validate states, default to random if invalid
+    if (!choices.includes(currentState)) {
+      currentState = choices[Math.floor(Math.random() * 3)];
+    }
+    if (!choices.includes(nextState)) {
+      nextState = choices[Math.floor(Math.random() * 3)];
+    }
+
     transitionMatrix[currentState][nextState]++;
   }
-
 
   // Normalize transition matrix with smoothing
   Object.keys(transitionMatrix).forEach((fromState) => {
@@ -43,16 +49,20 @@ const predictNext = (rps_list, markov = false) => {
     }
   });
 
-
   // Predict next state based on the last observed state
-  const currentState = rps_list[rps_list.length - 1].rps;
+  let currentState = rps_list[rps_list.length - 1].rps;
+
+  // Validate the last observed state
+  if (!choices.includes(currentState)) {
+    currentState = choices[Math.floor(Math.random() * 3)];
+  }
+
   let nextState = currentState;
   let maxProb = 0;
 
   if (transitionMatrix[currentState]) {
     Object.keys(transitionMatrix[currentState]).forEach((state) => {
       const prob = transitionMatrix[currentState][state];
-      // console.log(`Transition probability from ${currentState} to ${state}: ${prob}`);
       if (prob > maxProb) {
         maxProb = prob;
         nextState = state;
@@ -62,7 +72,6 @@ const predictNext = (rps_list, markov = false) => {
     console.warn(`Warning: No transition data available for state ${currentState}`);
     nextState = Object.keys(transitionMatrix)[0] || choices[Math.floor(Math.random() * 3)];
   }
-
 
   if (markov) {
     nextState = getBeatingType(nextState);

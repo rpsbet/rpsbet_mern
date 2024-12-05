@@ -30,11 +30,16 @@ function updateFromNow(history) {
 
 const styles = theme => ({
   activeTab: {
-    color: props => props.isDarkMode ? '#f9f9f9' : '#ff0000',
+    color: props => props.isDarkMode ? '#f9f9f9' : '#ff0000', // Active tab color
     '& .MuiTab-wrapper': {
-      color: '#ff0000',
-
-    }
+      color: '#ff0000', // Active tab icon color
+    },
+  },
+  inactiveTab: {
+    color: props => props.isDarkMode ? '#aaa' : '#ccc', // Non-active tab color based on dark mode
+    '& .MuiTab-wrapper': {
+      color: props => props.isDarkMode ? '#aaa' : '#ccc', // Non-active tab icon color
+    },
   },
 });
 class TabbedContent extends Component {
@@ -126,31 +131,43 @@ class TabbedContent extends Component {
     return (
       <div className='tabs-container'>
         <Tabs
-          TabIndicatorProps={{ style: { background: '#ff0000' } }}
-          value={selectedTab}
-          onChange={this.handleTabChange}
-        >
-          <Tab
-            classes={{ selected: classes.activeTab }}
-            icon={<SwapHorizIcon />} // Updated to SwapHorizIcon
-            label="Trade" // Updated label
-          />
-          <Tab
-            classes={{ selected: classes.activeTab }}
-            icon={<HistoryIcon />}
-            label="History"
-          />
-          <Tab
-            classes={{ selected: classes.activeTab }}
-            icon={<CommentIcon />}
-            label="Comments"
-          />
-          <Tab
-            classes={{ selected: classes.activeTab }}
-            icon={<BarChartIcon />}
-            label="Leaderboards"
-          />
-        </Tabs>
+  TabIndicatorProps={{ style: { background: '#ff0000' } }}
+  value={selectedTab}
+  onChange={this.handleTabChange}
+>
+  <Tab
+    classes={{
+      selected: classes.activeTab,
+      root: selectedTab === 0 ? classes.activeTab : classes.inactiveTab, // Check if tab is selected
+    }}
+    icon={<SwapHorizIcon />}
+    label="Trade"
+  />
+  <Tab
+    classes={{
+      selected: classes.activeTab,
+      root: selectedTab === 1 ? classes.activeTab : classes.inactiveTab,
+    }}
+    icon={<HistoryIcon />}
+    label="History"
+  />
+  <Tab
+    classes={{
+      selected: classes.activeTab,
+      root: selectedTab === 2 ? classes.activeTab : classes.inactiveTab,
+    }}
+    icon={<CommentIcon />}
+    label="Thread"
+  />
+  <Tab
+    classes={{
+      selected: classes.activeTab,
+      root: selectedTab === 3 ? classes.activeTab : classes.inactiveTab,
+    }}
+    icon={<BarChartIcon />}
+    label="Insights"
+  />
+</Tabs>
         <div>
           {selectedTab === 0 && (
             <div className="room-leaderboards-panel">
@@ -212,7 +229,7 @@ class TabbedContent extends Component {
           )}
           {selectedTab === 2 && (
             <div className='room-leaderboards-panel '>
-              <h2 className="room-history-title">Comments</h2>
+              <h2 className="room-history-title">Thread</h2>
               <div className="glass-container" style={{ padding: "30px", marginTop: "20px" }}>
 
                 <Comments
@@ -224,7 +241,7 @@ class TabbedContent extends Component {
           )}
           {selectedTab === 3 && (
             <div className="room-leaderboards-panel">
-              <h2 className="room-history-title">Leaderboards</h2>
+              <h2 className="room-history-title">Insights</h2>
 
               <Leaderboards roomId={roomInfo._id}
               />

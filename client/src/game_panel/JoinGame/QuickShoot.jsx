@@ -826,8 +826,9 @@ class QuickShoot extends Component {
         )}
         <div className="game-contents title">
           <div
-            className="pre-summary-panel title"
+            className="pre-summary-panel title" 
             ref={this.panelRef}
+            style={{overflow: 'hidden'}}
           // onScroll={this.handleScroll}
           >
             <div className="pre-summary-panel__inner">

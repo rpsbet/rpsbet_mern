@@ -1201,7 +1201,8 @@ export const getTransactionCandles = ({ roomId, timeFrame }) => async (dispatch)
 
 export const getQbot = (userId) => async dispatch => {
   try {
-    const res = await axios.post('/game/qbotStatus', { userId });
+    const res = await axios.get('/game/qbotStatus', { params: { userId } }); // Use `params` for query
+
     if (res.data.success) {
       return res.data.isActive;
     }
