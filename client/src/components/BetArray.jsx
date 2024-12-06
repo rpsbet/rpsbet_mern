@@ -180,21 +180,30 @@ const PlaceholderComponent = ({ selectedTab, myGames, updateQbot, handleTabChang
   }, [totalWagered]);
 
   useEffect(() => {
+    let isMounted = true; // Track if the component is mounted
+  
     const fetchQbotStatus = async () => {
       try {
         if (user_id) {
           const qbotStatus = await getQbot(user_id);
-          setIsActive(qbotStatus);
-          setBetting(qbotStatus);
+  
+          if (isMounted) { // Only update state if the component is still mounted
+            setIsActive(qbotStatus);
+            setBetting(qbotStatus);
+          }
         }
       } catch (err) {
         console.error('Error fetching Q-bot status', err);
       }
     };
-
+  
     if (user_id) {
       fetchQbotStatus();
     }
+  
+    return () => {
+      isMounted = false; // Cleanup: mark as unmounted
+    };
   }, [user_id]);
 
   const handleSwitchChange = async (event) => {
@@ -222,7 +231,7 @@ const PlaceholderComponent = ({ selectedTab, myGames, updateQbot, handleTabChang
             Q-BOT <span style={{ background: "linear-gradient(45deg, #fc00ff, #ff0000)", padding: "0px 10px", color: "#fff", borderRadius: "0.3em" }}>BETA</span>
           </h6>
           <Tooltip title="Utilize leveraging with Q-Bot which plays autonomously for you (manages games for you, including game creation, changing strategies and joining) based on your wins and behaviour." arrow>
-            <IconButton size="small">
+            <IconButton size="small" style={{borderRadius: "4px",}}>
               <FontAwesomeIcon icon={faInfoCircle} style={{ color: '#060607' }} />
             </IconButton>
           </Tooltip>
@@ -232,7 +241,7 @@ const PlaceholderComponent = ({ selectedTab, myGames, updateQbot, handleTabChang
           <>
             <div style={{ display: "inline-flex", flexDirection: "row", alignItems: "center", justifyContent: "center", width: "100%", marginBottom: "10px" }}>
               {/* AI Play Betting Switch */}
-              <Tooltip title="TOGGLE AI PLAY HOSTING">
+              <Tooltip title="TOGGLE AI HOSTING">
                 <Switch
                   id="aiplay-switch"
                   checked={betting}
@@ -255,10 +264,10 @@ const PlaceholderComponent = ({ selectedTab, myGames, updateQbot, handleTabChang
             </div>
             <div style={{ display: "inline-flex", flexDirection: "row", alignItems: "center", justifyContent: "center", width: "100%", marginBottom: "10px" }}>
               {/* AI Play Betting Switch */}
-              <Tooltip title="TOGGLE AI BETTING">
+              <Tooltip title="COMING SOON">
                 <Switch
                   id="aiplay-switch"
-                  checked={!betting}
+                  checked={betting}
                   onChange={handleSwitchChange}
                   disabled
                 />
@@ -266,7 +275,7 @@ const PlaceholderComponent = ({ selectedTab, myGames, updateQbot, handleTabChang
 
               {betting ? (
                 <div id="stop" style={{ marginRight: "15px", width: "60px" }}>
-                  {/* <Lottie options={defaultOptions} width={32} /> */}
+                  <Lottie options={defaultOptions} width={32} />
                 </div>
               ) : (
                 <div>{timerValue !== 2000 ? <span>{(timerValue / 2000).toFixed(2)}s</span> : null}</div>
@@ -274,12 +283,12 @@ const PlaceholderComponent = ({ selectedTab, myGames, updateQbot, handleTabChang
 
               <div style={{ fontSize: "small", display: 'flex', alignItems: 'center', width: "100%", boxShadow: "inset 0px 0px 6px 0px #b4b4b4a8", borderRadius: "9px", justifyContent: "center", padding: "5px 10px", overflow: "hidden" }}>
                 <FontAwesomeIcon icon={betting ? faToggleOn : faToggleOff} style={{ marginRight: '5px' }} />
-                {!betting ? 'BETTING ON' : 'BETTING OFF'}
+                {betting ? 'BETTING ON' : 'BETTING OFF'}
               </div>
             </div>
             <div style={{ display: "inline-flex", flexDirection: "row", alignItems: "center", justifyContent: "center", width: "100%" }}>
               {/* AI Play Betting Switch */}
-              <Tooltip title="TOGGLE AI TRADING">
+              <Tooltip title="COMING SOON">
                 <Switch
                   id="aiplay-switch"
                   checked={!betting}
@@ -395,7 +404,7 @@ const PlaceholderComponent = ({ selectedTab, myGames, updateQbot, handleTabChang
                 <Grid item style={{ filter: "blur(3px)" }}>
                   <h2 className="gamified-heading">Q-BOT Net Profit&nbsp;
                     <Tooltip title="TOTAL Q-BOT NET PROFIT (AFTER TAX)">
-                      <Info style={{ width: "18px", marginTop: "-3px", cursor: "pointer" }} />
+                      <Info style={{ width: "18px",  marginTop: "-3px", cursor: "pointer" }} />
                     </Tooltip>
                   </h2>
                   <div style={{ textAlign: "center", color: "#f9f9f9", background: "linear-gradient(45deg, #00ff6b, #84bd00)", padding: "5px 15px", fontSize: "1.1em", marginTop: "15px", borderRadius: "0.3em" }}>
@@ -415,7 +424,7 @@ const PlaceholderComponent = ({ selectedTab, myGames, updateQbot, handleTabChang
               <h2 className="gamified-heading">
                 Q-BOT Rooms&nbsp;
                 <Tooltip title="This data may not represent your recent transactions and is for the AI purposes only.">
-                  <Info style={{ width: "18px", marginTop: "-3px", cursor: "pointer" }} />
+                  <Info style={{ width: "18px",  marginTop: "-3px", cursor: "pointer" }} />
                 </Tooltip>
               </h2>
               <div className="gamified-content">
@@ -644,16 +653,33 @@ function BetArray({
     return [min, max];
   };
 
+  const isMounted = useRef(true); // Track component mounted status
+
   const fetchAttachedRooms = useCallback(async () => {
     try {
       if (getAttachedRooms) {
         const rooms = await getAttachedRooms();
-        setAttachedRooms(rooms);
+        if (isMounted.current) {
+          setAttachedRooms(rooms); // Only update state if the component is still mounted
+        }
       }
     } catch (error) {
       console.error('Error fetching attached rooms:', error);
     }
   }, [getAttachedRooms]);
+
+  useEffect(() => {
+    isMounted.current = true; // Set to true when component is mounted
+
+    // Call the function to fetch rooms
+    fetchAttachedRooms();
+
+    // Cleanup function that sets isMounted to false on unmount
+    return () => {
+      isMounted.current = false;
+    };
+  }, [fetchAttachedRooms]);
+
 
   useEffect(() => {
     fetchAttachedRooms();
@@ -1010,7 +1036,7 @@ function BetArray({
                       />
                     </Tooltip>
                     <Tooltip title="Betting will be slow, whilst active. Best used whilst AFK">
-                      <Info style={{ width: "18px", marginTop: "-3px", cursor: "pointer" }} />
+                      <Info style={{ width: "18px",  marginTop: "-3px", cursor: "pointer" }} />
                     </Tooltip>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', width: "50%", boxShadow: "inset 0px 0px 6px 0px #b4b4b4a8", borderRadius: "9px", justifyContent: "center", padding: "5px 10px", overflow: "hidden" }}>
@@ -1196,7 +1222,7 @@ function BetArray({
               <Grid item>
                 <h2 className="gamified-heading">Training Data&nbsp;
                   <Tooltip title="This data may not represent your recent transactions and is for the AI purposes only.">
-                    <Info style={{ width: "18px", marginTop: "-3px", cursor: "pointer" }} />
+                    <Info style={{ width: "18px",  marginTop: "-3px", cursor: "pointer" }} />
                   </Tooltip>
                 </h2>
                 <div style={{ position: "absolute", zIndex: '2', top: '180px', right: '30px' }}>
@@ -1307,7 +1333,7 @@ function BetArray({
               <Grid item>
                 <h2 className="gamified-heading">Attached Rooms&nbsp;
                   <Tooltip title="This data may not represent your recent transactions and is for the AI purposes only.">
-                    <Info style={{ width: "18px", marginTop: "-3px", cursor: "pointer" }} />
+                    <Info style={{ width: "18px", marginTop: "-3px",  cursor: "pointer" }} />
                   </Tooltip>
                 </h2>
                 <div style={{ position: "absolute", zIndex: '2', top: '180px', right: '30px' }}>

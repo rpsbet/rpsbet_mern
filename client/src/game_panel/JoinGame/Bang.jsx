@@ -264,11 +264,7 @@ class Bang extends Component {
 
   joinGame = async () => {
     const { playSound } = this.props;
-    // console.log("bet_amount", this.state.bet_amount)
-    // console.log("crashed", this.state.crashed)
-    // console.log("autoCashout", this.state.autoCashout)
-    // console.log("cashoutAmount", this.state.cashoutAmount)
-
+   
     const result = await this.props.join({
       bet_amount: parseFloat(this.state.bet_amount),
       crashed: this.state.crashed,
@@ -419,7 +415,6 @@ class Bang extends Component {
         previousTimestamp = timestamp;
       }
       if (cashoutAmount >= autoCashout && autoCashout !== '') {
-        // console.log("autocashout")
         this.setState({ cashoutAmount: autoCashout, crashed: false }, () => {
           this.pushBet();
         });

@@ -72,69 +72,81 @@ class OpenGamesTable extends Component {
       isLoading: true,
       filter: "Live Games",
     };
+    this.isComponentMounted = false; // Track component mount state
+    this.debouncedHandleScroll = null;
   }
 
   async componentDidMount() {
-    await this.props.getRoomList({ pageSize: 7 });
-    const qBotStatuses = {};
-    for (const room of this.state.roomList) {
-      const isQbot = await this.props.getQbot(room.creator_id);
-      console.log("done one", isQbot)
-      qBotStatuses[room.creator_id] = isQbot;
+    this.isComponentMounted = true;
+
+    try {
+      await this.props.getRoomList({ pageSize: 7 });
+
+      const qBotStatuses = {};
+      for (const room of this.props.roomList || []) {
+        const isQbot = await this.props.getQbot(room.creator_id);
+        if (this.isComponentMounted) { // Only update if still mounted
+          qBotStatuses[room.creator_id] = isQbot;
+        }
+      }
+
+      if (this.isComponentMounted) {
+        this.setState({ qBotStatuses });
+      }
+    } catch (error) {
+      console.error("Error fetching Qbot statuses:", error);
     }
-    this.setState({ qBotStatuses });
-    window.addEventListener('load', this.handleLoad);
+
+    this.handleLoad(); // Initial load logic
     this.debouncedHandleScroll = this.debounce(this.handleScroll, 300);
 
+    // Add event listeners
+    window.addEventListener('load', this.handleLoad);
     window.addEventListener('scroll', this.debouncedHandleScroll);
 
     this.props.handleRefresh();
   }
 
-
   componentWillUnmount() {
-    window.removeEventListener('scroll', this.debouncedHandleScroll);
+    this.isComponentMounted = false;
+
+    // Remove event listeners
     window.removeEventListener('load', this.handleLoad);
+    window.removeEventListener('scroll', this.debouncedHandleScroll);
   }
+
 
   componentDidUpdate(prevProps, prevState) {
     const roomIds = new Set(this.state.roomList.map(room => room._id));
 
-    if (prevProps.roomList !== this.props.roomList) {
-      // Filter out duplicate rooms
+    if (prevProps.roomList !== this.props.roomList || prevProps.highlightedRooms !== this.props.highlightedRooms) {
+      // Filter out new rooms (rooms that are not in the previous room list)
       const newRooms = this.props.roomList.filter(room => !roomIds.has(room._id));
 
-      // Check for significant changes
-      const significantChange = newRooms.some((room) => {
-        const prevRoom = prevProps.roomList.find(prevRoom => prevRoom._id === room._id);
-
-        if (prevRoom) {
-          const previousBet = parseFloat(prevRoom.user_bet);
-          const newBet = parseFloat(room.user_bet);
-
-          if (!isNaN(previousBet) && !isNaN(newBet) && previousBet !== 0) {
-            const change = Math.abs(newBet - previousBet) / previousBet;
-            return change >= 0.01; // Detect significant change
-          }
-        }
-        return false;
-      });
-
-      // Simply merge the rooms without sorting by updated_at
+      // Merge new rooms with the existing room list
       const mergedRooms = [...this.state.roomList, ...newRooms];
 
+      // Get the ID from highlightedRooms (assuming it's a Set with a single ID for simplicity)
+      const highlightedRoomId = Array.from(this.props.highlightedRooms)[0];
 
-      // Update state with merged rooms
+      // If there's a highlighted room ID and it's not already at the front, move it to the front
+      if (highlightedRoomId) {
+        const roomIndex = mergedRooms.findIndex(room => room._id === highlightedRoomId);
+
+        if (roomIndex !== -1 && roomIndex !== 0) {
+          // Remove the room from its current position and move it to the front
+          const [highlightedRoom] = mergedRooms.splice(roomIndex, 1);
+          mergedRooms.unshift(highlightedRoom);
+        }
+      }
       this.setState({
         roomList: mergedRooms,
         highlightedRooms: this.props.highlightedRooms,
       });
-
-      if (significantChange) {
-        this.props.handleRefresh();
-      }
+      // Update the state with the new room list order
     }
 
+    // Handle changes to selectedGameType
     if (prevProps.selectedGameType !== this.props.selectedGameType) {
       this.setState({ isLoading: true });
     }
@@ -451,12 +463,11 @@ class OpenGamesTable extends Component {
                     roomList.map((row, key) => (
                       <div
                         key={row._id}
-                        className={`table-row ${key < 10 ? "slide-in" : "slide-in"}`}
+                        className={`table-row  ${key < 10 ? "slide-in" : "slide-in"}`}
                         style={{
-                          animation: this.state.highlightedRooms.has(row._id)
-                            ? "flicker 0.4s 2, shake 0.5s"
+                          animation: this.props.highlightedRooms.has(row._id)
+                            ? "flicker 0.2s 2, shake 0.2s"
                             : "none",
-                          animationDelay: `${key * 0.1}s`,
                         }}
                         onClick={() =>
                           this.joinRoom({

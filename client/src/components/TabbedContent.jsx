@@ -131,43 +131,43 @@ class TabbedContent extends Component {
     return (
       <div className='tabs-container'>
         <Tabs
-  TabIndicatorProps={{ style: { background: '#ff0000' } }}
-  value={selectedTab}
-  onChange={this.handleTabChange}
->
-  <Tab
-    classes={{
-      selected: classes.activeTab,
-      root: selectedTab === 0 ? classes.activeTab : classes.inactiveTab, // Check if tab is selected
-    }}
-    icon={<SwapHorizIcon />}
-    label="Trade"
-  />
-  <Tab
-    classes={{
-      selected: classes.activeTab,
-      root: selectedTab === 1 ? classes.activeTab : classes.inactiveTab,
-    }}
-    icon={<HistoryIcon />}
-    label="History"
-  />
-  <Tab
-    classes={{
-      selected: classes.activeTab,
-      root: selectedTab === 2 ? classes.activeTab : classes.inactiveTab,
-    }}
-    icon={<CommentIcon />}
-    label="Thread"
-  />
-  <Tab
-    classes={{
-      selected: classes.activeTab,
-      root: selectedTab === 3 ? classes.activeTab : classes.inactiveTab,
-    }}
-    icon={<BarChartIcon />}
-    label="Insights"
-  />
-</Tabs>
+          TabIndicatorProps={{ style: { background: '#ff0000' } }}
+          value={selectedTab}
+          onChange={this.handleTabChange}
+        >
+          <Tab
+            classes={{
+              selected: classes.activeTab,
+              root: selectedTab === 0 ? classes.activeTab : classes.inactiveTab, // Check if tab is selected
+            }}
+            icon={<SwapHorizIcon />}
+            label="Trade"
+          />
+          <Tab
+            classes={{
+              selected: classes.activeTab,
+              root: selectedTab === 1 ? classes.activeTab : classes.inactiveTab,
+            }}
+            icon={<HistoryIcon />}
+            label="History"
+          />
+          <Tab
+            classes={{
+              selected: classes.activeTab,
+              root: selectedTab === 2 ? classes.activeTab : classes.inactiveTab,
+            }}
+            icon={<CommentIcon />}
+            label="Thread"
+          />
+          <Tab
+            classes={{
+              selected: classes.activeTab,
+              root: selectedTab === 3 ? classes.activeTab : classes.inactiveTab,
+            }}
+            icon={<BarChartIcon />}
+            label="Insights"
+          />
+        </Tabs>
         <div>
           {selectedTab === 0 && (
             <div className="room-leaderboards-panel">
@@ -181,7 +181,7 @@ class TabbedContent extends Component {
                     color: this.props.isDarkMode ? "#f9f9f9" : "#010101",
                   }}
                 >
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "8px" }}>
+                  <span style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "8px" }}>
                     {this.props.roomInfo.description ? (
                       this.props.roomInfo.description.split(",").map((tag, index) => (
                         <a
@@ -206,7 +206,7 @@ class TabbedContent extends Component {
                     ) : (
                       <span>No tags available</span> // Optional fallback message
                     )}
-                  </div>
+                  </span>
                 </Typography>
               </div>
               <CoHostModal

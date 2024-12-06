@@ -52,6 +52,7 @@ async function getQsBetItems(roomId, user) {
 
 
 async function predictNextBetAmount(betArray, penultimateSameAsLast, smoothingFactor = 0.01, randomnessFactor = 0.2, threshold = 0.0005, room) {
+  console.log("room.", room._id)
   const allStates = Array.from(new Set(betArray));
   if (penultimateSameAsLast !== 0) {
     if (penultimateSameAsLast >= 3) {
@@ -438,7 +439,7 @@ async function callCronJobs(io) {
               let attempts = 0;
 
               do {
-                bet_amount = await predictNextBetAmount(qbot_bet_amounts, 0, 0, 0.01, 0.2);
+                bet_amount = await predictNextBetAmount(qbot_bet_amounts, 0, 0, 0.01, 0.2, room);
                 attempts++;
 
                 if (bet_amount >= 500) {
@@ -664,7 +665,7 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
               if (penultimateSameAsLast === 3) {
                 predictedBetAmount = outcome.lastResult === 'loss' || outcome.lastResult === 'draw' ? betArray[0].bet_amount * 1.4 : Math.min(...betArray);
               } else {
-                predictedBetAmount = await predictNextBetAmount(betArray, penultimateSameAsLast, 0.01, 0.2);
+                predictedBetAmount = await predictNextBetAmount(betArray, penultimateSameAsLast, 0.01, 0.2, room);
               }
               if (predictedBetAmount > user.balance / 2) {
                 predictedBetAmount = user.balance / 4;

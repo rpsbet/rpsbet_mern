@@ -187,7 +187,7 @@ class RPS extends Component {
     this.onChangeState = this.onChangeState.bind(this);
     this.handleKeyPress = this.handleKeyPress.bind(this);
     this.handleClickOutside = this.handleClickOutside.bind(this);
-
+    this.isComponentMounted = false;
   }
 
   onChangeState(e) {
@@ -218,19 +218,27 @@ class RPS extends Component {
   };
 
   async componentDidMount() {
+    this.isComponentMounted = true;
+
     document.addEventListener('keydown', this.handleKeyPress);
     this.setState({ intervalId: setInterval(this.toggleBlueishHue, this.state.intervalDuration) });
     this.setupSocket();
 
-    const botsCount = await this.props.getRoomBotCount(this.props.roomInfo._id);
-    const qBotStatus = await this.props.getQbot(this.props.roomInfo.creator_id);
-    this.setState({
-      botsCount: botsCount,
-      isQbot: qBotStatus,
-    });
+    try {
+      const botsCount = await this.props.getRoomBotCount(this.props.roomInfo._id);
+      const qBotStatus = await this.props.getQbot(this.props.roomInfo.creator_id);
+
+      // Only update state if component is still mounted
+      if (this.isComponentMounted) {
+        this.setState({
+          botsCount: botsCount,
+          isQbot: qBotStatus,
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
   }
-
-
 
   setupSocket() {
     document.addEventListener('keydown', this.handleKeyPress);
@@ -337,6 +345,7 @@ class RPS extends Component {
 
 
   componentWillUnmount() {
+    this.isComponentMounted = false;
     document.removeEventListener('keydown', this.handleKeyPress);
     document.removeEventListener('mousedown', this.handleClickOutside);
     clearInterval(this.state.intervalId);
@@ -809,8 +818,7 @@ class RPS extends Component {
       isWatching,
       playSound,
     } = this.props;
-    const payoutPercentage = (bankroll / roomInfo.endgame_amount) * 100;
-
+    const payoutPercentage = isNaN((bankroll / roomInfo.endgame_amount) * 100) ? 0 : (bankroll / roomInfo.endgame_amount) * 100;
     const barStyle = {
       width: `${payoutPercentage}%`,
       backgroundColor: payoutPercentage <= 50 ? 'yellow' : 'red'
@@ -831,7 +839,8 @@ class RPS extends Component {
     const isLowBankroll = bankroll <= 1;
     const isHighCommission = this.props.cp > 16;
     const isLowProfit = (host_pr - roomInfo.total_stakes) > 0;
-
+    const hostProfit = parseFloat(host_pr) || 0;
+    const totalStakes = parseFloat(roomInfo?.total_stakes) || 0;
     return (
       <div className="game-page">
         <div className="page-title">
@@ -854,7 +863,7 @@ class RPS extends Component {
           />
         )}
         <div className="game-contents title">
-          <div className="pre-summary-panel title" style={{overflow: 'hidden'}} ref={this.panelRef}>
+          <div className="pre-summary-panel title" style={{ overflow: 'hidden' }} ref={this.panelRef}>
             <div className="pre-summary-panel__inner">
               {[...Array(1)].map((_, i) => (
                 <React.Fragment key={i}>
@@ -942,19 +951,26 @@ class RPS extends Component {
                       <div className="label net-profit">Room Profit</div>
                     </div>
                     <div className="value bankroll">
-
                       <Tooltip title="Current bankroll + Payouts - Initial bankroll">
-                        <div className="value" style={{ cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center" }}>
-                          <span className={`value ${!isLowProfit ? 'red-text' : 'green-text'}`} >
-                            {convertToCurrency(host_pr - roomInfo.total_stakes)}
+                        <div
+                          className="value"
+                          style={{
+                            cursor: 'pointer',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                          }}
+                        >
+                          <span className={`value ${!isLowProfit ? 'red-text' : 'green-text'}`}>
+                            {isNaN(hostProfit - totalStakes)
+                              ? 'N/A'
+                              : convertToCurrency(hostProfit - totalStakes)}
                           </span>
                           {isLowProfit ? (
-                            <InfoIcon style={{ color: "#00ff3a", fontSize: 16, marginLeft: 4 }} />
+                            <InfoIcon style={{ color: '#00ff3a', fontSize: 16, marginLeft: 4 }} />
                           ) : (
-                            <WarningIcon style={{ color: "red", fontSize: 16, marginLeft: 4 }} />
-                          )
-                          }
-
+                            <WarningIcon style={{ color: 'red', fontSize: 16, marginLeft: 4 }} />
+                          )}
                         </div>
                       </Tooltip>
 

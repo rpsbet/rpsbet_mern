@@ -556,7 +556,6 @@ class SiteWrapper extends Component {
       });
 
       socket.on('UPDATED_ROOM_LIST', async data => {
-        console.log("data", data);
         await this.props.setRoomList(data);
         await this.props.getMyHistory();
         await this.props.getHistory();
@@ -729,8 +728,19 @@ class SiteWrapper extends Component {
     }
   };
 
+  enableAudioPlayback = () => {
+    // This interaction enables the audio context to start
+    if (this.notificationSound) {
+      this.notificationSound.play().catch(error => {
+        console.error('Audio playback failed:', error);
+      });
+    }
+  };
+
   async componentDidMount() {
     try {
+      document.addEventListener('click', this.enableAudioPlayback, { once: true });
+
       const initialBalance = await this.props.fetchVaultBalance();
       this.setState({ websiteLoading: true, isInvestorsPage: location.pathname.startsWith('/investors'), isPlayer: location.pathname.startsWith('/play') });
       const currentUrl = window.location.pathname;
@@ -765,9 +775,6 @@ class SiteWrapper extends Component {
       console.error(error);
     }
 
-    this.props.getWithdrawals();
-    await this.props.getWins();
-
   }
   async fetchInitialData() {
     const { getWins, getWithdrawals } = this.props;
@@ -801,14 +808,6 @@ class SiteWrapper extends Component {
   }
 
 
-  fetchHistory = async () => {
-    try {
-      await this.props.getHistory();
-    } catch (error) {
-      console.error("An error occurred during getHistory:", error);
-    }
-  }
-
   initializeAudio() {
     try {
       this.nyan = new Audio('/sounds/nyan.mp3');
@@ -837,7 +836,6 @@ class SiteWrapper extends Component {
   }
   async fetchData() {
     const { transactions } = this.props;
-console.log(transactions.length)
     const categories = [];
     const data = [];
     let currentBalance = 0;

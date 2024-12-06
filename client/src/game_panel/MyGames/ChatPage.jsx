@@ -19,7 +19,6 @@ import {
   getMyChat,
   getMyGames,
   getMyHistory,
-  getHistory,
   getGameTypeList
 } from '../../redux/Logic/logic.actions';
 import { toggleDrawer } from '../../redux/Auth/user.actions';
@@ -103,7 +102,6 @@ class ChatPage extends Component {
     try {
       const { id } = this.props.match.params;
       await this.initializeRoomData(id);
-      this.props.getHistory();
 
       if (this.state.socket) {
         this.state.socket.on('connect', () => {
@@ -121,13 +119,9 @@ class ChatPage extends Component {
     try {
       await this.props.getChatRoomInfo(id);
 
-      await this.props.getHistory();
-
       // await this.props.getGameTypeList();
       if (this.props.isAuthenticated) {
         // await this.props.getMyGames();
-        await this.props.getMyHistory();
-
         await this.props.getMyChat();
       }
 
@@ -619,7 +613,6 @@ const mapStateToProps = state => ({
 const mapDispatchToProps = {
   getChatRoomInfo,
   addChatLog,
-  getHistory,
   getMyGames,
   getMyHistory,
   getGameTypeList,

@@ -7,9 +7,7 @@ import axios from '../../util/Api';
 import { token } from '../../config/index.js';
 import {
   getRoomList,
-  getHistory,
   getRoomCount,
-  clearRoomListCache,
   setCurRoomInfo,
   getMyChat,
   getGameTypeList,
@@ -87,17 +85,15 @@ class MainPage extends Component {
   }
 
   async componentDidMount() {
+    this.isComponentMounted = true; // Set to true when component is mounted
+
     const { selectedGameType } = this.state;
     const {
-      getRoomList,
       getRoomCount,
-      getHistory,
       isAuthenticated,
       getMyChat,
       getTokenPrice, // Import the action
     } = this.props;
-
-    this.isComponentMounted = true;
 
     if (window.location.pathname === '/dashboard') {
       this.setState({
@@ -121,8 +117,15 @@ class MainPage extends Component {
       this.toggleDrawer();
     }
 
+    // Set up polling interval
     document.addEventListener("visibilitychange", this.handleVisibilityChange);
-    this.pollingInterval = setInterval(() => this.handleRefresh(), 1200);
+    // this.pollingInterval = setInterval(() => this.handleRefresh(), 1200);
+  }
+
+  componentWillUnmount() {
+    this.isComponentMounted = false; // Set to false when component is unmounted
+    clearInterval(this.pollingInterval); // Clear the polling interval
+    document.removeEventListener("visibilitychange", this.handleVisibilityChange); // Cleanup event listeners
   }
 
   componentDidUpdate(prevProps) {
@@ -141,11 +144,7 @@ class MainPage extends Component {
     }
   }
 
-  componentWillUnmount() {
-    this.isComponentMounted = false;
-    clearInterval(this.pollingInterval);
-    document.removeEventListener("visibilitychange", this.handleVisibilityChange);
-  }
+
 
   handleVisibilityChange() {
     if (document.visibilityState === "visible" && !this.pollingInterval) {
@@ -186,16 +185,17 @@ class MainPage extends Component {
   };
 
   handleRefresh = async () => {
-    this.setState({ refreshing: true }, async () => {
-      await this.props.clearRoomListCache();
-      const roomCount = await this.props.getRoomCount();
-      const roomList = await this.props.getRoomList({ pageSize: 7 });
-      // Only update state if the data has changed
-      if (JSON.stringify(this.props.roomList) !== JSON.stringify(roomList)) {
-        this.setState({ refreshing: false });
-      }
-    });
+    if (this.isComponentMounted) {
+      this.setState({ refreshing: true }, async () => {
+        const roomList = await this.props.getRoomList({ pageSize: 7 });
+        if (this.isComponentMounted && JSON.stringify(this.props.roomList) !== JSON.stringify(roomList)) {
+          this.setState({ refreshing: false });
+        }
+      });
+    }
+
   };
+
 
   onChangeGameType = async (newType, callback) => {
     await this.props.getRoomCount({ game_type: newType });
@@ -214,8 +214,7 @@ class MainPage extends Component {
   };
 
   setHighlightedRooms = (rooms) => {
-      this.setState({ highlightedRooms: new Set(rooms) });
-
+    this.setState({ highlightedRooms: new Set(rooms) });
   };
 
   getActiveTabText = () => {
@@ -681,11 +680,9 @@ const mapStateToProps = state => ({
 const mapDispatchToProps = {
   getRoomList,
   getRoomCount,
-  getHistory,
   getTokenPrice,
   setCurRoomInfo,
   getGameTypeList,
-  clearRoomListCache,
   getMyChat,
   toggleDrawer
 };

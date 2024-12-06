@@ -129,6 +129,7 @@ button.btn {
   padding: 20px;
   border-radius: 8px;
 }
+
 .grid-item {
   display: flex;
   align-items: center;
@@ -267,11 +268,10 @@ div.table .table-row .table-cell button:last-child:before,
 }
 
 #rps-radio div.active {
-  opacity: 0.9;
+  opacity: 0.8;
   border: unset;
-  transition: 0.1s;
   margin-left: 5px !important;
-  transform: translateY(10px) rotate(180deg) !important;
+  transform: translateY(20px) rotate(180deg) !important;
 }
 
 #rps-radio div {
@@ -820,7 +820,8 @@ div.table .table-cell button.btn_join img {
   padding: 0;
   background: none;
 }
-.main-game.join .modal-footer button{
+
+.main-game.join .modal-footer button {
   margin-top: 0;
   margin-bottom: 0;
   border-radius: 6px !important;
@@ -938,6 +939,7 @@ div.table.my-chat-table .table-cell button.btn_join {
   padding: 2.5em;
 
 }
+
 div.table .table-row {
   border-radius: 6px;
   padding: 0.5em;
@@ -946,7 +948,8 @@ div.table .table-row {
   color: #86868b;
   overflow: hidden;
 }
-.sub-panel div.table .table-row div.desktop-only{
+
+.sub-panel div.table .table-row div.desktop-only {
   font-size: 0.85em !important;
   margin-top: 0.5em;
   margin-bottom: 0.5em;
@@ -982,6 +985,10 @@ div.table.main-history-table .table-row>div>.room-id {
 
 .top-wins .rank-icon {
   display: none !important;
+}
+.table-header .table-cell {
+	font-size: 0.9em;
+  white-space: nowrap;
 }
 
 .top-wins div.table-cell {
@@ -1631,6 +1638,8 @@ div.table.main-game-table .table-row .table-cell.cell-room-info {
   z-index: 2;
 }
 
+
+
 .table-cell.cell-room-info .cell-game-type {
   color: #767676;
   font-size: 12px;
@@ -1702,6 +1711,7 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info {
   gap: 8px;
   margin: 0 auto 10px;
 }
+
 #view .liquidity {
   color: rgb(3, 255, 59) !important;
 }
@@ -1737,6 +1747,7 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info {
   width: 24px !important;
   height: 24px !important;
 }
+
 .cell-likes .chart-arrow svg {
   width: 15px !important;
   height: 15px !important;
@@ -2578,8 +2589,6 @@ input {
 
 .card-hidden,
 #rps-radio div {
-  transition: transform 0.5s ease-in-out;
-
   border: none;
   background-color: var(--secondary-color);
   border: 3px solid var(--white-color);
@@ -3029,14 +3038,12 @@ svg#delete:hover {
   background-color: var(--secondary-color);
   box-shadow: 0 10px 27px rgb(255 0 0 / 10%), inset 0 -3px #af0000,
     inset 0 2px #ff2525;
-  transition: all 0.1s ease-in-out;
   border-radius: 0.25em !important;
 }
 
 #rps-radio button:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   transform: translateY(-4px);
-  animation: pulse 0.2s ease-in-out;
 }
 
 #rps-radio button:before {
@@ -4502,9 +4509,14 @@ div.table.my-chat-table .table-row .table-cell:last-child {
   white-space: nowrap;
 }
 
+table#balance-history td {
+  border-bottom: none !important;
+}
+
 table td {
   border-bottom: 1px solid #969696 !important;
 }
+
 .leaderboards-page table td {
   color: var(--white-color);
   text-align: center;
@@ -5642,6 +5654,7 @@ button#recentSearches span {
 .green-text {
   color: #00ff3a !important;
 }
+
 .label.green-text {
   color: #00ff3a !important;
 }
@@ -6208,15 +6221,35 @@ div[role='tablist'] {
 
 
 @keyframes flicker {
-  0%, 100% { background: transparent; }
-  50% { background: rgb(0, 218, 29); }
+
+  0%,
+  100% {
+    background: transparent;
+  }
+
+  50% {
+    background: rgb(0, 218, 29);
+  }
 }
 
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-6px); }
-  50% { transform: translateX(-6px); }
-  75% { transform: translateX(-6px); }
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(-6px);
+  }
+
+  50% {
+    transform: translateX(-6px);
+  }
+
+  75% {
+    transform: translateX(-6px);
+  }
 }
 
 #wallet-btn {
@@ -8198,7 +8231,7 @@ div[aria-label="How To Play Modal"] ul {
   }
 
   .avatar-square {
-position: relative;
+    position: relative;
     margin-left: 0;
   }
 
@@ -8750,5 +8783,5 @@ position: relative;
     font-size: 1em !important;
   }
 
- 
+
 }

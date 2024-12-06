@@ -1216,10 +1216,12 @@ const getRoomList = async (pageSize, game_type, excludeIds = []) => {
   }
 
   try {
+    // Fetch the rooms and sort by updated_at in descending order directly in the MongoDB query
     const preRooms = await Room.find(search_condition)
       .select('_id creator battles username joiners game_type qs_game_type gameBackground is_private bet_amount user_bet pr host_pr status room_number created_at updated_at likes views hosts')
       .populate({ path: 'creator', model: User, select: 'avatar totalWagered username accessory status' })
       .populate({ path: 'game_type', model: GameType })
+      .sort({ updated_at: -1 }) // Sort by updated_at in descending order
       .limit(pageSize);
 
     const result = await Promise.all(preRooms.map(async (room) => {
@@ -1314,11 +1316,9 @@ const getRoomList = async (pageSize, game_type, excludeIds = []) => {
 
     const filteredResults = result.filter((temp) => temp !== null);
 
-    // Sort by updated_at in descending order (most recent first)
-    filteredResults.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
-
-    // Apply the limit after sorting
+    // Apply the limit after fetching and sorting
     const limitedResults = filteredResults.slice(0, pageSize);
+
     return {
       rooms: limitedResults,
     };
@@ -2572,11 +2572,24 @@ router.post('/unstake', auth, async (req, res) => {
 
     // Broadcast the updated room list
     const rooms = await getRoomList(7, 'All');
-    req.io.sockets.emit('UPDATED_ROOM_LIST', {
-      total: rooms.count,
-      roomList: rooms.rooms,
-      pageSize: rooms.pageSize
-    });
+    if (req.io.sockets) {
+      req.io.sockets.emit('UPDATED_ROOM_LIST', {
+        total: rooms.count,
+        roomList: rooms.rooms,
+        pageSize: rooms.pageSize
+      });
+      req.io.sockets.emit(`UPDATED_BANKROLL_${roomInfo._id}`, {
+          bankroll: roomInfo['user_bet'],
+          host_pr: roomInfo['host_pr'],
+          rps: mostRecentItems,
+          newLog: newLog,
+          user: user
+      });
+      console.log("newlog", newLog[0]._id)
+      req.io.sockets.emit('NEW_LOG', {
+          newLog: newLog
+      });
+  }
   } catch (err) {
     console.error('ERROR in unstake:', err);
     res.json({

@@ -159,7 +159,9 @@ class MyGamesTable extends Component {
     }
   };
 
-  handleSettingsIconClick = (row) => {
+  handleSettingsIconClick = (event, row) => {
+    event.preventDefault(); // Prevent the default action
+    event.stopPropagation(); 
     if (row.coHost) {
       this.setState({ settings_panel_opened: !this.state.settings_panel_opened, selectedRow: row });
     } else {
@@ -601,12 +603,13 @@ class MyGamesTable extends Component {
                 (row, key) => (
                   <div
                     className={`table-row ${key < 10 ? 'slide-in' : 'slide-in'}`}
-                    style={{ animationDelay: `${key * 0.1}s` }}
+                    style={{ animationDelay: `${key * 0.1}s`, cursor: "pointer" }}
                     key={row._id}
+                    onClick={() => history.push(`/join/${row._id}`)}
                   >
                     <div>
                       <div className="table-cell room-id">
-                        <a href={`/join/${row._id}`}>
+
                           <img
                             src={`/img/gametype/icons/${row.game_type.short_name}.svg`}
                             alt=""
@@ -620,8 +623,7 @@ class MyGamesTable extends Component {
                               className="lock-icon"
                             />
                           )}
-                          <Link style={{ paddingRight: "5px", paddingLeft: "2.5px" }} />
-                        </a>
+
                       </div>
                       <div className="table-cell bet-info">
                         <span className="bet-pr">
@@ -664,7 +666,7 @@ class MyGamesTable extends Component {
                         <Tooltip title="CHANGE AI PLAY STRATEGY">
                           <a
                             style={{ borderRadius: "200px", cursor: "pointer", padding: "1px", display: "flex", justifyContent: "center", alignItems: "center" }}
-                            onClick={() => this.handleSettingsIconClick(row)}
+                            onClick={(event) => this.handleSettingsIconClick(event, row)}
                           >
 
                             <SettingsOutlinedIcon

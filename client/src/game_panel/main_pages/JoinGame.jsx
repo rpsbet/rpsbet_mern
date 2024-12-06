@@ -141,7 +141,7 @@ class JoinGame extends Component {
       },
       currentSound: null
     };
-
+    this.isComponentMounted = false;
     this.toggleDrawer = this.toggleDrawer.bind(this);
   }
 
@@ -166,6 +166,7 @@ class JoinGame extends Component {
   }
 
   async componentDidMount() {
+    this.isComponentMounted = true;
     const { id } = this.props.match.params;
     await this.initializeRoomData(id);
     await this.props.checkPlayerAttachment(id);
@@ -215,7 +216,7 @@ class JoinGame extends Component {
 
   componentWillUnmount() {
     window.removeEventListener('unload', this.handleUnload);
-
+    this.isComponentMounted = false;
     clearInterval(this.interval);
   }
 
@@ -248,22 +249,34 @@ class JoinGame extends Component {
   };
 
   async fetchAccessory() {
+    let isComponentMounted = true; // Local flag to track mounting
+  
     try {
+      console.log("this.props.roomInfo", this.props.roomInfo)
       const creatorId = this.props.roomInfo.creator_id;
       if (!creatorId) {
         console.error("Creator ID is empty or undefined");
         return;
       }
+  
       const _id = creatorId.toString(); // Convert _id to string
       const accessory = await this.props.fetchAccessory({ _id });
+      console.log("_id", _id)
+      console.log("this.props.user_id", this.props.user_id)
       const dp = await this.props.fetchAccessory({ _id: this.props.user_id });
-      if (accessory.accessory.CP !== undefined) {
+  
+      if (isComponentMounted && accessory.accessory.CP !== undefined) {
         this.setState({ cp: accessory.accessory.CP - dp.accessory.DP });
       }
     } catch (error) {
+      console.error("Error fetching accessory:", error);
     }
+  
+    // Cleanup function to mark component as unmounted
+    return () => {
+      isComponentMounted = false;
+    };
   }
-
   // auto bet
   join2 = async betInfo => {
     const result = await this.props.bet2({
@@ -874,12 +887,19 @@ class JoinGame extends Component {
 
 
   changeBgColor = async result => {
-    this.setState({ betResult: result, bgColorChanged: true }, async () => {
-      await new Promise(resolve => setTimeout(resolve, this.props.ai_mode !== "Skill-issue-old" ? 1000 : 500)); // Wait for 1 second
+    this.setState({ betResult: result }, async () => {
+      const flickerCount = 3; // Number of flickers
+      const delay = 50; // Delay between flickers in milliseconds
+  
+      for (let i = 0; i < flickerCount; i++) {
+        this.setState({ bgColorChanged: i % 2 === 0 }); // Alternate between true and false
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+  
+      // Final reset
       this.setState({ bgColorChanged: false, betResult: null });
     });
   };
-
   changeBgColorQs = async result => {
     this.setState({ betResult: result, bgColorChanged: true }, async () => {
       let borderColor = '';

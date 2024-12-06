@@ -59,15 +59,9 @@ const predictNextQs = (qs_list, gameType) => {
     const fromState3 = Number(qs_list[i + 2].qs);
     const toState = Number(qs_list[i + 3].qs);
 
-    if (
-      transitionMatrix[fromState1] &&
-      transitionMatrix[fromState1][fromState2] &&
-      transitionMatrix[fromState1][fromState2][fromState3]
-    ) {
-      transitionMatrix[fromState1][fromState2][fromState3][toState]++;
-    } else {
-      console.error(`Invalid transition: ${fromState1} -> ${fromState2} -> ${fromState3} -> ${toState}`);
-    }
+
+    transitionMatrix[fromState1][fromState2][fromState3][toState]++;
+      
   }
 
   Object.keys(transitionMatrix).forEach((fromState1) => {

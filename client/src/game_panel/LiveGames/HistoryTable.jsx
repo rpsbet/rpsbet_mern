@@ -66,27 +66,46 @@ class HistoryTable extends Component {
       copiedRowId: null
 
     };
+    this.isComponentMounted = false;
   }
 
 
   async componentDidMount() {
-    // this.updateReminderTime(); 
+    this.isComponentMounted = true;
+
+    // Attach listeners and fetch initial data
     this.attachUserLinkListeners();
     this.attachAccessories();
-    // this.interval = setInterval(this.updateReminderTime(), 3000);
-    const settings = await this.props.getSettings();
-    this.setState({ ...settings });
-    await this.props.getHistory();
+
+    try {
+      const settings = await this.props.getSettings();
+      if (this.isComponentMounted) {
+        this.setState({ ...settings });
+      }
+    } catch (error) {
+      console.error("Error fetching settings:", error);
+    }
+
+    try {
+      await this.props.getHistory();
+    } catch (error) {
+      console.error("Error fetching history:", error);
+    }
+
     this.setupSocketConnection();
   }
 
+
   componentWillUnmount() {
+    this.isComponentMounted = false;
+    // Clear any intervals and clean up socket connections
     clearInterval(this.interval);
     this.disconnectSocket();
-
   }
+  
   setupSocketConnection = () => {
     const { socket } = this.props;
+
     if (socket) {
       socket.on('NEW_LOG', this.handleNewLog);
     } else {
@@ -103,40 +122,48 @@ class HistoryTable extends Component {
   }
 
   handleNewLog = (data) => {
-  
-    const newLog = data.newLog[0];
-    
+    if (!this.isComponentMounted) return; // Ensure the component is still mounted
+
+    const newLog = data.newLog?.[0]; // Use optional chaining for safer access
+
     if (!newLog) {
       console.warn("No valid log data received.");
       return;
     }
-  
+
     const { room_id } = newLog;
-  
+
     if (!room_id) {
       console.warn("No room_id found in new log data:", newLog);
       return;
     }
-  
+
+    // Highlight the room
     if (this.props.setHighlightedRooms) {
       this.props.setHighlightedRooms(new Set([room_id]));
-  
+
+      // Clear highlight after a timeout
       setTimeout(() => {
-        this.props.setHighlightedRooms(new Set());
+        if (this.isComponentMounted) { // Ensure component is still mounted
+          this.props.setHighlightedRooms(new Set());
+        }
       }, 4000);
     }
-  
+
+    // Update the component's state
     this.setState((prevState) => {
-      const updatedHistory = [newLog, ...prevState.history.slice(0, 29)]; // Prepend newLog and limit to 30 entries
+      const updatedHistory = [newLog, ...prevState.history.slice(0, 29)]; // Prepend newLog, limit to 30 entries
       const finalHistory = updateFromNow(updatedHistory);
-  
+
       return { history: finalHistory };
     }, () => {
-      this.attachUserLinkListeners();
-      this.attachAccessories();
+      // Safely call these methods after the state update
+      if (this.isComponentMounted) {
+        this.attachUserLinkListeners();
+        this.attachAccessories();
+      }
     });
   };
-
 
   retrySocketConnection = () => {
     setTimeout(() => {
@@ -320,28 +347,6 @@ class HistoryTable extends Component {
   //   return gameTypePanel;
   // };
 
-  handlePageNumberClicked = page => {
-    this.props.getHistory({
-      page: page,
-      game_type: this.state.selectedGameType
-    });
-  };
-
-  handlePrevPageClicked = () => {
-    if (this.props.pageNumber === 1) return;
-    this.props.getHistory({
-      page: this.props.pageNumber - 1,
-      game_type: this.state.selectedGameType
-    });
-  };
-
-  handleNextPageClicked = () => {
-    if (this.props.pageNumber === this.props.totalPage) return;
-    this.props.getHistory({
-      page: this.props.pageNumber + 1,
-      game_type: this.state.selectedGameType
-    });
-  };
   render() {
     const { isLowGraphics } = this.props;
     // const gameTypePanel = this.generateGameTypePanel();
@@ -452,7 +457,7 @@ class HistoryTable extends Component {
                     <div className="room-id">
                       {row.status === 'open' ? (
                         <>
-                          {row.status}  <HeartIcon isOpen={true} /> 
+                          {row.status}  <HeartIcon isOpen={true} />
                         </>
                       ) : row.room_name === 'Withdrawal' ? (
                         <>
@@ -460,7 +465,7 @@ class HistoryTable extends Component {
                         </>
                       ) : (
                         <>
-                          finished  <HeartIcon isOpen={false} /> 
+                          finished  <HeartIcon isOpen={false} />
                         </>
                       )}                    </div>
                     {row.ai_mode && (

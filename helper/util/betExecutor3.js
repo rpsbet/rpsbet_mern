@@ -24,7 +24,6 @@ let user_access_log = {};
 
 const addToQueue = async (req, bot = false) => {
     try {
-
         const taxPromise = SystemSetting.findOne({ name: 'commission' });
         const rainPromise = SystemSetting.findOne({ name: 'rain' });
         const platformPromise = SystemSetting.findOne({ name: 'platform' });
@@ -107,7 +106,6 @@ const addToQueue = async (req, bot = false) => {
             }
             const tenSecondsAgo = new Date(Date.now() - 500);
             if (roomInfo['updated_at'] > tenSecondsAgo) {
-                // console.log("roomInfo['updated_at'] > tenSecondsAgo");
                 responseData = {
                     success: false,
                     message: 'ROOM TOO BUSY, TRY AGAIN LATER',
@@ -476,7 +474,6 @@ const addToQueue = async (req, bot = false) => {
                 const creatorMap = new Map(creators.map(creator => [creator._id.toString(), creator]));
                 const joinedUserMap = new Map(joinedUsers.map(user => [user._id.toString(), user]));
                 const gameTypeMap = new Map(gameTypes.map(type => [type._id.toString(), type]));
-
                 // Map game logs to their updated form
                 const updatedGameLogArray = gameLogArray.map(gameLog => ({
                     bet_amount: gameLog.bet_amount,
@@ -500,6 +497,7 @@ const addToQueue = async (req, bot = false) => {
 
                 // socket for last 5 items
                 if (roomInfo['rps_game_type'] === 0) {
+                    
                     mostRecentItems.reverse();
                     mostRecentItems.push(bet_item);
                     if (mostRecentItems.length > 0) {
@@ -795,7 +793,6 @@ const addToQueue = async (req, bot = false) => {
 
                     return mergedObject;
                 }));
-
                 const newLog = await convertGameLogToHistoryStyle(updatedGameLogArray);
                 // socket for last 5 items
                 mostRecentItems.reverse();
@@ -809,6 +806,7 @@ const addToQueue = async (req, bot = false) => {
                             newLog: newLog,
                             user: user
                         });
+
                         req.io.sockets.emit('NEW_LOG', {
                             newLog: newLog
                         });
@@ -1060,6 +1058,7 @@ const addToQueue = async (req, bot = false) => {
             newTransaction: newTransactionJ,
             roomStatus: roomInfo.status
         };
+
         return responseData;
     } catch (err) {
         console.error(err);

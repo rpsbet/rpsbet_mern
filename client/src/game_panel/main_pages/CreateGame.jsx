@@ -37,7 +37,6 @@ import {
   setGameMode,
   getMyGames,
   getMyHistory,
-  getHistory,
   getMyChat,
   getGameTypeList,
   getStrategies
@@ -181,7 +180,6 @@ class CreateGame extends Component {
     });
 
     this.IsAuthenticatedReroute();
-    this.props.getHistory();
 
     const gameTypeName = this.props.match.params.game_type_name || 'RPS';
 
@@ -1287,7 +1285,6 @@ const mapDispatchToProps = {
   createRoom,
   setGameMode,
   getBrainGameType,
-  getHistory,
   getMyGames,
   getStrategies,
   getMyHistory,

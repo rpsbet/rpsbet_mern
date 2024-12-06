@@ -353,7 +353,10 @@
 .dark_mode div.table .table-row.carousel-content {
 	background: linear-gradient(52deg, #54096a, #3f0067);
 }
-
+.dark_mode .table-header .table-cell,
+.dark_mode .table-cell.cell-room-info .cell-game-id {
+	color: rgb(170, 170, 170);
+}
 
 .dark_mode .table-cell.cell-room-info .cell-game-type,
 .dark_mode div.table.my-open-game-table .table-row .table-cell.room-id {
