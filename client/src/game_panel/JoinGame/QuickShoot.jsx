@@ -356,7 +356,6 @@ class QuickShoot extends Component {
 
   joinGame = async () => {
     const {
-      qs_bet_item_id,
       qs_game_type,
       onChangeState,
       playSound,
@@ -369,7 +368,6 @@ class QuickShoot extends Component {
     const result = await this.props.join({
       bet_amount: parseFloat(bet_amount),
       selected_qs_position: selected_qs_position,
-      qs_bet_item_id: qs_bet_item_id
     });
 
     playSound('ballKick');

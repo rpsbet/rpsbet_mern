@@ -622,7 +622,6 @@ router.patch('/room/:id/:type', auth, async (req, res) => {
   }
 });
 
-// /api/room/:id call
 router.get('/room/:id', async (req, res) => {
   try {
     const room = await Room.findOne({ _id: req.params.id })
@@ -637,13 +636,8 @@ router.get('/room/:id', async (req, res) => {
       .populate({ path: 'creator', model: User, select: '_id avatar username accessory totalWagered' })
       .populate({ path: 'joined_user', model: User, select: '_id avatar username accessory totalWagered' });
 
-    // Check if the limit parameter is provided
-    if (req.query.limit) {
-      const limit = parseInt(req.query.limit);
-      gameLogQuery = gameLogQuery.limit(limit);
-    }
-
-    // const totalGameLogsCount = await GameLog.countDocuments({ room: room });
+    const limit = 30;
+    gameLogQuery = gameLogQuery.limit(limit);
     const totalGameLogsCount = 0;
 
     const gameLogList = await gameLogQuery;
@@ -651,17 +645,14 @@ router.get('/room/:id', async (req, res) => {
     const creator = await User.findOne({ _id: room.creator });
     const joiners = await User.find({ _id: { $in: room.joiners } });
 
-    // const boxPrizeList = await RoomBoxPrize.find({ room: room }).sort({
-    //   _id: 'asc'
-    // });
-    const rpsBetItem = await RpsBetItem.findOne({
-      room: room._id,
-      joiner_rps: ''
-    }).sort({ _id: 'asc' });
-    const qsBetItem = await QsBetItem.findOne({
-      room: room,
-      joiner_qs: ''
-    }).sort({ _id: 'asc' });
+    // const rpsBetItem = await RpsBetItem.findOne({
+    //   room: room._id,
+    //   joiner_rps: ''
+    // }).sort({ _id: 'asc' }).limit(30);
+    // const qsBetItem = await QsBetItem.findOne({
+    //   room: room,
+    //   joiner_qs: ''
+    // }).sort({ _id: 'asc' }).limit(30);
 
 
     const roomHistory = await convertGameLogToHistoryStyle(gameLogList);
@@ -685,8 +676,6 @@ router.get('/room/:id', async (req, res) => {
           stake: host['stake'],
           share: host['share']
         })),
-        // aveMultiplier: room['aveMultiplier'],
-        // creator_name: creator['username'],
         endgame_amount: room['endgame_amount'],
         endgame_type: room['endgame_type'],
         description: room['description'],
@@ -694,27 +683,20 @@ router.get('/room/:id', async (req, res) => {
         game_type: room['game_type']['game_type_name'],
         bet_amount: parseFloat(room['bet_amount']),
         user_bet: parseFloat(room['user_bet']),
-        // spleesh_bet_unit: room['spleesh_bet_unit'],
-        // brain_game_type: room['brain_game_type'],
         host_pr: room['host_pr'],
         pr: room['pr'],
         user_bet: room['user_bet'],
         room_name: room['game_type']['short_name'] + '-' + room['room_number'],
         total_stakes: room.hosts.reduce((acc, host) => acc + host.stake, 0),
-        // brain_game_score: room['brain_game_score'],
-        // selected_drop: room['selected_drop'],
-        // selected_bj: room['selected_bj'],
-        // multiplier: room['multiplier'],
         qs_game_type: room['qs_game_type'],
         selectedStrategy: room['selectedStrategy'],
         qs_nation: room['qs_nation'],
         rps_game_type: room['rps_game_type'],
         qs_game_type: room['qs_game_type'],
         room_history: roomHistory,
-        // box_list: boxPrizeList,
         status: room['status'],
-        rps_bet_item_id: rpsBetItem ? rpsBetItem.id : null,
-        qs_bet_item_id: qsBetItem ? qsBetItem.id : null,
+        // rps_bet_item_id: rpsBetItem ? rpsBetItem.id : null,
+        // qs_bet_item_id: qsBetItem ? qsBetItem.id : null,
         is_private: room['is_private'],
         youtubeUrl: room['youtubeUrl'],
         gameBackground: room['gameBackground'],
@@ -2234,11 +2216,9 @@ router.post('/coHost', auth, async (req, res) => {
       });
     }
 
-    // Deduct 2.5% fee
     const fee = coHostAmount * 0.025;
     const amountAfterFee = coHostAmount - fee;
 
-    // Update room's bankroll and user's balance
     room.user_bet = parseFloat(room.user_bet) + coHostAmount;
     room.host_pr += coHostAmount;
     room.endgame_amount += coHostAmount;
@@ -2249,19 +2229,15 @@ router.post('/coHost', auth, async (req, res) => {
     const existingHostIndex = room.hosts.findIndex(host => host.host.equals(req.user._id));
     const totalBankroll = parseFloat(room.user_bet);
 
-    // Calculate base share without any boost
     const baseShare = (amountAfterFee / totalBankroll) * 100;
 
-    // Calculate a boost factor that grows with investment size
-    const maxBoostFactor = 1.6; // Example: set a maximum boost cap
-    const minBoostFactor = 1.025; // Minimum boost factor
+    const maxBoostFactor = 1.6;
+    const minBoostFactor = 1.025;
     const boostFactor = minBoostFactor + ((coHostAmount / totalBankroll) * (maxBoostFactor - minBoostFactor));
     const boostedShare = baseShare * boostFactor;
 
 
-    // Handle host addition or update
     if (existingHostIndex === -1) {
-      // Add new co-host with boosted share
       const newHost = {
         host: req.user._id,
         share: boostedShare,
@@ -2274,7 +2250,6 @@ router.post('/coHost', auth, async (req, res) => {
       };
       room.hosts.push(newHost);
     } else {
-      // Update existing host's share
       const host = room.hosts[existingHostIndex];
       const updatedShare = (((host.share / 100) * totalBankroll + amountAfterFee) / totalBankroll) * 100;
       host.share = updatedShare * boostFactor;
@@ -2282,7 +2257,6 @@ router.post('/coHost', auth, async (req, res) => {
       host.stake += amountAfterFee;
     }
 
-    // Normalize shares to ensure they total 100%
     let totalShares = 0;
     room.hosts.forEach(host => totalShares += host.share);
     const normalizationFactor = 100 / totalShares;
@@ -2345,7 +2319,6 @@ router.post('/coHost', auth, async (req, res) => {
       console.error("Error saving documents:", error);
     }
 
-    // Add a game log entry similar to unstake
     const newGameLog = new GameLog({
       room: room._id,
       creator: req.user._id,
@@ -2355,7 +2328,7 @@ router.post('/coHost', auth, async (req, res) => {
       selected_rps: '',
       ai_mode: '',
       commission: 0,
-      game_result: 444,  // Set game_result to 444 for co-host action
+      game_result: 444,
       winnings: 0,
       endgame_amount: coHostAmount,
       host_pr: coHostAmount,
@@ -2366,6 +2339,31 @@ router.post('/coHost', auth, async (req, res) => {
 
     try {
       await newGameLog.save();
+
+      let gameLogQuery = GameLog.find({ room: room._id })
+      .sort({ created_at: 'desc' })
+      .limit(1)
+      .populate({ path: 'room', model: Room, select: '_id winnings commission username creator status hosts room_number game_type bet_amount user_bet host_pr created_at' })
+      .populate({ path: 'game_type', model: GameType, select: 'short_name game_type_name' })
+      .populate({ path: 'creator', model: User, select: '_id avatar username accessory totalWagered' })
+      .populate({ path: 'joined_user', model: User, select: '_id avatar username accessory totalWagered' });
+  
+      const gameLogList = await gameLogQuery;
+  
+      const newLog = await convertGameLogToHistoryStyle(gameLogList);
+  
+      if (req.io.sockets) {
+        req.io.sockets.emit(`UPDATED_BANKROLL_${room._id}`, {
+          bankroll: room.user_bet,
+          host_pr: room.host_pr,
+          // rps: mostRecentItems,
+          newLog: newLog,
+          user: req.user
+        });
+        req.io.sockets.emit('NEW_LOG', {
+          newLog: newLog
+        });
+      }
     } catch (error) {
       console.error('Error saving game log:', error);
       return res.status(500).json({
@@ -2390,12 +2388,11 @@ router.post('/coHost', auth, async (req, res) => {
 });
 
 // sell route
-
 router.post('/unstake', auth, async (req, res) => {
   try {
     const userId = req.user._id;
     const roomId = req.body.room_id;
-    const stakeAmount = req.body.stake_amount;  // Get the stake amount the user wants to unstake
+    const stakeAmount = req.body.stake_amount;
 
     if (stakeAmount <= 0) {
       return res.json({
@@ -2404,7 +2401,6 @@ router.post('/unstake', auth, async (req, res) => {
       });
     }
 
-    // Check if action is allowed based on access time
     const accessAllowed = await check_access_time(userId);
     if (!accessAllowed) {
       return res.json({
@@ -2427,7 +2423,6 @@ router.post('/unstake', auth, async (req, res) => {
 
     const gameType = await GameType.findOne({ _id: roomInfo.game_type });
 
-    // Check if the game has already ended
     if (roomInfo.status === 'finished') {
       return res.json({
         success: false,
@@ -2436,7 +2431,6 @@ router.post('/unstake', auth, async (req, res) => {
       });
     }
 
-    // Find the host's share index
     const hostIndex = roomInfo.hosts.findIndex(host => host.host.equals(userId));
     if (hostIndex === -1) {
       return res.json({
@@ -2445,7 +2439,6 @@ router.post('/unstake', auth, async (req, res) => {
       });
     }
 
-    // Calculate the unstake amount based on the stake amount
     const userStake = roomInfo.hosts[hostIndex].stake;
 
     if (stakeAmount > userStake) {
@@ -2456,35 +2449,32 @@ router.post('/unstake', auth, async (req, res) => {
     }
 
     const unstakeAmount = parseFloat(stakeAmount);
-    roomInfo.hosts[hostIndex].stake -= unstakeAmount;  // Decrease the host's stake by the unstaked amount
-    roomInfo.hosts[hostIndex].initial_stake -= unstakeAmount;  // Decrease the host's initial stake
-    req.user.balance = parseFloat(req.user.balance) + unstakeAmount;  // Add the unstaked amount to the user's balance
+    roomInfo.hosts[hostIndex].stake -= unstakeAmount;
+    roomInfo.hosts[hostIndex].initial_stake -= unstakeAmount;
+    req.user.balance = parseFloat(req.user.balance) + unstakeAmount;
 
-    // If the unstake amount equals the total stake, remove the host from the room
     if (roomInfo.hosts[hostIndex].stake === 0) {
       roomInfo.hosts.splice(hostIndex, 1);
     }
 
-    // If only one host remains, set that host's share to 100%
+
     if (roomInfo.hosts.length === 1) {
       roomInfo.hosts[0].share = 100;
     } else {
-      // Recalculate the remaining host shares
-      const remainingBankroll = roomInfo.user_bet; // Updated bankroll after unstake
+
+      const remainingBankroll = roomInfo.user_bet;
       roomInfo.hosts.forEach(host => {
         if (host.stake > 0) {
           host.share = (host.stake / remainingBankroll) * 100;
         }
       });
-      
-      // Normalize shares to ensure they total 100%
+
       let totalShares = 0;
       roomInfo.hosts.forEach(host => totalShares += host.share);
       const normalizationFactor = 100 / totalShares;
       roomInfo.hosts.forEach(host => host.share *= normalizationFactor);
     }
 
-    // Create a transaction log for the unstake
     const newTransaction = new Transaction({
       user: userId,
       amount: unstakeAmount,
@@ -2494,15 +2484,15 @@ router.post('/unstake', auth, async (req, res) => {
 
     // Create a game log entry for tracking
     const newGameLog = new GameLog({
-      room: roomInfo._id,
-      creator: userId,
+      room: roomInfo,
+      creator: roomInfo.creator,
       joined_user: null,
       game_type: roomInfo.game_type,
       bet_amount: unstakeAmount,
       selected_rps: '',
       ai_mode: '',
       commission: 0,
-      game_result: 666, // Setting a generic game result for unstake action
+      game_result: 666,
       winnings: 0,
       endgame_amount: unstakeAmount,
       host_pr: unstakeAmount,
@@ -2511,7 +2501,6 @@ router.post('/unstake', auth, async (req, res) => {
       hosts: []
     });
 
-    // Save the game log
     try {
       await newGameLog.save();
     } catch (error) {
@@ -2522,13 +2511,11 @@ router.post('/unstake', auth, async (req, res) => {
       });
     }
 
-    // Update room data after unstake
     roomInfo.user_bet -= unstakeAmount;
     roomInfo.host_pr -= unstakeAmount;
     roomInfo.endgame_amount -= unstakeAmount;
     roomInfo.updated_at = moment(new Date()).format('YYYY-MM-DD HH:mm');
 
-    // Send notifications to remaining hosts
     roomInfo.hosts.forEach(host => {
       const message = `${req.user.username} jeeted ${convertToCurrency(stakeAmount)} in ${gameType.short_name}-${roomInfo.room_number}, your new Share is ${(host.share).toFixed(2)}%`;
 
@@ -2549,7 +2536,6 @@ router.post('/unstake', auth, async (req, res) => {
       socket.sendNotification(host.host, notificationData);
     });
 
-    // Save updates to room and user balance, and log the transaction
     try {
       await Promise.all([
         saveDocumentWithRetry(roomInfo),
@@ -2560,36 +2546,38 @@ router.post('/unstake', auth, async (req, res) => {
       console.error("Error saving documents:", error);
     }
 
-    // Retrieve the user's updated room list for the response
-    const myRooms = await getMyRooms(userId);
-
     res.json({
       success: true,
-      myGames: myRooms.rooms,
-      pageSize: myRooms.pageSize,
+      // myGames: myRooms.rooms,
+      // pageSize: myRooms.pageSize,
       newTransaction
     });
 
-    // Broadcast the updated room list
-    const rooms = await getRoomList(7, 'All');
+    let gameLogQuery = GameLog.find({ room: roomInfo._id })
+    .sort({ created_at: 'desc' })
+    .limit(1)
+    .populate({ path: 'room', model: Room, select: '_id winnings commission username creator status hosts room_number game_type bet_amount user_bet host_pr created_at' })
+    .populate({ path: 'game_type', model: GameType, select: 'short_name game_type_name' })
+    .populate({ path: 'creator', model: User, select: '_id avatar username accessory totalWagered' })
+    .populate({ path: 'joined_user', model: User, select: '_id avatar username accessory totalWagered' });
+
+    const gameLogList = await gameLogQuery; // Get the most recent game log from the query
+
+    const newLog = await convertGameLogToHistoryStyle(gameLogList);
+
     if (req.io.sockets) {
-      req.io.sockets.emit('UPDATED_ROOM_LIST', {
-        total: rooms.count,
-        roomList: rooms.rooms,
-        pageSize: rooms.pageSize
-      });
       req.io.sockets.emit(`UPDATED_BANKROLL_${roomInfo._id}`, {
-          bankroll: roomInfo['user_bet'],
-          host_pr: roomInfo['host_pr'],
-          rps: mostRecentItems,
-          newLog: newLog,
-          user: user
+        bankroll: roomInfo.user_bet,
+        host_pr: roomInfo.host_pr,
+        // rps: mostRecentItems,
+        newLog: newLog,
+        user: req.user
       });
-      console.log("newlog", newLog[0]._id)
       req.io.sockets.emit('NEW_LOG', {
-          newLog: newLog
+        newLog: newLog
       });
-  }
+    }
+
   } catch (err) {
     console.error('ERROR in unstake:', err);
     res.json({
@@ -2731,7 +2719,7 @@ router.get('/qbotStatus', auth, async (req, res) => {
       success: true,
       isActive: !!isActive // Return true if QBot is found, false otherwise
     });
-  } catch (err) { 
+  } catch (err) {
     console.error(err);
     res.status(500).json({
       success: false,

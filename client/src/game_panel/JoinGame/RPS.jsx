@@ -317,17 +317,23 @@ class RPS extends Component {
   }
 
   handleSocketData = (data) => {
+    if (!data) {
+      console.error("Error: Received undefined or null data from the socket.");
+      return;
+    }
     this.setState(prevState => {
       let updatedPlayers = [...prevState.players, data.user];
       if (updatedPlayers.length > 5) {
-        updatedPlayers.shift(); // Remove the oldest player
+        updatedPlayers.shift();
       }
       this.props.playSound('blip');
-
-      // Check if the filtered result is empty
+      if (!data.rps) {
+        return prevState;
+      }
+  
       let filteredRPS = data.rps.filter(game => game.joiner === this.props.user_id);
       let rpsState = filteredRPS.length > 0 ? filteredRPS : prevState.rps;
-
+  
       return {
         bankroll: data.bankroll,
         host_pr: data.host_pr,
@@ -338,6 +344,7 @@ class RPS extends Component {
       };
     });
   };
+  
   handleSocketData2 = (data) => {
     this.setState({ bankroll: data.bankroll });
   };
@@ -572,7 +579,6 @@ class RPS extends Component {
 
   joinGame = async () => {
     const {
-      rps_bet_item_id,
       join,
       playSound,
       rps_game_type,
@@ -586,7 +592,6 @@ class RPS extends Component {
     const result = await join({
       bet_amount: parseFloat(bet_amount),
       selected_rps: selected_rps,
-      rps_bet_item_id: rps_bet_item_id,
     });
 
 

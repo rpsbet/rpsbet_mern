@@ -57,7 +57,7 @@ const customStyles = {
 class OpenGamesTable extends Component {
   constructor(props) {
     super(props);
-    this._isMounted = true;
+
     this.state = {
       selectedGameType: this.props.selectedGameType,
       mouseDown: false,
@@ -80,7 +80,11 @@ class OpenGamesTable extends Component {
     this.isComponentMounted = true;
 
     try {
-      await this.props.getRoomList({ pageSize: 7 });
+
+      this.setState({
+        roomList: this.props.roomList,
+      });
+      this.props.getRoomList({ pageSize: 7 });
 
       const qBotStatuses = {};
       for (const room of this.props.roomList || []) {
@@ -104,7 +108,7 @@ class OpenGamesTable extends Component {
     window.addEventListener('load', this.handleLoad);
     window.addEventListener('scroll', this.debouncedHandleScroll);
 
-    this.props.handleRefresh();
+    // this.props.fetchMoreRooms(null);
   }
 
   componentWillUnmount() {
@@ -116,15 +120,23 @@ class OpenGamesTable extends Component {
   }
 
 
-  componentDidUpdate(prevProps, prevState) {
+  async componentDidUpdate(prevProps, prevState) {
     const roomIds = new Set(this.state.roomList.map(room => room._id));
 
-    if (prevProps.roomList !== this.props.roomList || prevProps.highlightedRooms !== this.props.highlightedRooms) {
-      // Filter out new rooms (rooms that are not in the previous room list)
-      const newRooms = this.props.roomList.filter(room => !roomIds.has(room._id));
+    if (
+      prevProps.roomList[0]?.battles !== this.props.roomList[0]?.battles ||
+      prevProps.roomList[0]?.user_bet !== this.props.roomList[0]?.user_bet ||
+      prevProps.highlightedRooms !== this.props.highlightedRooms ||
+      prevProps.roomList.length !== this.props.roomList.length
+    ) {
+      this.props.fetchMoreRooms(null);
 
-      // Merge new rooms with the existing room list
-      const mergedRooms = [...this.state.roomList, ...newRooms];
+      const mergedRooms = [
+        ...this.props.roomList, // New rooms (will replace old ones if IDs match)
+        ...this.state.roomList.filter(
+          room => !this.props.roomList.some(newRoom => newRoom._id === room._id)
+        ), // Old rooms that aren't in the new list
+      ];
 
       // Get the ID from highlightedRooms (assuming it's a Set with a single ID for simplicity)
       const highlightedRoomId = Array.from(this.props.highlightedRooms)[0];
@@ -139,11 +151,12 @@ class OpenGamesTable extends Component {
           mergedRooms.unshift(highlightedRoom);
         }
       }
+
       this.setState({
         roomList: mergedRooms,
         highlightedRooms: this.props.highlightedRooms,
       });
-      // Update the state with the new room list order
+
     }
 
     // Handle changes to selectedGameType
@@ -153,7 +166,9 @@ class OpenGamesTable extends Component {
   }
 
   handleLoad = () => {
-    this.setState({ loaded: true, selectedGameType: 'All' });
+    if (this.isComponentMounted) {
+      this.setState({ loaded: true, selectedGameType: 'All' });
+    }
   };
 
   handleScroll = async () => {
@@ -175,7 +190,7 @@ class OpenGamesTable extends Component {
           pageSize: roomList.length + 3,
           game_type: selectedGameType,
           excludeIds: fetchedRoomIds,
-        }, roomList);
+        });
       }
     }
   };

@@ -252,7 +252,6 @@ class JoinGame extends Component {
     let isComponentMounted = true; // Local flag to track mounting
   
     try {
-      console.log("this.props.roomInfo", this.props.roomInfo)
       const creatorId = this.props.roomInfo.creator_id;
       if (!creatorId) {
         console.error("Creator ID is empty or undefined");
@@ -261,8 +260,7 @@ class JoinGame extends Component {
   
       const _id = creatorId.toString(); // Convert _id to string
       const accessory = await this.props.fetchAccessory({ _id });
-      console.log("_id", _id)
-      console.log("this.props.user_id", this.props.user_id)
+
       const dp = await this.props.fetchAccessory({ _id: this.props.user_id });
   
       if (isComponentMounted && accessory.accessory.CP !== undefined) {
@@ -959,7 +957,6 @@ class JoinGame extends Component {
           result = await this.join2({
             bet_amount: parseFloat(predictedBetAmount),
             selected_rps: selected_rps,
-            rps_bet_item_id: roomInfo.rps_bet_item_id
           });
 
         }
@@ -969,7 +966,6 @@ class JoinGame extends Component {
           result = await this.join2({
             bet_amount: parseFloat(predictedBetAmount),
             selected_qs_position: selected_qs_position,
-            qs_bet_item_id: roomInfo.qs_bet_item_id,
           });
           if (result.status === 'success' && !isMuted) {
             this.playSound('ballKick');
@@ -1373,7 +1369,6 @@ class JoinGame extends Component {
                     updateUserStrategy={this.props.updateUserStrategy}
                     user_bet={roomInfo.user_bet}
                     predictedBetAmount={predictedBetAmount}
-                    rps_bet_item_id={roomInfo.rps_bet_item_id}
                     is_private={roomInfo.is_private}
                     youtubeUrl={roomInfo.youtubeUrl}
                     gameBackground={roomInfo.gameBackground}
@@ -1493,7 +1488,6 @@ class JoinGame extends Component {
                     qs_game_type={roomInfo.qs_game_type}
                     user_bet={roomInfo.user_bet}
                     bet_amount={roomInfo.bet_amount}
-                    qs_bet_item_id={roomInfo.qs_bet_item_id}
                     is_private={roomInfo.is_private}
                     selected_qs_position={selected_qs_position}
                     roomInfo={roomInfo}

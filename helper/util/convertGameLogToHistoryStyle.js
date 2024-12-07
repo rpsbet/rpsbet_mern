@@ -2,20 +2,19 @@ const avatarUtils = require('./getRank');
 const convertToCurrency = require('./conversion');
 
 const convertGameLogToHistoryStyle = async gameLogList => {
-
   let result = [];
   gameLogList.forEach(gameLog => {
     if (gameLog.game_result === 3 && gameLog.hosts && gameLog.hosts.length === 0) {
       return;
     }
-
+    
     let room_name;
     if (gameLog.game_result === 3000 || gameLog.game_result === 333 || gameLog.game_result === 666 || gameLog.game_result === 444) {
       room_name = `<a style='color: #b9bbbe;' href="/join/${gameLog['room']['_id']}">${gameLog['game_type']['short_name']}-${gameLog['room']['room_number']}</a>`;
     } else {
       room_name = gameLog['room'] ?
-        gameLog['game_type']['short_name'] + '-' + gameLog['room']['room_number'] :
-        'Withdrawal';
+      gameLog['game_type']['short_name'] + '-' + gameLog['room']['room_number'] :
+      'Withdrawal';
     }
     try {
       let temp = {

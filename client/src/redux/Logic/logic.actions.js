@@ -675,7 +675,6 @@ export const getRoomList = search_condition => async dispatch => {
     let roomList = [];
 
     const cachedRooms = localStorage.getItem('roomList');
-    console.log("cachedRooms", cachedRooms)
     if (cachedRooms) {
       roomList = JSON.parse(cachedRooms);
 
@@ -700,25 +699,19 @@ export const getRoomList = search_condition => async dispatch => {
 };
 
 // actions
-export const fetchMoreRooms = (search_condition, roomList) => async (dispatch) => {
+export const fetchMoreRooms = (search_condition) => async (dispatch) => {
+  console.log("DWc")
   dispatch({ type: START_LOADING });
   try {
     // Fetch the room list from the server
     const res = await axios.get('/game/rooms', { params: search_condition });
     if (res.data.success) {
       const newRoomList = res.data.roomList;
-      // Combine the existing room list with the newly fetched rooms, removing duplicates
-      const updatedRoomList = [...roomList, ...newRoomList].reduce((uniqueRooms, currentRoom) => {
-        if (!uniqueRooms.some((room) => room._id === currentRoom._id)) {
-          uniqueRooms.push(currentRoom);
-        }
-        return uniqueRooms;
-      }, []);
-
+  
       localStorage.removeItem('roomList');
-      localStorage.setItem('roomList', JSON.stringify(updatedRoomList));
+      localStorage.setItem('roomList', JSON.stringify(newRoomList));
 
-      dispatch({ type: ROOMS_LOADED, payload: { roomList: updatedRoomList } });
+      dispatch({ type: ROOMS_LOADED, payload: { roomList: newRoomList } });
     }
   } catch (err) {
     console.error('Error fetching more rooms:', err);

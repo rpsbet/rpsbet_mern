@@ -79,10 +79,9 @@ class RoomHistory extends React.Component {
               .map((row, key) => (
                 <div
                   className={`table-row ${(row.joined_user === userId) ? 'history-background' : ''} ${key < 50 ? 'slide-in' : ''}`}
-                  style={{ animationDelay: `${key * 0.1}s` }}
+                  style={{ animationDelay: `${key * 0.1}s`, padding: '10px' }}
                   key={row._id}
                 >
-                  <div>
                     <div className="table-cell">
                       <div className="room-id">{row.status}</div>
                       {row.ai_mode && (
@@ -100,7 +99,6 @@ class RoomHistory extends React.Component {
                       ></div>
                     </div>
                     <div className="table-cell">{Moment(row.created_at).fromNow()}</div>
-                  </div>
                   {key === roomInfo.room_history.length - 1 && <div ref={this.lastItemRef}></div>}
                 </div>
               ))}

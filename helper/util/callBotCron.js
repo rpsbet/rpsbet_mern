@@ -52,7 +52,7 @@ async function getQsBetItems(roomId, user) {
 
 
 async function predictNextBetAmount(betArray, penultimateSameAsLast, smoothingFactor = 0.01, randomnessFactor = 0.2, threshold = 0.0005, room) {
-  console.log("room.", room._id)
+  console.log("room.", room)
   const allStates = Array.from(new Set(betArray));
   if (penultimateSameAsLast !== 0) {
     if (penultimateSameAsLast >= 3) {
@@ -659,7 +659,7 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
             nextState = randomnessResult.counterMove;
             const penultimateSameAsLast = randomnessResult.risk;
             if (ai_mode === 'Skill-issue-old') {
-              predictedBetAmount = await predictNextBetAmount(betArray, penultimateSameAsLast, 0.01, 0.2);
+              predictedBetAmount = await predictNextBetAmount(betArray, penultimateSameAsLast, 0.01, 0.2, room);
             } else if (ai_mode === 'Skill-issue') {
               const outcome = await martingaleStrategy(rpsBetItems);
               if (penultimateSameAsLast === 3) {
