@@ -207,6 +207,11 @@ const PlaceholderComponent = ({ selectedTab, myGames, updateQbot, handleTabChang
   }, [user_id]);
 
   const handleSwitchChange = async (event) => {
+    // console.log(rpsbetitems.length)
+    // if (rpsbetitems.length <= 3 || qsbetitems.length <= 3) {
+    //   alertModal(isDarkMode, "NOT ENOUGHT TRAINING DATA");
+    //   return;
+    // }
     const newBettingStatus = event.target.checked;
     setBetting(newBettingStatus);
     try {
@@ -998,7 +1003,7 @@ function BetArray({
 
                 <div style={{ display: "flex", width: "100%", justifyContent: "center" }}>
                   <div style={{ display: "inline-flex", flexDirection: "row", alignItems: "center", justifyContent: "center", width: "50%", padding: "10px" }}>
-                    <Tooltip title="TOGGLE AI PLAY BETTING">
+                    <Tooltip title="TOGGLE AI BETTING">
                       <Switch
                         id="aiplay-switch"
                         checked={betting}

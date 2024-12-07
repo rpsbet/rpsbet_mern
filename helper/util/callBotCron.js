@@ -52,7 +52,6 @@ async function getQsBetItems(roomId, user) {
 
 
 async function predictNextBetAmount(betArray, penultimateSameAsLast, smoothingFactor = 0.01, randomnessFactor = 0.2, threshold = 0.0005, room) {
-  console.log("room.", room)
   const allStates = Array.from(new Set(betArray));
   if (penultimateSameAsLast !== 0) {
     if (penultimateSameAsLast >= 3) {

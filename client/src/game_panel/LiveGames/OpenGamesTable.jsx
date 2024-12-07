@@ -359,8 +359,8 @@ class OpenGamesTable extends Component {
     }
   };
   joinRoom = (roomDetails) => {
-    const { id, roomStatus, gameType, betAmount, creatorId, qsGameType } = roomDetails;
-
+    const { id, roomStatus, gameType, betAmount, totalStakes, creatorStatus, creatorAvatar, accessory, rank, creatorId, qsGameType, pr, host_pr } = roomDetails;
+console.log(id, roomStatus, gameType, betAmount, totalStakes, creatorId, qsGameType, pr, host_pr)
     this.setState({ isClicked: true });
 
     if (roomStatus === "finished") {
@@ -374,9 +374,16 @@ class OpenGamesTable extends Component {
       bet_amount: parseFloat(betAmount),
       user_bet: parseFloat(betAmount),
       creator_id: creatorId,
+      // accessory: accessory,
+      rank: rank,
+      creator_status: creatorStatus,
+      creator_avatar: creatorAvatar,
+      total_stakes: totalStakes,
       hosts: [],
       status: roomStatus,
       qs_game_type: qsGameType,
+      pr: pr,
+      host_pr: host_pr,
       game_log_list: [],
     });
 
@@ -457,7 +464,7 @@ class OpenGamesTable extends Component {
 
         {isLiveGames ? (
           <>
-            <div className="table main-game-table">
+            <div className="table main-game-table open-games">
 
               {(roomList.length === 0 && !isLoading && !loading) ? (
                 <div className="dont-have-game-msg">
@@ -487,10 +494,16 @@ class OpenGamesTable extends Component {
                         onClick={() =>
                           this.joinRoom({
                             id: row._id,
+                            roomId: row._id,
                             creatorId: row.creator_id,
+                            creatorAvatar: row.creator_avatar,
+                            creatorStatus: row.creator_status,
+                            accessory: row.accessory,
+                            rank: row.rank,
                             roomStatus: row.status,
                             gameType: row.game_type.game_type_name,
                             betAmount: row.user_bet,
+                            totalStakes: row.total_stakes,
                             qsGameType: row.qs_game_type,
                             pr: row.pr,
                             host_pr: row.host_pr,

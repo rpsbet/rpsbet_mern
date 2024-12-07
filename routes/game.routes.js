@@ -1239,6 +1239,8 @@ const getRoomList = async (pageSize, game_type, excludeIds = []) => {
           bet_amount: room.bet_amount,
           selectedStrategy: room.selectedStrategy,
           pr: room.pr,
+          host_pr: room.host_pr,
+          total_stakes: room.hosts.reduce((acc, host) => acc + host.stake, 0),
           user_bet: parseFloat(room.user_bet),
           winnings: '',
           is_private: room.is_private,

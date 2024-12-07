@@ -313,7 +313,7 @@ class PlayerModal extends Component {
       this.setState({
         status: data.status,
       });
-    } 
+    }
     await this.props.queryProducts(127, 1, this.state._id);
   }
 
@@ -513,81 +513,76 @@ class PlayerModal extends Component {
               </div>
               <div className="modal-body player-modal edit-modal-body">
                 <div className="align-center">
-                  {loading ? (
-                    <div className="loading-spinner"></div>
-                  ) : (
-                    <>
-                      <div style={{
-                        margin: '30px auto -10px',
-                        padding: '10px',
-                        borderRadius: '4px',
-                        maxWidth: '150px',
-                        background: '#6c757d26',
-                        position: 'fixed',
-                        left: '15px',
-                        top: '65px',
-                        zIndex: '9'
-                      }}>
-                        <span>
-                          {this.props.onlineUserList.includes(this.props.selectedCreator) ? 'online' : 'offline'}
-                        </span>&nbsp;
-                        <i
-                          style={{ margin: 'unset', transform: 'unset' }}
-                          className={`online-status${this.props.onlineUserList.includes(this.props.selectedCreator) ? ' online' : ''}`}
-                        ></i>
+
+                  <div style={{
+                    margin: '30px auto -10px',
+                    padding: '10px',
+                    borderRadius: '4px',
+                    maxWidth: '150px',
+                    background: '#6c757d26',
+                    position: 'fixed',
+                    left: '15px',
+                    top: '65px',
+                    zIndex: '9'
+                  }}>
+                    <span>
+                      {this.props.onlineUserList.includes(this.props.selectedCreator) ? 'online' : 'offline'}
+                    </span>&nbsp;
+                    <i
+                      style={{ margin: 'unset', transform: 'unset' }}
+                      className={`online-status${this.props.onlineUserList.includes(this.props.selectedCreator) ? ' online' : ''}`}
+                    ></i>
+                  </div>
+
+                  <div className='avatar-border'>
+                    <Avatar
+                      src={
+                        this.state.avatar
+                          ? this.state.avatar
+                          : '/img/profile-thumbnail.svg'
+                      }
+                      accessory={this.state.accessory}
+                      username={this.state.username}
+                      rank={this.state.rank}
+                      alt=""
+                    />
+                    <h1 className={'player-username'} style={{ marginTop: '60px' }}>
+                      {this.state.username}
+                    </h1>
+                    <div id="user-bio" style={{ position: 'relative', marginTop: '20px', borderBottom: '2px solid', borderTop: '2px solid' }}>
+                      <div className={'player-username'} style={{ color: this.props.isDarkMode ? "#e5e5e5" : "#333" }}>
+                        {isBio ? (
+                          <a
+                            href={bio}
+                            style={{
+                              fontSize: "1.1em",
+                              marginBottom: '2px',
+                              color: this.props.isDarkMode ? "#e5e5e5" : "#333"
+                            }}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {this.state.bio}
+                          </a>
+                        ) : (
+                          <span
+                            style={{
+                              fontSize: "1.1em",
+                              marginBottom: '20px',
+                              paddingBottom: '10px',
+                              color: this.props.isDarkMode ? "#e5e5e5" : "#333"
+                            }}
+                          >
+                            {this.state.bio}
+                          </span>
+                        )}
                       </div>
+                    </div>
 
-                      <div className='avatar-border'>
-                        <Avatar
-                          src={
-                            this.state.avatar
-                              ? this.state.avatar
-                              : '/img/profile-thumbnail.svg'
-                          }
-                          accessory={this.state.accessory}
-                          username={this.state.username}
-                          rank={this.state.rank}
-                          alt=""
-                        />
-                        <h1 className={'player-username'} style={{ marginTop: '60px' }}>
-                          {this.state.username}
-                        </h1>
-                        <div id="user-bio" style={{ position: 'relative', marginTop: '20px', borderBottom: '2px solid', borderTop: '2px solid' }}>
-                          <div className={'player-username'} style={{ color: this.props.isDarkMode ? "#e5e5e5" : "#333" }}>
-                            {isBio ? (
-                              <a
-                                href={bio}
-                                style={{
-                                  fontSize: "1.1em",
-                                  marginBottom: '2px',
-                                  color: this.props.isDarkMode ? "#e5e5e5" : "#333"
-                                }}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                {this.state.bio}
-                              </a>
-                            ) : (
-                              <span
-                                style={{
-                                  fontSize: "1.1em",
-                                  marginBottom: '20px',
-                                  paddingBottom: '10px',
-                                  color: this.props.isDarkMode ? "#e5e5e5" : "#333"
-                                }}
-                              >
-                                {this.state.bio}
-                              </span>
-                            )}
-                          </div>
-                        </div>
+                  </div>
 
-                      </div>
-                    </>
-
-                  )}
                 </div>
-              
+
                 {loading ? null : (
                   <div className="user-statistics">
                     <StatisticsForm

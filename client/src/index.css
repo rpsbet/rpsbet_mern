@@ -688,7 +688,7 @@ div.table .table-cell button.btn_join img {
   border: 3px solid #ffd000 !important;
 }
 
-.main-panel div.table .table-row:hover {
+.main-panel div.table.open-games .table-row:hover {
   border: 2px solid #f9f9f9;
 }
 
@@ -812,9 +812,6 @@ div.table .table-cell button.btn_join img {
   background: unset;
 }
 
-.sub-panel .overflowX .lottie-container {
-  display: none;
-}
 
 .main-game.join .modal-footer {
   padding: 0;

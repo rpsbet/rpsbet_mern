@@ -344,7 +344,7 @@ class RPS extends Component {
       };
     });
   };
-  
+
   handleSocketData2 = (data) => {
     this.setState({ bankroll: data.bankroll });
   };
@@ -843,8 +843,9 @@ class RPS extends Component {
     }
     const isLowBankroll = bankroll <= 1;
     const isHighCommission = this.props.cp > 16;
-    const isLowProfit = (host_pr - roomInfo.total_stakes) > 0;
-    const hostProfit = parseFloat(host_pr) || 0;
+    const isLowProfit = (roomInfo.host_pr - roomInfo.total_stakes) > 0;
+    console.log("cc", roomInfo.host_pr, roomInfo.total_stakes)
+    const hostProfit = parseFloat(roomInfo.host_pr) || 0;
     const totalStakes = parseFloat(roomInfo?.total_stakes) || 0;
     return (
       <div className="game-page">

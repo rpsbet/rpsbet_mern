@@ -99,50 +99,85 @@ class QuickShoot extends Component {
     this.onChangeState = this.onChangeState.bind(this);
     this.handleKeyPress = this.handleKeyPress.bind(this);
     this.panelRef = React.createRef();
+    this.isComponentMounted = false;
   }
 
   async componentDidMount() {
-    document.addEventListener('keydown', this.handleKeyPress);
-    this.setState({ intervalId: setInterval(this.toggleBlueishHue, this.state.intervalDuration) });
-    this.setupSocket();
-    const botsCount = await this.props.getRoomBotCount(this.props.roomInfo._id);
-    const qBotStatus = await this.props.getQbot(this.props.roomInfo.creator_id);
-    this.setState({
-      botsCount: botsCount,
-      isQbot: qBotStatus,
-    });
-  }
+    this.isComponentMounted = true; // Set mounted flag to true
 
-  setupSocket() {
+    // Add keydown listener
     document.addEventListener('keydown', this.handleKeyPress);
-    this.setState({ intervalId: setInterval(this.toggleBlueishHue, this.state.intervalDuration) });
+
+    // Set interval for toggling hue and save the interval ID
+    const intervalId = setInterval(this.toggleBlueishHue, this.state.intervalDuration);
+    this.setState({ intervalId });
+
+    // Setup socket connection
+    this.setupSocket();
+
+    try {
+      // Fetch bots count and Q-bot status
+      const botsCount = await this.props.getRoomBotCount(this.props.roomInfo._id);
+      const qBotStatus = await this.props.getQbot(this.props.roomInfo.creator_id);
+
+      // Update state only if the component is still mounted
+      if (this.isComponentMounted) {
+        this.setState({
+          botsCount,
+          isQbot: qBotStatus,
+        });
+      }
+    } catch (error) {
+      console.error('Error in componentDidMount:', error);
+    }
+  }
+  setupSocket() {
+    this.isComponentMounted = true; // Ensure socket setup knows the component is mounted
+
+    // Add keydown listener
+    document.addEventListener('keydown', this.handleKeyPress);
+
+    // Start interval for hue toggling
+    const intervalId = setInterval(this.toggleBlueishHue, this.state.intervalDuration);
+    this.setState({ intervalId });
 
     const initializeSocket = async () => {
       try {
+        if (!this.isComponentMounted) return; // Exit if unmounted
+
         const { socket, playSound, roomInfo } = this.props;
         const initializedSocket = socket || null;
         this.setState({ socket: initializedSocket });
 
         if (initializedSocket) {
-
+          // Set up socket listeners
           initializedSocket.on(`UPDATED_BANKROLL_QS_${roomInfo._id}`, this.handleSocketData);
           initializedSocket.on(`UPDATED_BANKROLL_QS2_${roomInfo._id}`, this.handleSocketData2);
         } else {
-          setTimeout(initializeSocket, 3000);
+          // Retry initialization after delay if socket is not ready
+          setTimeout(() => {
+            if (this.isComponentMounted) initializeSocket();
+          }, 3000);
         }
       } catch (error) {
         console.error('Socket initialization failed:', error);
-        setTimeout(initializeSocket, 3000);
+
+        // Retry initialization after delay in case of error
+        setTimeout(() => {
+          if (this.isComponentMounted) initializeSocket();
+        }, 3000);
       }
     };
 
     initializeSocket();
   }
 
+
   removeSocketListeners() {
     const { socket, roomInfo } = this.props;
     if (socket) {
       socket.off(`UPDATED_BANKROLL_QS_${roomInfo._id}`, this.handleSocketData);
+      
     }
   }
 
@@ -195,6 +230,7 @@ class QuickShoot extends Component {
   };
 
   componentWillUnmount() {
+    this.isComponentMounted = false;
     document.removeEventListener('keydown', this.handleKeyPress);
     document.removeEventListener('mousedown', this.handleClickOutside);
     clearInterval(this.state.intervalId);

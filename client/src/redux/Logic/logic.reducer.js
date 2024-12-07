@@ -359,7 +359,6 @@ export default function (state = initialState, action) {
     case ROOMS_LOADED:
       const { roomList } = payload;
       const accessories = roomList.map(room => room.accessory);
-console.log("roomList", roomList)
       return {
         ...state,
         roomList,

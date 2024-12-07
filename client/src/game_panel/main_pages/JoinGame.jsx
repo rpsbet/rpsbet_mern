@@ -169,11 +169,13 @@ class JoinGame extends Component {
     this.isComponentMounted = true;
     const { id } = this.props.match.params;
     await this.initializeRoomData(id);
+    await this.fetchAccessory();
     await this.props.checkPlayerAttachment(id);
-    if (this.props.attached) {
+  
+    if (this.isComponentMounted && this.props.attached) {
       this.setState({ betting: true });
     }
-
+  
     window.addEventListener('unload', this.handleUnload);
   }
 
@@ -194,7 +196,6 @@ class JoinGame extends Component {
         // this.props.getGameTypeList(),
         this.props.getStrategies(),
         this.props.getRoomInfo(this.props.match.params.id, this.state.limit, true)
-          .then(() => this.fetchAccessory()) // Invoke fetchAccessory after getRoomInfo
       ]);
     } catch (error) {
       console.error('Error initializing room data:', error);
@@ -249,31 +250,23 @@ class JoinGame extends Component {
   };
 
   async fetchAccessory() {
-    let isComponentMounted = true; // Local flag to track mounting
-  
     try {
       const creatorId = this.props.roomInfo.creator_id;
+  
       if (!creatorId) {
-        console.error("Creator ID is empty or undefined");
         return;
       }
   
-      const _id = creatorId.toString(); // Convert _id to string
+      const _id = creatorId.toString();
       const accessory = await this.props.fetchAccessory({ _id });
-
       const dp = await this.props.fetchAccessory({ _id: this.props.user_id });
   
-      if (isComponentMounted && accessory.accessory.CP !== undefined) {
+      if (this.isComponentMounted && accessory.accessory.CP !== undefined) {
         this.setState({ cp: accessory.accessory.CP - dp.accessory.DP });
       }
     } catch (error) {
       console.error("Error fetching accessory:", error);
     }
-  
-    // Cleanup function to mark component as unmounted
-    return () => {
-      isComponentMounted = false;
-    };
   }
   // auto bet
   join2 = async betInfo => {
@@ -666,9 +659,7 @@ class JoinGame extends Component {
     if (betting) {
       this.stopBetting();
     } else {
-
       this.playSound('start');
-
       this.setState({ betting: true });
 
       // const result = await getCustomerStatisticsData(
@@ -700,7 +691,6 @@ class JoinGame extends Component {
 
         await getRpsBetItems(roomInfo._id);
         await getQsBetItems(roomInfo._id);
-
         switch (roomInfo.game_type) {
           case 'Quick Shoot':
             if (this.props.qsbetitems && this.props.qsbetitems.length > 0) {

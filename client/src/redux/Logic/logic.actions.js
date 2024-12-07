@@ -234,6 +234,7 @@ export const bet = bet_info => async dispatch => {
 export const bet2 = bet_info => async dispatch => {
   try {
     dispatch({ type: START_BET });
+    console.log("bet_info", bet_info)
     const res = await axios.post('/game/bet2', bet_info);
     dispatch({ type: END_BET });
 
@@ -700,7 +701,6 @@ export const getRoomList = search_condition => async dispatch => {
 
 // actions
 export const fetchMoreRooms = (search_condition) => async (dispatch) => {
-  console.log("DWc")
   dispatch({ type: START_LOADING });
   try {
     // Fetch the room list from the server

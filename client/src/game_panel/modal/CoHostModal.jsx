@@ -379,12 +379,12 @@ function CoHostModal({
   const handleMaxButtonClick = () => {
     // Find the host in selectedRow.hosts who matches the user._id
     const userHost = selectedRow.hosts.find((host) => host.host === user._id);
-  
+
     // Check if userHost exists and has a stake
     if (userHost) {
       // Create a simulated event with the stake value from userHost.stake
       const simulatedEvent = { target: { value: userHost.stake } };
-      
+
       // Call handleCoHostAmountChange with the simulated event
       handleCoHostAmountChange(simulatedEvent);
     }
@@ -664,11 +664,13 @@ function CoHostModal({
                     {selectedRow ? convertToCurrency(selectedRow.user_bet) : null}
                   </TableCell>
                 </TableRow>
-               
+
                 <TableRow>
                   <TableCell>CURRENT SHARE:</TableCell>
                   <TableCell style={{ color: "rgb(255, 176, 0)", textAlign: 'right' }}>
-                    {Array.isArray(selectedRow.hosts) && selectedRow.hosts.length > 0 && selectedRow.hosts.some((host) => host.host === user._id) ? (
+                    {Array.isArray(selectedRow.hosts) &&
+                      selectedRow.hosts.length > 0 &&
+                      selectedRow.hosts.some((host) => host.host === user?._id) ? (
                       <>
                         {
                           (() => {
@@ -691,7 +693,7 @@ function CoHostModal({
                     {(() => {
                       if (!selectedRow || !Array.isArray(selectedRow.hosts)) return "0%";
 
-                      const userHost = selectedRow.hosts.find((host) => host.host === user._id);
+                      const userHost = user && selectedRow.hosts.find((host) => host.host === user._id);
                       const userStake = userHost ? parseFloat(userHost.stake) : 0; // User's current stake
 
                       const coHostAmountFloat = parseFloat(coHostAmount || 0);
@@ -847,9 +849,9 @@ function CoHostModal({
 
     </div >
 
-    
+
   );
-  
+
 }
 
 
