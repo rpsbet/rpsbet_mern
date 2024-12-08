@@ -25,7 +25,7 @@ function CoHostModal({
 }) {
   const dispatch = useDispatch();
   const [closingRooms, setClosingRooms] = useState({});
-  const [timeFrame, setTimeFrame] = useState('1m'); // Default to 1 minute
+  const [timeFrame, setTimeFrame] = useState('4h'); // Default to 1 minute
   const [showPlayerModal, setShowPlayerModal] = useState(false);
   const [selectedCreator, setSelectedCreator] = useState('');
 

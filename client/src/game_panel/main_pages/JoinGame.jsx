@@ -1133,7 +1133,7 @@ class JoinGame extends Component {
       const result = await this.props.coHost(coHostAmount, roomInfo._id);
 
       if (result.success) {
-        alertModal(isDarkMode, result.message, '-cat');
+        // alertModal(isDarkMode, result.message, '-cat');
         setBalance(result.balance);
         addNewTransaction(result.newTransaction);
         await getRoomList({

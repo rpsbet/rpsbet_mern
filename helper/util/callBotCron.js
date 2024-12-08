@@ -882,7 +882,7 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
   }
 }
 
-cron.schedule('*/9 * * * * *', async () => {
+cron.schedule('*/7 * * * * *', async () => {
   await callCronJobs(socketio);
 });
 module.exports = {

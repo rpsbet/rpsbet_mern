@@ -2378,7 +2378,7 @@ router.post('/coHost', auth, async (req, res) => {
       success: true,
       balance: req.user.balance,
       newTransaction,
-      message: 'YOU ARE NOW A CO-HOST AND SHARE PROFITS/LOSSES WITH THE HOST.'
+      // message: 'YOU ARE NOW A CO-HOST AND SHARE PROFITS/LOSSES WITH THE HOST.'
     });
   } catch (error) {
     console.log('ERROR in coHost:', error);
@@ -3046,7 +3046,7 @@ router.get('/candles/:room', async (req, res) => {
 
     const { timeRange = '1m' } = req.query;
     const bucketSize = getTimeBucket(timeRange);
-    let startDate = moment().subtract(4, 'hours').startOf('second').toDate();
+    let startDate = moment().subtract(12, 'hours').startOf('second').toDate();
 
     // Fetch the first transaction that includes "created", "Pumped", or "Jeeted" in the description
     const transactions = await Transaction.find({

@@ -454,7 +454,7 @@ class BankTable extends Component {
                   history.push(`/loan/${row._id}`);
                 }}
               >
-              <APY>{(row.apy * 100).toFixed(2)}%</APY>
+                <APY>{(row.apy * 100).toFixed(2)}%</APY>
 
 
                 <ProductCreator>
@@ -613,7 +613,13 @@ class BankTable extends Component {
                           <TableCell>
                             <FontAwesomeIcon icon={faClock} /> DAYS LEFT:
                           </TableCell>
-                          <TableCell className="value">{loan.outstanding === true ? "OUTSTANDING" : loan.outstanding}</TableCell>
+                          <TableCell className="value">
+                            {loan.outstanding === true
+                              ? loan.totalLoanerAmount === 0
+                                ? "CLEARED"
+                                : "OUTSTANDING"
+                              : loan.outstanding}
+                          </TableCell>
                         </TableRow>
                         <TableRow>
                           <TableCell>

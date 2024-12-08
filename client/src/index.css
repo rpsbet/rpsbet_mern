@@ -1610,7 +1610,9 @@ div.table.main-history-table {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
-
+div.table.main-history-table .lottie-container {
+  display: none;
+}
 div.table.main-game-table,
 div.table.my-open-game-table {
   position: relative;
