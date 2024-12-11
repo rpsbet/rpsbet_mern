@@ -222,9 +222,7 @@ class ChatPage extends Component {
             variant="persistent"
             anchor="left"
             open={isDrawerOpen}
-            classes={{
-              paper: classes.drawerPaper, // Use the custom styles
-            }}
+         
           >
             <ChatPanel is_mobile={is_mobile} toggleDrawer={this.toggleDrawer} />
           </Drawer>

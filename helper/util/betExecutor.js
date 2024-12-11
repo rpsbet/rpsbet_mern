@@ -911,11 +911,13 @@ const addToQueue = async (req, bot = false) => {
                 notification.from = roomInfo['creator']._id;
                 notification.to = roomInfo['creator']._id;
                 notification.message = 'Hosting ' + convertToCurrency(newTransactionC.amount) + ' auto-payout in ' + roomInfo.game_type.short_name + '-' + roomInfo.room_number;
+                notification.amount = newTransactionC.amount;
 
                 const notificationData = {
                     _id: roomInfo['creator']._id,
                     message: notification.message,
                     username: roomInfo['creator'].username,
+                    amount: newTransactionC.amount,
                     avatar: roomInfo['creator'].avatar,
                     accessory: roomInfo['creator'].accessory,
                     room: req.body._id,
@@ -993,10 +995,12 @@ const addToQueue = async (req, bot = false) => {
                     notification.from = roomInfo['creator'];
                     notification.to = host.host;
                     notification.message = 'Co-Hosting ' + convertToCurrency(amountForHost) + ' auto-payout in ' + roomInfo.game_type.short_name + '-' + roomInfo.room_number;
+                    notification.amount = amountForHost;
 
                     const notificationData = {
                         _id: roomInfo['creator']._id,
                         message: notification.message,
+                        amount: notification.amount,
                         username: roomInfo['creator'].username,
                         avatar: roomInfo['creator'].avatar,
                         accessory: roomInfo['creator'].accessory,

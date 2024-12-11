@@ -20,6 +20,10 @@ const NotificationSchema = new Schema({
     type: String,
     default: ''
   },
+  amount: {
+    type: Number,
+    default: 0
+  },
   is_read: {
     type: Boolean,
     default: false

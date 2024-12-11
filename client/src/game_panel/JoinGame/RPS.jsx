@@ -219,7 +219,6 @@ class RPS extends Component {
 
   async componentDidMount() {
     this.isComponentMounted = true;
-
     document.addEventListener('keydown', this.handleKeyPress);
     this.setState({ intervalId: setInterval(this.toggleBlueishHue, this.state.intervalDuration) });
     this.setupSocket();
@@ -271,35 +270,6 @@ class RPS extends Component {
         //   }
         // });
 
-
-        //   initializedSocket.on('RPS_1', data => {
-        //     if (data && data.length > 0) {
-        //       this.setState({
-        //         rps: this.props.isWatching ? data.filter(game => game.joiner === user_id) : data,
-        //         prev_rps: data,
-        //         startedPlaying: true
-        //       });
-        //     }
-        //   });
-
-        //   initializedSocket.emit('emitRps');
-        // }
-
-        // // Add event listener conditionally based on rps_game_type
-        // if (rps_game_type === 0) {
-        //   document.addEventListener('mousedown', this.handleClickOutside);
-        // }
-
-        // if (rps_game_type === 1) {
-        //   // Ensure acQueryMyItem is available
-        //   if (acQueryMyItem) {
-        //     await acQueryMyItem(100, 1, 'price', '653ee7ac17c9f5ee21245649');
-        //     setTimeout(() => {
-        //       if (!this.state.cardDealt) {
-        //         this.dealCard();
-        //       }
-        //     }, 1500);
-        //   }
       } catch (error) {
         console.error('Socket initialization failed:', error);
         setTimeout(initializeSocket, 3000);
@@ -333,7 +303,7 @@ class RPS extends Component {
   
       let filteredRPS = data.rps.filter(game => game.joiner === this.props.user_id);
       let rpsState = filteredRPS.length > 0 ? filteredRPS : prevState.rps;
-  
+  console.log("data.bankroll", data.bankroll)
       return {
         bankroll: data.bankroll,
         host_pr: data.host_pr,
@@ -545,7 +515,7 @@ class RPS extends Component {
     if (prevProps.roomInfo && roomInfo) {
       if (prevProps.roomInfo.bet_amount !== roomInfo.bet_amount) {
         this.setState({
-          bankroll: parseFloat(roomInfo.bet_amount)
+          bankroll: parseFloat(roomInfo.user_bet)
         });
       }
     }
@@ -844,7 +814,6 @@ class RPS extends Component {
     const isLowBankroll = bankroll <= 1;
     const isHighCommission = this.props.cp > 16;
     const isLowProfit = (roomInfo.host_pr - roomInfo.total_stakes) > 0;
-    console.log("cc", roomInfo.host_pr, roomInfo.total_stakes)
     const hostProfit = parseFloat(roomInfo.host_pr) || 0;
     const totalStakes = parseFloat(roomInfo?.total_stakes) || 0;
     return (

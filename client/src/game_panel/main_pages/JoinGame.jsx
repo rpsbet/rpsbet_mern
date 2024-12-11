@@ -171,7 +171,6 @@ class JoinGame extends Component {
     await this.initializeRoomData(id);
     await this.fetchAccessory();
     await this.props.checkPlayerAttachment(id);
-  
     if (this.isComponentMounted && this.props.attached) {
       this.setState({ betting: true });
     }

@@ -79,6 +79,7 @@ async function checkRentalPayments(io) {
                     to:  owner.originalOwner ,
                     room: '',
                     message: `Received back ${item.productName}.`,
+                    amount: 0,
                     is_read: false
                   })
 
@@ -98,6 +99,7 @@ async function checkRentalPayments(io) {
                     to: currentUser,
                     room: '',
                     message: `No more funds. Returned ${item.productName}`,
+                    amount: 0,
                     is_read: false
                   })
 
@@ -105,6 +107,7 @@ async function checkRentalPayments(io) {
                     message: notificationJ.message,
                     username: currentUser.username,
                     avatar: currentUser.avatar,
+                    amount: 0,
                     accessory: currentUser.accessory,
                     rank: currentUser.totalWagered,
                     created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
@@ -168,6 +171,7 @@ async function checkRentalPayments(io) {
                     from: currentUser,
                     to: currentUser,
                     room: '',
+                    amount: -amountToDeduct,
                     message: `Paid ${convertToCurrency(amountToDeduct)} Rental Payment for ${item.productName}`,
                     is_read: false
                   })
@@ -177,6 +181,7 @@ async function checkRentalPayments(io) {
                     username: currentUser.username,
                     avatar: currentUser.avatar,
                     accessory: currentUser.accessory,
+                    amount: -amountToDeduct,
                     rank: currentUser.totalWagered,
                     created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
                     created_at_str: moment(new Date()).format('LLL'),

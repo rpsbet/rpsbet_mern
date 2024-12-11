@@ -27,6 +27,7 @@ import CountUp from 'react-countup';
 import Lottie from 'react-lottie';
 import progress from './LottieAnimations/progress.json';
 import coins from './LottieAnimations/coins.json';
+import { setBalance } from '../redux/Auth/user.actions.js'
 import InlineSVG from 'react-inlinesvg';
 import busdSvg from './JoinGame/busd.svg';
 import AllTransactionsModal from './modal/AllTransactionsModal.jsx';
@@ -74,10 +75,6 @@ import WithdrawModal from './modal/WithdrawModal';
 import InventoryModal from './modal/InventoryModal';
 import VaultModal from './modal/VaultModal';
 import ResetPasswordModal from './modal/ResetPasswordModal';
-import Battle from './icons/Battle.js';
-import BattleHover from './icons/BattleHover';
-import Manage from './icons/Manage.js';
-import ManageHover from './icons/ManageHover';
 import Notifications from './icons/Notifications.js';
 import NotificationsHover from './icons/NotificationsHover';
 import Leaderboards from './icons/Leaderboards.js';
@@ -308,12 +305,11 @@ class SiteWrapper extends Component {
 
   async componentDidUpdate(prevProps, prevState) {
     const { loadMore } = this.state;
-    const { transactions, tnxComplete, remainingLoans, betResult } = this.props;
+    const { transactions, tnxComplete, remainingLoans, betResult, notifications } = this.props;
 
     if (this.props.user !== prevProps.user) {
       this.setState({ run: !this.props.user.completedTutorials.includes(1) })
     }
-
 
     if (prevProps.betResult !== betResult && betResult === 'win') {
       if (!this.props.isLowGraphics) {
@@ -617,6 +613,10 @@ class SiteWrapper extends Component {
       });
 
       socket.on('SEND_NOTIFICATION', data => {
+        if (data.amount && data.amount !== 0) {
+          this.props.setBalance(this.props.balance + data.amount);
+        }
+      
         if (!this.props.isMuted || !this.props.notificationSounds) {
           this.notificationSound.play();
         }
@@ -780,19 +780,6 @@ class SiteWrapper extends Component {
     const { getWins, getWithdrawals } = this.props;
     const promises = [getWins(), getWithdrawals()];
     await Promise.all(promises);
-  }
-
-  async initializeWebsiteData() {
-    const { getNotifications, getUser, acCalculateRemainingLoans, fetchData, fetchTokenDetails } = this.props;
-    await Promise.all([
-      getNotifications(),
-      getUser(),
-      this.initSocket(),
-      acCalculateRemainingLoans(),
-      this.initializeAudio(),
-      fetchData(),
-      fetchTokenDetails()
-    ]);
   }
 
   handleCreatePage() {
@@ -2439,6 +2426,7 @@ const mapDispatchToProps = {
   globalChatReceived,
   setGlobalChat,
   updateBetResult,
+  setBalance,
   getProfitData,
   openOfferLoanModal,
   setCurrentOfferTargetInfo,

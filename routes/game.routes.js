@@ -628,7 +628,6 @@ router.get('/room/:id', async (req, res) => {
       .populate({ path: 'game_type', model: GameType })
       .populate({ path: 'brain_game_type', model: BrainGameType })
       .populate({ path: 'joiners', model: User });
-
     let gameLogQuery = GameLog.find({ room: room })
       .sort({ created_at: 'desc' })
       .populate({ path: 'room', model: Room, select: '_id winnings commission username creator status hosts room_number game_type bet_amount user_bet host_pr created_at' })
@@ -636,7 +635,7 @@ router.get('/room/:id', async (req, res) => {
       .populate({ path: 'creator', model: User, select: '_id avatar username accessory totalWagered' })
       .populate({ path: 'joined_user', model: User, select: '_id avatar username accessory totalWagered' });
 
-    const limit = 30;
+    const limit = 3000;
     gameLogQuery = gameLogQuery.limit(limit);
     const totalGameLogsCount = 0;
 
@@ -644,16 +643,6 @@ router.get('/room/:id', async (req, res) => {
 
     const creator = await User.findOne({ _id: room.creator });
     const joiners = await User.find({ _id: { $in: room.joiners } });
-
-    // const rpsBetItem = await RpsBetItem.findOne({
-    //   room: room._id,
-    //   joiner_rps: ''
-    // }).sort({ _id: 'asc' }).limit(30);
-    // const qsBetItem = await QsBetItem.findOne({
-    //   room: room,
-    //   joiner_qs: ''
-    // }).sort({ _id: 'asc' }).limit(30);
-
 
     const roomHistory = await convertGameLogToHistoryStyle(gameLogList);
     res.json({
@@ -695,11 +684,7 @@ router.get('/room/:id', async (req, res) => {
         qs_game_type: room['qs_game_type'],
         room_history: roomHistory,
         status: room['status'],
-        // rps_bet_item_id: rpsBetItem ? rpsBetItem.id : null,
-        // qs_bet_item_id: qsBetItem ? qsBetItem.id : null,
         is_private: room['is_private'],
-        youtubeUrl: room['youtubeUrl'],
-        gameBackground: room['gameBackground'],
         game_log_list: gameLogList.map(({ bet_amount }) => bet_amount)
       },
       totalGameLogsCount: totalGameLogsCount
@@ -1004,6 +989,7 @@ router.post('/comments', auth, async (req, res) => {
       to: room.creator,
       room: room_id,
       message: '',
+      amount: 0,
       // is_anonymous: req.body.is_anonymous,
       is_read: false
     });
@@ -1033,6 +1019,7 @@ router.post('/comments', auth, async (req, res) => {
       avatar: req.user.avatar,
       accessory: req.user.accessory,
       room: room_id,
+      amount: 0,
       rank: req.user.totalWagered,
       created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
       created_at_str: moment(new Date()).format('LLL'),
@@ -2105,6 +2092,7 @@ router.post('/end_game', auth, async (req, res) => {
         message: message,
         username: req.user.username,
         avatar: req.user.avatar,
+        amount: host.share / 100 * roomInfo.user_bet,
         accessory: req.user.accessory,
         room: roomInfo._id,
         rank: req.user.totalWagered,
@@ -2184,6 +2172,7 @@ router.post('/coHost', auth, async (req, res) => {
     }
 
     const accessAllowed = await check_access_time(req.user._id);
+    console.log("accessAllowed", accessAllowed)
     if (!accessAllowed) {
       return res.json({
         success: false,
@@ -2264,43 +2253,44 @@ router.post('/coHost', auth, async (req, res) => {
     const normalizationFactor = 100 / totalShares;
     room.hosts.forEach(host => host.share *= normalizationFactor);
 
-    // Notifications
     room.hosts.forEach(host => {
-      if (!host.host.equals(req.user._id)) {
-        const message = `${req.user.username} now shares ${(boostedShare).toFixed(2)}% of ${gameType.short_name +
-          '-' +
-          room.room_number}, your new Share is ${(host.share).toFixed(2)}%`;
+      const isCurrentUserHost = host.host.equals(req.user._id);
 
-        const temp = new Notification({
-          from: req.user._id,
-          to: host.host,
-          room: room._id,
-          message: message,
-          is_read: false
-        });
+      const message = `${isCurrentUserHost ? "You" : req.user.username} now ${isCurrentUserHost ? "share" : "shares"} ${(boostedShare).toFixed(2)}% of ${gameType.short_name + '-' + room.room_number
+        }, your new share is ${(host.share).toFixed(2)}%`;
 
-        try {
-          saveDocumentWithRetry(temp);
-        } catch (error) {
-          console.error("Error saving temp:", error);
-        }
+      const temp = new Notification({
+        from: req.user._id,
+        to: host.host,
+        room: room._id,
+        amount: isCurrentUserHost ? -coHostAmount : 0,
+        message: message,
+        is_read: false,
+      });
 
-        const notificationData = {
-          _id: req.user._id,
-          message: message,
-          username: req.user.username,
-          avatar: req.user.avatar,
-          accessory: req.user.accessory,
-          room: room._id,
-          rank: req.user.totalWagered,
-          created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
-          created_at_str: moment(new Date()).format('LLL'),
-          updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
-          is_read: false
-        };
-
-        socket.sendNotification(host.host, notificationData);
+      try {
+        saveDocumentWithRetry(temp);
+      } catch (error) {
+        console.error("Error saving temp:", error);
       }
+
+      const notificationData = {
+        _id: req.user._id,
+        message: message,
+        username: req.user.username,
+        avatar: req.user.avatar,
+        accessory: req.user.accessory,
+        room: room._id,
+        rank: req.user.totalWagered,
+        amount: isCurrentUserHost ? -coHostAmount : 0, // Use coHostAmount for the amount field
+        created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+        created_at_str: moment(new Date()).format('LLL'),
+        updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+        is_read: false,
+      };
+
+      // Send notification through the socket
+      socket.sendNotification(host.host, notificationData);
     });
 
     const newTransaction = new Transaction({
@@ -2343,17 +2333,17 @@ router.post('/coHost', auth, async (req, res) => {
       await newGameLog.save();
 
       let gameLogQuery = GameLog.find({ room: room._id })
-      .sort({ created_at: 'desc' })
-      .limit(1)
-      .populate({ path: 'room', model: Room, select: '_id winnings commission username creator status hosts room_number game_type bet_amount user_bet host_pr created_at' })
-      .populate({ path: 'game_type', model: GameType, select: 'short_name game_type_name' })
-      .populate({ path: 'creator', model: User, select: '_id avatar username accessory totalWagered' })
-      .populate({ path: 'joined_user', model: User, select: '_id avatar username accessory totalWagered' });
-  
+        .sort({ created_at: 'desc' })
+        .limit(1)
+        .populate({ path: 'room', model: Room, select: '_id winnings commission username creator status hosts room_number game_type bet_amount user_bet host_pr created_at' })
+        .populate({ path: 'game_type', model: GameType, select: 'short_name game_type_name' })
+        .populate({ path: 'creator', model: User, select: '_id avatar username accessory totalWagered' })
+        .populate({ path: 'joined_user', model: User, select: '_id avatar username accessory totalWagered' });
+
       const gameLogList = await gameLogQuery;
-  
+
       const newLog = await convertGameLogToHistoryStyle(gameLogList);
-  
+
       if (req.io.sockets) {
         req.io.sockets.emit(`UPDATED_BANKROLL_${room._id}`, {
           bankroll: room.user_bet,
@@ -2519,7 +2509,8 @@ router.post('/unstake', auth, async (req, res) => {
     roomInfo.updated_at = moment(new Date()).format('YYYY-MM-DD HH:mm');
 
     roomInfo.hosts.forEach(host => {
-      const message = `${req.user.username} jeeted ${convertToCurrency(stakeAmount)} in ${gameType.short_name}-${roomInfo.room_number}, your new Share is ${(host.share).toFixed(2)}%`;
+      const isCurrentUserHost = req.user._id === host.host;
+      const message = `${isCurrentUserHost ? "You" : req.user.username} jeeted ${convertToCurrency(stakeAmount)} in ${gameType.short_name}-${roomInfo.room_number}, your new Share is ${(host.share).toFixed(2)}%`;
 
       const notificationData = {
         _id: userId,
@@ -2527,6 +2518,7 @@ router.post('/unstake', auth, async (req, res) => {
         username: req.user.username,
         avatar: req.user.avatar,
         accessory: req.user.accessory,
+        amount: isCurrentUserHost ? stakeAmount : 0,
         room: roomInfo._id,
         rank: req.user.totalWagered,
         created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
@@ -2556,12 +2548,12 @@ router.post('/unstake', auth, async (req, res) => {
     });
 
     let gameLogQuery = GameLog.find({ room: roomInfo._id })
-    .sort({ created_at: 'desc' })
-    .limit(1)
-    .populate({ path: 'room', model: Room, select: '_id winnings commission username creator status hosts room_number game_type bet_amount user_bet host_pr created_at' })
-    .populate({ path: 'game_type', model: GameType, select: 'short_name game_type_name' })
-    .populate({ path: 'creator', model: User, select: '_id avatar username accessory totalWagered' })
-    .populate({ path: 'joined_user', model: User, select: '_id avatar username accessory totalWagered' });
+      .sort({ created_at: 'desc' })
+      .limit(1)
+      .populate({ path: 'room', model: Room, select: '_id winnings commission username creator status hosts room_number game_type bet_amount user_bet host_pr created_at' })
+      .populate({ path: 'game_type', model: GameType, select: 'short_name game_type_name' })
+      .populate({ path: 'creator', model: User, select: '_id avatar username accessory totalWagered' })
+      .populate({ path: 'joined_user', model: User, select: '_id avatar username accessory totalWagered' });
 
     const gameLogList = await gameLogQuery; // Get the most recent game log from the query
 
@@ -2754,6 +2746,7 @@ router.get('/notifications', auth, async (req, res) => {
         created_at: notification.created_at,
         created_at_str: moment(notification.created_at).format('LLL'),
         updated_at: notification.updated_at,
+        amount: notification.amount ? notification.amount : 0,
         is_read: notification.is_read
       }))
     });
@@ -3044,7 +3037,7 @@ router.get('/candles/:room', async (req, res) => {
   try {
     const room = req.params.room;
 
-    const { timeRange = '1m' } = req.query;
+    const { timeRange = '15m' } = req.query;
     const bucketSize = getTimeBucket(timeRange);
     let startDate = moment().subtract(12, 'hours').startOf('second').toDate();
 
@@ -3111,7 +3104,7 @@ router.get('/candles/:room', async (req, res) => {
         $sort: { startTime: -1 },
       },
       {
-        $limit: 2,
+        $limit: 4,
       },
     ]);
 
@@ -3124,7 +3117,7 @@ router.get('/candles/:room', async (req, res) => {
         open: index === 0 ? firstTransaction.amount : previousClose,
         high: candle.high,
         low: candle.low,
-        close: -candle.close || tokenPrice,
+        close: candle.close || tokenPrice,
         volume: candle.volume || 0,
         sellVolume: candle.sellVolume || 0,
         startTime: candle.startTime,
@@ -3449,6 +3442,7 @@ router.post('/tip', auth, async (req, res) => {
       to: userToTip._id,
       room: '',
       message: `Tipped you ${convertToCurrency(tipAmount)} ${tipMessage}`,
+      amount: tipAmount,
       is_read: false
     });
 
@@ -3457,11 +3451,13 @@ router.post('/tip', auth, async (req, res) => {
       to: req.user._id,
       room: '',
       message: `You Tipped ${convertToCurrency(tipAmount)} ${tipMessage}`,
+      amount: -tipAmount,
       is_read: false
     });
 
     const notificationData = {
       message: notification.message,
+      amount: tipAmount,
       username: req.user.username,
       avatar: req.user.avatar,
       accessory: req.user.accessory,
@@ -3472,6 +3468,7 @@ router.post('/tip', auth, async (req, res) => {
     };
     const notificationDataC = {
       message: notificationC.message,
+      amount: -tipAmount,
       username: userToTip.username,
       avatar: userToTip.avatar,
       accessory: userToTip.accessory,

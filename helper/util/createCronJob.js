@@ -102,6 +102,7 @@ async function checkConfirmations(io) {
                   const notificationJ = new Notification({
                     from: user._id,
                     to: referralOwner._id,
+                    amount: amountRaw * 0.05,
                     room: '',
                     message: `Received ${convertToCurrency(amountRaw * 0.05)} in referral rewards.`
                   });
@@ -110,6 +111,7 @@ async function checkConfirmations(io) {
                     message: notificationJ.message,
                     username: user.username,
                     avatar: user.avatar,
+                    amount: amountRaw * 0.05,
                     accessory: user.accessory,
                     rank: user.totalWagered,
                     created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
@@ -132,6 +134,7 @@ async function checkConfirmations(io) {
                 const notification = new Notification({
                   from: user._id,
                   to: user._id,
+                  amount: amountRaw,
                   room: '',
                   message: `Deposit successful, received ${convertToCurrency(amountRaw)}`
                 });
@@ -143,6 +146,7 @@ async function checkConfirmations(io) {
                   accessory: user.accessory,
                   rank: user.totalWagered,
                   created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+                  amount: amountRaw,
                   created_at_str: moment(new Date()).format('LLL'),
                   updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
                   is_read: false
@@ -261,12 +265,14 @@ async function checkConfirmations(io) {
                 let notificationJ = new Notification({
                   from: user._id,
                   to: referralOwner._id,
+                  amount: transaction.amount * 0.05,
                   room: '',
-                  message: `Received ${convertToCurrency(transaction.amount)} in referral rewards.`
+                  message: `Received ${convertToCurrency(transaction.amount * 0.05)} in referral rewards.`
                 });
     
                 const notificationDataJ = {
                   message: notificationJ.message,
+                  amount: transaction.amount,
                   username: user.username,
                   avatar: user.avatar,
                   accessory: user.accessory,
@@ -290,6 +296,7 @@ async function checkConfirmations(io) {
               let notification = new Notification({
                 from: user._id,
                 to: user._id,
+                amount: transaction.amount,
                 room: '',
                 message: `Deposit successful, received ${convertToCurrency(transaction.amount)}`
               });
@@ -299,6 +306,7 @@ async function checkConfirmations(io) {
                 username: user.username,
                 avatar: user.avatar,
                 accessory: user.accessory,
+                amount: transaction.amount,
                 rank: user.totalWagered,
                 created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
                 created_at_str: moment(new Date()).format('LLL'),

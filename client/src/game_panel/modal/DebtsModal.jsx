@@ -146,62 +146,63 @@ class DebtsModal extends Component {
           </div>
           <div className="modal-body edit-modal-body Debts-modal-body">
             <Grid container spacing={2}>
-              {!this.props.userLoans && this.props.userLoans.length === 0 ? (
-                <Grid item xs={12} sm={12} md={8} lg={12} key={loan._id}>
-
+              {!this.props.userLoans || this.props.userLoans.length === 0 ? (
+                <Grid item xs={12} sm={12} md={8} lg={12}>
                   <Typography variant="h6" style={{ textAlign: 'center', marginTop: '20px', color: 'gray' }}>
                     NO DEBTS!
                   </Typography>
                 </Grid>
               ) : (
-                this.props.userLoans.map((loan) => (
-                  <Grid item xs={12} sm={12} md={8} lg={12} key={loan._id}>
-                    <TableContainer >
-                      <Table>
-                        <TableBody>
-                          <TableRow>
-                            <TableCell>
-                              <span>Lender:</span>
-                            </TableCell>
-                            <TableCell>
-                              <span>{loan.lender}</span>
-                            </TableCell>
-                          </TableRow>
-                          <TableRow>
-                            <TableCell>
-                              <span>Paid Back:</span>
-                            </TableCell>
-                            <TableCell>
-                              <span>{convertToCurrency(loan.paid_back)}</span>
-                            </TableCell>
-                          </TableRow>
-                          <TableRow>
-                            <TableCell>
-                              <span>Outstanding Debt:</span>
-                            </TableCell>
-                            <TableCell>
-                              <span>{convertToCurrency(loan.amount)}&nbsp;{`(${loan.apy * 100}%)`}</span>
-                            </TableCell>
-                          </TableRow>
-                          <TableRow>
-                            <TableCell>
-                              <span>Days Left:</span>
-                            </TableCell>
-                            <TableCell>
-                              <span>{`${loan.loan_period} days`}</span>
-                            </TableCell>
-                          </TableRow>
-                        </TableBody>
-                      </Table>
-                    </TableContainer>
-                    <Button
-                      fullWidth
-                      onClick={() => this.openPaybackModal(loan)}
-                    >
-                      CLEAR DEBT
-                    </Button>
-                  </Grid>
-                )))}
+                this.props.userLoans
+                  .filter(loan => loan.amount !== 0) // Skip loans with amount = 0
+                  .map((loan) => (
+                    <Grid item xs={12} sm={12} md={8} lg={12} key={loan._id}>
+                      <TableContainer>
+                        <Table>
+                          <TableBody>
+                            <TableRow>
+                              <TableCell>
+                                <span>Lender:</span>
+                              </TableCell>
+                              <TableCell>
+                                <span>{loan.lender}</span>
+                              </TableCell>
+                            </TableRow>
+                            <TableRow>
+                              <TableCell>
+                                <span>Paid Back:</span>
+                              </TableCell>
+                              <TableCell>
+                                <span>{convertToCurrency(loan.paid_back)}</span>
+                              </TableCell>
+                            </TableRow>
+                            <TableRow>
+                              <TableCell>
+                                <span>Outstanding Debt:</span>
+                              </TableCell>
+                              <TableCell>
+                                <span>{convertToCurrency(loan.amount)}&nbsp;{`(${loan.apy * 100}%)`}</span>
+                              </TableCell>
+                            </TableRow>
+                            <TableRow>
+                              <TableCell>
+                                <span>Days Left:</span>
+                              </TableCell>
+                              <TableCell>
+                                <span>{`${loan.loan_period} days`}</span>
+                              </TableCell>
+                            </TableRow>
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                      <Button
+                        fullWidth
+                        onClick={() => this.openPaybackModal(loan)}
+                      >
+                        CLEAR DEBT
+                      </Button>
+                    </Grid>
+                  )))}
             </Grid>
           </div>
           <div className="modal-footer">

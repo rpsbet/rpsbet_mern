@@ -117,7 +117,7 @@ class CreateGame extends Component {
       ai_mode: this.props.user.ai_mode,
       videoId: '',
       isPlaying: false,
-      endgame_type: true,
+      endgame_type: false,
       description: '',
       box_list: [],
       brain_game_type: this.props.brain_game_type,

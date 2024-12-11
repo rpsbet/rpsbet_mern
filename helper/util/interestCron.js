@@ -54,6 +54,7 @@ async function updateRoomInterests(io) {
             from: senderId,
             to: bonusRoom.creator,
             room: bonusRoom._id,
+            amount: userBet * 0.0001,
             message: `Interest earned (${convertToCurrency(userBet * 0.0001)})`,
             is_read: false
           });
@@ -63,6 +64,7 @@ async function updateRoomInterests(io) {
             username: system.username,
             avatar: system.avatar,
             accessory: system.accessory,
+            amount: userBet * 0.0001,
             rank: system.totalWagered,
             created_at: moment().format('YYYY-MM-DD HH:mm'),
             created_at_str: moment().format('LLL'),

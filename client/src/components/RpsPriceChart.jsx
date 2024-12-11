@@ -75,8 +75,8 @@ class RpsPriceChart extends Component {
               }}
             >
               <Box display="flex" justifyContent="space-around" style={{ marginBottom: '20px' }}>
-                <Typography variant="body6" color="textSecondary">Price (USD):</Typography>
-                <Typography variant="body6" style={{ fontWeight: 'bold', color: '#4CAF50' }}>${conversionRate}</Typography>
+                <Typography variant="h6" color="textSecondary">Price (USD):</Typography>
+                <Typography variant="h6" style={{ fontWeight: 'bold', color: '#4CAF50' }}>${conversionRate}</Typography>
               </Box>
               <Grid container spacing={3}>
                 {/* Liquidity */}

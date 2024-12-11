@@ -68,81 +68,16 @@ function CoHostModal({
     }
   };
 
-
   useEffect(() => {
     if (selectedRow?._id) {
-      dispatch(getTransactionCandles({ roomId: selectedRow._id, timeFrame })); // Single object parameter
+      dispatch(getTransactionCandles({ roomId: selectedRow._id, timeFrame })); // Fetch candles for the selected room and time frame
     }
   }, [dispatch, selectedRow?._id, timeFrame]);
+
   let chartData = [];
-  if (transactionCandles && transactionCandles.length > 0) {
-    let lastCandle = transactionCandles[0];
-
-    chartData.push({
-      x: new Date(lastCandle.startTime).getTime(), // Convert to timestamp
-      y: [lastCandle.open, lastCandle.high, lastCandle.low, lastCandle.close],
-    });
-
-    for (let i = 1; i < transactionCandles.length; i++) {
-      const currentCandle = transactionCandles[i];
-
-      const timeDiff = currentCandle.startTime - lastCandle.startTime;
-
-      if (timeDiff > 60000) {  // More than 1 minute gap
-        const missingCandlesCount = timeDiff / 60000; // Number of missing minutes
-
-        for (let j = 1; j < missingCandlesCount; j++) {
-          const missingTime = new Date(lastCandle.startTime).getTime() + j * 60000;
-
-          const gapCandle = {
-            x: missingTime, // Timestamp for missing candle
-            y: [
-              lastCandle.close,
-              lastCandle.close,
-              lastCandle.close,
-              lastCandle.close,
-            ]
-          };
-          chartData.push(gapCandle);  // Add the gap candle to chart data
-        }
-      }
-
-      chartData.push({
-        x: new Date(currentCandle.startTime).getTime(), // Convert to timestamp
-        y: [currentCandle.open, currentCandle.high, currentCandle.low, currentCandle.close],
-      });
-
-      lastCandle = currentCandle;
-    }
-
-    const now = new Date();
-    const lastTime = new Date(lastCandle.startTime);
-    const timeDiff = Math.floor((now - lastTime) / 60000); // Calculate minutes remaining
-    for (let j = 1; j <= timeDiff; j++) {
-      const missingTime = new Date(lastCandle.startTime).getTime() + j * 60000;
-      const gapCandle = {
-        x: missingTime,
-        y: [
-          lastCandle.close,
-          lastCandle.close,
-          lastCandle.close,
-          lastCandle.close,
-        ]
-      };
-      chartData.push(gapCandle);
-    }
-  }
-
-  let text = "";
-  if (selectedRow.index) {
-    text = `${selectedRow.game_type.short_name}-${selectedRow.index}`
-  } else {
-    text = `${selectedRow.room_name}`
-  }
-  // Chart options
   const chartOptions = {
     chart: {
-      type: 'candlestick', // Candlestick chart type
+      type: 'candlestick',
       height: 350,
       zoom: {
         enabled: true,
@@ -151,138 +86,175 @@ function CoHostModal({
           size: 30,
           offsetX: 0,
           offsetY: 0,
-          fillColor: '#fff', // Reset icon color
+          fillColor: '#fff',
           shape: 'circle',
         },
       },
       toolbar: {
-        autoSelected: 'zoom', // Auto select zoom tool
-        show: false, // Hide the toolbar for a cleaner look
+        autoSelected: 'zoom',
+        show: false,
       },
     },
     title: {
-      text: text,
+      text: selectedRow.index
+        ? `${selectedRow.game_type.short_name}-${selectedRow.index}`
+        : selectedRow.room_name,
       align: 'center',
       style: {
         fontSize: '18px',
-        color: '#fff', // Title color set to white
+        color: '#fff',
         fontWeight: 600,
-        fontFamily: 'Arial, Helvetica, sans-serif', // Set professional font family
+        fontFamily: 'Arial, Helvetica, sans-serif',
       },
     },
     xaxis: {
-      type: 'datetime', // Treat x-axis as datetime
+      type: 'datetime',
       labels: {
-        datetimeUTC: false, // Use local time
+        datetimeUTC: false,
         rotate: -45,
         format: 'HH:mm',
         style: {
-          colors: '#fff', // Axis label text color set to white
-          fontSize: '12px', // Axis label font size
-          fontFamily: 'Arial, Helvetica, sans-serif', // Axis label font family
+          colors: '#fff',
+          fontSize: '12px',
+          fontFamily: 'Arial, Helvetica, sans-serif',
           fontWeight: 400,
         },
-
       },
       tickAmount: 10,
       axisBorder: {
         show: true,
-        color: '#fff', // Axis border color set to white
-        height: 1, // Thin border for a cleaner look
+        color: '#fff',
+        height: 1,
       },
       axisTicks: {
         show: true,
-        color: '#fff', // Tick marks color set to white
+        color: '#fff',
       },
     },
     yaxis: {
-      tooltip: {
-        enabled: false,
-      },
       labels: {
         style: {
-          colors: '#fff', // Y-axis label text color set to white
-          fontSize: '12px', // Y-axis label font size
-          fontFamily: 'Arial, Helvetica, sans-serif', // Y-axis label font family
+          colors: '#fff',
+          fontSize: '12px',
+          fontFamily: 'Arial, Helvetica, sans-serif',
           fontWeight: 400,
         },
-        formatter: function (value) {
-          const result = convertToChartCurrency(value); // Get result from convertToCurrency
-
-          // Check if it's a string (for cases like "$123")
-          if (typeof result === 'string') {
-            return result; // Return the string directly if it's a string
-          }
-
-          // If it's an SVG or other object, handle it differently:
-          return ''; // You could potentially use a placeholder or empty string here
-        },
+        formatter: (value) => convertToChartCurrency(value),
       },
     },
     tooltip: {
       custom: function ({ series, seriesIndex, dataPointIndex, w }) {
-        // Get the data from the chartData
-        const candle = chartData[dataPointIndex]; // Retrieve the candle for the given index
+        const candle = chartData[dataPointIndex];
+
         if (!candle || !candle.y || candle.y.length !== 4) {
           console.error("Invalid candle data:", candle);
           return '';
         }
 
-        const timestamp = candle.x; // Get the timestamp (x-value)
-        const [open, high, low, close] = candle.y; // Destructure the open, high, low, and close values
-
-        // Format the time (timestamp) and the price values
-        const formattedTime = Moment(timestamp).format('HH:mm'); // Format timestamp to 'HH:mm' format
-        const formattedOpen = convertToChartCurrency(open); // Format the open value
-        const formattedHigh = convertToChartCurrency(high); // Format the high value
-        const formattedLow = convertToChartCurrency(low); // Format the low value
-        const formattedClose = convertToChartCurrency(close); // Format the close value
-
-        // Return the custom tooltip HTML
-        return (
-          `<div class="chart-tooltip">
-            <div><strong>Time:</strong> ${formattedTime}</div>
-            <div><strong>Open:</strong> ${formattedOpen}</div>
-            <div><strong>High:</strong> ${formattedHigh}</div>
-            <div><strong>Low:</strong> ${formattedLow}</div>
-            <div><strong>Close:</strong> ${formattedClose}</div>
-          </div>`
-        );
-      }
-    },
-    scrollbar: {
-      enabled: true, // Enable scrollbar for better navigation
-      height: 8, // Set height of scrollbar
-      trackColor: '#444', // Darker track for scrollbar
-      handleColor: '#fff', // Scrollbar handle color set to white
+        const [open, high, low, close] = candle.y;
+        return `
+          <div class="chart-tooltip">
+            <div><strong>Time:</strong> ${Moment(candle.x).format('HH:mm')}</div>
+            <div><strong>Open:</strong> ${convertToChartCurrency(open)}</div>
+            <div><strong>High:</strong> ${convertToChartCurrency(high)}</div>
+            <div><strong>Low:</strong> ${convertToChartCurrency(low)}</div>
+            <div><strong>Close:</strong> ${convertToChartCurrency(close)}</div>
+          </div>`;
+      },
     },
     plotOptions: {
       candlestick: {
-        colors: {
-          upward: '#00b140', // Color for upward candles
-          downward: '#ff4b4b', // Color for downward candles
-        },
         wick: {
-          useFillColor: true, // Use the fill color for the wicks as well
-          color: '#fff', // Wick color set to white for consistency
+          useFillColor: true,
+          width: 1 // Reducing the width of the wick for visibility
         },
+        colors: {
+          upward: '#00b140',
+          downward: '#ff4b4b',
+        },
+        bodyWidth: 1, // Adjust the width of the candle body (default is larger)
       },
     },
-    stroke: {
-      width: 1,
-      curve: 'smooth',
-      colors: ['#008FFB'], // Stroke color for line/graph elements
-    },
     grid: {
-      borderColor: '#444', // Grid line color set to a darker shade for contrast
-      strokeDashArray: 4, // Dashed grid lines for a more elegant look
+      borderColor: '#444',
+      strokeDashArray: 4,
     },
-    colors: ['#008FFB', '#00b140', '#ff4b4b'], // Color palette for various chart elements
     theme: {
-      mode: isDarkMode ? 'dark' : 'light', // Dynamic theme based on the mode
-      palette: 'palette1', // Default palette for the chart
+      mode: isDarkMode ? 'dark' : 'light',
     },
   };
+
+  if (transactionCandles && transactionCandles.length > 0) {
+    let lastCandle = transactionCandles[0];
+
+    // Add the first candle
+    chartData.push({
+      x: new Date(lastCandle.startTime).getTime(), // Convert to timestamp
+      y: [lastCandle.open, lastCandle.high, lastCandle.low, lastCandle.close],
+    });
+
+    // Process remaining candles
+    for (let i = 1; i < transactionCandles.length; i++) {
+      const currentCandle = transactionCandles[i];
+      const timeDiff = currentCandle.startTime - lastCandle.startTime;
+
+      if (timeDiff > 60000) { // Gap longer than 1 minute
+        const missingCandlesCount = Math.floor(timeDiff / 60000);
+
+        // Insert gap candles
+        for (let j = 1; j < missingCandlesCount; j++) {
+          const missingTime = new Date(lastCandle.startTime).getTime() + j * 60000;
+
+          chartData.push({
+            x: missingTime, // Missing candle's timestamp
+            y: [
+              lastCandle.close,
+              lastCandle.close,
+              lastCandle.close,
+              lastCandle.close,
+            ],
+          });
+        }
+      }
+
+      // Add the current candle
+      chartData.push({
+        x: new Date(currentCandle.startTime).getTime(), // Convert to timestamp
+        y: [currentCandle.open, currentCandle.high, currentCandle.low, currentCandle.close],
+      });
+
+      // Update last candle reference
+      lastCandle = currentCandle;
+    }
+
+    // Fill gaps between the last candle and the current time
+    const now = new Date();
+    const lastTime = new Date(lastCandle.startTime);
+    const timeDiff = Math.floor((now - lastTime) / 60000); // Minutes since the last candle
+
+    for (let j = 1; j <= timeDiff; j++) {
+      const missingTime = new Date(lastCandle.startTime).getTime() + j * 60000;
+
+      chartData.push({
+        x: missingTime,
+        y: [
+          lastCandle.close,
+          lastCandle.close,
+          lastCandle.close,
+          lastCandle.close,
+        ],
+      });
+    }
+
+    // Ensure chart data is sorted and valid
+    chartData.sort((a, b) => a.x - b.x);
+    chartData.forEach((candle) => {
+      if (!candle.y || candle.y.length !== 4) {
+        console.error("Invalid candle:", candle);
+        throw new Error("Invalid candle structure detected.");
+      }
+    });
+  }
 
   useEffect(() => {
     if (isFocused) {

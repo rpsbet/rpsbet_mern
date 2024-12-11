@@ -14,7 +14,7 @@ class RoomHistory extends React.Component {
     this.state = {
       showPlayerModal: false,
       selectedCreator: null,
-      numToShow: 10, // Add numToShow state for Load More
+      numToShow: 10000, // Add numToShow state for Load More
     };
   }
 
