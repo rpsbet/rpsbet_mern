@@ -2695,10 +2695,47 @@ router.patch('/qbotStatus', auth, async (req, res) => {
   }
 });
 
+// Modified endpoint to handle multiple user IDs
+router.get('/qbotStatuses', auth, async (req, res) => {
+  try {
+    const { userIds } = req.query; // Accept `userIds` as a comma-separated string
+    if (!userIds) {
+      return res.status(400).json({
+        success: false,
+        message: 'User IDs are required',
+      });
+    }
+
+    const userIdsArray = userIds.split(','); // Convert to an array
+    const statuses = await QBot.find(
+      { user: { $in: userIdsArray }, active: true },
+      'user active'
+    );
+
+    // Transform statuses into a lookup object
+    const statusesMap = userIdsArray.reduce((acc, id) => {
+      acc[id] = !!statuses.find((status) => status.user.toString() === id);
+      return acc;
+    }, {});
+
+    res.json({
+      success: true,
+      statuses: statusesMap,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+});
+
 // Use GET for fetching the QBot status based on userId
 router.get('/qbotStatus', auth, async (req, res) => {
   try {
     const { userId } = req.query; // Using query parameters instead of body
+
     if (!userId) {
       return res.status(400).json({
         success: false,

@@ -1600,7 +1600,7 @@ class JoinGame extends Component {
             <TabbedContent
               actionList={actionList}
               roomInfo={roomInfo}
-              user={this.props.user_id}
+              user={this.props.user}
               coHostAmount={this.state.coHostAmount}
               getRoomData={this.getRoomData}
               getRoomInfo={this.props.getRoomInfo}

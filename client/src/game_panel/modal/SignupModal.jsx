@@ -312,7 +312,7 @@ class SignupModal extends Component {
                       <span>
                         I agree to the{' '}
                         <a onClick={this.handleOpenTermsModal}>
-                          <Typography component="span" style={{color:'#ffb000'}} >
+                          <Typography component="span" style={{color:'#ff8500'}} >
                             Terms and Conditions
                           </Typography>
                         </a>

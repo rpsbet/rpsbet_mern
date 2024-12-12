@@ -303,7 +303,6 @@ class RPS extends Component {
   
       let filteredRPS = data.rps.filter(game => game.joiner === this.props.user_id);
       let rpsState = filteredRPS.length > 0 ? filteredRPS : prevState.rps;
-  console.log("data.bankroll", data.bankroll)
       return {
         bankroll: data.bankroll,
         host_pr: data.host_pr,

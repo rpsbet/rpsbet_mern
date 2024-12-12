@@ -322,7 +322,7 @@ const PlaceholderComponent = ({ selectedTab, myGames, updateQbot, handleTabChang
             variant="contained"
             color="primary"
             startIcon={<FontAwesomeIcon icon={faCrown} />}
-            style={{ background: 'linear-gradient(340deg, #ffb000, #ff5100c7)', color: '#fff', textTransform: 'none', fontSize: '16px' }}
+            style={{ background: 'linear-gradient(340deg, #ff8500, #ff5100c7)', color: '#fff', textTransform: 'none', fontSize: '16px' }}
           >
             UNLOCK AT LEVEL 19
           </Button>

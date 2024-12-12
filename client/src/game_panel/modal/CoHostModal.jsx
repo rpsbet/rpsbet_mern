@@ -349,17 +349,8 @@ function CoHostModal({
   };
 
   const handleMaxButtonClick = () => {
-    // Find the host in selectedRow.hosts who matches the user._id
-    const userHost = selectedRow.hosts.find((host) => host.host === user._id);
-
-    // Check if userHost exists and has a stake
-    if (userHost) {
-      // Create a simulated event with the stake value from userHost.stake
-      const simulatedEvent = { target: { value: userHost.stake } };
-
-      // Call handleCoHostAmountChange with the simulated event
+      const simulatedEvent = { target: { value: user.balance } };
       handleCoHostAmountChange(simulatedEvent);
-    }
   };
 
   const handleUnstake = async (winnings, room_id, stakeAmount) => {
@@ -632,14 +623,14 @@ function CoHostModal({
                 </TableRow>
                 <TableRow>
                   <TableCell>CURRENT BANKROLL:</TableCell>
-                  <TableCell style={{ color: "#ffb000", textAlign: 'right' }}>
+                  <TableCell style={{ color: "#ff8500", textAlign: 'right' }}>
                     {selectedRow ? convertToCurrency(selectedRow.user_bet) : null}
                   </TableCell>
                 </TableRow>
 
                 <TableRow>
                   <TableCell>CURRENT SHARE:</TableCell>
-                  <TableCell style={{ color: "rgb(255, 176, 0)", textAlign: 'right' }}>
+                  <TableCell style={{ color: "#ff8500", textAlign: 'right' }}>
                     {Array.isArray(selectedRow.hosts) &&
                       selectedRow.hosts.length > 0 &&
                       selectedRow.hosts.some((host) => host.host === user?._id) ? (
@@ -661,7 +652,7 @@ function CoHostModal({
 
                 <TableRow>
                   <TableCell>NEW SHARE:</TableCell>
-                  <TableCell style={{ color: "rgb(255, 176, 0)", textAlign: 'right' }}>
+                  <TableCell style={{ color: "#ff8500", textAlign: 'right' }}>
                     {(() => {
                       if (!selectedRow || !Array.isArray(selectedRow.hosts)) return "0%";
 

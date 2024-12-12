@@ -193,7 +193,7 @@ class StatisticsForm extends React.Component {
           colorStops: [
             {
               offset: 0,
-              color: '#ffb000',
+              color: '#ff8500',
               opacity: 1
             },
             {
@@ -374,11 +374,11 @@ class StatisticsForm extends React.Component {
             <TableBody>
               <TableRow>
                 <TableCell><b style={{ opacity: "0.6", fontSize: '0.9em', fontWeight: '500' }}>LAST SEEN</b></TableCell>
-                <TableCell style={{ color: "#ffb000", textAlign: 'center' }}>{lastSeenAgo}</TableCell>
+                <TableCell style={{ color: "#ff8500", textAlign: 'center' }}>{lastSeenAgo}</TableCell>
               </TableRow>
               <TableRow>
                 <TableCell><b style={{ opacity: "0.6", fontSize: '0.9em', fontWeight: '500' }}>JOINED</b></TableCell>
-                <TableCell style={{ color: "#ffb000", textAlign: 'center' }}>{joinedAgo}</TableCell>
+                <TableCell style={{ color: "#ff8500", textAlign: 'center' }}>{joinedAgo}</TableCell>
               </TableRow>
               <TableRow>
                 <TableCell><b style={{ opacity: "0.6", fontSize: '0.9em', fontWeight: '500' }}>RANK</b></TableCell>
@@ -412,12 +412,12 @@ class StatisticsForm extends React.Component {
                       <svg width="120" height="120">
                         {hexagon}
                       </svg>
-                      <text x="50%" y="40%" textAnchor="middle" alignmentBaseline="middle" className="creditScoreStatus" style={{ fill: '#ffb000' }}>
+                      <text x="50%" y="40%" textAnchor="middle" alignmentBaseline="middle" className="creditScoreStatus" style={{ fill: '#ff8500' }}>
                         {roundedCreditScore >= 1000 && roundedCreditScore <= 1500 && 'OK'}
                         {roundedCreditScore > 1500 && roundedCreditScore <= 2000 && 'HIGH'}
                         {roundedCreditScore < 1000 && 'BAD'}
                       </text>
-                      <text x="50%" y="60%" textAnchor="middle" alignmentBaseline="middle" className="creditScoreValue" style={{ fill: '#ffb000' }}>
+                      <text x="50%" y="60%" textAnchor="middle" alignmentBaseline="middle" className="creditScoreValue" style={{ fill: '#ff8500' }}>
                         {roundedCreditScore} / 2000
                       </text>
                     </svg>

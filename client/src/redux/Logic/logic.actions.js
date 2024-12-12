@@ -15,6 +15,7 @@ import {
   SET_TOKEN_PRICE,
   COMMENT_CREATED,
   TOP_WINS,
+  SET_QBOT_STATUSES,
   COMMENT_CREATION_FAILED,
   COMMENTS_LOADED,
   COMMENTS_LOAD_FAILED,
@@ -844,7 +845,6 @@ export const coHost = (amount, rowId) => async dispatch => {
       return result.data;
     }
   } catch (e) {
-    console.log("Err", e)
     dispatch({ type: MSG_ERROR, payload: 'UNABLE TO CO-HOST' });
   }
 };
@@ -1175,6 +1175,31 @@ export const getTransactionCandles = ({ roomId, timeFrame }) => async (dispatch)
       type: 'TRANSACTION_CANDLES_ERROR',
       payload: err.message || 'Error fetching candles data.',
     });
+  }
+};
+
+export const getQbotStatuses = (creatorIds) => async (dispatch) => {
+  try {
+    const res = await axios.get('/game/qbotStatuses', { params: { userIds: creatorIds.join(',') } });
+    if (res.data.success) {
+      const qBotStatuses = res.data.statuses;
+
+      // Optionally store in localStorage
+      localStorage.setItem('qBotStatuses', JSON.stringify({
+        data: qBotStatuses,
+        timestamp: Date.now(),
+      }));
+
+      dispatch({
+        type: 'SET_QBOT_STATUSES',
+        payload: qBotStatuses,
+      });
+
+      return qBotStatuses;
+    }
+  } catch (error) {
+    console.error('Error fetching QBot statuses:', error);
+    return null;
   }
 };
 

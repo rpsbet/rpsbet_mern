@@ -12,6 +12,7 @@ import {
   START_BET,
   END_BET,
   ROOMS_LOADED,
+  SET_QBOT_STATUSES,
   ROOMS_COUNT,
   BET_SUCCESS,
   SET_TOKEN_PRICE,
@@ -129,6 +130,7 @@ const initialState = {
   rain: 0,
   accessories: [],
   roomStatus: '',
+  qBotStatuses: {},
   myGames: [],
   myGamesTotalPage: 0,
   myGamesPageNumber: 1,
@@ -169,6 +171,11 @@ export default function (state = initialState, action) {
         ...state,
         betResult: payload.betResult,
         roomStatus: payload.roomStatus
+      };
+    case SET_QBOT_STATUSES:
+      return {
+        ...state,
+        state: action.payload,
       };
     case UPDATE_BET_RESULT:
       if (payload && typeof payload === 'object') {

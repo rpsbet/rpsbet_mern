@@ -649,6 +649,11 @@
 		background: linear-gradient(45deg, #580096, #470065);
 	}
 
+	.dark_mode   .mat-chat .chat-wrapper {
+		background: #420068;
+	  }
+	
+
 	.dark_mode .game-logs-modal-container {
 		background: #101010;
 	}

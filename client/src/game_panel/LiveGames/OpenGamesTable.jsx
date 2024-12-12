@@ -7,6 +7,7 @@ import {
   fetchMoreRooms,
   getRecentlyClosed,
   getQbot,
+  getQbotStatuses,
   addNewTransaction,
   coHost,
 } from '../../redux/Logic/logic.actions';
@@ -81,22 +82,10 @@ class OpenGamesTable extends Component {
 
     try {
 
-      this.setState({
-        roomList: this.props.roomList,
-      });
       this.props.getRoomList({ pageSize: 7 });
 
-      const qBotStatuses = {};
-      for (const room of this.props.roomList || []) {
-        const isQbot = await this.props.getQbot(room.creator_id);
-        if (this.isComponentMounted) { // Only update if still mounted
-          qBotStatuses[room.creator_id] = isQbot;
-        }
-      }
 
-      if (this.isComponentMounted) {
-        this.setState({ qBotStatuses });
-      }
+
     } catch (error) {
       console.error("Error fetching Qbot statuses:", error);
     }
@@ -121,7 +110,6 @@ class OpenGamesTable extends Component {
 
 
   async componentDidUpdate(prevProps, prevState) {
-    const roomIds = new Set(this.state.roomList.map(room => room._id));
 
     if (
       prevProps.roomList[0]?.battles !== this.props.roomList[0]?.battles ||
@@ -129,6 +117,7 @@ class OpenGamesTable extends Component {
       prevProps.highlightedRooms !== this.props.highlightedRooms ||
       prevProps.roomList.length !== this.props.roomList.length
     ) {
+
       this.props.fetchMoreRooms(null);
 
       const mergedRooms = [
@@ -152,6 +141,25 @@ class OpenGamesTable extends Component {
         }
       }
 
+
+      const roomList = this.props.roomList || [];
+      const creatorIds = roomList.map((room) => room.creator_id);
+
+      const cachedData = JSON.parse(localStorage.getItem('qBotStatuses') || '{}');
+      const isCacheValid = cachedData.timestamp && (Date.now() - cachedData.timestamp < 3600000); // 1 hour
+
+      if (isCacheValid) {
+        // Use cached data
+        this.setState({ qBotStatuses: cachedData.data });
+      } else if (creatorIds.length) {
+        // Dispatch action to fetch QBot statuses
+        const qBotStatuses = await this.props.getQbotStatuses(creatorIds);
+
+        if (this.isComponentMounted && qBotStatuses) {
+          this.setState({ qBotStatuses });
+        }
+      }
+
       this.setState({
         roomList: mergedRooms,
         highlightedRooms: this.props.highlightedRooms,
@@ -159,7 +167,6 @@ class OpenGamesTable extends Component {
 
     }
 
-    // Handle changes to selectedGameType
     if (prevProps.selectedGameType !== this.props.selectedGameType) {
       this.setState({ isLoading: true });
     }
@@ -360,7 +367,7 @@ class OpenGamesTable extends Component {
   };
   joinRoom = (roomDetails) => {
     const { id, roomStatus, gameType, betAmount, totalStakes, creatorStatus, creatorAvatar, accessory, rank, creatorId, qsGameType, pr, host_pr } = roomDetails;
-console.log(id, roomStatus, gameType, betAmount, totalStakes, creatorId, qsGameType, pr, host_pr)
+    console.log(id, roomStatus, gameType, betAmount, totalStakes, creatorId, qsGameType, pr, host_pr)
     this.setState({ isClicked: true });
 
     if (roomStatus === "finished") {
@@ -420,6 +427,8 @@ console.log(id, roomStatus, gameType, betAmount, totalStakes, creatorId, qsGameT
     }
 
   };
+
+
   render() {
     const {
       coHostAmount,
@@ -893,7 +902,7 @@ console.log(id, roomStatus, gameType, betAmount, totalStakes, creatorId, qsGameT
                 </Grid>
               ))
             ) : (
-              // Show actual content if there's data
+
               recent.map((row) => {
                 const hostPrizeMinusBetAmount = row.host_pr - row.bet_amount;
 
@@ -985,6 +994,7 @@ const mapDispatchToProps = {
   actionRoom,
   getRoomStatisticsData,
   getRecentlyClosed,
+  getQbotStatuses,
   setBalance,
   fetchMoreRooms,
   getQbot,

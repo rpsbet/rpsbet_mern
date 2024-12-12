@@ -870,7 +870,7 @@ class MyGamesTable extends Component {
                           <TableCell>
                             <span>CURRENT PAYOUT:</span>
                           </TableCell>
-                          <TableCell style={{ color: "#ffb000" }}>
+                          <TableCell style={{ color: "#ff8500" }}>
                             {this.state.selectedRow && this.state.selectedRow.endgame_type ? (
                               convertToCurrency(this.state.selectedRow.endgame_amount)
                             ) : (

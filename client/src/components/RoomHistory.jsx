@@ -85,9 +85,9 @@ class RoomHistory extends React.Component {
                     <div className="table-cell">
                       <div className="room-id">{row.status}</div>
                       {row.ai_mode && (
-                        <div className="room-id ai_mode">
+                        <span className="room-id ai_mode">
                           {row.ai_mode}
-                        </div>
+                        </span>
                       )}
                       <div
                         className="mobile-only"

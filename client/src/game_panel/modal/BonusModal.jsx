@@ -197,7 +197,7 @@ class BonusModal extends Component {
                 <div style={{ textAlign: 'center', padding: '5px', border: '3px solid #f9f9f9', borderRadius: '4px', background: 'linear-gradient(0deg, rgb(57 40 167), rgba(202, 185, 141, 0.45))', margin: '0 0 20px', }}>
 
                   <span style={{ color: 'rgb(222, 226, 230)' }}><FontAwesomeIcon icon={faClock} />&nbsp;Next Corn Arrives...</span>
-                  <h5 style={{ color: "#ffb000" }}>{remainingTime}</h5>
+                  <h5 style={{ color: "#ff8500" }}>{remainingTime}</h5>
                 </div>
                 <div className="wheel" style={{ transform: `rotate(${this.state.rotation}deg)`, overflow: 'hidden' }}>
                   {numbers.map((number, index) => {
