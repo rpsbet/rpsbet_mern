@@ -30,10 +30,8 @@ import { convertToCurrency } from '../../util/conversion';
 import Lottie from 'react-lottie';
 import { getRoomStatisticsData } from '../../redux/Customer/customer.action';
 import Battle from '../icons/Battle';
-
 import { alertModal } from '../modal/ConfirmAlerts';
 import PlayerModal from '../modal/PlayerModal';
-
 import blob from '../LottieAnimations/loadingChart.json';
 import history from '../../redux/history';
 const gifUrls = ['/img/rock.gif', '/img/paper.gif', '/img/scissors.gif'];
@@ -58,11 +56,12 @@ const customStyles = {
 class OpenGamesTable extends Component {
   constructor(props) {
     super(props);
+    this.socket = this.props.socket;
 
     this.state = {
       selectedGameType: this.props.selectedGameType,
       mouseDown: false,
-      roomList: [],
+      roomList: this.props.roomList ? this.props.roomList : [],
       qBotStatuses: {},
       fetchedRoomIds: [],
       fetchedDataIds: [],
@@ -73,7 +72,7 @@ class OpenGamesTable extends Component {
       isLoading: true,
       filter: "Live Games",
     };
-    this.isComponentMounted = false; // Track component mount state
+    this.isComponentMounted = false;
     this.debouncedHandleScroll = null;
   }
 
@@ -81,31 +80,24 @@ class OpenGamesTable extends Component {
     this.isComponentMounted = true;
 
     try {
-
       this.props.getRoomList({ pageSize: 7 });
-
-
-
     } catch (error) {
       console.error("Error fetching Qbot statuses:", error);
     }
 
-    this.handleLoad(); // Initial load logic
+    this.handleLoad();
     this.debouncedHandleScroll = this.debounce(this.handleScroll, 300);
-
-    // Add event listeners
     window.addEventListener('load', this.handleLoad);
     window.addEventListener('scroll', this.debouncedHandleScroll);
+    this.setupSocketConnection();
 
-    // this.props.fetchMoreRooms(null);
   }
 
   componentWillUnmount() {
     this.isComponentMounted = false;
-
-    // Remove event listeners
     window.removeEventListener('load', this.handleLoad);
     window.removeEventListener('scroll', this.debouncedHandleScroll);
+    this.disconnectSocket();
   }
 
 
@@ -117,25 +109,21 @@ class OpenGamesTable extends Component {
       prevProps.highlightedRooms !== this.props.highlightedRooms ||
       prevProps.roomList.length !== this.props.roomList.length
     ) {
-
       this.props.fetchMoreRooms(null);
 
       const mergedRooms = [
-        ...this.props.roomList, // New rooms (will replace old ones if IDs match)
+        ...this.props.roomList,
         ...this.state.roomList.filter(
           room => !this.props.roomList.some(newRoom => newRoom._id === room._id)
-        ), // Old rooms that aren't in the new list
+        ),
       ];
 
-      // Get the ID from highlightedRooms (assuming it's a Set with a single ID for simplicity)
       const highlightedRoomId = Array.from(this.props.highlightedRooms)[0];
 
-      // If there's a highlighted room ID and it's not already at the front, move it to the front
       if (highlightedRoomId) {
         const roomIndex = mergedRooms.findIndex(room => room._id === highlightedRoomId);
 
         if (roomIndex !== -1 && roomIndex !== 0) {
-          // Remove the room from its current position and move it to the front
           const [highlightedRoom] = mergedRooms.splice(roomIndex, 1);
           mergedRooms.unshift(highlightedRoom);
         }
@@ -146,15 +134,13 @@ class OpenGamesTable extends Component {
       const creatorIds = roomList.map((room) => room.creator_id);
 
       const cachedData = JSON.parse(localStorage.getItem('qBotStatuses') || '{}');
+
       const isCacheValid = cachedData.timestamp && (Date.now() - cachedData.timestamp < 3600000); // 1 hour
 
       if (isCacheValid) {
-        // Use cached data
         this.setState({ qBotStatuses: cachedData.data });
       } else if (creatorIds.length) {
-        // Dispatch action to fetch QBot statuses
         const qBotStatuses = await this.props.getQbotStatuses(creatorIds);
-
         if (this.isComponentMounted && qBotStatuses) {
           this.setState({ qBotStatuses });
         }
@@ -171,6 +157,59 @@ class OpenGamesTable extends Component {
       this.setState({ isLoading: true });
     }
   }
+
+
+  setupSocketConnection = () => {
+    const { socket } = this.props;
+    if (socket) {
+      socket.on('QBOT_STATUS', this.handleNewStatus);
+    } else {
+      this.retrySocketConnection();
+    }
+  }
+
+  disconnectSocket = () => {
+    const { socket } = this.props;
+    if (socket) {
+      socket.off('QBOT_STATUS', this.handleNewStatus);
+    }
+  }
+
+  handleNewStatus = (data) => {
+    if (!this.isComponentMounted) return;
+  
+    const { user: userId, active: isActive } = data;
+    const cachedData = JSON.parse(localStorage.getItem('qBotStatuses') || '{}');
+    const updatedCache = {
+      ...cachedData?.data,
+      [userId]: isActive,
+    };
+  
+    localStorage.setItem('qBotStatuses', JSON.stringify({
+      data: updatedCache,
+      timestamp: cachedData?.timestamp || Date.now(),
+    }));
+  
+    this.setState((prevState) => ({
+      qBotStatuses: {
+        ...prevState.qBotStatuses,
+        [userId]: isActive,
+      },
+    }));
+  
+  };
+
+  retrySocketConnection = () => {
+    setTimeout(() => {
+      const { socket } = this.props;
+      if (socket) {
+        socket.on('QBOT_STATUS', this.handleNewStatus);
+      } else {
+        this.retrySocketConnection();
+      }
+    }, 1000);
+  }
+
 
   handleLoad = () => {
     if (this.isComponentMounted) {
@@ -366,8 +405,7 @@ class OpenGamesTable extends Component {
     }
   };
   joinRoom = (roomDetails) => {
-    const { id, roomStatus, gameType, betAmount, totalStakes, creatorStatus, creatorAvatar, accessory, rank, creatorId, qsGameType, pr, host_pr } = roomDetails;
-    console.log(id, roomStatus, gameType, betAmount, totalStakes, creatorId, qsGameType, pr, host_pr)
+    const { id, roomStatus, gameType, createdAt, betAmount, totalStakes, creatorStatus, creatorAvatar, roomName, rank, creatorId, qsGameType, pr, host_pr } = roomDetails;
     this.setState({ isClicked: true });
 
     if (roomStatus === "finished") {
@@ -386,6 +424,8 @@ class OpenGamesTable extends Component {
       creator_status: creatorStatus,
       creator_avatar: creatorAvatar,
       total_stakes: totalStakes,
+      created_at: createdAt,
+      room_name: roomName,
       hosts: [],
       status: roomStatus,
       qs_game_type: qsGameType,
@@ -513,6 +553,8 @@ class OpenGamesTable extends Component {
                             gameType: row.game_type.game_type_name,
                             betAmount: row.user_bet,
                             totalStakes: row.total_stakes,
+                            createdAt: row.created_at,
+                            roomName: row.room_name,
                             qsGameType: row.qs_game_type,
                             pr: row.pr,
                             host_pr: row.host_pr,
@@ -570,19 +612,19 @@ class OpenGamesTable extends Component {
 
                             <div
                               style={{
-                                display: 'flex',                // Use Flexbox for a row layout
-                                alignItems: 'center',           // Vertically align items
-                                justifyContent: 'flex-start',   // Align items to the left (default behavior)
-                                gap: '10px',                    // Space between the items
+                                display: 'flex',             
+                                alignItems: 'center',        
+                                justifyContent: 'flex-start',
+                                gap: '10px',                 
                               }}
                             >
                               {/* Co-host button */}
                               <a
                                 className="ml-1"
                                 onClick={(event) => {
-                                  event.preventDefault(); // Prevent default anchor tag behavior
+                                  event.preventDefault();
                                   event.stopPropagation();
-                                  this.handleCoHost(row); // Call the function with the row
+                                  this.handleCoHost(row);
                                 }}
                                 style={{
                                   color: "rgb(0 255 58)",
@@ -595,7 +637,7 @@ class OpenGamesTable extends Component {
                                   cursor: "pointer",
                                   borderRadius: "0.3em",
                                   fontSize: "14px",
-                                  textDecoration: "none", // Remove default anchor styles
+                                  textDecoration: "none",
                                 }}
                               >
                                 <ShowChartOutlined style={{ width: "20px" }} />
@@ -609,10 +651,10 @@ class OpenGamesTable extends Component {
                                       justifyContent: "center",
                                       alignItems: "center",
                                       padding: "8px",
-                                      borderRadius: "0.3em", // Matching border radius to co-host button
-                                      backgroundColor: "#f1f1f1", // Light background color for the icon
-                                      border: "2px solid #cccccc", // Subtle border
-                                      cursor: "default", // Add cursor pointer to indicate interactivity
+                                      borderRadius: "0.3em",
+                                      backgroundColor: "#f1f1f1",
+                                      border: "2px solid #cccccc",
+                                      cursor: "default",
                                     }}
                                   >
                                     <LockOutlined style={{ color: "#808080", fontSize: "18px" }} />
@@ -628,9 +670,9 @@ class OpenGamesTable extends Component {
                             <a
                               className="player"
                               onClick={(event) => {
-                                event.preventDefault(); // Prevent the default behavior (e.g., navigating to a link)
-                                event.stopPropagation(); // Stop the event from bubbling up to parent elements
-                                handleOpenPlayerModal(row.creator_id); // Execute your function
+                                event.preventDefault();
+                                event.stopPropagation();
+                                handleOpenPlayerModal(row.creator_id);
                               }}
                             >
                               <Avatar
@@ -691,9 +733,9 @@ class OpenGamesTable extends Component {
                                       key={index}
                                       className="player"
                                       onClick={(event) => {
-                                        event.preventDefault(); // Prevent default behavior (if needed)
-                                        event.stopPropagation(); // Prevent the event from propagating further
-                                        handleOpenPlayerModal(row.joiners[index]); // Call the function with the correct argument
+                                        event.preventDefault();
+                                        event.stopPropagation();
+                                        handleOpenPlayerModal(row.joiners[index]);
                                       }}
                                     >
                                       <Avatar
@@ -838,9 +880,9 @@ class OpenGamesTable extends Component {
                                       key={index}
                                       className="player"
                                       onClick={(event) => {
-                                        event.preventDefault(); // Prevent default anchor tag behavior
-                                        event.stopPropagation(); // Prevent the event from bubbling up
-                                        handleOpenPlayerModal(row.joiners[index]); // Call the function with the correct argument
+                                        event.preventDefault();
+                                        event.stopPropagation();
+                                        handleOpenPlayerModal(row.joiners[index]);
                                       }}
                                     >
                                       <Avatar
@@ -984,6 +1026,7 @@ const mapStateToProps = state => ({
   userName: state.auth.userName,
   recentlyClosed: state.logic.recentlyClosed,
   user: state.auth.user,
+  socket: state.auth.socket,
   isLowGraphics: state.auth.isLowGraphics,
   loading: state.logic.isActiveLoadingOverlay
 });

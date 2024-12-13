@@ -634,6 +634,7 @@ class RPS extends Component {
                 className="strategy-btn title"
                 style={{
                   boxShadow: 'unset',
+                  border: '3px solid var(--yellow-color)',
                   background: 'transparent',
                   display: 'flex',
                   alignItems: 'center',

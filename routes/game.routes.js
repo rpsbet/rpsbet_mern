@@ -1227,6 +1227,8 @@ const getRoomList = async (pageSize, game_type, excludeIds = []) => {
           selectedStrategy: room.selectedStrategy,
           pr: room.pr,
           host_pr: room.host_pr,
+          room_name: room.room_name,
+          room_name: room.game_type.short_name + '-' + room.room_number,
           total_stakes: room.hosts.reduce((acc, host) => acc + host.stake, 0),
           user_bet: parseFloat(room.user_bet),
           winnings: '',
@@ -2674,17 +2676,19 @@ router.patch('/qbotStatus', auth, async (req, res) => {
       });
     }
 
-    // Find QBot record by userId and update the active status
     const qbot = await QBot.findOneAndUpdate(
-      { user: userId }, // Find QBot entry by user
-      { active: isActive }, // Update the active field
-      { new: true, upsert: true } // Return updated document or create a new one if not found
-    );
-
+      { user: userId },
+      { active: isActive },
+      { new: true, upsert: true }
+    ).select('user _id active');
+    if (req.io.sockets) {
+      const socketName = 'QBOT_STATUS';
+      req.io.sockets.emit(socketName, qbot);
+    }
 
     res.json({
       success: true,
-      isActive: qbot.active // Return the updated active status
+      isActive: qbot.active
     });
   } catch (err) {
     console.error(err);

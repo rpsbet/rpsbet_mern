@@ -156,6 +156,7 @@ class Avatar extends Component {
     const verifiedUsernames = [
       'pimpedpistols',
       'KEKW',
+      'Guru47',
       'GIGACHAD',
       'smellyfingers',
       'SUPPORT',

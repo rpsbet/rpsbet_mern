@@ -96,7 +96,7 @@ class CreateGame extends Component {
       qs_game_type: 2,
       qs_nation: 0,
       selected_qs_position: 0,
-      bet_amount: 10,
+      bet_amount: 50000,
       endgame_amount: 0,
       spleesh_bet_unit: 0.01,
       max_return: 0,
@@ -216,7 +216,7 @@ class CreateGame extends Component {
 
     let newState = {
       child_step: 1,
-      bet_amount: 1,
+      bet_amount: 50000,
       endgame_amount: 0,
       max_return: 0,
       max_prize: 0,
@@ -237,7 +237,7 @@ class CreateGame extends Component {
       newState = {
         ...newState,
         game_type: 1,
-        bet_amount: 0.0,
+        bet_amount: 50000,
         winChance: 0,
         max_return: 0,
         endgame_amount: 0
@@ -248,7 +248,7 @@ class CreateGame extends Component {
         game_type: 5,
         public_bet_amount: convertToCurrency(1),
         max_return: 2,
-        bet_amount: 1,
+        bet_amount: 50000,
         winChance: 0,
         qs_nation: Math.floor(Math.random() * 4),
         endgame_amount: 0

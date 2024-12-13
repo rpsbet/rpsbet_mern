@@ -335,7 +335,6 @@ div.table .table-row .table-cell button:last-child,
 
 .strategy-btn {
   color: #333 !important;
-  border-color: #333 !important;
 }
 
 .strategy-btn:hover {
@@ -961,6 +960,7 @@ div.table .table-row>div,
 }
 
 div.table .table-row>div {
+  position: relative;
   justify-content: space-between;
 }
 
@@ -1042,7 +1042,7 @@ div.table .table-row.carousel-content:hover {
 
 .table-cell #ai_mode {
   position: absolute;
-  top: 5px;
+  top:-2px;
   left: 90px;
 }
 

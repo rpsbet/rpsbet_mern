@@ -940,7 +940,6 @@ const mapStateToProps = state => ({
   isLowGraphics: state.auth.isLowGraphics,
   myGames: state.logic.myGames,
   pageNumber: state.logic.myGamesPageNumber,
-  socket: state.auth.socket,
   game_mode: state.logic.game_mode,
   balance: state.auth.balance,
   user: state.auth.user,

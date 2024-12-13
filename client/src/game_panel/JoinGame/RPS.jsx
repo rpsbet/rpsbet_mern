@@ -815,6 +815,7 @@ class RPS extends Component {
     const isLowProfit = (roomInfo.host_pr - roomInfo.total_stakes) > 0;
     const hostProfit = parseFloat(roomInfo.host_pr) || 0;
     const totalStakes = parseFloat(roomInfo?.total_stakes) || 0;
+    console.log("roomInfo", roomInfo.room_name)
     return (
       <div className="game-page">
         <div className="page-title">
