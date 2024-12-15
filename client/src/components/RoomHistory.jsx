@@ -205,7 +205,6 @@ class RoomHistory extends React.Component {
 
     return (
       <div className="room-history-panel">
-        <h2 className="room-history-title">Battle History</h2>
         {/* <div className="refresh-button refresh-main">
           <IconButton color="primary" onClick={this.handleRefresh}>
             <RefreshIcon />

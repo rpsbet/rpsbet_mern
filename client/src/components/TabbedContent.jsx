@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Tabs, Tab, Button, Typography, Box } from '@material-ui/core';
+import { Tabs, Tab, Checkbox, FormControlLabel, Typography, Box } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
 import Leaderboards from './Leaderboards';
 import RoomHistory from './RoomHistory';
@@ -27,21 +27,39 @@ function updateFromNow(history) {
   return result;
 }
 
-
 const styles = theme => ({
   activeTab: {
-    color: props => props.isDarkMode ? '#f9f9f9' : '#ff0000', // Active tab color
+    color: props => (props.isDarkMode ? '#f9f9f9' : '#ff0000'),
     '& .MuiTab-wrapper': {
-      color: '#ff0000', // Active tab icon color
+      color: '#ff0000',
     },
   },
   inactiveTab: {
-    color: props => props.isDarkMode ? '#aaa' : '#ccc', // Non-active tab color based on dark mode
+    color: props => (props.isDarkMode ? '#aaa' : '#ccc'),
     '& .MuiTab-wrapper': {
-      color: props => props.isDarkMode ? '#aaa' : '#ccc', // Non-active tab icon color
+      color: props => (props.isDarkMode ? '#aaa' : '#ccc'),
     },
   },
+  flexContainer: {
+    display: 'flex',
+    gap: '16px',
+    flexWrap: 'wrap',
+  },
+  column: {
+    flex: 1,
+    minWidth: '300px',
+  },
+  checkboxContainer: {
+    display: 'flex',
+    gap: '16px',
+    marginBottom: '16px',
+  },
+  checkbox: {
+    color: props => (props.isDarkMode ? '#f9f9f9' : '#ff0000'),
+
+  },
 });
+
 class TabbedContent extends Component {
   constructor(props) {
     super(props);
@@ -49,14 +67,16 @@ class TabbedContent extends Component {
       selectedTab: 0,
       numToShow: 10,
       showPlayerModal: false,
-      room_history: this.props.roomInfo.room_history
+      room_history: this.props.roomInfo.room_history,
+      activeTabs: [], // Keep track of active (checked) tabs
+      isMobile: window.innerWidth < 767, // Determine if the view is mobile
     };
     this.handleLoadMore = this.handleLoadMore.bind(this);
   }
 
   static getDerivedStateFromProps(props, current_state) {
     if (
-      !current_state.room_history || // Check if room_history is undefined
+      !current_state.room_history ||
       current_state.room_history.length === 0 ||
       (props.roomInfo.room_history &&
         current_state.room_history[0]['created_at'] !==
@@ -64,17 +84,32 @@ class TabbedContent extends Component {
     ) {
       return {
         ...current_state,
-        room_history: updateFromNow(props.roomInfo.room_history)
+        room_history: updateFromNow(props.roomInfo.room_history),
       };
     }
     return null;
   }
 
-  async componentDidMount() {
-    // this.updateReminderTime();
+  componentDidMount() {
     this.attachUserLinkListeners();
     this.attachAccessories();
+    window.addEventListener('resize', this.handleResize);
   }
+
+  componentWillUnmount() {
+    window.removeEventListener('resize', this.handleResize);
+  }
+
+  componentDidUpdate(prevProps) {
+    if (prevProps.roomInfo.room_history !== this.props.roomInfo.room_history) {
+      this.attachUserLinkListeners();
+      this.attachAccessories();
+    }
+  }
+
+  handleResize = () => {
+    this.setState({ isMobile: window.innerWidth < 767 });
+  };
 
   attachUserLinkListeners = () => {
     const userLinks = document.querySelectorAll('.user-link');
@@ -98,13 +133,6 @@ class TabbedContent extends Component {
     });
   };
 
-  componentDidUpdate(prevProps) {
-    if (prevProps.roomInfo.room_history !== this.props.roomInfo.room_history) {
-      this.attachUserLinkListeners();
-      this.attachAccessories();
-    }
-  }
-
   handleOpenPlayerModal = creator_id => {
     this.setState({ showPlayerModal: true, selectedCreator: creator_id });
   };
@@ -115,7 +143,7 @@ class TabbedContent extends Component {
 
   handleLoadMore = () => {
     this.setState(prevState => ({
-      numToShow: prevState.numToShow + 10
+      numToShow: prevState.numToShow + 10,
     }));
   };
 
@@ -123,131 +151,106 @@ class TabbedContent extends Component {
     this.setState({ selectedTab: newValue });
   };
 
+  handleCheckboxChange = (event, tabIndex) => {
+    this.setState(prevState => {
+      const isActive = prevState.activeTabs.includes(tabIndex);
+      return {
+        activeTabs: isActive
+          ? prevState.activeTabs.filter(tab => tab !== tabIndex)
+          : [...prevState.activeTabs, tabIndex],
+      };
+    });
+  };
+
+  renderTabContent(tabIndex) {
+    const { roomInfo, isLowGraphics } = this.props;
+
+    switch (tabIndex) {
+      case 0:
+        return (
+          <div>
+            <CoHostModal
+              isDarkMode={this.props.isDarkMode}
+              coHostAmount={this.props.coHostAmount}
+              selectedRow={roomInfo}
+              balance={this.props.balance}
+              user={this.props.user}
+              togglePopup={this.togglePopup}
+              handleClose={this.handleCloseCoHostModal}
+              handleSendCoHost={this.props.handleSendCoHost}
+              handleCoHostAmountChange={this.props.handleCoHostAmountChange}
+              has_joined={this.props.has_joined}
+            />
+          </div>
+        );
+      case 1:
+        return <RoomHistory roomId={roomInfo._id} getRoomInfo={this.props.getRoomInfo} roomInfo={roomInfo} isLowGraphics={isLowGraphics} />;
+      case 2:
+        return (
+          <div>
+            <Comments roomId={roomInfo._id} />
+          </div>
+        );
+      case 3:
+        return <Leaderboards roomId={roomInfo._id} />;
+      default:
+        return null;
+    }
+  }
 
   render() {
-    const { selectedTab, coHostAmount } = this.state;
-    const { roomInfo, isLowGraphics, classes, isDarkMode } = this.props;
+    const { selectedTab, activeTabs, isMobile } = this.state;
+    const { classes } = this.props;
 
+    if (isMobile) {
+      return (
+        <div className='tabs-container'>
+          <Tabs
+            TabIndicatorProps={{ style: { background: '#ff0000' } }}
+            value={selectedTab}
+            onChange={this.handleTabChange}
+          >
+            <Tab label="Trade" />
+            <Tab label="History" />
+            <Tab label="Thread" />
+            <Tab label="Insights" />
+          </Tabs>
+          <div>
+            {selectedTab === 0 && this.renderTabContent(0)}
+            {selectedTab === 1 && this.renderTabContent(1)}
+            {selectedTab === 2 && this.renderTabContent(2)}
+            {selectedTab === 3 && this.renderTabContent(3)}
+          </div>
+        </div>
+      );
+    }
+
+    // Desktop view with checkboxes
     return (
-      <div className='tabs-container'>
-        <Tabs
-          TabIndicatorProps={{ style: { background: '#ff0000' } }}
-          value={selectedTab}
-          onChange={this.handleTabChange}
-        >
-          <Tab
-            classes={{
-              selected: classes.activeTab,
-              root: selectedTab === 0 ? classes.activeTab : classes.inactiveTab, // Check if tab is selected
-            }}
-            icon={<SwapHorizIcon />}
-            label="Trade"
-          />
-          <Tab
-            classes={{
-              selected: classes.activeTab,
-              root: selectedTab === 1 ? classes.activeTab : classes.inactiveTab,
-            }}
-            icon={<HistoryIcon />}
-            label="History"
-          />
-          <Tab
-            classes={{
-              selected: classes.activeTab,
-              root: selectedTab === 2 ? classes.activeTab : classes.inactiveTab,
-            }}
-            icon={<CommentIcon />}
-            label="Thread"
-          />
-          <Tab
-            classes={{
-              selected: classes.activeTab,
-              root: selectedTab === 3 ? classes.activeTab : classes.inactiveTab,
-            }}
-            icon={<BarChartIcon />}
-            label="Insights"
-          />
-        </Tabs>
-        <div>
-          {selectedTab === 0 && (
-            <div className="room-leaderboards-panel">
-
-              <h2 className="room-history-title">Chart & Trading</h2>
-              <div className="description-container" style={{ background: isDarkMode ? 'linear-gradient(45deg,  rgb(119 0 255), rgba(40, 40, 40, 0.15))' : 'linear-gradient(45deg, #d81719, #f3f3f326)' }}>
-                <Typography
-                  variant="body2"
-                  className="description-text"
-                  style={{
-                    color: this.props.isDarkMode ? "#f9f9f9" : "#010101",
-                  }}
-                >
-                  <span style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "8px" }}>
-                    {this.props.roomInfo.description ? (
-                      this.props.roomInfo.description.split(",").map((tag, index) => (
-                        <a
-                          key={index}
-                          href={`https://twitter.com/search?q=%23${tag.trim()}`} // Twitter search URL with the tag
-                          target="_blank" // Open in a new tab
-                          rel="noopener noreferrer" // Security for opening in a new tab
-                          style={{
-                            backgroundColor: this.props.isDarkMode ? "#333" : "#e0e0e0",
-                            color: this.props.isDarkMode ? "#f9f9f9" : "#010101",
-                            padding: "6px 12px",
-                            borderRadius: "8px",
-                            fontSize: "0.875rem",
-                            fontWeight: 500,
-                            display: "inline-block",
-                            textDecoration: "none", // Remove underline
-                          }}
-                        >
-                          #{tag.trim()} {/* Add the # symbol before each tag */}
-                        </a>
-                      ))
-                    ) : (
-                      <span>No tags available</span> // Optional fallback message
-                    )}
-                  </span>
-                </Typography>
-              </div>
-              <CoHostModal
-                isDarkMode={this.props.isDarkMode}
-                coHostAmount={this.props.coHostAmount}
-                selectedRow={this.props.roomInfo}
-                balance={this.props.balance}
-                user={this.props.user}
-                togglePopup={this.togglePopup}
-                handleClose={this.handleCloseCoHostModal}
-                handleSendCoHost={this.props.handleSendCoHost}
-                handleCoHostAmountChange={this.props.handleCoHostAmountChange}
-                has_joined={this.props.has_joined}
-              />
-            </div>
-          )}
-
-          {selectedTab === 1 && (
-            <RoomHistory roomId={roomInfo._id} getRoomInfo={this.props.getRoomInfo} roomInfo={roomInfo} isLowGraphics={isLowGraphics} />
-          )}
-          {selectedTab === 2 && (
-            <div className='room-leaderboards-panel '>
-              <h2 className="room-history-title">Thread</h2>
-              <div className="glass-container" style={{ padding: "30px", marginTop: "20px" }}>
-
-                <Comments
-                  roomId={roomInfo._id}
+      <div>
+        <div className={classes.checkboxContainer}>
+          {['Trade', 'History', 'Thread', 'Insights'].map((label, index) => (
+            <FormControlLabel
+              key={index}
+              className={classes.checkbox}
+              control={
+                <Checkbox
+                  checked={activeTabs.includes(index)}
+                  onChange={e => this.handleCheckboxChange(e, index)}
+                  color="secondary"
                 />
-              </div>
+              }
+              label={label}
+            />
+          ))}
+        </div>
+
+        <div className={classes.flexContainer}>
+          {activeTabs.map(tabIndex => (
+            <div key={tabIndex} className={classes.column}>
+              {this.renderTabContent(tabIndex)}
             </div>
-
-          )}
-          {selectedTab === 3 && (
-            <div className="room-leaderboards-panel">
-              <h2 className="room-history-title">Insights</h2>
-
-              <Leaderboards roomId={roomInfo._id}
-              />
-            </div>
-          )}
-
+          ))}
         </div>
       </div>
     );

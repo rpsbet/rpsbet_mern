@@ -91,6 +91,24 @@ class OpenGamesTable extends Component {
     window.addEventListener('scroll', this.debouncedHandleScroll);
     this.setupSocketConnection();
 
+    const roomList = this.props.roomList || [];
+    const creatorIds = roomList.map((room) => room.creator_id);
+
+    const cachedData = JSON.parse(localStorage.getItem('qBotStatuses') || '{}');
+
+    const isCacheValid = cachedData.timestamp && (Date.now() - cachedData.timestamp < 3600000); // 1 hour
+
+    if (isCacheValid) {
+      this.setState({ qBotStatuses: cachedData.data });
+    } else if (creatorIds.length) {
+      const qBotStatuses = await this.props.getQbotStatuses(creatorIds);
+      if (this.isComponentMounted && qBotStatuses) {
+        this.setState({ qBotStatuses });
+      }
+    }
+
+ 
+    console.log("this.props.qBotStatuses", this.props.qBotStatuses);
   }
 
   componentWillUnmount() {
@@ -129,28 +147,10 @@ class OpenGamesTable extends Component {
         }
       }
 
-
-      const roomList = this.props.roomList || [];
-      const creatorIds = roomList.map((room) => room.creator_id);
-
-      const cachedData = JSON.parse(localStorage.getItem('qBotStatuses') || '{}');
-
-      const isCacheValid = cachedData.timestamp && (Date.now() - cachedData.timestamp < 3600000); // 1 hour
-
-      if (isCacheValid) {
-        this.setState({ qBotStatuses: cachedData.data });
-      } else if (creatorIds.length) {
-        const qBotStatuses = await this.props.getQbotStatuses(creatorIds);
-        if (this.isComponentMounted && qBotStatuses) {
-          this.setState({ qBotStatuses });
-        }
-      }
-
       this.setState({
         roomList: mergedRooms,
         highlightedRooms: this.props.highlightedRooms,
       });
-
     }
 
     if (prevProps.selectedGameType !== this.props.selectedGameType) {
@@ -177,26 +177,26 @@ class OpenGamesTable extends Component {
 
   handleNewStatus = (data) => {
     if (!this.isComponentMounted) return;
-  
+
     const { user: userId, active: isActive } = data;
     const cachedData = JSON.parse(localStorage.getItem('qBotStatuses') || '{}');
     const updatedCache = {
       ...cachedData?.data,
       [userId]: isActive,
     };
-  
+
     localStorage.setItem('qBotStatuses', JSON.stringify({
       data: updatedCache,
       timestamp: cachedData?.timestamp || Date.now(),
     }));
-  
+
     this.setState((prevState) => ({
       qBotStatuses: {
         ...prevState.qBotStatuses,
         [userId]: isActive,
       },
     }));
-  
+
   };
 
   retrySocketConnection = () => {
@@ -612,10 +612,10 @@ class OpenGamesTable extends Component {
 
                             <div
                               style={{
-                                display: 'flex',             
-                                alignItems: 'center',        
+                                display: 'flex',
+                                alignItems: 'center',
                                 justifyContent: 'flex-start',
-                                gap: '10px',                 
+                                gap: '10px',
                               }}
                             >
                               {/* Co-host button */}

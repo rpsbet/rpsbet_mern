@@ -6415,15 +6415,11 @@ div.table .table-row .table-cell img.avatar,
   margin-bottom: 30px;
 }
 
-.room-history-panel,
 .room-leaderboards-panel,
 .action-panel {
   padding: 20px;
 }
 
-.trade-container {
-  margin: 30px 0;
-}
 
 .trade-container .modal-content-panel {
   padding: 30px;
