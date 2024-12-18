@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { setBalance, updateTutorialCompleted } from '../../redux/Auth/user.actions';
 import Modal from 'react-modal';
-import axios from '../../util/Api';
+import { Skeleton } from '@material-ui/lab';
 import { Info } from '@material-ui/icons';
 import { Warning, Link } from '@material-ui/icons';
 import SettingsRef from '../../components/SettingsRef';
@@ -558,9 +558,30 @@ class MyGamesTable extends Component {
 
         </div>
         {isLoading && loading ? (
-          <div className="loading-gif-container">
-            <img src={randomGifUrl} id="isLoading" alt="loading" />
-          </div>
+          <>
+          {[...Array(5)].map((_, key) => (  // You can adjust the number of skeleton rows
+            <div
+              className="table-row"
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr 1fr 2fr 1fr 2fr 2fr",
+                gap: "10px",
+                padding: "10px 20px",
+                animationDelay: `${key * 0.1}s`,
+              }}
+              key={key}
+            >
+              <Skeleton variant="rectangular" width="100%" height={40} />
+              <Skeleton variant="text" width="60%" height={20} />
+              <Skeleton variant="text" width="80%" height={20} />
+              <Skeleton variant="text" width="50%" height={20} />
+              <Skeleton variant="text" width="70%" height={20} />
+              <Skeleton variant="text" width="60%" height={20} />
+              <Skeleton variant="text" width="90%" height={20} />
+            </div>
+          ))}
+          </>
+
         ) : (
           <div className="table my-open-game-table">
             {this.props.myGames && this.props.myGames.length > 0 && (

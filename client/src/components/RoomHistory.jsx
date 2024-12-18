@@ -66,8 +66,6 @@ class RoomHistory extends React.Component {
 
   componentDidUpdate(prevProps) {
     if (prevProps.roomInfo !== this.props.roomInfo) {
-      console.log("Updated room history: ", this.props.roomInfo.room_history);
-
       this.setState({
         history: this.props.roomInfo.room_history,
         roomInfo: this.props.roomInfo,

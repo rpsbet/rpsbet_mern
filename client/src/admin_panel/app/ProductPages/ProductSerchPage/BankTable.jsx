@@ -369,7 +369,6 @@ class BankTable extends Component {
       loansWithProfit,
       loanType
     } = this.state;
-console.log("loansWithProfit", loansWithProfit)
     this.fetchCustomerInfo();
     return (
       <MarketplaceContainer style={{ padding: "20px", background: "rgb(170 170 170 / 6%)", borderRadius: "20px" }}>

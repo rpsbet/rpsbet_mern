@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import axios from 'axios';
 import Moment from 'moment';
 import { alertModal } from '../modal/ConfirmAlerts';
+import { getRank } from '../../util/getRank';
 import Avatar from '../../components/Avatar';
 import {
   Tabs,
@@ -359,8 +360,8 @@ class ChatPanel extends Component {
       hoverTabIndex,
       showEmojiPanel
     } = this.state;
-    const { selectedMainTabIndex, isAuthenticated } = this.props;
-    const isChatEnabled = isAuthenticated;
+    const { selectedMainTabIndex, isAuthenticated, user } = this.props;
+    const isChatEnabled = isAuthenticated && getRank(user.totalWagered) > 10;
 
     return (
       <div className="chat-wrapper">
@@ -461,7 +462,7 @@ class ChatPanel extends Component {
               onFocus={this.onFocusHandler}
               onBlur={this.onBlurHandler}
               onKeyDown={this.onTextAreaKeyDown}
-              placeholder={isChatEnabled ? "Chat here..." : "NOT LOGGED IN"}
+              placeholder={isChatEnabled ? "Chat here..." : "RANK MUST BE 10+"}
               onChange={this.onChangeText}
               value={this.state.text}
               ref={elem => {

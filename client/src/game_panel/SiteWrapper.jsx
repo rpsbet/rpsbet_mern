@@ -292,6 +292,8 @@ class SiteWrapper extends Component {
 
     if (this.props.user !== prevProps.user) {
       this.setState({ run: !this.props.user.completedTutorials.includes(1) })
+        this.fetchData();
+
     }
 
     if (prevProps.betResult !== betResult && betResult === 'win') {
@@ -317,7 +319,7 @@ class SiteWrapper extends Component {
       !tnxComplete;
 
     if (prevProps.remainingLoans !== remainingLoans) {
-      this.setState({ remainingLoans: remainingLoans });
+      this.setState({ remainingLoans: remainingLoans, loaded: true });
     }
 
     if (shouldUpdate) {
@@ -729,17 +731,15 @@ class SiteWrapper extends Component {
         this.initSocket(),
         this.props.acCalculateRemainingLoans(),
         this.initializeAudio(),
-        this.fetchData(),
         this.fetchTokenDetails(),
 
       ]);
-
       this.setState({ websiteLoading: false, notifications: this.props.notifications, vaultBal: initialBalance });
       if (currentUrl && currentUrl.includes('create')) {
         this.setState({ selectedMainTabIndex: this.props.selectMainTab(1) });
       }
 
-      setInterval(() => this.fetchData(), 2000);
+      // setInterval(() => this.fetchData(), 1000);
       this.interval = setInterval(this.updateReminderTime, 3000);
 
       this.loadSolanaWallet();
@@ -766,12 +766,6 @@ class SiteWrapper extends Component {
       this.setState({ selectedMainTabIndex: this.props.selectMainTab(1) });
     }
   }
-
-  setIntervals() {
-    setInterval(() => this.fetchData(), 2000);
-    this.interval = setInterval(this.updateReminderTime, 3000);
-  }
-
 
   initializeAudio() {
     try {
@@ -1596,7 +1590,7 @@ class SiteWrapper extends Component {
                 </div>
               )}
               <div className="header_action_panel">
-                {(this.props.user && this.state.balance && this.state.oldBalance && !isInvestorsPage) ? (
+                {(this.props.user && this.state.oldBalance)  ? (
                   <>
                     <a
                       href="#"
@@ -1677,7 +1671,7 @@ class SiteWrapper extends Component {
                 ) : (
                   null
                 )}
-                {this.props.user && this.state.balance && this.state.oldBalance ? (
+                {this.state.loaded  ? (
                   isAuthenticated ? (
                     <>
                       <div id="balance" className="title">
@@ -1908,7 +1902,7 @@ class SiteWrapper extends Component {
                 )}
               </div>
             </div>
-            {this.props.user && this.state.balance && this.state.oldBalance ? (
+            { this.state.loaded ? (
               <>
                 <div
                   id="notifications"
@@ -2344,9 +2338,9 @@ class SiteWrapper extends Component {
             styles={{
               options: {
                 zIndex: 10000,
-                backgroundColor: isDarkMode ? 'rgb(81 48 98 / 60%)' : '#ccc9',
+                backgroundColor: isDarkMode ? 'rgb(255 0 234 / 60%)' : '#ccc9',
                 primaryColor: '#ff0000',
-                arrowColor: isDarkMode ? 'rgb(81 48 98 / 60%)' : '#ccc9',
+                arrowColor: isDarkMode ? 'rgb(255 0 234 / 60%)' : '#ccc9',
                 textColor: isDarkMode ? '#f9f9f9' : '#333',
                 width: 300,
                 padding: 20,

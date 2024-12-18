@@ -1059,16 +1059,29 @@ export const getMyGames = search_condition => async dispatch => {
   try {
     dispatch({ type: START_LOADING });
 
-    // Call the backend API to fetch rooms
-    const res = await axios.get('/game/my_games', {
-      params: { ...search_condition }
-    });
-    if (res.data.success) {
-      // Dispatch the success action with the payload from the API response
-      dispatch({ type: MY_GAMES_LOADED, payload: { ...res.data } });
+    // Check if the data is already stored in localStorage
+    const storedData = localStorage.getItem('myGamesData');
+    
+    if (storedData) {
+      // If the data exists in localStorage, parse it and dispatch the success action with the stored data
+      const parsedData = JSON.parse(storedData);
+      dispatch({ type: MY_GAMES_LOADED, payload: { ...parsedData } });
     } else {
-      // Handle failure case
-      dispatch({ type: MSG_GAMETYPE_LOAD_FAILED });
+      // If the data is not in localStorage, make the API call to fetch data
+      const res = await axios.get('/game/my_games', {
+        params: { ...search_condition }
+      });
+
+      if (res.data.success) {
+        // Store the fetched data in localStorage
+        localStorage.setItem('myGamesData', JSON.stringify(res.data));
+
+        // Dispatch the success action with the payload from the API response
+        dispatch({ type: MY_GAMES_LOADED, payload: { ...res.data } });
+      } else {
+        // Handle failure case
+        dispatch({ type: MSG_GAMETYPE_LOAD_FAILED });
+      }
     }
   } catch (err) {
     console.error("Error while fetching games:", err);
@@ -1077,8 +1090,6 @@ export const getMyGames = search_condition => async dispatch => {
     dispatch({ type: END_LOADING });
   }
 };
-
-
 
 export const endGame = (room_id, callback) => async dispatch => {
   try {
