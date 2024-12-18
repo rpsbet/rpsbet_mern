@@ -6,6 +6,8 @@ import Avatar from "../../components/Avatar";
 import Moment from 'moment';
 import { Button } from '@material-ui/core';
 import { toggleDrawer } from '../../redux/Auth/user.actions';
+import { Skeleton } from "@material-ui/lab";
+
 
 class MyChat extends Component {
 	constructor(props) {
@@ -18,12 +20,6 @@ class MyChat extends Component {
 
 	}
 
-
-	// async componentDidUpdate(prevProps) {
-	// 	if (prevProps.myChat !== this.props.myChat) {
-	// 	}
-	// 	this.chat_log_panel.scrollTop = this.chat_log_panel.scrollHeight;
-	// }
 
 	openChat = (e) => {
 		const { avatar, username, rank } = e.currentTarget.dataset;
@@ -65,9 +61,68 @@ class MyChat extends Component {
 			<div className="chat">
 				<div className="table my-chat-table">
 					{
-						this.state.myChat.length === 0 && loading ?
-							<div className='loading-spinner'></div>
-							:
+						this.state.myChat.length === 0 && loading ? (
+							<div>
+								{[...Array(5)].map((_, index) => (
+									<div
+										key={index}
+										className="table-row"
+										style={{
+											display: 'flex',
+											alignItems: 'center',
+											padding: '10px 0',
+											borderBottom: '1px solid #ccc',
+										}}
+									>
+										{/* Skeleton for Avatar */}
+										<div style={{ marginRight: '15px' }}>
+											<Skeleton
+												variant="circular"
+												width={40}
+												height={40}
+												style={{ borderRadius: '50%' }}
+											/>
+										</div>
+
+										{/* Skeleton for Message Content */}
+										<div style={{ flex: 1, marginRight: '15px' }}>
+											<Skeleton
+												variant="text"
+												width="60%"
+												height={20}
+												style={{ marginBottom: '8px' }}
+											/>
+											<Skeleton
+												variant="text"
+												width="40%"
+												height={15}
+												style={{ marginBottom: '4px' }}
+											/>
+										</div>
+
+										{/* Skeleton for Unread Badge */}
+										<div style={{ marginRight: '15px' }}>
+											<Skeleton
+												variant="rounded"
+												width={30}
+												height={20}
+												style={{ borderRadius: '10px' }}
+											/>
+										</div>
+
+										{/* Skeleton for Button */}
+										<div>
+											<Skeleton
+												variant="rounded"
+												width={60}
+												height={30}
+												style={{ borderRadius: '5px' }}
+											/>
+										</div>
+									</div>
+								))}
+							</div>
+						) : (
 							history_keys.map((row, key) => (
 								<div className="table-row" key={key}>
 									<div>
@@ -77,20 +132,33 @@ class MyChat extends Component {
 												rank={this.state.myChat[row].rank}
 												src={this.state.myChat[row].avatar}
 												username={this.state.myChat[row].username}
-												alt="" className="avatar"
+												alt=""
+												className="avatar"
 												darkMode={this.props.isDarkMode}
 											/>
-											{/* {this.state.myChat[row].username} */}
 										</div>
 									</div>
 									<div className="message-panel title">
-										<div className="table-cell">{this.state.myChat[row].message}</div>
-										<div className="table-cell message-date">{Moment(this.state.myChat[row].created_at_str).format('DD / MM')}</div>
-										<div><div className="table-cell" title="Unread message">{this.state.myChat[row].unread_message_count === 0 ? <></> : <span className="unread_message_badge">{this.state.myChat[row].unread_message_count}</span>}</div></div>
+										<div className="table-cell">
+											{this.state.myChat[row].message}
+										</div>
+										<div className="table-cell message-date">
+											{Moment(this.state.myChat[row].created_at_str).format('DD / MM')}
+										</div>
+										<div>
+											<div className="table-cell" title="Unread message">
+												{this.state.myChat[row].unread_message_count === 0 ? (
+													<></>
+												) : (
+													<span className="unread_message_badge">
+														{this.state.myChat[row].unread_message_count}
+													</span>
+												)}
+											</div>
+										</div>
 									</div>
 									<div>
-										<div className="table-cell">
-										</div>
+										<div className="table-cell"></div>
 										<div className="table-cell">
 											<Button
 												className="btn btn_join"
@@ -102,11 +170,11 @@ class MyChat extends Component {
 											>
 												Open
 											</Button>
-
 										</div>
 									</div>
 								</div>
 							), this)
+						)
 					}
 				</div>
 			</div>

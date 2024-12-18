@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
 import styled from 'styled-components';
 import { connect } from 'react-redux';
-import Pagination from '../../../../components/Pagination';
 import moment from 'moment';
-
+import { convertToCurrency } from '../../../../util/conversion';
+import SwapHoriz from '@material-ui/icons/SwapHoriz';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faFilter,
@@ -13,6 +13,7 @@ import {
   faPiggyBank,
   faCalendar
 } from '@fortawesome/free-solid-svg-icons';
+import { alertModal } from '../../../../game_panel/modal/ConfirmAlerts';
 import {
   acQueryMyLoan,
   setCurrentLoanId,
@@ -26,7 +27,6 @@ import {
 } from '../../../../redux/Notification/notification.actions';
 import history from '../../../../redux/history';
 import {
-  LinearProgress,
   Button,
   Menu,
   MenuItem,
@@ -39,11 +39,8 @@ import {
   Tooltip,
   Select
 } from '@material-ui/core';
+import { Skeleton } from "@material-ui/lab";
 import { acGetCustomerInfo } from '../../../../redux/Customer/customer.action';
-// import Pagination from 'material-ui-flat-pagination';
-import SwapHoriz from '@material-ui/icons/SwapHoriz';
-import { convertToCurrency } from '../../../../util/conversion';
-import { alertModal } from '../../../../game_panel/modal/ConfirmAlerts';
 import Avatar from '../../../../components/Avatar';
 import PlayerModal from '../../../../game_panel/modal/PlayerModal';
 const MarketplaceContainer = styled.div`
@@ -134,6 +131,22 @@ const ProductInfo = styled.div`
   text-align: center;
 `;
 
+const CommissionPower = styled.span`
+position: absolute;
+top: 20px;
+right: 15px;
+width: 60px;
+height: 40px;
+line-height: 40px;
+background: #28a745;
+border-radius: 10px;
+box-shadow: inset 0px -1px 11px #005b15;
+color: #fff;
+font-weight: 500;
+text-align: center;
+`;
+
+
 const LoanAmount = styled.h6`
   padding: 4px;
   font-size: 1rem;
@@ -154,33 +167,6 @@ const LoanAmount = styled.h6`
   border-top-left-radius: 30px;
 `;
 
-const LinearContainer = styled.div`
-  width: 80%;
-  max-width: 1200px;
-  margin: 20px 0;
-`;
-
-const CommissionPower = styled.span`
-position: absolute;
-top: 20px;
-right: 15px;
-width: 60px;
-height: 40px;
-line-height: 40px;
-background: #28a745;
-border-radius: 10px;
-box-shadow: inset 0px -1px 11px #005b15;
-color: #fff;
-font-weight: 500;
-text-align: center;
-`;
-
-const PaginationContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  align-loans: center;
-  margin-top: 20px;
-`;
 
 class MyBankTable extends Component {
   constructor(props) {
@@ -219,10 +205,6 @@ class MyBankTable extends Component {
     this.fetchLoans();
   };
 
-  // handleSortChange = event => {
-  //   this.setState({ sortCriteria: event.target.value });
-  //   this.fetchLoans();
-  // }
 
   fetchLoans() {
     const { acQueryMyLoan, page } = this.props;
@@ -343,10 +325,7 @@ class MyBankTable extends Component {
             </Menu>
           </div>
           <div className="filters">
-            {/* <Button onClick={this.handleSortClick} variant="contained">
-              Sort By&nbsp;
-              <FontAwesomeIcon icon={faSort} />
-            </Button> */}
+
             <Menu
               sortAnchorEl={sortAnchorEl}
               open={Boolean(sortAnchorEl)}
@@ -364,7 +343,21 @@ class MyBankTable extends Component {
             </Menu>
           </div>
         </FilterSortContainer>
-        {!loading ? (
+        {data && data.length === 0? (
+          <ProductGrid>
+            {/* Placeholder Skeleton for Product Cards */}
+            {[...Array(5)].map((_, index) => (
+              <ProductCard key={index}>
+                <Skeleton variant="text" width="80%" height={30} />
+                <Skeleton variant="rectangular" width="100%" height={200} />
+                <Skeleton variant="text" width="50%" height={20} />
+                <Skeleton variant="text" width="70%" height={20} />
+                <Skeleton variant="text" width="60%" height={20} />
+                <Skeleton variant="text" width="50%" height={20} />
+              </ProductCard>
+            ))}
+          </ProductGrid>
+        ) : (
           <ProductGrid>
 
             {showPlayerModal && (
@@ -412,7 +405,7 @@ class MyBankTable extends Component {
                                   {row.loaners.slice(0, 2).map((loaner, index) => (
                                     loaner && loaner.avatar ? (
                                       <a
-                                        key={loaner._id || index} // Use loaner's _id if available; otherwise, fallback to index
+                                        key={loaner._id || index}
                                         className="player"
                                         onClick={() => this.handleOpenPlayerModal(loaner._id)}
                                       >
@@ -428,7 +421,7 @@ class MyBankTable extends Component {
                                     ) : null
                                   ))}
                                   {row.loaners.length > 2 && (
-                                    <div className="avatar-square" style={{marginLeft: "20px", zIndex: "0"}}>
+                                    <div className="avatar-square" style={{ marginLeft: "20px", zIndex: "0" }}>
                                       <div className="avatar-count">
                                         +{row.loaners.length - 2}
                                       </div>
@@ -439,7 +432,6 @@ class MyBankTable extends Component {
                                 <span>No Loaners</span>
                               )}
                             </TableCell>
-
                           </TableRow>
                           <TableRow>
                             <TableCell>
@@ -485,23 +477,9 @@ class MyBankTable extends Component {
               );
             })}
 
-
           </ProductGrid>
-        ) : (
-          <LinearContainer>
-            <LinearProgress color="secondary" />
-          </LinearContainer>
         )}
-        {/* <PaginationContainer>
-          <Pagination
-            limit={1}
-            offset={page - 1}
-            total={pages}
-            onClick={(e, offset) => {
-              acQueryMyLoan(30, offset + 1, this.state.sortCriteria, this.state.loanType);
-            }}
-          />
-        </PaginationContainer> */}
+
       </MarketplaceContainer>
     );
   }

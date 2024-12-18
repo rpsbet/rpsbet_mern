@@ -11,6 +11,7 @@ import { convertToCurrency } from '../../util/conversion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faList } from '@fortawesome/free-solid-svg-icons'; // Example icon, choose appropriate icon
 import happyCat from '../../util/happyCat.svg';
+import { Skeleton } from "@material-ui/lab";
 
 import {
   Button,
@@ -287,7 +288,7 @@ class LeaderboardsModal extends Component {
                     <img className=" desktop-only" style={{ position: "absolute", bottom: "-50px", right: "50px", filter: "hue-rotate(272deg)" }} src={happyCat} width={"80px"} alt="Caesar the car" />
                   )}
                 </div>
-                <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", background: "rgba(170, 170, 170, 0.06)", borderRadius: "20px", padding: "30px 10px", marginBottom: "30px" }}>
+                <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", background: "rgba(170, 170, 170, 0.06)", borderRadius: "0.6em", padding: "30px 10px", marginBottom: "30px" }}>
 
                   <div
                     style={{
@@ -302,7 +303,8 @@ class LeaderboardsModal extends Component {
                       <h5 className="title">Equity Distribution (in-game)</h5>
                       {loadingEquityChartData ? (
                         <div style={{ marginTop: "20px" }}>
-                          <LinearProgress color="secondary" />
+                          <Skeleton variant="circular" width={350} height={350} />
+                          <Skeleton variant="text" width="60%" style={{ margin: "10px auto" }} />
                         </div>
                       ) : (
                         chartSeries.length > 0 && (
@@ -320,7 +322,8 @@ class LeaderboardsModal extends Component {
                       <h5 className="title">Profit Distribution ($RPS)</h5>
                       {loadingReceiptChartData ? (
                         <div style={{ marginTop: "20px" }}>
-                          <LinearProgress color="secondary" />
+                          <Skeleton variant="circular" width={350} height={350} />
+                          <Skeleton variant="text" width="60%" style={{ margin: "10px auto" }} />
                         </div>
                       ) : (
                         receiptChartSeries.length > 0 && (
@@ -348,25 +351,17 @@ class LeaderboardsModal extends Component {
                           <TableCell onClick={() => this.handleSort('username')}>
                             PLAYER {sortField === 'username' && <Sort />}
                           </TableCell>
-                          <TableCell
-                            onClick={() => this.handleSort('totalWagered')}
-                          >
+                          <TableCell onClick={() => this.handleSort('totalWagered')}>
                             TOTAL WAGERED {sortField === 'totalWagered' && <Sort />}
                           </TableCell>
                           <TableCell onClick={() => this.handleSort('totalProfit')}>
                             NET PROFIT {sortField === 'totalProfit' && <Sort />}
                           </TableCell>
-                          <TableCell
-                            onClick={() => this.handleSort('profitAllTimeHigh')}
-                          >
-                            ALL-TIME-HIGH (ATH){' '}
-                            {sortField === 'profitAllTimeHigh' && <Sort />}
+                          <TableCell onClick={() => this.handleSort('profitAllTimeHigh')}>
+                            ALL-TIME-HIGH (ATH) {sortField === 'profitAllTimeHigh' && <Sort />}
                           </TableCell>
-                          <TableCell
-                            onClick={() => this.handleSort('profitAllTimeLow')}
-                          >
-                            ALL-TIME-LOW (ATL){' '}
-                            {sortField === 'profitAllTimeLow' && <Sort />}
+                          <TableCell onClick={() => this.handleSort('profitAllTimeLow')}>
+                            ALL-TIME-LOW (ATL) {sortField === 'profitAllTimeLow' && <Sort />}
                           </TableCell>
                           <TableCell onClick={() => this.handleSort('gamePlayed')}>
                             GAMES PLAYED {sortField === 'gamePlayed' && <Sort />}
@@ -388,15 +383,6 @@ class LeaderboardsModal extends Component {
                                   darkMode={isDarkMode}
                                 />
                               </a>
-                              {/* <i
-                        className={`online-status${
-                          this.props.onlineUserList.filter(
-                            user => user === row.creator_id
-                          ).length > 0
-                            ? ' online'
-                            : ''
-                        }`}
-                      ></i> */}
                             </TableCell>
                             <TableCell>{convertToCurrency(entry.totalWagered)}</TableCell>
                             <TableCell>{convertToCurrency(entry.totalProfit)}</TableCell>
@@ -406,15 +392,18 @@ class LeaderboardsModal extends Component {
                           </TableRow>
                         ))}
                       </TableBody>
-
                     </Table>
                   ) : (
-                    <>
-                      <div style={{ color: isDarkMode ? "#f9f9f9" : "#ccc" }}>
-                        Loading Leaderboards...
-                      </div>
-                      <LinearProgress color='secondary' />
-                    </>
+                    <div style={{ margin: "20px 0" }}>
+                      {[...Array(5)].map((_, index) => (
+                        <div key={index} style={{ display: "flex", alignItems: "center", marginBottom: "15px" }}>
+                          <Skeleton variant="circular" width={40} height={40} style={{ marginRight: "15px" }} />
+                          <Skeleton variant="text" width="20%" style={{ marginRight: "10px" }} />
+                          <Skeleton variant="text" width="15%" />
+                          <Skeleton variant="text" width="15%" style={{ marginLeft: "auto", marginRight: "10px" }} />
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
               </div>

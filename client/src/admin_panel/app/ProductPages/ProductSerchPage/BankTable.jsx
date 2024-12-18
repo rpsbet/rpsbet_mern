@@ -6,7 +6,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import MyLoansModal from '../../../../game_panel/modal/MyLoansModal';
 import RpsPriceChart from '../../../../components/RpsPriceChart';
 import { token } from '../../../../config/index.js';
-
+import { Skeleton } from "@material-ui/lab";
 import {
   faClock,
   faSort,
@@ -22,7 +22,6 @@ import {
 import { openConfirmLoanModal } from '../../../../redux/Notification/notification.actions';
 import history from '../../../../redux/history';
 import {
-  LinearProgress,
   Button,
   IconButton,
   Table,
@@ -160,11 +159,6 @@ const LoanAmount = styled.h6`
   border-top-left-radius: 30px;
 `;
 
-const LinearContainer = styled.div`
-  width: 100%;
-  max-width: 1200px;
-  margin: 20px 0;
-`;
 
 const APY = styled.span`
   position: absolute;
@@ -355,14 +349,13 @@ class BankTable extends Component {
   render() {
     const {
       data,
-      pages,
-      page,
       loading,
       acQueryLoan,
       setCurrentLoanId,
       setCurrentLoanInfo,
       openConfirmLoanModal,
       isLowGraphics,
+      prevLoans
     } = this.props;
 
     const {
@@ -370,14 +363,13 @@ class BankTable extends Component {
       showPlayerModal,
       selectedCreator,
       sortCriteria,
-      sortOrder,
       anchorEl,
       is_mobile,
       sortAnchorEl,
       loansWithProfit,
       loanType
     } = this.state;
-
+console.log("loansWithProfit", loansWithProfit)
     this.fetchCustomerInfo();
     return (
       <MarketplaceContainer style={{ padding: "20px", background: "rgb(170 170 170 / 6%)", borderRadius: "20px" }}>
@@ -456,7 +448,6 @@ class BankTable extends Component {
               >
                 <APY>{(row.apy * 100).toFixed(2)}%</APY>
 
-
                 <ProductCreator>
                   {customerInfo[row.lender] ? (
                     <a
@@ -477,7 +468,6 @@ class BankTable extends Component {
                     <div className="loading-spinner"></div>
                   )}
                 </ProductCreator>
-
 
                 <ProductInfo>
                   <LoanAmount>{convertToCurrency(row.loan_amount)}</LoanAmount>
@@ -502,7 +492,7 @@ class BankTable extends Component {
                                 {row.loaners.slice(0, 2).map((loaner, index) => (
                                   loaner && loaner.avatar ? (
                                     <a
-                                      key={loaner._id || index} // Use loaner's _id if available; otherwise, fallback to index
+                                      key={loaner._id || index}
                                       className="player"
                                       onClick={() => this.handleOpenPlayerModal(loaner._id)}
                                     >
@@ -529,7 +519,6 @@ class BankTable extends Component {
                               <span>No Loaners</span>
                             )}
                           </TableCell>
-
                         </TableRow>
                       </TableBody>
                     </Table>
@@ -560,9 +549,17 @@ class BankTable extends Component {
             ))}
           </ProductGrid>
         ) : (
-          <LinearContainer>
-            <LinearProgress color="secondary" />
-          </LinearContainer>
+          // Skeleton Loader
+          <ProductGrid>
+            {[...Array(6)].map((_, index) => (
+              <ProductCard key={`skeleton-${index}`}>
+                <Skeleton variant="text" width="80%" height={30} />
+                <Skeleton variant="circle" width={40} height={40} style={{ margin: '10px 0' }} />
+                <Skeleton variant="rectangular" width="100%" height={100} />
+                <Skeleton variant="text" width="60%" height={20} style={{ margin: '10px 0' }} />
+              </ProductCard>
+            ))}
+          </ProductGrid>
         )}
         {/* <PaginationContainer >
           <Pagination
@@ -582,58 +579,60 @@ class BankTable extends Component {
           </h6>
           <div className="carousel">
             {
-              loansWithProfit.map(loan => (
-                <div key={loan._id} className={`carousel-item ${loan.profit <= 0 ? 'red-gradient' : 'green-gradient'}`}
-                >
-                  <div className="loan-details">
-                    <Table className="product-detail">
-                      <TableBody>
-                        <TableRow>
-                          <TableCell>
-                            <FontAwesomeIcon icon={faUser} /> LENDER:
-                          </TableCell>
-                          <TableCell style={{ float: "right" }}>
-                            <a
-                              className="player"
-                              onClick={() => this.handleOpenPlayerModal(loan.lender)}
-                            >
-                              <Avatar
-                                className="avatar"
-                                src={loan.customerInfo.avatar}
-                                rank={loan.customerInfo.totalWagered}
-                                accessory={loan.customerInfo.accessory}
-                                username={loan.customerInfo.username}
-                                alt=""
-                                darkMode={this.props.isDarkMode}
-                              />
-                            </a>
-                          </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell>
-                            <FontAwesomeIcon icon={faClock} /> DAYS LEFT:
-                          </TableCell>
-                          <TableCell className="value">
-                            {loan.outstanding === true
-                              ? loan.totalLoanerAmount === 0
-                                ? "CLEARED"
-                                : "OUTSTANDING"
-                              : loan.outstanding}
-                          </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell>
-                            <FontAwesomeIcon icon={faMoneyBillAlt} /> UNPAID FUNDS:
-                          </TableCell>
-                          <TableCell className="value">{convertToCurrency(loan.totalLoanerAmount)}</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell>
-                            <FontAwesomeIcon icon={faUsers} /> LOANERS:
-                          </TableCell>
-                          <TableCell className="cell-joiners" >
-                            {
-                              loan.loaners.map((loaner, index) => (
+              loansWithProfit && loansWithProfit.length > 0 ? (
+                loansWithProfit.map(loan => (
+                  <div
+                    key={loan._id}
+                    className={`carousel-item ${loan.profit <= 0 ? 'red-gradient' : 'green-gradient'}`}
+                  >
+                    <div className="loan-details">
+                      <Table className="product-detail">
+                        <TableBody>
+                          <TableRow>
+                            <TableCell>
+                              <FontAwesomeIcon icon={faUser} /> LENDER:
+                            </TableCell>
+                            <TableCell style={{ float: "right" }}>
+                              <a
+                                className="player"
+                                onClick={() => this.handleOpenPlayerModal(loan.lender)}
+                              >
+                                <Avatar
+                                  className="avatar"
+                                  src={loan.customerInfo.avatar}
+                                  rank={loan.customerInfo.totalWagered}
+                                  accessory={loan.customerInfo.accessory}
+                                  username={loan.customerInfo.username}
+                                  alt=""
+                                  darkMode={this.props.isDarkMode}
+                                />
+                              </a>
+                            </TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell>
+                              <FontAwesomeIcon icon={faClock} /> DAYS LEFT:
+                            </TableCell>
+                            <TableCell className="value">
+                              {loan.outstanding === true
+                                ? loan.totalLoanerAmount === 0
+                                  ? "CLEARED"
+                                  : "OUTSTANDING"
+                                : loan.outstanding}
+                            </TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell>
+                              <FontAwesomeIcon icon={faMoneyBillAlt} /> UNPAID FUNDS:
+                            </TableCell>
+                            <TableCell className="value">{convertToCurrency(loan.totalLoanerAmount)}</TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell>
+                              <FontAwesomeIcon icon={faUsers} /> LOANERS:
+                            </TableCell>
+                            <TableCell className="cell-joiners">
+                              {loan.loaners.map((loaner, index) => (
                                 <a
                                   key={index}
                                   className="player"
@@ -649,44 +648,56 @@ class BankTable extends Component {
                                     darkMode={this.props.isDarkMode}
                                   />
                                 </a>
-                              ))
-                            }
-                          </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell>
-                            <FontAwesomeIcon icon={faMoneyCheckAlt} /> TOTAL PAID BACK:
-                          </TableCell>
-                          <TableCell className="value">{convertToCurrency(loan.totalPaidBack)}</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell>
-                            <FontAwesomeIcon icon={faChartLine} /> PROFIT:
-                          </TableCell>
-                          <TableCell className={`value ${loan.profit <= 0 ? 'profit-negative' : 'profit-positive'}`}>
-                            {convertToCurrency(loan.profit)}
-                          </TableCell>
-                        </TableRow>
-                      </TableBody>
-                    </Table>
+                              ))}
+                            </TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell>
+                              <FontAwesomeIcon icon={faMoneyCheckAlt} /> TOTAL PAID BACK:
+                            </TableCell>
+                            <TableCell className="value">{convertToCurrency(loan.totalPaidBack)}</TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell>
+                              <FontAwesomeIcon icon={faChartLine} /> PROFIT:
+                            </TableCell>
+                            <TableCell className={`value ${loan.profit <= 0 ? 'profit-negative' : 'profit-positive'}`}>
+                              {convertToCurrency(loan.profit)}
+                            </TableCell>
+                          </TableRow>
+                        </TableBody>
+                      </Table>
+                    </div>
                   </div>
-                </div>
-              ))
+                ))
+              ) : (
+                // Skeleton Loader for Carousel
+                [...Array(5)].map((_, index) => (
+                  <div key={`skeleton-carousel-item-${index}`} className="carousel-item skeleton-item">
+                    <div className="loan-details">
+                      <Skeleton variant="text" width="50%" height={30} style={{ marginBottom: "10px" }} />
+                      <Skeleton variant="circle" width={40} height={40} style={{ marginBottom: "10px" }} />
+                      <Skeleton variant="text" width="100%" height={20} style={{ marginBottom: "5px" }} />
+                      <Skeleton variant="text" width="80%" height={20} style={{ marginBottom: "5px" }} />
+                      <Skeleton variant="text" width="60%" height={20} style={{ marginBottom: "5px" }} />
+                      <Skeleton variant="rectangular" width="100%" height={50} style={{ marginBottom: "10px" }} />
+                    </div>
+                  </div>
+                ))
+              )
             }
 
+        {this.state.showMyLoansModal && is_mobile && (
+          <MyLoansModal
+            modalIsOpen={this.state.showMyLoansModal}
+            closeModal={this.handleCloseMyLoansModal}
+          />
+        )}
 
+      </div>
 
-            {this.state.showMyLoansModal && is_mobile && (
-              <MyLoansModal
-                modalIsOpen={this.state.showMyLoansModal}
-                closeModal={this.handleCloseMyLoansModal}
-              />
-            )}
-
-          </div>
-
-        </div>
-      </MarketplaceContainer>
+        </div >
+      </MarketplaceContainer >
     );
   }
 }

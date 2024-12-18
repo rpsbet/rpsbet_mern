@@ -2,22 +2,16 @@ import React, { Component } from 'react';
 import {
   createTheme,
   MuiThemeProvider,
-  Tabs,
-  Tab,
   Button,
-  TextField,
   Menu,
   MenuItem,
   ListItemIcon,
   ListItemText,
   Divider,
   Tooltip,
-  Typography
 } from '@material-ui/core';
-import Footer from './main_pages/Footer';
 import { Info } from '@material-ui/icons';
 import Countdown from 'react-countdown';
-import { withRouter } from 'react-router-dom';
 import axios from '../util/Api';
 import SettingsModal from './modal/SettingsModal.jsx';
 import BonusModal from './modal/BonusModal.jsx';
@@ -25,7 +19,6 @@ import { connect } from 'react-redux';
 import LoadingOverlay from 'react-loading-overlay';
 import CountUp from 'react-countup';
 import Lottie from 'react-lottie';
-import progress from './LottieAnimations/progress.json';
 import coins from './LottieAnimations/coins.json';
 import { setBalance } from '../redux/Auth/user.actions.js'
 import InlineSVG from 'react-inlinesvg';
@@ -38,7 +31,6 @@ import {
   PersonOutline,
   Dashboard,
   MonetizationOn,
-  ShoppingCart,
   Help,
   Settings,
   Star
@@ -49,16 +41,14 @@ import Moment from 'moment';
 import Avatar from '../components/Avatar';
 import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
-
+import { Skeleton } from "@material-ui/lab";
 import ProfileModal from './modal/ProfileModal';
 import PlayerModal from './modal/PlayerModal';
 import HowToPlayModal from './modal/HowToPlayModal';
 import MarketplaceModal from './modal/MarketplaceModal';
 import BankModal from './modal/BankModal';
 import DebtsModal from './modal/DebtsModal';
-
 import LeaderboardsModal from './modal/LeaderboardsModal';
-
 import { acCalculateRemainingLoans, setCurrentOfferTargetInfo } from '../redux/Loan/loan.action';
 import ConfirmTradeModal from './modal/ConfirmTradeModal';
 import ConfirmLoanModal from './modal/ConfirmLoanModal';
@@ -171,13 +161,6 @@ const darkTheme = createTheme({
   overrides: customTextFieldStyles
 });
 
-const customStyles = {
-  tabRoot: {
-    textTransform: 'none',
-    minWidth: '80px'
-  }
-};
-
 const gifUrls = ['/img/rock.gif', '/img/paper.gif', '/img/scissors.gif'];
 const randomGifUrl = gifUrls[Math.floor(Math.random() * gifUrls.length)];
 const hueRotateValue = (gifUrls.indexOf(randomGifUrl) + 1) * 75;
@@ -246,8 +229,8 @@ class SiteWrapper extends Component {
       blurValue: 3,
       isCountdownHovered: false,
       isYoutubeHovered: false,
-      countdownWidth: '50%', // Initial width for countdown side
-      youtubeWidth: '50%', // Initial width for youtube side
+      countdownWidth: '50%',
+      youtubeWidth: '50%',
       countdownOpacity: 1,
       currentGif: '',
       youtubeOpacity: 1,
@@ -370,10 +353,8 @@ class SiteWrapper extends Component {
   }
 
   handleMouseMove = (event) => {
-    const { clientX } = event; // Get cursor's x position
-    const { innerWidth } = window; // Get the window's width
-
-    // Map cursor position to blur value (adjust min/max values as necessary)
+    const { clientX } = event;
+    const { innerWidth } = window;
     const blurValue = Math.max(0, Math.min(10, 10 * (1 - clientX / (innerWidth - 290))));
 
     this.setState({ blurValue });
@@ -382,12 +363,11 @@ class SiteWrapper extends Component {
   async fetchTokenDetails() {
     try {
       const response = await axios.get(`https://api.dexscreener.com/latest/dex/tokens/${token}`);
-      const priceData = response.data.pairs?.[0];  // Extract token pair details
+      const priceData = response.data.pairs?.[0];
 
       if (priceData) {
-        // Update the state with the conversion rate (price in USD)
         this.setState({
-          conversionRate: priceData.priceUsd,  // This is the price of the token in USD
+          conversionRate: priceData.priceUsd,
         });
       } else {
         console.error("No pair data available for this token.");
@@ -470,9 +450,9 @@ class SiteWrapper extends Component {
 
   handleCountdownHover = () => {
     this.setState({
-      countdownWidth: '60%', // Increase width of countdown side
-      youtubeWidth: '40%', // Decrease width of youtube side
-      youtubeOpacity: 0.7, // Reduce opacity of youtube side
+      countdownWidth: '60%',
+      youtubeWidth: '40%',
+      youtubeOpacity: 0.7,
     });
   };
 
@@ -482,7 +462,7 @@ class SiteWrapper extends Component {
     this.setState({ currentGif: this.gifs[randomIndex] });
   };
   handleCountdownButtonClick = () => {
-    this.changeBackgroundGif(); // Change the background GIF
+    this.changeBackgroundGif();
     setTimeout(() => {
       history.push('/investors');
       this.closeTokenModal();
@@ -491,35 +471,35 @@ class SiteWrapper extends Component {
 
   // Handle click for youtube button
   handleYoutubeButtonClick = () => {
-    this.changeBackgroundGif(); // Change the background GIF
+    this.changeBackgroundGif();
     setTimeout(() => {
       this.handleOpenLoginModal();
       this.closeTokenModal();
-    }, 1000); // Redirect after 1 second
+    }, 1000);
     history.push('/');
   };
 
   handleCountdownLeave = () => {
     this.setState({
-      countdownWidth: '50%', // Reset width of countdown side
-      youtubeWidth: '50%', // Reset width of youtube side
-      youtubeOpacity: 1, // Reset opacity of youtube side
+      countdownWidth: '50%',
+      youtubeWidth: '50%',
+      youtubeOpacity: 1,
     });
   };
 
   handleYoutubeHover = () => {
     this.setState({
-      youtubeWidth: '60%', // Increase width of youtube side
-      countdownWidth: '40%', // Decrease width of countdown side
-      countdownOpacity: 0.7, // Reduce opacity of countdown side
+      youtubeWidth: '60%',
+      countdownWidth: '40%',
+      countdownOpacity: 0.7,
     });
   };
 
   handleYoutubeLeave = () => {
     this.setState({
-      youtubeWidth: '50%', // Reset width of youtube side
-      countdownWidth: '50%', // Reset width of countdown side
-      countdownOpacity: 1, // Reset opacity of countdown side
+      youtubeWidth: '50%',
+      countdownWidth: '50%',
+      countdownOpacity: 1,
     });
   };
 
@@ -616,7 +596,7 @@ class SiteWrapper extends Component {
         if (data.amount && data.amount !== 0) {
           this.props.setBalance(this.props.balance + data.amount);
         }
-      
+
         if (!this.props.isMuted || !this.props.notificationSounds) {
           this.notificationSound.play();
         }
@@ -627,10 +607,8 @@ class SiteWrapper extends Component {
           notifications: currentNotifications
         });
 
-        // Check if the new notification message contains "Deposit"
-        const message = data.message; // Assuming 'data' has a 'message' property
+        const message = data.message;
 
-        // First condition: check if the message contains the word "Deposit"
         if (message.includes("Deposit")) {
           this.props.getUser(true, 5);
         }
@@ -1126,22 +1104,17 @@ class SiteWrapper extends Component {
 
     if (status === 'finished' || status === 'skipped') {
       const { currentTutorial } = this.state;
-      // Mark the current tutorial as completed in the backend
       this.props.updateTutorialCompleted(currentTutorial);
-
-      // Stop the Joyride after completion
       this.setState({ run: false });
     }
   };
 
   render() {
     const {
-      series,
       sortAnchorEl,
       filterAnchorEl,
       searchAnchorEl,
       hoverTabIndex,
-      websiteLoading,
       currentGif,
       balance,
       searchQuery,
@@ -1189,10 +1162,8 @@ class SiteWrapper extends Component {
       isMuted,
       tnxComplete,
       isDarkMode,
-      selectedMainTabIndex,
       isAuthenticated,
       children,
-      showOfferLoanModal,
       user,
       showCookieConsent,
       isLowGraphics,
@@ -1239,7 +1210,7 @@ class SiteWrapper extends Component {
               <div
                 className="countdown-side"
                 style={{
-                  width: countdownWidth, // Dynamic width based on state
+                  width: countdownWidth,
                   padding: '30px',
                   display: 'flex',
                   position: 'relative',
@@ -1247,11 +1218,11 @@ class SiteWrapper extends Component {
                   justifyContent: 'space-between',
                   flexDirection: 'column',
                   height: '400px',
-                  opacity: countdownOpacity, // Set dynamic opacity
-                  transition: 'width 0.5s ease, opacity 0.5s ease', // Smooth transition for width and opacity
+                  opacity: countdownOpacity,
+                  transition: 'width 0.5s ease, opacity 0.5s ease',
                   boxSizing: 'border-box',
                 }}
-                onMouseEnter={this.handleCountdownHover} // Handle hover state
+                onMouseEnter={this.handleCountdownHover}
                 onMouseLeave={this.handleCountdownLeave}
               >
                 <div >
@@ -1334,11 +1305,11 @@ class SiteWrapper extends Component {
               <div
                 className="youtube-side"
                 style={{
-                  width: youtubeWidth, // Dynamic width based on state
+                  width: youtubeWidth,
                   padding: '30px',
                   height: '400px',
-                  opacity: youtubeOpacity, // Set dynamic opacity
-                  transition: 'width 0.5s ease, opacity 0.5s ease', // Smooth transition for width and opacity
+                  opacity: youtubeOpacity,
+                  transition: 'width 0.5s ease, opacity 0.5s ease',
                   boxSizing: 'border-box',
                   display: 'flex',
                   flexDirection: 'column',
@@ -1371,14 +1342,10 @@ class SiteWrapper extends Component {
                 </Button>
               </div>
             </div>
-            {/* <Footer className="footer"
-                open={this.props.isDrawerOpen}
-                style={{ marginLeft: '0' }}
-              /> */}
           </div>
         )}
         <div className={`site_wrapper row ${isDarkMode ? 'dark_mode' : ''}`}>
-         
+
           <div className="game_header">
             <div className="main_header">
               <a
@@ -1393,220 +1360,243 @@ class SiteWrapper extends Component {
               {!isInvestorsPage ? (
                 <div className='desktop-only' style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", width: "30%", marginTop: "10px" }}>
                   {/* TOP PLAYS Carousel */}
-                  <div style={{ flex: "1", maxWidth: "50%", paddingRight: "10px" }}>
-                  <span className='roll-tag' style={{position: "absolute", top: "5px"}}>Wins</span>
-                    <div className="top-wins">
-                      {this.props.topWins?.map((row, index) => (
-                        <div
-                          key={`table-cell-${index}-${row.room}`}
-                          className="table-cell"
-                          onClick={() => (window.location.href = `/join/${row.room}`)}
-                          style={{ cursor: 'pointer' }}
-                        >
-                          <div key={`carousel-content-${index}-${row.room}`} className="carousel-content table-row slide-in">
-                            <div style={{ display: 'flex', flexDirection: 'row' }}>
-                              <a
-                                href="#"
-                                className="player"
-                                onClick={(event) => {
-                                  event.preventDefault();
-                                  event.stopPropagation();
-                                  this.handleOpenPlayerModal(row.joined_user._id);
-                                }}
-                                style={{ marginRight: '-15px' }}
-                              >
-                                <Avatar
-                                  className="avatar"
-                                  src={row.joined_user?.avatar || 'default-avatar-url'}
-                                  accessory={row.joined_user?.accessory || 'default-accessory'}
-                                  username={row.joined_user?.username || 'Unknown'}
-                                  rank={row.joined_user?.totalWagered || 0}
-                                  alt=""
-                                  darkMode={this.props.isDarkMode}
-                                />
-                              </a>
-                            </div>
+                  {this.props.topWins?.length > 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'row', flex: 1, maxWidth: '50%', paddingRight: '10px' }}>
+                      {/* Roll Tag */}
+                      <span className="roll-tag" style={{ position: 'absolute', top: '5px' }}>Wins</span>
 
-                            <div className="cell" style={{ lineHeight: '0.5em', marginBottom: '5px', textAlign: 'right', padding: "5px 5px 15px 5px" }}>
-                              <span style={{ whiteSpace: 'nowrap' }}>+{convertToCurrency(row.winnings)}</span>
-                              <br />
-                              <span style={{ whiteSpace: 'nowrap', fontSize: 'xx-small' }}>
-                                {(() => {
-                                  if (!tokenPrice) return convertToCurrency(row.winnings);
-                                  return (
-                                    <>
-                                      {(row.winnings / row.bet_amount).toFixed(2)}x / $
-                                      {(row.winnings * tokenPrice).toFixed(2)}
-                                    </>
-                                  );
-                                })()}
-                              </span>
-                            </div>
+                      {/* Top Wins Content */}
+                      <div className="top-wins" style={{ marginBottom: '20px', flex: 1 }}>
+                        {this.props.topWins.map((row, index) => (
+                          <div
+                            key={`table-cell-${index}-${row.room}`}
+                            className="table-cell"
+                            onClick={() => (window.location.href = `/join/${row.room}`)}
+                            style={{ cursor: 'pointer' }}
+                          >
+                            <div className="carousel-content table-row slide-in">
+                              {/* Avatar Section */}
+                              <div style={{ display: 'flex', flexDirection: 'row' }}>
+                                <a
+                                  href="#"
+                                  className="player"
+                                  onClick={(event) => {
+                                    event.preventDefault();
+                                    event.stopPropagation();
+                                    this.handleOpenPlayerModal(row.joined_user._id);
+                                  }}
+                                  style={{ marginRight: '-15px' }}
+                                >
+                                  <Avatar
+                                    className="avatar"
+                                    src={row.joined_user?.avatar || 'default-avatar-url'}
+                                    accessory={row.joined_user?.accessory || 'default-accessory'}
+                                    username={row.joined_user?.username || 'Unknown'}
+                                    rank={row.joined_user?.totalWagered || 0}
+                                    alt=""
+                                    darkMode={this.props.isDarkMode}
+                                  />
+                                </a>
+                              </div>
 
-                            <div
-                              className="cell"
-                              style={{
-                                whiteSpace: 'nowrap',
-                                fontSize: 'xx-small',
-                                position: 'absolute',
-                                right: '5px',
-                                bottom: '0px',
-                              }}
-                            >
-                              <span
+                              {/* Winnings */}
+                              <div
+                                className="cell"
                                 style={{
-                                  color: 'unset',
+                                  lineHeight: '0.5em',
+                                  marginBottom: '5px',
+                                  textAlign: 'right',
+                                  padding: '5px 5px 15px 5px',
+                                }}
+                              >
+                                <span style={{ whiteSpace: 'nowrap' }}>+{convertToCurrency(row.winnings)}</span>
+                                <br />
+                                <span style={{ whiteSpace: 'nowrap', fontSize: 'xx-small' }}>
+                                  {(() => {
+                                    if (!tokenPrice) return convertToCurrency(row.winnings);
+                                    return (
+                                      <>
+                                        {(row.winnings / row.bet_amount).toFixed(2)}x / ${(row.winnings * tokenPrice).toFixed(2)}
+                                      </>
+                                    );
+                                  })()}
+                                </span>
+                              </div>
+
+                              {/* Time Ago */}
+                              <div
+                                className="cell"
+                                style={{
                                   whiteSpace: 'nowrap',
                                   fontSize: 'xx-small',
-                                  marginRight: '-5px',
-                                  paddingBottom: '10px',
-                                  paddingTop: '5px',
+                                  position: 'absolute',
+                                  right: '5px',
+                                  bottom: '0px',
                                 }}
                               >
-                                {formatTimeAgo(row.created_at)}
-                              </span>
+                                <span
+                                  style={{
+                                    color: 'unset',
+                                    whiteSpace: 'nowrap',
+                                    fontSize: 'xx-small',
+                                    marginRight: '-5px',
+                                    paddingBottom: '10px',
+                                    paddingTop: '5px',
+                                  }}
+                                >
+                                  {formatTimeAgo(row.created_at)}
+                                </span>
+                              </div>
                             </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    // Skeleton Loader for Wins
+                    <div style={{ display: 'flex', flexDirection: 'row', flex: 1,  overflow: 'hidden', maxWidth: '50%', paddingRight: '10px' }}>
+                      {[...Array(5)].map((_, index) => (
+                        <div
+                          key={index}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            marginBottom: '10px',
+                            padding: '10px 5px',
+                            flex: 1,
+                          }}
+                        >
+                          <Skeleton variant="circle" width={40} height={40} />
+                          <div style={{ marginLeft: '10px', flex: 1 }}>
+                            <Skeleton variant="text" width="40%" height={15} />
                           </div>
                         </div>
                       ))}
                     </div>
-                  </div>
+                  )}
 
-                  {/* TOP WITHDRAWALS Carousel */}
-                  <div style={{ flex: "1", maxWidth: "50%", paddingLeft: "10px" }}>
-                    <span className='roll-tag'  style={{position: "absolute", top: "5px"}}>WDS</span>
-                    <div className="top-wins" style={{ marginBottom: "20px" }}>
-                      {this.props.topWithdrawals?.map((row, index) => (
+                  {this.props.topWithdrawals?.length > 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'row', flex: 1, maxWidth: '50%', paddingLeft: '10px' }}>
+                      {/* Roll Tag */}
+                      <span className="roll-tag" style={{ position: 'absolute', top: '5px' }}>WDS</span>
+
+                      {/* Top Withdrawals Content */}
+                      <div className="top-wins" style={{ marginBottom: '20px', flex: 1 }}>
+                        {this.props.topWithdrawals.map((row, index) => (
+                          <div
+                            key={`table-cell-${index}-${row.room}`}
+                            className="table-cell"
+                            onClick={() => (window.location.href = `/join/${row.room}`)}
+                            style={{ cursor: 'pointer' }}
+                          >
+                            <div className="carousel-content table-row slide-in">
+                              {/* Avatar Section */}
+                              <div style={{ display: 'flex', flexDirection: 'row' }}>
+                                <a
+                                  href="#"
+                                  className="player"
+                                  onClick={(event) => {
+                                    event.preventDefault();
+                                    event.stopPropagation();
+                                    this.handleOpenPlayerModal(row.user_id._id);
+                                  }}
+                                  style={{ marginRight: '-15px' }}
+                                >
+                                  <Avatar
+                                    className="avatar"
+                                    src={row.user_id.avatar}
+                                    accessory={row.user_id.accessory}
+                                    username={row.user_id.username}
+                                    rank={row.user_id.totalWagered}
+                                    alt=""
+                                    darkMode={this.props.isDarkMode}
+                                  />
+                                </a>
+                              </div>
+
+                              {/* Withdrawal Amount */}
+                              <div
+                                className="cell"
+                                style={{
+                                  lineHeight: '0.5em',
+                                  marginBottom: '5px',
+                                  textAlign: 'right',
+                                  padding: '5px 5px 15px 5px',
+                                }}
+                              >
+                                <span style={{ color: '#00ff3a', whiteSpace: 'nowrap' }}>
+                                  +{convertToCurrency(row.amount)}
+                                </span>
+                                <br />
+                                <span
+                                  style={{
+                                    color: '#00ff3a',
+                                    whiteSpace: 'nowrap',
+                                    fontSize: 'xx-small',
+                                  }}
+                                >
+                                  ${((row.amount * tokenPrice) || 0).toFixed(2)}
+                                </span>
+                              </div>
+
+                              {/* Time Ago */}
+                              <div
+                                className="cell"
+                                style={{
+                                  whiteSpace: 'nowrap',
+                                  fontSize: 'xx-small',
+                                  position: 'absolute',
+                                  right: '5px',
+                                  bottom: '0px',
+                                }}
+                              >
+                                <span
+                                  style={{
+                                    color: 'unset',
+                                    whiteSpace: 'nowrap',
+                                    fontSize: 'xx-small',
+                                    marginRight: '-5px',
+                                    paddingBottom: '10px',
+                                    paddingTop: '5px',
+                                  }}
+                                >
+                                  {formatTimeAgo(row.created_at)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    // Skeleton Loader for Withdrawals
+                    <div style={{ display: 'flex', flexDirection: 'row', flex: 1, maxWidth: '50%', overflow: 'hidden', paddingLeft: '10px' }}>
+                      {[...Array(5)].map((_, index) => (
                         <div
-                          key={`table-cell-${index}-${row.room}`}
-                          className="table-cell"
-                          onClick={() => (window.location.href = `/join/${row.room}`)}
-                          style={{ cursor: 'pointer' }}
+                          key={index}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            marginBottom: '10px',
+                            padding: '10px 5px',
+                            flex: 1,
+                          }}
                         >
-                          <div key={`carousel-content-${index}-${row.room}`} className="carousel-content table-row slide-in">
-                            <div style={{ display: 'flex', flexDirection: 'row' }}>
-                              <a
-                                href="#"
-                                className="player"
-                                onClick={(event) => {
-                                  event.preventDefault();
-                                  event.stopPropagation();
-                                  this.handleOpenPlayerModal(row.user_id._id);
-                                }}
-                                style={{ marginRight: '-15px' }}
-                              >
-                                <Avatar
-                                  className="avatar"
-                                  src={row.user_id.avatar}
-                                  accessory={row.user_id.accessory}
-                                  username={row.user_id.username}
-                                  rank={row.user_id.totalWagered}
-                                  alt=""
-                                  darkMode={this.props.isDarkMode}
-                                />
-                              </a>
-                            </div>
-
-                            <div className="cell" style={{ lineHeight: '0.5em', marginBottom: '5px', textAlign: 'right', padding: "5px 5px 15px 5px" }}>
-                              <span style={{ color: '#00ff3a', whiteSpace: 'nowrap' }}>+{convertToCurrency(row.amount)}</span>
-                              <br />
-                              <span
-                                style={{
-                                  color: '#00ff3a',
-                                  whiteSpace: 'nowrap',
-                                  fontSize: 'xx-small',
-                                }}
-                              >
-                                ${((row.amount * tokenPrice) || 0).toFixed(2)}
-                              </span>
-                            </div>
-
-                            <div
-                              className="cell"
-                              style={{
-                                whiteSpace: 'nowrap',
-                                fontSize: 'xx-small',
-                                position: 'absolute',
-                                right: '5px',
-                                bottom: '0px',
-                              }}
-                            >
-                              <span
-                                style={{
-                                  color: 'unset',
-                                  whiteSpace: 'nowrap',
-                                  fontSize: 'xx-small',
-                                  marginRight: '-5px',
-                                  paddingBottom: '10px',
-                                  paddingTop: '5px',
-                                }}
-                              >
-                                {formatTimeAgo(row.created_at)}
-                              </span>
-                            </div>
+                          <Skeleton variant="circle" width={40} height={40} />
+                          <div style={{ marginLeft: '10px', flex: 1 }}>
+                            <Skeleton variant="text" width="40%" height={15} />
                           </div>
                         </div>
                       ))}
                     </div>
-                  </div>
+                  )}
                 </div>
-                // <Tabs
-                //   value={selectedMainTabIndex}
-                //   onChange={this.handleMainTabChange}
-                //   TabIndicatorProps={{
-                //     style: {
-                //       display: 'none', // Hide the bottom border (indicator)
-                //     },
-                //   }}
-                //   className="main-game-page-tabs desktop-only"
-                // >
-                //   <Tab
-                //     className={`custom-tab ${hoverTabIndex === 0 || selectedMainTabIndex === 0
-                //       ? 'fade-animation fade-in'
-                //       : 'fade-animation fade-out'
-                //       }`}
-                //     label="ALL GAMES"
-                //     labelplacement="left"
-                //     icon={
-                //       hoverTabIndex === 0 || selectedMainTabIndex === 0 ? (
-                //         <BattleHover />
-                //       ) : (
-                //         <Battle />
-                //       )
-                //     }
-                //     style={customStyles.tabRoot}
-                //     sx={{
-                //       borderBottom: 'none', // Removes the bottom border
-                //     }}
-                //     onMouseEnter={() => this.handleMouseEnter(0)}
-                //     onMouseLeave={this.handleMouseLeave}
-                //   />
-
-                //   <Tab
-                //     className={`custom-tab ${hoverTabIndex === 1 || selectedMainTabIndex === 1
-                //       ? 'fade-animation fade-in'
-                //       : 'fade-animation fade-out'
-                //       }`}
-                //     label="Your Games"
-                //     labelplacement="left"
-                //     icon={
-                //       hoverTabIndex === 1 || selectedMainTabIndex === 1 ? (
-                //         <ManageHover />
-                //       ) : (
-                //         <Manage />
-                //       )
-                //     }
-                //     style={customStyles.tabRoot}
-                //     onMouseEnter={() => this.handleMouseEnter(1)}
-                //     onMouseLeave={this.handleMouseLeave}
-                //   />
-                // </Tabs>
               ) : (
                 <div style={{ padding: width < 600 ? "0" : "48px" }}>
                 </div>
               )}
               <div className="header_action_panel">
-                {!isInvestorsPage && (
+                {(this.props.user && this.state.balance && this.state.oldBalance && !isInvestorsPage) ? (
                   <>
                     <a
                       href="#"
@@ -1684,379 +1674,418 @@ class SiteWrapper extends Component {
                     </a>
                   </>
 
+                ) : (
+                  null
                 )}
-                {isAuthenticated ? (
-                  <>
-                    <div id="balance" className='title'>
+                {this.props.user && this.state.balance && this.state.oldBalance ? (
+                  isAuthenticated ? (
+                    <>
+                      <div id="balance" className="title">
+                        <div
+                          style={{ display: "inline" }}
+                          onMouseEnter={this.handleDollarEnter}
+                          onMouseLeave={this.handleDollarLeave}
+                        >
+                          {isHovered ? (
+                            `$${(balance * conversionRate).toFixed(numDecimals)}`
+                          ) : (
+                            <>
+                              <InlineSVG id="busd" src={busdSvg} />
+                              <CountUp
+                                start={oldBalance}
+                                end={balance}
+                                separator=","
+                                decimal="."
+                                decimals={numDecimals}
+                                duration={40.5}
+                                redraw={true}
+                                preserveValue={true}
+                                onEnd={() => {
+                                  this.setState({ oldBalance: balance });
+                                }}
+                              />
+                            </>
+                          )}
+                        </div>
 
-
-                      <div style={{ display: "inline" }}
-                        onMouseEnter={this.handleDollarEnter}
-                        onMouseLeave={this.handleDollarLeave}
-                      >
-                        {isHovered ? (
-                          // When hovered, show the balance in USD by multiplying with the conversionRate (token price in USD)
-                          `$${(balance * conversionRate).toFixed(numDecimals)}`
-                        ) : (
-                          <>
-                            <InlineSVG
-                              id="busd"
-                              src={busdSvg}
-                            />
-                            <CountUp
-                              start={oldBalance}
-                              end={balance}
-                              separator=","
-                              decimal="."
-                              decimals={numDecimals}
-                              duration={40.5}
-                              redraw={true}
-                              preserveValue={true}
-                              onEnd={() => {
-                                this.setState({ oldBalance: balance });
-                              }}
-                            />
-                          </>
+                        {(isCoinsAnimation && !isLowGraphics) && (
+                          <Lottie
+                            options={{
+                              loop: isLowGraphics ? false : true,
+                              autoplay: isCoinsAnimation,
+                              animationData: coins,
+                              rendererSettings: {
+                                preserveAspectRatio: "xMidYMid slice",
+                              },
+                            }}
+                            style={{
+                              marginTop: "-0px",
+                              position: "absolute",
+                              width: "100px",
+                              height: "100px",
+                            }}
+                          />
                         )}
+                        <Button
+                          id="wallet-btn"
+                          style={{
+                            minWidth: "32px",
+                            maxHeight: "33px",
+                            borderRadius: "0.25em",
+                          }}
+                          onClick={this.handleBalanceClick}
+                        >
+                          <AccountBalanceWallet
+                            style={{
+                              position: "relative",
+                              zIndex: "1",
+                              width: "18px",
+                              height: "18px",
+                              margin: "0 5px 0 10px",
+                            }}
+                          />
+                          <span
+                            id="wallet-text"
+                            style={{
+                              position: "relative",
+                              zIndex: "1",
+                              fontSize: "0.6em",
+                              paddingRight: "10px",
+                            }}
+                          >
+                            Wallet
+                          </span>
+                        </Button>
                       </div>
 
-                      {(isCoinsAnimation && !isLowGraphics) &&
-                        <Lottie
-                          options={{
-                            loop: isLowGraphics ? false : true,
-                            autoplay: isCoinsAnimation,
-                            animationData: coins,
-                            rendererSettings: {
-                              preserveAspectRatio: 'xMidYMid slice',
-                            },
-                          }}
-                          style={{
-                            marginTop: '-0px',
-                            position: `absolute`,
-                            width: '100px',
-                            height: '100px'
-                          }}
-                        />
-                      }
-                      <Button
-                        id="wallet-btn"
-                        style={{
-                          minWidth: '32px',
-                          maxHeight: '33px',
-                          borderRadius: '0.25em'
+                      <a
+                        href="#"
+                        className="mobile-only"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          this.handleNotificationsClick();
                         }}
-                        onClick={this.handleBalanceClick}
+                        id="btn_notifications"
+                        onMouseEnter={() => this.handleMouseEnter(3)}
+                        onMouseLeave={this.handleMouseLeave}
                       >
-                        <AccountBalanceWallet
-                          style={{
-                            position: 'relative',
-                            zIndex: '1',
-                            width: '18px',
-                            height: '18px',
-                            margin: '0 5px 0 10px'
-                          }}
+                        {hoverTabIndex === 3 ? (
+                          <NotificationsHover width="18pt" />
+                        ) : (
+                          <Notifications />
+                        )}
+                      </a>
+
+                      <Button
+                        aria-controls="profile-menu"
+                        aria-haspopup="true"
+                        onClick={this.handleClickMenu}
+                        className="profile-menu"
+                      >
+                        <Avatar
+                          src={user.avatar}
+                          rank={user.totalWagered}
+                          accessory={user.accessory}
+                          alt=""
+                          username={user.username}
+                          className="avatar"
+                          darkMode={isDarkMode}
                         />
-                        <span
-                          id="wallet-text"
-                          style={{
-                            position: 'relative',
-                            zIndex: '1',
-                            fontSize: '0.6em',
-                            paddingRight: '10px'
+                        <ArrowDropDown />
+                      </Button>
+
+                      {/* Menu */}
+                      <Menu
+                        id="profile-menu"
+                        anchorEl={anchorEl}
+                        getContentAnchorEl={null}
+                        open={Boolean(anchorEl)}
+                        onClose={this.handleCloseMenu}
+                        anchorOrigin={{
+                          vertical: "bottom",
+                          horizontal: "center",
+                        }}
+                        transformOrigin={{
+                          vertical: "top",
+                          horizontal: "center",
+                        }}
+                        PaperProps={{
+                          style: {
+                            width: "200px",
+                            border: "none",
+                            filter: isDarkMode ? "unset" : "hue-rotate(25deg)",
+                            background: isDarkMode
+                              ? "linear-gradient(45deg, #7300c8, #620096)"
+                              : "linear-gradient(45deg, #e300ea, #a700ff)",
+                          },
+                        }}
+                        BackdropProps={{
+                          invisible: true,
+                        }}
+                      >
+                        <MenuItem onClick={this.handleOpenProfileModal}>
+                          <ListItemIcon>
+                            <PersonOutline />
+                          </ListItemIcon>
+                          <ListItemText>PROFILE</ListItemText>
+                        </MenuItem>
+
+                        <Divider />
+                        <MenuItem className="desktop-only" onClick={this.handleDashboard}>
+                          <ListItemIcon>
+                            <Dashboard />
+                          </ListItemIcon>
+                          <ListItemText>DASHBOARD</ListItemText>
+                        </MenuItem>
+
+                        <MenuItem onClick={this.handleOpenSettingsModal}>
+                          <ListItemIcon>
+                            <Settings />
+                          </ListItemIcon>
+                          <ListItemText>SETTINGS</ListItemText>
+                        </MenuItem>
+
+                        <MenuItem onClick={this.handleBonusModal}>
+                          <ListItemIcon>
+                            <Star />
+                          </ListItemIcon>
+                          <ListItemText>CORN WHEEL</ListItemText>
+                          <ListItemIcon>
+                            <img
+                              style={{
+                                transform: "translate(-93px, 4px)",
+                                width: "20px",
+                                zIndex: 0,
+                              }}
+                              src="../img/icons/corn.svg"
+                            />
+                          </ListItemIcon>
+                        </MenuItem>
+
+                        <MenuItem onClick={this.handleOpenHowToPlayModal}>
+                          <ListItemIcon>
+                            <Help />
+                          </ListItemIcon>
+                          <ListItemText>INFO</ListItemText>
+                        </MenuItem>
+
+                        <Divider />
+                        <MenuItem
+                          onClick={() => {
+                            history.push("/investors");
                           }}
                         >
-                          Wallet
-                        </span>
-                      </Button>
-                    </div>
-                    <a
-                      href="#"
-                      className="mobile-only"
-                      onClick={e => {
-                        e.preventDefault();
-                        this.handleNotificationsClick();
-                      }}
-                      id="btn_notifications"
-                      onMouseEnter={() => this.handleMouseEnter(3)}
-                      onMouseLeave={this.handleMouseLeave}
-                    >
-                      {hoverTabIndex === 3 ? (
-                        <NotificationsHover width="18pt" />
-                      ) : (
-                        <Notifications />
-                      )}
-                    </a>
-                    <Button
-                      area-constrols="profile-menu"
-                      aria-haspopup="true"
-                      onClick={this.handleClickMenu}
-                      className="profile-menu"
-                    >
-                      <Avatar
-                        src={user.avatar}
-                        rank={user.totalWagered}
-                        accessory={user.accessory}
-                        alt=""
-                        username={user.username}
-                        className="avatar"
-                        darkMode={isDarkMode}
-                      />
-                      <ArrowDropDown />
-                    </Button>
-                    <Menu
-                      id="profile-menu"
-                      anchorEl={anchorEl}
-                      getContentAnchorEl={null}
-                      open={Boolean(anchorEl)}
-                      onClose={this.handleCloseMenu}
-                      anchorOrigin={{
-                        vertical: 'bottom',
-                        horizontal: 'center'
-                      }}
-                      transformOrigin={{
-                        vertical: 'top',
-                        horizontal: 'center'
-                      }}
-                      PaperProps={{
-                        style: {
-                          width: '200px',
-                          border: "none",
-                          filter: isDarkMode ? "unset" : "hue-rotate(25deg)",
-                          background: isDarkMode ? 'linear-gradient(45deg, #7300c8, #620096)' : 'linear-gradient(45deg, #e300ea, #a700ff)'
-                        }
-                      }}
-                      BackdropProps={{
-                        invisible: true
-                      }}
-                    >
-                      <MenuItem onClick={this.handleOpenProfileModal}>
-                        <ListItemIcon>
-                          <PersonOutline />
-                        </ListItemIcon>
-                        <ListItemText>PROFILE</ListItemText>
-                      </MenuItem>
+                          <ListItemIcon>
+                            <MonetizationOn size="small" />
+                          </ListItemIcon>
+                          <ListItemText>$RPS 🚀🚀🚀</ListItemText>
+                        </MenuItem>
 
-                      <Divider />
-                      <MenuItem className="desktop-only" onClick={this.handleDashboard}>
-                      <ListItemIcon>
-                          <Dashboard />
-                        </ListItemIcon>
-                        <ListItemText>DASHBOARD</ListItemText> {/* You can also add an icon here */}
-                      </MenuItem>
-                      <MenuItem onClick={this.handleOpenSettingsModal}>
-                        <ListItemIcon>
-                          <Settings />
-                        </ListItemIcon>
-                        <ListItemText>SETTINGS</ListItemText>
-                      </MenuItem>
-                      <MenuItem onClick={this.handleBonusModal}>
-                        <ListItemIcon>
-                          <Star />
-                        </ListItemIcon>
-                        <ListItemText>CORN WHEEL</ListItemText>
-                        <ListItemIcon>
-                          <img style={{ transform: "translate(-93px, 4px)", width: "20px", zIndex: 0 }} src="../img/icons/corn.svg" />
-                        </ListItemIcon>
-                      </MenuItem>
-
-                      <MenuItem onClick={this.handleOpenHowToPlayModal}>
-                        <ListItemIcon>
-                          <Help />
-                        </ListItemIcon>
-                        <ListItemText>INFO</ListItemText>
-                      </MenuItem>
-                      <Divider />
-                      <MenuItem
-                        onClick={() => {
-                          // Use history.push if using react-router, or window.location.href for a direct navigation
-                          // window.location.href = '/investors'; // Direct navigation
-                          // Alternatively, use this if you're using react-router's history object:
-                          history.push('/investors');
-                        }}
-                      >
-                        <ListItemIcon>
-                          <MonetizationOn size="small" />
-                        </ListItemIcon>
-                        <ListItemText>$RPS 🚀🚀🚀</ListItemText>
-                      </MenuItem>
-                      <MenuItem
-                        onClick={e => {
-                          this.handleLogout(true);
-                        }}
-                      >
-
-                        <ListItemIcon>
-                          <ExitToApp size="small" />
-                        </ListItemIcon>
-                        <ListItemText>LOG OUT</ListItemText>
-                      </MenuItem>
-                    </Menu>
-                  </>
-                ) : (
-                  <>
+                        <MenuItem
+                          onClick={(e) => {
+                            this.handleLogout(true);
+                          }}
+                        >
+                          <ListItemIcon>
+                            <ExitToApp size="small" />
+                          </ListItemIcon>
+                          <ListItemText>LOG OUT</ListItemText>
+                        </MenuItem>
+                      </Menu>
+                    </>
+                  ) : (
                     <Button id="btn-login" onClick={this.handleOpenLoginModal}>
                       Login
                     </Button>
-                  </>
+                  )
+                ) : (
+                  // Skeleton Loader
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <Skeleton variant="rect" width={80} height={30} />
+                    <Skeleton variant="text" width={100} height={30} />
+                    <Skeleton variant="circle" width={40} height={40} />
+                  </div>
                 )}
               </div>
             </div>
-            <div
-              id="notifications"
-              className={showNotifications ? '' : 'hidden'}
-              onClick={this.handleNotificationsClick}
-            >
-              <div className="arrow-up"></div>
-              <div className="header_panel_contents">
-                {<h2 className='title'>NOTIFICATIONS</h2>}
-                {
-                  <div className="notification-element">
-                    {notificationsArray.length > 0 ? (
-                      notificationsArray.map((notification, index) => (
+            {this.props.user && this.state.balance && this.state.oldBalance ? (
+              <>
+                <div
+                  id="notifications"
+                  className={showNotifications ? '' : 'hidden'}
+                  onClick={this.handleNotificationsClick}
+                >
+                  <div className="arrow-up"></div>
+                  <div className="header_panel_contents">
+                    {<h2 className='title'>NOTIFICATIONS</h2>}
+                    {
+                      <div className="notification-element">
+                        {notificationsArray.length > 0 ? (
+                          notificationsArray.map((notification, index) => (
 
-                        <div className={`notification-container ${notification.is_read ? 'read' : ''}`} key={index}>
-                          <a
-                            className="player"
-                            onClick={() =>
-                              this.handleOpenPlayerModal(notification._id)
-                            }
-                            style={{ display: 'flex', flexDirection: 'row' }}
-                          >
-                            <Avatar
-                              src={notification.avatar}
-                              rank={notification.rank}
-                              accessory={notification.accessory}
-                              username={notification.username}
-                              className="avatar"
-                            />
-                          </a>
-                          <a href={`/join/${notification.room}/`} style={{ width: "100%" }}>
+                            <div className={`notification-container ${notification.is_read ? 'read' : ''}`} key={index}>
+                              <a
+                                className="player"
+                                onClick={() =>
+                                  this.handleOpenPlayerModal(notification._id)
+                                }
+                                style={{ display: 'flex', flexDirection: 'row' }}
+                              >
+                                <Avatar
+                                  src={notification.avatar}
+                                  rank={notification.rank}
+                                  accessory={notification.accessory}
+                                  username={notification.username}
+                                  className="avatar"
+                                />
+                              </a>
+                              <a href={`/join/${notification.room}/`} style={{ width: "100%" }}>
 
-                            {!notification.is_read && <div className="red-dot" />}
-                            <div className="notification" style={{ width: "70%", display: 'inline-block' }}>
-                              <p
-                                dangerouslySetInnerHTML={{
-                                  __html: notification.message
-                                }}
-                              />
-                              <p className="fromNow">{notification.from_now}</p>
+                                {!notification.is_read && <div className="red-dot" />}
+                                <div className="notification" style={{ width: "70%", display: 'inline-block' }}>
+                                  <p
+                                    dangerouslySetInnerHTML={{
+                                      __html: notification.message
+                                    }}
+                                  />
+                                  <p className="fromNow">{notification.from_now}</p>
+                                </div>
+                              </a>
                             </div>
-                          </a>
-                        </div>
-                      ))
-                    ) : (
-                      <p>No notifications available.</p>
-                    )}
-
-
-                  </div>
-                }
-              </div>
-            </div>
-            {showAllGameLogs && (
-              <AllTransactionsModal
-                modalIsOpen={showAllGameLogs}
-                isDarkMode={isDarkMode}
-                close={this.toggleAllTransactions}
-                sortType={sortType}
-                sortAnchorEl={sortAnchorEl}
-                searchAnchorEl={searchAnchorEl}
-                filterAnchorEl={filterAnchorEl}
-                filterType={filterType}
-                user={user._id}
-                transactions={transactions}
-                tnxComplete={tnxComplete}
-                handleSortClick={this.handleSortClick}
-                handleFilterClick={this.handleFilterClick}
-                handleFilterClose={this.handleFilterClose}
-                handleSortClose={this.handleSortClose}
-                handleSearchClose={this.handleSearchClose}
-                searchQuery={searchQuery}
-                onSearchQueryChange={this.onSearchQueryChange}
-                handleSearchClick={this.handleSearchClick}
-                handleLoadMore={this.handleLoadMore}
-                oneDayProfit={this.props.oneDayProfit}
-                sevenDayProfit={this.props.sevenDayProfit}
-                allTimeProfit={this.props.allTimeProfit}
-              />
-            )}
-
-            <div
-              id="game_logs"
-              className={this.state.showGameLog ? '' : 'hidden'}
-              onClick={this.handleBalanceClick}
-            >
-              <div className="arrow-up"></div>
-              <div className="header_panel_contents">
-                {
-                  <Tooltip
-                    style={{ position: "absolute", right: "20px" }}
-                    title={
-                      <>
-                        <h6 style={{ marginBottom: "0.5rem" }}>WHY DO MY WINNINGS APPEAR LESS?</h6>
-                        <p style={{ marginBottom: "0.5rem" }}>
-                          You see less as this is net profit (
-                          <span style={{ fontWeight: "bold", color: "#28a745" }}>winning amount</span> -
-                          <span style={{ fontWeight: "bold", color: "#ff0000" }}> bet amount</span>)
-                          and receive less due to:
-                        </p>
-                        <ul style={{ paddingLeft: "1rem", marginBottom: "0.5rem" }}>
-                          <li>RTB fees awarded to the Host (0% - 15% returned to bankroll dependent on their accessory)</li>
-                          <li>1% towards platform fees</li>
-                        </ul>
-                        <p style={{ marginBottom: "0.5rem" }}>
-                          For example, if you win <strong>{convertToCurrency(0.2)}</strong> but bet <strong>{convertToCurrency(0.1)}</strong>,
-                          then you might see:
-                        </p>
-                        <p style={{ marginBottom: "0.5rem" }}>
-                          <strong>{convertToCurrency(0.2)} * 0.88 </strong>
-                          (12% RTB) - <strong>{convertToCurrency(0.1)}</strong> (net profit)
-                          = <strong>{convertToCurrency(0.076)}</strong> (final calculation).
-                        </p>
-                      </>
-                    }
-                    placement="top"
-                  >
-                    <Info style={{ cursor: "pointer", float: "right" }} />
-                  </Tooltip>
-                }
-
-
-                <h2 className='title'>BALANCE HISTORY</h2>
-
-                {
-                  <div>
-                    <table id="balance-history">
-                      <tbody>
-                        {transactions.length === 0 ? (
-                          <tr>
-                            <td>...</td>
-                          </tr>
+                          ))
                         ) : (
-                          transactions.slice(0, 5).map((row, key) => (
-                            <tr key={key}>
-                              {row.hash && row.hash.length !== 10 ? (
-                                <>
-                                  {row.status !== "processing" ? (
-                                    <a href={`https://explorer.solana.com/tx/${row.hash}?cluster=mainnet`} rel="noopener noreferrer" target="_blank">
-                                      <td className={`amount ${row.status === "waiting" || row.status === "pending" || row.status === "processing" ? 'grey' : (row.amount > 0 ? 'green' : 'red')}`}>
-                                        {row.amount > 0 ? (
-                                          <>
-                                            {'+ '}
-                                            {convertToCurrency(row.amount, true)}
-                                          </>
-                                        ) : (
-                                          <>
-                                            {'- '}
-                                            {convertToCurrency(Math.abs(row.amount), true)}
-                                          </>
-                                        )}
-                                      </td>
-                                      <td className="fromNow">{row.from_now}</td>
-                                    </a>
+                          <p>No notifications available.</p>
+                        )}
+
+
+                      </div>
+                    }
+                  </div>
+                </div>
+                {showAllGameLogs && (
+                  <AllTransactionsModal
+                    modalIsOpen={showAllGameLogs}
+                    isDarkMode={isDarkMode}
+                    close={this.toggleAllTransactions}
+                    sortType={sortType}
+                    sortAnchorEl={sortAnchorEl}
+                    searchAnchorEl={searchAnchorEl}
+                    filterAnchorEl={filterAnchorEl}
+                    filterType={filterType}
+                    user={user._id}
+                    transactions={transactions}
+                    tnxComplete={tnxComplete}
+                    handleSortClick={this.handleSortClick}
+                    handleFilterClick={this.handleFilterClick}
+                    handleFilterClose={this.handleFilterClose}
+                    handleSortClose={this.handleSortClose}
+                    handleSearchClose={this.handleSearchClose}
+                    searchQuery={searchQuery}
+                    onSearchQueryChange={this.onSearchQueryChange}
+                    handleSearchClick={this.handleSearchClick}
+                    handleLoadMore={this.handleLoadMore}
+                    oneDayProfit={this.props.oneDayProfit}
+                    sevenDayProfit={this.props.sevenDayProfit}
+                    allTimeProfit={this.props.allTimeProfit}
+                  />
+                )}
+
+                <div
+                  id="game_logs"
+                  className={this.state.showGameLog ? '' : 'hidden'}
+                  onClick={this.handleBalanceClick}
+                >
+                  <div className="arrow-up"></div>
+                  <div className="header_panel_contents">
+                    {
+                      <Tooltip
+                        style={{ position: "absolute", right: "20px" }}
+                        title={
+                          <>
+                            <h6 style={{ marginBottom: "0.5rem" }}>WHY DO MY WINNINGS APPEAR LESS?</h6>
+                            <p style={{ marginBottom: "0.5rem" }}>
+                              You see less as this is net profit (
+                              <span style={{ fontWeight: "bold", color: "#28a745" }}>winning amount</span> -
+                              <span style={{ fontWeight: "bold", color: "#ff0000" }}> bet amount</span>)
+                              and receive less due to:
+                            </p>
+                            <ul style={{ paddingLeft: "1rem", marginBottom: "0.5rem" }}>
+                              <li>RTB fees awarded to the Host (0% - 15% returned to bankroll dependent on their accessory)</li>
+                              <li>1% towards platform fees</li>
+                            </ul>
+                            <p style={{ marginBottom: "0.5rem" }}>
+                              For example, if you win <strong>{convertToCurrency(0.2)}</strong> but bet <strong>{convertToCurrency(0.1)}</strong>,
+                              then you might see:
+                            </p>
+                            <p style={{ marginBottom: "0.5rem" }}>
+                              <strong>{convertToCurrency(0.2)} * 0.88 </strong>
+                              (12% RTB) - <strong>{convertToCurrency(0.1)}</strong> (net profit)
+                              = <strong>{convertToCurrency(0.076)}</strong> (final calculation).
+                            </p>
+                          </>
+                        }
+                        placement="top"
+                      >
+                        <Info style={{ cursor: "pointer", float: "right" }} />
+                      </Tooltip>
+                    }
+
+
+                    <h2 className='title'>BALANCE HISTORY</h2>
+
+                    {
+                      <div>
+                        <table id="balance-history">
+                          <tbody>
+                            {transactions.length === 0 ? (
+                              <tr>
+                                <td>...</td>
+                              </tr>
+                            ) : (
+                              transactions.slice(0, 5).map((row, key) => (
+                                <tr key={key}>
+                                  {row.hash && row.hash.length !== 10 ? (
+                                    <>
+                                      {row.status !== "processing" ? (
+                                        <a href={`https://explorer.solana.com/tx/${row.hash}?cluster=mainnet`} rel="noopener noreferrer" target="_blank">
+                                          <td className={`amount ${row.status === "waiting" || row.status === "pending" || row.status === "processing" ? 'grey' : (row.amount > 0 ? 'green' : 'red')}`}>
+                                            {row.amount > 0 ? (
+                                              <>
+                                                {'+ '}
+                                                {convertToCurrency(row.amount, true)}
+                                              </>
+                                            ) : (
+                                              <>
+                                                {'- '}
+                                                {convertToCurrency(Math.abs(row.amount), true)}
+                                              </>
+                                            )}
+                                          </td>
+                                          <td className="fromNow">{row.from_now}</td>
+                                        </a>
+                                      ) : (
+                                        <>
+                                          <td className={`amount grey`} >
+                                            {row.amount > 0 ? (
+                                              <>
+                                                {'+ '}
+                                                {convertToCurrency(row.amount, true)}
+                                              </>
+                                            ) : (
+                                              <>
+                                                {'- '}
+                                                {convertToCurrency(Math.abs(row.amount), true)}
+                                              </>
+                                            )}
+                                          </td>
+                                          <td className="fromNow">{row.from_now}</td>
+                                        </>
+                                      )}
+                                    </>
+
                                   ) : (
                                     <>
-                                      <td className={`amount grey`} >
+                                      <td className={`amount ${row.status === "waiting" || row.status === "pending" || row.status === "processing" || row.status === "in_process" ? 'grey' : (row.amount > 0 ? 'green' : 'red')}`}>
                                         {row.amount > 0 ? (
                                           <>
                                             {'+ '}
@@ -2072,101 +2101,82 @@ class SiteWrapper extends Component {
                                       <td className="fromNow">{row.from_now}</td>
                                     </>
                                   )}
-                                </>
+                                </tr>
+                              ))
+                            )}
+                          </tbody>
+                        </table>
+                        <Button onClick={this.toggleAllTransactions}>ALL TRANSACTIONS</Button>
+                      </div>
+                    }
 
-                              ) : (
-                                <>
-                                  <td className={`amount ${row.status === "waiting" || row.status === "pending" || row.status === "processing" || row.status === "in_process" ? 'grey' : (row.amount > 0 ? 'green' : 'red')}`}>
-                                    {row.amount > 0 ? (
-                                      <>
-                                        {'+ '}
-                                        {convertToCurrency(row.amount, true)}
-                                      </>
-                                    ) : (
-                                      <>
-                                        {'- '}
-                                        {convertToCurrency(Math.abs(row.amount), true)}
-                                      </>
-                                    )}
-                                  </td>
-                                  <td className="fromNow">{row.from_now}</td>
-                                </>
-                              )}
-                            </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
-                    <Button onClick={this.toggleAllTransactions}>ALL TRANSACTIONS</Button>
-                  </div>
-                }
-
-                <div className="transaction-panel">
-                  <Button
-                    className="btn-inventory title"
-                    // isDarkMode={isDarkMode}
-                    onClick={this.handleOpenInventoryModal}
-                  >
-                    Inventory
-                  </Button>
-                  <Button
-                    className="btn-vault title"
-                    // isDarkMode={isDarkMode}
-                    onClick={this.handleOpenVaultModal}
-                  >
-                    Vault&nbsp;
-                    <span style={{ border: "2px solid", background: "#1284cc11", color: "#1284ff", padding: "2px 5px", marginLeft: "10px", borderRadius: "0.4em" }}>
-                      {this.state.vaultBal ? convertToCurrency(this.state.vaultBal) : 0}
-                    </span>
-                  </Button>
-                </div>
-                <div className="transaction-panel">
-                  {this.state.remainingLoans > 0 ? (
-                    <Button
-                      className="btn-withdraw debt title"
-                      onClick={this.handleOpenDebtsModal}
-                    // isDarkMode={isDarkMode}
-                    >
-                      <div>{convertToCurrency(this.state.remainingLoans)} IN DEBT</div>
-                    </Button>
-                  ) : (
-                    <Button
-                      className="btn-withdraw title"
-                      onClick={this.handleOpenWithdrawModal}
-                    // isDarkMode={isDarkMode}
-                    >
-                      Withdraw
-                    </Button>
-                  )}
-
-                  <Button
-                    className="btn-deposit title"
-                    onClick={this.handleOpenDepositModal}
-                  // isDarkMode={isDarkMode}
-                  >
-                    Deposit
-                  </Button>
-                  <hr />
-                  {walletAddress ? (
-                    <>
-                      <input
-                        id="wallet-address"
-                        type="text"
-                        value={walletAddress}
-                        readOnly
-                      />
-                      <Button className="connect title" onClick={this.disconnectWeb3}>
-                        Disconnect
+                    <div className="transaction-panel">
+                      <Button
+                        className="btn-inventory title"
+                        onClick={this.handleOpenInventoryModal}
+                      >
+                        Inventory
                       </Button>
-                    </>
-                  ) : (
-                    <Button className="connect title" onClick={this.loadSolanaWallet}>
-                      CONNECT WALLET&nbsp;<FontAwesomeIcon icon={faExternalLinkAlt} />
-                    </Button>
-                  )}
+                      <Button
+                        className="btn-vault title"
+                        onClick={this.handleOpenVaultModal}
+                      >
+                        Vault&nbsp;
+                        <span style={{ border: "2px solid", background: "#1284cc11", color: "#1284ff", padding: "2px 5px", marginLeft: "10px", borderRadius: "0.4em" }}>
+                          {this.state.vaultBal ? convertToCurrency(this.state.vaultBal) : 0}
+                        </span>
+                      </Button>
+                    </div>
+                    <div className="transaction-panel">
+                      {this.state.remainingLoans > 0 ? (
+                        <Button
+                          className="btn-withdraw debt title"
+                          onClick={this.handleOpenDebtsModal}
+                        >
+                          <div>{convertToCurrency(this.state.remainingLoans)} IN DEBT</div>
+                        </Button>
+                      ) : (
+                        <Button
+                          className="btn-withdraw title"
+                          onClick={this.handleOpenWithdrawModal}
+                        // isDarkMode={isDarkMode}
+                        >
+                          Withdraw
+                        </Button>
+                      )}
+
+                      <Button
+                        className="btn-deposit title"
+                        onClick={this.handleOpenDepositModal}
+                      // isDarkMode={isDarkMode}
+                      >
+                        Deposit
+                      </Button>
+                      <hr />
+                      {walletAddress ? (
+                        <>
+                          <input
+                            id="wallet-address"
+                            type="text"
+                            value={walletAddress}
+                            readOnly
+                          />
+                          <Button className="connect title" onClick={this.disconnectWeb3}>
+                            Disconnect
+                          </Button>
+                        </>
+                      ) : (
+                        <Button className="connect title" onClick={this.loadSolanaWallet}>
+                          CONNECT WALLET&nbsp;<FontAwesomeIcon icon={faExternalLinkAlt} />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
+              </>
+            ) : (
+              null
+            )}
           </div>
 
           <div className="game_wrapper">
@@ -2334,17 +2344,17 @@ class SiteWrapper extends Component {
             styles={{
               options: {
                 zIndex: 10000,
-                backgroundColor: isDarkMode ? 'rgb(81 48 98 / 60%)' : '#ccc9', // Tooltip background color
-                primaryColor: '#ff0000', // Custom color for buttons and highlights
-                arrowColor: isDarkMode ? 'rgb(81 48 98 / 60%)' : '#ccc9', // Arrow color
-                textColor: isDarkMode ? '#f9f9f9' : '#333', // Text color inside the tooltip
-                width: 300, // Tooltip width
-                padding: 20, // Padding inside the tooltip
-                borderRadius: 5, // Rounded corners for the tooltip
+                backgroundColor: isDarkMode ? 'rgb(81 48 98 / 60%)' : '#ccc9',
+                primaryColor: '#ff0000',
+                arrowColor: isDarkMode ? 'rgb(81 48 98 / 60%)' : '#ccc9',
+                textColor: isDarkMode ? '#f9f9f9' : '#333',
+                width: 300,
+                padding: 20,
+                borderRadius: 5,
               },
 
               buttonClose: {
-                borderRadius: '0.3em', /* Custom border radius */
+                borderRadius: '0.3em',
                 color: isDarkMode ? '#f9f9f9' : '#333',
               },
               buttonBack: {
@@ -2362,9 +2372,9 @@ class SiteWrapper extends Component {
 
             }}
           />
+
         </div>
-        {/* </> */}
-        {/* )} */}
+
       </MuiThemeProvider>
     );
   }

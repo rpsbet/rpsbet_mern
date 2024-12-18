@@ -42,6 +42,7 @@ import {
 } from '../../redux/Item/item.action';
 import Avatar from '../../components/Avatar';
 import StatisticsForm from '../../admin_panel/app/Customer/EditCustomerPage/StatisticsForm';
+import { Skeleton } from "@material-ui/lab";
 
 Modal.setAppElement('#root');
 
@@ -148,34 +149,6 @@ const ProductName = styled.h6`
   border-top-left-radius: 30px;
 `;
 
-const LinearContainer = styled.div`
-  width: 80%;
-  max-width: 1200px;
-  margin: 20px 0;
-`;
-
-const CommissionPower = styled.span`
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  width: 30px;
-  height: 30px;
-  background: #28a745;
-  border-radius: 10px;
-  box-shadow: inset 0px -1px 11px #005b15;
-  color: #fff;
-  font-weight: 500;
-  text-align: center;
-`;
-
-const PaginationContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-top: 20px;
-`;
-
-
 class PlayerModal extends Component {
   constructor(props) {
     super(props);
@@ -217,8 +190,6 @@ class PlayerModal extends Component {
   handleCloseTipModal = () => {
     this.setState({ isTipModalOpen: false });
   };
-
-
 
   handleTipAmountChange = event => {
     this.setState({ tipAmount: event.target.value });
@@ -513,77 +484,111 @@ class PlayerModal extends Component {
               </div>
               <div className="modal-body player-modal edit-modal-body">
                 <div className="align-center">
-
-                  <div style={{
-                    margin: '30px auto -10px',
-                    padding: '10px',
-                    borderRadius: '4px',
-                    maxWidth: '150px',
-                    background: '#6c757d26',
-                    position: 'fixed',
-                    left: '15px',
-                    top: '65px',
-                    zIndex: '9'
-                  }}>
-                    <span>
-                      {this.props.onlineUserList.includes(this.props.selectedCreator) ? 'online' : 'offline'}
-                    </span>&nbsp;
-                    <i
-                      style={{ margin: 'unset', transform: 'unset' }}
-                      className={`online-status${this.props.onlineUserList.includes(this.props.selectedCreator) ? ' online' : ''}`}
-                    ></i>
-                  </div>
-
-                  <div className='avatar-border'>
-                    <Avatar
-                      src={
-                        this.state.avatar
-                          ? this.state.avatar
-                          : '/img/profile-thumbnail.svg'
-                      }
-                      accessory={this.state.accessory}
-                      username={this.state.username}
-                      rank={this.state.rank}
-                      alt=""
-                    />
-                    <h1 className={'player-username'} style={{ marginTop: '60px' }}>
-                      {this.state.username}
-                    </h1>
-                    <div id="user-bio" style={{ position: 'relative', marginTop: '20px', borderBottom: '2px solid', borderTop: '2px solid' }}>
-                      <div className={'player-username'} style={{ color: this.props.isDarkMode ? "#e5e5e5" : "#333" }}>
-                        {isBio ? (
-                          <a
-                            href={bio}
-                            style={{
-                              fontSize: "1.1em",
-                              marginBottom: '2px',
-                              color: this.props.isDarkMode ? "#e5e5e5" : "#333"
-                            }}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            {this.state.bio}
-                          </a>
-                        ) : (
-                          <span
-                            style={{
-                              fontSize: "1.1em",
-                              marginBottom: '20px',
-                              paddingBottom: '10px',
-                              color: this.props.isDarkMode ? "#e5e5e5" : "#333"
-                            }}
-                          >
-                            {this.state.bio}
-                          </span>
-                        )}
+                  {!this.state.avatar ? (
+                    // Skeleton loader when loading is true
+                   null
+                  ) : (
+                    // Original content when loading is false
+                    <>
+                      <div style={{
+                        margin: '30px auto -10px',
+                        padding: '10px',
+                        borderRadius: '4px',
+                        maxWidth: '150px',
+                        background: '#6c757d26',
+                        position: 'fixed',
+                        left: '15px',
+                        top: '65px',
+                        zIndex: '9'
+                      }}>
+                        <span>
+                          {this.props.onlineUserList.includes(this.props.selectedCreator) ? 'online' : 'offline'}
+                        </span>&nbsp;
+                        <i
+                          style={{ margin: 'unset', transform: 'unset' }}
+                          className={`online-status${this.props.onlineUserList.includes(this.props.selectedCreator) ? ' online' : ''}`}
+                        ></i>
                       </div>
-                    </div>
 
-                  </div>
-
+                      <div className='avatar-border'>
+                        <Avatar
+                          src={
+                            this.state.avatar
+                              ? this.state.avatar
+                              : '/img/profile-thumbnail.svg'
+                          }
+                          accessory={this.state.accessory}
+                          username={this.state.username}
+                          rank={this.state.rank}
+                          alt=""
+                        />
+                        <h1 className={'player-username'} style={{ marginTop: '60px' }}>
+                          {this.state.username}
+                        </h1>
+                        <div id="user-bio" style={{ position: 'relative', marginTop: '20px', borderBottom: '2px solid', borderTop: '2px solid' }}>
+                          <div className={'player-username'} style={{ color: this.props.isDarkMode ? "#e5e5e5" : "#333" }}>
+                            {isBio ? (
+                              <a
+                                href={bio}
+                                style={{
+                                  fontSize: "1.1em",
+                                  marginBottom: '2px',
+                                  color: this.props.isDarkMode ? "#e5e5e5" : "#333"
+                                }}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                {this.state.bio}
+                              </a>
+                            ) : (
+                              <span
+                                style={{
+                                  fontSize: "1.1em",
+                                  marginBottom: '20px',
+                                  paddingBottom: '10px',
+                                  color: this.props.isDarkMode ? "#e5e5e5" : "#333"
+                                }}
+                              >
+                                {this.state.bio}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
 
-                {loading ? null : (
+                {!this.state.username ? (
+                  <div className="user-statistics">
+                    <Skeleton variant="rectangular" width="100%" height={300} style={{ marginBottom: '20px', borderRadius: '8px' }} />
+
+                    <div style={{ marginBottom: '10px' }}>
+                      <Skeleton variant="text" width="40%" height={30} />
+                      <Skeleton variant="text" width="60%" height={20} />
+                    </div>
+
+                    <div style={{ marginBottom: '10px' }}>
+                      <Skeleton variant="text" width="30%" height={20} />
+                      <Skeleton variant="text" width="50%" height={20} />
+                    </div>
+
+                    <div style={{ marginBottom: '10px' }}>
+                      <Skeleton variant="text" width="50%" height={20} />
+                      <Skeleton variant="text" width="60%" height={20} />
+                    </div>
+
+                    <div style={{ marginBottom: '10px' }}>
+                      <Skeleton variant="text" width="60%" height={20} />
+                      <Skeleton variant="text" width="40%" height={20} />
+                    </div>
+
+                    <div style={{ marginBottom: '10px' }}>
+                      <Skeleton variant="text" width="30%" height={20} />
+                      <Skeleton variant="text" width="70%" height={20} />
+                    </div>
+                  </div>
+                ) : (
                   <div className="user-statistics">
                     <StatisticsForm
                       onDropdownChange={this.handleDropdownChange}
@@ -612,9 +617,7 @@ class PlayerModal extends Component {
                       profitAllTimeHigh={this.state.profitAllTimeHigh}
                       profitAllTimeLow={this.state.profitAllTimeLow}
                       averageWager={this.state.averageWager}
-                      averageGamesPlayedPerRoom={
-                        this.state.averageGamesPlayedPerRoom
-                      }
+                      averageGamesPlayedPerRoom={this.state.averageGamesPlayedPerRoom}
                       averageProfit={this.state.averageProfit}
                     />
                   </div>
@@ -622,26 +625,15 @@ class PlayerModal extends Component {
 
                 <MarketplaceContainer>
                   <h5>INVENTORY</h5>
-                  {!loading ? (
+                  {productArray && productArray.length > 0 ? (
                     <ProductGrid>
-
-
                       {productArray.map(row => (
-                        <ProductCard
-                          key={row._id}
-
-                        >
+                        <ProductCard key={row._id}>
                           {row.image && renderLottieAnimation(row.image, isLowGraphics) ? (
                             renderLottieAnimation(row.image, isLowGraphics)
                           ) : (
                             <ProductImage src={row.image} alt={row.productName} />
                           )}
-                          {/* {row.item_type === '653ee81117c9f5ee2124564b' ? (
-                            <CommissionPower>{row.CP}</CommissionPower>
-                          ) : (
-                            ''
-                          )} */}
-
                           <ProductInfo>
                             <ProductName>{row.productName}</ProductName>
                           </ProductInfo>
@@ -649,9 +641,30 @@ class PlayerModal extends Component {
                       ))}
                     </ProductGrid>
                   ) : (
-                    <LinearContainer>
-                      <LinearProgress color="secondary" />
-                    </LinearContainer>
+                    <ProductGrid>
+                      {[...Array(6)].map((_, index) => (
+                        <ProductCard key={index}>
+                          {/* Skeleton for Product Image */}
+                          <Skeleton
+                            variant="rectangular"
+                            width="100%"
+                            height={150}
+                            style={{ marginBottom: '10px', borderRadius: '8px' }}
+                          />
+
+                          {/* Skeleton for Product Info */}
+                          <ProductInfo>
+                            <Skeleton
+                              variant="text"
+                              width="60%"
+                              height={20}
+                              style={{ marginBottom: '8px' }}
+                            />
+                            <Skeleton variant="text" width="40%" height={15} />
+                          </ProductInfo>
+                        </ProductCard>
+                      ))}
+                    </ProductGrid>
                   )}
                 </MarketplaceContainer>
               </div>

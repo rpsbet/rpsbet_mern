@@ -8,6 +8,7 @@ import { renderLottieAvatarAnimation } from '../util/LottieAvatarAnimations';
 import PlayerModal from '../game_panel/modal/PlayerModal';
 import { Button, IconButton } from '@material-ui/core'; // Import Button from Material-UI
 import ReactDOM from 'react-dom';
+import { Skeleton } from "@material-ui/lab";
 
 
 // Define a custom function to format the time duration
@@ -61,6 +62,18 @@ class RoomHistory extends React.Component {
     this.isComponentMounted = false;
     clearInterval(this.interval);
     this.disconnectSocket();
+  }
+
+  componentDidUpdate(prevProps) {
+    if (prevProps.roomInfo !== this.props.roomInfo) {
+      console.log("Updated room history: ", this.props.roomInfo.room_history);
+
+      this.setState({
+        history: this.props.roomInfo.room_history,
+        roomInfo: this.props.roomInfo,
+      });
+
+    }
   }
 
   setupSocketConnection = () => {
@@ -200,84 +213,78 @@ class RoomHistory extends React.Component {
 
 
   render() {
-    const { roomInfo, isLowGraphics, loading, userId } = this.props;
-    const { showPlayerModal, selectedCreator, numToShow, history } = this.state;
+    const { isLowGraphics, loading, userId } = this.props;
+    const { roomInfo, showPlayerModal, selectedCreator, numToShow, history } = this.state;
 
     return (
       <div className="room-history-panel">
-        {/* <div className="refresh-button refresh-main">
-          <IconButton color="primary" onClick={this.handleRefresh}>
-            <RefreshIcon />
-          </IconButton>
-        </div> */}
-        {roomInfo && roomInfo.room_history && roomInfo.room_history.length > 1 ? (
-          <div className="table main-history-table">
-            {showPlayerModal && (
-              <PlayerModal
-                modalIsOpen={showPlayerModal}
-                closeModal={this.handleClosePlayerModal}
-                selectedCreator={selectedCreator}
-              />
-            )}
-            {(history || [])
-              .slice(0, numToShow)
-              .map((row, key) => (
-                <div
-                  className={`table-row ${(row.joined_user === userId) ? 'history-background' : ''} ${key < 50 ? 'slide-in' : ''}`}
-                  style={{ animationDelay: `${key * 0.1}s`, padding: '10px' }}
-                  key={row._id}
-                >
-                  <div className="table-cell">
-                    <div className="room-id">{row.status}</div>
-                    {row.ai_mode && (
-                      <div id="ai_mode">
-                        <span className="room-id ai_mode">
-                          {row.ai_mode}
-                        </span>
-                        {row.qbot && (<>
-                          <span className="room-id qbot">
-                            Q-BOT
+        {
+          history && history.length > 0 ? (
+            <div className="table main-history-table">
+              {showPlayerModal && (
+                <PlayerModal
+                  modalIsOpen={showPlayerModal}
+                  closeModal={this.handleClosePlayerModal}
+                  selectedCreator={selectedCreator}
+                />
+              )}
+              {(history || [])
+                .slice(0, numToShow)
+                .map((row, key) => (
+                  <div
+                    className={`table-row ${(row.joined_user === userId) ? 'history-background' : ''} ${key < 50 ? 'slide-in' : ''}`}
+                    style={{ animationDelay: `${key * 0.1}s`, padding: '10px' }}
+                    key={row._id}
+                  >
+                    <div className="table-cell">
+                      <div className="room-id">{row.status}</div>
+                      {row.ai_mode && (
+                        <div id="ai_mode">
+                          <span className="room-id ai_mode">
+                            {row.ai_mode}
                           </span>
-                        </>)}
-                      </div>
-                    )}
-                    <div
-                      className="mobile-only"
-                      dangerouslySetInnerHTML={{ __html: row.history }}
-                    ></div>
-                    <div
-                      className="desktop-only"
-                      dangerouslySetInnerHTML={{ __html: row.history }}
-                    ></div>
+                          {row.qbot && (
+                            <span className="room-id qbot">Q-BOT</span>
+                          )}
+                        </div>
+                      )}
+                      <div
+                        className="mobile-only"
+                        dangerouslySetInnerHTML={{ __html: row.history }}
+                      ></div>
+                      <div
+                        className="desktop-only"
+                        dangerouslySetInnerHTML={{ __html: row.history }}
+                      ></div>
+                    </div>
+                    <div className="table-cell">{Moment(row.created_at).fromNow()}</div>
+                    {key === history.length - 1 && <div ref={this.lastItemRef}></div>}
                   </div>
-                  <div className="table-cell">{Moment(row.created_at).fromNow()}</div>
-                  {key === roomInfo.room_history.length - 1 && <div ref={this.lastItemRef}></div>}
+                ))}
+              {roomInfo && numToShow < roomInfo.totalGameLogsCount && (
+                <div className="load-more-btn">
+                  <Button
+                    id="load-btn"
+                    variant="contained"
+                    color="primary"
+                    onClick={this.handleLoadMore}
+                  >
+                    Load More
+                  </Button>
                 </div>
-              ))}
-            {numToShow < roomInfo.totalGameLogsCount && (
-              <>
-                {loading ? (
-                  <div className='loading-spinner'>
-
-                  </div>
-                ) : (
-                  <div className="load-more-btn">
-                    <Button
-                      id="load-btn"
-                      variant="contained"
-                      color="primary"
-                      onClick={this.handleLoadMore}
-                    >
-                      Load More
-                    </Button>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        ) : (
-          <p>No History Yet</p>
-        )}
+              )}
+            </div>
+          ) : (
+            <div className="loading-skeleton">
+              {/* Skeleton Loader for empty history */}
+              <Skeleton variant="rectangular" width="100%" height={60} />
+              <Skeleton variant="text" width="80%" height={30} />
+              <Skeleton variant="text" width="60%" height={20} />
+              <Skeleton variant="text" width="80%" height={30} />
+              <Skeleton variant="text" width="60%" height={20} />
+            </div>
+          )
+        }
       </div>
     );
   }

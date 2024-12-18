@@ -253,7 +253,7 @@ class HistoryTable extends Component {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
                 {/* Skeleton Loader */}
                 {[...Array(5)].map((_, index) => (
-                  <Skeleton key={index} variant="rect" width="100%" height={40} />
+                  <Skeleton key={index} variant="rect" width="100%" height={70} />
                 ))}
               </div>
             </div>

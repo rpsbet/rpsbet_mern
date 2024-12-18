@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import styled from 'styled-components';
 import { connect } from 'react-redux';
 import { alertModal } from '../../../../game_panel/modal/ConfirmAlerts';
+import { Skeleton } from "@material-ui/lab";
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -386,12 +387,12 @@ class ProductTable extends Component {
     };
     this.fetchCustomerInfo();
     return (
-      <MarketplaceContainer style={{padding: "0 20px 20px 20px", background:"rgb(170 170 170 / 6%)", borderBottomRightRadius: "20px", borderBottomLeftRadius: "20px"}}>
+      <MarketplaceContainer style={{ padding: "0 20px 20px 20px", background: "rgb(170 170 170 / 6%)", borderBottomRightRadius: "20px", borderBottomLeftRadius: "20px" }}>
         {itemType === '653ee81117c9f5ee2124564b' && (
           <img id="marketplace-banner" src={'/img/accessory-banner.svg'} />
         )}
         <FilterSortContainer className='desktop-only'>
-          
+
           <div className="filters">
             <Button onClick={this.handleFilterClick}>
               Filter&nbsp;
@@ -490,16 +491,16 @@ class ProductTable extends Component {
                 }}
               >
                 {row.item_type === '653ee81117c9f5ee2124564b' ? (
-                 <PowerContainer>
-                 <PowerItem>
-                   <PercentageBar percentage={row.CP} color="#28a745" />
-                   <PercentageBar percentage={row.DP} color="#dc3545" />
-                 </PowerItem>
-                 <PowerItem>
-                   <CommissionPower>CP: {row.CP}%</CommissionPower>
-                   <DefensePower>BP: {row.DP}%</DefensePower>
-                 </PowerItem>
-               </PowerContainer>
+                  <PowerContainer>
+                    <PowerItem>
+                      <PercentageBar percentage={row.CP} color="#28a745" />
+                      <PercentageBar percentage={row.DP} color="#dc3545" />
+                    </PowerItem>
+                    <PowerItem>
+                      <CommissionPower>CP: {row.CP}%</CommissionPower>
+                      <DefensePower>BP: {row.DP}%</DefensePower>
+                    </PowerItem>
+                  </PowerContainer>
                 ) : (
                   ''
                 )}
@@ -541,7 +542,6 @@ class ProductTable extends Component {
                           <TableCell>
                             <FontAwesomeIcon icon={faTag} />
                             {row.owners[0].rentOption ? ' Price per month' : ' Price per unit'}:
-
                           </TableCell>
                           <TableCell className="value">
                             {convertToCurrency(row.owners[0].price)}
@@ -581,19 +581,18 @@ class ProductTable extends Component {
                         });
 
                         if (row.owners[0].user !== this.props.user) {
-                          // Check if the server response requires confirmation
                           if (row.showConfirmationModal) {
                             const userConfirmed = window.confirm(row.message);
 
                             if (userConfirmed) {
-                              // User confirmed, proceed with the action
                               openConfirmTradeModal(row.owners[0].rentOption ? 'rent' : 'trade');
                             } else {
-                              // User declined, do not proceed with the action
-                              alertModal(this.props.isDarkMode, 'TRADE ACTION CANCELLED,PUSSY-ED OUT');
+                              alertModal(
+                                this.props.isDarkMode,
+                                'TRADE ACTION CANCELLED,PUSSY-ED OUT'
+                              );
                             }
                           } else {
-                            // No need for confirmation, proceed as usual
                             openConfirmTradeModal(row.owners[0].rentOption ? 'rent' : 'trade');
                           }
                         } else {
@@ -608,14 +607,21 @@ class ProductTable extends Component {
                     </IconButton>
                   </Tooltip>
                 </TradeButton>
-
               </ProductCard>
             ))}
           </ProductGrid>
         ) : (
-          <LinearContainer>
-            <LinearProgress color="secondary" />
-          </LinearContainer>
+          <ProductGrid>
+            {[...Array(6)].map((_, index) => (
+              <ProductCard key={`skeleton-product-${index}`}>
+                <Skeleton variant="rectangular" width="100%" height={150} style={{ marginBottom: "10px" }} />
+                <Skeleton variant="text" width="60%" height={20} style={{ marginBottom: "10px" }} />
+                <Skeleton variant="text" width="80%" height={20} style={{ marginBottom: "10px" }} />
+                <Skeleton variant="text" width="40%" height={20} style={{ marginBottom: "10px" }} />
+                <Skeleton variant="circle" width={40} height={40} style={{ marginBottom: "10px" }} />
+              </ProductCard>
+            ))}
+          </ProductGrid>
         )}
         <PaginationContainer className='desktop-only'>
           <Pagination
@@ -641,7 +647,7 @@ const mapStateToProps = state => ({
   showConfirmTradeModal: state.snackbar.showConfirmTradeModal,
   isDarkMode: state.auth.isDarkMode,
   user: state.auth.user._id,
-  
+
   isLowGraphics: state.auth.isLowGraphics,
 });
 

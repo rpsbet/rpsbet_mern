@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/static/css/main.21a8ecf4.css",
-    "main.js": "/static/js/main.d74dbe1b.js",
+    "main.css": "/static/css/main.a32467a6.css",
+    "main.js": "/static/js/main.7b4f0586.js",
     "static/js/469.95be026d.chunk.js": "/static/js/469.95be026d.chunk.js",
     "static/js/857.d36b7e12.chunk.js": "/static/js/857.d36b7e12.chunk.js",
     "static/js/331.a9ba1ba8.chunk.js": "/static/js/331.a9ba1ba8.chunk.js",
@@ -32,14 +32,22 @@
     "static/js/277.6fe4d963.chunk.js": "/static/js/277.6fe4d963.chunk.js",
     "static/js/442.8333e578.chunk.js": "/static/js/442.8333e578.chunk.js",
     "static/js/694.c38a4486.chunk.js": "/static/js/694.c38a4486.chunk.js",
+    "static/js/201.3dd44a2c.chunk.js": "/static/js/201.3dd44a2c.chunk.js",
+    "static/js/884.99278d3b.chunk.js": "/static/js/884.99278d3b.chunk.js",
     "static/js/707.392a1829.chunk.js": "/static/js/707.392a1829.chunk.js",
+    "static/js/868.fdc4801f.chunk.js": "/static/js/868.fdc4801f.chunk.js",
+    "static/js/831.806f68f7.chunk.js": "/static/js/831.806f68f7.chunk.js",
+    "static/js/250.d6cce668.chunk.js": "/static/js/250.d6cce668.chunk.js",
+    "static/js/482.75d95f97.chunk.js": "/static/js/482.75d95f97.chunk.js",
     "static/js/721.db6ae7bb.chunk.js": "/static/js/721.db6ae7bb.chunk.js",
     "static/js/123.5dc58e4f.chunk.js": "/static/js/123.5dc58e4f.chunk.js",
     "static/js/912.2bf35136.chunk.js": "/static/js/912.2bf35136.chunk.js",
     "static/js/212.9f59430c.chunk.js": "/static/js/212.9f59430c.chunk.js",
     "static/js/624.a4fb44f9.chunk.js": "/static/js/624.a4fb44f9.chunk.js",
+    "static/js/215.041cfc18.chunk.js": "/static/js/215.041cfc18.chunk.js",
     "static/js/135.df8d2326.chunk.js": "/static/js/135.df8d2326.chunk.js",
     "static/js/48.67598260.chunk.js": "/static/js/48.67598260.chunk.js",
+    "static/js/453.5fbcefbc.chunk.js": "/static/js/453.5fbcefbc.chunk.js",
     "static/media/rock-weapon.gif": "/static/media/rock-weapon.46a971ad30a5f08cf592.gif",
     "static/media/scissors-weapon.gif": "/static/media/scissors-weapon.1c5e9a58de5e68e7d65a.gif",
     "static/media/cat_bg.svg": "/static/media/cat_bg.74be7505d574df53253f256b2d51fea1.svg",
@@ -126,11 +134,11 @@
     "static/media/btn-paypal.svg": "/static/media/btn-paypal.4ed05cb443934a9fa8a0.svg",
     "static/media/btn-bank-active.svg": "/static/media/btn-bank-active.5c45b7981b5e7971c30a.svg",
     "static/media/btn-bank.svg": "/static/media/btn-bank.8ce60c3913abb5408b9b.svg",
-    "main.21a8ecf4.css.map": "/static/css/main.21a8ecf4.css.map",
-    "main.d74dbe1b.js.map": "/static/js/main.d74dbe1b.js.map"
+    "main.a32467a6.css.map": "/static/css/main.a32467a6.css.map",
+    "main.7b4f0586.js.map": "/static/js/main.7b4f0586.js.map"
   },
   "entrypoints": [
-    "static/css/main.21a8ecf4.css",
-    "static/js/main.d74dbe1b.js"
+    "static/css/main.a32467a6.css",
+    "static/js/main.7b4f0586.js"
   ]
 }

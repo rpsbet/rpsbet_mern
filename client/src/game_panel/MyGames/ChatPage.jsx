@@ -12,6 +12,7 @@ import HistoryTable from '../LiveGames/HistoryTable';
 import MyHistoryTable from '../MyGames/MyHistoryTable';
 import MyGamesTable from '../MyGames/MyGamesTable';
 import ChatPanel from '../ChatPanel/ChatPanel';
+import { Skeleton } from "@material-ui/lab";
 
 import {
   loadRoomInfo,
@@ -118,10 +119,7 @@ class ChatPage extends Component {
   async initializeRoomData(id) {
     try {
       await this.props.getChatRoomInfo(id);
-
-      // await this.props.getGameTypeList();
       if (this.props.isAuthenticated) {
-        // await this.props.getMyGames();
         await this.props.getMyChat();
       }
 
@@ -155,17 +153,6 @@ class ChatPage extends Component {
       show_open_game: newValue
     });
   };
-
-  //   getActiveTabText = () =>
-  //     (this.state.is_mobile && this.state.selectedMobileTab === 'live_games') ||
-  //     (!this.state.is_mobile && this.props.selectedMainTabIndex === 0) ? (
-  //       <div id="liveStakes">
-  //         {this.props.roomCount} LIVE GAMES
-  //         {/* <Lottie options={defaultOptions} width={40} /> */}
-  //       </div>
-  //     ) : (
-  //       'Your Games'
-  //     );
 
   render() {
     const {
@@ -222,7 +209,7 @@ class ChatPage extends Component {
             variant="persistent"
             anchor="left"
             open={isDrawerOpen}
-         
+
           >
             <ChatPanel is_mobile={is_mobile} toggleDrawer={this.toggleDrawer} />
           </Drawer>
@@ -247,7 +234,6 @@ class ChatPage extends Component {
               <Tab label="History" style={customStyles.tabRoot} />
             </Tabs>
           )}
-        {/* <h2 className="main-title desktop-only">{this.getActiveTabText()}</h2> */}
         <div className="chat-page">
           <div
             className="chat-header title"
@@ -301,44 +287,64 @@ class ChatPage extends Component {
                       {row.from !== my_info._id && (
                         <div
                           onClick={() => this.handleOpenPlayerModal(user_id)}
-                          style={{ cursor: "pointer", position: "relative" }}
-                        >
-                          {/* <Avatar
-                            src={avatar}
-                            rank={rank}
-                            accessory={accessory}
-                            className="avatar"
-                          /> */}
-                        </div>
+                          style={{ cursor: 'pointer', position: 'relative' }}
+                        ></div>
                       )}
                       <div>
                         <div className="message-time">{row.created_at}</div>
-                        {/* <div className="message_username">
-                          {row.from === my_info._id
-                            ? my_info.username
-                            : username}
-                        </div> */}
                       </div>
                       {row.from === my_info._id && (
                         <div
                           onClick={() => this.handleOpenPlayerModal(my_info._id)}
-                          style={{ cursor: "pointer", position: "relative" }}
-                        >
-                          {/* <Avatar
-                            src={my_info.avatar}
-                            rank={my_info.totalWagered}
-                            accessory={my_info.accessory}
-                            username={my_info.username}
-                            className="avatar"
-                          /> */}
-                        </div>
+                          style={{ cursor: 'pointer', position: 'relative' }}
+                        ></div>
                       )}
                     </div>
                   </div>
                 ))}
               </>
             ) : (
-              <div className="loading-spinner"></div>
+              <div>
+                {[...Array(5)].map((_, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      marginBottom: '15px',
+                      gap: '8px',
+                    }}
+                  >
+                    <div
+                      style={{
+                        alignSelf: index % 2 === 0 ? 'flex-end' : 'flex-start',
+                        maxWidth: '70%',
+                      }}
+                    >
+                      <Skeleton
+                        variant="rounded"
+                        height={20}
+                        width="100%"
+                        style={{ borderRadius: '10px' }}
+                      />
+                    </div>
+                    <div
+                      style={{
+                        alignSelf: index % 2 === 0 ? 'flex-end' : 'flex-start',
+                      }}
+                    >
+                      <Skeleton
+                        variant="text"
+                        width={60}
+                        height={15}
+                        style={{
+                          borderRadius: '5px',
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
           <div

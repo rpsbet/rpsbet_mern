@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-// import './Chat.css';
+import { Skeleton } from "@material-ui/lab";
 import PlayerModal from '../modal/PlayerModal';
 import Avatar from '../../components/Avatar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -213,10 +213,8 @@ class GlobalChat extends Component {
                 .map((part, index) => {
                   if (part.startsWith(':') && part.endsWith(':')) {
                     const emojiCommand = part;
-                    const emoji = emojis.find(
-                      emoji => emoji.command === emojiCommand
-                    );
-  
+                    const emoji = emojis.find(emoji => emoji.command === emojiCommand);
+
                     if (emoji) {
                       const { url, alt } = emoji;
                       return (
@@ -231,8 +229,7 @@ class GlobalChat extends Component {
                   }
                   return part;
                 });
-  
-              // Handle replyTo message
+
               let wrappedReplyMessage = null;
               if (chat.replyTo && chat.replyTo.message) {
                 const replyMessage = chat.replyTo.message;
@@ -241,10 +238,8 @@ class GlobalChat extends Component {
                   .map((part, index) => {
                     if (part.startsWith(':') && part.endsWith(':')) {
                       const emojiCommand = part;
-                      const emoji = emojis.find(
-                        emoji => emoji.command === emojiCommand
-                      );
-  
+                      const emoji = emojis.find(emoji => emoji.command === emojiCommand);
+
                       if (emoji) {
                         const { url, alt } = emoji;
                         return (
@@ -260,23 +255,20 @@ class GlobalChat extends Component {
                     return part;
                   });
               }
+
               return (
                 <div
                   key={key}
-                  className={`chat-line ${selectedMessage === chat ? 'selected' : ''} ${
-                    chat.sender === 'SYSTEM' ? 'special-message' : ''
-                  } ${
-                    chat.sender === 'SYSTEM' && chat.message.includes('rent') ? 'special-message-rent  ' : ''
-                  }`}
+                  className={`chat-line ${selectedMessage === chat ? 'selected' : ''} ${chat.sender === 'SYSTEM' ? 'special-message' : ''
+                    } ${chat.sender === 'SYSTEM' && chat.message.includes('rent') ? 'special-message-rent  ' : ''
+                    }`}
                   onClick={() => this.handleMessageClick(chat)}
                 >
                   {chat.replyTo && chat.replyTo.message && (
                     <div className="reply-to">
                       <a
                         className="chat-player"
-                        onClick={() =>
-                          this.handleOpenPlayerModal(chat.replyTo.senderId)
-                        }
+                        onClick={() => this.handleOpenPlayerModal(chat.replyTo.senderId)}
                       >
                         <div className="reply-border"></div>
                         <Avatar
@@ -288,16 +280,16 @@ class GlobalChat extends Component {
                           accessory={chat.replyTo.accessory}
                           darkMode={this.props.isDarkMode}
                         />
-                           <i
-                                className={`online-status${this.props.onlineUserList.filter(
-                                  user => user === chat.replyTo.senderId
-                                ).length > 0
-                                  ? ' online'
-                                  : ''
-                                  }`}
-                              ></i>
+                        <i
+                          className={`online-status${this.props.onlineUserList.filter(
+                            user => user === chat.replyTo.senderId
+                          ).length > 0
+                              ? ' online'
+                              : ''
+                            }`}
+                        ></i>
                       </a>
-                      
+
                       <span className="reply-sender sender-name">
                         {chat.replyTo.username}
                       </span>
@@ -311,7 +303,6 @@ class GlobalChat extends Component {
                           wrappedReplyMessage
                         )}
                       </span>
-                      {/* <span className="reply-time chat-time">{chat.replyTo.time}</span> */}
                     </div>
                   )}
                   <div className="chat-content">
@@ -328,18 +319,18 @@ class GlobalChat extends Component {
                         rank={chat.rank}
                         darkMode={this.props.isDarkMode}
                       />
-                    <i
-                                className={`online-status${this.props.onlineUserList.filter(
-                                  user => user === chat.senderId
-                                ).length > 0
-                                  ? ' online'
-                                  : ''
-                                  }`}
-                              ></i>
+                      <i
+                        className={`online-status${this.props.onlineUserList.filter(
+                          user => user === chat.senderId
+                        ).length > 0
+                            ? ' online'
+                            : ''
+                          }`}
+                      ></i>
                     </a>
                     <div className="chat-msg">
                       <span className="sender-name">{chat.sender}</span>
-  
+
                       <span className="chat-text title">
                         {chat.messageType === 'gif' ? (
                           <img
@@ -351,7 +342,7 @@ class GlobalChat extends Component {
                         )}
                       </span>
                     </div>
-  
+
                     <div className="chat-time">
                       <div>{chat.time}</div>
                     </div>
@@ -361,12 +352,30 @@ class GlobalChat extends Component {
             })}
           </>
         ) : (
-          <div className="loading-spinner"></div>
+          <div>
+            {[...Array(10)].map((_, index) => (
+              <div
+                key={index}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  marginBottom: '15px',
+                  gap: '10px',
+                }}
+              >
+                <Skeleton variant="circular" width={40} height={40} />
+                <div style={{ flex: 1 }}>
+                  <Skeleton variant="text" width="100%" />
+                  <Skeleton variant="text" width="80%" />
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </div>
     );
   }
-}  
+}
 const mapStateToProps = state => ({
   userName: state.auth.userName,
   user: state.auth.user,

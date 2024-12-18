@@ -529,7 +529,7 @@ function CoHostModal({
               </Box>
             </div>
           )}
-          <div className="modal-content-panel" style={{ background: "rgba(170, 170, 170, 0.06)", borderRadius: "20px", marginBottom: "30px" }}>
+          <div className="modal-content-panel" style={{ background: "rgba(170, 170, 170, 0.06)", borderRadius: "0.6em", marginBottom: "30px" }}>
             <Chart
               options={chartOptions}
               series={[{ data: chartData }]}

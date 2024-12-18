@@ -7,13 +7,10 @@ import { Button, Drawer, LinearProgress } from '@material-ui/core';
 import LoadingOverlay from 'react-loading-overlay';
 import { toggleDrawer, updateTutorialCompleted, setBalance } from '../../redux/Auth/user.actions';
 import RPS from '../JoinGame/RPS';
-import Blackjack from '../JoinGame/Blackjack';
-import Spleesh from '../JoinGame/Spleesh';
-import MysteryBox from '../JoinGame/MysteryBox';
+import { Skeleton } from "@material-ui/lab";
 import BrainGame from '../JoinGame/BrainGame';
 import QuickShoot from '../JoinGame/QuickShoot';
-import DropGame from '../JoinGame/DropGame';
-import Bang from '../JoinGame/Bang';
+
 import AiPanel from '../../components/AiPanel';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { getCustomerStatisticsData } from '../../redux/Customer/customer.action';
@@ -174,7 +171,7 @@ class JoinGame extends Component {
     if (this.isComponentMounted && this.props.attached) {
       this.setState({ betting: true });
     }
-  
+
     window.addEventListener('unload', this.handleUnload);
   }
 
@@ -251,15 +248,15 @@ class JoinGame extends Component {
   async fetchAccessory() {
     try {
       const creatorId = this.props.roomInfo.creator_id;
-  
+
       if (!creatorId) {
         return;
       }
-  
+
       const _id = creatorId.toString();
       const accessory = await this.props.fetchAccessory({ _id });
       const dp = await this.props.fetchAccessory({ _id: this.props.user_id });
-  
+
       if (this.isComponentMounted && accessory.accessory.CP !== undefined) {
         this.setState({ cp: accessory.accessory.CP - dp.accessory.DP });
       }
@@ -647,7 +644,7 @@ class JoinGame extends Component {
 
     let betArray = [];
 
-  
+
     if (!validateIsAuthenticated(auth, isDarkMode)) {
       return;
     }
@@ -877,12 +874,12 @@ class JoinGame extends Component {
     this.setState({ betResult: result }, async () => {
       const flickerCount = 3; // Number of flickers
       const delay = 50; // Delay between flickers in milliseconds
-  
+
       for (let i = 0; i < flickerCount; i++) {
         this.setState({ bgColorChanged: i % 2 === 0 }); // Alternate between true and false
         await new Promise(resolve => setTimeout(resolve, delay));
       }
-  
+
       // Final reset
       this.setState({ bgColorChanged: false, betResult: null });
     });
@@ -1066,7 +1063,7 @@ class JoinGame extends Component {
     if (currentSound && currentSound.src.includes(sound)) {
       currentSound.pause();
       currentSound.currentTime = 0;
-      this.setState({ currentSound: null }); // Clear the reference to the currently playing sound
+      this.setState({ currentSound: null });
     }
   };
 
@@ -1160,7 +1157,7 @@ class JoinGame extends Component {
       this.props.match.params.id,
       this.state.limit,
       false
-    ); // room call
+    );
     // await this.getRoomData(this.props.match.params.id); // room stats
   };
 
@@ -1293,17 +1290,16 @@ class JoinGame extends Component {
                   styles={{
                     options: {
                       zIndex: 10000,
-                      backgroundColor: isDarkMode ? 'rgb(81 48 98 / 60%)' : '#ccc9', // Tooltip background color
-                      primaryColor: '#ff0000', // Custom color for buttons and highlights
-                      arrowColor: isDarkMode ? 'rgb(81 48 98 / 60%)' : '#ccc9', // Arrow color
-                      textColor: isDarkMode ? '#f9f9f9' : '#333', // Text color inside the tooltip
-                      width: 300, // Tooltip width
-                      padding: 20, // Padding inside the tooltip
-                      borderRadius: 5, // Rounded corners for the tooltip
+                      backgroundColor: isDarkMode ? 'rgb(81 48 98 / 60%)' : '#ccc9',
+                      primaryColor: '#ff0000',
+                      arrowColor: isDarkMode ? 'rgb(81 48 98 / 60%)' : '#ccc9',
+                      textColor: isDarkMode ? '#f9f9f9' : '#333',
+                      width: 300,
+                      padding: 20,
+                      borderRadius: 5,
                     },
-
                     buttonClose: {
-                      borderRadius: '0.3em', /* Custom border radius */
+                      borderRadius: '0.3em',
                       color: isDarkMode ? '#f9f9f9' : '#333',
                     },
                     buttonBack: {
@@ -1318,7 +1314,6 @@ class JoinGame extends Component {
                       borderRadius: '0.3em',
                       color: isDarkMode ? '#f9f9f9' : '#333',
                     },
-
                   }}
                 />
                 {roomInfo.game_type === 'RPS' && (
@@ -1366,63 +1361,7 @@ class JoinGame extends Component {
                     getRoomData={this.getRoomData}
                   />
                 )}
-                {roomInfo.game_type === 'Spleesh!' && (
-                  <Spleesh
-                    refreshHistory={this.refreshHistory}
-                    handleOpenPlayerModal={this.handleOpenPlayerModal}
-                    handleClosePlayerModal={this.handleClosePlayerModal}
-                    selectedCreator={selectedCreator}
-                    showPlayerModal={showPlayerModal}
-                    betResult={betResult}
-                    join={this.join}
-                    bet_amount={roomInfo.bet_amount}
-                    bankroll={roomInfo.host_pr}
-                    spleesh_guesses={spleesh_guesses}
-                    updateSpleeshGuesses={this.updateSpleeshGuesses}
-                    spleesh_bet_unit={roomInfo.spleesh_bet_unit}
-                    game_log_list={roomInfo.game_log_list || []}
-                    user_id={user_id}
-                    changeBgColor={this.changeBgColor}
-                    bgColorChanged={bgColorChanged}
-                    creator_id={roomInfo.creator_id}
-                    roomInfo={roomInfo}
-                    endgame_amount={roomInfo.endgame_amount}
-                    playSound={this.playSound}
-                    is_private={roomInfo.is_private}
-                    youtubeUrl={roomInfo.youtubeUrl}
-                    gameBackground={roomInfo.gameBackground}
-                    actionList={actionList}
-                    getRoomData={this.getRoomData}
-                  />
-                )}
-                {roomInfo.game_type === 'Mystery Box' &&
-                  roomInfo.box_list.length > 0 && (
-                    <MysteryBox
-                      handleOpenPlayerModal={this.handleOpenPlayerModal}
-                      handleClosePlayerModal={this.handleClosePlayerModal}
-                      selectedCreator={selectedCreator}
-                      showPlayerModal={showPlayerModal}
-                      refreshHistory={this.refreshHistory}
-                      join={this.join}
-                      borderColor={borderColor}
-                      box_list={roomInfo.box_list}
-                      box_price={roomInfo.box_price}
-                      user_id={user_id}
-                      selected_id={selected_id}
-                      changeBgColor={this.changeBgColorQs}
-                      bgColorChanged={bgColorChanged}
-                      updateSelectedMb={this.updateSelectedMb}
-                      creator_id={roomInfo.creator_id}
-                      is_private={roomInfo.is_private}
-                      roomInfo={roomInfo}
-                      playSound={this.playSound}
-                      betResult={betResult}
-                      youtubeUrl={roomInfo.youtubeUrl}
-                      gameBackground={roomInfo.gameBackground}
-                      actionList={actionList}
-                      getRoomData={this.getRoomData}
-                    />
-                  )}
+
                 {roomInfo.game_type === 'Brain Game' && (
                   <BrainGame
                     handleOpenPlayerModal={this.handleOpenPlayerModal}
@@ -1436,11 +1375,7 @@ class JoinGame extends Component {
                     bet_amount={roomInfo.bet_amount}
                     user_id={this.props.user_id}
                     creator_id={roomInfo.creator_id}
-                    joined_count={
-                      roomInfo.game_log_list
-                        ? roomInfo.game_log_list.length
-                        : 0
-                    }
+                    joined_count={roomInfo.game_log_list ? roomInfo.game_log_list.length : 0}
                     is_private={roomInfo.is_private}
                     roomInfo={roomInfo}
                     playSound={this.playSound}
@@ -1450,6 +1385,7 @@ class JoinGame extends Component {
                     getRoomData={this.getRoomData}
                   />
                 )}
+
                 {roomInfo.game_type === 'Quick Shoot' && (
                   <QuickShoot
                     handleOpenPlayerModal={this.handleOpenPlayerModal}
@@ -1494,108 +1430,30 @@ class JoinGame extends Component {
                     getRoomData={this.getRoomData}
                   />
                 )}
-                {roomInfo.game_type === 'Drop Game' && (
-                  <DropGame
-                    handleOpenPlayerModal={this.handleOpenPlayerModal}
-                    handleClosePlayerModal={this.handleClosePlayerModal}
-                    selectedCreator={selectedCreator}
-                    showPlayerModal={showPlayerModal}
-                    refreshHistory={this.refreshHistory}
-                    join={this.join}
-                    user_id={user_id}
-                    showAnimation={showAnimation}
-                    updateDropAnimation={this.updateDropAnimation}
-                    creator_id={roomInfo.creator_id}
-                    bet_amount={roomInfo.bet_amount}
-                    // bankroll={bankroll}
-                    drop_bet_item_id={roomInfo.drop_bet_item_id}
-                    is_private={roomInfo.is_private}
-                    roomInfo={roomInfo}
-                    playSound={this.playSound}
-                    youtubeUrl={roomInfo.youtubeUrl}
-                    gameBackground={roomInfo.gameBackground}
-                    actionList={actionList}
-                    getRoomData={this.getRoomData}
-                  />
-                )}
-                {roomInfo.game_type === 'Bang!' && (
-                  <Bang
-                    refreshHistory={this.refreshHistory}
-                    join={this.join}
-                    handleOpenPlayerModal={this.handleOpenPlayerModal}
-                    handleClosePlayerModal={this.handleClosePlayerModal}
-                    selectedCreator={selectedCreator}
-                    showPlayerModal={showPlayerModal}
-                    user_id={user_id}
-                    creator_id={roomInfo.creator_id}
-                    aveMultiplier={roomInfo.aveMultiplier}
-                    bet_amount={roomInfo.bet_amount}
-                    cashoutAmount={roomInfo.cashoutAmount}
-                    // bankroll={bankroll}
-                    bang_bet_item_id={roomInfo.bang_bet_item_id}
-                    is_private={roomInfo.is_private}
-                    roomInfo={roomInfo}
-                    playSound={this.playSound}
-                    playSoundLoop={this.playSoundLoop}
-                    stopSound={this.stopSound}
-                    youtubeUrl={roomInfo.youtubeUrl}
-                    gameBackground={roomInfo.gameBackground}
-                    actionList={actionList}
-                    getRoomData={this.getRoomData}
-                  />
-                )}
-                {roomInfo.game_type === 'Roll' && (
-                  <Roll
-                    handleOpenPlayerModal={this.handleOpenPlayerModal}
-                    handleClosePlayerModal={this.handleClosePlayerModal}
-                    selectedCreator={selectedCreator}
-                    showPlayerModal={showPlayerModal}
-                    refreshHistory={this.refreshHistory}
-                    join={this.join}
-                    user_id={user_id}
-                    creator_id={roomInfo.creator_id}
-                    aveMultiplier={roomInfo.aveMultiplier}
-                    bet_amount={roomInfo.bet_amount}
-                    cashoutAmount={roomInfo.cashoutAmount}
-                    bankroll={bankroll}
-                    roll_bet_item_id={roomInfo.roll_bet_item_id}
-                    is_private={roomInfo.is_private}
-                    roomInfo={roomInfo}
-                    playSound={this.playSound}
-                    stopSound={this.stopSound}
-                    youtubeUrl={roomInfo.youtubeUrl}
-                    gameBackground={roomInfo.gameBackground}
-                    actionList={actionList}
-                    getRoomData={this.getRoomData}
-                  />
-                )}
-                {roomInfo.game_type === 'Blackjack' && (
-                  <Blackjack
-                    handleOpenPlayerModal={this.handleOpenPlayerModal}
-                    handleClosePlayerModal={this.handleClosePlayerModal}
-                    selectedCreator={selectedCreator}
-                    showPlayerModal={showPlayerModal}
-                    refreshHistory={this.refreshHistory}
-                    playSound={this.playSound}
-                    join={this.join}
-                    roomInfo={roomInfo}
-                    user_id={user_id}
-                    creator_id={roomInfo.creator_id}
-                    bet_amount={roomInfo.bet_amount}
-                    bankroll={bankroll}
-                    bj_bet_item_id={roomInfo.bj_bet_item_id}
-                    is_private={roomInfo.is_private}
-                    youtubeUrl={roomInfo.youtubeUrl}
-                    gameBackground={roomInfo.gameBackground}
-                    actionList={actionList}
-                    getRoomData={this.getRoomData}
-                  />
-                )}
+              </div>
+            ) : (
+              <div className="join-game-panel ">
 
+              <div className="game-page loading-skeleton">
+                <div className="game-contents">
+                  <Skeleton variant="rectangular" width="100%" height={60} />
+
+                  <div
+                    className="game-info-panel"
+                    style={{ position: 'relative', zIndex: 10, paddingBottom: "90px" }}
+                  >
+
+                    <Skeleton variant="text" width="20%" height={30} />
+                    <Skeleton variant="text" width="80%" height={30} />
+                    <Skeleton variant="text" width="60%" height={100} />
+                      <Skeleton variant="text" width="80%" height={30} />
+                      <Skeleton variant="text" width="10%" height={90} />
+                      <Skeleton variant="text" width="20%" height={90} />
+                    </div>
+                  </div>
+                </div>
               </div>
 
-            ) : (
-              <LinearProgress color="secondary" />
             )}
             <TabbedContent
               actionList={actionList}

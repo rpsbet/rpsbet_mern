@@ -79,17 +79,18 @@ class OpenGamesTable extends Component {
   async componentDidMount() {
     this.isComponentMounted = true;
 
-    try {
-      this.props.getRoomList({ pageSize: 7 });
-    } catch (error) {
-      console.error("Error fetching Qbot statuses:", error);
-    }
-
     this.handleLoad();
     this.debouncedHandleScroll = this.debounce(this.handleScroll, 300);
     window.addEventListener('load', this.handleLoad);
     window.addEventListener('scroll', this.debouncedHandleScroll);
     this.setupSocketConnection();
+    
+    try {
+      await this.props.getRoomList({ pageSize: 7 });
+    } catch (error) {
+      console.error("Error fetching Qbot statuses:", error);
+    }
+
 
     const roomList = this.props.roomList || [];
     const creatorIds = roomList.map((room) => room.creator_id);
@@ -97,18 +98,16 @@ class OpenGamesTable extends Component {
     const cachedData = JSON.parse(localStorage.getItem('qBotStatuses') || '{}');
 
     const isCacheValid = cachedData.timestamp && (Date.now() - cachedData.timestamp < 3600000); // 1 hour
-
     if (isCacheValid) {
       this.setState({ qBotStatuses: cachedData.data });
-    } else if (creatorIds.length) {
+    } else {
       const qBotStatuses = await this.props.getQbotStatuses(creatorIds);
       if (this.isComponentMounted && qBotStatuses) {
         this.setState({ qBotStatuses });
       }
     }
 
- 
-    console.log("this.props.qBotStatuses", this.props.qBotStatuses);
+
   }
 
   componentWillUnmount() {
