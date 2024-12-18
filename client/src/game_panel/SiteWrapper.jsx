@@ -291,7 +291,7 @@ class SiteWrapper extends Component {
     const { transactions, tnxComplete, remainingLoans, betResult, notifications } = this.props;
 
     if (this.props.user !== prevProps.user) {
-      this.setState({ run: !this.props.user.completedTutorials.includes(1) })
+      this.setState({ run: !this.props.user.completedTutorials.includes(1),  loaded: true  })
         this.fetchData();
 
     }
@@ -734,7 +734,7 @@ class SiteWrapper extends Component {
         this.fetchTokenDetails(),
 
       ]);
-      this.setState({ websiteLoading: false, notifications: this.props.notifications, vaultBal: initialBalance });
+      this.setState({ websiteLoading: false, notifications: this.props.notifications, vaultBal: initialBalance, loaded: true  });
       if (currentUrl && currentUrl.includes('create')) {
         this.setState({ selectedMainTabIndex: this.props.selectMainTab(1) });
       }
