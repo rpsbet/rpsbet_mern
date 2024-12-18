@@ -618,6 +618,10 @@
 	background: #430068
 }
 
+.dark_mode .main-panel div.table .table-row:hover {
+border: 2px solid #fff;
+}
+
 
 .dark_mode .chat-page .chat-header button.btn-back {
 	background-image: url("data:image/svg+xml,%3Csvg width='32' height='32' viewBox='0 0 32 32' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20.5 24L11.5 15.5L20.5 7' stroke='white' stroke-width='1.5' stroke-linecap='square'/%3E%3C/svg%3E%0A");

@@ -687,8 +687,8 @@ div.table .table-cell button.btn_join img {
   border: 3px solid #ffd000 !important;
 }
 
-.main-panel div.table.open-games .table-row:hover {
-  border: 2px solid #f9f9f9;
+.main-panel div.table .table-row:hover {
+  border: 2px solid #222;
 }
 
 .lottie-container-btn_bet {

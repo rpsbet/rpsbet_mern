@@ -112,7 +112,7 @@ class ConfirmLoanModal extends Component {
   };
 
   onBtnOkClicked = async () => {
-    const { item, lender, closeConfirmLoanModal, acCalculateRemainingLoans, loan_amount, acQueryLoan, setBalance, addNewTransaction, isDarkMode, confirmLoan } = this.props;
+    const { item, lender, closeConfirmLoanModal, acCalculateRemainingLoans, loan_amount, acQueryLoan, addNewTransaction, isDarkMode, confirmLoan } = this.props;
     const { responseText } = this.state;
 
     if (parseFloat(responseText) > loan_amount) {
@@ -136,7 +136,6 @@ class ConfirmLoanModal extends Component {
       const { balance, newTransaction, message } = response;
       closeConfirmLoanModal();
       alertModal(isDarkMode, message, '-cat');
-      setBalance(balance);
       addNewTransaction(newTransaction);
       getUser(true, 5);
       acQueryLoan();

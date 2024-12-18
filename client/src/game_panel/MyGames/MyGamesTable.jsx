@@ -161,7 +161,7 @@ class MyGamesTable extends Component {
 
   handleSettingsIconClick = (event, row) => {
     event.preventDefault(); // Prevent the default action
-    event.stopPropagation(); 
+    event.stopPropagation();
     if (row.coHost) {
       this.setState({ settings_panel_opened: !this.state.settings_panel_opened, selectedRow: row });
     } else {
@@ -610,19 +610,19 @@ class MyGamesTable extends Component {
                     <div>
                       <div className="table-cell room-id">
 
+                        <img
+                          src={`/img/gametype/icons/${row.game_type.short_name}.svg`}
+                          alt=""
+                          className="game-type-icon"
+                        />
+                        {row.game_type.short_name + '-' + row.index}
+                        {row.is_private && (
                           <img
-                            src={`/img/gametype/icons/${row.game_type.short_name}.svg`}
+                            src="/img/icon-lock.png"
                             alt=""
-                            className="game-type-icon"
+                            className="lock-icon"
                           />
-                          {row.game_type.short_name + '-' + row.index}
-                          {row.is_private && (
-                            <img
-                              src="/img/icon-lock.png"
-                              alt=""
-                              className="lock-icon"
-                            />
-                          )}
+                        )}
 
                       </div>
                       <div className="table-cell bet-info">
@@ -640,8 +640,19 @@ class MyGamesTable extends Component {
                           (selectedFilter === 'open') && (
                             <a
                               className="ml-1"
-                              onClick={() => this.handlePayout(row)}
-                              style={{ color: "#ff0000", cursor: "pointer", borderRadius: "30px", display: "inline-flex", verticalAlign: "middle", marginBottom: "4px" }}
+                              onClick={(event) => {
+                                event.preventDefault();
+                                event.stopPropagation();
+                                this.handlePayout(row);
+                              }}
+                              style={{
+                                color: "#ff0000",
+                                cursor: "pointer",
+                                borderRadius: "30px",
+                                display: "inline-flex",
+                                verticalAlign: "middle",
+                                marginBottom: "4px",
+                              }}
                             >
                               <EditOutline style={{ padding: "2.5px", width: "22px" }} />
                             </a>
@@ -665,12 +676,21 @@ class MyGamesTable extends Component {
 
                         <Tooltip title="CHANGE AI PLAY STRATEGY">
                           <a
-                            style={{ borderRadius: "200px", cursor: "pointer", padding: "1px", display: "flex", justifyContent: "center", alignItems: "center" }}
-                            onClick={(event) => this.handleSettingsIconClick(event, row)}
+                            style={{
+                              borderRadius: "200px",
+                              cursor: "pointer",
+                              padding: "1px",
+                              display: "flex",
+                              justifyContent: "center",
+                              alignItems: "center",
+                            }}
+                            onClick={(event) => {
+                              event.preventDefault();
+                              event.stopPropagation();
+                              this.handleSettingsIconClick(event, row);
+                            }}
                           >
-
-                            <SettingsOutlinedIcon
-                            />
+                            <SettingsOutlinedIcon />
                           </a>
                         </Tooltip>
                       </div>
@@ -691,19 +711,47 @@ class MyGamesTable extends Component {
                                 {!row.coHost ? (
                                   <Button
                                     className="btn_withdraw btn_end"
-                                    onClick={() => this.handleCoHost(row)}
+                                    onClick={(event) => {
+                                      event.preventDefault();
+                                      event.stopPropagation();
+                                      this.handleCoHost(row);
+                                    }}
                                   >
                                     TRADE
                                   </Button>
                                 ) : (
                                   <Button
                                     className="btn_end"
-                                    onMouseDown={() => this.handleButtonClick(row.winnings, row._id)}
-                                    onMouseUp={() => this.handleButtonRelease(row._id)}
-                                    onMouseLeave={() => this.handleButtonRelease(row._id)}
-                                    onTouchStart={() => this.handleButtonClick(row.winnings, row._id)}
-                                    onTouchEnd={() => this.handleButtonRelease(row._id)}
-                                    onTouchCancel={() => this.handleButtonRelease(row._id)}
+                                    onMouseDown={(event) => {
+                                      event.preventDefault();
+                                      event.stopPropagation();
+                                      this.handleButtonClick(row.winnings, row._id);
+                                    }}
+                                    onMouseUp={(event) => {
+                                      event.preventDefault();
+                                      event.stopPropagation();
+                                      this.handleButtonRelease(row._id);
+                                    }}
+                                    onMouseLeave={(event) => {
+                                      event.preventDefault();
+                                      event.stopPropagation();
+                                      this.handleButtonRelease(row._id);
+                                    }}
+                                    onTouchStart={(event) => {
+                                      event.preventDefault();
+                                      event.stopPropagation();
+                                      this.handleButtonClick(row.winnings, row._id);
+                                    }}
+                                    onTouchEnd={(event) => {
+                                      event.preventDefault();
+                                      event.stopPropagation();
+                                      this.handleButtonRelease(row._id);
+                                    }}
+                                    onTouchCancel={(event) => {
+                                      event.preventDefault();
+                                      event.stopPropagation();
+                                      this.handleButtonRelease(row._id);
+                                    }}
                                     _id={row._id}
                                     style={
                                       this.state[row._id] && this.state[row._id].holding
@@ -726,9 +774,7 @@ class MyGamesTable extends Component {
                                         />
                                       </>
                                     ) : (
-                                      <>
-                                        RUG
-                                      </>
+                                      <>RUG</>
                                     )}
                                   </Button>
                                 )}
@@ -743,12 +789,21 @@ class MyGamesTable extends Component {
 
                         <Tooltip title="CHANGE AI PLAY STRATEGY">
                           <a
-                            style={{ borderRadius: "200px", cursor: "pointer", padding: "1px", display: "flex", justifyContent: "center", alignItems: "center" }}
-                            onClick={() => this.handleSettingsIconClick(row)}
+                            style={{
+                              borderRadius: "200px",
+                              cursor: "pointer",
+                              padding: "1px",
+                              display: "flex",
+                              justifyContent: "center",
+                              alignItems: "center",
+                            }}
+                            onClick={(event) => {
+                              event.preventDefault();
+                              event.stopPropagation();
+                              this.handleSettingsIconClick(row);
+                            }}
                           >
-
-                            <SettingsOutlinedIcon
-                            />
+                            <SettingsOutlinedIcon />
                           </a>
                         </Tooltip>
                         {row.status === 'finished' ? (
@@ -767,20 +822,47 @@ class MyGamesTable extends Component {
                                 {!row.coHost ? (
                                   <Button
                                     className="btn_withdraw btn_end"
-                                    onClick={() => this.handleCoHost(row)}
-
+                                    onClick={(event) => {
+                                      event.preventDefault();
+                                      event.stopPropagation();
+                                      this.handleCoHost(row);
+                                    }}
                                   >
                                     TRADE
                                   </Button>
                                 ) : (
                                   <Button
                                     className="btn_end"
-                                    onMouseDown={() => this.handleButtonClick(row.winnings, row._id)}
-                                    onMouseUp={() => this.handleButtonRelease(row._id)}
-                                    onMouseLeave={() => this.handleButtonRelease(row._id)}
-                                    onTouchStart={() => this.handleButtonClick(row.winnings, row._id)}
-                                    onTouchEnd={() => this.handleButtonRelease(row._id)}
-                                    onTouchCancel={() => this.handleButtonRelease(row._id)}
+                                    onMouseDown={(event) => {
+                                      event.preventDefault();
+                                      event.stopPropagation();
+                                      this.handleButtonClick(row.winnings, row._id);
+                                    }}
+                                    onMouseUp={(event) => {
+                                      event.preventDefault();
+                                      event.stopPropagation();
+                                      this.handleButtonRelease(row._id);
+                                    }}
+                                    onMouseLeave={(event) => {
+                                      event.preventDefault();
+                                      event.stopPropagation();
+                                      this.handleButtonRelease(row._id);
+                                    }}
+                                    onTouchStart={(event) => {
+                                      event.preventDefault();
+                                      event.stopPropagation();
+                                      this.handleButtonClick(row.winnings, row._id);
+                                    }}
+                                    onTouchEnd={(event) => {
+                                      event.preventDefault();
+                                      event.stopPropagation();
+                                      this.handleButtonRelease(row._id);
+                                    }}
+                                    onTouchCancel={(event) => {
+                                      event.preventDefault();
+                                      event.stopPropagation();
+                                      this.handleButtonRelease(row._id);
+                                    }}
                                     _id={row._id}
                                     style={
                                       this.state[row._id] && this.state[row._id].holding
@@ -803,9 +885,7 @@ class MyGamesTable extends Component {
                                         />
                                       </>
                                     ) : (
-                                      <>
-                                        RUG
-                                      </>
+                                      <>RUG</>
                                     )}
                                   </Button>
                                 )}
