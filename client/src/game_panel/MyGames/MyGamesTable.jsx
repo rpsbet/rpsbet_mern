@@ -171,20 +171,25 @@ class MyGamesTable extends Component {
 
   fetchData = () => {
     const { selectedFilter, selectedGameType, selectedSort } = this.state;
-    this.setState({
-      myGames: this.props.myGames,
-    });
+  
+    // Quick return of myGames from props/localStorage
+    this.setState({ myGames: this.props.myGames });
+  
+    // Fetch strategies in the background
     this.props.getStrategies();
-
-    this.props.getMyGames({
-      game_type: selectedGameType,
-      status: selectedFilter === 'open' ? 'open' : 'finished',
-      sort: selectedSort
-    }, () => {
-      this.setState({
-        myGames: this.props.myGames,
-      });
-    });
+  
+    // Fetch updated games in the background
+    this.props.getMyGames(
+      {
+        game_type: selectedGameType,
+        status: selectedFilter === 'open' ? 'open' : 'finished',
+        sort: selectedSort
+      },
+      updatedGames => {
+        // Update the state with the new data when available
+        this.setState({ myGames: updatedGames });
+      }
+    );
   };
 
 

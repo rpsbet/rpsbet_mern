@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { getMyHistory, getMyGames } from '../../redux/Logic/logic.actions';
+import { getMyHistory } from '../../redux/Logic/logic.actions';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import CountUp from 'react-countup';
 import { getSettings } from '../../redux/Setting/setting.action';
@@ -382,7 +382,6 @@ const mapStateToProps = state => ({
 const mapDispatchToProps = {
   getMyHistory,
   getSettings,
-  getMyGames,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(MyHistoryTable);

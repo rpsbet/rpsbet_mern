@@ -1165,7 +1165,7 @@ router.get('/', async (req, res) => {
     for (const loan of loans) {
       const loaners = await Promise.all(
         loan.loaners.map(async (loaner) => {
-          const user = await User.findById(loaner.user, 'avatar _id totalWagered accessory');
+          const user = await User.findById(loaner.user, 'avatar _id username totalWagered accessory');
           return user;
         })
       );

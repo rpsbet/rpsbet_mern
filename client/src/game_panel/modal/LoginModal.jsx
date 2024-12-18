@@ -6,7 +6,7 @@ import { Button, TextField } from '@material-ui/core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSignInAlt } from '@fortawesome/free-solid-svg-icons';
 import { setFocused, userSignIn, getUser, authenticateWithGoogle } from '../../redux/Auth/user.actions';
-import { getMyGames, getMyHistory, getMyChat, getNotifications } from '../../redux/Logic/logic.actions';
+import { getMyHistory, getMyChat, getNotifications } from '../../redux/Logic/logic.actions';
 import history from '../../redux/history';
 import {
   faExternalLinkAlt,
@@ -276,7 +276,6 @@ const mapStateToProps = state => ({
 const mapDispatchToProps = {
   userSignIn,
   getUser,
-  getMyGames,
   getMyHistory,
   getMyChat,
   getNotifications,

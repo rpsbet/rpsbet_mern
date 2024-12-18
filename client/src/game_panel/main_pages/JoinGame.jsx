@@ -1696,8 +1696,6 @@ const mapDispatchToProps = {
   bet3,
   setCurRoomInfo,
   loadRoomInfo,
-  // getMyChat,
-  // getMyGames,
   detachPlayerFromRoom,
   attachPlayerToRoom,
   checkPlayerAttachment,

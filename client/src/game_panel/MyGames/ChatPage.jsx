@@ -18,7 +18,6 @@ import {
   loadRoomInfo,
   setCurRoomInfo,
   getMyChat,
-  getMyGames,
   getMyHistory,
   getGameTypeList
 } from '../../redux/Logic/logic.actions';
@@ -617,7 +616,6 @@ const mapStateToProps = state => ({
 const mapDispatchToProps = {
   getChatRoomInfo,
   addChatLog,
-  getMyGames,
   getMyHistory,
   getGameTypeList,
   setCurRoomInfo,

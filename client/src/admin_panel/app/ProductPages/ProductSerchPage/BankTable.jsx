@@ -246,7 +246,6 @@ class BankTable extends Component {
         prevProps.data[index] &&
         currentLoan.loan_amount !== prevProps.data[index].loan_amount
       );
-
     if (loanAmountChanged) {
       this.fetchLoans();
       this.props.previousLoans();
@@ -499,6 +498,7 @@ class BankTable extends Component {
                                         className="avatar"
                                         src={loaner.avatar}
                                         rank={loaner.totalWagered || 0}
+                                        username={loaner.username || ''}
                                         accessory={loaner.accessory || ''}
                                         alt={loaner.username || 'Unknown User'}
                                         darkMode={this.props.isDarkMode}

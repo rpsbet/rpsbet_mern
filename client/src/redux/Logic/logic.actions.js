@@ -1054,34 +1054,31 @@ export const getGameTypeList = () => async dispatch => {
     dispatch({ type: MSG_GAMETYPE_LOAD_FAILED, payload: err });
   }
 };
-
-export const getMyGames = search_condition => async dispatch => {
+export const getMyGames = (search_condition, callback) => async dispatch => {
   try {
     dispatch({ type: START_LOADING });
 
-    // Check if the data is already stored in localStorage
+    // Check if data is stored in localStorage
     const storedData = localStorage.getItem('myGamesData');
-    
     if (storedData) {
-      // If the data exists in localStorage, parse it and dispatch the success action with the stored data
       const parsedData = JSON.parse(storedData);
       dispatch({ type: MY_GAMES_LOADED, payload: { ...parsedData } });
+      if (callback) callback(parsedData); // Optional callback for immediate use
+    }
+
+    // Fetch updated data from the backend in the background
+    const res = await axios.get('/game/my_games', {
+      params: { ...search_condition }
+    });
+
+    if (res.data.success) {
+      // Update localStorage and Redux store with the new data
+      localStorage.setItem('myGamesData', JSON.stringify(res.data));
+      dispatch({ type: MY_GAMES_LOADED, payload: { ...res.data } });
+      if (callback) callback(res.data);
     } else {
-      // If the data is not in localStorage, make the API call to fetch data
-      const res = await axios.get('/game/my_games', {
-        params: { ...search_condition }
-      });
-
-      if (res.data.success) {
-        // Store the fetched data in localStorage
-        localStorage.setItem('myGamesData', JSON.stringify(res.data));
-
-        // Dispatch the success action with the payload from the API response
-        dispatch({ type: MY_GAMES_LOADED, payload: { ...res.data } });
-      } else {
-        // Handle failure case
-        dispatch({ type: MSG_GAMETYPE_LOAD_FAILED });
-      }
+      // Handle failure case
+      dispatch({ type: MSG_GAMETYPE_LOAD_FAILED });
     }
   } catch (err) {
     console.error("Error while fetching games:", err);

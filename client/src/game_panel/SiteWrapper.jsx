@@ -96,7 +96,6 @@ import { openOfferLoanModal } from '../redux/Notification/notification.actions';
 import {
   setRoomList,
   addChatLog,
-  getMyGames,
   getMyHistory,
   getHistory,
   addNewTransaction,
@@ -2414,7 +2413,6 @@ const mapDispatchToProps = {
   setRoomList,
   getUser,
   addChatLog,
-  getMyGames,
   getMyHistory,
   updateTutorialCompleted,
   getHistory,

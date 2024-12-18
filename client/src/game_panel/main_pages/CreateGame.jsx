@@ -35,7 +35,6 @@ import { toggleDrawer } from '../../redux/Auth/user.actions';
 import {
   createRoom,
   setGameMode,
-  getMyGames,
   getMyHistory,
   getMyChat,
   getGameTypeList,
@@ -188,7 +187,6 @@ class CreateGame extends Component {
     await this.initializeGameType(gameTypeName);
 
     if (this.props.isAuthenticated) {
-      // this.props.getMyGames();
       this.props.getMyHistory();
       this.props.getMyChat();
     }
@@ -1285,7 +1283,6 @@ const mapDispatchToProps = {
   createRoom,
   setGameMode,
   getBrainGameType,
-  getMyGames,
   getStrategies,
   getMyHistory,
   getGameTypeList,

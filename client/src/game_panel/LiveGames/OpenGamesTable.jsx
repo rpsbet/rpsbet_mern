@@ -91,7 +91,6 @@ class OpenGamesTable extends Component {
       console.error("Error fetching Qbot statuses:", error);
     }
 
-
     const roomList = this.props.roomList || [];
     const creatorIds = roomList.map((room) => room.creator_id);
 
@@ -99,7 +98,10 @@ class OpenGamesTable extends Component {
 
     const isCacheValid = cachedData.timestamp && (Date.now() - cachedData.timestamp < 3600000); // 1 hour
     if (isCacheValid) {
-      this.setState({ qBotStatuses: cachedData.data });
+      this.setState({ qBotStatuses: cachedData.data }, async () => {
+        const qBotStatuses = await this.props.getQbotStatuses(creatorIds);
+        this.setState({ qBotStatuses });
+      });
     } else {
       const qBotStatuses = await this.props.getQbotStatuses(creatorIds);
       if (this.isComponentMounted && qBotStatuses) {
