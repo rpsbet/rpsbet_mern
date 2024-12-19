@@ -1940,15 +1940,15 @@ div.table.my-history-table .table-row .table-cell img.avatar {
 .comment-container {
   position: relative;
   margin-top: 20px;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 5px;
   background-color: #f9f9f999;
 }
-
-.comment-content {
-  margin-bottom: 10px;
+span.comment-time.title,
+.comment-content p {
+  font-size: 0.8em;
 }
 
 .comment-footer {

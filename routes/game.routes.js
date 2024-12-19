@@ -981,7 +981,6 @@ router.get('/comments/:room_id', async (req, res) => {
 router.post('/comments', auth, async (req, res) => {
   try {
     const { room_id, content } = req.body;
-
     room = await Room.findOne({ _id: room_id });
 
     let message = new Notification({
@@ -990,7 +989,6 @@ router.post('/comments', auth, async (req, res) => {
       room: room_id,
       message: '',
       amount: 0,
-      // is_anonymous: req.body.is_anonymous,
       is_read: false
     });
 
@@ -1008,11 +1006,25 @@ router.post('/comments', auth, async (req, res) => {
     });
 
     // Save the comment to the database
-    try {
-      await saveDocumentWithRetry(comment);
-    } catch (error) {
-      console.error("Error saving comment:", error);
-    }
+    await saveDocumentWithRetry(comment);
+
+    // Emit the new comment via socket
+    const newCommentData = {
+      _id: comment._id,
+      user: {
+        _id: req.user._id,
+        username: req.user.username,
+        avatar: req.user.avatar,
+        accessory: req.user.accessory,
+        totalWagered: req.user.totalWagered
+      },
+      content: comment.content,
+      created_at: comment.created_at,
+      room: comment.room
+    };
+    req.io.sockets.emit('NEW_COMMENT', newCommentData);
+
+    // Save and send the notification
     const notificationData = {
       message: message.message,
       username: req.user.username,
@@ -1026,21 +1038,18 @@ router.post('/comments', auth, async (req, res) => {
       updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
       is_read: false
     };
-    try {
-      await saveDocumentWithRetry(message);
-      socket.sendNotification(message.to, notificationData);
-    } catch (error) {
-      console.error("Error saving message:", error);
-    }
+    await saveDocumentWithRetry(message);
+    socket.sendNotification(message.to, notificationData);
 
     res.json({
       success: true,
+      comment: newCommentData
     });
   } catch (err) {
-
+    console.error("Error creating comment:", err);
     res.json({
       success: false,
-      err: err
+      err
     });
   }
 });
@@ -1049,8 +1058,6 @@ router.post('/comments', auth, async (req, res) => {
 router.delete('/comments/:comment_id', async (req, res) => {
   try {
     const commentId = req.params.comment_id;
-
-    // Check if the comment exists
     const comment = await Comment.findById(commentId);
     if (!comment) {
       return res.status(404).json({ message: 'Comment not found' });
@@ -1059,15 +1066,17 @@ router.delete('/comments/:comment_id', async (req, res) => {
     // Delete the comment
     await Comment.findByIdAndDelete(commentId);
 
+    req.io.sockets.emit('DELETE_COMMENT', { commentId });
+    console.log("emitted")
 
     res.json({
       success: true,
+      commentId,
     });
   } catch (err) {
-
     res.json({
       success: false,
-      err: err
+      err: err.message,
     });
   }
 });
@@ -1102,8 +1111,8 @@ router.get('/topWins', async (req, res) => {
 
 router.get('/topWithdrawals', async (req, res) => {
   try {
-    const topWds = await Receipt.find({ payment_type: { $regex: /Withdraw/i } }) // Match "withdraw" case-insensitively
-      .sort({ amount: -1 }) // Sort by amount in descending order
+    const topWds = await Receipt.find({ payment_type: { $regex: /Withdraw/i } })
+      .sort({ amount: -1 })
       .populate({
         path: 'user_id',
         model: User,
@@ -1121,9 +1130,9 @@ router.get('/topWithdrawals', async (req, res) => {
     const sortedWithdrawals = filteredWithdrawals
       .map(withdrawal => ({
         ...withdrawal.toObject(),
-        amount: Math.abs(withdrawal.amount) // Convert amount to positive
+        amount: Math.abs(withdrawal.amount)
       }))
-      .slice(0, 4); // Limit to top 12 after filtering
+      .slice(0, 4);
 
     // Respond with the top withdrawals
     res.json({
@@ -1190,7 +1199,7 @@ const getRoomList = async (pageSize, game_type, excludeIds = []) => {
       .select('_id creator battles username joiners game_type qs_game_type gameBackground is_private bet_amount user_bet pr host_pr status room_number created_at updated_at likes views hosts')
       .populate({ path: 'creator', model: User, select: 'avatar totalWagered username accessory status' })
       .populate({ path: 'game_type', model: GameType })
-      .sort({ updated_at: -1 }) // Sort by updated_at in descending order
+      .sort({ updated_at: -1 })
       .limit(pageSize);
 
     const result = await Promise.all(preRooms.map(async (room) => {
@@ -1237,7 +1246,7 @@ const getRoomList = async (pageSize, game_type, excludeIds = []) => {
           status: room.status,
           index: room.room_number,
           created_at: moment(room.created_at).format('YYYY-MM-DD HH:mm'),
-          updated_at: room.updated_at, // Add updated_at for sorting
+          updated_at: room.updated_at,
           likes: room.likes,
           views: room.views,
           battles: room.battles,
@@ -1288,8 +1297,6 @@ const getRoomList = async (pageSize, game_type, excludeIds = []) => {
     }));
 
     const filteredResults = result.filter((temp) => temp !== null);
-
-    // Apply the limit after fetching and sorting
     const limitedResults = filteredResults.slice(0, pageSize);
 
     return {

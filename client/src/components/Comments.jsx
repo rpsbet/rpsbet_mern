@@ -9,10 +9,13 @@ import Moment from 'moment';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPenSquare } from '@fortawesome/free-solid-svg-icons'
 import { setFocused } from '../redux/Auth/user.actions.js'
+import { Skeleton } from '@material-ui/lab';
 
 class Comments extends Component {
     constructor(props) {
         super(props);
+        this.socket = this.props.socket;
+
         this.state = {
             newComment: '',
             showPlayerModal: false,
@@ -23,17 +26,55 @@ class Comments extends Component {
 
     componentDidMount() {
         this.fetchComments();
+        this.setupSocketConnection();
     }
 
     async fetchComments() {
         await this.props.getCommentsForRoom(this.props.roomId);
+
     }
 
     componentDidUpdate(prevProps) {
         if (prevProps.comments !== this.props.comments) {
             this.setState({ comments: this.props.comments });
         }
+        if (prevProps.roomId !== this.props.roomId) {
+
+            this.fetchComments();
+            this.setupSocketConnection();
+        }
     }
+
+    setupSocketConnection = () => {
+        const { socket } = this.props;
+    
+        if (socket) {
+            socket.on('NEW_COMMENT', this.handleNewComment);
+            socket.on('DELETE_COMMENT', this.handleDeleteCommentFromSocket);
+        } else {
+            this.retrySocketConnection();
+        }
+    };
+    
+    // Retry logic for reconnection remains unchanged
+    disconnectSocket = () => {
+        const { socket } = this.props;
+        if (socket) {
+            socket.off('NEW_COMMENT', this.handleNewLog);
+        }
+    }
+
+    retrySocketConnection = () => {
+        setTimeout(() => {
+            const { socket } = this.props;
+            if (socket) {
+                socket.on('NEW_COMMENT', this.handleNewComment);
+            } else {
+                this.retrySocketConnection();
+            }
+        }, 1000);
+    }
+
 
     onFocusHandler = () => {
         this.props.setFocused(true);
@@ -55,29 +96,103 @@ class Comments extends Component {
         this.setState({ newComment: event.target.value });
     };
 
-    handleCommentSubmit = () => {
+    handleCommentSubmit = async () => {
         const { newComment } = this.state;
+        const { roomId } = this.props;
+
         if (newComment.trim() !== '') {
-            this.props.createComment({ content: newComment, room_id: this.props.roomId })
-                .then(() => {
-                    // Fetch comments after the comment is successfully created
-                    this.fetchComments();
-                })
-                .catch(error => {
-                    // Handle error if comment creation fails
-                    console.error('Error creating comment:', error);
+            // Create a temporary comment object
+            const tempComment = {
+                _id: `temp-${Date.now()}`, // Temporary ID
+                content: newComment,
+                room: roomId,
+                user: {
+                    _id: this.props.currentUserId,
+                    username: this.props.currentUsername, // Assuming you have these props
+                    avatar: this.props.currentUserAvatar,
+                    accessory: this.props.currentUserAccessory,
+                    totalWagered: this.props.currentUserTotalWagered,
+                },
+                created_at: new Date().toISOString(),
+            };
+
+            // Append the temporary comment to the state
+            this.setState((prevState) => ({
+                comments: [tempComment, ...prevState.comments],
+                newComment: '', // Clear the input field immediately
+            }));
+
+            try {
+                const response = await this.props.createComment({
+                    content: newComment,
+                    room_id: roomId,
                 });
-            this.setState({ newComment: '' });
+
+                if (response && response.success) {
+                    const createdComment = response.comment;
+
+                    // Replace the temporary comment with the actual comment from the response
+                    this.setState((prevState) => ({
+                        comments: prevState.comments.map((comment) =>
+                            comment._id === tempComment._id ? createdComment : comment
+                        ),
+                    }));
+                } else {
+                    console.error('Failed to create comment:', response?.error || 'Unknown error');
+
+                    // Optionally remove the temporary comment on failure
+                    this.setState((prevState) => ({
+                        comments: prevState.comments.filter((comment) => comment._id !== tempComment._id),
+                    }));
+                }
+            } catch (error) {
+                console.error('Error creating comment:', error);
+
+                // Remove the temporary comment if the API call fails
+                this.setState((prevState) => ({
+                    comments: prevState.comments.filter((comment) => comment._id !== tempComment._id),
+                }));
+            }
         }
     };
 
+    handleNewComment = (newComment) => {
+        this.setState((prevState) => {
+            if (newComment.user._id === this.props.currentUserId) {
+                console.log("Comment by current user, not appending:", newComment);
+                return prevState;
+            }
+    
+            return {
+                comments: [newComment, ...prevState.comments],
+            };
+        });
+    };
 
-    handleDeleteComment = (commentId) => {
-        this.props.deleteComment(commentId);
+    handleDeleteCommentFromSocket = ({ commentId }) => {
+        console.log("commentId", commentId)
+        this.setState((prevState) => ({
+            comments: prevState.comments.filter((comment) => comment._id !== commentId),
+        }));
+    };
+
+    handleDeleteComment = async (commentId) => {
+        this.setState((prevState) => ({
+            comments: prevState.comments.filter((comment) => comment._id !== commentId),
+        }));
+    
+        try {
+            const response = await this.props.deleteComment(commentId);
+            if (!response.success) {
+                console.error('Failed to delete comment:', response.error || 'Unknown error');
+            }
+        } catch (error) {
+            console.error('Error deleting comment:', error);
+        }
     };
 
     render() {
-        const { loading } = this.props;
+        const { loading, roomId } = this.props;
         const { comments } = this.state;
 
         return (
@@ -89,84 +204,99 @@ class Comments extends Component {
                         closeModal={this.handleClosePlayerModal}
                     />
                 )}
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <TextField
-                        label="Reply"
-                        value={this.state.newComment}
-                        onChange={this.handleCommentChange}
-                        fullWidth
-                        multiline
-                        onFocus={this.onFocusHandler}
-                        onBlur={this.onBlurHandler}
-                        minRows={2}
-                        variant="filled"
-                        onKeyDown={(event) => {
-                            if (event.key === 'Enter') {
-                                event.preventDefault(); // Prevent default Enter behavior (line break)
-                                this.handleCommentSubmit();
-                            }
-                        }
-                        }
-                    />
-                    <Button
-                        className="btn_recreate"
-                        style={{ marginLeft: '10px' }} // Adjust margin as needed
-                        onClick={this.handleCommentSubmit}
-                        variant="contained"
-
-                        startIcon={<FontAwesomeIcon icon={faPenSquare} />} // Use the Font Awesome icon here
-                    >
-                        <span className='roll-tag'>[&#x23CE;]</span>
-
-                    </Button>
-                </div>
-
                 {loading ? (
-                    <>
-                        <div style={{ paddingTop: "30px" }}>
-                            <LinearProgress color='secondary' />
-                        </div>
-                    </>
-                ) : (
-                    <div>
-                        {comments.map((comment) => (
-                            <div className="comment-container title" key={comment._id}>
-                                <div className="comment-header">
-                                    <a
-                                        className="player"
-                                        onClick={() => this.handleOpenPlayerModal(comment.user._id)}
-                                    >
-                                        <Avatar
-                                            className="avatar"
-                                            src={comment.avatar}
-                                            username={comment.user.username}
-                                            rank={comment.totalWagered}
-                                            accessory={comment.accessory}
-                                            alt=""
-                                            darkMode={this.props.isDarkMode}
-                                        />
-                                    </a>
-                                </div>
-                                <div className="comment-content">
-                                    <p>{comment.content}</p>
-                                </div>
-                                <div className="comment-footer">
-                                    <span>{comment.user._id === this.props.currentUserId && (
-                                        <IconButton
-                                            className="delete-icon title"
-                                            onClick={() => this.handleDeleteComment(comment._id)}
-                                        >
-                                            <DeleteIcon />
-                                        </IconButton>
-                                    )}</span>
-                                </div>
-                                <span className="comment-time title">{Moment(comment.created_at).fromNow()}</span>
+    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        {/* Skeleton loader for TextField and Button */}
+        <Skeleton variant="rect" width="100%" height={56} style={{ marginRight: "10px" }} />
+        <Skeleton variant="rect" width={80} height={56} />
+    </div>
+) : (
+    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <TextField
+            label="Reply"
+            value={this.state.newComment}
+            onChange={this.handleCommentChange}
+            fullWidth
+            onFocus={this.onFocusHandler}
+            onBlur={this.onBlurHandler}
+            variant="filled"
+            onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                    event.preventDefault(); // Prevent default Enter behavior (line break)
+                    this.handleCommentSubmit();
+                }
+            }}
+        />
+        <Button
+            className="btn_recreate"
+            style={{ marginLeft: '10px' }} // Adjust margin as needed
+            onClick={this.handleCommentSubmit}
+            variant="contained"
+            startIcon={<FontAwesomeIcon icon={faPenSquare} />} // Use the Font Awesome icon here
+        >
+            <span className="roll-tag">[&#x23CE;]</span>
+        </Button>
+    </div>
+)}
 
-                            </div>
-                        ))}
-
+{loading ? (
+    <div style={{ paddingTop: "30px" }}>
+        {/* Skeleton loaders for comments */}
+        {[...Array(3)].map((_, index) => (
+            <div key={index} className="comment-skeleton">
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <Skeleton variant="circle" width={40} height={40} />
+                    <Skeleton variant="text" width="30%" height={20} />
+                </div>
+                <Skeleton variant="text" width="90%" height={20} style={{ margin: "10px 0" }} />
+                <Skeleton variant="text" width="80%" height={20} />
+            </div>
+        ))}
+    </div>
+) : (
+    comments.length === 0 ? (
+        <div style={{ textAlign: "center", paddingTop: "30px", fontSize: "16px", color: "#999" }}>
+            NO REPLIES
+        </div>
+    ) : (
+        <div>
+            {comments.map((comment) => (
+                <div className="comment-container title" key={comment._id}>
+                    <div className="comment-header">
+                        <a
+                            className="player"
+                            onClick={() => this.handleOpenPlayerModal(comment.user._id)}
+                        >
+                            <Avatar
+                                className="avatar"
+                                src={comment.user.avatar}
+                                username={comment.user.username}
+                                rank={comment.user.totalWagered}
+                                accessory={comment.user.accessory}
+                                alt=""
+                                darkMode={this.props.isDarkMode}
+                            />
+                        </a>
                     </div>
-                )}
+                    <div className="comment-content">
+                        <p>{comment.content}</p>
+                    </div>
+                    <div className="comment-footer">
+                        <span>{comment.user._id === this.props.currentUserId && (
+                            <Button
+                                className="delete-icon title"
+                                onClick={() => this.handleDeleteComment(comment._id)}
+                            >
+                                <DeleteIcon />
+                            </Button>
+                        )}</span>
+                    </div>
+                    <span className="comment-time title">{Moment(comment.created_at).fromNow()}</span>
+                </div>
+            ))}
+        </div>
+    )
+)}
             </div>
         );
     }
@@ -175,7 +305,14 @@ class Comments extends Component {
 const mapStateToProps = (state) => ({
     comments: state.logic.comments,
     loading: state.logic.isActiveLoadingOverlay,
-    currentUserId: state.auth.user._id, // Assuming you have user authentication implemented
+    currentUserId: state.auth.user._id,
+    currentUserAccessory: state.auth.user.accessory,
+    currentUserAvatar: state.auth.user.avatar,
+    currentUserTotalWagered: state.auth.user.totalWagered,
+    currentUsername: state.auth.user.username,
+    socket: state.auth.socket,
+
 });
+
 
 export default connect(mapStateToProps, { getCommentsForRoom, createComment, deleteComment, setFocused })(Comments);

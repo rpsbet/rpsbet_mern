@@ -413,23 +413,23 @@ export const getRoomInfo = (room_id, limit, loading) => async dispatch => {
 };
 
 // CreateComment
-export const createComment = (commentData) => async dispatch => {
+export const createComment = (commentData) => async (dispatch) => {
   try {
-
     const res = await axios.post('/game/comments', commentData);
+    console.log("Response from server:", res.data);
     if (res.data.success) {
       dispatch({ type: MSG_SUCCESS, payload: "COMMENT ADDED" });
-
     } else {
-      // Dispatch action for failure if needed
-      // dispatch({ type: COMMENT_CREATION_FAILED });
+      // Optionally, handle failure here
+      dispatch({ type: COMMENT_CREATION_FAILED });
     }
+    return res.data; // Return the response to the caller
   } catch (err) {
-    // Dispatch action for failure if needed, including error payload
+    console.error("Error while creating comment:", err);
     dispatch({ type: COMMENT_CREATION_FAILED, payload: err });
+    return { success: false, error: err }; // Return error to the caller
   } finally {
-    // Dispatch end loading action if needed
-    // Dispatch END_LOADING action if loading flag is set
+    // Any cleanup actions or ending loading state can be handled here
   }
 };
 
@@ -441,14 +441,11 @@ export const getCommentsForRoom = (room_id) => async dispatch => {
     const res = await axios.get(`/game/comments/${room_id}`);
 
     if (res.data.success) {
-      // Dispatch action to handle successful retrieval of comments
       dispatch({ type: COMMENTS_LOADED, payload: res.data.comments });
     } else {
-      // Dispatch action for failure if needed
       dispatch({ type: COMMENTS_LOAD_FAILED });
     }
   } catch (err) {
-    // Dispatch action for failure if needed, including error payload
     dispatch({ type: COMMENTS_LOAD_FAILED, payload: err });
   } finally {
     dispatch({ type: END_LOADING });
@@ -456,21 +453,23 @@ export const getCommentsForRoom = (room_id) => async dispatch => {
 };
 
 // DeleteComment
-export const deleteComment = (comment_id) => async dispatch => {
+export const deleteComment = (comment_id) => async (dispatch) => {
+  console.log("called", comment_id)
   try {
-    // Dispatch start loading action if needed
-
     const res = await axios.delete(`/game/comments/${comment_id}`);
     if (res.data.success) {
-      // Dispatch action to handle successful deletion of comment
       dispatch({ type: COMMENT_DELETED, payload: comment_id });
+
+      return { success: true, commentId: comment_id };
     } else {
-      // Dispatch action for failure if needed
       dispatch({ type: COMMENT_DELETION_FAILED });
+
+      return { success: false, error: res.data.err || 'Unknown error' };
     }
   } catch (err) {
-    // Dispatch action for failure if needed, including error payload
     dispatch({ type: COMMENT_DELETION_FAILED, payload: err });
+
+    return { success: false, error: err.message };
   } finally {
     // Dispatch end loading action if needed
   }

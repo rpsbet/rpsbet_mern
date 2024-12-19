@@ -7,8 +7,6 @@ import { acQueryLoan, previousLoans } from '../../../../redux/Loan/loan.action';
 import BankTable from './BankTable';
 
 
-
-
 export class BankPage extends Component {
 
   componentDidMount() {
