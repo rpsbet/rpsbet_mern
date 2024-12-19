@@ -53,8 +53,6 @@ class RoomHistory extends React.Component {
 
   async componentDidMount() {
     this.isComponentMounted = true;
-    this.attachUserLinkListeners();
-    this.attachAccessories();
     this.setupSocketConnection();
   }
 
@@ -66,10 +64,16 @@ class RoomHistory extends React.Component {
 
   componentDidUpdate(prevProps) {
     if (prevProps.roomInfo !== this.props.roomInfo) {
+     
       this.setState({
         history: this.props.roomInfo.room_history,
         roomInfo: this.props.roomInfo,
+      }, () => {
+
+        this.attachUserLinkListeners();
+        this.attachAccessories();
       });
+
 
     }
   }
@@ -275,7 +279,7 @@ class RoomHistory extends React.Component {
           ) : (
             <div className="loading-skeleton">
               {/* Skeleton Loader for empty history */}
-              <Skeleton variant="rectangular" width="100%" height={60} />
+              <Skeleton variant="rect" width="100%" height={60} />
               <Skeleton variant="text" width="80%" height={30} />
               <Skeleton variant="text" width="60%" height={20} />
               <Skeleton variant="text" width="80%" height={30} />

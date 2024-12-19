@@ -363,7 +363,7 @@ class GlobalChat extends Component {
                   gap: '10px',
                 }}
               >
-                <Skeleton variant="circular" width={40} height={40} />
+                <Skeleton variant="circle" width={40} height={40} />
                 <div style={{ flex: 1 }}>
                   <Skeleton variant="text" width="100%" />
                   <Skeleton variant="text" width="80%" />

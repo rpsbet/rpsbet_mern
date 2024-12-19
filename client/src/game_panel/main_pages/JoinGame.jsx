@@ -1436,7 +1436,7 @@ class JoinGame extends Component {
 
               <div className="game-page loading-skeleton">
                 <div className="game-contents">
-                  <Skeleton variant="rectangular" width="100%" height={60} />
+                  <Skeleton variant="rect" width="100%" height={60} />
 
                   <div
                     className="game-info-panel"

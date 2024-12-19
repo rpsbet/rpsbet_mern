@@ -576,7 +576,7 @@ class MyGamesTable extends Component {
               }}
               key={key}
             >
-              <Skeleton variant="rectangular" width="100%" height={40} />
+              <Skeleton variant="rect" width="100%" height={40} />
               <Skeleton variant="text" width="60%" height={20} />
               <Skeleton variant="text" width="80%" height={20} />
               <Skeleton variant="text" width="50%" height={20} />

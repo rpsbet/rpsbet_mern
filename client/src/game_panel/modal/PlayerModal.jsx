@@ -561,7 +561,7 @@ class PlayerModal extends Component {
 
                 {!this.state.username ? (
                   <div className="user-statistics">
-                    <Skeleton variant="rectangular" width="100%" height={300} style={{ marginBottom: '20px', borderRadius: '8px' }} />
+                    <Skeleton variant="rect" width="100%" height={300} style={{ marginBottom: '20px', borderRadius: '8px' }} />
 
                     <div style={{ marginBottom: '10px' }}>
                       <Skeleton variant="text" width="40%" height={30} />
@@ -646,7 +646,7 @@ class PlayerModal extends Component {
                         <ProductCard key={index}>
                           {/* Skeleton for Product Image */}
                           <Skeleton
-                            variant="rectangular"
+                            variant="rect"
                             width="100%"
                             height={150}
                             style={{ marginBottom: '10px', borderRadius: '8px' }}

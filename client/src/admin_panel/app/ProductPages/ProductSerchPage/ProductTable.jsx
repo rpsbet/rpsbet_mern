@@ -614,7 +614,7 @@ class ProductTable extends Component {
           <ProductGrid>
             {[...Array(6)].map((_, index) => (
               <ProductCard key={`skeleton-product-${index}`}>
-                <Skeleton variant="rectangular" width="100%" height={150} style={{ marginBottom: "10px" }} />
+                <Skeleton variant="rect" width="100%" height={150} style={{ marginBottom: "10px" }} />
                 <Skeleton variant="text" width="60%" height={20} style={{ marginBottom: "10px" }} />
                 <Skeleton variant="text" width="80%" height={20} style={{ marginBottom: "10px" }} />
                 <Skeleton variant="text" width="40%" height={20} style={{ marginBottom: "10px" }} />

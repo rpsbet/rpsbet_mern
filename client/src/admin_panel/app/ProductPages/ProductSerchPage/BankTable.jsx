@@ -554,7 +554,7 @@ class BankTable extends Component {
               <ProductCard key={`skeleton-${index}`}>
                 <Skeleton variant="text" width="80%" height={30} />
                 <Skeleton variant="circle" width={40} height={40} style={{ margin: '10px 0' }} />
-                <Skeleton variant="rectangular" width="100%" height={100} />
+                <Skeleton variant="rect" width="100%" height={100} />
                 <Skeleton variant="text" width="60%" height={20} style={{ margin: '10px 0' }} />
               </ProductCard>
             ))}
@@ -679,7 +679,7 @@ class BankTable extends Component {
                       <Skeleton variant="text" width="100%" height={20} style={{ marginBottom: "5px" }} />
                       <Skeleton variant="text" width="80%" height={20} style={{ marginBottom: "5px" }} />
                       <Skeleton variant="text" width="60%" height={20} style={{ marginBottom: "5px" }} />
-                      <Skeleton variant="rectangular" width="100%" height={50} style={{ marginBottom: "10px" }} />
+                      <Skeleton variant="rect" width="100%" height={50} style={{ marginBottom: "10px" }} />
                     </div>
                   </div>
                 ))

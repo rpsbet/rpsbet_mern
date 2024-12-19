@@ -83,7 +83,7 @@ class RpsPriceChart extends Component {
                 <Grid item xs={6} sm={6} md={3}>
                   <Box display="flex" alignItems="center" justifyContent="center">
                     <MonetizationOnIcon style={{ color: '#FFC107' }} />
-                    <Typography variant="body6" style={{ marginLeft: '5px' }}>Liquidity:</Typography>
+                    <Typography variant="h6" style={{ marginLeft: '5px' }}>Liquidity:</Typography>
                   </Box>
                   <Typography variant="h6" style={{ fontWeight: 'bold', color: '#FF9800' }}>${liquidityUsd}</Typography>
                 </Grid>
@@ -92,7 +92,7 @@ class RpsPriceChart extends Component {
                 <Grid item xs={6} sm={6} md={3}>
                   <Box display="flex" alignItems="center" justifyContent="center">
                     <MonetizationOnIcon style={{ color: '#03A9F4' }} />
-                    <Typography variant="body6" style={{ marginLeft: '5px' }}>MC:</Typography>
+                    <Typography variant="h6" style={{ marginLeft: '5px' }}>MC:</Typography>
                   </Box>
                   <Typography variant="h6" style={{ fontWeight: 'bold', color: '#0288D1' }}>${marketCap}</Typography>
                 </Grid>
@@ -101,7 +101,7 @@ class RpsPriceChart extends Component {
                 <Grid item xs={6} sm={6} md={3}>
                   <Box display="flex" alignItems="center" justifyContent="center">
                     <TrendingUpIcon style={{ color: '#4CAF50' }} />
-                    <Typography variant="body6" style={{ marginLeft: '5px' }}>24h Price:</Typography>
+                    <Typography variant="h6" style={{ marginLeft: '5px' }}>24h Price:</Typography>
                   </Box>
                   <Typography variant="h6" style={{ fontWeight: 'bold', color: priceChanges.h24 >= 0 ? '#4CAF50' : '#F44336' }}>
                     {priceChanges.h24}%
@@ -112,7 +112,7 @@ class RpsPriceChart extends Component {
                 <Grid item xs={6} sm={6} md={3}>
                   <Box display="flex" alignItems="center" justifyContent="center">
                     <TrendingDownIcon style={{ color: '#E91E63' }} />
-                    <Typography variant="body6" style={{ marginLeft: '5px' }}>Volume 24h:</Typography>
+                    <Typography variant="h6" style={{ marginLeft: '5px' }}>Volume 24h:</Typography>
                   </Box>
                   <Typography variant="h6" style={{ fontWeight: 'bold', color: '#FF4081' }}>${volume.h24}</Typography>
                 </Grid>

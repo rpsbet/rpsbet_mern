@@ -98,7 +98,7 @@ class Comments extends Component {
                         multiline
                         onFocus={this.onFocusHandler}
                         onBlur={this.onBlurHandler}
-                        rows={2}
+                        minRows={2}
                         variant="filled"
                         onKeyDown={(event) => {
                             if (event.key === 'Enter') {

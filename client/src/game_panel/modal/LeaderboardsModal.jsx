@@ -303,7 +303,7 @@ class LeaderboardsModal extends Component {
                       <h5 className="title">Equity Distribution (in-game)</h5>
                       {loadingEquityChartData ? (
                         <div style={{ marginTop: "20px" }}>
-                          <Skeleton variant="circular" width={350} height={350} />
+                          <Skeleton variant="circle" width={350} height={350} />
                           <Skeleton variant="text" width="60%" style={{ margin: "10px auto" }} />
                         </div>
                       ) : (
@@ -322,7 +322,7 @@ class LeaderboardsModal extends Component {
                       <h5 className="title">Profit Distribution ($RPS)</h5>
                       {loadingReceiptChartData ? (
                         <div style={{ marginTop: "20px" }}>
-                          <Skeleton variant="circular" width={350} height={350} />
+                          <Skeleton variant="circle" width={350} height={350} />
                           <Skeleton variant="text" width="60%" style={{ margin: "10px auto" }} />
                         </div>
                       ) : (
@@ -397,7 +397,7 @@ class LeaderboardsModal extends Component {
                     <div style={{ margin: "20px 0" }}>
                       {[...Array(5)].map((_, index) => (
                         <div key={index} style={{ display: "flex", alignItems: "center", marginBottom: "15px" }}>
-                          <Skeleton variant="circular" width={40} height={40} style={{ marginRight: "15px" }} />
+                          <Skeleton variant="circle" width={40} height={40} style={{ marginRight: "15px" }} />
                           <Skeleton variant="text" width="20%" style={{ marginRight: "10px" }} />
                           <Skeleton variant="text" width="15%" />
                           <Skeleton variant="text" width="15%" style={{ marginLeft: "auto", marginRight: "10px" }} />

@@ -349,7 +349,7 @@ class MyBankTable extends Component {
             {[...Array(5)].map((_, index) => (
               <ProductCard key={index}>
                 <Skeleton variant="text" width="80%" height={30} />
-                <Skeleton variant="rectangular" width="100%" height={200} />
+                <Skeleton variant="rect" width="100%" height={200} />
                 <Skeleton variant="text" width="50%" height={20} />
                 <Skeleton variant="text" width="70%" height={20} />
                 <Skeleton variant="text" width="60%" height={20} />

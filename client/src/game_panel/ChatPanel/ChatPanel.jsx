@@ -297,7 +297,7 @@ class ChatPanel extends Component {
             <div style={{ marginBottom: '10px' }}>
               <TextField
                 type="text"
-                placeholder="Search GIFs..."
+                placeholder="SEARCH GIFS..."
                 variant="filled"
                 onKeyDown={this.onTextAreaKeyDown}
                 onChange={this.handleSearchInputChange}
@@ -462,7 +462,7 @@ class ChatPanel extends Component {
               onFocus={this.onFocusHandler}
               onBlur={this.onBlurHandler}
               onKeyDown={this.onTextAreaKeyDown}
-              placeholder={isChatEnabled ? "Chat here..." : "RANK MUST BE 10+"}
+              placeholder={isChatEnabled ? "CHAT HERE..." : "RANK MUST BE 10+"}
               onChange={this.onChangeText}
               value={this.state.text}
               ref={elem => {

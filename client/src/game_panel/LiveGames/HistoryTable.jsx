@@ -65,11 +65,6 @@ class HistoryTable extends Component {
 
   async componentDidMount() {
     this.isComponentMounted = true;
-
-    // Attach listeners and fetch initial data
-    this.attachUserLinkListeners();
-    this.attachAccessories();
-
     try {
       const settings = await this.props.getSettings();
       if (this.isComponentMounted) {
@@ -144,11 +139,6 @@ class HistoryTable extends Component {
       const finalHistory = updateFromNow(updatedHistory);
 
       return { history: finalHistory };
-    }, () => {
-      if (this.isComponentMounted) {
-        this.attachUserLinkListeners();
-        this.attachAccessories();
-      }
     });
   };
 
@@ -166,6 +156,8 @@ class HistoryTable extends Component {
   componentDidUpdate(prevProps, prevState) {
 
     if (prevProps.history !== this.props.history) {
+      this.attachUserLinkListeners();
+      this.attachAccessories();
       this.setState({ history: updateFromNow(this.props.history) });
     }
   }

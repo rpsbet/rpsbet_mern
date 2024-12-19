@@ -77,7 +77,7 @@ class MyChat extends Component {
 										{/* Skeleton for Avatar */}
 										<div style={{ marginRight: '15px' }}>
 											<Skeleton
-												variant="circular"
+												variant="circle"
 												width={40}
 												height={40}
 												style={{ borderRadius: '50%' }}

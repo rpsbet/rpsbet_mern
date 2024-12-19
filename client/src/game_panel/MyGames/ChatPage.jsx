@@ -432,7 +432,7 @@ class ChatPage extends Component {
             <input
               type="text"
               className="form-control"
-              placeholder="Chat here..."
+              placeholder="CHAT HERE..."
               onKeyDown={this.onTextAreaKeyDown}
               onChange={this.onChangeText}
               value={text}
