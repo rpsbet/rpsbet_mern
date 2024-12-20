@@ -28,13 +28,12 @@ function CoHostModal({
   const [timeFrame, setTimeFrame] = useState('4h'); // Default to 1 minute
   const [showPlayerModal, setShowPlayerModal] = useState(false);
   const [selectedCreator, setSelectedCreator] = useState('');
-
+  const [selectedTab, setSelectedTab] = useState("PUMP");
   const [isFocused, setIsFocused] = useState(false);
   const [isButtonGroupVisible, setIsButtonGroupVisible] = useState(false);
-
+  const handleTabChange = (tab) => setSelectedTab(tab);
   const transactionCandles = useSelector(state => state.logic.candles);
   const transactions = useSelector(state => state.auth.transactions);
-
   const convertToChartCurrency = (input) => {
     let number = Number(input);
 
@@ -95,18 +94,18 @@ function CoHostModal({
         show: false,
       },
     },
-    title: {
-      text: selectedRow.index
-        ? `${selectedRow.game_type.short_name}-${selectedRow.index}`
-        : selectedRow.room_name,
-      align: 'center',
-      style: {
-        fontSize: '18px',
-        color: '#fff',
-        fontWeight: 600,
-        fontFamily: 'Arial, Helvetica, sans-serif',
-      },
-    },
+    // title: {
+    //   text: selectedRow.index
+    //     ? `${selectedRow.game_type.short_name}-${selectedRow.index}`
+    //     : selectedRow.room_name,
+    //   align: 'center',
+    //   style: {
+    //     fontSize: '18px',
+    //     color: '#fff',
+    //     fontWeight: 600,
+    //     fontFamily: 'Arial, Helvetica, sans-serif',
+    //   },
+    // },
     xaxis: {
       type: 'datetime',
       labels: {
@@ -349,8 +348,18 @@ function CoHostModal({
   };
 
   const handleMaxButtonClick = () => {
-      const simulatedEvent = { target: { value: user.balance } };
-      handleCoHostAmountChange(simulatedEvent);
+    let maxValue;
+
+    if (selectedTab === "PUMP") {
+      maxValue = balance; // Use balance for PUMP
+    } else if (selectedTab === "JEET") {
+      const userHost = selectedRow?.hosts?.find((host) => host.host === user?._id);
+      maxValue =
+        userHost?.share / 100 * parseFloat(selectedRow?.user_bet || 0) || 0; // Use JEET logic
+    }
+
+    const simulatedEvent = { target: { value: maxValue } };
+    handleCoHostAmountChange(simulatedEvent);
   };
 
   const handleUnstake = async (winnings, room_id, stakeAmount) => {
@@ -530,12 +539,63 @@ function CoHostModal({
             </div>
           )}
           <div className="modal-content-panel" style={{ background: "rgba(170, 170, 170, 0.06)", borderRadius: "0.6em", marginBottom: "30px" }}>
-            <Chart
-              options={chartOptions}
-              series={[{ data: chartData }]}
-              type="candlestick"
-              height={350}
-            />
+            {/* Tabs */}
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: "20px" }}>
+              <Button
+                onClick={() => handleTabChange("PUMP")}
+                variant={selectedTab === "PUMP" ? "contained" : "outlined"}
+                color="secondary"
+                style={{
+                  marginRight: "15px",
+                  minWidth: "120px",
+                  padding: "10px 15px",
+                  borderRadius: "8px",
+                  textTransform: "none",
+                  backgroundColor: selectedTab === "PUMP" ? "#28a745" : "transparent", // Green background when selected
+                  color: selectedTab === "PUMP" ? "#fff" : "#28a745", // White text when selected
+                  // boxShadow: selectedTab === "PUMP" ? "0px 4px 12px rgba(0, 255, 0, 0.2)" : "none",
+                }}
+              >
+                PUMP
+                <TrendingUpOutlined
+                  style={{
+                    color: "#fff",
+                    marginLeft: "8px",
+                    background: "linear-gradient(357deg, #00ff17, #28a745)",
+                    padding: "2px",
+                    borderRadius: "50%",
+                    fontSize: "18px",
+                  }}
+                />
+              </Button>
+
+              <Button
+                onClick={() => handleTabChange("JEET")}
+                variant={selectedTab === "JEET" ? "contained" : "outlined"}
+                color="secondary"
+                style={{
+                  minWidth: "120px",
+                  padding: "10px 15px",
+                  borderRadius: "8px",
+                  textTransform: "none",
+                  backgroundColor: selectedTab === "JEET" ? "#ff0000" : "transparent", // Red background when selected
+                  color: selectedTab === "JEET" ? "#fff" : "#ff0000", // White text when selected
+                  // boxShadow: selectedTab === "JEET" ? "0px 4px 12px rgba(255, 0, 0, 0.2)" : "none",
+                }}
+              >
+                JEET
+                <TrendingDownOutlined
+                  style={{
+                    color: "#fff",
+                    marginLeft: "4px",
+                    background: "linear-gradient(357deg, #ff0000, rgb(244 38 38))",
+                    padding: "2px",
+                    borderRadius: "50%",
+                    fontSize: "18px",
+                  }}
+                />
+              </Button>
+            </div>
             <div style={{ display: "flex", flexDirection: "row", justifyContent: "center", alignItems: "center" }}>
               <div className="input-amount" >
                 <TextField
@@ -585,30 +645,60 @@ function CoHostModal({
                     ),
                   }}
                 />
+
                 {has_joined && (
+                  <>
+                    {selectedTab === "PUMP" && (
+                      <div
+                        className="desktop-only"
+                        style={{
+                          paddingTop: "20px",
+                          display: "flex",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Button
+                          style={{ padding: "0 10px" }}
+                          className="button-submit"
+                          onClick={handleSendCoHost}
+                        >
+                          PUMP
 
-                  <div className={"desktop-only"} style={{ paddingTop: "20px ", display: "flex", flexDirection: "row", justifyContent: "center", alignItems: "center" }} >
-                    <Button style={{ padding: "0 10px", marginRight: "10px" }} className={`button-submit ${has_joined ? 'desktop-only' : ''}`} onClick={handleSendCoHost}>
-                      PUMP
-                      <TrendingUpOutlined style={{ color: "#fff", marginLeft: "8px", background: "linear-gradient(357deg, #ff0000, rgb(244 38 38))" }} />
-                    </Button>
-                    <Button
-                      className="btn-back"
-                      onClick={() =>
-                        handleUnstake(
-                          selectedRow?.winnings ?? parseFloat(selectedRow?.user_bet || 0),
-                          selectedRow?._id,
-                          coHostAmount
-                        )
-                      }
-                      style={{ border: "unset", padding: "0 10px", background: "linear-gradient(357deg, #00ff17, #28a745)" }}
-                    >
-                      JEET
-                      <TrendingDownOutlined style={{ color: "#fff", marginLeft: "4px", background: "linear-gradient(357deg, #00ff17, #28a745)" }} />
-                    </Button>
-                  </div>
+                        </Button>
+                      </div>
+                    )}
+                    {selectedTab === "JEET" && (
+                      <div
+                        className="desktop-only"
+                        style={{
+                          paddingTop: "20px",
+                          display: "flex",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Button
+                          style={{
+                            padding: "0 10px",
+                            background: "linear-gradient(357deg, #00ff17, #28a745)",
+                          }}
+                          className="btn-back"
+                          onClick={() =>
+                            handleUnstake(
+                              selectedRow?.winnings ??
+                              parseFloat(selectedRow?.user_bet || 0),
+                              selectedRow?._id,
+                              coHostAmount
+                            )
+                          }
+                        >
+                          JEET
+
+                        </Button>
+                      </div>
+                    )}
+                  </>
+
                 )}
-
               </div>
 
             </div>
@@ -639,7 +729,7 @@ function CoHostModal({
                           (() => {
                             const userHost = selectedRow.hosts.find((host) => host.host === user._id);
                             if (userHost) {
-                              return <>{userHost.share.toFixed(2)}% ({convertToCurrency(userHost.stake)})</>;
+                              return <>{userHost.share.toFixed(2)}% ({convertToCurrency(userHost.share / 100 * parseFloat(selectedRow.user_bet))})</>;
                             } else {
                               return convertToCurrency(0); // In case the host is not found, fallback to 0
                             }
@@ -682,23 +772,35 @@ function CoHostModal({
                       // Calculate new share for the user if they were to buy
                       const newUserShareBuy = (newUserStake / totalStakeIncludingUser) * 100;
 
-                      // Calculate new share for the user if they were to sell
-                      const newUserStakeAfterSell = userStake - amountAfterFee;
-                      const newTotalStakeAfterSell = totalStakeIncludingUser - amountAfterFee;
-                      const newUserShareSell = (newUserStakeAfterSell / newTotalStakeAfterSell) * 100;
+                      // Calculate the amount user currently owns in the bankroll
+                      const userCurrentShareAmount = (userHost.share / 100) * parseFloat(selectedRow.user_bet);
+
+                      // Calculate the user's new stake after selling (they will lose `amountAfterFee`)
+                      const newUserStakeAfterSell = userCurrentShareAmount - amountAfterFee;
+
+                      // Calculate the new share for the user after selling the co-host amount
+                      const newUserShareSell = (newUserStakeAfterSell / totalBankroll) * 100;
 
                       // Fix for minor discrepancies (to ensure the share doesn't go slightly over 100% due to rounding)
                       const buyShare = `${Math.min(newUserShareBuy.toFixed(2), 100).toString()}%`;
-                      const sellShare = `${Math.min(newUserShareSell.toFixed(2), 100).toString()}%`;
+                      const sellShare = newUserStakeAfterSell > 0
+                        ? `${Math.min(newUserShareSell.toFixed(2), 100).toString()}%`
+                        : "0%"; // Prevent division by zero in sell calculation
 
-                      return `~${buyShare} or ~${sellShare}`;
+                      // Return share based on selected tab
+                      return selectedTab === "PUMP" ? `~${buyShare}` : `~${sellShare}`;
                     })()}
                   </TableCell>
                 </TableRow>
               </TableBody>
             </Table>
+            <Chart
+              options={chartOptions}
+              series={[{ data: chartData }]}
+              type="candlestick"
+              height={350}
+            />
           </div>
-
           {!has_joined && (
             <div style={{ background: "rgba(170, 170, 170, 0.06)", borderRadius: "20px", marginBottom: "30px" }}>
 

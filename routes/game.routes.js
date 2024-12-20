@@ -3084,37 +3084,34 @@ const getTimeBucket = (timeRange) => {
 router.get('/candles/:room', async (req, res) => {
   try {
     const room = req.params.room;
+    const { timeRange = '1m' } = req.query;
 
-    const { timeRange = '15m' } = req.query;
+    // Get bucket size based on the time range
     const bucketSize = getTimeBucket(timeRange);
     let startDate = moment().subtract(12, 'hours').startOf('second').toDate();
 
-    // Fetch the first transaction that includes "created", "Pumped", or "Jeeted" in the description
+    const roomData = await Room.findById(room);
+    const user_bet = parseFloat(roomData.user_bet); // Assuming user_bet is stored as a string
+    if (isNaN(user_bet)) {
+      console.error(`[ERROR] Invalid liquidity (user_bet) for room: ${room}`);
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid liquidity value.',
+      });
+    }
+
     const transactions = await Transaction.find({
       room: room,
-      // description: { $regex:  'created|Pumped|Jeeted', $options: 'i' }, // Match any of these words
+      created_at: { $gte: startDate },
     }).sort({ created_at: 1 });
+
     if (transactions.length === 0) {
-      console.warn("[DEBUG] No transaction with 'created', 'Pumped' or 'Jeeted' description found.");
       return res.json({
         success: false,
-        message: "No transactions found with 'created', 'Pumped', or 'Jeeted' descriptions.",
+        message: 'No transactions found.',
       });
     }
 
-    // Assuming the first transaction (created) is used as the initial value for candles
-    const firstTransaction = transactions[0];
-
-    const response = await axios.get(`https://api.dexscreener.com/latest/dex/tokens/${tokenMintAddress}`);
-    const tokenPrice = parseFloat(response.data.pairs[0]?.priceUsd);
-    if (tokenPrice == null || isNaN(tokenPrice)) {
-      return res.status(404).json({
-        success: false,
-        message: 'Token price not found or invalid.',
-      });
-    }
-
-    // Aggregate the transaction data for candlestick chart
     const candles = await Transaction.aggregate([
       {
         $match: {
@@ -3126,64 +3123,68 @@ router.get('/candles/:room', async (req, res) => {
         $project: {
           timeBucket: {
             $floor: {
-              $divide: [
-                { $toLong: "$created_at" },
-                bucketSize * 1000,
-              ],
+              $divide: [{ $toLong: "$created_at" }, bucketSize * 1000],
             },
           },
-          amount: 1,
+          amount: {
+            $cond: {
+              if: {
+                $or: [
+                  { $regexMatch: { input: "$description", regex: /Jeeted/i } },
+                  { $regexMatch: { input: "$description", regex: /Pumped/i } },
+                ],
+              },
+              then: { $multiply: ["$amount", -1] }, // Invert the amount if description contains "Jeeted" or "Pumped"
+              else: "$amount",
+            },
+          },
           created_at: 1,
         },
       },
       {
         $group: {
           _id: "$timeBucket",
-          open: { $first: "$amount" },
-          high: { $max: "$amount" },
-          low: { $min: "$amount" },
-          close: { $last: "$amount" },
           volume: { $sum: { $abs: "$amount" } },
-          sellVolume: { $sum: { $abs: "$amount" } },
+          buyVolume: { $sum: { $cond: [{ $gte: ["$amount", 0] }, "$amount", 0] } },
+          sellVolume: { $sum: { $cond: [{ $lt: ["$amount", 0] }, { $abs: "$amount" }, 0] } },
           startTime: { $min: "$created_at" },
         },
       },
       {
-        $sort: { startTime: -1 },
-      },
-      {
-        $limit: 4,
+        $sort: { startTime: 1 },
       },
     ]);
 
-    const finalCandles = [];
-    let previousClose = firstTransaction.amount;
+    let previousLiquidity = user_bet;
+    const finalCandles = candles.map((candle) => {
+      const open = previousLiquidity;
+      const close = open + (candle.buyVolume - candle.sellVolume); // Adjusted based on transaction volumes
+      const high = Math.max(open, close);
+      const low = Math.min(open, close);
 
-    candles.reverse().forEach((candle, index) => {
-      const adjustedCandle = {
+      previousLiquidity = close; // Update for the next candle
+
+      return {
         _id: candle._id,
-        open: index === 0 ? firstTransaction.amount : previousClose,
-        high: candle.high,
-        low: candle.low,
-        close: candle.close || tokenPrice,
-        volume: candle.volume || 0,
-        sellVolume: candle.sellVolume || 0,
+        open,
+        close,
+        high,
+        low,
+        volume: candle.volume,
+        buyVolume: candle.buyVolume,
+        sellVolume: candle.sellVolume,
         startTime: candle.startTime,
       };
-
-      previousClose = adjustedCandle.close;
-      finalCandles.push(adjustedCandle);
     });
 
-    // Include the relevant transactions in the response
-    const transactionData = transactions
-      .reverse()
-      .map((transaction) => ({
-        description: transaction.description,
-        amount: transaction.amount,
-        created_at: transaction.created_at,
-      }));
+    const transactionData = transactions.map((transaction) => ({
+      description: transaction.description,
+      amount: transaction.amount,
+      created_at: transaction.created_at,
+    }));
 
+
+    // Send response
     res.json({
       success: true,
       candles: finalCandles,
@@ -3191,7 +3192,7 @@ router.get('/candles/:room', async (req, res) => {
     });
   } catch (err) {
     console.error(`[ERROR] An error occurred: ${err.message}`);
-    res.json({
+    res.status(500).json({
       success: false,
       err: err.message,
     });

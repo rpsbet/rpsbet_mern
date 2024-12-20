@@ -262,7 +262,7 @@ class HistoryTable extends Component {
               >
                 <div>
                   <div className="table-cell">
-                    <div className="room-id">
+                    <div className="room-id" style={{display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginRight: "10px"}}>
                       {row.status === 'open' ? (
                         <>
                           {row.status}  <HeartIcon isOpen={true} />
@@ -276,7 +276,6 @@ class HistoryTable extends Component {
                           finished  <HeartIcon isOpen={false} />
                         </>
                       )}
-                    </div>
                     {row.ai_mode && (
                       <div id="ai_mode">
                         <span className="room-id ai_mode">
@@ -289,6 +288,7 @@ class HistoryTable extends Component {
                         </>)}
                       </div>
                     )}
+                    </div>
                     <div
                       className="desktop-only"
                       dangerouslySetInnerHTML={{ __html: row.history }}

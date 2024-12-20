@@ -1041,23 +1041,25 @@ div.table .table-row.carousel-content:hover {
 }
 
 .table-cell #ai_mode {
-  position: absolute;
-  top:-2px;
-  left: 90px;
+  position: relative;
+  /* top:-2px;
+  left: 90px; */
 }
 
 span.room-id.ai_mode {
-
   border: 1px solid #f13bfe;
   border-radius: 0.4em;
   color: #f68aff;
   font-size: 0.5em !important;
   padding: 2px 4px;
   background: linear-gradient(45deg, #a341a28c, #6a18ff87);
+  margin-left: 10px;
 }
 
 span.room-id.qbot {
-  margin-left: 10px;
+white-space: nowrap;
+  margin-left: 5px;
+  margin-right: 10px;
   border: 1px solid #dab200;
   border-radius: 0.4em;
   color: #f1c100;
@@ -2749,7 +2751,7 @@ input {
 
 .input-amount span,
 .game-page .game-contents .game-info-panel .edit-amount-panel span {
-  font-size: 16px;
+  font-size: 10px;
 }
 
 .gradient-container .previous-guesses.drop {
