@@ -746,7 +746,7 @@ function CoHostModal({
                     {(() => {
                       if (!selectedRow || !Array.isArray(selectedRow.hosts)) return "0%";
 
-                      const userHost = user && selectedRow.hosts.find((host) => host.host === user._id);
+                      const userHost = user && selectedRow?.hosts?.find((host) => host.host === user._id);
                       const userStake = userHost ? parseFloat(userHost.stake) : 0; // User's current stake
 
                       const coHostAmountFloat = parseFloat(coHostAmount || 0);
@@ -773,8 +773,9 @@ function CoHostModal({
                       const newUserShareBuy = (newUserStake / totalStakeIncludingUser) * 100;
 
                       // Calculate the amount user currently owns in the bankroll
-                      const userCurrentShareAmount = (userHost.share / 100) * parseFloat(selectedRow.user_bet);
-
+                      const userCurrentShareAmount = userHost && !isNaN(userHost.share) && !isNaN(selectedRow.user_bet) 
+                      ? (userHost.share / 100) * parseFloat(selectedRow.user_bet)
+                      : 0;
                       // Calculate the user's new stake after selling (they will lose `amountAfterFee`)
                       const newUserStakeAfterSell = userCurrentShareAmount - amountAfterFee;
 
