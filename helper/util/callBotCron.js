@@ -256,7 +256,7 @@ async function callCronJobs(io) {
         for (const cronJob of cronJobs) {
 
           const user = await User.findOne({ _id: cronJob.userId });
-          const room = await Room.findOne({ joiners: cronJob.userId, status: "open" });
+          const room = await Room.findOne({ joiners: cronJob.userId, status: "open", is_private: false });
           if (user && room) {
             const result = await executeCronJob(user, cronJob.betArray, cronJobUserIds, true, room, 'Random');
             if (result && result.success) {
@@ -268,7 +268,7 @@ async function callCronJobs(io) {
         const attachedPlayers = await AttachedPlayer.find({});
         for (const player of attachedPlayers) {
           const user = await User.findOne({ _id: player.user });
-          const room = await Room.findOne({ _id: player.room, status: 'open' });
+          const room = await Room.findOne({ _id: player.room, status: 'open', is_private: false });
           if (user && room) {
             const result = await executeCronJob(user, player.bet_amounts, [player.user.toString()], false, room, player.selected_strategy);
             if (result && result.success) {
@@ -292,7 +292,8 @@ async function callCronJobs(io) {
               const room = await Room.findOne({
                 status: 'open',
                 selectedStrategy: formattedStrategyName,
-                creator: { $ne: bot.user }
+                creator: { $ne: bot.user },
+                is_private: false
               });
               const numElements = 6;
               let remainingBalance = user.balance;
@@ -334,7 +335,8 @@ async function callCronJobs(io) {
               const user = await User.findOne({ _id: bot.user });
               const rooms = await Room.find({
                 status: 'open',
-                creator: { $in: [bot.user] }
+                creator: { $in: [bot.user] },
+                is_private: false
               });
 
 
