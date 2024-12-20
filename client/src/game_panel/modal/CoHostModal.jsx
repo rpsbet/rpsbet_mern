@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import Moment from 'moment';
-import { getTransactionCandles, unstake, addNewTransaction, getMyGames } from '../../redux/Logic/logic.actions';
+import { getTransactionCandles, unstake, addNewTransaction, addNewCandle, getMyGames } from '../../redux/Logic/logic.actions';
 import { setBalance } from '../../redux/Auth/user.actions'
 import Chart from "react-apexcharts";
 import { Box, Tooltip, Typography, Button, TextField, TableHead, Table, TableBody, TableCell, TableRow, ButtonGroup } from "@material-ui/core";
@@ -34,6 +34,8 @@ function CoHostModal({
   const handleTabChange = (tab) => setSelectedTab(tab);
   const transactionCandles = useSelector(state => state.logic.candles);
   const transactions = useSelector(state => state.auth.transactions);
+  const socket = useSelector(state => state.auth.socket);
+
   const convertToChartCurrency = (input) => {
     let number = Number(input);
 
@@ -73,6 +75,33 @@ function CoHostModal({
     }
   }, [dispatch, selectedRow?._id, timeFrame]);
 
+  useEffect(() => {
+    if (selectedRow && selectedRow._id && socket) {
+      const roomId = selectedRow._id;
+      const candleEvent = `NEW_CANDLE_${roomId}`;
+      
+      // Log when the listener is set up
+      console.log(`Setting up listener for candle events in room ${roomId}`);
+
+      const handleNewCandle = (data) => {
+        // Log when a new candle is received
+        console.log(`New candle received for room ${roomId}:`, data.newCandle);
+
+        // Dispatch the action to add the new candle to the Redux store
+        dispatch(addNewCandle(data.newCandle));
+      };
+
+      // Set up the socket listener
+      socket.on(candleEvent, handleNewCandle);
+
+      // Clean up the socket listener when the component unmounts or roomId changes
+      return () => {
+        console.log(`Cleaning up listener for room ${roomId}`);
+        socket.off(candleEvent, handleNewCandle);
+      };
+    }
+  }, [selectedRow?._id, socket, dispatch]);
+
   let chartData = [];
   const chartOptions = {
     chart: {
@@ -94,18 +123,6 @@ function CoHostModal({
         show: false,
       },
     },
-    // title: {
-    //   text: selectedRow.index
-    //     ? `${selectedRow.game_type.short_name}-${selectedRow.index}`
-    //     : selectedRow.room_name,
-    //   align: 'center',
-    //   style: {
-    //     fontSize: '18px',
-    //     color: '#fff',
-    //     fontWeight: 600,
-    //     fontFamily: 'Arial, Helvetica, sans-serif',
-    //   },
-    // },
     xaxis: {
       type: 'datetime',
       labels: {

@@ -2320,6 +2320,26 @@ router.post('/coHost', auth, async (req, res) => {
       console.error("Error saving documents:", error);
     }
 
+    const timeBucket = Math.floor(new Date(now).getTime() / (60 * 1000)); // Assuming bucket size of 1 minute
+    const newCandle = {
+      _id: timeBucket,
+      open: room.user_bet - coHostAmount,           // Liquidity before transaction
+      close: room.user_bet,                        // Liquidity after transaction
+      high: Math.max(room.user_bet - coHostAmount, room.user_bet), // High
+      low: Math.min(room.user_bet - coHostAmount, room.user_bet),  // Low
+      volume: coHostAmount,                        // Volume of the transaction
+      buyVolume: coHostAmount,                     // This is a buy
+      sellVolume: 0,                               // No sell volume for this transaction
+      startTime: new Date(timeBucket * 60 * 1000)  // Start time of the bucket
+    };
+
+    if (req.io.sockets) {
+      req.io.sockets.emit(`NEW_CANDLE_${room._id}`, {
+        newCandle: newCandle
+      });
+    }
+
+
     const newGameLog = new GameLog({
       room: room._id,
       creator: req.user._id,
@@ -2402,14 +2422,14 @@ router.post('/unstake', auth, async (req, res) => {
       });
     }
 
-    const accessAllowed = await check_access_time(userId);
-    if (!accessAllowed) {
-      return res.json({
-        success: false,
-        message: 'Irregular action',
-        betResult: -1000
-      });
-    }
+    // const accessAllowed = await check_access_time(userId);
+    // if (!accessAllowed) {
+    //   return res.json({
+    //     success: false,
+    //     message: 'Irregular action',
+    //     betResult: -1000
+    //   });
+    // }
 
     const roomInfo = await Room.findOne({ _id: roomId })
       .populate({ path: 'creator', model: User })
@@ -2458,11 +2478,10 @@ router.post('/unstake', auth, async (req, res) => {
       roomInfo.hosts.splice(hostIndex, 1);
     }
 
-
+    // Adjust shares
     if (roomInfo.hosts.length === 1) {
       roomInfo.hosts[0].share = 100;
     } else {
-
       const remainingBankroll = roomInfo.user_bet;
       roomInfo.hosts.forEach(host => {
         if (host.stake > 0) {
@@ -2482,6 +2501,25 @@ router.post('/unstake', auth, async (req, res) => {
       description: `Jeeted ${roomInfo.game_type.short_name}-${roomInfo.room_number}`,
       room: roomId
     });
+
+    // Update the candle
+    const open = roomInfo.user_bet;
+    const close = roomInfo.user_bet - unstakeAmount; // New value after unstake
+    const high = Math.max(open, close); // The highest value in this period
+    const low = Math.min(open, close); // The lowest value in this period
+
+    const updatedCandle = {
+      newCandle: {
+        open: open,
+        high: high,
+        low: low,
+        close: close,
+        timestamp: moment().valueOf(), // Set the current timestamp
+      }
+    };
+
+    // Emit the candle event to all clients connected to the room
+    req.io.sockets.emit(`NEW_CANDLE_${roomInfo._id}`, updatedCandle);
 
     // Create a game log entry for tracking
     const newGameLog = new GameLog({
@@ -2551,8 +2589,6 @@ router.post('/unstake', auth, async (req, res) => {
 
     res.json({
       success: true,
-      // myGames: myRooms.rooms,
-      // pageSize: myRooms.pageSize,
       newTransaction
     });
 
@@ -2572,7 +2608,6 @@ router.post('/unstake', auth, async (req, res) => {
       req.io.sockets.emit(`UPDATED_BANKROLL_${roomInfo._id}`, {
         bankroll: roomInfo.user_bet,
         host_pr: roomInfo.host_pr,
-        // rps: mostRecentItems,
         newLog: newLog,
         user: req.user
       });

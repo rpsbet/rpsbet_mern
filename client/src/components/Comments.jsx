@@ -138,17 +138,11 @@ class Comments extends Component {
                         ),
                     }));
                 } else {
-                    console.error('Failed to create comment:', response?.error || 'Unknown error');
-
-                    // Optionally remove the temporary comment on failure
                     this.setState((prevState) => ({
                         comments: prevState.comments.filter((comment) => comment._id !== tempComment._id),
                     }));
                 }
             } catch (error) {
-                console.error('Error creating comment:', error);
-
-                // Remove the temporary comment if the API call fails
                 this.setState((prevState) => ({
                     comments: prevState.comments.filter((comment) => comment._id !== tempComment._id),
                 }));
@@ -159,7 +153,6 @@ class Comments extends Component {
     handleNewComment = (newComment) => {
         this.setState((prevState) => {
             if (newComment.user._id === this.props.currentUserId) {
-                console.log("Comment by current user, not appending:", newComment);
                 return prevState;
             }
     
@@ -170,7 +163,6 @@ class Comments extends Component {
     };
 
     handleDeleteCommentFromSocket = ({ commentId }) => {
-        console.log("commentId", commentId)
         this.setState((prevState) => ({
             comments: prevState.comments.filter((comment) => comment._id !== commentId),
         }));

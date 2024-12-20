@@ -4278,9 +4278,9 @@ div.table.my-chat-table .table-row .table-cell:last-child {
 
 
 .mat-chat .chat-wrapper {
-  padding-top: 73px;
+  padding-top: 84px;
   overflow: hidden;
-  padding-bottom: 30px;
+  padding-bottom: 20px;
   width: 260px;
   height: 100%;
 }
@@ -4801,10 +4801,7 @@ button {
   border: 3px solid #ddd;
 }
 
-#footer-container {
-  border-top: 1px solid rgba(235, 235, 235, 0.48);
-  background: #e5e5e5;
-}
+
 
 .create-game-panel button#tr {
   right: 18%;
@@ -4979,6 +4976,9 @@ ul div {
   min-width: 44px !important;
 }
 
+body {
+  background: #420068;
+}
 .copyright {
   color: white;
   font-size: 1em;

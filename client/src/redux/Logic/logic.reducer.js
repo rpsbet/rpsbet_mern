@@ -11,6 +11,7 @@ import {
   END_LOADING,
   START_BET,
   END_BET,
+  ADD_NEW_CANDLE,
   ROOMS_LOADED,
   SET_QBOT_STATUSES,
   ROOMS_COUNT,
@@ -434,6 +435,12 @@ export default function (state = initialState, action) {
       return {
         ...state,
         globalChatList: [...state.globalChatList, payload]
+      };
+
+    case ADD_NEW_CANDLE:
+      return {
+        ...state,
+        candles: [...state.candles, payload], // Add the new candle to the list
       };
     case SET_GLOBAL_CHAT:
       return {

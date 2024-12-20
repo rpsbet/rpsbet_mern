@@ -15,6 +15,7 @@ import {
   SET_TOKEN_PRICE,
   COMMENT_CREATED,
   TOP_WINS,
+  ADD_NEW_CANDLE,
   SET_QBOT_STATUSES,
   COMMENT_CREATION_FAILED,
   COMMENTS_LOADED,
@@ -1157,12 +1158,18 @@ export const getMyHistory = search_condition => async dispatch => {
   }
 };
 
+export const addNewCandle = (newCandle) => {
+  return {
+    type: 'ADD_NEW_CANDLE',
+    payload: newCandle,
+  };
+};
+
 export const getTransactionCandles = ({ roomId, timeFrame }) => async (dispatch) => { 
   try {
     const res = await axios.get(`/game/candles/${roomId}`, {
       params: { timeFrame }
     });
-
 
     if (res.data.success) {
       dispatch({

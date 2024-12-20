@@ -202,10 +202,6 @@
 	border-top: 2px solid #ff00ed1a;
 }
 
-.dark_mode #footer-container {
-	border-top: 1px solid rgba(40, 38, 55, 0.48);
-	background: #151515;
-}
 
 .dark_mode .modal-footer {
 	background: linear-gradient(45deg, #6316d7, #6c00a4, #3a00a3);

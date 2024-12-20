@@ -604,6 +604,7 @@ async function executeCronJob(user, betArray, userIds, useFirstBetFunction, room
   try {
     const rooms = room ? [room] : await Room.find({
       status: 'open',
+      is_private: false,
       creator: { $ne: user._id }
     });
 
