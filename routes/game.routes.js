@@ -3115,17 +3115,17 @@ const getTimeBucket = (timeRange) => {
       return 1;
   }
 };
+
 router.get('/candles/:room', async (req, res) => {
   try {
     const room = req.params.room;
     const { timeRange = '1m' } = req.query;
 
-    // Get bucket size based on the time range
     const bucketSize = getTimeBucket(timeRange);
     let startDate = moment().subtract(12, 'hours').startOf('second').toDate();
 
     const roomData = await Room.findById(room);
-    const user_bet = parseFloat(roomData.user_bet);
+    const user_bet = parseFloat(roomData.user_bet); // Assuming user_bet is stored as a string
     if (isNaN(user_bet)) {
       console.error(`[ERROR] Invalid liquidity (user_bet) for room: ${room}`);
       return res.status(400).json({
@@ -3148,18 +3148,17 @@ router.get('/candles/:room', async (req, res) => {
     }
 
     let previousLiquidity = user_bet; // Default to user_bet
+    let initialCandle = null;
     const firstTransaction = transactions.find((t) =>
       t.description.toLowerCase().includes('created')
     );
 
-    let initialCandle = null;
-    let endedTransaction = null;
-
     if (firstTransaction) {
+
       const amount = Math.abs(firstTransaction.amount); // Convert to positive
       initialCandle = {
         _id: 'initial',
-        open: 0,
+        open: amount, // Set to the amount of the "created" transaction
         close: amount,
         high: amount,
         low: 0,
@@ -3172,36 +3171,45 @@ router.get('/candles/:room', async (req, res) => {
       previousLiquidity = amount; // Update liquidity to the amount of the "created" transaction
 
       transactions = transactions.filter((t) => t !== firstTransaction);
-    }
+    } else {
 
-    // Handle "ended" transaction: it represents the dev's withdrawal
-    const lastTransaction = transactions.find((t) =>
-      t.description.toLowerCase().includes('ended')
-    );
+      const priorTransactions = await Transaction.find({
+        room: room,
+        created_at: { $lt: startDate }, // Transactions before 12 hours ago
+      }).sort({ created_at: 1 });
 
-    if (lastTransaction) {
-      endedTransaction = {
-        _id: 'ended',
-        open: previousLiquidity,
-        close: 0.00000001, // Set to 0 because the dev withdrew the liquidity
-        high: previousLiquidity,
-        low: 0,
-        volume: previousLiquidity,
-        buyVolume: 0,
-        sellVolume: previousLiquidity, // Sell all liquidity
-        startTime: lastTransaction.created_at,
+
+      const amounts = priorTransactions.map(transaction => {
+        return transaction.amount < 0 ? Math.abs(transaction.amount) : -Math.abs(transaction.amount);
+      });
+
+      const calculationString = amounts.join(' + ');
+      const totalAmount = amounts.reduce((total, amount) => total + amount, 0); // Sum prior transactions
+
+      // Now set initialCandle based on totalAmount, not previousLiquidity
+      initialCandle = {
+        _id: 'initial',
+        open: totalAmount, // Corrected: Set to totalAmount from prior transactions
+        close: totalAmount,
+        high: totalAmount,
+        low: totalAmount,
+        volume: Math.abs(totalAmount),
+        buyVolume: totalAmount > 0 ? totalAmount : 0,
+        sellVolume: totalAmount < 0 ? Math.abs(totalAmount) : 0,
+        startTime: priorTransactions.length > 0 ? priorTransactions[0].created_at : startDate,
       };
 
-      previousLiquidity = 0; // Set liquidity to 0 after withdrawal
-      transactions = transactions.filter((t) => t !== lastTransaction); // Remove the "ended" transaction from further aggregation
+
+      // Update previousLiquidity with totalAmount from prior transactions
+      previousLiquidity = totalAmount;
     }
-    // Aggregate candles (excluding the "created" and "ended" transactions)
+
     const candles = await Transaction.aggregate([
       {
         $match: {
           room: room,
           created_at: { $gte: startDate },
-          description: { $not: /created|ended/i }, // Exclude transactions with "created" or "ended"
+          description: { $not: /created|ended/i },
         },
       },
       {
@@ -3217,9 +3225,10 @@ router.get('/candles/:room', async (req, res) => {
                 $or: [
                   { $regexMatch: { input: '$description', regex: /Jeeted/i } },
                   { $regexMatch: { input: '$description', regex: /Pumped/i } },
+                  { $regexMatch: { input: '$description', regex: /joined/i } },
                 ],
               },
-              then: { $multiply: ['$amount', -1] }, // Invert the amount if description contains "Jeeted" or "Pumped"
+              then: { $multiply: ['$amount', -1] },
               else: '$amount',
             },
           },
@@ -3238,14 +3247,16 @@ router.get('/candles/:room', async (req, res) => {
       { $sort: { startTime: 1 } },
     ]);
 
-    // Map candles to include open, close, high, and low values
+ 
+
     const finalCandles = candles.map((candle) => {
       const open = previousLiquidity;
-      const close = open + (candle.buyVolume - candle.sellVolume); // Adjusted based on transaction volumes
+      const close = open + (candle.buyVolume - candle.sellVolume);
       const high = Math.max(open, close);
       const low = Math.min(open, close);
 
-      previousLiquidity = close; // Update for the next candle
+      previousLiquidity = close;
+
 
       return {
         _id: candle._id,
@@ -3260,32 +3271,19 @@ router.get('/candles/:room', async (req, res) => {
       };
     });
 
-    // Prepend the initial and "ended" candles if applicable
     if (initialCandle) {
       finalCandles.unshift(initialCandle);
     }
-    if (endedTransaction) {
-      finalCandles.push(endedTransaction); // Push the endedTransaction as a sell
-    }
 
-    // Map transaction data for response
-    const transactionData = transactions.map((transaction) => ({
-      description: transaction.description,
-      amount: transaction.amount,
-      created_at: transaction.created_at,
-    }));
-
-    // Send response
     res.json({
       success: true,
       candles: finalCandles,
-      transactions: transactionData,
     });
   } catch (err) {
     console.error(`[ERROR] An error occurred: ${err.message}`);
     res.status(500).json({
       success: false,
-      err: err.message,
+      message: 'An error occurred while processing the request.',
     });
   }
 });

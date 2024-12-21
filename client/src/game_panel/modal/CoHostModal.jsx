@@ -267,6 +267,7 @@ function CoHostModal({
 
     // Ensure chart data is sorted by timestamp and valid
     chartData.sort((a, b) => a.x - b.x);
+    console.log("chartData", chartData)
     chartData.forEach((candle) => {
       if (!candle.y || candle.y.length !== 4) {
         console.error("Invalid candle:", candle);
