@@ -75,16 +75,16 @@ class TabbedContent extends Component {
   }
 
   static getDerivedStateFromProps(props, current_state) {
+    const { roomInfo } = props;
     if (
       !current_state.room_history ||
       current_state.room_history.length === 0 ||
-      (props.roomInfo.room_history &&
-        current_state.room_history[0]['created_at'] !==
-        props.roomInfo.room_history[0]['created_at'])
+      (roomInfo?.room_history &&
+        current_state.room_history[0]?.created_at !== roomInfo.room_history[0]?.created_at)
     ) {
       return {
         ...current_state,
-        room_history: updateFromNow(props.roomInfo.room_history),
+        room_history: updateFromNow(roomInfo?.room_history || []),
       };
     }
     return null;

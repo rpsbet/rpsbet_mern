@@ -1683,20 +1683,23 @@ class SiteWrapper extends Component {
                             `$${(balance * conversionRate).toFixed(numDecimals)}`
                           ) : (
                             <>
-                              <InlineSVG id="busd" src={busdSvg} />
+                              {/* <InlineSVG id="busd" src={busdSvg} /> */}
                               <CountUp
-                                start={oldBalance}
+                                start={balance}
                                 end={balance}
                                 separator=","
                                 decimal="."
                                 decimals={numDecimals}
-                                duration={40.5}
+                                duration={4.5}
                                 redraw={true}
                                 preserveValue={true}
                                 onEnd={() => {
                                   this.setState({ oldBalance: balance });
                                 }}
                               />
+                              {/* <span>
+                               { convertToCurrency(balance) }
+                              </span> */}
                             </>
                           )}
                         </div>

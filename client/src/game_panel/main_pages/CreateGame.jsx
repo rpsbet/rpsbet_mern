@@ -987,7 +987,7 @@ class CreateGame extends Component {
                   )}
                 </div>
                 <div className="game-contents title">
-                  {(this.state.step === 3 ) && (
+                  {(this.state.step === 2 || this.state.step === 3 || this.state.step === 1 ) && (
                       <Summary
                         bet_amount={this.state.bet_amount}
                         max_return={this.state.max_return}

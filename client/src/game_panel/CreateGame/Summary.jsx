@@ -295,7 +295,7 @@ class Summary extends Component {
   }
 
   render() {
-    if (this.props.step === 1) {
+    if (this.props.step === 2) {
       return <></>;
     } else if (this.props.step === 3) {
       return this.total_summery();

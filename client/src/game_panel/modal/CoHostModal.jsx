@@ -146,6 +146,7 @@ function CoHostModal({
         show: true,
         color: '#fff',
       },
+     
     },
     yaxis: {
       labels: {
@@ -193,7 +194,7 @@ function CoHostModal({
     },
     grid: {
       borderColor: '#444',
-      strokeDashArray: 4,
+      strokeDashArray: 9,
     },
     theme: {
       mode: isDarkMode ? 'dark' : 'light',
@@ -203,21 +204,22 @@ function CoHostModal({
   if (transactionCandles && transactionCandles.length > 0) {
     let lastCandle = transactionCandles[0];
 
-    // Add the first candle
+    // Add the first candle to chartData
     chartData.push({
       x: new Date(lastCandle.startTime).getTime(), // Convert to timestamp
       y: [lastCandle.open, lastCandle.high, lastCandle.low, lastCandle.close],
     });
 
-    // Process remaining candles
+    // Process remaining candles starting from the second one (i = 1)
     for (let i = 1; i < transactionCandles.length; i++) {
       const currentCandle = transactionCandles[i];
-      const timeDiff = currentCandle.startTime - lastCandle.startTime;
+      
+      const timeDiff = new Date(currentCandle.startTime).getTime() - new Date(lastCandle.startTime).getTime();
 
       if (timeDiff > 60000) { // Gap longer than 1 minute
         const missingCandlesCount = Math.floor(timeDiff / 60000);
 
-        // Insert gap candles
+        // Insert gap candles for the missing minutes
         for (let j = 1; j < missingCandlesCount; j++) {
           const missingTime = new Date(lastCandle.startTime).getTime() + j * 60000;
 
@@ -228,26 +230,27 @@ function CoHostModal({
               lastCandle.close,
               lastCandle.close,
               lastCandle.close,
-            ],
+            ], // Missing candle with last close price
           });
         }
       }
 
-      // Add the current candle
+      // Add the current candle to chartData
       chartData.push({
         x: new Date(currentCandle.startTime).getTime(), // Convert to timestamp
         y: [currentCandle.open, currentCandle.high, currentCandle.low, currentCandle.close],
       });
 
-      // Update last candle reference
+      // Update lastCandle to be the current candle
       lastCandle = currentCandle;
     }
 
-    // Fill gaps between the last candle and the current time
+    // Fill gaps between the last candle and the current time (now)
     const now = new Date();
     const lastTime = new Date(lastCandle.startTime);
     const timeDiff = Math.floor((now - lastTime) / 60000); // Minutes since the last candle
 
+    // Add missing candles from the last candle to the current time
     for (let j = 1; j <= timeDiff; j++) {
       const missingTime = new Date(lastCandle.startTime).getTime() + j * 60000;
 
@@ -258,11 +261,11 @@ function CoHostModal({
           lastCandle.close,
           lastCandle.close,
           lastCandle.close,
-        ],
+        ], // Missing candle with last close price
       });
     }
 
-    // Ensure chart data is sorted and valid
+    // Ensure chart data is sorted by timestamp and valid
     chartData.sort((a, b) => a.x - b.x);
     chartData.forEach((candle) => {
       if (!candle.y || candle.y.length !== 4) {
@@ -270,7 +273,7 @@ function CoHostModal({
         throw new Error("Invalid candle structure detected.");
       }
     });
-  }
+}
 
   useEffect(() => {
     if (isFocused) {

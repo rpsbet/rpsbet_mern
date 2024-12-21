@@ -3115,7 +3115,6 @@ const getTimeBucket = (timeRange) => {
       return 1;
   }
 };
-
 router.get('/candles/:room', async (req, res) => {
   try {
     const room = req.params.room;
@@ -3126,7 +3125,7 @@ router.get('/candles/:room', async (req, res) => {
     let startDate = moment().subtract(12, 'hours').startOf('second').toDate();
 
     const roomData = await Room.findById(room);
-    const user_bet = parseFloat(roomData.user_bet); // Assuming user_bet is stored as a string
+    const user_bet = parseFloat(roomData.user_bet);
     if (isNaN(user_bet)) {
       console.error(`[ERROR] Invalid liquidity (user_bet) for room: ${room}`);
       return res.status(400).json({
@@ -3135,7 +3134,8 @@ router.get('/candles/:room', async (req, res) => {
       });
     }
 
-    const transactions = await Transaction.find({
+    // Fetch transactions
+    let transactions = await Transaction.find({
       room: room,
       created_at: { $gte: startDate },
     }).sort({ created_at: 1 });
@@ -3147,30 +3147,80 @@ router.get('/candles/:room', async (req, res) => {
       });
     }
 
+    let previousLiquidity = user_bet; // Default to user_bet
+    const firstTransaction = transactions.find((t) =>
+      t.description.toLowerCase().includes('created')
+    );
+
+    let initialCandle = null;
+    let endedTransaction = null;
+
+    if (firstTransaction) {
+      const amount = Math.abs(firstTransaction.amount); // Convert to positive
+      initialCandle = {
+        _id: 'initial',
+        open: 0,
+        close: amount,
+        high: amount,
+        low: 0,
+        volume: amount,
+        buyVolume: amount,
+        sellVolume: 0,
+        startTime: firstTransaction.created_at,
+      };
+
+      previousLiquidity = amount; // Update liquidity to the amount of the "created" transaction
+
+      transactions = transactions.filter((t) => t !== firstTransaction);
+    }
+
+    // Handle "ended" transaction: it represents the dev's withdrawal
+    const lastTransaction = transactions.find((t) =>
+      t.description.toLowerCase().includes('ended')
+    );
+
+    if (lastTransaction) {
+      endedTransaction = {
+        _id: 'ended',
+        open: previousLiquidity,
+        close: 0.00000001, // Set to 0 because the dev withdrew the liquidity
+        high: previousLiquidity,
+        low: 0,
+        volume: previousLiquidity,
+        buyVolume: 0,
+        sellVolume: previousLiquidity, // Sell all liquidity
+        startTime: lastTransaction.created_at,
+      };
+
+      previousLiquidity = 0; // Set liquidity to 0 after withdrawal
+      transactions = transactions.filter((t) => t !== lastTransaction); // Remove the "ended" transaction from further aggregation
+    }
+    // Aggregate candles (excluding the "created" and "ended" transactions)
     const candles = await Transaction.aggregate([
       {
         $match: {
           room: room,
           created_at: { $gte: startDate },
+          description: { $not: /created|ended/i }, // Exclude transactions with "created" or "ended"
         },
       },
       {
         $project: {
           timeBucket: {
             $floor: {
-              $divide: [{ $toLong: "$created_at" }, bucketSize * 1000],
+              $divide: [{ $toLong: '$created_at' }, bucketSize * 1000],
             },
           },
           amount: {
             $cond: {
               if: {
                 $or: [
-                  { $regexMatch: { input: "$description", regex: /Jeeted/i } },
-                  { $regexMatch: { input: "$description", regex: /Pumped/i } },
+                  { $regexMatch: { input: '$description', regex: /Jeeted/i } },
+                  { $regexMatch: { input: '$description', regex: /Pumped/i } },
                 ],
               },
-              then: { $multiply: ["$amount", -1] }, // Invert the amount if description contains "Jeeted" or "Pumped"
-              else: "$amount",
+              then: { $multiply: ['$amount', -1] }, // Invert the amount if description contains "Jeeted" or "Pumped"
+              else: '$amount',
             },
           },
           created_at: 1,
@@ -3178,19 +3228,17 @@ router.get('/candles/:room', async (req, res) => {
       },
       {
         $group: {
-          _id: "$timeBucket",
-          volume: { $sum: { $abs: "$amount" } },
-          buyVolume: { $sum: { $cond: [{ $gte: ["$amount", 0] }, "$amount", 0] } },
-          sellVolume: { $sum: { $cond: [{ $lt: ["$amount", 0] }, { $abs: "$amount" }, 0] } },
-          startTime: { $min: "$created_at" },
+          _id: '$timeBucket',
+          volume: { $sum: { $abs: '$amount' } },
+          buyVolume: { $sum: { $cond: [{ $gte: ['$amount', 0] }, '$amount', 0] } },
+          sellVolume: { $sum: { $cond: [{ $lt: ['$amount', 0] }, { $abs: '$amount' }, 0] } },
+          startTime: { $min: '$created_at' },
         },
       },
-      {
-        $sort: { startTime: 1 },
-      },
+      { $sort: { startTime: 1 } },
     ]);
 
-    let previousLiquidity = user_bet;
+    // Map candles to include open, close, high, and low values
     const finalCandles = candles.map((candle) => {
       const open = previousLiquidity;
       const close = open + (candle.buyVolume - candle.sellVolume); // Adjusted based on transaction volumes
@@ -3212,12 +3260,20 @@ router.get('/candles/:room', async (req, res) => {
       };
     });
 
+    // Prepend the initial and "ended" candles if applicable
+    if (initialCandle) {
+      finalCandles.unshift(initialCandle);
+    }
+    if (endedTransaction) {
+      finalCandles.push(endedTransaction); // Push the endedTransaction as a sell
+    }
+
+    // Map transaction data for response
     const transactionData = transactions.map((transaction) => ({
       description: transaction.description,
       amount: transaction.amount,
       created_at: transaction.created_at,
     }));
-
 
     // Send response
     res.json({

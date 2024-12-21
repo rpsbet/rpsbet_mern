@@ -79,7 +79,6 @@ class HistoryTable extends Component {
     } catch (error) {
       console.error("Error fetching history:", error);
     }
-
     this.setupSocketConnection();
   }
 
@@ -154,7 +153,6 @@ class HistoryTable extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-
     if (prevProps.history !== this.props.history) {
       this.attachUserLinkListeners();
       this.attachAccessories();
@@ -199,6 +197,7 @@ class HistoryTable extends Component {
 
 
   handleOpenPlayerModal = creator_id => {
+    console.log("creator_id", creator_id)
     this.setState({ showPlayerModal: true, selectedCreator: creator_id });
   };
 
