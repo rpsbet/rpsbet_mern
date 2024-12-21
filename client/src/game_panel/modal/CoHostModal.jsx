@@ -103,141 +103,155 @@ function CoHostModal({
   }, [selectedRow?._id, socket, dispatch]);
 
   let chartData = [];
-  const chartOptions = {
-    chart: {
-      type: 'candlestick',
-      height: 350,
-      zoom: {
-        enabled: true,
-        type: 'x',
-        resetIcon: {
-          size: 30,
-          offsetX: 0,
-          offsetY: 0,
-          fillColor: '#fff',
-          shape: 'circle',
-        },
-      },
-      toolbar: {
-        autoSelected: 'zoom',
-        show: false,
-      },
-    },
-    xaxis: {
-      type: 'datetime',
-      labels: {
-        datetimeUTC: false,
-        rotate: -45,
-        format: 'HH:mm',
-        style: {
-          colors: '#fff',
-          fontSize: '12px',
-          fontFamily: 'Arial, Helvetica, sans-serif',
-          fontWeight: 400,
-        },
-      },
-      tickAmount: 10,
-      axisBorder: {
-        show: true,
-        color: '#fff',
-        height: 1,
-      },
-      axisTicks: {
-        show: true,
-        color: '#fff',
-      },
-     
-    },
-    yaxis: {
-      labels: {
-        style: {
-          colors: '#fff',
-          fontSize: '12px',
-          fontFamily: 'Arial, Helvetica, sans-serif',
-          fontWeight: 400,
-        },
-        formatter: (value) => convertToChartCurrency(value),
-      },
-    },
-    tooltip: {
-      custom: function ({ series, seriesIndex, dataPointIndex, w }) {
-        const candle = chartData[dataPointIndex];
+const FOUR_HOURS_IN_MS = 4 * 60 * 60 * 1000; // 4 hours in milliseconds
+const now = new Date().getTime(); // Current time in milliseconds
+const thresholdTime = now - FOUR_HOURS_IN_MS; // 4 hours ago timestamp
 
-        if (!candle || !candle.y || candle.y.length !== 4) {
-          console.error("Invalid candle data:", candle);
-          return '';
-        }
-
-        const [open, high, low, close] = candle.y;
-        return `
-          <div class="chart-tooltip">
-            <div><strong>Time:</strong> ${Moment(candle.x).format('HH:mm')}</div>
-            <div><strong>Open:</strong> ${convertToChartCurrency(open)}</div>
-            <div><strong>High:</strong> ${convertToChartCurrency(high)}</div>
-            <div><strong>Low:</strong> ${convertToChartCurrency(low)}</div>
-            <div><strong>Close:</strong> ${convertToChartCurrency(close)}</div>
-          </div>`;
+const chartOptions = {
+  chart: {
+    type: 'candlestick',
+    height: 350,
+    zoom: {
+      enabled: true,
+      type: 'x',
+      resetIcon: {
+        size: 30,
+        offsetX: 0,
+        offsetY: 0,
+        fillColor: '#fff',
+        shape: 'circle',
       },
     },
-    plotOptions: {
-      candlestick: {
-        wick: {
-          useFillColor: true,
-          width: 1 // Reducing the width of the wick for visibility
-        },
-        colors: {
-          upward: '#00b140',
-          downward: '#ff4b4b',
-        },
-        bodyWidth: 1, // Adjust the width of the candle body (default is larger)
+    toolbar: {
+      autoSelected: 'zoom',
+      show: false,
+    },
+  },
+  xaxis: {
+    type: 'datetime',
+    labels: {
+      datetimeUTC: false,
+      rotate: -45,
+      format: 'HH:mm',
+      style: {
+        colors: '#fff',
+        fontSize: '12px',
+        fontFamily: 'Arial, Helvetica, sans-serif',
+        fontWeight: 400,
       },
     },
-    grid: {
-      borderColor: '#444',
-      strokeDashArray: 9,
+    tickAmount: 10,
+    axisBorder: {
+      show: true,
+      color: '#fff',
+      height: 1,
     },
-    theme: {
-      mode: isDarkMode ? 'dark' : 'light',
+    axisTicks: {
+      show: true,
+      color: '#fff',
     },
-  };
+  },
+  yaxis: {
+    labels: {
+      style: {
+        colors: '#fff',
+        fontSize: '12px',
+        fontFamily: 'Arial, Helvetica, sans-serif',
+        fontWeight: 400,
+      },
+      formatter: (value) => convertToChartCurrency(value),
+    },
+  },
+  tooltip: {
+    custom: function ({ series, seriesIndex, dataPointIndex, w }) {
+      const candle = chartData[dataPointIndex];
 
-  if (transactionCandles && transactionCandles.length > 0) {
-    let lastCandle = transactionCandles[0];
+      if (!candle || !candle.y || candle.y.length !== 4) {
+        console.error("Invalid candle data:", candle);
+        return '';
+      }
+
+      const [open, high, low, close] = candle.y;
+      return `
+        <div class="chart-tooltip">
+          <div><strong>Time:</strong> ${Moment(candle.x).format('HH:mm')}</div>
+          <div><strong>Open:</strong> ${convertToChartCurrency(open)}</div>
+          <div><strong>High:</strong> ${convertToChartCurrency(high)}</div>
+          <div><strong>Low:</strong> ${convertToChartCurrency(low)}</div>
+          <div><strong>Close:</strong> ${convertToChartCurrency(close)}</div>
+        </div>`;
+    },
+  },
+  plotOptions: {
+    candlestick: {
+      wick: {
+        useFillColor: true,
+        width: 1,
+      },
+      colors: {
+        upward: '#00b140',
+        downward: '#ff4b4b',
+      },
+      bodyWidth: 1,
+    },
+  },
+  grid: {
+    borderColor: '#444',
+    strokeDashArray: 9,
+  },
+  theme: {
+    mode: isDarkMode ? 'dark' : 'light',
+  },
+};
+
+if (transactionCandles && transactionCandles.length > 0) {
+  // Filter candles to only include the last 4 hours
+  const recentCandles = transactionCandles.filter(candle => 
+    new Date(candle.startTime).getTime() >= thresholdTime
+  );
+
+  if (recentCandles.length === 0) {
+    console.warn("No candles found within the last 4 hours.");
+  } else {
+    let lastCandle = recentCandles[0];
 
     // Add the first candle to chartData
     chartData.push({
-      x: new Date(lastCandle.startTime).getTime(), // Convert to timestamp
+      x: new Date(lastCandle.startTime).getTime(),
       y: [lastCandle.open, lastCandle.high, lastCandle.low, lastCandle.close],
     });
 
     // Process remaining candles starting from the second one (i = 1)
-    for (let i = 1; i < transactionCandles.length; i++) {
-      const currentCandle = transactionCandles[i];
-      
-      const timeDiff = new Date(currentCandle.startTime).getTime() - new Date(lastCandle.startTime).getTime();
+    for (let i = 1; i < recentCandles.length; i++) {
+      const currentCandle = recentCandles[i];
+      const lastTime = new Date(lastCandle.startTime).getTime();
+      const currentTime = new Date(currentCandle.startTime).getTime();
+      const timeDiff = currentTime - lastTime;
 
       if (timeDiff > 60000) { // Gap longer than 1 minute
         const missingCandlesCount = Math.floor(timeDiff / 60000);
 
         // Insert gap candles for the missing minutes
         for (let j = 1; j < missingCandlesCount; j++) {
-          const missingTime = new Date(lastCandle.startTime).getTime() + j * 60000;
+          const missingTime = lastTime + j * 60000;
 
-          chartData.push({
-            x: missingTime, // Missing candle's timestamp
-            y: [
-              lastCandle.close,
-              lastCandle.close,
-              lastCandle.close,
-              lastCandle.close,
-            ], // Missing candle with last close price
-          });
+          if (missingTime >= thresholdTime) { // Ensure missing candles are within the last 4 hours
+            chartData.push({
+              x: missingTime,
+              y: [
+                lastCandle.close,
+                lastCandle.close,
+                lastCandle.close,
+                lastCandle.close,
+              ],
+            });
+          }
         }
       }
 
       // Add the current candle to chartData
       chartData.push({
-        x: new Date(currentCandle.startTime).getTime(), // Convert to timestamp
+        x: currentTime,
         y: [currentCandle.open, currentCandle.high, currentCandle.low, currentCandle.close],
       });
 
@@ -245,35 +259,30 @@ function CoHostModal({
       lastCandle = currentCandle;
     }
 
-    // Fill gaps between the last candle and the current time (now)
-    const now = new Date();
-    const lastTime = new Date(lastCandle.startTime);
-    const timeDiff = Math.floor((now - lastTime) / 60000); // Minutes since the last candle
+    // Fill gaps between the last candle and the current time
+    const lastTime = new Date(lastCandle.startTime).getTime();
+    const timeDiff = Math.floor((now - lastTime) / 60000);
 
-    // Add missing candles from the last candle to the current time
     for (let j = 1; j <= timeDiff; j++) {
-      const missingTime = new Date(lastCandle.startTime).getTime() + j * 60000;
+      const missingTime = lastTime + j * 60000;
 
-      chartData.push({
-        x: missingTime,
-        y: [
-          lastCandle.close,
-          lastCandle.close,
-          lastCandle.close,
-          lastCandle.close,
-        ], // Missing candle with last close price
-      });
-    }
-
-    // Ensure chart data is sorted by timestamp and valid
-    chartData.sort((a, b) => a.x - b.x);
-    console.log("chartData", chartData)
-    chartData.forEach((candle) => {
-      if (!candle.y || candle.y.length !== 4) {
-        console.error("Invalid candle:", candle);
-        throw new Error("Invalid candle structure detected.");
+      if (missingTime >= thresholdTime) { // Ensure missing candles are within the last 4 hours
+        chartData.push({
+          x: missingTime,
+          y: [
+            lastCandle.close,
+            lastCandle.close,
+            lastCandle.close,
+            lastCandle.close,
+          ],
+        });
       }
-    });
+    }
+  }
+
+  // Ensure chart data is sorted by timestamp
+  chartData.sort((a, b) => a.x - b.x);
+  console.log("chartData", chartData);
 }
 
   useEffect(() => {

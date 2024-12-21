@@ -3284,6 +3284,8 @@ router.get('/candles/:room', async (req, res) => {
           buyVolume: { $sum: { $cond: [{ $gte: ['$amount', 0] }, '$amount', 0] } },
           sellVolume: { $sum: { $cond: [{ $lt: ['$amount', 0] }, { $abs: '$amount' }, 0] } },
           startTime: { $min: '$created_at' },
+          maxAmount: { $max: '$amount' },
+          minAmount: { $min: '$amount' },
         },
       },
       { $sort: { startTime: 1 } },
@@ -3298,8 +3300,8 @@ router.get('/candles/:room', async (req, res) => {
     const finalCandles = candles.map((candle) => {
       const open = previousLiquidity;
       const close = open + (candle.buyVolume - candle.sellVolume); // Adjusted based on transaction volumes
-      const high = Math.max(open, close);
-      const low = Math.min(open, close);
+      const high = Math.max(open, candle.maxAmount);
+      const low = Math.min(open, candle.minAmount);
 
       previousLiquidity = close; // Update for the next candle
 
