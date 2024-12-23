@@ -5673,21 +5673,20 @@ button#recentSearches span {
 
 .disclaimer-web3 {
   background: hwb(120 7% 0% / 0.386) !important;
-  color: #77dd77
+  color: rgb(0, 255, 58)
 }
 
 .green {
-  stroke: #77dd77;
+  stroke: rgb(0, 255, 58);
 }
 
 .grey {
   stroke: #bbb;
   color: #bbb;
-  background-color: #bbb9;
 }
 
 .cell .green {
-  color: #77dd77 !important;
+  color: rgb(0, 255, 58) !important;
 }
 
 .hexagon {

@@ -321,7 +321,7 @@ class ChatPage extends Component {
                       }}
                     >
                       <Skeleton
-                        variant="rounded"
+                        variant="circle"
                         height={20}
                         width="100%"
                         style={{ borderRadius: '10px' }}

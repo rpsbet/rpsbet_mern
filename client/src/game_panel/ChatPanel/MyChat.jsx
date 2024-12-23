@@ -103,7 +103,7 @@ class MyChat extends Component {
 										{/* Skeleton for Unread Badge */}
 										<div style={{ marginRight: '15px' }}>
 											<Skeleton
-												variant="rounded"
+												variant="circle"
 												width={30}
 												height={20}
 												style={{ borderRadius: '10px' }}
@@ -113,7 +113,7 @@ class MyChat extends Component {
 										{/* Skeleton for Button */}
 										<div>
 											<Skeleton
-												variant="rounded"
+												variant="circle"
 												width={60}
 												height={30}
 												style={{ borderRadius: '5px' }}

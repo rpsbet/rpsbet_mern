@@ -447,7 +447,6 @@ class OpenGamesTable extends Component {
     }
   };
 
-
   renderArrow = value => {
     return value >= 0 ? (
       <Add style={{ color: '#57ca22' }} />
@@ -465,9 +464,7 @@ class OpenGamesTable extends Component {
     if (filterOption) {
       await this.props.getRecentlyClosed();
     }
-
   };
-
 
   render() {
     const {
@@ -972,19 +969,19 @@ class OpenGamesTable extends Component {
                         />
                         <span className="cell">{row.game_type.short_name + '-' + row.room_number}</span>
                       </a>
+                      {/* <div className="cell">
+                        {row.status} 
+                      </div> */}
                       <div className="cell">
-                        {row.status} <FontAwesomeIcon icon={faHeartBroken} />
+                        {row.from_now} <FontAwesomeIcon icon={faStopwatch} />&nbsp;<FontAwesomeIcon icon={faHeartBroken} />
                       </div>
-                      <div className="cell">
-                        {row.from_now} <FontAwesomeIcon icon={faStopwatch} />
-                      </div>
-                      <div className="cell">
+                      <div className="cell"  style={{ fontSize: '0.8em' }}>
                         <span className={`${this.getColorClass(hostPrizeMinusBetAmount)}`}>
                           {convertToCurrency(hostPrizeMinusBetAmount)}
                         </span>
                         <span
                           className={`${this.getColorClass(hostPrizeMinusBetAmount)}`}
-                          style={{ fontSize: 'xx-small', marginLeft: '5px' }}
+                          style={{ marginLeft: '5px' }}
                         >
                           (${(hostPrizeMinusBetAmount * this.props.tokenPrice).toFixed(2)})
                         </span>
@@ -1029,7 +1026,8 @@ const mapStateToProps = state => ({
   user: state.auth.user,
   socket: state.auth.socket,
   isLowGraphics: state.auth.isLowGraphics,
-  loading: state.logic.isActiveLoadingOverlay
+  loading: state.logic.isActiveLoadingOverlay,
+  tokenPrice: state.logic.tokenPrice,
 });
 
 const mapDispatchToProps = {

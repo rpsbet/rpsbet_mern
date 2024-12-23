@@ -362,7 +362,7 @@ async function callCronJobs(io) {
                 key !== 'created_at' &&
                 key !== 'updated_at' &&
                 typeof plainHostingStrategies[key] === 'number' &&
-                plainHostingStrategies[key] > 0
+                plainHostingStrategies[key] !== 0
               );
               if (rooms.length >= 2) {
                 for (const room of rooms) {

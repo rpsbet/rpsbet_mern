@@ -25,7 +25,7 @@ function CoHostModal({
 }) {
   const dispatch = useDispatch();
   const [closingRooms, setClosingRooms] = useState({});
-  const [timeFrame, setTimeFrame] = useState('4h'); // Default to 1 minute
+  const [timeFrame, setTimeFrame] = useState('4h');
   const [showPlayerModal, setShowPlayerModal] = useState(false);
   const [selectedCreator, setSelectedCreator] = useState('');
   const [selectedTab, setSelectedTab] = useState("PUMP");
@@ -40,19 +40,14 @@ function CoHostModal({
     let number = Number(input);
 
     if (!isNaN(number)) {
-      // Round the number down
       number = Math.floor(number * 100) / 100;
 
-      // Format number for K (thousands) and M (millions)
       let formattedNumber = '';
       if (number >= 1000000 || number <= -1000000) {
-        // For millions
         formattedNumber = (number / 1000000).toFixed(1) + 'M';
       } else if (number >= 1000 || number <= -1000) {
-        // For thousands
         formattedNumber = (number / 1000).toFixed(1) + 'K';
       } else {
-        // For numbers less than 1000
         let [whole, decimal] = number.toFixed(2).split('.');
         whole = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
@@ -63,15 +58,15 @@ function CoHostModal({
         formattedNumber = decimal ? `${whole}.${decimal}` : whole;
       }
 
-      return formattedNumber; // Return just the string without SVG
+      return formattedNumber;
     } else {
-      return input.toString(); // Return the original input if not a valid number
+      return input.toString();
     }
   };
 
   useEffect(() => {
     if (selectedRow?._id) {
-      dispatch(getTransactionCandles({ roomId: selectedRow._id, timeFrame })); // Fetch candles for the selected room and time frame
+      dispatch(getTransactionCandles({ roomId: selectedRow._id, timeFrame }));
     }
   }, [dispatch, selectedRow?._id, timeFrame]);
 
@@ -175,13 +170,13 @@ function CoHostModal({
       candlestick: {
         wick: {
           useFillColor: true,
-          width: 1 // Reducing the width of the wick for visibility
+          width: 1
         },
         colors: {
           upward: '#00b140',
           downward: '#ff4b4b',
         },
-        bodyWidth: 1, // Adjust the width of the candle body (default is larger)
+        bodyWidth: 1,
       },
     },
     grid: {
@@ -194,46 +189,32 @@ function CoHostModal({
   };
 
   if (transactionCandles && transactionCandles.length > 0) {
-    const now = new Date().getTime(); // Current time in milliseconds
+    const now = new Date().getTime();
     const fourHoursAgo = Date.now() - 4 * 60 * 60 * 1000;
-    console.log("fourHoursAgo", fourHoursAgo)
-  
     let lastCandle = transactionCandles[0];
   
-    // Add the first candle if it's within the 4-hour range
     if (new Date(lastCandle.startTime).getTime() >= fourHoursAgo) {
       chartData.push({
-        x: new Date(lastCandle.startTime).getTime(), // Convert to timestamp
+        x: new Date(lastCandle.startTime).getTime(),
         y: [lastCandle.open, lastCandle.high, lastCandle.low, lastCandle.close],
       });
     }
   
-    // Process remaining candles
     for (let i = 1; i < transactionCandles.length; i++) {
       const currentCandle = transactionCandles[i];
-      const lastCandleTime = new Date(lastCandle.startTime).getTime(); // Convert to timestamp
-      const currentCandleTime = new Date(currentCandle.startTime).getTime(); // Convert to timestamp
+      const lastCandleTime = new Date(lastCandle.startTime).getTime();
+      const currentCandleTime = new Date(currentCandle.startTime).getTime();
+
+      const timeDiff = currentCandleTime - lastCandleTime;
   
-      // Skip candles older than 4 hours
-      // if (currentCandleTime < fourHoursAgo) {
-      //   continue;
-      // }
-  
-      const timeDiff = currentCandleTime - lastCandleTime; // Calculate time difference in milliseconds
-  
-      // Handle the case for gap candles
-      if (timeDiff > 60000) { // Gap longer than 1 minute
+      if (timeDiff > 60000) {
         
-        const missingCandlesCount = Math.floor(timeDiff / 60000); // Calculate how many missing minutes
-        console.log(`Gap detected: ${timeDiff} ms, adding missingCandlesCount candles.`);
-  
-        // Insert gap candles
+        const missingCandlesCount = Math.floor(timeDiff / 60000);
         for (let j = 1; j < missingCandlesCount; j++) {
-          const missingTime = lastCandleTime + j * 60000; // Increment by 1 minute for each missing candle
-          // Skip adding filler candles if they are outside the 4-hour range
+          const missingTime = lastCandleTime + j * 60000;
           if (missingTime >= fourHoursAgo) {
             chartData.push({
-              x: missingTime, // Missing candle's timestamp
+              x: missingTime,
               y: [
                 lastCandle.close,
                 lastCandle.close,
@@ -245,43 +226,37 @@ function CoHostModal({
         }
       }
   
-      // Merge candles if they are within the same minute
-      if (timeDiff <= 60000) { // Within the same minute
-
+      if (timeDiff <= 60000 && Math.floor(lastCandleTime / 60000) === Math.floor(currentCandleTime / 60000)) {
         lastCandle.high = Math.max(lastCandle.high, currentCandle.high);
         lastCandle.low = Math.min(lastCandle.low, currentCandle.low);
-        lastCandle.close = currentCandle.close; // Update the close price
-        lastCandle.volume += currentCandle.volume; // Add to the volume
-  
-        // Update the chart data for the merged candle
-        if (currentCandleTime >= fourHoursAgo) {
-          chartData[chartData.length - 1] = {
-            x: currentCandleTime,
+        lastCandle.close = currentCandle.close;
+        lastCandle.volume += currentCandle.volume;
+      
+        const lastChartIndex = chartData.length - 1;
+        if (currentCandleTime >= fourHoursAgo && lastChartIndex >= 0) {
+          chartData[lastChartIndex] = {
+            x: lastCandleTime,
             y: [lastCandle.open, lastCandle.high, lastCandle.low, lastCandle.close],
           };
         }
       } else {
-        // If not within the same minute, create a new candle
         if (currentCandleTime >= fourHoursAgo) {
           chartData.push({
-            x: currentCandleTime, // Use the timestamp for the current candle
+            x: currentCandleTime,
             y: [currentCandle.open, currentCandle.high, currentCandle.low, currentCandle.close],
           });
         }
+      
+        lastCandle = currentCandle;
       }
-  
-      // Update the last candle reference
-      lastCandle = currentCandle;
     }
   
-    // Fill gaps between the last candle and the current time
     const lastCandleTime = new Date(lastCandle.startTime).getTime();
-    const timeDiff = Math.floor((now - lastCandleTime) / 60000); // Minutes since the last candle
+    const timeDiff = Math.floor((now - lastCandleTime) / 60000);
   
     for (let j = 1; j <= timeDiff; j++) {
       const missingTime = lastCandleTime + j * 60000;
   
-      // Skip adding filler candles if they are outside the 4-hour range
       if (missingTime >= fourHoursAgo) {
         chartData.push({
           x: missingTime,
@@ -295,7 +270,6 @@ function CoHostModal({
       }
     }
   
-    // Ensure chart data is sorted and valid
     chartData.sort((a, b) => a.x - b.x);
 
     chartData.forEach((candle) => {
@@ -312,7 +286,7 @@ function CoHostModal({
     } else {
       const timeoutId = setTimeout(() => {
         setIsButtonGroupVisible(false);
-      }, 0); // Adjust the timeout value as needed
+      }, 0);
       return () => clearTimeout(timeoutId);
     }
   }, [isFocused]);
