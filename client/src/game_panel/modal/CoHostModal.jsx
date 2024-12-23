@@ -79,24 +79,16 @@ function CoHostModal({
     if (selectedRow && selectedRow._id && socket) {
       const roomId = selectedRow._id;
       const candleEvent = `NEW_CANDLE_${roomId}`;
-      
-      // Log when the listener is set up
-      console.log(`Setting up listener for candle events in room ${roomId}`);
 
       const handleNewCandle = (data) => {
-        // Log when a new candle is received
         console.log(`New candle received for room ${roomId}:`, data.newCandle);
 
-        // Dispatch the action to add the new candle to the Redux store
         dispatch(addNewCandle(data.newCandle));
       };
 
-      // Set up the socket listener
       socket.on(candleEvent, handleNewCandle);
 
-      // Clean up the socket listener when the component unmounts or roomId changes
       return () => {
-        console.log(`Cleaning up listener for room ${roomId}`);
         socket.off(candleEvent, handleNewCandle);
       };
     }
@@ -146,7 +138,7 @@ function CoHostModal({
         show: true,
         color: '#fff',
       },
-      
+
     },
     yaxis: {
       labels: {
@@ -170,13 +162,13 @@ function CoHostModal({
 
         const [open, high, low, close] = candle.y;
         return `
-          <div class="chart-tooltip">
-            <div><strong>Time:</strong> ${Moment(candle.x).format('HH:mm')}</div>
-            <div><strong>Open:</strong> ${convertToChartCurrency(open)}</div>
-            <div><strong>High:</strong> ${convertToChartCurrency(high)}</div>
-            <div><strong>Low:</strong> ${convertToChartCurrency(low)}</div>
-            <div><strong>Close:</strong> ${convertToChartCurrency(close)}</div>
-          </div>`;
+        <div class="chart-tooltip">
+          <div><strong>Time:</strong> ${Moment(candle.x).format('HH:mm')}</div>
+          <div><strong>Open:</strong> ${convertToChartCurrency(open)}</div>
+          <div><strong>High:</strong> ${convertToChartCurrency(high)}</div>
+          <div><strong>Low:</strong> ${convertToChartCurrency(low)}</div>
+          <div><strong>Close:</strong> ${convertToChartCurrency(close)}</div>
+        </div>`;
       },
     },
     plotOptions: {
@@ -202,69 +194,110 @@ function CoHostModal({
   };
 
   if (transactionCandles && transactionCandles.length > 0) {
+    const now = new Date().getTime(); // Current time in milliseconds
+    const fourHoursAgo = Date.now() - 4 * 60 * 60 * 1000;
+    console.log("fourHoursAgo", fourHoursAgo)
+  
     let lastCandle = transactionCandles[0];
-
-    // Add the first candle
-    chartData.push({
-      x: new Date(lastCandle.startTime).getTime(), // Convert to timestamp
-      y: [lastCandle.open, lastCandle.high, lastCandle.low, lastCandle.close],
-    });
-
+  
+    // Add the first candle if it's within the 4-hour range
+    if (new Date(lastCandle.startTime).getTime() >= fourHoursAgo) {
+      chartData.push({
+        x: new Date(lastCandle.startTime).getTime(), // Convert to timestamp
+        y: [lastCandle.open, lastCandle.high, lastCandle.low, lastCandle.close],
+      });
+    }
+  
     // Process remaining candles
     for (let i = 1; i < transactionCandles.length; i++) {
       const currentCandle = transactionCandles[i];
-      const timeDiff = currentCandle.startTime - lastCandle.startTime;
-
+      const lastCandleTime = new Date(lastCandle.startTime).getTime(); // Convert to timestamp
+      const currentCandleTime = new Date(currentCandle.startTime).getTime(); // Convert to timestamp
+  
+      // Skip candles older than 4 hours
+      // if (currentCandleTime < fourHoursAgo) {
+      //   continue;
+      // }
+  
+      const timeDiff = currentCandleTime - lastCandleTime; // Calculate time difference in milliseconds
+  
+      // Handle the case for gap candles
       if (timeDiff > 60000) { // Gap longer than 1 minute
-        const missingCandlesCount = Math.floor(timeDiff / 60000);
-
+        
+        const missingCandlesCount = Math.floor(timeDiff / 60000); // Calculate how many missing minutes
+        console.log(`Gap detected: ${timeDiff} ms, adding missingCandlesCount candles.`);
+  
         // Insert gap candles
         for (let j = 1; j < missingCandlesCount; j++) {
-          const missingTime = new Date(lastCandle.startTime).getTime() + j * 60000;
+          const missingTime = lastCandleTime + j * 60000; // Increment by 1 minute for each missing candle
+          // Skip adding filler candles if they are outside the 4-hour range
+          if (missingTime >= fourHoursAgo) {
+            chartData.push({
+              x: missingTime, // Missing candle's timestamp
+              y: [
+                lastCandle.close,
+                lastCandle.close,
+                lastCandle.close,
+                lastCandle.close,
+              ],
+            });
+          }
+        }
+      }
+  
+      // Merge candles if they are within the same minute
+      if (timeDiff <= 60000) { // Within the same minute
 
+        lastCandle.high = Math.max(lastCandle.high, currentCandle.high);
+        lastCandle.low = Math.min(lastCandle.low, currentCandle.low);
+        lastCandle.close = currentCandle.close; // Update the close price
+        lastCandle.volume += currentCandle.volume; // Add to the volume
+  
+        // Update the chart data for the merged candle
+        if (currentCandleTime >= fourHoursAgo) {
+          chartData[chartData.length - 1] = {
+            x: currentCandleTime,
+            y: [lastCandle.open, lastCandle.high, lastCandle.low, lastCandle.close],
+          };
+        }
+      } else {
+        // If not within the same minute, create a new candle
+        if (currentCandleTime >= fourHoursAgo) {
           chartData.push({
-            x: missingTime, // Missing candle's timestamp
-            y: [
-              lastCandle.close,
-              lastCandle.close,
-              lastCandle.close,
-              lastCandle.close,
-            ],
+            x: currentCandleTime, // Use the timestamp for the current candle
+            y: [currentCandle.open, currentCandle.high, currentCandle.low, currentCandle.close],
           });
         }
       }
-
-      // Add the current candle
-      chartData.push({
-        x: new Date(currentCandle.startTime).getTime(), // Convert to timestamp
-        y: [currentCandle.open, currentCandle.high, currentCandle.low, currentCandle.close],
-      });
-
-      // Update last candle reference
+  
+      // Update the last candle reference
       lastCandle = currentCandle;
     }
-
+  
     // Fill gaps between the last candle and the current time
-    const now = new Date();
-    const lastTime = new Date(lastCandle.startTime);
-    const timeDiff = Math.floor((now - lastTime) / 60000); // Minutes since the last candle
-
+    const lastCandleTime = new Date(lastCandle.startTime).getTime();
+    const timeDiff = Math.floor((now - lastCandleTime) / 60000); // Minutes since the last candle
+  
     for (let j = 1; j <= timeDiff; j++) {
-      const missingTime = new Date(lastCandle.startTime).getTime() + j * 60000;
-
-      chartData.push({
-        x: missingTime,
-        y: [
-          lastCandle.close,
-          lastCandle.close,
-          lastCandle.close,
-          lastCandle.close,
-        ],
-      });
+      const missingTime = lastCandleTime + j * 60000;
+  
+      // Skip adding filler candles if they are outside the 4-hour range
+      if (missingTime >= fourHoursAgo) {
+        chartData.push({
+          x: missingTime,
+          y: [
+            lastCandle.close,
+            lastCandle.close,
+            lastCandle.close,
+            lastCandle.close,
+          ],
+        });
+      }
     }
-
+  
     // Ensure chart data is sorted and valid
     chartData.sort((a, b) => a.x - b.x);
+
     chartData.forEach((candle) => {
       if (!candle.y || candle.y.length !== 4) {
         console.error("Invalid candle:", candle);
@@ -546,6 +579,7 @@ function CoHostModal({
                     <Avatar
                       className="avatar desktop-only"
                       src={selectedRow.creator_avatar}
+                      username={selectedRow.username}
                       rank={selectedRow.rank}
                       accessory={selectedRow.accessory}
                       alt="Player Avatar"
@@ -791,9 +825,9 @@ function CoHostModal({
                       const newUserShareBuy = (newUserStake / totalStakeIncludingUser) * 100;
 
                       // Calculate the amount user currently owns in the bankroll
-                      const userCurrentShareAmount = userHost && !isNaN(userHost.share) && !isNaN(selectedRow.user_bet) 
-                      ? (userHost.share / 100) * parseFloat(selectedRow.user_bet)
-                      : 0;
+                      const userCurrentShareAmount = userHost && !isNaN(userHost.share) && !isNaN(selectedRow.user_bet)
+                        ? (userHost.share / 100) * parseFloat(selectedRow.user_bet)
+                        : 0;
                       // Calculate the user's new stake after selling (they will lose `amountAfterFee`)
                       const newUserStakeAfterSell = userCurrentShareAmount - amountAfterFee;
 

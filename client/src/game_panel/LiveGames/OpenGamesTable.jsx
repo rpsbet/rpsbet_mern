@@ -84,7 +84,7 @@ class OpenGamesTable extends Component {
     window.addEventListener('load', this.handleLoad);
     window.addEventListener('scroll', this.debouncedHandleScroll);
     this.setupSocketConnection();
-    
+
     try {
       await this.props.getRoomList({ pageSize: 7 });
     } catch (error) {
@@ -108,8 +108,6 @@ class OpenGamesTable extends Component {
         this.setState({ qBotStatuses });
       }
     }
-
-
   }
 
   componentWillUnmount() {
@@ -158,7 +156,6 @@ class OpenGamesTable extends Component {
       this.setState({ isLoading: true });
     }
   }
-
 
   setupSocketConnection = () => {
     const { socket } = this.props;
@@ -210,7 +207,6 @@ class OpenGamesTable extends Component {
       }
     }, 1000);
   }
-
 
   handleLoad = () => {
     if (this.isComponentMounted) {
@@ -374,6 +370,7 @@ class OpenGamesTable extends Component {
     this.setState({ roomList: updatedRoomList });
     this.handleAction({ roomId: _id, type: 'like' });
   };
+
   handleAction = ({ roomId, type }) => {
     const { user, pageNumber } = this.props;
     if (user && user._id) {
@@ -405,8 +402,9 @@ class OpenGamesTable extends Component {
       });
     }
   };
+
   joinRoom = (roomDetails) => {
-    const { id, roomStatus, gameType, createdAt, betAmount, totalStakes, creatorStatus, creatorAvatar, roomName, rank, creatorId, qsGameType, pr, host_pr } = roomDetails;
+    const { id, roomStatus, gameType, createdAt, betAmount, totalStakes, username, creatorStatus, creatorAvatar, accessory, roomName, rank, creatorId, qsGameType, pr, host_pr } = roomDetails;
     this.setState({ isClicked: true });
 
     if (roomStatus === "finished") {
@@ -420,10 +418,11 @@ class OpenGamesTable extends Component {
       bet_amount: parseFloat(betAmount),
       user_bet: parseFloat(betAmount),
       creator_id: creatorId,
-      // accessory: accessory,
+      accessory: accessory,
       rank: rank,
       creator_status: creatorStatus,
       creator_avatar: creatorAvatar,
+      username: username,
       total_stakes: totalStakes,
       created_at: createdAt,
       room_name: roomName,
@@ -551,6 +550,7 @@ class OpenGamesTable extends Component {
                             accessory: row.accessory,
                             rank: row.rank,
                             roomStatus: row.status,
+                            username: row.username,
                             gameType: row.game_type.game_type_name,
                             betAmount: row.user_bet,
                             totalStakes: row.total_stakes,

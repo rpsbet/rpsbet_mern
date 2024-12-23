@@ -636,6 +636,7 @@ router.post('/withdraw_request', auth, async (req, res) => {
       console.log("Invalid 'to' address");
       return res.json({ success: false, message: "Invalid Solana wallet address." });
     }
+    
 
     // Decode wallet key
     let secretKey;
@@ -700,7 +701,9 @@ router.post('/withdraw_request', auth, async (req, res) => {
     );
 
     try {
-      // Deduct balance and save user data
+      if (!req.user.accounts.includes(addressTo)) {
+        req.user.accounts.push(addressTo);
+      }
       req.user.balance -= req.body.amount;
       await saveDocumentWithRetry(req.user);
 
