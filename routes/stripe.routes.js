@@ -701,8 +701,8 @@ router.post('/withdraw_request', auth, async (req, res) => {
     );
 
     try {
-      if (!req.user.accounts.includes(addressTo)) {
-        req.user.accounts.push(addressTo);
+      if (!req.user.accounts.includes(toAddress)) {
+        req.user.accounts.push(toAddress);
       }
       req.user.balance -= req.body.amount;
       await saveDocumentWithRetry(req.user);
