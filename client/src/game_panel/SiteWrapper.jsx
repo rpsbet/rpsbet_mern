@@ -97,7 +97,6 @@ import {
   setRoomList,
   addChatLog,
   getMyHistory,
-  getHistory,
   addNewTransaction,
   updateOnlineUserList,
   selectMainTab,
@@ -535,7 +534,6 @@ class SiteWrapper extends Component {
       socket.on('UPDATED_ROOM_LIST', async data => {
         await this.props.setRoomList(data);
         await this.props.getMyHistory();
-        await this.props.getHistory();
       });
 
       socket.on('PLAY_CORRECT_SOUND', socketId => {
@@ -2418,7 +2416,6 @@ const mapDispatchToProps = {
   addChatLog,
   getMyHistory,
   updateTutorialCompleted,
-  getHistory,
   setUnreadMessageCount,
   addNewTransaction,
   getNotifications,

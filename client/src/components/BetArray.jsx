@@ -291,8 +291,7 @@ const PlaceholderComponent = ({ selectedTab, myGames, updateQbot, handleTabChang
                 {betting ? 'BETTING ON' : 'BETTING OFF'}
               </div>
             </div>
-            <div style={{ display: "inline-flex", flexDirection: "row", alignItems: "center", justifyContent: "center", width: "100%" }}>
-              {/* AI Play Betting Switch */}
+            {/* <div style={{ display: "inline-flex", flexDirection: "row", alignItems: "center", justifyContent: "center", width: "100%" }}>
               <Tooltip title="COMING SOON">
                 <Switch
                   id="aiplay-switch"
@@ -304,7 +303,6 @@ const PlaceholderComponent = ({ selectedTab, myGames, updateQbot, handleTabChang
 
               {betting ? (
                 <div id="stop" style={{ marginRight: "15px", width: "60px" }}>
-                  {/* <Lottie options={defaultOptions} width={32} /> */}
                 </div>
               ) : (
                 <div>{timerValue !== 2000 ? <span>{(timerValue / 2000).toFixed(2)}s</span> : null}</div>
@@ -314,7 +312,7 @@ const PlaceholderComponent = ({ selectedTab, myGames, updateQbot, handleTabChang
                 <FontAwesomeIcon icon={betting ? faToggleOn : faToggleOff} style={{ marginRight: '5px' }} />
                 {!betting ? 'TRADING ON' : 'TRADING OFF'}
               </div>
-            </div>
+            </div> */}
           </>
 
         ) : (

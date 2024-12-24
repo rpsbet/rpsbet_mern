@@ -27,7 +27,6 @@ import {
   setCurRoomInfo,
   loadRoomInfo,
   fetchAccessory,
-  getHistory,
   getGameTypeList,
   updateUserStrategy,
   getRpsBetItems,
@@ -188,7 +187,6 @@ class JoinGame extends Component {
         this.props.getQsBetItems(id),
         // this.getRoomData(id),
         this.loadSounds(),
-        this.props.getHistory(),
         // this.props.getGameTypeList(),
         this.props.getStrategies(),
         this.props.getRoomInfo(this.props.match.params.id, this.state.limit, true)
@@ -1706,7 +1704,6 @@ const mapDispatchToProps = {
   // getMyHistory,
   getRoomList,
   getRoomStatisticsData,
-  getHistory,
   getAttachedRooms,
   toggleDrawer,
   getGameTypeList,

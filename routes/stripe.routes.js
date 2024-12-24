@@ -770,7 +770,7 @@ router.post('/withdraw_request', auth, async (req, res) => {
         hosts: [],
       });
       await saveDocumentWithRetry(newGameLog);
-
+console.log("newGameLog", newGameLog)
       return res.json({
         success: true,
         balance: req.user.balance,

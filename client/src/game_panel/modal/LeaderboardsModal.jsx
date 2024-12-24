@@ -55,6 +55,7 @@ const styles = theme => ({
 });
 
 class LeaderboardsModal extends Component {
+  _isMounted = false;
   state = {
     sortField: 'totalProfit',
     sortOrder: 'desc',
@@ -69,20 +70,33 @@ class LeaderboardsModal extends Component {
   };
 
   async componentDidMount() {
-    // Fetch all the necessary data
-    await this.props.fetchLeaderboardsData();
-    await this.props.fetchEquityDistribution();
-    await this.props.fetchReceiptStatistics();
+    this._isMounted = true; // Set the mounted flag to true
 
-    const marketingStat = await this.props.getMarketingStat();
-    // Set the fetched data to state
-    this.setState({
-      message: marketingStat.message,
-      equityChartData: this.props.equityChart || [], // Store equity chart data
-      receiptChartData: this.props.receiptChart || [], // Store receipt chart data
-      loadingEquityChartData: this.props.loadingEquityChart || false, // Set loading flag to false after data is loaded
-      loadingReceiptChartData: this.props.loadingReceiptChart || false, // Set loading flag to false after data is loaded
-    });
+    try {
+      // Fetch all the necessary data
+      await this.props.fetchLeaderboardsData();
+      await this.props.fetchEquityDistribution();
+      await this.props.fetchReceiptStatistics();
+
+      const marketingStat = await this.props.getMarketingStat();
+
+      // Update state only if the component is still mounted
+      if (this._isMounted) {
+        this.setState({
+          message: marketingStat.message,
+          equityChartData: this.props.equityChart || [], // Store equity chart data
+          receiptChartData: this.props.receiptChart || [], // Store receipt chart data
+          loadingEquityChartData: this.props.loadingEquityChart || false, // Set loading flag to false after data is loaded
+          loadingReceiptChartData: this.props.loadingReceiptChart || false, // Set loading flag to false after data is loaded
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching leaderboard data:', error);
+    }
+  }
+
+  componentWillUnmount() {
+    this._isMounted = false; // Set the mounted flag to false
   }
 
   handleOpenPlayerModal = creator_id => {

@@ -417,7 +417,6 @@ export const getRoomInfo = (room_id, limit, loading) => async dispatch => {
 export const createComment = (commentData) => async (dispatch) => {
   try {
     const res = await axios.post('/game/comments', commentData);
-    console.log("Response from server:", res.data);
     if (res.data.success) {
       dispatch({ type: MSG_SUCCESS, payload: "COMMENT ADDED" });
     } else {
@@ -455,7 +454,6 @@ export const getCommentsForRoom = (room_id) => async dispatch => {
 
 // DeleteComment
 export const deleteComment = (comment_id) => async (dispatch) => {
-  console.log("called", comment_id)
   try {
     const res = await axios.delete(`/game/comments/${comment_id}`);
     if (res.data.success) {

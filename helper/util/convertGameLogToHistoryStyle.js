@@ -7,20 +7,18 @@ const convertGameLogToHistoryStyle = async gameLogList => {
     if (gameLog.game_result === 3 && gameLog.hosts && gameLog.hosts.length === 0) {
       return;
     }
-    
+
     let room_name;
+
     if (gameLog.game_result === 3000 || gameLog.game_result === 333 || gameLog.game_result === 666 || gameLog.game_result === 444) {
       room_name = `<a style='color: #b9bbbe;' href="/join/${gameLog['room']['_id']}">${gameLog['game_type']['short_name']}-${gameLog['room']['room_number']}</a>`;
-    } else {
-      room_name = gameLog['room'] ?
-      gameLog['game_type']['short_name'] + '-' + gameLog['room']['room_number'] :
-      'Withdrawal';
     }
+
     try {
       let temp = {
-        _id: gameLog._id,
-        room_id: gameLog['room']['_id'],
-        room_name: room_name,
+        _id: gameLog._id ? gameLog._id : null,
+        room_id: gameLog['room'] ? gameLog['room']['_id'] : null,
+        room_name: room_name ? room_name : null,
         history: '',
         creator: gameLog['creator']['_id'],
         joined_user: gameLog['joined_user'] ? gameLog['joined_user']['_id'] : null,
@@ -30,6 +28,7 @@ const convertGameLogToHistoryStyle = async gameLogList => {
         qbot: gameLog.qbot ? gameLog.qbot : '',
         status: gameLog['room'] ? gameLog['room']['status'] : 'completed'
       };
+
       if (gameLog.game_result !== 3000 && gameLog.game_result !== 333 && gameLog.game_result !== 666  && gameLog.game_result !== 444 && gameLog.game_result !== 777) {
 
         const joined_user_avatar = `<img class='avatar' data-userid="${gameLog['joined_user']['_id']}" src='${gameLog['joined_user']['avatar']}'  alt='' onerror='this.src="/img/profile-thumbnail.svg"' style="border: ${avatarUtils.getBorderByRank(gameLog['joined_user']['totalWagered'])}" />`;
@@ -50,7 +49,6 @@ const convertGameLogToHistoryStyle = async gameLogList => {
         const creator_avatar = `<img class='avatar' data-userid="${gameLog['creator']['_id']}" src='${gameLog['creator']['avatar']}'  alt='' onerror='this.src="/img/profile-thumbnail.svg"' style="border: ${avatarUtils.getBorderByRank(gameLog['creator']['totalWagered'])}" />`;
         const creator_link = `<a href="javascript:void(0)" class="user-link" accessory='${gameLog['creator']['accessory']}' rank='${gameLog['creator']['totalWagered']}' data-userid="${gameLog['creator']['_id']}">${creator_avatar}</a>`;
         const joined_user_link = `<a href="javascript:void(0)" class="user-link" accessory='${gameLog['joined_user']['accessory']}' rank='${gameLog['joined_user']['totalWagered']}' data-userid="${gameLog['joined_user']['_id']}">${joined_user_avatar}</a>`;
-
         const betAmount = gameLog['bet_amount'];
         const userBet = parseFloat(gameLog['room']['user_bet']);
         const multiplier = parseFloat(gameLog['room']['user_bet']) / parseFloat(gameLog['room']['bet_amount']);
@@ -98,13 +96,8 @@ const convertGameLogToHistoryStyle = async gameLogList => {
         const creator_link = `<a href="javascript:void(0)" class="user-link" accessory='${gameLog['creator']['accessory']}' rank='${gameLog['creator']['totalWagered']}' data-userid="${gameLog['creator']['_id']}">${creator_avatar}</a>`;
         temp.history = `<span style='color: #03ff3b;'>${creator_link} Pumped ${convertToCurrency(gameLog['bet_amount'])} into ${room_name}</span>`;
 
-      } else if (gameLog.game_result === 333) {
-        // coHost log
-        const creator_avatar = `<img class='avatar' data-userid="${gameLog['creator']['_id']}" src='${gameLog['creator']['avatar']}' alt='' onerror='this.src="/img/profile-thumbnail.svg"' style="border: ${avatarUtils.getBorderByRank(gameLog['creator']['totalWagered'])}" />`;
-        const creator_link = `<a href="javascript:void(0)" class="user-link" accessory='${gameLog['creator']['accessory']}' rank='${gameLog['creator']['totalWagered']}' data-userid="${gameLog['creator']['_id']}">${creator_avatar}</a>`;
-        temp.history = `<span style='color: #007bff;'>${creator_link} Pumped ${convertToCurrency(gameLog['bet_amount'])} in ${room_name}</span>`;
-
       } else if (gameLog.game_result === 777) {
+
         // Withdrawal log
         const creator_avatar = `<img class='avatar' data-userid="${gameLog['creator']['_id']}" src='${gameLog['creator']['avatar']}' alt='' onerror='this.src="/img/profile-thumbnail.svg"' style="border: ${avatarUtils.getBorderByRank(gameLog['creator']['totalWagered'])}" />`;
         const creator_link = `<a href="javascript:void(0)" class="user-link" accessory='${gameLog['creator']['accessory']}' rank='${gameLog['creator']['totalWagered']}' data-userid="${gameLog['creator']['_id']}">${creator_avatar}</a>`;
@@ -112,6 +105,7 @@ const convertGameLogToHistoryStyle = async gameLogList => {
       }
       result.push(temp);
     } catch (e) {
+      console.log("E", e)
       return;
     }
   });

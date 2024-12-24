@@ -16,9 +16,6 @@ import {
   TableBody,
   LinearProgress
 } from '@material-ui/core';
-// import Select from '@material-ui/core/Select';
-// import MenuItem from '@material-ui/core/MenuItem';
-
 
 const styles = theme => ({
   root: {
@@ -33,8 +30,6 @@ class Leaderboards extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      // period: 'all time',
-      // data: []
       showPlayerModal: false,
       selectedCreator: ''
     };
@@ -50,18 +45,6 @@ class Leaderboards extends Component {
     this.IsAuthenticatedReroute();
   }
 
-  // componentDidUpdate(prevProps) {
-  //   const { actionList } = this.props;
-
-  //   if (prevProps.actionList !== actionList) {
-  //     this.setState(
-  //       {
-  //         actionList: actionList
-  //       }
-  //     );
-  //   }
-  // }
-
   IsAuthenticatedReroute = async () => {
     if (!this.props.auth) {
       history.push('/');
@@ -76,14 +59,6 @@ class Leaderboards extends Component {
     this.setState({ showPlayerModal: false });
   };
 
-  // onPeriodChanged = e => {
-  //   e.preventDefault();
-  //   this.setState({ period: e.target.value });
-  // };
-
-  // refreshTable = e => {
-  //   e.preventDefault();
-  // };
 
   render() {
     const { roomStatsLoaded, actionList } = this.props;

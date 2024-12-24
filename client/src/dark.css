@@ -208,6 +208,19 @@
 	color: #f9f9f9;
 }
 
+.dark_mode table td {
+	border-bottom: 1px solid #f9f9f9 !important;
+  }
+  
+  .dark_mode  .rps-add-run-panel>div.rps-add-run-form {
+	border-right: 1px solid #f9f9f9 !important;
+
+  }
+
+  .dark_mode .rps-add-run-panel {
+	border: 1px solid #f9f9f9 !important;
+
+  }
 .dark_mode .modal-body .table table td,
 .dark_mode .modal-body .table table th {
 	border-bottom: 2px solid #f9f9f9 !important;
@@ -616,6 +629,9 @@
 
 .dark_mode .main-panel div.table .table-row:hover {
 border: 2px solid #fff;
+}
+.dark_mode .main-panel div.table.main-history-table .table-row:hover {
+border: unset;
 }
 
 
