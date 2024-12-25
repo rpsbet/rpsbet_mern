@@ -3115,7 +3115,6 @@ router.get('/candles/:room', async (req, res) => {
     const room = req.params.room;
     const { timeRange = '1m' } = req.query;
 
-    console.log("Called");
     const bucketSize = getTimeBucket(timeRange);
     let startDate = moment().subtract(4, 'hours').startOf('second').toDate();
 

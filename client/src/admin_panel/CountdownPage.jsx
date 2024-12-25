@@ -469,13 +469,13 @@ const CountdownPage = ({
     // Check if the section is 'buy'
     if (section === 'buy') {
       setShowDepositModal(true);
-      window.open('https://raydium.io/swap/?inputMint=sol&outputMint=BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump', '_blank'); // Open in new tab
+      window.open('https://raydium.io/swap/?inputMint=sol&outputMint=jnugxwzjbipumBBDULAQQBG1UYBK9ay7hSf1Arfhme4p', '_blank'); // Open in new tab
       return; // Stop further execution
     }
 
     if (section === 'chart') {
       setShowDepositModal(true);
-      window.open('https://dexscreener.com/solana/BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump', '_blank'); // Open in new tab
+      window.open('https://dexscreener.com/solana/EHJwUtoMJcDja45gcfGKbA9w64n4FnuNLXSmPqgJpump', '_blank'); // Open in new tab
       return; // Stop further execution
     }
 
@@ -554,12 +554,12 @@ const CountdownPage = ({
                 className={`${classes.section} ${activeSection === '' ? classes.activeSection : ''}`}
               >
 
-                <Typography variant="h2" style={{ filter: "drop-shadow(2px 4px 6px #f9f9)" }}>$RPS&nbsp;<img src={busd} width="80" height="auto" alt='$RPS Token Symbol' /></Typography>
+                <Typography variant="h2" style={{ filter: "drop-shadow(2px 4px 6px #f9f9)" }}>$CZAR&nbsp;<img src={busd} width="80" height="auto" alt='$CZAR Token Symbol' /></Typography>
                 <Typography variant="h6" style={{ filter: "drop-shadow(2px 4px 6px #f9f9)", marginBottom: "20px" }}>
                   [ GET RICH 💰 OR DIE 🩸 ] <br />
                 </Typography>
                 <h6>TOKEN ADDRESS:</h6>
-                {`[${'BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump'.slice(0, 7)}...${'BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump'.slice(-10)}]`}
+                {`[${'EHJwUtoMJcDja45gcfGKbA9w64n4FnuNLXSmPqgJpump'.slice(0, 7)}...${'EHJwUtoMJcDja45gcfGKbA9w64n4FnuNLXSmPqgJpump'.slice(-10)}]`}
                 <br />
                 <Typography variant="body1" className="fading-text" style={{ marginTop: "20px" }}>
                   Click the Gravestones below to choose a life path...
@@ -608,7 +608,7 @@ const CountdownPage = ({
                 <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", marginTop: "90px" }}>
 
                   <h4 className="title">
-                    Current $RPS Holders
+                    Current $CZAR Holders
                   </h4>
                   <h6 className="title">
                     (PLATFORM)
@@ -643,7 +643,7 @@ const CountdownPage = ({
                       Contract Address
                     </h4>
                     <h6 className="title">
-                      BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump
+                      EHJwUtoMJcDja45gcfGKbA9w64n4FnuNLXSmPqgJpump
                     </h6>
 
                   </div>
@@ -708,7 +708,7 @@ const CountdownPage = ({
                     >
                       Sadly, Caesar’s attempt at starting a decentralized micro-economy, <span className="highlight">RPS.Game</span>,
                       got him killed. But fear not, fellow fur-iends, RPS.Game lives on! It’s a decentralized platform powered by its native
-                      token, <span className="highlight">$RPS</span>, and just like a cat, it has <strong>NINE LIVES</strong>.
+                      token, <span className="highlight">$CZAR</span>, and just like a cat, it has <strong>NINE LIVES</strong>.
                       This game isn’t going anywhere. In fact, it’s here to stay furrever.
                     </Typography>
 
@@ -720,7 +720,7 @@ const CountdownPage = ({
                     >
                       <span className="highlight">RPS.Game</span> offers financial tools that are typically gate-kept by the Elite,
                       but we’ve opened the door for <span className="highlight">EVERYONE</span>—whether you're a fat cat or a stray.
-                      Using <span className="highlight">$RPS</span>, we’ve got a solution to inflation by capping the total supply
+                      Using <span className="highlight">$CZAR</span>, we’ve got a solution to inflation by capping the total supply
                       at <strong>1 Billion tokens</strong>. Just think of it as a ball of yarn with a limit on how much it can unravel!
                     </Typography>
 
@@ -740,7 +740,7 @@ const CountdownPage = ({
                       className="scroll-animation"
                       style={{ animationDelay: '1.6s' }}
                     >
-                      Mark your cat-lendars! The Pump.Fun FAIR LAUNCH of <span className="highlight">$RPS</span> opens on
+                      Mark your cat-lendars! The Pump.Fun FAIR LAUNCH of <span className="highlight">$CZAR</span> opens on
                       <strong> 1st November 00:00 CEST</strong>. So, sharpen your claws and get ready! Remember, it’s
                       <strong> GET RICH 💰 OR DIE 🩸</strong>—fur real.
                     </Typography>

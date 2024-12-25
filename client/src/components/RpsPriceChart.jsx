@@ -133,7 +133,7 @@ class RpsPriceChart extends Component {
               cursor: "pointer", // Cursor pointer on hover
               transition: "background 0.3s ease", // Smooth background change on hover
             }}
-            onClick={() => window.open("https://dexscreener.com/solana/BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump", "_blank")}
+            onClick={() => window.open("https://dexscreener.com/solana/EHJwUtoMJcDja45gcfGKbA9w64n4FnuNLXSmPqgJpump", "_blank")}
             onMouseOver={(e) => e.currentTarget.style.background = "#fbc02d"} // Change color on hover
             onMouseOut={(e) => e.currentTarget.style.background = "#ffd000"} // Revert color on mouse leave
           >

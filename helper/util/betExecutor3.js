@@ -113,7 +113,7 @@ const addToQueue = async (req, bot = false) => {
                 };
 
                 return responseData;
-                
+
             }
 
             if (roomInfo['status'] === 'finished') {
@@ -133,21 +133,21 @@ const addToQueue = async (req, bot = false) => {
             const accessoryJ = user.accessory;
             let item;
             let commission;
-           
+
             if (accessory) {
                 const item = await Item.findOne({ image: accessory }).select('CP');
                 const itemJ = await Item.findOne({ image: accessoryJ }).select('DP');
-            
+
                 // Default CP or DP to 0 if they are null or undefined
                 const cp = item ? item.CP || 0 : 0;
                 const dp = itemJ ? itemJ.DP || 0 : 0;
-            
+
                 // Calculate commission
                 commission = cp - dp + parseFloat(tax.value);
             } else {
                 commission = parseFloat(tax.value); // If no accessory, use tax.value directly
             }
-            
+
             // Ensure commission is at least 1
             if (commission < 1) {
                 commission = 1;
@@ -497,7 +497,7 @@ const addToQueue = async (req, bot = false) => {
 
                 // socket for last 5 items
                 if (roomInfo['rps_game_type'] === 0) {
-                    
+
                     mostRecentItems.reverse();
                     mostRecentItems.push(bet_item);
                     if (mostRecentItems.length > 0) {
@@ -688,7 +688,7 @@ const addToQueue = async (req, bot = false) => {
                         roomInfo['game_type']['short_name'] +
                         '-' +
                         roomInfo['room_number'];
-                } else {    
+                } else {
                     game_result = 1;
                     newTransactionAmount +=
                         (betAmount +
@@ -729,7 +729,7 @@ const addToQueue = async (req, bot = false) => {
                             rain: rain.value
                         });
                     }
-                    
+
                     message.message =
                         'Won ' +
                         convertToCurrency(
@@ -833,6 +833,31 @@ const addToQueue = async (req, bot = false) => {
                         roomInfo['room_number'];
                 }
             }
+
+            const now = new Date(); // Define 'now' as the current timestamp
+            console.log("newTransactionAmount", newTransactionAmount);
+
+            const timeBucket = Math.floor(now.getTime() / (60 * 1000)); // Assuming bucket size of 1 minute
+            const isBuyTransaction = newTransactionAmount < 0; // Check if it's a buy transaction
+
+            const newCandle = {
+                _id: timeBucket,
+                open: roomInfo.user_bet, // Liquidity before transaction
+                close: roomInfo.user_bet - newTransactionAmount, // Liquidity after transaction
+                high: Math.max(roomInfo.user_bet - newTransactionAmount, roomInfo.user_bet), // High
+                low: Math.min(roomInfo.user_bet - newTransactionAmount, roomInfo.user_bet), // Low
+                volume: Math.abs(newTransactionAmount), // Volume is the absolute value of the transaction
+                buyVolume: isBuyTransaction ? Math.abs(newTransactionAmount) : 0, // Set buyVolume if it's a buy
+                sellVolume: isBuyTransaction ? 0 : Math.abs(newTransactionAmount), // Set sellVolume if it's a sell
+                startTime: new Date(timeBucket * 60 * 1000), // Start time of the bucket
+            };
+
+            if (req.io.sockets) {
+                req.io.sockets.emit(`NEW_CANDLE_${roomInfo._id}`, {
+                    newCandle: newCandle,
+                });
+            }
+
 
             user['balance'] += newTransactionAmount;
             user['gamePlayed']++;

@@ -276,7 +276,7 @@ class DepositModal extends Component {
         return;
       }
 
-      const tokenMintAddress = new PublicKey('BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump');
+      const tokenMintAddress = new PublicKey('EHJwUtoMJcDja45gcfGKbA9w64n4FnuNLXSmPqgJpump');
 
       // Fetch token mint info
       const mintInfo = await getMint(connection, tokenMintAddress);
@@ -448,14 +448,14 @@ class DepositModal extends Component {
         description = 'Via Manual Transfer (50+ Cryptocurrencies supported)';
         break;
       case 'web3':
-        description = <>Via Connect Wallet (Phantom Wallet recommended), $RPS only, lowest fees.<br />
+        description = <>Via Connect Wallet (Phantom Wallet recommended), $CZAR only, lowest fees.<br />
           Buy/Swap tokens on&nbsp;
           <a
             style={{
               textDecoration: "underline",
               color: "#3f51b5"
             }}
-            href="https://raydium.io/swap/?inputMint=sol&outputMint=BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump"
+            href="https://raydium.io/swap/?inputMint=sol&outputMint=EHJwUtoMJcDja45gcfGKbA9w64n4FnuNLXSmPqgJpump"
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -524,7 +524,7 @@ class DepositModal extends Component {
                           label={
                             <div className={classes.labelContainer} style={{ position: 'relative' }}>
                               <WalletIcon className={classes.icon} />
-                              <span>$RPS</span>
+                              <span>$CZAR</span>
                               {paymentMethod === 'web3' && (
                                 <span className='roll-tag' style={{ position: 'absolute', transform: "translateY(30px)", filter: 'invert(1)', letterSpacing: '0.1em' }}>
                                   FASTEST&nbsp;
