@@ -134,9 +134,9 @@ class HistoryTable extends Component {
     }
 
     this.setState((prevState) => {
-      const updatedHistory = [newLog, ...prevState.history.slice(0, 29)];
+      const updatedHistory = [newLog]; // Only keep this newLog as the entire history
       const finalHistory = updateFromNow(updatedHistory);
-
+    
       return { history: finalHistory };
     });
   };
@@ -260,7 +260,7 @@ class HistoryTable extends Component {
               >
                 <div>
                   <div className="table-cell">
-                    <div className="room-id" style={{display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginRight: "10px"}}>
+                    {/* <div className="room-id" style={{display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginRight: "10px"}}>
                       {row.status === 'open' ? (
                         <>
                           {row.status}  <HeartIcon isOpen={true} />
@@ -286,24 +286,24 @@ class HistoryTable extends Component {
                         </>)}
                       </div>
                     )}
-                    </div>
+                    </div> */}
                     <div
                       className="desktop-only"
                       dangerouslySetInnerHTML={{ __html: row.history }}
                     ></div>
                   </div>
-                  <div className="table-cell">
-                    {row.from_now && row.from_now.split('').map((char, index) => (
-                      <span key={index} style={{ fontSize: isNaN(char) ? '0.5em' : '0.8em' }}>{char}</span>
-                    ))}
-                    &nbsp;<FontAwesomeIcon icon={faStopwatch} />
-                  </div>
+           
                   <div className="table-cell row-copy">
+                  &nbsp;
                     <Tooltip title={this.state.copiedRowId === row._id ? "COPIED ID!" : "COPY BET ID"} placement="top">
                       <a style={{ padding: "5px", cursor: "pointer" }} onClick={() => this.copyToClipboard(row._id)}>
                         <FileCopyIcon style={{ width: "12px" }} />
                       </a>
-                    </Tooltip>
+                    </Tooltip>&nbsp;
+                    {row.from_now && row.from_now.split('').map((char, index) => (
+                      <span key={index} style={{ fontSize: isNaN(char) ? '0.5em' : '0.8em' }}>{char}</span>
+                    ))}
+                    &nbsp;<FontAwesomeIcon icon={faStopwatch} />
                   </div>
                 </div>
                 <div>
@@ -316,7 +316,6 @@ class HistoryTable extends Component {
             ),
             this
           )}
-          <div className="table-gradient"></div>
         </div>
         {this.state.showPlayerModal && (
           <PlayerModal

@@ -9,7 +9,7 @@ import { acQueryMyItem } from '../../redux/Item/item.action';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
 import ReactApexChart from 'react-apexcharts';
 import { Info } from '@material-ui/icons';
-
+import PreSummaryPanel from '../../components/PreSummaryPanel';
 import Avatar from '../../components/Avatar';
 import progress from '../LottieAnimations/progress.json';
 import pressHold from '../LottieAnimations/pressHold.json';
@@ -137,13 +137,6 @@ const UseItemButton = styled.div`
         opacity: 1;
           bottom: calc(50%);;
   `;
-
-
-const styles = {
-  focused: {
-    borderColor: '#fa3fa0'
-  }
-};
 
 const options = [
   { classname: 'rock', selection: 'R' },
@@ -300,7 +293,7 @@ class RPS extends Component {
       if (!data.rps) {
         return prevState;
       }
-  
+
       let filteredRPS = data.rps.filter(game => game.joiner === this.props.user_id);
       let rpsState = filteredRPS.length > 0 ? filteredRPS : prevState.rps;
       return {
@@ -837,228 +830,29 @@ class RPS extends Component {
           />
         )}
         <div className="game-contents title">
-          <div className="pre-summary-panel title" style={{ overflow: 'hidden' }} ref={this.panelRef}>
-            <div className="pre-summary-panel__inner">
-              {[...Array(1)].map((_, i) => (
-                <React.Fragment key={i}>
-                  <div className="data-item">
-                    <div>
-                      <div className="label room-id">STATUS</div>
-                    </div>
-                    <div className="value">{status}</div>
-                  </div>
-                  <div className="data-item">
-                    <div>
-                      <div className="label your-bet-amount">LIQUIDITY</div>
-                    </div>
-                    <Tooltip title={isLowBankroll ? "LOW BANKROLL CAN CAUSE A BET TO FAIL" : "A.K.A Liquidity / Pool / Pot"}>
-                      <div className={`value ${isLowBankroll ? 'red-text' : ''}`} style={{ cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center" }}>
-                        {convertToCurrency(bankroll)}
-                        {!isLowBankroll ? (
-                          <InfoIcon style={{ fontSize: 16, marginLeft: 4 }} />
-                        ) : (
-                          <WarningIcon style={{ fontSize: 16, marginLeft: 4 }} />
-                        )
-                        }
-
-                      </div>
-                    </Tooltip>
-                  </div>
-                  <div className="data-item">
-                    <div>
-                      <div className="label your-max-return">Your Return</div>
-                    </div>
-                    <Tooltip
-                      title={
-                        <div>
-                          <span>EXPLANATION: </span>
-                          <p>
-                            2x your Bet Amount, then deduct Host(s)'s(') commission, if any,
-                            (which is Returned to Bankroll or RTB) and finally deduct 2.5%
-                            platform tax.
-                          </p>
-                          <span>CALCULATION: </span>
-                          <div>{convertToCurrency(this.state.bet_amount)} x 2 ={' '}
-                            {convertToCurrency(this.state.bet_amount * 2)}
-                          </div>
-                          <div>
-                            -({this.props.cp} + 2.5)% ={' '}
-                            {convertToCurrency(
-                              this.state.bet_amount * 2 * ((100 - (this.props.cp + 2.5)) / 100)
-                            )}
-                          </div>
-                        </div>
-                      }
-                    >
-                      <div
-                        className="value"
-                        style={{
-                          cursor: 'pointer',
-                          display: 'flex',
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                          color:
-                            (this.state.bet_amount * 2 * ((100 - (this.props.cp + 2.5)) / 100)) -
-                              this.state.bet_amount > 0
-                              ? '#00ff3a'
-                              : 'red',
-                        }}
-                      >
-                        {convertToCurrency(
-                          this.state.bet_amount * 2 * ((100 - (this.props.cp + 2.5)) / 100) -
-                          this.state.bet_amount
-                        )}
-                        <InfoIcon style={{ fontSize: 16, marginLeft: 4 }} />
-                      </div>
-                    </Tooltip>
-                  </div>
-                  <div className="data-item">
-                    <div>
-                      <div className="label chance">Win Chance</div>
-                    </div>
-                    <div className="value">
-                      {33}%
-                    </div>
-                  </div>
-                  <div className="data-item">
-                    <div>
-                      <div className="label net-profit">Room Profit</div>
-                    </div>
-                    <div className="value bankroll">
-                      <Tooltip title="Current bankroll + Payouts - Initial bankroll">
-                        <div
-                          className="value"
-                          style={{
-                            cursor: 'pointer',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                          }}
-                        >
-                          <span className={`value ${!isLowProfit ? 'red-text' : 'green-text'}`}>
-                            {isNaN(hostProfit - totalStakes)
-                              ? 'N/A'
-                              : convertToCurrency(hostProfit - totalStakes)}
-                          </span>
-                          {isLowProfit ? (
-                            <InfoIcon style={{ color: '#00ff3a', fontSize: 16, marginLeft: 4 }} />
-                          ) : (
-                            <WarningIcon style={{ color: 'red', fontSize: 16, marginLeft: 4 }} />
-                          )}
-                        </div>
-                      </Tooltip>
-
-                    </div>
-                  </div>
-                  {this.props.rps_game_type === 0 && (
-                    <div className="data-item">
-                      <div>
-                        <div className="label commission">Tax</div>
-                      </div>
-                      <Tooltip title="Host's Accessory's Commission Power (CP) - Player's Accessory's Battle Power (BP) (MINIMUM 2.5% TOWARDS PLATFORM)">
-                        <div style={{ cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center" }}>
-
-                          <div className={`value ${isHighCommission ? 'red-text' : ''}`} style={{ cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center" }}>
-                            <div className="value">{this.props.cp < 1 ? 1 : this.props.cp}% </div>
-                            {!isHighCommission ? (
-                              <InfoIcon style={{ fontSize: 16, marginLeft: 4 }} />
-                            ) : (
-                              <WarningIcon style={{ fontSize: 16, marginLeft: 4 }} />
-                            )
-                            }
-                          </div>
-                        </div>
-                      </Tooltip>
-                    </div>
-                  )}
-                  {this.props.endgame_type && (
-                    <div className="data-item">
-                      <div>
-                        <div className="label created">Auto-Payout</div>
-                      </div>
-                      <Tooltip title="Automatic dividends paid out to Hosts & CoHosts upon meeting the set payout threshold">
-                        <div style={{ cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center" }}>
-
-                          <div className="payout-bar">
-                            <div className="value" style={barStyle}></div>
-                          </div>
-                          <InfoIcon style={{ fontSize: 16, marginLeft: 4 }} />
-                        </div>
-
-                      </Tooltip>
-                    </div>
-                  )}
-                  <div className="data-item">
-                    <div>
-                      <div className="label public-interest">Interest Received</div>
-                    </div>
-                    <div className="value" >
-                      <Tooltip title="Paid every 33 minutes, at a rate of 0.00001% of the bankroll. Room must be public.">
-                        <div style={{ cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center" }}>
-                          <span style={{ color: "#00fff5" }}>
-                            {convertToCurrency(this.props.pr)}
-                          </span>
-                          <InfoIcon style={{ fontSize: 16, marginLeft: 4 }} />
-                        </div>
-                      </Tooltip>
-
-                    </div>
-                  </div>
-
-                  <div className="data-item">
-                    <div>
-                      <div className="label host-display-name">Creator</div>
-                    </div>
-                    <div className="value host">
-                      <a
-                        className="player"
-                        onClick={() =>
-                          handleOpenPlayerModal(this.props.creator_id)
-                        }
-
-                      >
-                        <Avatar
-                          className="avatar"
-                          src={creator_avatar}
-                          username={username}
-                          rank={rank}
-                          accessory={accessory}
-                          alt=""
-                          darkMode={isDarkMode}
-                        />
-                      </a>
-                      {isQbot && (<span style={{ fontSize: "xx-small", position: "absolute", top: "65px", border: "1px solid rgb(255, 208, 0)", background: "linear-gradient(45deg, #7a5958, #a27955)", borderRadius: "4px", color: "rgb(255, 208, 0)", padding: "0px 5px", lineHeight: "20px", marginLeft: "7.5px" }} >
-                        Q-BOT
-                      </span>)}
-                    </div>
-                  </div>
-                  <div className="data-item">
-                    <div>
-                      <div className="label room-name">Room ID</div>
-                    </div>
-                    <div className="value">{roomInfo.room_name}</div>
-                  </div>
-                  {/* {youtubeUrl && (
-                    <div className="data-item">
-                      <YouTubeVideo
-                        url={youtubeUrl}
-                        isMusicEnabled={isMusicEnabled}
-                      />
-                    </div>
-                  )} */}
-                  <div className="data-item">
-                    <div>
-                      <div className="label public-max-return">Created</div>
-                    </div>
-                    <div className="value">
-                      {Moment(roomInfo.created_at).fromNow()}
-                    </div>
-                  </div>
-
-                </React.Fragment>
-              ))}
-            </div>
-          </div>
+          <PreSummaryPanel
+            status={status}
+            bankroll={bankroll}
+            isDarkMode={isDarkMode}
+            cp={cp}
+            barStyle={barStyle}
+            roomInfo={roomInfo}
+            handleOpenPlayerModal={handleOpenPlayerModal}
+            creator_id={creator_id}
+            creator_avatar={creator_avatar}
+            username={username}
+            rank={rank}
+            accessory={accessory}
+            rps_game_type={rps_game_type}
+            endgame_type={endgame_type}
+            pr={pr}
+            isLowBankroll={isLowBankroll}
+            isHighCommission={isHighCommission}
+            isLowProfit={isLowProfit}
+            hostProfit={hostProfit}
+            totalStakes={totalStakes}
+            bet_amount={this.state.bet_amount}
+          />
           <div
             className="game-info-panel"
             style={{ position: 'relative', zIndex: 10 }}

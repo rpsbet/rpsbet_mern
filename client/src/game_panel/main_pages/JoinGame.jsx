@@ -1483,9 +1483,7 @@ class JoinGame extends Component {
             </div>
           </div>
           <div className="sub-panel">
-            <h2 className="main-title desktop-only">AI PANEL <Tooltip title="Some strategies require you to train the bot by playing normally, in order to use certain bet amounts and patterns.">
-              <QuestionIcon style={{ width: "18px", cursor: "pointer", float: "right", marginTop: "-1px" }} />
-            </Tooltip></h2>
+           
             {!this.state.is_mobile &&
               this.props.selectedMainTabIndex === 0 && (
                 <AiPanel
@@ -1513,8 +1511,7 @@ class JoinGame extends Component {
                   isDarkMode={this.props.isDarkMode}
                 />
               )}
-            <h2 className="main-title desktop-only" style={{ marginBottom: "10px" }}>HISTORY</h2>
-            {!is_mobile && selectedMainTabIndex === 0 && <HistoryTable userId={user_id} />}
+       
             <DrawerButton
               open={isDrawerOpen}
               toggleDrawer={this.toggleDrawer}

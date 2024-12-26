@@ -210,7 +210,7 @@ class TabbedContent extends Component {
             value={selectedTab}
             onChange={this.handleTabChange}
           >
-            <Tab label="Trade" />
+            <Tab label="Chart" />
             <Tab label="History" />
             <Tab label="Thread" />
             <Tab label="Insights" />
@@ -229,7 +229,7 @@ class TabbedContent extends Component {
     return (
       <div>
         <div className={classes.checkboxContainer}>
-          {['Trade', 'History', 'Thread', 'Insights'].map((label, index) => (
+          {['Chart', 'History', 'Thread', 'Insights'].map((label, index) => (
             <FormControlLabel
               key={index}
               className={classes.checkbox}

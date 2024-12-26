@@ -79,10 +79,6 @@
 	border: 2px solid #212529;
 }
 
-.dark_mode .table-gradient {
-	background: linear-gradient(185deg, #2e224300, #3c0067);
-}
-
 .dark_mode .game-logs-table thead,
 .dark_mode .modal-img {
 	background: linear-gradient(45deg, #8864be96, #9f04b799, #8a35dc45);

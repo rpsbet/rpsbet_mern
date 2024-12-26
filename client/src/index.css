@@ -562,7 +562,6 @@ div.table .table-cell button.btn_join img {
 .overflowX {
   top: 0px;
   z-index: 2;
-  margin-bottom: 10px;
 }
 
 .game-type-panel .btn-game-type {
@@ -940,7 +939,6 @@ div.table .table-row {
   border-radius: 6px;
   padding: 0.5em;
   background: linear-gradient(109deg, #e9e9e9, #dcdcdc);
-  margin-bottom: 10px;
   color: #86868b;
   overflow: hidden;
 }
@@ -1604,14 +1602,9 @@ div.table.main-history-table,
 div.table.my-open-game-table {
   -ms-overflow-style: none;
   scrollbar-width: none;
+  margin-bottom: 0;
 }
 
-div.table.main-history-table {
-  overflow-y: auto;
-  max-height: calc(100vh - 0px);
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
 div.table.main-history-table .lottie-container {
   display: none;
 }
@@ -1621,14 +1614,6 @@ div.table.my-open-game-table {
 
 }
 
-.table-gradient {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 100px;
-  background: linear-gradient(to bottom, rgb(236 221 221 / 0%) 0%, rgb(211 211 211) 100%);
-}
 
 div.table.main-game-table .table-row .table-cell.cell-room-info {
   width: 100%;
@@ -2012,8 +1997,6 @@ span.comment-time.title,
   position: absolute;
   width: 100%;
   z-index: 1;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.7);
 }
 
 #notifications .arrow-up {
@@ -4234,7 +4217,7 @@ input {
   position: fixed !important;
   right: 3rem;
   bottom: 3rem;
-  z-index: 90;
+  z-index: 9999;
   width: 56px;
   height: 56px !important;
   border-bottom: 3px solid #810059;
@@ -5830,13 +5813,6 @@ button#recentSearches span {
   top: 39px !important;
   left: 22px;
   position: absolute;
-}
-
-
-.row-copy {
-  position: absolute;
-  bottom: 5px;
-  right: 5px;
 }
 
 .sub-panel .lottie-container.crown div {

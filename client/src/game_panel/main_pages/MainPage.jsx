@@ -27,7 +27,6 @@ import ManageHover from '../icons/ManageHover';
 import Lottie from 'react-lottie';
 import animationData from '../LottieAnimations/live';
 import { Button } from '@material-ui/core';
-import AiPanel from '../../components/AiPanel';
 import JukeboxPanel from '../../components/JukeboxPanel.jsx';
 import { Tabs, Tab, Drawer, IconButton, Tooltip } from '@material-ui/core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -274,8 +273,8 @@ class MainPage extends Component {
         className="main-game"
         style={{
           gridTemplateColumns: this.props.isDrawerOpen
-            ? '260px calc(100% - 610px) 350px'
-            : 'calc(100% - 350px) 350px'
+            ? '260px calc(100% - 260px)' // Two columns when the drawer is open
+            : '100%'                    // Single column spanning the full width if the drawer is closed
         }}
       >
         {((this.state.is_mobile && this.state.selectedMobileTab === 'chat') ||
@@ -400,13 +399,13 @@ class MainPage extends Component {
                   onlineUserList={this.props.onlineUserList}
                   gameTypeList={this.props.gameTypeList}
                 />
-                {this.state.is_mobile && (
+                {/* {this.state.is_mobile && (
                   <>
                     <h2 className="main-title">AI PANEL</h2>
 
                     <AiPanel user_id={this.props.user._id} />
                   </>
-                )}
+                )} */}
               </>
 
             )}
@@ -419,45 +418,33 @@ class MainPage extends Component {
           {selectedMobileTab === 'my_games' && showOpenGame === 1 && (
             <MyHistoryTable />
           )}
-        </div>
-        <div className="sub-panel">
-
-
-          {!this.state.is_mobile && this.props.selectedMainTabIndex === 0 && (
-            <>
-              <h2 className="main-title desktop-only">AI PANEL</h2>
-              <AiPanel user_id={this.props.user._id} />
-            </>
-          )}
-
-          {!this.state.is_mobile && this.props.selectedMainTabIndex === 0 && (
-            <>
-              <h2 className="main-title desktop-only" style={{ marginBottom: "10px" }}>HISTORY</h2>
-              <HistoryTable setHighlightedRooms={this.setHighlightedRooms} userId={this.props.user._id} />
-            </>
-          )}
           <DrawerButton
             open={this.props.isDrawerOpen}
             toggleDrawer={this.toggleDrawer}
           />
-          {/* <SupportButton
+        </div>
+
+        {/* <SupportButton
             open={this.props.isSupportOpen}
           // toggleDrawer={this.toggleDrawer}
           />*/}
-          {!this.state.is_mobile && this.props.selectedMainTabIndex === 1 && (
+        {/* {!this.state.is_mobile && this.props.selectedMainTabIndex === 1 && (
             <>
               <h2 className="main-title desktop-only">AI PANEL</h2>
 
               <AiPanel user_id={this.props.user._id} />
             </>
-          )}
-          {!this.state.is_mobile && this.props.selectedMainTabIndex === 1 && (
-            <>
-              <h2 className="main-title desktop-only" style={{ marginBottom: "10px" }}>YOUR HISTORY</h2>
-              <MyHistoryTable />
-            </>
-          )}
-        </div>
+          )} */}
+
+
+        {!this.state.is_mobile && this.props.selectedMainTabIndex === 1 && (
+          <div className="sub-panel">
+
+
+            <h2 className="main-title desktop-only" style={{ marginBottom: "10px" }}>YOUR HISTORY</h2>
+            <MyHistoryTable />
+          </div>
+        )}
         {this.state.is_mobile && (
           <div className="mobile-only main-page-nav-button-group">
             <Button

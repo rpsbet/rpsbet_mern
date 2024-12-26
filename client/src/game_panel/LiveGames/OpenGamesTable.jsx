@@ -78,7 +78,6 @@ class OpenGamesTable extends Component {
 
   async componentDidMount() {
     this.isComponentMounted = true;
-
     this.handleLoad();
     this.debouncedHandleScroll = this.debounce(this.handleScroll, 300);
     window.addEventListener('load', this.handleLoad);
@@ -97,15 +96,18 @@ class OpenGamesTable extends Component {
     const cachedData = JSON.parse(localStorage.getItem('qBotStatuses') || '{}');
 
     const isCacheValid = cachedData.timestamp && (Date.now() - cachedData.timestamp < 3600000); // 1 hour
+    
     if (isCacheValid) {
       this.setState({ qBotStatuses: cachedData.data }, async () => {
         const qBotStatuses = await this.props.getQbotStatuses(creatorIds);
         this.setState({ qBotStatuses });
+
       });
     } else {
       const qBotStatuses = await this.props.getQbotStatuses(creatorIds);
       if (this.isComponentMounted && qBotStatuses) {
         this.setState({ qBotStatuses });
+
       }
     }
   }
@@ -564,7 +566,7 @@ class OpenGamesTable extends Component {
                         <div className="" style={{ display: 'flex', flexDirection: 'column' }}>
                           {/* Room Info Row */}
                           <div>
-                            {this.state.qBotStatuses[row.creator_id] ? (
+                            {this.state.qBotStatuses && this.state.qBotStatuses[row.creator_id] ? (
                               <span
                                 style={{
                                   transform: "translateX(-30px)",

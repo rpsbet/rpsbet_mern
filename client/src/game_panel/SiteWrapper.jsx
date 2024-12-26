@@ -12,6 +12,7 @@ import {
 } from '@material-ui/core';
 import { Info } from '@material-ui/icons';
 import Countdown from 'react-countdown';
+import HistoryTable from '../game_panel/LiveGames/HistoryTable.jsx'
 import axios from '../util/Api';
 import SettingsModal from './modal/SettingsModal.jsx';
 import BonusModal from './modal/BonusModal.jsx';
@@ -250,8 +251,7 @@ class SiteWrapper extends Component {
       showDeposits: false,
       bonusCheck: false,
       remainingLoans: this.props.remainingLoans,
-      // web3: null,
-      // walletAddress: '',
+      highlightedRooms: new Set(),
       walletAddress: '',
       tokenBalance: 0,
       solanaBalance: 0
@@ -1085,10 +1085,9 @@ class SiteWrapper extends Component {
   handleDashboard = () => {
     history.push('/dashboard');
     this.setState({
-      selectedMainTabIndex: 1, // Adjust this index to the appropriate one for "Dashboard"
+      selectedMainTabIndex: 1,
     });
   };
-
 
   handleJoyrideCallback = (data) => {
     const { status, type } = data;
@@ -1099,6 +1098,11 @@ class SiteWrapper extends Component {
       this.setState({ run: false });
     }
   };
+
+  setHighlightedRooms = (rooms) => {
+    this.setState({ highlightedRooms: new Set(rooms) });
+  };
+
 
   render() {
     const {
@@ -1349,238 +1353,8 @@ class SiteWrapper extends Component {
                 {' '}
               </a>
               {!isInvestorsPage ? (
-                <div className='desktop-only' style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", width: "30%", marginTop: "10px" }}>
-                  {/* TOP PLAYS Carousel */}
-                  {this.props.topWins?.length > 0 ? (
-                    <div style={{ display: 'flex', flexDirection: 'row', flex: 1, maxWidth: '50%', paddingRight: '10px' }}>
-                      {/* Roll Tag */}
-                      <span className="roll-tag" style={{ position: 'absolute', top: '5px' }}>Wins</span>
-
-                      {/* Top Wins Content */}
-                      <div className="top-wins" style={{ marginBottom: '20px', flex: 1 }}>
-                        {this.props.topWins.map((row, index) => (
-                          <div
-                            key={`table-cell-${index}-${row.room}`}
-                            className="table-cell"
-                            onClick={() => (window.location.href = `/join/${row.room}`)}
-                            style={{ cursor: 'pointer' }}
-                          >
-                            <div className="carousel-content table-row slide-in">
-                              {/* Avatar Section */}
-                              <div style={{ display: 'flex', flexDirection: 'row' }}>
-                                <a
-                                  href="#"
-                                  className="player"
-                                  onClick={(event) => {
-                                    event.preventDefault();
-                                    event.stopPropagation();
-                                    this.handleOpenPlayerModal(row.joined_user._id);
-                                  }}
-                                  style={{ marginRight: '-15px' }}
-                                >
-                                  <Avatar
-                                    className="avatar"
-                                    src={row.joined_user?.avatar || 'default-avatar-url'}
-                                    accessory={row.joined_user?.accessory || 'default-accessory'}
-                                    username={row.joined_user?.username || 'Unknown'}
-                                    rank={row.joined_user?.totalWagered || 0}
-                                    alt=""
-                                    darkMode={this.props.isDarkMode}
-                                  />
-                                </a>
-                              </div>
-
-                              {/* Winnings */}
-                              <div
-                                className="cell"
-                                style={{
-                                  lineHeight: '0.5em',
-                                  marginBottom: '5px',
-                                  textAlign: 'right',
-                                  padding: '5px 5px 15px 5px',
-                                }}
-                              >
-                                <span style={{ whiteSpace: 'nowrap' }}>+{convertToCurrency(row.winnings)}</span>
-                                <br />
-                                <span style={{ whiteSpace: 'nowrap', fontSize: 'xx-small' }}>
-                                  {(() => {
-                                    if (!tokenPrice) return convertToCurrency(row.winnings);
-                                    return (
-                                      <>
-                                        {(row.winnings / row.bet_amount).toFixed(2)}x / ${(row.winnings * tokenPrice).toFixed(2)}
-                                      </>
-                                    );
-                                  })()}
-                                </span>
-                              </div>
-
-                              {/* Time Ago */}
-                              <div
-                                className="cell"
-                                style={{
-                                  whiteSpace: 'nowrap',
-                                  fontSize: 'xx-small',
-                                  position: 'absolute',
-                                  right: '5px',
-                                  bottom: '0px',
-                                }}
-                              >
-                                <span
-                                  style={{
-                                    color: 'unset',
-                                    whiteSpace: 'nowrap',
-                                    fontSize: 'xx-small',
-                                    marginRight: '-5px',
-                                    paddingBottom: '10px',
-                                    paddingTop: '5px',
-                                  }}
-                                >
-                                  {formatTimeAgo(row.created_at)}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ) : (
-                    // Skeleton Loader for Wins
-                    <div style={{ display: 'flex', flexDirection: 'row', flex: 1,  overflow: 'hidden', maxWidth: '50%', paddingRight: '10px' }}>
-                      {[...Array(5)].map((_, index) => (
-                        <div
-                          key={index}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            marginBottom: '10px',
-                            padding: '10px 5px',
-                            flex: 1,
-                          }}
-                        >
-                          <Skeleton variant="circle" width={40} height={40} />
-                          <div style={{ marginLeft: '10px', flex: 1 }}>
-                            <Skeleton variant="text" width="40%" height={15} />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {this.props.topWithdrawals?.length > 0 ? (
-                    <div style={{ display: 'flex', flexDirection: 'row', flex: 1, maxWidth: '50%', paddingLeft: '10px' }}>
-                      {/* Roll Tag */}
-                      <span className="roll-tag" style={{ position: 'absolute', top: '5px' }}>WDS</span>
-
-                      {/* Top Withdrawals Content */}
-                      <div className="top-wins" style={{ marginBottom: '20px', flex: 1 }}>
-                        {this.props.topWithdrawals.map((row, index) => (
-                          <div
-                            key={`table-cell-${index}-${row.room}`}
-                            className="table-cell"
-                            onClick={() => (window.location.href = `/join/${row.room}`)}
-                            style={{ cursor: 'pointer' }}
-                          >
-                            <div className="carousel-content table-row slide-in">
-                              {/* Avatar Section */}
-                              <div style={{ display: 'flex', flexDirection: 'row' }}>
-                                <a
-                                  href="#"
-                                  className="player"
-                                  onClick={(event) => {
-                                    event.preventDefault();
-                                    event.stopPropagation();
-                                    this.handleOpenPlayerModal(row.user_id._id);
-                                  }}
-                                  style={{ marginRight: '-15px' }}
-                                >
-                                  <Avatar
-                                    className="avatar"
-                                    src={row.user_id.avatar}
-                                    accessory={row.user_id.accessory}
-                                    username={row.user_id.username}
-                                    rank={row.user_id.totalWagered}
-                                    alt=""
-                                    darkMode={this.props.isDarkMode}
-                                  />
-                                </a>
-                              </div>
-
-                              {/* Withdrawal Amount */}
-                              <div
-                                className="cell"
-                                style={{
-                                  lineHeight: '0.5em',
-                                  marginBottom: '5px',
-                                  textAlign: 'right',
-                                  padding: '5px 5px 15px 5px',
-                                }}
-                              >
-                                <span style={{ color: '#00ff3a', whiteSpace: 'nowrap' }}>
-                                  +{convertToCurrency(row.amount)}
-                                </span>
-                                <br />
-                                <span
-                                  style={{
-                                    color: '#00ff3a',
-                                    whiteSpace: 'nowrap',
-                                    fontSize: 'xx-small',
-                                  }}
-                                >
-                                  ${((row.amount * tokenPrice) || 0).toFixed(2)}
-                                </span>
-                              </div>
-
-                              {/* Time Ago */}
-                              <div
-                                className="cell"
-                                style={{
-                                  whiteSpace: 'nowrap',
-                                  fontSize: 'xx-small',
-                                  position: 'absolute',
-                                  right: '5px',
-                                  bottom: '0px',
-                                }}
-                              >
-                                <span
-                                  style={{
-                                    color: 'unset',
-                                    whiteSpace: 'nowrap',
-                                    fontSize: 'xx-small',
-                                    marginRight: '-5px',
-                                    paddingBottom: '10px',
-                                    paddingTop: '5px',
-                                  }}
-                                >
-                                  {formatTimeAgo(row.created_at)}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ) : (
-                    // Skeleton Loader for Withdrawals
-                    <div style={{ display: 'flex', flexDirection: 'row', flex: 1, maxWidth: '50%', overflow: 'hidden', paddingLeft: '10px' }}>
-                      {[...Array(5)].map((_, index) => (
-                        <div
-                          key={index}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            marginBottom: '10px',
-                            padding: '10px 5px',
-                            flex: 1,
-                          }}
-                        >
-                          <Skeleton variant="circle" width={40} height={40} />
-                          <div style={{ marginLeft: '10px', flex: 1 }}>
-                            <Skeleton variant="text" width="40%" height={15} />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                <div className='desktop-only' style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginTop: "10px" }}>
+                  <HistoryTable setHighlightedRooms={this.setHighlightedRooms} userId={this.props.user._id} />
                 </div>
               ) : (
                 <div style={{ padding: width < 600 ? "0" : "48px" }}>
@@ -2405,6 +2179,7 @@ const mapStateToProps = state => ({
   notifications: state.logic.notifications,
   isLowGraphics: state.auth.isLowGraphics,
   showCookieConsent: state.auth.showCookieConsent,
+  history: state.logic.history,
 
 });
 

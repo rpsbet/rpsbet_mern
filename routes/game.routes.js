@@ -1312,7 +1312,7 @@ const getRoomList = async (pageSize, game_type, excludeIds = []) => {
 
 router.get('/history', async (req, res) => {
   try {
-    const { pageSize = 50, game_type = 'All' } = req.query;
+    const { pageSize = 1, game_type = 'All' } = req.query;
 
     const history = await getHistory(
       parseInt(pageSize),
