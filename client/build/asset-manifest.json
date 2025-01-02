@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/static/css/main.1aee1ce0.css",
-    "main.js": "/static/js/main.e5d9ceb7.js",
+    "main.css": "/static/css/main.def3c3a7.css",
+    "main.js": "/static/js/main.fd3c6bd6.js",
     "static/js/469.5d4d93cd.chunk.js": "/static/js/469.5d4d93cd.chunk.js",
     "static/js/857.01cd8b42.chunk.js": "/static/js/857.01cd8b42.chunk.js",
     "static/js/331.2aa29dd2.chunk.js": "/static/js/331.2aa29dd2.chunk.js",
@@ -103,12 +103,13 @@
     "static/media/alert-icon-create.svg": "/static/media/alert-icon-create.77afe2ab5b680a765bba.svg",
     "static/media/modal-quick-shoot.svg": "/static/media/modal-quick-shoot.7e5895c0302b9ede32ac.svg",
     "static/media/dark-game-page-title.svg": "/static/media/dark-game-page-title.9cee3b69a15386ee4fdf.svg",
+    "static/media/rps-logo-white.svg": "/static/media/rps-logo-white.032a6ce6f40118f58669.svg",
     "static/media/profile-thumbnail-dark.svg": "/static/media/profile-thumbnail-dark.2a9fc745fcffc9fc2053.svg",
-    "main.1aee1ce0.css.map": "/static/css/main.1aee1ce0.css.map",
-    "main.e5d9ceb7.js.map": "/static/js/main.e5d9ceb7.js.map"
+    "main.def3c3a7.css.map": "/static/css/main.def3c3a7.css.map",
+    "main.fd3c6bd6.js.map": "/static/js/main.fd3c6bd6.js.map"
   },
   "entrypoints": [
-    "static/css/main.1aee1ce0.css",
-    "static/js/main.e5d9ceb7.js"
+    "static/css/main.def3c3a7.css",
+    "static/js/main.fd3c6bd6.js"
   ]
 }

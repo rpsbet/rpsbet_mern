@@ -245,10 +245,6 @@ div.table .table-row .table-cell button:last-child:before,
   width: 330px;
 }
 
-#rps-radio div {
-  padding: 0 15px;
-  margin: 10px 4px 8px;
-}
 
 #rps-radio div.active {
   opacity: 0.8;
@@ -258,10 +254,19 @@ div.table .table-row .table-cell button:last-child:before,
 }
 
 #rps-radio div {
+  border: none;
+  background-color: var(--secondary-color);
+  border: 3px solid var(--white-color);
   transform: rotate(180deg) !important;
   margin-top: -60px;
   opacity: 0.5;
   pointer-events: none;
+  padding: 0 15px;
+  margin: 10px 4px 8px;
+  box-shadow: 3px solid #f6f6f6;
+  background-image: url('../public/img/rps-logo-white.svg');
+  background-repeat: no-repeat;
+  background-position: center;
 }
 
 #roll button span span {

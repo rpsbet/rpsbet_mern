@@ -582,6 +582,7 @@ class QuickShoot extends Component {
                 name={this.props.name}
                 ticker={this.props.ticker}
                 x_link={this.props.x_link}
+                image={this.props.image}
                 telegram_link={this.props.telegram_link}
                 isDarkMode={this.props.isDarkMode}
                 website_link={this.props.website_link}

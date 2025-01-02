@@ -167,14 +167,15 @@ async function checkConfirmations(io) {
         }
       }
     }
-    const response = await axios.get(`https://api.dexscreener.com/latest/dex/tokens/${tokenMintAddress}`);
-    const tokenPrice = parseFloat(response.data.pairs[0]?.priceUsd);
-    if (tokenPrice == null || isNaN(tokenPrice)) {
-      return res.status(404).json({
-        success: false,
-        message: 'Token price not found or invalid.',
-      });
-    }
+    const response = await axios.get('https://api.coingecko.com/api/v3/simple/price', {
+      params: {
+        ids: 'solana',
+        vs_currencies: 'usd',
+      },
+    });
+
+    const solPrice = response.data.solana?.usd;
+
     
     const margin = 1000000; // Define the threshold for acceptable price variation (in USD)
     
@@ -229,8 +230,7 @@ async function checkConfirmations(io) {
         
             // Check if transaction amount is within an acceptable range of the token price
             const expectedAmountInUSD = transaction.amount; // Calculate expected amount based on token price
-            const amountInUSD = response.data.pay_amount * solPrice; // This should be the amount received in USD
-            const tokenAmount = amountInUSD / tokenPrice;
+            const tokenAmount = response.data.pay_amount * solPrice; // This should be the amount received in USD
 
             // Check if the amount is within the defined epsilon range
             if (Math.abs(tokenAmount - expectedAmountInUSD) < margin) {

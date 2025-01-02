@@ -1283,10 +1283,10 @@ router.post('/rooms', auth, async (req, res) => {
         message: 'IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!'
       });
     }
-    if (bet_amount < 10) {
+    if (bet_amount < 0.0001) {
       return res.json({
         success: false,
-        message: 'MEOWNIMUM BET IS 10 RPS!'
+        message: 'MEOWNIMUM BET IS 0.0001 SOL!'
       });
     }
     if (endgame_type && parseFloat(endgame_amount) < bet_amount) {
@@ -1317,7 +1317,7 @@ router.post('/rooms', auth, async (req, res) => {
       });
     }
 
-    if (req.user.dailyWithdrawals > 100000) {
+    if (req.user.dailyWithdrawals > 2.5) {
       return res.json({
         success: false,
         message: "Exceeded Daily Withdrawal Limit. Unable to Create a room. Please try again tomorrow! (During Launch Phase only)"
