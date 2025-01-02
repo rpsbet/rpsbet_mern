@@ -12,7 +12,6 @@ export default function BetAmountInput(props) {
     handleMaxButtonClick,
     onChangeState,
     isDarkMode,
-    bangGame,
     betAmountRef,
     disabledButtons
   } = props;
@@ -64,8 +63,6 @@ export default function BetAmountInput(props) {
     },
     
   });
-  
-  
 
   const [isFocused, setIsFocused] = useState(false);
   const [isButtonGroupVisible, setIsButtonGroupVisible] = useState(false);
@@ -100,10 +97,10 @@ export default function BetAmountInput(props) {
           id="betamount"
           ref={betAmountRef}
           disabled={disabledButtons || false}
-          label={bangGame ? "MULTIPLIER" : ""}
+          label=""
           value={betAmount}
           onChange={onChangeState}
-          placeholder={bangGame ? "1.29x" : "BET AMOUNT"}
+          placeholder="BET AMOUNT"
           inputProps={{
             pattern: '^\\d*\\.?\\d*$',
             maxLength: 9,

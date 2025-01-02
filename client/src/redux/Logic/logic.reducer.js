@@ -14,9 +14,9 @@ import {
   ADD_NEW_CANDLE,
   ROOMS_LOADED,
   SET_QBOT_STATUSES,
-  ROOMS_COUNT,
   BET_SUCCESS,
   SET_TOKEN_PRICE,
+  SET_SOL_TO_USD_PRICE,
   MSG_CREATE_ROOM_FAIL,
   MSG_CREATE_ROOM_SUCCESS,
   SET_GAME_MODE,
@@ -30,11 +30,7 @@ import {
   UPDATE_BANKROLL,
   UPDATE_BANKROLL_QS,
   UPDATE_RAIN,
-  SPLEESH_GUESSES,
-  DROP_GUESSES,
-  BANG_GUESSES,
   ATTACHED,
-  ROLL_GUESSES,
   HISTORY_LOADED,
   ONLINE_USER_LIST_UPDATED,
   SELECT_MAIN_TAB,
@@ -51,7 +47,7 @@ import {
   COMMENTS_LOAD_FAILED,
   COMMENT_DELETED,
   COMMENT_DELETION_FAILED,
-  TRANSACTION_CANDLES_LOADED, // Add this action type
+  TRANSACTION_CANDLES_LOADED,
   TRANSACTION_CANDLES_ERROR,
 } from '../types';
 
@@ -64,14 +60,13 @@ const initialState = {
   game_mode: "",
   error: null,
   roomList: [],
+  solPrice: 0,
+  usdValue: null,
   history: [],
   tokenPrice: null,
   amount: 0,
-  rooms_count: 0,
-  spleesh_guesses: [],
-  drop_guesses: [],
-  candles: [], // Add this state to hold the candles data
-  transactions: [], // Add this state to hold the candles data
+  candles: [],
+  transactions: [],
   transactionCandlesError: null,
   bangs: [],
   is_betting: false,
@@ -84,22 +79,20 @@ const initialState = {
   gameTypeList: [
     { game_type_id: 1, game_type_name: 'RPS', short_name: 'RPS', _id: '62a25d2a723b9f15709d1ae7', created_at: '2018-06-09T20:50:50.217Z' },
     { game_type_id: 5, game_type_name: 'Quick Shoot', short_name: 'QS', _id: '62a25d2a723b9f15709d1aeb', created_at: '2020-06-09T20:50:50.219Z', },
-    // { game_type_id: 3, game_type_name: 'Brain Game', short_name: 'BG', _id: '62a25d2a723b9f15709d1ae9', created_at: '2029-06-09T20:50:50.219Z', },
-    // { game_type_id: 6, game_type_name: 'Drop Game', short_name: 'DG', _id: '63dac60ba1316a1e70a468ab', created_at: '2023-02-01T20:50:50.217Z', },
-    // { game_type_id: 2, game_type_name: 'Spleesh!', short_name: 'S!', _id: '62a25d2a723b9f15709d1ae8', created_at: '2024-06-09T20:50:50.218Z'},
-    // {game_type_id: 4, game_type_name: 'Mystery Box', short_name: 'MB', _id: '62a25d2a723b9f15709d1aea', created_at: '2022-06-09T20:50:50.219Z',},
-    // { game_type_id: 7, game_type_name: 'Bang!', short_name: 'B!', _id: '6536a82933e70418b45fbe32', created_at: '2019-12-02T11:04:10.217Z', },
-    // { game_type_id: 8, game_type_name: 'Roll', short_name: 'R', _id: '6536946933e70418b45fbe2f', created_at: '2010-05-19T15:57:30.217Z' },
-    // { game_type_id: 9, game_type_name: 'Blackjack', short_name: 'BJ', _id: '656cd55bb2c2d9dfb59a4bfa', created_at: '2034-03-08T14:40:50.217Z', }
   ],
   curRoomInfo: {
     _id: 0,
+    name: '',
+    ticker: '',
+    image: '',
+    x_link: '',
+    website_link: '',
+    telegram_link: '',
     creator_id: '',
     creator_avatar: '',
     rank: 0,
     accessory: '',
     username: '',
-    // aveMultiplier: '',
     totalGameLogsCount: 0,
     joiners: {},
     game_type: '',
@@ -109,14 +102,10 @@ const initialState = {
     bet_amount: 0,
     user_bet: 0,
     selectedStrategy: '',
-    // spleesh_bet_unit: 1,
-    box_price: 0,
     room_history: [],
     posted: false,
     attached: false,
-    box_list: [],
     is_private: false,
-    gameBackground: '',
     rps_game_type: 0,
     qs_game_type: 2,
     description: '',
@@ -165,7 +154,13 @@ export default function (state = initialState, action) {
     case SET_TOKEN_PRICE:
       return {
         ...state,
-        tokenPrice: payload, // Update tokenPrice in the state
+        tokenPrice: payload,
+      };
+    case SET_SOL_TO_USD_PRICE:
+      return {
+        ...state,
+        solPrice: payload.solPrice,
+        usdValue: payload.usdValue,
       };
     case BET_SUCCESS:
       return {
@@ -182,46 +177,21 @@ export default function (state = initialState, action) {
       if (payload && typeof payload === 'object') {
         return {
           ...state,
-          betResult: payload.betResult, // Assuming betResult is a single value, not an array
+          betResult: payload.betResult,
         };
       }
       return state;
     case TRANSACTION_CANDLES_LOADED:
       return {
         ...state,
-        candles: payload.candles, // Store the candles data in the state
-        transactions: payload.transactions, // Store the candles data in the state
-        transactionCandlesError: null, // Clear any previous error
+        candles: payload.candles,
+        transactions: payload.transactions,
+        transactionCandlesError: null,
       };
     case TRANSACTION_CANDLES_ERROR:
       return {
         ...state,
-        transactionCandlesError: payload, // Store the error message if any
-      };
-    case SPLEESH_GUESSES:
-      return {
-        ...state,
-        spleesh_guesses: payload
-      };
-    case DROP_GUESSES:
-      return {
-        ...state,
-        drop_guesses: action.drop_guesses
-      };
-    // case FETCH_ACCESSORY_SUCCESS:
-    //   return {
-    //     ...state,
-    //     accessory: action.payload
-    //   };
-    case BANG_GUESSES:
-      return {
-        ...state,
-        bang_guesses: action.bang_guesses
-      };
-    case ROLL_GUESSES:
-      return {
-        ...state,
-        roll_guesses: action.roll_guesses
+        transactionCandlesError: payload,
       };
     case UPDATE_BANKROLL:
     case UPDATE_BANKROLL_QS:
@@ -358,11 +328,6 @@ export default function (state = initialState, action) {
           ...payload.roomInfo,
           totalGameLogsCount: payload.totalGameLogsCount
         }
-      };
-    case ROOMS_COUNT:
-      return {
-        ...state,
-        rooms_count: payload
       };
     case ROOMS_LOADED:
       const { roomList } = payload;

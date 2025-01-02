@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { Button, Tooltip, RadioGroup, IconButton, ButtonBase, Radio, FormControlLabel } from '@material-ui/core';
 import { Info } from '@material-ui/icons';
-// import { acQueryMyItem } from '../../redux/Item/item.action';
 import styled from 'styled-components';
 import { faTrash, faRobot } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -12,13 +11,14 @@ import HighlightOffIcon from '@material-ui/icons/HighlightOff';
 import { alertModal } from '../modal/ConfirmAlerts';
 import { predictNext } from '../../util/predictNext';
 import DefaultBetAmountPanel from './DefaultBetAmountPanel';
+import CoinInfo from './CoinInfo';
+import GameSettingsPanel from './GameSettingsPanel';
 
 const StyledRadioGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 12px; /* Reduced gap for a subtle appearance */
-  margin: 10px auto;
-  padding: 15px;
+
   width: 100%;
   max-width: 800px;
 
@@ -40,7 +40,7 @@ const StyledProductCard = styled.a`
   align-items: center;
   justify-content: center;
 
-  border-radius: 0.5em;
+  border-radius: 0.3em;
   padding: 12px;
   width: 150px; /* Slightly smaller */
   text-align: center;
@@ -76,66 +76,6 @@ const StyledProductImage = styled.img`
   opacity: 0.85; /* Lower opacity for a muted look */
 `;
 
-const ProductGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
-  gap: 20px;
-  max-width: 100%;
-  margin: 20px 0;
-`;
-
-const ProductImage = styled.img`
-  max-width: 100%;
-  height: auto;
-  background: #fff;
-  border: 1px solid #f9f9;
-  box-shadow: 0 1px 17px #333;
-  border-radius: 10px;
-`;
-
-const ProductCard = styled.div`
-  position: relative;
-  background: linear-gradient(156deg, #8a0290, #cf0c0e);
-  border-radius: 20px;
-  padding: 10px;
-  display: -ms-flexbox;
-  display: flex;
-  -webkit-flex-direction: column;
-  -ms-flex-direction: column;
-  flex-direction: column;
-  -webkit-align-items: center;
-  -webkit-box-align: center;
-  -ms-flex-align: center;
-  align-items: center;
-  cursor: pointer;
-  -webkit-transition: -webkit-transform 0.2s;
-  -webkit-transition: transform 0.2s;
-  transition: transform 0.2s;
-  position: relative;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    border-radius: 20px;
-    opacity: 0;
-    transition: opacity 0.2s;
-  }
-
-  &:hover::before {
-    opacity: 1;
-  }
-
-  &:hover {
-    transform: scale(1.03);
-    border: 2px solid #fff;
-  }
-`;
-
 const calcWinChance = prevStates => {
   let total = prevStates.length;
   let rock = 0;
@@ -151,20 +91,14 @@ const calcWinChance = prevStates => {
     }
   });
 
-  // Calculate the base win chances
   const baseWinChance = (100 / 3).toFixed(2);
-
   const rockWinChance = parseFloat(baseWinChance);
   const paperWinChance = parseFloat(baseWinChance);
   const scissorsWinChance = parseFloat(baseWinChance);
-
-  // Calculate the range of frequencies
   const freq = { rock, paper, scissors };
   const freqValues = Object.values(freq);
   const range = Math.max(...freqValues) - Math.min(...freqValues);
-
-  // Adjust probabilities based on the range of frequencies
-  const sensitivityFactor = (range / 100) * total; // You can adjust this value to increase or decrease sensitivity
+  const sensitivityFactor = (range / 100) * total;
   const adjustmentFactor = (range / total) * sensitivityFactor;
 
   const adjustedRockWinChance = (
@@ -208,7 +142,6 @@ const calcEV = (calcWinChance, wager, winPayout, lossPayout, tiePayout) => {
   return EV.toFixed(2);
 };
 
-
 class RPS extends Component {
   constructor(props) {
     super(props);
@@ -216,7 +149,6 @@ class RPS extends Component {
       selected_rps: '',
       bet_amount: this.props.bet_amount,
       winChance: 33,
-      card_list: {},
       rps_list: [],
       selectedStrategy: this.props.selectedStrategy,
       settings_panel_opened: false,
@@ -238,7 +170,6 @@ class RPS extends Component {
     // await acQueryMyItem(100, 1, 'price', '653ee81117c9f5ee2124564b');
     document.addEventListener('keydown', this.handleKeyPress);
     document.addEventListener('mousedown', this.handleClickOutside);
-    // this.setCardListState();
   }
 
   componentWillUnmount() {
@@ -282,27 +213,11 @@ class RPS extends Component {
   }
 
   handleReset() {
-    // Clear the roll_list and reset winChance and aveMultiplier
     this.props.onChangeState({
       rps_list: [],
-      winChance: 33, // You may want to reset to default values
-      aveMultiplier: 0 // You may want to reset to default values
+      winChance: 33,
     });
   }
-
-
-  // setCardListState() {
-  //   const { data } = this.props;
-  //   const modifiedData = data.map(item => ({
-  //     ...item,
-  //     in_use: 0
-  //   }));
-
-  //   this.setState({
-  //     card_list: modifiedData,
-  //     rps_list: []
-  //   });
-  // }
 
   onAutoPlay = () => {
     if (this.props.rps_list.length > 2) {
@@ -345,23 +260,6 @@ class RPS extends Component {
       winChance: winChanceEV
     });
 
-    if (this.props.rps_game_type === 1) {
-      const removedItem = this.props.rps_list[index];
-      if (removedItem) {
-        const updatedCardList = this.state.card_list.map(item => {
-          if (item.productName === removedItem.rps) {
-            const updatedInUse = item.in_use - 1;
-
-            return { ...item, in_use: updatedInUse };
-          }
-          return item;
-        });
-
-        this.setState({
-          card_list: updatedCardList
-        });
-      }
-    }
   };
 
   onAddRun = selected_rps => {
@@ -411,7 +309,7 @@ class RPS extends Component {
   }
 
   render() {
-    const { selected_rps, card_list, settings_panel_opened } = this.state;
+    const { selected_rps, settings_panel_opened } = this.state;
     const {
       rps_game_type,
       step,
@@ -429,14 +327,7 @@ class RPS extends Component {
 
     const gameTypeStyleClass = {
       RPS: 'rps',
-      'S!': 'spleesh',
-      MB: 'mystery-box',
-      BG: 'brain-game',
       QS: 'quick-shoot',
-      DG: 'drop-game',
-      'B!': 'bang',
-      R: 'roll',
-      BJ: 'blackjack'
     };
 
     const { gameTypeList } = this.props;
@@ -445,131 +336,13 @@ class RPS extends Component {
     if (!gameTypeList) return null;
     return (
       <>
-
-        {/* {step === 2 && (
-          <div className="game-info-panel">
-            <h3 className="game-sub-title">Select Mode:</h3>
-
-            <div id="rps-game-type-radio">
-              <Button
-                className={rps_game_type === 0 ? 'active' : ''}
-                onClick={() => {
-                  onChangeState({ rps_game_type: 0, game_mode: this.state.game_mode });
-                }}
-              >
-                <img src="/img/icons/RPS_badge.svg" alt="Classic RPS" />
-                Classic RPS
-              </Button>
-
-              <Button
-                className={rps_game_type === 1 ? 'active' : ''}
-                onClick={() => {
-                  if (rps_game_type !== 1) {
-                    onChangeState({ rps_game_type: 1, game_mode: this.state.game_mode });
-                  }
-                }}
-              >
-                <img src="/img/icons/RRPS_badge.svg" alt="Restricted RPS" />
-                Restricted RPS
-              </Button>
-            </div>
-            <p className="tip">
-              {rps_game_type === 0
-                ? 'Classic RPS - familiar and simple, traditional rules apply'
-                : 'Restricted RPS - limited cards, decide who to avoid, who to work with and who to betray'}
-            </p>
-          </div>
-        )}
-
-        {step === 2 && rps_game_type === 1 && (
-          <div className="game-info-panel">
-            <h3 className="game-sub-title">Select Cards</h3>
-            <ProductGrid>
-              {Array.isArray(card_list) && card_list.map(row => {
-                const remainingCount = row.total_count - row.in_use;
-
-                if (remainingCount > 0) {
-                  return (
-                    <ProductCard
-                      key={row._id}
-                      onClick={() => {
-                        const { card_list } = this.state;
-                        const updatedCardList = card_list.map(item => {
-                          if (item._id === row._id) {
-                            const updatedInUse = item.in_use + 1;
-
-                            if (updatedInUse <= item.total_count) {
-                              return { ...item, in_use: updatedInUse };
-                            }
-                          }
-                          return item;
-                        });
-
-                        this.setState({
-                          card_list: updatedCardList,
-                          selected_rps: row._id
-                        });
-
-                        // onChangeState({
-                        //   selected_rps: row.image
-                        // });
-
-                        this.onAddRun(row.productName);
-                      }}
-                      className={selected_rps === row._id ? 'selected' : ''}
-                    >
-                      <ProductImage src={row.image} alt={row.productName} />
-
-                      <div>
-                        {row.productName} x <span>{remainingCount}</span>
-                      </div>
-                    </ProductCard>
-                  );
-                } else {
-                  return null;
-                }
-              })}
-            </ProductGrid>
-
-            <div className="rps-add-run-table">
-              <h3 className="game-sub-title">Training Data</h3>
-              <table id="runs">
-                <tbody>
-                  {rps_list && rps_list.length > 0 ? (
-                    rps_list.map((rps, index) => (
-                      <tr key={index}>
-                        <td>{index + 1}</td>
-                        <td>{rps.rps}</td>
-                        <td>
-                          <HighlightOffIcon
-                            id="delete"
-                            onClick={() => this.onRemoveItem(index)}
-                          />
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td id="add-run" colSpan="4">
-                        Determine the order of your deck (first-in, first-out).
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-
-            </div>
-            <p className="tip">RRPS CARDS AVAILABLE VIA THE MARKETPLACE</p>
-          </div>
-        )} */}
         {step === 1 && rps_game_type === 0 && (
           <div className="game-info-panel">
             <div className='glass-container' style={{ display: "flex", flexDirection: "column" }}>
               <div>
-
                 <div style={{ marginBottom: "30px" }}>
                   <RadioGroup value={selectedGameType} onChange={this.props.handleChange}>
-                    <h3 className="game-sub-title roll-tag">Switch Collateral&nbsp;<Tooltip
+                    <h3 className="game-sub-title roll-tag">Choose Game Mode&nbsp;<Tooltip
                       style={{ position: "absolute", right: "20px" }}
                       title={'Select a game-mode to use as collateral against your capital.'}
                       placement="top"
@@ -597,7 +370,7 @@ class RPS extends Component {
                                 src={`/img/gametype/icons/${gameType.short_name}.svg`}
                                 alt={gameType.game_type_name}
                               />
-                              <span style={{ color: "#f9f9f9" }}>{gameType.game_type_name}</span>
+                              <span style={{ color: "#f9f9f9", marginTop: '0' }}>{gameType.game_type_name}</span>
                             </StyledProductCard>
                           }
                         />
@@ -606,152 +379,29 @@ class RPS extends Component {
                   </RadioGroup>
                 </div>
               </div>
+
+              <GameSettingsPanel
+                selectedStrategy={this.props.selectedStrategy}
+                setSelectedStrategy={this.props.setSelectedStrategy}
+                isDarkMode={this.props.isDarkMode}
+              />
+              <CoinInfo
+                onChangeState={this.props.onChangeState}
+                name={this.props.name}
+                ticker={this.props.ticker}
+                x_link={this.props.x_link}
+                image={this.props.image}
+                isDarkMode={this.props.isDarkMode}
+                telegram_link={this.props.telegram_link}
+                website_link={this.props.website_link}
+              />
+
               <DefaultBetAmountPanel
                 bet_amount={this.props.bet_amount}
                 onChangeState={this.props.onChangeState}
                 game_type={this.props.game_type}
                 defaultBetAmounts={this.props.defaultBetAmounts}
               />
-              <h3 className="game-sub-title roll-tag">Strategy&nbsp;<Tooltip
-                style={{ position: "absolute", right: "20px", marginBottom: "30px" }}
-                title={'The strategy determines how your AI will play, includes patterns, reasoning and predictability.'}
-                placement="top"
-              >
-                <Info style={{ cursor: "pointer", float: "right" }} />
-              </Tooltip></h3>
-              <SettingsRef
-                strategies={strategies}
-                ai_mode={ai_mode}
-                user_id={user_id}
-                rank={rank}
-                settings_panel_opened={settings_panel_opened}
-                setSelectedStrategy={setSelectedStrategy}
-                settingsRef={this.settingsRef}
-                selectedStrategy={selectedStrategy}
-              />
-              <Button
-                onClick={this.handleSettingsIconClick}
-                className="strategy-btn title"
-                style={{
-                  boxShadow: 'unset',
-                  border: '3px solid var(--yellow-color)',
-                  background: 'transparent',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <span style={{ marginRight: '5px' }}>{selectedStrategy}</span>
-                <SettingsOutlinedIcon />
-              </Button>
-              {(selectedStrategy === 'Hidden Markov') ? (
-                <>
-                  <div className="rps-add-run-panel">
-                    <div className="rps-add-run-form">
-                      <h3 className="game-sub-title roll-tag">Select: R - P - S! &nbsp;<Tooltip
-                        style={{ position: "absolute", right: "20px", marginBottom: "30px" }}
-                        title={'Train the AI with some custom data.'}
-                        placement="top"
-                      >
-                        <Info style={{ cursor: "pointer", float: "right" }} />
-                      </Tooltip></h3>
-                      <div id="rps-radio">
-                        <Button
-                          className={'rock' + (selected_rps === 'R' ? ' active' : '')}
-                          variant="contained"
-                          onClick={() => {
-
-                            this.onAddRun('R');
-                            const currentActive = document.querySelector('.active');
-                            if (currentActive) {
-                              currentActive.style.animation = 'none';
-                              void currentActive.offsetWidth;
-                              currentActive.style.animation =
-                                'pulse 0.2s ease-in-out ';
-                            }
-                          }}
-                        ><span className="roll-tag">[R]</span></Button>
-                        <Button
-                          className={
-                            'paper' + (selected_rps === 'P' ? ' active' : '')
-                          }
-                          variant="contained"
-                          onClick={() => {
-
-                            this.onAddRun('P');
-                            const currentActive = document.querySelector('.active');
-                            if (currentActive) {
-                              currentActive.style.animation = 'none';
-                              void currentActive.offsetWidth;
-                              currentActive.style.animation =
-                                'pulse 0.2s ease-in-out ';
-                            }
-                          }}
-                        ><span className="roll-tag">[P]</span></Button>
-                        <Button
-                          className={
-                            'scissors' + (selected_rps === 'S' ? ' active' : '')
-                          }
-                          variant="contained"
-                          onClick={() => {
-                            this.onAddRun('S');
-                            const currentActive = document.querySelector('.active');
-                            if (currentActive) {
-                              currentActive.style.animation = 'none';
-                              void currentActive.offsetWidth;
-                              currentActive.style.animation =
-                                'pulse 0.2s ease-in-out ';
-                            }
-                          }}
-                        ><span className="roll-tag">[S]</span></Button>
-                      </div>
-
-                      <Button
-                        id="aiplay"
-                        variant="contained"
-                        onClick={this.onAutoPlay}
-                      >
-                        <FontAwesomeIcon icon={faRobot} style={{ color: '#060607' }} />&nbsp;Test AI Play&nbsp;<span className="roll-tag">[space]</span>
-                      </Button>
-                    </div>
-                    <div className="rps-add-run-table">
-                      <h3 className="game-sub-title">Pattern Table</h3>
-                      <table id="runs">
-                        <tbody>
-                          {rps_list && rps_list.length > 0 ? (
-                            rps_list.map((rps, index) => (
-                              <tr key={index}>
-                                <td>{index + 1}</td>
-                                <td>{rps.rps}</td>
-                                <td>
-                                  <HighlightOffIcon
-                                    id="delete"
-                                    onClick={() => this.onRemoveItem(index)}
-                                  />
-                                </td>
-                              </tr>
-                            ))
-                          ) : (
-                            <tr>
-                              <td id="add-run" colSpan="4">
-                                Your pattern will be displayed here
-                              </td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
-                      <IconButton style={{ background: "transparent", boxShadow: "none" }} color="secondary" onClick={this.handleReset}>
-                        <FontAwesomeIcon icon={faTrash} /> {/* Use the faRedo icon */}
-                      </IconButton>
-                    </div>
-                  </div>
-                </>
-
-              ) : (
-                <div style={{ padding: "30px", fontSize: "0.6em", textAlign: "center" }}>
-                  (No Pattern Needed)
-                </div>
-              )}
             </div>
           </div>
 
@@ -771,7 +421,6 @@ const mapStateToProps = state => ({
 });
 
 const mapDispatchToProps = {
-  // acQueryMyItem
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(RPS);

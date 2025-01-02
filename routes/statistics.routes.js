@@ -13,7 +13,6 @@ const Vault = require('../model/Vault');
 const Room = require('../model/Room');
 const GameType = require('../model/GameType');
 const SystemSetting = require('../model/SystemSetting');
-const RoomBoxPrize = require('../model/RoomBoxPrize');
 
 router.get('/get-customer-statistics', async (req, res) => {
   try {
@@ -74,7 +73,7 @@ router.get('/get-customer-statistics', async (req, res) => {
     // Define the base query
     let query = GameLog.find(gameLogsQuery)
       .select(
-        'creator joined_user selected_drop room game_type bet_amount commission created_at game_result'
+        'creator joined_user room game_type bet_amount commission created_at game_result'
       )
       .sort({ created_at: 1 })
       .populate([
@@ -92,8 +91,6 @@ router.get('/get-customer-statistics', async (req, res) => {
 
     // Execute the query
     const gameLogs = await query;
-
-
 
     let statistics = {
       deposit: 0,
@@ -409,13 +406,7 @@ router.get('/get-total-statistics', auth, async (req, res) => {
       totalWithdrawn: 0,
       volumeOfBets: [
         { name: 'RPS', data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
-        { name: 'Spleesh', data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
-        { name: 'Mystery Box', data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
-        { name: 'Brain Game', data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
         { name: 'Quick Shoot', data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
-        { name: 'Drop Game', data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
-        { name: 'Bang!', data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
-        { name: 'Roll', data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] }
       ]
     };
 

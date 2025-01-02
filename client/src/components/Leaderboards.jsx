@@ -61,7 +61,7 @@ class Leaderboards extends Component {
 
 
   render() {
-    const { roomStatsLoaded, actionList } = this.props;
+    const { roomStatsLoaded, actionList, solPrice } = this.props;
     return (
       <div className="leaderboards-page">
         <div className="leaderboards-content">
@@ -106,24 +106,14 @@ class Leaderboards extends Component {
                               alt=""
                               darkMode={this.props.isDarkMode}
                             />
-                            {/* <span>{playerData.actor}</span> */}
                           </a>
-                          {/* <i
-                        className={`online-status${
-                          this.props.onlineUserList.filter(
-                            user => user === playerData._id
-                          ).length > 0
-                            ? ' online'
-                            : ''
-                        }`}
-                      ></i> */}
-                          {/* {playerData._id} */}
+                        
                         </TableCell>
                         <TableCell>
-                          {playerData.bets >= 10 ? <>{convertToCurrency(playerData.wagered)}+</> : convertToCurrency(playerData.wagered)}
+                          {playerData.bets >= 10 ? <>{convertToCurrency(playerData.wagered, solPrice)}+</> : convertToCurrency(playerData.wagered, solPrice)}
                         </TableCell>
                         <TableCell>
-                          {playerData.bets >= 10 ? <>{convertToCurrency(playerData.net_profit)}+</> : convertToCurrency(playerData.net_profit)}
+                          {playerData.bets >= 10 ? <>{convertToCurrency(playerData.net_profit, solPrice)}+</> : convertToCurrency(playerData.net_profit, solPrice)}
                         </TableCell>
 
 
@@ -216,7 +206,7 @@ class Leaderboards extends Component {
                   </TableBody>
                 </Table>
               ) : (
-                <p>No Winners Yet</p>
+                <p style={{color: "rgb(153, 153, 153)", textAlign: 'center', fontSize: '16px'}}>No Winners</p>
               )}
             </>
           ) : (
@@ -233,7 +223,8 @@ const mapStateToProps = state => ({
   user_id: state.auth.user._id,
   isDarkMode: state.auth.isDarkMode,
   actionList: state.customerReducer.actionList,
-  roomStatsLoaded: state.customerReducer.roomStatsLoaded
+  roomStatsLoaded: state.customerReducer.roomStatsLoaded,
+  solPrice: state.logic.solPrice
 });
 
 const mapDispatchToProps = {getRoomStatisticsData};

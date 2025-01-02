@@ -366,6 +366,7 @@ class ProductTable extends Component {
       setCurrentProductInfo,
       openConfirmTradeModal,
       isLowGraphics,
+      solPrice
     } = this.props;
 
     const {
@@ -403,22 +404,7 @@ class ProductTable extends Component {
               open={Boolean(anchorEl)}
               onClose={() => this.handleFilterClose(null)}
             >
-              {/* <MenuItem
-                onClick={() =>
-                  this.handleFilterClose('653ee7ac17c9f5ee21245649')
-                }
-                selected={itemType === '653ee7ac17c9f5ee21245649'}
-              >
-                RRPS Card
-              </MenuItem> */}
-              {/* <MenuItem
-                onClick={() =>
-                  this.handleFilterClose('653ee7df17c9f5ee2124564a')
-                }
-                selected={itemType === '653ee7df17c9f5ee2124564a'}
-              >
-                Game Background
-              </MenuItem> */}
+        
               <MenuItem
                 onClick={() =>
                   this.handleFilterClose('653ee81117c9f5ee2124564b')
@@ -427,22 +413,7 @@ class ProductTable extends Component {
               >
                 Accessories
               </MenuItem>
-              {/* <MenuItem
-                onClick={() =>
-                  this.handleFilterClose('654231df29446bc96d689d0f')
-                }
-                selected={itemType === '654231df29446bc96d689d0f'}
-              >
-                Tools
-              </MenuItem>
-              <MenuItem
-                onClick={() =>
-                  this.handleFilterClose('6542321929446bc96d689d10')
-                }
-                selected={itemType === '6542321929446bc96d689d10'}
-              >
-                Games
-              </MenuItem> */}
+            
             </Menu>
           </div>
           <div className="filters">
@@ -544,7 +515,7 @@ class ProductTable extends Component {
                             {row.owners[0].rentOption ? ' Price per month' : ' Price per unit'}:
                           </TableCell>
                           <TableCell className="value">
-                            {convertToCurrency(row.owners[0].price)}
+                            {convertToCurrency(row.owners[0].price, solPrice)}
                           </TableCell>
                         </TableRow>
                         <TableRow>
@@ -647,7 +618,7 @@ const mapStateToProps = state => ({
   showConfirmTradeModal: state.snackbar.showConfirmTradeModal,
   isDarkMode: state.auth.isDarkMode,
   user: state.auth.user._id,
-
+  solPrice: state.logic.solPrice,
   isLowGraphics: state.auth.isLowGraphics,
 });
 

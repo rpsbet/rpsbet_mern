@@ -87,36 +87,6 @@ function ClippedDrawer(props) {
         </ListSubheader>
       }
     >
-      {/* <ListItem button onClick={() => navPush('/admin/question')}>
-        <ListItemIcon>
-          <RedeemIcon color={activeUrl.includes('/admin/question') ? 'secondary' : 'inherit'} />
-        </ListItemIcon>
-        <ListItemTextEl inputcolor={activeUrl.includes('/admin/question') ? 'true' : 'false'} primary="Manage Questions" />
-      </ListItem>
-      <ListItem button onClick={() => navPush('/admin/customers')}>
-        <ListItemIcon>
-          <PeopleAlt color={activeUrl === '/admin/customers' ? 'secondary' : 'inherit'} />
-        </ListItemIcon>
-        <ListItemTextEl inputcolor={activeUrl === '/admin/customers' ? 'true' : 'false'} primary="Customers" />
-      </ListItem>
-      <ListItem button onClick={() => navPush('/admin/activities')}>
-        <ListItemIcon>
-          <SportsFootball color={activeUrl === '/admin/activities' ? 'secondary' : 'inherit'} />
-        </ListItemIcon>
-        <ListItemTextEl inputcolor={activeUrl === '/admin/activities' ? 'true' : 'false'} primary="Customer Activities" />
-      </ListItem>
-      <ListItem button onClick={() => navPush('/admin/statistics')}>
-        <ListItemIcon>
-          <TimeLine color={activeUrl === '/admin/statistics' ? 'secondary' : 'inherit'} />
-        </ListItemIcon>
-        <ListItemTextEl inputcolor={activeUrl === '/admin/statistics' ? 'true' : 'false'} primary="Statistics" />
-      </ListItem>
-      <ListItem button onClick={() => navPush('/admin/settings')}>
-        <ListItemIcon>
-          <SettingsIcon color={activeUrl === '/admin/settings' ? 'secondary' : 'inherit'} />
-        </ListItemIcon>
-        <ListItemTextEl inputcolor={activeUrl === '/admin/settings' ? 'true' : 'false'} primary="System Settings" />
-      </ListItem> */}
     </List>
   );
 
@@ -164,7 +134,6 @@ function ClippedDrawer(props) {
           </Typography>
           <div className={classes.grow}></div>
           <Typography noWrap align="right">
-            {/* {userName} */}
           </Typography>
         </Toolbar>
       </AppBar>
@@ -176,7 +145,6 @@ function ClippedDrawer(props) {
         }}
       >
         <div className={classes.toolbar} />
-        {/* {isAdmin ? rdAdminMenu() : ''} */}
         <Divider />
         {rdProfileMenu()}
       </Drawer>

@@ -6,8 +6,6 @@ const moment = require('moment');
 const auth = require('../middleware/auth');
 const admin = require('../middleware/admin');
 const { v4: uuidv4 } = require('uuid');
-const axios = require('axios');
-
 const Comment = require('../model/Comment');
 
 const Item = require('../model/Item');
@@ -17,25 +15,13 @@ const GameType = require('../model/GameType');
 const Strategy = require('../model/Strategy');
 const GameLog = require('../model/GameLog');
 const Receipt = require('../model/Receipt');
-// const RoomBoxPrize = require('../model/RoomBoxPrize');
-// const Question = require('../model/Question');
-// const Answer = require('../model/Answer');
-// const BrainGameType = require('../model/BrainGameType');
 const Message = require('../model/Message');
 const Notification = require('../model/Notification');
 const QBot = require('../model/QBot');
 const Transaction = require('../model/Transaction');
 const SystemSetting = require('../model/SystemSetting');
-const SpleeshGuess = require('../model/SpleeshGuess');
-// const DropGuess = require('../model/DropGuess');
-// const BangGuess = require('../model/BangGuess');
-// const RollGuess = require('../model/RollGuess');
 const RpsBetItem = require('../model/RpsBetItem');
-// const BjBetItem = require('../model/BjBetItem');
 const QsBetItem = require('../model/QsBetItem');
-// const DropBetItem = require('../model/DropBetItem');
-const BangBetItem = require('../model/BangBetItem');
-const RollBetItem = require('../model/RollBetItem');
 const { convertGameLogToHistoryStyle } = require('../helper/util/convertGameLogToHistoryStyle');
 const avatarUtils = require('../helper/util/getRank');
 const convertToCurrency = require('../helper/util/conversion');
@@ -61,7 +47,7 @@ router.get('/game_types', async (req, res) => {
   } catch (err) {
     res.json({
       success: false,
-      err: err.message // You might want to include the error message for debugging purposes.
+      err: err.message
     });
   }
 });
@@ -78,7 +64,7 @@ router.get('/strategies', async (req, res) => {
   } catch (err) {
     res.json({
       success: false,
-      err: err.message // You might want to include the error message for debugging purposes.
+      err: err.message
     });
   }
 });
@@ -106,20 +92,16 @@ router.get('/recently-closed', async (req, res) => {
   } catch (err) {
     res.status(500).json({
       success: false,
-      error: err.message // Include the error message for debugging purposes.
+      error: err.message
     });
   }
 });
 
-
-
-// Route to update a strategy's description
 router.patch('/strategies/:user_id', async (req, res) => {
   const { user_id } = req.params;
   const { strategy } = req.body;
 
   try {
-    // Find the strategy by ID and update its description
     const user = await User.findByIdAndUpdate(user_id, { ai_mode: strategy }, { new: true });
 
     if (!user) {
@@ -133,7 +115,7 @@ router.patch('/strategies/:user_id', async (req, res) => {
   } catch (err) {
     res.json({
       success: false,
-      err: err.message // You might want to include the error message for debugging purposes.
+      err: err.message
     });
   }
 });
@@ -143,21 +125,18 @@ router.post('/detachPlayer/:room_id', auth, async (req, res) => {
   const user_id = req.user._id;
 
   try {
-    // Check if the room exists
     const room = await Room.findById(room_id);
     if (!room) {
       console.log('Room not found');
       return res.status(404).json({ success: false, message: 'Room not found' });
     }
 
-    // Check if the user is attached to the room in AttachedPlayers
     const attachedPlayer = await AttachedPlayer.findOne({ room: room_id, user: user_id });
     if (!attachedPlayer) {
       console.log('Attached player not found');
       return res.status(404).json({ success: false, message: 'Attached player not found' });
     }
 
-    // Remove the attached player entry
     await AttachedPlayer.deleteOne({ _id: attachedPlayer._id });
 
     res.json({
@@ -174,14 +153,12 @@ router.post('/detachPlayer/:room_id', auth, async (req, res) => {
   }
 });
 
-// Route to update an existing AttachedPlayer document
 router.put('/updateAttachment/:room_id', auth, async (req, res) => {
   const { room_id } = req.params;
   const user_id = req.user._id;
   const { bet_amounts, selected_strategy } = req.body;
 
   try {
-    // Find the document and update it
     const updatedAttachment = await AttachedPlayer.findOneAndUpdate(
       { user: user_id, room: room_id },
       { $set: { bet_amounts, selected_strategy, updated_at: Date.now() } },
@@ -210,8 +187,6 @@ router.put('/updateAttachment/:room_id', auth, async (req, res) => {
   }
 });
 
-
-// Route to find all documents for the user
 router.get('/getattachedrooms', auth, async (req, res) => {
   const user_id = req.user._id;
   try {
@@ -236,7 +211,6 @@ router.get('/checkAttachment/:room_id', auth, async (req, res) => {
   const { room_id } = req.params;
   const user_id = req.user._id;
   try {
-    // Check if the user is already attached to the room
     const existingAttachment = await AttachedPlayer.findOne({ user: user_id, room: room_id });
 
     if (existingAttachment) {
@@ -271,7 +245,6 @@ router.patch('/attachPlayer/:room_id', auth, async (req, res) => {
   const bet_amounts = req.body.bet_amounts;
   try {
 
-    // Check if the room exists
     const room = await Room.findById(room_id).populate({ path: 'game_type', model: GameType });
     if (!room) {
       console.log('Room not found');
@@ -286,7 +259,6 @@ router.patch('/attachPlayer/:room_id', auth, async (req, res) => {
       });
     }
 
-    // Add a new document to the AttachedPlayers schema
     const newAttachedPlayer = new AttachedPlayer({
       user: user_id,
       room: room_id,
@@ -316,19 +288,16 @@ router.patch('/rooms/:room_id', async (req, res) => {
 
   try {
 
-    // Check if the room is locked by another request
     if (roomLocks[room_id]) {
       return res.status(409).json({ success: false, message: 'Room is currently being updated' });
     }
 
-    // Lock the room
     roomLocks[room_id] = true;
 
-    // Check if the room exists
     const room = await Room.findById(room_id);
     if (!room) {
       console.log('Room not found');
-      delete roomLocks[room_id]; // Release the lock
+      delete roomLocks[room_id];
       return res.status(404).json({ success: false, message: 'Room not found' });
     }
 
@@ -339,10 +308,9 @@ router.patch('/rooms/:room_id', async (req, res) => {
         message: 'THIS GAME HAS ENDED ALREADY'
       });
     }
-    // Function to find a random bot
     const findRandomBot = async () => {
       let attempts = 0;
-      while (attempts < 6) { // Maximum number of attempts
+      while (attempts < 6) {
         const randomBot = await User.aggregate([
           { $match: { username: { $regex: /BOT/i } } },
           { $sample: { size: 1 } }
@@ -350,7 +318,6 @@ router.patch('/rooms/:room_id', async (req, res) => {
         const botId = randomBot[0]._id;
 
         if (!room.joiners.includes(botId)) {
-          // Bot is not already in the room
           return botId;
         }
         attempts++;
@@ -358,12 +325,9 @@ router.patch('/rooms/:room_id', async (req, res) => {
       throw new Error('No available bots found');
     };
 
-    // Find and attach a bot to the room
     const botId = await findRandomBot();
 
-    // Check if the bot is already in the room
     if (room.joiners.includes(botId)) {
-      // Release the lock
       delete roomLocks[room_id];
       return res.status(400).json({
         success: false,
@@ -371,14 +335,12 @@ router.patch('/rooms/:room_id', async (req, res) => {
       });
     }
 
-    // Update the room
     const updatedRoom = await Room.findByIdAndUpdate(
       room_id,
       { $push: { joiners: botId } },
       { new: true }
     );
 
-    // Release the lock
     delete roomLocks[room_id];
 
     res.json({
@@ -388,7 +350,6 @@ router.patch('/rooms/:room_id', async (req, res) => {
     });
   } catch (err) {
     console.error('Error updating room:', err.message);
-    // Release the lock in case of error
     delete roomLocks[room_id];
     res.status(500).json({
       success: false,
@@ -401,7 +362,6 @@ router.patch('/rooms/:room_id', async (req, res) => {
 
 router.patch('/rooms/:room_id/remove-bots', async (req, res) => {
   const { room_id } = req.params;
-  // Define the bot IDs to remove
   const bots = [
     '65eafc72aea25957ac8ea60d',
     '65eafa5caea25957ac8ea60b',
@@ -410,36 +370,29 @@ router.patch('/rooms/:room_id/remove-bots', async (req, res) => {
   ];
 
   try {
-    // Lock the room
     roomLocks[room_id] = true;
 
-    // Check if the room exists
     let room = await Room.findById(room_id);
 
     if (!room) {
-      delete roomLocks[room_id]; // Release the lock
+      delete roomLocks[room_id];
       return res.status(404).json({ success: false, message: 'Room not found' });
     }
 
-    // Change room status to 'waiting' and save it
     room.status = 'waiting';
     await saveDocumentWithRetry(room);
 
-    // Function to remove all matching bots from the room
     const removeAllMatchingBots = async () => {
       try {
-        // Fetch the room again to ensure we have the latest data
         room = await Room.findById(room_id);
 
         if (!room) {
           throw new Error('Room not found');
         }
 
-        // Filter out bot IDs that exist in the bots array
         const matchingBots = room.joiners.filter(joiner => bots.includes(joiner.toString()));
 
         if (matchingBots.length === 0) {
-          // No more bots to remove, update status back to 'open' if needed
           if (room.status !== 'open') {
             room.status = 'open';
             await saveDocumentWithRetry(room);
@@ -447,10 +400,8 @@ router.patch('/rooms/:room_id/remove-bots', async (req, res) => {
           return room;
         }
 
-        // Remove matching bots from the room
         room.joiners = room.joiners.filter(joiner => !bots.includes(joiner.toString()));
 
-        // Update room status to 'open'
         room.status = 'open';
         await saveDocumentWithRetry(room);
 
@@ -460,10 +411,8 @@ router.patch('/rooms/:room_id/remove-bots', async (req, res) => {
       }
     };
 
-    // Execute the removal function
     const updatedRoom = await removeAllMatchingBots();
 
-    // Release the lock
     delete roomLocks[room_id];
 
     if (updatedRoom) {
@@ -476,13 +425,12 @@ router.patch('/rooms/:room_id/remove-bots', async (req, res) => {
       res.json({
         success: true,
         message: 'No matching bots found in the room',
-        room: room // Return original room data
+        room: room
       });
     }
 
   } catch (err) {
     console.error('Error removing bots from room:', err.message);
-    // Release the lock in case of error
     delete roomLocks[room_id];
     res.status(500).json({
       success: false,
@@ -495,25 +443,22 @@ router.patch('/rooms/:room_id/remove-bots', async (req, res) => {
 router.get('/rooms/:room_id/bots-count', async (req, res) => {
   const { room_id } = req.params;
   try {
-    // Check if the room exists
     const room = await Room.findById(room_id);
     if (!room) {
       console.log('Room not found');
       return res.status(404).json({ success: false, message: 'Room not found' });
     }
 
-    // Function to find the bots
     const findBots = async () => {
       const bots = await User.aggregate([
         { $match: { username: { $regex: /BOT/i } } },
-        { $project: { _id: { $toString: '$_id' } } } // Convert _id to string
+        { $project: { _id: { $toString: '$_id' } } }
       ]);
-      return bots.map(bot => bot._id); // Extracting only the _id of bots
+      return bots.map(bot => bot._id);
     };
 
-    // Find the bots and count them in the room
     const botIds = await findBots();
-    const joinerIds = room.joiners.map(joiner => joiner.toString()); // Convert joiner _ids to strings
+    const joinerIds = room.joiners.map(joiner => joiner.toString());
     const botCount = joinerIds.reduce((count, joinerId) => {
       if (botIds.includes(joinerId)) {
         count++;
@@ -535,8 +480,6 @@ router.get('/rooms/:room_id/bots-count', async (req, res) => {
   }
 });
 
-
-
 router.patch('/room/strategies/:room_id', async (req, res) => {
   const { room_id } = req.params;
   const { strategy } = req.body;
@@ -551,13 +494,13 @@ router.patch('/room/strategies/:room_id', async (req, res) => {
     res.json({
       success: true,
       message: 'Room strategy updated successfully!',
-      room: room // Optionally, you might return the updated room object.
+      room: room
     });
   } catch (err) {
     res.status(500).json({
       success: false,
       message: 'Internal server error',
-      error: err.message // Include error message for debugging
+      error: err.message
     });
   }
 });
@@ -626,7 +569,6 @@ router.get('/room/:id', async (req, res) => {
   try {
     const room = await Room.findOne({ _id: req.params.id })
       .populate({ path: 'game_type', model: GameType })
-      .populate({ path: 'brain_game_type', model: BrainGameType })
       .populate({ path: 'joiners', model: User });
     let gameLogQuery = GameLog.find({ room: room })
       .sort({ created_at: 'desc' })
@@ -650,6 +592,12 @@ router.get('/room/:id', async (req, res) => {
       query: req.query,
       roomInfo: {
         _id: room['_id'],
+        name: room['name'],
+        image: room['image'],
+        ticker: room['ticker'],
+        x_link: room['x_link'],
+        website_link: room['website_link'],
+        telegram_link: room['telegram_link'],
         created_at: room['created_at'],
         creator_id: room['creator'],
         username: creator['username'],
@@ -697,87 +645,10 @@ router.get('/room/:id', async (req, res) => {
   }
 });
 
-router.get('/question/:brain_game_type', async (req, res) => {
-  try {
-    const [question] = await Question.aggregate([
-      {
-        $match: { brain_game_type: new ObjectId(req.params.brain_game_type) }
-      },
-      {
-        $sample: { size: 1 }
-      }
-    ]);
-
-    const [correctAnswer] = await Answer.aggregate([
-      {
-        $match: {
-          question: new ObjectId(question._id),
-          is_correct_answer: true
-        }
-      },
-      {
-        $sample: { size: 1 }
-      }
-    ]);
-
-    const wrongAnswers = await Answer.aggregate([
-      {
-        $match: {
-          question: new ObjectId(question._id),
-          is_correct_answer: false
-        }
-      },
-      {
-        $sample: { size: 3 }
-      }
-    ]);
-
-    const answers = [
-      { _id: correctAnswer._id, answer: correctAnswer.answer },
-      ...wrongAnswers.map(answer => ({
-        _id: answer._id,
-        answer: answer.answer
-      }))
-    ].sort(() => Math.random() - 0.5);
-    res.json({
-      success: true,
-      question: { _id: question._id, question: question.question, image: question.image },
-      answers
-    });
-  } catch (err) {
-    res.json({
-      success: false,
-      err: err
-    });
-  }
-});
-
-router.post('/answer', auth, async (req, res) => {
-  try {
-    const count = await Answer.countDocuments({
-      _id: req.body.answer_id,
-      question: new ObjectId(req.body.question_id),
-      is_correct_answer: true
-    });
-
-    res.json({
-      success: true,
-      answer_result: count > 0 ? 1 : -1
-    });
-  } catch (err) {
-    res.json({
-      success: false,
-      err: err
-    });
-  }
-});
-
-
 // Define your route
 router.get('/rpsbetitems/:roomId', auth, async (req, res) => {
   const { roomId } = req.params;
   try {
-    // Find RpsBetItems filtered by room id and status equal to 'open'
     const rpsBetItems = await RpsBetItem.find({
       room: roomId,
       joiner: req.user._id,
@@ -786,7 +657,6 @@ router.get('/rpsbetitems/:roomId', auth, async (req, res) => {
       .sort({ created_at: -1 })
       .limit(50);
 
-    // Return the filtered RpsBetItems
     res.json({
       success: true,
       data: rpsBetItems
@@ -800,11 +670,9 @@ router.get('/rpsbetitems/:roomId', auth, async (req, res) => {
   }
 });
 
-// Define your route
 router.get('/qsbetitems/:roomId', auth, async (req, res) => {
   const { roomId } = req.params;
   try {
-    // Find QsBetItems filtered by room id and status equal to 'open'
     const qsBetItems = await QsBetItem.find({
       room: roomId,
       joiner: req.user._id,
@@ -813,7 +681,6 @@ router.get('/qsbetitems/:roomId', auth, async (req, res) => {
       .sort({ created_at: -1 })
       .limit(50);
 
-    // Return the filtered QsBetItems
     res.json({
       success: true,
       data: qsBetItems
@@ -835,7 +702,6 @@ router.put('/rpsbetitems/:itemId', auth, async (req, res) => {
     // Find the RpsBetItem by ID
     const rpsBetItem = await RpsBetItem.findById(itemId);
 
-    // Ensure the item exists
     if (!rpsBetItem) {
       console.log("RpsBetItem not found");
       return res.status(404).json({
@@ -845,14 +711,12 @@ router.put('/rpsbetitems/:itemId', auth, async (req, res) => {
     }
 
     if (cellindex === 'bet_amount') {
-      // Validate if the updated item is a float or integer
       if (!isNaN(updatedItem)) {
         rpsBetItem[cellindex] = parseFloat(updatedItem);
       } else {
         throw new Error('Invalid bet amount. Please provide a valid number.');
       }
     } else if (cellindex === 'rps' || cellindex === 'joiner_rps') {
-      // Validate if the updated item is either 'r', 'p', or 's' (case-insensitive)
       const validRPSValues = ['r', 'p', 's', 'R', 'P', 'S'];
       if (validRPSValues.includes(updatedItem.toLowerCase())) {
         rpsBetItem[cellindex] = updatedItem.toUpperCase();
@@ -863,7 +727,6 @@ router.put('/rpsbetitems/:itemId', auth, async (req, res) => {
       throw new Error('Invalid cell index.');
     }
 
-    // Save the updated RpsBetItem
     await rpsBetItem.save();
 
     const updatedRpsBetItems = await RpsBetItem.find({
@@ -906,16 +769,13 @@ router.put('/qsbetitems/:itemId', auth, async (req, res) => {
       });
     }
 
-    // Validate and set the updated item based on the cell index
     if (cellindex === 'bet_amount') {
-      // Validate if the updated item is a float or integer
       if (!isNaN(updatedItem)) {
         qsBetItem[cellindex] = parseFloat(updatedItem);
       } else {
         throw new Error('Invalid bet amount. Please provide a valid number.');
       }
     } else if (cellindex === 'qs' || cellindex === 'joiner_qs') {
-      // Validate if the updated item is either 'r', 'p', or 's' (case-insensitive)
       const validQSValues = [0, 1, 2, 3, 4, 5];
       if (validQSValues.includes(updatedItem.toLowerCase())) {
         qsBetItem[cellindex] = updatedItem.toUpperCase();
@@ -926,7 +786,6 @@ router.put('/qsbetitems/:itemId', auth, async (req, res) => {
       throw new Error('Invalid cell index.');
     }
 
-    // Save the updated QsBetItem
     await qsBetItem.save();
 
     const updatedQsBetItems = await QsBetItem.find({
@@ -953,14 +812,10 @@ router.put('/qsbetitems/:itemId', auth, async (req, res) => {
   }
 });
 
-
-
 // GET /api/comments/:room_id
 router.get('/comments/:room_id', async (req, res) => {
   try {
     const room_id = req.params.room_id;
-
-    // Find all comments for the specified room
     const comments = await Comment.find({ room: room_id })
       .populate({ path: 'user', model: User })
       .select('_id accessory avatar username totalWagered content created_at')
@@ -995,7 +850,6 @@ router.post('/comments', auth, async (req, res) => {
     const truncatedContent = content.length > 10 ? content.substring(0, 10) + '...' : content;
     message.message = `${req.user.username} left a comment ${truncatedContent}`;
 
-    // Create the comment
     const comment = new Comment({
       user: req.user._id,
       avatar: req.user.avatar,
@@ -1005,10 +859,8 @@ router.post('/comments', auth, async (req, res) => {
       content: content
     });
 
-    // Save the comment to the database
     await saveDocumentWithRetry(comment);
 
-    // Emit the new comment via socket
     const newCommentData = {
       _id: comment._id,
       user: {
@@ -1024,7 +876,6 @@ router.post('/comments', auth, async (req, res) => {
     };
     req.io.sockets.emit('NEW_COMMENT', newCommentData);
 
-    // Save and send the notification
     const notificationData = {
       message: message.message,
       username: req.user.username,
@@ -1119,14 +970,12 @@ router.get('/topWithdrawals', async (req, res) => {
         select: '_id avatar accessory totalWagered username'
       });
 
-    // Filter unwanted usernames
     const filteredWithdrawals = topWds
       .filter(withdrawal =>
         withdrawal.user_id &&
         !['OFFICIALRPSGAME', 'pimpedpistols', '69'].includes(withdrawal.user_id.username)
       );
 
-    // Map and limit results to top 12
     const sortedWithdrawals = filteredWithdrawals
       .map(withdrawal => ({
         ...withdrawal.toObject(),
@@ -1134,7 +983,6 @@ router.get('/topWithdrawals', async (req, res) => {
       }))
       .slice(0, 4);
 
-    // Respond with the top withdrawals
     res.json({
       success: true,
       pageSize: 4,
@@ -1194,9 +1042,8 @@ const getRoomList = async (pageSize, game_type, excludeIds = []) => {
   }
 
   try {
-    // Fetch the rooms and sort by updated_at in descending order directly in the MongoDB query
     const preRooms = await Room.find(search_condition)
-      .select('_id creator battles username joiners game_type qs_game_type gameBackground is_private bet_amount user_bet pr host_pr status room_number created_at updated_at likes views hosts')
+      .select('_id name selectedStrategy image ticker description creator battles username joiners game_type qs_game_type is_private bet_amount user_bet pr host_pr status created_at updated_at hosts')
       .populate({ path: 'creator', model: User, select: 'avatar totalWagered username accessory status' })
       .populate({ path: 'game_type', model: GameType })
       .sort({ updated_at: -1 })
@@ -1231,18 +1078,19 @@ const getRoomList = async (pageSize, game_type, excludeIds = []) => {
           username: room.creator?.username || '',
           creator_status: room.creator?.status || '',
           game_type: room.game_type,
+          name: room.name,
+          description: room.description,
+          ticker: room.ticker,
+          image: room.image,
           qs_game_type: room.qs_game_type,
           bet_amount: room.bet_amount,
-          selectedStrategy: room.selectedStrategy,
           pr: room.pr,
           host_pr: room.host_pr,
-          room_name: room.room_name,
           room_name: room.game_type.short_name + '-' + room.room_number,
           total_stakes: room.hosts.reduce((acc, host) => acc + host.stake, 0),
           user_bet: parseFloat(room.user_bet),
           winnings: '',
           is_private: room.is_private,
-          gameBackground: room.gameBackground,
           status: room.status,
           index: room.room_number,
           created_at: moment(room.created_at).format('YYYY-MM-DD HH:mm'),
@@ -1252,6 +1100,11 @@ const getRoomList = async (pageSize, game_type, excludeIds = []) => {
           battles: room.battles,
           hosts: room.hosts
         };
+
+        // Conditionally include the selectedStrategy field
+        if (room.selectedStrategy === 'Random') {
+          temp.selectedStrategy = room.selectedStrategy;
+        }
 
         switch (temp.game_type.game_type_id) {
           case 1:
@@ -1322,7 +1175,6 @@ router.get('/history', async (req, res) => {
     res.json({
       success: true,
       pageSize: parseInt(pageSize),
-      // total: history.count,
       history: history.history
     });
   } catch (err) {
@@ -1396,7 +1248,6 @@ router.get('/rooms', async (req, res) => {
       pageSize: pageSize,
       success: true,
       query: req.query,
-      total: rooms.count,
       roomList: rooms.rooms,
     });
   } catch (err) {
@@ -1407,17 +1258,20 @@ router.get('/rooms', async (req, res) => {
   }
 });
 
-
-
 router.post('/rooms', auth, async (req, res) => {
   try {
     const {
       bet_amount,
+      ticker,
+      name,
+      image,
+      telegram_link,
+      x_link,
+      website_link,
       game_type,
       endgame_amount,
       endgame_type,
       description,
-      box_list,
       rps_list,
       qs_list,
       rps_game_type
@@ -1482,44 +1336,10 @@ router.post('/rooms', auth, async (req, res) => {
       host_pr = parseFloat(bet_amount);
       user_bet = parseFloat(bet_amount);
       pr = user_bet * 2;
-    } else if (game_type == '2') {
-      // Spleesh!
-      host_pr = 0;
-      user_bet = parseFloat(bet_amount);
-      pr = parseFloat(bet_amount);
-    } else if (game_type == '3') {
-      // Brain Game
-      pr = parseFloat(bet_amount);
-      host_pr = parseFloat(bet_amount);
-      user_bet = parseFloat(bet_amount);
-    } else if (game_type == '4') {
-      // Mystery Box
-      pr = parseFloat(req.body.max_prize);
-      host_pr = parseFloat(bet_amount);
     } else if (game_type == '5') {
       // Quick Shoot
       host_pr = parseFloat(bet_amount);
       user_bet = parseFloat(bet_amount);
-    } else if (game_type == '6') {
-      // Drop Game
-      pr = parseFloat(req.body.max_return);
-      host_pr = parseFloat(bet_amount);
-      user_bet = parseFloat(bet_amount);
-    } else if (game_type == '7') {
-      // Bang!
-      pr = parseFloat(req.body.max_return);
-      host_pr = parseFloat(bet_amount);
-      user_bet = parseFloat(bet_amount);
-    } else if (game_type == '8') {
-      // Roll
-      pr = parseFloat(req.body.max_return);
-      host_pr = parseFloat(bet_amount);
-      user_bet = parseFloat(bet_amount);
-    } else if (game_type == '9') {
-      // Blackjack
-      host_pr = parseFloat(bet_amount);
-      user_bet = parseFloat(bet_amount);
-      pr = user_bet * 2;
     }
 
     const roomCount = await Room.countDocuments({});
@@ -1531,6 +1351,12 @@ router.post('/rooms', auth, async (req, res) => {
       hosts: [{ host: req.user._id, avatar: req.user.avatar, username: req.user.username, accessory: req.user.accessory, rank: req.user.totalWagered, share: 100, stake: parseFloat(bet_amount) }],
       game_type: gameType,
       user_bet,
+      ticker,
+      name,
+      image,
+      x_link,
+      telegram_link,
+      website_link,
       pr: 0,
       endgame_amount: endgame_type ? endgame_amount : parseFloat(bet_amount),
       endgame_type,
@@ -1539,29 +1365,14 @@ router.post('/rooms', auth, async (req, res) => {
       status: 'open',
       description,
     });
+    console.log("newRoom", newRoom)
     try {
       await saveDocumentWithRetry(newRoom);
     } catch (error) {
       console.error("Error saving newRoom:", error);
     }
 
-
-    if (gameType.game_type_name === 'Mystery Box') {
-      for (const box of box_list) {
-        const newBox = new RoomBoxPrize({
-          room: newRoom,
-          box_prize: box.box_prize,
-          box_price: box.box_price,
-          status: 'init'
-        });
-        try {
-          await saveDocumentWithRetry(newBox);
-        } catch (error) {
-          console.error("Error saving newBox:", error);
-        }
-
-      }
-    } else if (gameType.game_type_name === 'RPS') {
+    if (gameType.game_type_name === 'RPS') {
       for (const rps of rps_list) {
         const newRps = new RpsBetItem({
           room: newRoom,
@@ -1577,9 +1388,7 @@ router.post('/rooms', auth, async (req, res) => {
 
           const item = await Item.findOne({ productName: rps.rps });
           if (item) {
-            // Find the owner entry for the current user
             const owner = item.owners.find(owner => owner.user.toString() === req.user._id.toString());
-
             if (owner && owner.count >= 1) {
               owner.count -= 1;
               try {
@@ -1614,43 +1423,6 @@ router.post('/rooms', auth, async (req, res) => {
         }
       }
     }
-    // else if (gameType.game_type_name === 'Drop Game') {
-    //   for (const drop of drop_list) {
-    //     const newDrop = new DropBetItem({
-    //       room: newRoom,
-    //       drop: drop.drop
-    //     });
-    //     await newDrop.save();
-    //   }
-    // } else if (gameType.game_type_name === 'Bang!') {
-    //   // const roomId = newRoom.id;
-    //   // initializeRound(bang_list, newRoom, req.io.sockets, roomId);
-    //   for (const bang of bang_list) {
-    //     const newBang = new BangBetItem({
-    //       room: newRoom,
-    //       bang: bang.bang
-    //     });
-    //     await newBang.save();
-    //   }
-    // } else if (gameType.game_type_name === 'Roll') {
-    //   for (const roll of roll_list) {
-    //     const newRoll = new RollBetItem({
-    //       room: newRoom,
-    //       roll: roll.roll,
-    //       face: roll.face
-    //     });
-    //     await newRoll.save();
-    //   }
-    // } else if (gameType.game_type_name === 'Blackjack') {
-    //   for (const bj of bj_list) {
-    //     const newBj = new BjBetItem({
-    //       room: newRoom,
-    //       bj: bj.bj,
-    //       score: bj.score
-    //     });
-    //     await newBj.save();
-    //   }
-    // }
 
     const newTransaction = new Transaction({
       user: req.user,
@@ -1658,7 +1430,6 @@ router.post('/rooms', auth, async (req, res) => {
       description: 'created ' + gameType.short_name + '-' + newRoom.room_number,
       room: newRoom._id
     });
-
 
     req.user.balance -= bet_amount;
     newTransaction.amount -= bet_amount;
@@ -1674,7 +1445,6 @@ router.post('/rooms', auth, async (req, res) => {
     req.io.sockets.emit('UPDATED_ROOM_LIST', {
       pageSize: rooms.pageSize,
       roomList: rooms.rooms,
-      total: rooms.count
     });
 
     res.json({
@@ -1692,117 +1462,6 @@ router.post('/rooms', auth, async (req, res) => {
   }
 });
 
-async function getRoomNetProfits(room_id) {
-  try {
-    const gameLogs = await GameLog.find({
-      $and: [{ room: { $ne: null } }, { game_result: { $nin: [3, -100] } }],
-      room: room_id
-    })
-      .sort({ created_at: 'asc' })
-      .populate({ path: 'game_type', model: GameType, select: 'short_name' })
-      .populate({ path: 'room', model: Room, select: 'qs_game_type' })
-      .populate({
-        path: 'joined_user',
-        model: User,
-        select: '_id'
-      });
-
-    const playerStats = {};
-
-    for (const gameLog of gameLogs) {
-      const tax = await SystemSetting.findOne({ name: 'commission' });
-
-      const creatorUser = await User.findOne({ _id: gameLog.creator }).select(
-        'accessory'
-      );
-
-      const accessory = creatorUser ? creatorUser.accessory : null;
-      let item;
-      if (accessory) {
-        item = await Item.findOne({ image: accessory }).select('CP DP');
-      } else {
-        item = { CP: parseFloat(tax.value) };
-      }
-
-      let actor;
-      if (gameLog.joined_user && gameLog.joined_user.username) {
-        actor = gameLog.joined_user.username;
-      } else {
-        actor = "Other";  // or any default value you'd prefer
-      }
-      const wagered = gameLog.bet_amount;
-      let net_profit = 0;
-
-      if (gameLog.game_type && gameLog.game_type.short_name === 'S!') {
-        if (gameLog.game_result === 1) {
-          net_profit = 0 - wagered;
-        } else {
-          net_profit =
-            wagered;
-        }
-      } else if (gameLog.game_type && gameLog.game_type.short_name === 'QS') {
-        if (gameLog.game_result === 1) {
-          net_profit = 0 - wagered;
-        } else {
-          net_profit =
-            (wagered + wagered / (gameLog.room.qs_game_type - 1)) -
-            wagered;
-        }
-      } else if (gameLog.game_type && gameLog.game_type.short_name === 'DG') {
-        if (gameLog.game_result === 1) {
-          net_profit = 0 - wagered;
-        } else {
-          net_profit =
-            (wagered + gameLog.selected_drop);
-        }
-      } else if (gameLog.game_type && gameLog.game_type.short_name === 'MB') {
-        net_profit = gameLog.game_result - wagered;
-      } else {
-        if (gameLog.game_result === 0) {
-          net_profit = 0;
-        } else if (gameLog.game_result === -1) {
-          net_profit = wagered;
-        } else {
-          net_profit = 0 - wagered;
-        }
-      }
-
-      if (playerStats[actor]) {
-        playerStats[actor].wagered += wagered;
-        playerStats[actor].net_profit += net_profit;
-        playerStats[actor].bets +=
-          gameLog.game_result === 0 ||
-            gameLog.game_result === -1 ||
-            gameLog.game_result === 1
-            ? 1
-            : 0;
-      } else {
-        playerStats[actor] = {
-          wagered,
-          net_profit,
-          bets:
-            gameLog.game_result === 0 ||
-              gameLog.game_result === -1 ||
-              gameLog.game_result === 1
-              ? 1
-              : 0
-        };
-      }
-    }
-
-    const room_info = Object.values(playerStats).map(player => ({
-      net_profit: player.net_profit,
-      bets: player.bets
-    }));
-
-    return {
-      room_info
-    };
-  } catch (error) {
-    console.log('error***', error);
-  }
-}
-
 
 router.get('/my_games', auth, async (req, res) => {
   try {
@@ -1811,7 +1470,6 @@ router.get('/my_games', auth, async (req, res) => {
     const status = req.query.status;
     const sort = req.query.sort ? req.query.sort : 'desc';
 
-    // Call only the getMyRooms function
     const { rooms, count } = await getMyRooms(
       req.user._id,
       pageSize,
@@ -1819,7 +1477,6 @@ router.get('/my_games', auth, async (req, res) => {
       status,
       sort
     );
-    // Respond with the results
     res.json({
       success: true,
       pageSize: pageSize,
@@ -1827,7 +1484,6 @@ router.get('/my_games', auth, async (req, res) => {
       total: count,
     });
   } catch (err) {
-    // Handle error case
     res.json({
       success: false,
       message: err.toString()
@@ -1873,9 +1529,9 @@ const getMyRooms = async (
       );
       const gameLogCount = await GameLog.countDocuments({ room: room._id });
       const creatorDetails = await User.findById(room.creator).select('avatar totalWagered accessory');
-      const creatorAvatar = creatorDetails?.avatar || ''; // Default to empty string if not found
-      const creatorTotalWagered = creatorDetails?.totalWagered || 0; // Default to 0 if not found
-      const creatorAccessory = creatorDetails?.accessory || ''; // Default to empty string if not found
+      const creatorAvatar = creatorDetails?.avatar || '';
+      const creatorTotalWagered = creatorDetails?.totalWagered || 0;
+      const creatorAccessory = creatorDetails?.accessory || '';
 
       let temp = {
         _id: room._id,
@@ -1934,32 +1590,9 @@ const getMyRooms = async (
       } else if (room.game_type.game_type_id === 1) {
         // RPS
         temp.winnings = room.user_bet;
-      }
-      else if (room.game_type.game_type_id === 2) {
-        // Spleesh!
-        temp.winnings =
-          parseFloat(room.user_bet);
-      } else if (room.game_type.game_type_id === 3) {
-        // Brain Game
-        temp.winnings = room.pr;
-      } else if (room.game_type.game_type_id === 4) {
-        // Mystery Box
-        temp.winnings = parseFloat(room.user_bet) + parseFloat(room.host_pr);
       } else if (room.game_type.game_type_id === 5) {
         // Quick Shoot
         temp.winnings = room.user_bet;
-      } else if (room.game_type.game_type_id === 6) {
-        // Drop Game
-        temp.winnings = room.user_bet;
-      } else if (room.game_type.game_type_id === 7) {
-        // Bang!
-        temp.winnings = updateDigitToPoint2(room.user_bet);
-      } else if (room.game_type.game_type_id === 8) {
-        // Roll
-        temp.winnings = updateDigitToPoint2(room.user_bet);
-      } else if (room.game_type.game_type_id === 9) {
-        // Blackjack
-        temp.winnings = updateDigitToPoint2(room.user_bet);
       }
 
 
@@ -2011,16 +1644,6 @@ router.post('/end_game', auth, async (req, res) => {
       });
     }
 
-    // Check if QBot is active for the user
-    const qbot = await QBot.findOne({ user: userId, active: true }).select("_id");
-    if (qbot) {
-      return res.json({
-        success: false,
-        message: 'Please turn off QBot first before proceeding.',
-      });
-    }
-
-    // Check if action is allowed based on access time
     const accessAllowed = await check_access_time(userId);
     if (!accessAllowed) {
       return res.json({
@@ -2030,15 +1653,13 @@ router.post('/end_game', auth, async (req, res) => {
       });
     }
 
-    // Check daily withdrawal limit
-    if (req.user.dailyWithdrawals > 100000000) {
+    if (req.user.dailyWithdrawals > 4.269) {
       return res.json({
         success: false,
         message: 'Exceeded Daily Withdrawal Limit. Unable to end this room. Please try again tomorrow!',
       });
     }
 
-    // Fetch room information with specific fields
     const roomInfo = await Room.findOne({ _id: roomId })
       .populate({ path: 'creator', model: User, select: 'username _id' })
       .populate({ path: 'game_type', model: GameType, select: 'short_name' })
@@ -2092,7 +1713,6 @@ router.post('/end_game', auth, async (req, res) => {
 
     }
 
-    // Send notifications to each host about the game ending
     roomInfo.hosts.forEach(host => {
       const message = `You ended your game ${roomInfo.game_type.short_name}-${roomInfo.room_number}. Received ${(host.share / 100 * roomInfo.user_bet).toFixed(2)}.`;
 
@@ -2114,7 +1734,6 @@ router.post('/end_game', auth, async (req, res) => {
       socket.sendNotification(host.host, notificationData);
     });
 
-    // Create a GameLog entry with specific fields
     const newGameLog = new GameLog({
       room: roomInfo._id,
       creator: roomInfo.creator._id,
@@ -2127,7 +1746,6 @@ router.post('/end_game', auth, async (req, res) => {
 
     const myRooms = await getMyRooms(userId);
 
-    // Create a new transaction with specific fields
     const newTransactionC = new Transaction({
       user: userId,
       amount: roomInfo.hosts[0].share / 100 * parseFloat(roomInfo.user_bet),
@@ -2142,10 +1760,8 @@ router.post('/end_game', auth, async (req, res) => {
       console.error("Error saving:", error);
     }
 
-    // Emit updated room list
     const rooms = await getRoomList(7, 'All');
     req.io.sockets.emit('UPDATED_ROOM_LIST', {
-      total: rooms.count,
       roomList: rooms.rooms,
       pageSize: rooms.pageSize
     });
@@ -2320,17 +1936,17 @@ router.post('/coHost', auth, async (req, res) => {
       console.error("Error saving documents:", error);
     }
 
-    const timeBucket = Math.floor(new Date(now).getTime() / (60 * 1000)); // Assuming bucket size of 1 minute
+    const timeBucket = Math.floor(new Date(now).getTime() / (60 * 1000));
     const newCandle = {
       _id: timeBucket,
-      open: room.user_bet - coHostAmount,           // Liquidity before transaction
-      close: room.user_bet,                        // Liquidity after transaction
-      high: Math.max(room.user_bet - coHostAmount, room.user_bet), // High
-      low: Math.min(room.user_bet - coHostAmount, room.user_bet),  // Low
-      volume: coHostAmount,                        // Volume of the transaction
-      buyVolume: coHostAmount,                     // This is a buy
-      sellVolume: 0,                               // No sell volume for this transaction
-      startTime: new Date(timeBucket * 60 * 1000)  // Start time of the bucket
+      open: room.user_bet - coHostAmount,
+      close: room.user_bet,
+      high: Math.max(room.user_bet - coHostAmount, room.user_bet),
+      low: Math.min(room.user_bet - coHostAmount, room.user_bet),
+      volume: coHostAmount,
+      buyVolume: coHostAmount,
+      sellVolume: 0,
+      startTime: new Date(timeBucket * 60 * 1000)
     };
 
     if (req.io.sockets) {
@@ -2338,7 +1954,6 @@ router.post('/coHost', auth, async (req, res) => {
         newCandle: newCandle
       });
     }
-
 
     const newGameLog = new GameLog({
       room: room._id,
@@ -2377,7 +1992,6 @@ router.post('/coHost', auth, async (req, res) => {
         req.io.sockets.emit(`UPDATED_BANKROLL_${room._id}`, {
           bankroll: room.user_bet,
           host_pr: room.host_pr,
-          // rps: mostRecentItems,
           newLog: newLog,
           user: req.user
         });
@@ -2397,7 +2011,6 @@ router.post('/coHost', auth, async (req, res) => {
       success: true,
       balance: req.user.balance,
       newTransaction,
-      // message: 'YOU ARE NOW A CO-HOST AND SHARE PROFITS/LOSSES WITH THE HOST.'
     });
   } catch (error) {
     console.log('ERROR in coHost:', error);
@@ -2505,17 +2118,15 @@ router.post('/unstake', auth, async (req, res) => {
         high: high,
         low: low,
         close: close,
-        volume: unstakeAmount, // Volume of the unstake
-        buyVolume: 0, // No buy volume in this case
-        sellVolume: unstakeAmount, // Unstake represents a sell volume
-        startTime: moment().valueOf() // Set the current timestamp
+        volume: unstakeAmount,
+        buyVolume: 0,
+        sellVolume: unstakeAmount,
+        startTime: moment().valueOf()
       }
     };
 
-    // Emit the candle event to all clients connected to the room
     req.io.sockets.emit(`NEW_CANDLE_${roomInfo._id}`, updatedCandle);
 
-    // Create a game log entry for tracking
     const newGameLog = new GameLog({
       room: roomInfo,
       creator: roomInfo.creator,
@@ -2594,7 +2205,7 @@ router.post('/unstake', auth, async (req, res) => {
       .populate({ path: 'creator', model: User, select: '_id avatar username accessory totalWagered' })
       .populate({ path: 'joined_user', model: User, select: '_id avatar username accessory totalWagered' });
 
-    const gameLogList = await gameLogQuery; // Get the most recent game log from the query
+    const gameLogList = await gameLogQuery;
 
     const newLog = await convertGameLogToHistoryStyle(gameLogList);
 
@@ -2735,10 +2346,9 @@ router.patch('/qbotStatus', auth, async (req, res) => {
   }
 });
 
-// Modified endpoint to handle multiple user IDs
 router.get('/qbotStatuses', auth, async (req, res) => {
   try {
-    const { userIds } = req.query; // Accept `userIds` as a comma-separated string
+    const { userIds } = req.query;
     if (!userIds) {
       return res.status(400).json({
         success: false,
@@ -2746,7 +2356,7 @@ router.get('/qbotStatuses', auth, async (req, res) => {
       });
     }
 
-    const userIdsArray = userIds.split(','); // Convert to an array
+    const userIdsArray = userIds.split(',');
     const statuses = await QBot.find(
       { user: { $in: userIdsArray }, active: true },
       'user active'
@@ -2771,11 +2381,9 @@ router.get('/qbotStatuses', auth, async (req, res) => {
   }
 });
 
-// Use GET for fetching the QBot status based on userId
 router.get('/qbotStatus', auth, async (req, res) => {
   try {
-    const { userId } = req.query; // Using query parameters instead of body
-
+    const { userId } = req.query;
     if (!userId) {
       return res.status(400).json({
         success: false,
@@ -2788,7 +2396,7 @@ router.get('/qbotStatus', auth, async (req, res) => {
     );
     res.json({
       success: true,
-      isActive: !!isActive // Return true if QBot is found, false otherwise
+      isActive: !!isActive
     });
   } catch (err) {
     console.error(err);
@@ -2840,12 +2448,10 @@ router.patch('/read_notifications', auth, async (req, res) => {
   try {
     const userId = req.user._id;
 
-    // Find the most recent 10 notifications for the user
     const notifications = await Notification.find({ to: userId })
       .sort({ created_at: -1 })
       .limit(10);
 
-    // Update the 'is_read' field of the most recent notifications for the user
     const notificationIds = notifications.map(notification => notification._id);
     await Notification.updateMany({ _id: { $in: notificationIds } }, { $set: { is_read: true } });
     res.json({
@@ -2860,183 +2466,6 @@ router.patch('/read_notifications', auth, async (req, res) => {
     });
   }
 });
-
-const decrementUserBalance = async (userId, betAmount) => {
-  const user = await User.findOne({ _id: userId });
-
-  // Check if the balance after decrement would be negative
-  if (user.balance - betAmount < 0) {
-    throw new Error('NOT ENUFF FUNDS AT THIS MEOWMENT');
-  }
-
-  user.balance -= betAmount;
-  try {
-    await saveDocumentWithRetry(user);
-  } catch (error) {
-    console.error("Error saving user:", error);
-  }
-
-  return user.balance;
-};
-
-router.post('/start_brain_game', auth, async (req, res) => {
-  try {
-    const userId = new ObjectId(req.user._id);
-
-    const balance = await decrementUserBalance(userId, req.body.bet_amount);
-
-    res.json({
-      success: true,
-      balance
-    });
-  } catch (err) {
-    res.json({
-      success: false,
-      message: err.toString()
-    });
-  }
-});
-
-router.post('/start_blackjack', auth, async (req, res) => {
-  try {
-    const userId = new ObjectId(req.user._id);
-    const balance = await decrementUserBalance(userId, req.body.bet_amount);
-
-    res.json({
-      success: true,
-      balance
-    });
-  } catch (err) {
-    res.json({
-      success: false,
-      message: err.toString()
-    });
-  }
-});
-
-router.get('/get_roll_guesses', async (req, res) => {
-  try {
-    const room = req.query.roomId;
-    const recentRolls = await RollBetItem.find({ room: room.roomId })
-      .sort({ created_at: -1 })
-      .limit(20);
-    await RollBetItem.updateMany(
-      { _id: { $in: recentRolls.map(item => item._id) } },
-      { $set: { status: 'FOUND' } }
-    );
-    const rolls = recentRolls.map((item) => item.roll);
-    const faces = recentRolls.map((item) => item.face);
-
-    // const reversedRolls = rolls.slice().reverse();
-    // const reversedFaces = faces.slice().reverse();
-
-    if (req.io.sockets) {
-      const socketName = `ROLL_GUESSES_${room.roomId}`;
-      req.io.sockets.emit(socketName, { rolls: rolls, faces: faces });
-    }
-
-    res.json({
-      success: true
-    });
-
-  } catch (err) {
-    res.json({
-      success: false,
-      message: err.toString(),
-    });
-  }
-});
-
-
-router.get('/get_spleesh_guesses', async (req, res) => {
-  try {
-    const room = req.query.roomId;
-
-    const spleesh_guesses = await SpleeshGuess.find({ room: room.roomId });
-    if (req.io.sockets) {
-      req.io.sockets.emit('SPLEESH_GUESSES', spleesh_guesses);
-    }
-    res.json({
-      success: true,
-    });
-  } catch (err) {
-    res.json({
-      success: false,
-      message: err.toString(),
-    });
-  }
-});
-
-router.get('/get_bang_guess', async (req, res) => {
-  try {
-    const room = req.query.roomId;
-    const recentBangs = await BangBetItem.find({ room: room.roomId })
-      .sort({ created_at: -1 })
-      .limit(100);
-
-    // Reverse the order of recentBangs
-    recentBangs.reverse();
-
-    const bangs = recentBangs.map(bet => bet.bang);
-    const elapsedTime = '';
-    if (req.io.sockets) {
-      const socketName = `BANG_GUESSES_${room.roomId}`;
-      req.io.sockets.emit(socketName, { bangs: bangs, elapsedTime });
-    }
-
-    res.json({
-      success: true
-    });
-
-  } catch (err) {
-    res.json({
-      success: false,
-      message: err.toString(),
-    });
-  }
-});
-
-
-router.post('/start_roll', auth, async (req, res) => {
-  try {
-    const userId = new ObjectId(req.user._id);
-    const { roomId, gameType } = req.body;
-    const room = await Room.findOne({ _id: roomId });
-    const room_number = room.room_number;
-    const game_type = await GameType.findOne({ game_type_name: gameType });
-    const short_name = game_type.short_name;
-
-    const balance = await decrementUserBalance(userId, req.body.bet_amount);
-    const newTransaction = new Transaction({
-      user: req.user,
-      amount: -req.body.bet_amount,
-      description:
-        'joined ' +
-        short_name +
-        '-' +
-        room_number,
-      room: roomId
-    });
-    try {
-      await saveDocumentWithRetry(newTransaction);
-    } catch (error) {
-      console.error("Error saving newTransaction:", error);
-    }
-    res.json({
-      success: true,
-      balance,
-      newTransaction: newTransaction,
-      // message: 'Tip has been sent. 💸 Yipeee!'
-    });
-  } catch (err) {
-    res.json({
-      success: false,
-      message: err.toString()
-    });
-  }
-});
-
-
 
 router.post('/get_chat_room_info', auth, async (req, res) => {
   try {
@@ -3070,7 +2499,6 @@ router.post('/get_chat_room_info', auth, async (req, res) => {
         from: chatLog.from,
         to: chatLog.to,
         message: chatLog.message,
-        // messageContent: chatLog.messageContent,
         created_at: moment(chatLog.created_at).format('LLL')
       };
       messages.push(message);
@@ -3401,12 +2829,8 @@ router.post('/topUp', auth, async (req, res) => {
     const oldValuation = parseFloat(room.user_bet);
     const newTotalBet = oldValuation + topUpAmount;
     req.user.balance -= topUpAmount;
-
-    // Add the user as a host if not already present, or update their stake
     const existingHostIndex = room.hosts.findIndex(host => host.host.equals(req.user._id));
     let newShare;
-
-    // Apply bonding curve only if the bankroll exceeds a certain threshold
     const bondingCurveThreshold = 1000; // Example threshold
     const bondingCurveFactor = newTotalBet > bondingCurveThreshold ? 1.2 : 1.0;
     const baseSharePrice = newTotalBet / (room.hosts.length + 1);
@@ -3492,7 +2916,7 @@ router.post('/editPayout', auth, async (req, res) => {
     }
 
     const now = moment().format('LLL');
-    const payoutAmount = parseFloat(req.body.amount); // Parse amount as a float
+    const payoutAmount = parseFloat(req.body.amount);
 
     if (isNaN(payoutAmount) || payoutAmount < 0) {
       return res.json({
@@ -3506,26 +2930,6 @@ router.post('/editPayout', auth, async (req, res) => {
         message: 'PAYOUT TOO LOW! MINIMUM IS BANKROLL'
       });
     }
-
-    if (
-      (gameType.short_name === 'MB') &&
-      (topUpAmount > room.bet_amount * 4) ||
-      (gameType.short_name === 'S!' &&
-        room.spleesh_bet_unit === 0.01 &&
-        room.endgame_amount < 0.44) ||
-      (gameType.short_name === 'S!' &&
-        room.spleesh_bet_unit === 0.1 &&
-        room.endgame_amount < 4.4) ||
-      (gameType.short_name === 'S!' &&
-        room.spleesh_bet_unit === 0.001 &&
-        room.endgame_amount < 0.044)
-    ) {
-      return res.json({
-        success: false,
-        message: 'IM-PAW-SIBBLEEE, GAME TOO PROFITABLE!'
-      });
-    }
-
 
     room.endgame_amount = payoutAmount;
     if (room.endgame_amount === 0) {
@@ -3590,7 +2994,7 @@ router.post('/tip', auth, async (req, res) => {
         message: 'IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!'
       });
     }
-    if (req.user.dailyWithdrawals > 100000000) {
+    if (req.user.dailyWithdrawals > 4.269) {
       return res.json({
         success: false,
         message: 'UNABLE TO TIP TODAY, PLEASE CHECK BACK TOMORROW!'
@@ -3830,7 +3234,7 @@ router.post('/bet2', auth, async (req, res) => {
   }
 });
 
-const MAX_RETRIES = 3; // Maximum number of retries
+const MAX_RETRIES = 3;
 
 router.post('/bet3', auth, async (req, res) => {
   let retryCount = 0;
@@ -3839,19 +3243,16 @@ router.post('/bet3', auth, async (req, res) => {
     try {
       const requestId = uuidv4();
 
-      // Acquire the semaphore
       if (semaphore3 === 0) {
-        // If semaphore is already acquired, return a busy response
         return res.status(503).json({ success: false, message: 'Service Unavailable' });
       }
-      semaphore3 = 0; // Set semaphore to indicate it's acquired
+      semaphore3 = 0;
 
       const [accessAllowed, betResult] = await Promise.all([
         check_access_time(req.user._id),
         executeBet3(req)
       ]);
 
-      // Release the semaphore
       semaphore3 = 1;
 
       if (!accessAllowed) {
@@ -3874,21 +3275,18 @@ router.post('/bet3', auth, async (req, res) => {
         requestId: requestId
       });
 
-      return; // Exit the function after successful response
+      return;
 
     } catch (err) {
       console.error(`Error occurred on attempt ${retryCount + 1}:`, err);
       retryCount++; // Increment retry count
 
-      // Release the semaphore in case of an error
       semaphore3 = 1;
 
       if (retryCount === MAX_RETRIES) {
-        // If reached max retries, return internal server error
         console.error('Max retry limit reached');
         return res.status(500).json({ success: false, message: 'Internal Server Error' });
       }
-      // Retry after a delay (you can adjust the delay time if needed)
       console.log(`Retrying after a delay...`);
       await new Promise(resolve => setTimeout(resolve, 1000));
     }

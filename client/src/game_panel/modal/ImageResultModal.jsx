@@ -52,7 +52,7 @@ class ImageResultModal extends Component {
       >
         <div
           style={{
-            borderRadius: '0.6em',
+            borderRadius: '0.3em',
             background: isDarkMode ? '#333' : '#fff'
           }}
           className={isDarkMode ? 'dark_mode' : ''}

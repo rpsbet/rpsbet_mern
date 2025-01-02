@@ -12,7 +12,6 @@ const getBeatingType2 = (currentState) => {
   }
 }
 
-
 function innovate(historicData) {
   const firstEntries = historicData.slice(0, 8);
   const firstJoinerQs = firstEntries.map(entry => entry.joiner_rps);
@@ -29,7 +28,6 @@ function innovate(historicData) {
     return { counterMove: previousMove, risk: 1 };
   }
 }
-
 
 const predictNext = (rps_list, markov = false) => {
   const choices = ['R', 'P', 'S'];
@@ -278,7 +276,6 @@ async function reinforcementAI(data) {
   }
 }
 
-
 function patternBasedAI(historicData) {
   if (historicData.length === 0) {
     return ['R', 'P', 'S'][Math.floor(Math.random() * 3)];
@@ -347,7 +344,6 @@ function getRandomMove() {
   const moves = ['R', 'P', 'S'];
   return moves[Math.floor(Math.random() * moves.length)];
 }
-
 
 function counterRandomness(historicData) {
   if (historicData.length < 3) {
@@ -471,7 +467,6 @@ function generatePattern(allBetItems) {
   }
 }
 
-
 function martingaleStrategy(historicData) {
   if (historicData.length === 0) {
     const randomMove = ['R', 'P', 'S'][Math.floor(Math.random() * 3)];
@@ -484,7 +479,6 @@ function martingaleStrategy(historicData) {
   const lastOpponentMove = historicData[0].joiner_rps;
   const lastAIMove = historicData[0].rps;
   const lastResult = getResult(lastAIMove, lastOpponentMove);
-
   const randomMove = ['R', 'P', 'S'][Math.floor(Math.random() * 3)];
   return {
     move: randomMove,
@@ -503,7 +497,6 @@ function getResult(aiMove, opponentMove) {
     return 'loss';
   }
 }
-
 
 module.exports = {
   innovate,

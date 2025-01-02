@@ -14,13 +14,10 @@ const socket = require('../../socketController')
 const moment = require('moment');
 const { convertGameLogToHistoryStyle } = require('./convertGameLogToHistoryStyle');
 const check_access_time = require('../../helper/util/checkAccessTime');
-
 const { predictNext, reinforcementAI, innovate, patternBasedAI, counterSwitchAI, counterRandomness, NPC, generatePattern } = require('./predictNext');
 const { NPC_qs, patternBasedAI_qs, innovate_qs, getRandomItem_qs, counterSwitchAI_qs, generatePattern_qs, counterRandomness_qs, getCopyCatItem_qs, predictNextQs, reinforcementAI_qs } = require('./predictNextQs');
 const saveDocumentWithRetry = require('./retrySave');
 const requestQueue = [];
-let user_access_log = {};
-
 
 const addToQueue = async (req, bot = false) => {
     try {
@@ -54,7 +51,7 @@ const addToQueue = async (req, bot = false) => {
         }
 
         if (req.body._id) {
-            if (user.dailyWithdrawals > 100000000) {
+            if (user.dailyWithdrawals > 4.269) {
                 responseData = {
                     success: false,
                     message: 'illregular action',
@@ -137,18 +134,14 @@ const addToQueue = async (req, bot = false) => {
             if (accessory) {
                 const item = await Item.findOne({ image: accessory }).select('CP');
                 const itemJ = await Item.findOne({ image: accessoryJ }).select('DP');
-
-                // Default CP or DP to 0 if they are null or undefined
                 const cp = item ? item.CP || 0 : 0;
                 const dp = itemJ ? itemJ.DP || 0 : 0;
 
-                // Calculate commission
                 commission = cp - dp + parseFloat(tax.value);
             } else {
-                commission = parseFloat(tax.value); // If no accessory, use tax.value directly
+                commission = parseFloat(tax.value);
             }
 
-            // Ensure commission is at least 1
             if (commission < 1) {
                 commission = 1;
             }
@@ -159,7 +152,6 @@ const addToQueue = async (req, bot = false) => {
                 joined_user: user,
                 game_type: roomInfo['game_type'],
                 bet_amount: req.body.bet_amount,
-                // is_anonymous: req.body.is_anonymous
             });
 
             newTransactionC = new Transaction({
@@ -188,7 +180,6 @@ const addToQueue = async (req, bot = false) => {
                 to: roomInfo['creator'],
                 room: req.body._id,
                 message: '',
-                // is_anonymous: req.body.is_anonymous,
                 is_read: false
             });
 
@@ -277,20 +268,11 @@ const addToQueue = async (req, bot = false) => {
                             nextItem = move.move;
                             break;
                     }
-                    // save the new item
                     bet_item = new RpsBetItem({
                         room: new ObjectId(req.body._id),
                         rps: nextItem,
                         bet_amount: betAmount,
                     });
-
-                    // try {
-                    //     await saveDocumentWithRetry(bet_item);
-                    // } catch (error) {
-                    //     console.error("Error saving bet_item:", error);
-                    // }
-
-                    // Define helper functions
                     function getRandomItem() {
                         const rpsOptions = ['R', 'P', 'S'];
                         return rpsOptions[Math.floor(Math.random() * 3)];
@@ -399,7 +381,6 @@ const addToQueue = async (req, bot = false) => {
                             parseFloat(platform.value) +
                             betAmount * 2 * (parseFloat(tax.value) / 100);
 
-                        // autopayout host
                         if (
                             roomInfo['endgame_type'] &&
                             roomInfo['user_bet'] >= roomInfo['endgame_amount']
@@ -417,7 +398,6 @@ const addToQueue = async (req, bot = false) => {
                                 user_bet: roomInfo['user_bet'],
                                 hosts: roomInfo.hosts,
                                 endgame_amount: roomInfo['endgame_amount'],
-                                // is_anonymous: roomInfo['is_anonymous'],
                                 game_result: 3
                             });
 
@@ -428,7 +408,6 @@ const addToQueue = async (req, bot = false) => {
                                 );
                         }
 
-                        // send notification
                         message.message =
                             'Lost ' +
                             convertToCurrency(req.body.bet_amount) +
@@ -443,7 +422,6 @@ const addToQueue = async (req, bot = false) => {
                     winnings = betAmount * 2;
                 }
 
-                // update bet item with joiner's data
                 newGameLog.winnings = winnings;
                 newGameLog.game_result = game_result;
                 newGameLog.endgame_amount = roomInfo['endgame_amount'];
@@ -469,12 +447,10 @@ const addToQueue = async (req, bot = false) => {
                     GameType.find({ _id: { $in: gameTypeIds } }).lean().exec()
                 ]);
 
-                // Create maps for quick lookup
                 const roomMap = new Map(rooms.map(room => [room._id.toString(), room]));
                 const creatorMap = new Map(creators.map(creator => [creator._id.toString(), creator]));
                 const joinedUserMap = new Map(joinedUsers.map(user => [user._id.toString(), user]));
                 const gameTypeMap = new Map(gameTypes.map(type => [type._id.toString(), type]));
-                // Map game logs to their updated form
                 const updatedGameLogArray = gameLogArray.map(gameLog => ({
                     bet_amount: gameLog.bet_amount,
                     commission: gameLog.commission,
@@ -492,10 +468,8 @@ const addToQueue = async (req, bot = false) => {
                     hosts: gameLog.hosts
                 }));
 
-                // Assuming convertGameLogToHistoryStyle can be optimized similarly
                 const newLog = await convertGameLogToHistoryStyle(updatedGameLogArray);
 
-                // socket for last 5 items
                 if (roomInfo['rps_game_type'] === 0) {
 
                     mostRecentItems.reverse();
@@ -523,7 +497,6 @@ const addToQueue = async (req, bot = false) => {
                     }
                 }
 
-                // rug game if bankroll too low
                 if (roomInfo['user_bet'] <= 0.1) {
                     roomInfo.status = 'finished';
                     game_result = 1;
@@ -534,10 +507,7 @@ const addToQueue = async (req, bot = false) => {
                         roomInfo['game_type']['short_name'] +
                         '-' +
                         roomInfo['room_number'];
-
-
                 }
-
             }
             else if (roomInfo['game_type']['game_type_name'] === 'Quick Shoot') {
                 if (
@@ -669,13 +639,12 @@ const addToQueue = async (req, bot = false) => {
                             user_bet: roomInfo['user_bet'],
                             endgame_amount: roomInfo['endgame_amount'],
                             hosts: roomInfo.hosts,
-                            is_anonymous: roomInfo['is_anonymous'],
                             game_result: 3
                         });
                         saveDocumentWithRetry(newGameLogC);
                         roomInfo['user_bet'] = parseFloat(
                             roomInfo['endgame_amount']
-                        ); /* (roomInfo['user_bet'] -  roomInfo['bet_amount']) */
+                        );
                     }
 
                     bet_item.joiner = req.user._id;
@@ -794,7 +763,6 @@ const addToQueue = async (req, bot = false) => {
                     return mergedObject;
                 }));
                 const newLog = await convertGameLogToHistoryStyle(updatedGameLogArray);
-                // socket for last 5 items
                 mostRecentItems.reverse();
                 mostRecentItems.push(bet_item);
                 if (mostRecentItems.length > 0) {
@@ -820,7 +788,6 @@ const addToQueue = async (req, bot = false) => {
                     return responseData;
                 }
 
-                // rug game if bankroll too low
                 if (roomInfo['user_bet'] <= 0.1) {
                     roomInfo.status = 'finished';
                     game_result = 1;
@@ -834,22 +801,22 @@ const addToQueue = async (req, bot = false) => {
                 }
             }
 
-            const now = new Date(); // Define 'now' as the current timestamp
+            const now = new Date();
             console.log("newTransactionAmount", newTransactionAmount);
 
-            const timeBucket = Math.floor(now.getTime() / (60 * 1000)); // Assuming bucket size of 1 minute
-            const isBuyTransaction = newTransactionAmount < 0; // Check if it's a buy transaction
+            const timeBucket = Math.floor(now.getTime() / (60 * 1000));
+            const isBuyTransaction = newTransactionAmount < 0;
 
             const newCandle = {
                 _id: timeBucket,
-                open: roomInfo.user_bet, // Liquidity before transaction
-                close: roomInfo.user_bet - newTransactionAmount, // Liquidity after transaction
-                high: Math.max(roomInfo.user_bet - newTransactionAmount, roomInfo.user_bet), // High
-                low: Math.min(roomInfo.user_bet - newTransactionAmount, roomInfo.user_bet), // Low
-                volume: Math.abs(newTransactionAmount), // Volume is the absolute value of the transaction
-                buyVolume: isBuyTransaction ? Math.abs(newTransactionAmount) : 0, // Set buyVolume if it's a buy
-                sellVolume: isBuyTransaction ? 0 : Math.abs(newTransactionAmount), // Set sellVolume if it's a sell
-                startTime: new Date(timeBucket * 60 * 1000), // Start time of the bucket
+                open: roomInfo.user_bet,
+                close: roomInfo.user_bet - newTransactionAmount,
+                high: Math.max(roomInfo.user_bet - newTransactionAmount, roomInfo.user_bet),
+                low: Math.min(roomInfo.user_bet - newTransactionAmount, roomInfo.user_bet),
+                volume: Math.abs(newTransactionAmount),
+                buyVolume: isBuyTransaction ? Math.abs(newTransactionAmount) : 0,
+                sellVolume: isBuyTransaction ? 0 : Math.abs(newTransactionAmount),
+                startTime: new Date(timeBucket * 60 * 1000),
             };
 
             if (req.io.sockets) {
@@ -871,7 +838,6 @@ const addToQueue = async (req, bot = false) => {
                 user['profitAllTimeLow'] = newTransactionAmount;
             }
 
-            // setTimeout(async () => {
             const host = await User.findOne({ _id: roomInfo['creator'] });
             if (host) {
                 host.gamePlayed++;
@@ -886,14 +852,12 @@ const addToQueue = async (req, bot = false) => {
                 }
             }
 
-            // Check if user_bet matches the share value of the first host
             if (roomInfo.hosts[0].share === 100) {
                 let notification = new Notification({
                     from: user._id,
                     to: roomInfo['creator'],
                     room: req.body._id,
                     message: '',
-                    // is_anonymous: req.body.is_anonymous,
                     is_read: false
                 });
                 notification.from = roomInfo['creator']._id;
@@ -946,14 +910,12 @@ const addToQueue = async (req, bot = false) => {
                 }
 
             } else {
-                // Iterate over each host asynchronously
                 roomInfo.hosts.forEach(async (host) => {
                     let notification = new Notification({
                         from: user._id,
                         to: roomInfo['creator'],
                         room: req.body._id,
                         message: '',
-                        // is_anonymous: req.body.is_anonymous,
                         is_read: false
                     });
 
@@ -1069,7 +1031,6 @@ const addToQueue = async (req, bot = false) => {
             }
             user = null;
             bet_item = null;
-            // }, 0);
         }
 
         if (newTransactionAmount !== 0) {

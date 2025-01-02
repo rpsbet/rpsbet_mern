@@ -1,9 +1,7 @@
-// Import the necessary modules and configurations
 const cron = require('node-cron');
 const { Connection, clusterApiUrl, PublicKey } = require('@solana/web3.js');
 const User = require('../../model/User');
 const Transaction = require('../../model/Transaction');
-const { setBalance } = require('../../routes/user.routes');
 const axios = require('axios');
 const moment = require('moment');
 const convertToCurrency = require('../../helper/util/conversion');
@@ -16,7 +14,6 @@ const API_KEY = process.env.API_KEY;
 const tokenMintAddress = process.env.token;
 
 const depositConfirmationThreshold = 6; // Number of confirmations required
-let socketio = null;
 let isProcessing = false;
 
 async function checkConfirmations(io) {
@@ -178,7 +175,6 @@ async function checkConfirmations(io) {
         message: 'Token price not found or invalid.',
       });
     }
-
     
     const margin = 1000000; // Define the threshold for acceptable price variation (in USD)
     

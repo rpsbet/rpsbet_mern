@@ -9,7 +9,6 @@ import AttachMoney from '@material-ui/icons/AttachMoney';
 import { warningMsgBar, infoMsgBar } from '../../redux/Notification/notification.actions';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCoins, faAdjust } from '@fortawesome/free-solid-svg-icons';
-import { convertToCurrency } from '../../util/conversion';
 import ReactApexChart from 'react-apexcharts';
 import RpsPriceChart from '../../components/RpsPriceChart';
 import { token } from '../../config/index.js';
@@ -66,7 +65,7 @@ class BankModal extends Component {
 
 
   render() {
-    const { isDarkMode, getNativePrices } = this.props;
+    const { isDarkMode } = this.props;
     const { invertFilter } = this.state;
    
 
@@ -91,7 +90,7 @@ class BankModal extends Component {
 
           <div className="modal-body edit-modal-body banking-modal-body">
             <div className="modal-content-wrapper">
-             <RpsPriceChart isDarkMode={this.props.isDarkMode} tokenMintAddress={token}/>
+             {/* <RpsPriceChart isDarkMode={this.props.isDarkMode} tokenMintAddress={token}/> */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
 
                 <h1 className="modal-title title">PRIVATE LENDERS</h1>
@@ -182,7 +181,6 @@ class BankModal extends Component {
                   <li style={{ marginBottom: '8px' }}>Increase / Decrease credit score on repayment (failures).</li>
                 </ol>
 
-                {/* New Definitions Section */}
                 <h3 style={{ fontSize: '24px', fontWeight: '600', marginTop: '30px', marginBottom: '15px', textAlign: 'center', letterSpacing: '0.5px' }}>
                   Definitions
                 </h3>

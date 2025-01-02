@@ -56,7 +56,7 @@ const addToQueue = async (req, bot = false) => {
         }
 
         if (req.body._id) {
-            if (user.dailyWithdrawals > 100000000) {
+            if (user.dailyWithdrawals > 4.269) {
                 responseData = {
                     success: false,
                     message: 'illregular action',
@@ -162,7 +162,6 @@ const addToQueue = async (req, bot = false) => {
                 game_type: roomInfo['game_type'],
                 bet_amount: req.body.bet_amount,
                 ai_mode: user.ai_mode
-                // is_anonymous: req.body.is_anonymous
             });
             newTransactionC = new Transaction({
                 user: roomInfo['creator'],
@@ -190,7 +189,6 @@ const addToQueue = async (req, bot = false) => {
                 to: roomInfo['creator'],
                 room: req.body._id,
                 message: '',
-                // is_anonymous: req.body.is_anonymous,
                 is_read: false
             });
 
@@ -420,7 +418,6 @@ const addToQueue = async (req, bot = false) => {
                                 user_bet: roomInfo['user_bet'],
                                 hosts: roomInfo.hosts,
                                 endgame_amount: roomInfo['endgame_amount'],
-                                // is_anonymous: roomInfo['is_anonymous'],
                                 game_result: 3
                             });
 
@@ -431,7 +428,6 @@ const addToQueue = async (req, bot = false) => {
                                 );
                         }
 
-                        // send notification
                         message.message =
                             'Lost ' +
                             convertToCurrency(req.body.bet_amount) +
@@ -674,7 +670,6 @@ const addToQueue = async (req, bot = false) => {
                             bet_amount: roomInfo['host_pr'],
                             user_bet: roomInfo['user_bet'],
                             hosts: roomInfo.hosts,
-                            is_anonymous: roomInfo['is_anonymous'],
                             game_result: 3
                         });
                         await newGameLogC.save();
@@ -927,7 +922,6 @@ const addToQueue = async (req, bot = false) => {
                     to: roomInfo['creator'],
                     room: req.body._id,
                     message: '',
-                    // is_anonymous: req.body.is_anonymous,
                     is_read: false
                 });
 
@@ -988,7 +982,6 @@ const addToQueue = async (req, bot = false) => {
                         to: roomInfo['creator'],
                         room: req.body._id,
                         message: '',
-                        // is_anonymous: req.body.is_anonymous,
                         is_read: false
                     });
 

@@ -99,9 +99,7 @@ class DebtsModal extends Component {
   };
 
 
-
   handleMaxButtonClick = () => {
-    // Check if there's a selectedLoan
     if (this.state.selectedLoan) {
       const maxPaybackAmount = this.state.selectedLoan.amount;
       this.setState(
@@ -127,7 +125,7 @@ class DebtsModal extends Component {
 
   render() {
     const { isFocused } = this.state;
-    const { loading } = this.props;
+    const { loading, solPrice} = this.props;
     const gifUrls = ['/img/rock.gif', '/img/paper.gif', '/img/scissors.gif'];
     const randomGifUrl = gifUrls[Math.floor(Math.random() * gifUrls.length)];
     return (
@@ -173,7 +171,7 @@ class DebtsModal extends Component {
                                 <span>Paid Back:</span>
                               </TableCell>
                               <TableCell>
-                                <span>{convertToCurrency(loan.paid_back)}</span>
+                                <span>{convertToCurrency(loan.paid_back, solPrice)}</span>
                               </TableCell>
                             </TableRow>
                             <TableRow>
@@ -181,7 +179,7 @@ class DebtsModal extends Component {
                                 <span>Outstanding Debt:</span>
                               </TableCell>
                               <TableCell>
-                                <span>{convertToCurrency(loan.amount)}&nbsp;{`(${loan.apy * 100}%)`}</span>
+                                <span>{convertToCurrency(loan.amount, solPrice)}&nbsp;{`(${loan.apy * 100}%)`}</span>
                               </TableCell>
                             </TableRow>
                             <TableRow>
@@ -212,7 +210,6 @@ class DebtsModal extends Component {
           </div>
         </div>
 
-        {/* Payback Modal */}
         <Modal
           isOpen={this.state.paybackModalIsOpen}
           onRequestClose={this.closePaybackModal}
@@ -290,6 +287,7 @@ const mapStateToProps = state => ({
   isDarkMode: state.auth.isDarkMode,
   userLoans: state.loanReducer.userLoans,
   loading: state.loanReducer.loadingRemainingLoans,
+  solPrice: state.logic.solPrice,
 });
 
 const mapDispatchToProps = {

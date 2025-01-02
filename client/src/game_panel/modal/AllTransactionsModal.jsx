@@ -20,7 +20,6 @@ import {
   TableBody,
   IconButton,
   Tooltip,
-  TableHead,
   Table,
   TableCell,
   TableRow,
@@ -59,8 +58,6 @@ class AllTransactionsModal extends Component {
   }
   handleScroll = event => {
     const { target } = event;
-
-    // Check if the scroll is at the bottom of the modal
     const isAtBottom = target.scrollHeight - target.scrollTop === target.clientHeight;
     if (isAtBottom) {
       this.props.handleLoadMore();
@@ -240,66 +237,8 @@ class AllTransactionsModal extends Component {
                           </Menu>
                         </div>
                       </div>
-
-                      {/* <div style={{ marginLeft: '45px' }} className="summary-flex">
-                        <div style={{ display: 'flex', alignItems: 'center' }}>
-                          <span>1-DAY</span>
-                          <span
-                            style={{
-                              color: this.props.oneDayProfit > 0 ? '#57ca22' : 'red'
-                            }}
-                          >
-                            {this.props.oneDayProfit > 0 ? (
-                              <ArrowUpward />
-                            ) : (
-                              <ArrowDownward />
-                            )}
-                            {convertToCurrency(this.props.oneDayProfit)}
-                          </span>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center' }}>
-                          <span>7-DAY</span>
-                          <span
-                            style={{
-                              color: this.props.sevenDayProfit > 0 ? '#57ca22' : 'red'
-                            }}
-                          >
-                            {this.props.sevenDayProfit > 0 ? (
-                              <ArrowUpward />
-                            ) : (
-                              <ArrowDownward />
-                            )}
-                            {convertToCurrency(this.props.sevenDayProfit)}
-                          </span>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', marginRight: '20px' }}>
-                          <span>ALL-TIME</span>
-                          <span
-                            style={{
-                              color: this.props.allTimeProfit > 0 ? '#57ca22' : 'red'
-                            }}
-                          >
-                            {this.props.allTimeProfit > 0 ? (
-                              <ArrowUpward />
-                            ) : (
-                              <ArrowDownward />
-                            )}
-                            {convertToCurrency(this.props.allTimeProfit)}
-                          </span>
-                        </div>
-                      </div> */}
                     </div>
-                    {/* <Table style={{ width: '100%' }}>
-                      <TableHead>
-                        <TableRow>
-                          <TableCell>AMOUNT</TableCell>
-                          <TableCell>FROM NOW</TableCell>
-                          <TableCell>DESCRIPTION</TableCell>
-                          <TableCell>LINK</TableCell>
-                          <TableCell>ID</TableCell>
-                        </TableRow>
-                      </TableHead>
-                    </Table> */}
+                    
                   </div>
                   <div className="game-logs-container" onScroll={this.handleScroll}
                     style={{ maxHeight: '380px', overflowY: 'scroll' }}>
@@ -336,7 +275,7 @@ class AllTransactionsModal extends Component {
                               <TableCell className="hash">
                                 {transaction.hash ? (
                                   transaction.hash.startsWith('0x') ? (
-                                    <a href={`https://etherscan.io/tx/${transaction.hash}`} target="_blank" rel="noopener noreferrer">
+                                    <a href={`https://solscan.io/tx/${transaction.hash}`} target="_blank" rel="noopener noreferrer">
                                       <Link />
                                     </a>
                                   ) : (

@@ -293,7 +293,6 @@ class ChatPanel extends Component {
       >
         {this.state.showSearchPopup && (
           <>
-            {/* Search input */}
             <div style={{ marginBottom: '10px' }}>
               <TextField
                 type="text"
@@ -304,9 +303,7 @@ class ChatPanel extends Component {
               />
             </div>
 
-            {/* Display the searched GIFs */}
             {this.state.loading ? (
-              // Show loading text while GIFs are being loaded
               <div>Loading...</div>
             ) : (
               <div className="gif-results">
@@ -327,7 +324,6 @@ class ChatPanel extends Component {
     );
   }
   handleGifLoad = index => {
-    // Update the loaded state for the specific gif
     const updatedGifs = [...this.state.gifs];
     updatedGifs[index].loaded = true;
     this.setState({ gifs: updatedGifs });
@@ -408,9 +404,6 @@ class ChatPanel extends Component {
             onMouseLeave={this.handleMouseLeave}
           />
         </Tabs>
-        {/* <div id="online-banner">
-          <span>[{this.props.onlineUserList.length}] users online</span>
-        </div> */}
         {selected_tab_index === 0 ? (
           <MyChat is_mobile={this.props.is_mobile} toggleDrawer={this.props.toggleDrawer}/>
         ) : (

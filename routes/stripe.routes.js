@@ -306,6 +306,52 @@ router.post('/generate_address', auth, async (req, res) => {
   }
 });
 
+router.post('/get_sol_to_usd', auth, async (req, res) => {
+  try {
+    const { solAmount } = req.body;
+
+    // Fetch the current SOL price in USD
+    const response = await axios.get('https://api.coingecko.com/api/v3/simple/price', {
+      params: {
+        ids: 'solana',
+        vs_currencies: 'usd',
+      },
+    });
+
+    const solPrice = response.data.solana?.usd;
+
+    if (solPrice == null || isNaN(solPrice)) {
+      return res.status(404).json({
+        success: false,
+        message: 'Failed to fetch Solana price.',
+      });
+    }
+
+    // If solAmount is not provided or invalid, return only the SOL price
+    if (solAmount == null || isNaN(solAmount)) {
+      return res.json({
+        success: true,
+        solPrice,
+        usdValue: null, // No USD value calculated
+      });
+    }
+
+    const usdValue = solAmount * solPrice;
+
+    res.json({
+      success: true,
+      solPrice,
+      usdValue,
+    });
+  } catch (error) {
+    console.error('Error getting SOL to USD price:', error.message || error);
+    res.status(500).json({
+      success: false,
+      message: 'An error occurred while getting the SOL to USD price',
+    });
+  }
+});
+
 router.post('/get_token_price', auth, async (req, res) => {
   try {
     const { tokenMintAddress, web2Amount } = req.body;
@@ -368,17 +414,17 @@ router.post('/create_payout', auth, async (req, res) => {
       });
     }
 
-    if (withdrawalLimit >= 100000000) {
+    if (withdrawalLimit >= 4.269) {
       return res.json({
         success: false,
         message: 'EXCEEDED DAILY WITHDRAWAL LIMIT (DURING LAUNCH PHASE ONLY!)'
       });
     }
 
-    if (amount > 100000000) {
+    if (amount > 4.269) {
       return res.json({
         success: false,
-        message: 'Maximum Withdrawal Amount is 100000000 RPS per DAY during Launch'
+        message: 'Maximum Withdrawal Amount is 4.269 RPS per DAY during Launch'
       });
     }
 
@@ -618,12 +664,12 @@ router.post('/withdraw_request', auth, async (req, res) => {
     if (balance < req.body.amount) {
       return res.json({ success: false, message: 'Insufficient balance' });
     }
-    if (withdrawalLimit > 100000000) {
+    if (withdrawalLimit > 4.269) {
       console.log("Exceeded Daily Withdrawal Limit", req.user);
       return res.json({ success: false, message: 'EXCEEDED DAILY WITHDRAWAL LIMIT (DURING LAUNCH PHASE ONLY!)' });
     }
-    if (req.body.amount > 100000000) {
-      return res.json({ success: false, message: 'Maximum Withdrawal Amount is 100000000 RPS per DAY during Launch' });
+    if (req.body.amount > 4.269) {
+      return res.json({ success: false, message: 'Maximum Withdrawal Amount is 4.269 RPS per DAY during Launch' });
     }
 
     const remainingLoanAmount = await calculateRemainingLoans(req.user);

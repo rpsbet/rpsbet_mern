@@ -9,32 +9,13 @@ import {
   faClock,
   faSyncAlt
 } from '@fortawesome/free-solid-svg-icons';
-
 import {
   addBonus,
   getUser
 } from '../../redux/Auth/user.actions';
 import {
   Button,
-  Table,
-  TableBody,
-  TableRow,
-  TableCell,
-  Checkbox,
 } from '@material-ui/core';
-import {
-  Close,
-  MusicNote,
-  MusicOff,
-  Brightness7,
-  Brightness4,
-  NotificationsActive,
-  NotificationsOff,
-  VolumeUp,
-  VolumeOff,
-  Eco,
-  EcoOutlined
-} from '@material-ui/icons';
 import { convertToCurrency } from '../../util/conversion';
 
 Modal.setAppElement('#root');
@@ -67,7 +48,6 @@ const styles = (theme) => ({
   dropdownStyle: {},
 });
 
-
 class BonusModal extends Component {
   constructor(props) {
     super(props);
@@ -77,21 +57,19 @@ class BonusModal extends Component {
       landedNumber: null,
       showFlash: false,
       translateDistance: window.innerWidth <= 600 ? '100px' : '120px'
-
     };
     this.spinWheel = this.spinWheel.bind(this);
   }
+
   componentDidMount() {
     window.addEventListener('resize', this.handleResize);
-
   }
 
   componentWillUnmount() {
-    // Clean up event listener
     window.removeEventListener('resize', this.handleResize);
   }
+  
   handleResize = () => {
-    // Update translate distance based on window width
     this.setState({
       translateDistance: window.innerWidth <= 600 ? '100px' : '120px'
     });
@@ -101,7 +79,6 @@ class BonusModal extends Component {
     const lastBonus = this.props.user.last_bonus ? new Date(this.props.user.last_bonus) : null;
     const now = new Date();
 
-    // Check if last_bonus is within the last 24 hours or if last_bonus is null
     if (!lastBonus || now - lastBonus < 6 * 60 * 60 * 1000) {
       this.setState({ showBonusModal: true });
     }
@@ -109,9 +86,9 @@ class BonusModal extends Component {
   }
 
   async spinWheel() {
-    if (this.state.spinning) return; // Prevent multiple spins at the same time
+    if (this.state.spinning) return;
 
-    const randomRotation = Math.floor(Math.random() * 360) + 360; // At least 10 full rotations
+    const randomRotation = Math.floor(Math.random() * 360) + 360;
     this.setState({ spinning: true, rotation: randomRotation, landedNumber: null, showFlash: false });
 
     if (!this.props.isMuted || !this.props.gameSounds) {
@@ -125,39 +102,26 @@ class BonusModal extends Component {
         await this.props.getUser(true, 5);
       });
 
-      // Remove the flash effect after it's done
-      setTimeout(() => this.setState({ showFlash: false }), 1500); // 3 flashes, 0.5s each
+      setTimeout(() => this.setState({ showFlash: false }), 1500);
     }, 4000);
-
   }
+
   formatNumber = (number) => {
     if (number >= 1000000) {
-      return (number / 1000000) + 'M'; // For millions
+      return (number / 1000000) + 'M';
     } else if (number >= 1000) {
-      return (number / 1000) + 'K'; // For thousands
+      return (number / 1000) + 'K';
     }
-    return number; // For numbers less than 1000
+    return number;
   };
-
 
   render() {
     const {
-      isMuted,
-      isLowGraphics,
       isDarkMode,
       totalWagered,
-      toggleMute,
-      toggleLowGraphics,
-      setDarkMode,
-      toggleMusic,
-      setNotificationsAllowed,
-      isMusicEnabled,
-      loading,
+      solPrice
     } = this.props;
-    const numbers = [50000, 10000, 10000, 3000, 25000, 1000, 5000, 15000, 5000, 2000];
-    // const markerStyle = {
-    //   transform: `rotate(180deg)`,
-    // };
+    const numbers = [0.5, 0.4, 0.1, 0.03, 0.25, 0.01, 0.05, 0.15, 0.05, 0.02 ];
     const lastBonus = this.props.user.last_bonus ? new Date(this.props.user.last_bonus) : null;
     const now = new Date();
     let remainingTime = null;
@@ -210,21 +174,20 @@ class BonusModal extends Component {
                           transform: `rotate(${rotation}deg) translate(${this.state.translateDistance}) rotate(-${rotation}deg)`
                         }}
                       >
-                        {this.formatNumber(number)} {/* Render formatted number */}
+                        {this.formatNumber(number)}
                       </div>
                     );
                   })}
                   <img width="200px" src={'../img/bonus.svg'} alt="Bonus" />
 
                 </div>
-                {/* <div className="marker" style={markerStyle}></div> */}
 
               </div>
 
             </div>
             {this.state.landedNumber !== null ? (
               <div className={`spin-result ${this.state.showFlash ? 'flash' : ''}`}>
-                {convertToCurrency(this.state.landedNumber)}
+                {convertToCurrency(this.state.landedNumber, solPrice)}
               </div>
             ) : (
               <Button
@@ -257,6 +220,7 @@ const mapStateToProps = (state) => ({
   gameSounds: state.auth.gameSounds,
   isMusicEnabled: state.auth.isMusicEnabled,
   isLowGraphics: state.auth.isLowGraphics,
+  solPrice: state.logic.solPrice,
   loading: state.customerReducer.loading
 });
 

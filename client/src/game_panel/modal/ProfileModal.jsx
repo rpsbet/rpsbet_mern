@@ -382,7 +382,7 @@ class ProfileModal extends Component {
   };
 
   render() {
-    const { modalIsOpen, isDarkMode, userInfo } = this.props;
+    const { modalIsOpen, isDarkMode, userInfo, solPrice } = this.props;
     const { rewards } = userInfo;
     const {
       rank,
@@ -546,8 +546,8 @@ class ProfileModal extends Component {
                             Referral earnings depend on your referrals' deposit activity and are calculated based on <span style={{ fontWeight: "bold", color: "#28a745" }}>5%</span> of the deposit amount of your referred users.
                           </p>
                           <p style={{ marginBottom: "0.5rem" }}>
-                            For example, if your referral deposits <strong>{convertToCurrency(100)}</strong> in total,
-                            you will earn 5% which is <strong>{convertToCurrency(5)}</strong>.
+                            For example, if your referral deposits <strong>{convertToCurrency(100, solPrice)}</strong> in total,
+                            you will earn 5% which is <strong>{convertToCurrency(5, solPrice)}</strong>.
                           </p>
                         </>
                       }
@@ -654,6 +654,7 @@ class ProfileModal extends Component {
                   profitAllTimeLow={profitAllTimeLow}
                   averageWager={averageWager}
                   averageGamesPlayedPerRoom={averageGamesPlayedPerRoom}
+                  solPrice={solPrice}
                   averageProfit={averageProfit}
                 />
               </div>
@@ -806,7 +807,7 @@ class ProfileModal extends Component {
                         )}
                         <div style={{ border: "2px solid rgb(40, 167, 69)", borderRadius: "0.3em", padding: "2px" }}>
                           <Typography style={{ margin: "auto", textAlign: 'center', color: "rgb(40, 167, 69)" }} variant="body2">
-                            + {convertToCurrency(reward.amount)}
+                            + {convertToCurrency(reward.amount, solPrice)}
                           </Typography>
                         </div>
                       </Grid>
@@ -833,6 +834,7 @@ class ProfileModal extends Component {
 const mapStateToProps = state => ({
   isDarkMode: state.auth.isDarkMode,
   userInfo: state.auth.user,
+  solPrice: state.logic.solPrice,
   loading: state.logic.isActiveLoadingOverlay
 });
 

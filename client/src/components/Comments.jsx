@@ -101,7 +101,6 @@ class Comments extends Component {
         const { roomId } = this.props;
 
         if (newComment.trim() !== '') {
-            // Create a temporary comment object
             const tempComment = {
                 _id: `temp-${Date.now()}`, // Temporary ID
                 content: newComment,
@@ -198,7 +197,6 @@ class Comments extends Component {
                 )}
                 {loading ? (
     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        {/* Skeleton loader for TextField and Button */}
         <Skeleton variant="rect" width="100%" height={56} style={{ marginRight: "10px" }} />
         <Skeleton variant="rect" width={80} height={56} />
     </div>
@@ -233,7 +231,6 @@ class Comments extends Component {
 
 {loading ? (
     <div style={{ paddingTop: "30px" }}>
-        {/* Skeleton loaders for comments */}
         {[...Array(3)].map((_, index) => (
             <div key={index} className="comment-skeleton">
                 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
@@ -247,7 +244,7 @@ class Comments extends Component {
     </div>
 ) : (
     comments.length === 0 ? (
-        <div style={{ textAlign: "center", paddingTop: "30px", fontSize: "16px", color: "#999" }}>
+        <div style={{ textAlign: "center", paddingTop: "30px", margin: "20px", fontSize: "16px", color: "#999" }}>
             NO REPLIES
         </div>
     ) : (

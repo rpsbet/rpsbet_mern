@@ -195,9 +195,7 @@ class MerchModal extends Component {
                         <Button className="btn-close title" onClick={this.props.closeModal}>×</Button>
                     </div>
                     <div className="modal-body edit-modal-body merch-modal-body"  style={{background:"#fff"}}>
-                        {/* Container for the first product component */}
                         <div id={this.productComponentId1}></div>
-                        {/* Container for the second product component */}
                         <div id={this.productComponentId2}></div>
                     </div>
                 </div>

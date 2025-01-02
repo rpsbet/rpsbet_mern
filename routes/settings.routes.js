@@ -7,7 +7,6 @@ const cron = require('node-cron');
 // User Model
 const User = require('../model/User');
 const SystemSetting = require('../model/SystemSetting');
-const NativePrice = require('../model/NativePrice');
 const Jukebox = require('../model/Jukebox');
 
 router.get('/', async (req, res) => {
@@ -32,30 +31,6 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.get('/native-prices', async (req, res) => {
-  try {
-    const prices = await NativePrice.find({});
-
-    // Process the prices data if needed
-    const result = prices.map(price => ({
-      rate: price.rate,
-      createdAt: price.created_at,
-      updatedAt: price.updated_at
-    }));
-
-    // Send the processed result back to the client
-    res.json({
-      success: true,
-      prices: result,
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({
-      success: false,
-      error: err.message
-    });
-  }
-});
 router.post('/', auth, async (req, res) => {
     try {
       const settings = req.body.settings;

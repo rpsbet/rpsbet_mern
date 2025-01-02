@@ -1,32 +1,22 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import BetArray from '../../components/BetArray';
-import Share from '../../components/Share';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
-import YouTubeModal from '../modal/YouTubeModal';
 import Moment from 'moment';
 import { acQueryMyItem } from '../../redux/Item/item.action';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
-import ReactApexChart from 'react-apexcharts';
 import { Info } from '@material-ui/icons';
-import PreSummaryPanel from '../../components/PreSummaryPanel';
 import Avatar from '../../components/Avatar';
 import progress from '../LottieAnimations/progress.json';
 import pressHold from '../LottieAnimations/pressHold.json';
 import PlayerModal from '../modal/PlayerModal';
 import AiPanel from '../../components/AiPanel';
-import loadingChart from '../LottieAnimations/loadingChart.json';
-import { YouTubeVideo } from '../../components/YoutubeVideo';
 import { updateRoomBot, kickBots } from '../../redux/Logic/logic.actions';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faRobot, faMoneyBillWave, faBrain, faBan } from '@fortawesome/free-solid-svg-icons';
 import ViewIcon from '@material-ui/icons/Visibility';
-import InfoIcon from '@material-ui/icons/Info';
-import WarningIcon from '@material-ui/icons/Warning';
 import SwordsIcon from '@material-ui/icons/VisibilityOff';
 import {
   getRpsBetItems,
-  getQbot,
   getRoomBotCount,
 } from '../../redux/Logic/logic.actions';
 import {
@@ -34,11 +24,9 @@ import {
   Switch,
   IconButton,
   Tooltip,
-  FormControlLabel
 } from '@material-ui/core';
 import BetAmountInput from '../../components/BetAmountInput';
 import Lottie from 'react-lottie';
-import { renderLottieAvatarAnimation } from '../../util/LottieAvatarAnimations';
 import {
   validateIsAuthenticated,
   validateCreatorId,
@@ -47,103 +35,19 @@ import {
   validateBankroll
 } from '../modal/betValidations';
 
-import animationData from '../LottieAnimations/spinningIcon';
 import {
   alertModal,
   confirmModalCreate,
-  gameResultModal
 } from '../modal/ConfirmAlerts';
-import styled from 'styled-components';
 import { convertToCurrency } from '../../util/conversion';
 import ImageResultModal from '../modal/ImageResultModal';
 import { setSpectateMode } from '../../redux/Auth/user.actions';
-
-const ProductImage = styled.img`
-  width: 100px;
-  height: auto;
-  background: #fff;
-  border: 1px solid #f9f9;
-  box-shadow: 0 1px 1px #ccc9;
-  border-radius: 10px;
-`;
-
-const ProductCarousel = styled.div`
-  display: flex;
-  justify-content: start;
-  align-items: center;
-  overflow-x: auto;
-  overflow-y: hidden;
-  gap: 20px;
-  margin-top: -30px;
-  max-width: 460px;
-  height: 270px;
-  padding: 0;
-  @media (max-width: 768px) {
-    /* Adjust the width for mobile devices */
-    max-width: 300px;
-  }
-`;
-
-const ProductCard = styled.div`
-  position: relative;
-  border-radius: 0.8em;
-  display: -ms-flexbox;
-  display: flex;
-  -webkit-flex-direction: column;
-  -ms-flex-direction: column;
-  flex-direction: column;
-  -webkit-align-items: center;
-  -webkit-box-align: center;
-  -ms-flex-align: center;
-  align-items: center;
-  cursor: pointer;
-  -webkit-transition: -webkit-transform 0.2s;
-  -webkit-transition: transform 0.2s;
-  transition: transform 0.2s, width 0.2s;
-  position: relative;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border-radius: 20px;
-  }
-
-  &:hover {
-    transform: scale(1.2);
-    width: 350px;
-    border: 2px solid #fff;
-
-  }
-`;
-
-const UseItemButton = styled.div`
-  opacity: 0;
-    position: absolute;
-    margin-top: auto;
-    bottom: 0;
-    
-    margin
-    right: 0; 
-      cursor: pointer;
-      -webkit-transition: -webkit-transform 0.2s;
-      -webkit-transition: transform 0.2s;
-      transition: transform 0.2s,  bottom 0.2s;
-
-      ${ProductCard}:hover & {
-        opacity: 1;
-          bottom: calc(50%);;
-  `;
 
 const options = [
   { classname: 'rock', selection: 'R' },
   { classname: 'paper', selection: 'P' },
   { classname: 'scissors', selection: 'S' }
 ];
-
 
 class RPS extends Component {
   constructor(props) {
@@ -165,16 +69,12 @@ class RPS extends Component {
       isQbot: false,
       advanced_status: '',
       status: this.props.roomInfo.status,
-      isMax: false,
-      cardDealt: false,
-      bet_amount: 1,
       betResult: 0,
-      bankroll: this.props.user_bet,
+      bankroll: this.props.bankroll,
       host_pr: this.props.roomInfo.host_pr,
       rps: [],
       prev_rps: [],
       isPasswordCorrect: this.props.isPasswordCorrect,
-      animateCard: false
     };
     this.panelRef = React.createRef();
     this.onChangeState = this.onChangeState.bind(this);
@@ -218,13 +118,9 @@ class RPS extends Component {
 
     try {
       const botsCount = await this.props.getRoomBotCount(this.props.roomInfo._id);
-      const qBotStatus = await this.props.getQbot(this.props.roomInfo.creator_id);
-
-      // Only update state if component is still mounted
       if (this.isComponentMounted) {
         this.setState({
           botsCount: botsCount,
-          isQbot: qBotStatus,
         });
       }
     } catch (error) {
@@ -250,18 +146,6 @@ class RPS extends Component {
           setTimeout(initializeSocket, 3000);
         }
 
-        // initializedSocket.on('CARD_PRIZE', data => {
-        //   if (data) {
-        //     this.setState(
-        //       {
-        //         image: data.image,
-        //         productName: data.productName,
-        //         showImageModal: true
-        //       },
-        //       () => playSound('')
-        //     );
-        //   }
-        // });
 
       } catch (error) {
         console.error('Socket initialization failed:', error);
@@ -296,8 +180,8 @@ class RPS extends Component {
 
       let filteredRPS = data.rps.filter(game => game.joiner === this.props.user_id);
       let rpsState = filteredRPS.length > 0 ? filteredRPS : prevState.rps;
+      this.props.onChangeState({ bankroll: data.bankroll });
       return {
-        bankroll: data.bankroll,
         host_pr: data.host_pr,
         rps: this.props.isWatching ? rpsState : data.rps,
         prev_rps: data.rps,
@@ -308,10 +192,9 @@ class RPS extends Component {
   };
 
   handleSocketData2 = (data) => {
-    this.setState({ bankroll: data.bankroll });
+    this.props.onChangeState({ bankroll: data.bankroll });
+
   };
-
-
 
   componentWillUnmount() {
     this.isComponentMounted = false;
@@ -324,14 +207,9 @@ class RPS extends Component {
 
   handleKeyPress(event) {
     const { isFocused } = this.props;
-
-    // Check if the Ctrl key is pressed (for Windows/Linux) or the Cmd key is pressed (for macOS)
     const ctrlKeyPressed = event.ctrlKey || event.metaKey;
-
-    // Check if the key pressed is 'r'
     const isRKeyPressed = event.key === 'r';
 
-    // Check if both conditions are met: Ctrl (or Cmd) key is pressed AND 'r' key is pressed
     if (!isFocused && !(ctrlKeyPressed && isRKeyPressed)) {
       switch (event.key) {
         case 'r':
@@ -349,124 +227,12 @@ class RPS extends Component {
     }
   }
 
-
-
   toggleImageModal = () => {
     this.setState({
       showImageModal: false
     });
   };
-  dealCard = () => {
-    // Check if the DOM is fully loaded
-    if (document.readyState !== 'loading') {
-      // If it's already loaded, call the dealCardLogic directly
-      this.dealCardLogic();
-    } else {
-      // If the DOM is still loading, wait for the 'DOMContentLoaded' event
-      document.addEventListener('DOMContentLoaded', this.dealCardLogic);
-    }
-  };
 
-  dealCardLogic = () => {
-    const newCard = document.createElement('div');
-    newCard.className = 'card-hidden upside-down animated-card';
-    newCard.style.height = '200px';
-    newCard.style.width = '130px';
-    newCard.style.borderRadius = '1rem';
-    newCard.style.marginRight = '10px';
-
-    // Add the new card to the card-container
-    const cardContainer = document.querySelector('.card-container');
-
-    // Check if cardContainer exists before manipulating it
-    if (cardContainer) {
-      cardContainer.insertBefore(newCard, cardContainer.firstChild);
-
-      this.props.playSound('cards');
-
-      const firstCardDashed = cardContainer.querySelector('.card-hidden.dashed');
-      if (firstCardDashed && firstCardDashed.style.display !== 'none') {
-        firstCardDashed.style.display = 'none';
-      } else {
-        // If '.card-hidden.dashed' doesn't exist, look for an element with 'flipped' class
-        const firstCardFlipped = cardContainer.querySelector('.flipped');
-        if (firstCardFlipped) {
-          firstCardFlipped.style.display = 'none';
-        }
-      }
-      this.setState({ cardDealt: true });
-    }
-  };
-
-
-  flipCard = () => {
-    const rpsValueAtLastIndex = this.state.rps[this.state.rps.length - 1]?.rps;
-    const cardContainer = document.querySelector('.card-container');
-    if (cardContainer) {
-      const card = cardContainer.querySelector('div');
-
-      if (card) {
-        const card = cardContainer.querySelector('div');
-        if (card.classList.contains('card-hidden')) {
-          card.classList.remove('card-hidden');
-        }
-
-        if (card.classList.contains('animated-card')) {
-          card.classList.remove('animated-card');
-        }
-
-        this.props.playSound('cards');
-        card.classList.add('flipped');
-
-        const backgroundImageURL = '/img/marketplace/blender.svg';
-        const updatedBackgroundImageURL = backgroundImageURL.replace(
-          'blender',
-          rpsValueAtLastIndex
-        );
-        card.style.backgroundImage = `url('${updatedBackgroundImageURL}')`;
-        card.style.backgroundSize = `100%`;
-
-      } else {
-        console.error("No 'div' element found inside .card-container");
-      }
-    } else {
-      console.error("No element found with the class .card-container");
-    }
-
-    setTimeout(() => {
-
-      if (!this.state.cardDealt) {
-        this.dealCard();
-      }
-
-    }, 5500);
-  };
-
-  drawCard = () => {
-    // Create a new card element
-    const newCard = document.createElement('div');
-    newCard.className = 'animated-rrps-card';
-    newCard.style.height = '200px';
-    newCard.style.width = '130px';
-    newCard.style.borderRadius = '1rem';
-    newCard.style.marginLeft = '10px';
-
-    // Replace 'blender' with the value of this.state.selected in the background image URL
-    const backgroundImageURL = '/img/marketplace/blender.svg';
-    const updatedBackgroundImageURL = backgroundImageURL.replace(
-      'blender',
-      this.props.selected_rps
-    );
-    newCard.style.backgroundImage = `url('${updatedBackgroundImageURL}')`;
-
-    const cardContainer = document.querySelector('.card-container');
-    const lastCard = cardContainer.querySelector('div:last-child');
-    lastCard.style.display = 'none';
-
-    cardContainer.appendChild(newCard);
-
-    this.props.playSound('cards');
-  };
 
   async componentDidUpdate(prevProps, prevState) {
     const { roomInfo, actionList, selected_rps, is_betting } = this.props;
@@ -478,21 +244,14 @@ class RPS extends Component {
       });
     }
 
-    if (prevState.bankroll !== this.state.bankroll && this.state.bankroll <= 0.05) {
-      this.state.status = 'finished';
-    }
     if (prevProps.isWatching !== this.props.isWatching) {
       this.removeSocketListeners();
       this.setupSocket();
     }
-    if (prevProps.balance !== this.props.balance && this.props.gameResult !== -1 && this.state.isMax) {
-      this.handleMaxButtonClick();
-    }
-
+  
     if (prevProps.is_betting !== is_betting && !is_betting) {
       const prevLastItemId = this.props.rpsbetitems.length > 4 ? this.props.rpsbetitems.slice(0, 5).reverse()[4]._id : null;
       const currentLastItemId = rps.length > 4 ? rps[4]._id : null;
-
 
       if (prevLastItemId === currentLastItemId) {
         await this.props.getRpsBetItems(roomInfo._id);
@@ -503,14 +262,6 @@ class RPS extends Component {
       }
     }
 
-
-    if (prevProps.roomInfo && roomInfo) {
-      if (prevProps.roomInfo.bet_amount !== roomInfo.bet_amount) {
-        this.setState({
-          bankroll: parseFloat(roomInfo.user_bet)
-        });
-      }
-    }
     if (prevProps.roomInfo && roomInfo) {
       if (prevProps.roomInfo.host_pr !== roomInfo.host_pr) {
         this.setState({
@@ -526,9 +277,6 @@ class RPS extends Component {
       this.joinGame(selected_rps);
     }
 
-    // if (prevState.rps !== rps && rps_game_type === 1) {
-    //   this.flipcard();
-    // }
   }
 
 
@@ -546,7 +294,8 @@ class RPS extends Component {
       rps_game_type,
       changeBgColor,
       selected_rps,
-      onChangeState
+      onChangeState,
+      solPrice
     } = this.props;
 
     const { bet_amount } = this.state;
@@ -577,7 +326,7 @@ class RPS extends Component {
       changeBgColor(result.betResult);
     }
 
-    const currencyElement = convertToCurrency(Math.abs(result.amount));
+    const currencyElement = convertToCurrency(Math.abs(result.amount), solPrice);
 
     const fragmentStyle = {
       color: color,
@@ -701,51 +450,14 @@ class RPS extends Component {
     });
   };
 
-  // Function to round down to 2 decimal places
-  roundDownToTwoDecimalPlaces = (number) => {
-    return Math.floor(number * 100) / 100;
-  };
-
-  handleHalfXButtonClick = () => {
-    const multipliedBetAmount = this.state.bet_amount * 0.5;
-    const roundedBetAmount = this.roundDownToTwoDecimalPlaces(multipliedBetAmount);
-    this.setState({ bet_amount: roundedBetAmount, isMax: false }, () => {
-      document.getElementById('betamount').focus();
-    });
-  };
-
-  handle2xButtonClick = () => {
-
-    const maxBetAmount = this.props.balance;
-    const multipliedBetAmount = this.state.bet_amount * 2;
-    const limitedBetAmount = Math.min(multipliedBetAmount, maxBetAmount);
-    const roundedBetAmount = this.roundDownToTwoDecimalPlaces(limitedBetAmount);
-    if (roundedBetAmount < -2330223) {
-      alertModal(this.props.isDarkMode, "NOW, THAT'S GETTING A BIT CRAZY NOW ISN'T IT?");
-    } else {
-      this.setState({ bet_amount: roundedBetAmount, isMax: false }, () => {
-        document.getElementById('betamount').focus();
-      });
-    }
-  };
-
-  handleMaxButtonClick = () => {
-    const maxBetAmount = Math.min(this.props.balance, this.state.bankroll);
-    const roundedMaxBetAmount = this.roundDownToTwoDecimalPlaces(maxBetAmount);
-    this.setState({ bet_amount: roundedMaxBetAmount, isMax: true }, () => {
-      document.getElementById('betamount').focus();
-    });
-  };
 
   render() {
     const {
       showImageModal,
       image,
-      bankroll,
       startedPlaying,
       rps,
       productName,
-      actionList,
       botsCount,
       players,
       prev_rps,
@@ -757,13 +469,8 @@ class RPS extends Component {
     const {
       bgColorChanged,
       selectedCreator,
-      accessory,
-      rank,
-      username,
       isDarkMode,
-      selected_rps,
       isLowGraphics,
-      isMusicEnabled,
       handleDetachAttachChange,
       handleClosePlayerModal,
       showPlayerModal,
@@ -783,13 +490,12 @@ class RPS extends Component {
       creator_id,
       user_id,
       isWatching,
+      endgame_type,
+      pr,
       playSound,
+      cp
     } = this.props;
-    const payoutPercentage = isNaN((bankroll / roomInfo.endgame_amount) * 100) ? 0 : (bankroll / roomInfo.endgame_amount) * 100;
-    const barStyle = {
-      width: `${payoutPercentage}%`,
-      backgroundColor: payoutPercentage <= 50 ? 'yellow' : 'red'
-    };
+    
     const rpsValueAtLastIndex = rps[rps.length - 1]?.rps;
     const joinerRpsValueAtLastIndex = rps[rps.length - 1]?.joiner_rps;
 
@@ -803,16 +509,11 @@ class RPS extends Component {
         });
       }, flashingDuration);
     }
-    const isLowBankroll = bankroll <= 1;
-    const isHighCommission = this.props.cp > 16;
-    const isLowProfit = (roomInfo.host_pr - roomInfo.total_stakes) > 0;
-    const hostProfit = parseFloat(roomInfo.host_pr) || 0;
-    const totalStakes = parseFloat(roomInfo?.total_stakes) || 0;
+    
+
     return (
       <div className="game-page">
-        <div className="page-title">
-          {rps_game_type === 1 ? <h2 className="title">PLAY - RRPS</h2> : <h2 className="title">PLAY - RPS</h2>}{' '}
-        </div>
+   
         {showImageModal && (
           <ImageResultModal
             modalIsOpen={showImageModal}
@@ -830,125 +531,12 @@ class RPS extends Component {
           />
         )}
         <div className="game-contents title">
-          <PreSummaryPanel
-            status={status}
-            bankroll={bankroll}
-            isDarkMode={isDarkMode}
-            cp={cp}
-            barStyle={barStyle}
-            roomInfo={roomInfo}
-            handleOpenPlayerModal={handleOpenPlayerModal}
-            creator_id={creator_id}
-            creator_avatar={creator_avatar}
-            username={username}
-            rank={rank}
-            accessory={accessory}
-            rps_game_type={rps_game_type}
-            endgame_type={endgame_type}
-            pr={pr}
-            isLowBankroll={isLowBankroll}
-            isHighCommission={isHighCommission}
-            isLowProfit={isLowProfit}
-            hostProfit={hostProfit}
-            totalStakes={totalStakes}
-            bet_amount={this.state.bet_amount}
-          />
+         
           <div
             className="game-info-panel"
             style={{ position: 'relative', zIndex: 10 }}
           >
-            {/* {renderLottieAvatarAnimation(gameBackground, isLowGraphics)} */}
-            {this.props.rps_game_type === 1 && (
-              <div className="game-background-panel game-info-panel">
-                <YouTubeModal
-                  open={this.state.modalOpen}
-                  onClose={this.handleCloseModal}
-                  rps={rpsValueAtLastIndex}
-                />
-
-                <div
-                  className="card-container"
-                  style={{ margin: '-30px auto 10px' }}
-                >
-                  <div
-                    className="card-hidden dashed"
-                    style={{
-                      height: '100%',
-                      width: '130px',
-                      borderRadius: '1rem',
-                      marginRight: '10px'
-                    }}
-                  ></div>
-                  <div
-                    className="card-hidden dashed"
-                    style={{
-                      height: '100%',
-                      width: '130px',
-                      borderRadius: '1rem',
-                      transform: 'rotate(0deg)'
-                    }}
-                  ></div>
-                </div>
-                <h3 className="game-sub-title">Select a Card</h3>
-                <ProductCarousel>
-                  {this.props.data
-                    .filter(row => row.item_type === '653ee7ac17c9f5ee21245649')
-                    .map(row => (
-                      <ProductCard
-                        key={row._id}
-                        onClick={() => {
-                          this.setState(
-                            {
-                              selected_rps: row.productName
-                            },
-                            () => {
-                              this.drawCard();
-                            }
-                          );
-                        }}
-                        className={
-                          selected_rps === row.productName ? 'selected' : ''
-                        }
-                      >
-                        <ProductImage src={row.image} alt={row.productName} />
-                        {/* <div>{row.productName}</div> */}
-                        <UseItemButton>
-                          <Tooltip title={'Use Item'}>
-                            <IconButton
-                              className="btn-back"
-                              onClick={() => {
-                                this.onBtnBetClick(row.productName);
-                              }}
-                            >
-                              Play
-                              <PlayArrowIcon />
-                            </IconButton>
-                          </Tooltip>
-                        </UseItemButton>
-                      </ProductCard>
-                    ))}
-                </ProductCarousel>
-
-                <BetAmountInput
-                  betAmount={this.state.bet_amount}
-                  handle2xButtonClick={this.handle2xButtonClick}
-                  handleHalfXButtonClick={this.handleHalfXButtonClick}
-                  handleMaxButtonClick={this.handleMaxButtonClick}
-                  onChangeState={this.onChangeState}
-                  isDarkMode={isDarkMode}
-                />
-
-              </div>
-            )}
-            {this.props.rps_game_type === 1 && (
-              <div style={{ position: 'absolute' }}>
-                <div className="card-back">
-                  <div className="rps-logo">
-                    <img src={'/img/rps-logo-white.svg'} alt="RPS Game Logo" />
-                  </div>
-                </div>
-              </div>
-            )}
+            
             <div className="guesses">
               <div>
 
@@ -1003,7 +591,6 @@ class RPS extends Component {
                       {this.props.result !== '' ? (
                         <>
                           {this.props.result}
-                          {/* Second Lottie Animation */}
                           {this.props.betting && (
 
                             <div className='lottie-pressHold'>
@@ -1024,7 +611,6 @@ class RPS extends Component {
                       ) : (
                         <>
                           <span><FontAwesomeIcon icon={faBrain} />&nbsp;<span className='desktop-only'>thinking...</span></span>
-                          {/* First Lottie Animation */}
                           <div className='lottie-progress'>
                             <Lottie
                               options={{
@@ -1041,8 +627,6 @@ class RPS extends Component {
                       )}
                     </span>
                   </div>
-
-
 
                   {startedPlaying && (
                     <div
@@ -1158,26 +742,10 @@ class RPS extends Component {
                           <span className="button-text">&nbsp;KICK BOTS?</span>
                         </Button>
                       )}
-                      {/* <Button
-                        onClick={this.handleEndClick}
-                        className="hover-text-button special-button"
-                      >
-                        <FontAwesomeIcon className="button-icon" icon={faMoneyBillWave} />
-                        <span className="button-text">&nbsp;QUICK RUG&nbsp;{convertToCurrency(bankroll)}&nbsp;&nbsp;&nbsp;</span>
-                      </Button> */}
                     </div>
                   ) : (
                     <>
-                      <BetAmountInput
-                        betAmount={this.state.bet_amount}
-                        handle2xButtonClick={this.handle2xButtonClick}
-                        handleHalfXButtonClick={this.handleHalfXButtonClick}
-                        handleMaxButtonClick={this.handleMaxButtonClick}
-                        onChangeState={this.onChangeState}
-                        isDarkMode={isDarkMode}
-                        balance={this.state.balance}
-                        bankroll={this.state.bankroll}
-                      />
+                    
                       {this.props.is_mobile && (
                         <AiPanel
                           rpsbetitems={this.props.rpsbetitems}
@@ -1198,8 +766,6 @@ class RPS extends Component {
                           creator_id={roomInfo.creator_id}
                           getAttachedRooms={getAttachedRooms}
                           rps_game_type={roomInfo.rps_game_type}
-                          brain_game_type={roomInfo.brain_game_type}
-                          spleesh_bet_unit={roomInfo.spleesh_bet_unit}
                           isDarkMode={this.props.isDarkMode}
                         />
 
@@ -1215,9 +781,6 @@ class RPS extends Component {
             )}
           </div>
 
-          <div className="action-panel">
-            <Share roomInfo={roomInfo} />
-          </div>
         </div>
       </div>
     );
@@ -1232,11 +795,8 @@ const mapStateToProps = state => ({
   isWatching: state.auth.isWatching,
   balance: state.auth.balance,
   rpsbetitems: state.logic.rpsbetitems,
-  creator_avatar: state.logic.curRoomInfo.creator_avatar,
-  accessory: state.logic.curRoomInfo.accessory,
-  username: state.logic.curRoomInfo.username,
+  solPrice: state.logic.solPrice,
   data: state.itemReducer.myItemArray,
-  rank: state.logic.curRoomInfo.rank,
   isLowGraphics: state.auth.isLowGraphics,
   isMusicEnabled: state.auth.isMusicEnabled,
   isFocused: state.auth.isFocused,
@@ -1249,7 +809,6 @@ const mapDispatchToProps = {
   updateRoomBot,
   kickBots,
   setSpectateMode,
-  getQbot,
   getRpsBetItems,
   getRoomBotCount
 };

@@ -278,15 +278,12 @@ class MyGamesTable extends Component {
   }
 
   onCreateRoom = async (row) => {
-
     if (localStorage.getItem('hideConfirmModal') === 'true') {
       this.setState({ creatingRoom: true });
       await this.props.createRoom({
         game_type: row.game_type,
         bet_amount: row.bet_amount,
         endgame_amount: row.endgame_amount,
-        youtubeUrl: row.youtubeUrl,
-        gameBackground: row.gameBackground,
       });
 
       this.setState({ creatingRoom: false });
@@ -480,22 +477,17 @@ class MyGamesTable extends Component {
   createRoom() {
     this.props.createRoom({
       game_type: 3,
-      brain_game_type: this.props.brain_game_type,
-      brain_game_score: this.state.score,
       bet_amount: this.props.bet_amount,
       is_private: this.props.is_private,
       selectedStrategy: this.props.selectedStrategy,
       endgame_amount: this.props.endgame_amount,
-      // is_anonymous: this.props.is_anonymous,
       room_password: this.props.room_password,
-      youtubeUrl: this.props.youtubeUrl,
-      gameBackground: this.props.gameBackground
 
     });
   }
 
   render() {
-    const { loading, strategies, user, updateRoomStrategy, isLowGraphics, isDarkMode } = this.props;
+    const { loading, strategies, solPrice, updateRoomStrategy, isLowGraphics, isDarkMode } = this.props;
     const { isLoading, anchorEl, coHostAmount, selectedRow, selectedStrategy, settings_panel_opened, isFocused, selectedFilter, sortAnchorEl, selectedSort } = this.state;
     const defaultOptions = {
       loop: this.props.isLowGraphics ? false : true,
@@ -653,14 +645,14 @@ class MyGamesTable extends Component {
                       </div>
                       <div className="table-cell bet-info">
                         <span className="bet-pr">
-                          {convertToCurrency(row.user_bet)}<br className='mobile-only' />
+                          {convertToCurrency(row.user_bet, solPrice)}<br className='mobile-only' />
                           <span style={{ fontSize: '10px' }}> / {((row.share).toFixed(2))}%</span>
                         </span>
                       </div>
 
                       <div className="table-cell endgame">
                         <span className="end-amount">
-                          {!row.endgame_type ? "M" : convertToCurrency(row.endgame_amount)}
+                          {!row.endgame_type ? "M" : convertToCurrency(row.endgame_amount, solPrice)}
                         </span>
                         {(row.coHost) &&
                           (selectedFilter === 'open') && (
@@ -685,7 +677,7 @@ class MyGamesTable extends Component {
                           )}
                       </div>
                       <div className="table-cell winnings">
-                        <span>{row.coHost ? convertToCurrency((row.share / 100 * parseFloat(row.user_bet)) - row.initial_stake) : convertToCurrency((row.share / 100 * parseFloat(row.user_bet)) - row.initial_stake)}&nbsp;
+                        <span>{row.coHost ? convertToCurrency((row.share / 100 * parseFloat(row.user_bet)) - row.initial_stake, solPrice) : convertToCurrency((row.share / 100 * parseFloat(row.user_bet)) - row.initial_stake, solPrice)}&nbsp;
                         </span>
 
                       </div>
@@ -946,6 +938,8 @@ class MyGamesTable extends Component {
             handleSendCoHost={this.handleSendCoHost}
             handleCoHostAmountChange={this.handleCoHostAmountChange}
             has_joined={false}
+            input_only={false}
+            solPrice={solPrice}
           />
         </Modal>
         <Modal
@@ -978,7 +972,7 @@ class MyGamesTable extends Component {
                           </TableCell>
                           <TableCell style={{ color: "#ff8500" }}>
                             {this.state.selectedRow && this.state.selectedRow.endgame_type ? (
-                              convertToCurrency(this.state.selectedRow.endgame_amount)
+                              convertToCurrency(this.state.selectedRow.endgame_amount, solPrice)
                             ) : (
                               <span>MANUAL</span>
                             )}
@@ -1050,7 +1044,8 @@ const mapStateToProps = state => ({
   balance: state.auth.balance,
   user: state.auth.user,
   strategies: state.logic.strategies,
-  loading: state.logic.isActiveLoadingOverlay
+  strategies: state.logic.solPrice,
+  solPrice: state.logic.solPrice
 });
 
 const mapDispatchToProps = {

@@ -2,14 +2,10 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { getMyHistory } from '../../redux/Logic/logic.actions';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import CountUp from 'react-countup';
 import { getSettings } from '../../redux/Setting/setting.action';
-import InlineSVG from 'react-inlinesvg';
-import busdSvg from '../JoinGame/busd.svg';
 import FileCopyIcon from '@material-ui/icons/FileCopy';
 import {
   Tooltip,
-  IconButton
 } from '@material-ui/core';
 import Moment from 'moment';
 import ReactDOM from 'react-dom';
@@ -39,7 +35,6 @@ class MyHistoryTable extends Component {
     this.isUnmounted = false;
   }
 
-
   static getDerivedStateFromProps(props, current_state) {
     if (
       (current_state.myHistory && current_state.myHistory.length === 0) ||
@@ -66,7 +61,6 @@ class MyHistoryTable extends Component {
 
   async componentDidMount() {
     const { getMyHistory, isAuthenticated } = this.props;
-
     const promises = [];
     if (isAuthenticated) {
       promises.push(getMyHistory());
@@ -86,15 +80,12 @@ class MyHistoryTable extends Component {
       this.setState({ ...settings });
     }
 
-    // Add any socket event listeners here, for example:
-    // this.socket.on('UPDATE_RAIN', this.handleRainUpdate);
   }
 
   componentDidUpdate(prevProps) {
     if (prevProps.history !== this.props.history) {
       this.attachUserLinkListeners();
       this.attachAccessories();
-
       this.setState({ history: updateFromNow(this.props.history) });
     }
   }
@@ -131,20 +122,12 @@ class MyHistoryTable extends Component {
         this.setState({ copiedRowId: rowId });
         setTimeout(() => {
           this.setState({ copiedRowId: null });
-        }, 1500); // Reset the copied row after 1.5 seconds
+        }, 1500);
       })
       .catch(err => {
         console.error('Failed to copy: ', err);
       });
   };
-
-
-  // handleGameTypeButtonClicked = async short_name => {
-  //   this.setState({ selectedGameType: short_name });
-  //   this.props.getMyHistory({
-  //     game_type: short_name
-  //   });
-  // };
 
   handleOpenPlayerModal = creator_id => {
     this.setState({ showPlayerModal: true, selectedCreator: creator_id });
@@ -153,80 +136,6 @@ class MyHistoryTable extends Component {
   handleClosePlayerModal = () => {
     this.setState({ showPlayerModal: false });
   };
-
-  //   handleBtnLeftClicked = e => {
-  //     const scrollAmount = 200; // Change this value to adjust the scroll amount
-  //     this.game_type_panel.scrollLeft -= scrollAmount;
-  //   };
-
-  //   handleBtnRightClicked = e => {
-  //     const scrollAmount = 200; // Change this value to adjust the scroll amount
-  //     this.game_type_panel.scrollLeft += scrollAmount;
-  //   };
-
-  //   generateGameTypePanel = () => {
-  //     const gameTypeStyleClass = {
-  //       RPS: 'rps',
-  //       'S!': 'spleesh',
-  //       MB: 'mystery-box',
-  //       BG: 'brain-game',
-  //       QS: 'quick-shoot',
-  //       DG: 'drop-game',
-  //       'B!': 'bang',
-  //       R: 'roll'
-  //     };
-
-  //     const gameTypePanel = (
-  //       <Box display="flex" justifyContent="space-evenly" flexWrap="nowrap"  gap="15px">
-  //         <Box key="open-game-left-button">
-  //           <IconButton
-  //             className="btn-arrow-left"
-  //             onClick={this.handleBtnLeftClicked}
-  //           >
-  //             <ChevronLeftIcon />
-  //           </IconButton>
-  //         </Box>
-  //         <Button
-  //   className={`btn-game-type title btn-icon all-games ${
-  //     this.state.selectedGameType === 'All' ? 'active' : ''
-  //   }`}
-  //   key="open-game-all-game-button"
-  //   onClick={() => {
-  //     this.handleGameTypeButtonClicked('All');
-  //   }}
-  // >
-  //   All Games
-  // </Button>
-  // {this.props.gameTypeList.map((gameType, index) => (
-  //   <Button
-  //     className={`btn-game-type title btn-icon ${
-  //       gameTypeStyleClass[gameType.short_name]
-  //     } ${
-  //       this.state.selectedGameType === gameType.short_name ? 'active' : ''
-  //     }`}
-  //     key={index}
-  //     onClick={() => {
-  //       this.handleGameTypeButtonClicked(gameType.short_name);
-  //     }}
-  //   >
-  //     {gameType.game_type_name}
-  //   </Button>
-  //         ))}
-  //         <Box key="open-game-right-button">
-  //           <IconButton
-  //             className="btn-arrow-right"
-  //             onClick={this.handleBtnRightClicked}
-  //           >
-  //             <ChevronRightIcon />
-  //           </IconButton>
-  //         </Box>
-  //       </Box>
-  //     );
-
-  //     return gameTypePanel;
-
-  //   };
-
  
   render() {
     const {isLowGraphics} = this.props;
@@ -238,76 +147,6 @@ class MyHistoryTable extends Component {
     
     return (
       <div className="overflowX">
-        {/* <div className="outer-div">
-          <div className="border-mask" />
-          
-          <Lottie
-            options={{
-              loop: isLowGraphics ? false: true,
-              autoplay: isLowGraphics ? false: true,
-              animationData: hex
-            }}
-            style={{
-              width: '142px',
-              height: '100%',
-              overflow: 'hidden',
-              margin: '-2px 0px -136px',
-              outline: 'none',
-              filter: 'grayscale(100%)',
-              maxWidth: '100%'
-            }}
-          />
-         
-          <InlineSVG
-            className="rain"
-            id="busd"
-            src={busdSvg}
-          />
-          <CountUp
-            end={this.state.rain}
-            start={this.state.prevRain}
-            duration={2}
-            separator=","
-            decimals={6}
-          >
-            {({ countUpRef, start }) => (
-              <h1
-                id="rain"
-                ref={countUpRef}
-                style={{
-                  color: '#fff',
-                  fontSize: '1em',
-                  position: 'relative',
-                  display: 'inline-block',
-                  zIndex: '1',
-                  textShadow: '0 0 12px #0058b6'
-                }}
-              />
-            )}
-          </CountUp>
-          <span
-            style={{
-              color: '#fff',
-              position: 'relative',
-              zIndex: '1',
-              fontSize: '0.6em',
-              paddingLeft: '10px',
-              textShadow: '0 0 12px #0058b6'
-            }}
-          >
-            / 10.00 (NEXT BIG GIVEAWAY EVENT)
-          </span>
-        </div> */}
-        {/* <div className="game-type-container">
-          <div
-            className="game-type-panel"
-            ref={elem => {
-              this.game_type_panel = elem;
-            }}
-          >
-            {gameTypePanel}
-          </div>
-        </div> */}
         <div className="table main-history-table">
           {this.state.myHistory?.length === 0 && (
             <div className="dont-have-game-msg">
@@ -322,7 +161,6 @@ class MyHistoryTable extends Component {
                 key={row._id}
               >
                  {' '}
-                 {/* {renderLottieAvatarAnimation(row.gameBackground, isLowGraphics)} */}
                 <div>
                   <div className="table-cell">
                   {row.status}&nbsp;{row.status === 'open' ? <HeartIcon isOpen={true} /> : <HeartIcon isOpen={false} />}
@@ -333,13 +171,11 @@ class MyHistoryTable extends Component {
                   </div>
                   <div className="table-cell">{row.from_now}&nbsp;<FontAwesomeIcon icon={faStopwatch} /></div>
                   <div className="table-cell row-copy">
-
                     <Tooltip title={this.state.copiedRowId === row._id ? "COPIED ID!" : "COPY BET ID"} placement="top">
                       <a style={{padding: "5px", cursor: "pointer"}} onClick={() => this.copyToClipboard(row._id)}>
                         <FileCopyIcon style={{width: "12px"}}  />
                       </a>
                     </Tooltip>
-
                   </div>
                 </div>
                 <div>
@@ -358,9 +194,6 @@ class MyHistoryTable extends Component {
             modalIsOpen={this.state.showPlayerModal}
             closeModal={this.handleClosePlayerModal}
             selectedCreator={this.state.selectedCreator}
-            // player_name={this.state.userName}
-            // balance={this.state.balance}
-            // avatar={this.props.user.avatar}
           />
         )}
       
@@ -373,10 +206,8 @@ const mapStateToProps = state => ({
   socket: state.auth.socket,
   isAuthenticated: state.auth.isAuthenticated,
   isLowGraphics: state.auth.isLowGraphics,
-
   myHistory: state.logic.myHistory,
   pageNumber: state.logic.myHistoryPageNumber,
-  // gameTypeList: state.logic.gameTypeList
 });
 
 const mapDispatchToProps = {

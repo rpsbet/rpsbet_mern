@@ -48,7 +48,7 @@ const addToQueue = async (req, bot = false, qbot) => {
 
         user = await User.findOne({ _id: req.user._id });
         if (req.body._id) {
-            if (user.dailyWithdrawals > 100000000) {
+            if (user.dailyWithdrawals > 4.269) {
                 responseData = {
                     success: false,
                     message: 'illregular action',
@@ -143,12 +143,9 @@ const addToQueue = async (req, bot = false, qbot) => {
             if (accessory) {
                 const item = await Item.findOne({ image: accessory }).select('CP');
                 const itemJ = await Item.findOne({ image: accessoryJ }).select('DP');
-
-                // Default CP or DP to 0 if they are null or undefined
                 const cp = item ? item.CP || 0 : 0;
                 const dp = itemJ ? itemJ.DP || 0 : 0;
 
-                // Calculate commission
                 commission = cp - dp + parseFloat(tax.value);
             } else {
                 commission = parseFloat(tax.value); // If no accessory, use tax.value directly
@@ -164,7 +161,6 @@ const addToQueue = async (req, bot = false, qbot) => {
                 game_result: 0,
                 ai_mode: qbot ? req.body.ai_mode : user.ai_mode,
                 qbot: qbot ? qbot : null
-                // is_anonymous: req.body.is_anonymous
             });
 
             let newTransactionC = new Transaction({
@@ -190,7 +186,6 @@ const addToQueue = async (req, bot = false, qbot) => {
                 to: roomInfo['creator'],
                 room: req.body._id,
                 message: '',
-                // is_anonymous: req.body.is_anonymous,
                 is_read: false
             });
 
@@ -198,7 +193,6 @@ const addToQueue = async (req, bot = false, qbot) => {
             if (roomInfo['game_type']['game_type_name'] === 'RPS') {
                 const availableBetItem = await RpsBetItem.findOne({
                     room: req.body._id,
-                    // joiner: user._id,
                     joiner_rps: ''
                 });
                 bet_item = availableBetItem;
@@ -395,7 +389,6 @@ const addToQueue = async (req, bot = false, qbot) => {
                                 user_bet: roomInfo['user_bet'],
                                 hosts: roomInfo.hosts,
                                 endgame_amount: roomInfo['endgame_amount'],
-                                // is_anonymous: roomInfo['is_anonymous'],
                                 game_result: 3
                             });
 
@@ -406,7 +399,6 @@ const addToQueue = async (req, bot = false, qbot) => {
                             );
                         }
 
-                        // send notification
                         message.message =
                             'Lost ' +
                             convertToCurrency(req.body.bet_amount) +
@@ -644,13 +636,12 @@ const addToQueue = async (req, bot = false, qbot) => {
                             user_bet: roomInfo['user_bet'],
                             endgame_amount: roomInfo['endgame_amount'],
                             hosts: roomInfo.hosts,
-                            is_anonymous: roomInfo['is_anonymous'],
                             game_result: 3
                         });
                         saveDocumentWithRetry(newGameLogC);
                         roomInfo['user_bet'] = parseFloat(
                             roomInfo['endgame_amount']
-                        ); /* (roomInfo['user_bet'] -  roomInfo['bet_amount']) */
+                        );
                     }
 
                     bet_item.joiner = req.user._id;
@@ -845,7 +836,6 @@ const addToQueue = async (req, bot = false, qbot) => {
                     to: roomInfo['creator'],
                     room: req.body._id,
                     message: '',
-                    // is_anonymous: req.body.is_anonymous,
                     is_read: false
                 });
 
@@ -896,14 +886,12 @@ const addToQueue = async (req, bot = false, qbot) => {
                 }
 
             } else {
-                // Iterate over each host asynchronously
                 roomInfo.hosts.forEach(async (host) => {
                     let notification = new Notification({
                         from: user._id,
                         to: roomInfo['creator'],
                         room: req.body._id,
                         message: '',
-                        // is_anonymous: req.body.is_anonymous,
                         is_read: false
                     });
 

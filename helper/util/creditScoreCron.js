@@ -1,6 +1,5 @@
 const moment = require('moment');
 const cron = require('node-cron');
-const Chat = require('../../model/Chat');
 const Loan = require('../../model/Loan');
 const User = require('../../model/User');
 const socketController = require('../../socketController.js');
@@ -8,7 +7,6 @@ const SystemSetting = require('../../model/SystemSetting');
 const Notification = require('../../model/Notification.js');
 const saveDocumentWithRetry = require('./retrySave');
 const senderId = '629685058f368a1838372754';
-const convertToCurrency = require('../../helper/util/conversion');
 
 let socketio = null;
 async function checkOutstandingLoans(io) {

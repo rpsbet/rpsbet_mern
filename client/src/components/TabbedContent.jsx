@@ -5,15 +5,15 @@ import Leaderboards from './Leaderboards';
 import RoomHistory from './RoomHistory';
 import Comments from './Comments';
 import Moment from 'moment';
-import PlayerModal from '../game_panel/modal/PlayerModal';
 import ReactDOM from 'react-dom';
 import { renderLottieAvatarAnimation } from '../util/LottieAvatarAnimations';
-import DescriptionIcon from '@material-ui/icons/Description';
-import HistoryIcon from '@material-ui/icons/History';
-import CommentIcon from '@material-ui/icons/Comment';
-import BarChartIcon from '@material-ui/icons/BarChart';
-import SwapHorizIcon from '@material-ui/icons/SwapHoriz';
+import { Skeleton } from "@material-ui/lab";
+import Joyride from 'react-joyride';
+import { tutorialStepsGame } from '../util/tutorialStepsGame';
+import RPS from '../game_panel/JoinGame/RPS';
+import QuickShoot from '../game_panel/JoinGame/QuickShoot';
 import CoHostModal from '../game_panel/modal/CoHostModal';
+import { getRank } from '../util/getRank';
 
 function updateFromNow(history) {
   if (!history) {
@@ -47,12 +47,13 @@ const styles = theme => ({
   },
   column: {
     flex: 1,
-    minWidth: '300px',
+    minWidth: '100%',
   },
   checkboxContainer: {
+    marginTop: '5px',
     display: 'flex',
     gap: '16px',
-    marginBottom: '16px',
+    marginBottom: '0',
   },
   checkbox: {
     color: props => (props.isDarkMode ? '#f9f9f9' : '#ff0000'),
@@ -68,8 +69,8 @@ class TabbedContent extends Component {
       numToShow: 10,
       showPlayerModal: false,
       room_history: this.props.roomInfo.room_history,
-      activeTabs: [], // Keep track of active (checked) tabs
-      isMobile: window.innerWidth < 767, // Determine if the view is mobile
+      activeTabs: [0, 1, 3],
+      isMobile: window.innerWidth < 767,
     };
     this.handleLoadMore = this.handleLoadMore.bind(this);
   }
@@ -163,10 +164,204 @@ class TabbedContent extends Component {
   };
 
   renderTabContent(tabIndex) {
-    const { roomInfo, isLowGraphics } = this.props;
+    const {
+      roomInfo,
+      isLowGraphics,
+      selectedCreator,
+      showPlayerModal,
+      strategies,
+      betting,
+      result,
+      attached,
+      ai_mode,
+      user_id,
+      bankroll,
+      betResult,
+      bgColorChanged,
+      playSound,
+      changeBgColor,
+      getAttachedRooms,
+      handleDetachAttachChange,
+      onChangeState,
+      is_mobile,
+      gameResult,
+      handleJoyrideCallback,
+      updateSelectedRps,
+      rpsbetitems,
+      refreshHistory,
+      handleOpenPlayerModal,
+      predictedBetAmount,
+      handleClosePlayerModal,
+      join,
+      selected_qs_position,
+      handleSwitchChange,
+      cp,
+      selected_rps,
+      isDarkMode,
+      total_wagered,
+      updateUserStrategy,
+      actionList,
+      getRoomData,
+      run,
+      qsbetitems,
+      borderColor,
+      updateSelectedQs,
+      changeBgColorQs,
+    } = this.props;
 
     switch (tabIndex) {
-      case 0:
+      case 0: // "Play" Tab
+        if (!roomInfo || !roomInfo.game_type) {
+          return (
+            <div className="join-game-panel">
+              <div className="game-page loading-skeleton">
+                <div className="game-contents">
+                  <Skeleton variant="rect" width="100%" height={60} />
+                  <div
+                    className="game-info-panel"
+                    style={{ position: 'relative', zIndex: 10, paddingBottom: "90px" }}
+                  >
+                    <Skeleton variant="text" width="20%" height={30} />
+                    <Skeleton variant="text" width="80%" height={30} />
+                    <Skeleton variant="text" width="60%" height={100} />
+                    <Skeleton variant="text" width="80%" height={30} />
+                    <Skeleton variant="text" width="10%" height={90} />
+                    <Skeleton variant="text" width="20%" height={90} />
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        }
+    
+        return (
+          <div className="join-game-panel">
+            <Joyride
+              steps={tutorialStepsGame}
+              run={run}
+              callback={handleJoyrideCallback}
+              continuous
+              showProgress
+              showSkipButton
+              styles={{
+                options: {
+                  zIndex: 10000,
+                  backgroundColor: isDarkMode ? 'rgb(81 48 98 / 60%)' : '#ccc9',
+                  primaryColor: '#ff0000',
+                  arrowColor: isDarkMode ? 'rgb(81 48 98 / 60%)' : '#ccc9',
+                  textColor: isDarkMode ? '#f9f9f9' : '#333',
+                  width: 300,
+                  padding: 20,
+                  borderRadius: 5,
+                },
+                buttonClose: {
+                  borderRadius: '0.3em',
+                  color: isDarkMode ? '#f9f9f9' : '#333',
+                },
+                buttonBack: {
+                  borderRadius: '0.3em',
+                  color: isDarkMode ? '#f9f9f9' : '#333',
+                },
+                buttonNext: {
+                  borderRadius: '0.3em',
+                  color: isDarkMode ? '#f9f9f9' : '#333',
+                },
+                buttonSkip: {
+                  borderRadius: '0.3em',
+                  color: isDarkMode ? '#f9f9f9' : '#333',
+                },
+              }}
+            />
+    
+            {roomInfo.game_type === 'RPS' ? (
+              <RPS
+                changeBgColor={changeBgColor}
+                bgColorChanged={bgColorChanged}
+                betting={betting}
+                strategies={strategies}
+                result={result}
+                ai_mode={ai_mode}
+                getAttachedRooms={getAttachedRooms}
+                handleDetachAttachChange={handleDetachAttachChange}
+                onChangeState={onChangeState}
+                cp={cp}
+                is_mobile={is_mobile}
+                gameResult={gameResult}
+                rpsbetitems={rpsbetitems}
+                attached={attached}
+                updateSelectedRps={updateSelectedRps}
+                selected_rps={selected_rps}
+                refreshHistory={refreshHistory}
+                playSound={playSound}
+                join={join}
+                handleSwitchChange={handleSwitchChange}
+                betResult={betResult}
+                roomInfo={roomInfo}
+                rps_game_type={roomInfo.rps_game_type}
+                user_id={user_id}
+                rank={getRank(total_wagered)}
+                handleOpenPlayerModal={handleOpenPlayerModal}
+                handleClosePlayerModal={handleClosePlayerModal}
+                selectedCreator={selectedCreator}
+                showPlayerModal={showPlayerModal}
+                creator_id={roomInfo.creator_id}
+                bet_amount={roomInfo.bet_amount}
+                pr={roomInfo.pr}
+                updateUserStrategy={updateUserStrategy}
+                bankroll={bankroll}
+                predictedBetAmount={predictedBetAmount}
+                is_private={roomInfo.is_private}
+                endgame_type={roomInfo.endgame_type}
+                actionList={actionList}
+                getRoomData={getRoomData}
+              />
+            ) : roomInfo.game_type === 'Quick Shoot' ? (
+              <QuickShoot
+                handleOpenPlayerModal={handleOpenPlayerModal}
+                handleClosePlayerModal={handleClosePlayerModal}
+                selectedCreator={selectedCreator}
+                showPlayerModal={showPlayerModal}
+                refreshHistory={refreshHistory}
+                handleDetachAttachChange={handleDetachAttachChange}
+                join={join}
+                result={result}
+                gameResult={gameResult}
+                getAttachedRooms={getAttachedRooms}
+                endgame_type={roomInfo.endgame_type}
+                attached={attached}
+                updateUserStrategy={updateUserStrategy}
+                borderColor={borderColor}
+                bgColorChanged={bgColorChanged}
+                changeBgColor={changeBgColorQs}
+                updateSelectedQs={updateSelectedQs}
+                user_id={user_id}
+                betResult={betResult}
+                is_mobile={is_mobile}
+                qsbetitems={qsbetitems}
+                creator_id={roomInfo.creator_id}
+                qs_game_type={roomInfo.qs_game_type}
+                bankroll={bankroll}
+                bet_amount={roomInfo.bet_amount}
+                is_private={roomInfo.is_private}
+                selected_qs_position={selected_qs_position}
+                roomInfo={roomInfo}
+                playSound={playSound}
+                ai_mode={ai_mode}
+                betting={betting}
+                strategies={strategies}
+                handleSwitchChange={handleSwitchChange}
+                pr={roomInfo.pr}
+                onChangeState={onChangeState}
+                cp={cp}
+                actionList={actionList}
+                getRoomData={getRoomData}
+              />
+            ) : (
+              <div>Unsupported game type.</div>
+            )}
+          </div>
+        );
+      case 1:
         return (
           <div>
             <CoHostModal
@@ -180,18 +375,20 @@ class TabbedContent extends Component {
               handleSendCoHost={this.props.handleSendCoHost}
               handleCoHostAmountChange={this.props.handleCoHostAmountChange}
               has_joined={this.props.has_joined}
+              solPrice={solPrice}
+              input_only={false}
             />
           </div>
         );
-      case 1:
-        return <RoomHistory roomId={roomInfo._id} getRoomInfo={this.props.getRoomInfo} roomInfo={roomInfo} isLowGraphics={isLowGraphics} />;
       case 2:
+        return <RoomHistory roomId={roomInfo._id} getRoomInfo={this.props.getRoomInfo} roomInfo={roomInfo} isLowGraphics={isLowGraphics} />;
+      case 3:
         return (
           <div>
             <Comments roomId={roomInfo._id} />
           </div>
         );
-      case 3:
+      case 4:
         return <Leaderboards roomId={roomInfo._id} />;
       default:
         return null;
@@ -229,7 +426,7 @@ class TabbedContent extends Component {
     return (
       <div>
         <div className={classes.checkboxContainer}>
-          {['Chart', 'History', 'Thread', 'Insights'].map((label, index) => (
+          {['Play', 'Chart', 'History', 'Thread', 'Insights'].map((label, index) => (
             <FormControlLabel
               key={index}
               className={classes.checkbox}

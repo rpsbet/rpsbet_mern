@@ -141,11 +141,6 @@ function SignInSide(props) {
             <Grid container>
               <Grid item xs>
               </Grid>
-              {/* <Grid item>
-                <HepperLink to="/admin/signup">
-                  "Don't have an account? Sign Up"
-                </HepperLink>
-              </Grid> */}
             </Grid>
             <Box mt={5}>
               <Copyright />

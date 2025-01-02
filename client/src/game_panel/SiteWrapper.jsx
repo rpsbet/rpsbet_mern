@@ -22,8 +22,6 @@ import CountUp from 'react-countup';
 import Lottie from 'react-lottie';
 import coins from './LottieAnimations/coins.json';
 import { setBalance } from '../redux/Auth/user.actions.js'
-import InlineSVG from 'react-inlinesvg';
-import busdSvg from './JoinGame/busd.svg';
 import AllTransactionsModal from './modal/AllTransactionsModal.jsx';
 import {
   AccountBalanceWallet,
@@ -289,8 +287,8 @@ class SiteWrapper extends Component {
     const { transactions, tnxComplete, remainingLoans, betResult, notifications } = this.props;
 
     if (this.props.user !== prevProps.user) {
-      this.setState({ run: !this.props.user.completedTutorials.includes(1),  loaded: true  })
-        this.fetchData();
+      this.setState({ run: !this.props.user.completedTutorials.includes(1), loaded: true })
+      this.fetchData();
 
     }
 
@@ -731,7 +729,7 @@ class SiteWrapper extends Component {
         this.fetchTokenDetails(),
 
       ]);
-      this.setState({ websiteLoading: false, notifications: this.props.notifications, vaultBal: initialBalance, loaded: true  });
+      this.setState({ websiteLoading: false, notifications: this.props.notifications, vaultBal: initialBalance, loaded: true });
       if (currentUrl && currentUrl.includes('create')) {
         this.setState({ selectedMainTabIndex: this.props.selectMainTab(1) });
       }
@@ -1162,7 +1160,7 @@ class SiteWrapper extends Component {
       user,
       showCookieConsent,
       isLowGraphics,
-      tokenPrice
+      solPrice,
     } = this.props;
     const balanceString = balance.toString();
     const decimalIndex = balanceString.indexOf('.');
@@ -1236,7 +1234,7 @@ class SiteWrapper extends Component {
                   date={halloween}
                   renderer={({ days, hours, minutes, seconds, completed }) => (
                     <div style={{ zIndex: '1', height: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <h4 style={{ transform: 'rotate(-20deg) translateX(-200px)', position: 'absolute', top: '5px', color: '#f9f9f9', background: '#ff0000', padding: '5px 10px' }}>$CZAR 🚀🚀🚀</h4>
+                      <h4 style={{ transform: 'rotate(-20deg) translateX(-200px)', position: 'absolute', top: '5px', color: '#f9f9f9', background: '#ff0000', padding: '5px 10px' }}>$RPS 🚀🚀🚀</h4>
                       {!completed ? (
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                           <div style={{ fontSize: '2.2em', fontWeight: 'bold', marginBottom: '5px' }}>{days}</div>
@@ -1314,8 +1312,6 @@ class SiteWrapper extends Component {
                 onMouseEnter={this.handleYoutubeHover} // Handle hover state
                 onMouseLeave={this.handleYoutubeLeave}
               >
-                {/* <h5 style={{ color: '#fff', marginBottom: '10px' }}>WATCH TRAILER & USER GUIDE</h5>
-                <hr style={{ borderColor: '#fff' }} /> */}
                 <div style={{ width: "100%", display: "flex", justifyContent: "center", alignItems: "center" }}>
 
                   <img style={{ width: "400px", border: "3px solid rgb(98 3 172)", borderRadius: "12px" }} src="../img/giant-login-2.svg" />
@@ -1345,12 +1341,18 @@ class SiteWrapper extends Component {
             <div className="main_header">
               <a
                 className="game_logo"
-                href="#"
-                onClick={e => {
-                  history.push('/');
+                href="/"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.location.href = '/'; // Reloads the home page
                 }}
               >
-                {' '}
+                <img
+                  src='/img/game-logo.svg'
+                  alt="Game Logo"
+                  width="25"
+                  height="25"
+                />
               </a>
               {!isInvestorsPage ? (
                 <div className='desktop-only' style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginTop: "10px" }}>
@@ -1361,7 +1363,7 @@ class SiteWrapper extends Component {
                 </div>
               )}
               <div className="header_action_panel">
-                {(this.props.user && this.state.oldBalance)  ? (
+                {(this.props.user && this.state.oldBalance) ? (
                   <>
                     <a
                       href="#"
@@ -1442,7 +1444,7 @@ class SiteWrapper extends Component {
                 ) : (
                   null
                 )}
-                {this.state.loaded  ? (
+                {this.state.loaded ? (
                   isAuthenticated ? (
                     <>
                       <div id="balance" className="title">
@@ -1455,7 +1457,6 @@ class SiteWrapper extends Component {
                             `$${(balance * conversionRate).toFixed(numDecimals)}`
                           ) : (
                             <>
-                              {/* <InlineSVG id="busd" src={busdSvg} /> */}
                               <CountUp
                                 start={balance}
                                 end={balance}
@@ -1469,9 +1470,6 @@ class SiteWrapper extends Component {
                                   this.setState({ oldBalance: balance });
                                 }}
                               />
-                              {/* <span>
-                               { convertToCurrency(balance) }
-                              </span> */}
                             </>
                           )}
                         </div>
@@ -1562,7 +1560,6 @@ class SiteWrapper extends Component {
                         <ArrowDropDown />
                       </Button>
 
-                      {/* Menu */}
                       <Menu
                         id="profile-menu"
                         anchorEl={anchorEl}
@@ -1646,7 +1643,7 @@ class SiteWrapper extends Component {
                           <ListItemIcon>
                             <MonetizationOn size="small" />
                           </ListItemIcon>
-                          <ListItemText>$CZAR 🚀🚀🚀</ListItemText>
+                          <ListItemText>$RPS 🚀🚀🚀</ListItemText>
                         </MenuItem>
 
                         <MenuItem
@@ -1676,7 +1673,7 @@ class SiteWrapper extends Component {
                 )}
               </div>
             </div>
-            { this.state.loaded ? (
+            {this.state.loaded ? (
               <>
                 <div
                   id="notifications"
@@ -1782,13 +1779,13 @@ class SiteWrapper extends Component {
                               <li>1% towards platform fees</li>
                             </ul>
                             <p style={{ marginBottom: "0.5rem" }}>
-                              For example, if you win <strong>{convertToCurrency(0.2)}</strong> but bet <strong>{convertToCurrency(0.1)}</strong>,
+                              For example, if you win <strong>{convertToCurrency(0.2, solPrice)}</strong> but bet <strong>{convertToCurrency(0.1, solPrice)}</strong>,
                               then you might see:
                             </p>
                             <p style={{ marginBottom: "0.5rem" }}>
-                              <strong>{convertToCurrency(0.2)} * 0.88 </strong>
-                              (12% RTB) - <strong>{convertToCurrency(0.1)}</strong> (net profit)
-                              = <strong>{convertToCurrency(0.076)}</strong> (final calculation).
+                              <strong>{convertToCurrency(0.2, solPrice)} * 0.88 </strong>
+                              (12% RTB) - <strong>{convertToCurrency(0.1, solPrice)}</strong> (net profit)
+                              = <strong>{convertToCurrency(0.076, solPrice)}</strong> (final calculation).
                             </p>
                           </>
                         }
@@ -1820,12 +1817,12 @@ class SiteWrapper extends Component {
                                             {row.amount > 0 ? (
                                               <>
                                                 {'+ '}
-                                                {convertToCurrency(row.amount, true)}
+                                                {convertToCurrency(row.amount, solPrice)}
                                               </>
                                             ) : (
                                               <>
                                                 {'- '}
-                                                {convertToCurrency(Math.abs(row.amount), true)}
+                                                {convertToCurrency(Math.abs(row.amount), solPrice)}
                                               </>
                                             )}
                                           </td>
@@ -1837,12 +1834,12 @@ class SiteWrapper extends Component {
                                             {row.amount > 0 ? (
                                               <>
                                                 {'+ '}
-                                                {convertToCurrency(row.amount, true)}
+                                                {convertToCurrency(row.amount, solPrice)}
                                               </>
                                             ) : (
                                               <>
                                                 {'- '}
-                                                {convertToCurrency(Math.abs(row.amount), true)}
+                                                {convertToCurrency(Math.abs(row.amount), solPrice)}
                                               </>
                                             )}
                                           </td>
@@ -1857,12 +1854,12 @@ class SiteWrapper extends Component {
                                         {row.amount > 0 ? (
                                           <>
                                             {'+ '}
-                                            {convertToCurrency(row.amount, true)}
+                                            {convertToCurrency(row.amount, solPrice)}
                                           </>
                                         ) : (
                                           <>
                                             {'- '}
-                                            {convertToCurrency(Math.abs(row.amount), true)}
+                                            {convertToCurrency(Math.abs(row.amount), solPrice)}
                                           </>
                                         )}
                                       </td>
@@ -1891,7 +1888,7 @@ class SiteWrapper extends Component {
                       >
                         Vault&nbsp;
                         <span style={{ border: "2px solid", background: "#1284cc11", color: "#1284ff", padding: "2px 5px", marginLeft: "10px", borderRadius: "0.4em" }}>
-                          {this.state.vaultBal ? convertToCurrency(this.state.vaultBal) : 0}
+                          {this.state.vaultBal ? convertToCurrency(this.state.vaultBal, solPrice) : 0}
                         </span>
                       </Button>
                     </div>
@@ -1901,7 +1898,7 @@ class SiteWrapper extends Component {
                           className="btn-withdraw debt title"
                           onClick={this.handleOpenDebtsModal}
                         >
-                          <div>{convertToCurrency(this.state.remainingLoans)} IN DEBT</div>
+                          <div>{convertToCurrency(this.state.remainingLoans, solPrice)} IN DEBT</div>
                         </Button>
                       ) : (
                         <Button
@@ -2171,6 +2168,7 @@ const mapStateToProps = state => ({
   tnxComplete: state.logic.transactionComplete,
   isDarkMode: state.auth.isDarkMode,
   betResult: state.logic.betResult,
+  solPrice: state.logic.solPrice,
   remainingLoans: state.loanReducer.remainingLoans,
   userLoans: state.loanReducer.userLoans,
   sevenDayProfit: state.auth.sevenDayProfit,

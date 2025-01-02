@@ -463,7 +463,6 @@ class OfferLoanModal extends Component {
                       </TableCell>
                     </TableRow>
 
-                    {/* Table Row for Interest Rate */}
                     <TableRow>
                       <TableCell style={inputCellStyle}>
                         <TextField
@@ -498,7 +497,7 @@ class OfferLoanModal extends Component {
                       </TableCell>
                       <TableCell>
                         <Typography variant="body1" style={{ marginTop: '0' }}>
-                          {convertToCurrency(userInfo.balance)}
+                          {convertToCurrency(userInfo.balance, solPrice)}
                         </Typography>
                       </TableCell>
                     </TableRow>
@@ -514,8 +513,8 @@ class OfferLoanModal extends Component {
                       <TableCell>
                         <Typography variant="body1" style={{ marginTop: '0' }}>
                           {this.calculateNewBalance(userInfo.balance, responseText) < 0
-                            ? <>{convertToCurrency(0)} AND {convertToCurrency(Math.abs(this.calculateNewBalance(userInfo.balance, responseText)))} IN DEBT</>
-                            : convertToCurrency(this.calculateNewBalance(userInfo.balance, responseText))
+                            ? <>{convertToCurrency(0, solPrice)} AND {convertToCurrency(Math.abs(this.calculateNewBalance(userInfo.balance, responseText)), solPrice)} IN DEBT</>
+                            : convertToCurrency(this.calculateNewBalance(userInfo.balance, responseText), solPrice)
                           }
                         </Typography>
                       </TableCell>
@@ -532,8 +531,8 @@ class OfferLoanModal extends Component {
                       <TableCell>
                         <Typography variant="body1" style={{ marginTop: '0' }}>
                           {isNaN(parseFloat(responseText)) || isNaN(parseFloat(interestRateText)) || parseFloat(responseText) <= 0 || parseFloat(interestRateText) <= 0
-                            ? convertToCurrency(0)
-                            : convertToCurrency(this.calculateInterest(responseText, interestRateText) + parseFloat(responseText))
+                            ? convertToCurrency(0, solPrice)
+                            : convertToCurrency(this.calculateInterest(responseText, interestRateText) + parseFloat(responseText), solPrice)
                           }
                         </Typography>
                       </TableCell>
@@ -549,7 +548,7 @@ class OfferLoanModal extends Component {
                       </TableCell>
                       <TableCell>
                         <Typography variant="body1" style={{ marginTop: '0' }}>
-                          <span id="interest">(+{convertToCurrency(this.calculateInterest(responseText, interestRateText))})</span>
+                          <span id="interest">(+{convertToCurrency(this.calculateInterest(responseText, interestRateText), solPrice)})</span>
                         </Typography>
                       </TableCell>
                     </TableRow>
@@ -602,7 +601,7 @@ class OfferLoanModal extends Component {
                 <TableBody>
                   <TableRow>
                     <TableCell style={{ textAlign: "center" }}>
-                      {cancelled || waiting ? 'waiting' : convertToCurrency(parseFloat(responseText))}
+                      {cancelled || waiting ? 'waiting' : convertToCurrency(parseFloat(responseText), solPrice)}
                     </TableCell>
                     <TableCell style={{ textAlign: "center" }}>
                       {cancelled || waiting ? 'waiting' : `${loanPeriodText} days`}
@@ -610,13 +609,10 @@ class OfferLoanModal extends Component {
                     <TableCell style={{ textAlign: "center" }}>
                       {cancelled || waiting
                         ? 'waiting'
-                        : <> {convertToCurrency(((parseFloat(responseText) / 100) * parseFloat(interestRateText)) + parseFloat(responseText))} <span>({parseFloat(interestRateText).toFixed(2)}%)</span>
+                        : <> {convertToCurrency(((parseFloat(responseText) / 100) * parseFloat(interestRateText)) + parseFloat(responseText), solPrice)} <span>({parseFloat(interestRateText).toFixed(2)}%)</span>
                         </>
                       }
                     </TableCell>
-
-
-                    {/* Add more cells for other details if needed */}
                   </TableRow>
                 </TableBody>
               </Table>
@@ -634,7 +630,7 @@ class OfferLoanModal extends Component {
                   <tbody>
                     <tr>
                       <td className="list-number">1.</td>
-                      <td>The loan amount is <span style={{ color: "#ff0000" }}>[{convertToCurrency(parseFloat(responseText))}]</span>.</td>
+                      <td>The loan amount is <span style={{ color: "#ff0000" }}>[{convertToCurrency(parseFloat(responseText), solPrice)}]</span>.</td>
                     </tr>
                     <tr>
                       <td className="list-number">2.</td>
@@ -773,7 +769,8 @@ const mapStateToProps = state => ({
   userInfo: state.auth.user,
   alertType: state.snackbar.alertType,
   onlineUserList: state.logic.onlineUserList,
-  isMuted: state.auth.isMuted
+  isMuted: state.auth.isMuted,
+  solPrice: state.auth.solPrice
 });
 
 const mapDispatchToProps = {

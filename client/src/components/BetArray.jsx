@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback, useSelector } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { connect } from 'react-redux';
 import { getRpsBetItems, getQsBetItems, updateRpsBetItems, updateQsBetItems, getQbot, updateQbot, getMyGames } from '../redux/Logic/logic.actions';
 import { setFocused } from '../redux/Auth/user.actions';
@@ -11,7 +11,6 @@ import {
   Grid,
   createTheme,
   ThemeProvider,
-  FormControlLabel,
   Tooltip,
   Switch,
   makeStyles,
@@ -34,9 +33,8 @@ import MeetingRoomOutlinedIcon from '@material-ui/icons/MeetingRoomOutlined';
 import EditIcon from '@material-ui/icons/Edit';
 import Lottie from 'react-lottie';
 import animationData from '../game_panel/LottieAnimations/spinningIcon.json';
-import { alertModal } from '../game_panel/modal/ConfirmAlerts';
+import BetAmountInput from '../components/BetAmountInput.jsx';
 import SettingsRef from './SettingsRef';
-import { FaMoneyBillWave } from 'react-icons/fa';
 
 const theme = createTheme({
   overrides: {
@@ -125,14 +123,15 @@ const SideTabs = ({ selectedTab, handleTabChange }) => (
 );
 
 
-const PlaceholderComponent = ({ selectedTab, myGames, updateQbot, handleTabChange, getMyGames, getQbot, ownRoom, user_id, totalWagered, game_type }) => {
+const PlaceholderComponent = ({ selectedTab, myGames, solPrice, updateQbot, handleTabChange, getMyGames, getQbot, ownRoom, user_id, totalWagered, game_type }) => {
+
   const [betting, setBetting] = useState(false);
   const [rank, setRank] = useState(null);
   const [isActive, setIsActive] = useState(false);
   const [timerValue, setTimerValue] = useState(2000);
   const chartOptions = {
     chart: {
-      type: 'line', // You can change this to 'bar', 'area', etc.
+      type: 'line',
       zoom: {
         enabled: false
       }
@@ -153,7 +152,7 @@ const PlaceholderComponent = ({ selectedTab, myGames, updateQbot, handleTabChang
   const chartSeries = [
     {
       name: 'Net Profit',
-      data: [1000, 2000, 1500, 3000, 2500, 4000, 3500] // Dummy data
+      data: [1000, 2000, 1500, 3000, 2500, 4000, 3500]
     }
   ];
 
@@ -180,14 +179,14 @@ const PlaceholderComponent = ({ selectedTab, myGames, updateQbot, handleTabChang
   }, [totalWagered]);
 
   useEffect(() => {
-    let isMounted = true; // Track if the component is mounted
-  
+    let isMounted = true;
+
     const fetchQbotStatus = async () => {
       try {
         if (user_id) {
           const qbotStatus = await getQbot(user_id);
-  
-          if (isMounted) { // Only update state if the component is still mounted
+
+          if (isMounted) {
             setIsActive(qbotStatus);
             setBetting(qbotStatus);
           }
@@ -196,22 +195,17 @@ const PlaceholderComponent = ({ selectedTab, myGames, updateQbot, handleTabChang
         console.error('Error fetching Q-bot status', err);
       }
     };
-  
+
     if (user_id) {
       fetchQbotStatus();
     }
-  
+
     return () => {
-      isMounted = false; // Cleanup: mark as unmounted
+      isMounted = false;
     };
   }, [user_id]);
 
   const handleSwitchChange = async (event) => {
-    // console.log(rpsbetitems.length)
-    // if (rpsbetitems.length <= 3 || qsbetitems.length <= 3) {
-    //   alertModal(isDarkMode, "NOT ENOUGHT TRAINING DATA");
-    //   return;
-    // }
     const newBettingStatus = event.target.checked;
     setBetting(newBettingStatus);
     try {
@@ -236,7 +230,7 @@ const PlaceholderComponent = ({ selectedTab, myGames, updateQbot, handleTabChang
             Q-BOT <span style={{ background: "linear-gradient(45deg, #fc00ff, #ff0000)", padding: "0px 10px", color: "#fff", borderRadius: "0.3em" }}>BETA</span>
           </h6>
           <Tooltip title="Utilize leveraging with Q-Bot which plays autonomously for you (manages games for you, including game creation, changing strategies and joining) based on your wins and behaviour." arrow>
-            <IconButton size="small" style={{borderRadius: "4px",}}>
+            <IconButton size="small" style={{ borderRadius: "4px", }}>
               <FontAwesomeIcon icon={faInfoCircle} style={{ color: '#060607' }} />
             </IconButton>
           </Tooltip>
@@ -245,7 +239,6 @@ const PlaceholderComponent = ({ selectedTab, myGames, updateQbot, handleTabChang
         {rank >= 19 ? (
           <>
             <div style={{ display: "inline-flex", flexDirection: "row", alignItems: "center", justifyContent: "center", width: "100%", marginBottom: "10px" }}>
-              {/* AI Play Betting Switch */}
               <Tooltip title="TOGGLE AI HOSTING">
                 <Switch
                   id="aiplay-switch"
@@ -262,13 +255,12 @@ const PlaceholderComponent = ({ selectedTab, myGames, updateQbot, handleTabChang
                 <div>{timerValue !== 2000 ? <span>{(timerValue / 2000).toFixed(2)}s</span> : null}</div>
               )}
 
-              <div style={{ fontSize: "small", display: 'flex', alignItems: 'center', width: "100%", boxShadow: "inset 0px 0px 6px 0px #b4b4b4a8", borderRadius: "9px", justifyContent: "center", padding: "5px 10px", overflow: "hidden" }}>
+              <div style={{ fontSize: "small", display: 'flex', alignItems: 'center', width: "100%", boxShadow: "inset 0px 0px 6px 0px #b4b4b4a8", borderRadius: "0.3em", justifyContent: "center", padding: "5px 10px", overflow: "hidden" }}>
                 <FontAwesomeIcon icon={betting ? faToggleOn : faToggleOff} style={{ marginRight: '5px' }} />
                 {betting ? 'HOSTING ON' : 'Q-BOT OFF'}
               </div>
             </div>
             <div style={{ display: "inline-flex", flexDirection: "row", alignItems: "center", justifyContent: "center", width: "100%", marginBottom: "10px" }}>
-              {/* AI Play Betting Switch */}
               <Tooltip title="COMING SOON">
                 <Switch
                   id="aiplay-switch"
@@ -286,33 +278,11 @@ const PlaceholderComponent = ({ selectedTab, myGames, updateQbot, handleTabChang
                 <div>{timerValue !== 2000 ? <span>{(timerValue / 2000).toFixed(2)}s</span> : null}</div>
               )}
 
-              <div style={{ fontSize: "small", display: 'flex', alignItems: 'center', width: "100%", boxShadow: "inset 0px 0px 6px 0px #b4b4b4a8", borderRadius: "9px", justifyContent: "center", padding: "5px 10px", overflow: "hidden" }}>
+              <div style={{ fontSize: "small", display: 'flex', alignItems: 'center', width: "100%", boxShadow: "inset 0px 0px 6px 0px #b4b4b4a8", borderRadius: "0.3em", justifyContent: "center", padding: "5px 10px", overflow: "hidden" }}>
                 <FontAwesomeIcon icon={betting ? faToggleOn : faToggleOff} style={{ marginRight: '5px' }} />
                 {betting ? 'BETTING ON' : 'BETTING OFF'}
               </div>
             </div>
-            {/* <div style={{ display: "inline-flex", flexDirection: "row", alignItems: "center", justifyContent: "center", width: "100%" }}>
-              <Tooltip title="COMING SOON">
-                <Switch
-                  id="aiplay-switch"
-                  checked={!betting}
-                  onChange={handleSwitchChange}
-                  disabled
-                />
-              </Tooltip>
-
-              {betting ? (
-                <div id="stop" style={{ marginRight: "15px", width: "60px" }}>
-                </div>
-              ) : (
-                <div>{timerValue !== 2000 ? <span>{(timerValue / 2000).toFixed(2)}s</span> : null}</div>
-              )}
-
-              <div style={{ fontSize: "small", display: 'flex', alignItems: 'center', width: "100%", boxShadow: "inset 0px 0px 6px 0px #b4b4b4a8", borderRadius: "9px", justifyContent: "center", padding: "5px 10px", overflow: "hidden" }}>
-                <FontAwesomeIcon icon={betting ? faToggleOn : faToggleOff} style={{ marginRight: '5px' }} />
-                {!betting ? 'TRADING ON' : 'TRADING OFF'}
-              </div>
-            </div> */}
           </>
 
         ) : (
@@ -349,7 +319,7 @@ const PlaceholderComponent = ({ selectedTab, myGames, updateQbot, handleTabChang
                 background: betting ? (!betting ? "#0ef34233" : "#007bff33") : "#ff000033",
                 width: "100%",
                 boxShadow: betting ? (!betting ? "#28a745 0px 0px 6px 0px inset" : "#007bff 0px 0px 6px 0px inset") : "#ff0000 0px 0px 6px 0px inset",
-                borderRadius: "9px",
+                borderRadius: "0.3em",
                 justifyContent: "center",
                 padding: "5px 10px",
                 overflow: "hidden"
@@ -364,7 +334,7 @@ const PlaceholderComponent = ({ selectedTab, myGames, updateQbot, handleTabChang
                     {33 > 0 ? (
                       <>
                         <FontAwesomeIcon icon={faCoins} style={{ marginRight: '5px' }} />
-                        COMING SOON&nbsp;{convertToCurrency(33)}
+                        COMING SOON&nbsp;
                       </>
                     ) : (
                       <>
@@ -385,7 +355,6 @@ const PlaceholderComponent = ({ selectedTab, myGames, updateQbot, handleTabChang
         )}
         {selectedTab === 1 && (
           <>
-            {/* Coming Soon Overlay */}
             <div className="gamified-container" >
               <div style={{ position: "relative", width: "100%" }}>
                 <div style={{
@@ -407,11 +376,11 @@ const PlaceholderComponent = ({ selectedTab, myGames, updateQbot, handleTabChang
                 <Grid item style={{ filter: "blur(3px)" }}>
                   <h2 className="gamified-heading">Q-BOT Net Profit&nbsp;
                     <Tooltip title="TOTAL Q-BOT NET PROFIT (AFTER TAX)">
-                      <Info style={{ width: "18px",  marginTop: "-3px", cursor: "pointer" }} />
+                      <Info style={{ width: "18px", marginTop: "-3px", cursor: "pointer" }} />
                     </Tooltip>
                   </h2>
                   <div style={{ textAlign: "center", color: "#f9f9f9", background: "linear-gradient(45deg, #00ff6b, #84bd00)", padding: "5px 15px", fontSize: "1.1em", marginTop: "15px", borderRadius: "0.3em" }}>
-                    <span>+ {convertToCurrency(44343.02)}</span>
+                    <span>+ {convertToCurrency(44343.02, solPrice)}</span>
                   </div>
                   <div className="gamified-content" style={{ marginTop: "20px" }}>
                     <ApexChart options={chartOptions} series={chartSeries} type="line" height={350} />
@@ -427,7 +396,7 @@ const PlaceholderComponent = ({ selectedTab, myGames, updateQbot, handleTabChang
               <h2 className="gamified-heading">
                 Q-BOT Rooms&nbsp;
                 <Tooltip title="This data may not represent your recent transactions and is for the AI purposes only.">
-                  <Info style={{ width: "18px",  marginTop: "-3px", cursor: "pointer" }} />
+                  <Info style={{ width: "18px", marginTop: "-3px", cursor: "pointer" }} />
                 </Tooltip>
               </h2>
               <div className="gamified-content">
@@ -446,7 +415,7 @@ const PlaceholderComponent = ({ selectedTab, myGames, updateQbot, handleTabChang
                           <TableCell align="center">
                             <a style={{ color: '#333' }} href={`/join/${room._id}`}>{room.game_type.short_name + '-' + room.index}</a>
                           </TableCell>
-                          <TableCell align="center">{convertToCurrency(room.pr - room.bet_amount)}</TableCell>
+                          <TableCell align="center">{convertToCurrency(room.pr - room.bet_amount, solPrice)}</TableCell>
                           <TableCell align="center">{room.selectedStrategy}</TableCell>
                         </TableRow>
                       ))
@@ -468,7 +437,6 @@ const PlaceholderComponent = ({ selectedTab, myGames, updateQbot, handleTabChang
   );
 };
 
-
 function BetArray({
   rpsbetitems,
   getRpsBetItems,
@@ -482,6 +450,7 @@ function BetArray({
   handleSwitchChange,
   handleDetachAttachChange,
   isDarkMode,
+  solPrice,
   attached,
   qs_game_type,
   ai_mode,
@@ -495,7 +464,12 @@ function BetArray({
   getMyGames,
   user_id,
   room_id,
-  user,
+  bet_amount,
+  handle2xButtonClick,
+  handleHalfXButtonClick,
+  handleMaxButtonClick,
+  bankroll,
+  onChangeState,
   strategies,
   game_type,
   getQbot,
@@ -534,7 +508,7 @@ function BetArray({
   }
 
   const handleSliderChange = (event, newValue) => {
-    setText(<>New range detected: {convertToCurrency(newValue)}</>);
+    setText(<>New range detected: {convertToCurrency(newValue, solPrice)}</>);
     setRange(newValue);
     setIsDragging(true);
 
@@ -571,25 +545,24 @@ function BetArray({
       const uniqueValue = uniqueBetAmounts[0];
       if (uniqueValue !== newMin) {
         const itemToUpdate = itemsToUpdate.find(item => item.bet_amount === uniqueValue);
-        setText(<>Updating item(s) with new min: {convertToCurrency(newMin)}, please wait...</>);
+        setText(<>Updating item(s) with new min: {convertToCurrency(newMin, solPrice)}, please wait...</>);
         await updateFunction(itemToUpdate._id, 'bet_amount', newMin);
       }
       if (uniqueValue !== newMax) {
         const itemToUpdate = itemsToUpdate.find(item => item.bet_amount === uniqueValue);
-        setText(<>Updating item(s) with new max: {convertToCurrency(newMax)}, please wait...</>);
+        setText(<>Updating item(s) with new max: {convertToCurrency(newMax, solPrice)}, please wait...</>);
         await updateFunction(itemToUpdate._id, 'bet_amount', newMax);
       }
     } else {
-      // Update items for new min value
       const currentMin = Math.min(...uniqueBetAmounts);
       if (newMin < currentMin) {
         const itemToUpdate = itemsToUpdate.find(item => item.bet_amount === currentMin);
-        setText(<>Updating item(s) with new min: {convertToCurrency(newMin)}, please wait...</>);
+        setText(<>Updating item(s) with new min: {convertToCurrency(newMin, solPrice)}, please wait...</>);
         await updateFunction(itemToUpdate._id, 'bet_amount', newMin);
       } else {
         for (const item of itemsToUpdate) {
           if (item.bet_amount < newMin) {
-            setText(<>Updating item(s) with new min: {convertToCurrency(newMin)}, please wait...</>);
+            setText(<>Updating item(s) with new min: {convertToCurrency(newMin, solPrice)}, please wait...</>);
             await updateFunction(item._id, 'bet_amount', newMin);
           }
         }
@@ -598,12 +571,12 @@ function BetArray({
       const currentMax = Math.max(...uniqueBetAmounts);
       if (newMax > currentMax) {
         const itemToUpdate = itemsToUpdate.find(item => item.bet_amount === currentMax);
-        setText(<>Updating item(s) with new max: {convertToCurrency(newMax)}, please wait...</>);
+        setText(<>Updating item(s) with new max: {convertToCurrency(newMax, solPrice)}, please wait...</>);
         await updateFunction(itemToUpdate._id, 'bet_amount', newMax);
       } else {
         for (const item of itemsToUpdate) {
           if (item.bet_amount > newMax) {
-            setText(<>Updating item(s) with new max: {convertToCurrency(newMax)}, please wait...</>);
+            setText(<>Updating item(s) with new max: {convertToCurrency(newMax, solPrice)}, please wait...</>);
             await updateFunction(item._id, 'bet_amount', newMax);
           }
         }
@@ -656,14 +629,14 @@ function BetArray({
     return [min, max];
   };
 
-  const isMounted = useRef(true); // Track component mounted status
+  const isMounted = useRef(true);
 
   const fetchAttachedRooms = useCallback(async () => {
     try {
       if (getAttachedRooms) {
         const rooms = await getAttachedRooms();
         if (isMounted.current) {
-          setAttachedRooms(rooms); // Only update state if the component is still mounted
+          setAttachedRooms(rooms);
         }
       }
     } catch (error) {
@@ -672,12 +645,8 @@ function BetArray({
   }, [getAttachedRooms]);
 
   useEffect(() => {
-    isMounted.current = true; // Set to true when component is mounted
-
-    // Call the function to fetch rooms
+    isMounted.current = true;
     fetchAttachedRooms();
-
-    // Cleanup function that sets isMounted to false on unmount
     return () => {
       isMounted.current = false;
     };
@@ -697,7 +666,6 @@ function BetArray({
 
 
   useEffect(() => {
-
     if (game_type === 'Quick Shoot') {
       const [min, max] = getMinMaxValues(qsbetitems);
       setRange([min, max]);
@@ -869,9 +837,9 @@ function BetArray({
 
   const formatProfit = (profit) => {
     if (profit > 0) {
-      return <span style={{ padding: "0 5px", fontSize: "0.75em", background: "#28a74522", borderRadius: "30px", border: "2px solid #28a745", color: '#28a745' }}>+{convertToCurrency(profit)}</span>;
+      return <span style={{ padding: "0 5px", fontSize: "0.75em", background: "#28a74522", borderRadius: "30px", border: "2px solid #28a745", color: '#28a745' }}>+{convertToCurrency(profit, solPrice)}</span>;
     } else if (profit < 0) {
-      return <span style={{ padding: "0 5px", fontSize: "0.75em", background: "#ff000022", borderRadius: "30px", border: "2px solid #ff0000", color: '#ff0000' }}>-{convertToCurrency(Math.abs(profit))}</span>;
+      return <span style={{ padding: "0 5px", fontSize: "0.75em", background: "#ff000022", borderRadius: "30px", border: "2px solid #ff0000", color: '#ff0000' }}>-{convertToCurrency(Math.abs(profit), solPrice)}</span>;
     } else {
       return <span>{convertToCurrency(profit)}</span>;
     }
@@ -912,6 +880,7 @@ function BetArray({
         myGames={myGames}
         ownRoom={false}
         user_id={user_id}
+        solPrice={solPrice}
         updateQbot={updateQbot}
         totalWagered={totalWagered}
         settingsRef={settingsRef}
@@ -952,12 +921,7 @@ function BetArray({
         <SideTabs selectedTab={selectedTab} handleTabChange={handleTabChange} />
         {selectedTab === 0 && (
           <>
-
             <div className="gamified-container">
-              {((game_type === 'Roll' || game_type === 'Blackjack' || game_type === 'Bang!') &&
-                <div style={{ height: "80px", display: "flex", justifyContent: "center", alignItems: "center", textAlign: "center" }} className="coming-soon-text"><h4>Coming soon!</h4></div>
-
-              )}
               <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", width: "100%" }} >
                 <div style={{
                   display: 'flex',
@@ -967,7 +931,7 @@ function BetArray({
                   background: betting ? (is_betting ? "#0ef34233" : "#007bff33") : "#ff000033",
                   width: "100%",
                   boxShadow: betting ? (is_betting ? "#28a745 0px 0px 6px 0px inset" : "#007bff 0px 0px 6px 0px inset") : "#ff0000 0px 0px 6px 0px inset",
-                  borderRadius: "9px",
+                  borderRadius: "0.3em",
                   justifyContent: "center",
                   padding: "5px 10px",
                   overflow: "hidden"
@@ -982,7 +946,7 @@ function BetArray({
                       {predictedBetAmount > 0 ? (
                         <>
                           <FontAwesomeIcon icon={faCoins} style={{ marginRight: '5px' }} />
-                          TRIED&nbsp;{convertToCurrency(predictedBetAmount)}
+                          TRIED&nbsp;{convertToCurrency(predictedBetAmount, solPrice)}
                         </>
                       ) : (
                         <>
@@ -998,6 +962,15 @@ function BetArray({
                   )}
                 </div>
 
+                <BetAmountInput
+                  betAmount={bet_amount}
+                  handle2xButtonClick={handle2xButtonClick}
+                  handleHalfXButtonClick={handleHalfXButtonClick}
+                  handleMaxButtonClick={handleMaxButtonClick}
+                  onChangeState={onChangeState}
+                  isDarkMode={isDarkMode}
+                  bankroll={bankroll}
+                />
 
                 <div style={{ display: "flex", width: "100%", justifyContent: "center" }}>
                   <div style={{ display: "inline-flex", flexDirection: "row", alignItems: "center", justifyContent: "center", width: "50%", padding: "10px" }}>
@@ -1006,7 +979,6 @@ function BetArray({
                         id="aiplay-switch"
                         checked={betting}
                         onChange={handleSwitchChange}
-                        disabled={game_type === 'Roll' || game_type === 'Blackjack' || game_type === 'Bang!'}
                       />
                     </Tooltip>
                     {betting ? (
@@ -1022,7 +994,7 @@ function BetArray({
                     )}
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', width: "50%", boxShadow: "inset 0px 0px 6px 0px #b4b4b4a8", borderRadius: "9px", justifyContent: "center", padding: "5px 10px", overflow: "hidden" }}>
+                  <div style={{ display: 'flex', alignItems: 'center', width: "50%", boxShadow: "inset 0px 0px 6px 0px #b4b4b4a8", borderRadius: "0.3em", justifyContent: "center", padding: "5px 10px", overflow: "hidden" }}>
                     <FontAwesomeIcon icon={betting ? faToggleOn : faToggleOff} style={{ marginRight: '5px' }} />
                     {betting ? 'AIP ON' : 'AIP OFF'}
                   </div>
@@ -1039,10 +1011,10 @@ function BetArray({
                       />
                     </Tooltip>
                     <Tooltip title="Betting will be slow, whilst active. Best used whilst AFK">
-                      <Info style={{ width: "18px",  marginTop: "-3px", cursor: "pointer" }} />
+                      <Info style={{ width: "18px", marginTop: "-3px", cursor: "pointer" }} />
                     </Tooltip>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', width: "50%", boxShadow: "inset 0px 0px 6px 0px #b4b4b4a8", borderRadius: "9px", justifyContent: "center", padding: "5px 10px", overflow: "hidden" }}>
+                  <div style={{ display: 'flex', alignItems: 'center', width: "50%", boxShadow: "inset 0px 0px 6px 0px #b4b4b4a8", borderRadius: "0.3em", justifyContent: "center", padding: "5px 10px", overflow: "hidden" }}>
 
                     <FontAwesomeIcon icon={attached ? faLink : faUnlink} style={{ marginLeft: '10px', marginRight: '5px' }} />
                     {attached ? 'DETACH' : 'ATTACH'}
@@ -1069,7 +1041,7 @@ function BetArray({
 
                   <div style={{ display: "inline-flex", flexDirection: "column", justifyContent: "center", alignItems: "center", width: "50%", padding: "10px 0" }}>
                     <div style={{ width: "100%", }}>
-                      <p style={{ width: "100%", textAlign: "center", boxShadow: "inset 0px 0px 6px 0px #b4b4b4a8", borderRadius: "9px", padding: "5px 10px", overflow: "hidden" }}>
+                      <p style={{ width: "100%", textAlign: "center", boxShadow: "inset 0px 0px 6px 0px #b4b4b4a8", borderRadius: "0.3em", padding: "5px 10px", overflow: "hidden" }}>
                         <span><FontAwesomeIcon icon={faRobot} />&nbsp;{selectedStrategy ? selectedStrategy : ai_mode}</span>
                       </p>
                     </div>
@@ -1080,7 +1052,7 @@ function BetArray({
                 <div style={{
                   pointerEvents: selectedStrategy === "Martingale" || selectedStrategy === "Sniper" ? "none" : "auto",
                   filter: selectedStrategy === "Martingale" ? "grayscale(100%)" : "none",
-                  opacity: selectedStrategy === "Martingale" ? "0.3" : "1", display: 'flex', alignItems: 'center', width: "100%", boxShadow: "inset 0px 0px 6px 0px #b4b4b4a8", borderRadius: "9px", justifyContent: "center", padding: "5px 10px", overflow: "hidden"
+                  opacity: selectedStrategy === "Martingale" ? "0.3" : "1", display: 'flex', alignItems: 'center', width: "100%", boxShadow: "inset 0px 0px 6px 0px #b4b4b4a8", borderRadius: "0.3em", justifyContent: "center", padding: "5px 10px", overflow: "hidden"
                 }}>
                   <FontAwesomeIcon icon={faBalanceScale} style={{ marginRight: '5px' }} />
                   <Typography>ADJUST BET RANGE</Typography>
@@ -1137,7 +1109,7 @@ function BetArray({
                       alignItems: 'center',
                       width: "100%",
                       boxShadow: "inset 0px 0px 6px 0px #b4b4b4a8",
-                      borderRadius: "9px",
+                      borderRadius: "0.3em",
                       justifyContent: "center",
                       padding: "5px 10px",
                       overflow: "hidden",
@@ -1150,70 +1122,6 @@ function BetArray({
                     </span>
                   </div>
                 </div>
-                {/* <div style={{
-                  pointerEvents: selectedStrategy === "Martingale" || selectedStrategy === "Sniper" ? "none" : "auto",
-                  display: 'flex', alignItems: 'center', width: "100%", boxShadow: "inset 0px 0px 6px 0px #b4b4b4a8",
-                  borderRadius: "9px", justifyContent: "center", padding: "5px 10px", overflow: "hidden"
-                }}>
-                  <FontAwesomeIcon icon={faChartLine} style={{ marginRight: '5px' }} />
-                  <Typography>ADJUST STOP / LOSS</Typography>
-                </div>
-                <div style={{
-                  display: "flex", padding: '0 10px', flexDirection: "row", alignItems: "center",
-                  justifyContent: "space-between", width: "100%", marginTop: "10px"
-                }}>
-                  <Typography><span style={{ fontSize: "xx-small" }}>Min:</span> {convertToCurrency(range[0])}</Typography>
-                  <Typography><span style={{ fontSize: "xx-small" }}>Max:</span> {convertToCurrency(range[1])}</Typography>
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    padding: '0 10px',
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    width: "100%",
-                    marginTop: "10px",
-
-                  }}
-                >
-                  <Tooltip
-                    style={{ width: "100%" }}
-                    title={<>MIN & MAX BET VALUES</>}
-                    classes={{ tooltip: classes.redTooltip }}
-                  >
-                    <Slider
-                      value={range}
-                      onChange={handleSliderChange}
-                      onChangeCommitted={handleSliderChangeCommitted}
-                      onMouseUp={handleMouseUp}
-                      onTouchEnd={handleTouchEnd}
-                      valueLabelDisplay="auto"
-                      step={0.1}
-                      min={1}
-                      max={user_balance}
-                      aria-labelledby="range-slider"
-                      className={classes.slider}
-
-                    />
-                  </Tooltip>
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      width: "100%",
-                      boxShadow: "inset 0px 0px 6px 0px #b4b4b4a8",
-                      borderRadius: "9px",
-                      justifyContent: "center",
-                      padding: "5px 10px",
-                      overflow: "hidden",
-                    }}
-                  >
-                    <span style={{ fontSize: "x-small", color: "#ff0000" }}>
-                      {text}
-                    </span>
-                  </div>
-                </div> */}
               </div>
             </div>
           </>
@@ -1225,7 +1133,7 @@ function BetArray({
               <Grid item>
                 <h2 className="gamified-heading">Training Data&nbsp;
                   <Tooltip title="This data may not represent your recent transactions and is for the AI purposes only.">
-                    <Info style={{ width: "18px",  marginTop: "-3px", cursor: "pointer" }} />
+                    <Info style={{ width: "18px", marginTop: "-3px", cursor: "pointer" }} />
                   </Tooltip>
                 </h2>
                 <div style={{ position: "absolute", zIndex: '2', top: '180px', right: '30px' }}>
@@ -1268,7 +1176,7 @@ function BetArray({
                                   onClick={() => handleCellClick(item, index, 'bet_amount')}
                                   className={classes.cell}>
                                   <div className={classes.cellContent}>
-                                    {convertToCurrency(item.bet_amount)}
+                                    {convertToCurrency(item.bet_amount, solPrice)}
                                     {hoveredIndex === index && (
                                       <IconButton className={classes.editIcon} size="small">
                                         <EditIcon />
@@ -1336,7 +1244,7 @@ function BetArray({
               <Grid item>
                 <h2 className="gamified-heading">Attached Rooms&nbsp;
                   <Tooltip title="This data may not represent your recent transactions and is for the AI purposes only.">
-                    <Info style={{ width: "18px", marginTop: "-3px",  cursor: "pointer" }} />
+                    <Info style={{ width: "18px", marginTop: "-3px", cursor: "pointer" }} />
                   </Tooltip>
                 </h2>
                 <div style={{ position: "absolute", zIndex: '2', top: '180px', right: '30px' }}>
@@ -1366,7 +1274,7 @@ function BetArray({
                               <TableCell align="center">
                                 <Typography><a style={{ color: '#333' }} href={`/join/${room._id}`}>{room.room_name}</a></Typography>
                               </TableCell>
-                              <TableCell align="center">{<>{convertToCurrency(minBet)} - {convertToCurrency(maxBet)}</>}</TableCell>
+                              <TableCell align="center">{<>{convertToCurrency(minBet, solPrice)} - {convertToCurrency(maxBet, solPrice)}</>}</TableCell>
                               <TableCell align="center">{room.selected_strategy}</TableCell>
                             </TableRow>
                           );
@@ -1412,6 +1320,7 @@ const mapStateToProps = (state) => ({
   user_balance: state.auth.user.balance,
   user_id: state.auth.user._id,
   myGames: state.logic.myGames,
+  solPrice: state.logic.solPrice,
   totalWagered: state.auth.user.totalWagered,
 });
 

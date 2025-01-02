@@ -7,17 +7,15 @@ import axios from '../../util/Api';
 import { token } from '../../config/index.js';
 import {
   getRoomList,
-  getRoomCount,
   setCurRoomInfo,
   getMyChat,
   getGameTypeList,
-  getTokenPrice
+  getSolToUsdPrice,
 } from '../../redux/Logic/logic.actions';
 import history from '../../redux/history.js';
 import { toggleDrawer } from '../../redux/Auth/user.actions';
 import MyGamesTable from '../MyGames/MyGamesTable';
 import MyHistoryTable from '../MyGames/MyHistoryTable';
-import RefreshIcon from '@material-ui/icons/Refresh';
 import ShowHistory from '../icons/ShowHistory.js';
 import ShowHistoryHover from '../icons/ShowHistoryHover';
 import Battle from '../icons/Battle.js';
@@ -27,10 +25,8 @@ import ManageHover from '../icons/ManageHover';
 import Lottie from 'react-lottie';
 import animationData from '../LottieAnimations/live';
 import { Button } from '@material-ui/core';
-import JukeboxPanel from '../../components/JukeboxPanel.jsx';
 import { Tabs, Tab, Drawer, IconButton, Tooltip } from '@material-ui/core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { convertToCurrency } from '../../util/conversion.js';
 import { faCoins, faStore, faLink } from '@fortawesome/free-solid-svg-icons';
 import Avatar from '../../components/Avatar';
 import PlayerModal from '../modal/PlayerModal';
@@ -40,7 +36,6 @@ import ChatPanel from '../ChatPanel/ChatPanel';
 import OpenGamesTable from '../LiveGames/OpenGamesTable';
 import HistoryTable from '../LiveGames/HistoryTable';
 import Footer from './Footer';
-import { Translate } from '@material-ui/icons';
 
 const customStyles = {
   tabRoot: {
@@ -84,47 +79,38 @@ class MainPage extends Component {
   }
 
   async componentDidMount() {
-    this.isComponentMounted = true; // Set to true when component is mounted
+    this.isComponentMounted = true;
 
-    const { selectedGameType } = this.state;
     const {
-      getRoomCount,
       isAuthenticated,
       getMyChat,
-      getTokenPrice, // Import the action
+      getSolToUsdPrice,
     } = this.props;
 
     if (window.location.pathname === '/dashboard') {
       this.setState({
         selectedMobileTab: 'my_games',
-        showOpenGame: 0, // Show "My Games" (not history) initially
+        showOpenGame: 0,
       });
     }
 
-    const promises = [
-      getRoomCount({ game_type: selectedGameType }),
-    ];
     if (isAuthenticated) {
-      promises.push(getMyChat());
+      getMyChat();
     }
 
-    getTokenPrice(token);
-
-    await Promise.all(promises);
+    getSolToUsdPrice();
 
     if (this.state.is_mobile && !this.props.isDrawerOpen) {
       this.toggleDrawer();
     }
 
-    // Set up polling interval
     document.addEventListener("visibilitychange", this.handleVisibilityChange);
-    // this.pollingInterval = setInterval(() => this.handleRefresh(), 1200);
   }
 
   componentWillUnmount() {
-    this.isComponentMounted = false; // Set to false when component is unmounted
-    clearInterval(this.pollingInterval); // Clear the polling interval
-    document.removeEventListener("visibilitychange", this.handleVisibilityChange); // Cleanup event listeners
+    this.isComponentMounted = false;
+    clearInterval(this.pollingInterval);
+    document.removeEventListener("visibilitychange", this.handleVisibilityChange);
   }
 
   componentDidUpdate(prevProps) {
@@ -133,17 +119,14 @@ class MainPage extends Component {
     if (location.pathname === '/dashboard' && location.pathname !== prevProps.location.pathname) {
       this.setState({
         selectedMobileTab: 'my_games',
-        showOpenGame: 0, // Show "My Games" tab
+        showOpenGame: 0,
       });
     } else if ((location.pathname === '/dashboard' && location.pathname !== prevProps.location.pathname) && location.pathname === '/') {
       this.setState({
-        // selectedMobileTab: 'live_games',
-        showOpenGame: 1, // Show "Live Games" tab
+        showOpenGame: 1,
       });
     }
   }
-
-
 
   handleVisibilityChange() {
     if (document.visibilityState === "visible" && !this.pollingInterval) {
@@ -195,14 +178,6 @@ class MainPage extends Component {
 
   };
 
-
-  onChangeGameType = async (newType, callback) => {
-    await this.props.getRoomCount({ game_type: newType });
-    this.setState({
-      selectedGameType: newType,
-    }, callback);
-  };
-
   toggleDrawer = () => {
     this.props.toggleDrawer(!this.props.isDrawerOpen);
   };
@@ -246,15 +221,6 @@ class MainPage extends Component {
             </Button>
           </div>
 
-
-          <div className="refresh-main roll-tag">
-            <span>Total Liquidity: {convertToCurrency(totalUserBet)}</span>
-          </div>
-
-          <div id="liveStakes">
-            {this.props.rooms_count} GAMES
-            <Lottie options={defaultOptions} width={40} />
-          </div>
         </>
       ) : (
         'Your Games'
@@ -390,22 +356,14 @@ class MainPage extends Component {
                   handleClosePlayerModal={this.handleClosePlayerModal}
                   roomList={this.props.roomList}
                   isAuthenticated={this.props.isAuthenticated}
-                  rooms_count={this.props.rooms_count}
                   pageNumber={this.props.pageNumber}
                   balance={this.props.balance}
-                  onChangeGameType={this.onChangeGameType}
                   isDarkMode={this.props.isDarkMode}
                   selectedGameType={this.state.selectedGameType}
                   onlineUserList={this.props.onlineUserList}
                   gameTypeList={this.props.gameTypeList}
                 />
-                {/* {this.state.is_mobile && (
-                  <>
-                    <h2 className="main-title">AI PANEL</h2>
-
-                    <AiPanel user_id={this.props.user._id} />
-                  </>
-                )} */}
+            
               </>
 
             )}
@@ -650,6 +608,7 @@ const mapStateToProps = state => ({
   isAuthenticated: state.auth.isAuthenticated,
   roomList: state.logic.roomList,
   history: state.logic.history,
+  solPrice: state.logic.solPrice,
   roomCount: state.logic.roomCount,
   pageNumber: state.logic.pageNumber,
   balance: state.auth.balance,
@@ -659,15 +618,13 @@ const mapStateToProps = state => ({
   isDarkMode: state.auth.isDarkMode,
   onlineUserList: state.logic.onlineUserList,
   isDrawerOpen: state.auth.isDrawerOpen,
-  rooms_count: state.logic.rooms_count,
   gameTypeList: state.logic.gameTypeList,
   selectedMainTabIndex: state.logic.selectedMainTabIndex
 });
 
 const mapDispatchToProps = {
   getRoomList,
-  getRoomCount,
-  getTokenPrice,
+  getSolToUsdPrice,
   setCurRoomInfo,
   getGameTypeList,
   getMyChat,

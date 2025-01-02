@@ -66,7 +66,6 @@ export class GameMainRoute extends Component {
             component={LeaderboardsModal}
           />
 
-          {/* New /dashboard route */}
           <Route
             exact
             path={`${match.path}dashboard`}

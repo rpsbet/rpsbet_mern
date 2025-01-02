@@ -1,6 +1,5 @@
 import { alertModal, callBotModal } from '../modal/ConfirmAlerts';
 
-
 export const validateIsAuthenticated = (isAuthenticated, isDarkMode) => {
     if (!isAuthenticated) {
       alertModal(isDarkMode, `FURR-SST LOG IN!`);
@@ -72,7 +71,6 @@ export const validateIsAuthenticated = (isAuthenticated, isDarkMode) => {
   }
   
   export const validateLocalStorageLength = (storageName, isDarkMode) => {
-    // const storedArray = JSON.parse(localStorage.getItem(storageName)) || [];
     if (storageName.length < 3) {
       alertModal(isDarkMode, "PURR-HAPS YOU SHOULD BET MANUALLY FOR AT LEAST 3 TURNS TO TRAIN THE AI PLAY");
       return false;

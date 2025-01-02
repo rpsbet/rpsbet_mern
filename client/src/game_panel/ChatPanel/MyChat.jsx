@@ -8,7 +8,6 @@ import { Button } from '@material-ui/core';
 import { toggleDrawer } from '../../redux/Auth/user.actions';
 import { Skeleton } from "@material-ui/lab";
 
-
 class MyChat extends Component {
 	constructor(props) {
 		super(props);
@@ -17,9 +16,7 @@ class MyChat extends Component {
 			chatOpenMobile: false,
 			is_mobile: window.innerWidth < 1024 ? true : false
 		};
-
 	}
-
 
 	openChat = (e) => {
 		const { avatar, username, rank } = e.currentTarget.dataset;

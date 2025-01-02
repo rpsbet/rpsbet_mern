@@ -12,14 +12,14 @@ import SettingsRef from '../../components/SettingsRef';
 import { Info } from '@material-ui/icons';
 import { faTrash, faRobot } from '@fortawesome/free-solid-svg-icons';
 import styled from 'styled-components';
+import GameSettingsPanel from './GameSettingsPanel';
 import DefaultBetAmountPanel from './DefaultBetAmountPanel';
+import CoinInfo from './CoinInfo';
 
 const StyledRadioGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 12px; /* Reduced gap for a subtle appearance */
-  margin: 10px auto;
-  padding: 15px;
+
   width: 100%;
   max-width: 800px;
 
@@ -40,7 +40,7 @@ const StyledProductCard = styled.a`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border-radius: 0.5em;
+  border-radius: 0.3em;
 
   padding: 12px;
   width: 150px; /* Slightly smaller */
@@ -492,19 +492,12 @@ class QuickShoot extends Component {
       selectedStrategy,
       selectedGameType,
       gameTypeList,
-      setSelectedStrategy } = this.props;
+      solPrice } = this.props;
     const { settings_panel_opened } = this.state;
 
     const gameTypeStyleClass = {
       RPS: 'rps',
-      'S!': 'spleesh',
-      MB: 'mystery-box',
-      BG: 'brain-game',
       QS: 'quick-shoot',
-      DG: 'drop-game',
-      'B!': 'bang',
-      R: 'roll',
-      BJ: 'blackjack'
     };
 
     return (
@@ -514,7 +507,7 @@ class QuickShoot extends Component {
             <div className=' glass-container'>
               <div style={{ marginBottom: "30px" }}>
                 <RadioGroup value={selectedGameType} onChange={this.props.handleChange}>
-                  <h3 className="game-sub-title roll-tag">Switch Collateral&nbsp;<Tooltip
+                  <h3 className="game-sub-title roll-tag">Choose Game Mode&nbsp;<Tooltip
                     style={{ position: "absolute", right: "20px" }}
                     title={'Select a game-mode to use as collateral against your capital.'}
                     placement="top"
@@ -542,7 +535,7 @@ class QuickShoot extends Component {
                               src={`/img/gametype/icons/${gameType.short_name}.svg`}
                               alt={gameType.game_type_name}
                             />
-                            <span style={{ color: "#f9f9f9" }}>{gameType.game_type_name}</span>
+                            <span style={{ color: "#f9f9f9", marginTop: '0' }}>{gameType.game_type_name}</span>
                           </StyledProductCard>
                         }
                       />
@@ -550,12 +543,7 @@ class QuickShoot extends Component {
                   </StyledRadioGrid>
                 </RadioGroup>
               </div>
-              <DefaultBetAmountPanel
-                bet_amount={this.props.bet_amount}
-                onChangeState={this.props.onChangeState}
-                game_type={this.props.game_type}
-                defaultBetAmounts={this.props.defaultBetAmounts}
-              />
+
               <h3 className="game-sub-title roll-tag">Choose a Game Type&nbsp;<Tooltip
                 style={{ position: "absolute", right: "20px" }}
                 title={'Select the multiplier of the player, 5x is typically the safest option for the Host.'}
@@ -564,7 +552,7 @@ class QuickShoot extends Component {
               </h3>
               <div className="qs-game-type-panel" style={{ textAlign: "center", marginBottom: "30px" }}>
                 {[2, 3, 4, 5].map(i => (
-                  <button
+                  <Button
                     key={i}
                     className={qs_game_type === i ? ' active' : ''}
                     onClick={() => {
@@ -572,111 +560,39 @@ class QuickShoot extends Component {
                         qs_game_type: i,
                         max_return: bet_amount * Number(i),
                         public_bet_amount: convertToCurrency(
-                          bet_amount * Number(i - 1)
+                          bet_amount * Number(i - 1), solPrice
                         ),
                         selected_qs_position: 0
                       });
                     }}
                   >
                     {i}x
-                  </button>
+                  </Button>
                 ))}
               </div>
 
-              <h3 className="game-sub-title roll-tag">Strategy&nbsp;<Tooltip
-                style={{ position: "absolute", right: "20px" }}
-                title={'The strategy determines how your AI will play, includes patterns, reasoning and predictability.'}
-                placement="top"
-              >
-                <Info style={{ cursor: "pointer", float: "right" }} />
-              </Tooltip></h3>
-              <div style={{ marginBottom: "30px", display: "flex", justifyContent: "center" }}>
+              <GameSettingsPanel
+                selectedStrategy={this.props.selectedStrategy}
+                setSelectedStrategy={this.props.setSelectedStrategy}
+                isDarkMode={this.props.isDarkMode}
+              />
 
-                <SettingsRef
-                  strategies={strategies}
-                  ai_mode={ai_mode}
-                  user_id={user_id}
-                  rank={rank}
-                  settings_panel_opened={settings_panel_opened}
-                  setSelectedStrategy={setSelectedStrategy}
-                  settingsRef={this.settingsRef}
-                  selectedStrategy={selectedStrategy}
-                />
-                <Button
-                  onClick={this.handleSettingsIconClick}
-                  className="strategy-btn title"
-                  style={{
-                    boxShadow: 'unset',
-                    background: 'transparent',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <span style={{ marginRight: '5px' }}>{selectedStrategy}</span>
-                  <SettingsOutlinedIcon />
-                </Button>
-              </div>
-              {(selectedStrategy === 'Hidden Markov') ? (
-                <>
-                      <h3 className="game-sub-title roll-tag">Choose WHERE TO SAVE&nbsp;<Tooltip
-                        style={{ position: "absolute", right: "20px" }}
-                        title={'Click the on-screen buttons and try to shoot.'}
-                        placement="top"
-                      >
-                        <Info style={{ cursor: "pointer", float: "right" }} />
-                      </Tooltip>
-                      </h3>
-                  <div style={{ display: "flex", justifyContent: "center", flexDirection: "column", alignItems:"center" }}>
+              <CoinInfo
+                onChangeState={this.props.onChangeState}
+                name={this.props.name}
+                ticker={this.props.ticker}
+                x_link={this.props.x_link}
+                telegram_link={this.props.telegram_link}
+                isDarkMode={this.props.isDarkMode}
+                website_link={this.props.website_link}
+              />
 
-                    <div className="qs-add-run-panel">
-                      <div className="qs-add-run-form">
-                        {this.state.animation}
-                        {this.renderButtons()}
-                        <Button id="aiplay" onClick={this.onAutoPlay}>
-                          <FontAwesomeIcon icon={faRobot} style={{ color: '#060607' }} />&nbsp;Test AI Play&nbsp;<span className="roll-tag">[space]</span>
-                        </Button>
-                      </div>
-                      <div className="qs-add-run-table">
-                        <h3 className="game-sub-title">Pattern Table</h3>
-
-                        <table id="runs">
-                          <tbody>
-                            {qs_list && this.state.qs_list.length > 0 ? (
-                              qs_list.map((qs, index) => (
-                                <tr key={index}>
-                                  <td>{index + 1}</td>
-                                  <td>{qs.qs}</td>
-                                  <td>
-                                    <HighlightOffIcon id="delete"
-                                      onClick={() => this.onRemoveItem(index)}
-                                    />
-                                  </td>
-                                </tr>
-                              ))
-                            ) : (
-                              <tr>
-                                <td id="add-run" colSpan="3">
-                                  Your pattern will be displayed here
-                                </td>
-                              </tr>
-                            )}
-                          </tbody>
-                        </table>
-                        <IconButton style={{ background: "transparent", boxShadow: "none" }} color="secondary" onClick={this.handleReset}>
-                          <FontAwesomeIcon icon={faTrash} /> {/* Use the faRedo icon */}
-                        </IconButton>
-                      </div>
-                    </div>
-                  </div>
-
-                </>
-
-              ) : (
-                <div style={{ padding: "30px", fontSize: "0.6em", textAlign: "center" }}>
-                  (No Pattern Needed)
-                </div>
-              )}
+              <DefaultBetAmountPanel
+                bet_amount={this.props.bet_amount}
+                onChangeState={this.props.onChangeState}
+                game_type={this.props.game_type}
+                defaultBetAmounts={this.props.defaultBetAmounts}
+              />
             </div>
           </div>
 
@@ -691,6 +607,7 @@ const mapStateToProps = state => ({
   isDarkMode: state.auth.isDarkMode,
   isFocused: state.auth.isFocused,
   gameTypeList: state.logic.gameTypeList,
+  solPrice: state.logic.solPrice,
 });
 
 export default connect(mapStateToProps)(QuickShoot);

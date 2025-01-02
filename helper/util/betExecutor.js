@@ -54,7 +54,7 @@ const addToQueue = async (req, bot = false) => {
 
 
         if (req.body._id) {
-            if (user.dailyWithdrawals > 100000000) {
+            if (user.dailyWithdrawals > 4.269) {
                 responseData = {
                     success: false,
                     message: 'illregular action',
@@ -172,7 +172,6 @@ const addToQueue = async (req, bot = false) => {
                 game_type: roomInfo['game_type'],
                 bet_amount: req.body.bet_amount,
                 game_result: 0
-                // is_anonymous: req.body.is_anonymous
             });
 
             let newTransactionC = new Transaction({
@@ -198,7 +197,6 @@ const addToQueue = async (req, bot = false) => {
                 to: roomInfo['creator'],
                 room: req.body._id,
                 message: '',
-                // is_anonymous: req.body.is_anonymous,
                 is_read: false
             });
 
@@ -206,7 +204,6 @@ const addToQueue = async (req, bot = false) => {
             if (roomInfo['game_type']['game_type_name'] === 'RPS') {
                 const availableBetItem = await RpsBetItem.findOne({
                     room: req.body._id,
-                    // joiner: user._id,
                     joiner_rps: ''
                 });
                 bet_item = availableBetItem;
@@ -441,7 +438,6 @@ const addToQueue = async (req, bot = false) => {
                                 user_bet: roomInfo['user_bet'],
                                 hosts: roomInfo.hosts,
                                 endgame_amount: roomInfo['endgame_amount'],
-                                // is_anonymous: roomInfo['is_anonymous'],
                                 game_result: 3
                             });
 
@@ -452,7 +448,6 @@ const addToQueue = async (req, bot = false) => {
                             );
                         }
 
-                        // send notification
                         message.message =
                             'Lost ' +
                             convertToCurrency(req.body.bet_amount) +
@@ -699,7 +694,6 @@ const addToQueue = async (req, bot = false) => {
                             game_type: roomInfo['game_type'],
                             bet_amount: roomInfo['host_pr'],
                             user_bet: roomInfo['user_bet'],
-                            is_anonymous: roomInfo['is_anonymous'],
                             endgame_amount: roomInfo['endgame_amount'],
                             hosts: roomInfo.hosts,
                             game_result: 3
@@ -707,7 +701,7 @@ const addToQueue = async (req, bot = false) => {
                         saveDocumentWithRetry(newGameLogC);
                         roomInfo['user_bet'] = parseFloat(
                             roomInfo['endgame_amount']
-                        ); /* (roomInfo['user_bet'] -  roomInfo['bet_amount']) */
+                        );
                     }
 
                     bet_item.joiner = req.user._id;
@@ -897,14 +891,12 @@ const addToQueue = async (req, bot = false) => {
                 }
             }
 
-            // Check if user_bet matches the share value of the first host
             if (roomInfo.hosts[0].share === 100) {
                 let notification = new Notification({
                     from: user._id,
                     to: roomInfo['creator'],
                     room: req.body._id,
                     message: '',
-                    // is_anonymous: req.body.is_anonymous,
                     is_read: false
                 });
 
@@ -963,7 +955,6 @@ const addToQueue = async (req, bot = false) => {
                         to: roomInfo['creator'],
                         room: req.body._id,
                         message: '',
-                        // is_anonymous: req.body.is_anonymous,
                         is_read: false
                     });
 

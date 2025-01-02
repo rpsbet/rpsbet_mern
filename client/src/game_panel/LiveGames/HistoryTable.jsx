@@ -3,7 +3,6 @@ import { connect } from 'react-redux';
 import { getHistory } from '../../redux/Logic/logic.actions';
 import Moment from 'moment';
 import { getSettings } from '../../redux/Setting/setting.action';
-import { convertToCurrency } from '../../util/conversion';
 import { Skeleton } from "@material-ui/lab";
 import ReactDOM from 'react-dom';
 import { renderLottieAvatarAnimation } from '../../util/LottieAvatarAnimations';
@@ -241,9 +240,8 @@ class HistoryTable extends Component {
           {this.state.history?.length === 0 && (
             <div className="dont-have-game-msg">
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
-                {/* Skeleton Loader */}
-                {[...Array(5)].map((_, index) => (
-                  <Skeleton key={index} variant="rect" width="100%" height={70} />
+                {[...Array(1)].map((_, index) => (
+                  <Skeleton key={index} variant="rect" width="100%" height={10} />
                 ))}
               </div>
             </div>
@@ -260,33 +258,7 @@ class HistoryTable extends Component {
               >
                 <div>
                   <div className="table-cell">
-                    {/* <div className="room-id" style={{display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginRight: "10px"}}>
-                      {row.status === 'open' ? (
-                        <>
-                          {row.status}  <HeartIcon isOpen={true} />
-                        </>
-                      ) : row.room_name === 'Withdrawal' ? (
-                        <>
-                          MONEY OUT <FontAwesomeIcon icon={faArrowCircleDown} />
-                        </>
-                      ) : (
-                        <>
-                          finished  <HeartIcon isOpen={false} />
-                        </>
-                      )}
-                    {row.ai_mode && (
-                      <div id="ai_mode">
-                        <span className="room-id ai_mode">
-                          {row.ai_mode}
-                        </span>
-                        {row.qbot && (<>
-                          <span className="room-id qbot">
-                            Q-BOT
-                          </span>
-                        </>)}
-                      </div>
-                    )}
-                    </div> */}
+                   
                     <div
                       className="desktop-only"
                       dangerouslySetInnerHTML={{ __html: row.history }}
@@ -336,8 +308,7 @@ const mapStateToProps = state => ({
   pageNumber: state.logic.historyPageNumber,
   totalPage: state.logic.historyTotalPage,
   isDarkMode: state.auth.isDarkMode,
-  isLowGraphics: state.auth.isLowGraphics
-  // gameTypeList: state.logic.gameTypeList
+  isLowGraphics: state.auth.isLowGraphics,
 });
 
 const mapDispatchToProps = {

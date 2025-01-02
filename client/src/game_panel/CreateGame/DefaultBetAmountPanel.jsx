@@ -1,7 +1,5 @@
 import React, { Component } from 'react';
-// import { initParams } from 'request';
 import { convertToCurrency } from '../../util/conversion';
-// import { updateDigitToPoint2 } from '../../util/helper';
 import { connect } from 'react-redux';
 import { Button, Tooltip, TextField } from '@material-ui/core';
 import ButtonGroup from '@material-ui/core/ButtonGroup';
@@ -15,17 +13,12 @@ class DefaultBetAmountPanel extends Component {
       is_other: false
     };
 
-
-
-
-    // Add corresponding image sources for each bet amount
     this.images = [
       '/img/icons/coins-xs.svg',
       '/img/icons/coins-s.svg',
       '/img/icons/coins-m.svg',
       '/img/icons/coins-l.svg',
       '/img/icons/coins-xl.svg',
-
     ];
   }
 
@@ -37,7 +30,6 @@ class DefaultBetAmountPanel extends Component {
     };
     this.props.onChangeState(newState);
     document.getElementById("betAmount").focus();
-
   }
 
   handle2xButtonClick = () => {
@@ -52,20 +44,13 @@ class DefaultBetAmountPanel extends Component {
     document.getElementById("betAmount").focus();
   }
 
-
-
-
   handleMaxButtonClick = () => {
-    const maxBetAmount = Math.floor(this.props.balance * 100000) / 100000; // round down to 2 decimal places
-    if (this.props.game_type === 'Brain Game') {
-      this.props.onChangeState({
-        bet_amount: maxBetAmount
-      });
-    } else if (this.props.game_type === 'Quick Shoot') {
+    const maxBetAmount = Math.floor(this.props.balance * 100000) / 100000;
+    if (this.props.game_type === 'Quick Shoot') {
       this.props.onChangeState({
         bet_amount: maxBetAmount,
         public_bet_amount: convertToCurrency(
-          (this.props.qs_game_type - 1) * maxBetAmount
+          (this.props.qs_game_type - 1) * maxBetAmount, this.props.solPrice
         ),
         max_return: this.props.qs_game_type * maxBetAmount
       });
@@ -76,9 +61,7 @@ class DefaultBetAmountPanel extends Component {
       });
     }
     document.getElementById("betAmount").focus();
-
   }
-
 
   componentDidUpdate(prevProps, prevState) {
     if (this.props.bet_amount !== prevProps.bet_amount) {
@@ -101,7 +84,7 @@ class DefaultBetAmountPanel extends Component {
   };
 
   render() {
-    const defaultBetAmounts = this.props.defaultBetAmounts || this.state.defaultBetAmounts || [50000, 250000, 500000, 2500000, 10000000];
+    const defaultBetAmounts = this.props.defaultBetAmounts || this.state.defaultBetAmounts || [0.25, 0.5, 1, 2.5, 10 ];
 
     const isDarkMode = this.props.isDarkMode;
     const theme = createTheme({
@@ -149,13 +132,11 @@ class DefaultBetAmountPanel extends Component {
     });
 
     const { isFocused, is_other } = this.state;
+    const { bet_amount, game_type, onChangeState, qs_game_type, solPrice } = this.props;
 
-    const { bet_amount, game_type, onChangeState, qs_game_type } = this.props;
-
-    const formattedBetAmount = this.formatBetAmount(bet_amount);
     return (
       <div className="default-bet-amount-panel" style={{ marginBottom: "30px", }}>
-        <h3 className="game-sub-title roll-tag">LIQUIDITY&nbsp;<Tooltip
+        <h3 className="game-sub-title roll-tag">Initial Buy-In&nbsp;<Tooltip
           style={{ position: "absolute", right: "20px" }}
           title={'Liquidity / pot / pool of money for the game'}
           placement="top"
@@ -172,20 +153,18 @@ class DefaultBetAmountPanel extends Component {
               }
               onClick={() => {
                 this.setState({ is_other: false });
-                if (game_type === 'Brain Game') {
-                  onChangeState({ bet_amount: amount });
-                } else if (game_type === 'Quick Shoot') {
+                if (game_type === 'Quick Shoot') {
                   onChangeState({
                     bet_amount: amount,
                     public_bet_amount: convertToCurrency(
-                      (qs_game_type - 1) * amount
+                      (qs_game_type - 1) * amount, solPrice
                     ),
                     max_return: qs_game_type * amount
                   });
                 } else {
                   onChangeState({
                     bet_amount: amount,
-                    max_return: amount * 2 /* * 0.95 */
+                    max_return: amount * 2
                   });
                 }
               }}
@@ -193,7 +172,7 @@ class DefaultBetAmountPanel extends Component {
             >
               <img width="20px" src={this.images[index]} alt={`Bet Amount: ${amount}`} />
 
-              {convertToCurrency(amount)}
+              {convertToCurrency(amount, solPrice)}
             </Button>
           ))}
           <Button
@@ -210,8 +189,6 @@ class DefaultBetAmountPanel extends Component {
         >
           <div className='bet-amount'>
             <ThemeProvider theme={theme}>
-
-
               <TextField
                 type="text"
                 name="betamount"
@@ -260,23 +237,20 @@ class DefaultBetAmountPanel extends Component {
                   ),
                 }}
                 onChange={e => {
-                  if (this.props.game_type === 'Brain Game') {
-                    this.props.onChangeState({ bet_amount: e.target.value });
-                  } else if (this.props.game_type === 'Quick Shoot') {
+                  if (this.props.game_type === 'Quick Shoot') {
                     this.props.onChangeState({
                       bet_amount: e.target.value,
                       public_bet_amount: convertToCurrency(
-                        // updateDigitToPoint2(
                         (this.props.qs_game_type - 1) *
-                        (parseInt(e.target.value) || '')
-                        // )
+                        (parseInt(e.target.value) || ''),
+                        solPrice
                       ),
                       max_return: this.props.qs_game_type * e.target.value
                     });
                   } else {
                     this.props.onChangeState({
                       bet_amount: e.target.value,
-                      max_return: (parseInt(e.target.value) || 0) * 2 /* * 0.95 */
+                      max_return: (parseInt(e.target.value) || 0) * 2
                     });
                   }
                 }}
@@ -294,7 +268,8 @@ const mapStateToProps = state => ({
   auth: state.auth.isAuthenticated,
   socket: state.auth.socket,
   balance: state.auth.balance,
-  isDarkMode: state.auth.isDarkMode
+  isDarkMode: state.auth.isDarkMode,
+  solPrice: state.logic.solPrice
 });
 
 const mapDispatchToProps = {};

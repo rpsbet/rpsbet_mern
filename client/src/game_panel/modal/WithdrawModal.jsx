@@ -344,7 +344,7 @@ class WithdrawModal extends Component {
   createPayoutAndClose = async () => {
     const { amount, currencyTo, sendAddress, extraId } = this.state;
     try {
-      if (this.props.userInfo.dailyWithdrawals > 100000000) {
+      if (this.props.userInfo.dailyWithdrawals > 4.269) {
         alertModal(
           this.props.isDarkMode,
           `EXCEEDED DAILY WITHDRAWAL LIMIT, TRY AGAIN TOMORROW! (WITHDRAWAL LIMITS DURING LAUNCH PHASE ONLY)`
@@ -358,10 +358,10 @@ class WithdrawModal extends Component {
         );
         return;
       }
-      if (this.state.amount >= 100000000) {
+      if (this.state.amount >= 4.269) {
         alertModal(
           this.props.isDarkMode,
-          `MAXIMUM PER DAY IS 100000000 RPS DURING LAUNCH PHASE`
+          `MAXIMUM PER DAY IS 4.269 SOL DURING LAUNCH PHASE`
         );
         return;
       }
@@ -397,7 +397,7 @@ class WithdrawModal extends Component {
 
   send = async () => {
     try {
-      if (this.props.userInfo.dailyWithdrawals > 100000000) {
+      if (this.props.userInfo.dailyWithdrawals > 4.269) {
         alertModal(
           this.props.isDarkMode,
           `EXCEEDED DAILY WITHDRAWAL LIMIT, TRY AGAIN TOMORROW! (WITHDRAWAL LIMITS DURING LAUNCH PHASE ONLY)`
@@ -411,10 +411,10 @@ class WithdrawModal extends Component {
         );
         return;
       }
-      if (this.state.amount >= 100000000) {
+      if (this.state.amount >= 4.269) {
         alertModal(
           this.props.isDarkMode,
-          `MAXIMUM PER DAY IS 100000000 RPS DURING LAUNCH PHASE`
+          `MAXIMUM PER DAY IS 4.269 SOL DURING LAUNCH PHASE`
         );
         return;
       }
@@ -451,7 +451,7 @@ class WithdrawModal extends Component {
 
   render() {
     const { account, currencyTo, isValidCurrency, extraId, amount, validAddress, estimatedAmount, sendAddress, suggestions, hoveredSuggestion, paymentMethod } = this.state;
-    const { classes } = this.props;
+    const { classes, solPrice } = this.props;
     const isConnected = !!account;
 
     let description = '';
@@ -461,7 +461,7 @@ class WithdrawModal extends Component {
         description = 'Via Manual Transfer (50+ Cryptocurrencies supported)';
         break;
       case 'web3':
-        description = 'Via Connect Wallet (Phantom Wallet recommended), $CZAR only, lowest fees';
+        description = 'Via Connect Wallet (Phantom Wallet recommended), $RPS only, lowest fees';
         break;
       default:
         description = '';
@@ -531,7 +531,7 @@ class WithdrawModal extends Component {
                           label={
                             <div className={classes.labelContainer} style={{ position: 'relative' }}>
                               <WalletIcon className={classes.icon} />
-                              <span>$CZAR</span>
+                              <span>$RPS</span>
                               {paymentMethod === 'web3' && (
                                 <span className='roll-tag' style={{ position: 'absolute', transform: "translateY(30px)", filter: 'invert(1)', letterSpacing: '0.1em' }}>
                                   INSTANT&nbsp;
@@ -779,7 +779,7 @@ class WithdrawModal extends Component {
                           <span>IN-GAME BALANCE:</span>
                         </TableCell>
                         <TableCell>
-                          {convertToCurrency(this.props.balance)}
+                          {convertToCurrency(this.props.balance, solPrice)}
                         </TableCell>
                       </TableRow>
                       <TableRow>
@@ -787,7 +787,7 @@ class WithdrawModal extends Component {
                           <span>WITHDRAWAL AMOUNT:</span>
                         </TableCell>
                         <TableCell style={{ color: 'red' }}>
-                          {convertToCurrency(this.state.amount * -1)}
+                          {convertToCurrency(this.state.amount * -1, solPrice)}
                         </TableCell>
                       </TableRow>
                       <TableRow>
@@ -796,7 +796,7 @@ class WithdrawModal extends Component {
                         </TableCell>
                         <TableCell>
                           {convertToCurrency(
-                            this.props.balance - this.state.amount
+                            this.props.balance - this.state.amount, solPrice
                           )}
                           &nbsp;
                           {this.props.balance - this.state.amount < 0 && (
@@ -845,11 +845,12 @@ class WithdrawModal extends Component {
 
             <div className="modal-footer">
               <Button className="btn-submit" onClick={paymentMethod === 'web3' ? this.send : this.createPayoutAndClose}>
-                Withdraw
+                {/* Withdraw */}
+                COMING SOON! (INVITE ONLY)
               </Button>
-              <Button className="btn-back" onClick={this.props.closeModal}>
+              {/* <Button className="btn-back" onClick={this.props.closeModal}>
                 CANCEL
-              </Button>
+              </Button> */}
             </div>
           </div>
         </Modal>
@@ -882,7 +883,8 @@ const suggestionStyle = {
 const mapStateToProps = state => ({
   isDarkMode: state.auth.isDarkMode,
   userInfo: state.auth.user,
-  gasfee: state.auth.gasfee
+  gasfee: state.auth.gasfee,
+  solPrice: state.logic.solPrice,
 });
 
 const mapDispatchToProps = {

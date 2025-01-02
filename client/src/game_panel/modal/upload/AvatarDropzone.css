@@ -47,7 +47,7 @@
   background: transparent;
   color: #747f8d;
   border: 1px solid #d3d7db;
-  border-radius: 9px;
+  border-radius: 0.3em;
   padding: 0 20px;
   font-weight: 600;
 }
@@ -61,6 +61,6 @@
   }
   .AvatarButtonPanel button {
 width: 100%;
-    font-size: 0.6em;
+    font-size: 0.3em;
 }
 }

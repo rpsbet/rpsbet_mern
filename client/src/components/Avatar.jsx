@@ -20,31 +20,7 @@ class Avatar extends Component {
       darkMode: props.darkMode,
       dominantColor: null
     };
-
-    // this.colorThief = new ColorThief();
   }
-
-  componentDidMount() {
-    // this.getColor();
-
-  }
-
-  // componentDidUpdate(prevProps) {
-  //   if (this.props.src !== prevProps.src) {
-  //     this.getColor();
-  //   }
-  // }
-
-  // getColor() {
-  //   const image = new Image();
-  //   image.crossOrigin = 'Anonymous';
-  //   image.src = this.props.src;
-
-  //   image.onload = () => {
-  //     const dominantColor = this.colorThief.getColor(image);
-  //     this.setState({ dominantColor });
-  //   };
-  // }
 
   static getDerivedStateFromProps(nextProps, prevState) {
     if (
@@ -197,7 +173,7 @@ class Avatar extends Component {
               ? 'none'
               : isSystem
                 ? 'none'
-                : `0 6px 20px 0px ${rankColor}, 0 0 5px ${shadedColor}`,
+                : `0 6px 20px 0px ${rankColor}`,
           }}
           onError={(e) => {
             e.target.src = darkMode
@@ -222,7 +198,7 @@ class Avatar extends Component {
                   ? 'none'
                   : `0 6px 20px 0px ${rankColor}, 0 0 5px ${shadedColor}`,
               boxSizing: 'border-box',
-              borderRadius: '9px',
+              borderRadius: '0.3em',
             }}
           />
         )}

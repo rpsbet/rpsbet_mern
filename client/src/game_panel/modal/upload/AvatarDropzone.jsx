@@ -3,6 +3,8 @@ import "./AvatarDropzone.css";
 import Avatar from "../../../components/Avatar";
 import { alertModal } from "../ConfirmAlerts";
 import { Button, TextField, Grid } from '@material-ui/core';
+const uniqid = require('uniqid');
+
 
 class Dropzone extends Component {
   constructor(props) {
@@ -67,6 +69,15 @@ class Dropzone extends Component {
             alertModal(this.props.darkMode, "THIS ONE IS TOO LARGE, TRY ANOTHER");
             return;
           }
+        
+          // Dynamically generate a name for the blob
+          const originalName = file.name || 'image';
+          const fileExt = originalName.split('.').pop(); // Get the original file extension
+          const uniqueName = `${uniqid('IMG_')}.${fileExt}`;
+        
+          blob.name = uniqueName; // Assign the dynamically generated name
+          console.log("Blob created with name:", blob.name);
+        
           this.previewImage(blob);
           if (this.props.onFileAdded) {
             this.props.onFileAdded(blob);

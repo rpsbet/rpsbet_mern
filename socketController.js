@@ -48,16 +48,13 @@ const globalChatSend = (io, data) => {
           messageType: replyTo.messageType,
           time: Moment(replyTo.created_at).format('hh:mm')
         }
-      : null // Include the replyTo message details if it exists
+      : null
   });
 
   chat
     .save()
     .then(savedChat => {
-      // Fetch the username for replyTo.senderId from your data source
       const fetchUsername = userId => {
-        // Implementation to fetch username using userId
-        // Replace this with your actual implementation
         return User.findById(userId)
           .then(user => user.username)
           .catch(error => {
@@ -97,12 +94,10 @@ const globalChatSend = (io, data) => {
         })
         .catch(error => {
           console.error('Error fetching replyTo username:', error);
-          // Handle error if fetching the replyTo username fails
         });
     })
     .catch(error => {
       console.error('Error saving chat:', error);
-      // Handle error if chat saving fails
 
 });
 };
@@ -139,7 +134,6 @@ module.exports.socketio = server => {
         await User.updateOne({ _id: data.user_id }, { last_seen: new Date() });
     
         sockets[data.user_id] = socket;
-        // Emit the updated online status
         const onlineUsers = Object.keys(sockets);
         io.sockets.emit('ONLINE_STATUS_UPDATED', {
           user_list: onlineUsers
@@ -156,7 +150,7 @@ module.exports.socketio = server => {
     socket.on('FETCH_GLOBAL_CHAT', () => {
 
       Chat.find({})
-        .sort({ created_at: -1 }) // Sort in descending order of created_at
+        .sort({ created_at: -1 })
         .limit(15)
         .populate({ path: 'sender', model: User, select: 'username avatar accessory totalWagered' })
         .populate({
@@ -227,35 +221,10 @@ module.exports.socketio = server => {
       });
     });
 
-    socket.on('UPDATED_BOX_LIST', data => {
-      socket.broadcast.emit('UPDATED_BOX_LIST', data);
-    });
-
-    socket.on('SPLEESH_GUESSES', data => {
-      socket.broadcast.emit('SPLEESH_GUESSES', data);
-    });
-
     socket.on('RPS_1', data => {
       socket.broadcast.emit('RPS_1', data);
     });
-    
-    socket.on('DROP_GUESSES', data => {
-      socket.broadcast.emit('DROP_GUESSES', data);
-    });
-
-    socket.on('DROP_GUESSES1', data => {
-      socket.broadcast.emit('DROP_GUESSES1', data);
-    });
-
-    socket.on('CARDS_ARRAY', data => {
-      socket.broadcast.emit('CARDS_ARRAY', data);
-    });
-
-    socket.on('BANG_GUESSES1', data => {
-      const roomId = data.roomId; // assuming roomId is passed in the data object
-      socket.to(roomId).emit('BANG_GUESSES1', data);
-    });
-
+   
     socket.on('INITIAL_STATE', data => {
       const roomId = data.roomId; // assuming roomId is passed in the data object
       socket.to(roomId).emit('INITIAL_STATE', data);

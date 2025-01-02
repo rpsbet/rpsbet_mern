@@ -76,7 +76,7 @@ class ConfirmTradeModal extends Component {
   };
 
   render() {
-    const { isOpen, isDarkMode, productName, price, closeConfirmTradeModal, rentOption, tnxComplete } = this.props;
+    const { isOpen, isDarkMode, productName, price, closeConfirmTradeModal, rentOption, solPrice } = this.props;
     const { loading } = this.state;
     const defaultOptions = {
       loop: true,
@@ -100,9 +100,9 @@ class ConfirmTradeModal extends Component {
                 <h6>
                   Click {rentOption ? 'RENT' : 'TRADE'} to{' '}
                   {rentOption ? (
-                    <span>pay {convertToCurrency(price)} per month</span>
+                    <span>pay {convertToCurrency(price, solPrice)} per month</span>
                   ) : (
-                    <span>exchange for [{convertToCurrency(price)}]</span>
+                    <span>exchange for [{convertToCurrency(price, solPrice)}]</span>
                   )}
                 </h6>
               </>
@@ -142,6 +142,7 @@ const mapStateToProps = state => ({
   productName: state.itemReducer.data.productName,
   alertMessage: state.snackbar.alertMessage,
   alertType: state.snackbar.alertType,
+  solPrice: state.logic.solPrice,
 });
 
 const mapDispatchToProps = {

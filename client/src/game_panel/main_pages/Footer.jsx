@@ -2,8 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import history from '../../redux/history';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faXTwitter, faTelegram, faYoutube, faDiscord } from '@fortawesome/free-brands-svg-icons';
-import bscscan from '../icons/etherscan-logo.svg';
+import { faXTwitter, faTelegram, faYoutube, faTiktok } from '@fortawesome/free-brands-svg-icons';
 import sol from '../icons/sol.png';
 import bnb from '../icons/bnb.png';
 import btc from '../icons/btc.png';
@@ -155,14 +154,17 @@ class Footer extends Component {
                         {/* <a href="https://discord.gg/anMJntW4AD">
                             <FontAwesomeIcon icon={faDiscord} />
                         </a> */}<span>CHECK SOCIALS FOR UPDATES ►</span>
-                        <a href="https://x.com/officialrpsgame">
+                        <a href="https://x.com/rpsdotgame">
                             <FontAwesomeIcon icon={faXTwitter} />
                         </a>
                         <a href="https://t.me/rpsfinance">
                             <FontAwesomeIcon icon={faTelegram} />
                         </a>
-                        <a href="https://www.youtube.com/channel/UCikMJVhTSPUYcGSWEdAj6cQ">
+                        <a href="https://www.youtube.com/@rpsdotgame">
                             <FontAwesomeIcon icon={faYoutube} />
+                        </a>
+                        <a href="https://www.tiktok.com/@rpsdotgame">
+                            <FontAwesomeIcon icon={faTiktok} />
                         </a>
                         {/* <a href="https://www.instagram.com/rps.game/">
                         <FontAwesomeIcon icon={faInstagram} />
@@ -179,14 +181,7 @@ class Footer extends Component {
                         <img className={classes.availableCurrency} src={ltc} alt="LTC" />
                         <span>+ 50 MORE!</span>
                     </div>
-                    <div className={classes.proof}>
-                        {/* <p>Proof of Funds</p>
-                        <a target="_blank" href="https://etherscan.com/address/0x12b2b3f570E14bd2247A34B999255DD70f88f426">
 
-                            <img className={classes.bscscan} src={bscscan} alt="etherscan" />
-                        </a> */}
-
-                    </div>
                     <div className={classes.links}>
                         <a className={(classes.link, 'mobile-only')} href="#"
                             onClick={e => {
@@ -215,9 +210,7 @@ class Footer extends Component {
                         {/* <a className={classes.link} href="#">Fair</a> */}
                     </div>
                     <div className={classes.address}>
-                        <p>This website falls under provable fairness because (1) P2P, skill games are transformative and (2) players have a 100% control-rate over the AI technology used to replace an intermediary.
-                        </p>
-                        <p>Also rps.game has absolutely no involvement with any third-party gambling provider software or 'provably-fair' algorithms.
+                        <p>RPS.Game has absolutely no involvement with any third-party gambling provider software or 'provably-fair' algorithms.
                         </p>
                     </div>
                 </div>

@@ -5,19 +5,19 @@ const OwnerSchema = new Schema({
     user: {
         type: Schema.Types.ObjectId,
         ref: 'User',
-        index: true // Add index on user
+        index: true
     },
     avatar: {
-        type: String, // Assuming the avatar is a URL or file path
-        default: '' // Provide a default avatar URL if necessary
+        type: String,
+        default: ''
     },
     rank: {
-        type: Number, // Or you can use Number if rank is represented by a numerical value
-        default: '' // Default rank if necessary
+        type: Number,
+        default: ''
     },
     accessory: {
-        type: String, // Assuming accessory is represented as a string
-        default: '' // Default accessory if necessary
+        type: String,
+        default: ''
     },
     count: {
         type: Number,
@@ -30,7 +30,7 @@ const OwnerSchema = new Schema({
     onSale: {
         type: Number,
         default: 0,
-        index: true // Add index on onSale
+        index: true
     },
     rentOption: {
         type: Boolean,
@@ -53,13 +53,13 @@ const ItemSchema = new Schema({
     },
     image: {
         type: String,
-        index: true // Add index on image
+        index: true
     },
     item_type: {
         type: Schema.Types.ObjectId,
         ref: 'itemType',
         default: null,
-        index: true // Add index on item_type
+        index: true
     },
     CP: {
         type: Number,

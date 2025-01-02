@@ -5,7 +5,6 @@ import { fetchLeaderboardsData, fetchReceiptStatistics, fetchEquityDistribution,
 import Chart from 'react-apexcharts';
 import PlayerModal from '../modal/PlayerModal';
 import Avatar from '../../components/Avatar';
-import LinearProgress from '@material-ui/core/LinearProgress';
 import { withStyles } from '@material-ui/core/styles';
 import { convertToCurrency } from '../../util/conversion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -120,11 +119,8 @@ class LeaderboardsModal extends Component {
   };
 
   render() {
-    const { sortField, sortOrder, showPlayerModal, selectedCreator, message, isMobile } = this.state;
-    const { leaderboards, isDarkMode, loading } = this.props;
-    const { equityChartData, receiptChartData, loadingEquityChartData, loadingReceiptChartData } = this.state;
-
-    // Define a base color and create shades for it
+    const { sortField, sortOrder, showPlayerModal, selectedCreator, message, isMobile, equityChartData, receiptChartData, loadingEquityChartData, loadingReceiptChartData } = this.state;
+    const { leaderboards, isDarkMode, loading, solPrice } = this.props;
     const baseColor = '#c734ff'; // Base color (e.g., a shade of purple)
     const chartColors = [
       `${baseColor}BF`, // 75% opacity
@@ -302,7 +298,7 @@ class LeaderboardsModal extends Component {
                     <img className=" desktop-only" style={{ position: "absolute", bottom: "-50px", right: "50px", filter: "hue-rotate(272deg)" }} src={happyCat} width={"80px"} alt="Caesar the car" />
                   )}
                 </div>
-                <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", background: "rgba(170, 170, 170, 0.06)", borderRadius: "0.6em", padding: "30px 10px", marginBottom: "30px" }}>
+                <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", background: "rgba(170, 170, 170, 0.06)", borderRadius: "0.3em", padding: "30px 10px", marginBottom: "30px" }}>
 
                   <div
                     style={{
@@ -333,7 +329,7 @@ class LeaderboardsModal extends Component {
                     </div>
 
                     <div style={{ textAlign: "center" }}>
-                      <h5 className="title">Profit Distribution ($CZAR)</h5>
+                      <h5 className="title">Profit Distribution ($RPS)</h5>
                       {loadingReceiptChartData ? (
                         <div style={{ marginTop: "20px" }}>
                           <Skeleton variant="circle" width={350} height={350} />
@@ -398,10 +394,10 @@ class LeaderboardsModal extends Component {
                                 />
                               </a>
                             </TableCell>
-                            <TableCell>{convertToCurrency(entry.totalWagered)}</TableCell>
-                            <TableCell>{convertToCurrency(entry.totalProfit)}</TableCell>
-                            <TableCell>{convertToCurrency(entry.profitAllTimeHigh)}</TableCell>
-                            <TableCell>{convertToCurrency(entry.profitAllTimeLow)}</TableCell>
+                            <TableCell>{convertToCurrency(entry.totalWagered, solPrice)}</TableCell>
+                            <TableCell>{convertToCurrency(entry.totalProfit, solPrice)}</TableCell>
+                            <TableCell>{convertToCurrency(entry.profitAllTimeHigh, solPrice)}</TableCell>
+                            <TableCell>{convertToCurrency(entry.profitAllTimeLow, solPrice)}</TableCell>
                             <TableCell>{entry.gamePlayed}</TableCell>
                           </TableRow>
                         ))}
@@ -437,6 +433,7 @@ const mapStateToProps = state => ({
   receiptChart: state.customerReducer.receiptChart,
   leaderboards: state.customerReducer.leaderboards,
   loading: state.customerReducer.loading,
+  solPrice: state.logic.solPrice,
   loadingEquityChart: state.customerReducer.loadingEquityChart,
   loadingReceiptChart: state.customerReducer.loadingReceiptChart,
 

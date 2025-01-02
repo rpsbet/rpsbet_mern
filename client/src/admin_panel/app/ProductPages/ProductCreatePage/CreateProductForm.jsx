@@ -167,7 +167,7 @@ function CreateProductForm({ updateTextField, user_balance }) {
               </TableCell>
               <TableCell>
                 <Typography variant="body1">
-                  {convertToCurrency(user_balance)}
+                  {convertToCurrency(user_balance, solPrice)}
                 </Typography>
               </TableCell>
             </TableRow>
@@ -183,8 +183,8 @@ function CreateProductForm({ updateTextField, user_balance }) {
               <TableCell>
                 <Typography variant="body1">
                   {calculateNewBalance() < 0
-                    ? <>{convertToCurrency(0)} AND {convertToCurrency(Math.abs(calculateNewBalance()))} IN DEBT</>
-                    : convertToCurrency(calculateNewBalance())
+                    ? <>{convertToCurrency(0)} AND {convertToCurrency(Math.abs(calculateNewBalance()), solPrice)} IN DEBT</>
+                    : convertToCurrency(calculateNewBalance(), solPrice)
                   }
                 </Typography>
               </TableCell>
@@ -321,6 +321,7 @@ function CreateProductForm({ updateTextField, user_balance }) {
 
 const mapStateToProps = (state) => ({
   user_balance: state.auth.user.balance,
+  solPrice: state.logic.solPrice,
 });
 
 const mapDispatchToProps = {};

@@ -37,7 +37,7 @@ async function updateRoomInterests(io) {
             }
           };
           let userBet = parseFloat(bonusRoom.user_bet);
-          const newInterest = userBet * 1.0001;  // 10x the original interest calculation
+          const newInterest = userBet * 1.0000001;  // 10x the original interest calculation
           const interestAdded = newInterest - userBet;  // Calculate the actual interest added
           
           bonusRoom.user_bet = newInterest.toString();  // Update the user_bet with the new interest
@@ -54,8 +54,8 @@ async function updateRoomInterests(io) {
             from: senderId,
             to: bonusRoom.creator,
             room: bonusRoom._id,
-            amount: userBet * 0.0001,
-            message: `Interest earned (${convertToCurrency(userBet * 0.0001)})`,
+            amount: userBet * 0.0000001,
+            message: `Interest earned (${convertToCurrency(userBet * 0.0000001)})`,
             is_read: false
           });
 
@@ -64,7 +64,7 @@ async function updateRoomInterests(io) {
             username: system.username,
             avatar: system.avatar,
             accessory: system.accessory,
-            amount: userBet * 0.0001,
+            amount: userBet * 0.0000001,
             rank: system.totalWagered,
             created_at: moment().format('YYYY-MM-DD HH:mm'),
             created_at_str: moment().format('LLL'),

@@ -143,6 +143,7 @@ class VaultModal extends Component {
 
   render() {
     const { vaultBal, loaded, animate, amount, lastUpdatedBalance, isWithdraw, vaultTransactions } = this.state;
+    const { solPrice } = this.props;
     let balanceClass = '';
     if (isWithdraw && loaded) {
       balanceClass = 'red';
@@ -170,10 +171,6 @@ class VaultModal extends Component {
               <div className="modal-content-panel" style={modalContentStyles}>
                 <p style={labelStyle}>Your Vault Balance</p>
                 <p id="vault-bal" style={valueStyle} className={balanceClass}>
-                  <InlineSVG
-                    id="busd"
-                    src={busdSvg}
-                  />
                   <CountUp
                     start={animate ? lastUpdatedBalance : null}
                     end={vaultBal}
@@ -182,7 +179,7 @@ class VaultModal extends Component {
                     decimals={2}
                     useEasing={true}
                     useGrouping={true}
-                  /> (${(vaultBal * this.props.conversionRate).toFixed(2)})
+                  /> SOL (${(vaultBal * solPrice).toFixed(2)})
                 </p>
                 <TextField
                   label="Enter Amount"
@@ -201,7 +198,7 @@ class VaultModal extends Component {
                     {vaultTransactions.map((transaction) => (
                       <tr key={transaction?._id} className={transaction?.description.includes('withdrawal') ? 'withdrawal' : 'deposit'}>
                         <td>{transaction?.description.includes('withdrawal') ? '-' : '+'}</td>
-                        <td>{convertToCurrency(transaction?.amount)}</td>
+                        <td>{convertToCurrency(transaction?.amount, solPrice)}</td>
                         <td>{new Date(transaction?.created_at).toLocaleString()}</td>
                       </tr>
                     ))}
@@ -228,7 +225,8 @@ class VaultModal extends Component {
 const mapStateToProps = (state) => ({
   isDarkMode: state.auth.isDarkMode,
   user: state.auth.user,
-  vaultTransactions: state.auth.vaultTransactions, // Add this line to get recent transactions from state
+  vaultTransactions: state.auth.vaultTransactions,
+  solPrice: state.logic.solPrice,
 });
 
 const mapDispatchToProps = {

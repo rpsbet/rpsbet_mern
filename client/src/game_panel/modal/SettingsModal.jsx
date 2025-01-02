@@ -139,37 +139,6 @@ class SettingsModal extends Component {
               <div className="modal-content-panel settings">
                 <Table>
                   <TableBody>
-                     {/* <TableRow>
-                      <TableCell>
-                        {isMusicEnabled ? (
-                          <Button
-                            className="playBtn"
-                            onClick={(e) => {
-                              toggleMusic(!isMusicEnabled);
-                            }}
-                          >
-                            <MusicNote />&nbsp;
-                            MUSIC
-                          </Button>
-                        ) : (
-                          <Button
-                            className="playBtn"
-                            onClick={(e) => {
-                              toggleMusic(!isMusicEnabled);
-                            }}
-                          >
-                            <MusicOff />&nbsp;
-                            NO MUSIC
-                          </Button>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Checkbox
-                          checked={isMusicEnabled}
-                          onChange={() => toggleMusic(!isMusicEnabled)}
-                        />
-                      </TableCell>
-                    </TableRow> */}
                     {/* Parent Mute/Unmute Control */}
                     <TableRow>
                       <TableCell>

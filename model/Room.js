@@ -2,14 +2,38 @@
   const Schema = mongoose.Schema;
 
   const RoomSchema = new Schema({
+    name: {
+      type: String,
+      default: ''
+    },
+    ticker: {
+      type: String,
+      default: ''
+    },
     room_number: {
+      type: String,
+      default: ''
+    },
+    image: {
+      type: String,
+      default: ''
+    },
+    website_link: {
+      type: String,
+      default: ''
+    },
+    x_link: {
+      type: String,
+      default: ''
+    },
+    telegram_link: {
       type: String,
       default: ''
     },
     creator: {
       type: Schema.Types.ObjectId,
       ref: 'User',
-      index: true // Index creator field
+      index: true
     },
     joiners: [{
       type: Schema.Types.ObjectId,
@@ -23,12 +47,12 @@
     },
     selectedStrategy: {
       type: String,
-      default: 'Hidden Markov'
+      default: 'Random'
     },
-    // aveMultiplier: {
-    //   type: Number,
-    //   default: 1
-    // },
+    last_updated_strat: {
+      type: Date,
+      index: true
+    },
     qs_game_type: {
       type: Number,
       default: 2
@@ -41,15 +65,6 @@
       type: Number,
       default: 0
     },
-    // brain_game_type: {
-    //   type: Schema.Types.ObjectId,
-    //   ref: 'BrainGameType',
-    //   default: null
-    // },
-    // brain_game_score: {
-    //   type: Number,
-    //   default: 0
-    // },
     bet_amount: {
       type: Number,
       default: 0
@@ -58,10 +73,6 @@
       type: String,
       default: ''
     },
-    // spleesh_bet_unit: {
-    //   type: Number,
-    //   default: 1
-    // },
     pr: {
       type: Number,
       default: 0
@@ -70,10 +81,6 @@
       type: Number,
       default: 0
     },
-    // is_anonymous: {
-    //   type: Boolean,
-    //   default: false
-    // },
     endgame_type: {
       type: Boolean,
       default: false
@@ -114,14 +121,6 @@
       default: 0
     },
     status: { type: String, index: true },
-    youtubeUrl: {
-      type: String,
-      default: ''
-    },
-    gameBackground: {
-      type: String,
-      default: ''
-    },
     created_at: {
       type: Date,
       default: Date.now,

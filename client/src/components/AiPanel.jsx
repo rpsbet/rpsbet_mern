@@ -1,38 +1,12 @@
 import React from 'react';
 import BetArray from './BetArray';
 
-
-const AiPanel = ({ isDarkMode, creator_id, rank, attached, handleDetachAttachChange, is_betting, rpsbetitems, qsbetitems, predictedBetAmount, roomId, ai_mode, user_balance, user_id, updateUserStrategy, strategies, game_type, brain_game_type, spleesh_bet_unit, qs_game_type, betting, handleSwitchChange, getAttachedRooms }) => {
+const AiPanel = ({ isDarkMode, bankroll, handle2xButtonClick, handleHalfXButtonClick, handleMaxButtonClick, creator_id, rank, attached, handleDetachAttachChange, is_betting, rpsbetitems, qsbetitems, predictedBetAmount, roomId, ai_mode, user_balance, user_id, updateUserStrategy, strategies, game_type, onChangeState, qs_game_type, betting, handleSwitchChange, getAttachedRooms }) => {
   let list;
   switch (game_type) {
     case 'Quick Shoot':
       list = qsbetitems;
       break;
-    // case 'Bang!':
-    //   list = 'bang_array';
-    //   break;
-    // case 'Brain Game':
-    //   list = `score_array_${brain_game_type}`;
-    //   break;
-    // case 'Blackjack':
-    //   list = 'bj_array';
-    //   break;
-    // case 'Drop Game':
-    //   list = 'drop_array';
-    //   break;
-    // case 'Spleesh!':
-    //   if (spleesh_bet_unit === 0.01) {
-    //     list = 'spleesh_array';
-    //   } else if (spleesh_bet_unit === 0.1) {
-    //     list = 'spleesh_10_array';
-    //   } else {
-    //     list = 'spleesh_001_array';
-
-    //   }
-    //   break;
-    // case 'Mystery Box':
-    //   list = 'bet_array';
-    //   break;
     default:
       list = rpsbetitems;
   }
@@ -40,6 +14,11 @@ const AiPanel = ({ isDarkMode, creator_id, rank, attached, handleDetachAttachCha
   return (
     <div className="ai-container">
       <BetArray
+        bankroll={bankroll}
+        handle2xButtonClick={handle2xButtonClick}
+        handleMaxButtonClick={handleMaxButtonClick}
+        handleHalfXButtonClick={handleHalfXButtonClick}
+        onChangeState={onChangeState}
         isDarkMode={isDarkMode}
         arrayName={list}
         handleDetachAttachChange={handleDetachAttachChange}

@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import { convertToCurrency } from '../../util/conversion';
 import { Warning, Info, CheckCircle } from '@material-ui/icons';
 import { Tooltip } from '@material-ui/core';
-// import { updateDigitToPoint2 } from '../../util/helper';
 
 class Summary extends Component {
   constructor(props) {
@@ -14,39 +13,12 @@ class Summary extends Component {
     };
     if (this.props.game_mode === 'RPS') {
       this.state.winChance = 33;
-    // } else if (this.props.game_mode === 'Spleesh!') {
-    //   this.state.winChance = 69;
-    // } else if (this.props.game_mode === 'Mystery Box') {
-    //   this.state.winChance = 10;
-    // } else if (this.props.game_mode === 'Quick Shoot') {
-    //   this.state.winChance = 15;
-    // } else if (this.props.game_mode === 'Brain Game') {
-    //   this.state.winChance = '0 - 100';
-    // } else if (this.props.game_mode === 'Drop Game') {
-    //   this.state.winChance = 42;
-    // } else if (this.props.game_mode === 'Bang!') {
-    //   this.state.winChance = 42;
-    // } else if (this.props.game_mode === 'Roll') {
-    //   this.state.winChance = 42;
-    // } else if (this.props.game_mode === 'Blackjack') {
-    //   this.state.winChance = 42;
     }
   }
 
   pre_summery() {
-    let public_max_return = convertToCurrency(this.props.max_prize /* 0.95 */);
-    let public_bet_amount = this.props.public_bet_amount;
-    if (this.props.game_mode === 'Spleesh!') {
-      public_bet_amount = (
-        <>
-          {convertToCurrency(this.props.spleesh_bet_unit)}{' '}-
-          {convertToCurrency(this.props.spleesh_bet_unit * 10)}
-        </>
-      );
-      public_max_return = convertToCurrency(
-        this.props.spleesh_bet_unit * 5.5 + this.props.bet_amount /* 0.9 */
-      );
-    } else if (this.props.game_mode === 'Quick Shoot') {
+    let public_max_return = convertToCurrency(this.props.max_prize);
+    if (this.props.game_mode === 'Quick Shoot') {
       public_max_return = convertToCurrency(this.props.max_return);
     } else if (this.props.game_mode === 'RPS') {
       public_max_return = convertToCurrency(this.props.bet_amount);
@@ -60,32 +32,12 @@ class Summary extends Component {
             {convertToCurrency(this.props.bet_amount)}
           </div>
         </div>
-        {/* {['Mystery Box', 'Spleesh!', 'Quick Shoot'].includes(
-          this.props.game_mode
-        ) && (
-          <div className="data-item">
-            <div className="label public-bet-amount">THEIR BET</div>
-            <div className="value">{public_bet_amount}</div>
-          </div>
-        )} */}
         <div className="data-item">
           <div className="label your-max-return">TARGET ROI</div>
           <div className="value">
-            {this.props.game_mode === 'Brain Game' ? (
-              <>
-                <span style={{ fontSize: '2em' }}>∞</span>
-              </>
-            ) : (
-              convertToCurrency(this.props.max_return)
-            )}
+            {convertToCurrency(this.props.max_return)}
           </div>
         </div>
-        {['Bang!', 'Roll'].includes(this.props.game_mode) && (
-          <div className="data-item">
-            <div className="label public-max-return">Average Multiplier</div>
-            <div className="value">{this.props.aveMultiplier}x</div>
-          </div>
-        )}
 
         <div className="data-item">
           <div className="label win-chance">Expected Value</div>
@@ -103,18 +55,8 @@ class Summary extends Component {
     if (prevProps.game_mode !== this.props.game_mode) {
       if (this.props.game_mode === 'RPS') {
         this.setState({ winChance: 33 });
-      } else if (this.props.game_mode === 'Spleesh!') {
-        this.setState({ winChance: 69 });
-      } else if (this.props.game_mode === 'Mystery Box') {
-        this.setState({ winChance: 10 });
       } else if (this.props.game_mode === 'Quick Shoot') {
         this.setState({ winChance: 15 });
-      } else if (this.props.game_mode === 'Brain Game') {
-        this.setState({ winChance: '0 - 100' });
-      } else if (this.props.game_mode === 'Drop Game') {
-        this.setState({ winChance: 42 });
-      } else if (this.props.game_mode === 'Bang!') {
-        this.setState({ winChance: 42 });
       }
     }
   }
@@ -123,53 +65,46 @@ class Summary extends Component {
     const {
       rps_game_type,
       qs_game_type,
+      name,
+      ticker,
+      x_link,
+      image,
+      website_link,
+      telegram_link,
       bet_amount,
       winChance,
       max_return,
-      aveMultiplier,
       public_bet_amount,
       max_prize,
       game_mode,
-      spleesh_bet_unit,
-      gameBackground,
       is_private,
-      youtubeUrl,
       endgame_amount,
       endgame_type,
       selectedStrategy,
       description
     } = this.props;
     let public_max_return = <> {convertToCurrency(max_prize)} </>;
-    let spleesh_public_bet_amount = public_bet_amount
 
     const isNegative = winChance < 0;
     const isPositive = winChance > 0;
-    const isZero = winChance === 0;
 
     let valueColor = 'default';
     let backgroundColor = 'default';
-    let icon = <Info style={{width: "10pt", cursor: "pointer", marginLeft: "5px"}}/>;
+    let icon = <Info style={{ width: "10pt", cursor: "pointer", marginLeft: "5px" }} />;
     let tooltipText = 'Zero (Neutral Fairness)';
 
     if (isNegative) {
       valueColor = '#ff0000';
       backgroundColor = '#ff000033';
-      icon = <Warning  style={{width: "10pt", cursor: "pointer", marginLeft: "5px"}}/>;
+      icon = <Warning style={{ width: "10pt", cursor: "pointer", marginLeft: "5px" }} />;
       tooltipText = 'High Risk Game';
     } else if (isPositive) {
       valueColor = 'rgb(40, 167, 69)';
       backgroundColor = 'rgba(40, 167, 69, 0.3)';
-      icon = <CheckCircle  style={{width: "10pt", cursor: "pointer", marginLeft: "5px"}}/>;
+      icon = <CheckCircle style={{ width: "10pt", cursor: "pointer", marginLeft: "5px" }} />;
       tooltipText = 'Low Risk Game';
     }
-    if (game_mode === 'Spleesh!') {
-      spleesh_public_bet_amount = (
-        <>
-          {convertToCurrency(spleesh_bet_unit)} -{' '}
-          {convertToCurrency(spleesh_bet_unit * 10)}
-        </>
-      );
-    } else if (game_mode === 'Quick Shoot') {
+    if (game_mode === 'Quick Shoot') {
       public_max_return = convertToCurrency(this.props.max_return);
     }
 
@@ -194,20 +129,6 @@ class Summary extends Component {
               {convertToCurrency(bet_amount)}
             </div>
           </div>
-          
-          {/* {game_mode === 'RPS' && (
-            <div className="summary-item">
-              <div className="summary-item-name title">Game Mode</div>
-              <div className="summary-item-value">
-                {rps_game_type === 0
-                  ? 'Classic'
-                  : rps_game_type === 1
-                    ? 'RRPS'
-                    : 'Other'}
-              </div>
-            </div>
-          )} */}
-           
 
           {game_mode === 'Quick Shoot' && (
             <div className="summary-item">
@@ -216,11 +137,11 @@ class Summary extends Component {
             </div>
           )}
           <div className="summary-item">
-              <div className="summary-item-name title">AI Play Strategy</div>
-              <div className="summary-item-value">
-                {selectedStrategy}
+            <div className="summary-item-name title">AI Play Strategy</div>
+            <div className="summary-item-value">
+              {selectedStrategy}
             </div>
-            </div>
+          </div>
           {(game_mode === 'Quick Shoot') && (
             <div className="summary-item">
               <div className="summary-item-name title">Public Bet Amount</div>
@@ -229,28 +150,13 @@ class Summary extends Component {
               </div>
             </div>
           )}
-          {(game_mode === 'Spleesh!') && (
-            <div className="summary-item">
-              <div className="summary-item-name title">Public Bet Amount</div>
-              <div className="summary-item-value">
-                {convertToCurrency(spleesh_public_bet_amount)}
-              </div>
-            </div>
-          )}
+
           {game_mode === 'Quick Shoot' && (
             <div className="summary-item">
               <div className="summary-item-name title">Public Max Return</div>
               <div className="summary-item-value">{public_max_return}</div>
             </div>
           )}
-          {game_mode === 'Bang!' ||
-            (game_mode === 'Roll' && (
-              <div className="summary-item">
-                <div className="summary-item-name title">Average Multiplier</div>
-                <div className="summary-item-value">{aveMultiplier}x</div>
-              </div>
-            ))}
-            
           <div className="summary-item">
             <div className="summary-item-name title">TARGET ROI</div>
             <div className="summary-item-value">
@@ -265,18 +171,7 @@ class Summary extends Component {
               </div>
             </div>
           )}
-          {/* <div className="summary-item">
-            <div className="summary-item-name title">Music</div>
-            <div className="summary-item-value">
-              {youtubeUrl ? youtubeUrl : 'No Music'}
-            </div>
-          </div>
-          <div className="summary-item">
-            <div className="summary-item-name title">Background</div>
-            <div className="summary-item-value">
-              {gameBackground ? gameBackground : 'No Background'}
-            </div>
-          </div> */}
+
           <div className="summary-item">
             <div className="summary-item-name title">Description</div>
             <div className="summary-item-value">

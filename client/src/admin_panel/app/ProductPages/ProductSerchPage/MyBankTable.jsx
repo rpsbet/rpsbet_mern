@@ -285,7 +285,7 @@ class MyBankTable extends Component {
       setCurrentLoanId,
       setCurrentLoanInfo,
       openDeListLoanModal,
-      isLowGraphics
+      solPrice
     } = this.props;
 
     const {
@@ -345,7 +345,6 @@ class MyBankTable extends Component {
         </FilterSortContainer>
         {data && data.length === 0? (
           <ProductGrid>
-            {/* Placeholder Skeleton for Product Cards */}
             {[...Array(5)].map((_, index) => (
               <ProductCard key={index}>
                 <Skeleton variant="text" width="80%" height={30} />
@@ -385,7 +384,7 @@ class MyBankTable extends Component {
                   <CommissionPower>{(row.apy * 100).toFixed(2)}%</CommissionPower>
 
                   <ProductInfo>
-                    <LoanAmount>{convertToCurrency(row.loan_amount)}</LoanAmount>
+                    <LoanAmount>{convertToCurrency(row.loan_amount, solPrice)}</LoanAmount>
                     <TableContainer>
                       <Table id="my-products" className="product-detail">
                         <TableBody>
@@ -444,7 +443,7 @@ class MyBankTable extends Component {
                               <FontAwesomeIcon icon={faPiggyBank} />&nbsp;Reserves:
                             </TableCell>
                             <TableCell className="value">
-                              {convertToCurrency(reserves)}
+                              {convertToCurrency(reserves, solPrice)}
                             </TableCell>
                           </TableRow>
                           <TableRow>
@@ -494,7 +493,8 @@ const mapStateToProps = state => ({
   tnxComplete: state.logic.transactionComplete,
   isDarkMode: state.auth.isDarkMode,
   userInfo: state.auth.user,
-  isLowGraphics: state.auth.isLowGraphics
+  isLowGraphics: state.auth.isLowGraphics,
+  solPrice: state.logic.solPrice
 });
 
 const mapDispatchToProps = {

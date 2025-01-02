@@ -230,8 +230,8 @@ class StatisticsForm extends React.Component {
       yaxis: {
         labels: {
           formatter: function (value) {
-            const convertToCurrency = input => {
-              let number = Number(input);
+            const convertToCurrency = (input, solPrice) => {
+              let number = Number(input * solPrice);
               if (!isNaN(number)) {
                 let [whole, decimal] = number
                   .toFixed(2)
@@ -259,8 +259,8 @@ class StatisticsForm extends React.Component {
 
       tooltip: {
         custom: function ({ series, seriesIndex, dataPointIndex, w }) {
-          const convertToCurrency = input => {
-            let number = Number(input);
+          const convertToCurrency = (input, solPrice) => {
+            let number = Number(input * solPrice);
             if (!isNaN(number)) {
               number = Math.floor(number * 100000) / 100000;
               let [whole, decimal] = number.toString().split('.');
@@ -298,7 +298,7 @@ class StatisticsForm extends React.Component {
               <tr>
               <td>BET: </td>
               <td>&nbsp;${convertToCurrency(
-            gameLogList[dataPointIndex].bet
+            gameLogList[dataPointIndex].bet, solPrice
           )}</td>
               </tr>
               <tr>
@@ -308,13 +308,13 @@ class StatisticsForm extends React.Component {
               <tr>
               <td>PROFIT: </td>
               <td>&nbsp;${convertToCurrency(
-            gameLogList[dataPointIndex].profit
+            gameLogList[dataPointIndex].profit, solPrice
           )}</td>
               </tr>
               <tr>
               <td>NET PROFIT: </td>
               <td>&nbsp;${convertToCurrency(
-            gameLogList[dataPointIndex].net_profit
+            gameLogList[dataPointIndex].net_profit, solPrice
           )}</td>
               </tr>
               
@@ -356,7 +356,8 @@ class StatisticsForm extends React.Component {
       message,
       title,
       barStyle,
-      color
+      color,
+      solPrice
     } = this.props;
     const { creditScore, hexagon } = this.state;
 
@@ -452,13 +453,6 @@ class StatisticsForm extends React.Component {
                     <MenuItem value="All">All</MenuItem>
                     <MenuItem value="62a25d2a723b9f15709d1ae7">RPS</MenuItem>
                     <MenuItem value="62a25d2a723b9f15709d1aeb">Quick Shoot</MenuItem>
-                     <MenuItem value="62a25d2a723b9f15709d1ae9">Brain Game</MenuItem>
-                    {/*<MenuItem value="62a25d2a723b9f15709d1aea">Mystery Box</MenuItem>
-                    <MenuItem value="63dac60ba1316a1e70a468ab">Drop Game</MenuItem>
-                    <MenuItem value="62a25d2a723b9f15709d1ae8">Spleesh</MenuItem>
-                    <MenuItem value="6536a82933e70418b45fbe32">Bang!</MenuItem>
-                    <MenuItem value="6536946933e70418b45fbe2f">Roll</MenuItem> */}
-
                   </Select>
                 </FormControl>
                 <FormControl>
@@ -509,27 +503,27 @@ class StatisticsForm extends React.Component {
                     </TableRow>
                     <TableRow>
                       <TableCell className="label">Net Profit</TableCell>
-                      <TableCell className="value" align="center">{convertToCurrency(gameProfit)}</TableCell>
+                      <TableCell className="value" align="center">{convertToCurrency(gameProfit, solPrice)}</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell className="label">Ave. Wager</TableCell>
-                      <TableCell className="value" align="center">{convertToCurrency(averageWager)}</TableCell>
+                      <TableCell className="value" align="center">{convertToCurrency(averageWager, solPrice)}</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell className="label">Ave. Games Played Per Room</TableCell>
-                      <TableCell className="value" align="center">{updateDigitToPoint2(averageGamesPlayedPerRoom)}</TableCell>
+                      <TableCell className="value" align="center">{updateDigitToPoint2(averageGamesPlayedPerRoom, solPrice)}</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell className="label">Ave. Profit Per Game</TableCell>
-                      <TableCell className="value" align="center">{convertToCurrency(averageProfit)}</TableCell>
+                      <TableCell className="value" align="center">{convertToCurrency(averageProfit, solPrice)}</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell className="label">Profit ATH</TableCell>
-                      <TableCell className="value" align="center">{convertToCurrency(profitAllTimeHigh)}</TableCell>
+                      <TableCell className="value" align="center">{convertToCurrency(profitAllTimeHigh, solPrice)}</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell className="label">Profit ATL</TableCell>
-                      <TableCell className="value" align="center">{convertToCurrency(profitAllTimeLow)}</TableCell>
+                      <TableCell className="value" align="center">{convertToCurrency(profitAllTimeLow, solPrice)}</TableCell>
                     </TableRow>
                   </TableBody>
                 </Table>

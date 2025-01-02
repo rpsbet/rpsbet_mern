@@ -39,8 +39,6 @@ const uploadRoutes = require('./routes/upload.routes');
 const gameRoutes = require('./routes/game.routes');
 const itemRoutes = require('./routes/item.routes');
 const loanRoutes = require('./routes/loan.routes');
-const questionRoutes = require('./routes/admin_question.routes');
-const brainGameTypeRoutes = require('./routes/admin_brain_game_type.route');
 const stripeRoutes = require('./routes/stripe.routes');
 const statisticsRoutes = require('./routes/statistics.routes');
 const systemSetting = require('./routes/settings.routes');
@@ -94,7 +92,6 @@ async function verify(token) {
   return payload;
 }
 
-
 // Login route
 app.post('/auth/google', async (req, res) => {
   const token = req.body.token;
@@ -107,7 +104,6 @@ app.post('/auth/google', async (req, res) => {
     res.status(401).json({ success: false, error: 'Invalid token' });
   }
 });
-
 
 // Connect Database
 const connectWithRetry = async () => {
@@ -140,8 +136,6 @@ app.use('/api/game', gameRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/item', itemRoutes);
 app.use('/api/loan', loanRoutes);
-app.use('/api/question', questionRoutes);
-app.use('/api/brain_game_type', brainGameTypeRoutes);
 app.use('/api/stripe', stripeRoutes);
 app.use('/api/statistics', statisticsRoutes);
 app.use('/api/settings', systemSetting);

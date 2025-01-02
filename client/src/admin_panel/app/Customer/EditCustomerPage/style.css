@@ -48,7 +48,7 @@
   top: 50%;
   transform: translateY(-50%);
   color: white;
-  font-size: 0.6em;
+  font-size: 0.3em;
   display: none;
 }
 
@@ -127,19 +127,6 @@
   text-align: center;
   font-style: italic;
   color: gray;
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-  100% {
-    transform: scale(1);
-  }
 }
 
 @keyframes slideIn {

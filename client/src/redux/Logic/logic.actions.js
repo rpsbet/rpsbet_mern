@@ -13,6 +13,7 @@ import {
   TNX_COMPLETE,
   TNX_INCOMPLETE,
   SET_TOKEN_PRICE,
+  SET_SOL_TO_USD_PRICE,
   COMMENT_CREATED,
   TOP_WINS,
   ADD_NEW_CANDLE,
@@ -25,7 +26,6 @@ import {
   RPSBETITEMS_LOADED,
   QSBETITEMS_LOADED,
   ROOMS_LOADED,
-  ROOMS_COUNT,
   UPDATE_BET_RESULT,
   UPDATE_BANKROLL,
   UPDATE_RAIN,
@@ -46,10 +46,6 @@ import {
   HISTORY_LOADED,
   NEW_TRANSACTION,
   SET_BALANCE,
-  SPLEESH_GUESSES,
-  DROP_GUESSES,
-  BANG_GUESSES,
-  ROLL_GUESSES,
   ONLINE_USER_LIST_UPDATED,
   MSG_WARNING,
   SELECT_MAIN_TAB,
@@ -62,8 +58,6 @@ import {
 } from '../types';
 import axios from '../../util/Api';
 import history from '../history';
-
-// Logic.actions
 
 // CreateRoom
 export const createRoom = room_info => async dispatch => {
@@ -106,69 +100,41 @@ export const reCreateRoom = room_id => async dispatch => {
   }
 };
 
-export function updateDropGuesses() {
-  return dispatch => {
-    fetch('/api/drop/guesses')
-      .then(res => res.json())
-      .then(data => {
-        dispatch({
-          type: DROP_GUESSES,
-          payload: data
-        });
-      })
-      .catch(error => {
-        console.error(error);
-      });
-  };
-}
-export function updateBangGuesses() {
-  return dispatch => {
-    fetch('/api/bang/guesses')
-      .then(res => res.json())
-      .then(data => {
-        dispatch({
-          type: BANG_GUESSES,
-          payload: data
-        });
-      })
-      .catch(error => {
-        console.error(error);
-      });
-  };
-}
-export function updateRollGuesses() {
-  return dispatch => {
-    fetch('/api/roll/guesses')
-      .then(res => res.json())
-      .then(data => {
-        dispatch({
-          type: ROLL_GUESSES,
-          payload: data
-        });
-      })
-      .catch(error => {
-        console.error(error);
-      });
-  };
-}
+export const getSolToUsdPrice = (solAmount = null) => async (dispatch) => {
+  try {
+    const response = await axios.post('/stripe/get_sol_to_usd', {
+      solAmount,
+    });
+
+    const { solPrice, usdValue } = response.data;
+
+    dispatch({
+      type: SET_SOL_TO_USD_PRICE,
+      payload: { solPrice, usdValue },
+    });
+  } catch (error) {
+    console.error('Error fetching SOL to USD price:', error);
+  }
+};
 
 export const getTokenPrice = (tokenMintAddress) => async (dispatch) => {
   try {
     const response = await axios.post('/stripe/get_token_price', {
-      tokenMintAddress, // Replace with the actual token address
-      web2Amount: 1,    // Default amount to fetch the token price
+      tokenMintAddress,
+      web2Amount: 1,
     });
 
     const { tokenPrice } = response.data;
 
     dispatch({
       type: SET_TOKEN_PRICE,
-      payload: tokenPrice, // Send token price to the reducer
+      payload: tokenPrice,
     });
   } catch (error) {
     console.error('Error fetching token price:', error);
   }
 };
+
 
 // join game
 export const bet = bet_info => async dispatch => {
@@ -181,16 +147,6 @@ export const bet = bet_info => async dispatch => {
     if (res.data.success) {
       dispatch({ type: NEW_TRANSACTION, payload: res.data.newTransaction });
 
-      if (bet_info.game_type === 'Mystery Box') {
-        dispatch({ type: BET_SUCCESS, payload: res.data });
-      } else {
-        dispatch({
-          type: UPDATE_BET_RESULT,
-          payload: {
-            betResult: res.data.betResult === 1 ? 'win' : res.data.betResult === 0 ? 'draw' : 'lose',
-          }
-        });
-      }
       return {
         status: 'success',
         betResult: res.data.betResult,
@@ -242,16 +198,6 @@ export const bet2 = bet_info => async dispatch => {
     if (res.data.success) {
       dispatch({ type: NEW_TRANSACTION, payload: res.data.newTransaction });
 
-      if (bet_info.game_type === 'Mystery Box') {
-        dispatch({ type: BET_SUCCESS, payload: res.data });
-      } else {
-        dispatch({
-          type: UPDATE_BET_RESULT,
-          payload: {
-            betResult: res.data.betResult === 1 ? 'win' : res.data.betResult === 0 ? 'draw' : 'lose',
-          }
-        });
-      }
       return {
         status: 'success',
         betResult: res.data.betResult,
@@ -398,7 +344,6 @@ export const getRoomInfo = (room_id, limit, loading) => async dispatch => {
     // Include the 'limit' parameter in the API request URL if provided
     const apiURL = limit ? `/game/room/${room_id}?limit=${limit}` : `/game/room/${room_id}`;
     const res = await axios.get(apiURL);
-
     if (res.data.success) {
       dispatch({ type: ROOMINFO_LOADED, payload: res.data });
     } else {
@@ -429,14 +374,12 @@ export const createComment = (commentData) => async (dispatch) => {
     dispatch({ type: COMMENT_CREATION_FAILED, payload: err });
     return { success: false, error: err }; // Return error to the caller
   } finally {
-    // Any cleanup actions or ending loading state can be handled here
   }
 };
 
 // GetCommentsForRoom
 export const getCommentsForRoom = (room_id) => async dispatch => {
   try {
-    // Dispatch start loading action if needed
     dispatch({ type: START_LOADING });
     const res = await axios.get(`/game/comments/${room_id}`);
 
@@ -489,8 +432,6 @@ export const actionRoom = ({ roomId, type }) => async dispatch => {
   } catch (err) {
     dispatch({ type: MSG_WARNING, payload: err });
   }
-
-  // dispatch({ type: END_LOADING });
 };
 
 export const checkGamePassword = data => async dispatch => {
@@ -501,7 +442,6 @@ export const checkGamePassword = data => async dispatch => {
       return true;
     }
   } catch (err) {
-    // dispatch({ type: MSG_ROOMS_LOAD_FAILED, payload: err });
   } finally {
     dispatch({ type: END_LOADING });
   }
@@ -717,20 +657,8 @@ export const fetchMoreRooms = (search_condition) => async (dispatch) => {
     dispatch({ type: END_LOADING });
   }
 };
+
 // actions
-
-
-export const getRoomCount = search_condition => async dispatch => {
-  try {
-    const res = await axios.get('/game/count', { params: search_condition });
-    if (res.data.success) {
-      dispatch({ type: ROOMS_COUNT, payload: res.data.roomCount });
-    }
-  } catch (err) {
-    console.log("error", err)
-  }
-};
-
 export const getHistory = search_condition => async dispatch => {
 
   dispatch({ type: TNX_COMPLETE });
@@ -915,7 +843,7 @@ export const kickBots = (room_id) => async (dispatch) => {
     return true; // Bots successfully removed
   } catch (err) {
     dispatch({ type: 'MSG_ERROR', payload: 'Failed to remove bots from the room or room has ended' });
-    return false; // Bot removal failed
+    return false;
   }
 };
 
@@ -940,10 +868,10 @@ export const updateRoomBot = (room_id) => async dispatch => {
       dispatch({ type: MSG_ERROR, payload: 'NO BOTS AVAILABLE' });
     }
 
-    return true; // Bot successfully attached
+    return true;
   } catch (err) {
     dispatch({ type: MSG_ERROR, payload: 'NO MORE BOTS OR ROOM HAS ENDED' });
-    return false; // Bot attachment failed
+    return false;
   }
 };
 
@@ -993,16 +921,16 @@ export const attachPlayerToRoom = (room_id, bet_amounts) => async dispatch => {
       dispatch({ type: MSG_SUCCESS, payload: "Attached AI to room" });
       dispatch({ type: ATTACHED, payload: true });
 
-      return true; // Player successfully attached
+      return true;
     } else {
       dispatch({ type: MSG_ERROR, payload: res.data.message || 'Failed to attach player to the room' });
       dispatch({ type: ATTACHED, payload: false });
 
-      return false; // Player attachment failed
+      return false;
     }
   } catch (err) {
     dispatch({ type: MSG_ERROR, payload: 'Internal server error or room not found' });
-    return false; // Player attachment failed
+    return false;
   }
 };
 
@@ -1011,14 +939,14 @@ export const detachPlayerFromRoom = (room_id) => async dispatch => {
     const res = await axios.post(`/game/detachPlayer/${room_id}`);
     if (res.data.success) {
       dispatch({ type: MSG_SUCCESS, payload: "Detached AI from the room" });
-      return true; // Player successfully detached
+      return true;
     } else {
       dispatch({ type: MSG_ERROR, payload: res.data.message || 'Failed to detach player from the room' });
-      return false; // Player detachment failed
+      return false;
     }
   } catch (err) {
     dispatch({ type: MSG_ERROR, payload: 'Internal server error or room not found' });
-    return false; // Player detachment failed
+    return false;
   }
 };
 
@@ -1196,7 +1124,6 @@ export const getQbotStatuses = (creatorIds) => async (dispatch) => {
     if (res.data.success) {
       const qBotStatuses = res.data.statuses;
 
-      // Optionally store in localStorage
       localStorage.setItem('qBotStatuses', JSON.stringify({
         data: qBotStatuses,
         timestamp: Date.now(),
@@ -1257,41 +1184,30 @@ export const getMyChat = () => async dispatch => {
 };
 export const getNotifications = () => async dispatch => {
   try {
-    // Send an HTTP GET request to the '/game/notifications' endpoint.
     const res = await axios.get('/game/notifications');
-
-    // Check if the response data indicates success.
     if (res.data.success) {
-      // If successful, dispatch a Redux action with the notifications payload.
       dispatch({ type: NOTIFICATIONS_LOADED, payload: res.data.notifications });
     }
   } catch (err) {
-    // If there's an error during the request, log the error.
     console.log(err);
   }
 };
 
 export const readNotifications = () => async dispatch => {
   try {
-    // First, mark notifications as read
     const markReadResponse = await axios.patch('/game/read_notifications');
 
-    // Check if marking notifications as read was successful
     if (markReadResponse.data.success) {
 
       const fetchNotificationsResponse = await axios.get('/game/notifications');
-      // Dispatch a Redux action with the updated notifications payload
       if (fetchNotificationsResponse.data.success) {
         dispatch({ type: NOTIFICATIONS_LOADED, payload: fetchNotificationsResponse.data.notifications });
       }
     }
   } catch (err) {
-    // If there's an error during the request, log the error.
     console.log(err);
   }
 };
-
-
 
 export const getChatRoomInfo = user_id => async dispatch => {
   try {
@@ -1321,62 +1237,6 @@ const handleGameStart = async (dispatch, data, endpoint) => {
     return false;
   } catch (err) {
     return false;
-  }
-};
-
-export const deductBalanceWhenStartBrainGame = data => async dispatch => {
-  return handleGameStart(dispatch, data, '/game/start_brain_game');
-};
-
-export const deductBalanceWhenStartBlackjack = data => async dispatch => {
-  return handleGameStart(dispatch, data, '/game/start_blackjack');
-};
-
-export const deductBalanceWhenStartRoll = data => async dispatch => {
-  return handleGameStart(dispatch, data, '/game/start_roll');
-};
-
-export const getRollGuesses = roomId => async dispatch => {
-  try {
-    dispatch({ type: START_LOADING });
-    const res = await axios.get('/game/get_roll_guesses', { params: { roomId } });
-    if (res.data.success) {
-      dispatch({ type: END_LOADING });
-    } else {
-      dispatch({ type: MSG_GAMETYPE_LOAD_FAILED });
-    }
-
-  } catch (err) {
-    dispatch({ type: MSG_GAMETYPE_LOAD_FAILED, payload: err });
-  }
-};
-
-export const getSpleeshGuesses = roomId => async dispatch => {
-  try {
-    const res = await axios.get('/game/get_spleesh_guesses', { params: { roomId } });
-    if (res.data.success) {
-      dispatch({ type: SPLEESH_GUESSES, payload: res.data.spleesh_guesses });
-    } else {
-      dispatch({ type: MSG_GAMETYPE_LOAD_FAILED });
-    }
-
-  } catch (err) {
-    dispatch({ type: MSG_GAMETYPE_LOAD_FAILED, payload: err });
-  }
-};
-
-export const getBangGuesses = roomId => async dispatch => {
-  try {
-    dispatch({ type: START_LOADING });
-    const res = await axios.get('/game/get_bang_guess', { params: { roomId } });
-    if (res.data.success) {
-      dispatch({ type: END_LOADING });
-    } else {
-      dispatch({ type: MSG_GAMETYPE_LOAD_FAILED });
-    }
-
-  } catch (err) {
-    dispatch({ type: MSG_GAMETYPE_LOAD_FAILED, payload: err });
   }
 };
 
@@ -1414,9 +1274,6 @@ export const setGameMode = game_mode => dispatch => {
 
 export const setCurRoomInfo = room_info => dispatch => {
   dispatch({ type: SET_CUR_ROOM_INFO, payload: room_info });
-  if (room_info.game_type === 'Mystery Box') {
-    dispatch({ type: BET_SUCCESS, payload: { betResult: -1 } });
-  }
 };
 
 export const setNotificationsRoomInfo = room_info => dispatch => {
@@ -1489,14 +1346,6 @@ export const addNewTransaction = data => dispatch => {
 export const setUrl = url => dispatch => {
   dispatch({ type: SET_URL, payload: url });
 };
-
-// export const startLoading = () => dispatch => {
-//   dispatch({ type: START_LOADING });
-// };
-
-// export const endLoading = () => dispatch => {
-//   dispatch({ type: END_LOADING });
-// };
 
 export const updateOnlineUserList = user_list => dispatch => {
   dispatch({ type: ONLINE_USER_LIST_UPDATED, payload: user_list });

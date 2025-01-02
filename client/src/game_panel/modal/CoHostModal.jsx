@@ -9,8 +9,6 @@ import { ShowChartOutlined, TrendingUpOutlined, TrendingDownOutlined } from "@ma
 import { convertToCurrency } from '../../util/conversion';
 import Avatar from '../../components/Avatar';
 import PlayerModal from '../modal/PlayerModal';
-import { Warning, Info, CheckCircle } from '@material-ui/icons';
-
 
 function CoHostModal({
   isDarkMode,
@@ -21,6 +19,8 @@ function CoHostModal({
   handleClose,
   handleSendCoHost,
   has_joined,
+  solPrice,
+  input_only,
   handleCoHostAmountChange,
 }) {
   const dispatch = useDispatch();
@@ -35,7 +35,6 @@ function CoHostModal({
   const transactionCandles = useSelector(state => state.logic.candles);
   const transactions = useSelector(state => state.auth.transactions);
   const socket = useSelector(state => state.auth.socket);
-
   const convertToChartCurrency = (input) => {
     let number = Number(input);
 
@@ -192,23 +191,23 @@ function CoHostModal({
     const now = new Date().getTime();
     const fourHoursAgo = Date.now() - 4 * 60 * 60 * 1000;
     let lastCandle = transactionCandles[0];
-  
+
     if (new Date(lastCandle.startTime).getTime() >= fourHoursAgo) {
       chartData.push({
         x: new Date(lastCandle.startTime).getTime(),
         y: [lastCandle.open, lastCandle.high, lastCandle.low, lastCandle.close],
       });
     }
-  
+
     for (let i = 1; i < transactionCandles.length; i++) {
       const currentCandle = transactionCandles[i];
       const lastCandleTime = new Date(lastCandle.startTime).getTime();
       const currentCandleTime = new Date(currentCandle.startTime).getTime();
 
       const timeDiff = currentCandleTime - lastCandleTime;
-  
+
       if (timeDiff > 60000) {
-        
+
         const missingCandlesCount = Math.floor(timeDiff / 60000);
         for (let j = 1; j < missingCandlesCount; j++) {
           const missingTime = lastCandleTime + j * 60000;
@@ -225,13 +224,13 @@ function CoHostModal({
           }
         }
       }
-  
+
       if (timeDiff <= 60000 && Math.floor(lastCandleTime / 60000) === Math.floor(currentCandleTime / 60000)) {
         lastCandle.high = Math.max(lastCandle.high, currentCandle.high);
         lastCandle.low = Math.min(lastCandle.low, currentCandle.low);
         lastCandle.close = currentCandle.close;
         lastCandle.volume += currentCandle.volume;
-      
+
         const lastChartIndex = chartData.length - 1;
         if (currentCandleTime >= fourHoursAgo && lastChartIndex >= 0) {
           chartData[lastChartIndex] = {
@@ -246,17 +245,17 @@ function CoHostModal({
             y: [currentCandle.open, currentCandle.high, currentCandle.low, currentCandle.close],
           });
         }
-      
+
         lastCandle = currentCandle;
       }
     }
-  
+
     const lastCandleTime = new Date(lastCandle.startTime).getTime();
     const timeDiff = Math.floor((now - lastCandleTime) / 60000);
-  
+
     for (let j = 1; j <= timeDiff; j++) {
       const missingTime = lastCandleTime + j * 60000;
-  
+
       if (missingTime >= fourHoursAgo) {
         chartData.push({
           x: missingTime,
@@ -269,7 +268,7 @@ function CoHostModal({
         });
       }
     }
-  
+
     chartData.sort((a, b) => a.x - b.x);
 
     chartData.forEach((candle) => {
@@ -395,27 +394,20 @@ function CoHostModal({
 
     try {
 
-      // Ensure winnings is a valid number
       const parsedWinnings = parseFloat(winnings);
       if (isNaN(parsedWinnings)) {
         console.error("Invalid winnings value", winnings);
         return; // Exit if winnings are invalid
       }
 
-      // Ensure balance is a valid number (assuming 'balance' comes from Redux or props)
       const parsedBalance = parseFloat(balance);
       if (isNaN(parsedBalance)) {
         console.error("Invalid balance value", balance);
         return; // Exit if balance is invalid
       }
 
-      // Perform unstake and update state
       await dispatch(unstake(room_id, stakeAmount));
-
-      // Fetch updated games
       await dispatch(getMyGames({ game_type: 'All', status: 'open', sort: 'desc' }));
-
-      // Add new transaction
       await dispatch(addNewTransaction({ amount: parsedWinnings, room_id }));
 
       const jim = parsedBalance + parsedWinnings;
@@ -432,8 +424,8 @@ function CoHostModal({
   };
 
   return (
-    <div className={`${isDarkMode && !has_joined ? "dark_mode" : ""} ${!has_joined ? "big-modal" : "trade-container"}`}>
-      {!has_joined && (
+    <div className={`${isDarkMode && !has_joined ? "dark_mode" : ""} ${(!has_joined && !input_only) ? "big-modal" : "trade-container"}`}>
+      {!input_only && !has_joined && (
         <div className="modal-header">
           <h2 className="modal-title title">
             <ShowChartOutlined className="mr-2" />
@@ -444,7 +436,7 @@ function CoHostModal({
           </Button>
         </div>
       )}
-      <div className={` ${!has_joined ? "modal-body" : ""}`}>
+      <div className={` ${!has_joined && !input_only ? "modal-body" : ""}`}>
         {showPlayerModal && (
           <PlayerModal
             selectedCreator={selectedCreator}
@@ -456,7 +448,7 @@ function CoHostModal({
         <div className="modal-content-wrapper"
         >
           {/* Timeframe Buttons */}
-          {!has_joined && (
+          {!input_only && !has_joined && (
             <div className="glass-container" style={{ marginBottom: "15px", paddingBottom: "10px" }}>
 
               <Box
@@ -495,7 +487,7 @@ function CoHostModal({
                           {liquidityPercentageChange === 0 && null}
                           {' '}{!selectedRow.winnings
                             ? parseFloat(selectedRow.user_bet)
-                            : convertToCurrency(selectedRow.winnings)}
+                            : convertToCurrency(selectedRow.winnings, solPrice)}
                           {liquidityPercentageChange > 0 && (
                             <TrendingUpOutlined sx={{ marginRight: 1, color: 'green' }} />
                           )}
@@ -534,7 +526,6 @@ function CoHostModal({
                   </Tooltip>
                 </Box>
 
-                {/* Battles Column */}
                 <Box sx={{ textAlign: 'center' }}>
                   <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
                     BATTLES
@@ -544,7 +535,6 @@ function CoHostModal({
                   </Typography>
                 </Box>
 
-                {/* Created By Column */}
                 <Box sx={{ textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column' }}>
                   <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
                     CREATED BY
@@ -564,271 +554,263 @@ function CoHostModal({
               </Box>
             </div>
           )}
-          <div className="modal-content-panel" style={{ background: "rgba(170, 170, 170, 0.06)", borderRadius: "0.6em", marginBottom: "30px" }}>
+          <div className="modal-content-panel" style={{ background: "rgba(170, 170, 170, 0.06)", borderRadius: "0.3em", marginBottom: "15px" }}>
             {/* Tabs */}
-            <div style={{ display: "flex", justifyContent: "center", marginBottom: "20px" }}>
-              <Button
-                onClick={() => handleTabChange("PUMP")}
-                variant={selectedTab === "PUMP" ? "contained" : "outlined"}
-                color="secondary"
-                style={{
-                  marginRight: "15px",
-                  minWidth: "120px",
-                  padding: "10px 15px",
-                  borderRadius: "8px",
-                  textTransform: "none",
-                  backgroundColor: selectedTab === "PUMP" ? "#28a745" : "transparent", // Green background when selected
-                  color: selectedTab === "PUMP" ? "#fff" : "#28a745", // White text when selected
-                  // boxShadow: selectedTab === "PUMP" ? "0px 4px 12px rgba(0, 255, 0, 0.2)" : "none",
-                }}
-              >
-                PUMP
-                <TrendingUpOutlined
-                  style={{
-                    color: "#fff",
-                    marginLeft: "8px",
-                    background: "linear-gradient(357deg, #00ff17, #28a745)",
-                    padding: "2px",
-                    borderRadius: "50%",
-                    fontSize: "18px",
-                  }}
-                />
-              </Button>
+            {!has_joined && (
+              <>
+                <div style={{ display: "flex", justifyContent: "center", marginBottom: "20px" }}>
+                  <Button
+                    onClick={() => handleTabChange("PUMP")}
+                    variant={selectedTab === "PUMP" ? "contained" : "outlined"}
+                    color="secondary"
+                    style={{
+                      marginRight: "15px",
+                      minWidth: "120px",
+                      padding: "10px 15px",
+                      borderRadius: "0.3em",
+                      textTransform: "none",
+                      backgroundColor: selectedTab === "PUMP" ? "#28a745" : "transparent", // Green background when selected
+                      color: selectedTab === "PUMP" ? "#fff" : "#28a745", // White text when selected
+                      // boxShadow: selectedTab === "PUMP" ? "0px 4px 12px rgba(0, 255, 0, 0.2)" : "none",
+                    }}
+                  >
+                    PUMP
+                    <TrendingUpOutlined
+                      style={{
+                        color: "#fff",
+                        marginLeft: "8px",
+                        background: "linear-gradient(357deg, #00ff17, #28a745)",
+                        padding: "2px",
+                        borderRadius: "50%",
+                        fontSize: "18px",
+                      }}
+                    />
+                  </Button>
 
-              <Button
-                onClick={() => handleTabChange("JEET")}
-                variant={selectedTab === "JEET" ? "contained" : "outlined"}
-                color="secondary"
-                style={{
-                  minWidth: "120px",
-                  padding: "10px 15px",
-                  borderRadius: "8px",
-                  textTransform: "none",
-                  backgroundColor: selectedTab === "JEET" ? "#ff0000" : "transparent", // Red background when selected
-                  color: selectedTab === "JEET" ? "#fff" : "#ff0000", // White text when selected
-                  // boxShadow: selectedTab === "JEET" ? "0px 4px 12px rgba(255, 0, 0, 0.2)" : "none",
-                }}
-              >
-                JEET
-                <TrendingDownOutlined
-                  style={{
-                    color: "#fff",
-                    marginLeft: "4px",
-                    background: "linear-gradient(357deg, #ff0000, rgb(244 38 38))",
-                    padding: "2px",
-                    borderRadius: "50%",
-                    fontSize: "18px",
-                  }}
-                />
-              </Button>
-            </div>
-            <div style={{ display: "flex", flexDirection: "row", justifyContent: "center", alignItems: "center" }}>
-              <div className="input-amount" >
-                <TextField
-                  label="Amount"
-                  value={coHostAmount || 0}
-                  onChange={handleCoHostAmountChange}
-                  pattern="^\\d*\\.?\\d*$"
-                  variant="filled"
-                  type="number"
-                  autoComplete="off"
-                  id="payout"
-                  className="form-control"
-                  InputProps={{
-                    onFocus: handleFocus,
-                    // onBlur: handleBlur,
-                    endAdornment: (
-                      <ButtonGroup
-                        className={isButtonGroupVisible ? 'fade-in' : 'fade-out'}
-                      // style={{ visibility: isButtonGroupVisible ? 'visible' : 'hidden' }}
-                      >
-                        <Button
-                          variant="contained"
-                          color="primary"
-                          onClick={handle2xButtonClick}
-                          style={{ marginRight: "5px", padding: "7.5px" }}
-                        >
-                          2x
-                        </Button>
-                        <Button
-                          variant="contained"
-                          color="primary"
-                          onClick={handleHalfXButtonClick}
-                          style={{ marginRight: "5px", padding: "7.5px" }}
-                        >
-                          1/2x
-                        </Button>
-                        <Button
-                          variant="contained"
-                          color="primary"
-                          onClick={handleMaxButtonClick}
-                          style={{ padding: "7.5px" }}
+                  <Button
+                    onClick={() => handleTabChange("JEET")}
+                    variant={selectedTab === "JEET" ? "contained" : "outlined"}
+                    color="secondary"
+                    style={{
+                      minWidth: "120px",
+                      padding: "10px 15px",
+                      borderRadius: "0.3em",
+                      textTransform: "none",
+                      backgroundColor: selectedTab === "JEET" ? "#ff0000" : "transparent", // Red background when selected
+                      color: selectedTab === "JEET" ? "#fff" : "#ff0000", // White text when selected
+                      // boxShadow: selectedTab === "JEET" ? "0px 4px 12px rgba(255, 0, 0, 0.2)" : "none",
+                    }}
+                  >
+                    JEET
+                    <TrendingDownOutlined
+                      style={{
+                        color: "#fff",
+                        marginLeft: "4px",
+                        background: "linear-gradient(357deg, #ff0000, rgb(244 38 38))",
+                        padding: "2px",
+                        borderRadius: "50%",
+                        fontSize: "18px",
+                      }}
+                    />
+                  </Button>
+                </div>
+                <div style={{ display: "flex", flexDirection: "row", justifyContent: "center", alignItems: "center" }}>
+                  <div className="input-amount" >
+                    <TextField
+                      label="Amount"
+                      value={coHostAmount || 0}
+                      onChange={handleCoHostAmountChange}
+                      pattern="^\\d*\\.?\\d*$"
+                      variant="filled"
+                      type="number"
+                      autoComplete="off"
+                      id="payout"
+                      className="form-control"
+                      InputProps={{
+                        onFocus: handleFocus,
+                        // onBlur: handleBlur,
+                        endAdornment: (
+                          <ButtonGroup
+                            className={isButtonGroupVisible ? 'fade-in' : 'fade-out'}
+                          >
+                            <Button
+                              variant="contained"
+                              color="primary"
+                              onClick={handle2xButtonClick}
+                              style={{ marginRight: "5px", padding: "7.5px" }}
+                            >
+                              2x
+                            </Button>
+                            <Button
+                              variant="contained"
+                              color="primary"
+                              onClick={handleHalfXButtonClick}
+                              style={{ marginRight: "5px", padding: "7.5px" }}
+                            >
+                              1/2x
+                            </Button>
+                            <Button
+                              variant="contained"
+                              color="primary"
+                              onClick={handleMaxButtonClick}
+                              style={{ padding: "7.5px" }}
 
-                        >
-                          Max
-                        </Button>
-                      </ButtonGroup>
-                    ),
-                  }}
-                />
+                            >
+                              Max
+                            </Button>
+                          </ButtonGroup>
+                        ),
+                      }}
+                    />
 
-                {has_joined && (
-                  <>
-                    {selectedTab === "PUMP" && (
-                      <div
-                        className="desktop-only"
-                        style={{
-                          paddingTop: "20px",
-                          display: "flex",
-                          justifyContent: "center",
-                        }}
-                      >
-                        <Button
-                          style={{ padding: "0 10px" }}
-                          className="button-submit"
-                          onClick={handleSendCoHost}
-                        >
-                          PUMP
-
-                        </Button>
-                      </div>
-                    )}
-                    {selectedTab === "JEET" && (
-                      <div
-                        className="desktop-only"
-                        style={{
-                          paddingTop: "20px",
-                          display: "flex",
-                          justifyContent: "center",
-                        }}
-                      >
-                        <Button
-                          style={{
-                            padding: "0 10px",
-                            background: "linear-gradient(357deg, #00ff17, #28a745)",
-                          }}
-                          className="btn-back"
-                          onClick={() =>
-                            handleUnstake(
-                              selectedRow?.winnings ??
-                              parseFloat(selectedRow?.user_bet || 0),
-                              selectedRow?._id,
-                              coHostAmount
-                            )
-                          }
-                        >
-                          JEET
-
-                        </Button>
-                      </div>
-                    )}
-                  </>
-
-                )}
-              </div>
-
-            </div>
-
-
-            {/* Balance Table Section */}
-            <Table>
-              <TableBody>
-                <TableRow>
-                  <TableCell>BALANCE:</TableCell>
-                  <TableCell style={{ textAlign: 'right' }}>{convertToCurrency(balance)}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>CURRENT BANKROLL:</TableCell>
-                  <TableCell style={{ color: "#ff8500", textAlign: 'right' }}>
-                    {selectedRow ? convertToCurrency(selectedRow.user_bet) : null}
-                  </TableCell>
-                </TableRow>
-
-                <TableRow>
-                  <TableCell>CURRENT SHARE:</TableCell>
-                  <TableCell style={{ color: "#ff8500", textAlign: 'right' }}>
-                    {Array.isArray(selectedRow.hosts) &&
-                      selectedRow.hosts.length > 0 &&
-                      selectedRow.hosts.some((host) => host.host === user?._id) ? (
+                    {input_only && (
                       <>
-                        {
-                          (() => {
-                            const userHost = selectedRow.hosts.find((host) => host.host === user._id);
-                            if (userHost) {
-                              return <>{userHost.share.toFixed(2)}% ({convertToCurrency(userHost.share / 100 * parseFloat(selectedRow.user_bet))})</>;
-                            } else {
-                              return convertToCurrency(0); // In case the host is not found, fallback to 0
-                            }
-                          })()
-                        }
+                        {selectedTab === "PUMP" && (
+                          <div
+                            className="desktop-only"
+                            style={{
+                              paddingTop: "20px",
+                              display: "flex",
+                              justifyContent: "center",
+                            }}
+                          >
+                            <Button
+                              style={{ padding: "0 10px" }}
+                              className="button-submit"
+                              onClick={handleSendCoHost}
+                            >
+                              PUMP
+
+                            </Button>
+                          </div>
+                        )}
+                        {selectedTab === "JEET" && (
+                          <div
+                            className="desktop-only"
+                            style={{
+                              paddingTop: "20px",
+                              display: "flex",
+                              justifyContent: "center",
+                            }}
+                          >
+                            <Button
+                              style={{
+                                padding: "0 10px",
+                                background: "linear-gradient(357deg, #00ff17, #28a745)",
+                              }}
+                              className="btn-back"
+                              onClick={() =>
+                                handleUnstake(
+                                  selectedRow?.winnings ??
+                                  parseFloat(selectedRow?.user_bet || 0),
+                                  selectedRow?._id,
+                                  coHostAmount
+                                )
+                              }
+                            >
+                              JEET
+
+                            </Button>
+                          </div>
+                        )}
                       </>
-                    ) : convertToCurrency(0)}
-                  </TableCell>
-                </TableRow>
+                    )}
+                  </div>
+                </div>
 
-                <TableRow>
-                  <TableCell>NEW SHARE:</TableCell>
-                  <TableCell style={{ color: "#ff8500", textAlign: 'right' }}>
-                    {(() => {
-                      if (!selectedRow || !Array.isArray(selectedRow.hosts)) return "0%";
+                {/* Balance Table Section */}
+                <Table>
+                  <TableBody>
+                    {!input_only && (
+                      <>
+                        <TableRow>
+                          <TableCell>BALANCE:</TableCell>
+                          <TableCell style={{ textAlign: 'right' }}>{convertToCurrency(balance, solPrice)}</TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell>CURRENT BANKROLL:</TableCell>
+                          <TableCell style={{ color: "#ff8500", textAlign: 'right' }}>
+                            {selectedRow ? convertToCurrency(selectedRow.user_bet, solPrice) : null}
+                          </TableCell>
+                        </TableRow>
+                      </>
 
-                      const userHost = user && selectedRow?.hosts?.find((host) => host.host === user._id);
-                      const userStake = userHost ? parseFloat(userHost.stake) : 0; // User's current stake
+                    )}
 
-                      const coHostAmountFloat = parseFloat(coHostAmount || 0);
-                      const currentBankroll = parseFloat(selectedRow.user_bet || 0);
+                    <TableRow>
+                      <TableCell>CURRENT SHARE:</TableCell>
+                      <TableCell style={{ color: "#ff8500", textAlign: 'right' }}>
+                        {Array.isArray(selectedRow.hosts) &&
+                          selectedRow.hosts.length > 0 &&
+                          selectedRow.hosts.some((host) => host.host === user?._id) ? (
+                          <>
+                            {
+                              (() => {
+                                const userHost = selectedRow.hosts.find((host) => host.host === user._id);
+                                if (userHost) {
+                                  return <>{userHost.share.toFixed(2)}% ({convertToCurrency(userHost.share / 100 * parseFloat(selectedRow.user_bet), solPrice)})</>;
+                                } else {
+                                  return convertToCurrency(0, solPrice); // In case the host is not found, fallback to 0
+                                }
+                              })()
+                            }
+                          </>
+                        ) : convertToCurrency(0, solPrice)}
+                      </TableCell>
+                    </TableRow>
 
-                      // Deduct 2.5% fee (same logic as backend)
-                      const fee = coHostAmountFloat * 0.025;
-                      const amountAfterFee = coHostAmountFloat - fee;
+                    <TableRow>
+                      <TableCell>NEW SHARE:</TableCell>
+                      <TableCell style={{ color: "#ff8500", textAlign: 'right' }}>
+                        {(() => {
+                          if (!selectedRow || !Array.isArray(selectedRow.hosts)) return "0%";
 
-                      // Total bankroll before adding new contribution
-                      const totalBankroll = currentBankroll;
+                          const userHost = user && selectedRow?.hosts?.find((host) => host.host === user._id);
+                          const userStake = userHost ? parseFloat(userHost.stake) : 0;
+                          const coHostAmountFloat = parseFloat(coHostAmount || 0);
+                          const currentBankroll = parseFloat(selectedRow.user_bet || 0);
+                          const fee = coHostAmountFloat * 0.025;
+                          const amountAfterFee = coHostAmountFloat - fee;
+                          const totalBankroll = currentBankroll;
 
-                      if (totalBankroll === 0) return "0%"; // Prevent division by zero
+                          if (totalBankroll === 0) return "0%";
 
-                      // Calculate total stake including new user's stake (after fee)
-                      const totalStakeIncludingUser = selectedRow.hosts.reduce((total, host) => {
-                        return total + parseFloat(host.stake);
-                      }, 0) + amountAfterFee; // Total stake + user's amountAfterFee
+                          const totalStakeIncludingUser = selectedRow.hosts.reduce((total, host) => {
+                            return total + parseFloat(host.stake);
+                          }, 0) + amountAfterFee;
 
-                      // Calculate the user's new stake (including the co-host amount)
-                      const newUserStake = userStake + amountAfterFee;
+                          const newUserStake = userStake + amountAfterFee;
+                          const newUserShareBuy = (newUserStake / totalStakeIncludingUser) * 100;
+                          const userCurrentShareAmount = userHost && !isNaN(userHost.share) && !isNaN(selectedRow.user_bet)
+                            ? (userHost.share / 100) * parseFloat(selectedRow.user_bet)
+                            : 0;
+                          const newUserStakeAfterSell = userCurrentShareAmount - amountAfterFee;
+                          const newUserShareSell = (newUserStakeAfterSell / totalBankroll) * 100;
+                          const buyShare = `${Math.min(newUserShareBuy.toFixed(2), 100).toString()}%`;
+                          const sellShare = newUserStakeAfterSell > 0
+                            ? `${Math.min(newUserShareSell.toFixed(2), 100).toString()}%`
+                            : "0%";
+                          return selectedTab === "PUMP" ? `~${buyShare}` : `~${sellShare}`;
+                        })()}
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </>
 
-                      // Calculate new share for the user if they were to buy
-                      const newUserShareBuy = (newUserStake / totalStakeIncludingUser) * 100;
+            )}
+            {!input_only && (
 
-                      // Calculate the amount user currently owns in the bankroll
-                      const userCurrentShareAmount = userHost && !isNaN(userHost.share) && !isNaN(selectedRow.user_bet)
-                        ? (userHost.share / 100) * parseFloat(selectedRow.user_bet)
-                        : 0;
-                      // Calculate the user's new stake after selling (they will lose `amountAfterFee`)
-                      const newUserStakeAfterSell = userCurrentShareAmount - amountAfterFee;
+              <Chart
+                options={chartOptions}
+                series={[{ data: chartData }]}
+                type="candlestick"
+                height={350}
+              />
+            )}
 
-                      // Calculate the new share for the user after selling the co-host amount
-                      const newUserShareSell = (newUserStakeAfterSell / totalBankroll) * 100;
-
-                      // Fix for minor discrepancies (to ensure the share doesn't go slightly over 100% due to rounding)
-                      const buyShare = `${Math.min(newUserShareBuy.toFixed(2), 100).toString()}%`;
-                      const sellShare = newUserStakeAfterSell > 0
-                        ? `${Math.min(newUserShareSell.toFixed(2), 100).toString()}%`
-                        : "0%"; // Prevent division by zero in sell calculation
-
-                      // Return share based on selected tab
-                      return selectedTab === "PUMP" ? `~${buyShare}` : `~${sellShare}`;
-                    })()}
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-            <Chart
-              options={chartOptions}
-              series={[{ data: chartData }]}
-              type="candlestick"
-              height={350}
-            />
           </div>
-          {!has_joined && (
+          {!has_joined && !input_only && (
             <div style={{ background: "rgba(170, 170, 170, 0.06)", borderRadius: "20px", marginBottom: "30px" }}>
 
               <Table>
@@ -842,8 +824,8 @@ function CoHostModal({
                         position: 'sticky',
                         top: 0,
                         zIndex: 1,
-                        fontSize: '14px',  // Smaller font for mobile
-                        minWidth: '120px'   // Ensure it fits well on small screens
+                        fontSize: '14px',
+                        minWidth: '120px'
                       }}
                     >
                       Description
@@ -898,7 +880,7 @@ function CoHostModal({
                       return (
                         <TableRow key={index}>
                           <TableCell style={{ textAlign: 'left', paddingLeft: '40px' }}>{descriptionText}</TableCell>
-                          <TableCell style={{ textAlign: 'center' }}>{convertToCurrency(transaction.amount)}</TableCell>
+                          <TableCell style={{ textAlign: 'center' }}>{convertToCurrency(transaction.amount, solPrice)}</TableCell>
                           <TableCell style={{ textAlign: 'right', paddingRight: '40px' }}>
                             {formatRelativeTime(transaction.created_at)} {/* Format time */}
                           </TableCell>
@@ -918,26 +900,29 @@ function CoHostModal({
       </div>
 
       {/* Footer Actions */}
-      <div className={`modal-footer ${has_joined ? 'mobile-only' : ''}`}>
-        <Button className="btn-submit" onClick={handleSendCoHost}>
-          PUMP
-          <TrendingUpOutlined style={{ color: "#fff", marginLeft: "8px" }} />
-        </Button>
-        <Button
-          className="btn-submit"
-          onClick={() =>
-            handleUnstake(
-              selectedRow?.winnings ?? parseFloat(selectedRow?.user_bet || 0), // Use winnings if available, otherwise fallback
-              selectedRow?._id,
-              coHostAmount
-            )
-          }
-          style={{ marginLeft: "10px", border: "unset", background: "linear-gradient(357deg, #00ff17, #28a745)", boxShadow: "rgb(37 184 65) 0px -0.5px 0px, rgb(34, 117, 52) 0px -3px inset, rgb(80, 191, 98) 0px 2px inset" }}
-        >
-          JEET
-          <TrendingDownOutlined style={{ color: "#fff", marginLeft: "4px" }} />
-        </Button>
-      </div>
+      {!input_only && (
+
+        <div className={`modal-footer ${has_joined ? 'mobile-only' : ''}`}>
+          <Button className="btn-submit" onClick={handleSendCoHost}>
+            PUMP
+            <TrendingUpOutlined style={{ color: "#fff", marginLeft: "8px" }} />
+          </Button>
+          <Button
+            className="btn-submit"
+            onClick={() =>
+              handleUnstake(
+                selectedRow?.winnings ?? parseFloat(selectedRow?.user_bet || 0), // Use winnings if available, otherwise fallback
+                selectedRow?._id,
+                coHostAmount
+              )
+            }
+            style={{ marginLeft: "10px", border: "unset", background: "linear-gradient(357deg, #00ff17, #28a745)", boxShadow: "rgb(37 184 65) 0px -0.5px 0px, rgb(34, 117, 52) 0px -3px inset, rgb(80, 191, 98) 0px 2px inset" }}
+          >
+            JEET
+            <TrendingDownOutlined style={{ color: "#fff", marginLeft: "4px" }} />
+          </Button>
+        </div>
+      )}
 
     </div >
 

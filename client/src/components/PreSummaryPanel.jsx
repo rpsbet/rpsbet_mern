@@ -27,18 +27,41 @@ const PreSummaryPanel = (props) => {
     username,
     rank,
     accessory,
+    isQbot,
+    solPrice,
+    winChance,
     rps_game_type,
     endgame_type,
-    pr, // interest received
+    qs_game_type,
+    pr,
     bet_amount,
-    // ... add any other props you need from the parent
   } = props;
+
+  const calculateQuickShootReturn = () => {
+    if (qs_game_type && bet_amount) {
+      return (
+        (bet_amount / (qs_game_type - 1) + parseFloat(bet_amount)) *
+        (1 - (cp + 2.5) / 100) -
+        bet_amount
+      );
+    }
+    return 0;
+  };
+
+  const calculateRPSReturn = () => {
+    return bet_amount * 2 * ((100 - (cp + 2.5)) / 100) - bet_amount;
+  };
 
   return (
     <div className="pre-summary-panel title" style={{ overflow: 'hidden' }}>
       <div className="pre-summary-panel__inner">
         {[...Array(1)].map((_, i) => (
           <React.Fragment key={i}>
+
+            <div className="data-item">
+              <div><div className="label room-name">Name (ticker)</div></div>
+              <div className="value">{roomInfo?.name} (${roomInfo?.ticker})</div>
+            </div>
 
             <div className="data-item">
               <div><div className="label room-id">STATUS</div></div>
@@ -52,7 +75,7 @@ const PreSummaryPanel = (props) => {
                   className={`value ${isLowBankroll ? 'red-text' : ''}`}
                   style={{ cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center" }}
                 >
-                  {convertToCurrency(bankroll)}
+                  {convertToCurrency(bankroll, solPrice)}
                   {!isLowBankroll ? (
                     <InfoIcon style={{ fontSize: 16, marginLeft: 4 }} />
                   ) : (
@@ -63,45 +86,70 @@ const PreSummaryPanel = (props) => {
             </div>
 
             <div className="data-item">
-              <div><div className="label your-max-return">Your Return</div></div>
+              <div>
+                <div className="label your-max-return">Your Return</div>
+              </div>
               <Tooltip
                 title={
-                  <div>
-                    <span>EXPLANATION: </span>
-                    <p>
-                      2x your Bet Amount, then deduct Host(s)'s(') commission, if any,
-                      (which is Returned to Bankroll or RTB) and finally deduct 2.5%
-                      platform tax.
-                    </p>
-                    <span>CALCULATION: </span>
-                    <div>{convertToCurrency(bet_amount)} x 2 ={' '}
-                      {convertToCurrency(bet_amount * 2)}
-                    </div>
-                    <div>
-                      -({cp} + 2.5)% ={' '}
-                      {convertToCurrency(
-                        bet_amount * 2 * ((100 - (cp + 2.5)) / 100)
-                      )}
-                    </div>
-                  </div>
+                  roomInfo.game_type === 'Quick Shoot'
+                    ? (
+                      <div>
+                        <span>EXPLANATION: </span>
+                        <p>
+                          Quick Shoot logic: (Bet Amount / (qs_game_type - 1) + Bet Amount),
+                          minus commission ({cp}%) and platform tax (2.5%).
+                        </p>
+                        <span>CALCULATION: </span>
+                        <div>
+                          {convertToCurrency(bet_amount, solPrice)} / ({qs_game_type - 1}) + {convertToCurrency(bet_amount, solPrice)} ={' '}
+                          {convertToCurrency(bet_amount / (qs_game_type - 1) + bet_amount, solPrice)}
+                        </div>
+                        <div>
+                          -({cp} + 2.5)% ={' '}
+                          {convertToCurrency(
+                            calculateQuickShootReturn(), solPrice
+                          )}
+                        </div>
+                      </div>
+                    )
+                    : (
+                      <div>
+                        <span>EXPLANATION: </span>
+                        <p>
+                          2x your Bet Amount, then deduct Host(s)'s(') commission, if any,
+                          (which is Returned to Bankroll or RTB) and finally deduct 2.5%
+                          platform tax.
+                        </p>
+                        <span>CALCULATION: </span>
+                        <div>{convertToCurrency(bet_amount, solPrice)} x 2 ={' '}
+                          {convertToCurrency(bet_amount * 2, solPrice)}
+                        </div>
+                        <div>
+                          -({cp} + 2.5)% ={' '}
+                          {convertToCurrency(
+                            calculateRPSReturn(), solPrice
+                          )}
+                        </div>
+                      </div>
+                    )
                 }
               >
                 <div
                   className="value"
                   style={{
                     cursor: 'pointer',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
                     color:
-                      (bet_amount * 2 * ((100 - (cp + 2.5)) / 100)) - bet_amount > 0
+                      (roomInfo.game_type === 'Quick Shoot'
+                        ? calculateQuickShootReturn()
+                        : calculateRPSReturn()) > 0
                         ? '#00ff3a'
                         : 'red',
                   }}
                 >
                   {convertToCurrency(
-                    bet_amount * 2 * ((100 - (cp + 2.5)) / 100) -
-                      bet_amount
+                    roomInfo.game_type === 'Quick Shoot'
+                      ? calculateQuickShootReturn()
+                      : calculateRPSReturn(), solPrice
                   )}
                   <InfoIcon style={{ fontSize: 16, marginLeft: 4 }} />
                 </div>
@@ -110,7 +158,7 @@ const PreSummaryPanel = (props) => {
 
             <div className="data-item">
               <div><div className="label chance">Win Chance</div></div>
-              <div className="value">33%</div>
+              <div className="value">{winChance}%</div>
             </div>
 
             <div className="data-item">
@@ -129,7 +177,7 @@ const PreSummaryPanel = (props) => {
                     <span className={`value ${isLowProfit ? 'green-text' : 'red-text'}`}>
                       {isNaN(hostProfit - totalStakes)
                         ? 'N/A'
-                        : convertToCurrency(hostProfit - totalStakes)}
+                        : convertToCurrency(hostProfit - totalStakes, solPrice)}
                     </span>
                     {isLowProfit ? (
                       <InfoIcon style={{ color: '#00ff3a', fontSize: 16, marginLeft: 4 }} />
@@ -189,7 +237,7 @@ const PreSummaryPanel = (props) => {
                 <Tooltip title="Paid every 33 minutes, at a rate of 0.00001% of the bankroll. Room must be public.">
                   <div style={{ cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center" }}>
                     <span style={{ color: "#00fff5" }}>
-                      {convertToCurrency(pr)}
+                      {convertToCurrency(pr, solPrice)}
                     </span>
                     <InfoIcon style={{ fontSize: 16, marginLeft: 4 }} />
                   </div>
@@ -214,12 +262,10 @@ const PreSummaryPanel = (props) => {
                     darkMode={isDarkMode}
                   />
                 </a>
+                {isQbot && (<span style={{ fontSize: "xx-small", position: "absolute", top: "65px", border: "1px solid rgb(255, 208, 0)", background: "linear-gradient(45deg, #7a5958, #a27955)", borderRadius: "4px", color: "rgb(255, 208, 0)", padding: "0px 5px", lineHeight: "20px", marginLeft: "7.5px" }} >
+                  Q-BOT
+                </span>)}
               </div>
-            </div>
-
-            <div className="data-item">
-              <div><div className="label room-name">Room ID</div></div>
-              <div className="value">{roomInfo?.room_name}</div>
             </div>
 
             <div className="data-item">

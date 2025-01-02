@@ -68,7 +68,7 @@ class RpsPriceChart extends Component {
       <>
         <div style={{ display: 'flex', justifyContent: 'center', padding: '20px' }}>
           <Card style={{ width: '100%', 
-                filter: !this.props.isDarkMode ? 'invert(1)' : 'none', borderRadius: '9px', boxShadow: '0px 4px 15px rgba(0, 0, 0, 0.15)', backgroundColor: 'unset', background: 'linear-gradient(-45deg, #3f51b5,  #6c0066)' }}>
+                filter: !this.props.isDarkMode ? 'invert(1)' : 'none', borderRadius: '0.3em', boxShadow: '0px 4px 15px rgba(0, 0, 0, 0.15)', backgroundColor: 'unset', background: 'linear-gradient(-45deg, #3f51b5,  #6c0066)' }}>
             <CardContent
               style={{
                 textAlign: 'center',
@@ -125,19 +125,19 @@ class RpsPriceChart extends Component {
           <Button
             style={{
               background: "#ffd000",
-              color: "#000", // Text color for contrast
-              border: "none", // Remove default border
-              borderRadius: "5px", // Rounded corners
-              padding: "0px 20px", // Padding for better touch area
-              fontSize: "xx-small", // Font size for readability
-              cursor: "pointer", // Cursor pointer on hover
-              transition: "background 0.3s ease", // Smooth background change on hover
+              color: "#000",
+              border: "none",
+              borderRadius: "5px",
+              padding: "0px 20px",
+              fontSize: "xx-small",
+              cursor: "pointer",
+              transition: "background 0.3s ease",
             }}
-            onClick={() => window.open("https://dexscreener.com/solana/EHJwUtoMJcDja45gcfGKbA9w64n4FnuNLXSmPqgJpump", "_blank")}
-            onMouseOver={(e) => e.currentTarget.style.background = "#fbc02d"} // Change color on hover
-            onMouseOut={(e) => e.currentTarget.style.background = "#ffd000"} // Revert color on mouse leave
+            onClick={() => window.open("https://dexscreener.com/solana/BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump", "_blank")}
+            onMouseOver={(e) => e.currentTarget.style.background = "#fbc02d"}
+            onMouseOut={(e) => e.currentTarget.style.background = "#ffd000"}
           >
-            Live Chart&nbsp;      <FontAwesomeIcon icon={faChartLine} style={{ fontSize: "18px", color: "#000" }} /> {/* Font Awesome Icon */}
+            Live Chart&nbsp;      <FontAwesomeIcon icon={faChartLine} style={{ fontSize: "18px", color: "#000" }} />
 
           </Button>
         </div>

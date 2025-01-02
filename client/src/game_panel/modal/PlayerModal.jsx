@@ -408,7 +408,7 @@ class PlayerModal extends Component {
 
   render() {
     const { isLoading, loading, bio, status } = this.state;
-    const { productArray, isLowGraphics } = this.props;
+    const { productArray, isLowGraphics, solPrice } = this.props;
     const isBot = this.state.username.toUpperCase().includes('BOT');
     const systemUsernames = [
       'pimpedpistols',
@@ -644,7 +644,6 @@ class PlayerModal extends Component {
                     <ProductGrid>
                       {[...Array(6)].map((_, index) => (
                         <ProductCard key={index}>
-                          {/* Skeleton for Product Image */}
                           <Skeleton
                             variant="rect"
                             width="100%"
@@ -652,7 +651,6 @@ class PlayerModal extends Component {
                             style={{ marginBottom: '10px', borderRadius: '8px' }}
                           />
 
-                          {/* Skeleton for Product Info */}
                           <ProductInfo>
                             <Skeleton
                               variant="text"
@@ -734,7 +732,7 @@ class PlayerModal extends Component {
                               <span>IN-GAME BALANCE:</span>
                             </TableCell>
                             <TableCell>
-                              {convertToCurrency(this.props.balance)}
+                              {convertToCurrency(this.props.balance, solPrice)}
                             </TableCell>
                           </TableRow>
                           <TableRow>
@@ -742,7 +740,7 @@ class PlayerModal extends Component {
                               <span>TIP AMOUNT:</span>
                             </TableCell>
                             <TableCell style={{ color: 'red' }}>
-                              {convertToCurrency(this.state.tipAmount * -1)}
+                              {convertToCurrency(this.state.tipAmount * -1, solPrice)}
                             </TableCell>
                           </TableRow>
                           <TableRow>
@@ -751,7 +749,7 @@ class PlayerModal extends Component {
                             </TableCell>
                             <TableCell>
                               {convertToCurrency(
-                                this.props.balance - this.state.tipAmount
+                                this.props.balance - this.state.tipAmount, solPrice
                               )}
                               &nbsp;
                               {this.props.balance - this.state.tipAmount <
@@ -804,6 +802,7 @@ const mapStateToProps = state => ({
   productArray: state.itemReducer.productArray,
   isLowGraphics: state.auth.isLowGraphics,
   onlineUserList: state.logic.onlineUserList,
+  solPrice: state.logic.solPrice,
 
 });
 

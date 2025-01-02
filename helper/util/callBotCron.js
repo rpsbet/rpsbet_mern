@@ -50,7 +50,6 @@ async function getQsBetItems(roomId, user) {
   }
 }
 
-
 async function predictNextBetAmount(betArray, penultimateSameAsLast, smoothingFactor = 0.01, randomnessFactor = 0.2, threshold = 0.0005, room) {
   const allStates = Array.from(new Set(betArray));
   if (penultimateSameAsLast !== 0) {
@@ -80,71 +79,19 @@ async function predictNextBetAmount(betArray, penultimateSameAsLast, smoothingFa
 
 // List of valid strategy names in JoiningStrategySchema
 const validJoiningStrategies = [
-  'copycat', 'hiddenmarkov', 'markov', 'random', 'feedback', 'innovate', 'hertz',
-  'martingale', 'adam', 'tesla', 'npc', 'sniper', 'skillissueold', 'skillissue'
+  'copycat', 'hiddenmarkov', 'markov', 'feedback', 'innovate', 'hertz',
+  'adam', 'tesla', 'npc', 'sniper', 'skillissueold', 'skillissue'
 ];
 
-// Function to sum all numeric values in nested joining strategies
-const sumJoiningStrategies = (joiningObj) => {
-  let total = 0;
-  for (const strategy in joiningObj) {
-    if (validJoiningStrategies.includes(strategy)) {
-      const subStrategies = joiningObj[strategy];
-      if (typeof subStrategies === 'object') {
-        for (const subStrategy in subStrategies) {
-          const value = subStrategies[subStrategy];
-          if (typeof value === 'number') {
-            total += value;
-          }
-        }
-      }
-    }
-  }
-  return total;
-};
-
-// Function to sum all numeric values in flat hosting strategies
-const sumHostingStrategies = (hostingObj) => {
-  let total = 0;
-  for (const strategy in hostingObj) {
-    const value = hostingObj[strategy];
-    if (typeof value === 'number') {
-      total += value;
-    }
-  }
-  return total;
-};
-
-// Function to choose one of the totals based on their probabilities
-const chooseBasedOnProbability = (joiningTotal, hostingTotal) => {
-  const totalSum = joiningTotal + hostingTotal;
-  const joiningProbability = totalSum > 0 ? joiningTotal / totalSum : 0;
-  const hostingProbability = totalSum > 0 ? hostingTotal / totalSum : 0;
-
-  // Generate a random number between 0 and 1
-  const randomValue = Math.random();
-
-  // Determine which total is chosen based on probability
-  const chosenTotal = randomValue < joiningProbability ? joiningTotal : hostingTotal;
-  const chosenType = randomValue < joiningProbability ? 'joining' : 'hosting';
-
-  return {
-    chosenTotal,
-    chosenType,
-    joiningProbability,
-    hostingProbability,
-    randomValue
-  };
-};
-
 // Function to pick a sub-strategy based on probabilities
-const pickSubStrategy = (joiningObj, joiningTotal) => {
+const pickSubStrategy = (joiningObj) => {
   const subStrategyValues = [];
 
   // Collect sub-strategies and their values
   for (const strategy in joiningObj) {
     if (validJoiningStrategies.includes(strategy)) {
       const subStrategies = joiningObj[strategy];
+
       if (typeof subStrategies === 'object') {
         for (const subStrategy in subStrategies) {
           const value = subStrategies[subStrategy];
@@ -199,41 +146,39 @@ const formatStrategyName = (strategy) => {
 
 async function callCronJobs(io) {
   const cronJobs = [
-    { 
-      userId: '65eafc72aea25957ac8ea60d', 
+    {
+      userId: '65eafc72aea25957ac8ea60d',
       betArray: [
-        40000, 10000, 2500, 120000, 2, 100000, 1, 250000, 
-        125000, 1, 175000, 100000, 1, 1, 2, 3300, 660000, 
-        15500, 15500, 250000, 10000, 244500, 5000, 18000, 100000
-      ], 
-      delay: 0 
+        0.0422, 0.0818, 0.0998, 0.0879, 0.0001, 0.0362, 0.0001, 0.0526,
+        0.0368, 0.0001, 0.0839, 0.0725, 0.0001, 0.0001, 0.0002, 0.0058,
+        0.0239, 0.0269, 0.012, 0.0813, 0.0985, 0.0664, 0.0149, 0.0022, 0.0216
+      ],
+      delay: 0
     },
-    { 
-      userId: '65eafa5caea25957ac8ea60b', 
+    {
+      userId: '65eafa5caea25957ac8ea60b',
       betArray: [
-        733500, 9900, 950000, 950000, 222200, 950000, 
-        99500, 25000, 2000, 2500, 500000, 4000, 950000
-      ], 
-      delay: 4000 
+        0.0593, 0.075, 0.0118, 0.0494, 0.0092, 0.0465, 0.087, 0.0742,
+        0.0694, 0.0492, 0.009, 0.0765, 0.0382
+      ],
+      delay: 4000
     },
-    { 
-      userId: '62b9ef88a5409449f63f7ccb', 
+    {
+      userId: '62b9ef88a5409449f63f7ccb',
       betArray: [
-        150000, 100000, 255500, 12500, 1, 50000, 
-        20000, 3300, 660000, 10000, 55100, 252200, 
-        1000, 2500, 5000, 10100
-      ], 
-      delay: 8000 
+        0.061, 0.0866, 0.0388, 0.0543, 0.0001, 0.0906, 0.0665, 0.0223,
+        0.0177, 0.093, 0.0688, 0.0406, 0.0336, 0.0021, 0.0617, 0.0021
+      ],
+      delay: 8000
     },
-    { 
-      userId: '65eafb7daea25957ac8ea60c', 
+    {
+      userId: '65eafb7daea25957ac8ea60c',
       betArray: [
-        500000, 650000, 650000, 1600000, 323300, 
-        1300, 350000, 950000, 55500, 6500, 57500, 
-        1900, 1500, 1500, 953300, 2500, 105500, 
-        250000, 200000, 100000, 55500
-      ], 
-      delay: 12000 
+        0.0614, 0.0126, 0.0739, 0.0798, 0.0383, 0.0338, 0.0401, 0.0473,
+        0.0005, 0.0878, 0.0492, 0.0763, 0.061, 0.054, 0.0456, 0.0852,
+        0.0906, 0.043, 0.0025, 0.0989, 0.0532
+      ],
+      delay: null
     }
   ];
 
@@ -245,6 +190,13 @@ async function callCronJobs(io) {
 
   try {
     let systemSetting = await SystemSetting.findOne({ name: 'last_updated_bot' });
+    const sevenSecondsAgo = new Date(Date.now() - 7 * 1000); // Calculate timestamp for 7 seconds ago
+
+    const aiRooms = await Room.find({
+      selectedStrategy: { $ne: 'Random' },
+      status: 'open',
+      last_updated_strat: { $gte: sevenSecondsAgo },
+    });
 
     if (systemSetting) {
       const lastUpdated = new Date(systemSetting.updated_at);
@@ -254,7 +206,7 @@ async function callCronJobs(io) {
       if (lastUpdated < nineSecondsAgo) {
 
         for (const cronJob of cronJobs) {
-
+          // call bot
           const user = await User.findOne({ _id: cronJob.userId });
           const room = await Room.findOne({ joiners: cronJob.userId, status: "open", is_private: false });
           if (user && room) {
@@ -265,6 +217,7 @@ async function callCronJobs(io) {
           }
         }
 
+        // attached players
         const attachedPlayers = await AttachedPlayer.find({});
         for (const player of attachedPlayers) {
           const user = await User.findOne({ _id: player.user });
@@ -277,321 +230,62 @@ async function callCronJobs(io) {
           }
         }
 
+        // qbot joining
         const qBots = await QBot.find({ active: true });
         for (const bot of qBots) {
+          const chosenSubStrategy = pickSubStrategy(bot.joining);
+          if (chosenSubStrategy) {
+            const formattedStrategyName = formatStrategyName(chosenSubStrategy.parentStrategy);
+            const formattedSubStrategyName = formatStrategyName(chosenSubStrategy.name);
+            const user = await User.findOne({ _id: bot.user });
+            const room = await Room.findOne({
+              status: 'open',
+              selectedStrategy: formattedStrategyName,
+              creator: { $ne: bot.user },
+              is_private: false
+            });
+  
+            const numElements = 6;
+            let remainingBalance = user.balance;
+            const qbot_bet_amounts = [];
 
-          const joiningTotal = sumJoiningStrategies(bot.joining);
-          const hostingTotal = sumHostingStrategies(bot.hosting);
-          const result = chooseBasedOnProbability(joiningTotal, hostingTotal);
-          if (result.chosenType === 'joining') {
-            const chosenSubStrategy = pickSubStrategy(bot.joining, joiningTotal);
-            if (chosenSubStrategy) {
-              const formattedStrategyName = formatStrategyName(chosenSubStrategy.parentStrategy);
-              const formattedSubStrategyName = formatStrategyName(chosenSubStrategy.name);
-              const user = await User.findOne({ _id: bot.user });
-              const room = await Room.findOne({
-                status: 'open',
-                selectedStrategy: formattedStrategyName,
-                creator: { $ne: bot.user },
-                is_private: false
-              });
-              const numElements = 6;
-              let remainingBalance = user.balance;
-              const qbot_bet_amounts = [];
+            for (let i = 0; i < numElements; i++) {
 
-              for (let i = 0; i < numElements; i++) {
+              const maxBet = remainingBalance - (numElements - i - 1);
+              const bet = Math.floor(Math.random() * (maxBet)) + 1;
 
-                const maxBet = remainingBalance - (numElements - i - 1);
-                const bet = Math.floor(Math.random() * (maxBet)) + 1;
+              qbot_bet_amounts.push(bet);
+              remainingBalance -= bet;
 
-                qbot_bet_amounts.push(bet);
-                remainingBalance -= bet;
-
-                if (remainingBalance <= numElements - i - 1) {
-                  while (qbot_bet_amounts.length < numElements) {
-                    qbot_bet_amounts.push(1);
-                    remainingBalance--;
-                  }
-                  break;
+              if (remainingBalance <= numElements - i - 1) {
+                while (qbot_bet_amounts.length < numElements) {
+                  qbot_bet_amounts.push(1);
+                  remainingBalance--;
                 }
-              }
-
-              qbot_bet_amounts.sort((a, b) => a - b);
-              if (user && room) {
-                const result = await executeCronJob(user, qbot_bet_amounts, [bot.user.toString()], false, room, formattedSubStrategyName, true);
-
-                if (result && result.success) {
-                  await delay(4000);
-                }
+                break;
               }
             }
-          } else if (result.chosenType === 'hosting') {
-            try {
-              const description = '';
-              const endgame_type = false;
-              const rps_list = [];
-              const qs_list = [];
-              const rps_game_type = 0;
-              const user = await User.findOne({ _id: bot.user });
-              const rooms = await Room.find({
-                status: 'open',
-                creator: { $in: [bot.user] },
-                is_private: false
-              });
 
+            qbot_bet_amounts.sort((a, b) => a - b);
+            if (user && room) {
+              const result = await executeCronJob(user, qbot_bet_amounts, [bot.user.toString()], false, room, formattedSubStrategyName, true);
 
-              let room = null;
-              let ai_mode;
-              if (rooms.length > 0) {
-                // Filter the rooms based on condition
-                const filteredRooms = rooms.filter(room => room.host_pr <= room.bet_amount);
-
-                if (filteredRooms.length > 0) {
-                  // Pick a random room from the filtered list
-                  const randomRoom = filteredRooms[Math.floor(Math.random() * filteredRooms.length)];
-
-                  // Set the selected random room
-                  room = randomRoom;
-                }
+              if (result && result.success) {
+                await delay(4000);
               }
-
-              const hostingStrategies = bot.hosting;
-              const plainHostingStrategies = hostingStrategies.toObject ? hostingStrategies.toObject() : hostingStrategies;
-              const validStrategies = Object.keys(plainHostingStrategies).filter(key =>
-                key !== '_id' &&
-                key !== 'created_at' &&
-                key !== 'updated_at' &&
-                typeof plainHostingStrategies[key] === 'number' &&
-                plainHostingStrategies[key] !== 0
-              );
-              if (rooms.length >= 2) {
-                for (const room of rooms) {
-
-                  if (room) {
-                    // Check if the room was updated within the last 0.25 minutes (15 seconds)
-                    // if (timeDifferenceInMinutes > 0.2) {
-                    let attempts = 0;
-                    const maxAttempts = 10;
-
-                    while (attempts < maxAttempts) {
-                      let newStrategy;
-
-                      if (validStrategies.length > 0) {
-                        const randomIndex = Math.floor(Math.random() * validStrategies.length);
-                        newStrategy = formatStrategyName(validStrategies[randomIndex]);
-                      } else {
-                        const allStrategies = Object.keys(hostingStrategies);
-                        newStrategy = formatStrategyName(allStrategies[Math.floor(Math.random() * allStrategies.length)]);
-                      }
-
-                      room.newStrategy = newStrategy;
-                      attempts++;
-                      if (room.selectedStrategy !== newStrategy) {
-                        room.selectedStrategy = newStrategy;
-
-                        // Save the updated room to the database
-                        try {
-                          await room.save();
-                        } catch (error) {
-                          console.error(`Failed to save room ${room.room_number}:`, error);
-                        }
-                        break; // Exit the loop if strategy is updated successfully
-                      }
-
-                      attempts++;
-
-                      // Log when attempts exceed maximum tries
-                      if (attempts >= maxAttempts) {
-                        break;
-                      }
-                    }
-                    // }
-                  }
-                }
-                continue;
-                // Return after all rooms have been processed
-              }
-
-              const randomIndex = Math.floor(Math.random() * validStrategies.length);
-              ai_mode = formatStrategyName(validStrategies[randomIndex]);
-              const numElements = 2;
-              let remainingBalance = user.balance;
-              const qbot_bet_amounts = [];
-
-              for (let i = 0; i < numElements; i++) {
-                const maxBet = remainingBalance - (numElements - i - 1);
-                const bet = Math.floor(Math.random() * maxBet) + 1;
-
-                qbot_bet_amounts.push(bet);
-                remainingBalance -= bet;
-
-                if (remainingBalance <= numElements - i - 1) {
-                  while (qbot_bet_amounts.length < numElements) {
-                    qbot_bet_amounts.push(1);
-                    remainingBalance--;
-                  }
-                  break;
-                }
-              }
-
-              qbot_bet_amounts.sort((a, b) => a - b);
-              let bet_amount;
-              const maxAttempts = 6;
-              let attempts = 0;
-
-              do {
-                bet_amount = await predictNextBetAmount(qbot_bet_amounts, 0, 0, 0.01, 0.2, room);
-                attempts++;
-
-                if (bet_amount >= 500) {
-                  break;
-                }
-
-                if (attempts >= maxAttempts) {
-                  break;
-                }
-
-
-              } while (attempts < maxAttempts);
-
-              if (bet_amount < 500) {
-                bet_amount = 500;
-              }
-
-              if (user.username.includes('BOT')) {
-                continue;
-              }
-
-              if (bet_amount > user.balance) {
-                continue;
-              }
-
-              if (user.dailyWithdrawals > 100000000) {
-                continue;
-              }
-              const game_types = [
-                1,
-                5
-              ];
-
-              const game_type = game_types[Math.floor(Math.random() * game_types.length)];
-
-              const gameType = await GameType.findOne({
-                game_type_id: (game_type)
-              });
-
-              const roomCount = await Room.countDocuments({});
-              const newRoom = new Room({
-                creator: user,
-                joiners: [],
-                bet_amount: parseFloat(bet_amount),
-                rps_list: rps_list,
-                description: description,
-                selectedStrategy: ai_mode,
-                qs_list: qs_list,
-                hosts: [{ host: user._id, avatar: user.avatar, username: user.username, accessory: user.accessory, rank: user.totalWagered, share: 100, stake: parseFloat(bet_amount) }],
-                game_type: gameType,
-                user_bet: parseFloat(bet_amount),
-                pr: 0,
-                endgame_amount: endgame_type ? endgame_amount : parseFloat(bet_amount),
-                endgame_type: endgame_type,
-                host_pr: parseFloat(bet_amount),
-                room_number: roomCount + 1,
-                status: 'open',
-                description,
-              });
-              try {
-                await saveDocumentWithRetry(newRoom);
-              } catch (error) {
-                console.error("Error saving newRoom:", error);
-              }
-
-              if (game_type === '1') {
-                for (const rps of rps_list) {
-                  const newRps = new RpsBetItem({
-                    room: newRoom,
-                    rps: rps.rps
-                  });
-                  try {
-                    await saveDocumentWithRetry(newRps);
-                  } catch (error) {
-                    console.error("Error saving newRps:", error);
-                  }
-
-                  if (rps_game_type === 1) {
-
-                    const item = await Item.findOne({ productName: rps.rps });
-                    if (item) {
-                      const owner = item.owners.find(owner => owner.user.toString() === user._id.toString());
-
-                      if (owner && owner.count >= 1) {
-                        owner.count -= 1;
-                        try {
-                          await saveDocumentWithRetry(item);
-                        } catch (error) {
-                          console.error("Error saving item:", error);
-                        }
-                      } else {
-                        console.log("You do not own enough items for the RRPS gametype.");
-                        return;
-                      }
-                    } else {
-                      console.log("Item not found for the RRPS gametype.");
-                      return;
-                    }
-                  }
-                }
-              } else if (game_type === '5') {
-                for (const qs of qs_list) {
-                  const newQs = new QsBetItem({
-                    room: newRoom,
-                    qs: qs.qs
-                  });
-                  try {
-                    await saveDocumentWithRetry(newQs);
-                  } catch (error) {
-                    console.error("Error saving newRps:", error);
-                  }
-                }
-              }
-
-
-              const newTransaction = new Transaction({
-                user: user,
-                amount: 0,
-                description: 'created ' + gameType.short_name + '-' + newRoom.room_number,
-                room: newRoom._id
-              });
-
-
-              user.balance -= bet_amount;
-              newTransaction.amount -= bet_amount;
-
-              try {
-                await saveDocumentWithRetry(user);
-                await saveDocumentWithRetry(newTransaction);
-              } catch (error) {
-                console.error("Error saving:", error);
-              }
-              // const rooms = await getRoomList(7, 'All');
-              // req.io.sockets.emit('UPDATED_ROOM_LIST', {
-              //   pageSize: rooms.pageSize,
-              //   roomList: rooms.rooms,
-              //   total: rooms.count
-              // });
-
-            } catch (err) {
-              console.error('Error saving room:', err);
-
             }
-
           }
         }
-
       }
     }
+
+    if (aiRooms && aiRooms.length > 0) {
+
+    }
+
   } catch (error) {
     console.error('Error executing cron jobs:', error);
+
   }
 }
 

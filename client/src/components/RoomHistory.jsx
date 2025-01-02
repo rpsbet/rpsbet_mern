@@ -64,7 +64,7 @@ class RoomHistory extends React.Component {
 
   componentDidUpdate(prevProps) {
     if (prevProps.roomInfo !== this.props.roomInfo) {
-     
+
       this.setState({
         history: this.props.roomInfo.room_history,
         roomInfo: this.props.roomInfo,
@@ -191,7 +191,6 @@ class RoomHistory extends React.Component {
     try {
       const { getRoomInfo, roomId } = this.props;
       const { numToShow } = this.state;
-
       const newNumToShow = numToShow + 10;
 
       await getRoomInfo(roomId, newNumToShow, true);
@@ -220,75 +219,74 @@ class RoomHistory extends React.Component {
 
     return (
       <div className="room-history-panel">
-        {
-          history && history.length > 0 ? (
-            <div className="table main-history-table">
-              {showPlayerModal && (
-                <PlayerModal
-                  modalIsOpen={showPlayerModal}
-                  closeModal={this.handleClosePlayerModal}
-                  selectedCreator={selectedCreator}
-                />
-              )}
-              {(history || [])
-                .slice(0, numToShow)
-                .map((row, key) => (
-                  <div
-                    className={`table-row ${(row.joined_user === userId) ? 'history-background' : ''} ${key < 50 ? 'slide-in' : ''}`}
-                    style={{ animationDelay: `${key * 0.1}s`, padding: '10px' }}
-                    key={row._id}
-                  >
-                    <div className="table-cell">
-                      <div className="room-id">{row.status}</div>
-                      {row.ai_mode && (
-                        <div id="ai_mode">
-                          <span className="room-id ai_mode">
-                            {row.ai_mode}
-                          </span>
-                          {row.qbot && (
-                            <span className="room-id qbot">Q-BOT</span>
-                          )}
-                        </div>
-                      )}
-                      <div
-                        className="mobile-only"
-                        dangerouslySetInnerHTML={{ __html: row.history }}
-                      ></div>
-                      <div
-                        className="desktop-only"
-                        dangerouslySetInnerHTML={{ __html: row.history }}
-                      ></div>
-                    </div>
-                    <div className="table-cell">{Moment(row.created_at).fromNow()}</div>
-                    {key === history.length - 1 && <div ref={this.lastItemRef}></div>}
+        {history && history.length > 0 ? (
+          <div className="table main-history-table">
+            {showPlayerModal && (
+              <PlayerModal
+                modalIsOpen={showPlayerModal}
+                closeModal={this.handleClosePlayerModal}
+                selectedCreator={selectedCreator}
+              />
+            )}
+            {(history || [])
+              .slice(0, numToShow)
+              .map((row, key) => (
+                <div
+                  className={`table-row ${row.joined_user === userId ? 'history-background' : ''
+                    } ${key < 50 ? 'slide-in' : ''}`}
+                  style={{ animationDelay: `${key * 0.1}s`, padding: '10px' }}
+                  key={row._id}
+                >
+                  <div className="table-cell">
+                    <div className="room-id">{row.status}</div>
+                    {row.ai_mode && (
+                      <div id="ai_mode">
+                        <span className="room-id ai_mode">{row.ai_mode}</span>
+                        {row.qbot && <span className="room-id qbot">Q-BOT</span>}
+                      </div>
+                    )}
+                    <div
+                      className="mobile-only"
+                      dangerouslySetInnerHTML={{ __html: row.history }}
+                    ></div>
+                    <div
+                      className="desktop-only"
+                      dangerouslySetInnerHTML={{ __html: row.history }}
+                    ></div>
                   </div>
-                ))}
-              {roomInfo && numToShow < roomInfo.totalGameLogsCount && (
-                <div className="load-more-btn">
-                  <Button
-                    id="load-btn"
-                    variant="contained"
-                    color="primary"
-                    onClick={this.handleLoadMore}
-                  >
-                    Load More
-                  </Button>
+                  <div className="table-cell">{Moment(row.created_at).fromNow()}</div>
+                  {key === history.length - 1 && <div ref={this.lastItemRef}></div>}
                 </div>
-              )}
-            </div>
-          ) : (
-            <div className="loading-skeleton">
-              {/* Skeleton Loader for empty history */}
-              <Skeleton variant="rect" width="100%" height={60} />
-              <Skeleton variant="text" width="80%" height={30} />
-              <Skeleton variant="text" width="60%" height={20} />
-              <Skeleton variant="text" width="80%" height={30} />
-              <Skeleton variant="text" width="60%" height={20} />
-            </div>
-          )
-        }
+              ))}
+            {roomInfo && numToShow < roomInfo.totalGameLogsCount && (
+              <div className="load-more-btn">
+                <Button
+                  id="load-btn"
+                  variant="contained"
+                  color="primary"
+                  onClick={this.handleLoadMore}
+                >
+                  Load More
+                </Button>
+              </div>
+            )}
+          </div>
+        ) : history && history.length === 0 ? (
+          <p style={{ color: 'rgb(153, 153, 153)', textAlign: 'center', fontSize: '16px' }}>
+            NO History
+          </p>
+        ) : (
+          <div className="loading-skeleton">
+            <Skeleton variant="rect" width="100%" height={60} />
+            <Skeleton variant="text" width="80%" height={30} />
+            <Skeleton variant="text" width="60%" height={20} />
+            <Skeleton variant="text" width="80%" height={30} />
+            <Skeleton variant="text" width="60%" height={20} />
+          </div>
+        )}
       </div>
     );
+
   }
 }
 

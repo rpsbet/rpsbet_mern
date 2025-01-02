@@ -353,7 +353,7 @@ class BankTable extends Component {
       setCurrentLoanId,
       setCurrentLoanInfo,
       openConfirmLoanModal,
-      isLowGraphics,
+      solPrice,
       prevLoans
     } = this.props;
 
@@ -468,7 +468,7 @@ class BankTable extends Component {
                 </ProductCreator>
 
                 <ProductInfo>
-                  <LoanAmount>{convertToCurrency(row.loan_amount)}</LoanAmount>
+                  <LoanAmount>{convertToCurrency(row.loan_amount, solPrice)}</LoanAmount>
                   <TableContainer>
                     <Table id="all-loans" className="product-detail">
                       <TableBody>
@@ -624,7 +624,7 @@ class BankTable extends Component {
                             <TableCell>
                               <FontAwesomeIcon icon={faMoneyBillAlt} /> UNPAID FUNDS:
                             </TableCell>
-                            <TableCell className="value">{convertToCurrency(loan.totalLoanerAmount)}</TableCell>
+                            <TableCell className="value">{convertToCurrency(loan.totalLoanerAmount, solPrice)}</TableCell>
                           </TableRow>
                           <TableRow>
                             <TableCell>
@@ -654,14 +654,14 @@ class BankTable extends Component {
                             <TableCell>
                               <FontAwesomeIcon icon={faMoneyCheckAlt} /> TOTAL PAID BACK:
                             </TableCell>
-                            <TableCell className="value">{convertToCurrency(loan.totalPaidBack)}</TableCell>
+                            <TableCell className="value">{convertToCurrency(loan.totalPaidBack, solPrice)}</TableCell>
                           </TableRow>
                           <TableRow>
                             <TableCell>
                               <FontAwesomeIcon icon={faChartLine} /> PROFIT:
                             </TableCell>
                             <TableCell className={`value ${loan.profit <= 0 ? 'profit-negative' : 'profit-positive'}`}>
-                              {convertToCurrency(loan.profit)}
+                              {convertToCurrency(loan.profit, solPrice)}
                             </TableCell>
                           </TableRow>
                         </TableBody>
@@ -710,7 +710,8 @@ const mapStateToProps = state => ({
   total: state.loanReducer.totalResults,
   isDarkMode: state.auth.isDarkMode,
   user: state.auth.user._id,
-  isLowGraphics: state.auth.isLowGraphics
+  isLowGraphics: state.auth.isLowGraphics,
+  solPrice: state.logic.solPrice
 });
 
 const mapDispatchToProps = {

@@ -163,12 +163,11 @@ class DepositModal extends Component {
       loading: true,
       hoveredSuggestion: null,
       tokenPrice: null,
-      currencyValue: 0.03222,
       copied: false,
       paymentId: ''
     };
 
-    this.options = [25, 50, 250, 500, 2500, 5000];
+    this.options = [0.25, 0.5, 1, 2.5, 10];
     this.images = [
       '/img/icons/coins-xs.svg',
       '/img/icons/coins-s.svg',
@@ -276,7 +275,7 @@ class DepositModal extends Component {
         return;
       }
 
-      const tokenMintAddress = new PublicKey('EHJwUtoMJcDja45gcfGKbA9w64n4FnuNLXSmPqgJpump');
+      const tokenMintAddress = new PublicKey('BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump');
 
       // Fetch token mint info
       const mintInfo = await getMint(connection, tokenMintAddress);
@@ -437,8 +436,8 @@ class DepositModal extends Component {
   };
 
   render() {
-    const { tokenPrice, account, paymentMethod, paymentId, payinExtraId, amount, sendAddress, sendAmount, copied, currencyTo, isValidCurrency, suggestions, hoveredSuggestion, selectedOption, currencyValue } = this.state;
-    const { classes, user_id } = this.props;
+    const { tokenPrice, account, paymentMethod, paymentId, payinExtraId, amount, sendAddress, sendAmount, copied, currencyTo, isValidCurrency, suggestions, hoveredSuggestion } = this.state;
+    const { classes, user_id, solPrice } = this.props;
     const isConnected = !!account;
     const isBlurred = !user_id;
     let description = '';
@@ -448,14 +447,14 @@ class DepositModal extends Component {
         description = 'Via Manual Transfer (50+ Cryptocurrencies supported)';
         break;
       case 'web3':
-        description = <>Via Connect Wallet (Phantom Wallet recommended), $CZAR only, lowest fees.<br />
+        description = <>Via Connect Wallet (Phantom Wallet recommended), $RPS only, lowest fees.<br />
           Buy/Swap tokens on&nbsp;
           <a
             style={{
               textDecoration: "underline",
               color: "#3f51b5"
             }}
-            href="https://raydium.io/swap/?inputMint=sol&outputMint=EHJwUtoMJcDja45gcfGKbA9w64n4FnuNLXSmPqgJpump"
+            href="https://raydium.io/swap/?inputMint=sol&outputMint=BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump"
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -491,7 +490,7 @@ class DepositModal extends Component {
         >
           <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
             <div className="modal-header">
-              <h2 className="modal-title title">    <Icon component={AccountBalanceWallet} className="mr-2" /> {/* Use Material-UI Icon component */}
+              <h2 className="modal-title title">    <Icon component={AccountBalanceWallet} className="mr-2" />
 
                 DEPOSIT</h2>
               <Button className="btn-close title" onClick={this.props.closeModal}>
@@ -524,7 +523,7 @@ class DepositModal extends Component {
                           label={
                             <div className={classes.labelContainer} style={{ position: 'relative' }}>
                               <WalletIcon className={classes.icon} />
-                              <span>$CZAR</span>
+                              <span>SOL</span>
                               {paymentMethod === 'web3' && (
                                 <span className='roll-tag' style={{ position: 'absolute', transform: "translateY(30px)", filter: 'invert(1)', letterSpacing: '0.1em' }}>
                                   FASTEST&nbsp;
@@ -573,8 +572,8 @@ class DepositModal extends Component {
                             <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignContent: 'center', flexDirection: 'row' }}>
                               <Typography className={classes.price}>
                                 {paymentMethod === 'web2'
-                                  ? convertToCurrency((tokenAmount - (tokenAmount * 0.008)))
-                                  : convertToCurrency(tokenAmount)}&nbsp;
+                                  ? convertToCurrency((tokenAmount - (tokenAmount * 0.008)), solPrice)
+                                  : convertToCurrency(tokenAmount, solPrice)}&nbsp;
                               </Typography>
                               <Typography className={classes.price}>
                                 {`($${price})`}
@@ -669,7 +668,7 @@ class DepositModal extends Component {
                               readOnly: true,
                               endAdornment: (
                                 <InputAdornment position="end">
-                                  &nbsp;RPS
+                                  &nbsp;SOL
                                 </InputAdornment>
                               ),
                             }}
@@ -687,7 +686,7 @@ class DepositModal extends Component {
                                 <Typography style={{ whiteSpace: 'nowrap' }}>WALLET BALANCE:</Typography>
                               </TableCell>
                               <TableCell style={{ textAlign: 'center' }}>
-                                {convertToCurrency(this.props.tokenBalance)} RPS
+                                {convertToCurrency(this.props.tokenBalance, solPrice)}
                                 &nbsp;
                               </TableCell>
                               <TableCell>
@@ -885,14 +884,15 @@ class DepositModal extends Component {
             {!isBlurred && (
 
               <div className="modal-footer">
-                <Button className="btn-submit" onClick={paymentMethod === 'web3' ? this.send : this.createPaymentAndClose}>
-                  {paymentMethod === 'web3' ? 'Deposit' : 'I have paid'}
+                <Button className="btn-submit disabled" onClick={paymentMethod === 'web3' ? this.send : this.createPaymentAndClose}>
+                  {/* {paymentMethod === 'web3' ? 'Deposit' : 'I have paid'} */}
+                  COMING SOON! (INVITE ONLY)
                 </Button>
 
 
-                <Button className="btn-back" onClick={this.props.closeModal}>
+                {/* <Button className="btn-back" onClick={this.props.closeModal}>
                   CANCEL
-                </Button>
+                </Button> */}
               </div>
             )}
 
@@ -927,6 +927,7 @@ const suggestionStyle = {
 const mapStateToProps = state => ({
   isDarkMode: state.auth.isDarkMode,
   gasfee: state.auth.gasfee,
+  solPrice: state.logic.solPrice,
   user_id: state.auth.user._id
 });
 

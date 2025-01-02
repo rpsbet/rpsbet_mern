@@ -14,7 +14,6 @@ const SvgPrefix = () => (
     width="20" // Adjust the width and height as per your requirement
     height="20"
   >
-    {/* Your SVG code */}
     <g>
       <polygon fill="#8A92B2" points="959.8,80.7 420.1,976.3 959.8,731" />
       <polygon fill="#62688F" points="959.8,731 420.1,976.3 959.8,1295.4 	"/>

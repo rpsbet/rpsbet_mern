@@ -7,7 +7,7 @@ import busd from '../game_panel/JoinGame/busd.svg'
 import PrivacyModal from '../game_panel/modal/PrivacyModal'
 import TermsModal from '../game_panel/modal/TermsModal'
 import MerchModal from '../game_panel/modal/MerchModal'
-import { faXTwitter, faTelegram, faYoutube, faDiscord } from '@fortawesome/free-brands-svg-icons';
+import { faXTwitter, faTelegram, faYoutube, faTiktok } from '@fortawesome/free-brands-svg-icons';
 import sol from '../game_panel/icons/sol.png';
 import bnb from '../game_panel/icons/bnb.png';
 import btc from '../game_panel/icons/btc.png';
@@ -26,7 +26,7 @@ import Lottie from 'react-lottie';
 import animationData from '../game_panel/LottieAnimations/quantum-goal.json'; // Import your Lottie animation
 import catBack from '../game_panel/LottieAnimations/cat-back.json'; // Import your Lottie animation
 import ApexCharts from 'react-apexcharts';
-import centerImage from './logo.webp';
+
 import { connect } from 'react-redux';
 import { useHistory } from 'react-router-dom';
 import SiteWrapper from '../game_panel/SiteWrapper';
@@ -475,7 +475,7 @@ const CountdownPage = ({
 
     if (section === 'chart') {
       setShowDepositModal(true);
-      window.open('https://dexscreener.com/solana/EHJwUtoMJcDja45gcfGKbA9w64n4FnuNLXSmPqgJpump', '_blank'); // Open in new tab
+      window.open('https://dexscreener.com/solana/BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump', '_blank'); // Open in new tab
       return; // Stop further execution
     }
 
@@ -554,12 +554,12 @@ const CountdownPage = ({
                 className={`${classes.section} ${activeSection === '' ? classes.activeSection : ''}`}
               >
 
-                <Typography variant="h2" style={{ filter: "drop-shadow(2px 4px 6px #f9f9)" }}>$CZAR&nbsp;<img src={busd} width="80" height="auto" alt='$CZAR Token Symbol' /></Typography>
+                <Typography variant="h2" style={{ filter: "drop-shadow(2px 4px 6px #f9f9)" }}>$RPS&nbsp;<img src={busd} width="80" height="auto" alt='$RPS Token Symbol' /></Typography>
                 <Typography variant="h6" style={{ filter: "drop-shadow(2px 4px 6px #f9f9)", marginBottom: "20px" }}>
                   [ GET RICH 💰 OR DIE 🩸 ] <br />
                 </Typography>
                 <h6>TOKEN ADDRESS:</h6>
-                {`[${'EHJwUtoMJcDja45gcfGKbA9w64n4FnuNLXSmPqgJpump'.slice(0, 7)}...${'EHJwUtoMJcDja45gcfGKbA9w64n4FnuNLXSmPqgJpump'.slice(-10)}]`}
+                {`[${'BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump'.slice(0, 7)}...${'BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump'.slice(-10)}]`}
                 <br />
                 <Typography variant="body1" className="fading-text" style={{ marginTop: "20px" }}>
                   Click the Gravestones below to choose a life path...
@@ -587,28 +587,13 @@ const CountdownPage = ({
                 {/* The Tokenomics Pie Chart */}
                 <div style={{ height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative', marginTop: "30px" }}>
                   <ApexCharts options={chartData.options} series={chartData.series} type="donut" height={400} />
-                  <img
-                    src={centerImage}
-                    alt="Center Image"
-                    className={throwing ? classes.throwFall : ''} // Apply throw/fall animation class conditionally
 
-                    style={{
-                      position: 'absolute',
-                      top: '50%',
-                      left: '50%',
-                      transform: 'translate(-50%, -68%)',
-                      width: '175px', // Adjust the size as needed
-                      height: 'auto', // Adjust the size as needed
-                      filter: 'grayscale(1)',
-                      zIndex: 10, // Ensure the image is above the chart
-                    }}
-                  />
                 </div>
 
                 <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", marginTop: "90px" }}>
 
                   <h4 className="title">
-                    Current $CZAR Holders
+                    Current $RPS Holders
                   </h4>
                   <h6 className="title">
                     (PLATFORM)
@@ -643,7 +628,7 @@ const CountdownPage = ({
                       Contract Address
                     </h4>
                     <h6 className="title">
-                      EHJwUtoMJcDja45gcfGKbA9w64n4FnuNLXSmPqgJpump
+                      BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump
                     </h6>
 
                   </div>
@@ -708,7 +693,7 @@ const CountdownPage = ({
                     >
                       Sadly, Caesar’s attempt at starting a decentralized micro-economy, <span className="highlight">RPS.Game</span>,
                       got him killed. But fear not, fellow fur-iends, RPS.Game lives on! It’s a decentralized platform powered by its native
-                      token, <span className="highlight">$CZAR</span>, and just like a cat, it has <strong>NINE LIVES</strong>.
+                      token, <span className="highlight">$RPS</span>, and just like a cat, it has <strong>NINE LIVES</strong>.
                       This game isn’t going anywhere. In fact, it’s here to stay furrever.
                     </Typography>
 
@@ -720,7 +705,7 @@ const CountdownPage = ({
                     >
                       <span className="highlight">RPS.Game</span> offers financial tools that are typically gate-kept by the Elite,
                       but we’ve opened the door for <span className="highlight">EVERYONE</span>—whether you're a fat cat or a stray.
-                      Using <span className="highlight">$CZAR</span>, we’ve got a solution to inflation by capping the total supply
+                      Using <span className="highlight">$RPS</span>, we’ve got a solution to inflation by capping the total supply
                       at <strong>1 Billion tokens</strong>. Just think of it as a ball of yarn with a limit on how much it can unravel!
                     </Typography>
 
@@ -740,7 +725,7 @@ const CountdownPage = ({
                       className="scroll-animation"
                       style={{ animationDelay: '1.6s' }}
                     >
-                      Mark your cat-lendars! The Pump.Fun FAIR LAUNCH of <span className="highlight">$CZAR</span> opens on
+                      Mark your cat-lendars! The Pump.Fun FAIR LAUNCH of <span className="highlight">$RPS</span> opens on
                       <strong> 1st November 00:00 CEST</strong>. So, sharpen your claws and get ready! Remember, it’s
                       <strong> GET RICH 💰 OR DIE 🩸</strong>—fur real.
                     </Typography>
@@ -761,9 +746,8 @@ const CountdownPage = ({
 
 
                   <div className={classes.address}>
-                    <p>This website falls under provable fairness because (1) P2P, skill games are transformative and (2) players have a 100% control-rate over the AI technology used to replace an intermediary.
-                    </p>
-                    <p>Also rps.game has absolutely no involvement with any third-party gambling provider software or 'provably-fair' algorithms.
+
+                    <p>RPS.Game has absolutely no involvement with any third-party gambling provider software or 'provably-fair' algorithms.
                     </p>
                   </div>
                 </div>
@@ -840,19 +824,19 @@ const CountdownPage = ({
               {/* <a href="https://discord.gg/anMJntW4AD">
                             <FontAwesomeIcon icon={faDiscord} />
                         </a> */}<span>CHECK SOCIALS FOR UPDATES ►</span>
-              <a href="https://x.com/officialrpsgame">
+              <a href="https://x.com/rpsdotgame">
                 <FontAwesomeIcon icon={faXTwitter} />
               </a>
               <a href="https://t.me/rpsfinance">
                 <FontAwesomeIcon icon={faTelegram} />
               </a>
-              <a href="https://www.youtube.com/channel/UCikMJVhTSPUYcGSWEdAj6cQ">
+              <a href="https://www.youtube.com/@rpsdotgame">
                 <FontAwesomeIcon icon={faYoutube} />
               </a>
-              {/* <a href="https://www.instagram.com/rps.game/">
-                        <FontAwesomeIcon icon={faInstagram} />
-                    </a>
-                    <a href="https://www.twitch.tv/rpsbet">
+              <a href="https://www.tiktok.com/@rpsdotgame">
+                <FontAwesomeIcon icon={faTiktok} />
+              </a>
+              {/*<a href="https://www.twitch.tv/rpsbet">
                         <FontAwesomeIcon icon={faTwitch} />
                     </a> */}
             </div>

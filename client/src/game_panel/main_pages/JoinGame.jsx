@@ -3,22 +3,17 @@ import { connect } from 'react-redux';
 import TabbedContent from '../../components/TabbedContent';
 import Moment from 'moment';
 import { getRoomStatisticsData } from '../../redux/Customer/customer.action';
-import { Button, Drawer, LinearProgress } from '@material-ui/core';
-import LoadingOverlay from 'react-loading-overlay';
+import { Button, Drawer } from '@material-ui/core';
 import { toggleDrawer, updateTutorialCompleted, setBalance } from '../../redux/Auth/user.actions';
-import RPS from '../JoinGame/RPS';
-import { Skeleton } from "@material-ui/lab";
-import BrainGame from '../JoinGame/BrainGame';
-import QuickShoot from '../JoinGame/QuickShoot';
-
+import PreSummaryPanel from '../../components/PreSummaryPanel';
+import CoHostModal from '../modal/CoHostModal';
 import AiPanel from '../../components/AiPanel';
+import RoomTokenDetails from '../../components/RoomTokenDetails';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { getCustomerStatisticsData } from '../../redux/Customer/customer.action';
-import Roll from '../JoinGame/Roll';
-import QuestionIcon from '@material-ui/icons/Info';
 import { getRank } from '../../util/getRank';
-import Tooltip from '@material-ui/core/Tooltip';
 import { convertToCurrency } from '../../util/conversion';
+
 import {
   bet,
   bet2,
@@ -30,9 +25,9 @@ import {
   getGameTypeList,
   updateUserStrategy,
   getRpsBetItems,
+  getQbot,
   getQsBetItems,
   getStrategies,
-  deductBalanceWhenStartBrainGame,
   attachPlayerToRoom,
   detachPlayerFromRoom,
   checkPlayerAttachment,
@@ -47,23 +42,16 @@ import ChatPanel from '../ChatPanel/ChatPanel';
 import { Tabs, Tab } from '@material-ui/core';
 import MyGamesTable from '../MyGames/MyGamesTable';
 import MyHistoryTable from '../MyGames/MyHistoryTable';
-import Lottie from 'react-lottie';
-import animationData from '../LottieAnimations/live';
 import HistoryTable from '../LiveGames/HistoryTable';
 import DrawerButton from './DrawerButton';
 import SupportButton from './SupportButton';
 import Footer from './Footer';
-import Joyride from 'react-joyride';
-import { tutorialStepsGame } from '../../util/tutorialStepsGame';
+
 import {
   validateIsAuthenticated,
   validateCreatorId,
-  validateBetAmount,
-  validateLocalStorageLength,
-  validateBankroll
 } from '../modal/betValidations';
 import { alertModal } from '../modal/ConfirmAlerts'
-
 
 function updateFromNow(history) {
   const result = JSON.parse(JSON.stringify(history));
@@ -80,7 +68,6 @@ const customStyles = {
   }
 };
 
-
 class JoinGame extends Component {
   constructor(props) {
     super(props);
@@ -92,9 +79,9 @@ class JoinGame extends Component {
       is_mobile: window.innerWidth < 1024 ? true : false,
       selectedMobileTab: 'live_games',
       roomInfo: this.props.roomInfo,
+      bankroll: this.props.roomInfo.bankroll,
       limit: 10,
       cp: 0,
-      spleesh_guesses: [],
       selected_rps: '',
       selected_qs_position: 0,
       index: 0,
@@ -111,8 +98,9 @@ class JoinGame extends Component {
       result: 0,
       productName: '',
       coHostAmount: 0,
-      bankroll: '',
       intervalId: null,
+      isMax: false,
+      bet_amount: 1,
       predictedBetAmount: 0,
       history: this.props.history,
       showAnimation: false,
@@ -130,7 +118,6 @@ class JoinGame extends Component {
         correct: new Audio('/sounds/correct.mp3'),
         bang: new Audio('/sounds/bang.mp3'),
         shine: new Audio('/sounds/shine.mp3'),
-        cards: new Audio('/sounds/card.mp3'),
         ballKick: new Audio('/sounds/ball_kick.mp3'),
         grunt2: new Audio('/sounds/grunt2.mp3'),
         grunt: new Audio('/sounds/grunt.mp3'),
@@ -155,7 +142,8 @@ class JoinGame extends Component {
     }
     if (current_state.roomInfo._id !== props.roomInfo._id) {
       return {
-        roomInfo: props.roomInfo
+        roomInfo: props.roomInfo,
+        bankroll: props.roomInfo.user_bet
       };
     }
     return null;
@@ -167,27 +155,36 @@ class JoinGame extends Component {
     await this.initializeRoomData(id);
     await this.fetchAccessory();
     await this.props.checkPlayerAttachment(id);
-    if (this.isComponentMounted && this.props.attached) {
-      this.setState({ betting: true });
-    }
-
     window.addEventListener('unload', this.handleUnload);
   }
 
-  componentDidUpdate(prevProps) {
-    // Check if the user has changed and if qBotStatus has not already been fetched
+  componentDidUpdate(prevProps, prevState) {
     if (this.props.user !== prevProps.user && !this.state.qBotFetched) {
       this.setState({ run: !this.props.user.completedTutorials.includes(2) });
     }
+
+    if (prevProps.roomInfo !== this.props.roomInfo) {
+      this.state.bankroll = this.props.roomInfo.user_bet;
+      const qBotStatus = this.props.getQbot(this.props.roomInfo.creator_id);
+      if (this.isComponentMounted && this.props.attached) {
+        this.setState({ betting: true, isQbot: qBotStatus });
+      }
+    }
+    if (prevState.bankroll !== this.state.bankroll && this.state.bankroll <= 0.0005) {
+      this.state.status = 'finished';
+    }
+
+    if (prevProps.user_balance !== this.props.user_balance && this.state.gameResult !== -1 && this.state.isMax) {
+      this.handleMaxButtonClick();
+    }
   }
+
   async initializeRoomData(id) {
     try {
       await Promise.all([
         this.props.getRpsBetItems(id),
         this.props.getQsBetItems(id),
-        // this.getRoomData(id),
         this.loadSounds(),
-        // this.props.getGameTypeList(),
         this.props.getStrategies(),
         this.props.getRoomInfo(this.props.match.params.id, this.state.limit, true)
       ]);
@@ -195,7 +192,6 @@ class JoinGame extends Component {
       console.error('Error initializing room data:', error);
     }
   }
-
 
   async loadSounds() {
     await Promise.all(
@@ -273,242 +269,11 @@ class JoinGame extends Component {
     return result;
   };
 
-  predictNextDg = dropAmounts => {
-    const sortedDrops = dropAmounts.map(drop => drop.drop).sort((a, b) => a - b);
-    const uniqueValues = [...new Set(sortedDrops)];
-
-    if (uniqueValues.length === 1) {
-      return uniqueValues[0];
-    } else {
-      let finalValue;
-
-      do {
-        const minDrop = Math.min(...sortedDrops);
-        const maxDrop = Math.max(...sortedDrops);
-        const difference = maxDrop - minDrop;
-        const segmentSize = difference / 20;
-
-        const segments = Array.from({ length: 20 }, (_, index) => {
-          const lowerBound = minDrop + index * segmentSize;
-          const upperBound = minDrop + (index + 1) * segmentSize;
-          const dropsInSegment = sortedDrops.filter(drop => drop >= lowerBound && (drop < upperBound || (index === 19 && drop === upperBound)));
-
-          return {
-            segment: index + 1,
-            drops: dropsInSegment
-          };
-        });
-
-        const totalDropsCount = sortedDrops.length;
-        const weights = segments.map(segment => segment.drops.length / totalDropsCount);
-
-        const randomValue = Math.random();
-        let cumulativeWeight = 0;
-        let selectedSegment;
-
-        for (let i = 0; i < segments.length; i++) {
-          cumulativeWeight += weights[i];
-          if (randomValue <= cumulativeWeight) {
-            selectedSegment = segments[i];
-            break;
-          }
-        }
-
-        const switchChance = Math.random();
-
-        if (switchChance <= 0.4) {
-          const bottom5PercentIndex = Math.floor(0.25 * totalDropsCount);
-          finalValue = sortedDrops[Math.floor(Math.random() * bottom5PercentIndex)];
-        } else if (switchChance <= 0.8) {
-          const top30PercentIndex = Math.floor(0.6 * totalDropsCount);
-          finalValue = sortedDrops[Math.floor(top30PercentIndex + Math.random() * (totalDropsCount - top30PercentIndex))];
-        } else {
-          const randomAddition = Math.random() * segmentSize;
-          finalValue = selectedSegment ? selectedSegment.drops[0] + randomAddition : null;
-        }
-
-      } while (finalValue !== null && finalValue < 0.000001);
-      return finalValue;
-    }
-  };
-
-  predictNextMb = (betAmountArray, boxList) => {
-    let transitions = {};
-    let probabilities = {};
-    let startProbabilities = {};
-    let distinctBoxes = [...new Set(boxList)];
-
-    for (let i = 0; i < boxList.length; i++) {
-      if (startProbabilities[boxList[i]]) {
-        startProbabilities[boxList[i]]++;
-      } else {
-        startProbabilities[boxList[i]] = 1;
-      }
-    }
-
-    let totalStartStates = Object.values(startProbabilities).reduce(
-      (a, b) => a + b
-    );
-
-    for (let box in startProbabilities) {
-      startProbabilities[box] /= totalStartStates;
-    }
-
-    for (let i = 0; i < boxList.length - 1; i++) {
-      let currentBox = boxList[i];
-      let nextBox = boxList[i + 1];
-
-      if (transitions[currentBox]) {
-        if (transitions[currentBox][nextBox]) {
-          transitions[currentBox][nextBox]++;
-        } else {
-          transitions[currentBox][nextBox] = 1;
-        }
-      } else {
-        transitions[currentBox] = {};
-        transitions[currentBox][nextBox] = 1;
-      }
-    }
-
-    for (let currentBox in transitions) {
-      let currentBoxTransitions = transitions[currentBox];
-      let totalCurrentBoxTransitions = Object.values(
-        currentBoxTransitions
-      ).reduce((a, b) => a + b);
-
-      probabilities[currentBox] = {};
-
-      for (let nextBox in currentBoxTransitions) {
-        probabilities[currentBox][nextBox] =
-          currentBoxTransitions[nextBox] / totalCurrentBoxTransitions;
-      }
-    }
-
-    // Make prediction
-    let prediction = null;
-    let maxProbability = -1;
-
-    const maxBetAmount = Math.max(...betAmountArray);
-    betAmountArray = [boxList[boxList.length - 1]];
-    for (let i = 0; i < distinctBoxes.length; i++) {
-      let currentBox = distinctBoxes[i];
-      if (currentBox > maxBetAmount) {
-        continue;
-      }
-      let currentBoxProbability =
-        startProbabilities[currentBox] *
-        probabilities[currentBox][betAmountArray[betAmountArray.length - 1]];
-
-      if (currentBoxProbability > maxProbability) {
-        maxProbability = currentBoxProbability;
-        prediction = currentBox;
-      }
-    }
-
-    return parseFloat(prediction.box_price);
-  };
-
-
-  predictNextS = (array1, array2) => {
-    const frequencyMap = {};
-    let maxValue = 0;
-    let maxKey = 0;
-
-    array1.forEach(item => {
-      if (!frequencyMap[item.spleesh]) {
-        frequencyMap[item.spleesh] = 0;
-      }
-      frequencyMap[item.spleesh] += 1;
-
-      if (frequencyMap[item.spleesh] > maxValue) {
-        maxValue = frequencyMap[item.spleesh];
-        maxKey = item.spleesh;
-      }
-    });
-
-    const spleeshValues = Object.keys(frequencyMap);
-
-    let prediction = maxKey;
-    let i = 0;
-    const maxAttempts = spleeshValues.length * 1;
-    let shouldStopBetting = false;
-    while (array2.some(item => item.bet_amount === prediction)) {
-      const randomIndex = Math.floor(Math.random() * spleeshValues.length);
-      prediction = Number(spleeshValues[randomIndex]);
-
-      i++;
-      if (i >= maxAttempts) {
-        alertModal(this.props.isDarkMode, `NO MORE AVAILABLE OPTIONS MTF!!`);
-        shouldStopBetting = true;
-        break;
-      }
-    }
-
-    return { prediction, shouldStopBetting };
-  };
-
-  predictNextBg = (score_array) => {
-    // if (score_array.length < 5) {
-    //   return Math.round(
-    //     score_array.reduce((total, item) => total + item.score, 0) /
-    //     score_array.length
-    //   );
-    // }
-
-    const oldScores = score_array.slice(0, 5).map(item => item.score);
-    const newScores = score_array
-      .slice(score_array.length - 5)
-      .map(item => item.score);
-
-    const oldAvg =
-      oldScores.reduce((total, score) => total + score, 0) / oldScores.length;
-    const newAvg =
-      newScores.reduce((total, score) => total + score, 0) / newScores.length;
-
-    let prediction;
-    if (newAvg > oldAvg) {
-      let diff = newAvg - oldAvg;
-      prediction = Math.round(score_array[score_array.length - 1].score + diff);
-    } else {
-      prediction = Math.round(
-        score_array.reduce((total, item) => total + item.score, 0) /
-        score_array.length
-      );
-    }
-
-    const random = Math.random();
-
-    if (score_array && score_array.length > 0 && random < 0.4) {
-      const randomIndex = Math.floor(Math.random() * score_array.length);
-      prediction = score_array[randomIndex].score;
-    } else {
-      const offset = Math.floor(Math.random() * 2) + 1; // either 1 or 2
-      const sign = Math.random() < 0.5 ? -1 : 1; // either -1 or 1
-      prediction = prediction + offset * sign;
-    }
-
-    // const randomOffset = Math.floor(Math.random() * 8) - 3;
-    return prediction;
-  };
-
-
   updateSelectedRps = (selection, callback) => {
     this.setState({ selected_rps: selection }, callback);
   }
   updateSelectedQs = (position, callback) => {
     this.setState({ selected_qs_position: position }, callback);
-  }
-  updateSelectedMb = (_id, callback) => {
-    this.setState({ selected_id: _id }, callback);
-  }
-  updateDropAnimation = () => {
-    this.setState({ showAnimation: true });
-    setTimeout(() => {
-      this.setState({ showAnimation: false });
-    }, 2000);
-  }
-  updateSpleeshGuesses = (guesses) => {
-    this.setState({ spleesh_guesses: guesses });
   }
 
   createTransitionMatrix(betArray, smoothingFactor = 0.01, decayFactor = 0.9) {
@@ -518,7 +283,7 @@ class JoinGame extends Component {
     for (let i = 0; i < betArrayLength - 1; i++) {
       const currentBet = betArray[i];
       const nextBet = betArray[i + 1];
-      const distance = betArrayLength - i; // Calculate distance from the most recent transition
+      const distance = betArrayLength - i;
 
       if (!transitionMatrix[currentBet]) {
         transitionMatrix[currentBet] = {};
@@ -531,8 +296,7 @@ class JoinGame extends Component {
       }
     }
 
-    // Ensure all possible transitions have some default value
-    const allStates = Array.from(new Set(betArray)); // Get all unique states
+    const allStates = Array.from(new Set(betArray));
 
     allStates.forEach((currentState) => {
       if (!transitionMatrix[currentState]) {
@@ -546,7 +310,6 @@ class JoinGame extends Component {
       });
     });
 
-    // Apply Laplace smoothing to all transitions
     Object.keys(transitionMatrix).forEach((currentState) => {
       const possibleNextStates = Object.keys(transitionMatrix[currentState]);
 
@@ -571,7 +334,6 @@ class JoinGame extends Component {
       }
     }
 
-    // This should not happen, but just in case
     return probabilities.length - 1;
   }
 
@@ -580,13 +342,13 @@ class JoinGame extends Component {
       return null;
     }
 
-    const allStates = Array.from(new Set(betArray)); // Get all unique states
+    const allStates = Array.from(new Set(betArray));
 
     if (penultimateSameAsLast !== 0) {
       if (penultimateSameAsLast >= 3) {
         // Return the highest value from allStates without 50%
         const maxState = Math.max(...allStates);
-        return Math.min(Math.max(maxState, 0.05), this.props.roomInfo.user_bet);
+        return Math.min(Math.max(maxState, 0.05), this.state.bankroll);
       } else if (penultimateSameAsLast === 2) {
         // Return the second highest value from allStates
         const sortedStates = allStates.sort((a, b) => b - a);
@@ -656,14 +418,6 @@ class JoinGame extends Component {
       this.playSound('start');
       this.setState({ betting: true });
 
-      // const result = await getCustomerStatisticsData(
-      //   user_id,
-      //   'As Player',
-      //   gameType,
-      //   'All',
-      //   50
-      // );
-
       if (!this.props.attached) {
 
         this.startBetting(betArray);
@@ -673,6 +427,7 @@ class JoinGame extends Component {
   };
 
   startBetting = async betArray => {
+    const { bankroll } = this.state;
     const { isDarkMode, openGamePasswordModal, roomInfo, user_balance, getRpsBetItems, getQsBetItems } = this.props;
     const interval = this.props.ai_mode === 'Adam' || this.props.ai_mode === 'Sniper' ? 6200 :
       this.props.ai_mode === 'Skill-issue' || this.props.ai_mode === 'Innovate' ? 3000 :
@@ -698,7 +453,7 @@ class JoinGame extends Component {
               } else if (this.props.ai_mode === 'Sniper') {
                 const nextMove = await reinforcementAI_qs(this.props.qsbetitems, roomInfo.qs_game_type);
                 randomItem = nextMove.move;
-                predictedBetAmount = nextMove.risk === 4 ? (this.props.user_balance < parseFloat(roomInfo.user_bet) ? this.props.user_balance : parseFloat(roomInfo.user_bet)) : Math.min(...betArray);
+                predictedBetAmount = nextMove.risk === 4 ? (this.props.user_balance < bankroll ? this.props.user_balance : bankroll) : Math.min(...betArray);
               } else if (this.props.ai_mode === 'Hertz') {
                 randomItem = await patternBasedAI_qs(this.props.qsbetitems, roomInfo.qs_game_type);
                 predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
@@ -773,7 +528,7 @@ class JoinGame extends Component {
               } else if (this.props.ai_mode === 'Sniper') {
                 const nextMove = await reinforcementAI(this.props.rpsbetitems);
                 randomItem = nextMove.move;
-                predictedBetAmount = nextMove.risk === 4 ? (this.props.user_balance < parseFloat(roomInfo.user_bet) ? this.props.user_balance : parseFloat(roomInfo.user_bet)) : Math.min(...betArray);
+                predictedBetAmount = nextMove.risk === 4 ? (this.props.user_balance < bankroll ? this.props.user_balance : bankroll) : Math.min(...betArray);
               } else if (this.props.ai_mode === 'Hertz') {
                 randomItem = await patternBasedAI(this.props.rpsbetitems);
                 predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
@@ -866,22 +621,20 @@ class JoinGame extends Component {
     }
   };
 
-
-
   changeBgColor = async result => {
     this.setState({ betResult: result }, async () => {
-      const flickerCount = 3; // Number of flickers
-      const delay = 50; // Delay between flickers in milliseconds
+      const flickerCount = 3;
+      const delay = 50;
 
       for (let i = 0; i < flickerCount; i++) {
-        this.setState({ bgColorChanged: i % 2 === 0 }); // Alternate between true and false
+        this.setState({ bgColorChanged: i % 2 === 0 });
         await new Promise(resolve => setTimeout(resolve, delay));
       }
 
-      // Final reset
       this.setState({ bgColorChanged: false, betResult: null });
     });
   };
+
   changeBgColorQs = async result => {
     this.setState({ betResult: result, bgColorChanged: true }, async () => {
       let borderColor = '';
@@ -889,7 +642,7 @@ class JoinGame extends Component {
       if (this.props.roomInfo.game_type === 'Mystery Box') {
         defaultColor = '#ffd000';
       } else {
-        defaultColor = 'grey'; // Set default color to grey for other gametypes
+        defaultColor = 'grey';
       }
 
       switch (result) {
@@ -907,13 +660,11 @@ class JoinGame extends Component {
       this.setState({ borderColor });
       await new Promise(resolve => setTimeout(resolve, 1000));
       this.setState({ borderColor: '', bgColorChanged: false, betResult: null });
-
     });
-
   };
 
   joinGame2 = async (randomItem, predictedBetAmount) => {
-    const { balance, isDarkMode, isMuted, roomInfo, deductBalanceWhenStartBrainGame, getRpsBetItems, getQsBetItems } = this.props;
+    const { balance, solPrice, isMuted, roomInfo, getRpsBetItems, getQsBetItems } = this.props;
     let { betting, selected_qs_position, selected_rps, selected_id, bankroll } = this.state;
     const gameType = roomInfo.game_type;
     if (!betting) {
@@ -924,15 +675,12 @@ class JoinGame extends Component {
       return;
     }
 
-    // Set randomItem based on gameType
     if (gameType === 'RPS') {
       selected_rps = randomItem;
     } else if (gameType === 'Quick Shoot') {
       selected_qs_position = parseInt(randomItem);
     }
 
-
-    // Set state with a callback to ensure randomItem is properly set
     this.setState({ selected_rps, result: '', predictedBetAmount, selected_qs_position, selected_id }, async () => {
 
       let result;
@@ -964,7 +712,7 @@ class JoinGame extends Component {
             this.playSound('win');
             text = '+';
             color = '#7ed321';
-            if (gameType === 'Quick Shoot' || gameType === 'Mystery Box') {
+            if (gameType === 'Quick Shoot') {
               this.changeBgColorQs(result.betResult);
             } else {
               this.changeBgColor(result.betResult);
@@ -973,13 +721,13 @@ class JoinGame extends Component {
             this.playSound('split');
             text = '-';
             color = 'grey';
-            if (gameType === 'Quick Shoot' || gameType === 'Mystery Box') {
+            if (gameType === 'Quick Shoot') {
               this.changeBgColorQs(result.betResult);
             } else {
               this.changeBgColor(result.betResult);
             }
           } else {
-            if (gameType === 'Quick Shoot' || gameType === 'Mystery Box') {
+            if (gameType === 'Quick Shoot') {
               this.changeBgColorQs(result.betResult);
             } else {
               this.changeBgColor(result.betResult);
@@ -988,7 +736,7 @@ class JoinGame extends Component {
             color = '#f50000';
             this.playSound('lose');
           }
-          const currencyElement = convertToCurrency(Math.abs(result.amount));
+          const currencyElement = convertToCurrency(Math.abs(result.amount), solPrice);
           const fragmentStyle = {
             color: color,
           };
@@ -999,7 +747,6 @@ class JoinGame extends Component {
               </React.Fragment>
             ), gameResult: result.betResult
           });
-          // this.refreshHistory();
           await getRpsBetItems(roomInfo._id)
           await getQsBetItems(roomInfo._id)
         }
@@ -1008,7 +755,6 @@ class JoinGame extends Component {
       }
     });
   };
-
 
   playSound = sound => {
     if (!this.props.isMuted || !this.props.gameSounds) {
@@ -1029,7 +775,6 @@ class JoinGame extends Component {
       }
     }
   };
-
 
   handleCoHostAmountChange = event => {
     this.setState({ coHostAmount: event.target.value });
@@ -1067,9 +812,7 @@ class JoinGame extends Component {
 
   handleDetachAttachChange = () => {
     const { rpsbetitems, qsbetitems, roomInfo, attachPlayerToRoom, detachPlayerFromRoom, attached } = this.props;
-
     const gameType = roomInfo.game_type;
-
     const items = gameType === "RPS" ? rpsbetitems : qsbetitems;
 
     if (!Array.isArray(items)) {
@@ -1104,7 +847,6 @@ class JoinGame extends Component {
     if (status === 'finished' || status === 'skipped') {
       const { currentTutorial } = this.state;
       this.props.updateTutorialCompleted(currentTutorial);
-
       this.setState({ run: false });
     }
   };
@@ -1127,7 +869,6 @@ class JoinGame extends Component {
       const result = await this.props.coHost(coHostAmount, roomInfo._id);
 
       if (result.success) {
-        // alertModal(isDarkMode, result.message, '-cat');
         setBalance(result.balance);
         addNewTransaction(result.newTransaction);
         await getRoomList({
@@ -1156,7 +897,6 @@ class JoinGame extends Component {
       this.state.limit,
       false
     );
-    // await this.getRoomData(this.props.match.params.id); // room stats
   };
 
   showOpenGameOrHistory = (e, newValue) => {
@@ -1171,18 +911,47 @@ class JoinGame extends Component {
       (!this.state.is_mobile && this.props.selectedMainTabIndex === 0) ? (
       <div id="liveStakes">
         {this.props.roomCount} LIVE GAMES
-        <Lottie options={defaultOptions} width={40} />
       </div>
     ) : (
       'Your Games'
     );
+
+  roundDownToTwoDecimalPlaces = (number) => {
+    return Math.floor(number * 100) / 100;
+  };
+
+  handleHalfXButtonClick = () => {
+    const multipliedBetAmount = this.state.bet_amount * 0.5;
+    const roundedBetAmount = this.roundDownToTwoDecimalPlaces(multipliedBetAmount);
+    this.setState({ bet_amount: roundedBetAmount, isMax: false }, () => {
+      document.getElementById('betamount').focus();
+    });
+  };
+
+  handle2xButtonClick = () => {
+    const maxBetAmount = this.props.user_balance;
+    const multipliedBetAmount = this.state.bet_amount * 2;
+    const limitedBetAmount = Math.min(multipliedBetAmount, maxBetAmount);
+    const roundedBetAmount = this.roundDownToTwoDecimalPlaces(limitedBetAmount);
+
+    this.setState({ bet_amount: roundedBetAmount, isMax: false }, () => {
+      document.getElementById('betamount').focus();
+    });
+  };
+
+  handleMaxButtonClick = () => {
+    const maxBetAmount = Math.min(this.props.user_balance, this.state.bankroll);
+    const roundedMaxBetAmount = this.roundDownToTwoDecimalPlaces(maxBetAmount);
+    this.setState({ bet_amount: roundedMaxBetAmount, isMax: true }, () => {
+      document.getElementById('betamount').focus();
+    });
+  };
 
   render() {
     const {
       showPlayerModal,
       is_mobile,
       selectedCreator,
-      bankroll,
       actionList,
       show_open_game,
       predictedBetAmount,
@@ -1190,23 +959,23 @@ class JoinGame extends Component {
       betting,
       betResult,
       borderColor,
+      bankroll,
       bgColorChanged,
       selected_rps,
       selected_qs_position,
-      spleesh_guesses,
-      selected_id,
-      showAnimation,
-      loading,
       result,
+      isQbot,
+      cp,
+      run
     } = this.state;
     const {
-      open,
       roomInfo,
       gameTypeList,
       isDrawerOpen,
       is_betting,
       user_id,
       user_balance,
+      creator_accessory,
       strategies,
       ai_mode,
       user,
@@ -1216,16 +985,35 @@ class JoinGame extends Component {
       total_wagered,
       isDarkMode,
       attached,
-      getAttachedRooms
+      getAttachedRooms,
+      creator_avatar,
+      username,
+      solPrice,
+      rank
     } = this.props;
-    const defaultOptions = {
-      loop: this.props.isLowGraphics ? false : true,
-      autoplay: this.props.isLowGraphics ? false : true,
-      animationData: animationData,
-      rendererSettings: {
-        preserveAspectRatio: 'xMidYMid slice'
-      }
+
+    const payoutPercentage = isNaN((bankroll / roomInfo.endgame_amount) * 100)
+      ? 0
+      : (bankroll / roomInfo.endgame_amount) * 100;
+
+    const barStyle = {
+      width: `${payoutPercentage}%`,
+      backgroundColor: payoutPercentage <= 50 ? 'yellow' : 'red'
     };
+
+    const isLowBankroll = bankroll <= 0.01;
+    const isHighCommission = cp > 16;
+    const isLowProfit = (roomInfo.host_pr - roomInfo.total_stakes) > 0;
+    const hostProfit = parseFloat(roomInfo.host_pr) || 0;
+    const totalStakes = parseFloat(roomInfo?.total_stakes) || 0;
+    const winChance =
+      roomInfo.game_type === 'Quick Shoot'
+        ? (((roomInfo.qs_game_type - 1) / roomInfo.qs_game_type) * 100).toFixed(2)
+        : 33;
+
+    const maxBankroll = 10000000;
+    const progressPercentage = Math.min((bankroll / maxBankroll) * 100, 100).toFixed(2);
+
 
     return (
       <>
@@ -1274,198 +1062,91 @@ class JoinGame extends Component {
               </Tabs>
             )}
 
-          <div className="main-panel">
-
-            {roomInfo.game_type ? (
-              <div className="join-game-panel">
-                <Joyride
-                  steps={tutorialStepsGame}
-                  run={this.state.run}
-                  callback={this.handleJoyrideCallback}
-                  continuous
-                  showProgress
-                  showSkipButton
-                  styles={{
-                    options: {
-                      zIndex: 10000,
-                      backgroundColor: isDarkMode ? 'rgb(81 48 98 / 60%)' : '#ccc9',
-                      primaryColor: '#ff0000',
-                      arrowColor: isDarkMode ? 'rgb(81 48 98 / 60%)' : '#ccc9',
-                      textColor: isDarkMode ? '#f9f9f9' : '#333',
-                      width: 300,
-                      padding: 20,
-                      borderRadius: 5,
-                    },
-                    buttonClose: {
-                      borderRadius: '0.3em',
-                      color: isDarkMode ? '#f9f9f9' : '#333',
-                    },
-                    buttonBack: {
-                      borderRadius: '0.3em',
-                      color: isDarkMode ? '#f9f9f9' : '#333',
-                    },
-                    buttonNext: {
-                      borderRadius: '0.3em',
-                      color: isDarkMode ? '#f9f9f9' : '#333',
-                    },
-                    buttonSkip: {
-                      borderRadius: '0.3em',
-                      color: isDarkMode ? '#f9f9f9' : '#333',
-                    },
-                  }}
-                />
-                {roomInfo.game_type === 'RPS' && (
-                  <RPS
-                    changeBgColor={this.changeBgColor}
-                    bgColorChanged={bgColorChanged}
-                    betting={betting}
-                    strategies={strategies}
-                    result={result}
-                    ai_mode={ai_mode}
-                    getAttachedRooms={getAttachedRooms}
-                    handleDetachAttachChange={this.handleDetachAttachChange}
-                    onChangeState={this.onChangeState}
-                    cp={this.state.cp}
-                    is_mobile={this.state.is_mobile}
-                    gameResult={this.state.gameResult}
-                    rpsbetitems={rpsbetitems}
-                    attached={attached}
-                    updateSelectedRps={this.updateSelectedRps}
-                    selected_rps={selected_rps}
-                    refreshHistory={this.refreshHistory}
-                    playSound={this.playSound}
-                    join={this.join}
-                    handleSwitchChange={this.handleSwitchChange}
-                    betResult={betResult}
-                    roomInfo={roomInfo}
-                    rps_game_type={roomInfo.rps_game_type}
-                    user_id={user_id}
-                    rank={getRank(total_wagered)}
-                    handleOpenPlayerModal={this.handleOpenPlayerModal}
-                    handleClosePlayerModal={this.handleClosePlayerModal}
-                    selectedCreator={selectedCreator}
-                    showPlayerModal={showPlayerModal}
-                    creator_id={roomInfo.creator_id}
-                    bet_amount={roomInfo.bet_amount}
-                    pr={roomInfo.pr}
-                    updateUserStrategy={this.props.updateUserStrategy}
-                    user_bet={roomInfo.user_bet}
-                    predictedBetAmount={predictedBetAmount}
-                    is_private={roomInfo.is_private}
-                    youtubeUrl={roomInfo.youtubeUrl}
-                    gameBackground={roomInfo.gameBackground}
-                    endgame_type={roomInfo.endgame_type}
-                    actionList={actionList}
-                    getRoomData={this.getRoomData}
-                  />
-                )}
-
-                {roomInfo.game_type === 'Brain Game' && (
-                  <BrainGame
-                    handleOpenPlayerModal={this.handleOpenPlayerModal}
-                    handleClosePlayerModal={this.handleClosePlayerModal}
-                    selectedCreator={selectedCreator}
-                    showPlayerModal={showPlayerModal}
-                    refreshHistory={this.refreshHistory}
-                    join={this.join}
-                    brain_game_type={roomInfo.brain_game_type}
-                    brain_game_score={roomInfo.brain_game_score}
-                    bet_amount={roomInfo.bet_amount}
-                    user_id={this.props.user_id}
-                    creator_id={roomInfo.creator_id}
-                    joined_count={roomInfo.game_log_list ? roomInfo.game_log_list.length : 0}
-                    is_private={roomInfo.is_private}
-                    roomInfo={roomInfo}
-                    playSound={this.playSound}
-                    youtubeUrl={roomInfo.youtubeUrl}
-                    gameBackground={roomInfo.gameBackground}
-                    actionList={actionList}
-                    getRoomData={this.getRoomData}
-                  />
-                )}
-
-                {roomInfo.game_type === 'Quick Shoot' && (
-                  <QuickShoot
-                    handleOpenPlayerModal={this.handleOpenPlayerModal}
-                    handleClosePlayerModal={this.handleClosePlayerModal}
-                    selectedCreator={selectedCreator}
-                    showPlayerModal={showPlayerModal}
-                    refreshHistory={this.refreshHistory}
-                    handleDetachAttachChange={this.handleDetachAttachChange}
-                    join={this.join}
-                    result={result}
-                    gameResult={this.state.gameResult}
-                    getAttachedRooms={getAttachedRooms}
-                    endgame_type={roomInfo.endgame_type}
-                    attached={attached}
-                    updateUserStrategy={this.props.updateUserStrategy}
-                    borderColor={borderColor}
-                    bgColorChanged={bgColorChanged}
-                    changeBgColor={this.changeBgColorQs}
-                    updateSelectedQs={this.updateSelectedQs}
-                    user_id={user_id}
-                    betResult={betResult}
-                    is_mobile={this.state.is_mobile}
-                    qsbetitems={qsbetitems}
-                    creator_id={roomInfo.creator_id}
-                    qs_game_type={roomInfo.qs_game_type}
-                    user_bet={roomInfo.user_bet}
-                    bet_amount={roomInfo.bet_amount}
-                    is_private={roomInfo.is_private}
-                    selected_qs_position={selected_qs_position}
-                    roomInfo={roomInfo}
-                    playSound={this.playSound}
-                    ai_mode={ai_mode}
-                    betting={betting}
-                    strategies={strategies}
-                    handleSwitchChange={this.handleSwitchChange}
-                    pr={roomInfo.pr}
-                    onChangeState={this.onChangeState}
-                    cp={this.state.cp}
-                    youtubeUrl={roomInfo.youtubeUrl}
-                    gameBackground={roomInfo.gameBackground}
-                    actionList={actionList}
-                    getRoomData={this.getRoomData}
-                  />
-                )}
-              </div>
-            ) : (
-              <div className="join-game-panel ">
-
-              <div className="game-page loading-skeleton">
-                <div className="game-contents">
-                  <Skeleton variant="rect" width="100%" height={60} />
-
-                  <div
-                    className="game-info-panel"
-                    style={{ position: 'relative', zIndex: 10, paddingBottom: "90px" }}
-                  >
-
-                    <Skeleton variant="text" width="20%" height={30} />
-                    <Skeleton variant="text" width="80%" height={30} />
-                    <Skeleton variant="text" width="60%" height={100} />
-                      <Skeleton variant="text" width="80%" height={30} />
-                      <Skeleton variant="text" width="10%" height={90} />
-                      <Skeleton variant="text" width="20%" height={90} />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-            )}
-            <TabbedContent
-              actionList={actionList}
+          <div className="main-panel" style={{margin: '8px'}}>
+            <PreSummaryPanel
+              status={roomInfo.status}
+              bankroll={bankroll}
+              isDarkMode={isDarkMode}
+              solPrice={solPrice}
+              cp={cp}
+              isQbot={isQbot}
+              winChance={winChance}
+              barStyle={barStyle}
               roomInfo={roomInfo}
+              handleOpenPlayerModal={this.handleOpenPlayerModal}
+              creator_id={roomInfo.creator_id}
+              creator_avatar={creator_avatar}
+              username={username}
+              rank={rank}
+              accessory={creator_accessory}
+              rps_game_type={roomInfo.rps_game_type}
+              qs_game_type={roomInfo.qs_game_type}
+              endgame_type={roomInfo.endgame_type}
+              pr={roomInfo.pr}
+              isLowBankroll={isLowBankroll}
+              isHighCommission={isHighCommission}
+              isLowProfit={isLowProfit}
+              hostProfit={hostProfit}
+              totalStakes={totalStakes}
+              bet_amount={this.state.bet_amount}
+            />
+            <TabbedContent
+              changeBgColor={this.changeBgColor}
+              bgColorChanged={bgColorChanged}
+              betting={betting}
+              strategies={strategies}
+              result={result}
+              solPrice={solPrice}
+              ai_mode={ai_mode}
+              getAttachedRooms={getAttachedRooms}
+              handleDetachAttachChange={this.handleDetachAttachChange}
+              onChangeState={this.onChangeState}
+              cp={cp}
+              is_mobile={this.state.is_mobile}
+              gameResult={this.state.gameResult}
+              rpsbetitems={rpsbetitems}
+              attached={attached}
+              run={run}
+              updateSelectedRps={this.updateSelectedRps}
+              selected_rps={selected_rps}
+              handleJoyrideCallback={this.handleJoyrideCallback}
+              refreshHistory={this.refreshHistory}
+              playSound={this.playSound}
+              join={this.join}
+              handleSwitchChange={this.handleSwitchChange}
+              betResult={betResult}
+              roomInfo={roomInfo}
+              rps_game_type={roomInfo.rps_game_type}
+              user_id={user_id}
+              rank={getRank(total_wagered)}
+              handleOpenPlayerModal={this.handleOpenPlayerModal}
+              handleClosePlayerModal={this.handleClosePlayerModal}
+              selectedCreator={selectedCreator}
+              showPlayerModal={showPlayerModal}
+              creator_id={roomInfo.creator_id}
+              bet_amount={roomInfo.bet_amount}
+              pr={roomInfo.pr}
+              updateUserStrategy={this.props.updateUserStrategy}
+              bankroll={bankroll}
+              predictedBetAmount={predictedBetAmount}
+              is_private={roomInfo.is_private}
+              isDarkMode={this.props.isDarkMode}
+              endgame_type={roomInfo.endgame_type}
+              actionList={actionList}
+              getRoomData={this.getRoomData}
               user={this.props.user}
               coHostAmount={this.state.coHostAmount}
-              getRoomData={this.getRoomData}
               getRoomInfo={this.props.getRoomInfo}
               balance={this.props.user_balance}
               isLowGraphics={this.props.isLowGraphics}
-              isDarkMode={this.props.isDarkMode}
               handleCoHostAmountChange={this.handleCoHostAmountChange}
               handleSendCoHost={this.handleSendCoHost}
               has_joined={true}
+              borderColor={borderColor}
+              updateSelectedQs={this.updateSelectedQs}
+              qsbetitems={qsbetitems}
+              qs_game_type={roomInfo.qs_game_type}
+              selected_qs_position={selected_qs_position}
             />
             <div>
               {((!is_mobile && selectedMainTabIndex === 1) ||
@@ -1483,35 +1164,59 @@ class JoinGame extends Component {
             </div>
           </div>
           <div className="sub-panel">
-           
+
             {!this.state.is_mobile &&
               this.props.selectedMainTabIndex === 0 && (
-                <AiPanel
-                  handleDetachAttachChange={this.handleDetachAttachChange}
-                  rpsbetitems={this.props.rpsbetitems}
-                  qsbetitems={this.props.qsbetitems}
-                  updateUserStrategy={this.props.updateUserStrategy}
-                  strategies={strategies}
-                  betting={betting}
-                  is_betting={is_betting}
-                  attached={attached}
-                  creator_id={roomInfo.creator_id}
-                  getAttachedRooms={getAttachedRooms}
-                  predictedBetAmount={predictedBetAmount}
-                  roomId={roomInfo._id}
-                  handleSwitchChange={this.handleSwitchChange}
-                  game_type={roomInfo.game_type}
-                  rank={getRank(total_wagered)}
-                  qs_game_type={roomInfo.qs_game_type}
-                  brain_game_type={roomInfo.brain_game_type}
-                  spleesh_bet_unit={roomInfo.spleesh_bet_unit}
-                  user_id={user_id}
-                  ai_mode={ai_mode}
-                  user_balance={user_balance}
-                  isDarkMode={this.props.isDarkMode}
-                />
+                <>
+                  <AiPanel
+                    handleDetachAttachChange={this.handleDetachAttachChange}
+                    rpsbetitems={this.props.rpsbetitems}
+                    qsbetitems={this.props.qsbetitems}
+                    updateUserStrategy={this.props.updateUserStrategy}
+                    strategies={strategies}
+                    betting={betting}
+                    betAmount={this.state.bet_amount}
+                    handle2xButtonClick={this.handle2xButtonClick}
+                    handleHalfXButtonClick={this.handleHalfXButtonClick}
+                    handleMaxButtonClick={this.handleMaxButtonClick}
+                    onChangeState={this.onChangeState}
+                    bankroll={this.state.bankroll}
+                    is_betting={is_betting}
+                    attached={attached}
+                    creator_id={roomInfo.creator_id}
+                    getAttachedRooms={getAttachedRooms}
+                    predictedBetAmount={predictedBetAmount}
+                    roomId={roomInfo._id}
+                    handleSwitchChange={this.handleSwitchChange}
+                    game_type={roomInfo.game_type}
+                    rank={getRank(total_wagered)}
+                    qs_game_type={roomInfo.qs_game_type}
+                    user_id={user_id}
+                    ai_mode={ai_mode}
+                    user_balance={user_balance}
+                    isDarkMode={isDarkMode}
+                  />
+                  <CoHostModal
+                    isDarkMode={this.props.isDarkMode}
+                    coHostAmount={this.props.coHostAmount}
+                    selectedRow={roomInfo}
+                    balance={this.props.balance}
+                    solPrice={solPrice}
+                    user={this.props.user}
+                    togglePopup={this.togglePopup}
+                    handleClose={this.handleCloseCoHostModal}
+                    handleSendCoHost={this.props.handleSendCoHost}
+                    handleCoHostAmountChange={this.handleCoHostAmountChange}
+                    has_joined={this.props.has_joined}
+                    input_only={true}
+                  />
+                  
+                  <RoomTokenDetails progressPercentage={progressPercentage} handleOpenPlayerModal={this.handleOpenPlayerModal} roomInfo={roomInfo} />
+
+                </>
+
               )}
-       
+
             <DrawerButton
               open={isDrawerOpen}
               toggleDrawer={this.toggleDrawer}
@@ -1653,7 +1358,6 @@ class JoinGame extends Component {
             style={{ marginLeft: isDrawerOpen ? '270px' : '0' }}
           />
         </div>
-
       </>
     );
   }
@@ -1668,7 +1372,11 @@ const mapStateToProps = state => ({
   qsbetitems: state.logic.qsbetitems,
   user_id: state.auth.user._id,
   total_wagered: state.auth.user.totalWagered,
+  rank: state.logic.curRoomInfo.rank,
   user: state.auth.user,
+  creator_avatar: state.logic.curRoomInfo.creator_avatar,
+  creator_accessory: state.logic.curRoomInfo.accessory,
+  username: state.logic.curRoomInfo.username,
   accessory: state.auth.user.accessory,
   user_balance: state.auth.user.balance,
   ai_mode: state.auth.user.ai_mode,
@@ -1680,7 +1388,8 @@ const mapStateToProps = state => ({
   isDarkMode: state.auth.isDarkMode,
   isLowGraphics: state.auth.isLowGraphics,
   is_betting: state.logic.is_betting,
-  attached: state.logic.attached
+  attached: state.logic.attached,
+  solPrice: state.logic.solPrice
 });
 
 const mapDispatchToProps = {
@@ -1698,7 +1407,7 @@ const mapDispatchToProps = {
   addNewTransaction,
   setBalance,
   coHost,
-  // getMyHistory,
+  getQbot,
   getRoomList,
   getRoomStatisticsData,
   getAttachedRooms,
@@ -1708,7 +1417,6 @@ const mapDispatchToProps = {
   getQsBetItems,
   openGamePasswordModal,
   getCustomerStatisticsData,
-  deductBalanceWhenStartBrainGame,
   fetchAccessory,
   updateTutorialCompleted
 };

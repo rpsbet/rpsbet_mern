@@ -6,7 +6,6 @@ import useMediaQuery from '@material-ui/core/useMediaQuery';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 
-// Utility function to decode HTML entities
 const decodeHtmlEntity = (html) => {
   const txt = document.createElement('textarea');
   txt.innerHTML = html;
@@ -66,8 +65,6 @@ const SettingsRef = ({
             <div className="strategy-label">CHOSEN STRATEGY: </div>
             <div className="strategy-description">{selectedStrategy || ai_mode}</div>
             <hr />
-
-            {/* Description Section */}
             <div className="desktop-only strategy-label">Description:</div>
             {isMobile ? (
               <>
@@ -83,8 +80,6 @@ const SettingsRef = ({
               <div className="strategy-description">{strategy.description}</div>
             )}
             <hr />
-
-            {/* Strengths Section */}
             <div className="desktop-only strategy-label">Strengths:</div>
             {isMobile ? (
               <>

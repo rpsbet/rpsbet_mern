@@ -38,7 +38,7 @@ const showConfirm = (
   confirmAlert({
     customUI: ({ onClose }) => {
       return (
-        <div style={{ borderRadius: "0.6em" }} className={isDarkMode ? 'dark_mode' : ''}>
+        <div style={{ borderRadius: "0.3em" }} className={isDarkMode ? 'dark_mode' : ''}>
           <div className="modal-body alert-body confirm-body">
             <Button className="btn-close title" onClick={onClose}>
               ×
@@ -95,7 +95,7 @@ const showConfirmCall = (
   confirmAlert({
     customUI: ({ onClose }) => {
       return (
-        <div style={{ borderRadius: "0.6em" }} className={isDarkMode ? 'dark_mode' : ''}>
+        <div style={{ borderRadius: "0.3em" }} className={isDarkMode ? 'dark_mode' : ''}>
           <div className="modal-body alert-body confirm-body">
             <h5 style={{margin: '30px auto'}}> {text}</h5>
             <div className='glass-container'
@@ -185,84 +185,3 @@ const speak = (message) => {
     window.speechSynthesis.speak(utterance);
   }
 };
-
-const showResultModal = (
-  isDarkMode,
-  text,
-  amount,
-  icon,
-) => {
-  let timeLeft = 1500;
-  const intervalId = setInterval(() => {
-    timeLeft -= 100;
-    if (timeLeft === 0) {
-      clearInterval(intervalId);
-    }
-  }, 100);
-
-  // Speak the message
-  speak(text);
-
-  // Determine the inline style based on the sign of the amount
-  const amountStyle = {
-    color: amount >= 0 ? '#00FF00' : '#FF0000' // Vibrant green and red
-  };
-
-  confirmAlert({
-    overlayClassName: 'overlay-result',
-    closeOnEscape: false,
-    closeOnClickOutside: false,
-    customUI: ({ onClose }) => {
-      setTimeout(() => {
-        onClose();
-        // window.speechSynthesis.cancel();
-      }, 1500);
-
-      return (
-        <div style={{ borderRadius: "0.6em" }} className={isDarkMode ? 'dark_mode' : ''}>
-          <div className="modal-body alert-body result-body">
-            <div className={`modal-icon result-icon${icon}`}></div>
-            <h4 className='title'>{text}</h4>
-            <h1 style={amountStyle}>{convertToCurrency(amount)}</h1>
-            <div className="modal-footer">
-              <div className="countdown-timer">
-                <div
-                  className="countdown-bar"
-                  style={{ width: `${(timeLeft / 1500) * 100}%` }}
-                ></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    }
-  });
-};
-
-
-export const gameResultModal = (
-  isDarkMode,
-  text,
-  amount,
-  gameResult,
-  cancelButtonTitle,
-  callback,
-  callback2
-) => {
-  let icon = '-lost';
-  if (gameResult === 0) {
-    icon = '-draw';
-  } else if (gameResult === 1) {
-    icon = '-win';
-  }
-  showResultModal(
-    isDarkMode,
-    text,
-    amount,
-    icon,
-    cancelButtonTitle,
-    callback,
-    callback2
-  );
-};
-
