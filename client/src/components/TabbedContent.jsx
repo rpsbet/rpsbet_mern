@@ -204,6 +204,7 @@ class TabbedContent extends Component {
       getRoomData,
       run,
       qsbetitems,
+      solPrice,
       borderColor,
       updateSelectedQs,
       changeBgColorQs,

@@ -106,7 +106,7 @@ async function updateRoomInterests(io) {
   }
 }
 
-cron.schedule('*/33 * * * *', async () => {
+cron.schedule('*/99 * * * *', async () => {
   await updateRoomInterests();
 });
 
