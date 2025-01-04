@@ -275,7 +275,7 @@ class DepositModal extends Component {
         return;
       }
 
-      const tokenMintAddress = new PublicKey('coming-soon-pump');
+      const tokenMintAddress = new PublicKey('F8dfME79PgXroXZsvn8KNCzUxe147tzGGfDDo6eGpump');
 
       // Fetch token mint info
       const mintInfo = await getMint(connection, tokenMintAddress);
@@ -454,7 +454,7 @@ class DepositModal extends Component {
               textDecoration: "underline",
               color: "#3f51b5"
             }}
-            href="https://raydium.io/swap/?inputMint=sol&outputMint=coming-soon-pump"
+            href="https://raydium.io/swap/?inputMint=sol&outputMint=F8dfME79PgXroXZsvn8KNCzUxe147tzGGfDDo6eGpump"
             target="_blank"
             rel="noopener noreferrer"
           >

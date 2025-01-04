@@ -475,7 +475,7 @@ const CountdownPage = ({
 
     if (section === 'chart') {
       setShowDepositModal(true);
-      window.open('https://dexscreener.com/solana/coming-soon-pump', '_blank'); // Open in new tab
+      window.open('https://dexscreener.com/solana/F8dfME79PgXroXZsvn8KNCzUxe147tzGGfDDo6eGpump', '_blank'); // Open in new tab
       return; // Stop further execution
     }
 
@@ -559,7 +559,7 @@ const CountdownPage = ({
                   [ GET RICH 💰 OR DIE 🩸 ] <br />
                 </Typography>
                 <h6>TOKEN ADDRESS:</h6>
-                {`[${'coming-soon-pump'.slice(0, 7)}...${'coming-soon-pump'.slice(-10)}]`}
+                {`[${'F8dfME79PgXroXZsvn8KNCzUxe147tzGGfDDo6eGpump'.slice(0, 7)}...${'F8dfME79PgXroXZsvn8KNCzUxe147tzGGfDDo6eGpump'.slice(-10)}]`}
                 <br />
                 <Typography variant="body1" className="fading-text" style={{ marginTop: "20px" }}>
                   Click the Gravestones below to choose a life path...
@@ -628,7 +628,7 @@ const CountdownPage = ({
                       Contract Address
                     </h4>
                     <h6 className="title">
-                      coming-soon-pump
+                      F8dfME79PgXroXZsvn8KNCzUxe147tzGGfDDo6eGpump
                     </h6>
 
                   </div>

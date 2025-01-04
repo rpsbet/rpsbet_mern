@@ -133,7 +133,7 @@ class RpsPriceChart extends Component {
               cursor: "pointer",
               transition: "background 0.3s ease",
             }}
-            onClick={() => window.open("https://dexscreener.com/solana/coming-soon-pump", "_blank")}
+            onClick={() => window.open("https://dexscreener.com/solana/F8dfME79PgXroXZsvn8KNCzUxe147tzGGfDDo6eGpump", "_blank")}
             onMouseOver={(e) => e.currentTarget.style.background = "#fbc02d"}
             onMouseOut={(e) => e.currentTarget.style.background = "#ffd000"}
           >
