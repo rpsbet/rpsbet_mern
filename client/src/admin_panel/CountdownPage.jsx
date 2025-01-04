@@ -469,13 +469,13 @@ const CountdownPage = ({
     // Check if the section is 'buy'
     if (section === 'buy') {
       setShowDepositModal(true);
-      window.open('https://raydium.io/swap/?inputMint=sol&outputMint=jnugxwzjbipumBBDULAQQBG1UYBK9ay7hSf1Arfhme4p', '_blank'); // Open in new tab
+      window.open('https://raydium.io/swap/?inputMint=sol&outputMint=', '_blank'); // Open in new tab
       return; // Stop further execution
     }
 
     if (section === 'chart') {
       setShowDepositModal(true);
-      window.open('https://dexscreener.com/solana/FmPgGWd8Z4jeCBhWwGC1hCqgPKP2doeX53GbJjT3pump', '_blank'); // Open in new tab
+      window.open('https://dexscreener.com/solana/coming-soon-pump', '_blank'); // Open in new tab
       return; // Stop further execution
     }
 
@@ -554,12 +554,12 @@ const CountdownPage = ({
                 className={`${classes.section} ${activeSection === '' ? classes.activeSection : ''}`}
               >
 
-                <Typography variant="h2" style={{ filter: "drop-shadow(2px 4px 6px #f9f9)" }}>$BRUTUS&nbsp;<img src={busd} width="80" height="auto" alt='$BRUTUS Token Symbol' /></Typography>
+                <Typography variant="h2" style={{ filter: "drop-shadow(2px 4px 6px #f9f9)" }}>$RPS&nbsp;<img src={busd} width="80" height="auto" alt='$RPS Token Symbol' /></Typography>
                 <Typography variant="h6" style={{ filter: "drop-shadow(2px 4px 6px #f9f9)", marginBottom: "20px" }}>
                   [ GET RICH 💰 OR DIE 🩸 ] <br />
                 </Typography>
                 <h6>TOKEN ADDRESS:</h6>
-                {`[${'FmPgGWd8Z4jeCBhWwGC1hCqgPKP2doeX53GbJjT3pump'.slice(0, 7)}...${'FmPgGWd8Z4jeCBhWwGC1hCqgPKP2doeX53GbJjT3pump'.slice(-10)}]`}
+                {`[${'coming-soon-pump'.slice(0, 7)}...${'coming-soon-pump'.slice(-10)}]`}
                 <br />
                 <Typography variant="body1" className="fading-text" style={{ marginTop: "20px" }}>
                   Click the Gravestones below to choose a life path...
@@ -593,7 +593,7 @@ const CountdownPage = ({
                 <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", marginTop: "90px" }}>
 
                   <h4 className="title">
-                    Current $BRUTUS Holders
+                    Current $RPS Holders
                   </h4>
                   <h6 className="title">
                     (PLATFORM)
@@ -628,7 +628,7 @@ const CountdownPage = ({
                       Contract Address
                     </h4>
                     <h6 className="title">
-                      FmPgGWd8Z4jeCBhWwGC1hCqgPKP2doeX53GbJjT3pump
+                      coming-soon-pump
                     </h6>
 
                   </div>
@@ -704,7 +704,7 @@ const CountdownPage = ({
                     >
                       <span className="highlight">RPS.Game</span> offers financial tools that are typically gate-kept by the Elite,
                       but we’ve opened the door for <span className="highlight">EVERYONE</span>—whether you're a fat cat or a stray.
-                      Using <span className="highlight">$BRUTUS</span>, we’ve got a solution to inflation by capping the total supply
+                      Using <span className="highlight">$RPS</span>, we’ve got a solution to inflation by capping the total supply
                       at <strong>1 Billion tokens</strong>. Just think of it as a ball of yarn with a limit on how much it can unravel!
                     </Typography>
 
@@ -724,7 +724,7 @@ const CountdownPage = ({
                       className="scroll-animation"
                       style={{ animationDelay: '1.6s' }}
                     >
-                      Mark your cat-lendars! The Pump.Fun FAIR LAUNCH of <span className="highlight">$BRUTUS</span> opens on
+                      Mark your cat-lendars! The Pump.Fun FAIR LAUNCH of <span className="highlight">$RPS</span> opens on
                       <strong> 4TH DEC 20:00 CEST</strong>. So, sharpen your claws and get ready! Remember, it’s
                       <strong> GET RICH 💰 OR DIE 🩸</strong>—fur real.
                     </Typography>
@@ -818,10 +818,8 @@ const CountdownPage = ({
             {/* <a onClick={openMerchModal} style={{ cursor: "pointer" }}>Merch ► 💍 🎩 💎 🩱 👠 👞 🥽</a> */}
 
 
-            <div className="countdown social-icons" style={{ display: 'flex', alignItems: 'center' }}>
-              {/* <a href="https://discord.gg/anMJntW4AD">
-                            <FontAwesomeIcon icon={faDiscord} />
-                        </a> */}<span>FOLLOW US ►</span>
+            {/* <div className="countdown social-icons" style={{ display: 'flex', alignItems: 'center' }}>
+              <span>FOLLOW US ►</span>
               <a href="https://x.com/rpsdotgame">
                 <FontAwesomeIcon icon={faXTwitter} />
               </a>
@@ -834,10 +832,8 @@ const CountdownPage = ({
               <a href="https://www.tiktok.com/@rpsdotgame">
                 <FontAwesomeIcon icon={faTiktok} />
               </a>
-              {/*<a href="https://www.twitch.tv/rpsbet">
-                        <FontAwesomeIcon icon={faTwitch} />
-                    </a> */}
-            </div>
+          
+            </div> */}
             <div className="countdown">
 
               <a className={classes.link} href="https://blog.rps.game/">Blog</a>&nbsp;✗&nbsp;

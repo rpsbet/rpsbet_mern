@@ -95,7 +95,7 @@ class HowToPlayModal extends Component {
                         <span className="highlight" style={{ background: 'linear-gradient(165deg, #ffd000, #ff0000)', padding: '0em 0.4em', margin: '2.5px', borderRadius: '5px' }}>RPS.Game</span>
                         offers financial tools that are typically gate-kept by the Elite, but we’ve opened the door for
                         <span className="highlight" style={{ background: 'linear-gradient(165deg, #ffd000, #ff0000)', padding: '0em 0.4em', margin: '2.5px', borderRadius: '5px' }}>EVERYONE</span>—whether you're a fat cat or a stray.
-                        Using <span className="highlight" style={{ background: 'linear-gradient(165deg, #ffd000, #ff0000)', padding: '0em 0.4em', margin: '2.5px', borderRadius: '5px' }}>$BRUTUS</span>,
+                        Using <span className="highlight" style={{ background: 'linear-gradient(165deg, #ffd000, #ff0000)', padding: '0em 0.4em', margin: '2.5px', borderRadius: '5px' }}>$RPS</span>,
                         we’ve got a solution to inflation by capping the total supply at
                         <strong style={{ background: 'linear-gradient(165deg, #ffd000, #ff0000)', padding: '0em 0.4em', margin: '2.5px', borderRadius: '5px' }}>1 Billion tokens</strong>.
                         Just think of it as a ball of yarn with a limit on how much it can unravel!
@@ -119,7 +119,7 @@ class HowToPlayModal extends Component {
                         className="scroll-animation"
                         style={{ lineHeight: '2em', animationDelay: '1s', textAlign: 'center' }}
                       >
-                        Mark your cat-lendars! The Pump.Fun FAIR LAUNCH of <span className="highlight" style={{ background: 'linear-gradient(165deg, #ffd000, #ff0000)', padding: '0em 0.4em', margin: '2.5px', borderRadius: '5px' }}>$BRUTUS</span>
+                        Mark your cat-lendars! The Pump.Fun FAIR LAUNCH of <span className="highlight" style={{ background: 'linear-gradient(165deg, #ffd000, #ff0000)', padding: '0em 0.4em', margin: '2.5px', borderRadius: '5px' }}>$RPS</span>
                         opens on <strong style={{ background: 'linear-gradient(165deg, #ffd000, #ff0000)', padding: '0em 0.4em', margin: '2.5px', borderRadius: '5px' }}>4TH DEC 20:00 CEST</strong>.
                         So, sharpen your claws and get ready! Remember, it’s <strong style={{ background: 'linear-gradient(165deg, #ffd000, #ff0000)', padding: '0em 0.4em', margin: '2.5px', borderRadius: '5px' }}>GET RICH 💰 OR DIE 🩸</strong>—fur real.
                       </Typography>

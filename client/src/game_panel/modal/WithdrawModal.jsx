@@ -461,7 +461,7 @@ class WithdrawModal extends Component {
         description = 'Via Manual Transfer (50+ Cryptocurrencies supported)';
         break;
       case 'web3':
-        description = 'Via Connect Wallet (Phantom Wallet recommended), $BRUTUS only, lowest fees';
+        description = 'Via Connect Wallet (Phantom Wallet recommended), $RPS only, lowest fees';
         break;
       default:
         description = '';
@@ -531,7 +531,7 @@ class WithdrawModal extends Component {
                           label={
                             <div className={classes.labelContainer} style={{ position: 'relative' }}>
                               <WalletIcon className={classes.icon} />
-                              <span>$BRUTUS</span>
+                              <span>$RPS</span>
                               {paymentMethod === 'web3' && (
                                 <span className='roll-tag' style={{ position: 'absolute', transform: "translateY(30px)", filter: 'invert(1)', letterSpacing: '0.1em' }}>
                                   INSTANT&nbsp;

@@ -245,7 +245,7 @@ class LoginModal extends Component {
                   history.push('/investors');
                 }}
               >
-                INVESTOR? ($BRUTUS PORTAL)&nbsp;<FontAwesomeIcon icon={faExternalLinkAlt} />
+                INVESTOR? ($RPS PORTAL)&nbsp;<FontAwesomeIcon icon={faExternalLinkAlt} />
               </a>
             ) : (
               <a
