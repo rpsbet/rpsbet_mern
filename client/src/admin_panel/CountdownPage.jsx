@@ -475,7 +475,7 @@ const CountdownPage = ({
 
     if (section === 'chart') {
       setShowDepositModal(true);
-      window.open('https://dexscreener.com/solana/F8dfME79PgXroXZsvn8KNCzUxe147tzGGfDDo6eGpump', '_blank'); // Open in new tab
+      window.open('https://dexscreener.com/solana/BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump', '_blank'); // Open in new tab
       return; // Stop further execution
     }
 
@@ -559,7 +559,7 @@ const CountdownPage = ({
                   [ GET RICH 💰 OR DIE 🩸 ] <br />
                 </Typography>
                 <h6>TOKEN ADDRESS:</h6>
-                {`[${'F8dfME79PgXroXZsvn8KNCzUxe147tzGGfDDo6eGpump'.slice(0, 7)}...${'F8dfME79PgXroXZsvn8KNCzUxe147tzGGfDDo6eGpump'.slice(-10)}]`}
+                {`[${'BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump'.slice(0, 7)}...${'BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump'.slice(-10)}]`}
                 <br />
                 <Typography variant="body1" className="fading-text" style={{ marginTop: "20px" }}>
                   Click the Gravestones below to choose a life path...
@@ -628,7 +628,7 @@ const CountdownPage = ({
                       Contract Address
                     </h4>
                     <h6 className="title">
-                      F8dfME79PgXroXZsvn8KNCzUxe147tzGGfDDo6eGpump
+                      BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump
                     </h6>
 
                   </div>
@@ -818,7 +818,7 @@ const CountdownPage = ({
             {/* <a onClick={openMerchModal} style={{ cursor: "pointer" }}>Merch ► 💍 🎩 💎 🩱 👠 👞 🥽</a> */}
 
 
-            {/* <div className="countdown social-icons" style={{ display: 'flex', alignItems: 'center' }}>
+            <div className="countdown social-icons" style={{ display: 'flex', alignItems: 'center' }}>
               <span>FOLLOW US ►</span>
               <a href="https://x.com/rpsdotgame">
                 <FontAwesomeIcon icon={faXTwitter} />
@@ -833,7 +833,7 @@ const CountdownPage = ({
                 <FontAwesomeIcon icon={faTiktok} />
               </a>
           
-            </div> */}
+            </div>
             <div className="countdown">
 
               <a className={classes.link} href="https://blog.rps.game/">Blog</a>&nbsp;✗&nbsp;
