@@ -1082,6 +1082,7 @@ class JoinGame extends Component {
               handleDetachAttachChange={this.handleDetachAttachChange}
               onChangeState={this.onChangeState}
               cp={cp}
+              bet_amount={this.state.bet_amount}
               is_mobile={this.state.is_mobile}
               gameResult={this.state.gameResult}
               rpsbetitems={rpsbetitems}
@@ -1104,7 +1105,6 @@ class JoinGame extends Component {
               selectedCreator={selectedCreator}
               showPlayerModal={showPlayerModal}
               creator_id={roomInfo.creator_id}
-              bet_amount={roomInfo.bet_amount}
               pr={roomInfo.pr}
               updateUserStrategy={this.props.updateUserStrategy}
               bankroll={bankroll}

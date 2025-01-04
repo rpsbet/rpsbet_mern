@@ -694,7 +694,7 @@ router.post('/getId', admin, async (req, res) => {
   }
 });
 
-const bonusNumbers = [0.5, 0.4, 0.1, 0.03, 0.25, 0.01, 0.05, 0.15, 0.05, 0.02];
+const bonusNumbers = [0.05, 0.004, 0.01, 0.03, 0.25, 0.001, 0.05, 0.1, 0.05, 0.02];
 
 // Route to add bonus
 router.post('/add-bonus', auth, async (req, res) => {
@@ -714,7 +714,7 @@ router.post('/add-bonus', auth, async (req, res) => {
     const randomIndex = Math.floor(Math.random() * bonusNumbers.length);
     const number = bonusNumbers[randomIndex];
 
-    if (number > 0.5) {
+    if (number > 50000) {
       number -= 99999;
     }
 

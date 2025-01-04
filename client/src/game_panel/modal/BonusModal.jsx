@@ -121,7 +121,7 @@ class BonusModal extends Component {
       totalWagered,
       solPrice
     } = this.props;
-    const numbers = [0.5, 0.4, 0.1, 0.03, 0.25, 0.01, 0.05, 0.15, 0.05, 0.02 ];
+    const numbers = [0.05, 0.004, 0.01, 0.03, 0.25, 0.001, 0.05, 0.1, 0.05, 0.02 ];
     const lastBonus = this.props.user.last_bonus ? new Date(this.props.user.last_bonus) : null;
     const now = new Date();
     let remainingTime = null;

@@ -204,6 +204,7 @@ class TabbedContent extends Component {
       getRoomData,
       run,
       qsbetitems,
+      bet_amount,
       solPrice,
       borderColor,
       updateSelectedQs,
@@ -306,7 +307,7 @@ class TabbedContent extends Component {
                 selectedCreator={selectedCreator}
                 showPlayerModal={showPlayerModal}
                 creator_id={roomInfo.creator_id}
-                bet_amount={roomInfo.bet_amount}
+                bet_amount={bet_amount}
                 pr={roomInfo.pr}
                 updateUserStrategy={updateUserStrategy}
                 bankroll={bankroll}
@@ -342,7 +343,7 @@ class TabbedContent extends Component {
                 creator_id={roomInfo.creator_id}
                 qs_game_type={roomInfo.qs_game_type}
                 bankroll={bankroll}
-                bet_amount={roomInfo.bet_amount}
+                bet_amount={bet_amount}
                 is_private={roomInfo.is_private}
                 selected_qs_position={selected_qs_position}
                 roomInfo={roomInfo}

@@ -37,6 +37,7 @@ export const validateIsAuthenticated = (isAuthenticated, isDarkMode) => {
   
   export const validateBankroll = (bet_amount, bankroll, isDarkMode) => {
     if (bet_amount > bankroll) {
+      console.log(bet_amount, bankroll)
       alertModal(
         isDarkMode,
         `BET NOT PAWS-SIBLE, NOT ENOUGH BANKROLL OR GAME HAS FINISHED`);
@@ -47,7 +48,6 @@ export const validateIsAuthenticated = (isAuthenticated, isDarkMode) => {
   
 
   export const validateBetAmount = (bet_amount, balance, isDarkMode) => {
-    console.log("bet_amount, balance,", bet_amount, balance,)
     if (isNaN(bet_amount)) {
       alertModal(isDarkMode, 'IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!');
       return false;

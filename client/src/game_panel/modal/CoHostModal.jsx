@@ -77,8 +77,6 @@ function CoHostModal({
       const candleEvent = `NEW_CANDLE_${roomId}`;
 
       const handleNewCandle = (data) => {
-        console.log(`New candle received for room ${roomId}:`, data.newCandle);
-
         dispatch(addNewCandle(data.newCandle));
       };
 
