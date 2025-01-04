@@ -62,12 +62,12 @@ const addToQueue = async (req, bot = false) => {
             }
 
             if (
-                parseFloat(req.body.bet_amount) < 0.05
+                parseFloat(req.body.bet_amount) < 0.0001
             ) {
 
                 responseData = {
                     success: false,
-                    message: 'MEOWNIMUM BET IS 0.05 RPS'
+                    message: 'MEOWNIMUM BET IS 0.0001 SOL'
                 }
                 return responseData;
             }

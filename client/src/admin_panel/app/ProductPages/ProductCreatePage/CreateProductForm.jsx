@@ -17,7 +17,7 @@ import { convertToCurrency } from '../../../../util/conversion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 
-function CreateProductForm({ updateTextField, user_balance }) {
+function CreateProductForm({ updateTextField, user_balance, solPrice }) {
   const [formValues, setFormValues] = useState({
     loan_amount: '',
     loan_period: '',

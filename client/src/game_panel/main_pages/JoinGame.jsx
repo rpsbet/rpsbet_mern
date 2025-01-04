@@ -34,7 +34,8 @@ import {
   getAttachedRooms,
   addNewTransaction,
   coHost,
-  getRoomList
+  getRoomList,
+  getSolToUsdPrice
 } from '../../redux/Logic/logic.actions';
 import { predictNext, reinforcementAI, innovate, martingaleStrategy, patternBasedAI, counterSwitchAI, generatePattern, counterRandomness, NPC } from '../../util/predictNext';
 import { predictNextQs, reinforcementAI_qs, innovate_qs, martingaleStrategy_qs, patternBasedAI_qs, counterSwitchAI_qs, generatePattern_qs, counterRandomness_qs, NPC_qs, getCopyCatItem_qs, getRandomItem_qs } from '../../util/predictNextQs';
@@ -97,10 +98,10 @@ class JoinGame extends Component {
       betResult: null,
       result: 0,
       productName: '',
-      coHostAmount: 0,
+      coHostAmount: 0.1,
       intervalId: null,
       isMax: false,
-      bet_amount: 1,
+      bet_amount: 0.0001,
       predictedBetAmount: 0,
       history: this.props.history,
       showAnimation: false,
@@ -155,6 +156,9 @@ class JoinGame extends Component {
     await this.initializeRoomData(id);
     await this.fetchAccessory();
     await this.props.checkPlayerAttachment(id);
+    if (!this.props.solPrice) {
+      await this.props.getSolToUsdPrice();
+    }
     window.addEventListener('unload', this.handleUnload);
   }
 
@@ -780,23 +784,6 @@ class JoinGame extends Component {
     this.setState({ coHostAmount: event.target.value });
   };
 
-  playSoundLoop = sound => {
-    if (!this.props.isMuted) {
-      const audio = this.state.sounds[sound];
-      if (audio.paused) {
-        audio.currentTime = 3;
-        audio.loop = true;
-        const playPromise = audio.play();
-        if (playPromise !== undefined) {
-          playPromise.catch(error => {
-            console.log(`Error playing sound "${sound}":`, error);
-          });
-        }
-        this.setState({ currentSound: audio });
-      }
-    }
-  };
-
   onChangeState = async newState => {
     await this.setState(newState);
   };
@@ -916,14 +903,9 @@ class JoinGame extends Component {
       'Your Games'
     );
 
-  roundDownToTwoDecimalPlaces = (number) => {
-    return Math.floor(number * 100) / 100;
-  };
-
   handleHalfXButtonClick = () => {
     const multipliedBetAmount = this.state.bet_amount * 0.5;
-    const roundedBetAmount = this.roundDownToTwoDecimalPlaces(multipliedBetAmount);
-    this.setState({ bet_amount: roundedBetAmount, isMax: false }, () => {
+    this.setState({ bet_amount: multipliedBetAmount, isMax: false }, () => {
       document.getElementById('betamount').focus();
     });
   };
@@ -932,17 +914,15 @@ class JoinGame extends Component {
     const maxBetAmount = this.props.user_balance;
     const multipliedBetAmount = this.state.bet_amount * 2;
     const limitedBetAmount = Math.min(multipliedBetAmount, maxBetAmount);
-    const roundedBetAmount = this.roundDownToTwoDecimalPlaces(limitedBetAmount);
-
-    this.setState({ bet_amount: roundedBetAmount, isMax: false }, () => {
+    
+    this.setState({ bet_amount: limitedBetAmount, isMax: false }, () => {
       document.getElementById('betamount').focus();
     });
   };
 
   handleMaxButtonClick = () => {
     const maxBetAmount = Math.min(this.props.user_balance, this.state.bankroll);
-    const roundedMaxBetAmount = this.roundDownToTwoDecimalPlaces(maxBetAmount);
-    this.setState({ bet_amount: roundedMaxBetAmount, isMax: true }, () => {
+    this.setState({ bet_amount: maxBetAmount, isMax: true }, () => {
       document.getElementById('betamount').focus();
     });
   };
@@ -1011,7 +991,7 @@ class JoinGame extends Component {
         ? (((roomInfo.qs_game_type - 1) / roomInfo.qs_game_type) * 100).toFixed(2)
         : 33;
 
-    const maxBankroll = 10000000;
+    const maxBankroll = 80;
     const progressPercentage = Math.min((bankroll / maxBankroll) * 100, 100).toFixed(2);
 
 
@@ -1175,7 +1155,7 @@ class JoinGame extends Component {
                     updateUserStrategy={this.props.updateUserStrategy}
                     strategies={strategies}
                     betting={betting}
-                    betAmount={this.state.bet_amount}
+                    bet_amount={this.state.bet_amount}
                     handle2xButtonClick={this.handle2xButtonClick}
                     handleHalfXButtonClick={this.handleHalfXButtonClick}
                     handleMaxButtonClick={this.handleMaxButtonClick}
@@ -1198,7 +1178,7 @@ class JoinGame extends Component {
                   />
                   <CoHostModal
                     isDarkMode={this.props.isDarkMode}
-                    coHostAmount={this.props.coHostAmount}
+                    coHostAmount={this.state.coHostAmount}
                     selectedRow={roomInfo}
                     balance={this.props.balance}
                     solPrice={solPrice}
@@ -1418,7 +1398,8 @@ const mapDispatchToProps = {
   openGamePasswordModal,
   getCustomerStatisticsData,
   fetchAccessory,
-  updateTutorialCompleted
+  updateTutorialCompleted,
+  getSolToUsdPrice
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(JoinGame);

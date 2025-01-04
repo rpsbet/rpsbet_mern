@@ -4,7 +4,6 @@ import moment from 'moment';
 import ProductPage from '../../admin_panel/app/ProductPages/ProductSerchPage/ProductPage';
 import BankPage from '../../admin_panel/app/ProductPages/ProductSerchPage/BankPage';
 import axios from '../../util/Api';
-import { token } from '../../config/index.js';
 import {
   getRoomList,
   setCurRoomInfo,
@@ -22,7 +21,6 @@ import Battle from '../icons/Battle.js';
 import BattleHover from '../icons/BattleHover';
 import Manage from '../icons/Manage.js';
 import ManageHover from '../icons/ManageHover';
-import Lottie from 'react-lottie';
 import animationData from '../LottieAnimations/live';
 import { Button } from '@material-ui/core';
 import { Tabs, Tab, Drawer, IconButton, Tooltip } from '@material-ui/core';
@@ -45,14 +43,6 @@ const customStyles = {
   }
 };
 
-const calculateDaysUntilNextMonth = () => {
-  const now = moment();
-  const nextMonth = now.clone().add(1, 'months').startOf('month');
-  const daysUntilNextMonth = nextMonth.diff(now, 'days');
-  return daysUntilNextMonth > 0 ? `${daysUntilNextMonth}d` : '0d';
-};
-
-
 class MainPage extends Component {
   constructor(props) {
     super(props);
@@ -69,13 +59,12 @@ class MainPage extends Component {
       loading: true,
       refreshing: false,
       selectedCreator: '',
-      remainingDays: calculateDaysUntilNextMonth()
+      // remainingDays: calculateDaysUntilNextMonth()
     };
     this.toggleDrawer = this.toggleDrawer.bind(this);
     this.isComponentMounted = false;
     this.pollingInterval = null;
     this.handleVisibilityChange = this.handleVisibilityChange.bind(this); // Bind the method
-
   }
 
   async componentDidMount() {
@@ -98,7 +87,7 @@ class MainPage extends Component {
       getMyChat();
     }
 
-    getSolToUsdPrice();
+    await getSolToUsdPrice();
 
     if (this.state.is_mobile && !this.props.isDrawerOpen) {
       this.toggleDrawer();
@@ -175,7 +164,6 @@ class MainPage extends Component {
         }
       });
     }
-
   };
 
   toggleDrawer = () => {

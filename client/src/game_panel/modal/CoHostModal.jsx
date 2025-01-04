@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import Moment from 'moment';
 import { getTransactionCandles, unstake, addNewTransaction, addNewCandle, getMyGames } from '../../redux/Logic/logic.actions';
@@ -9,6 +9,7 @@ import { ShowChartOutlined, TrendingUpOutlined, TrendingDownOutlined } from "@ma
 import { convertToCurrency } from '../../util/conversion';
 import Avatar from '../../components/Avatar';
 import PlayerModal from '../modal/PlayerModal';
+import { debounce } from 'lodash';
 
 function CoHostModal({
   isDarkMode,
@@ -31,6 +32,7 @@ function CoHostModal({
   const [selectedTab, setSelectedTab] = useState("PUMP");
   const [isFocused, setIsFocused] = useState(false);
   const [isButtonGroupVisible, setIsButtonGroupVisible] = useState(false);
+  const [localCoHostAmount, setLocalCoHostAmount] = useState('');
   const handleTabChange = (tab) => setSelectedTab(tab);
   const transactionCandles = useSelector(state => state.logic.candles);
   const transactions = useSelector(state => state.auth.transactions);
@@ -352,38 +354,30 @@ function CoHostModal({
     return `${seconds}s ago`;
   };
 
-  const handleFocus = () => {
-    setIsFocused(true);
+
+  const debouncedHandleChange = useCallback(
+    debounce((value) => {
+      handleCoHostAmountChange({ target: { value } });
+    }, 300), // Adjust the delay in milliseconds (e.g., 300ms)
+    []
+  );
+
+  const handleInputChange = (event) => {
+    const value = event.target.value;
+    setLocalCoHostAmount(value); // Update local state immediately for UX
+    debouncedHandleChange(value); // Trigger the debounced handler
   };
 
-  const handleBlur = (event) => {
-    event.stopPropagation();
-    setIsFocused(false);
-  };
+  const debouncedHandleButtonClick = useCallback(
+    debounce((value) => {
+      handleCoHostAmountChange({ target: { value } });
+    }, 300), // Adjust delay as needed
+    []
+  );
 
-  const handle2xButtonClick = () => {
-    const simulatedEvent = { target: { value: coHostAmount * 2 } };
-    handleCoHostAmountChange(simulatedEvent);
-  };
-
-  const handleHalfXButtonClick = () => {
-    const simulatedEvent = { target: { value: coHostAmount * 0.5 } };
-    handleCoHostAmountChange(simulatedEvent);
-  };
-
-  const handleMaxButtonClick = () => {
-    let maxValue;
-
-    if (selectedTab === "PUMP") {
-      maxValue = balance; // Use balance for PUMP
-    } else if (selectedTab === "JEET") {
-      const userHost = selectedRow?.hosts?.find((host) => host.host === user?._id);
-      maxValue =
-        userHost?.share / 100 * parseFloat(selectedRow?.user_bet || 0) || 0; // Use JEET logic
-    }
-
-    const simulatedEvent = { target: { value: maxValue } };
-    handleCoHostAmountChange(simulatedEvent);
+  const handleButtonClick = (value) => {
+    setLocalCoHostAmount(value); // Update local state immediately for visual feedback
+    debouncedHandleButtonClick(value); // Trigger the debounced handler
   };
 
   const handleUnstake = async (winnings, room_id, stakeAmount) => {
@@ -558,20 +552,18 @@ function CoHostModal({
             {/* Tabs */}
             {!has_joined && (
               <>
-                <div style={{ display: "flex", justifyContent: "center", marginBottom: "20px" }}>
+                <div style={{ display: "flex", justifyContent: "center", marginBottom: "5px" }}>
                   <Button
                     onClick={() => handleTabChange("PUMP")}
                     variant={selectedTab === "PUMP" ? "contained" : "outlined"}
                     color="secondary"
                     style={{
-                      marginRight: "15px",
-                      minWidth: "120px",
+                      marginRight: "10px",
+                      width: "100%",
                       padding: "10px 15px",
-                      borderRadius: "0.3em",
                       textTransform: "none",
-                      backgroundColor: selectedTab === "PUMP" ? "#28a745" : "transparent", // Green background when selected
-                      color: selectedTab === "PUMP" ? "#fff" : "#28a745", // White text when selected
-                      // boxShadow: selectedTab === "PUMP" ? "0px 4px 12px rgba(0, 255, 0, 0.2)" : "none",
+                      backgroundColor: selectedTab === "PUMP" ? "#28a745" : "transparent",
+                      color: selectedTab === "PUMP" ? "#fff" : "#28a745",
                     }}
                   >
                     PUMP
@@ -592,7 +584,7 @@ function CoHostModal({
                     variant={selectedTab === "JEET" ? "contained" : "outlined"}
                     color="secondary"
                     style={{
-                      minWidth: "120px",
+                      width: "100%",
                       padding: "10px 15px",
                       borderRadius: "0.3em",
                       textTransform: "none",
@@ -614,89 +606,102 @@ function CoHostModal({
                     />
                   </Button>
                 </div>
-                <div style={{ display: "flex", flexDirection: "row", justifyContent: "center", alignItems: "center" }}>
-                  <div className="input-amount" >
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    width: "100%",
+                  }}
+                >
+                  <div className="bet-amount" style={{ width: "100%" }}>
+                    {/* Button Group Positioned Above */}
+                    <div
+                      style={{
+                        display: "flex",
+                        marginBottom: "5px",
+                        width: "100%",
+                      }}
+                    >
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => handleButtonClick(1)} // Set coHostAmount to 1
+                        style={{ flex: 1, padding: "7.5px" }}
+                      >
+                        1
+                      </Button>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => handleButtonClick(5)} // Set coHostAmount to 5
+                        style={{ flex: 1, padding: "7.5px" }}
+                      >
+                        5
+                      </Button>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => handleButtonClick(10)} // Set coHostAmount to 10
+                        style={{ flex: 1, padding: "7.5px" }}
+                      >
+                        10
+                      </Button>
+                    </div>
+
+                    {/* TextField Positioned Below */}
                     <TextField
-                      label="Amount"
-                      value={coHostAmount || 0}
-                      onChange={handleCoHostAmountChange}
-                      pattern="^\\d*\\.?\\d*$"
+                      value={localCoHostAmount}
+                      onChange={handleInputChange}
                       variant="filled"
+                      pattern="^\\d*\\.?\\d*$"
                       type="number"
                       autoComplete="off"
-                      id="payout"
-                      className="form-control"
-                      InputProps={{
-                        onFocus: handleFocus,
-                        // onBlur: handleBlur,
-                        endAdornment: (
-                          <ButtonGroup
-                            className={isButtonGroupVisible ? 'fade-in' : 'fade-out'}
-                          >
-                            <Button
-                              variant="contained"
-                              color="primary"
-                              onClick={handle2xButtonClick}
-                              style={{ marginRight: "5px", padding: "7.5px" }}
-                            >
-                              2x
-                            </Button>
-                            <Button
-                              variant="contained"
-                              color="primary"
-                              onClick={handleHalfXButtonClick}
-                              style={{ marginRight: "5px", padding: "7.5px" }}
-                            >
-                              1/2x
-                            </Button>
-                            <Button
-                              variant="contained"
-                              color="primary"
-                              onClick={handleMaxButtonClick}
-                              style={{ padding: "7.5px" }}
-
-                            >
-                              Max
-                            </Button>
-                          </ButtonGroup>
-                        ),
-                      }}
+                      id="betamount"
+                      style={{ width: '100%' }}
                     />
-
+                    {/* Pump/Jeet Buttons Positioned Below TextField */}
                     {input_only && (
                       <>
                         {selectedTab === "PUMP" && (
                           <div
-                            className="desktop-only"
                             style={{
-                              paddingTop: "20px",
-                              display: "flex",
-                              justifyContent: "center",
-                            }}
-                          >
-                            <Button
-                              style={{ padding: "0 10px" }}
-                              className="button-submit"
-                              onClick={handleSendCoHost}
-                            >
-                              PUMP
-
-                            </Button>
-                          </div>
-                        )}
-                        {selectedTab === "JEET" && (
-                          <div
-                            className="desktop-only"
-                            style={{
-                              paddingTop: "20px",
+                              marginTop: "10px",
+                              width: "100%",
                               display: "flex",
                               justifyContent: "center",
                             }}
                           >
                             <Button
                               style={{
-                                padding: "0 10px",
-                                background: "linear-gradient(357deg, #00ff17, #28a745)",
+                                width: "100%",
+                                padding: "10px",
+                                border: "2px solid rgb(0, 255, 58)", // Green border
+                                backgroundColor: "rgba(0, 255, 58, 0.1)", // Green background with opacity
+                                color: "rgb(0, 255, 58)", // Green font color
+                                fontWeight: "bold", // Optional for emphasis
+                              }}
+                              className="button-submit"
+                              onClick={handleSendCoHost}
+                            >
+                              PUMP
+                            </Button>
+                          </div>
+                        )}
+                        {selectedTab === "JEET" && (
+                          <div
+                            style={{
+                              marginTop: "10px",
+                              width: "100%",
+                              display: "flex",
+                              justifyContent: "center",
+                            }}
+                          >
+                            <Button
+                              style={{
+                                width: "100%",
+                                padding: "10px",
                               }}
                               className="btn-back"
                               onClick={() =>
@@ -709,7 +714,6 @@ function CoHostModal({
                               }
                             >
                               JEET
-
                             </Button>
                           </div>
                         )}

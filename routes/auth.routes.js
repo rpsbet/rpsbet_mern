@@ -103,7 +103,7 @@ router.post('/google', async (req, res) => {
 
     res.json({
       success: true,
-      message: "Login successful",
+      message: "WE'RE IN BOYS",
       token: jwtToken,
       user
     });

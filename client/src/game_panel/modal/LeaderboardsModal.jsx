@@ -329,7 +329,7 @@ class LeaderboardsModal extends Component {
                     </div>
 
                     <div style={{ textAlign: "center" }}>
-                      <h5 className="title">Profit Distribution ($RPS)</h5>
+                      <h5 className="title">Profit Distribution ($BRUTUS)</h5>
                       {loadingReceiptChartData ? (
                         <div style={{ marginTop: "20px" }}>
                           <Skeleton variant="circle" width={350} height={350} />

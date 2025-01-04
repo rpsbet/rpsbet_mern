@@ -475,7 +475,7 @@ const CountdownPage = ({
 
     if (section === 'chart') {
       setShowDepositModal(true);
-      window.open('https://dexscreener.com/solana/BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump', '_blank'); // Open in new tab
+      window.open('https://dexscreener.com/solana/x0-COMING-SOON-xxxxxx000000000pump', '_blank'); // Open in new tab
       return; // Stop further execution
     }
 
@@ -554,12 +554,12 @@ const CountdownPage = ({
                 className={`${classes.section} ${activeSection === '' ? classes.activeSection : ''}`}
               >
 
-                <Typography variant="h2" style={{ filter: "drop-shadow(2px 4px 6px #f9f9)" }}>$RPS&nbsp;<img src={busd} width="80" height="auto" alt='$RPS Token Symbol' /></Typography>
+                <Typography variant="h2" style={{ filter: "drop-shadow(2px 4px 6px #f9f9)" }}>$BRUTUS&nbsp;<img src={busd} width="80" height="auto" alt='$BRUTUS Token Symbol' /></Typography>
                 <Typography variant="h6" style={{ filter: "drop-shadow(2px 4px 6px #f9f9)", marginBottom: "20px" }}>
                   [ GET RICH 💰 OR DIE 🩸 ] <br />
                 </Typography>
                 <h6>TOKEN ADDRESS:</h6>
-                {`[${'BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump'.slice(0, 7)}...${'BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump'.slice(-10)}]`}
+                {`[${'x0-COMING-SOON-xxxxxx000000000pump'.slice(0, 7)}...${'x0-COMING-SOON-xxxxxx000000000pump'.slice(-10)}]`}
                 <br />
                 <Typography variant="body1" className="fading-text" style={{ marginTop: "20px" }}>
                   Click the Gravestones below to choose a life path...
@@ -593,7 +593,7 @@ const CountdownPage = ({
                 <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", marginTop: "90px" }}>
 
                   <h4 className="title">
-                    Current $RPS Holders
+                    Current $BRUTUS Holders
                   </h4>
                   <h6 className="title">
                     (PLATFORM)
@@ -628,7 +628,7 @@ const CountdownPage = ({
                       Contract Address
                     </h4>
                     <h6 className="title">
-                      BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump
+                      x0-COMING-SOON-xxxxxx000000000pump
                     </h6>
 
                   </div>
@@ -650,7 +650,7 @@ const CountdownPage = ({
                 <div style={{ position: 'relative' }}>
                   <div className="speech-bubble scroll-animation" style={{ animationDelay: '0.6s' }}>
                     <Typography variant="h6" component="span" style={{ fontStyle: 'italic', color: '#ff6347' }}>
-                      “Skill-gaming is the purr-fect solution!”
+                      “Gamified Token Launches is the purr-fect solution!”
                     </Typography>
                   </div>
 
@@ -674,27 +674,26 @@ const CountdownPage = ({
                     </Typography>
 
                     <Typography
-                      variant="body2"
+                      variant="body1"
                       paragraph
                       className="scroll-animation"
-                      style={{ animationDelay: '0.4s' }}
+                      style={{ animationDelay: '0.4s', fontWeight: 'bold', color: '#ff6347' }}
                     >
-                      Caesar was fed up with the <span className="highlight">claw-ful</span> trickery in the financial system.
-                      This cat wasn’t kitten around when he decided to swipe at the issues of usury and private lending.
-                      He scratched out a game to simulate a real-life economy that even the fussiest felines would love!
+                      Important Note: We launch tokens for fun every week on Saturdays as a way to help crowdfund the platform.
+                      This is NOT financial advice, and you should never invest more than you are willing to lose.
+                      These are high-risk, high-reward opportunities meant for entertainment and innovation!
                     </Typography>
-
 
                     <Typography
                       variant="body2"
                       paragraph
                       className="scroll-animation"
-                      style={{ animationDelay: '1s' }}
+                      style={{ animationDelay: '0.6s' }}
                     >
-                      Sadly, Caesar’s attempt at starting a decentralized micro-economy, <span className="highlight">RPS.Game</span>,
-                      got him killed. But fear not, fellow fur-iends, RPS.Game lives on! It’s a decentralized platform powered by its native
-                      token, <span className="highlight">$RPS</span>, and just like a cat, it has <strong>NINE LIVES</strong>.
-                      This game isn’t going anywhere. In fact, it’s here to stay furrever.
+                      <span className="highlight">RPS.Game</span> is more than just a platform—it's a powerful game creation tool! Players can
+                      design their own games and, when they reach <strong>80 SOL</strong> in contributions, these games can be minted as unique
+                      tokens on the blockchain. This lets creators turn their gaming ideas into real, tradable assets.
+                      It’s the purr-fect way to blend creativity and decentralization!
                     </Typography>
 
                     <Typography
@@ -705,7 +704,7 @@ const CountdownPage = ({
                     >
                       <span className="highlight">RPS.Game</span> offers financial tools that are typically gate-kept by the Elite,
                       but we’ve opened the door for <span className="highlight">EVERYONE</span>—whether you're a fat cat or a stray.
-                      Using <span className="highlight">$RPS</span>, we’ve got a solution to inflation by capping the total supply
+                      Using <span className="highlight">$BRUTUS</span>, we’ve got a solution to inflation by capping the total supply
                       at <strong>1 Billion tokens</strong>. Just think of it as a ball of yarn with a limit on how much it can unravel!
                     </Typography>
 
@@ -715,7 +714,7 @@ const CountdownPage = ({
                       className="scroll-animation"
                       style={{ animationDelay: '1.4s' }}
                     >
-                      The token distribution? We’re giving 5% to the team (for their paw-some efforts), 20% to the Platform, 70% to the eco-system
+                      The cat (token) distribution system? We’re giving 5% to the team (for their paw-some efforts), 20% to the Platform, 70% to the eco-system
                       (you cool cats), and the final 5%... well, marketing.
                     </Typography>
 
@@ -725,12 +724,11 @@ const CountdownPage = ({
                       className="scroll-animation"
                       style={{ animationDelay: '1.6s' }}
                     >
-                      Mark your cat-lendars! The Pump.Fun FAIR LAUNCH of <span className="highlight">$RPS</span> opens on
-                      <strong> 1st November 00:00 CEST</strong>. So, sharpen your claws and get ready! Remember, it’s
+                      Mark your cat-lendars! The Pump.Fun FAIR LAUNCH of <span className="highlight">$BRUTUS</span> opens on
+                      <strong> 4TH DEC 20:00 CEST</strong>. So, sharpen your claws and get ready! Remember, it’s
                       <strong> GET RICH 💰 OR DIE 🩸</strong>—fur real.
                     </Typography>
                   </div>
-
                 </div>
                 <div id="" className={classes.footerContainer}>
 
@@ -817,13 +815,13 @@ const CountdownPage = ({
 
           {/* Footer */}
           <div style={{ position: "absolute", bottom: "0", display: "flex", textAlign: "left", flexDirection: "column", padding: "30px", justifyContent: "center", alignContent: "center" }} >
-            <a onClick={openMerchModal} style={{ cursor: "pointer" }}>Merch ► 💍 🎩 💎 🩱 👠 👞 🥽</a>
+            {/* <a onClick={openMerchModal} style={{ cursor: "pointer" }}>Merch ► 💍 🎩 💎 🩱 👠 👞 🥽</a> */}
 
 
             <div className="countdown social-icons" style={{ display: 'flex', alignItems: 'center' }}>
               {/* <a href="https://discord.gg/anMJntW4AD">
                             <FontAwesomeIcon icon={faDiscord} />
-                        </a> */}<span>CHECK SOCIALS FOR UPDATES ►</span>
+                        </a> */}<span>FOLLOW US ►</span>
               <a href="https://x.com/rpsdotgame">
                 <FontAwesomeIcon icon={faXTwitter} />
               </a>
@@ -844,13 +842,12 @@ const CountdownPage = ({
 
               <a className={classes.link} href="https://blog.rps.game/">Blog</a>&nbsp;✗&nbsp;
               {/* <a className={classes.link} href="#">Faq</a>&nbsp;✗&nbsp; */}
-              <a className={classes.link}
-                // href="/#"
+              {/* <a className={classes.link}
                 id="merch"
                 onClick={openMerchModal}
               >
                 Merch
-              </a>&nbsp;✗&nbsp;
+              </a>&nbsp;✗&nbsp; */}
               <a className={classes.link}
                 // href="/#"
                 id="terms"

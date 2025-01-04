@@ -2159,13 +2159,6 @@ h2.main-title.recently-closed-title {
   justify-content: flex-end;
 }
 
-.input-amount {
-  display: flex;
-  width: 100%;
-  flex-direction: row;
-  align-items: center;
-  gap: 10px;
-}
 
 h2.room-history-title {
   font-size: 12px;
@@ -2499,7 +2492,8 @@ input {
 .game-page .game-contents .game-info-panel #rps-radio button:hover {
   transition: 0.1s;
   transform: translateY(-2px);
-  filter: brightness(1.2);
+  color: #fff;
+  background: #ff0000;
 }
 
 .game-page .game-contents .game-info-panel #rps-radio button:focus,
@@ -2535,7 +2529,6 @@ input {
   white-space: nowrap;
 }
 
-.input-amount span,
 .game-page .game-contents .game-info-panel .edit-amount-panel span {
   font-size: 10px;
 }
@@ -4732,17 +4725,20 @@ a.player:hover {
 }
 
 
-.game-contents .game-info-panel .bet-amount button,
-.input-amount button {
-  border: 2px solid #ff8500 !important;
+.bet-amount button {
+  border: 2px solid #ff0000;
   box-shadow: unset !important;
-  background: #ff85005c !important;
-  color: #fcfcfc;
-  margin-right: 2.5px;
+  background: #ff000029;
+  color: #ff0000;
+  margin-right: 5px;
   margin-top: 5px;
   font-size: 0.7em;
   padding: 0;
   margin-bottom: 5px;
+}
+
+.bet-amount button:last-child {
+  margin-right: 0;
 }
 
 .game-page .game-contents .game-info-panel button.add-new-game-type {
@@ -7501,7 +7497,6 @@ div[aria-label="How To Play Modal"] ul {
     min-width: 120px !important;
   }
 
-  .input-amount span,
   .game-page .game-contents .game-info-panel .edit-amount-panel span {
     font-size: 8px;
   }

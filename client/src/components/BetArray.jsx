@@ -927,7 +927,7 @@ function BetArray({
                   display: 'flex',
                   alignItems: 'center',
                   color: betting ? (is_betting ? "#28a745" : "#007bff") : "#ff0000",
-                  marginBottom: "20px",
+                  marginBottom: "5px",
                   background: betting ? (is_betting ? "#0ef34233" : "#007bff33") : "#ff000033",
                   width: "100%",
                   boxShadow: betting ? (is_betting ? "#28a745 0px 0px 6px 0px inset" : "#007bff 0px 0px 6px 0px inset") : "#ff0000 0px 0px 6px 0px inset",
@@ -963,7 +963,7 @@ function BetArray({
                 </div>
 
                 <BetAmountInput
-                  betAmount={bet_amount}
+                  bet_amount={bet_amount}
                   handle2xButtonClick={handle2xButtonClick}
                   handleHalfXButtonClick={handleHalfXButtonClick}
                   handleMaxButtonClick={handleMaxButtonClick}

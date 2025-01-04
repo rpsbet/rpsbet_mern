@@ -306,19 +306,61 @@ router.post('/generate_address', auth, async (req, res) => {
   }
 });
 
-router.post('/get_sol_to_usd', auth, async (req, res) => {
+router.post('/get_sol_to_usd', async (req, res) => {
   try {
     const { solAmount } = req.body;
 
-    // Fetch the current SOL price in USD
-    const response = await axios.get('https://api.coingecko.com/api/v3/simple/price', {
-      params: {
-        ids: 'solana',
-        vs_currencies: 'usd',
-      },
-    });
+    // Function to fetch SOL price from the primary source (CoinGecko)
+    const fetchSolPriceFromPrimary = async () => {
+      const response = await axios.get('https://api.coingecko.com/api/v3/simple/price', {
+        params: {
+          ids: 'solana',
+          vs_currencies: 'usd',
+        },
+      });
+      return response.data.solana?.usd;
+    };
 
-    const solPrice = response.data.solana?.usd;
+    // Function to fetch SOL price from the first fallback source (Binance)
+    const fetchSolPriceFromFallback1 = async () => {
+      const response = await axios.get('https://api.binance.com/api/v3/ticker/price', {
+        params: {
+          symbol: 'SOLUSDT',
+        },
+      });
+      return parseFloat(response.data.price);
+    };
+
+    // Function to fetch SOL price from the second fallback source (Coincap)
+    const fetchSolPriceFromFallback2 = async () => {
+      const response = await axios.get('https://api.coincap.io/v2/assets/solana');
+      return parseFloat(response.data.data.priceUsd);
+    };
+
+    let solPrice = null;
+
+    // Attempt to fetch SOL price from the primary and fallback sources in sequence
+    try {
+      solPrice = await fetchSolPriceFromPrimary();
+    } catch (primaryError) {
+      console.warn('Primary source failed, trying first fallback source...', primaryError.message);
+
+      try {
+        solPrice = await fetchSolPriceFromFallback1();
+      } catch (fallback1Error) {
+        console.warn('First fallback source failed, trying second fallback source...', fallback1Error.message);
+
+        try {
+          solPrice = await fetchSolPriceFromFallback2();
+        } catch (fallback2Error) {
+          console.error('All sources failed:', fallback2Error.message);
+          return res.status(500).json({
+            success: false,
+            message: 'Failed to fetch Solana price from all sources.',
+          });
+        }
+      }
+    }
 
     if (solPrice == null || isNaN(solPrice)) {
       return res.status(404).json({
@@ -347,10 +389,11 @@ router.post('/get_sol_to_usd', auth, async (req, res) => {
     console.error('Error getting SOL to USD price:', error.message || error);
     res.status(500).json({
       success: false,
-      message: 'An error occurred while getting the SOL to USD price',
+      message: 'An error occurred while getting the SOL to USD price.',
     });
   }
 });
+
 
 router.post('/get_token_price', auth, async (req, res) => {
   try {

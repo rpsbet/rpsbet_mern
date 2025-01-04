@@ -7,7 +7,7 @@ import {
   AccordionItemButton,
   AccordionItemPanel
 } from 'react-accessible-accordion';
-import { Button } from '@material-ui/core';
+import { Typography, Button } from '@material-ui/core';
 
 Modal.setAppElement('#root');
 
@@ -60,181 +60,106 @@ class HowToPlayModal extends Component {
                 <AccordionItemPanel>
                   <div className="modal-content-wrapper spleesh">
                     <div className="modal-content-panel">
-                      <h5 style={{ color: '#02c526' }}>Skill-Games Vs. RNGs</h5>
-                      <p>
-                        RPS.GAME is a skill-based 'casino' meaning the more the learn and stick around, the better chance you have of earning, vs. traditional casinos where the math works in the House's favor over time. House Edge for us is commission-based per bet, and does not affect your odds, whereas in a traditional casino, their business-model is based entirely on you losing. Sound fair to you?
-                      </p>
-                      <h5 style={{ color: '#02c526' }}>Using AI for AI Play (vs. an RNG)</h5>
+                      <Typography
+                        variant="body2"
+                        paragraph
+                        className="scroll-animation"
+                        style={{ animationDelay: '0.2s', lineHeight: '2em', textAlign: 'center' }}
+                      >
+                        <span className="highlight" style={{ background: 'linear-gradient(165deg, #ffd000, #ff0000)', padding: '0em 0.4em', margin: '2.5px', borderRadius: '5px' }}>RPS.Game</span>
+                        is more than just a platform—it’s a <span className="highlight" style={{ background: 'linear-gradient(165deg, #ffd000, #ff0000)', padding: '0em 0.4em', margin: '2.5px', borderRadius: '5px' }}>powerful game creation tool!</span>
+                        Players can design their own games, and when they reach <strong style={{ background: 'linear-gradient(165deg, #ffd000, #ff0000)', padding: '0em 0.4em', margin: '2.5px', borderRadius: '5px' }}>80 SOL</strong>
+                        in contributions, these games can be minted as unique tokens on the blockchain.
+                        This allows creators to turn their gaming ideas into real, tradable assets. It’s the
+                        <span className="highlight" style={{ background: 'linear-gradient(165deg, #ffd000, #ff0000)', padding: '0em 0.4em', margin: '2.5px', borderRadius: '5px' }}>purr-fect</span>
+                        way to blend creativity and decentralization!
+                      </Typography>
+
+                      <Typography
+                        variant="body2"
+                        paragraph
+                        className="scroll-animation"
+                        style={{ animationDelay: '0.4s', fontWeight: 'bold', lineHeight: '2em', color: 'rgb(72 255 4)', textAlign: 'center' }}
+                      >
+                        Important Note: We launch tokens for fun every week on Saturdays to help crowdfund the platform.
+                        This is <span className="highlight" style={{ background: 'linear-gradient(165deg, #ffd000, #ff0000)', padding: '0em 0.4em', margin: '2.5px', borderRadius: '5px' }}>NOT financial advice</span>,
+                        and you should never invest more than you are willing to lose. These are high-risk, high-reward opportunities meant for entertainment and innovation!
+                      </Typography>
+
+                      <Typography
+                        variant="body2"
+                        paragraph
+                        className="scroll-animation"
+                        style={{ lineHeight: '2em', animationDelay: '0.6s', textAlign: 'center' }}
+                      >
+                        <span className="highlight" style={{ background: 'linear-gradient(165deg, #ffd000, #ff0000)', padding: '0em 0.4em', margin: '2.5px', borderRadius: '5px' }}>RPS.Game</span>
+                        offers financial tools that are typically gate-kept by the Elite, but we’ve opened the door for
+                        <span className="highlight" style={{ background: 'linear-gradient(165deg, #ffd000, #ff0000)', padding: '0em 0.4em', margin: '2.5px', borderRadius: '5px' }}>EVERYONE</span>—whether you're a fat cat or a stray.
+                        Using <span className="highlight" style={{ background: 'linear-gradient(165deg, #ffd000, #ff0000)', padding: '0em 0.4em', margin: '2.5px', borderRadius: '5px' }}>$BRUTUS</span>,
+                        we’ve got a solution to inflation by capping the total supply at
+                        <strong style={{ background: 'linear-gradient(165deg, #ffd000, #ff0000)', padding: '0em 0.4em', margin: '2.5px', borderRadius: '5px' }}>1 Billion tokens</strong>.
+                        Just think of it as a ball of yarn with a limit on how much it can unravel!
+                      </Typography>
+
+                      <Typography
+                        variant="body2"
+                        paragraph
+                        className="scroll-animation"
+                        style={{ lineHeight: '2em', animationDelay: '0.8s', textAlign: 'center' }}
+                      >
+                        The cat (token) distribution system? We’re giving <strong style={{ background: 'linear-gradient(165deg, #ffd000, #ff0000)', padding: '0em 0.4em', margin: '2.5px', borderRadius: '5px' }}>5%</strong>
+                        to the team (for their paw-some efforts), <strong style={{ background: 'linear-gradient(165deg, #ffd000, #ff0000)', padding: '0em 0.4em', margin: '2.5px', borderRadius: '5px' }}>20%</strong>
+                        to the platform, <strong style={{ background: 'linear-gradient(165deg, #ffd000, #ff0000)', padding: '0em 0.4em', margin: '2.5px', borderRadius: '5px' }}>70%</strong>
+                        to the eco-system (you cool cats), and the final <strong style={{ background: 'linear-gradient(165deg, #ffd000, #ff0000)', padding: '0em 0.4em', margin: '2.5px', borderRadius: '5px' }}>5%</strong>... well, marketing.
+                      </Typography>
+
+                      <Typography
+                        variant="body2"
+                        paragraph
+                        className="scroll-animation"
+                        style={{ lineHeight: '2em', animationDelay: '1s', textAlign: 'center' }}
+                      >
+                        Mark your cat-lendars! The Pump.Fun FAIR LAUNCH of <span className="highlight" style={{ background: 'linear-gradient(165deg, #ffd000, #ff0000)', padding: '0em 0.4em', margin: '2.5px', borderRadius: '5px' }}>$BRUTUS</span>
+                        opens on <strong style={{ background: 'linear-gradient(165deg, #ffd000, #ff0000)', padding: '0em 0.4em', margin: '2.5px', borderRadius: '5px' }}>4TH DEC 20:00 CEST</strong>.
+                        So, sharpen your claws and get ready! Remember, it’s <strong style={{ background: 'linear-gradient(165deg, #ffd000, #ff0000)', padding: '0em 0.4em', margin: '2.5px', borderRadius: '5px' }}>GET RICH 💰 OR DIE 🩸</strong>—fur real.
+                      </Typography>
 
                       <div className="tiers">
-                        <br />
-                        <h5>Markov</h5>
-                        <p>Markov the 'mimicker' is a pattern prediction model whilst throwing in a bit of maths to prevent being too predictable. For example, if you feed Markov 'Rock', 'Paper, 'Rock', 'Paper' etc. it will still throw in some 'Scissors' so, yes Markov might be simple but its reliable.</p>
-                        <table>
+                        <Typography
+                          variant="h5"
+                          paragraph
+                          style={{ lineHeight: '2em', textAlign: 'center', fontWeight: 'bold', marginTop: '1em', color: 'rgb(72 255 4)', padding: '2.5px', backgroundColor: 'rgba(72 255 4, 0.3)', borderRadius: '0.3em' }}
+                        >
+                          Our AI (Unlocked at Level 60)
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          paragraph
+                          style={{ lineHeight: '2em', textAlign: 'center', lineHeight: '1.6' }}
+                        >
+                          Our AI is a language model and cannot be used in most games. However, some games cannot be played without it.
+                          It offers a unique balance of <span className="highlight" style={{ background: 'linear-gradient(165deg, #ffd000, #ff0000)', padding: '0em 0.4em', margin: '2.5px', borderRadius: '5px' }}>speed</span>,
+                          <span className="highlight" style={{ background: 'linear-gradient(165deg, #ffd000, #ff0000)', padding: '0em 0.4em', margin: '2.5px', borderRadius: '5px' }}>reasoning</span>, and
+                          <span className="highlight" style={{ background: 'linear-gradient(165deg, #ffd000, #ff0000)', padding: '0em 0.4em', margin: '2.5px', borderRadius: '5px' }}>abilities</span> tailored for advanced gameplay.
+                        </Typography>
+                        <table style={{ margin: '20px auto 0', textAlign: 'center', width: '100%' }}>
                           <tbody>
                             <tr>
                               <td>Speed</td>
                               <td>
                                 <div className="bar" style={{ width: '100%' }}></div>
                               </td>
-                              <td>
-                                <div className="bar" style={{ width: '100%' }}></div>
-                              </td>
-                              <td>
-                                <div className="bar" style={{ width: '80%' }}></div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>Reasoning</td>
-                              <td>
-                                <div className="bar" style={{ width: '50%' }}></div>
-                              </td>
-                              <td>
-                                <div className="bar" style={{ width: '0%' }}></div>
-                              </td>
-                              <td>
-                                <div className="bar" style={{ width: '0%' }}></div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>Abilities</td>
-                              <td>
-                                <div className="bar" style={{ width: '30%' }}></div>
-                              </td>
-                              <td>
-                                <div className="bar" style={{ width: '0%' }}></div>
-                              </td>
-                              <td>
-                                <div className="bar" style={{ width: '0%' }}></div>
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                        <br />
-                        <h5>Carlo (Unlocked at Level 26)</h5>
-                        <p>Carlo, named after Monte Carlo's famous casino as well as the Monte Carlo Simulation used for decision making and overall much more advanced than Markov. Carlo can make decisions such as altering your Bet Amount, autonomous game creation / unstaking as well as executing at the perfect times all calibrated from its user's actions.</p>
-                        <table>
-                          <tbody>
-                            <tr>
-                              <td>Speed</td>
-                              <td>
-                                <div className="bar" style={{ width: '10%' }}></div>
-                              </td>
-                              <td>
-                                <div className="bar" style={{ width: '0%' }}></div>
-                              </td>
-                              <td>
-                                <div className="bar" style={{ width: '0%' }}></div>
-                              </td>
                             </tr>
                             <tr>
                               <td>Reasoning</td>
                               <td>
                                 <div className="bar" style={{ width: '100%' }}></div>
-                              </td>
-                              <td>
-                                <div className="bar" style={{ width: '00%' }}></div>
-                              </td>
-                              <td>
-                                <div className="bar" style={{ width: '0%' }}></div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>Abilities</td>
-                              <td>
-                                <div className="bar" style={{ width: '100%' }}></div>
-                              </td>
-                              <td>
-                                <div className="bar" style={{ width: '70%' }}></div>
-                              </td>
-                              <td>
-                                <div className="bar" style={{ width: '0%' }}></div>
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                        <br />
-                        <h5>Q Bot (Unlocked at Level 42)</h5>
-                        <p>Q Bot has a personality of its own, in fact it's the only AI that inherits self-learning. That's right, turn it on then just sit back and watch the money come in. Is it smarter than a Human you ask? Maybe... It's only downside is that it's so OP, it might scare other users from playing against it.</p>
-                        <table>
-                          <tbody>
-                            <tr>
-                              <td>Speed</td>
-                              <td>
-                                <div className="bar" style={{ width: '10%' }}></div>
-                              </td>
-                              <td>
-                                <div className="bar" style={{ width: '0%' }}></div>
-                              </td>
-                              <td>
-                                <div className="bar" style={{ width: '0%' }}></div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>Reasoning</td>
-                              <td>
-                                <div className="bar" style={{ width: '100%' }}></div>
-                              </td>
-                              <td>
-                                <div className="bar" style={{ width: '100%' }}></div>
-                              </td>
-                              <td>
-                                <div className="bar" style={{ width: '70%' }}></div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>Abilities</td>
-                              <td>
-                                <div className="bar" style={{ width: '80%' }}></div>
-                              </td>
-                              <td>
-                                <div className="bar" style={{ width: '0%' }}></div>
-                              </td>
-                              <td>
-                                <div className="bar" style={{ width: '0%' }}></div>
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                        <br />
-                        <h5>ELMo (Unlocked at Level 60)</h5>
-                        <p>ELMo is a language model and cannot be used in most games, on the other side, some games cannot be played without ELMo.</p>
-                        <table>
-                          <tbody>
-                            <tr>
-                              <td>Speed</td>
-                              <td>
-                                <div className="bar" style={{ width: '100%' }}></div>
-                              </td>
-                              <td>
-                                <div className="bar" style={{ width: '10%' }}></div>
-                              </td>
-                              <td>
-                                <div className="bar" style={{ width: '0%' }}></div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>Reasoning</td>
-                              <td>
-                                <div className="bar" style={{ width: '100%' }}></div>
-                              </td>
-                              <td>
-                                <div className="bar" style={{ width: '10%' }}></div>
-                              </td>
-                              <td>
-                                <div className="bar" style={{ width: '0%' }}></div>
                               </td>
                             </tr>
                             <tr>
                               <td>Abilities</td>
                               <td>
                                 <div className="bar" style={{ width: '50%' }}></div>
-                              </td>
-                              <td>
-                                <div className="bar" style={{ width: '00%' }}></div>
-                              </td>
-                              <td>
-                                <div className="bar" style={{ width: '0%' }}></div>
                               </td>
                             </tr>
                           </tbody>
@@ -380,7 +305,7 @@ class HowToPlayModal extends Component {
                           <li><strong>Where can I find the latest updates?</strong> For the latest updates, check our Twitter feed or join our Discord channel.</li>
                           <li><strong>What should I do if I encounter a bug?</strong> Please report any bugs via our support channels, including Twitter, Telegram, or Discord.</li>
                           <li><strong>How can I participate in beta testing?</strong> Announcements about beta testing opportunities will be made on our social media channels. Stay tuned!</li>
-                          <li><strong>Who can I contact for partnership inquiries?</strong> For partnership inquiries, please email us at lenny@rps.finance.</li>
+                          <li><strong>Who can I contact for partnership inquiries?</strong> For partnership inquiries, please email us at inv_inquiries@rps.game.</li>
                         </ul>
                       </div>
                       <br />

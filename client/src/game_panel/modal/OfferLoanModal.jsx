@@ -284,7 +284,7 @@ class OfferLoanModal extends Component {
 
   render() {
     const { expanded, responseText, loanPeriodText, interestRateText, cancelled, waiting } = this.state;
-    const { loan_amount, loan_period, apy, rank, userInfo, onlineUserList, isLowGraphics } = this.props;
+    const { userInfo, solPrice, isLowGraphics } = this.props;
     const tableCellStyle = { textAlign: 'center' };
 
     const inputCellStyle = {

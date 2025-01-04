@@ -275,7 +275,7 @@ class DepositModal extends Component {
         return;
       }
 
-      const tokenMintAddress = new PublicKey('BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump');
+      const tokenMintAddress = new PublicKey('x0-COMING-SOON-xxxxxx000000000pump');
 
       // Fetch token mint info
       const mintInfo = await getMint(connection, tokenMintAddress);
@@ -447,14 +447,14 @@ class DepositModal extends Component {
         description = 'Via Manual Transfer (50+ Cryptocurrencies supported)';
         break;
       case 'web3':
-        description = <>Via Connect Wallet (Phantom Wallet recommended), $RPS only, lowest fees.<br />
+        description = <>Via Connect Wallet (Phantom Wallet recommended), $BRUTUS only, lowest fees.<br />
           Buy/Swap tokens on&nbsp;
           <a
             style={{
               textDecoration: "underline",
               color: "#3f51b5"
             }}
-            href="https://raydium.io/swap/?inputMint=sol&outputMint=BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump"
+            href="https://raydium.io/swap/?inputMint=sol&outputMint=x0-COMING-SOON-xxxxxx000000000pump"
             target="_blank"
             rel="noopener noreferrer"
           >

@@ -1,95 +1,127 @@
-import React, { useState, useEffect  } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
-import ButtonGroup from '@material-ui/core/ButtonGroup';
 import { createTheme, ThemeProvider } from '@material-ui/core/styles';
+import { debounce } from 'lodash';
 
 export default function BetAmountInput(props) {
   const {
-    betAmount,
+    bet_amount,
     handle2xButtonClick,
     handleHalfXButtonClick,
     handleMaxButtonClick,
     onChangeState,
     isDarkMode,
     betAmountRef,
-    disabledButtons
+    disabledButtons,
   } = props;
+
+  const [localBetAmount, setLocalBetAmount] = useState(bet_amount);
+
+  useEffect(() => {
+    setLocalBetAmount(bet_amount);
+  }, [bet_amount]);
+
+  const debouncedOnChangeState = useCallback(
+    debounce((value) => {
+      onChangeState({ bet_amount: parseFloat(value) || 0 });
+    }, 300),
+    [onChangeState]
+  );
+
+  const handleTextFieldChange = (event) => {
+    const value = event.target.value;
+    setLocalBetAmount(value);
+    debouncedOnChangeState(value);
+  };
+
+  const handle2x = () => {
+    handle2xButtonClick();
+  };
+
+  const handleHalfX = () => {
+    handleHalfXButtonClick();
+  };
+
+  const handleMax = () => {
+    handleMaxButtonClick();
+  };
 
   const theme = createTheme({
     overrides: {
-      
       MuiOutlinedInput: {
-        adornedEnd: {
-          paddingRight: '6px',
-        },
         root: {
           '& $notchedOutline': {
-            borderColor: 'gray', // Set initial border color to gray
+            borderColor: 'gray',
             transition: 'border-color 0.3s ease-in-out',
-            paddingRight: '6px',
           },
           '&:hover $notchedOutline': {
-            borderColor: 'gray', // Set hover border color to gray
+            borderColor: 'gray',
           },
           '&$focused $notchedOutline': {
-            borderColor: 'red', // Set focused border color to red
-            boxShadow: '0 0 0 4px rgba(255, 0, 0, 0.3)', // Add red glow outline
-          },
-          '&$focused': {
-            backgroundColor: '#10101011', // Set focused background color to black
-          },
-          '&:not($focused):not($error) $notchedOutline': {
-            borderColor: isDarkMode ? 'white' : '#101010',
+            borderColor: 'red',
+            boxShadow: '0 0 0 4px rgba(255, 0, 0, 0.3)',
           },
           '& input': {
             color: isDarkMode ? 'white' : '#101010',
-            backgroundColor: '#10101011', // Set the input background color to black
-          },
-        },
-        input: {
-          '&::placeholder': {
-            color: 'gray', // Set the placeholder color to gray
+            backgroundColor: '#10101011',
           },
         },
       },
-      
       MuiFormLabel: {
         root: {
           color: isDarkMode ? 'white' : '#101010',
         },
-        
       },
     },
-    
   });
 
-  const [isFocused, setIsFocused] = useState(false);
-  const [isButtonGroupVisible, setIsButtonGroupVisible] = useState(false);
-
-  useEffect(() => {
-    if (isFocused) {
-      setIsButtonGroupVisible(true);
-    } else {
-      const timeoutId = setTimeout(() => {
-        setIsButtonGroupVisible(false);
-      }, 0); // Adjust the timeout value as needed
-      return () => clearTimeout(timeoutId);
-    }
-  }, [isFocused]);
-
-  const handleFocus = () => {
-    setIsFocused(true);
-  };
-
-  const handleBlur = (event) => {
-    event.stopPropagation();
-    setIsFocused(false);
-  };
-
   return (
-    <div className="bet-amount">
+    <div
+      className="bet-amount"
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'stretch',
+        gap: '5px',
+        width: '100%',
+      }}
+    >
       <ThemeProvider theme={theme}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            width: '100%',
+          }}
+        >
+          <Button
+            variant="contained"
+            color="primary"
+            style={{ flex: 1 }}
+            onClick={handle2x}
+          >
+            2x
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            style={{ flex: 1 }}
+            onClick={handleHalfX}
+          >
+            1/2x
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            style={{ flex: 1 }}
+            onClick={handleMax}
+          >
+            Max
+          </Button>
+        </div>
+
         <TextField
           type="text"
           name="betamount"
@@ -98,48 +130,17 @@ export default function BetAmountInput(props) {
           ref={betAmountRef}
           disabled={disabledButtons || false}
           label=""
-          value={betAmount}
-          onChange={onChangeState}
+          value={localBetAmount}
+          onChange={handleTextFieldChange}
           placeholder="BET AMOUNT"
+          fullWidth
           inputProps={{
             pattern: '^\\d*\\.?\\d*$',
-            maxLength: 9,
           }}
           InputLabelProps={{
             shrink: true,
           }}
-          InputProps={{
-            onFocus: handleFocus,
-            onBlur: handleBlur,
-            endAdornment: (
-              <ButtonGroup
-                className={isButtonGroupVisible ? 'fade-in' : 'fade-out'}
-                // style={{ visibility: isButtonGroupVisible ? 'visible' : 'hidden' }}
-              >
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={handle2xButtonClick}
-                >
-                  2x
-                </Button>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={handleHalfXButtonClick}
-                >
-                  1/2x
-                </Button>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={handleMaxButtonClick}
-                >
-                  Max
-                </Button>
-              </ButtonGroup>
-            ),
-          }}
+          style={{ marginBottom: '10px' }}
         />
       </ThemeProvider>
     </div>

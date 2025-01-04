@@ -47,6 +47,7 @@ export const validateIsAuthenticated = (isAuthenticated, isDarkMode) => {
   
 
   export const validateBetAmount = (bet_amount, balance, isDarkMode) => {
+    console.log("bet_amount, balance,", bet_amount, balance,)
     if (isNaN(bet_amount)) {
       alertModal(isDarkMode, 'IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!');
       return false;
@@ -57,8 +58,8 @@ export const validateIsAuthenticated = (isAuthenticated, isDarkMode) => {
       return false;
     }
 
-    if (bet_amount < 0.05) {
-      alertModal(isDarkMode, `MEOWNIMUM BET IS 0.05 RPS`);
+    if (bet_amount < 0.0001) {
+      alertModal(isDarkMode, `MEOWNIMUM BET IS 0.0001 SOL`);
       return false;
     }
   

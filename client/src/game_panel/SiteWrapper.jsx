@@ -358,23 +358,6 @@ class SiteWrapper extends Component {
     this.setState({ blurValue });
   };
 
-  async fetchTokenDetails() {
-    try {
-      const response = await axios.get(`https://api.dexscreener.com/latest/dex/tokens/${token}`);
-      const priceData = response.data.pairs?.[0];
-
-      if (priceData) {
-        this.setState({
-          conversionRate: priceData.priceUsd,
-        });
-      } else {
-        console.error("No pair data available for this token.");
-      }
-    } catch (error) {
-      console.error("Error fetching token details:", error);
-    }
-  }
-
   stopCoinsAnimationAfterDelay() {
     setTimeout(() => {
       this.setState({ isCoinsAnimation: false });
@@ -425,11 +408,6 @@ class SiteWrapper extends Component {
       this.audioWin,
       this.audioSplit,
       this.audioLose,
-      this.fatality,
-      this.nyan,
-      this.topG,
-      this.oohBaby,
-      this.cashRegister
     ];
 
     audioElements.forEach(audio => {
@@ -534,19 +512,6 @@ class SiteWrapper extends Component {
         await this.props.getMyHistory();
       });
 
-      socket.on('PLAY_CORRECT_SOUND', socketId => {
-        if (socket.id === socketId && !this.props.isMuted) {
-          const audio = new Audio('/sounds/correct.mp3');
-          audio.play();
-        }
-      });
-
-      socket.on('PLAY_WRONG_SOUND', socketId => {
-        if (socket.id === socketId && !this.props.isMuted) {
-          const audio = new Audio('/sounds/wrong.mp3');
-          audio.play();
-        }
-      });
       socket.on(`RECEIVED_LOAN_OFFER_${this.props.user._id}`, ({ lender, avatar, accessory, username, totalWagered }) => {
         this.props.openOfferLoanModal();
         if (!this.props.isMuted) {
@@ -703,19 +668,9 @@ class SiteWrapper extends Component {
     }
   };
 
-  enableAudioPlayback = () => {
-    // This interaction enables the audio context to start
-    if (this.notificationSound) {
-      this.notificationSound.play().catch(error => {
-        console.error('Audio playback failed:', error);
-      });
-    }
-  };
 
   async componentDidMount() {
     try {
-      document.addEventListener('click', this.enableAudioPlayback, { once: true });
-
       const initialBalance = await this.props.fetchVaultBalance();
       this.setState({ websiteLoading: true, isInvestorsPage: location.pathname.startsWith('/investors'), isPlayer: location.pathname.startsWith('/play') });
       const currentUrl = window.location.pathname;
@@ -726,8 +681,6 @@ class SiteWrapper extends Component {
         this.initSocket(),
         this.props.acCalculateRemainingLoans(),
         this.initializeAudio(),
-        this.fetchTokenDetails(),
-
       ]);
       this.setState({ websiteLoading: false, notifications: this.props.notifications, vaultBal: initialBalance, loaded: true });
       if (currentUrl && currentUrl.includes('create')) {
@@ -764,20 +717,10 @@ class SiteWrapper extends Component {
 
   initializeAudio() {
     try {
-      this.nyan = new Audio('/sounds/nyan.mp3');
-      this.nyan.load();
-      this.topG = new Audio('/sounds/topG.mp3');
-      this.topG.load();
-      this.oohBaby = new Audio('/sounds/ooh-baby.mp3');
-      this.oohBaby.load();
       this.notificationSound = new Audio('/sounds/notification.mp3');
       this.needALoan = new Audio('/sounds/need_a_loan.mp3');
       this.needALoan.load();
       this.notificationSound.load();
-      this.cashRegister = new Audio('/sounds/cash-register.mp3');
-      this.cashRegister.load();
-      this.fatality = new Audio('/sounds/fatality.mp3');
-      this.fatality.load();
       this.audioWin = new Audio('/sounds/audioWin.mp3');
       this.audioWin.load();
       this.audioSplit = new Audio('/sounds/audioSplit.mp3');
@@ -819,7 +762,6 @@ class SiteWrapper extends Component {
     clearInterval(this.timer);
     clearInterval(this.historyInterval);
     window.removeEventListener('mousemove', this.handleMouseMove);
-
   }
 
   handleLogout = clear_token => {
@@ -1121,7 +1063,6 @@ class SiteWrapper extends Component {
       walletAddress, solanaBalance,
       transactions,
       blurValue,
-      conversionRate,
       userName,
       showInventoryModal,
       showVaultModal,
@@ -1234,7 +1175,7 @@ class SiteWrapper extends Component {
                   date={halloween}
                   renderer={({ days, hours, minutes, seconds, completed }) => (
                     <div style={{ zIndex: '1', height: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <h4 style={{ transform: 'rotate(-20deg) translateX(-200px)', position: 'absolute', top: '5px', color: '#f9f9f9', background: '#ff0000', padding: '5px 10px' }}>$RPS 🚀🚀🚀</h4>
+                      <h4 style={{ transform: 'rotate(-20deg) translateX(-200px)', position: 'absolute', top: '5px', color: '#f9f9f9', background: '#ff0000', padding: '5px 10px' }}>$BRUTUS 🚀🚀🚀</h4>
                       {!completed ? (
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                           <div style={{ fontSize: '2.2em', fontWeight: 'bold', marginBottom: '5px' }}>{days}</div>
@@ -1454,7 +1395,7 @@ class SiteWrapper extends Component {
                           onMouseLeave={this.handleDollarLeave}
                         >
                           {isHovered ? (
-                            `$${(balance * conversionRate).toFixed(numDecimals)}`
+                            `$${(balance * solPrice).toFixed(numDecimals)}`
                           ) : (
                             <>
                               <CountUp
@@ -1643,7 +1584,7 @@ class SiteWrapper extends Component {
                           <ListItemIcon>
                             <MonetizationOn size="small" />
                           </ListItemIcon>
-                          <ListItemText>$RPS 🚀🚀🚀</ListItemText>
+                          <ListItemText>$BRUTUS 🚀</ListItemText>
                         </MenuItem>
 
                         <MenuItem
@@ -2073,7 +2014,7 @@ class SiteWrapper extends Component {
               vaultBal={this.state.vaultBal}
               modalIsOpen={showVaultModal}
               closeModal={this.handleCloseVaultModal}
-              conversionRate={conversionRate}
+              conversionRate={solPrice}
             />
           )}
           {showWithdrawModal && (
@@ -2097,7 +2038,7 @@ class SiteWrapper extends Component {
           <ConfirmTradeModal />
           <DeListLoanModal />
           <ConfirmLoanModal />
-          <OfferLoanModal socket={this.props.socket} />
+          <OfferLoanModal solPrice={solPrice} socket={this.props.socket} />
           <GamePasswordModal />
           <Joyride
             steps={tutorialStepsMain}
@@ -2148,7 +2089,6 @@ class SiteWrapper extends Component {
 const mapStateToProps = state => ({
   topWins: state.logic.topWins,
   topWithdrawals: state.logic.topWithdrawals,
-  tokenPrice: state.logic.tokenPrice,
   isAuthenticated: state.auth.isAuthenticated,
   showDeListLoanModal: state.snackbar.showDeListLoanModal,
   showListItemModal: state.snackbar.showListItemModal,
@@ -2178,7 +2118,6 @@ const mapStateToProps = state => ({
   isLowGraphics: state.auth.isLowGraphics,
   showCookieConsent: state.auth.showCookieConsent,
   history: state.logic.history,
-
 });
 
 const mapDispatchToProps = {

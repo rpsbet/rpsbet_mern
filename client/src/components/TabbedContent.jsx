@@ -69,7 +69,7 @@ class TabbedContent extends Component {
       numToShow: 10,
       showPlayerModal: false,
       room_history: this.props.roomInfo.room_history,
-      activeTabs: [0, 1, 3],
+      activeTabs: [0, 1],
       isMobile: window.innerWidth < 767,
     };
     this.handleLoadMore = this.handleLoadMore.bind(this);

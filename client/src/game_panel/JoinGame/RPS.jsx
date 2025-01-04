@@ -295,10 +295,10 @@ class RPS extends Component {
       changeBgColor,
       selected_rps,
       onChangeState,
-      solPrice
+      solPrice,
+      bet_amount
     } = this.props;
 
-    const { bet_amount } = this.state;
     onChangeState({ result: '' });
     const result = await join({
       bet_amount: parseFloat(bet_amount),
@@ -390,12 +390,10 @@ class RPS extends Component {
       is_private,
       roomInfo,
       updateSelectedRps,
-      bankroll
+      bankroll,
+      bet_amount
     } = this.props;
 
-    const { bet_amount } = this.state;
-
-    // Call the function passed from the parent to update selected_rps
     updateSelectedRps(selection, async () => {
       // Code to execute after the state has been updated
 

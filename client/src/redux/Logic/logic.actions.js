@@ -102,12 +102,46 @@ export const reCreateRoom = room_id => async dispatch => {
 
 export const getSolToUsdPrice = (solAmount = null) => async (dispatch) => {
   try {
+    const solPriceKey = 'solPrice';
+    const usdValueKey = 'usdValue';
+    const timestampKey = 'solPriceTimestamp';
+    const expiryTime = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+    // Check if data exists in localStorage
+    const cachedPrice = localStorage.getItem(solPriceKey);
+    const cachedUsdValue = localStorage.getItem(usdValueKey);
+    const cachedTimestamp = localStorage.getItem(timestampKey);
+
+    const now = Date.now();
+
+    // If cached data exists and is not expired, use it
+    if (cachedPrice && cachedTimestamp && now - cachedTimestamp < expiryTime) {
+      const solPrice = parseFloat(cachedPrice);
+      const usdValue = solAmount ? solAmount * solPrice : parseFloat(cachedUsdValue);
+
+      dispatch({
+        type: SET_SOL_TO_USD_PRICE,
+        payload: { solPrice, usdValue },
+      });
+
+      return;
+    }
+
+    // If no valid cached data, fetch from the server
     const response = await axios.post('/stripe/get_sol_to_usd', {
       solAmount,
     });
 
     const { solPrice, usdValue } = response.data;
 
+    // Store new data and timestamp in localStorage
+    localStorage.setItem(solPriceKey, solPrice);
+    if (usdValue !== null) {
+      localStorage.setItem(usdValueKey, usdValue);
+    }
+    localStorage.setItem(timestampKey, now);
+
+    // Dispatch to Redux
     dispatch({
       type: SET_SOL_TO_USD_PRICE,
       payload: { solPrice, usdValue },
@@ -116,6 +150,7 @@ export const getSolToUsdPrice = (solAmount = null) => async (dispatch) => {
     console.error('Error fetching SOL to USD price:', error);
   }
 };
+
 
 export const getTokenPrice = (tokenMintAddress) => async (dispatch) => {
   try {
