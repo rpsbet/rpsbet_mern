@@ -108,6 +108,9 @@ function CoHostModal({
         autoSelected: 'zoom',
         show: false,
       },
+      animations: {
+        enabled: false, // Disable animations
+      },
     },
     xaxis: {
       type: 'datetime',

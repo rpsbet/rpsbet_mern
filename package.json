@@ -31,7 +31,7 @@
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.2",
     "browser-image-compression": "^2.0.2",
-    "bs58": "^6.0.0",
+    "bs58": "^4.0.1",
     "buffer": "^6.0.3",
     "canvas": "^2.11.2",
     "chart.js": "^4.3.0",

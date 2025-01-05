@@ -17,6 +17,11 @@ const check_access_time = require('../../helper/util/checkAccessTime');
 const { predictNext, reinforcementAI, innovate, patternBasedAI, counterSwitchAI, counterRandomness, NPC, generatePattern } = require('./predictNext');
 const { NPC_qs, patternBasedAI_qs, innovate_qs, getRandomItem_qs, counterSwitchAI_qs, generatePattern_qs, counterRandomness_qs, getCopyCatItem_qs, predictNextQs, reinforcementAI_qs } = require('./predictNextQs');
 const saveDocumentWithRetry = require('./retrySave');
+const { Connection } = require('@solana/web3.js');
+const { mintAndDistributeTokens } = require('./tokenMinting');
+// Example usage inside addToQueue
+const connection = new Connection('https://api.mainnet-beta.solana.com', 'confirmed');
+
 const requestQueue = [];
 
 const addToQueue = async (req, bot = false) => {
@@ -224,8 +229,6 @@ const addToQueue = async (req, bot = false) => {
                 // if no more items, create a new one
                 if (!bet_item && roomInfo['rps_game_type'] === 0) {
                     let nextItem;
-
-
                     switch (roomInfo['selectedStrategy']) {
                         case 'Random':
                             nextItem = await getRandomItem();
@@ -385,27 +388,29 @@ const addToQueue = async (req, bot = false) => {
                             roomInfo['endgame_type'] &&
                             roomInfo['user_bet'] >= roomInfo['endgame_amount']
                         ) {
+
                             newTransactionC.amount +=
-                                parseFloat(roomInfo['user_bet']) -
-                                parseFloat(roomInfo['endgame_amount']);
+                            parseFloat(roomInfo['user_bet']) -
+                            parseFloat(roomInfo['endgame_amount']);
 
-                            const newGameLogC = new GameLog({
-                                room: roomInfo,
-                                creator: roomInfo['creator'],
-                                joined_user: roomInfo['creator'],
-                                game_type: roomInfo['game_type'],
-                                bet_amount: roomInfo['host_pr'],
-                                user_bet: roomInfo['user_bet'],
-                                hosts: roomInfo.hosts,
-                                endgame_amount: roomInfo['endgame_amount'],
-                                game_result: 3
-                            });
+                        const newGameLogC = new GameLog({
+                            room: roomInfo,
+                            creator: roomInfo['creator'],
+                            joined_user: roomInfo['creator'],
+                            game_type: roomInfo['game_type'],
+                            bet_amount: roomInfo['host_pr'],
+                            user_bet: roomInfo['user_bet'],
+                            hosts: roomInfo.hosts,
+                            endgame_amount: roomInfo['endgame_amount'],
+                            game_result: 3
+                        });
 
-                            saveDocumentWithRetry(newGameLogC),
+                        saveDocumentWithRetry(newGameLogC),
 
-                                roomInfo['user_bet'] = parseFloat(
-                                    roomInfo['endgame_amount']
-                                );
+                            roomInfo['user_bet'] = parseFloat(
+                                roomInfo['endgame_amount']
+                            );
+
                         }
 
                         message.message =
@@ -627,21 +632,25 @@ const addToQueue = async (req, bot = false) => {
                         roomInfo['endgame_type'] &&
                         roomInfo['user_bet'] >= roomInfo['endgame_amount']
                     ) {
+
                         newTransactionC.amount +=
-                            parseFloat(roomInfo['user_bet']) -
-                            parseFloat(roomInfo['endgame_amount']);
-                        const newGameLogC = new GameLog({
-                            room: roomInfo,
-                            creator: roomInfo['creator'],
-                            joined_user: roomInfo['creator'],
-                            game_type: roomInfo['game_type'],
-                            bet_amount: roomInfo['host_pr'],
-                            user_bet: roomInfo['user_bet'],
-                            endgame_amount: roomInfo['endgame_amount'],
-                            hosts: roomInfo.hosts,
-                            game_result: 3
-                        });
-                        saveDocumentWithRetry(newGameLogC);
+                        parseFloat(roomInfo['user_bet']) -
+                        parseFloat(roomInfo['endgame_amount']);
+
+                    const newGameLogC = new GameLog({
+                        room: roomInfo,
+                        creator: roomInfo['creator'],
+                        joined_user: roomInfo['creator'],
+                        game_type: roomInfo['game_type'],
+                        bet_amount: roomInfo['host_pr'],
+                        user_bet: roomInfo['user_bet'],
+                        hosts: roomInfo.hosts,
+                        endgame_amount: roomInfo['endgame_amount'],
+                        game_result: 3
+                    });
+
+                    saveDocumentWithRetry(newGameLogC),
+
                         roomInfo['user_bet'] = parseFloat(
                             roomInfo['endgame_amount']
                         );
@@ -802,7 +811,6 @@ const addToQueue = async (req, bot = false) => {
             }
 
             const now = new Date();
-            console.log("newTransactionAmount", newTransactionAmount);
 
             const timeBucket = Math.floor(now.getTime() / (60 * 1000));
             const isBuyTransaction = newTransactionAmount < 0;

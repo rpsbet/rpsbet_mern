@@ -110,14 +110,10 @@ class JoinGame extends Component {
         split: new Audio('/sounds/split-sound.mp3'),
         lose: new Audio('/sounds/lose-sound.mp3'),
         start: new Audio('/sounds/start.mp3'),
-        countDown: new Audio('/sounds/countDown.mp3'),
         stop: new Audio('/sounds/stop.mp3'),
-        sweep: new Audio('/sounds/sweep.mp3'),
-        blip: new Audio('/sounds/blip.mp3'),
         select: new Audio('/sounds/select.mp3'),
         wrong: new Audio('/sounds/wrong.mp3'),
         correct: new Audio('/sounds/correct.mp3'),
-        bang: new Audio('/sounds/bang.mp3'),
         shine: new Audio('/sounds/shine.mp3'),
         ballKick: new Audio('/sounds/ball_kick.mp3'),
         grunt2: new Audio('/sounds/grunt2.mp3'),
@@ -164,10 +160,12 @@ class JoinGame extends Component {
 
   componentDidUpdate(prevProps, prevState) {
     if (this.props.user !== prevProps.user && !this.state.qBotFetched) {
+
       this.setState({ run: !this.props.user.completedTutorials.includes(2) });
     }
 
     if (prevProps.roomInfo !== this.props.roomInfo) {
+
       this.state.bankroll = this.props.roomInfo.user_bet;
       const qBotStatus = this.props.getQbot(this.props.roomInfo.creator_id);
       if (this.isComponentMounted && this.props.attached) {
@@ -175,10 +173,12 @@ class JoinGame extends Component {
       }
     }
     if (prevState.bankroll !== this.state.bankroll && this.state.bankroll <= 0.0005) {
+
       this.state.status = 'finished';
     }
 
     if (prevProps.user_balance !== this.props.user_balance && this.state.gameResult !== -1 && this.state.isMax) {
+
       this.handleMaxButtonClick();
     }
   }

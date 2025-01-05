@@ -105,7 +105,6 @@ import {
   getNotifications,
   readNotifications,
   getWithdrawals,
-  getWins,
 } from '../redux/Logic/logic.actions';
 import { alertModal } from './modal/ConfirmAlerts.jsx';
 import CookieConsent from '../util/cookieConsent';
@@ -687,11 +686,9 @@ class SiteWrapper extends Component {
         this.setState({ selectedMainTabIndex: this.props.selectMainTab(1) });
       }
 
-      // setInterval(() => this.fetchData(), 1000);
       this.interval = setInterval(this.updateReminderTime, 3000);
 
       this.loadSolanaWallet();
-      this.fetchInitialData();
 
       if (this.state.isPlayer) {
         this.closeTokenModal();
@@ -701,11 +698,6 @@ class SiteWrapper extends Component {
       console.error(error);
     }
 
-  }
-  async fetchInitialData() {
-    const { getWins, getWithdrawals } = this.props;
-    const promises = [getWins(), getWithdrawals()];
-    await Promise.all(promises);
   }
 
   handleCreatePage() {
@@ -2087,8 +2079,6 @@ class SiteWrapper extends Component {
 }
 
 const mapStateToProps = state => ({
-  topWins: state.logic.topWins,
-  topWithdrawals: state.logic.topWithdrawals,
   isAuthenticated: state.auth.isAuthenticated,
   showDeListLoanModal: state.snackbar.showDeListLoanModal,
   showListItemModal: state.snackbar.showListItemModal,
@@ -2145,7 +2135,6 @@ const mapDispatchToProps = {
   openOfferLoanModal,
   setCurrentOfferTargetInfo,
   fetchVaultBalance,
-  getWins,
   getWithdrawals,
 };
 

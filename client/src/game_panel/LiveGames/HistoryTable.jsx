@@ -84,7 +84,6 @@ class HistoryTable extends Component {
 
   componentWillUnmount() {
     this.isComponentMounted = false;
-    clearInterval(this.interval);
     this.disconnectSocket();
   }
 

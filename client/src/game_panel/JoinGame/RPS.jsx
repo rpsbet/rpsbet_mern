@@ -113,7 +113,7 @@ class RPS extends Component {
   async componentDidMount() {
     this.isComponentMounted = true;
     document.addEventListener('keydown', this.handleKeyPress);
-    this.setState({ intervalId: setInterval(this.toggleBlueishHue, this.state.intervalDuration) });
+    // this.setState({ intervalId: setInterval(this.toggleBlueishHue, this.state.intervalDuration) });
     this.setupSocket();
 
     try {
@@ -245,11 +245,13 @@ class RPS extends Component {
     }
 
     if (prevProps.isWatching !== this.props.isWatching) {
+
       this.removeSocketListeners();
       this.setupSocket();
     }
   
     if (prevProps.is_betting !== is_betting && !is_betting) {
+
       const prevLastItemId = this.props.rpsbetitems.length > 4 ? this.props.rpsbetitems.slice(0, 5).reverse()[4]._id : null;
       const currentLastItemId = rps.length > 4 ? rps[4]._id : null;
 
@@ -262,13 +264,12 @@ class RPS extends Component {
       }
     }
 
-    if (prevProps.roomInfo && roomInfo) {
-      if (prevProps.roomInfo.host_pr !== roomInfo.host_pr) {
+    
+    if (prevProps.roomInfo.host_pr !== roomInfo.host_pr) {
         this.setState({
           host_pr: parseFloat(roomInfo.host_pr)
         });
       }
-    }
 
     if (
       prevState.isPasswordCorrect !== isPasswordCorrect &&
@@ -498,6 +499,7 @@ class RPS extends Component {
     const joinerRpsValueAtLastIndex = rps[rps.length - 1]?.joiner_rps;
 
     if (this.props.is_betting) {
+
       const intervalId = setInterval(this.toggleBlueishHue, intervalDuration);
       const flashingDuration = 2000;
       setTimeout(() => {

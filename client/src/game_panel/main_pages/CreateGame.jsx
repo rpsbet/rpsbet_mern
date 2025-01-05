@@ -87,14 +87,9 @@ class CreateGame extends Component {
       description: '',
       rps_game_type: 0,
       sounds: {
-        wrong: new Audio('/sounds/wrong.mp3'),
-        correct: new Audio('/sounds/correct.mp3'),
-        boop: new Audio('/sounds/boop.mp3'),
-        countDown: new Audio('/sounds/countDown.mp3'),
         grunt2: new Audio('/sounds/grunt2.mp3'),
         grunt: new Audio('/sounds/grunt.mp3'),
         select: new Audio('/sounds/select.mp3'),
-        addTen: new Audio('/sounds/addTen.mp3'),
         tap: new Audio('/sounds/tap.mp3'),
       }
     };
