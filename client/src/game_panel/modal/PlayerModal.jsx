@@ -595,6 +595,7 @@ class PlayerModal extends Component {
                       username={this.state.username}
                       title={title}
                       barStyle={barStyle}
+                      solPrice={solPrice}
                       color={color}
                       message={message}
                       actorType={this.state.actorType}

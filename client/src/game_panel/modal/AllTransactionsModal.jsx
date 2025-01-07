@@ -99,7 +99,8 @@ class AllTransactionsModal extends Component {
       handleSortClose,
       handleSearchClick,
       handleFilterClick,
-      handleFilterClose
+      handleFilterClose,
+      solPrice
     } = this.props;
     return (
       <Modal
@@ -253,9 +254,9 @@ class AllTransactionsModal extends Component {
                             <TableRow key={transaction._id}>
                               <TableCell className={`amount ${transaction.status === "waiting" || transaction.status === "pending" ||  transaction.status === "processing" ||  transaction.status === "in_process" ? 'grey' : (transaction.amount > 0 ? 'green' : 'red')}`}>
                                 {transaction.amount > 0 ? (
-                                  <> + {convertToCurrency(transaction.amount)}</>
+                                  <> + {convertToCurrency(transaction.amount, solPrice)}</>
                                 ) : (
-                                  <> - {convertToCurrency(Math.abs(transaction.amount))}</>
+                                  <> - {convertToCurrency(Math.abs(transaction.amount, solPrice))}</>
                                 )}
                               </TableCell>
                               <TableCell className="fromNow">

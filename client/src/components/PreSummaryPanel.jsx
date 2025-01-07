@@ -71,10 +71,10 @@ const PreSummaryPanel = (props) => {
             <div className="data-item">
               <div><div className="label your-bet-amount">LIQUIDITY</div></div>
               <Tooltip title={
-    isLowBankroll
-      ? `${parseFloat((Number(bankroll) || 0).toFixed(4))} SOL — LOW BANKROLL CAN CAUSE A BET TO FAIL`
-      : `${parseFloat((Number(bankroll) || 0).toFixed(3))} SOL`
-  }>
+                isLowBankroll
+                  ? `${parseFloat((Number(bankroll) || 0).toFixed(4))} SOL — LOW BANKROLL CAN CAUSE A BET TO FAIL`
+                  : `${parseFloat((Number(bankroll) || 0).toFixed(3))} SOL`
+              }>
                 <div
                   className={`value ${isLowBankroll ? 'red-text' : ''}`}
                   style={{ cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center" }}

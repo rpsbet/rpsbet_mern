@@ -172,10 +172,10 @@ class JoinGame extends Component {
         this.setState({ betting: true, isQbot: qBotStatus });
       }
     }
-    if (prevState.bankroll !== this.state.bankroll && this.state.bankroll <= 0.0005) {
+    // if (prevState.bankroll !== this.state.bankroll && this.state.bankroll <= 0.0005) {
 
-      this.state.status = 'finished';
-    }
+    //   this.state.status = 'finished';
+    // }
 
     if (prevProps.user_balance !== this.props.user_balance && this.state.gameResult !== -1 && this.state.isMax) {
 

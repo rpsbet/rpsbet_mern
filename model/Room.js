@@ -148,6 +148,10 @@
         type: String,
         default: ''
       },
+      walletAddress: {
+        type: String,
+        default: ''
+      },
       accessory: {
         type: String,
         default: ''

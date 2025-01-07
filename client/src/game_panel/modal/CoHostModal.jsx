@@ -192,7 +192,7 @@ function CoHostModal({
 
   if (transactionCandles && transactionCandles.length > 0) {
     const now = new Date().getTime();
-    const fourHoursAgo = Date.now() - 4 * 60 * 60 * 1000;
+    const fourHoursAgo = Date.now() - 2 * 60 * 60 * 1000;
     let lastCandle = transactionCandles[0];
 
     if (new Date(lastCandle.startTime).getTime() >= fourHoursAgo) {

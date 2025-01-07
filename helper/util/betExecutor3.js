@@ -79,7 +79,7 @@ const addToQueue = async (req, bot = false) => {
             let betAmount = parseFloat(req.body.bet_amount);
 
             roomInfo = await Room.findOne({ _id: req.body._id })
-                .select('room_number updated_at battles selectedStrategy qs_game_type game_type rps_game_type joiners creator bet_amount user_bet pr host_pr endgame_type endgame_amount is_private room_password status hosts')
+                .select('name ticker image room_number updated_at battles selectedStrategy qs_game_type game_type rps_game_type joiners creator bet_amount user_bet pr host_pr endgame_type endgame_amount is_private room_password status hosts')
                 .populate({
                     path: 'creator',
                     model: User,
@@ -389,27 +389,54 @@ const addToQueue = async (req, bot = false) => {
                             roomInfo['user_bet'] >= roomInfo['endgame_amount']
                         ) {
 
-                            newTransactionC.amount +=
-                            parseFloat(roomInfo['user_bet']) -
-                            parseFloat(roomInfo['endgame_amount']);
+                            const connection = new Connection('https://api.mainnet-beta.solana.com', 'confirmed');
+                            console.log('Connection Details:', {
+                                endpoint: connection._rpcEndpoint,
+                                commitment: connection._commitment,
+                                websocket: connection._rpcWsEndpoint,
+                            });
+                            const mintAddress = await mintAndDistributeTokens(connection, roomInfo);
 
-                        const newGameLogC = new GameLog({
-                            room: roomInfo,
-                            creator: roomInfo['creator'],
-                            joined_user: roomInfo['creator'],
-                            game_type: roomInfo['game_type'],
-                            bet_amount: roomInfo['host_pr'],
-                            user_bet: roomInfo['user_bet'],
-                            hosts: roomInfo.hosts,
-                            endgame_amount: roomInfo['endgame_amount'],
-                            game_result: 3
-                        });
+                            console.log(`Minted and distributed tokens. Mint Address: ${mintAddress}`);
 
-                        saveDocumentWithRetry(newGameLogC),
+                            // Notify hosts
+                            for (let host of roomInfo.hosts) {
+                                const tokensDistributed = calculateTokenDistribution(10_000_000_000, host.share);
+                                const message = `You have received ${tokensDistributed} ${roomInfo.ticker} tokens from the room ${roomInfo.name}, tokens have been minted here ${mintAddress}.`;
 
-                            roomInfo['user_bet'] = parseFloat(
-                                roomInfo['endgame_amount']
-                            );
+                                const notification = new Notification({
+                                    from: req.user._id,
+                                    to: host.walletAddress,
+                                    room: req.body._id,
+                                    message,
+                                    is_read: false,
+                                });
+
+                                await notification.save();
+
+                                socket.sendNotification(host.walletAddress, {
+                                    message,
+                                    room: roomInfo.name,
+                                    ticker: roomInfo.ticker,
+                                });
+                            }
+
+                            // Mark room as finished
+                            // roomInfo.status = 'finished';
+                            // await roomInfo.save();
+
+                            const newGameLogC = new GameLog({
+                                room: roomInfo,
+                                creator: roomInfo['creator'],
+                                joined_user: roomInfo['creator'],
+                                game_type: roomInfo['game_type'],
+                                bet_amount: parseFloat(req.body.bet_amount),
+                                user_bet: roomInfo['user_bet'],
+                                endgame_amount: roomInfo['endgame_amount'],
+                                hosts: roomInfo.hosts,
+                                game_result: 3
+                            });
+                            saveDocumentWithRetry(newGameLogC);
 
                         }
 
@@ -502,17 +529,17 @@ const addToQueue = async (req, bot = false) => {
                     }
                 }
 
-                if (roomInfo['user_bet'] <= 0.1) {
-                    roomInfo.status = 'finished';
-                    game_result = 1;
-                    message.message =
-                        'Won ' +
-                        convertToCurrency(roomInfo['host_pr'] + roomInfo['bet_amount']) +
-                        ' in ' +
-                        roomInfo['game_type']['short_name'] +
-                        '-' +
-                        roomInfo['room_number'];
-                }
+                // if (roomInfo['user_bet'] <= 0.1) {
+                //     roomInfo.status = 'finished';
+                //     game_result = 1;
+                //     message.message =
+                //         'Won ' +
+                //         convertToCurrency(roomInfo['host_pr'] + roomInfo['bet_amount']) +
+                //         ' in ' +
+                //         roomInfo['game_type']['short_name'] +
+                //         '-' +
+                //         roomInfo['room_number'];
+                // }
             }
             else if (roomInfo['game_type']['game_type_name'] === 'Quick Shoot') {
                 if (
@@ -633,27 +660,50 @@ const addToQueue = async (req, bot = false) => {
                         roomInfo['user_bet'] >= roomInfo['endgame_amount']
                     ) {
 
-                        newTransactionC.amount +=
-                        parseFloat(roomInfo['user_bet']) -
-                        parseFloat(roomInfo['endgame_amount']);
 
-                    const newGameLogC = new GameLog({
-                        room: roomInfo,
-                        creator: roomInfo['creator'],
-                        joined_user: roomInfo['creator'],
-                        game_type: roomInfo['game_type'],
-                        bet_amount: roomInfo['host_pr'],
-                        user_bet: roomInfo['user_bet'],
-                        hosts: roomInfo.hosts,
-                        endgame_amount: roomInfo['endgame_amount'],
-                        game_result: 3
-                    });
+                        const connection = new Connection('https://api.mainnet-beta.solana.com', 'confirmed');
+                        const mintAddress = await mintAndDistributeTokens(connection, roomInfo);
 
-                    saveDocumentWithRetry(newGameLogC),
+                        console.log(`Minted and distributed tokens. Mint Address: ${mintAddress}`);
 
-                        roomInfo['user_bet'] = parseFloat(
-                            roomInfo['endgame_amount']
-                        );
+                        // Notify hosts
+                        for (let host of roomInfo.hosts) {
+                            const tokensDistributed = calculateTokenDistribution(10_000_000_000, host.share);
+                            const message = `You have received ${tokensDistributed} ${roomInfo.ticker} tokens from the room ${roomInfo.name}, tokens have been minted here ${mintAddress}.`;
+
+                            const notification = new Notification({
+                                from: req.user._id,
+                                to: host.walletAddress,
+                                room: req.body._id,
+                                message,
+                                is_read: false,
+                            });
+
+                            await notification.save();
+
+                            socket.sendNotification(host.walletAddress, {
+                                message,
+                                room: roomInfo.name,
+                                ticker: roomInfo.ticker,
+                            });
+                        }
+
+                        // Mark room as finished
+                        // roomInfo.status = 'finished';
+                        // await roomInfo.save();
+
+                        const newGameLogC = new GameLog({
+                            room: roomInfo,
+                            creator: roomInfo['creator'],
+                            joined_user: roomInfo['creator'],
+                            game_type: roomInfo['game_type'],
+                            bet_amount: parseFloat(req.body.bet_amount),
+                            user_bet: roomInfo['user_bet'],
+                            endgame_amount: roomInfo['endgame_amount'],
+                            hosts: roomInfo.hosts,
+                            game_result: 3
+                        });
+                        saveDocumentWithRetry(newGameLogC);
                     }
 
                     bet_item.joiner = req.user._id;
@@ -797,17 +847,17 @@ const addToQueue = async (req, bot = false) => {
                     return responseData;
                 }
 
-                if (roomInfo['user_bet'] <= 0.1) {
-                    roomInfo.status = 'finished';
-                    game_result = 1;
-                    message.message =
-                        'Won ' +
-                        convertToCurrency(roomInfo['host_pr'] + roomInfo['bet_amount']) +
-                        ' in ' +
-                        roomInfo['game_type']['short_name'] +
-                        '-' +
-                        roomInfo['room_number'];
-                }
+                // if (roomInfo['user_bet'] <= 0.1) {
+                //     roomInfo.status = 'finished';
+                //     game_result = 1;
+                //     message.message =
+                //         'Won ' +
+                //         convertToCurrency(roomInfo['host_pr'] + roomInfo['bet_amount']) +
+                //         ' in ' +
+                //         roomInfo['game_type']['short_name'] +
+                //         '-' +
+                //         roomInfo['room_number'];
+                // }
             }
 
             const now = new Date();

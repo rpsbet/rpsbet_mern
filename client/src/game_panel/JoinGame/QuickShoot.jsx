@@ -396,6 +396,57 @@ class QuickShoot extends Component {
     });
   }
 
+
+  handleHalfXButtonClick = () => {
+    const multipliedBetAmount = this.state.bet_amount * 0.5;
+    const roundedBetAmount = Math.floor(multipliedBetAmount * 100000) / 100000;
+    this.setState(
+      {
+        bet_amount: roundedBetAmount
+      },
+      () => {
+        document.getElementById('betamount').focus();
+      }
+    );
+  };
+
+  handle2xButtonClick = () => {
+    const multipliedBetAmount = this.state.bet_amount * 2;
+    const limitedBetAmount = Math.min(multipliedBetAmount, this.state.balance);
+    const roundedBetAmount = Math.floor(limitedBetAmount * 100000) / 100000;
+    if (
+      (this.state.bet_amount * 2) / (this.props.qs_game_type - 1) >
+      this.state.bankroll
+    ) {
+      alertModal(this.props.isDarkMode, 'EXCEEDED BANKROLL');
+    } else {
+      this.setState(
+        {
+          bet_amount: roundedBetAmount
+        },
+        () => {
+          document.getElementById('betamount').focus();
+        }
+      );
+    }
+  };
+
+  handleMaxButtonClick = () => {
+    const maxBetAmount = Math.floor(this.state.balance * 100000) / 100000;
+
+    this.setState(
+      {
+        bet_amount: Math.floor(Math.min(
+          maxBetAmount,
+          this.state.bankroll * (this.props.qs_game_type - 1)
+        ) * 100000) / 100000
+      },
+      () => {
+        document.getElementById('betamount').focus();
+      }
+    );
+  };
+
   updatePotentialReturn = () => {
     this.setState({
       potential_return:

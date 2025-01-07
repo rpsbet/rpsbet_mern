@@ -400,100 +400,140 @@ class CreateGame extends Component {
 
   onCreateRoom = async () => {
     const saveImage = async (imageSrc) => {
-      return new Promise((resolve, reject) => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        const img = new Image();
-        img.crossOrigin = 'anonymous'; // Handle CORS issues
-        img.src = imageSrc;
+        return new Promise((resolve, reject) => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+            img.crossOrigin = 'anonymous'; // Handle CORS issues
+            img.src = imageSrc;
 
-        img.onload = () => {
-          const maxWidth = 600;
-          const maxHeight = 600;
+            img.onload = () => {
+                const maxWidth = 600;
+                const maxHeight = 600;
 
-          let width = img.width;
-          let height = img.height;
+                let width = img.width;
+                let height = img.height;
 
-          // Scale image to maintain aspect ratio
-          if (width > height) {
-            if (width > maxWidth) {
-              height *= maxWidth / width;
-              width = maxWidth;
+                // Scale image to maintain aspect ratio
+                if (width > height) {
+                    if (width > maxWidth) {
+                        height *= maxWidth / width;
+                        width = maxWidth;
+                    }
+                } else {
+                    if (height > maxHeight) {
+                        width *= maxHeight / height;
+                        height = maxHeight;
+                    }
+                }
+
+                // Set canvas dimensions and draw the image
+                canvas.width = width;
+                canvas.height = height;
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // Compress and return the resized image as a Blob
+                canvas.toBlob(
+                    (blob) => {
+                        if (blob) {
+                            resolve(blob); // Return the compressed Blob
+                        } else {
+                            reject('Failed to generate image Blob.');
+                        }
+                    },
+                    'image/webp', // Use WebP format for better compression
+                    0.9 // Compression quality (0.7 is a good balance)
+                );
+            };
+
+            img.onerror = (error) => {
+                reject('Error processing image: ' + error);
+            };
+        });
+    };
+
+    const uploadImageToPinata = async (imageBlob) => {
+        const pinataApiKey = process.env.PINATA_API_KEY;
+        const pinataSecretApiKey = process.env.PINATA_SECRET_API_KEY;
+        const url = 'https://api.pinata.cloud/pinning/pinFileToIPFS';
+
+        if (!pinataApiKey || !pinataSecretApiKey) {
+            throw new Error('Missing Pinata API credentials. Please check your .env file.');
+        }
+
+        const formData = new FormData();
+        formData.append('file', imageBlob);
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${pinataApiKey}:${pinataSecretApiKey}`,
+                },
+                body: formData,
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to upload image to Pinata.');
             }
-          } else {
-            if (height > maxHeight) {
-              width *= maxHeight / height;
-              height = maxHeight;
-            }
-          }
 
-          canvas.width = width;
-          canvas.height = height;
-
-          ctx.drawImage(img, 0, 0, width, height);
-
-          canvas.toBlob(
-            (blob) => {
-              const reader = new FileReader();
-              reader.readAsDataURL(blob);
-              reader.onloadend = () => {
-                resolve(reader.result); // Return Base64 image string
-              };
-            },
-            'image/webp',
-            0.5 // Quality factor
-          );
-        };
-
-        img.onerror = (error) => {
-          reject('Error processing image: ' + error);
-        };
-      });
+            const result = await response.json();
+            return `https://gateway.pinata.cloud/ipfs/${result.IpfsHash}`; // Return the IPFS URL
+        } catch (error) {
+            console.error('Error uploading to Pinata:', error);
+            throw error;
+        }
     };
 
     // Main Room Creation Logic
     if (localStorage.getItem('hideConfirmModal') === 'true') {
-      this.setState({ creatingRoom: true });
+        this.setState({ creatingRoom: true });
 
-      // Process and save the image before creating the room
-      try {
-        const base64Image = await saveImage(this.state.image);
-        await this.props.createRoom({ ...this.state, image: base64Image });
-      } catch (error) {
-        console.error('Error saving image:', error);
-        alertModal(
-          this.props.isDarkMode,
-          'Failed to process the image. Please try again.'
-        );
-      }
+        // Process and save the image before creating the room
+        try {
+            const imageBlob = await saveImage(this.state.image);
+            const imageUrl = await uploadImageToPinata(imageBlob);
 
-      this.setState({ creatingRoom: false });
-    } else {
-      confirmModalCreate(
-        this.props.isDarkMode,
-        'CONFIRM GAME SETTINGS?',
-        'LFG',
-        'Cancel',
-        async () => {
-          this.setState({ creatingRoom: true });
-
-          // Process and save the image before creating the room
-          try {
-            const base64Image = await saveImage(this.state.image);
-            await this.props.createRoom({ ...this.state, image: base64Image });
-          } catch (error) {
+            // Create room with the Pinata-hosted image URL
+            await this.props.createRoom({ ...this.state, image: imageUrl });
+        } catch (error) {
             console.error('Error saving image:', error);
             alertModal(
-              this.props.isDarkMode,
-              'Failed to process the image. Please try again.'
+                this.props.isDarkMode,
+                'Failed to process the image. Please try again.'
             );
-          }
-
-          this.setState({ creatingRoom: false });
         }
-      );
+
+        this.setState({ creatingRoom: false });
+    } else {
+        confirmModalCreate(
+            this.props.isDarkMode,
+            'CONFIRM GAME SETTINGS?',
+            'LFG',
+            'Cancel',
+            async () => {
+                this.setState({ creatingRoom: true });
+
+                // Process and save the image before creating the room
+                try {
+                    const imageBlob = await saveImage(this.state.image);
+                    const imageUrl = await uploadImageToPinata(imageBlob);
+
+                    // Create room with the Pinata-hosted image URL
+                    await this.props.createRoom({ ...this.state, image: imageUrl });
+                } catch (error) {
+                    console.error('Error saving image:', error);
+                    alertModal(
+                        this.props.isDarkMode,
+                        'Failed to process the image. Please try again.'
+                    );
+                }
+
+                this.setState({ creatingRoom: false });
+            }
+        );
     }
-  };
+};
 
   handleChange = (event) => {
     const { gameTypeList } = this.props;

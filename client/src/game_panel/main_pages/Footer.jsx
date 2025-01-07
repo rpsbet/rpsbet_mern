@@ -150,7 +150,7 @@ class Footer extends Component {
                             isDarkMode={isDarkMode}
                         />
                     )}
-                    {/* <div className="social-icons" style={{ display: 'flex', alignItems: 'center' }}>
+                    <div className="social-icons" style={{ display: 'flex', alignItems: 'center' }}>
                       <span>CHECK SOCIALS FOR UPDATES ►</span>
                         <a href="https://x.com/rpsdotgame">
                             <FontAwesomeIcon icon={faXTwitter} />
@@ -164,7 +164,7 @@ class Footer extends Component {
                         <a href="https://www.tiktok.com/@rpsdotgame">
                             <FontAwesomeIcon icon={faTiktok} />
                         </a>
-                    </div> */}
+                    </div>
                     <div className={classes.currencies}>
                         <img className={classes.availableCurrency} src={sol} alt="SOL" />
                         {/* <img className={classes.availableCurrency} src={bnb} alt="BNB" /> */}

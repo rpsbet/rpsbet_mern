@@ -17,11 +17,12 @@ class Summary extends Component {
   }
 
   pre_summery() {
-    let public_max_return = convertToCurrency(this.props.max_prize);
+    const { solPrice } = this.props;
+    let public_max_return = convertToCurrency(this.props.max_prize, solPrice);
     if (this.props.game_mode === 'Quick Shoot') {
-      public_max_return = convertToCurrency(this.props.max_return);
+      public_max_return = convertToCurrency(this.props.max_return, solPrice);
     } else if (this.props.game_mode === 'RPS') {
-      public_max_return = convertToCurrency(this.props.bet_amount);
+      public_max_return = convertToCurrency(this.props.bet_amount, solPrice);
     }
 
     return (
@@ -29,22 +30,22 @@ class Summary extends Component {
         <div className="data-item">
           <div className="label your-bet-amount">YOUR BET</div>
           <div className="value">
-            {convertToCurrency(this.props.bet_amount)}
+            {convertToCurrency(this.props.bet_amount, solPrice)}
           </div>
         </div>
         <div className="data-item">
           <div className="label your-max-return">TARGET ROI</div>
           <div className="value">
-            {convertToCurrency(this.props.max_return)}
+            {convertToCurrency(this.props.max_return, solPrice)}
           </div>
         </div>
 
         <div className="data-item">
           <div className="label win-chance">Expected Value</div>
           <div className="value">
-            {convertToCurrency(this.props.winChance) === -0
+            {convertToCurrency(this.props.winChance, solPrice) === -0
               ? convertToCurrency(0.0).toFixed(2)
-              : convertToCurrency(this.props.winChance)}
+              : convertToCurrency(this.props.winChance, solPrice)}
           </div>
         </div>
       </div>
@@ -67,6 +68,7 @@ class Summary extends Component {
       qs_game_type,
       name,
       ticker,
+      solPrice,
       x_link,
       image,
       website_link,
@@ -83,7 +85,7 @@ class Summary extends Component {
       selectedStrategy,
       description
     } = this.props;
-    let public_max_return = <> {convertToCurrency(max_prize)} </>;
+    let public_max_return = <> {convertToCurrency(max_prize, solPrice)} </>;
 
     const isNegative = winChance < 0;
     const isPositive = winChance > 0;
@@ -105,7 +107,7 @@ class Summary extends Component {
       tooltipText = 'Low Risk Game';
     }
     if (game_mode === 'Quick Shoot') {
-      public_max_return = convertToCurrency(this.props.max_return);
+      public_max_return = convertToCurrency(this.props.max_return, solPrice);
     }
 
     return (
@@ -115,9 +117,9 @@ class Summary extends Component {
           <div className="summary-item">
             <div className="summary-item-name title">Expected Value</div>
             <div className="summary-item-value" style={{ color: valueColor, background: backgroundColor }}>
-              {convertToCurrency(winChance) === -0
-                ? convertToCurrency(0.0).toFixed(2)
-                : convertToCurrency(winChance)}
+              {(winChance) === -0
+                ? (0.0).toFixed(2)
+                : (winChance)}
               <Tooltip title={tooltipText}>
                 {icon}
               </Tooltip>
@@ -126,7 +128,7 @@ class Summary extends Component {
           <div className="summary-item">
             <div className="summary-item-name title">Bet Amount</div>
             <div className="summary-item-value">
-              {convertToCurrency(bet_amount)}
+              {convertToCurrency(bet_amount, solPrice)}
             </div>
           </div>
 
@@ -146,7 +148,7 @@ class Summary extends Component {
             <div className="summary-item">
               <div className="summary-item-name title">Public Bet Amount</div>
               <div className="summary-item-value">
-                {convertToCurrency(public_bet_amount)}
+                {convertToCurrency(public_bet_amount, solPrice)}
               </div>
             </div>
           )}
@@ -154,20 +156,20 @@ class Summary extends Component {
           {game_mode === 'Quick Shoot' && (
             <div className="summary-item">
               <div className="summary-item-name title">Public Max Return</div>
-              <div className="summary-item-value">{public_max_return}</div>
+              <div className="summary-item-value">{convertToCurrency(public_max_return, solPrice)}</div>
             </div>
           )}
           <div className="summary-item">
             <div className="summary-item-name title">TARGET ROI</div>
             <div className="summary-item-value">
-              {convertToCurrency(max_return)}
+              {convertToCurrency(max_return, solPrice)}
             </div>
           </div>
           {endgame_type && (
             <div className="summary-item">
               <div className="summary-item-name title">Payout</div>
               <div className="summary-item-value">
-                {convertToCurrency(endgame_amount)}
+                {convertToCurrency(endgame_amount, solPrice)}
               </div>
             </div>
           )}
