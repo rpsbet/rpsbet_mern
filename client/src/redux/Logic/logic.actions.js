@@ -651,11 +651,9 @@ export const getRoomList = search_condition => async dispatch => {
     const cachedRooms = localStorage.getItem('roomList');
     if (cachedRooms) {
       roomList = JSON.parse(cachedRooms);
-
       dispatch({ type: ROOMS_LOADED, payload: { roomList } });
     } else {
       const res = await axios.get('/game/rooms', { params: search_condition });
-      
       if (res.data.success) {
         roomList = res.data.roomList;
         localStorage.setItem('roomList', JSON.stringify(roomList));

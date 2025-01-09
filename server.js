@@ -105,15 +105,11 @@ app.post('/auth/google', async (req, res) => {
   }
 });
 
-// Connect Database
 const connectWithRetry = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      useFindAndModify: false,
-      useCreateIndex: true,
-      poolSize: 10,
     });
     console.log('*** MongoDB connected');
   } catch (error) {
@@ -121,7 +117,6 @@ const connectWithRetry = async () => {
     // Retry connection after a delay
     console.log('Retrying MongoDB connection in 5 seconds...');
     await new Promise(resolve => setTimeout(resolve, 5000));
-    // Retry connecting
     await connectWithRetry();
   }
 };

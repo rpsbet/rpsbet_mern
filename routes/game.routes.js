@@ -32,7 +32,15 @@ const check_access_time = require('../helper/util/checkAccessTime');
 let semaphore2 = 1;
 let semaphore3 = 1;
 const roomLocks = {};
-const tokenMintAddress = process.env.token;
+const multer = require('multer');
+const FormData = require('form-data');
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
+const axios = require('axios');
+
+// Environment variables
+const JWT = process.env.PINATA_JWT;
+
 
 let user_access_log = {};
 router.get('/game_types', async (req, res) => {
@@ -96,6 +104,46 @@ router.get('/recently-closed', async (req, res) => {
     });
   }
 });
+
+router.post('/upload-to-pinata', upload.single('file'), async (req, res) => {
+  try {
+
+    const file = req.file;
+
+    if (!file) {
+      console.error("No file uploaded.");
+      return res.status(400).json({ success: false, message: 'No file uploaded.' });
+    }
+    const formData = new FormData();
+    formData.append('file', file.buffer, file.originalname);
+
+    const response = await axios.post('https://api.pinata.cloud/pinning/pinFileToIPFS', formData, {
+      headers: {
+        Authorization: `Bearer ${JWT}`, // Pass your JWT here
+        ...formData.getHeaders(),
+      },
+    });
+
+    if (response.status !== 200) {
+      console.error("Failed to upload image to Pinata");
+      throw new Error('Failed to upload image to Pinata');
+    }
+
+    const { IpfsHash } = response.data;
+
+    res.json({
+      success: true,
+      imageUrl: `https://gateway.pinata.cloud/ipfs/${IpfsHash}`, // Return IPFS URL
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error uploading to Pinata',
+      error: error.message,
+    });
+  }
+});
+
 
 router.patch('/strategies/:user_id', async (req, res) => {
   const { user_id } = req.params;

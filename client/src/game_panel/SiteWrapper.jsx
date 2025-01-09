@@ -385,11 +385,6 @@ class SiteWrapper extends Component {
       this.audioWin,
       this.audioSplit,
       this.audioLose,
-      this.fatality,
-      this.nyan,
-      this.topG,
-      this.oohBaby,
-      this.cashRegister
     ];
 
     audioElements.forEach(audio => {
