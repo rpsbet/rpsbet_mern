@@ -1,235 +1,169 @@
-require('dotenv').config();
-const bs58 = require('bs58');
+require("dotenv").config();
+const bs58 = require("bs58");
+const { createUmi } = require("@metaplex-foundation/umi-bundle-defaults");
+const {
+    createMetadataAccountV3,
+    findMetadataPda,
+} = require("@metaplex-foundation/mpl-token-metadata");
 const {
     Keypair,
-    PublicKey,
-    Connection,
-    Transaction,
-    clusterApiUrl,
-    sendAndConfirmTransaction,
     SystemProgram,
-    LAMPORTS_PER_SOL,
-} = require('@solana/web3.js');
+    Transaction,
+    Connection,
+} = require("@solana/web3.js");
 const {
-    createMint,
-    getOrCreateAssociatedTokenAccount,
-    mintTo,
-    setAuthority,
+    createInitializeMintInstruction,
+    getAssociatedTokenAddress,
+    createAssociatedTokenAccountInstruction,
+    MINT_SIZE,
     TOKEN_PROGRAM_ID,
-} = require('@solana/spl-token');
-const {
-    createCreateMetadataAccountInstruction,
-    createCreateMetadataAccountV3Instruction,
-} = require('@metaplex-foundation/mpl-token-metadata');
-
-// Constants
-const METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
-const RAYDIUM_LIQUIDITY_PROGRAM_ID = new PublicKey('5quB68hAApBoN19riHUePvAca2WyKMaaR2B6sFdq5aFc'); // Replace with actual program ID
+    ASSOCIATED_TOKEN_PROGRAM_ID,
+} = require("@solana/spl-token");
+const { generateSigner, signerIdentity } = require("@metaplex-foundation/umi");
 
 // Decode Base58 private key
 const privateKeyBase58 = process.env.wk?.trim();
 if (!privateKeyBase58 || !/^[A-Za-z1-9]+$/.test(privateKeyBase58)) {
-    throw new Error('Invalid private key: ensure it is Base58 encoded and correctly set in .env');
+    throw new Error("Invalid private key: ensure it is Base58 encoded and correctly set in .env");
 }
 
-let centralWallet;
+let keypair;
 try {
     const secretKey = bs58.decode(privateKeyBase58);
-    if (secretKey.length !== 64) {
-        throw new Error(`Invalid private key length: expected 64 bytes, got ${secretKey.length}`);
-    }
-    centralWallet = Keypair.fromSecretKey(secretKey);
-    console.log(`Central Wallet Public Key: ${centralWallet.publicKey.toString()}`);
+    keypair = Keypair.fromSecretKey(secretKey); // Use Web3.js Keypair
+    console.log(`Central Wallet Public Key: ${keypair.publicKey.toBase58()}`);
 } catch (err) {
-    console.error('Error decoding private key:', err.message);
+    console.error("Error decoding private key:", err.message);
     throw err;
 }
 
-// Helper function to calculate token distribution
-function calculateTokenDistribution(totalTokens, hostShare) {
-    return totalTokens * (hostShare / 100);
-}
+// Create a UMI connection (to devnet)
+const umi = createUmi("https://api.devnet.solana.com");
+const signer = generateSigner(umi, keypair.secretKey); // Use keypair's secret key
+umi.use(signerIdentity(signer));
 
-// Helper function to send transactions with retries
-async function sendTransactionWithRetry(connection, transaction, signers, maxRetries = 5) {
-    let retries = maxRetries;
-    while (retries > 0) {
-        try {
-            const signature = await sendAndConfirmTransaction(connection, transaction, signers, {
-                skipPreflight: false,
-                preflightCommitment: 'confirmed',
-            });
-            console.log(`Transaction confirmed: ${signature}`);
-            return signature;
-        } catch (err) {
-            console.warn(`Transaction failed, retries left: ${retries - 1}`);
-            retries--;
-            if (retries === 0) {
-                throw new Error(`Transaction failed after ${maxRetries} retries: ${err.message}`);
-            }
-        }
-    }
-}
+// Connection to Solana network for balance checking
+const connection = new Connection("https://api.devnet.solana.com", "confirmed");
 
-// Function to create a new Raydium pool
-async function createRaydiumPool(connection, mint, centralWallet) {
-    console.log('Creating new Raydium pool...');
-    // Placeholder: Use Raydium SDK or program instructions for creating a pool
-    // Replace this with actual implementation from Raydium documentation
-    const poolAccount = Keypair.generate();
+async function createAndInitializeMint(umi, mint, payer) {
+    const lamports = await connection.getMinimumBalanceForRentExemption(MINT_SIZE);
 
-    const transaction = new Transaction().add(
-        SystemProgram.createAccount({
-            fromPubkey: centralWallet.publicKey,
-            newAccountPubkey: poolAccount.publicKey,
-            lamports: await connection.getMinimumBalanceForRentExemption(0), // Replace with actual rent-exempt size
-            space: 0, // Replace with the required space for the pool account
-            programId: RAYDIUM_LIQUIDITY_PROGRAM_ID,
-        })
-    );
-
-    await sendTransactionWithRetry(connection, transaction, [centralWallet, poolAccount]);
-    console.log(`New pool created: ${poolAccount.publicKey.toString()}`);
-    return poolAccount.publicKey;
-}
-
-// Function to add liquidity to Raydium
-async function addLiquidityToRaydium(connection, mint, remainingTokens, liquiditySolAmount, poolId) {
-    console.log('Adding liquidity to Raydium...');
-    // Placeholder: Use Raydium SDK or instructions for adding liquidity
-    const transaction = new Transaction();
-
-    transaction.add({
-        keys: [
-            { pubkey: centralWallet.publicKey, isSigner: true, isWritable: true },
-            { pubkey: mint, isSigner: false, isWritable: true },
-            { pubkey: poolId, isSigner: false, isWritable: true },
-        ],
-        programId: RAYDIUM_LIQUIDITY_PROGRAM_ID,
-        data: Buffer.from([
-            ...Buffer.from("ADD_LIQUIDITY"), // Placeholder, replace with actual data
-            ...Buffer.alloc(remainingTokens.toString().length, remainingTokens), // Token amount
-            ...Buffer.alloc(liquiditySolAmount.toString().length, liquiditySolAmount), // SOL amount
-        ]),
+    const createAccountIx = SystemProgram.createAccount({
+        fromPubkey: payer.publicKey,
+        newAccountPubkey: mint.publicKey,
+        space: MINT_SIZE,
+        lamports,
+        programId: TOKEN_PROGRAM_ID,
     });
 
-    await sendTransactionWithRetry(connection, transaction, [centralWallet]);
-    console.log('Liquidity successfully added to Raydium.');
+    const initializeMintIx = createInitializeMintInstruction(
+        mint.publicKey,
+        9, // Decimals (9 is standard for SPL tokens)
+        payer.publicKey,
+        null, // Freeze authority (optional, set to null)
+        TOKEN_PROGRAM_ID
+    );
+
+    const tx = new Transaction().add(createAccountIx, initializeMintIx);
+    const signature = await connection.sendTransaction(tx, [payer, mint], {
+        skipPreflight: false,
+        preflightCommitment: "confirmed",
+    });
+    await connection.confirmTransaction(signature, "confirmed");
+
+    console.log("Mint Account Created and Initialized:", signature);
 }
 
-// Function to mint and distribute tokens
-async function mintAndDistributeTokens(connection, roomInfo) {
+async function createAssociatedTokenAccount(payer, mint, owner) {
+    const ata = await getAssociatedTokenAddress(mint, owner, false, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID);
+
+    const instruction = createAssociatedTokenAccountInstruction(
+        payer.publicKey,
+        ata,
+        owner,
+        mint
+    );
+
+    const tx = new Transaction().add(instruction);
+    const signature = await connection.sendTransaction(tx, [payer], { skipPreflight: false, preflightCommitment: "confirmed" });
+    await connection.confirmTransaction(signature, "confirmed");
+
+    console.log("Associated Token Account Created:", signature);
+    return ata;
+}
+
+async function mintTokenWithMetadata(roomInfo) {
     try {
-        console.log(`Wallet Balance: ${(await connection.getBalance(centralWallet.publicKey)) / LAMPORTS_PER_SOL} SOL`);
-        console.log(`Central Wallet Public Key: ${centralWallet.publicKey.toString()}`);
-
-console.log("roomInfo.name", roomInfo.name)
-        if (!roomInfo.name || typeof roomInfo.name !== 'string' || roomInfo.name.trim().length === 0) {
-            throw new Error(`Invalid roomInfo.name: ${roomInfo.name}`);
-        }
-        if (!roomInfo.ticker || typeof roomInfo.ticker !== 'string' || roomInfo.ticker.trim().length === 0) {
-            throw new Error(`Invalid roomInfo.ticker: ${roomInfo.ticker}`);
-        }
-        if (!roomInfo.image || typeof roomInfo.image !== 'string' || !roomInfo.image.startsWith('http')) {
-            throw new Error(`Invalid roomInfo.image: ${roomInfo.image}`);
+        if (!roomInfo.name || !roomInfo.ticker || !roomInfo.image) {
+            throw new Error("Invalid room information. Ensure name, ticker, and image are provided.");
         }
 
-        const formattedName = roomInfo.name.trim();
-        const formattedTicker = roomInfo.ticker.trim().toUpperCase();
-        const formattedImage = roomInfo.image;
+        console.log(`Minting token for room: ${roomInfo.name}`);
 
-        console.log('Validated Metadata Fields:');
-        console.log(`Name: ${formattedName}`);
-        console.log(`Ticker: ${formattedTicker}`);
-        console.log(`Image URI: ${formattedImage}`);
+        // Ensure the payer is sufficiently funded
+        const rentExemption = await connection.getMinimumBalanceForRentExemption(1024); // Rent exemption for PDA
+        await ensureAccountIsFunded(keypair.publicKey, "Payer Account", rentExemption * 3);
 
-        // Step 1: Create SPL token mint
-        console.log('Attempting to create SPL token mint...');
-        const mint = await createMint(connection, centralWallet, centralWallet.publicKey, null, 9);
-        console.log(`Mint Address: ${mint.toString()}`);
+        // Generate a new mint keypair
+        const mint = Keypair.generate();
+        console.log("Mint Address:", mint.publicKey.toBase58());
 
-        const totalTokens = 10_000_000_000; // 10B tokens
-        let distributedTokens = 0;
+        // Ensure mint account is properly created and initialized
+        await createAndInitializeMint(umi, mint, keypair);
 
-        // Step 2: Prepare and log metadata PDA
-        console.log('Preparing metadata...');
-        const metadataPDA = await PublicKey.findProgramAddress(
-            [Buffer.from('metadata'), METADATA_PROGRAM_ID.toBuffer(), mint.toBuffer()],
-            METADATA_PROGRAM_ID
-        );
+        // Create the associated token account
+        const ata = await createAssociatedTokenAccount(keypair, mint.publicKey, keypair.publicKey);
 
-        console.log(`Metadata PDA: ${metadataPDA[0].toString()}`);
+        // Derive and validate Metadata PDA
+        const metadata = findMetadataPda(umi, { mint: mint.publicKey });
+        console.log("Metadata PDA:", metadata[0]);
 
-        const metadataTx = new Transaction().add(
-            createCreateMetadataAccountV3Instruction(
-                {
-                    metadata: metadataPDA[0],
-                    mint,
-                    mintAuthority: centralWallet.publicKey,
-                    payer: centralWallet.publicKey,
-                    updateAuthority: centralWallet.publicKey,
-                },
-                {
-                    createMetadataAccountArgsV3: {
-                        data: {
-                            name: formattedName,
-                            symbol: formattedTicker,
-                            uri: formattedImage,
-                            sellerFeeBasisPoints: 0,
-                            creators: null,
-                        },
-                        isMutable: true,
-                    },
-                }
-            )
-        );
+        // Ensure Metadata PDA is funded
+        await ensureAccountIsFunded(new PublicKey(metadata[0]), "Metadata PDA", rentExemption);
 
-        console.log('Sending transaction for metadata creation...');
-        await sendTransactionWithRetry(connection, metadataTx, [centralWallet]);
+        // Define accounts required for createMetadataAccountV3
+        const accounts = {
+            mint: mint.publicKey, // Use Web3.js PublicKey directly for the mint
+            mintAuthority: signer.publicKey, // Use the publicKey of the signer
+            payer: keypair.publicKey, // Use the keypair as payer
+            updateAuthority: signer.publicKey, // Authority to update metadata in the future
+        };
 
-        // Step 3: Distribute tokens to hosts
-        console.log('Distributing tokens...');
-        for (let host of roomInfo.hosts) {
-            const recipientWallet = new PublicKey(host.walletAddress);
-            const tokenAccount = await getOrCreateAssociatedTokenAccount(connection, centralWallet, mint, recipientWallet);
-            const tokensToDistribute = calculateTokenDistribution(totalTokens, host.share);
+        console.log("Accounts for Metadata Creation:");
+        console.log("Mint:", accounts.mint.toBase58());
+        console.log("Mint Authority:", accounts.mintAuthority.toBase58());
+        console.log("Payer:", accounts.payer.toBase58());
+        console.log("Update Authority:", accounts.updateAuthority.toBase58());
 
-            const mintTx = new Transaction().add(
-                mintTo(
-                    connection,
-                    centralWallet,
-                    mint,
-                    tokenAccount.address,
-                    centralWallet.publicKey,
-                    Math.floor(tokensToDistribute)
-                )
-            );
+        // Create metadata account
+        const txId = await createMetadataAccountV3(umi, {
+            metadata,
+            ...accounts,
+            data: {
+                name: roomInfo.name, // NFT name
+                symbol: roomInfo.ticker, // NFT ticker/symbol
+                uri: roomInfo.image, // Link to metadata JSON file
+                sellerFeeBasisPoints: 0, // Royalty fee (0 if not required)
+                creators: null, // Optional creators array
+                collection: null, // Optional collection
+                uses: null, // Optional usage metadata
+            },
+            isMutable: true, // Allow updates to metadata in the future
+            collectionDetails: null, // Optional collection details
+        }).sendAndConfirm(umi);
 
-            await sendTransactionWithRetry(connection, mintTx, [centralWallet]);
-            distributedTokens += tokensToDistribute;
-        }
+        console.log("Metadata account created successfully. Transaction ID:", txId);
 
-        // Step 4: Add remaining tokens to liquidity pool
-        const remainingTokens = totalTokens - distributedTokens;
-        const liquiditySolAmount = parseFloat(roomInfo.user_bet);
-
-        const poolId = await createRaydiumPool(connection, mint, centralWallet);
-        await addLiquidityToRaydium(connection, mint, remainingTokens, liquiditySolAmount, poolId);
-
-        // Step 5: Renounce mint authority
-        console.log('Renouncing mint authority...');
-        await setAuthority(connection, centralWallet, mint, centralWallet.publicKey, null, 'MintTokens');
-        console.log('Mint authority renounced.');
-
-        return mint.toString();
+        return mint.publicKey.toBase58();
     } catch (error) {
-        console.error('Error minting and distributing tokens:', error);
+        console.error("Error minting token and creating metadata:", error);
+
+        // Log detailed error information
+        if (error.name === "SendTransactionError" && error.getLogs) {
+            console.error("Transaction simulation failed. Logs:", await error.getLogs());
+        }
         throw error;
     }
 }
 
-// Export the functions
-module.exports = {
-    mintAndDistributeTokens,
-    calculateTokenDistribution,
-};
+module.exports = { mintTokenWithMetadata };

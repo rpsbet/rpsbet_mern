@@ -1148,7 +1148,7 @@ class JoinGame extends Component {
             {!this.state.is_mobile &&
               this.props.selectedMainTabIndex === 0 && (
                 <>
-                  <AiPanel
+                  {/* <AiPanel
                     handleDetachAttachChange={this.handleDetachAttachChange}
                     rpsbetitems={this.props.rpsbetitems}
                     qsbetitems={this.props.qsbetitems}
@@ -1175,7 +1175,7 @@ class JoinGame extends Component {
                     ai_mode={ai_mode}
                     user_balance={user_balance}
                     isDarkMode={isDarkMode}
-                  />
+                  /> */}
                   <CoHostModal
                     isDarkMode={this.props.isDarkMode}
                     coHostAmount={this.state.coHostAmount}

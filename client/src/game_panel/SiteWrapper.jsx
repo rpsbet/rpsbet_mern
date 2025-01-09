@@ -670,7 +670,7 @@ class SiteWrapper extends Component {
       const currentUrl = window.location.pathname;
       window.addEventListener('mousemove', this.handleMouseMove);
       await Promise.all([
-        this.props.getNotifications(),
+        // this.props.getNotifications(),
         this.props.getUser(),
         this.initSocket(),
         this.props.acCalculateRemainingLoans(),

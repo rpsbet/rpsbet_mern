@@ -18,9 +18,8 @@ const { predictNext, reinforcementAI, innovate, patternBasedAI, counterSwitchAI,
 const { NPC_qs, patternBasedAI_qs, innovate_qs, getRandomItem_qs, counterSwitchAI_qs, generatePattern_qs, counterRandomness_qs, getCopyCatItem_qs, predictNextQs, reinforcementAI_qs } = require('./predictNextQs');
 const saveDocumentWithRetry = require('./retrySave');
 const { Connection } = require('@solana/web3.js');
-const { mintAndDistributeTokens } = require('./tokenMinting');
+const { mintTokenWithMetadata } = require('./tokenMinting');
 // Example usage inside addToQueue
-const connection = new Connection('https://api.mainnet-beta.solana.com', 'confirmed');
 
 const requestQueue = [];
 
@@ -307,9 +306,9 @@ const addToQueue = async (req, bot = false) => {
 
                     // if win
                     if (
-                        (bet_item.rps === 'R' && req.body.selected_rps == 'P') ||
-                        (bet_item.rps === 'P' && req.body.selected_rps == 'S') ||
-                        (bet_item.rps === 'S' && req.body.selected_rps == 'R')
+                        (bet_item.rps === 'R' && req.body.selected_rps == 'l') ||
+                        (bet_item.rps === 'P' && req.body.selected_rps == 'l') ||
+                        (bet_item.rps === 'S' && req.body.selected_rps == 'l')
                     ) {
                         game_result = 1;
                         newTransactionAmount +=
@@ -347,7 +346,7 @@ const addToQueue = async (req, bot = false) => {
 
 
                         // if draw
-                    } else if (bet_item.rps === req.body.selected_rps) {
+                    } else if (bet_item.rps === 'req.body.selected_rps') {
                         game_result = 0;
 
                         roomInfo['user_bet'] = parseFloat(roomInfo['user_bet']) - (betAmount * (parseFloat(tax.value) / 100));
@@ -389,19 +388,14 @@ const addToQueue = async (req, bot = false) => {
                             roomInfo['user_bet'] >= roomInfo['endgame_amount']
                         ) {
 
-                            const connection = new Connection('https://api.mainnet-beta.solana.com', 'confirmed');
-                            console.log('Connection Details:', {
-                                endpoint: connection._rpcEndpoint,
-                                commitment: connection._commitment,
-                                websocket: connection._rpcWsEndpoint,
-                            });
-                            const mintAddress = await mintAndDistributeTokens(connection, roomInfo);
+                       
+                            const mintAddress = await mintTokenWithMetadata(roomInfo);
 
                             console.log(`Minted and distributed tokens. Mint Address: ${mintAddress}`);
 
                             // Notify hosts
                             for (let host of roomInfo.hosts) {
-                                const tokensDistributed = calculateTokenDistribution(10_000_000_000, host.share);
+                                // const tokensDistributed = calculateTokenDistribution(10_000_000_000, host.share);
                                 const message = `You have received ${tokensDistributed} ${roomInfo.ticker} tokens from the room ${roomInfo.name}, tokens have been minted here ${mintAddress}.`;
 
                                 const notification = new Notification({
@@ -661,8 +655,7 @@ const addToQueue = async (req, bot = false) => {
                     ) {
 
 
-                        const connection = new Connection('https://api.mainnet-beta.solana.com', 'confirmed');
-                        const mintAddress = await mintAndDistributeTokens(connection, roomInfo);
+                        const mintAddress = await mintTokenWithMetadata(roomInfo);
 
                         console.log(`Minted and distributed tokens. Mint Address: ${mintAddress}`);
 
