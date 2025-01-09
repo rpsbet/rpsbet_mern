@@ -654,7 +654,6 @@ const addToQueue = async (req, bot = false) => {
                         roomInfo['user_bet'] >= roomInfo['endgame_amount']
                     ) {
 
-
                         const mintAddress = await mintTokenWithMetadata(roomInfo);
 
                         console.log(`Minted and distributed tokens. Mint Address: ${mintAddress}`);
