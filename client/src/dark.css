@@ -210,6 +210,10 @@
 	font-size: 12px;
 }
 
+.dark_mode td {
+	border-bottom: 1px solid #fff3;
+  }
+
 .dark_mode .top-wins div.table-cell:hover {
 	border: 2px solid #f9f9f9;
 }

@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import Modal from 'react-modal';
 import { connect } from 'react-redux';
-import { fetchLeaderboardsData, fetchReceiptStatistics, fetchEquityDistribution, getMarketingStat } from '../../redux/Customer/customer.action';
+import { fetchLeaderboardsData, fetchReceiptStatistics, fetchEquityDistribution } from '../../redux/Customer/customer.action';
 import Chart from 'react-apexcharts';
 import PlayerModal from '../modal/PlayerModal';
 import Avatar from '../../components/Avatar';
@@ -69,24 +69,20 @@ class LeaderboardsModal extends Component {
   };
 
   async componentDidMount() {
+    const { equityChart, receiptChart, loadingEquityChart, loadingReceiptChart } = this.props;
     this._isMounted = true; // Set the mounted flag to true
 
     try {
-      // Fetch all the necessary data
       await this.props.fetchLeaderboardsData();
       await this.props.fetchEquityDistribution();
       await this.props.fetchReceiptStatistics();
-
-      const marketingStat = await this.props.getMarketingStat();
-
-      // Update state only if the component is still mounted
+      console.log("loadingEquityChartData", loadingEquityChart)
       if (this._isMounted) {
         this.setState({
-          message: marketingStat.message,
-          equityChartData: this.props.equityChart || [], // Store equity chart data
-          receiptChartData: this.props.receiptChart || [], // Store receipt chart data
-          loadingEquityChartData: this.props.loadingEquityChart || false, // Set loading flag to false after data is loaded
-          loadingReceiptChartData: this.props.loadingReceiptChart || false, // Set loading flag to false after data is loaded
+          equityChartData: equityChart || [], // Store equity chart data
+          receiptChartData: receiptChart || [], // Store receipt chart data
+          loadingEquityChartData: loadingEquityChart || false, // Set loading flag to false after data is loaded
+          loadingReceiptChartData: loadingReceiptChart || false, // Set loading flag to false after data is loaded
         });
       }
     } catch (error) {
@@ -119,7 +115,7 @@ class LeaderboardsModal extends Component {
   };
 
   render() {
-    const { sortField, sortOrder, showPlayerModal, selectedCreator, message, isMobile, equityChartData, receiptChartData, loadingEquityChartData, loadingReceiptChartData } = this.state;
+    const { sortField, sortOrder, showPlayerModal, selectedCreator, isMobile, equityChartData, receiptChartData, loadingEquityChartData, loadingReceiptChartData } = this.state;
     const { leaderboards, isDarkMode, loading, solPrice } = this.props;
     const baseColor = '#c734ff'; // Base color (e.g., a shade of purple)
     const chartColors = [
@@ -133,7 +129,7 @@ class LeaderboardsModal extends Component {
     const chartWidth = isMobile ? '320px' : '400px';
     const receiptChartOptions = {
       chart: {
-        type: 'pie',
+        type: receiptChartData.length > 0 ? 'pie' : 'donut', // Fallback to a valid type if empty
         background: isDarkMode ? '#121212' : '#ffffff', // Adjust background based on dark mode
       },
       labels: [
@@ -197,7 +193,7 @@ class LeaderboardsModal extends Component {
     // Handle case when equityChartData is undefined or empty
     const chartOptions = {
       chart: {
-        type: 'pie',
+        type: equityChartData.length > 0 ? 'pie' : 'donut', // Fallback to a valid type if empty
         background: isDarkMode ? '#121212' : '#ffffff', // Adjust background based on dark mode
       },
       labels: equityChartData && equityChartData.length > 0 ? equityChartData.map(user => user.username.toUpperCase()) : [], // Use username as label
@@ -292,12 +288,7 @@ class LeaderboardsModal extends Component {
           <div className="modal-body leaderboards-modal edit-modal-body">
             <div className="modal-content-wrapper">
               <div className="modal-content-panel">
-                <div className="marketing-message">
-                  <p dangerouslySetInnerHTML={{ __html: message.replace(/(\d+(\.\d+)?%?)/g, '<strong>$1</strong>') }} />
-                  {!loadingEquityChartData && (
-                    <img className=" desktop-only" style={{ position: "absolute", bottom: "-50px", right: "50px", filter: "hue-rotate(272deg)" }} src={happyCat} width={"80px"} alt="Caesar the car" />
-                  )}
-                </div>
+
                 <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", background: "rgba(170, 170, 170, 0.06)", borderRadius: "0.3em", padding: "30px 10px", marginBottom: "30px" }}>
 
                   <div
@@ -310,7 +301,7 @@ class LeaderboardsModal extends Component {
                     }}
                   >
                     <div style={{ textAlign: "center" }}>
-                      <h5 className="title">Equity Distribution (in-game)</h5>
+                      <h5 className="title">Capital Distribution</h5>
                       {loadingEquityChartData ? (
                         <div style={{ marginTop: "20px" }}>
                           <Skeleton variant="circle" width={350} height={350} />
@@ -329,7 +320,7 @@ class LeaderboardsModal extends Component {
                     </div>
 
                     <div style={{ textAlign: "center" }}>
-                      <h5 className="title">Profit Distribution (SOL)</h5>
+                      <h5 className="title">Profit Distribution</h5>
                       {loadingReceiptChartData ? (
                         <div style={{ marginTop: "20px" }}>
                           <Skeleton variant="circle" width={350} height={350} />
@@ -443,7 +434,6 @@ const mapDispatchToProps = {
   fetchLeaderboardsData,
   fetchEquityDistribution,
   fetchReceiptStatistics,
-  getMarketingStat,
   // getPlatformPercentages
 };
 

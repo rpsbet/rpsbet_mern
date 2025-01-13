@@ -56,6 +56,7 @@ class AllTransactionsModal extends Component {
       copiedRowId: null
     };
   }
+  
   handleScroll = event => {
     const { target } = event;
     const isAtBottom = target.scrollHeight - target.scrollTop === target.clientHeight;
@@ -70,14 +71,12 @@ class AllTransactionsModal extends Component {
         this.setState({ copiedRowId: rowId });
         setTimeout(() => {
           this.setState({ copiedRowId: null });
-        }, 1500); // Reset the copied row after 1.5 seconds
+        }, 1500);
       })
       .catch(err => {
         console.error('Failed to copy: ', err);
       });
   };
-
-
 
   render() {
     const {
@@ -111,8 +110,6 @@ class AllTransactionsModal extends Component {
       >
         <div
           className={isDarkMode ? 'dark_mode' : ''}
-
-
         >
           <div className="modal-header">
             <h2 className="modal-title title">
@@ -254,9 +251,9 @@ class AllTransactionsModal extends Component {
                             <TableRow key={transaction._id}>
                               <TableCell className={`amount ${transaction.status === "waiting" || transaction.status === "pending" ||  transaction.status === "processing" ||  transaction.status === "in_process" ? 'grey' : (transaction.amount > 0 ? 'green' : 'red')}`}>
                                 {transaction.amount > 0 ? (
-                                  <> + {convertToCurrency(transaction.amount, solPrice)}</>
+                                  <> + ({convertToCurrency(transaction.amount, solPrice)})</>
                                 ) : (
-                                  <> - {convertToCurrency(Math.abs(transaction.amount, solPrice))}</>
+                                  <> - ({convertToCurrency(Math.abs(transaction.amount), solPrice)})</>
                                 )}
                               </TableCell>
                               <TableCell className="fromNow">
@@ -280,7 +277,6 @@ class AllTransactionsModal extends Component {
                                       <Link />
                                     </a>
                                   ) : (
-                                    // If the hash doesn't start with '0x', don't display any link
                                     ''
                                   )
                                 ) : transaction.room ? (
@@ -288,7 +284,6 @@ class AllTransactionsModal extends Component {
                                     <Link />
                                   </a>
                                 ) : (
-                                  // If there's no room value, don't display a link
                                   ''
                                 )}
                               </TableCell>

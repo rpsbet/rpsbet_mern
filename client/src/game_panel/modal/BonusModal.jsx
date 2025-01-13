@@ -96,14 +96,12 @@ class BonusModal extends Component {
       audio.play();
     }
 
-    setTimeout(async () => {
       const landedNumber = await this.props.addBonus();
       this.setState({ spinning: false, landedNumber: landedNumber.amount, showFlash: true }, async () => {
         await this.props.getUser(true, 5);
       });
 
       setTimeout(() => this.setState({ showFlash: false }), 1500);
-    }, 4000);
   }
 
   formatNumber = (number) => {
@@ -121,7 +119,7 @@ class BonusModal extends Component {
       totalWagered,
       solPrice
     } = this.props;
-    const numbers = [0.05, 0.004, 0.01, 0.03, 0.25, 0.001, 0.05, 0.1, 0.05, 0.02 ];
+    const numbers = [0.04, 0, 0.01, 0.03, 0.3, 0, 0.2, 0.1, 0.05, 0.02];
     const lastBonus = this.props.user.last_bonus ? new Date(this.props.user.last_bonus) : null;
     const now = new Date();
     let remainingTime = null;
@@ -187,7 +185,7 @@ class BonusModal extends Component {
             </div>
             {this.state.landedNumber !== null ? (
               <div className={`spin-result ${this.state.showFlash ? 'flash' : ''}`}>
-                {convertToCurrency(this.state.landedNumber, solPrice)}
+                {this.state.landedNumber} SOL ({convertToCurrency(this.state.landedNumber, solPrice)})
               </div>
             ) : (
               <Button
@@ -197,7 +195,7 @@ class BonusModal extends Component {
               >
                 {totalWagered < 9410 ? 'UNLOCK AT RANK 12' : (
                   <>
-                    SPIN!&nbsp;<FontAwesomeIcon icon={faSyncAlt} /> <img style={{ transform: "rotate(167deg) scaleY(-1) translate(10px, 7px) rotate(5deg)", width: "40px", zIndex: 0 }} src="../img/icons/corn.svg" />
+                    SPIN FOR 0.01 SOL! ({convertToCurrency(0.01, solPrice)})&nbsp;<FontAwesomeIcon icon={faSyncAlt} /> <img style={{ transform: "rotate(167deg) scaleY(-1) translate(10px, 7px) rotate(5deg)", width: "40px", zIndex: 0 }} src="../img/icons/corn.svg" />
                   </>
                 )}
               </Button>

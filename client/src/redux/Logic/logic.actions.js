@@ -650,17 +650,21 @@ export const getRoomList = search_condition => async dispatch => {
 
     const cachedRooms = localStorage.getItem('roomList');
     if (cachedRooms) {
-      roomList = JSON.parse(cachedRooms);
-      dispatch({ type: ROOMS_LOADED, payload: { roomList } });
-    } else {
+      try {
+        roomList = JSON.parse(cachedRooms);
+        dispatch({ type: ROOMS_LOADED, payload: { roomList } });
+      } catch (parseError) {
+        console.error('Error parsing cached room list:', parseError);
+        localStorage.removeItem('roomList'); // Clear invalid data
+      }
+    } 
+
+    if (roomList.length === 0) {
       const res = await axios.get('/game/rooms', { params: search_condition });
       if (res.data.success) {
         roomList = res.data.roomList;
         localStorage.setItem('roomList', JSON.stringify(roomList));
-
         dispatch({ type: ROOMS_LOADED, payload: { roomList } });
-      } else {
-        console.error('Failed to fetch room list:', res.data.message);
       }
     }
   } catch (err) {
@@ -674,7 +678,6 @@ export const getRoomList = search_condition => async dispatch => {
 export const fetchMoreRooms = (search_condition) => async (dispatch) => {
   dispatch({ type: START_LOADING });
   try {
-    // Fetch the room list from the server
     const res = await axios.get('/game/rooms', { params: search_condition });
     if (res.data.success) {
       const newRoomList = res.data.roomList;

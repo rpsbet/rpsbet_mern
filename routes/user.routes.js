@@ -391,8 +391,8 @@ router.get('/vault-transactions', auth, async (req, res) => {
       user: userId,
       description: /vault/i // Regular expression to match descriptions containing the word 'vault'
     })
-    .sort({ createdAt: -1 }) // Sort by creation date in descending order
-    .limit(10); // Limit the results to the most recent 10 transactions
+      .sort({ createdAt: -1 }) // Sort by creation date in descending order
+      .limit(10); // Limit the results to the most recent 10 transactions
 
     res.json({
       success: true,
@@ -414,16 +414,16 @@ router.post('/deposit', auth, async (req, res) => {
     if (!userId) {
       return res.json({ success: false, error: 'NO USER FOUND' });
     }
-    
+
     const accessAllowed = await check_access_time(req.user._id);
     if (!accessAllowed) {
-        responseData = {
-            success: false,
-            message: 'TOO FAST',
-            betResult: -100
-        };
+      responseData = {
+        success: false,
+        message: 'TOO FAST',
+        betResult: -100
+      };
 
-        return responseData;
+      return responseData;
     }
     const parsedAmount = parseFloat(amount);
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
@@ -507,13 +507,13 @@ router.post('/withdraw', auth, async (req, res) => {
 
     const accessAllowed = await check_access_time(req.user._id);
     if (!accessAllowed) {
-        responseData = {
-            success: false,
-            message: 'TOO FAST',
-            betResult: -100
-        };
+      responseData = {
+        success: false,
+        message: 'TOO FAST',
+        betResult: -100
+      };
 
-        return responseData;
+      return responseData;
     }
 
     const parsedAmount = parseFloat(amount);
@@ -694,9 +694,8 @@ router.post('/getId', admin, async (req, res) => {
   }
 });
 
-const bonusNumbers = [0.05, 0.004, 0.01, 0.03, 0.25, 0.001, 0.05, 0.1, 0.05, 0.02];
+const bonusNumbers = [0.04, 0, 0.01, 0.03, 0.3, 0, 0.2, 0.1, 0.05, 0.02];
 
-// Route to add bonus
 router.post('/add-bonus', auth, async (req, res) => {
   try {
     const { user } = req;
@@ -711,28 +710,60 @@ router.post('/add-bonus', auth, async (req, res) => {
       return res.status(400).json({ message: 'Total wagered must be more than 20000 to claim bonus.' });
     }
 
-    const randomIndex = Math.floor(Math.random() * bonusNumbers.length);
-    const number = bonusNumbers[randomIndex];
+    const deduction = 0.01;
+    if (user.balance < deduction) {
+      return res.status(400).json({ message: 'Insufficient balance to claim the bonus.' });
+    }
 
-    if (number > 50000) {
-      number -= 99999;
+    user.balance -= deduction;
+    user.last_bonus = Date.now(); // Update last_bonus timestamp
+
+    const deductionTransaction = new Transaction({
+      user: user._id,
+      amount: -deduction,
+      description: `Bonus claim deduction`,
+      room: '',
+    });
+
+    await saveDocumentWithRetry(deductionTransaction);
+
+    let randomIndex = Math.floor(Math.random() * bonusNumbers.length);
+    let attempts = 0;
+    console.log(`Initial randomIndex: ${randomIndex}, bonus: ${bonusNumbers[randomIndex]}`);
+
+    while (bonusNumbers[randomIndex] > 0.09 && attempts < 1) {
+      randomIndex = Math.floor(Math.random() * bonusNumbers.length);
+      attempts++;
+      console.log(`Retry ${attempts}: randomIndex: ${randomIndex}, bonus: ${bonusNumbers[randomIndex]}`);
+    }
+
+    let number = bonusNumbers[randomIndex];
+    console.log(`Final selected bonus: ${number}`);
+
+    if (number === 0) {
+      console.log(`Bonus is 0, skipping bonus-specific transaction and notification.`);
+      await saveDocumentWithRetry(user); // Save the updated user object
+      return res.json({
+        success: true,
+        amount: 0,
+        message: 'No bonus was added, better luck next time!',
+      });
     }
 
     user.balance += number;
-    user.last_bonus = Date.now();
 
     const newTransaction = new Transaction({
       user: user._id,
       amount: number,
       description: `Bonus added`,
-      room: ''
+      room: '',
     });
 
-    let notificationJ = new Notification({
+    const notificationJ = new Notification({
       from: user._id,
       to: user._id,
       room: '',
-      message: `You received a bonus of ${convertToCurrency(number)}`
+      message: `You received a bonus of ${convertToCurrency(number)}`,
     });
 
     const notificationData = {
@@ -744,7 +775,7 @@ router.post('/add-bonus', auth, async (req, res) => {
       created_at: new Date(),
       created_at_str: new Date().toISOString(),
       updated_at: new Date(),
-      is_read: false
+      is_read: false,
     };
 
     await saveDocumentWithRetry(user);
@@ -755,7 +786,7 @@ router.post('/add-bonus', auth, async (req, res) => {
 
     res.json({
       success: true,
-      amount: number
+      amount: number,
     });
   } catch (err) {
     console.error(err);
@@ -765,7 +796,6 @@ router.post('/add-bonus', auth, async (req, res) => {
     });
   }
 });
-
 
 router.post('/updateCustomer', auth, async (req, res) => {
   try {

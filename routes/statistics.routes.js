@@ -625,28 +625,21 @@ router.get('/get-equity-distribution', async (req, res) => {
       '📃 PAPÎER 📃 (BOT #3)'
     ];
 
-    // Get the date for two months ago
     const twoMonthsAgo = new Date();
     twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
 
-    // Find all users who have been active in the last 2 months and are not ignored
     const users = await User.find({
       username: { $nin: ignoredUsernames },
       last_seen: { $gte: twoMonthsAgo }
     });
 
-    // Initialize total balance to 0
     let totalBalance = 0;
 
-    // Fetch balances for each user
     const userBalances = await Promise.all(users.map(async (user) => {
       const vault = await Vault.findOne({ user: user._id });
-
-      // Calculate the total balance by adding user balance and vault balance
       const userBalance = user.balance + (vault ? vault.balance : 0);
-
       // If the user's balance is greater than or equal to 10, return user info
-      if (userBalance >= 1000000) {
+      if (userBalance >= 0.005) {
         return {
           _id: user._id,
           username: user.username,
@@ -662,15 +655,11 @@ router.get('/get-equity-distribution', async (req, res) => {
 
     const validUserBalances = userBalances.filter(user => user !== null);
 
-    // Calculate the total balance across all valid users
     totalBalance = validUserBalances.reduce((acc, user) => acc + user.totalBalance, 0);
-
-    // If there are no valid users with balance, return an empty equity distribution
     if (totalBalance === 0) {
       return res.json({ success: true, equityDistribution: [] });
     }
 
-    // Map over valid users to calculate their equity percentage
     const equityDistribution = validUserBalances
       .map(user => ({
         _id: user._id,
@@ -682,13 +671,11 @@ router.get('/get-equity-distribution', async (req, res) => {
       }))
       .filter(user => user.equityPercentage > 0);
 
-    // Return the equity distribution as a JSON response
     res.json({
       success: true,
       equityDistribution
     });
   } catch (error) {
-    // Handle any errors and return a 500 response
     console.error(error);
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
@@ -937,6 +924,7 @@ router.get('/get-leaderboards', auth, async (req, res) => {
 
 router.get('/get-room-statistics', async (req, res) => {
   try {
+    console.log(req.query)
     const room_id = req.query.room_id;
     let limit = parseInt(req.query.limit) || undefined;
 
@@ -945,7 +933,7 @@ router.get('/get-room-statistics', async (req, res) => {
       room: room_id
     };
 
-    const gameLogsQuery = GameLog.find(query).sort({ created_at: '-1' });
+    const gameLogsQuery = GameLog.find(query).sort({ created_at: -1 });
     if (limit !== undefined) {
       gameLogsQuery.limit(limit);
     }

@@ -1,8 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet';
 import { Button, Container, Typography, Zoom, Box } from '@material-ui/core';
-import OpenInNewIcon from '@material-ui/icons/OpenInNew';
-import { fetchLeaderboardsData, fetchEquityDistribution, getMarketingStat } from '../redux/Customer/customer.action';
+import { makeStyles } from '@material-ui/core/styles';
+import PlayIcon from '@material-ui/icons/Gamepad';
+import LinearProgress from '@material-ui/core/LinearProgress';
+import MonetizationOnIcon from '@material-ui/icons/PieChart';
+import ShowChartIcon from '@material-ui/icons/ShowChart';
+import AttachMoneyIcon from '@material-ui/icons/AttachMoney';
+import DescriptionIcon from '@material-ui/icons/Description';
+import { fetchLeaderboardsData, fetchEquityDistribution } from '../redux/Customer/customer.action';
 import busd from '../game_panel/JoinGame/busd.svg'
 import PrivacyModal from '../game_panel/modal/PrivacyModal'
 import TermsModal from '../game_panel/modal/TermsModal'
@@ -13,15 +19,8 @@ import bnb from '../game_panel/icons/bnb.png';
 import btc from '../game_panel/icons/btc.png';
 import eth from '../game_panel/icons/eth.png'
 import ltc from '../game_panel/icons/ltc.png';
-import { makeStyles } from '@material-ui/core/styles';
-import PlayIcon from '@material-ui/icons/Gamepad';
-import LinearProgress from '@material-ui/core/LinearProgress';
-import CopyAll from '@material-ui/icons/FileCopy';
+
 import Chart from 'react-apexcharts';
-import MonetizationOnIcon from '@material-ui/icons/PieChart';
-import ShowChartIcon from '@material-ui/icons/ShowChart';
-import AttachMoneyIcon from '@material-ui/icons/AttachMoney';
-import DescriptionIcon from '@material-ui/icons/Description';
 import Lottie from 'react-lottie';
 import animationData from '../game_panel/LottieAnimations/quantum-goal.json'; // Import your Lottie animation
 import catBack from '../game_panel/LottieAnimations/cat-back.json'; // Import your Lottie animation
@@ -234,7 +233,6 @@ const generateRandomPositions = (buttonsCount) => {
 const CountdownPage = ({
   fetchLeaderboardsData,
   fetchEquityDistribution,
-  getMarketingStat,
   equityChart,
   isDarkMode,
   loadingEquityChart
@@ -251,7 +249,6 @@ const CountdownPage = ({
   const [web3account, setWeb3Account] = useState(''); // State for account
   const [web3balance, setWeb3Balance] = useState(''); // State for balance
   const [divStyles, setDivStyles] = useState({});
-  const [message, setMessage] = useState('');
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const handleOpenTermsModal = () => setShowTermsModal(true);
@@ -444,15 +441,14 @@ const CountdownPage = ({
       try {
         await fetchLeaderboardsData();
         await fetchEquityDistribution();
-        const marketingStat = await getMarketingStat();
-        setMessage(marketingStat.message);
+      
       } catch (error) {
         console.error("Error loading data:", error);
       }
     };
 
     fetchData();
-  }, [fetchLeaderboardsData, fetchEquityDistribution, getMarketingStat]);
+  }, [fetchLeaderboardsData, fetchEquityDistribution]);
 
 
   useEffect(() => {
@@ -617,12 +613,6 @@ const CountdownPage = ({
                       <div>Calculating Equities...</div>
                     )
                   )}
-                  <div className="marketing-message">
-                    <p dangerouslySetInnerHTML={{ __html: message.replace(/(\d+(\.\d+)?%?)/g, '<strong>$1</strong>') }} />
-                    {!loadingEquityChart && (
-                      <img className=" desktop-only" style={{ position: "absolute", bottom: "-50px", right: "50px", filter: "hue-rotate(272deg)" }} src={happyCat} width={"80px"} alt="Caesar the car" />
-                    )}
-                  </div>
                   <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", marginTop: "90px" }}>
                     <h4 className="title">
                       Contract Address
@@ -879,7 +869,6 @@ const mapStateToProps = (state) => ({
 const mapDispatchToProps = {
   fetchLeaderboardsData,
   fetchEquityDistribution,
-  getMarketingStat,
 };
 
 // Connect CountdownPage to Redux

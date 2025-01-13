@@ -981,6 +981,9 @@ function BetArray({
                         onChange={handleSwitchChange}
                       />
                     </Tooltip>
+                    <Tooltip title="Betting will be slow, whilst active. Best used whilst AFK">
+                      <Info style={{ width: "18px", marginTop: "-3px", cursor: "pointer" }} />
+                    </Tooltip>
                     {betting ? (
                       <div id="stop">
                         <Lottie options={defaultOptions} width={32} />
@@ -996,7 +999,7 @@ function BetArray({
 
                   <div style={{ display: 'flex', alignItems: 'center', width: "50%", boxShadow: "inset 0px 0px 6px 0px #b4b4b4a8", borderRadius: "0.3em", justifyContent: "center", padding: "5px 10px", overflow: "hidden" }}>
                     <FontAwesomeIcon icon={betting ? faToggleOn : faToggleOff} style={{ marginRight: '5px' }} />
-                    {betting ? 'AIP ON' : 'AIP OFF'}
+                    {betting ? 'AI ON' : 'AI OFF'}
                   </div>
                 </div>
 

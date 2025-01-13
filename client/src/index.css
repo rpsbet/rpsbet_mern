@@ -1039,7 +1039,9 @@ div.table.main-history-table .table-row>div>.room-id {
   margin-left: 10px;
   margin-top: 10px;
 }
-
+td {
+  border-bottom: 1px solid #33333333;
+}
 .top-wins div.table-cell:hover {
   border: 2px solid #333;
 }
@@ -1952,6 +1954,15 @@ div.table.my-history-table .table-row .table-cell img.avatar {
   border: 1px solid #ccc;
   border-radius: 5px;
   background-color: #f9f9f999;
+}
+
+h5.title {
+  margin: auto auto 10px auto;
+  text-transform: uppercase;
+  background: #f0b90b33;
+  padding: 5px;
+  width: 80%;
+  border-radius: 0.3em;
 }
 span.comment-time.title,
 .comment-content p {
@@ -6006,7 +6017,7 @@ div.table .table-row .table-cell img.avatar,
 
 .spin-result {
   margin-top: 20px;
-  font-size: 1.5em;
+  font-size: 1em;
   font-weight: bold;
   background: linear-gradient(178deg, #d97cf4, #001339);
   align-items: center;

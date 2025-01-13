@@ -8,7 +8,7 @@ import Modal from 'react-modal';
 import MyBankPage from '../../admin_panel/app/ProductPages/ProductSerchPage/MyBankPage';
 import ProductCreatePage from '../../admin_panel/app/ProductPages/ProductCreatePage/ProductCreatePage';
 import AttachMoney from '@material-ui/icons/AttachMoney';
-import { createLoan, getLoan, updateLoan, deleteLoan, setCurrentProductInfo, acQueryMyLoan, acQueryLoan, acCalculateRemainingLoans } from '../../redux/Loan/loan.action';
+import { createLoan, acQueryMyLoan, acQueryLoan, acCalculateRemainingLoans } from '../../redux/Loan/loan.action';
 import { getUser } from '../../redux/Auth/user.actions';
 import { warningMsgBar, infoMsgBar } from '../../redux/Notification/notification.actions';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -37,33 +37,35 @@ const customStyles = {
 };
 
 const categories = [
-  { creditScoreThreshold: 700, rankThreshold: 3, accountAgeThresholdInDays: 30, maxAllowance: 0.002 },
-  { creditScoreThreshold: 700, rankThreshold: 6, accountAgeThresholdInDays: 30, maxAllowance: 0.004 },
-  { creditScoreThreshold: 700, rankThreshold: 9, accountAgeThresholdInDays: 30, maxAllowance: 0.006 },
-  { creditScoreThreshold: 700, rankThreshold: 10, accountAgeThresholdInDays: 30, maxAllowance: 0.008 },
-  { creditScoreThreshold: 700, rankThreshold: 11, accountAgeThresholdInDays: 30, maxAllowance: 0.01 },
-  { creditScoreThreshold: 700, rankThreshold: 12, accountAgeThresholdInDays: 30, maxAllowance: 0.016 },
-  { creditScoreThreshold: 700, rankThreshold: 13, accountAgeThresholdInDays: 30, maxAllowance: 0.02 },
-  { creditScoreThreshold: 700, rankThreshold: 14, accountAgeThresholdInDays: 30, maxAllowance: 0.03 },
-  { creditScoreThreshold: 700, rankThreshold: 15, accountAgeThresholdInDays: 30, maxAllowance: 0.04 },
-  { creditScoreThreshold: 700, rankThreshold: 16, accountAgeThresholdInDays: 30, maxAllowance: 0.05 },
-  { creditScoreThreshold: 700, rankThreshold: 17, accountAgeThresholdInDays: 30, maxAllowance: 0.06 },
-  { creditScoreThreshold: 700, rankThreshold: 18, accountAgeThresholdInDays: 30, maxAllowance: 0.08 },
-  { creditScoreThreshold: 700, rankThreshold: 19, accountAgeThresholdInDays: 30, maxAllowance: 0.1 },
-  { creditScoreThreshold: 700, rankThreshold: 20, accountAgeThresholdInDays: 30, maxAllowance: 0.2 },
-  { creditScoreThreshold: 700, rankThreshold: 21, accountAgeThresholdInDays: 30, maxAllowance: 0.4 },
-  { creditScoreThreshold: 700, rankThreshold: 22, accountAgeThresholdInDays: 30, maxAllowance: 0.6 },
-  { creditScoreThreshold: 700, rankThreshold: 23, accountAgeThresholdInDays: 30, maxAllowance: 1.2 },
-  { creditScoreThreshold: 700, rankThreshold: 24, accountAgeThresholdInDays: 30, maxAllowance: 2.0 },
-  { creditScoreThreshold: 700, rankThreshold: 25, accountAgeThresholdInDays: 30, maxAllowance: 2.2 },
-  { creditScoreThreshold: 700, rankThreshold: 26, accountAgeThresholdInDays: 30, maxAllowance: 2.4 },
-  { creditScoreThreshold: 700, rankThreshold: 27, accountAgeThresholdInDays: 60, maxAllowance: 2.6 },
-  { creditScoreThreshold: 700, rankThreshold: 28, accountAgeThresholdInDays: 90, maxAllowance: 2.8 },
-  { creditScoreThreshold: 700, rankThreshold: 29, accountAgeThresholdInDays: 90, maxAllowance: 3.2 },
-  { creditScoreThreshold: 700, rankThreshold: 30, accountAgeThresholdInDays: 90, maxAllowance: 3.4 },
-  { creditScoreThreshold: 700, rankThreshold: 31, accountAgeThresholdInDays: 120, maxAllowance: 3.6 },
-  { creditScoreThreshold: 700, rankThreshold: 32, accountAgeThresholdInDays: 30, maxAllowance: 3.8 },
-  { creditScoreThreshold: 700, rankThreshold: 33, accountAgeThresholdInDays: 30, maxAllowance: 4.0 },
+  { creditScoreThreshold: 700, rankThreshold: 1, accountAgeThresholdInDays: 30, maxAllowance: 0.005 },
+  { creditScoreThreshold: 700, rankThreshold: 2, accountAgeThresholdInDays: 30, maxAllowance: 0.01 },
+  { creditScoreThreshold: 700, rankThreshold: 3, accountAgeThresholdInDays: 30, maxAllowance: 0.02 },
+  { creditScoreThreshold: 700, rankThreshold: 6, accountAgeThresholdInDays: 30, maxAllowance: 0.03 },
+  { creditScoreThreshold: 700, rankThreshold: 9, accountAgeThresholdInDays: 30, maxAllowance: 0.04 },
+  { creditScoreThreshold: 700, rankThreshold: 10, accountAgeThresholdInDays: 30, maxAllowance: 0.05 },
+  { creditScoreThreshold: 700, rankThreshold: 11, accountAgeThresholdInDays: 30, maxAllowance: 0.075 },
+  { creditScoreThreshold: 700, rankThreshold: 12, accountAgeThresholdInDays: 30, maxAllowance: 0.1 },
+  { creditScoreThreshold: 700, rankThreshold: 13, accountAgeThresholdInDays: 30, maxAllowance: 0.2 },
+  { creditScoreThreshold: 700, rankThreshold: 14, accountAgeThresholdInDays: 30, maxAllowance: 0.4 },
+  { creditScoreThreshold: 700, rankThreshold: 15, accountAgeThresholdInDays: 30, maxAllowance: 0.8 },
+  { creditScoreThreshold: 700, rankThreshold: 16, accountAgeThresholdInDays: 30, maxAllowance: 1.5 },
+  { creditScoreThreshold: 700, rankThreshold: 17, accountAgeThresholdInDays: 30, maxAllowance: 1.75 },
+  { creditScoreThreshold: 700, rankThreshold: 18, accountAgeThresholdInDays: 30, maxAllowance: 2 },
+  { creditScoreThreshold: 700, rankThreshold: 19, accountAgeThresholdInDays: 30, maxAllowance: 2.25 },
+  { creditScoreThreshold: 700, rankThreshold: 20, accountAgeThresholdInDays: 30, maxAllowance: 2.5 },
+  { creditScoreThreshold: 700, rankThreshold: 21, accountAgeThresholdInDays: 30, maxAllowance: 3 },
+  { creditScoreThreshold: 700, rankThreshold: 22, accountAgeThresholdInDays: 30, maxAllowance: 3.3 },
+  { creditScoreThreshold: 700, rankThreshold: 23, accountAgeThresholdInDays: 30, maxAllowance: 3.6 },
+  { creditScoreThreshold: 700, rankThreshold: 24, accountAgeThresholdInDays: 30, maxAllowance: 3.9 },
+  { creditScoreThreshold: 700, rankThreshold: 25, accountAgeThresholdInDays: 30, maxAllowance: 4.2 },
+  { creditScoreThreshold: 700, rankThreshold: 26, accountAgeThresholdInDays: 30, maxAllowance: 4.4 },
+  { creditScoreThreshold: 700, rankThreshold: 27, accountAgeThresholdInDays: 30, maxAllowance: 4.6 },
+  { creditScoreThreshold: 700, rankThreshold: 28, accountAgeThresholdInDays: 30, maxAllowance: 4.8 },
+  { creditScoreThreshold: 700, rankThreshold: 29, accountAgeThresholdInDays: 30, maxAllowance: 5 },
+  { creditScoreThreshold: 700, rankThreshold: 30, accountAgeThresholdInDays: 30, maxAllowance: 6 },
+  { creditScoreThreshold: 700, rankThreshold: 31, accountAgeThresholdInDays: 30, maxAllowance: 7 },
+  { creditScoreThreshold: 700, rankThreshold: 32, accountAgeThresholdInDays: 30, maxAllowance: 8 },
+  { creditScoreThreshold: 700, rankThreshold: 33, accountAgeThresholdInDays: 30, maxAllowance: 10 },
 ];
 
 class MyLoansModal extends Component {
@@ -103,35 +105,23 @@ class MyLoansModal extends Component {
     const accountAgeInMilliseconds = currentDate - accountCreatedAt;
     return Math.floor(accountAgeInMilliseconds / (24 * 60 * 60 * 1000));
   };
-  
+
   getHighlightedRowIndex = (categories, rank, accountAgeInDays) => {
     const currentRank = getRank(rank);
-    
     let bestCategoryIndex = -1;
-  
+
     for (let i = 0; i < categories.length; i++) {
       const category = categories[i];
-  
-      // Log category details for better debugging
-      // console.log(`Category ${i}:`, {
-      //   rankThreshold: category.rankThreshold,
-      //   accountAgeThresholdInDays: category.accountAgeThresholdInDays
-      // });
-  
-      // Check if the current rank and account age match or exceed the category thresholds
       if (currentRank >= category.rankThreshold && accountAgeInDays >= category.accountAgeThresholdInDays) {
-        // Keep track of the best match (highest index that matches the criteria)
+
         bestCategoryIndex = i;
-        // console.log(`Best match so far: index ${i}`);
       }
     }
-  
-    // Log the final selected index before returning
     return bestCategoryIndex;
   };
+
   onSubmitFrom = async () => {
     const { loan_amount, loan_period, apy } = this.state;
-    // e.preventDefault();
     if ((loan_amount !== '' ||
       apy !== '' ||
       loan_period !== '')) {
@@ -214,63 +204,74 @@ class MyLoansModal extends Component {
             <div className="modal-body edit-modal-body my-loans-modal-body">
               <div className="modal-content-wrapper">
                 <div className="modal-content-panel">
-                <TableContainer style={{ maxHeight: 150, overflow: 'auto' }}>
-                <Table aria-label="nice-table">
-                  <TableHead
-                    style={{
-                      textTransform: "uppercase",
-                      position: "sticky",
-                      top: 0,
-                      zIndex: 1,
-                      background: isDarkMode
-                        ? "linear-gradient(45deg, #63077eb5, #f23c3c9c)"
-                        : "linear-gradient(45deg, rgba(253, 247, 255, 0.37), rgba(255, 174, 0, 0.56))"
-                    }}
-                  >
-                    <TableRow>
-                      <TableCell style={{ textAlign: "center" }}>Rank</TableCell>
-                      <TableCell style={{ textAlign: "center" }}>Account Age</TableCell>
-                      <TableCell style={{ textAlign: "center" }}>Max Allowance</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {categories.map((category, index) => (
-                      <TableRow
-                        key={index}
+                  <TableContainer style={{ maxHeight: 150, overflow: 'auto' }}>
+                    <Table aria-label="nice-table">
+                      <TableHead
                         style={{
-                          background: highlightedRowIndex === index ? '#28a745' : ''
+                          textTransform: "uppercase",
+                          position: "sticky",
+                          top: 0,
+                          zIndex: 1,
+                          background: isDarkMode
+                            ? "linear-gradient(45deg, #63077eb5, #f23c3c9c)"
+                            : "linear-gradient(45deg, rgba(253, 247, 255, 0.37), rgba(255, 174, 0, 0.56))",
                         }}
                       >
-                        <TableCell style={{ padding: '0', textAlign: 'center' }}>
-                          <Lottie
-                            options={{
-                              loop: true,
-                              autoplay: true,
-                              animationData: rankIcon
-                            }}
-                            style={{
-                              height: '22px',
-                              width: '22px',
-                              display: 'inline-block'
-                            }}
-                          />
-                          &nbsp;<span style={{ transform: 'translateY(4px)' }}>{category.rankThreshold}</span>
-                        </TableCell>
-                        <TableCell style={{ textAlign: 'center', padding: '0' }}>
-                          <span>
-                            {category.accountAgeThresholdInDays >= 30
-                              ? `${category.accountAgeThresholdInDays} days (${Math.floor(category.accountAgeThresholdInDays / 30)} month${Math.floor(category.accountAgeThresholdInDays / 30) > 1 ? 's' : ''})`
-                              : `${category.accountAgeThresholdInDays} days`}
-                          </span>
-                        </TableCell>
-                        <TableCell style={{ textAlign: 'center', padding: '0' }}>
-                          <span>{convertToCurrency(category.maxAllowance, solPrice)}</span>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+                        <TableRow>
+                          <TableCell style={{ textAlign: "center" }}>Rank</TableCell>
+                          <TableCell style={{ textAlign: "center" }}>Max Allowance (SOL)</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {categories.map((category, index) => {
+                          if (index < highlightedRowIndex) {
+                            return null; // Skip rendering rows before the highlighted one
+                          }
+
+                          return (
+                            <TableRow
+                              key={index}
+                              style={{
+                                background: highlightedRowIndex === index ? '#28a745' : '',
+                              }}
+                            >
+                              <TableCell style={{ padding: '0', textAlign: 'center' }}>
+                                <Lottie
+                                  options={{
+                                    loop: true,
+                                    autoplay: true,
+                                    animationData: rankIcon,
+                                  }}
+                                  style={{
+                                    height: '22px',
+                                    width: '22px',
+                                    display: 'inline-block',
+                                  }}
+                                />
+                                &nbsp;<span style={{ transform: 'translateY(4px)' }}>{category.rankThreshold}</span>
+                              </TableCell>
+                              <TableCell style={{ textAlign: 'center', padding: '0' }}>
+                                <span>
+                                  {category.maxAllowance} ({convertToCurrency(category.maxAllowance, solPrice)})
+                                </span>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                    {/* Disclaimer Text */}
+                    <div
+                    className='roll-tag label'
+                      style={{
+                        marginTop: '10px',
+                        fontStyle: 'italic',
+                        textAlign: 'center',
+                      }}
+                    >
+                      You must have a credit score above 700 and an account age of at least 30 days to be eligible.
+                    </div>
                   <ProductCreatePage updateTextField={this.updateTextField} />
                 </div>
               </div>
@@ -289,8 +290,6 @@ class MyLoansModal extends Component {
 
 const mapStateToProps = state => ({
   _id: state.auth.user._id,
-  // productName: state.loanReducer.productName,
-  // price: state.loanReducer.price,
   created_at: state.auth.user.created_at,
   loan_amount: state.loanReducer.data.loan_amount,
   loan_period: state.loanReducer.data.loan_period,

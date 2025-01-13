@@ -23,6 +23,7 @@ import Lottie from 'react-lottie';
 import coins from './LottieAnimations/coins.json';
 import { setBalance } from '../redux/Auth/user.actions.js'
 import AllTransactionsModal from './modal/AllTransactionsModal.jsx';
+import { debounce } from 'lodash';
 import {
   AccountBalanceWallet,
   ArrowDropDown,
@@ -163,7 +164,7 @@ const randomGifUrl = gifUrls[Math.floor(Math.random() * gifUrls.length)];
 const hueRotateValue = (gifUrls.indexOf(randomGifUrl) + 1) * 75;
 
 function updateFromNow(transactions) {
-  
+
   const result = JSON.parse(JSON.stringify(transactions));
   for (let i = 0; i < result.length; i++) {
     result[i]['from_now'] = Moment(result[i]['created_at']).fromNow();
@@ -471,12 +472,12 @@ class SiteWrapper extends Component {
     this.setState({ anchorEl: null });
   };
 
-  updateReminderTime = () => {
-    this.setState({
-      transactions: updateFromNow(this.state.transactions),
-      notifications: updateFromNow(this.state.notifications)
-    });
-  };
+  updateReminderTime = debounce(() => {
+    this.setState((prevState) => ({
+      transactions: updateFromNow(prevState.transactions),
+      notifications: updateFromNow(prevState.notifications),
+    }));
+  }, 300);
 
   async initSocket() {
     try {
@@ -674,7 +675,7 @@ class SiteWrapper extends Component {
         this.setState({ selectedMainTabIndex: this.props.selectMainTab(1) });
       }
 
-      this.interval = setInterval(this.updateReminderTime, 3000);
+      this.interval = setInterval(() => this.updateReminderTime(), 3000);
 
       this.loadSolanaWallet();
 
@@ -1681,6 +1682,7 @@ class SiteWrapper extends Component {
                     filterAnchorEl={filterAnchorEl}
                     filterType={filterType}
                     user={user._id}
+                    solPrice={solPrice}
                     transactions={transactions}
                     tnxComplete={tnxComplete}
                     handleSortClick={this.handleSortClick}
@@ -1735,7 +1737,13 @@ class SiteWrapper extends Component {
                         }
                         placement="top"
                       >
-                        <Info style={{ cursor: "pointer", float: "right" }} />
+                        <Info
+                          style={{
+                            cursor: "pointer",
+                            float: "right",
+                            color: isDarkMode ? "#f9f9f9" : "#333"
+                          }}
+                        />
                       </Tooltip>
                     }
 
@@ -1926,6 +1934,7 @@ class SiteWrapper extends Component {
               handleMute={this.handleMute}
               handleUnmute={this.handleUnmute}
               user={this.props.user}
+              solPrice={solPrice}
             />
           )}
           {showLeaderboardsModal && (
