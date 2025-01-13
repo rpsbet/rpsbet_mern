@@ -32,7 +32,7 @@ function CoHostModal({
   const [selectedTab, setSelectedTab] = useState("PUMP");
   const [isFocused, setIsFocused] = useState(false);
   const [isButtonGroupVisible, setIsButtonGroupVisible] = useState(false);
-  const [localCoHostAmount, setLocalCoHostAmount] = useState('');
+  const [localCoHostAmount, setLocalCoHostAmount] = useState(0.01);
   const handleTabChange = (tab) => setSelectedTab(tab);
   const transactionCandles = useSelector(state => state.logic.candles);
   const transactions = useSelector(state => state.auth.transactions);
@@ -66,7 +66,8 @@ function CoHostModal({
   };
 
   useEffect(() => {
-    if (selectedRow?._id) {
+    if (selectedRow?._id && has_joined && !input_only) {
+      console.log(selectedRow?._id, has_joined, !input_only)
       dispatch(getTransactionCandles({ roomId: selectedRow._id, timeFrame }));
     }
   }, [dispatch, selectedRow?._id, timeFrame]);
@@ -89,6 +90,7 @@ function CoHostModal({
   }, [selectedRow?._id, socket, dispatch]);
 
   let chartData = [];
+
   const chartOptions = {
     chart: {
       type: 'candlestick',
@@ -117,7 +119,15 @@ function CoHostModal({
       labels: {
         datetimeUTC: false,
         rotate: -45,
-        format: 'HH:mm',
+        formatter: (value, timestamp) => {
+          if (value === chartData[0]?.x) {
+            return Moment(chartData[0]?.startTime).format('HH:mm'); // Oldest candle
+          }
+          if (value === chartData[chartData.length - 1]?.x) {
+            return Moment(chartData[chartData.length - 1]?.startTime).format('HH:mm'); // Most recent candle
+          }
+          return ''; // Empty labels for other ticks
+        },
         style: {
           colors: '#fff',
           fontSize: '12px',
@@ -125,7 +135,7 @@ function CoHostModal({
           fontWeight: 400,
         },
       },
-      tickAmount: 10,
+      tickAmount: 2, // Only two ticks: oldest and most recent candles
       axisBorder: {
         show: true,
         color: '#fff',
@@ -135,7 +145,6 @@ function CoHostModal({
         show: true,
         color: '#fff',
       },
-
     },
     yaxis: {
       labels: {
@@ -151,16 +160,16 @@ function CoHostModal({
     tooltip: {
       custom: function ({ series, seriesIndex, dataPointIndex, w }) {
         const candle = chartData[dataPointIndex];
-
+  
         if (!candle || !candle.y || candle.y.length !== 4) {
           console.error("Invalid candle data:", candle);
           return '';
         }
-
+  
         const [open, high, low, close] = candle.y;
         return `
         <div class="chart-tooltip">
-          <div><strong>Time:</strong> ${Moment(candle.x).format('HH:mm')}</div>
+          <div><strong>Time:</strong> ${Moment(candle.startTime).format('HH:mm')}</div>
           <div><strong>Open:</strong> ${convertToChartCurrency(open)}</div>
           <div><strong>High:</strong> ${convertToChartCurrency(high)}</div>
           <div><strong>Low:</strong> ${convertToChartCurrency(low)}</div>
@@ -189,98 +198,37 @@ function CoHostModal({
       mode: isDarkMode ? 'dark' : 'light',
     },
   };
-
+  
+  // Populate chart data and remove gaps between candles
   if (transactionCandles && transactionCandles.length > 0) {
-    const now = new Date().getTime();
-    const fourHoursAgo = Date.now() - 2 * 60 * 60 * 1000;
-    let lastCandle = transactionCandles[0];
-
-    if (new Date(lastCandle.startTime).getTime() >= fourHoursAgo) {
+    transactionCandles.forEach((candle, index) => {
       chartData.push({
-        x: new Date(lastCandle.startTime).getTime(),
-        y: [lastCandle.open, lastCandle.high, lastCandle.low, lastCandle.close],
+        x: index, // Sequential index to remove gaps
+        y: [candle.open, candle.high, candle.low, candle.close],
+        startTime: candle.startTime, // Keep startTime for tooltip and reference
       });
-    }
-
-    for (let i = 1; i < transactionCandles.length; i++) {
-      const currentCandle = transactionCandles[i];
-      const lastCandleTime = new Date(lastCandle.startTime).getTime();
-      const currentCandleTime = new Date(currentCandle.startTime).getTime();
-
-      const timeDiff = currentCandleTime - lastCandleTime;
-
-      if (timeDiff > 60000) {
-
-        const missingCandlesCount = Math.floor(timeDiff / 60000);
-        for (let j = 1; j < missingCandlesCount; j++) {
-          const missingTime = lastCandleTime + j * 60000;
-          if (missingTime >= fourHoursAgo) {
-            chartData.push({
-              x: missingTime,
-              y: [
-                lastCandle.close,
-                lastCandle.close,
-                lastCandle.close,
-                lastCandle.close,
-              ],
-            });
-          }
-        }
-      }
-
-      if (timeDiff <= 60000 && Math.floor(lastCandleTime / 60000) === Math.floor(currentCandleTime / 60000)) {
-        lastCandle.high = Math.max(lastCandle.high, currentCandle.high);
-        lastCandle.low = Math.min(lastCandle.low, currentCandle.low);
-        lastCandle.close = currentCandle.close;
-        lastCandle.volume += currentCandle.volume;
-
-        const lastChartIndex = chartData.length - 1;
-        if (currentCandleTime >= fourHoursAgo && lastChartIndex >= 0) {
-          chartData[lastChartIndex] = {
-            x: lastCandleTime,
-            y: [lastCandle.open, lastCandle.high, lastCandle.low, lastCandle.close],
-          };
-        }
-      } else {
-        if (currentCandleTime >= fourHoursAgo) {
-          chartData.push({
-            x: currentCandleTime,
-            y: [currentCandle.open, currentCandle.high, currentCandle.low, currentCandle.close],
-          });
-        }
-
-        lastCandle = currentCandle;
-      }
-    }
-
-    const lastCandleTime = new Date(lastCandle.startTime).getTime();
-    const timeDiff = Math.floor((now - lastCandleTime) / 60000);
-
-    for (let j = 1; j <= timeDiff; j++) {
-      const missingTime = lastCandleTime + j * 60000;
-
-      if (missingTime >= fourHoursAgo) {
-        chartData.push({
-          x: missingTime,
-          y: [
-            lastCandle.close,
-            lastCandle.close,
-            lastCandle.close,
-            lastCandle.close,
-          ],
-        });
-      }
-    }
-
-    chartData.sort((a, b) => a.x - b.x);
-
-    chartData.forEach((candle) => {
+    });
+  
+    // Validate the candles for debugging
+    chartData.forEach((candle, index) => {
       if (!candle.y || candle.y.length !== 4) {
-        console.error("Invalid candle:", candle);
-        throw new Error("Invalid candle structure detected.");
+        console.error(`Invalid candle structure at index ${index}:`, candle);
       }
     });
+  } else {
+    console.warn("No candles available to display.");
   }
+  
+  // X-axis labelling logic
+  chartOptions.xaxis.labels.formatter = (value, timestamp) => {
+    if (value === 0) {
+      return Moment(chartData[0]?.startTime).format('HH:mm'); // Oldest candle
+    }
+    if (value === chartData.length - 1) {
+      return Moment(chartData[chartData.length - 1]?.startTime).format('HH:mm'); // Most recent candle
+    }
+    return ''; // Empty labels for other ticks
+  };
 
   useEffect(() => {
     if (isFocused) {
@@ -623,8 +571,25 @@ function CoHostModal({
                         display: "flex",
                         marginBottom: "5px",
                         width: "100%",
+                        gap: "5px", // Add spacing between buttons
                       }}
                     >
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => handleButtonClick(0.01)} // Set coHostAmount to 0.01
+                        style={{ flex: 1, padding: "7.5px" }}
+                      >
+                        0.01
+                      </Button>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => handleButtonClick(0.1)} // Set coHostAmount to 0.1
+                        style={{ flex: 1, padding: "7.5px" }}
+                      >
+                        0.1
+                      </Button>
                       <Button
                         variant="contained"
                         color="primary"
@@ -633,22 +598,7 @@ function CoHostModal({
                       >
                         1
                       </Button>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => handleButtonClick(5)} // Set coHostAmount to 5
-                        style={{ flex: 1, padding: "7.5px" }}
-                      >
-                        5
-                      </Button>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => handleButtonClick(10)} // Set coHostAmount to 10
-                        style={{ flex: 1, padding: "7.5px" }}
-                      >
-                        10
-                      </Button>
+
                     </div>
 
                     {/* TextField Positioned Below */}
@@ -743,7 +693,7 @@ function CoHostModal({
                     )}
 
                     <TableRow>
-                      <TableCell>CURRENT SHARE:</TableCell>
+                      <TableCell>BEFORE:</TableCell>
                       <TableCell style={{ color: "#ff8500", textAlign: 'right' }}>
                         {Array.isArray(selectedRow.hosts) &&
                           selectedRow.hosts.length > 0 &&
@@ -765,7 +715,7 @@ function CoHostModal({
                     </TableRow>
 
                     <TableRow>
-                      <TableCell>NEW SHARE:</TableCell>
+                      <TableCell>AFTER:</TableCell>
                       <TableCell style={{ color: "#ff8500", textAlign: 'right' }}>
                         {(() => {
                           if (!selectedRow || !Array.isArray(selectedRow.hosts)) return "0%";

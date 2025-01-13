@@ -24,7 +24,6 @@ import {
 } from '../../redux/Logic/logic.actions';
 import { alertModal, confirmModalCreate } from '../modal/ConfirmAlerts';
 import { convertToCurrency } from '../../util/conversion';
-import uniqid from 'uniqid';
 
 const customStyles = {
   tabRoot: {
@@ -58,7 +57,7 @@ class CreateGame extends Component {
       selectedGameType: 'RPS',
       rps_list: [],
       qs_list: [],
-      ticker: '',
+      tax: 1,
       name: '',
       image: '',
       x_link: '',
@@ -68,7 +67,7 @@ class CreateGame extends Component {
       qs_game_type: 2,
       qs_nation: 0,
       selected_qs_position: 0,
-      bet_amount: 50000,
+      bet_amount: 0.25,
       endgame_amount: 0,
       max_return: 0,
       creatingRoom: false,
@@ -86,12 +85,6 @@ class CreateGame extends Component {
       endgame_type: false,
       description: '',
       rps_game_type: 0,
-      sounds: {
-        grunt2: new Audio('/sounds/grunt2.mp3'),
-        grunt: new Audio('/sounds/grunt.mp3'),
-        select: new Audio('/sounds/select.mp3'),
-        tap: new Audio('/sounds/tap.mp3'),
-      }
     };
     this.handleKeyPress = this.handleKeyPress.bind(this);
 
@@ -122,12 +115,6 @@ class CreateGame extends Component {
         game_mode: 'Quick Shoot',
       });
     }
-
-    document.addEventListener('keydown', this.handleKeyPress);
-    Object.values(this.state.sounds).forEach(sound => {
-      sound.load();
-    });
-
     this.IsAuthenticatedReroute();
     const gameTypeName = this.props.match.params.game_type_name || 'RPS';
 
@@ -163,7 +150,7 @@ class CreateGame extends Component {
 
     let newState = {
       child_step: 1,
-      bet_amount: 50000,
+      bet_amount: 0.25,
       endgame_amount: 0,
       max_return: 0,
       max_prize: 0,
@@ -174,7 +161,7 @@ class CreateGame extends Component {
       newState = {
         ...newState,
         game_type: 1,
-        bet_amount: 50000,
+        bet_amount: 0.25,
         winChance: 0,
         max_return: 0,
         endgame_amount: 0
@@ -185,7 +172,7 @@ class CreateGame extends Component {
         game_type: 5,
         public_bet_amount: convertToCurrency(1, solPrice),
         max_return: 2,
-        bet_amount: 50000,
+        bet_amount: 0.25,
         winChance: 0,
         qs_nation: Math.floor(Math.random() * 4),
         endgame_amount: 0
@@ -314,7 +301,6 @@ class CreateGame extends Component {
       rps_list,
       endgame_amount,
       name,
-      ticker,
       image,
       room_password,
       is_private,
@@ -343,10 +329,6 @@ class CreateGame extends Component {
         return;
       }
 
-      if (ticker == null || ticker.trim() === '') {
-        alertAndReturn("ADD A TICKER DUMBASS!");
-        return;
-      }
 
       if (image == null || image.trim() === '') {
         alertAndReturn("ADD AN IMAGE DUMBASS!");
@@ -390,14 +372,6 @@ class CreateGame extends Component {
     }
   };
 
-  playSound = sound => {
-    if (!this.props.isMuted) {
-      const audio = this.state.sounds[sound];
-      audio.currentTime = 0;
-      audio.play();
-    }
-  };
-
   onCreateRoom = async () => {
     const saveImage = async (imageSrc) => {
       return new Promise((resolve, reject) => {
@@ -408,7 +382,6 @@ class CreateGame extends Component {
         img.src = imageSrc;
 
         img.onload = () => {
-          console.log('Image loaded successfully for resizing.');
           const maxWidth = 250; // Set the maximum width
           let width = img.width;
           let height = img.height;
@@ -419,8 +392,6 @@ class CreateGame extends Component {
             width = maxWidth;
           }
 
-          console.log('Resizing image:', { width, height });
-
           // Set canvas dimensions and draw the image
           canvas.width = width;
           canvas.height = height;
@@ -429,126 +400,80 @@ class CreateGame extends Component {
           ctx.drawImage(img, 0, 0, width, height);
 
           // Return the resized image as a Blob
-          canvas.toBlob((blob) => {
-            if (blob) {
-              console.log('Image resized and Blob created successfully.');
-              // Convert Blob to ArrayBuffer for buffer field
-              const reader = new FileReader();
-              reader.onloadend = () => {
-                console.log('ArrayBuffer created successfully from Blob.');
-                resolve({
-                  blob, // Blob object
-                  buffer: reader.result, // ArrayBuffer
-                });
-              };
-              reader.readAsArrayBuffer(blob);
-            } else {
-              console.error('Failed to generate image Blob.');
-              reject('Failed to generate image Blob.');
-            }
-          }, 'image/png'); // Use PNG format for lossless quality
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                  resolve({
+                    blob, // Blob object
+                    buffer: reader.result, // ArrayBuffer
+                  });
+                };
+                reader.readAsArrayBuffer(blob);
+              } else {
+                reject('Failed to generate image Blob.');
+              }
+            },
+            'image/png' // Use PNG format for lossless quality
+          );
         };
 
         img.onerror = (error) => {
-          console.error('Error loading image:', error);
           reject('Error processing image: ' + error);
         };
       });
     };
 
     const uploadImageToBackend = async (imageBlob) => {
-      console.log('Preparing to upload image to backend...');
-      console.log('Image Blob:', imageBlob);
-
       const formData = new FormData();
       formData.append('file', imageBlob.blob, 'uploaded_image.png');
 
-      // Debugging FormData content
-      console.log('Preparing FormData...');
-      for (const [key, value] of formData.entries()) {
-        console.log(`FormData key: ${key}, value:`, value);
-      }
-
       try {
-        console.log('Sending POST request to /game/upload-to-pinata...');
         const response = await axios.post('/game/upload-to-pinata', formData, {
           headers: {
             'Content-Type': 'multipart/form-data', // Ensure correct content type
           },
         });
 
-        console.log('Response from backend:', response.data);
-
         if (response.status !== 200) {
           throw new Error('Failed to upload image to backend.');
         }
 
-        console.log('Image uploaded successfully to backend.');
         return response.data.imageUrl;
       } catch (error) {
-        console.error('Error uploading image to backend:', error);
         throw error;
       }
     };
 
     // Main Room Creation Logic
-    if (localStorage.getItem('hideConfirmModal') === 'true') {
+    const processAndCreateRoom = async () => {
       this.setState({ creatingRoom: true });
 
-      // Process and save the image before creating the room
       try {
-        console.log('Starting image processing...');
-        const { blob, buffer } = await saveImage(this.state.image);
-        console.log('Blob:', blob);
-        console.log('Buffer:', buffer);
+        const { blob } = await saveImage(this.state.image);
+        const imageUrl = await uploadImageToBackend({ blob });
 
-        const imageUrl = await uploadImageToBackend({ blob, buffer });
-        console.log('Image URL received from backend:', imageUrl);
-
-        // Create room with the Pinata-hosted image URL
-        console.log('Creating room with updated image URL...');
         await this.props.createRoom({ ...this.state, image: imageUrl });
-        console.log('Room created successfully.');
       } catch (error) {
-        console.error('Error saving image:', error);
         alertModal(this.props.isDarkMode, 'Failed to process the image. Please try again.');
+      } finally {
+        this.setState({ creatingRoom: false });
       }
+    };
 
-      this.setState({ creatingRoom: false });
+    if (localStorage.getItem('hideConfirmModal') === 'true') {
+      await processAndCreateRoom();
     } else {
       confirmModalCreate(
         this.props.isDarkMode,
         'CONFIRM GAME SETTINGS?',
         'LFG',
         'Cancel',
-        async () => {
-          this.setState({ creatingRoom: true });
-
-          // Process and save the image before creating the room
-          try {
-            console.log('Starting image processing...');
-            const { blob, buffer } = await saveImage(this.state.image);
-            console.log('Blob:', blob);
-            console.log('Buffer:', buffer);
-
-            const imageUrl = await uploadImageToBackend({ blob, buffer });
-            console.log('Image URL received from backend:', imageUrl);
-
-            // Create room with the Pinata-hosted image URL
-            console.log('Creating room with updated image URL...');
-            await this.props.createRoom({ ...this.state, image: imageUrl });
-            console.log('Room created successfully.');
-          } catch (error) {
-            console.error('Error saving image:', error);
-            alertModal(this.props.isDarkMode, 'Failed to process the image. Please try again.');
-          }
-
-          this.setState({ creatingRoom: false });
-        }
+        processAndCreateRoom
       );
     }
   };
-
 
   handleChange = (event) => {
     const { gameTypeList } = this.props;
@@ -569,7 +494,7 @@ class CreateGame extends Component {
   step1 = () => {
     const defaultBetAmounts = [0.25, 0.5, 1, 2.5, 10];
 
-    const { game_mode, name, image, x_link, website_link, telegram_link, bet_amount, game_type, child_step, selectedStrategy, selectedGameType, } = this.state;
+    const { tax, game_mode, name, image, x_link, website_link, telegram_link, bet_amount, game_type, child_step, selectedStrategy, selectedGameType, } = this.state;
     switch (game_mode) {
       case 'RPS':
         return (
@@ -578,6 +503,7 @@ class CreateGame extends Component {
             image={image}
             x_link={x_link}
             website_link={website_link}
+            tax={tax}
             telegram_link={telegram_link}
             setSelectedStrategy={this.setSelectedStrategy}
             selectedStrategy={selectedStrategy}
@@ -586,11 +512,9 @@ class CreateGame extends Component {
             user_id={this.props.user._id}
             rank={getRank(this.props.user.totalWagered)}
             defaultBetAmounts={defaultBetAmounts}
-            playSound={this.playSound}
             handleChange={this.handleChange}
             strategies={this.props.strategies}
             onChangeState={this.onChangeState}
-            rps_list={this.state.rps_list}
             bet_amount={this.state.bet_amount}
             winChance={this.state.winChance}
             is_private={this.state.is_private}
@@ -607,16 +531,15 @@ class CreateGame extends Component {
           <QuickShoot
             name={name}
             image={image}
+            tax={tax}
             x_link={x_link}
             website_link={website_link}
             telegram_link={telegram_link}
             setSelectedStrategy={this.setSelectedStrategy}
             selectedStrategy={selectedStrategy}
             ai_mode={this.props.user.ai_mode}
-            playSound={this.playSound}
             selectedGameType={selectedGameType}
             onChangeState={this.onChangeState}
-            qs_list={this.state.qs_list}
             user_id={this.props.user._id}
             bet_amount={this.state.bet_amount}
             is_private={this.state.is_private}
@@ -692,13 +615,6 @@ class CreateGame extends Component {
     );
   };
 
-  getActiveTabText = () =>
-    (this.state.is_mobile && this.state.selectedMobileTab === 'live_games') ||
-      (!this.state.is_mobile && this.props.selectedMainTabIndex === 0) ? (
-      <a onClick={() => history.push('/')} id="liveStakes">{this.props.roomCount} GO BACK</a>
-    ) : (
-      'Your Games'
-    );
 
   render() {
     const { solPrice } = this.props;
@@ -765,13 +681,14 @@ class CreateGame extends Component {
               </Tabs>
             )}
           <div className="main-panel">
-            <h2 className="main-title desktop-only" style={{ marginBottom: '45px' }}>
-              {this.getActiveTabText()}
+            <h2 className="main-title desktop-only" style={{ marginBottom: '10px' }}>
+              <a onClick={() => history.push('/')} className="label" id="liveStakes">GO BACK</a>
+
             </h2>
             <div className="create-game-panel">
               <div className="game-page">
                 <div className="game-contents title">
-                  {(this.state.step === 2 || this.state.step === 3 || this.state.step === 1) && (
+                  {/* {(this.state.step === 2 || this.state.step === 3 || this.state.step === 1) && (
                     <Summary
                       bet_amount={this.state.bet_amount}
                       max_return={this.state.max_return}
@@ -792,7 +709,7 @@ class CreateGame extends Component {
                       winChance={this.state.winChance}
                       calcWinChance={this.props.calcWinChance}
                     />
-                  )}
+                  )} */}
                   {this.state.step === 1 && this.step1()}
                   {(this.state.step === 2) && (
                     <AdvancedSettings
@@ -801,7 +718,11 @@ class CreateGame extends Component {
                       lowerLimit={this.state.lowerLimit}
                       upperLimit={this.state.upperLimit}
                       stopLossValue={this.state.stopLossValue}
+                      isDarkMode={this.props.isDarkMode}
                       winChance={this.state.winChance}
+                      x_link={this.state.x_link}
+                      telegram_link={this.state.telegram_link}
+                      website_link={this.state.website_link}
                       bet_amount={this.state.bet_amount}
                       is_private={this.state.is_private}
                       room_password={this.state.room_password}

@@ -451,6 +451,7 @@ class MyProductTable extends Component {
       pages,
       page,
       loading,
+      solPrice,
       acQueryMyItem,
       setCurrentProductId,
       setCurrentProductInfo,
@@ -551,7 +552,7 @@ class MyProductTable extends Component {
                 ) : (
                   <ProductImage src={row.image} alt={row.productName} />
                 )}
-                {row.item_type === '653ee81117c9f5ee2124564b' ? (
+                {/* {row.item_type === '653ee81117c9f5ee2124564b' ? (
                   <PowerContainer>
                     <PowerItem>
                       <PercentageBar percentage={row.CP} color="#28a745" />
@@ -564,7 +565,7 @@ class MyProductTable extends Component {
                   </PowerContainer>
                 ) : (
                   ''
-                )}
+                )} */}
                 {row.onSale === 0 && row.rentOption ? (
                   <RentingLabel>RENTING</RentingLabel>
                 ) : (

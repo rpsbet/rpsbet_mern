@@ -110,6 +110,7 @@ class MyGamesTable extends Component {
     }
 
     if (prevProps.myGames !== this.props.myGames) {
+      console.log("cd", prevProps.myGames, this.props.myGames)
       this.setState({ myGames: this.props.myGames, isLoading: false });
     }
   }
@@ -349,6 +350,7 @@ class MyGamesTable extends Component {
   };
 
   endRoom = async (winnings, room_id) => {
+    console.log("winnings, room_id", winnings, room_id);
     this.setState(prevState => ({
       [room_id]: {
         ...prevState[room_id],
@@ -357,14 +359,8 @@ class MyGamesTable extends Component {
     }), async () => {
       try {
         await this.props.endGame(room_id);
-        await this.props.getMyGames({
-          game_type: this.state.selectedGameType,
-          status: this.state.selectedFilter,
-          sort: this.state.selectedSort
-        });
         await this.props.addNewTransaction({ amount: winnings, room_id });
         this.props.setBalance(this.state.balance + parseFloat(winnings));
-        this.fetchData();
       } catch (error) {
         console.error('Error ending room:', error);
       } finally {
@@ -374,6 +370,8 @@ class MyGamesTable extends Component {
             closing: false
           }
         }));
+    console.log("finishedeeddd");
+
       }
     });
   };
@@ -511,9 +509,9 @@ class MyGamesTable extends Component {
             styles={{
               options: {
                 zIndex: 10000,
-                backgroundColor: isDarkMode ? 'rgb(81 48 98 / 60%)' : '#ccc9',
+                backgroundColor: isDarkMode ? 'rgb(208 0 47)' : '#ccc9',
                 primaryColor: '#ff0000',
-                arrowColor: isDarkMode ? 'rgb(81 48 98 / 60%)' : '#ccc9',
+                arrowColor: isDarkMode ? 'rgb(208 0 47)' : '#ccc9',
                 textColor: isDarkMode ? '#f9f9f9' : '#333',
                 width: 300,
                 padding: 20,
@@ -617,7 +615,7 @@ class MyGamesTable extends Component {
                 </span>
               </div>
             ) : (
-              this.props.myGames.map(
+              this.props.myGames?.map(
                 (row, key) => (
                   <div
                     className={`table-row ${key < 10 ? 'slide-in' : 'slide-in'}`}

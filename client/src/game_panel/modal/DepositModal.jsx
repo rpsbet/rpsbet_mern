@@ -447,19 +447,7 @@ class DepositModal extends Component {
         description = 'Via Manual Transfer (50+ Cryptocurrencies supported)';
         break;
       case 'web3':
-        description = <>Via Connect Wallet (Phantom Wallet recommended), $RPS only, lowest fees.<br />
-          Buy/Swap tokens on&nbsp;
-          <a
-            style={{
-              textDecoration: "underline",
-              color: "#3f51b5"
-            }}
-            href="https://raydium.io/swap/?inputMint=sol&outputMint=BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Raydium
-          </a>.
+        description = <>Via Connect Wallet (Phantom Wallet recommended), SOL only, lowest fees.
         </>;
         break;
       default:

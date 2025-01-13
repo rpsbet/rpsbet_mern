@@ -57,7 +57,6 @@ function CreateProductForm({ updateTextField, user_balance, solPrice }) {
     return loanAmount > (user_balance * 10);
   };
 
-
   return (
     <FormContainer>
       <TableContainer>
@@ -78,7 +77,7 @@ function CreateProductForm({ updateTextField, user_balance, solPrice }) {
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">
-                        &nbsp;RPS
+                        &nbsp;SOL
                       </InputAdornment>
                     ),
                   }}

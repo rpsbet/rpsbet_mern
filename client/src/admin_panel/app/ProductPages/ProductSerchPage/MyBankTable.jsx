@@ -112,9 +112,7 @@ opacity: 0;
   position: absolute;
   margin-top: auto;
   bottom: 0;
-  
-  margin
-  right: 0; 
+  margin-right: 0; 
     cursor: pointer;
     -webkit-transition: -webkit-transform 0.2s;
     -webkit-transition: transform 0.2s;
@@ -137,12 +135,14 @@ top: 20px;
 right: 15px;
 width: 60px;
 height: 40px;
+padding: 0 5px;
 line-height: 40px;
 background: #28a745;
 border-radius: 10px;
 box-shadow: inset 0px -1px 11px #005b15;
 color: #fff;
 font-weight: 500;
+font-size: x-small;
 text-align: center;
 `;
 
@@ -187,8 +187,6 @@ class MyBankTable extends Component {
   async componentDidMount() {
     await this.fetchLoans();
   }
-
-
 
   componentDidUpdate(prevProps, prevState) {
     if (
@@ -319,7 +317,7 @@ class MyBankTable extends Component {
                 }
                 selected={loanType === 'FULL'}
               >
-                FULL
+                ALL
               </MenuItem>
 
             </Menu>
@@ -460,7 +458,8 @@ class MyBankTable extends Component {
                   <DeListLoanButton>
                     {row.onSale === 0 ? null : (
                       <Tooltip title="Withdraw Funds">
-                        <IconButton
+                        <Button
+                        style={{left: '40%'}}
                           className="btn-back"
                           onClick={() => {
                             setCurrentLoanId(row._id);
@@ -468,7 +467,7 @@ class MyBankTable extends Component {
                           }}
                         >
                           WITHDRAW <SwapHoriz />
-                        </IconButton>
+                        </Button>
                       </Tooltip>
                     )}
                   </DeListLoanButton>

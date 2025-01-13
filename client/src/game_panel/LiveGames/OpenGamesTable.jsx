@@ -94,6 +94,7 @@ class OpenGamesTable extends Component {
 
 
   async componentDidUpdate(prevProps, prevState) {
+    // Check if props have changed and trigger fetchMoreRooms if needed
     if (
       prevProps.roomList[0]?.battles !== this.props.roomList[0]?.battles ||
       prevProps.roomList[0]?.user_bet !== this.props.roomList[0]?.user_bet ||
@@ -101,31 +102,44 @@ class OpenGamesTable extends Component {
       prevProps.roomList.length !== this.props.roomList.length
     ) {
       this.props.fetchMoreRooms(null);
-
+  
+      // Merge props.roomList and state.roomList
       const mergedRooms = [
         ...this.props.roomList,
         ...this.state.roomList.filter(
           room => !this.props.roomList.some(newRoom => newRoom._id === room._id)
         ),
       ];
-
+  
+      // Check if this.state.roomList has extra rooms not in this.props.roomList
+      const extraRoomsInState = this.state.roomList.some(
+        stateRoom => !this.props.roomList.some(propRoom => propRoom._id === stateRoom._id)
+      );
+  
+      if (extraRoomsInState) {
+        // If extra rooms exist in state, replace state.roomList with props.roomList
+        this.setState({
+          roomList: [...this.props.roomList],
+          highlightedRooms: this.props.highlightedRooms,
+        });
+        return; // Exit early since state has already been updated
+      }
+  
       const highlightedRoomId = Array.from(this.props.highlightedRooms)[0];
-
       if (highlightedRoomId) {
         const roomIndex = mergedRooms.findIndex(room => room._id === highlightedRoomId);
-
         if (roomIndex !== -1 && roomIndex !== 0) {
           const [highlightedRoom] = mergedRooms.splice(roomIndex, 1);
           mergedRooms.unshift(highlightedRoom);
         }
       }
-
+  
       this.setState({
         roomList: mergedRooms,
         highlightedRooms: this.props.highlightedRooms,
       });
     }
-
+  
     if (prevProps.selectedGameType !== this.props.selectedGameType) {
       this.setState({ isLoading: true });
     }
@@ -330,7 +344,6 @@ class OpenGamesTable extends Component {
   joinRoom = (roomDetails) => {
     const {
       id,
-      ticker,
       image,
       name,
       x_link,
@@ -376,7 +389,6 @@ class OpenGamesTable extends Component {
       website_link: website_link,
       selectedStrategy: selectedStrategy,
       description: description,
-      ticker: ticker,
       creator_status: creatorStatus,
       creator_avatar: creatorAvatar,
       username: username,
@@ -458,8 +470,7 @@ class OpenGamesTable extends Component {
     };
     return (
       <>
-        <div className="overflowX">
-        </div>
+
         {showPlayerModal && (
           <PlayerModal
             selectedCreator={selectedCreator}
@@ -508,34 +519,36 @@ class OpenGamesTable extends Component {
                             ? "flicker 0.2s 2, shake 0.2s"
                             : "none",
                         }}
-                        onClick={() =>
-                          this.joinRoom({
-                            id: row._id,
-                            roomId: row._id,
-                            name: row.name,
-                            ticker: row.ticker,
-                            x_link: row.x_link,
-                            website_link: row.website_link,
-                            selectedStrategy: row.selectedStrategy,
-                            image: row.image,
-                            telegram_link: row.telegram_link,
-                            creatorId: row.creator_id,
-                            creatorAvatar: row.creator_avatar,
-                            creatorStatus: row.creator_status,
-                            accessory: row.accessory,
-                            rank: row.rank,
-                            hosts: row.hosts,
-                            roomStatus: row.status,
-                            username: row.username,
-                            gameType: row.game_type.game_type_name,
-                            user_bet: row.user_bet,
-                            totalStakes: row.total_stakes,
-                            createdAt: row.created_at,
-                            roomName: row.room_name,
-                            qsGameType: row.qs_game_type,
-                            pr: row.pr,
-                            host_pr: row.host_pr,
-                          })
+                        onClick={(event) => {
+                          if (!event.defaultPrevented) {
+                            this.joinRoom({
+                              id: row._id,
+                              roomId: row._id,
+                              name: row.name,
+                              x_link: row.x_link,
+                              website_link: row.website_link,
+                              selectedStrategy: row.selectedStrategy,
+                              image: row.image,
+                              telegram_link: row.telegram_link,
+                              creatorId: row.creator_id,
+                              creatorAvatar: row.creator_avatar,
+                              creatorStatus: row.creator_status,
+                              accessory: row.accessory,
+                              rank: row.rank,
+                              hosts: row.hosts,
+                              roomStatus: row.status,
+                              username: row.username,
+                              gameType: row.game_type.game_type_name,
+                              user_bet: row.user_bet,
+                              totalStakes: row.total_stakes,
+                              createdAt: row.created_at,
+                              roomName: row.room_name,
+                              qsGameType: row.qs_game_type,
+                              pr: row.pr,
+                              host_pr: row.host_pr,
+                            })
+                          }
+                        }
                         }
                       >
                         {' '}
@@ -547,7 +560,9 @@ class OpenGamesTable extends Component {
                               className="game-type-icon"
                             />
                             <div className="cell-game-description">
-                              {row.name}{' '}(${row.ticker})<br/>
+                              {row.name}{' '}
+                              <span style={{ color: '#ff8500', fontWeight: 'bold' }}>({row.room_name})</span>
+                              <br />
                               <span>{row.description}</span>
                             </div>
 
@@ -594,6 +609,7 @@ class OpenGamesTable extends Component {
                             <a
                               className="ml-1"
                               onClick={(event) => {
+
                                 event.preventDefault();
                                 event.stopPropagation();
                                 this.handleCoHost(row);
@@ -635,10 +651,14 @@ class OpenGamesTable extends Component {
                               </Tooltip>
                             )}
                           </div>
-                          <div className="table-cell desktop-only cell-user-name">
+                          <div
+                            style={{ zIndex: '2' }}
+                            className="table-cell desktop-only cell-user-name">
                             <a
                               className="player"
                               onClick={(event) => {
+                                console.log("Joiner action clicked");
+
                                 event.preventDefault();
                                 event.stopPropagation();
                                 handleOpenPlayerModal(row.creator_id);
@@ -668,7 +688,9 @@ class OpenGamesTable extends Component {
                                 <div className="hosts" key={index}>
                                   <a
                                     className="player"
-                                    onClick={() => {
+                                    onClick={(event) => {
+                                      event.preventDefault();
+                                      event.stopPropagation();
                                       handleOpenPlayerModal(host.host);
                                     }}
                                   >
@@ -815,9 +837,11 @@ class OpenGamesTable extends Component {
                           <div className="table-cell cell-user-name">
                             <a
                               className="player"
-                              onClick={() =>
+                              onClick={(event) => {
+                                event.preventDefault();
+                                event.stopPropagation();
                                 handleOpenPlayerModal(row.creator_id)
-                              }
+                              }}
                             >
                               <Avatar
                                 className="avatar"
@@ -887,14 +911,6 @@ class OpenGamesTable extends Component {
         ) : (
           null
         )}
-        {!isLiveGames && (
-          <div style={{ display: "inline-flex", justifyContent: "center", alignItems: "center" }}>
-            <h2 className="main-title recently-closed-title" style={{ paddingTop: "5px" }}>
-              RECENTLY ENDED
-            </h2>
-            <Lottie style={{ filter: 'grayscale(1)' }} options={defaultOptions} width={40} />
-          </div>
-        )}
 
         {!isLiveGames && (
           <Grid container spacing={2}>
@@ -920,37 +936,47 @@ class OpenGamesTable extends Component {
                       className="carousel-content table-row slide-in glass-container"
                       style={{
                         padding: '25px',
-                        color: 'white',
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
                         borderRadius: '8px',
                       }}
                     >
-                      <a href={`/join/${row._id}`} className="table-cell">
-                        <img
-                          src={`/img/gametype/icons/${row.game_type.short_name}.svg`}
-                          alt=""
-                          className="game-type-icon"
-                          width={32}
-                          style={{ marginRight: "5px" }}
-                        />
-                        <span className="cell">{row.game_type.short_name + '-' + row.room_number}</span>
+                      <a href={`/join/${row._id}`} className="table-cell" style={{ marginBottom: '5px', display: 'flex', alignItems: 'center' }}>
+                        {/* Left Column: Image */}
+                        {row.image && (
+                          <div style={{ marginRight: '10px' }}>
+                            <img
+                              src={row.image}
+                              alt=""
+                              className="game-type-icon"
+                              width={32}
+                              style={{ display: 'block' }}
+                            />
+                          </div>
+                        )}
+
+                        {/* Right Column: Two rows */}
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                          {/* First Row: Room Name */}
+                          <span className="label cell" style={{ paddingRight: '5px', fontWeight: 'bold' }}>
+                            {row.name}
+                          </span>
+                          {/* Second Row: Room Details */}
+                          <span className="room-ticker" style={{ paddingRight: '5px', fontSize: 'xx-small' }}>
+                            {row.game_type.short_name + '-' + row.room_number}
+                          </span>
+                        </div>
                       </a>
 
-                      <div className="cell">
-                        {row.from_now} <FontAwesomeIcon icon={faStopwatch} />&nbsp;<FontAwesomeIcon icon={faHeartBroken} />
+                      <div className="cell label">
+                        {this.customFromNow(Moment(row.created_at))} <FontAwesomeIcon icon={faStopwatch} />&nbsp;<FontAwesomeIcon icon={faHeartBroken} />
                       </div>
                       <div className="cell" style={{ fontSize: '0.8em' }}>
                         <span className={`${this.getColorClass(hostPrizeMinusBetAmount)}`}>
                           {convertToCurrency(hostPrizeMinusBetAmount, solPrice)}
                         </span>
-                        <span
-                          className={`${this.getColorClass(hostPrizeMinusBetAmount)}`}
-                          style={{ marginLeft: '5px' }}
-                        >
-                          (${(hostPrizeMinusBetAmount * tokenPrice).toFixed(2)})
-                        </span>
+
                       </div>
                     </div>
                   </Grid>

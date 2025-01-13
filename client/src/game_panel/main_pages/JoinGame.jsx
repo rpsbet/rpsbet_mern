@@ -101,7 +101,7 @@ class JoinGame extends Component {
       coHostAmount: 0.1,
       intervalId: null,
       isMax: false,
-      bet_amount: 0.0001,
+      bet_amount: 0.0005,
       predictedBetAmount: 0,
       history: this.props.history,
       showAnimation: false,
@@ -1148,7 +1148,7 @@ class JoinGame extends Component {
             {!this.state.is_mobile &&
               this.props.selectedMainTabIndex === 0 && (
                 <>
-                  {/* <AiPanel
+                  <AiPanel
                     handleDetachAttachChange={this.handleDetachAttachChange}
                     rpsbetitems={this.props.rpsbetitems}
                     qsbetitems={this.props.qsbetitems}
@@ -1175,7 +1175,7 @@ class JoinGame extends Component {
                     ai_mode={ai_mode}
                     user_balance={user_balance}
                     isDarkMode={isDarkMode}
-                  /> */}
+                  />
                   <CoHostModal
                     isDarkMode={this.props.isDarkMode}
                     coHostAmount={this.state.coHostAmount}
@@ -1191,7 +1191,7 @@ class JoinGame extends Component {
                     input_only={true}
                   />
                   
-                  <RoomTokenDetails progressPercentage={progressPercentage} handleOpenPlayerModal={this.handleOpenPlayerModal} roomInfo={roomInfo} />
+                  <RoomTokenDetails solPrice={solPrice} progressPercentage={progressPercentage} handleOpenPlayerModal={this.handleOpenPlayerModal} roomInfo={roomInfo} />
 
                 </>
 

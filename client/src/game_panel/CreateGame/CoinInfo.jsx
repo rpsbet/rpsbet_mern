@@ -15,7 +15,6 @@ const CoinInfo = ({
   telegram_link,
   isDarkMode,
 }) => {
-  const [showOptions, setShowOptions] = useState(false);
 
   const dispatch = useDispatch();
 
@@ -80,12 +79,12 @@ const CoinInfo = ({
     <div
       className="coin-info-panel"
       style={{
-        marginBottom: '30px',
+        marginBottom: '10px',
         color: isDarkMode ? 'white' : 'black',
       }}
     >
       <h3 className="game-sub-title roll-tag" style={{ marginBottom: '5px' }}>
-        Coin Information
+        Room Information
         &nbsp;
         <Tooltip
           title={'For when room hits 69K, liquidity will be moved to a pool.'}
@@ -106,12 +105,11 @@ const CoinInfo = ({
           onFocus={() => dispatch(setFocused(true))} // Dispatch on focus
           onBlur={() => dispatch(setFocused(false))} // Dispatch on blur
           inputProps={{
-            maxLength: 10, // Enforce max length
+            maxLength: 10,
           }}
         />
 
-        {/* Ticker with Prefix "$" */}
-        <TextField
+        {/* <TextField
           label="Ticker"
           variant="filled"
           fullWidth
@@ -131,13 +129,13 @@ const CoinInfo = ({
             ),
           }}
           inputProps={{
-            maxLength: 10, // Enforce max length
+            maxLength: 10,
           }}
           value={ticker}
           onChange={(e) => handleInputChange('ticker', e.target.value)}
-          onFocus={() => dispatch(setFocused(true))} // Dispatch on focus
-          onBlur={() => dispatch(setFocused(false))} // Dispatch on blur
-        />
+          onFocus={() => dispatch(setFocused(true))}
+          onBlur={() => dispatch(setFocused(false))}
+        /> */}
 
         {/* Dropzone for Image Upload */}
         <div
@@ -207,72 +205,17 @@ const CoinInfo = ({
               <img
                 src={image}
                 alt="Uploaded"
-                style={{ maxWidth: '100%', borderRadius: '10px' }}
+                style={{
+                  maxWidth: '250px',
+                  height: 'auto',
+                  borderRadius: '10px',
+                }}
               />
             </div>
           )}
         </div>
 
-        {/* "Show more options" Hyperlink */}
-        <div style={{ textAlign: 'left', margin: '10px 0' }}>
-          <a
-            href="#"
-            style={{ fontSize: '12px', padding: '0 10px', color: isDarkMode ? 'white' : '#666' }}
-            onClick={(e) => {
-              e.preventDefault();
-              setShowOptions(!showOptions);
-            }}
-          >
-            {showOptions ? (
-              <>
-                Hide options &uarr; {/* Up Arrow */}
-              </>
-            ) : (
-              <>
-                Show more options &darr; {/* Down Arrow */}
-              </>
-            )}
-          </a>
-        </div>
 
-        {/* Optional Fields */}
-        {showOptions && (
-          <div>
-            <TextField
-              label="X Link"
-              variant="filled"
-              fullWidth
-              margin="normal"
-              value={x_link}
-              onChange={(e) => handleInputChange('x_link', e.target.value)}
-              placeholder="optional"
-              onFocus={() => dispatch(setFocused(true))}
-              onBlur={() => dispatch(setFocused(false))}
-            />
-            <TextField
-              label="Website Link"
-              variant="filled"
-              fullWidth
-              margin="normal"
-              value={website_link}
-              onChange={(e) => handleInputChange('website_link', e.target.value)}
-              placeholder="optional"
-              onFocus={() => dispatch(setFocused(true))}
-              onBlur={() => dispatch(setFocused(false))}
-            />
-            <TextField
-              label="Telegram Link"
-              variant="filled"
-              fullWidth
-              margin="normal"
-              value={telegram_link}
-              onChange={(e) => handleInputChange('telegram_link', e.target.value)}
-              placeholder="optional"
-              onFocus={() => dispatch(setFocused(true))}
-              onBlur={() => dispatch(setFocused(false))}
-            />
-          </div>
-        )}
       </ThemeProvider>
     </div>
   );

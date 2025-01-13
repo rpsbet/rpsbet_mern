@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { connect } from 'react-redux';
 import { acQueryMyItem } from '../../redux/Item/item.action';
 import { setFocused } from '../../redux/Auth/user.actions';
+import { useDispatch } from 'react-redux';
+
 import {
   Button,
   TextField,
@@ -14,6 +16,9 @@ import { faPenSquare } from '@fortawesome/free-solid-svg-icons';
 
 const AdvancedSettings = (props) => {
 
+  const dispatch = useDispatch();
+
+  const [showOptions, setShowOptions] = useState(false);
 
   const handleInputChange = (field, value) => {
     props.onChangeState({ [field]: value });
@@ -23,17 +28,17 @@ const AdvancedSettings = (props) => {
     <div id="advanced_panel">
       {/* Step 1: Privacy */}
       <div className="game-privacy-panel game-info-panel glass-container ">
-      <h3 className="game-sub-title roll-tag">Advanced Settings&nbsp;<Tooltip
-        style={{ position: "absolute", right: "20px" }}
-        title={'Optional - Skip if needed.'}
-        placement="top"
-      >
-        <Info style={{ cursor: "pointer", float: "right" }} />
-      </Tooltip></h3>
-        <div style={{ padding: "15px 15px 15px 15px", gridTemplateColumns: "1fr", display:"grid", gap: "20px", width: "80%" }}>
+        <h3 className="game-sub-title roll-tag">Advanced Settings&nbsp;<Tooltip
+          style={{ position: "absolute", right: "20px" }}
+          title={'Optional - Skip if needed.'}
+          placement="top"
+        >
+          <Info style={{ cursor: "pointer", float: "right" }} />
+        </Tooltip></h3>
+        <div style={{ padding: "15px 15px 15px 15px", gridTemplateColumns: "1fr", display: "grid", gap: "20px", width: "80%" }}>
           {/* Privacy Section */}
-          <div className="grid-item label roll-tag">
-            <span >Privacy</span>
+          <div className="grid-item label roll-tag" style={{display: 'flex', alignItems: 'center', justifyContent: "center", width: '100%'}}>
+            <span >Privacy</span>&nbsp;
             <Tooltip
               style={{ marginLeft: '8px' }}
               title="Set private to require players enter a password to play"
@@ -42,7 +47,7 @@ const AdvancedSettings = (props) => {
               <Info style={{ cursor: 'pointer' }} />
             </Tooltip>
 
-            
+
           </div>
           <div className="grid-item content">
             <div className="radio-button-group">
@@ -61,19 +66,19 @@ const AdvancedSettings = (props) => {
                 Private
               </Button>
             </div>
-              {props.is_private && (
-                <TextField
-                  id="room_password"
-                  variant="filled"
-                  value={props.room_password}
-                  onChange={(e) => handleInputChange('room_password', e.target.value)}
-                />
-              )}
+            {props.is_private && (
+              <TextField
+                id="room_password"
+                variant="filled"
+                value={props.room_password}
+                onChange={(e) => handleInputChange('room_password', e.target.value)}
+              />
+            )}
           </div>
 
           {/* Payout Section */}
-          <div className="grid-item label roll-tag" style={{marginTop: "20px"}}>
-            <span>Payout</span>
+          <div className="grid-item label roll-tag" style={{display: 'flex', alignItems: 'center', justifyContent: "center", width: '100%', marginTop: "20px" }}>
+            <span style={{ textAlign: "center" }}>Payout</span>&nbsp;
             <Tooltip
               style={{ marginLeft: '8px' }}
               title="Choose Automatic to be paid into your balance each time the set threshold has been reached"
@@ -99,41 +104,42 @@ const AdvancedSettings = (props) => {
                 Automatic
               </Button>
             </div>
-              {props.endgame_type && (
-                <TextField
-                  id="endgame_amount"
-                  variant="filled"
-                  value={props.endgame_amount}
-                  placeholder="PAYOUT"
-                  onChange={(e) => handleInputChange('endgame_amount', e.target.value)}
-                  InputProps={{
-                    endAdornment: <InputAdornment position="end">RPS</InputAdornment>,
-                  }}
-                />
-              )}
+            {props.endgame_type && (
+              <TextField
+                id="endgame_amount"
+                variant="filled"
+                value={props.endgame_amount}
+                placeholder="PAYOUT"
+                onChange={(e) => handleInputChange('endgame_amount', e.target.value)}
+                InputProps={{
+                  endAdornment: <InputAdornment position="end">RPS</InputAdornment>,
+                }}
+              />
+            )}
           </div>
 
-          {/* Tags Section */}
-          <div className="grid-item label roll-tag" style={{marginTop: "20px"}}>
-            <span>Tags</span>
+
+          <div className="grid-item label roll-tag" style={{ display: 'flex', alignItems: 'center', justifyContent: "center", width: '100%', marginTop: "20px" }}>
+            <span>Other Information</span>&nbsp;
             <Tooltip
               style={{ marginLeft: '8px' }}
-              title="Add tags to your game."
+              title="Add a description to your room."
               placement="top"
             >
               <Info style={{ cursor: 'pointer' }} />
             </Tooltip>
           </div>
-          <div className="grid-item content" style={{justifyItems: "center",}}>
+
+          <div className="grid-item content" style={{ justifyItems: "center", }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: "center", width: '100%' }}>
               <TextField
-                label="Add Tags"
+                label="Add Description"
                 value={props.description}
-                placeholder="e.g. crypto, money, web3, moonshot"
+                placeholder="e.g. This gonna go crazy"
                 onChange={props.handleDescriptionChange}
                 onFocus={() => props.setFocused(true)}
                 onBlur={() => props.setFocused(false)}
-                // fullWidth
+                fullWidth
                 // multiline
                 // minRows={2}
                 variant="filled"
@@ -141,6 +147,63 @@ const AdvancedSettings = (props) => {
               <FontAwesomeIcon icon={faPenSquare} style={{ marginLeft: '10px' }} />
             </div>
           </div>
+          <div style={{ textAlign: 'left', margin: '10px 0' }}>
+            <a
+              href="#"
+              style={{ fontSize: '12px', padding: '0 10px', color: props.isDarkMode ? 'white' : '#666' }}
+              onClick={(e) => {
+                e.preventDefault();
+                setShowOptions(!showOptions);
+              }}
+            >
+              {showOptions ? (
+                <>
+                  Hide options &uarr; {/* Up Arrow */}
+                </>
+              ) : (
+                <>
+                  Show more options &darr; {/* Down Arrow */}
+                </>
+              )}
+            </a>
+          </div>
+          {showOptions && (
+            <div>
+              <TextField
+                label="X Link"
+                variant="filled"
+                fullWidth
+                margin="normal"
+                value={props.x_link}
+                onChange={(e) => handleInputChange('x_link', e.target.value)}
+                placeholder="optional"
+                onFocus={() => dispatch(setFocused(true))}
+                onBlur={() => dispatch(setFocused(false))}
+              />
+              <TextField
+                label="Website Link"
+                variant="filled"
+                fullWidth
+                margin="normal"
+                value={props.website_link}
+                onChange={(e) => handleInputChange('website_link', e.target.value)}
+                placeholder="optional"
+                onFocus={() => dispatch(setFocused(true))}
+                onBlur={() => dispatch(setFocused(false))}
+              />
+              <TextField
+                label="Telegram Link"
+                variant="filled"
+                fullWidth
+                margin="normal"
+                value={props.telegram_link}
+                onChange={(e) => handleInputChange('telegram_link', e.target.value)}
+                placeholder="optional"
+                onFocus={() => dispatch(setFocused(true))}
+                onBlur={() => dispatch(setFocused(false))}
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>

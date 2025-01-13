@@ -105,6 +105,7 @@ import {
   getNotifications,
   readNotifications,
   getWithdrawals,
+  removeRoomFromList,
 } from '../redux/Logic/logic.actions';
 import { alertModal } from './modal/ConfirmAlerts.jsx';
 import CookieConsent from '../util/cookieConsent';
@@ -162,6 +163,7 @@ const randomGifUrl = gifUrls[Math.floor(Math.random() * gifUrls.length)];
 const hueRotateValue = (gifUrls.indexOf(randomGifUrl) + 1) * 75;
 
 function updateFromNow(transactions) {
+  
   const result = JSON.parse(JSON.stringify(transactions));
   for (let i = 0; i < result.length; i++) {
     result[i]['from_now'] = Moment(result[i]['created_at']).fromNow();
@@ -169,24 +171,12 @@ function updateFromNow(transactions) {
   return result;
 }
 
-const formatTimeAgo = (date) => {
-  const duration = Moment.duration(Moment().diff(Moment(date)));
-  const seconds = Math.floor(duration.asSeconds());
-  const minutes = Math.floor(duration.asMinutes());
-  const hours = Math.floor(duration.asHours());
-  const days = Math.floor(duration.asDays());
-
-  if (seconds < 60) return `${seconds} s`;
-  if (minutes < 60) return `${minutes} m`;
-  if (hours < 24) return `${hours} h`;
-  return `${days}d`;
-};
-
-
 class SiteWrapper extends Component {
   constructor(props) {
     super(props);
     const currentPath = window.location.pathname;
+    this.notificationsRef = React.createRef();
+    this.gameLogsRef = React.createRef();
     this.state = {
       endpoint:
         process.env.NODE_ENV === 'production'
@@ -473,8 +463,6 @@ class SiteWrapper extends Component {
     });
   };
 
-
-
   handleClickMenu = e => {
     this.setState({ anchorEl: e.currentTarget });
   };
@@ -503,7 +491,11 @@ class SiteWrapper extends Component {
 
       socket.on('UPDATED_ROOM_LIST', async data => {
         await this.props.setRoomList(data);
-        await this.props.getMyHistory();
+      });
+
+      socket.on('ROOM_ENDED', data => {
+        console.log("data", data)
+        this.props.removeRoomFromList(data.roomId);
       });
 
       socket.on(`RECEIVED_LOAN_OFFER_${this.props.user._id}`, ({ lender, avatar, accessory, username, totalWagered }) => {
@@ -669,14 +661,15 @@ class SiteWrapper extends Component {
       this.setState({ websiteLoading: true, isInvestorsPage: location.pathname.startsWith('/investors'), isPlayer: location.pathname.startsWith('/play') });
       const currentUrl = window.location.pathname;
       window.addEventListener('mousemove', this.handleMouseMove);
+      document.addEventListener('mousedown', this.handleClickOutside);
       await Promise.all([
-        // this.props.getNotifications(),
+        this.props.getNotifications(),
         this.props.getUser(),
         this.initSocket(),
         this.props.acCalculateRemainingLoans(),
         this.initializeAudio(),
       ]);
-      this.setState({ websiteLoading: false, notifications: this.props.notifications, vaultBal: initialBalance, loaded: true });
+      this.setState({ websiteLoading: false, transactions: this.props.transactions, notifications: this.props.notifications, vaultBal: initialBalance, loaded: true });
       if (currentUrl && currentUrl.includes('create')) {
         this.setState({ selectedMainTabIndex: this.props.selectMainTab(1) });
       }
@@ -694,6 +687,25 @@ class SiteWrapper extends Component {
     }
 
   }
+
+  handleClickOutside = (event) => {
+    const { showNotifications, showGameLog } = this.state;
+    if (
+      showNotifications &&
+      this.notificationsRef.current &&
+      !this.notificationsRef.current.contains(event.target)
+    ) {
+      this.setState({ showNotifications: false });
+    }
+
+    if (
+      showGameLog &&
+      this.gameLogsRef.current &&
+      !this.gameLogsRef.current.contains(event.target)
+    ) {
+      this.setState({ showGameLog: false });
+    }
+  };
 
   handleCreatePage() {
     const currentUrl = window.location.pathname;
@@ -749,6 +761,8 @@ class SiteWrapper extends Component {
     clearInterval(this.timer);
     clearInterval(this.historyInterval);
     window.removeEventListener('mousemove', this.handleMouseMove);
+    document.removeEventListener('mousedown', this.handleClickOutside);
+
   }
 
   handleLogout = clear_token => {
@@ -1605,6 +1619,7 @@ class SiteWrapper extends Component {
               <>
                 <div
                   id="notifications"
+                  ref={this.notificationsRef}
                   className={showNotifications ? '' : 'hidden'}
                   onClick={this.handleNotificationsClick}
                 >
@@ -1647,7 +1662,7 @@ class SiteWrapper extends Component {
                             </div>
                           ))
                         ) : (
-                          <p>No notifications available.</p>
+                          <p className='label'>No notifications available.</p>
                         )}
 
 
@@ -1685,6 +1700,7 @@ class SiteWrapper extends Component {
 
                 <div
                   id="game_logs"
+                  ref={this.gameLogsRef}
                   className={this.state.showGameLog ? '' : 'hidden'}
                   onClick={this.handleBalanceClick}
                 >
@@ -2109,6 +2125,7 @@ const mapDispatchToProps = {
   setSocket,
   userSignOut,
   setRoomList,
+  removeRoomFromList,
   getUser,
   addChatLog,
   getMyHistory,

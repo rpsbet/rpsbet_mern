@@ -47,6 +47,7 @@ class InventoryModal extends Component {
   };
 
   render() {
+    const { solPrice } = this.props;
     return (
       <Modal
         isOpen={this.props.modalIsOpen}
@@ -64,7 +65,7 @@ class InventoryModal extends Component {
           <div className="modal-body edit-modal-body inventory-modal-body">
             <div className="modal-content-wrapper">
               <div className="modal-content-panel">
-                <MyProductPage />
+                <MyProductPage solPrice={solPrice} />
               </div>
             </div>
           </div>
@@ -88,6 +89,7 @@ class InventoryModal extends Component {
 
 const mapStateToProps = state => ({
   isDarkMode: state.auth.isDarkMode,
+  solPrice: state.logic.solPrice,
 
 });
 

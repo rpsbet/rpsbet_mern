@@ -6,10 +6,7 @@
       type: String,
       default: ''
     },
-    ticker: {
-      type: String,
-      default: ''
-    },
+
     room_number: {
       type: String,
       default: ''

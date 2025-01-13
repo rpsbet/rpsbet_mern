@@ -405,7 +405,7 @@ const addToQueue = async (req, bot = false) => {
                             roomInfo['endgame_type'] &&
                             roomInfo['user_bet'] >= roomInfo['endgame_amount']
                         ) {
-                            newTransactionC.amount +=
+                           newTransactionC.amount +=
                                 parseFloat(roomInfo['user_bet']) -
                                 parseFloat(roomInfo['endgame_amount']);
 

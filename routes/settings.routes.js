@@ -17,7 +17,6 @@ router.get('/', async (req, res) => {
     for (setting of settings) {
         result[setting.name] = setting.value;
     }
-
     res.json({
       success: true,
       settings: result,

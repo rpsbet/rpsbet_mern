@@ -59,8 +59,8 @@ const PreSummaryPanel = (props) => {
           <React.Fragment key={i}>
 
             <div className="data-item">
-              <div><div className="label room-name">Name (ticker)</div></div>
-              <div className="value">{roomInfo?.name} (${roomInfo?.ticker})</div>
+              <div><div className="label room-name">Room Name</div></div>
+              <div className="value">{roomInfo?.name}</div>
             </div>
 
             <div className="data-item">

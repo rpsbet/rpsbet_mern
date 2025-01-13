@@ -171,7 +171,7 @@ class ConfirmLoanModal extends Component {
           <div className="modal-body alert-body password-modal-body">
             <div className={`modal-icon result-icon-trade`}></div>
             <h5>ACCEPT DEBT</h5>
-            <div className='thresholds' style={{ padding: '20px', overflow: 'auto' }}>
+            <div className='thresholds' style={{ overflow: 'auto' }}>
               <TableContainer style={{ maxHeight: 150, overflow: 'auto' }}>
                 <Table aria-label="nice-table">
                   <TableHead
@@ -188,7 +188,7 @@ class ConfirmLoanModal extends Component {
                     <TableRow>
                       <TableCell style={{ textAlign: "center" }}>Rank</TableCell>
                       <TableCell style={{ textAlign: "center" }}>Account Age</TableCell>
-                      <TableCell style={{ textAlign: "center" }}>Max Allowance</TableCell>
+                      <TableCell style={{ textAlign: "center" }}>Max Allowance (SOL)</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -217,13 +217,11 @@ class ConfirmLoanModal extends Component {
                         </TableCell>
                         <TableCell style={{ textAlign: 'center', padding: '0' }}>
                           <span>
-                            {category.accountAgeThresholdInDays >= 30
-                              ? `${category.accountAgeThresholdInDays} days (${Math.floor(category.accountAgeThresholdInDays / 30)} month${Math.floor(category.accountAgeThresholdInDays / 30) > 1 ? 's' : ''})`
-                              : `${category.accountAgeThresholdInDays} days`}
+                            {category.accountAgeThresholdInDays} days
                           </span>
                         </TableCell>
                         <TableCell style={{ textAlign: 'center', padding: '0' }}>
-                          <span>{convertToCurrency(category.maxAllowance, solPrice)}</span>
+                          <span>{category.maxAllowance} ({convertToCurrency(category.maxAllowance, solPrice)})</span>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -234,24 +232,30 @@ class ConfirmLoanModal extends Component {
             <TableContainer>
               <Table>
                 <TableBody>
+                  {/* Available Funds Row */}
                   <TableRow>
                     <TableCell style={{ width: "20%", textAlign: "right", borderBottom: "none" }}>
                       <span style={{ whiteSpace: "nowrap" }}>AVAILABLE FUNDS:</span>
                     </TableCell>
                     <TableCell style={{ borderBottom: "none", textAlign: "right", color: 'red' }}>
-                      {convertToCurrency(loan_amount, solPrice)}
+                      {loan_amount} SOL ({convertToCurrency(loan_amount, solPrice)})
                     </TableCell>
-                    <TableCell>
+                  </TableRow>
+
+                  {/* TextField on its own line */}
+                  <TableRow>
+                    <TableCell colSpan={2} style={{ textAlign: "center", borderBottom: "none" }}>
                       <TextField
                         label="Loan"
                         variant="filled"
+                        className="label"
                         value={responseText}
                         onChange={this.handleResponseTextChange}
                         style={{ margin: "10px 0", width: "80%" }}
                         InputProps={{
                           endAdornment: (
                             <InputAdornment position="end">
-                              &nbsp;RPS
+                              &nbsp;SOL
                             </InputAdornment>
                           ),
                         }}
@@ -280,7 +284,7 @@ class ConfirmLoanModal extends Component {
                   <TableRow>
                     <TableCell style={{ textAlign: "center" }}>{convertToCurrency(parseFloat(responseText, solPrice))}</TableCell>
                     <TableCell style={{ textAlign: "center" }}>{loan_period} days</TableCell>
-                    <TableCell style={{ textAlign: "center" }}>{<>{convertToCurrency((apy * parseFloat(responseText)) + parseFloat(responseText), solPrice)} <span>({apy * 100}%)</span></>}</TableCell>
+                    <TableCell style={{ textAlign: "center" }}>{<>{(apy * parseFloat(responseText)) + parseFloat(responseText)} ({convertToCurrency((apy * parseFloat(responseText)) + parseFloat(responseText), solPrice)}) <span>({apy * 100}%)</span></>}</TableCell>
                   </TableRow>
                 </TableBody>
               </Table>

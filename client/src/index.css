@@ -940,8 +940,8 @@ div.table.my-chat-table .table-cell button.btn_join {
 }
 
 .room-ticker {
-  font-size: 16px;
-  color: #4caf50;
+  font-size: 12px;
+  color: #ff8500;
   margin-top: 5px;
 }
 
@@ -1368,12 +1368,13 @@ div.table.my-chat-table .table-row .table-cell[title='Unread message']:hover:act
   color: #666666;
 }
 
-div.table .table-row .table-cell img.game-type-icon {
+img.game-type-icon {
   width: 40px;
   height: 40px;
   border-radius: 0.3em;
   background: #7575754d;
   margin-right: 10px;
+  padding: 6px;
 }
 
 .chat-line .avatar {
@@ -4281,11 +4282,7 @@ h3,
 h4,
 h5,
 h6,
-button span,
-button,
-li div,
-li div span,
-label {
+li div {
   font-family: 'Days One', sans-serif !important;
 }
 
@@ -4297,7 +4294,9 @@ label {
 body,
 p,
 span,
-div {
+div,
+button,
+a {
   font-family: 'Mitr', sans-serif !important;
 }
 
@@ -4577,12 +4576,6 @@ table#runs th {
   color: #333;
   margin: auto;
   text-shadow: 1px 1px 1px #AAAAAA;
-}
-
-
-div.table .table-row .table-cell img.game-type-icon {
-  padding: 6px;
-
 }
 
 #liveStakes {

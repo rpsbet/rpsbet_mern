@@ -4,8 +4,9 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXTwitter, faTelegram } from '@fortawesome/free-brands-svg-icons';
 import { faGlobe } from '@fortawesome/free-solid-svg-icons';
 import Share from '../components/Share';
+import { convertToCurrency } from '../util/conversion';
 
-const RoomTokenDetails = ({ roomInfo, isDarkMode, handleOpenPlayerModal, progressPercentage }) => {
+const RoomTokenDetails = ({ roomInfo, solPrice, isDarkMode, handleOpenPlayerModal, progressPercentage }) => {
     return (
         <div className="glass-container room-details">
             {/* Room Header: Image on the Left, Name/Ticker and Description on the Right */}
@@ -17,7 +18,7 @@ const RoomTokenDetails = ({ roomInfo, isDarkMode, handleOpenPlayerModal, progres
                 />
                 <div className="room-info">
                     <h6 className="room-name">
-                        {roomInfo.name} <span className="room-ticker">({roomInfo.ticker})</span>
+                        {roomInfo.name}<br/><span className="room-ticker">({roomInfo.room_name})</span>
                     </h6>
                     <p className="room-description">{roomInfo.description}</p>
                 </div>
@@ -59,7 +60,7 @@ const RoomTokenDetails = ({ roomInfo, isDarkMode, handleOpenPlayerModal, progres
 
             <div className="bonding-curve" style={{ marginBottom: "30px" }}>
                 <h4 className='game_header label' style={{ display: 'block', fontWeight: 'bold', marginBottom: '8px' }}>
-                    Bonding Curve Progress: {progressPercentage}%
+                    AUTO-PAYOUT PROGRESS: {progressPercentage}%
                 </h4>
                 <div
                     className='payout-bar'
@@ -122,6 +123,8 @@ const RoomTokenDetails = ({ roomInfo, isDarkMode, handleOpenPlayerModal, progres
                                         darkMode={isDarkMode}
                                     />
                                 </a>
+                                
+                                <span className='label'><span className='room-ticker'>{(host.share).toFixed(2)}%</span><br />{convertToCurrency(host.stake, solPrice)}</span>
                             </div>
                         ))}
                 </div>

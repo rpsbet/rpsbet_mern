@@ -461,7 +461,7 @@ class ProductTable extends Component {
                   history.push(`/product/${row._id}`);
                 }}
               >
-                {row.item_type === '653ee81117c9f5ee2124564b' ? (
+                {/* {row.item_type === '653ee81117c9f5ee2124564b' ? (
                   <PowerContainer>
                     <PowerItem>
                       <PercentageBar percentage={row.CP} color="#28a745" />
@@ -474,7 +474,7 @@ class ProductTable extends Component {
                   </PowerContainer>
                 ) : (
                   ''
-                )}
+                )} */}
 
                 {row.owners.map(owner => (
                   <ProductCreator key={owner.user}>
@@ -540,7 +540,7 @@ class ProductTable extends Component {
                 </ProductInfo>
                 <TradeButton>
                   <Tooltip title={row.owners[0].rentOption ? 'Rent' : 'Trade'}>
-                    <IconButton
+                    <Button
                       className="btn-back"
                       onClick={() => {
                         setCurrentProductId(row._id);
@@ -575,7 +575,7 @@ class ProductTable extends Component {
                       }}
                     >
                       {row.owners[0].rentOption ? 'Rent' : 'Trade'} <SwapHoriz />
-                    </IconButton>
+                    </Button>
                   </Tooltip>
                 </TradeButton>
               </ProductCard>

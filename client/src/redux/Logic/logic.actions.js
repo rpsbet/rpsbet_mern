@@ -1013,6 +1013,7 @@ export const getGameTypeList = () => async dispatch => {
     dispatch({ type: MSG_GAMETYPE_LOAD_FAILED, payload: err });
   }
 };
+
 export const getMyGames = (search_condition, callback) => async dispatch => {
   try {
     dispatch({ type: START_LOADING });
@@ -1050,25 +1051,46 @@ export const getMyGames = (search_condition, callback) => async dispatch => {
 export const endGame = (room_id, callback) => async dispatch => {
   try {
     dispatch({ type: START_LOADING });
+    console.log("called");
+
     const res = await axios.post('/game/end_game', { room_id });
+    console.log("res", res.data);
+
     if (res.data.success) {
-      dispatch({
-        type: MY_GAMES_LOADED,
-        payload: {
-          myGames: res.data.myGames,
-          pages: res.data.pages,
-          pageNumber: 1
-        }
-      });
+      const storedData = localStorage.getItem('myGamesData');
+      let updatedGames = [];
+
+      if (storedData) {
+        const parsedData = JSON.parse(storedData);
+
+        updatedGames = parsedData.myGames.filter(game => game._id !== room_id);
+
+        localStorage.setItem(
+          'myGamesData',
+          JSON.stringify({
+            ...parsedData,
+            myGames: updatedGames,
+          })
+        );
+
+        dispatch({
+          type: MY_GAMES_LOADED,
+          payload: {
+            myGames: updatedGames,
+            pageNumber: 1,
+          },
+        });
+      }
 
       dispatch({ type: NEW_TRANSACTION, payload: res.data.newTransaction });
       dispatch({ type: MSG_SUCCESS, payload: "GAME HAS NOW ENDED" });
+
     } else {
       dispatch({ type: MSG_ERROR, payload: res.data.message });
     }
   } catch (err) {
-    console.log(err);
-
+    console.error("Error ending game:", err);
+    dispatch({ type: MSG_ERROR, payload: "An error occurred while ending the game." });
   } finally {
     dispatch({ type: END_LOADING });
   }
@@ -1129,7 +1151,7 @@ export const getTransactionCandles = ({ roomId, timeFrame }) => async (dispatch)
     const res = await axios.get(`/game/candles/${roomId}`, {
       params: { timeFrame }
     });
-
+console.log("cancled", res.data)
     if (res.data.success) {
       dispatch({
         type: 'TRANSACTION_CANDLES_LOADED',
@@ -1295,10 +1317,32 @@ export const updateBankrollQs = bankroll => {
 };
 
 
+export const setRoomList = newRoom => dispatch => {
+  try {
+    let roomList = JSON.parse(localStorage.getItem('roomList')) || [];
+    roomList = [newRoom, ...roomList];
+    localStorage.setItem('roomList', JSON.stringify(roomList));
+    dispatch({
+      type: ROOMS_LOADED,
+      payload: { roomList, page: 1 },
+    });
+  } catch (err) {
+    console.error('Error updating room list in local storage:', err);
+  }
+};
 
-export const setRoomList = data => dispatch => {
-  data.page = 1;
-  dispatch({ type: ROOMS_LOADED, payload: data });
+export const removeRoomFromList = roomId => dispatch => {
+  try {
+    let roomList = JSON.parse(localStorage.getItem('roomList')) || [];
+    roomList = roomList.filter(room => room._id !== roomId);
+    localStorage.setItem('roomList', JSON.stringify(roomList));
+    dispatch({
+      type: ROOMS_LOADED,
+      payload: { roomList, page: 1 },
+    });
+  } catch (err) {
+    console.error('Error removing room from list in local storage:', err);
+  }
 };
 
 export const setGameMode = game_mode => dispatch => {

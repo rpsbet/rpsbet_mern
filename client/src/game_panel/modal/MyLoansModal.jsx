@@ -103,6 +103,7 @@ class MyLoansModal extends Component {
     const accountAgeInMilliseconds = currentDate - accountCreatedAt;
     return Math.floor(accountAgeInMilliseconds / (24 * 60 * 60 * 1000));
   };
+  
   getHighlightedRowIndex = (categories, rank, accountAgeInDays) => {
     const currentRank = getRank(rank);
     
@@ -176,7 +177,6 @@ class MyLoansModal extends Component {
           <div className="modal-body edit-modal-body my-loans-modal-body">
             <div className="modal-content-wrapper">
               <div className="modal-content-panel">
-                
                 <MyBankPage />
               </div>
             </div>

@@ -83,7 +83,6 @@ const initialState = {
   curRoomInfo: {
     _id: 0,
     name: '',
-    ticker: '',
     image: '',
     x_link: '',
     website_link: '',

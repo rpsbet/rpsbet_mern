@@ -67,7 +67,6 @@ class Summary extends Component {
       rps_game_type,
       qs_game_type,
       name,
-      ticker,
       solPrice,
       x_link,
       image,

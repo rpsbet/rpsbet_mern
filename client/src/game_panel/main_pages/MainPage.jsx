@@ -326,7 +326,7 @@ class MainPage extends Component {
               />
             </Tabs>
           )}
-        <div className="main-panel">
+        <div className="main-panel" style={{overflowX: 'hidden'}}>
           <h2 className="main-title">{this.getActiveTabText()}</h2>
           {((!is_mobile && selectedMainTabIndex === 0) ||
             (is_mobile && selectedMobileTab === 'live_games' && this.state.show_open_game === 0)) &&
