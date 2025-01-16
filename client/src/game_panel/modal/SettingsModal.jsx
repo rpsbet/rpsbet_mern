@@ -29,13 +29,13 @@ import {
   NotificationsOff,
   VolumeUp,
   VolumeOff,
-  Eco,
-  EcoOutlined,
+EnergySavingsLeaf,
+EnergySavingsLeafOutlined,
   VolumeMute,
   VolumeDown,
   Add,
   Remove,
-} from '@material-ui/icons';
+} from '@mui/icons-material';
 
 Modal.setAppElement('#root');
 
@@ -190,11 +190,11 @@ const SettingsModal = ({
                     <TableCell>
                       {isLowGraphics ? (
                         <Button onClick={() => toggleLowGraphics(!isLowGraphics)}>
-                          <EcoOutlined />&nbsp; LOW GRAPHICS
+                          <EnergySavingsLeaf />&nbsp; LOW GRAPHICS
                         </Button>
                       ) : (
                         <Button onClick={() => toggleLowGraphics(!isLowGraphics)}>
-                          <Eco />&nbsp; HIGH GRAPHICS
+                          <EnergySavingsLeafOutlined />&nbsp; HIGH GRAPHICS
                         </Button>
                       )}
                     </TableCell>

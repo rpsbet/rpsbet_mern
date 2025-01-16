@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import IconButton from '@material-ui/core/IconButton';
-import { ContactSupport, Close } from '@material-ui/icons';
+import { ContactSupport, Close } from '@mui/icons-material';
 
 const SupportButton = () => {
   const [intercomOpen, setIntercomOpen] = useState(false);

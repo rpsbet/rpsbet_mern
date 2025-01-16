@@ -29,10 +29,10 @@ import {
   Tooltip,
   Typography
 } from '@material-ui/core';
-import { Warning, Info, Link, FiberManualRecord, AccountBalanceWallet } from '@material-ui/icons';
-import QRCodeIcon from '@material-ui/icons/CropFreeOutlined';
-import WalletIcon from '@material-ui/icons/AccountBalanceWallet';
-import CheckCircleOutlineIcon from '@material-ui/icons/CheckCircleOutline';
+import { Warning, Info, Link, FiberManualRecord, AccountBalanceWallet } from '@mui/icons-material';
+import QRCodeIcon from '@mui/icons-material/CropFreeOutlined';
+import WalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import axios from '../../util/Api';
 import { alertModal } from '../modal/ConfirmAlerts';
 import { convertToCurrency } from '../../util/conversion';

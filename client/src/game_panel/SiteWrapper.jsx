@@ -10,7 +10,6 @@ import {
   Divider,
   Tooltip,
 } from '@material-ui/core';
-import { Info } from '@material-ui/icons';
 import Countdown from 'react-countdown';
 import HistoryTable from '../game_panel/LiveGames/HistoryTable.jsx'
 import axios from '../util/Api';
@@ -34,7 +33,7 @@ import {
   Help,
   Settings,
   Star
-} from '@material-ui/icons';
+} from '@mui/icons-material';
 import history from '../redux/history';
 import socketIOClient from 'socket.io-client';
 import Moment from 'moment';
@@ -65,6 +64,7 @@ import WithdrawModal from './modal/WithdrawModal';
 import InventoryModal from './modal/InventoryModal';
 import VaultModal from './modal/VaultModal';
 import ResetPasswordModal from './modal/ResetPasswordModal';
+import { Info } from '@mui/icons-material';
 import Notifications from './icons/Notifications.js';
 import NotificationsHover from './icons/NotificationsHover';
 import Leaderboards from './icons/Leaderboards.js';

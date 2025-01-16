@@ -1,6 +1,6 @@
 import React from 'react';
-import InfoIcon from '@material-ui/icons/Info';
-import WarningIcon from '@material-ui/icons/Warning';
+import InfoIcon from '@mui/icons-material/Info';
+import WarningIcon from '@mui/icons-material/Warning';
 import Avatar from './Avatar';
 import { convertToCurrency } from '../util/conversion';
 import Moment from 'moment';

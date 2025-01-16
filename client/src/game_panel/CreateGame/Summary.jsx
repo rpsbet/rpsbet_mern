@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { convertToCurrency } from '../../util/conversion';
-import { Warning, Info, CheckCircle } from '@material-ui/icons';
+import { Warning, Info, CheckCircle } from '@mui/icons-material';
 import { Tooltip } from '@material-ui/core';
 
 const Summary = (props) => {

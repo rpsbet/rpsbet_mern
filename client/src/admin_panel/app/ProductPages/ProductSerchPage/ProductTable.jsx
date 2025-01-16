@@ -36,7 +36,7 @@ import { acGetCustomerInfo } from '../../../../redux/Customer/customer.action';
 import Avatar from '../../../../components/Avatar';
 import PlayerModal from '../../../../game_panel/modal/PlayerModal';
 import Pagination from 'material-ui-flat-pagination';
-import SwapHoriz from '@material-ui/icons/SwapHoriz';
+import SwapHoriz from '@mui/icons-material/SwapHoriz';
 import { convertToCurrency } from '../../../../util/conversion';
 import { renderLottieAnimation } from '../../../../util/LottieAnimations';
 const MarketplaceContainer = styled.div`

@@ -1,8 +1,8 @@
 import React from 'react';
 import { Slider } from '@material-ui/core/';
 import IconButton from '@material-ui/core/IconButton';
-import PlayArrowIcon from '@material-ui/icons/PlayArrow';
-import PauseIcon from '@material-ui/icons/Pause';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import PauseIcon from '@mui/icons-material/Pause';
 
 export class YouTubeVideo extends React.Component {
   constructor(props) {

@@ -1,21 +1,21 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
-import { Info } from '@material-ui/icons';
+import { Info } from '@mui/icons-material';
 import Moment from 'moment';
 import Avatar from '../../components/Avatar';
 import progress from '../LottieAnimations/progress.json';
 import pressHold from '../LottieAnimations/pressHold.json';
 import PlayerModal from '../modal/PlayerModal';
 import AiPanel from '../../components/AiPanel';
-import ViewIcon from '@material-ui/icons/Visibility';
-import SwordsIcon from '@material-ui/icons/VisibilityOff';
-import InfoIcon from '@material-ui/icons/Info';
+import ViewIcon from '@mui/icons-material/Visibility';
+import SwordsIcon from '@mui/icons-material/VisibilityOff';
+import InfoIcon from '@mui/icons-material/Info';
 import { getQsLottieAnimation } from '../../util/helper';
 import { updateRoomBot, kickBots } from '../../redux/Logic/logic.actions';
 import { setSpectateMode } from '../../redux/Auth/user.actions';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import WarningIcon from '@material-ui/icons/Warning';
+import WarningIcon from '@mui/icons-material/Warning';
 import { faRobot, faMoneyBillWave, faBrain, faBan } from '@fortawesome/free-solid-svg-icons';
 import {
   Button,

@@ -1048,7 +1048,7 @@ const processQueue = async () => {
         } catch (error) {
             reject(error);
         }
-        requestQueue.shift(); // Remove the processed request from the queue
+        requestQueue.shift();
     }
 };
 

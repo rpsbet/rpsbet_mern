@@ -1,343 +1,274 @@
 import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet';
-import { Button, Container, Typography, Zoom, Box } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
-import PlayIcon from '@material-ui/icons/Gamepad';
-import LinearProgress from '@material-ui/core/LinearProgress';
-import MonetizationOnIcon from '@material-ui/icons/PieChart';
-import ShowChartIcon from '@material-ui/icons/ShowChart';
-import AttachMoneyIcon from '@material-ui/icons/AttachMoney';
-import DescriptionIcon from '@material-ui/icons/Description';
+import {
+  Button,
+  Container,
+  Typography,
+  Zoom,
+  Box,
+  LinearProgress,
+} from '@mui/material';
+import { styled, keyframes } from '@mui/system';
+import { useTheme } from '@mui/material/styles';
+import GamepadIcon from '@mui/icons-material/Gamepad';
+import PieChartIcon from '@mui/icons-material/PieChart';
+import ShowChartIcon from '@mui/icons-material/ShowChart';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import DescriptionIcon from '@mui/icons-material/Description';
 import { fetchLeaderboardsData, fetchEquityDistribution } from '../redux/Customer/customer.action';
-import busd from '../game_panel/JoinGame/busd.svg'
-import PrivacyModal from '../game_panel/modal/PrivacyModal'
-import TermsModal from '../game_panel/modal/TermsModal'
-import MerchModal from '../game_panel/modal/MerchModal'
+import busd from '../game_panel/JoinGame/busd.svg';
+import PrivacyModal from '../game_panel/modal/PrivacyModal';
+import TermsModal from '../game_panel/modal/TermsModal';
+import MerchModal from '../game_panel/modal/MerchModal';
 import { faXTwitter, faTelegram, faYoutube, faTiktok } from '@fortawesome/free-brands-svg-icons';
 import sol from '../game_panel/icons/sol.png';
 import bnb from '../game_panel/icons/bnb.png';
 import btc from '../game_panel/icons/btc.png';
-import eth from '../game_panel/icons/eth.png'
+import eth from '../game_panel/icons/eth.png';
 import ltc from '../game_panel/icons/ltc.png';
-
 import Chart from 'react-apexcharts';
 import Lottie from 'react-lottie';
-import animationData from '../game_panel/LottieAnimations/quantum-goal.json'; // Import your Lottie animation
-import catBack from '../game_panel/LottieAnimations/cat-back.json'; // Import your Lottie animation
+import animationData from '../game_panel/LottieAnimations/quantum-goal.json';
+import catBack from '../game_panel/LottieAnimations/cat-back.json';
 import ApexCharts from 'react-apexcharts';
-
 import { connect } from 'react-redux';
 import { useHistory } from 'react-router-dom';
 import SiteWrapper from '../game_panel/SiteWrapper';
-import happyCat from '../util/happyCat.svg'
-import cat_bg from '../util/cat_bg.svg'
-import remote from '../util/remote.svg'
+import happyCat from '../util/happyCat.svg';
+import cat_bg from '../util/cat_bg.svg';
+import remote from '../util/remote.svg';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
+// Keyframes
+const pulse = keyframes`
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+  }
+  70% {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 10px rgba(255, 255, 255, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+  }
+`;
 
-const width = window.innerWidth;
-const height = window.innerHeight;
+const throwAndFall = keyframes`
+  0% {
+    transform: translate(-50%, -67%) rotateX(0deg);
+  }
+  50% {
+    transform: translate(-50%, -99%) rotateX(360deg);
+  }
+  100% {
+    transform: translate(-50%, -67%) rotateX(0deg);
+  }
+`;
 
-const useStyles = makeStyles((theme) => ({
-  root: {
-    color: '#FFF',
-    minHeight: '100vh',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  title: {
-    fontSize: '2.5rem', // Default size for larger screens
-    [theme.breakpoints.down('sm')]: {
-      fontSize: '1.5rem', // Size for mobile screens
-    },
-  },
-  bottomBackground: {
-    backgroundImage: `url('/img/bottom-bg.svg')`, // Bottom background image
-    backgroundSize: width < 768 && height > 800 ? '800vw' : '175vw', // Adjust background size based on screen width
-    backgroundPosition: width > 768 ? '94% 110%' : '84% 120%', // Adjust position for larger vs smaller screens
-    backgroundRepeat: 'no-repeat',
-    height: '100%', // Adjust height for larger vs smaller screens
-    width: '100%',
-    position: 'fixed',
-    bottom: 0,
-    left: 0,
-    zIndex: 2, // Place behind the content
-  },
-  currencies: {
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '210px',
-    margin: '30px auto',
-  },
-  currency: {
-    width: width < 600 ? '32px' : '52px',
-    height: width < 600 ? '32px' : '52px',
-    opacity: '0.2',
-    filter: 'grayscale(100%)',
-  },
-  availableCurrency: {
-    width: width < 600 ? '32px' : '52px',
-    height: width < 600 ? '32px' : '52px',
-    filter: 'none',
-    marginRight: '10px',
+// Styled Components
+const Root = styled(Box)(({ theme }) => ({
+  color: '#FFF',
+  minHeight: '100vh',
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'flex-start',
+  position: 'relative',
+  overflow: 'hidden',
+}));
 
-  },
-  nav: {
-    position: 'absolute',
-    display: 'flex',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    width: '100%',
-    padding: '20px',
-    zIndex: 9,
-    top: width < 600 ? '150px' : '220px',
-    left: width < 600 ? '-100px' : '-50px',
-  },
-  gravestone: {
-    backgroundImage: `url('/img/grave.svg')`,
-    backgroundSize: 'contain',
-    backgroundPosition: 'center',
-    backgroundRepeat: 'no-repeat',
-    padding: '44px',
-    textAlign: 'center',
-    cursor: 'pointer',
-    transition: 'transform 0.3s, box-shadow 0.3s, z-index 0.3s',
-    margin: '10px',
-    position: 'absolute',
-    zIndex: 1,
-    '&:hover': {
-      filter: 'sepia(1)',
-      zIndex: 10,
-      animation: '$pulse 0.5s',
-    },
-  },
-  sectionContainer: {
-    width: '100%',
-    zIndex: 1,
-    position: 'relative',
-    marginTop: '0vh',
-    marginBottom: '50vh',
-  },
-  section: {
-    padding: '100px 20px',
-    textAlign: 'center',
-    display: 'none', // Initially hide all sections
-  },
-  activeSection: {
-    display: 'block',
-    transition: 'opacity 0.5s',
-  },
-  '@keyframes throwAndFall': {
-    '0%': {
-      transform: 'translate(-50%, -67%) rotateX(0deg)',
-    },
-    '50%': {
-      transform: 'translate(-50%, -99%) rotateX(360deg)', // Adjust the height as needed
-    },
-    '100%': {
-      transform: 'translate(-50%, -67%) rotateX(0deg)', // Return to original position
-    },
-  },
-  throwFall: {
-    animation: '$throwAndFall 1s ease-in-out', // Adjust the duration as needed
+const Title = styled(Typography)(({ theme }) => ({
+  fontSize: '2.5rem',
+  [theme.breakpoints.down('sm')]: {
+    fontSize: '1.5rem',
   },
 }));
 
+const BottomBackground = styled(Box)(({ theme, width, height }) => ({
+  backgroundImage: `url('/img/bottom-bg.svg')`,
+  backgroundSize: width < 768 && height > 800 ? '800vw' : '175vw',
+  backgroundPosition: width > 768 ? '94% 110%' : '84% 120%',
+  backgroundRepeat: 'no-repeat',
+  height: '100%',
+  width: '100%',
+  position: 'fixed',
+  bottom: 0,
+  left: 0,
+  zIndex: 2,
+}));
 
-const generateRandomPositions = (buttonsCount) => {
-  const positions = [];
-  const buttonWidth = 150;
-  const buttonHeight = 80;
-  const margin = 20;
-  const centerX = width / 2;
-  const centerY = height / 2;
+const Currencies = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  width: '210px',
+  margin: '30px auto',
+}));
 
-  // If width is less than 600px, use fixed positions
-  if (width < 600 && height < 700) {
+const Currency = styled('img')(({ theme, width }) => ({
+  width: width < 600 ? '32px' : '52px',
+  height: width < 600 ? '32px' : '52px',
+  opacity: '0.2',
+  filter: 'grayscale(100%)',
+}));
 
-    const fixedPositions = [
-      { top: 240, left: 280 },
-      { top: 300, left: 300 },
-      { top: 120, left: 120 },
-      { top: 140, left: 190 },
-      { top: 140, left: 340 },
-      // Add more fixed positions as needed for your buttons
-    ];
-    return fixedPositions.slice(0, buttonsCount); // Return only the needed positions
-  } else if (width < 600 && height < 900) {
-    const fixedPositions = [
-      { top: 400, left: 320 },
-      { top: 460, left: 340 },
-      { top: 280, left: 160 },
-      { top: 300, left: 230 },
-      { top: 300, left: 380 },
-      // Add more fixed positions as needed for your buttons
-    ];
-    return fixedPositions.slice(0, buttonsCount); // Return only the needed positions
-  } else if (width < 600) {
+const AvailableCurrency = styled('img')(({ theme, width }) => ({
+  width: width < 600 ? '32px' : '52px',
+  height: width < 600 ? '32px' : '52px',
+  filter: 'none',
+  marginRight: '10px',
+}));
 
-    const fixedPositions = [
-      { top: 500, left: 320 },
-      { top: 560, left: 340 },
-      { top: 380, left: 160 },
-      { top: 400, left: 230 },
-      { top: 400, left: 380 },
-      // Add more fixed positions as needed for your buttons
-    ];
-    return fixedPositions.slice(0, buttonsCount); // Return only the needed positions
-  }
+const Nav = styled(Box)(({ theme, width }) => ({
+  position: 'absolute',
+  display: 'flex',
+  flexWrap: 'wrap',
+  justifyContent: 'center',
+  width: '100%',
+  padding: '20px',
+  zIndex: 9,
+  top: width < 600 ? '150px' : '220px',
+  left: width < 600 ? '-100px' : '-50px',
+}));
 
-  // For larger screens, use scatter logic
-  const horizontalScatterDistance = 800;
-  const verticalScatterDistance = 300;
-  const maxAttempts = 100;
+const Gravestone = styled(Box)(({ theme }) => ({
+  backgroundImage: `url('/img/grave.svg')`,
+  backgroundSize: 'contain',
+  backgroundPosition: 'center',
+  backgroundRepeat: 'no-repeat',
+  padding: '44px',
+  textAlign: 'center',
+  cursor: 'pointer',
+  transition: 'transform 0.3s, box-shadow 0.3s, z-index 0.3s',
+  margin: '10px',
+  position: 'absolute',
+  zIndex: 1,
+  '&:hover': {
+    filter: 'sepia(1)',
+    zIndex: 10,
+    animation: `${pulse} 0.5s`,
+  },
+}));
 
-  for (let i = 0; i < buttonsCount; i++) {
-    let newPosition;
-    let attempts = 0;
-    do {
-      newPosition = {
-        left: Math.random() * horizontalScatterDistance + centerX - horizontalScatterDistance / 2,
-        top: Math.random() * verticalScatterDistance + centerY - verticalScatterDistance / 2,
-      };
-      attempts++;
-    } while (
-      attempts < maxAttempts &&
-      positions.some(
-        (pos) =>
-          newPosition.top < pos.top + buttonHeight + margin &&
-          newPosition.top + buttonHeight + margin > pos.top &&
-          newPosition.left < pos.left + buttonWidth + margin &&
-          newPosition.left + buttonWidth + margin > pos.left
-      )
-    );
-    if (attempts < maxAttempts) {
-      positions.push(newPosition);
-    } else {
-      // Fallback position in case of collision
-      positions.push({
-        top: centerY - buttonHeight / 2 + (i * (buttonHeight + margin)) % (verticalScatterDistance / 2),
-        left: centerX - buttonWidth / 2 + (i * (buttonWidth + margin)) % (horizontalScatterDistance / 2),
-      });
-    }
-  }
+const SectionContainer = styled(Box)(({ theme }) => ({
+  width: '100%',
+  zIndex: 1,
+  position: 'relative',
+  marginTop: '0vh',
+  marginBottom: '50vh',
+}));
 
-  return positions;
-};
+const Section = styled(Box)(({ theme }) => ({
+  padding: '100px 20px',
+  textAlign: 'center',
+  display: 'none',
+}));
+
+const ActiveSection = styled(Box)(({ theme }) => ({
+  display: 'block',
+  transition: 'opacity 0.5s',
+}));
 
 const CountdownPage = ({
   fetchLeaderboardsData,
   fetchEquityDistribution,
   equityChart,
   isDarkMode,
-  loadingEquityChart
+  loadingEquityChart,
 }) => {
-  const classes = useStyles();
+  const theme = useTheme();
   const history = useHistory();
   const [activeSection, setActiveSection] = useState('');
   const [buttonPositions, setButtonPositions] = useState([]);
-  const [showImageBackground, setShowImageBackground] = useState(false); // State to toggle background image
-  const [randomGif, setRandomGif] = useState(''); // State to store the randomly selected GIF
-  const [throwing, setThrowing] = useState(false); // State for the throwing animation
-  const [showDepositModal, setShowDepositModal] = useState(false); // State for deposit modal
-  const [web3, setWeb3] = useState(null); // State for web3 instance
-  const [web3account, setWeb3Account] = useState(''); // State for account
-  const [web3balance, setWeb3Balance] = useState(''); // State for balance
-  const [divStyles, setDivStyles] = useState({});
+  const [showImageBackground, setShowImageBackground] = useState(false);
+  const [randomGif, setRandomGif] = useState('');
+  const [throwing, setThrowing] = useState(false);
+  const [showDepositModal, setShowDepositModal] = useState(false);
+  const [web3, setWeb3] = useState(null);
+  const [web3account, setWeb3Account] = useState('');
+  const [web3balance, setWeb3Balance] = useState('');
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+  const [showMerchModal, setShowMerchModal] = useState(false);
+  const [divStyles, setDivStyles] = useState({});
+
   const handleOpenTermsModal = () => setShowTermsModal(true);
   const handleCloseTermsModal = () => setShowTermsModal(false);
-
-  const [showMerchModal, setShowMerchModal] = useState(false);
-
-  const openMerchModal = () => {
-    setShowMerchModal(true);
-  };
-
-  const closeMerchModal = () => {
-    setShowMerchModal(false);
-  };
-
-
-
   const handleOpenPrivacyModal = () => setShowPrivacyModal(true);
   const handleClosePrivacyModal = () => setShowPrivacyModal(false);
+  const openMerchModal = () => setShowMerchModal(true);
+  const closeMerchModal = () => setShowMerchModal(false);
 
   const gifs = [
     'https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExNGR4N2N1YXZwaHY4eDB1OWY3aTBybzJ2dXp2MGJiamcwcDJwbjVxayZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/6ABLpFTPng3euH1XE6/giphy.gif',
     'https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExZHNvM3VjN3FicHN1ZjM1ZnIwNGtrMGUyZjNiOWQzb3hrZXhxeG9vbSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/6Jrp4ZD9B1z7VjrKhq/giphy.gif',
     'https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExdnNza2NvZTdsZ3AwOWlweGJmYmV1cGc5anhyeW1rZ2NpM3l1cWc4YyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/UxVOH4FZjQ9wBk1hJa/giphy.gif',
-    'https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExeXZ5YjY4ZWhnY2NmMjY4N205aHRnOW1wenF6bzFjcTZuanllNzdoZiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/MNNLoVzRBXiW7ndcqb/giphy.gif'
+    'https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExeXZ5YjY4ZWhnY2NmMjY4N205aHRnOW1wenF6bzFjcTZuanllNzdoZiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/MNNLoVzRBXiW7ndcqb/giphy.gif',
   ];
 
-  const baseColor = '#c734ff'; // Base color (e.g., a shade of purple)
+  const baseColor = '#c734ff';
   const chartColors = [
-    `${baseColor}FF`, // 100% opacity (fully opaque)
-    `${baseColor}DD`, // 80% opacity
-    `${baseColor}99`, // 60% opacity
-    `${baseColor}66`, // 40% opacity
-    `${baseColor}33`, // 20% opacity
-    `${baseColor}11`, // 10% opacity
+    `${baseColor}FF`,
+    `${baseColor}DD`,
+    `${baseColor}99`,
+    `${baseColor}66`,
+    `${baseColor}33`,
+    `${baseColor}11`,
   ];
 
   const chartOptions = {
     chart: {
       type: 'pie',
-      background: isDarkMode ? '#121212' : '#ffffff', // Adjust background based on dark mode
+      background: isDarkMode ? '#121212' : '#ffffff',
     },
-    labels: equityChart && equityChart.length > 0 ? equityChart.map(user => user.username.toUpperCase()) : [], // Use username as label
-    responsive: [{
-      breakpoint: 480,
-      options: {
-        chart: {
-          width: 400
-        }
-      }
-    }],
+    labels: equityChart && equityChart.length > 0 ? equityChart.map(user => user.username.toUpperCase()) : [],
+    responsive: [
+      {
+        breakpoint: 480,
+        options: {
+          chart: {
+            width: 400,
+          },
+        },
+      },
+    ],
     colors: chartColors,
     legend: {
-      show: false // Hide the legend inside the chart
+      show: false,
     },
     plotOptions: {
       pie: {
         donut: {
-          size: '70%', // Adjust the size of the donut chart
+          size: '70%',
           labels: {
-            show: false, // Hide the center label
-          }
-        }
-      }
+            show: false,
+          },
+        },
+      },
     },
     dataLabels: {
       enabled: true,
-      formatter: (value, { seriesIndex }) => {
-        const user = equityChart[seriesIndex];
-        return `${value.toFixed(2)}%`; // Show username and percentage
-      },
+      formatter: (value, { seriesIndex }) => `${value.toFixed(2)}%`,
       style: {
-        colors: ['#ffffff'], // Color for data labels
-        fontSize: '14px', // Adjust font size
-        fontWeight: 600, // Adjust font weight
-      }
+        colors: ['#ffffff'],
+        fontSize: '14px',
+        fontWeight: 600,
+      },
     },
     tooltip: {
       custom: function ({ seriesIndex, w }) {
         const user = equityChart[seriesIndex];
         return `
-            <div style="display: flex; align-items: center;">
-              <img src="${user.avatar}" alt="${user.username}" style="width: 24px; height: 24px; border-radius: 50%; margin-right: 8px;" />
-              <span style="color: ${baseColor};">${user.username}: ${w.globals.series[seriesIndex].toFixed(2)}%</span>
-            </div>
-          `;
+          <div style="display: flex; align-items: center;">
+            <img src="${user.avatar}" alt="${user.username}" style="width: 24px; height: 24px; border-radius: 50%; margin-right: 8px;" />
+            <span style="color: ${baseColor};">${user.username}: ${w.globals.series[seriesIndex].toFixed(2)}%</span>
+          </div>
+        `;
       },
       theme: isDarkMode ? 'dark' : 'light',
-      useHTML: true, // Allow HTML rendering in the tooltip
+      useHTML: true,
     },
   };
 
@@ -351,14 +282,14 @@ const CountdownPage = ({
         background: 'transparent',
       },
       labels: ['Dev (5%)', 'Platform (20%)', 'Ecosystem (75%)'],
-      colors: chartColors, // Custom colors for each category
+      colors: chartColors,
       stroke: {
         width: 0,
       },
       legend: {
         position: 'bottom',
         labels: {
-          colors: '#fff', // Legend text color
+          colors: '#fff',
           useSeriesColors: false,
         },
       },
@@ -376,7 +307,7 @@ const CountdownPage = ({
           show: true,
         },
         y: {
-          formatter: (value) => `${value}%`, // Show percentages
+          formatter: (value) => `${value}%`,
         },
         background: '#333',
         borderColor: '#666',
@@ -394,25 +325,97 @@ const CountdownPage = ({
         },
       },
       theme: {
-        mode: 'dark', // Dark mode theme
+        mode: 'dark',
       },
     },
-    series: [5, 20, 75], // Tokenomics distribution percentages
+    series: [5, 20, 75],
   };
 
   const COUNTDOWN_BUTTONS = [
-    { label: 'Play', section: 'play', icon: <PlayIcon /> },
-    { label: 'Tokenomics', section: 'tokenomics', icon: <MonetizationOnIcon /> },
+    { label: 'Play', section: 'play', icon: <GamepadIcon /> },
+    { label: 'Tokenomics', section: 'tokenomics', icon: <PieChartIcon /> },
     { label: 'Chart', section: 'chart', icon: <ShowChartIcon /> },
     { label: 'Buy', section: 'buy', icon: <AttachMoneyIcon /> },
     { label: 'About', section: 'about', icon: <DescriptionIcon /> },
   ];
 
+  const generateRandomPositions = (buttonsCount) => {
+    const positions = [];
+    const buttonWidth = 150;
+    const buttonHeight = 80;
+    const margin = 20;
+    const centerX = window.innerWidth / 2;
+    const centerY = window.innerHeight / 2;
 
+    if (window.innerWidth < 600 && window.innerHeight < 700) {
+      const fixedPositions = [
+        { top: 240, left: 280 },
+        { top: 300, left: 300 },
+        { top: 120, left: 120 },
+        { top: 140, left: 190 },
+        { top: 140, left: 340 },
+      ];
+      return fixedPositions.slice(0, buttonsCount);
+    } else if (window.innerWidth < 600 && window.innerHeight < 900) {
+      const fixedPositions = [
+        { top: 400, left: 320 },
+        { top: 460, left: 340 },
+        { top: 280, left: 160 },
+        { top: 300, left: 230 },
+        { top: 300, left: 380 },
+      ];
+      return fixedPositions.slice(0, buttonsCount);
+    } else if (window.innerWidth < 600) {
+      const fixedPositions = [
+        { top: 500, left: 320 },
+        { top: 560, left: 340 },
+        { top: 380, left: 160 },
+        { top: 400, left: 230 },
+        { top: 400, left: 380 },
+      ];
+      return fixedPositions.slice(0, buttonsCount);
+    }
+
+    const horizontalScatterDistance = 800;
+    const verticalScatterDistance = 300;
+    const maxAttempts = 100;
+
+    for (let i = 0; i < buttonsCount; i++) {
+      let newPosition;
+      let attempts = 0;
+      do {
+        newPosition = {
+          left: Math.random() * horizontalScatterDistance + centerX - horizontalScatterDistance / 2,
+          top: Math.random() * verticalScatterDistance + centerY - verticalScatterDistance / 2,
+        };
+        attempts++;
+      } while (
+        attempts < maxAttempts &&
+        positions.some(
+          (pos) =>
+            newPosition.top < pos.top + buttonHeight + margin &&
+            newPosition.top + buttonHeight + margin > pos.top &&
+            newPosition.left < pos.left + buttonWidth + margin &&
+            newPosition.left + buttonWidth + margin > pos.left
+        )
+      );
+      if (attempts < maxAttempts) {
+        positions.push(newPosition);
+      } else {
+        positions.push({
+          top: centerY - buttonHeight / 2 + (i * (buttonHeight + margin)) % (verticalScatterDistance / 2),
+          left: centerX - buttonWidth / 2 + (i * (buttonWidth + margin)) % (horizontalScatterDistance / 2),
+        });
+      }
+    }
+
+    return positions;
+  };
 
   useEffect(() => {
     const updateStyles = () => {
       const width = window.innerWidth;
+      const height = window.innerHeight;
       if (width >= 600) {
         setDivStyles({
           position: 'absolute',
@@ -428,10 +431,7 @@ const CountdownPage = ({
         setDivStyles({});
       }
     };
-    // Initial check
     updateStyles();
-
-    // Update on resize
     window.addEventListener('resize', updateStyles);
     return () => window.removeEventListener('resize', updateStyles);
   }, []);
@@ -441,54 +441,47 @@ const CountdownPage = ({
       try {
         await fetchLeaderboardsData();
         await fetchEquityDistribution();
-      
       } catch (error) {
-        console.error("Error loading data:", error);
+        console.error('Error loading data:', error);
       }
     };
 
     fetchData();
   }, [fetchLeaderboardsData, fetchEquityDistribution]);
 
-
   useEffect(() => {
     setButtonPositions(generateRandomPositions(COUNTDOWN_BUTTONS.length));
   }, []);
 
-
   const handleButtonClick = (section) => {
     if (section === 'play') {
       window.open('/play', '_blank');
-      return; // Stop further execution if "play" is clicked
+      return;
     }
 
-    // Check if the section is 'buy'
     if (section === 'buy') {
       setShowDepositModal(true);
-      window.open('https://raydium.io/swap/?inputMint=sol&outputMint=', '_blank'); // Open in new tab
-      return; // Stop further execution
+      window.open('https://raydium.io/swap/?inputMint=sol&outputMint=', '_blank');
+      return;
     }
 
     if (section === 'chart') {
       setShowDepositModal(true);
-      window.open('https://dexscreener.com/solana/BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump', '_blank'); // Open in new tab
-      return; // Stop further execution
+      window.open('https://dexscreener.com/solana/BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump', '_blank');
+      return;
     }
 
     setActiveSection(section);
     if (section === 'tokenomics') {
-      setThrowing(true); // Start throwing animation
-      setTimeout(() => setThrowing(false), 1000); // Reset after animation duration
+      setThrowing(true);
+      setTimeout(() => setThrowing(false), 1000);
     }
 
-    // Select a random GIF from the list
     const randomIndex = Math.floor(Math.random() * gifs.length);
     setRandomGif(gifs[randomIndex]);
 
-    // Generate a random number between 1500 and 5000 milliseconds
     const randomDuration = Math.floor(Math.random() * (3000 - 500 + 1)) + 500;
 
-    // Show static GIF background for the random duration, then revert back to Lottie
     setShowImageBackground(true);
     setTimeout(() => {
       setShowImageBackground(false);
@@ -503,6 +496,7 @@ const CountdownPage = ({
       preserveAspectRatio: 'xMidYMid slice',
     },
   };
+
   const catOptions = {
     loop: true,
     autoplay: true,
@@ -514,150 +508,249 @@ const CountdownPage = ({
 
   return (
     <SiteWrapper>
-
-      <div className={classes.root}>
+      <Root>
         <Helmet>
           <title>Gamified Countdown Page</title>
-          <meta name="description" content="Explore our Web3 platform with sections on Tokenomics, Charts, and more!" />
+          <meta
+            name="description"
+            content="Explore our Web3 platform with sections on Tokenomics, Charts, and more!"
+          />
         </Helmet>
 
-
         {/* Conditionally show either the Lottie animation or a static background */}
-        <div style={{ width: '100%', height: '100%', position: 'fixed', top: 0, zIndex: 0, filter: 'opacity(0.3)' }}>
-
+        <Box
+          sx={{
+            width: '100%',
+            height: '100%',
+            position: 'fixed',
+            top: 0,
+            zIndex: 0,
+            filter: 'opacity(0.3)',
+          }}
+        >
           {showImageBackground ? (
-            <div
-              style={{
+            <Box
+              sx={{
                 backgroundImage: `url(${randomGif})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 height: '100%',
                 width: '100%',
               }}
-            ></div>
+            />
           ) : (
-            <Lottie options={defaultOptions} height={'100%'} width={'100%'} isClickToPauseDisabled={true} />
+            <Lottie
+              options={defaultOptions}
+              height={'100%'}
+              width={'100%'}
+              isClickToPauseDisabled={true}
+            />
           )}
-        </div>
+        </Box>
 
         {/* Sections and Navigation */}
-        <div className={classes.sectionContainer}>
+        <SectionContainer>
           <Container>
-
             <Zoom in={activeSection === ''}>
-              <section
-                id=""
-                className={`${classes.section} ${activeSection === '' ? classes.activeSection : ''}`}
+              <Section
+                sx={{
+                  display: activeSection === '' ? 'block' : 'none',
+                  transition: 'opacity 0.5s',
+                }}
               >
-
-                <Typography variant="h2" style={{ filter: "drop-shadow(2px 4px 6px #f9f9)" }}>$RPS&nbsp;<img src={busd} width="80" height="auto" alt='$RPS Token Symbol' /></Typography>
-                <Typography variant="h6" style={{ filter: "drop-shadow(2px 4px 6px #f9f9)", marginBottom: "20px" }}>
+                <Typography
+                  variant="h2"
+                  sx={{ filter: 'drop-shadow(2px 4px 6px #f9f9)' }}
+                >
+                  $RPS&nbsp;
+                  <img
+                    src={busd}
+                    width="80"
+                    height="auto"
+                    alt="$RPS Token Symbol"
+                  />
+                </Typography>
+                <Typography
+                  variant="h6"
+                  sx={{ filter: 'drop-shadow(2px 4px 6px #f9f9)', marginBottom: '20px' }}
+                >
                   [ GET RICH 💰 OR DIE 🩸 ] <br />
                 </Typography>
                 <h6>TOKEN ADDRESS:</h6>
                 {`[${'BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump'.slice(0, 7)}...${'BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump'.slice(-10)}]`}
                 <br />
-                <Typography variant="body1" className="fading-text" style={{ marginTop: "20px" }}>
+                <Typography
+                  variant="body1"
+                  sx={{ marginTop: '20px' }}
+                  className="fading-text"
+                >
                   Click the Gravestones below to choose a life path...
                 </Typography>
-              </section>
+              </Section>
             </Zoom>
-            <Zoom in={activeSection === 'play'}>
 
-              <section id="play" className={`${classes.section} ${activeSection === 'play' ? classes.activeSection : ''}`}>
-                <Typography variant="h1">Welcome to Our Web3 Platform</Typography>
-                <Typography variant="body1">Get Rich 💰 or Die 🩸 trying in our immersive new-gen platform.</Typography>
-              </section>
-            </Zoom>
-            <Zoom in={activeSection === 'tokenomics'}>
-              <section
-                id="tokenomics"
-                className={`${classes.section} ${activeSection === 'tokenomics' ? classes.activeSection : ''}`}
+            <Zoom in={activeSection === 'play'}>
+              <Section
+                id="play"
+                sx={{
+                  display: activeSection === 'play' ? 'block' : 'none',
+                  transition: 'opacity 0.5s',
+                }}
               >
-                <Typography variant="h2" className={classes.title}>
-                  Tokenomics</Typography>
+                <Typography variant="h1">Welcome to Our Web3 Platform</Typography>
+                <Typography variant="body1">
+                  Get Rich 💰 or Die 🩸 trying in our immersive new-gen platform.
+                </Typography>
+              </Section>
+            </Zoom>
+
+            <Zoom in={activeSection === 'tokenomics'}>
+              <Section
+                id="tokenomics"
+                sx={{
+                  display: activeSection === 'tokenomics' ? 'block' : 'none',
+                  transition: 'opacity 0.5s',
+                }}
+              >
+                <Typography variant="h2" sx={{ fontSize: '2.5rem', [theme.breakpoints.down('sm')]: { fontSize: '1.5rem' } }}>
+                  Tokenomics
+                </Typography>
                 <Typography variant="body1">
                   Explore the in-depth details of our token distribution and economic model.
                 </Typography>
 
                 {/* The Tokenomics Pie Chart */}
-                <div style={{ height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative', marginTop: "30px" }}>
-                  <ApexCharts options={chartData.options} series={chartData.series} type="donut" height={400} />
+                <Box
+                  sx={{
+                    height: '100%',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    position: 'relative',
+                    marginTop: '30px',
+                  }}
+                >
+                  <ApexCharts
+                    options={chartData.options}
+                    series={chartData.series}
+                    type="donut"
+                    height={400}
+                  />
+                </Box>
 
-                </div>
-
-                <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", marginTop: "90px" }}>
-
-                  <h4 className="title">
+                <Box
+                  sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    marginTop: '90px',
+                  }}
+                >
+                  <Typography variant="h4" className="title">
                     Current $RPS Holders
-                  </h4>
-                  <h6 className="title">
+                  </Typography>
+                  <Typography variant="h6" className="title">
                     (PLATFORM)
-                  </h6>
+                  </Typography>
                   <br />
                   {loadingEquityChart ? (
                     <>
-                      <div style={{ height: "200px", width: "30%", display: "block", position: "relative" }}>
-                        <span >
-                          Retrieving Distribution...
-                        </span>
-                        <LinearProgress style={{ marginTop: "30px" }} color='secondary' />
-                      </div>
+                      <Box
+                        sx={{
+                          height: '200px',
+                          width: '30%',
+                          display: 'block',
+                          position: 'relative',
+                        }}
+                      >
+                        <span>Retrieving Distribution...</span>
+                        <LinearProgress sx={{ marginTop: '30px' }} color="secondary" />
+                      </Box>
                     </>
-
+                  ) : equityChart && equityChart.length > 0 ? (
+                    <Chart options={chartOptions} series={chartSeries} type="pie" width="600" />
                   ) : (
-                    // Display the pie chart only if equityChart data is available
-                    equityChart && equityChart.length > 0 ? (
-                      <Chart options={chartOptions} series={chartSeries} type="pie" width="600" />
-                    ) : (
-                      <div>Calculating Equities...</div>
-                    )
+                    <div>Calculating Equities...</div>
                   )}
-                  <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", marginTop: "90px" }}>
-                    <h4 className="title">
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      marginTop: '90px',
+                    }}
+                  >
+                    <Typography variant="h4" className="title">
                       Contract Address
-                    </h4>
-                    <h6 className="title">
+                    </Typography>
+                    <Typography variant="h6" className="title">
                       BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump
-                    </h6>
-
-                  </div>
-                </div>
-              </section>
+                    </Typography>
+                  </Box>
+                </Box>
+              </Section>
             </Zoom>
 
-
             <Zoom in={activeSection === 'about'}>
-              <section
+              <Section
                 id="about"
-                className={`${classes.section} ${activeSection === 'about' ? classes.activeSection : ''}`}
-                style={{ marginBottom: width < 600 ? "200px" : "0" }}
+                sx={{
+                  display: activeSection === 'about' ? 'block' : 'none',
+                  transition: 'opacity 0.5s',
+                  marginBottom: window.innerWidth < 600 ? '200px' : '0',
+                }}
               >
-                <Typography variant="h2" className={classes.title} gutterBottom>
+                <Typography variant="h2" sx={{ fontSize: '2.5rem', [theme.breakpoints.down('sm')]: { fontSize: '1.5rem' } }} gutterBottom>
                   About
                 </Typography>
 
-                <div style={{ position: 'relative' }}>
-                  <div className="speech-bubble scroll-animation" style={{ animationDelay: '0.6s' }}>
-                    <Typography variant="h6" component="span" style={{ fontStyle: 'italic', color: '#ff6347' }}>
+                <Box sx={{ position: 'relative' }}>
+                  <Box
+                    className="speech-bubble scroll-animation"
+                    sx={{
+                      animationDelay: '0.6s',
+                      fontStyle: 'italic',
+                      color: '#ff6347',
+                    }}
+                  >
+                    <Typography variant="h6" component="span">
                       “Gamified Token Launches is the purr-fect solution!”
                     </Typography>
-                  </div>
+                  </Box>
 
-                  <img
+                  <Box
+                    component="img"
                     className="scroll-animation"
-                    style={{ transform: 'scale(1.5)', width: "100%", margin: "20px 0", animationDelay: '0.8s', filter: 'opacity(0.25)' }}
+                    sx={{
+                      transform: 'scale(1.5)',
+                      width: '100%',
+                      margin: '20px 0',
+                      animationDelay: '0.8s',
+                      filter: 'opacity(0.25)',
+                    }}
                     src={cat_bg}
                     alt="Cat of Egypt"
                   />
 
-                  <div style={divStyles} className="scroll-animation">
-
+                  <Box
+                    sx={{
+                      position: 'relative',
+                      ...divStyles,
+                      className: 'scroll-animation',
+                    }}
+                    className="scroll-animation"
+                  >
                     <Typography
                       variant="body1"
                       paragraph
+                      sx={{
+                        fontStyle: 'italic',
+                        color: '#ff6347',
+                        animationDelay: '0.2s',
+                      }}
                       className="scroll-animation"
-                      style={{ animationDelay: '0.2s' }}
                     >
                       Read our <span className="highlight">comprehensive guide</span> to understand our platform's vision
                       and technology. Trust us, it's not as paw-some as a cat nap, but it’s pretty close.
@@ -666,8 +759,12 @@ const CountdownPage = ({
                     <Typography
                       variant="body1"
                       paragraph
+                      sx={{
+                        animationDelay: '0.4s',
+                        fontWeight: 'bold',
+                        color: '#ff6347',
+                      }}
                       className="scroll-animation"
-                      style={{ animationDelay: '0.4s', fontWeight: 'bold', color: '#ff6347' }}
                     >
                       Important Note: We launch tokens for fun every week on Saturdays as a way to help crowdfund the platform.
                       This is NOT financial advice, and you should never invest more than you are willing to lose.
@@ -677,8 +774,10 @@ const CountdownPage = ({
                     <Typography
                       variant="body2"
                       paragraph
+                      sx={{
+                        animationDelay: '0.6s',
+                      }}
                       className="scroll-animation"
-                      style={{ animationDelay: '0.6s' }}
                     >
                       <span className="highlight">RPS.Game</span> is more than just a platform—it's a powerful game creation tool! Players can
                       design their own games and, when they reach <strong>80 SOL</strong> in contributions, these games can be minted as unique
@@ -689,8 +788,10 @@ const CountdownPage = ({
                     <Typography
                       variant="body2"
                       paragraph
+                      sx={{
+                        animationDelay: '1.2s',
+                      }}
                       className="scroll-animation"
-                      style={{ animationDelay: '1.2s' }}
                     >
                       <span className="highlight">RPS.Game</span> offers financial tools that are typically gate-kept by the Elite,
                       but we’ve opened the door for <span className="highlight">EVERYONE</span>—whether you're a fat cat or a stray.
@@ -701,8 +802,10 @@ const CountdownPage = ({
                     <Typography
                       variant="body2"
                       paragraph
+                      sx={{
+                        animationDelay: '1.4s',
+                      }}
                       className="scroll-animation"
-                      style={{ animationDelay: '1.4s' }}
                     >
                       The cat (token) distribution system? We’re giving 5% to the team (for their paw-some efforts), 20% to the Platform, 70% to the eco-system
                       (you cool cats), and the final 5%... well, marketing.
@@ -711,36 +814,88 @@ const CountdownPage = ({
                     <Typography
                       variant="body2"
                       paragraph
+                      sx={{
+                        animationDelay: '1.6s',
+                      }}
                       className="scroll-animation"
-                      style={{ animationDelay: '1.6s' }}
                     >
                       Mark your cat-lendars! The Pump.Fun FAIR LAUNCH of <span className="highlight">$RPS</span> opens on
                       <strong> 4TH DEC 20:00 CEST</strong>. So, sharpen your claws and get ready! Remember, it’s
                       <strong> GET RICH 💰 OR DIE 🩸</strong>—fur real.
                     </Typography>
-                  </div>
-                </div>
-                <div id="" className={classes.footerContainer}>
+                  </Box>
+                </Box>
 
-
-                  <div className={classes.currencies}>
-                    <img className={classes.availableCurrency} src={sol} alt="SOL" />
-                    {/* <img className={classes.availableCurrency} src={bnb} alt="BNB" /> */}
-                    <img className={classes.availableCurrency} src={btc} alt="BTC" />
-                    <img className={classes.availableCurrency} src={eth} alt="ETH" />
-                    <img className={classes.availableCurrency} src={ltc} alt="LTC" />
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    bottom: 0,
+                    display: 'flex',
+                    textAlign: 'left',
+                    flexDirection: 'column',
+                    padding: '30px',
+                    justifyContent: 'center',
+                    alignContent: 'center',
+                  }}
+                >
+                  <Currencies>
+                    <AvailableCurrency src={sol} alt="SOL" />
+                    {/* <AvailableCurrency src={bnb} alt="BNB" /> */}
+                    <AvailableCurrency src={btc} alt="BTC" />
+                    <AvailableCurrency src={eth} alt="ETH" />
+                    <AvailableCurrency src={ltc} alt="LTC" />
                     <span>+ 50 MORE!</span>
-                  </div>
+                  </Currencies>
 
+                  <Box sx={{ marginBottom: '20px' }}>
+                    <Typography variant="body2">
+                      RPS.Game has absolutely no involvement with any third-party gambling provider software or 'provably-fair' algorithms.
+                    </Typography>
+                  </Box>
 
-                  <div className={classes.address}>
+                  {/* Social Icons */}
+                  <Box className="countdown social-icons" sx={{ display: 'flex', alignItems: 'center' }}>
+                    <span>FOLLOW US ►</span>
+                    <a href="https://x.com/rpsdotgame">
+                      <FontAwesomeIcon icon={faXTwitter} />
+                    </a>
+                    <a href="https://t.me/rpsfinance">
+                      <FontAwesomeIcon icon={faTelegram} />
+                    </a>
+                    <a href="https://www.youtube.com/@rpsdotgame">
+                      <FontAwesomeIcon icon={faYoutube} />
+                    </a>
+                    <a href="https://www.tiktok.com/@rpsdotgame">
+                      <FontAwesomeIcon icon={faTiktok} />
+                    </a>
+                  </Box>
 
-                    <p>RPS.Game has absolutely no involvement with any third-party gambling provider software or 'provably-fair' algorithms.
-                    </p>
-                  </div>
-                </div>
+                  <Box className="countdown" sx={{ marginTop: '10px' }}>
+                    <a className="link" href="https://blog.rps.game/">
+                      Blog
+                    </a>
+                    &nbsp;✗&nbsp;
+                    <a
+                      className="link"
+                      id="terms"
+                      onClick={handleOpenTermsModal}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      Terms
+                    </a>
+                    &nbsp;✗&nbsp;
+                    <a
+                      className="link"
+                      id="privacy"
+                      onClick={handleOpenPrivacyModal}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      Privacy
+                    </a>
+                  </Box>
+                </Box>
 
-
+                {/* Modals */}
                 {showTermsModal && (
                   <TermsModal
                     modalIsOpen={showTermsModal}
@@ -762,53 +917,98 @@ const CountdownPage = ({
                     isDarkMode={isDarkMode}
                   />
                 )}
-
-              </section>
+              </Section>
             </Zoom>
           </Container>
-        </div>
+        </SectionContainer>
 
-        <div className={classes.bottomBackground}>
-
-          <div className={classes.nav}>
-            <div style={{ position: 'relative' }}>
-              <img
+        <BottomBackground width={window.innerWidth} height={window.innerHeight}>
+          <Nav width={window.innerWidth}>
+            <Box sx={{ position: 'relative' }}>
+              <Box
                 className="scroll-animation"
-                style={{ position: 'absolute', left: '50%', top: '50%', transform: width < 600 ? 'translate(1px, 346px)' : 'translate(71px, 446px)', width: "50px", animationDelay: '0.8s', filter: 'opacity(0.25)' }}
+                sx={{
+                  position: 'absolute',
+                  left: '50%',
+                  top: '50%',
+                  transform:
+                    window.innerWidth < 600
+                      ? 'translate(1px, 346px)'
+                      : 'translate(71px, 446px)',
+                  width: '50px',
+                  animationDelay: '0.8s',
+                  filter: 'opacity(0.25)',
+                }}
+                component="img"
                 src={remote}
                 alt="Remote Control"
               />
-              <Lottie options={catOptions} style={{ position: 'absolute', left: '50%', top: width < 600 && height < 900 ? '-50%' : '50%', transform: width < 600 ? 'translateY(0%)' : 'translateY(60%)' }} height={'auto'} width={'300px'} isClickToPauseDisabled={true} />
-            </div>
+              <Lottie
+                options={catOptions}
+                sx={{
+                  position: 'absolute',
+                  left: '50%',
+                  top:
+                    window.innerWidth < 600 && window.innerHeight < 900
+                      ? '-50%'
+                      : '50%',
+                  transform:
+                    window.innerWidth < 600
+                      ? 'translateY(0%)'
+                      : 'translateY(60%)',
+                }}
+                height="auto"
+                width="300px"
+                isClickToPauseDisabled={true}
+              />
+            </Box>
             {COUNTDOWN_BUTTONS.map((button, index) => (
               <Zoom in={true} timeout={index * 200} key={button.label}>
-                <div
-                  className={classes.gravestone}
-                  style={{ top: buttonPositions[index]?.top, left: buttonPositions[index]?.left }}
+                <Gravestone
+                  sx={{
+                    top: buttonPositions[index]?.top,
+                    left: buttonPositions[index]?.left,
+                  }}
                   onClick={() => handleButtonClick(button.section)}
                 >
-                  <div style={{ transform: 'rotateZ(6deg)', marginLeft: '-10px' }}>
+                  <Box
+                    sx={{
+                      transform: 'rotateZ(6deg)',
+                      marginLeft: '-10px',
+                    }}
+                  >
                     {button.icon}
-                  </div>
-                  <Typography variant="h6" style={{
-                    fontSize: '0.5rem',
-                    transform: 'rotateZ(6deg)', // Apply z-angle rotation to the text
-                    transition: 'transform 0.3s',
-                    marginLeft: '-10px'
-                  }}>
+                  </Box>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontSize: '0.5rem',
+                      transform: 'rotateZ(6deg)',
+                      transition: 'transform 0.3s',
+                      marginLeft: '-10px',
+                    }}
+                  >
                     {button.label}
                   </Typography>
-                </div>
+                </Gravestone>
               </Zoom>
             ))}
-          </div>
+          </Nav>
 
           {/* Footer */}
-          <div style={{ position: "absolute", bottom: "0", display: "flex", textAlign: "left", flexDirection: "column", padding: "30px", justifyContent: "center", alignContent: "center" }} >
-            {/* <a onClick={openMerchModal} style={{ cursor: "pointer" }}>Merch ► 💍 🎩 💎 🩱 👠 👞 🥽</a> */}
-
-
-            <div className="countdown social-icons" style={{ display: 'flex', alignItems: 'center' }}>
+          <Box
+            sx={{
+              position: 'absolute',
+              bottom: 0,
+              display: 'flex',
+              textAlign: 'left',
+              flexDirection: 'column',
+              padding: '30px',
+              justifyContent: 'center',
+              alignContent: 'center',
+            }}
+          >
+            <Box className="countdown social-icons" sx={{ display: 'flex', alignItems: 'center' }}>
               <span>FOLLOW US ►</span>
               <a href="https://x.com/rpsdotgame">
                 <FontAwesomeIcon icon={faXTwitter} />
@@ -822,41 +1022,34 @@ const CountdownPage = ({
               <a href="https://www.tiktok.com/@rpsdotgame">
                 <FontAwesomeIcon icon={faTiktok} />
               </a>
-          
-            </div>
-            <div className="countdown">
-
-              <a className={classes.link} href="https://blog.rps.game/">Blog</a>&nbsp;✗&nbsp;
-              {/* <a className={classes.link} href="#">Faq</a>&nbsp;✗&nbsp; */}
-              {/* <a className={classes.link}
-                id="merch"
-                onClick={openMerchModal}
-              >
-                Merch
-              </a>&nbsp;✗&nbsp; */}
-              <a className={classes.link}
-                // href="/#"
+            </Box>
+            <Box className="countdown" sx={{ marginTop: '10px' }}>
+              <a className="link" href="https://blog.rps.game/">
+                Blog
+              </a>
+              &nbsp;✗&nbsp;
+              <a
+                className="link"
                 id="terms"
                 onClick={handleOpenTermsModal}
+                style={{ cursor: 'pointer' }}
               >
                 Terms
-              </a>&nbsp;✗&nbsp;
-              <a className={classes.link}
-                // href="#"
+              </a>
+              &nbsp;✗&nbsp;
+              <a
+                className="link"
                 id="privacy"
                 onClick={handleOpenPrivacyModal}
+                style={{ cursor: 'pointer' }}
               >
                 Privacy
               </a>
-            </div>
-
-            {/* <a className={classes.link} href="#">Fair</a> */}
-
-          </div>
-        </div>
-      </div>
+            </Box>
+          </Box>
+        </BottomBackground>
+      </Root>
     </SiteWrapper>
-
   );
 };
 

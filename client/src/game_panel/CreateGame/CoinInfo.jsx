@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { TextField, Button, Tooltip } from '@material-ui/core';
 import { createTheme, ThemeProvider } from '@material-ui/core/styles';
-import { CloudUpload as UploadIcon, Info } from '@material-ui/icons';
+import { CloudUpload as UploadIcon, Info } from '@mui/icons-material';
 import { useDispatch } from 'react-redux';
 import { setFocused } from '../../redux/Auth/user.actions';
 

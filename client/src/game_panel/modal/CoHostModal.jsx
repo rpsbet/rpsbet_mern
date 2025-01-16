@@ -5,7 +5,7 @@ import { getTransactionCandles, unstake, addNewTransaction, addNewCandle, getMyG
 import { setBalance } from '../../redux/Auth/user.actions'
 import Chart from "react-apexcharts";
 import { Box, Tooltip, Typography, Button, TextField, TableHead, Table, TableBody, TableCell, TableRow, ButtonGroup } from "@material-ui/core";
-import { ShowChartOutlined, TrendingUpOutlined, TrendingDownOutlined } from "@material-ui/icons";
+import { ShowChartOutlined, TrendingUpOutlined, TrendingDownOutlined } from "@mui/icons-material";
 import { convertToCurrency } from '../../util/conversion';
 import Avatar from '../../components/Avatar';
 import PlayerModal from '../modal/PlayerModal';

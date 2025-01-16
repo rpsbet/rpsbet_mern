@@ -3,8 +3,8 @@ import { connect } from 'react-redux';
 import { setBalance, updateTutorialCompleted } from '../../redux/Auth/user.actions';
 import Modal from 'react-modal';
 import { Skeleton } from '@material-ui/lab';
-import { Info } from '@material-ui/icons';
-import { Warning, Link } from '@material-ui/icons';
+import { Info } from '@mui/icons-material';
+import { Warning, Link } from '@mui/icons-material';
 import SettingsRef from '../../components/SettingsRef';
 import {
   getMyGames,
@@ -27,9 +27,9 @@ import Battle from '../icons/Battle';
 import blob from '../LottieAnimations/blob.json';
 import { alertModal, confirmModalClosed, confirmModalCreate } from '../modal/ConfirmAlerts';
 // import Pagination from '../../components/Pagination';
-import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
-import AddCircleOutline from '@material-ui/icons/AddCircleOutline';
-import EditOutline from '@material-ui/icons/EditOutlined';
+import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
+import AddCircleOutline from '@mui/icons-material/AddCircleOutline';
+import EditOutline from '@mui/icons-material/EditOutlined';
 import history from '../../redux/history';
 import { convertToCurrency } from '../../util/conversion';
 import Lottie from 'react-lottie';

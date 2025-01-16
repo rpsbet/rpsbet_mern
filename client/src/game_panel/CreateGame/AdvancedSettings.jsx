@@ -10,7 +10,7 @@ import {
   Tooltip,
   InputAdornment,
 } from '@material-ui/core';
-import { Info } from '@material-ui/icons';
+import { Info } from '@mui/icons-material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPenSquare } from '@fortawesome/free-solid-svg-icons';
 

@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { connect } from 'react-redux';
 import moment from 'moment';
 import { convertToCurrency } from '../../../../util/conversion';
-import SwapHoriz from '@material-ui/icons/SwapHoriz';
+import SwapHoriz from '@mui/icons-material/SwapHoriz';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faFilter,

@@ -18,7 +18,7 @@ import {
 } from '../../redux/Customer/customer.action';
 
 import { alertModal } from './ConfirmAlerts';
-import FileCopyIcon from '@material-ui/icons/FileCopy';
+import FileCopyIcon from '@mui/icons-material/FileCopy';
 import {
   Tabs,
   Tab,
@@ -32,7 +32,7 @@ import {
 
 import StatisticsForm from '../../admin_panel/app/Customer/EditCustomerPage/StatisticsForm';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Info } from '@material-ui/icons';
+import { Info } from '@mui/icons-material';
 import PlayerModal from './PlayerModal';
 import { faUser, faEdit, faChartBar } from '@fortawesome/free-solid-svg-icons';
 import Avatar from '../../components/Avatar';

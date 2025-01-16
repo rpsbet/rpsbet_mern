@@ -42,7 +42,7 @@ import {
 } from '@material-ui/core';
 import { acGetCustomerInfo } from '../../../../redux/Customer/customer.action';
 import Pagination from 'material-ui-flat-pagination';
-import { SwapHoriz, Cancel } from '@material-ui/icons/';
+import { SwapHoriz, Cancel } from '@mui/icons-material';
 import { convertToCurrency } from '../../../../util/conversion';
 import { alertModal } from '../../../../game_panel/modal/ConfirmAlerts';
 import PlayerModal from '../../../../game_panel/modal/PlayerModal';

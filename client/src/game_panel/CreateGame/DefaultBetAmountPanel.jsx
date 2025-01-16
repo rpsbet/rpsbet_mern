@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { Button, Tooltip, TextField } from '@material-ui/core';
 import ButtonGroup from '@material-ui/core/ButtonGroup';
 import { createTheme, ThemeProvider } from '@material-ui/core/styles';
-import { Info } from '@material-ui/icons';
+import { Info } from '@mui/icons-material';
 import { convertToCurrency } from '../../util/conversion';
 
 const DefaultBetAmountPanel = ({

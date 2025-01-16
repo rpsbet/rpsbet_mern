@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import Modal from 'react-modal';
 import MyProductPage from '../../admin_panel/app/ProductPages/ProductSerchPage/MyProductPage';
 import { Button } from '@material-ui/core';
-import AttachMoney from '@material-ui/icons/AttachMoney';
+import AttachMoney from '@mui/icons-material/AttachMoney';
 import { warningMsgBar, infoMsgBar } from '../../redux/Notification/notification.actions';
 import MarketplaceModal from './MarketplaceModal';
 import { faBox } from '@fortawesome/free-solid-svg-icons';

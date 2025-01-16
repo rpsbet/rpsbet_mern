@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Moment from 'moment';
 import { connect } from 'react-redux';
-import RefreshIcon from '@material-ui/icons/Refresh';
 import { renderLottieAvatarAnimation } from '../util/LottieAvatarAnimations';
 import PlayerModal from '../game_panel/modal/PlayerModal';
 import { Button } from '@material-ui/core';
-// import ReactDOM from 'react-dom';
+import ReactDOM from 'react-dom';
 import { Skeleton } from "@material-ui/lab";
 
 function customFromNow(date) {
@@ -46,7 +45,7 @@ const RoomHistory = (props) => {
   useEffect(() => {
     setHistory(roomInfo?.room_history || []);
     attachUserLinkListeners();
-    // attachAccessories();
+    attachAccessories();
   }, [roomInfo]);
 
   const setupSocketConnection = () => {
@@ -78,7 +77,7 @@ const RoomHistory = (props) => {
 
     setHistory((prevHistory) => [newHistoryItem, ...prevHistory.slice(0, 29)]);
     attachUserLinkListeners();
-    // attachAccessories();
+    attachAccessories();
   };
 
   const retrySocketConnection = () => {
@@ -101,28 +100,28 @@ const RoomHistory = (props) => {
     });
   };
 
-  // const attachAccessories = () => {
-  //   const userLinks = document.querySelectorAll('.user-link');
-  //   let counter = 0;
-  //   userLinks.forEach((element) => {
-  //     if (counter < 3) {
-  //       const userId = element.getAttribute('data-userid');
-  //       const accessory = element.getAttribute('accessory');
-  //       const lottieAnimation = renderLottieAvatarAnimation(accessory, isLowGraphics);
-  //       const portalContainer = document.createElement('div');
-  //       ReactDOM.render(lottieAnimation, portalContainer);
-  //       element.parentNode.insertBefore(portalContainer, element);
+  const attachAccessories = () => {
+    const userLinks = document.querySelectorAll('.user-link');
+    let counter = 0;
+    userLinks.forEach((element) => {
+      if (counter < 3) {
+        const userId = element.getAttribute('data-userid');
+        const accessory = element.getAttribute('accessory');
+        const lottieAnimation = renderLottieAvatarAnimation(accessory, isLowGraphics);
+        const portalContainer = document.createElement('div');
+        ReactDOM.render(lottieAnimation, portalContainer);
+        element.parentNode.insertBefore(portalContainer, element);
 
-  //       portalContainer.addEventListener('click', () => {
-  //         handleOpenPlayerModal(userId);
-  //       });
-  //       portalContainer.style.cursor = 'pointer';
-  //       counter++;
-  //     } else {
-  //       return;
-  //     }
-  //   });
-  // };
+        portalContainer.addEventListener('click', () => {
+          handleOpenPlayerModal(userId);
+        });
+        portalContainer.style.cursor = 'pointer';
+        counter++;
+      } else {
+        return;
+      }
+    });
+  };
 
   const handleOpenPlayerModal = (creator_id) => {
     setShowPlayerModal(true);

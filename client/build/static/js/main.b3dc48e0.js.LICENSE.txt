@@ -416,6 +416,14 @@ and limitations under the License.
  */
 
 /**
+ * @mui/styled-engine v6.4.0
+ *
+ * @license MIT
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+/**
  * A better abstraction over CSS.
  *
  * @copyright Oleg Isonen (Slobodskoi) / Isonen 2014-present

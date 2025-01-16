@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { connect } from 'react-redux';
 import { Button, Tooltip, FormControlLabel, RadioGroup, Radio } from '@material-ui/core';
-import { Info } from '@material-ui/icons';
+import { Info } from '@mui/icons-material';
 import styled from 'styled-components';
 import GameSettingsPanel from './GameSettingsPanel';
 import DefaultBetAmountPanel from './DefaultBetAmountPanel';

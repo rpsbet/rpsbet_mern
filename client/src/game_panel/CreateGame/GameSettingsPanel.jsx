@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Tooltip, ButtonBase } from '@material-ui/core';
-import { Info } from '@material-ui/icons';
-import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
+import { Info } from '@mui/icons-material';
+import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import SettingsRef from '../../components/SettingsRef';
 
 const GameSettingsPanel = ({

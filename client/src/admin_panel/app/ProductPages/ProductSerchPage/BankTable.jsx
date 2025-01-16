@@ -39,8 +39,8 @@ import {
 } from '@material-ui/core';
 import { acGetCustomerInfo } from '../../../../redux/Customer/customer.action';
 import Pagination from 'material-ui-flat-pagination';
-import SwapHoriz from '@material-ui/icons/SwapHoriz';
-import AttachMoney from '@material-ui/icons/AttachMoney';
+import SwapHoriz from '@mui/icons-material/SwapHoriz';
+import AttachMoney from '@mui/icons-material/AttachMoney';
 import { convertToCurrency } from '../../../../util/conversion';
 import { updateDigitToPoint2 } from '../../../../util/helper';
 import Avatar from '../../../../components/Avatar';

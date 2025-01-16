@@ -1,7 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { connect } from 'react-redux';
-import { TextField, Button, LinearProgress } from '@material-ui/core';
-import { Delete as DeleteIcon } from '@material-ui/icons';
+import { 
+  TextField, 
+  Button, 
+  LinearProgress, 
+  Skeleton, 
+  Box, 
+  Typography, 
+  IconButton, 
+  Tooltip 
+} from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { getCommentsForRoom, createComment, deleteComment } from '../redux/Logic/logic.actions';
 import Avatar from './Avatar';
 import PlayerModal from '../game_panel/modal/PlayerModal';
@@ -9,7 +18,6 @@ import Moment from 'moment';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPenSquare } from '@fortawesome/free-solid-svg-icons';
 import { setFocused } from '../redux/Auth/user.actions.js';
-import { Skeleton } from '@material-ui/lab';
 
 const Comments = ({
   comments: initialComments,
@@ -143,7 +151,7 @@ const Comments = ({
   };
 
   return (
-    <div>
+    <Box>
       {showPlayerModal && (
         <PlayerModal
           selectedCreator={selectedCreator}
@@ -155,7 +163,14 @@ const Comments = ({
       {loading ? (
         <LinearProgress color="secondary" />
       ) : (
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <Box 
+          sx={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'flex-start',
+            mb: 2 
+          }}
+        >
           <TextField
             label="Reply"
             value={newComment}
@@ -170,55 +185,107 @@ const Comments = ({
                 handleCommentSubmit();
               }
             }}
+            sx={{ mr: 2 }}
           />
           <Button
-            className="btn_recreate"
-            style={{ marginLeft: '10px' }}
             onClick={handleCommentSubmit}
             variant="contained"
             startIcon={<FontAwesomeIcon icon={faPenSquare} />}
+            sx={{
+              minWidth: 'auto',
+              padding: '8px',
+              backgroundColor: '#1976d2',
+              '&:hover': {
+                backgroundColor: '#115293',
+              },
+            }}
           >
-            <span className="roll-tag">[&#x23CE;]</span>
+            <Typography variant="button">[&#x23CE;]</Typography>
           </Button>
-        </div>
+        </Box>
       )}
 
       {loading ? (
-        [...Array(3)].map((_, index) => (
-          <Skeleton key={index} variant="rect" width="100%" height={50} style={{ marginBottom: '10px' }} />
-        ))
+        <Box>
+          {[...Array(3)].map((_, index) => (
+            <Skeleton 
+              key={index} 
+              variant="rectangular" 
+              width="100%" 
+              height={50} 
+              sx={{ mb: 1 }} 
+            />
+          ))}
+        </Box>
       ) : comments.length === 0 ? (
-        <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '16px', color: '#999' }}>NO REPLIES</div>
+        <Typography 
+          variant="body1" 
+          sx={{ 
+            textAlign: 'center', 
+            mt: 2, 
+            fontSize: '16px', 
+            color: '#999' 
+          }}
+        >
+          NO REPLIES
+        </Typography>
       ) : (
         comments.map((comment) => (
-          <div className="comment-container title" key={comment._id}>
-            <div className="comment-header">
-              <a className="player" onClick={() => handleOpenPlayerModal(comment.user._id)}>
-                <Avatar
-                  src={comment.user.avatar}
-                  username={comment.user.username}
-                  rank={comment.user.totalWagered}
-                  accessory={comment.user.accessory}
-                  alt=""
-                  darkMode={isDarkMode}
-                />
-              </a>
-            </div>
-            <div className="comment-content">
-              <p>{comment.content}</p>
-            </div>
-            <div className="comment-footer">
-              {comment.user._id === currentUserId && (
-                <Button onClick={() => handleDeleteComment(comment._id)}>
-                  <DeleteIcon />
-                </Button>
-              )}
-              <span className="comment-time title">{Moment(comment.created_at).fromNow()}</span>
-            </div>
-          </div>
+          <Box 
+            key={comment._id} 
+            sx={{ 
+              display: 'flex', 
+              alignItems: 'flex-start', 
+              mb: 2, 
+              p: 2, 
+              bgcolor: isDarkMode ? '#1e1e1e' : '#f5f5f5', 
+              borderRadius: 2 
+            }}
+          >
+            <Box sx={{ mr: 2 }}>
+              <Tooltip title={comment.user.username}>
+                <Box 
+                  component="a" 
+                  onClick={() => handleOpenPlayerModal(comment.user._id)} 
+                  sx={{ cursor: 'pointer' }}
+                >
+                  <Avatar
+                    src={comment.user.avatar}
+                    username={comment.user.username}
+                    rank={comment.user.totalWagered}
+                    accessory={comment.user.accessory}
+                    alt=""
+                    darkMode={isDarkMode}
+                  />
+                </Box>
+              </Tooltip>
+            </Box>
+            <Box sx={{ flexGrow: 1 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                  {comment.user.username}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {Moment(comment.created_at).fromNow()}
+                </Typography>
+              </Box>
+              <Typography variant="body1" sx={{ mt: 1 }}>
+                {comment.content}
+              </Typography>
+            </Box>
+            {comment.user._id === currentUserId && (
+              <IconButton 
+                onClick={() => handleDeleteComment(comment._id)} 
+                aria-label="delete" 
+                sx={{ ml: 1 }}
+              >
+                <DeleteIcon />
+              </IconButton>
+            )}
+          </Box>
         ))
       )}
-    </div>
+    </Box>
   );
 };
 

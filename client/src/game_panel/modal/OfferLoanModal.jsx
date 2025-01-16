@@ -12,7 +12,7 @@ import { convertToCurrency } from '../../util/conversion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 import { faDollarSign, faCalendarAlt, faMoneyBillWave } from '@fortawesome/free-solid-svg-icons';
-import { Info } from '@material-ui/icons';
+import { Info } from '@mui/icons-material';
 import styled from 'styled-components';
 import {
   closeOfferLoanModal

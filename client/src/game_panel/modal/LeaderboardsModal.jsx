@@ -15,7 +15,7 @@ import {
   TableBody
 } from '@material-ui/core';
 
-import { Sort } from '@material-ui/icons';
+import { Sort } from '@mui/icons-material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faList } from '@fortawesome/free-solid-svg-icons';
 

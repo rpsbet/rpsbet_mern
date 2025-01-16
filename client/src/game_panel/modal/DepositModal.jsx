@@ -9,9 +9,9 @@ import { addNewTransaction } from '../../redux/Logic/logic.actions';
 import { Connection, Transaction, PublicKey } from '@solana/web3.js';
 import { getMint, getAssociatedTokenAddress, createTransferInstruction } from '@solana/spl-token';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import QRCodeIcon from '@material-ui/icons/CropFreeOutlined';
-import WalletIcon from '@material-ui/icons/AccountBalanceWallet';
-import FileCopyIcon from '@material-ui/icons/FileCopy';
+import QRCodeIcon from '@mui/icons-material/CropFreeOutlined';
+import WalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import FileCopyIcon from '@mui/icons-material/FileCopy';
 import QRCode from 'qrcode.react';
 import { token } from '../../config/index.js';
 
@@ -39,7 +39,7 @@ import {
   FormControlLabel,
   ButtonBase
 } from '@material-ui/core';
-import { Info, Warning, AccountBalanceWallet, Link, FiberManualRecord } from '@material-ui/icons';
+import { Info, Warning, AccountBalanceWallet, Link, FiberManualRecord } from '@mui/icons-material';
 import { convertToCurrency } from '../../util/conversion';
 import { withStyles } from '@material-ui/core/styles';
 import { Buffer } from 'buffer';

@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import { Typography, Card, Button, CardContent, Grid, Box } from '@material-ui/core';
-import MonetizationOnIcon from '@material-ui/icons/MonetizationOn';
-import TrendingUpIcon from '@material-ui/icons/TrendingUp';
-import TrendingDownIcon from '@material-ui/icons/TrendingDown';
+import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import axios from '../util/Api';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChartLine } from '@fortawesome/free-solid-svg-icons'; // Import the chart line icon

@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Button, Tooltip } from '@material-ui/core';
-import LockIcon from '@material-ui/icons/Lock';
+import LockIcon from '@mui/icons-material/Lock';
 import { green, yellow } from '@material-ui/core/colors';
 import useMediaQuery from '@material-ui/core/useMediaQuery';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';

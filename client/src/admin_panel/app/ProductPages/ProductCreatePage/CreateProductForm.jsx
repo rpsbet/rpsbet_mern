@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
-import TextField from '@material-ui/core/TextField';
-import styled from 'styled-components';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableRow,
-  Typography,
-  InputAdornment,
-  Tooltip,
-} from '@material-ui/core/';
-import { Info } from '@material-ui/icons';
+import { 
+  TextField, 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableContainer, 
+  TableRow, 
+  Typography, 
+  InputAdornment, 
+  Tooltip, 
+  Box 
+} from '@mui/material';
+import InfoIcon from '@mui/icons-material/Info';
 import { connect } from 'react-redux';
 import { convertToCurrency } from '../../../../util/conversion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -47,7 +47,9 @@ function CreateProductForm({ updateTextField, user_balance, solPrice }) {
   };
 
   const handleInputChange = (name, value, maxLength) => {
-    const updatedValues = { ...formValues, [name]: value, maxLength };
+    // Enforce maxLength if needed
+    const trimmedValue = value.slice(0, maxLength);
+    const updatedValues = { ...formValues, [name]: trimmedValue };
     setFormValues(updatedValues);
     updateTextField(updatedValues);
   };
@@ -58,14 +60,15 @@ function CreateProductForm({ updateTextField, user_balance, solPrice }) {
   };
 
   return (
-    <FormContainer>
+    <Box sx={{ mt: 2 }}>
       <TableContainer>
         <Table>
           <TableBody>
+            {/* Loan Amount Row */}
             <TableRow>
               <TableCell>
                 <TextField
-                  autoFocus={true}
+                  autoFocus
                   variant="filled"
                   label="Loan Amount"
                   name="loan_amount"
@@ -81,27 +84,44 @@ function CreateProductForm({ updateTextField, user_balance, solPrice }) {
                       </InputAdornment>
                     ),
                   }}
-                  className="form-control"
+                  fullWidth
                 />
               </TableCell>
-              <TableCell style={{textAlign: "center"}} >
+              <TableCell align="center">
                 <Tooltip title="Enter the amount of loan you are lending in RPS">
-                  <Info  style={{cursor: "pointer"}}/>
+                  <InfoIcon sx={{ cursor: 'pointer' }} />
                 </Tooltip>
               </TableCell>
             </TableRow>
+
+            {/* Warning Row */}
             {exceedsReservesLimit() && (
               <TableRow>
                 <TableCell colSpan={2}>
-                  <WarningContainer>
-                    <FontAwesomeIcon icon={faExclamationTriangle} style={{ color: '#ff0000', marginRight: '10px' }} />
+                  <Box 
+                    sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'flex-start', 
+                      borderRadius: '5px', 
+                      mt: 1, 
+                      bgcolor: 'rgba(255, 0, 0, 0.1)', 
+                      p: 1 
+                    }}
+                  >
+                    <FontAwesomeIcon 
+                      icon={faExclamationTriangle} 
+                      style={{ color: '#ff0000', marginRight: '10px' }} 
+                    />
                     <Typography variant="body1">
                       PLEASE ENSURE THE LOAN AMOUNT IS NO MORE THAN 10X YOUR BALANCE
                     </Typography>
-                  </WarningContainer>
+                  </Box>
                 </TableCell>
               </TableRow>
             )}
+
+            {/* Loan Period Row */}
             <TableRow>
               <TableCell>
                 <TextField
@@ -120,17 +140,19 @@ function CreateProductForm({ updateTextField, user_balance, solPrice }) {
                       </InputAdornment>
                     ),
                   }}
-                  className="form-control"
+                  fullWidth
                 />
               </TableCell>
-              <TableCell style={{textAlign: "center"}}>
+              <TableCell align="center">
                 <Tooltip title="Enter the duration for which you want the loan in days">
-                  <Info style={{cursor: "pointer"}}/>
+                  <InfoIcon sx={{ cursor: 'pointer' }} />
                 </Tooltip>
               </TableCell>
             </TableRow>
+
+            {/* Interest Rate Row */}
             <TableRow>
-              <TableCell style={{ borderBottom: 'none' }}>
+              <TableCell sx={{ borderBottom: 'none' }}>
                 <TextField
                   label="Interest Rate"
                   name="apy"
@@ -147,22 +169,24 @@ function CreateProductForm({ updateTextField, user_balance, solPrice }) {
                       </InputAdornment>
                     ),
                   }}
-                  className="form-control"
+                  fullWidth
                 />
               </TableCell>
-              <TableCell style={{ borderBottom: 'none', textAlign: "center"}}>
+              <TableCell sx={{ borderBottom: 'none', textAlign: "center" }}>
                 <Tooltip title="Enter the yielding interest rate for the loan">
-                  <Info  style={{cursor: "pointer"}}/>
+                  <InfoIcon sx={{ cursor: 'pointer' }} />
                 </Tooltip>
               </TableCell>
             </TableRow>
+
+            {/* Your Balance Row */}
             <TableRow>
               <TableCell>
-                <CalculationField>
-                  <Typography variant="body1" style={{ fontWeight: 'bold' }}>
+                <Box sx={{ mt: 0 }}>
+                  <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
                     YOUR BALANCE:
                   </Typography>
-                </CalculationField>
+                </Box>
               </TableCell>
               <TableCell>
                 <Typography variant="body1">
@@ -171,64 +195,70 @@ function CreateProductForm({ updateTextField, user_balance, solPrice }) {
               </TableCell>
             </TableRow>
 
+            {/* New Balance Row */}
             <TableRow>
               <TableCell>
-                <CalculationField>
-                  <Typography variant="body1" style={{ fontWeight: 'bold' }}>
+                <Box sx={{ mt: 0 }}>
+                  <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
                     NEW BALANCE:
                   </Typography>
-                </CalculationField>
+                </Box>
               </TableCell>
               <TableCell>
                 <Typography variant="body1">
                   {calculateNewBalance() < 0
-                    ? <>{convertToCurrency(0)} AND {convertToCurrency(Math.abs(calculateNewBalance()), solPrice)} IN DEBT</>
+                    ? <>
+                        {convertToCurrency(0, solPrice)} AND {convertToCurrency(Math.abs(calculateNewBalance()), solPrice)} IN DEBT
+                      </>
                     : convertToCurrency(calculateNewBalance(), solPrice)
                   }
                 </Typography>
               </TableCell>
             </TableRow>
 
+            {/* Gross Profit Row */}
             <TableRow>
               <TableCell>
-                <CalculationField>
-                  <Typography variant="body1" style={{ fontWeight: 'bold' }}>
+                <Box sx={{ mt: 0 }}>
+                  <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
                     GROSS PROFIT:
                   </Typography>
-                </CalculationField>
+                </Box>
               </TableCell>
               <TableCell>
                 <Typography variant="body1">
                   {isNaN(parseFloat(formValues.loan_amount)) || isNaN(parseFloat(formValues.apy)) || parseFloat(formValues.loan_amount) <= 0 || parseFloat(formValues.apy) <= 0
-                    ? convertToCurrency(0)
-                    : convertToCurrency(calculateInterest() + parseFloat(formValues.loan_amount))
+                    ? convertToCurrency(0, solPrice)
+                    : convertToCurrency(calculateInterest() + parseFloat(formValues.loan_amount), solPrice)
                   }
                 </Typography>
               </TableCell>
             </TableRow>
 
+            {/* Net Profit Row */}
             <TableRow>
               <TableCell>
-                <CalculationField>
-                  <Typography variant="body1" style={{ fontWeight: 'bold' }}>
+                <Box sx={{ mt: 0 }}>
+                  <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
                     NET PROFIT:
                   </Typography>
-                </CalculationField>
+                </Box>
               </TableCell>
               <TableCell>
                 <Typography variant="body1">
-                  <span id="interest">(+{convertToCurrency(calculateInterest())})</span>
+                  <span id="interest">(+{convertToCurrency(calculateInterest(), solPrice)})</span>
                 </Typography>
               </TableCell>
             </TableRow>
 
+            {/* Loan Type Row */}
             <TableRow>
               <TableCell>
-                <CalculationField>
-                  <Typography variant="body1" style={{ fontWeight: 'bold' }}>
+                <Box sx={{ mt: 0 }}>
+                  <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
                     LOAN TYPE:
                   </Typography>
-                </CalculationField>
+                </Box>
               </TableCell>
               <TableCell>
                 <Typography variant="body1">
@@ -237,10 +267,18 @@ function CreateProductForm({ updateTextField, user_balance, solPrice }) {
               </TableCell>
             </TableRow>
 
+            {/* Usury Warning Row */}
             {parseFloat(formValues.apy) > 6 && (
               <TableRow>
                 <TableCell colSpan={2}>
-                  <Typography variant="body1" style={{ color: '#ff0000', fontWeight: 'bold', textAlign: 'center' }}>
+                  <Typography 
+                    variant="body1" 
+                    sx={{ 
+                      color: '#ff0000', 
+                      fontWeight: 'bold', 
+                      textAlign: 'center' 
+                    }}
+                  >
                     Charging an interest rate above 6% may be considered usury and could increase the risk of borrower default. We recommend setting a rate below 6% to mitigate this risk.
                   </Typography>
                 </TableCell>
@@ -250,71 +288,95 @@ function CreateProductForm({ updateTextField, user_balance, solPrice }) {
           </TableBody>
         </Table>
       </TableContainer>
-      <h6 style={{ marginTop: '30px', marginBottom: '10px' }}>
+
+      {/* Terms and Conditions */}
+      <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>
         By clicking 'ACCEPT', you agree to the following{' '}
-        <span
+        <Box
+          component="span"
           onClick={toggleExpand}
-          style={{ color: '#ff0000', textDecoration: 'underline', cursor: 'pointer' }}
+          sx={{ 
+            color: '#ff0000', 
+            textDecoration: 'underline', 
+            cursor: 'pointer' 
+          }}
         >
           terms and conditions:
-        </span>
-      </h6>
+        </Box>
+      </Typography>
 
+      {/* Expanded Terms */}
       {expanded && (
-        <>
-          <table className="terms-and-conditions-table">
-            <tbody style={{ textAlign: 'center' }}>
-              <tr>
-                <td className="list-number">1.</td>
-                <td>
+        <TableContainer component={Box} sx={{ width: '100%', mt: 2 }}>
+          <Table>
+            <TableBody>
+              {/* Term 1 */}
+              <TableRow>
+                <TableCell sx={{ width: '30px', fontWeight: 'bold', verticalAlign: 'top' }}>1.</TableCell>
+                <TableCell>
                   The loan amount is{' '}
-                  <span style={{ color: '#ff0000' }}>
-                    [{convertToCurrency(formValues.loan_amount)}]
-                  </span>
+                  <Box component="span" sx={{ color: '#ff0000' }}>
+                    [{convertToCurrency(formValues.loan_amount, solPrice)}]
+                  </Box>
                   .
-                </td>
-              </tr>
-              <tr>
-                <td className="list-number">2.</td>
-                <td>
+                </TableCell>
+              </TableRow>
+
+              {/* Term 2 */}
+              <TableRow>
+                <TableCell sx={{ width: '30px', fontWeight: 'bold', verticalAlign: 'top' }}>2.</TableCell>
+                <TableCell>
                   The loan period is{' '}
-                  <span style={{ color: '#ff0000' }}>[{formValues.loan_period}]</span> days.
-                </td>
-              </tr>
-              <tr>
-                <td className="list-number">3.</td>
-                <td>
+                  <Box component="span" sx={{ color: '#ff0000' }}>
+                    [{formValues.loan_period}]
+                  </Box> days.
+                </TableCell>
+              </TableRow>
+
+              {/* Term 3 */}
+              <TableRow>
+                <TableCell sx={{ width: '30px', fontWeight: 'bold', verticalAlign: 'top' }}>3.</TableCell>
+                <TableCell>
                   There is no guarantee of the loaner repaying the loan within the specified period
                   let alone at all.
-                </td>
-              </tr>
-              <tr>
-                <td className="list-number">4.</td>
-                <td>
+                </TableCell>
+              </TableRow>
+
+              {/* Term 4 */}
+              <TableRow>
+                <TableCell sx={{ width: '30px', fontWeight: 'bold', verticalAlign: 'top' }}>4.</TableCell>
+                <TableCell>
                   The agreed Interest Rate:{' '}
-                  <span style={{ color: '#ff0000' }}>[{formValues.apy}%]</span>.
-                </td>
-              </tr>
-              <tr>
-                <td className="list-number">5.</td>
-                <td>
+                  <Box component="span" sx={{ color: '#ff0000' }}>
+                    [{formValues.apy}%]
+                  </Box>.
+                </TableCell>
+              </TableRow>
+
+              {/* Term 5 */}
+              <TableRow>
+                <TableCell sx={{ width: '30px', fontWeight: 'bold', verticalAlign: 'top' }}>5.</TableCell>
+                <TableCell>
                   Failure to repay the loan on time may result in the loaner's score credit
                   penalties.
-                </td>
-              </tr>
-              <tr>
-                <td className="list-number">6.</td>
-                <td>
+                </TableCell>
+              </TableRow>
+
+              {/* Term 6 */}
+              <TableRow>
+                <TableCell sx={{ width: '30px', fontWeight: 'bold', verticalAlign: 'top' }}>6.</TableCell>
+                <TableCell>
                   Any outstanding balance after the loan period may be automatically deducted from
                   the loaner's available in-game balance.
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
+
               {/* Add more terms as needed */}
-            </tbody>
-          </table>
-        </>
+            </TableBody>
+          </Table>
+        </TableContainer>
       )}
-    </FormContainer>
+    </Box>
   );
 }
 
@@ -323,22 +385,8 @@ const mapStateToProps = (state) => ({
   solPrice: state.logic.solPrice,
 });
 
-const mapDispatchToProps = {};
+const mapDispatchToProps = {
+  // Add your dispatch actions if any
+};
 
 export default connect(mapStateToProps, mapDispatchToProps)(CreateProductForm);
-
-const FormContainer = styled.div`
-  margin-top: 20px;
-`;
-
-const CalculationField = styled.div`
-  margin-top: 0px;
-`;
-
-const WarningContainer = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  border-radius: 5px;
-  margin-top: 10px;
-`;

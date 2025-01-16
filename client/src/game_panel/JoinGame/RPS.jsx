@@ -3,8 +3,8 @@ import { connect } from 'react-redux';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import Moment from 'moment';
 import { acQueryMyItem } from '../../redux/Item/item.action';
-import PlayArrowIcon from '@material-ui/icons/PlayArrow';
-import { Info } from '@material-ui/icons';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import { Info } from '@mui/icons-material';
 import Avatar from '../../components/Avatar';
 import progress from '../LottieAnimations/progress.json';
 import pressHold from '../LottieAnimations/pressHold.json';
@@ -13,8 +13,8 @@ import AiPanel from '../../components/AiPanel';
 import { updateRoomBot, kickBots } from '../../redux/Logic/logic.actions';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faRobot, faMoneyBillWave, faBrain, faBan } from '@fortawesome/free-solid-svg-icons';
-import ViewIcon from '@material-ui/icons/Visibility';
-import SwordsIcon from '@material-ui/icons/VisibilityOff';
+import ViewIcon from '@mui/icons-material/Visibility';
+import SwordsIcon from '@mui/icons-material/VisibilityOff';
 import {
   getRpsBetItems,
   getRoomBotCount,

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Modal from 'react-modal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import FileCopyIcon from '@material-ui/icons/FileCopy';
+import FileCopyIcon from '@mui/icons-material/FileCopy';
 import { convertToCurrency } from '../../util/conversion';
 import {
   faSort,
@@ -26,7 +26,7 @@ import {
   Menu,
   MenuItem,
 } from '@material-ui/core';
-import { Link } from '@material-ui/icons';
+import { Link } from '@mui/icons-material';
 
 Modal.setAppElement('#root');
 

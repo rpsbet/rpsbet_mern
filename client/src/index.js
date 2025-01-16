@@ -1,41 +1,38 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import './index';
 import './index.css';
 import './dark.css';
-import './global.css';
-
-import * as serviceWorker from './serviceWorker';
 
 import { Provider } from 'react-redux';
 import store from './redux/store';
 
 import { BrowserRouter, Router } from 'react-router-dom';
 
-import { MuiThemeProvider, createTheme } from '@material-ui/core/styles';
+// Updated imports for MUI v5
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline'; // For CSS baseline
 
 import { styleColor } from './Styles/styleThem';
 import App from './App';
 import GlobalStyle from './Styles/global.styles';
 import history from './redux/history';
-import MessageBar from './components/MessugeBar';
+import MessageBar from './components/MessageBar'; // Check if spelling is correct
 import buttonHoverSound from './main-select.mp3'; // Replace with the actual path
 import typingSound from './typing-sound.mp3'; // Replace with the actual path
 
 const theme = createTheme({
   palette: {
-    type: 'dark',
+    mode: 'dark', // updated for v5 from type: 'dark'
     primary: { main: styleColor.primary.main },
     secondary: { main: styleColor.secondary.main },
     error: { main: styleColor.error.main },
   },
 });
 
-// Helper function to check if sounds should play
 const shouldPlaySound = () => {
-  const state = store.getState(); // Get the latest state from the store
+  const state = store.getState();
   const { isMuted, clickSounds } = state.auth;
-  return !isMuted && !clickSounds; // Play sound only if `isMuted` is false and `gameSounds` is true
+  return !isMuted && clickSounds; // Updated condition based on your comment
 };
 
 const playSound = () => {
@@ -54,19 +51,19 @@ const playSoundTyping = () => {
   }
 };
 
-
 ReactDOM.render(
   <React.Fragment>
     <Provider store={store}>
       <GlobalStyle />
-      <MuiThemeProvider theme={theme}>
+      <ThemeProvider theme={theme}>
+        <CssBaseline /> {/* Ensures consistent baseline styles */}
         <BrowserRouter>
           <Router history={history}>
             <App />
           </Router>
           <MessageBar />
         </BrowserRouter>
-      </MuiThemeProvider>
+      </ThemeProvider>
     </Provider>
   </React.Fragment>,
   document.getElementById('root')

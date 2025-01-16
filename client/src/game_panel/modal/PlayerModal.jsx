@@ -43,7 +43,7 @@ import {
   Typography
 } from '@material-ui/core';
 
-import { Warning } from '@material-ui/icons';
+import { Warning } from '@mui/icons-material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMoneyBill, faUser, faCog, faEnvelope, faCoins, faRobot } from '@fortawesome/free-solid-svg-icons';
 

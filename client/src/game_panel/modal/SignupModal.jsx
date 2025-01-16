@@ -19,9 +19,9 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUserPlus } from '@fortawesome/free-solid-svg-icons';
 import TermsModal from '../modal/TermsModal';
 import { alertModal } from './ConfirmAlerts';
-import Visibility from '@material-ui/icons/Visibility';
-import Info from '@material-ui/icons/Info';
-import VisibilityOff from '@material-ui/icons/VisibilityOff';
+import Visibility from '@mui/icons-material/Visibility';
+import Info from '@mui/icons-material/Info';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { setFocused } from '../../redux/Auth/user.actions';
 
 Modal.setAppElement('#root');

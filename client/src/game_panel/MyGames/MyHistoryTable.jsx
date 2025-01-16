@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { getMyHistory } from '../../redux/Logic/logic.actions';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { getSettings } from '../../redux/Setting/setting.action';
-import FileCopyIcon from '@material-ui/icons/FileCopy';
+import FileCopyIcon from '@mui/icons-material/FileCopy';
 import {
   Tooltip,
 } from '@material-ui/core';

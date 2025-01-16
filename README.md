@@ -66,7 +66,7 @@ These instructions will get you a copy of the project up and running on your loc
 ```json
   "dependencies": {
     "@material-ui/core": "^4.3.2",
-    "@material-ui/icons": "^4.2.1",
+    "@mui/icons-material": "^4.2.1",
     "axios": "^0.19.0",
     "react": "^16.9.0",
     "react-dom": "^16.9.0",

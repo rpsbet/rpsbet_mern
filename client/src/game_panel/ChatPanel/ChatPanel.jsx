@@ -12,7 +12,7 @@ import {
   InputAdornment,
   TextField
 } from '@material-ui/core';
-import { InsertEmoticon, Gif, Clear } from '@material-ui/icons';
+import { InsertEmoticon, Gif, Clear } from '@mui/icons-material';
 import GlobalChat from './GlobalChat';
 import MyChat from './MyChat';
 import Chat from '../icons/Chat.js';

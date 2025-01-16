@@ -6,7 +6,7 @@ import Moment from 'moment';
 import { Skeleton } from "@material-ui/lab";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHeart, faHeartBroken, faStopwatch } from '@fortawesome/free-solid-svg-icons';
-import FileCopyIcon from '@material-ui/icons/FileCopy';
+import FileCopyIcon from '@mui/icons-material/FileCopy';
 import { Tooltip } from '@material-ui/core';
 import PlayerModal from '../modal/PlayerModal';
 

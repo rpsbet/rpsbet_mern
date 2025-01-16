@@ -15,7 +15,7 @@ import {
 } from '@material-ui/core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCoins } from '@fortawesome/free-solid-svg-icons';
-import AttachMoney from '@material-ui/icons/AttachMoney';
+import AttachMoney from '@mui/icons-material/AttachMoney';
 
 import MyBankPage from '../../admin_panel/app/ProductPages/ProductSerchPage/MyBankPage';
 import ProductCreatePage from '../../admin_panel/app/ProductPages/ProductCreatePage/ProductCreatePage';

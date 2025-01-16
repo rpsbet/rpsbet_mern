@@ -3,7 +3,7 @@ import { TwitterShareButton } from 'react-share';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXTwitter } from '@fortawesome/free-brands-svg-icons';
 import { Tooltip } from '@material-ui/core';
-import FileCopy from '@material-ui/icons/FileCopy';
+import FileCopy from '@mui/icons-material/FileCopy';
 
 const Share = ({ socket, roomInfo }) => {
   const [clicked, setClicked] = useState(true);

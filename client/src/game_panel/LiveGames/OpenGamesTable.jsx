@@ -10,11 +10,11 @@ import {
   coHost,
 } from '../../redux/Logic/logic.actions';
 
-import { TrendingUpOutlined, TrendingDownOutlined } from '@material-ui/icons';
+import { TrendingUpOutlined, TrendingDownOutlined } from '@mui/icons-material';
 import { Grid, Tooltip, Typography } from '@material-ui/core';
 import { Skeleton } from '@material-ui/lab';
-import { Warning, Add, Remove, Visibility } from '@material-ui/icons';
-import FilterListIcon from '@material-ui/icons/FilterList';
+import { Warning, Add, Remove, Visibility } from '@mui/icons-material';
+import FilterListIcon from '@mui/icons-material/FilterList';
 import Moment from 'moment';
 import { faHeart, faHeartBroken, faStopwatch } from '@fortawesome/free-solid-svg-icons';
 import animationData from '../LottieAnimations/live';
@@ -22,8 +22,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { setBalance } from '../../redux/Auth/user.actions';
 import CoHostModal from '../modal/CoHostModal';
 import Avatar from '../../components/Avatar';
-import ShowChartOutlined from '@material-ui/icons/ShowChartOutlined';
-import LockOutlined from '@material-ui/icons/LockOutlined';
+import ShowChartOutlined from '@mui/icons-material/ShowChartOutlined';
+import LockOutlined from '@mui/icons-material/LockOutlined';
 import Modal from 'react-modal';
 import { convertToCurrency } from '../../util/conversion';
 import Lottie from 'react-lottie';
