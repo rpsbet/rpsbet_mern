@@ -1,8 +1,9 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect } from 'react';
 import { connect } from 'react-redux';
 import LoadingOverlay from 'react-loading-overlay';
 import { setBalance, setGasfee } from '../../redux/Auth/user.actions';
 import { addNewTransaction } from '../../redux/Logic/logic.actions';
+import { getCustomerStatisticsData } from '../../redux/Customer/customer.action';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faBolt,
@@ -10,8 +11,7 @@ import {
   faTachometerAlt,
   faClock
 } from '@fortawesome/free-solid-svg-icons';
-import { getCustomerStatisticsData } from '../../redux/Customer/customer.action';
-import { Connection, Transaction, PublicKey } from '@solana/web3.js';
+
 import Modal from 'react-modal';
 import {
   Button,
@@ -35,13 +35,50 @@ import WalletIcon from '@material-ui/icons/AccountBalanceWallet';
 import CheckCircleOutlineIcon from '@material-ui/icons/CheckCircleOutline';
 import axios from '../../util/Api';
 import { alertModal } from '../modal/ConfirmAlerts';
-import { convertToEth } from '../../util/eth_conversion';
 import { convertToCurrency } from '../../util/conversion';
 import { withStyles } from '@material-ui/core/styles';
 import { token } from '../../config/index.js';
 
+Modal.setAppElement('#root');
 
-const styles = theme => ({
+const customStyles = {
+  overlay: {
+    zIndex: 3,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+  },
+  content: {
+    top: '50%',
+    left: '50%',
+    right: 'auto',
+    bottom: 'auto',
+    transform: 'translate(-50%, -50%)',
+    padding: 0,
+    background: 'transparent',
+    border: 'none',
+  },
+};
+
+const suggestionsListStyle = {
+  listStyleType: 'none',
+  padding: '0',
+  margin: '4px 0',
+  border: '1px solid #ccc',
+  borderRadius: '4px',
+  backgroundColor: '#e5e5e5',
+  position: 'absolute',
+  maxHeight: '100px',
+  overflowY: 'auto',
+  zIndex: '1',
+  width: 'calc(80% - 2px)', // Adjusting width to match the text field
+};
+
+const suggestionStyle = {
+  padding: '8px 12px',
+  cursor: 'pointer',
+  borderBottom: '1px solid #ccc',
+};
+
+const styles = (theme) => ({
   root: {
     display: 'flex',
     flexDirection: 'column',
@@ -61,7 +98,7 @@ const styles = theme => ({
     fontWeight: 'bold',
     display: 'flex',
     alignItems: 'center',
-    color: props => props.isDarkMode ? '#f9f9f9' : '#333',
+    color: (props) => (props.isDarkMode ? '#f9f9f9' : '#333'),
   },
   radioGroup: {
     flexDirection: 'row',
@@ -93,7 +130,7 @@ const styles = theme => ({
     padding: '2.5px 5px',
     border: '2px solid #c2e0ff',
     borderRadius: '30px',
-    whiteSpace: 'nowrap'
+    whiteSpace: 'nowrap',
   },
   labelContainer: {
     display: 'flex',
@@ -116,782 +153,697 @@ const styles = theme => ({
   },
 });
 
-Modal.setAppElement('#root');
+function WithdrawModal(props) {
+  const {
+    classes,
+    userInfo,
+    isDarkMode,
+    gasfee,
+    solPrice,
+    balance,       // from props, user's in-game token balance
+    account,       // from props, user's connected wallet account
+    modalIsOpen,
+    closeModal,
+    setBalance,
+    setGasfee,
+    addNewTransaction,
+    getCustomerStatisticsData,
+  } = props;
 
-const customStyles = {
-  overlay: {
-    zIndex: 3,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)'
-  },
-  content: {
-    top: '50%',
-    left: '50%',
-    right: 'auto',
-    bottom: 'auto',
-    transform: 'translate(-50%, -50%)',
-    padding: 0,
-    background: 'transparent',
-    border: 'none'
-  }
-};
+  // --------------------- Local States ---------------------
+  const [userId, setUserId] = useState(userInfo._id);
+  const [web2Amount, setWeb2Amount] = useState(balance);
+  const [localBalance, setLocalBalance] = useState(balance);
+  const [isLoading, setIsLoading] = useState(false);
+  const [estimatedAmount, setEstimatedAmount] = useState(0);
+  const [paymentMethod, setPaymentMethod] = useState('web3');
+  const [extraId, setExtraId] = useState('');
+  const [validAddress, setValidAddress] = useState(true);
+  const [currencies, setCurrencies] = useState([]);
+  const [currencyTo, setCurrencyTo] = useState('ltc');
+  const [isValidCurrency, setIsValidCurrency] = useState(true);
+  const [sendAddress, setSendAddress] = useState('');
+  const [hoveredSuggestion, setHoveredSuggestion] = useState(null);
+  const [suggestions, setSuggestions] = useState([]);
+  const [amountToWithdraw, setAmountToWithdraw] = useState(0);
 
-class WithdrawModal extends Component {
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      _id: this.props.userInfo._id,
-      web2Amount: props.balance,
-      // web3Amount: props.balance,
-      // web3: props.web3,
-      balance: props.balance,
-      account: props.account,
-      isLoading: false,
-      estimatedAmount: 0,
-      totalWagered: 0,
-      deposit: 0,
-      paymentMethod: 'web3',
-      extraId: '',
-      validAddress: true,
-      currencies: [],
-      currencyTo: 'ltc',
-      isValidCurrency: true,
-      sendAddress: '',
-      hoveredSuggestion: null,
-      suggestions: [],
-      amount: 0,
-      balance: 0,
+  // --------------------- Lifecycle: componentDidMount ---------------------
+  useEffect(() => {
+    const init = async () => {
+      // Fetch user stats
+      await getCustomerStatisticsData(userId);
+      // Fetch supported currencies
+      await handleGetPaymentMethods();
     };
-  }
+    init();
+    // eslint-disable-next-line
+  }, []);
 
-  async componentDidMount() {
-    const result = await this.props.getCustomerStatisticsData(this.state._id);
-    await this.handleGetPaymentMethods();
-
-    // await this.handleEstimateAmount();
-    // this.setState({
-    //   ...result
-    // });
-
-   
-  }
-
-  // componentDidUpdate(prevState) {
-  //   if (prevState.estimatedAmount !== this.state.estimatedAmount) {
-  //     this.handleEstimateAmount();
-  //   }
-  // }
-  handleSuggestionMouseEnter = suggestion => {
-    this.setState({
-      hoveredSuggestion: suggestion,
-    });
-  };
-  handleSendAddress = (event) => {
-
-    this.setState({
-      sendAddress: event.target.value
-    }, () => {
-      this.validateAddress();
-    });
-  };
-
-  validateAddress = async () => {
-    const { sendAddress, currencyTo } = this.state;
-
-    this.setState({ loading: true });
-
-    try {
-      const response = await axios.post('/stripe/validate_address', { sendAddress, currencyTo });
-
-
-      this.setState({
-        validAddress: response.status === 200 ? true : false,
-      });
-
-    } catch (error) {
-      this.setState({
-        validAddress: false,
-      });
-      console.error(error);
-      // Handle error
-    } finally {
-      // Reset loading state to false whether the request succeeds or fails
-      this.setState({ loading: false });
-    }
-  };
-
-
-  handleSuggestionMouseLeave = () => {
-    this.setState({
-      hoveredSuggestion: null,
-    });
-  };
-
-  handleSuggestionClick = suggestion => {
-    this.setState({
-      currencyTo: suggestion,
-      suggestions: [],
-      isValidCurrency: true
-    });
-  };
-
-  setCurrencyTo = event => {
-    const { sendAddress } = this.state;
-    const { value } = event.target;
-    const isValidCurrency = this.state.currencies.includes(value.toLowerCase());
-    const suggestions = this.state.currencies.filter(currency =>
-      currency.toLowerCase().startsWith(value.toLowerCase())
-    );
-    this.setState({
-      currencyTo: value,
-      isValidCurrency,
-      suggestions,
-      loading: true
-    }, () => {
-      if (isValidCurrency && sendAddress !== '') {
-        this.validateAddress();
-      }
-    });
-  };
-
-  handlePaymentMethodChange = event => {
-    const selectedPaymentMethod = event.target.value;
-    const isWeb3Payment = selectedPaymentMethod === "web3";
-
-    // If the payment method is switching to Web3, set currencyTo state to 'eth'
-    if (isWeb3Payment) {
-      this.setState({
-        paymentMethod: selectedPaymentMethod,
-        currencyTo: 'sol'
-      });
-    } else {
-      // Otherwise, set only the paymentMethod state
-      this.setState({
-        paymentMethod: selectedPaymentMethod
-      });
-    }
-  };
-
-
-  handleAmountChange = e => {
-    e.preventDefault();
-    const amount = Math.floor(e.target.value * 100) / 100;
-    this.setState({
-      amount: amount,
-      web2Amount: amount - (amount * 0.0088),
-      web3Amount: amount
-    }, () => {
-      this.handleEstimateAmount();
-    });
-    const params = {
-      addressTo: this.state.account,
-      amount: amount // Assuming you have the withdrawal amount in your state
-    };
-    this.props.setGasfee(params);
-  };
-
-  handleExtraId = e => {
-    e.preventDefault();
-    const _id = e.target.value;
-    this.setState({
-      extraId: _id,
-    });
-  };
-
-  handleGetPaymentMethods = async () => {
+  // --------------------- Handlers & API Calls ---------------------
+  const handleGetPaymentMethods = async () => {
     try {
       const response = await axios.get('/stripe/get_currencies');
-      const currencies = response.data.currencies.map(currency => currency.currency.toLowerCase());
-      this.setState({ currencies });
+      const fetchedCurrencies = response.data.currencies.map((c) => c.currency.toLowerCase());
+      setCurrencies(fetchedCurrencies);
     } catch (error) {
-      console.error('Error in generating deposit address:', error);
+      console.error('Error fetching deposit address:', error);
     }
   };
 
-  handleEstimateAmount = async () => {
-    try {
-      const { paymentMethod, web2Amount, web3Amount, currencyTo } = this.state;
-      let amountToSend;
+  const handleSuggestionMouseEnter = (suggestion) => {
+    setHoveredSuggestion(suggestion);
+  };
 
+  const handleSuggestionMouseLeave = () => {
+    setHoveredSuggestion(null);
+  };
+
+  const handleSuggestionClick = (suggestion) => {
+    setCurrencyTo(suggestion);
+    setSuggestions([]);
+    setIsValidCurrency(true);
+  };
+
+  const handleSendAddress = (event) => {
+    const value = event.target.value;
+    setSendAddress(value);
+    // Validate if currency is selected
+    if (currencyTo) {
+      validateAddress(value, currencyTo);
+    }
+  };
+
+  const validateAddress = async (address, currency) => {
+    try {
+      setIsLoading(true);
+      const response = await axios.post('/stripe/validate_address', {
+        sendAddress: address,
+        currencyTo: currency,
+      });
+      setValidAddress(response.status === 200);
+    } catch (error) {
+      setValidAddress(false);
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePaymentMethodChange = (e) => {
+    const selectedPaymentMethod = e.target.value;
+    setPaymentMethod(selectedPaymentMethod);
+
+    if (selectedPaymentMethod === 'web3') {
+      // For demonstration, you might override currency to 'sol'
+      setCurrencyTo('sol');
+    }
+  };
+
+  const handleAmountChange = (e) => {
+    e.preventDefault();
+    const newAmount = Math.floor(e.target.value * 100) / 100;
+    setAmountToWithdraw(newAmount);
+    setWeb2Amount(newAmount - newAmount * 0.0088);
+
+    // Prepare params for setting gas fee
+    const params = {
+      addressTo: account,
+      amount: newAmount,
+    };
+    setGasfee(params);
+    handleEstimateAmount(newAmount);
+  };
+
+  const handleExtraId = (e) => {
+    setExtraId(e.target.value);
+  };
+
+  const setCurrency = (event) => {
+    const value = event.target.value;
+    const valid = currencies.includes(value.toLowerCase());
+    const filteredSuggestions = currencies.filter((c) =>
+      c.toLowerCase().startsWith(value.toLowerCase())
+    );
+    setCurrencyTo(value);
+    setIsValidCurrency(valid);
+    setSuggestions(filteredSuggestions);
+  };
+
+  const handleEstimateAmount = async (newAmount) => {
+    try {
+      if (!newAmount) return;
+
+      let amountToSend = 0;
       if (paymentMethod === 'web2') {
         amountToSend = web2Amount;
       } else if (paymentMethod === 'web3') {
-        amountToSend = web3Amount
-      } else {
-        throw new Error('Unsupported payment method');
+        amountToSend = newAmount;
       }
 
-      if (amountToSend === 0) {
-        return;
-      }
+      if (amountToSend === 0) return;
 
       const response = await axios.get('/stripe/estimate_amount', {
         params: {
           web2Amount: amountToSend,
-          currencyTo: currencyTo,
-          token
+          currencyTo,
+          token,
         },
       });
-
-      const estimatedAmount = response.data.estimated_amount - this.props.gasfee;
-
-      this.setState({ estimatedAmount });
+      const estAmt = response.data.estimated_amount - gasfee; 
+      setEstimatedAmount(estAmt);
     } catch (error) {
       // console.error('Error in estimating amount:', error);
     }
   };
 
-  createPayoutAndClose = async () => {
-    const { amount, currencyTo, sendAddress, extraId } = this.state;
+  const createPayoutAndClose = async () => {
+    // Web2 Withdraw
+    if (userInfo.dailyWithdrawals > 4.269) {
+      alertModal(
+        isDarkMode,
+        `EXCEEDED DAILY WITHDRAWAL LIMIT, TRY AGAIN TOMORROW! (WITHDRAWAL LIMITS DURING LAUNCH PHASE ONLY)`
+      );
+      return;
+    }
+    if (amountToWithdraw <= 0) {
+      alertModal(isDarkMode, `IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!`);
+      return;
+    }
+    if (amountToWithdraw >= 4.269) {
+      alertModal(isDarkMode, `MAXIMUM PER DAY IS 4.269 SOL DURING LAUNCH PHASE`);
+      return;
+    }
+    if (amountToWithdraw > balance) {
+      alertModal(isDarkMode, `NOT ENUFF FUNDS AT THIS MEOWMENT`);
+      return;
+    }
+
     try {
-      if (this.props.userInfo.dailyWithdrawals > 4.269) {
-        alertModal(
-          this.props.isDarkMode,
-          `EXCEEDED DAILY WITHDRAWAL LIMIT, TRY AGAIN TOMORROW! (WITHDRAWAL LIMITS DURING LAUNCH PHASE ONLY)`
-        );
-        return;
-      }
-      if (this.state.amount <= 0) {
-        alertModal(
-          this.props.isDarkMode,
-          `IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!`
-        );
-        return;
-      }
-      if (this.state.amount >= 4.269) {
-        alertModal(
-          this.props.isDarkMode,
-          `MAXIMUM PER DAY IS 4.269 SOL DURING LAUNCH PHASE`
-        );
-        return;
-      }
+      setIsLoading(true);
+      const response = await axios.post('/stripe/create_payout', {
+        amount: amountToWithdraw,
+        currency: currencyTo,
+        address: sendAddress,
+        extra_id: extraId,
+      });
 
-      if (this.state.amount > this.props.balance) {
-        alertModal(this.props.isDarkMode, `NOT ENUFF FUNDS AT THIS MEOWMENT`);
-        return;
-      }
-
-      this.setState({ isLoading: true });
-      const response = await axios.post('/stripe/create_payout', { amount, currency: currencyTo, address: sendAddress, extra_id: extraId });
       if (response.data.success) {
-        this.props.setBalance(response.data.balance);
-        this.props.addNewTransaction(response.data.newTransaction);
-        this.setState({ isLoading: false });
-
-        this.props.closeModal();
-        alertModal(this.props.isDarkMode, response.data.message, '-cat');
-
+        setBalance(response.data.balance);
+        addNewTransaction(response.data.newTransaction);
+        setIsLoading(false);
+        closeModal();
+        alertModal(isDarkMode, response.data.message, '-cat');
       } else {
-        this.setState({ isLoading: false });
-        alertModal(this.props.isDarkMode, result.data.message);
+        setIsLoading(false);
+        alertModal(isDarkMode, response.data.message);
       }
     } catch (error) {
-      this.setState({ isLoading: false });
-      alertModal(this.props.isDarkMode, "Something went wrong, try again later.");
-
+      setIsLoading(false);
+      alertModal(isDarkMode, 'Something went wrong, try again later.');
       console.error(error);
-      // Handle error
     }
   };
 
+  const send = async () => {
+    // Web3 Withdraw
+    if (userInfo.dailyWithdrawals > 4.269) {
+      alertModal(
+        isDarkMode,
+        `EXCEEDED DAILY WITHDRAWAL LIMIT, TRY AGAIN TOMORROW! (WITHDRAWAL LIMITS DURING LAUNCH PHASE ONLY)`
+      );
+      return;
+    }
+    if (amountToWithdraw <= 0) {
+      alertModal(isDarkMode, `IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!`);
+      return;
+    }
+    if (amountToWithdraw >= 4.269) {
+      alertModal(isDarkMode, `MAXIMUM PER DAY IS 4.269 SOL DURING LAUNCH PHASE`);
+      return;
+    }
+    if (amountToWithdraw > balance) {
+      alertModal(isDarkMode, `NOT ENUFF FUNDS AT THIS MEOWMENT`);
+      return;
+    }
 
-  send = async () => {
     try {
-      if (this.props.userInfo.dailyWithdrawals > 4.269) {
-        alertModal(
-          this.props.isDarkMode,
-          `EXCEEDED DAILY WITHDRAWAL LIMIT, TRY AGAIN TOMORROW! (WITHDRAWAL LIMITS DURING LAUNCH PHASE ONLY)`
-        );
-        return;
-      }
-      if (this.state.amount <= 0) {
-        alertModal(
-          this.props.isDarkMode,
-          `IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!`
-        );
-        return;
-      }
-      if (this.state.amount >= 4.269) {
-        alertModal(
-          this.props.isDarkMode,
-          `MAXIMUM PER DAY IS 4.269 SOL DURING LAUNCH PHASE`
-        );
-        return;
-      }
-
-      if (this.state.amount > this.props.balance) {
-        alertModal(this.props.isDarkMode, `NOT ENUFF FUNDS AT THIS MEOWMENT`);
-        return;
-      }
-
-      this.setState({ isLoading: true });
+      setIsLoading(true);
       const result = await axios.post('/stripe/withdraw_request/', {
-        amount: this.state.amount,
-        addressTo: this.state.account
+        amount: amountToWithdraw,
+        addressTo: account,
       });
 
       if (result.data.success) {
-        alertModal(this.props.isDarkMode, result.data.message, '-cat');
-        this.props.setBalance(result.data.balance);
-        this.props.addNewTransaction(result.data.newTransaction);
-        this.setState({ isLoading: false });
-        // this.props.closeModal();
+        alertModal(isDarkMode, result.data.message, '-cat');
+        setBalance(result.data.balance);
+        addNewTransaction(result.data.newTransaction);
+        setIsLoading(false);
+        // Optionally close modal after success
+        // closeModal();
       } else {
-        this.setState({ isLoading: false });
-        alertModal(this.props.isDarkMode, result.data.message);
+        setIsLoading(false);
+        alertModal(isDarkMode, result.data.message);
       }
-    } catch (e) {
-      this.setState({ isLoading: false });
-      if (this.state.amount <= 0) {
-        alertModal(this.props.isDarkMode, `FAILED TRANSACTION`);
-        return;
-      }
+    } catch (error) {
+      setIsLoading(false);
+      alertModal(isDarkMode, 'FAILED TRANSACTION');
+      console.error(error);
     }
   };
 
-  render() {
-    const { account, currencyTo, isValidCurrency, extraId, amount, validAddress, estimatedAmount, sendAddress, suggestions, hoveredSuggestion, paymentMethod } = this.state;
-    const { classes, solPrice } = this.props;
-    const isConnected = !!account;
+  // --------------------- Rendering ---------------------
+  const isConnected = !!account;
+  let description = '';
 
-    let description = '';
+  switch (paymentMethod) {
+    case 'web2':
+      description = 'Via Manual Transfer (50+ Cryptocurrencies supported)';
+      break;
+    case 'web3':
+      description = 'Via Connect Wallet (Phantom Wallet recommended), SOL only, lowest fees';
+      break;
+    default:
+      description = '';
+  }
 
-    switch (paymentMethod) {
-      case 'web2':
-        description = 'Via Manual Transfer (50+ Cryptocurrencies supported)';
-        break;
-      case 'web3':
-        description = 'Via Connect Wallet (Phantom Wallet recommended), SOL only, lowest fees';
-        break;
-      default:
-        description = '';
-    }
+  const disclaimerClass = paymentMethod === 'web2' ? 'disclaimer-web2' : 'disclaimer-web3';
 
-    const disclaimerClass = paymentMethod === 'web2' ? 'disclaimer-web2' : 'disclaimer-web3';
+  // Decide which icon to show in the disclaimer (web2 => 12 hours, web3 => 30 seconds)
+  let icon = paymentMethod === 'web2' ? (
+    <FontAwesomeIcon icon={faClock} />
+  ) : (
+    <FontAwesomeIcon icon={faTachometerAlt} />
+  );
 
-
-    let icon;
-
-
-    if (paymentMethod === 'web2') {
-      // Icon for 12 hours
-      icon = <FontAwesomeIcon icon={faClock} />;
-    } else {
-      // Icon for 5 minutes
-      icon = <FontAwesomeIcon icon={faTachometerAlt} />;
-    }
-    return (
-      <>
-        <LoadingOverlay
-          active={true}
-          spinner
-          text="Creating Block..."
-          styles={{
-            wrapper: {
-              position: 'fixed',
-              width: '100%',
-              height: '100vh',
-              zIndex: this.state.isLoading ? 999 : 0
-            }
-          }}
-        />
-        <Modal
-          isOpen={this.props.modalIsOpen}
-          onRequestClose={this.props.closeModal}
-          style={customStyles}
-          contentLabel="Withdrawal Modal"
-          account={this.state.web3account}
-        >
-          <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
-            <div className="modal-header">
-              <h2 className="modal-title title">  <Icon component={AccountBalanceWallet} className="mr-2" /> {/* Withdraw icon */}
-                WITHDRAW</h2>
-              <Button className="btn-close title" onClick={this.props.closeModal}>
-                ×
-              </Button>
-            </div>
-            <div className="modal-body edit-modal-body deposit-modal-body">
-              <div className="modal-content-wrapper">
-                <div className="modal-content-panel">
-                  <div className={classes.root}>
-                    <h4 className={classes.radioLabel}>Select Withdrawal Method:</h4>
-                    <div className={classes.paymentMethodContainer}>
-
-                      <RadioGroup
-                        aria-label="payment-method"
-                        name="payment-method"
-                        value={paymentMethod}
-                        onChange={this.handlePaymentMethodChange}
-                        className={classes.radioGroup}
-                      >
-
-                        <FormControlLabel
-                          value="web3"
-                          control={<Radio color="primary" />}
-                          label={
-                            <div className={classes.labelContainer} style={{ position: 'relative' }}>
-                              <WalletIcon className={classes.icon} />
-                              <span>SOL</span>
-                              {paymentMethod === 'web3' && (
-                                <span className='roll-tag' style={{ position: 'absolute', transform: "translateY(30px)", filter: 'invert(1)', letterSpacing: '0.1em' }}>
-                                  INSTANT&nbsp;
-                                  <FontAwesomeIcon icon={faBolt} style={{ marginLeft: '0.2em' }} />
-                                </span>
-                              )}
-                            </div>
-                          }
-                          className={classes.radioLabel}
-                        />
-                        <FormControlLabel
-                          value="web2"
-                          control={<Radio color="primary" />}
-                          label={
-                            <div className={classes.labelContainer}>
-                              <QRCodeIcon className={classes.icon} />
-                              <span>Web2</span>
-                            </div>
-                          }
-                          className={classes.radioLabel}
-                        />
-                      </RadioGroup>
-                    </div>
-                    <Typography variant="body2" className={classes.description}>{description}</Typography>
-                  </div>
-                  {paymentMethod === 'web3' ? (
-                    <>
-                      <p className='step-tag'>Step 1 out of 2</p>
-                      <div className="input-amount">
-                        <Typography>WITHDRAWAL AMOUNT</Typography>
-                        <TextField
-                          pattern="^\\d*\\.?\\d*$"
-                          variant="filled"
-                          autoComplete="off"
-                          value={amount}
-                          onChange={this.handleAmountChange}
-                          InputProps={{
-                            endAdornment: (
-                              <InputAdornment position="end">
-                                &nbsp;RPS
-                              </InputAdornment>
-                            ),
-                          }}
-                          className="form-control"
-                        />
-                      </div>
-
-                      <div className="account">
-                        <p className='step-tag'>Step 2 out of 2</p>
-                        <div style={{ display: 'flex', alignItems: 'center' }}>
-
-                          <Typography variant="body2">SEND TO ADDRESS</Typography>
-                          {isConnected ? (
-                            <TextField
-                              label="Account"
-                              variant="filled"
-                              style={{ width: "100%" }}
-                              value={account}
-                              InputProps={{
-                                readOnly: true
-                              }}
-                              className="form-control"
-                            />
-                          ) : (
-                            <TextField
-                              label="Account"
-                              variant="filled"
-                              value="Connect Wallet"
-                              style={{ width: "100%" }}
-                              InputProps={{
-                                readOnly: true
-                              }}
-                              className="form-control"
-                            />
-                          )}
-                          {isConnected ? (
-                            <FiberManualRecord
-                              className="light"
-                              style={{ background: '#28a745', color: 'green' }}
-                            />
-                          ) : (
-                            <FiberManualRecord
-                              className="light"
-                              style={{ background: '#ff0000', color: 'red' }}
-                            />
-                          )}
-                          {isConnected ? (
-                            <Tooltip title="Connected account" arrow>
-                              <Info />
-                            </Tooltip>
-                          ) : (
-                            <Tooltip title="How do I connect?" arrow>
-                              <a
-                                href="your_connect_wallet_link_here"
-                                target="_blank"
-                                rel="noopener noreferrer"
+  return (
+    <>
+      <LoadingOverlay
+        active={isLoading}
+        spinner
+        text="Creating Block..."
+        styles={{
+          wrapper: {
+            position: 'fixed',
+            width: '100%',
+            height: '100vh',
+            zIndex: isLoading ? 999 : 0,
+          },
+        }}
+      />
+      <Modal
+        isOpen={modalIsOpen}
+        onRequestClose={closeModal}
+        style={customStyles}
+        contentLabel="Withdrawal Modal"
+      >
+        <div className={isDarkMode ? 'dark_mode' : ''}>
+          <div className="modal-header">
+            <h2 className="modal-title title">
+              <Icon component={AccountBalanceWallet} className="mr-2" />
+              WITHDRAW
+            </h2>
+            <Button className="btn-close title" onClick={closeModal}>
+              ×
+            </Button>
+          </div>
+          <div className="modal-body edit-modal-body deposit-modal-body">
+            <div className="modal-content-wrapper">
+              <div className="modal-content-panel">
+                {/* Payment Method Selection */}
+                <div className={classes.root}>
+                  <h4 className={classes.radioLabel}>Select Withdrawal Method:</h4>
+                  <div className={classes.paymentMethodContainer}>
+                    <RadioGroup
+                      aria-label="payment-method"
+                      name="payment-method"
+                      value={paymentMethod}
+                      onChange={handlePaymentMethodChange}
+                      className={classes.radioGroup}
+                    >
+                      <FormControlLabel
+                        value="web3"
+                        control={<Radio color="primary" />}
+                        label={
+                          <div
+                            className={classes.labelContainer}
+                            style={{ position: 'relative' }}
+                          >
+                            <WalletIcon className={classes.icon} />
+                            <span>SOL</span>
+                            {paymentMethod === 'web3' && (
+                              <span
+                                className="roll-tag"
                                 style={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  textDecoration: 'none'
+                                  position: 'absolute',
+                                  transform: 'translateY(30px)',
+                                  filter: 'invert(1)',
+                                  letterSpacing: '0.1em',
                                 }}
                               >
-                                <Info />
-                                <Link
-                                  fontSize="small"
-                                  style={{ marginLeft: '4px' }}
+                                INSTANT&nbsp;
+                                <FontAwesomeIcon
+                                  icon={faBolt}
+                                  style={{ marginLeft: '0.2em' }}
                                 />
-                              </a>
-                            </Tooltip>
-                          )}
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    <div>
-                      <div>
-
-                        <p className='step-tag'>Step 1 out of 3</p>
-                        <div className="account" style={{ display: "flex", alignItems: "center" }}>
-                          <Typography style={{ whiteSpace: 'nowrap' }}>CURRENCY TYPE</Typography>
+                              </span>
+                            )}
+                          </div>
+                        }
+                        className={classes.radioLabel}
+                      />
+                      <FormControlLabel
+                        value="web2"
+                        control={<Radio color="primary" />}
+                        label={
+                          <div className={classes.labelContainer}>
+                            <QRCodeIcon className={classes.icon} />
+                            <span>Web2</span>
+                          </div>
+                        }
+                        className={classes.radioLabel}
+                      />
+                    </RadioGroup>
+                  </div>
+                  <Typography variant="body2" className={classes.description}>
+                    {description}
+                  </Typography>
+                </div>
+                {/* Payment Method-Specific Fields */}
+                {paymentMethod === 'web3' ? (
+                  <>
+                    <p className="step-tag">Step 1 out of 2</p>
+                    <div className="input-amount">
+                      <Typography>WITHDRAWAL AMOUNT</Typography>
+                      <TextField
+                        pattern="^\\d*\\.?\\d*$"
+                        variant="filled"
+                        autoComplete="off"
+                        value={amountToWithdraw}
+                        onChange={handleAmountChange}
+                        InputProps={{
+                          endAdornment: (
+                            <InputAdornment position="end">&nbsp;RPS</InputAdornment>
+                          ),
+                        }}
+                        className="form-control"
+                      />
+                    </div>
+                    <div className="account">
+                      <p className="step-tag">Step 2 out of 2</p>
+                      <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <Typography variant="body2">SEND TO ADDRESS</Typography>
+                        {isConnected ? (
                           <TextField
-                            type="text"
+                            label="Account"
                             variant="filled"
-                            autoComplete="off"
-                            value={currencyTo.toUpperCase()}
-                            onChange={this.setCurrencyTo}
-                            error={!isValidCurrency}
-                            helperText={!isValidCurrency ? 'Invalid currency' : ''}
-                            className="form-control"
-                          />
-                          <Tooltip title="Choose currency you want to receive in.">
-                            <IconButton color="inherit" size="small">
-                              <Info />
-                            </IconButton>
-                          </Tooltip>
-                        </div>
-                        {suggestions.length > 0 && (
-                          <ul style={suggestionsListStyle}>
-                            {suggestions.map(suggestion => (
-                              <a>
-
-                                <li onMouseEnter={() => this.handleSuggestionMouseEnter(suggestion)}
-                                  onMouseLeave={this.handleSuggestionMouseLeave}
-                                  style={{
-                                    ...suggestionStyle,
-                                    backgroundColor: hoveredSuggestion === suggestion ? '#ffc107' : 'transparent',
-                                    color: hoveredSuggestion === suggestion ? '#060607' : '#212529',
-                                  }} key={suggestion} onClick={() => this.handleSuggestionClick(suggestion)}>
-                                  <Typography>{suggestion.toUpperCase()}</Typography>
-                                </li></a>
-                            ))}
-                          </ul>
-                        )}
-
-
-                        <p className='step-tag'>Step 2 out of 3</p>
-                        <div className="input-amount">
-                          <Typography>WITHDRAWAL AMOUNT</Typography>
-                          <TextField
-                            pattern="^\\d*\\.?\\d*$"
-                            variant="filled"
-                            autoComplete="off"
-                            value={amount}
-                            onChange={this.handleAmountChange}
-                            InputProps={{
-                              endAdornment: (
-                                <InputAdornment position="end">
-                                  &nbsp;RPS
-                                </InputAdornment>
-                              ),
-                            }}
-                            className="form-control"
-                          />
-                        </div>
-                        <div className="input-amount">
-
-                          <Typography>RECEIVE AMOUNT</Typography>
-                          <TextField
-                            variant="outlined"
-                            value={estimatedAmount}
+                            style={{ width: '100%' }}
+                            value={account}
                             InputProps={{
                               readOnly: true,
-                              endAdornment: isValidCurrency && (
-                                <InputAdornment position="end">
-                                  &nbsp;
-                                  <Typography variant="body2" component="span">
-                                    {currencyTo.toUpperCase()}
-                                  </Typography>
-                                </InputAdornment>
-                              ),
                             }}
                             className="form-control"
                           />
-                        </div>
-                        <p className='step-tag'>Step 3 out of 3</p>
-
-                        <div style={{ marginTop: '20px' }}>
-                          <Typography variant="body2">SEND TO ADDRESS</Typography>
-                          <div style={{ display: 'flex', alignItems: 'center' }}>
-                            <TextField
-                              variant="filled"
-                              fullWidth
-                              error={!validAddress}
-                              onChange={this.handleSendAddress}
-                              value={sendAddress}
-                              helperText={sendAddress ? (!validAddress ? 'Invalid address' : <p style={{ color: "#28a745" }}> Valid address!<CheckCircleOutlineIcon style={{ width: '12px' }} /></p>) : ''}
-                            />
-
-
-
-                            <Tooltip title="Address to send to" arrow>
-
-                              <IconButton size="small">
-
-                                <Info />
-
-                              </IconButton>
-
-                            </Tooltip>
-                          </div>
-                          <><div style={{ marginTop: '20px' }}>
-                            <Typography variant="body2">MEMO / DESTINATION TAG ETC. (OPTIONAL)</Typography>
-                            <div style={{ display: 'flex', alignItems: 'center' }}>
-                              <TextField
-                                variant="filled"
-                                fullWidth
-                                value={extraId}
-                                onChange={this.handleExtraId}
-
-                              />
-                            </div>
-                          </div>
-                          </>
+                        ) : (
+                          <TextField
+                            label="Account"
+                            variant="filled"
+                            style={{ width: '100%' }}
+                            value="Connect Wallet"
+                            InputProps={{
+                              readOnly: true,
+                            }}
+                            className="form-control"
+                          />
+                        )}
+                        {isConnected ? (
+                          <FiberManualRecord
+                            className="light"
+                            style={{ background: '#28a745', color: 'green' }}
+                          />
+                        ) : (
+                          <FiberManualRecord
+                            className="light"
+                            style={{ background: '#ff0000', color: 'red' }}
+                          />
+                        )}
+                        {isConnected ? (
+                          <Tooltip title="Connected account" arrow>
+                            <Info />
+                          </Tooltip>
+                        ) : (
+                          <Tooltip title="How do I connect?" arrow>
+                            <a
+                              href="your_connect_wallet_link_here"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                textDecoration: 'none',
+                              }}
+                            >
+                              <Info />
+                              <Link fontSize="small" style={{ marginLeft: '4px' }} />
+                            </a>
+                          </Tooltip>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div>
+                    <p className="step-tag">Step 1 out of 3</p>
+                    <div
+                      className="account"
+                      style={{ display: 'flex', alignItems: 'center' }}
+                    >
+                      <Typography style={{ whiteSpace: 'nowrap' }}>
+                        CURRENCY TYPE
+                      </Typography>
+                      <TextField
+                        type="text"
+                        variant="filled"
+                        autoComplete="off"
+                        value={currencyTo.toUpperCase()}
+                        onChange={setCurrency}
+                        error={!isValidCurrency}
+                        helperText={!isValidCurrency ? 'Invalid currency' : ''}
+                        className="form-control"
+                      />
+                      <Tooltip title="Choose currency you want to receive in.">
+                        <IconButton color="inherit" size="small">
+                          <Info />
+                        </IconButton>
+                      </Tooltip>
+                    </div>
+                    {suggestions.length > 0 && (
+                      <ul style={suggestionsListStyle}>
+                        {suggestions.map((suggestion) => (
+                          <a key={suggestion}>
+                            <li
+                              onMouseEnter={() => handleSuggestionMouseEnter(suggestion)}
+                              onMouseLeave={handleSuggestionMouseLeave}
+                              style={{
+                                ...suggestionStyle,
+                                backgroundColor:
+                                  hoveredSuggestion === suggestion
+                                    ? '#ffc107'
+                                    : 'transparent',
+                                color:
+                                  hoveredSuggestion === suggestion
+                                    ? '#060607'
+                                    : '#212529',
+                              }}
+                              onClick={() => handleSuggestionClick(suggestion)}
+                            >
+                              <Typography>{suggestion.toUpperCase()}</Typography>
+                            </li>
+                          </a>
+                        ))}
+                      </ul>
+                    )}
+                    <p className="step-tag">Step 2 out of 3</p>
+                    <div className="input-amount">
+                      <Typography>WITHDRAWAL AMOUNT</Typography>
+                      <TextField
+                        pattern="^\\d*\\.?\\d*$"
+                        variant="filled"
+                        autoComplete="off"
+                        value={amountToWithdraw}
+                        onChange={handleAmountChange}
+                        InputProps={{
+                          endAdornment: (
+                            <InputAdornment position="end">&nbsp;RPS</InputAdornment>
+                          ),
+                        }}
+                        className="form-control"
+                      />
+                    </div>
+                    <div className="input-amount">
+                      <Typography>RECEIVE AMOUNT</Typography>
+                      <TextField
+                        variant="outlined"
+                        value={estimatedAmount}
+                        InputProps={{
+                          readOnly: true,
+                          endAdornment: isValidCurrency && (
+                            <InputAdornment position="end">
+                              <Typography variant="body2" component="span">
+                                {currencyTo.toUpperCase()}
+                              </Typography>
+                            </InputAdornment>
+                          ),
+                        }}
+                        className="form-control"
+                      />
+                    </div>
+                    <p className="step-tag">Step 3 out of 3</p>
+                    <div style={{ marginTop: '20px' }}>
+                      <Typography variant="body2">SEND TO ADDRESS</Typography>
+                      <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <TextField
+                          variant="filled"
+                          fullWidth
+                          error={!validAddress}
+                          onChange={handleSendAddress}
+                          value={sendAddress}
+                          helperText={
+                            sendAddress
+                              ? !validAddress
+                                ? 'Invalid address'
+                                : (
+                                  <p style={{ color: '#28a745' }}>
+                                    Valid address!
+                                    <CheckCircleOutlineIcon style={{ width: '12px' }} />
+                                  </p>
+                                )
+                              : ''
+                          }
+                        />
+                        <Tooltip title="Address to send to" arrow>
+                          <IconButton size="small">
+                            <Info />
+                          </IconButton>
+                        </Tooltip>
+                      </div>
+                      <div style={{ marginTop: '20px' }}>
+                        <Typography variant="body2">
+                          MEMO / DESTINATION TAG ETC. (OPTIONAL)
+                        </Typography>
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                          <TextField
+                            variant="filled"
+                            fullWidth
+                            value={extraId}
+                            onChange={handleExtraId}
+                          />
                         </div>
                       </div>
-
-
                     </div>
-                  )}
-                  <hr />
+                  </div>
+                )}
+                <hr />
+                <Table>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell>
+                        <span>IN-GAME BALANCE:</span>
+                      </TableCell>
+                      <TableCell>{convertToCurrency(balance, solPrice)}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>
+                        <span>WITHDRAWAL AMOUNT:</span>
+                      </TableCell>
+                      <TableCell style={{ color: 'red' }}>
+                        {convertToCurrency(amountToWithdraw * -1, solPrice)}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>
+                        <span>NEW BALANCE:</span>
+                      </TableCell>
+                      <TableCell>
+                        {convertToCurrency(balance - amountToWithdraw, solPrice)}&nbsp;
+                        {balance - amountToWithdraw < 0 && <Warning width="15pt" />}
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+                {paymentMethod === 'web3' && (
                   <Table>
                     <TableBody>
                       <TableRow>
                         <TableCell>
-                          <span>IN-GAME BALANCE:</span>
+                          <FontAwesomeIcon icon={faGasPump} />
+                          &nbsp;&nbsp;<span>GAS FEE:</span>
                         </TableCell>
+                        <TableCell>{gasfee} SOL</TableCell>
                         <TableCell>
-                          {convertToCurrency(this.props.balance, solPrice)}
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>
-                          <span>WITHDRAWAL AMOUNT:</span>
-                        </TableCell>
-                        <TableCell style={{ color: 'red' }}>
-                          {convertToCurrency(this.state.amount * -1, solPrice)}
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>
-                          <span>NEW BALANCE:</span>
-                        </TableCell>
-                        <TableCell>
-                          {convertToCurrency(
-                            this.props.balance - this.state.amount, solPrice
-                          )}
-                          &nbsp;
-                          {this.props.balance - this.state.amount < 0 && (
-                            <Warning width="15pt" />
-                          )}
+                          <Tooltip
+                            title="Real-time Gas fee is the cost associated with performing a transaction. It covers network processing and validation."
+                            arrow
+                          >
+                            <IconButton size="small">
+                              <Info />
+                            </IconButton>
+                          </Tooltip>
                         </TableCell>
                       </TableRow>
                     </TableBody>
                   </Table>
-                  {paymentMethod === 'web3' && (
-
-                    <Table>
-                      <TableBody>
-                        <TableRow>
-                          <TableCell>
-                            <FontAwesomeIcon icon={faGasPump} />&nbsp;&nbsp;<span>GAS FEE:</span>
-                          </TableCell>
-                          <TableCell>
-                            {(this.props.gasfee)} SOL
-                          </TableCell>
-                          <TableCell>
-                            <Tooltip
-                              title="Real-time Gas fee is the cost associated with performing a transaction. It covers network processing and validation."
-                              arrow
-                            >
-                              <IconButton size="small">
-                                <Info />
-                              </IconButton>
-                            </Tooltip>
-                          </TableCell>
-                        </TableRow>
-                      </TableBody>
-                    </Table>
+                )}
+                <div className={'disclaimer'}>
+                  {paymentMethod === 'web2' ? (
+                    <Typography className={disclaimerClass}>
+                      Receive within <i style={{ fontWeight: 800 }}>12</i> hours&nbsp;{icon}
+                    </Typography>
+                  ) : (
+                    <Typography className={disclaimerClass}>
+                      Receive within <i style={{ fontWeight: 800 }}>30</i> seconds&nbsp;{icon}
+                    </Typography>
                   )}
-                  <div className={'disclaimer'}>
-                    {paymentMethod === 'web2' ? (
-                      <Typography className={disclaimerClass}>Receive within <i style={{ fontWeight: 800 }}>12</i> hours&nbsp; {icon}</Typography>
-                    ) : (
-                      <Typography className={disclaimerClass}>Receive within <i style={{ fontWeight: 800 }}>30</i> seconds&nbsp; {icon}</Typography>
-                    )}
-                  </div>
-
                 </div>
               </div>
             </div>
-
-            <div className="modal-footer">
-              <Button className="btn-submit" onClick={paymentMethod === 'web3' ? this.send : this.createPayoutAndClose}>
-                {/* Withdraw */}
-                COMING SOON! (INVITE ONLY)
-              </Button>
-              {/* <Button className="btn-back" onClick={this.props.closeModal}>
-                CANCEL
-              </Button> */}
-            </div>
           </div>
-        </Modal>
-      </>
-    );
-  }
+          {/* Modal Footer */}
+          <div className="modal-footer">
+            <Button
+              className="btn-submit"
+              onClick={paymentMethod === 'web3' ? send : createPayoutAndClose}
+            >
+              {/* COMING SOON! (INVITE ONLY) or 'Withdraw' */}
+              COMING SOON! (INVITE ONLY)
+            </Button>
+            {/* <Button className="btn-back" onClick={closeModal}>
+              CANCEL
+            </Button> */}
+          </div>
+        </div>
+      </Modal>
+    </>
+  );
 }
 
-
-const suggestionsListStyle = {
-  listStyleType: 'none',
-  padding: '0',
-  margin: '4px 0',
-  border: '1px solid #ccc',
-  borderRadius: '4px',
-  backgroundColor: '#e5e5e5',
-  position: 'absolute',
-  maxHeight: '100px',
-  overflowY: 'auto',
-  zIndex: '1',
-  width: 'calc(80% - 2px)', // Adjusting width to match the text field
-};
-
-const suggestionStyle = {
-  padding: '8px 12px',
-  cursor: 'pointer',
-  borderBottom: '1px solid #ccc',
-};
-
-const mapStateToProps = state => ({
+// --------------------- Redux Connections ---------------------
+const mapStateToProps = (state) => ({
   isDarkMode: state.auth.isDarkMode,
   userInfo: state.auth.user,
   gasfee: state.auth.gasfee,
   solPrice: state.logic.solPrice,
+  balance: state.auth.user.balance,
+  account: state.auth.user.account, // Make sure your store provides this if needed
 });
 
 const mapDispatchToProps = {
   setBalance,
   setGasfee,
   addNewTransaction,
-  getCustomerStatisticsData
+  getCustomerStatisticsData,
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(withStyles(styles)(WithdrawModal));
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(withStyles(styles)(WithdrawModal));

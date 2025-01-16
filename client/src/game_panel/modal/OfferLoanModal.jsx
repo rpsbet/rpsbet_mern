@@ -151,7 +151,7 @@ class OfferLoanModal extends Component {
     }
     if (prevState.isComplete !== this.state.isComplete && this.state.isComplete) {
       await this.props.getUser(true, 5);
-      await this.props.acCalculateRemainingLoans();
+      // await this.props.acCalculateRemainingLoans();
       this.props.closeOfferLoanModal();
     }
   }

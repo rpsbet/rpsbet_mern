@@ -8,11 +8,7 @@ import { setFocused } from '../../redux/Auth/user.actions';
 const CoinInfo = ({
   onChangeState,
   name,
-  ticker,
   image,
-  x_link,
-  website_link,
-  telegram_link,
   isDarkMode,
 }) => {
 

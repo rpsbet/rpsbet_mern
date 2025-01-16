@@ -7,7 +7,6 @@ const Receipt = require('../model/Receipt');
 const GameLog = require('../model/GameLog');
 const gameTransaction = require('../model/Transaction');
 const { newTransaction } = require('../socketController');
-const stripe = require('stripe')('sk_live_B8xrL7Gp2elKyanYJ0Zi5IqS00EKxOnhjP');
 const { Connection, Keypair, Transaction, PublicKey, SystemProgram, sendAndConfirmTransaction } = require('@solana/web3.js');
 const { getAssociatedTokenAddress, TOKEN_PROGRAM_ID, createTransferInstruction, createAssociatedTokenAccount } = require('@solana/spl-token'); // Import from spl-token package
 const saveDocumentWithRetry = require('../helper/util/retrySave');
@@ -106,30 +105,6 @@ router.post('/validate_address', auth, async (req, res) => {
     res.status(500).json({
       success: false,
       message: error.message,
-    });
-  }
-});
-// **************************************** //
-// ************* FIAT ********************* //
-// **************************************** //
-
-router.post('/secret', auth, async (req, res) => {
-  try {
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: req.body.amount,
-      currency: 'gbp',
-      // Verify your integration in this guide by including this parameter
-      metadata: { integration_check: 'accept_a_payment' }
-    });
-
-    res.json({
-      success: true,
-      clientSecret: paymentIntent.client_secret
-    });
-  } catch (err) {
-    res.json({
-      success: false,
-      message: err
     });
   }
 });

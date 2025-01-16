@@ -1,13 +1,24 @@
-import React, { Component } from 'react';
-import { connect } from 'react-redux';
-import { convertToCurrency } from '../../util/conversion';
+import React, { useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import Modal from 'react-modal';
-import { Button, Grid, TextField, ButtonGroup, Table, TableBody, TableCell, TableContainer, TableRow, Typography } from '@material-ui/core';
+import {
+  Button,
+  Grid,
+  TextField,
+  ButtonGroup,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableRow,
+  Typography,
+} from '@material-ui/core';
 import { warningMsgBar, infoMsgBar } from '../../redux/Notification/notification.actions';
 import { paybackLoan, acCalculateRemainingLoans } from '../../redux/Loan/loan.action';
 import { alertModal } from '../modal/ConfirmAlerts';
 import { setBalance } from '../../redux/Auth/user.actions';
 import { addNewTransaction } from '../../redux/Logic/logic.actions';
+import { convertToCurrency } from '../../util/conversion';
 
 Modal.setAppElement('#root');
 
@@ -16,7 +27,6 @@ const customStyles = {
     zIndex: 3,
     backgroundColor: 'rgba(0, 0, 0, 0.8)',
   },
-
   content: {
     top: '50%',
     left: '50%',
@@ -25,278 +35,213 @@ const customStyles = {
     transform: 'translate(-50%, -50%)',
     background: 'transparent',
     padding: 0,
-    border: 'none'
+    border: 'none',
   },
 };
 
-class DebtsModal extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      isFocused: false,
-      paybackModalIsOpen: false,
-      selectedLoan: null,
-      paybackAmount: '',
-    };
-  }
+const DebtsModal = ({ modalIsOpen, closeModal }) => {
+  const [paybackModalIsOpen, setPaybackModalIsOpen] = useState(false);
+  const [selectedLoan, setSelectedLoan] = useState(null);
+  const [paybackAmount, setPaybackAmount] = useState('');
+  const [isFocused, setIsFocused] = useState(false);
 
-  openPaybackModal = loan => {
-    this.setState({
-      paybackModalIsOpen: true,
-      selectedLoan: loan,
-    });
+  const dispatch = useDispatch();
+  const { isDarkMode, userLoans, loading, solPrice } = useSelector((state) => ({
+    isDarkMode: state.auth.isDarkMode,
+    userLoans: state.loanReducer.userLoans,
+    loading: state.loanReducer.loadingRemainingLoans,
+    solPrice: state.logic.solPrice,
+  }));
+
+  const gifUrls = ['/img/rock.gif', '/img/paper.gif', '/img/scissors.gif'];
+  const randomGifUrl = gifUrls[Math.floor(Math.random() * gifUrls.length)];
+
+  const openPaybackModal = (loan) => {
+    setPaybackModalIsOpen(true);
+    setSelectedLoan(loan);
   };
 
-  closePaybackModal = () => {
-    this.setState({
-      paybackModalIsOpen: false,
-      selectedLoan: null,
-      paybackAmount: '',
-    });
+  const closePaybackModal = () => {
+    setPaybackModalIsOpen(false);
+    setSelectedLoan(null);
+    setPaybackAmount('');
   };
 
-  paybackLoan = async () => {
-    const { paybackAmount, selectedLoan } = this.state;
-    const { paybackLoan, acCalculateRemainingLoans, setBalance, addNewTransaction, isDarkMode } = this.props;
-
-    // Check if there's a selectedLoan
+  const handlePaybackLoan = async () => {
     if (!selectedLoan) {
       console.error('No selected loan to pay back.');
       return;
     }
 
     if (parseFloat(paybackAmount) < 0) {
-      alertModal(isDarkMode, 'PAYBACK AMEOWNT CANNOT BE NEGATIVE, DUMFUQ');
+      alertModal(isDarkMode, 'PAYBACK AMOUNT CANNOT BE NEGATIVE!');
       return;
     }
 
-    // Check if paybackAmount is a real number
     if (isNaN(parseFloat(paybackAmount))) {
-      alertModal(isDarkMode, 'IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!');
+      alertModal(isDarkMode, 'ENTER A VALID NUMBER!');
       return;
     }
 
-    // Check if paybackAmount is more than the selectedLoan.amount
     if (parseFloat(paybackAmount) > selectedLoan.amount) {
-      alertModal(isDarkMode, 'PAYBACK AMOUNT CANNOT EXCEED THE LOAN AMEOWNT!');
+      alertModal(isDarkMode, 'PAYBACK AMOUNT CANNOT EXCEED THE LOAN AMOUNT!');
       return;
     }
 
     const loanId = selectedLoan._id;
-    const response = await paybackLoan(loanId, paybackAmount);
+    const response = await dispatch(paybackLoan(loanId, paybackAmount));
 
     if (response.success) {
       const { balance, newTransaction, message } = response;
-      this.closePaybackModal();
+      closePaybackModal();
       alertModal(isDarkMode, message, '-cat');
-      setBalance(balance);
-      addNewTransaction(newTransaction);
-      await acCalculateRemainingLoans();
+      dispatch(setBalance(balance));
+      dispatch(addNewTransaction(newTransaction));
+      dispatch(acCalculateRemainingLoans());
     } else {
-      this.closePaybackModal();
+      closePaybackModal();
       alertModal(isDarkMode, response.message);
     }
   };
 
-
-  handleMaxButtonClick = () => {
-    if (this.state.selectedLoan) {
-      const maxPaybackAmount = this.state.selectedLoan.amount;
-      this.setState(
-        {
-          paybackAmount: maxPaybackAmount,
-        },
-        () => {
-          document.getElementById('payback').focus();
-        }
-      );
+  const handleMaxButtonClick = () => {
+    if (selectedLoan) {
+      setPaybackAmount(selectedLoan.amount);
     }
   };
 
-  handleFocus = () => {
-    this.setState({ isFocused: true });
-  };
-
-  handleBlur = (event) => {
+  const handleFocus = () => setIsFocused(true);
+  const handleBlur = (event) => {
     event.stopPropagation();
-    this.setState({ isFocused: false });
+    setIsFocused(false);
   };
 
+  return (
+    <Modal
+      isOpen={modalIsOpen}
+      onRequestClose={closeModal}
+      style={customStyles}
+      contentLabel="Debts Modal"
+    >
+      <div className={isDarkMode ? 'dark_mode' : ''}>
+        <div className="modal-header">
+          <h2 className="modal-title title">Your Debts</h2>
+          <Button className="btn-close title" onClick={closeModal}>
+            ×
+          </Button>
+        </div>
+        <div className="modal-body edit-modal-body Debts-modal-body">
+          <Grid container spacing={2}>
+            {!userLoans || userLoans.length === 0 ? (
+              <Grid item xs={12}>
+                <Typography variant="h6" style={{ textAlign: 'center', marginTop: '20px', color: 'gray' }}>
+                  NO DEBTS!
+                </Typography>
+              </Grid>
+            ) : (
+              userLoans
+                .filter((loan) => loan.amount !== 0)
+                .map((loan) => (
+                  <Grid item xs={12} key={loan._id}>
+                    <TableContainer>
+                      <Table>
+                        <TableBody>
+                          <TableRow>
+                            <TableCell>Lender:</TableCell>
+                            <TableCell>{loan.lender}</TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell>Paid Back:</TableCell>
+                            <TableCell>{convertToCurrency(loan.paid_back, solPrice)}</TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell>Outstanding Debt:</TableCell>
+                            <TableCell>
+                              {convertToCurrency(loan.amount, solPrice)}&nbsp;{`(${loan.apy * 100}%)`}
+                            </TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell>Days Left:</TableCell>
+                            <TableCell>{`${loan.loan_period} days`}</TableCell>
+                          </TableRow>
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                    <Button fullWidth onClick={() => openPaybackModal(loan)}>
+                      CLEAR DEBT
+                    </Button>
+                  </Grid>
+                ))
+            )}
+          </Grid>
+        </div>
+        <div className="modal-footer">
+          <Button className="btn-back" onClick={closeModal}>
+            Close
+          </Button>
+        </div>
+      </div>
 
-  render() {
-    const { isFocused } = this.state;
-    const { loading, solPrice} = this.props;
-    const gifUrls = ['/img/rock.gif', '/img/paper.gif', '/img/scissors.gif'];
-    const randomGifUrl = gifUrls[Math.floor(Math.random() * gifUrls.length)];
-    return (
       <Modal
-        isOpen={this.props.modalIsOpen}
-        onRequestClose={this.props.closeModal}
+        isOpen={paybackModalIsOpen}
+        onRequestClose={closePaybackModal}
         style={customStyles}
-        contentLabel="Debts Modal"
+        contentLabel="Payback Modal"
       >
-        <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
+        <div className={isDarkMode ? 'dark_mode' : ''}>
           <div className="modal-header">
-            <h2 className="modal-title title">Your Debts</h2>
-            <Button className="btn-close title" onClick={this.props.closeModal}>
+            <h2 className="modal-title title">Pay back Loan</h2>
+            <Button className="btn-close title" onClick={closePaybackModal}>
               ×
             </Button>
           </div>
-          <div className="modal-body edit-modal-body Debts-modal-body">
-            <Grid container spacing={2}>
-              {!this.props.userLoans || this.props.userLoans.length === 0 ? (
-                <Grid item xs={12} sm={12} md={8} lg={12}>
-                  <Typography variant="h6" style={{ textAlign: 'center', marginTop: '20px', color: 'gray' }}>
-                    NO DEBTS!
-                  </Typography>
-                </Grid>
-              ) : (
-                this.props.userLoans
-                  .filter(loan => loan.amount !== 0) // Skip loans with amount = 0
-                  .map((loan) => (
-                    <Grid item xs={12} sm={12} md={8} lg={12} key={loan._id}>
-                      <TableContainer>
-                        <Table>
-                          <TableBody>
-                            <TableRow>
-                              <TableCell>
-                                <span>Lender:</span>
-                              </TableCell>
-                              <TableCell>
-                                <span>{loan.lender}</span>
-                              </TableCell>
-                            </TableRow>
-                            <TableRow>
-                              <TableCell>
-                                <span>Paid Back:</span>
-                              </TableCell>
-                              <TableCell>
-                                <span>{convertToCurrency(loan.paid_back, solPrice)}</span>
-                              </TableCell>
-                            </TableRow>
-                            <TableRow>
-                              <TableCell>
-                                <span>Outstanding Debt:</span>
-                              </TableCell>
-                              <TableCell>
-                                <span>{convertToCurrency(loan.amount, solPrice)}&nbsp;{`(${loan.apy * 100}%)`}</span>
-                              </TableCell>
-                            </TableRow>
-                            <TableRow>
-                              <TableCell>
-                                <span>Days Left:</span>
-                              </TableCell>
-                              <TableCell>
-                                <span>{`${loan.loan_period} days`}</span>
-                              </TableCell>
-                            </TableRow>
-                          </TableBody>
-                        </Table>
-                      </TableContainer>
+          <div className="modal-body edit-modal-body Payback-modal-body">
+            {loading ? (
+              <div
+                className="loading-overlay"
+                style={{ display: 'flex', flexDirection: 'column' }}
+              >
+                <img src={randomGifUrl} alt="Loading" />
+                <span style={{ marginTop: '10px', color: '#fff' }}>{`Repaying loan...`}</span>
+              </div>
+            ) : (
+              <TextField
+                label="Pay Back"
+                variant="filled"
+                fullWidth
+                id="payback"
+                value={paybackAmount}
+                onChange={(e) => setPaybackAmount(e.target.value)}
+                InputProps={{
+                  onFocus: handleFocus,
+                  onBlur: handleBlur,
+                  endAdornment: paybackAmount ? (
+                    ' RPS '
+                  ) : (
+                    <ButtonGroup className={isFocused ? 'fade-in' : 'fade-out'}>
                       <Button
-                        fullWidth
-                        onClick={() => this.openPaybackModal(loan)}
+                        variant="contained"
+                        color="secondary"
+                        onClick={handleMaxButtonClick}
+                        style={{ marginRight: '-10px' }}
                       >
-                        CLEAR DEBT
+                        Max
                       </Button>
-                    </Grid>
-                  )))}
-            </Grid>
+                    </ButtonGroup>
+                  ),
+                }}
+              />
+            )}
           </div>
           <div className="modal-footer">
-            <Button className="btn-back" onClick={this.props.closeModal}>
-              Close
+            <Button className="btn-back" onClick={handlePaybackLoan}>
+              Pay Back
             </Button>
           </div>
         </div>
-
-        <Modal
-          isOpen={this.state.paybackModalIsOpen}
-          onRequestClose={this.closePaybackModal}
-          style={customStyles}
-          contentLabel="Payback Modal"
-        >
-          <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
-            <div className="modal-header">
-              <h2 className="modal-title title">Pay back Loan</h2>
-              <Button className="btn-close title" onClick={this.closePaybackModal}>
-                ×
-              </Button>
-            </div>
-            <div className="modal-body edit-modal-body Payback-modal-body">
-              {loading ? (
-                <div
-                  className="loading-overlay"
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                  }}
-                >
-                  <img src={randomGifUrl} alt="Loading" />
-                  <span
-                    style={{
-                      marginTop: '10px',
-                      color: '#fff',
-                    }}
-                  >
-                    {`repaying loan...`}
-                  </span>
-                </div>
-              ) : (
-                <TextField
-                  label="Pay Back"
-                  variant="filled"
-                  fullWidth
-                  id="payback"
-                  value={this.state.paybackAmount}
-                  onChange={(e) => this.setState({ paybackAmount: e.target.value })}
-                  InputProps={{
-                    onFocus: this.handleFocus,
-                    onBlur: this.handleBlur,
-                    endAdornment: this.state.paybackAmount ? ' RPS ' : (
-                      <ButtonGroup
-                        className={isFocused ? 'fade-in' : 'fade-out'}
-                      >
-                        <Button
-                          variant="contained"
-                          color="secondary"
-                          onClick={() => this.handleMaxButtonClick()}
-                          style={{ marginRight: '-10px' }}
-                        >
-                          Max
-                        </Button>
-                      </ButtonGroup>
-                    ),
-                  }}
-                />
-              )}
-            </div>
-            <div className="modal-footer">
-              <Button className="btn-back" onClick={this.paybackLoan}>
-                Pay Back
-              </Button>
-            </div>
-          </div>
-        </Modal>
       </Modal>
-    );
-  }
-}
-
-const mapStateToProps = state => ({
-  isDarkMode: state.auth.isDarkMode,
-  userLoans: state.loanReducer.userLoans,
-  loading: state.loanReducer.loadingRemainingLoans,
-  solPrice: state.logic.solPrice,
-});
-
-const mapDispatchToProps = {
-  warningMsgBar,
-  infoMsgBar,
-  paybackLoan,
-  acCalculateRemainingLoans,
-  setBalance,
-  addNewTransaction
+    </Modal>
+  );
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(DebtsModal);
+export default DebtsModal;

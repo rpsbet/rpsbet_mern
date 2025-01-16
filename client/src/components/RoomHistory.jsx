@@ -1,17 +1,13 @@
-// RoomHistory.js
-
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Moment from 'moment';
 import { connect } from 'react-redux';
 import RefreshIcon from '@material-ui/icons/Refresh';
 import { renderLottieAvatarAnimation } from '../util/LottieAvatarAnimations';
 import PlayerModal from '../game_panel/modal/PlayerModal';
-import { Button, IconButton } from '@material-ui/core'; // Import Button from Material-UI
-import ReactDOM from 'react-dom';
+import { Button } from '@material-ui/core';
+// import ReactDOM from 'react-dom';
 import { Skeleton } from "@material-ui/lab";
 
-
-// Define a custom function to format the time duration
 function customFromNow(date) {
   const now = Moment();
   const duration = Moment.duration(now.diff(date));
@@ -27,75 +23,48 @@ function customFromNow(date) {
   }
 }
 
-function updateFromNow(history) {
-  const result = JSON.parse(JSON.stringify(history));
-  for (let i = 0; i < result.length; i++) {
-    result[i]['from_now'] = customFromNow(Moment(result[i]['created_at']));
-  }
-  return result;
-}
+const RoomHistory = (props) => {
+  const { socket, roomInfo, getRoomInfo, roomId, isLowGraphics, loading, userId } = props;
 
+  const [history, setHistory] = useState(roomInfo?.room_history || []);
+  const [showPlayerModal, setShowPlayerModal] = useState(false);
+  const [selectedCreator, setSelectedCreator] = useState(null);
+  const [numToShow, setNumToShow] = useState(10000);
 
-class RoomHistory extends React.Component {
-  constructor(props) {
-    super(props);
-    this.socket = this.props.socket;
+  const isComponentMounted = useRef(false);
 
-    this.state = {
-      history: this.props.roomInfo.room_history,
-      showPlayerModal: false,
-      selectedCreator: null,
-      numToShow: 10000,
-    }
-    this.isComponentMounted = false;
-  }
+  useEffect(() => {
+    isComponentMounted.current = true;
+    setupSocketConnection();
 
+    return () => {
+      isComponentMounted.current = false;
+      disconnectSocket();
+    };
+  }, [socket]);
 
-  async componentDidMount() {
-    this.isComponentMounted = true;
-    this.setupSocketConnection();
-  }
+  useEffect(() => {
+    setHistory(roomInfo?.room_history || []);
+    attachUserLinkListeners();
+    // attachAccessories();
+  }, [roomInfo]);
 
-  componentWillUnmount() {
-    this.isComponentMounted = false;
-    clearInterval(this.interval);
-    this.disconnectSocket();
-  }
-
-  componentDidUpdate(prevProps) {
-    if (prevProps.roomInfo !== this.props.roomInfo) {
-
-      this.setState({
-        history: this.props.roomInfo.room_history,
-        roomInfo: this.props.roomInfo,
-      }, () => {
-
-        this.attachUserLinkListeners();
-        this.attachAccessories();
-      });
-
-
-    }
-  }
-
-  setupSocketConnection = () => {
-    const { socket } = this.props;
-
+  const setupSocketConnection = () => {
     if (socket) {
-      socket.on('NEW_LOG', this.handleNewLog);
+      socket.on('NEW_LOG', handleNewLog);
     } else {
-      this.retrySocketConnection();
+      retrySocketConnection();
     }
-  }
+  };
 
-  disconnectSocket = () => {
-    const { socket } = this.props;
+  const disconnectSocket = () => {
     if (socket) {
-      socket.off('NEW_LOG', this.handleNewLog);
+      socket.off('NEW_LOG', handleNewLog);
     }
-  }
-  handleNewLog = (data) => {
-    if (!this.isComponentMounted) return;
+  };
+
+  const handleNewLog = (data) => {
+    if (!isComponentMounted.current) return;
 
     const newLog = data.newLog?.[0];
     if (!newLog) {
@@ -103,202 +72,143 @@ class RoomHistory extends React.Component {
       return;
     }
 
-    const { _id, status, hosts, qbot, ai_mode, room_id, history, created_at, creator, joined_user } = newLog;
+    let newHistoryItem = newLog.history || {
+      ...newLog,
+    };
 
-    if (!room_id) {
-      console.warn("No room_id found in new log data:", newLog);
-      return;
-    }
-
-    // Validate or sanitize newLog.history
-    let newHistoryItem = history; // Assuming `history` is a string or valid object
-    if (typeof history === "string") {
-      newHistoryItem = { history, room_id, _id, ai_mode, qbot, status, created_at, hosts, creator, joined_user }; // Wrap it into an object if needed
-    }
-
-    this.setState(
-      (prevState) => {
-        // Add the new history item and retain only the latest 30 entries
-        const updatedHistory = [newHistoryItem, ...prevState.history.slice(0, 29)];
-
-        return { history: updatedHistory };
-      },
-      () => {
-        // Callback after state update
-        if (this.isComponentMounted) {
-          this.attachUserLinkListeners();
-          this.attachAccessories();
-        }
-      }
-    );
+    setHistory((prevHistory) => [newHistoryItem, ...prevHistory.slice(0, 29)]);
+    attachUserLinkListeners();
+    // attachAccessories();
   };
 
-  retrySocketConnection = () => {
+  const retrySocketConnection = () => {
     setTimeout(() => {
-      const { socket } = this.props;
       if (socket) {
-        socket.on('NEW_LOG', this.handleNewLog);
+        socket.on('NEW_LOG', handleNewLog);
       } else {
-        this.retrySocketConnection();
+        retrySocketConnection();
       }
     }, 1000);
-  }
+  };
 
-
-
-  attachUserLinkListeners = () => {
+  const attachUserLinkListeners = () => {
     const userLinks = document.querySelectorAll('.user-link');
-    userLinks.forEach(link => {
-      link.addEventListener('click', event => {
+    userLinks.forEach((link) => {
+      link.addEventListener('click', (event) => {
         const userId = event.target.getAttribute('data-userid');
-        this.handleOpenPlayerModal(userId);
+        handleOpenPlayerModal(userId);
       });
     });
   };
-  attachAccessories = () => {
-    const { isLowGraphics } = this.props;
-    const userLinks = document.querySelectorAll('.user-link');
-    let counter = 0;
-    userLinks.forEach(element => {
-      if (counter < 3) {
-        const userId = element.getAttribute('data-userid');
-        const accessory = element.getAttribute('accessory');
-        const lottieAnimation = renderLottieAvatarAnimation(accessory, isLowGraphics);
-        const portalContainer = document.createElement('div');
-        ReactDOM.render(lottieAnimation, portalContainer);
-        element.parentNode.insertBefore(portalContainer, element);
 
-        portalContainer.addEventListener('click', () => {
-          this.handleOpenPlayerModal(userId);
-        });
-        portalContainer.style.cursor = 'pointer';
-        counter++;
-      } else {
-        return;
-      }
-    });
+  // const attachAccessories = () => {
+  //   const userLinks = document.querySelectorAll('.user-link');
+  //   let counter = 0;
+  //   userLinks.forEach((element) => {
+  //     if (counter < 3) {
+  //       const userId = element.getAttribute('data-userid');
+  //       const accessory = element.getAttribute('accessory');
+  //       const lottieAnimation = renderLottieAvatarAnimation(accessory, isLowGraphics);
+  //       const portalContainer = document.createElement('div');
+  //       ReactDOM.render(lottieAnimation, portalContainer);
+  //       element.parentNode.insertBefore(portalContainer, element);
+
+  //       portalContainer.addEventListener('click', () => {
+  //         handleOpenPlayerModal(userId);
+  //       });
+  //       portalContainer.style.cursor = 'pointer';
+  //       counter++;
+  //     } else {
+  //       return;
+  //     }
+  //   });
+  // };
+
+  const handleOpenPlayerModal = (creator_id) => {
+    setShowPlayerModal(true);
+    setSelectedCreator(creator_id);
   };
 
-  handleOpenPlayerModal = (creator_id) => {
-    this.setState({ showPlayerModal: true, selectedCreator: creator_id });
+  const handleClosePlayerModal = () => {
+    setShowPlayerModal(false);
   };
 
-  handleClosePlayerModal = () => {
-    this.setState({ showPlayerModal: false });
-  };
-
-  handleLoadMore = async () => {
+  const handleLoadMore = async () => {
     try {
-      const { getRoomInfo, roomId } = this.props;
-      const { numToShow } = this.state;
       const newNumToShow = numToShow + 10;
-
       await getRoomInfo(roomId, newNumToShow, true);
-      this.setState({ numToShow: newNumToShow });
+      setNumToShow(newNumToShow);
     } catch (error) {
       console.error('Error loading more data:', error);
     }
   };
 
-  handleRefresh = async () => {
-    try {
-      const { getRoomInfo, roomId } = this.props;
-      const { numToShow } = this.state;
-
-      await getRoomInfo(roomId, numToShow, true);
-
-    } catch (error) {
-      console.error('Error loading more data:', error);
-    }
-  };
-
-
-  render() {
-    const { isLowGraphics, loading, userId } = this.props;
-    const { roomInfo, showPlayerModal, selectedCreator, numToShow, history } = this.state;
-
-    return (
-      <div className="room-history-panel">
-        {history && history.length > 0 ? (
-          <div className="table main-history-table">
-            {showPlayerModal && (
-              <PlayerModal
-                modalIsOpen={showPlayerModal}
-                closeModal={this.handleClosePlayerModal}
-                selectedCreator={selectedCreator}
-              />
-            )}
-            {(history || [])
-              .slice(0, numToShow)
-              .map((row, key) => (
-                <div
-                  className={`table-row ${row.joined_user === userId ? 'history-background' : ''
-                    } ${key < 50 ? 'slide-in' : ''}`}
-                  style={{ animationDelay: `${key * 0.1}s`, padding: '10px' }}
-                  key={row._id}
-                >
-                  <div className="table-cell">
-                    <div className="room-id">{row.status}</div>
-                    {row.ai_mode && (
-                      <div id="ai_mode">
-                        <span className="room-id ai_mode">{row.ai_mode}</span>
-                        {row.qbot && <span className="room-id qbot">Q-BOT</span>}
-                      </div>
-                    )}
-                    <div
-                      className="mobile-only"
-                      dangerouslySetInnerHTML={{ __html: row.history }}
-                    ></div>
-                    <div
-                      className="desktop-only"
-                      dangerouslySetInnerHTML={{ __html: row.history }}
-                    ></div>
+  return (
+    <div className="room-history-panel">
+      {history && history.length > 0 ? (
+        <div className="table main-history-table">
+          {showPlayerModal && (
+            <PlayerModal
+              modalIsOpen={showPlayerModal}
+              closeModal={handleClosePlayerModal}
+              selectedCreator={selectedCreator}
+            />
+          )}
+          {history.slice(0, numToShow).map((row, key) => (
+            <div
+              className={`table-row ${row.joined_user === userId ? 'history-background' : ''} ${key < 50 ? 'slide-in' : ''}`}
+              style={{ animationDelay: `${key * 0.1}s`, padding: '10px' }}
+              key={row._id}
+            >
+              <div className="table-cell">
+                <div className="room-id">{row.status}</div>
+                {row.ai_mode && (
+                  <div id="ai_mode">
+                    <span className="room-id ai_mode">{row.ai_mode}</span>
+                    {row.qbot && <span className="room-id qbot">Q-BOT</span>}
                   </div>
-                  <div className="table-cell">{Moment(row.created_at).fromNow()}</div>
-                  {key === history.length - 1 && <div ref={this.lastItemRef}></div>}
-                </div>
-              ))}
-            {roomInfo && numToShow < roomInfo.totalGameLogsCount && (
-              <div className="load-more-btn">
-                <Button
-                  id="load-btn"
-                  variant="contained"
-                  color="primary"
-                  onClick={this.handleLoadMore}
-                >
-                  Load More
-                </Button>
+                )}
+                <div
+                  className="mobile-only"
+                  dangerouslySetInnerHTML={{ __html: row.history }}
+                ></div>
+                <div
+                  className="desktop-only"
+                  dangerouslySetInnerHTML={{ __html: row.history }}
+                ></div>
               </div>
-            )}
-          </div>
-        ) : history && history.length === 0 ? (
-          <p style={{ color: 'rgb(153, 153, 153)', textAlign: 'center', fontSize: '16px' }}>
-            NO History
-          </p>
-        ) : (
-          <div className="loading-skeleton">
-            <Skeleton variant="rect" width="100%" height={60} />
-            <Skeleton variant="text" width="80%" height={30} />
-            <Skeleton variant="text" width="60%" height={20} />
-            <Skeleton variant="text" width="80%" height={30} />
-            <Skeleton variant="text" width="60%" height={20} />
-          </div>
-        )}
-      </div>
-    );
+              <div className="table-cell">{Moment(row.created_at).fromNow()}</div>
+            </div>
+          ))}
+          {roomInfo && numToShow < roomInfo.totalGameLogsCount && (
+            <div className="load-more-btn">
+              <Button id="load-btn" variant="contained" color="primary" onClick={handleLoadMore}>
+                Load More
+              </Button>
+            </div>
+          )}
+        </div>
+      ) : history && history.length === 0 ? (
+        <p style={{ color: 'rgb(153, 153, 153)', textAlign: 'center', fontSize: '16px' }}>
+          NO History
+        </p>
+      ) : (
+        <div className="loading-skeleton">
+          <Skeleton variant="rect" width="100%" height={60} />
+          <Skeleton variant="text" width="80%" height={30} />
+          <Skeleton variant="text" width="60%" height={20} />
+          <Skeleton variant="text" width="80%" height={30} />
+          <Skeleton variant="text" width="60%" height={20} />
+        </div>
+      )}
+    </div>
+  );
+};
 
-  }
-}
-
-
-const mapStateToProps = state => ({
+const mapStateToProps = (state) => ({
   loading: state.logic.isActiveLoadingOverlay,
   userId: state.auth.user._id,
   socket: state.auth.socket,
-
 });
 
-const mapDispatchToProps = {
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(RoomHistory);
+export default connect(mapStateToProps)(RoomHistory);

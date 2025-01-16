@@ -1,11 +1,11 @@
-import React, { Component } from 'react';
+import React, { useState } from 'react';
 import Modal from 'react-modal';
 import { connect } from 'react-redux';
 import {
   closeConfirmTradeModal
 } from '../../redux/Notification/notification.actions';
 import { confirmTrade, addNewTransaction } from '../../redux/Logic/logic.actions';
-import { Button, TextField } from '@material-ui/core';
+import { Button } from '@material-ui/core';
 import { alertModal } from '../modal/ConfirmAlerts';
 import { setBalance } from '../../redux/Auth/user.actions';
 import { acQueryItem } from '../../redux/Item/item.action';
@@ -32,106 +32,109 @@ const customStyles = {
   }
 };
 
-class ConfirmTradeModal extends Component {
-  constructor(props) {
-    super(props);
+function ConfirmTradeModal(props) {
+  const {
+    isOpen,
+    isDarkMode,
+    productName,
+    price,
+    rentOption,
+    solPrice,
+    item, 
+    owner,
+    closeConfirmTradeModal,
+    confirmTrade,
+    setBalance,
+    addNewTransaction,
+    acQueryItem
+  } = props;
 
-    this.state = {
-      item: '',
-      owner: '',
-      price: 0,
-      productName: '',
-      loading: false
-    };
-  }
- 
-  onBtnOkClicked = async e => {
-    const { item, owner, closeConfirmTradeModal, setBalance, addNewTransaction, isDarkMode, confirmTrade, acQueryItem } = this.props;
-  
-    // Set loading to true before starting the async operation
-    this.setState({ loading: true });
-  
-    const response = await confirmTrade({ item_id: item, owner: owner });
-  
+  // Local state for loading
+  const [loading, setLoading] = useState(false);
+
+  const defaultOptions = {
+    loop: true,
+    autoplay: true,
+    animationData: progress,
+    rendererSettings: {
+      preserveAspectRatio: 'xMidYMid slice'
+    }
+  };
+
+  // Handler for the confirm (OK) button
+  const onBtnOkClicked = async () => {
+    setLoading(true); // start loading
+
+    const response = await confirmTrade({ item_id: item, owner });
+
     if (response.success) {
       const { balance, newTransaction, message } = response;
-  
-      // Handle success: Update balance, transaction and close the modal
       setBalance(balance);
       addNewTransaction(newTransaction);
       acQueryItem(40, 1, 'price', '653ee81117c9f5ee2124564b');
       alertModal(isDarkMode, message, '-cat');
     } else {
-      // Handle failure: Show error message
       alertModal(isDarkMode, response.message);
     }
-  
-    // Close modal and reset loading state
+
     closeConfirmTradeModal();
-    this.setState({ loading: false });
+    setLoading(false); // stop loading
   };
 
-  onBtnCancelClicked = e => {
-    this.props.closeConfirmTradeModal();
+  // Handler for the cancel button
+  const onBtnCancelClicked = () => {
+    closeConfirmTradeModal();
   };
 
-  render() {
-    const { isOpen, isDarkMode, productName, price, closeConfirmTradeModal, rentOption, solPrice } = this.props;
-    const { loading } = this.state;
-    const defaultOptions = {
-      loop: true,
-      autoplay: true,
-      animationData: progress,
-      rendererSettings: {
-        preserveAspectRatio: 'xMidYMid slice'
-      }
-    };
-    return (
-      <Modal isOpen={isOpen} style={customStyles}>
-        <div className={isDarkMode ? 'dark_mode' : ''}>
-          <div className="modal-body alert-body password-modal-body">
-            {!loading ? (
-              <>
-                <div className={`modal-icon result-icon-trade`}></div>
-                <h5>
-                  {rentOption ? 'RENT ' : 'PURCHASE '}
-                  <span style={{ color: '#ffd000' }}> 1 x '{productName}' </span>?
-                </h5>
-                <h6>
-                  Click {rentOption ? 'RENT' : 'TRADE'} to{' '}
-                  {rentOption ? (
-                    <span>pay {convertToCurrency(price, solPrice)} per month</span>
-                  ) : (
-                    <span>exchange for [{convertToCurrency(price, solPrice)}]</span>
-                  )}
-                </h6>
-              </>
-            ) : (
-              // Display Lottie animation when tnxComplete is false (processing trade)
-              <div className="loading-animation-container">
-                <Lottie options={defaultOptions} height={40} width={210} />
-                <h5 style={{ color: '#ffd000' }}>PROCESSING TRADE...</h5>
-              </div>
-            )}
-          </div>
-
-          {!loading && (
-            <div className="modal-footer">
-              <Button className="btn-submit" onClick={this.onBtnOkClicked}>
-                {rentOption ? 'RENT' : 'TRADE'}
-              </Button>
-              <Button className="btn-back" onClick={closeConfirmTradeModal}>
-                Cancel
-              </Button>
+  return (
+    <Modal isOpen={isOpen} style={customStyles}>
+      <div className={isDarkMode ? 'dark_mode' : ''}>
+        <div className="modal-body alert-body password-modal-body">
+          {!loading ? (
+            <>
+              <div className="modal-icon result-icon-trade" />
+              <h5>
+                {rentOption ? 'RENT ' : 'PURCHASE '}
+                <span style={{ color: '#ffd000' }}>1 x '{productName}'</span>?
+              </h5>
+              <h6>
+                Click {rentOption ? 'RENT' : 'TRADE'} to{' '}
+                {rentOption ? (
+                  <span>
+                    pay {convertToCurrency(price, solPrice)} per month
+                  </span>
+                ) : (
+                  <span>
+                    exchange for [{convertToCurrency(price, solPrice)}]
+                  </span>
+                )}
+              </h6>
+            </>
+          ) : (
+            // Display Lottie animation while loading
+            <div className="loading-animation-container">
+              <Lottie options={defaultOptions} height={40} width={210} />
+              <h5 style={{ color: '#ffd000' }}>PROCESSING TRADE...</h5>
             </div>
           )}
         </div>
-      </Modal>
-    );
-  }
+
+        {!loading && (
+          <div className="modal-footer">
+            <Button className="btn-submit" onClick={onBtnOkClicked}>
+              {rentOption ? 'RENT' : 'TRADE'}
+            </Button>
+            <Button className="btn-back" onClick={onBtnCancelClicked}>
+              Cancel
+            </Button>
+          </div>
+        )}
+      </div>
+    </Modal>
+  );
 }
 
-const mapStateToProps = state => ({
+const mapStateToProps = (state) => ({
   isDarkMode: state.auth.isDarkMode,
   isOpen: state.snackbar.showConfirmTradeModal,
   title: state.snackbar.title,
@@ -142,7 +145,7 @@ const mapStateToProps = state => ({
   productName: state.itemReducer.data.productName,
   alertMessage: state.snackbar.alertMessage,
   alertType: state.snackbar.alertType,
-  solPrice: state.logic.solPrice,
+  solPrice: state.logic.solPrice
 });
 
 const mapDispatchToProps = {

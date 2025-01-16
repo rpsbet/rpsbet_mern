@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/static/css/main.2572d33b.css",
-    "main.js": "/static/js/main.6e866265.js",
+    "main.css": "/static/css/main.94081ff6.css",
+    "main.js": "/static/js/main.e82f924d.js",
     "static/js/469.5d4d93cd.chunk.js": "/static/js/469.5d4d93cd.chunk.js",
     "static/js/857.01cd8b42.chunk.js": "/static/js/857.01cd8b42.chunk.js",
     "static/js/331.2aa29dd2.chunk.js": "/static/js/331.2aa29dd2.chunk.js",
@@ -66,7 +66,6 @@
     "static/media/slyCat.svg": "/static/media/slyCat.bdef40e3f22d746fe1a4486e143af1c3.svg",
     "static/media/happyCat.svg": "/static/media/happyCat.b58d10cbe7768df174c0b6e6183a89c1.svg",
     "static/media/football.svg": "/static/media/football.9f4ef1953d8988fcd171.svg",
-    "static/media/claw-cursor.svg": "/static/media/claw-cursor.e792462611971efa4bf23a1626a83817.svg",
     "static/media/btc.png": "/static/media/btc.bb62f97df1e9f1e12258.png",
     "static/media/eth.png": "/static/media/eth.7433db9ec7681b18a1dd.png",
     "static/media/typing-sound.mp3": "/static/media/typing-sound.d30991da89a264f3a81b.mp3",
@@ -75,7 +74,6 @@
     "static/media/main-select.mp3": "/static/media/main-select.2309ad590228f14b524f.mp3",
     "static/media/dark-alert-icon-cat.svg": "/static/media/dark-alert-icon-cat.e4ed7b5c8a62a451adc0.svg",
     "static/media/alert-icon-cat.svg": "/static/media/alert-icon-cat.48ca5a70af0e44e38b76.svg",
-    "static/media/claw-cursor.mp3": "/static/media/claw-cursor.67c1f664f0a737a3c460.mp3",
     "static/media/modal-house-edge.svg": "/static/media/modal-house-edge.ca01c901a467f797f760.svg",
     "static/media/modal-support.svg": "/static/media/modal-support.1ac4fe0aae50bcf6ad6c.svg",
     "static/media/result-icon-trade.svg": "/static/media/result-icon-trade.5f3c041bfb8998c3bbb8.svg",
@@ -105,11 +103,11 @@
     "static/media/dark-game-page-title.svg": "/static/media/dark-game-page-title.9cee3b69a15386ee4fdf.svg",
     "static/media/rps-logo-white.svg": "/static/media/rps-logo-white.032a6ce6f40118f58669.svg",
     "static/media/profile-thumbnail-dark.svg": "/static/media/profile-thumbnail-dark.2a9fc745fcffc9fc2053.svg",
-    "main.2572d33b.css.map": "/static/css/main.2572d33b.css.map",
-    "main.6e866265.js.map": "/static/js/main.6e866265.js.map"
+    "main.94081ff6.css.map": "/static/css/main.94081ff6.css.map",
+    "main.e82f924d.js.map": "/static/js/main.e82f924d.js.map"
   },
   "entrypoints": [
-    "static/css/main.2572d33b.css",
-    "static/js/main.6e866265.js"
+    "static/css/main.94081ff6.css",
+    "static/js/main.e82f924d.js"
   ]
 }

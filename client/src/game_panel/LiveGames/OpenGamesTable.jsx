@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { connect } from 'react-redux';
 import {
   actionRoom,
@@ -9,11 +9,12 @@ import {
   addNewTransaction,
   coHost,
 } from '../../redux/Logic/logic.actions';
-import { TrendingUpOutlined, TrendingDownOutlined } from "@material-ui/icons";
+
+import { TrendingUpOutlined, TrendingDownOutlined } from '@material-ui/icons';
 import { Grid, Tooltip, Typography } from '@material-ui/core';
-import { Skeleton } from "@material-ui/lab";
+import { Skeleton } from '@material-ui/lab';
 import { Warning, Add, Remove, Visibility } from '@material-ui/icons';
-import FilterListIcon from "@material-ui/icons/FilterList";
+import FilterListIcon from '@material-ui/icons/FilterList';
 import Moment from 'moment';
 import { faHeart, faHeartBroken, faStopwatch } from '@fortawesome/free-solid-svg-icons';
 import animationData from '../LottieAnimations/live';
@@ -32,12 +33,14 @@ import { alertModal } from '../modal/ConfirmAlerts';
 import PlayerModal from '../modal/PlayerModal';
 import blob from '../LottieAnimations/loadingChart.json';
 import history from '../../redux/history';
+
 const gifUrls = ['/img/rock.gif', '/img/paper.gif', '/img/scissors.gif'];
 const randomGifUrl = gifUrls[Math.floor(Math.random() * gifUrls.length)];
+
 const customStyles = {
   overlay: {
     zIndex: 3,
-    backgroundColor: 'unset'
+    backgroundColor: 'unset',
   },
   content: {
     top: '50%',
@@ -47,180 +50,177 @@ const customStyles = {
     transform: 'translate(-50%, -50%)',
     background: 'transparent',
     border: 'none',
-    padding: 0
-  }
+    padding: 0,
+  },
 };
 
-class OpenGamesTable extends Component {
-  constructor(props) {
-    super(props);
+function OpenGamesTable(props) {
+  const {
+    // Props from Redux or parent
+    roomList: propRoomList = [],
+    highlightedRooms = new Set(),
+    selectedGameType,
+    loading,
+    isDarkMode,
+    showPlayerModal,
+    selectedCreator,
+    handleOpenPlayerModal,
+    handleClosePlayerModal,
+    onlineUserList,
+    balance,
+    isLowGraphics,
+    user,
+    solPrice,
+    pageNumber,
+    // Redux actions
+    getRoomList,
+    setCurRoomInfo,
+    actionRoom,
+    getRoomStatisticsData,
+    getRecentlyClosed,
+    setBalance,
+    fetchMoreRooms,
+    addNewTransaction,
+    coHost,
+  } = props;
 
-    this.state = {
-      selectedGameType: this.props.selectedGameType,
-      mouseDown: false,
-      roomList: this.props.roomList ? this.props.roomList : [],
-      fetchedRoomIds: [],
-      fetchedDataIds: [],
-      invertFilter: false,
-      actionList: null,
-      isCoHostModalOpen: false,
-      isFocused: false,
-      isLoading: true,
-      filter: "Live Games",
+  // ------------------ LOCAL STATE ------------------
+  const [localRoomList, setLocalRoomList] = useState(propRoomList);
+  const [filter, setFilter] = useState('Live Games');
+  const [isCoHostModalOpen, setIsCoHostModalOpen] = useState(false);
+  const [coHostAmount, setCoHostAmount] = useState('');
+  const [selectedRow, setSelectedRow] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // If you had more original state (e.g. invertFilter, isFocused, actionList, etc.), you could add them here as well.
+
+  // For debouncing scroll
+  const scrollTimeout = useRef(null);
+
+  // Equivalent to componentDidMount:
+  useEffect(() => {
+    let isMounted = true;
+    const doMountThings = async () => {
+      setIsLoading(true);
+      // Fetch initial room list
+      try {
+        await getRoomList({ pageSize: 7 });
+      } catch (error) {
+        console.error('Error fetching Room List', error);
+      }
+      // Mark as done
+      if (isMounted) setIsLoading(false);
     };
-    this.isComponentMounted = false;
-    this.debouncedHandleScroll = null;
-  }
+    doMountThings();
 
-  async componentDidMount() {
-    this.isComponentMounted = true;
-    this.handleLoad();
-    this.debouncedHandleScroll = this.debounce(this.handleScroll, 300);
-    window.addEventListener('load', this.handleLoad);
-    window.addEventListener('scroll', this.debouncedHandleScroll);
-    try {
-      await this.props.getRoomList({ pageSize: 7 });
-    } catch (error) {
-      console.error("Error fetching Room List", error);
+    // Setup scroll listener
+    window.addEventListener('scroll', debouncedHandleScroll);
+    // Cleanup on unmount
+    return () => {
+      isMounted = false;
+      window.removeEventListener('scroll', debouncedHandleScroll);
+    };
+  }, []);
+
+  // Watch for changes in props.roomList, highlightedRooms, etc. 
+  // This mimics componentDidUpdate
+  useEffect(() => {
+    // Merge new props.roomList with localRoomList if needed
+    // Or replace localRoomList if there's new data
+    // Also handle highlighted rooms
+    const mergedRooms = [
+      ...propRoomList,
+      ...localRoomList.filter(
+        (room) => !propRoomList.some((newRoom) => newRoom._id === room._id)
+      ),
+    ];
+
+    // If localRoomList has extra rooms not in propRoomList, override
+    const extraRoomsInState = localRoomList.some(
+      (stateRoom) => !propRoomList.some((propRoom) => propRoom._id === stateRoom._id)
+    );
+    if (extraRoomsInState) {
+      setLocalRoomList([...propRoomList]);
+      return;
     }
-  }
 
-  componentWillUnmount() {
-    this.isComponentMounted = false;
-    window.removeEventListener('load', this.handleLoad);
-    window.removeEventListener('scroll', this.debouncedHandleScroll);
-
-  }
-
-
-  async componentDidUpdate(prevProps, prevState) {
-    // Check if props have changed and trigger fetchMoreRooms if needed
-    if (
-      prevProps.roomList[0]?.battles !== this.props.roomList[0]?.battles ||
-      prevProps.roomList[0]?.user_bet !== this.props.roomList[0]?.user_bet ||
-      prevProps.highlightedRooms !== this.props.highlightedRooms ||
-      prevProps.roomList.length !== this.props.roomList.length
-    ) {
-      this.props.fetchMoreRooms(null);
-  
-      // Merge props.roomList and state.roomList
-      const mergedRooms = [
-        ...this.props.roomList,
-        ...this.state.roomList.filter(
-          room => !this.props.roomList.some(newRoom => newRoom._id === room._id)
-        ),
-      ];
-  
-      // Check if this.state.roomList has extra rooms not in this.props.roomList
-      const extraRoomsInState = this.state.roomList.some(
-        stateRoom => !this.props.roomList.some(propRoom => propRoom._id === stateRoom._id)
-      );
-  
-      if (extraRoomsInState) {
-        // If extra rooms exist in state, replace state.roomList with props.roomList
-        this.setState({
-          roomList: [...this.props.roomList],
-          highlightedRooms: this.props.highlightedRooms,
-        });
-        return; // Exit early since state has already been updated
+    // If there's a highlighted room, bring it to the front
+    const highlightId = Array.from(highlightedRooms)[0];
+    if (highlightId) {
+      const index = mergedRooms.findIndex((r) => r._id === highlightId);
+      if (index !== -1 && index !== 0) {
+        const [highlighted] = mergedRooms.splice(index, 1);
+        mergedRooms.unshift(highlighted);
       }
-  
-      const highlightedRoomId = Array.from(this.props.highlightedRooms)[0];
-      if (highlightedRoomId) {
-        const roomIndex = mergedRooms.findIndex(room => room._id === highlightedRoomId);
-        if (roomIndex !== -1 && roomIndex !== 0) {
-          const [highlightedRoom] = mergedRooms.splice(roomIndex, 1);
-          mergedRooms.unshift(highlightedRoom);
-        }
-      }
-  
-      this.setState({
-        roomList: mergedRooms,
-        highlightedRooms: this.props.highlightedRooms,
+    }
+    setLocalRoomList(mergedRooms);
+  }, [propRoomList, highlightedRooms]);
+
+  // If selectedGameType changes, we might want to refetch or mark isLoading
+  useEffect(() => {
+    setIsLoading(true);
+  }, [selectedGameType]);
+
+  // ------------------ SCROLL HANDLING (debounce) ------------------
+  const debouncedHandleScroll = useCallback(() => {
+    // Cancel previous
+    if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
+    // Set new
+    scrollTimeout.current = setTimeout(() => handleScroll(), 300);
+  }, []);
+
+  // The actual handleScroll logic
+  const handleScroll = async () => {
+    if (loading) return;
+    const tableElement = document.querySelector('.table.main-game-table');
+    if (!tableElement) return;
+
+    const { bottom } = tableElement.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    const offset = 100;
+    const isTableNearBottom = bottom <= viewportHeight + offset;
+    const isAtBottom =
+      window.innerHeight + window.scrollY >= document.body.offsetHeight;
+
+    if (isTableNearBottom || isAtBottom) {
+      // fetch more
+      await fetchMoreRooms({
+        pageSize: localRoomList.length + 3,
+        game_type: selectedGameType,
       });
     }
-  
-    if (prevProps.selectedGameType !== this.props.selectedGameType) {
-      this.setState({ isLoading: true });
+  };
+
+  // ------------------ CO-HOST LOGIC ------------------
+  const handleCoHost = (row) => {
+    setSelectedRow(row);
+    setIsCoHostModalOpen(true);
+  };
+
+  const handleCloseCoHostModal = () => {
+    setIsCoHostModalOpen(false);
+  };
+
+  const handleCoHostAmountChange = (event) => {
+    setCoHostAmount(event.target.value);
+  };
+
+  const handleSendCoHost = async () => {
+    if (coHostAmount <= 0) {
+      alertModal(isDarkMode, 'R U FURR-REAL? AMOUNT MUST BE MORE THAN 0!');
+      return;
     }
-  }
-
-
-  handleLoad = () => {
-    if (this.isComponentMounted) {
-      this.setState({ loaded: true, selectedGameType: 'All' });
+    if (coHostAmount > balance) {
+      alertModal(isDarkMode, 'NOT ENUFF FUNDS AT THIS MEOWMENT');
+      return;
     }
-  };
-
-  handleScroll = async () => {
-    const { loading, selectedGameType, roomList } = this.props;
-    const { fetchedRoomIds } = this.state;
-
-    const tableElement = document.querySelector('.table.main-game-table');
-
-    if (tableElement) {
-      const { bottom } = tableElement.getBoundingClientRect();
-      const viewportHeight = window.innerHeight;
-      const offset = 100;
-
-      const isTableNearBottom = bottom <= viewportHeight + offset;
-      const isAtBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight;
-
-      if (!loading && (isTableNearBottom || isAtBottom)) {
-        await this.props.fetchMoreRooms({
-          pageSize: roomList.length + 3,
-          game_type: selectedGameType,
-          excludeIds: fetchedRoomIds,
-        });
-      }
-    }
-  };
-
-  debounce = (func, delay) => {
-    let debounceTimer;
-    return function (...args) {
-      const context = this;
-      clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(() => func.apply(context, args), delay);
-    };
-  };
-
-  handleCoHost = (row) => {
-    this.setState({ isCoHostModalOpen: true, selectedRow: row });
-  };
-
-  handleCloseCoHostModal = () => {
-    this.setState({ isCoHostModalOpen: false });
-  };
-
-  handleCoHostAmountChange = event => {
-    this.setState({ coHostAmount: event.target.value });
-  };
-
-
-  handleSendCoHost = async () => {
-    const { coHostAmount, selectedRow } = this.state;
-    const { balance, isDarkMode, setBalance, addNewTransaction, getRoomList, selectedGameType } = this.props;
-
     try {
-      if (coHostAmount <= 0) {
-        alertModal(isDarkMode, 'R U FURR-REAL? AMOUNT MUST BE MORE THAN 0!');
-        return;
-      }
-
-      if (coHostAmount > balance) {
-        alertModal(isDarkMode, 'NOT ENUFF FUNDS AT THIS MEOWMENT');
-        return;
-      }
-
-      const result = await this.props.coHost(coHostAmount, selectedRow._id);
-
+      const result = await coHost(coHostAmount, selectedRow._id);
       if (result.success) {
-        // alertModal(isDarkMode, result.message, '-cat');
         setBalance(result.balance);
         addNewTransaction(result.newTransaction);
         await getRoomList({
-          pageSize: this.state.roomList.length,
+          pageSize: localRoomList.length,
           game_type: selectedGameType,
         });
       } else {
@@ -231,14 +231,11 @@ class OpenGamesTable extends Component {
     }
   };
 
-
-  customFromNow(date) {
+  // ------------------ UTILS ------------------
+  const customFromNow = (date) => {
     const now = Moment();
     const duration = Moment.duration(now.diff(date));
-
-    const style = {
-      fontSize: 'xx-small',
-    };
+    const style = { fontSize: 'xx-small' };
 
     if (duration.asSeconds() < 60) {
       return (
@@ -269,749 +266,639 @@ class OpenGamesTable extends Component {
         </>
       );
     }
-  }
+  };
 
-  updateFromNow(history) {
-    const result = JSON.parse(JSON.stringify(history));
+  // If we need to transform a recentlyClosed array, we can do so
+  const updateFromNow = (historyArr) => {
+    const result = JSON.parse(JSON.stringify(historyArr));
     for (let i = 0; i < result.length; i++) {
-      result[i]['from_now'] = this.customFromNow(Moment(result[i]['updated_at']));
+      result[i]['from_now'] = customFromNow(Moment(result[i]['updated_at']));
     }
     return result;
-  }
+  };
 
-  handleLike = ({ _id }) => {
-    const updatedRoomList = this.state.roomList.map(room => {
-      if (room._id === _id) {
-        const likesIndex = room.likes ? room.likes.indexOf(this.props.user._id) : -1;
-        const dislikesIndex = room.dislikes ? room.dislikes.indexOf(this.props.user._id) : -1;
-
-        if (likesIndex > -1) {
-          room.likes.splice(likesIndex, 1);
-        } else if (dislikesIndex > -1) {
-          room.dislikes.splice(dislikesIndex, 1);
-          room.likes.push(this.props.user._id);
-          this.handleAction({ roomId: _id, type: 'dislike' });
-        } else {
-          room.likes.push(this.props.user._id);
-        }
-
-        room.likeAnimation = true;
-
-        setTimeout(() => {
-          room.likeAnimation = false;
-          this.setState({ roomList: [...this.state.roomList] });
-        }, 1500);
+  // Handling filter toggle: "Live Games" <-> "Recently Ended"
+  const handleFilterChange = useCallback(
+    async (option) => {
+      setFilter(option);
+      if (option === 'Recently Ended') {
+        await getRecentlyClosed();
       }
-      return room;
-    });
+    },
+    [getRecentlyClosed]
+  );
 
-    this.setState({ roomList: updatedRoomList });
-    this.handleAction({ roomId: _id, type: 'like' });
-  };
-
-  handleAction = ({ roomId, type }) => {
-    const { user, pageNumber } = this.props;
-    if (user && user._id) {
-      this.props.actionRoom({
-        roomId,
-        type,
-        conditions: {
-          page: pageNumber !== undefined ? pageNumber : 0,
-          game_type: this.props.selectedGameType
-        }
+  // "Join" a game
+  const joinRoom = useCallback(
+    (roomDetails) => {
+      const { roomStatus, id } = roomDetails;
+      if (roomStatus === 'finished') {
+        alertModal(isDarkMode, 'THIS GAME HAS NOW ENDED');
+        return;
+      }
+      setCurRoomInfo({
+        _id: id,
+        game_type: roomDetails.gameType,
+        bankroll: parseFloat(roomDetails.user_bet),
+        creator_id: roomDetails.creatorId,
+        accessory: roomDetails.accessory,
+        rank: roomDetails.rank,
+        image: roomDetails.image,
+        name: roomDetails.name,
+        x_link: roomDetails.x_link,
+        telegram_link: roomDetails.telegram_link,
+        website_link: roomDetails.website_link,
+        selectedStrategy: roomDetails.selectedStrategy,
+        description: roomDetails.description,
+        creator_status: roomDetails.creatorStatus,
+        creator_avatar: roomDetails.creatorAvatar,
+        username: roomDetails.username,
+        total_stakes: roomDetails.totalStakes,
+        created_at: roomDetails.createdAt,
+        room_name: roomDetails.roomName,
+        hosts: roomDetails.hosts,
+        status: roomDetails.roomStatus,
+        qs_game_type: roomDetails.qsGameType,
+        pr: roomDetails.pr,
+        host_pr: roomDetails.host_pr,
+        game_log_list: [],
       });
-    }
+      history.push(`/join/${id}`);
+    },
+    [alertModal, isDarkMode, setCurRoomInfo]
+  );
+
+  // -------------- UI HELPERS --------------
+  const getColorClass = (value) => {
+    if (value > 0) return 'green';
+    if (value === 0) return 'grey';
+    return 'red';
   };
-
-  handleView = ({ _id }) => {
-    this.handleViewAction({ roomId: _id, type: 'view' });
-  };
-
-  handleViewAction = ({ roomId, type }) => {
-    const { user, pageNumber, selectedGameType } = this.props;
-    if (user && user._id) {
-      this.props.actionRoom({
-        roomId,
-        type,
-        conditions: {
-          page: pageNumber !== undefined ? pageNumber : 0,
-          game_type: selectedGameType
-        }
-      });
-    }
-  };
-
-  joinRoom = (roomDetails) => {
-    const {
-      id,
-      image,
-      name,
-      x_link,
-      website_link,
-      telegram_link,
-      description,
-      roomStatus,
-      gameType,
-      createdAt,
-      user_bet,
-      totalStakes,
-      username,
-      creatorStatus,
-      creatorAvatar,
-      accessory,
-      selectedStrategy,
-      hosts,
-      roomName,
-      rank,
-      creatorId,
-      qsGameType,
-      pr,
-      host_pr
-    } = roomDetails;
-    this.setState({ isClicked: true });
-
-    if (roomStatus === "finished") {
-      alertModal(this.props.isDarkMode, "THIS GAME HAS NOW ENDED");
-      return;
-    }
-
-    this.props.setCurRoomInfo({
-      _id: id,
-      game_type: gameType,
-      bankroll: parseFloat(user_bet),
-      creator_id: creatorId,
-      accessory: accessory,
-      rank: rank,
-      image: image,
-      name: name,
-      x_link: x_link,
-      telegram_link: telegram_link,
-      website_link: website_link,
-      selectedStrategy: selectedStrategy,
-      description: description,
-      creator_status: creatorStatus,
-      creator_avatar: creatorAvatar,
-      username: username,
-      total_stakes: totalStakes,
-      created_at: createdAt,
-      room_name: roomName,
-      hosts: hosts,
-      status: roomStatus,
-      qs_game_type: qsGameType,
-      pr: pr,
-      host_pr: host_pr,
-      game_log_list: [],
-    });
-
-    history.push(`/join/${id}`);
-  };
-
-  getColorClass = (value) => {
-    if (value > 0) {
-      return 'green';
-    } else if (value === 0) {
-      return 'grey';
-    } else {
-      return 'red';
-    }
-  };
-
-  renderArrow = value => {
+  const renderArrow = (value) => {
     return value >= 0 ? (
       <Add style={{ color: '#57ca22' }} />
     ) : (
       <Remove style={{ color: 'red' }} />
     );
   };
-
-  calculateColor = value => {
+  const calculateColor = (value) => {
     return value >= 0 ? '#57ca22' : 'red';
   };
 
-  handleFilterChange = async (filterOption) => {
-    this.setState({ filter: filterOption });
-    if (filterOption) {
-      await this.props.getRecentlyClosed();
-    }
+  // Filter state
+  const isLiveGames = filter === 'Live Games';
+
+  // If we have recentlyClosed data from Redux
+  // (the original code references `recentlyClosed`, updated by getRecentlyClosed)
+  const recent = props.recentlyClosed ? updateFromNow(props.recentlyClosed) : [];
+
+  // Lottie animation defaults
+  const defaultOptions = {
+    loop: isLowGraphics ? false : true,
+    autoplay: isLowGraphics ? false : true,
+    animationData: animationData,
+    rendererSettings: { preserveAspectRatio: 'xMidYMid slice' },
   };
 
-  render() {
-    const {
-      coHostAmount,
-      selectedRow,
-      filter,
-      isLoading,
-      roomList
-    } = this.state;
-    const {
-      loading,
-      isDarkMode,
-      showPlayerModal,
-      selectedCreator,
-      recentlyClosed,
-      handleOpenPlayerModal,
-      balance,
-      isLowGraphics,
-      handleClosePlayerModal,
-      onlineUserList,
-      user,
-      solPrice
-    } = this.props;
+  return (
+    <>
+      {showPlayerModal && (
+        <PlayerModal
+          selectedCreator={selectedCreator}
+          modalIsOpen={showPlayerModal}
+          closeModal={handleClosePlayerModal}
+        />
+      )}
 
-    let recent = recentlyClosed ? this.updateFromNow(recentlyClosed) : [];
-    const isLiveGames = filter === "Live Games";
-    const defaultOptions = {
-      loop: isLowGraphics ? false : true,
-      autoplay: isLowGraphics ? false : true,
-      animationData: animationData,
-      rendererSettings: {
-        preserveAspectRatio: 'xMidYMid slice'
-      }
-    };
-    return (
-      <>
-
-        {showPlayerModal && (
-          <PlayerModal
-            selectedCreator={selectedCreator}
-            modalIsOpen={showPlayerModal}
-            closeModal={handleClosePlayerModal}
-          />
-        )}
-        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
-          <div
-            className="filter-container"
-            style={{ display: "flex", alignItems: "center", cursor: "pointer" }}
-            onClick={() => this.handleFilterChange(isLiveGames ? "Recently Ended" : "Live Games")}
-          >
-            <i className="filter-icon" style={{ marginRight: "5px" }}></i>
-            <FilterListIcon style={{ marginRight: "5px" }} />
-            <span>{filter}</span>
-          </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+        <div
+          className="filter-container"
+          style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
+          onClick={() => handleFilterChange(isLiveGames ? 'Recently Ended' : 'Live Games')}
+        >
+          <FilterListIcon style={{ marginRight: '5px' }} />
+          <span>{filter}</span>
         </div>
+      </div>
 
-        {isLiveGames ? (
-          <>
-            <div className="table main-game-table open-games">
-
-              {(roomList.length === 0 && !isLoading && !loading) ? (
-                <div className="dont-have-game-msg">
-                  <div>NO LIVE GAMES, GO TO 'MANAGE' TO CREATE ONE</div>
-                </div>
+      {isLiveGames ? (
+        <div className="table main-game-table open-games">
+          {localRoomList.length === 0 && !isLoading && !loading ? (
+            <div className="dont-have-game-msg">
+              <div>NO LIVE GAMES, GO TO 'MANAGE' TO CREATE ONE</div>
+            </div>
+          ) : (
+            <Grid container className="grid-container" spacing={1} style={{ padding: '20px', width: '100%' }}>
+              {localRoomList.length === 0 ? (
+                // Skeleton
+                Array.from({ length: 5 }).map((_, index) => (
+                  <Grid item xs={12} sm={6} md={4} key={index}>
+                    <Skeleton variant="rect" width="100%" height={100} />
+                    <Skeleton width="60%" />
+                    <Skeleton width="40%" />
+                  </Grid>
+                ))
               ) : (
-                <Grid container className="grid-container" spacing={1} style={{ padding: "20px", width: "100%" }}>
-                  {roomList.length === 0 ? (
-                    // Render Skeletons if loading
-                    Array.from({ length: 5 }).map((_, index) => (
-                      <Grid item xs={12} sm={6} md={4} key={index}>
-                        <Skeleton variant="rect" width="100%" height={100} />
-                        <Skeleton width="60%" />
-                        <Skeleton width="40%" />
-                      </Grid>
-                    ))
-                  ) : (
-                    roomList.map((row, key) => (
-                      <div
-                        key={row._id}
-                        className={`table-row  ${key < 10 ? "slide-in" : "slide-in"}`}
-                        style={{
-                          animation: this.props.highlightedRooms.has(row._id)
-                            ? "flicker 0.2s 2, shake 0.2s"
-                            : "none",
-                        }}
-                        onClick={(event) => {
-                          if (!event.defaultPrevented) {
-                            this.joinRoom({
-                              id: row._id,
-                              roomId: row._id,
-                              name: row.name,
-                              x_link: row.x_link,
-                              website_link: row.website_link,
-                              selectedStrategy: row.selectedStrategy,
-                              image: row.image,
-                              telegram_link: row.telegram_link,
-                              creatorId: row.creator_id,
-                              creatorAvatar: row.creator_avatar,
-                              creatorStatus: row.creator_status,
-                              accessory: row.accessory,
-                              rank: row.rank,
-                              hosts: row.hosts,
-                              roomStatus: row.status,
-                              username: row.username,
-                              gameType: row.game_type.game_type_name,
-                              user_bet: row.user_bet,
-                              totalStakes: row.total_stakes,
-                              createdAt: row.created_at,
-                              roomName: row.room_name,
-                              qsGameType: row.qs_game_type,
-                              pr: row.pr,
-                              host_pr: row.host_pr,
-                            })
-                          }
-                        }
-                        }
-                      >
-                        {' '}
-                        <div className="" style={{ display: 'flex', flexDirection: 'column' }}>
-                          <div className="table-cell cell-room-info">
-                            <img
-                              src={row.image}
-                              alt={row.image}
-                              className="game-type-icon"
-                            />
-                            <div className="cell-game-description">
-                              {row.name}{' '}
-                              <span style={{ color: '#ff8500', fontWeight: 'bold' }}>({row.room_name})</span>
-                              <br />
-                              <span>{row.description}</span>
-                            </div>
-
-                            <div className="cell-game-id ">
-                              <img
-                                src={`/img/gametype/icons/${row.game_type.short_name}.svg`}
-                                alt={row.game_type.short_name}
-                                className="game-type-icon"
-                              />
-                              {row.selectedStrategy !== 'Random' ? (
-                                <span
-                                  style={{
-                                    fontSize: "xx-small",
-                                    border: "1px solid rgb(255, 208, 0)",
-                                    background: "linear-gradient(45deg, #7a5958, #a27955)",
-                                    borderRadius: "4px",
-                                    color: "rgb(255, 208, 0)",
-                                    padding: "0px 5px",
-                                    lineHeight: "20px",
-                                  }}
-                                >
-                                  AI
-                                </span>
-                              ) : (
-                                <span
-                                  style={{
-                                    fontSize: "xx-small",
-                                    border: "1px solid #ff0000",
-                                    background: "linear-gradient(359deg, rgb(255 9 0 / 34%), rgb(215 0 0 / 40%))",
-                                    borderRadius: "4px",
-                                    color: "#ff0000",
-                                    padding: "0px 5px",
-                                    lineHeight: "20px",
-                                  }}
-                                >
-                                  RNG
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <div
-                            className="cell-coHost"
-                          >
-                            <a
-                              className="ml-1"
-                              onClick={(event) => {
-
-                                event.preventDefault();
-                                event.stopPropagation();
-                                this.handleCoHost(row);
-                              }}
+                localRoomList.map((row, key) => (
+                  <div
+                    key={row._id}
+                    className={`table-row ${key < 10 ? 'slide-in' : 'slide-in'}`}
+                    style={{
+                      animation: highlightedRooms.has(row._id)
+                        ? 'flicker 0.2s 2, shake 0.2s'
+                        : 'none',
+                    }}
+                    onClick={(event) => {
+                      if (!event.defaultPrevented) {
+                        joinRoom({
+                          id: row._id,
+                          roomId: row._id,
+                          name: row.name,
+                          x_link: row.x_link,
+                          website_link: row.website_link,
+                          selectedStrategy: row.selectedStrategy,
+                          image: row.image,
+                          telegram_link: row.telegram_link,
+                          creatorId: row.creator_id,
+                          creatorAvatar: row.creator_avatar,
+                          creatorStatus: row.creator_status,
+                          accessory: row.accessory,
+                          rank: row.rank,
+                          hosts: row.hosts,
+                          roomStatus: row.status,
+                          username: row.username,
+                          gameType: row.game_type.game_type_name,
+                          user_bet: row.user_bet,
+                          totalStakes: row.total_stakes,
+                          createdAt: row.created_at,
+                          roomName: row.room_name,
+                          qsGameType: row.qs_game_type,
+                          pr: row.pr,
+                          host_pr: row.host_pr,
+                        });
+                      }
+                    }}
+                  >
+                    {/* Info panel */}
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <div className="table-cell cell-room-info">
+                        <img src={row.image} alt={row.image} className="game-type-icon" />
+                        <div className="cell-game-description">
+                          {row.name}{' '}
+                          <span style={{ color: '#ff8500', fontWeight: 'bold' }}>
+                            ({row.room_name})
+                          </span>
+                          <br />
+                          <span>{row.description}</span>
+                        </div>
+                        <div className="cell-game-id ">
+                          <img
+                            src={`/img/gametype/icons/${row.game_type.short_name}.svg`}
+                            alt={row.game_type.short_name}
+                            className="game-type-icon"
+                          />
+                          {row.selectedStrategy && (
+                            <span
                               style={{
-                                color: "rgb(0 255 58)",
-                                padding: "8px 12px",
-                                display: "flex",
-                                justifyContent: "center",
-                                alignItems: "center",
-                                background: "linear-gradient(45deg, #28a74544, #33e74533)",
-                                border: "2px solid rgb(0 255 58)",
-                                cursor: "pointer",
-                                borderRadius: "0.3em",
-                                fontSize: "14px",
-                                textDecoration: "none",
+                                fontSize: 'xx-small',
+                                border: '1px solid rgb(255, 208, 0)',
+                                background: 'linear-gradient(45deg, #7a5958, #a27955)',
+                                borderRadius: '4px',
+                                color: 'rgb(255, 208, 0)',
+                                padding: '0px 5px',
+                                lineHeight: '20px',
                               }}
                             >
-                              <ShowChartOutlined style={{ width: "20px" }} />
-                            </a>
-
-                            {row.is_private && (
-                              <Tooltip title="A password is required to battle this room." arrow>
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    justifyContent: "center",
-                                    alignItems: "center",
-                                    padding: "8px",
-                                    borderRadius: "0.3em",
-                                    backgroundColor: "#f1f1f1",
-                                    border: "2px solid #cccccc",
-                                    cursor: "default",
-                                    marginTop: '5px'
-                                  }}
-                                >
-                                  <LockOutlined style={{ color: "#808080", fontSize: "18px" }} />
-                                </div>
-                              </Tooltip>
-                            )}
-                          </div>
-                          <div
-                            style={{ zIndex: '2' }}
-                            className="table-cell desktop-only cell-user-name">
+                              {row.selectedStrategy}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      {/* CoHost icon / Private icon */}
+                      <div className="cell-coHost">
+                        <a
+                          className="ml-1"
+                          onClick={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            handleCoHost(row);
+                          }}
+                          style={{
+                            color: 'rgb(0 255 58)',
+                            padding: '8px 12px',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            background: 'linear-gradient(45deg, #28a74544, #33e74533)',
+                            border: '2px solid rgb(0 255 58)',
+                            cursor: 'pointer',
+                            borderRadius: '0.3em',
+                            fontSize: '14px',
+                            textDecoration: 'none',
+                          }}
+                        >
+                          <ShowChartOutlined style={{ width: '20px' }} />
+                        </a>
+                        {row.is_private && (
+                          <Tooltip title="A password is required to battle this room." arrow>
+                            <div
+                              style={{
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                padding: '8px',
+                                borderRadius: '0.3em',
+                                backgroundColor: '#f1f1f1',
+                                border: '2px solid #cccccc',
+                                cursor: 'default',
+                                marginTop: '5px',
+                              }}
+                            >
+                              <LockOutlined style={{ color: '#808080', fontSize: '18px' }} />
+                            </div>
+                          </Tooltip>
+                        )}
+                      </div>
+                      {/* Desktop-only info */}
+                      <div style={{ zIndex: '2' }} className="table-cell desktop-only cell-user-name">
+                        <a
+                          className="player"
+                          onClick={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            handleOpenPlayerModal(row.creator_id);
+                          }}
+                        >
+                          <Avatar
+                            className="avatar desktop-only"
+                            src={row.creator_avatar}
+                            accessory={row.accessory}
+                            username={row.username}
+                            rank={row.rank}
+                            alt=""
+                            darkMode={isDarkMode}
+                          />
+                        </a>
+                        <i
+                          className={`online-status${
+                            onlineUserList.filter((u) => u === row.creator_id).length > 0
+                              ? ' online'
+                              : ''
+                          }`}
+                        ></i>
+                        {row.hosts && row.hosts.slice(1, 1).map((host, index) => (
+                          <div className="hosts" key={index}>
                             <a
                               className="player"
                               onClick={(event) => {
-                                console.log("Joiner action clicked");
-
                                 event.preventDefault();
                                 event.stopPropagation();
-                                handleOpenPlayerModal(row.creator_id);
+                                handleOpenPlayerModal(host.host);
                               }}
                             >
                               <Avatar
                                 className="avatar desktop-only"
-                                src={row.creator_avatar}
-                                accessory={row.accessory}
-                                username={row.username}
-                                rank={row.rank}
+                                src={host.avatar}
+                                accessory={host.accessory}
+                                username={host.username}
+                                rank={host.rank}
                                 alt=""
                                 darkMode={isDarkMode}
                               />
                             </a>
-                            <i
-                              className={`online-status${onlineUserList.filter(
-                                user => user === row.creator_id
-                              ).length > 0
-                                ? ' online'
-                                : ''
-                                }`}
-                            ></i>
-                            {row.hosts && row.hosts
-                              .slice(1, 1)
-                              .map((host, index) => (
-                                <div className="hosts" key={index}>
-                                  <a
-                                    className="player"
-                                    onClick={(event) => {
-                                      event.preventDefault();
-                                      event.stopPropagation();
-                                      handleOpenPlayerModal(host.host);
-                                    }}
-                                  >
-                                    <Avatar
-                                      className="avatar desktop-only"
-                                      src={host.avatar}
-                                      accessory={host.accessory}
-                                      username={host.username}
-                                      rank={host.rank}
-                                      alt=""
-                                      darkMode={isDarkMode}
-                                    />
-                                  </a>
-                                </div>
-                              ))}
-
-                            {row.hosts.length > 1 && (
-                              <div className="hosts avatar-square">
+                          </div>
+                        ))}
+                        {row.hosts.length > 1 && (
+                          <div className="hosts avatar-square">
+                            <div className="avatar-count">+{row.hosts.length - 1}</div>
+                          </div>
+                        )}
+                        {row.joiners && row.joiners.length > 0 && (
+                          <div className="table-cell avatar desktop-only cell-joiners">
+                            <Battle />
+                            {row.joiner_avatars.slice(0, 1).map((joiner, index) => (
+                              <a
+                                key={index}
+                                className="player"
+                                onClick={(event) => {
+                                  event.preventDefault();
+                                  event.stopPropagation();
+                                  handleOpenPlayerModal(row.joiners[index]);
+                                }}
+                              >
+                                <Avatar
+                                  className="avatar desktop-only"
+                                  key={index}
+                                  accessory={joiner.accessory}
+                                  src={joiner.avatar}
+                                  username={joiner.username}
+                                  rank={joiner.rank}
+                                  alt=""
+                                  darkMode={isDarkMode}
+                                />
+                              </a>
+                            ))}
+                            {row.joiner_avatars.length > 1 && (
+                              <div className="avatar-square">
                                 <div className="avatar-count">
-                                  +{row.hosts.length - 1}
+                                  +{row.joiner_avatars.length - 1}
                                 </div>
                               </div>
                             )}
-                            {row.joiners && row.joiners.length > 0 ? (
-                              <div className="table-cell avatar desktop-only cell-joiners">
-                                <Battle />
-                                {row.joiner_avatars
-                                  .slice(0, 1)
-                                  .map((joiner, index) => (
-                                    <a
-                                      key={index}
-                                      className="player"
-                                      onClick={(event) => {
-                                        event.preventDefault();
-                                        event.stopPropagation();
-                                        handleOpenPlayerModal(row.joiners[index]);
-                                      }}
-                                    >
-                                      <Avatar
-                                        className="avatar desktop-only"
-                                        key={index}
-                                        accessory={joiner.accessory}
-                                        src={joiner.avatar}
-                                        username={joiner.username}
-                                        rank={joiner.rank}
-                                        alt=""
-                                        darkMode={isDarkMode}
-                                      />
-                                    </a>
-                                  ))}
-                                {row.joiner_avatars.length > 1 && (
-                                  <div className="avatar-square">
-                                    <div className="avatar-count">
-                                      +{row.joiner_avatars.length - 1}
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            ) : null}
-                          </div>
-
-                          <div className="table-cell cell-likes title">
-                            <div
-                              id="view"
-                              style={{
-                                color:
-                                  parseFloat(row.user_bet) > row.bet_amount
-                                    ? "#03ff3b" // Green
-                                    : parseFloat(row.user_bet) < row.bet_amount
-                                      ? "#ff033e" // Red
-                                      : "#808080", // Grey
-                              }}
-                            >
-                              <Typography
-                                variant="body2"
-                                className={`label ${parseFloat(row.user_bet) > row.bet_amount
-                                  ? "green-text"
-                                  : parseFloat(row.user_bet) < row.bet_amount
-                                    ? "red-text"
-                                    : "grey-text"
-                                  }`}
-                                style={{ display: "flex", alignItems: "center" }} // Align text and icon
-                              >
-                                Liquidity
-
-                              </Typography>
-                              <div style={{ display: "flex", flexDirection: "row", whiteSpace: "nowrap" }}>
-                                <Typography
-                                  variant="body1"
-                                  className={`number ${parseFloat(row.user_bet) > row.bet_amount
-                                    ? "green-text"
-                                    : parseFloat(row.user_bet) < row.bet_amount
-                                      ? "red-text"
-                                      : "grey-text"
-                                    }`}
-                                >
-                                  {convertToCurrency(row.user_bet, solPrice)}
-                                </Typography>
-
-                                {parseFloat(row.user_bet) > row.bet_amount && (
-                                  <div className='chart-arrow'>
-                                    <TrendingUpOutlined style={{ marginRight: "-5px", }} />
-                                    <span style={{ marginLeft: "5px", fontSize: "xx-small" }}>
-                                      {`(${(
-                                        ((parseFloat(row.user_bet) - row.bet_amount) / row.bet_amount) *
-                                        100
-                                      ).toFixed(2)}%)`}
-                                    </span>
-                                  </div>
-                                )}
-                                {parseFloat(row.user_bet) < row.bet_amount && (
-                                  <div className='chart-arrow'>
-                                    <TrendingDownOutlined style={{ marginRight: "-5px" }} />
-                                    <span style={{ marginLeft: "5px", fontSize: "xx-small" }}>
-                                      {`(${(
-                                        ((row.bet_amount - parseFloat(row.user_bet)) / row.bet_amount) *
-                                        100
-                                      ).toFixed(2)}%)`}
-                                    </span>
-                                  </div>
-                                )}
-                              </div>
-
-                            </div>
-                            <div id="view" style={{ filter: isDarkMode ? "brightness(3)" : "none" }}>
-                              <Typography variant="body2" className="label">
-                                Battles
-                              </Typography>
-                              <Typography variant="body1" className="number">
-                                {row.battles}
-                              </Typography>
-                            </div>
-                            <div id="view" style={{ filter: isDarkMode ? "brightness(3)" : "none" }}>
-                              <Typography variant="body2" className="label">
-                                Age
-                              </Typography>
-                              <Typography variant="body1" className="number">
-                                {this.customFromNow(Moment(row.created_at))}
-                              </Typography>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="mobile-only" style={{ marginTop: '7.5px', marginBottom: '-5px' }}>
-                          <div className="table-cell cell-user-name">
-                            <a
-                              className="player"
-                              onClick={(event) => {
-                                event.preventDefault();
-                                event.stopPropagation();
-                                handleOpenPlayerModal(row.creator_id)
-                              }}
-                            >
-                              <Avatar
-                                className="avatar"
-                                src={row.creator_avatar}
-                                accessory={row.accessory}
-                                username={row.username}
-                                rank={row.rank}
-                                alt=""
-                                darkMode={isDarkMode}
-                              />
-                              <i
-                                className={`online-status${onlineUserList.filter(
-                                  user => user === row.creator_id
-                                ).length > 0
-                                  ? ' online'
-                                  : ''
-                                  }`}
-                              ></i>
-                            </a>
-                            {row.joiners && row.joiners.length > 0 ? (
-                              <div className="table-cell mobile-only cell-joiners">
-                                <Battle />
-                                {row.joiner_avatars
-                                  .slice(0, 3)
-                                  .map((joiner_avatar, index) => (
-
-                                    <a
-                                      key={index}
-                                      className="player"
-                                      onClick={(event) => {
-                                        event.preventDefault();
-                                        event.stopPropagation();
-                                        handleOpenPlayerModal(row.joiners[index]);
-                                      }}
-                                    >
-                                      <Avatar
-                                        className="avatar mobile-only"
-                                        key={index}
-                                        src={joiner_avatar.avatar}
-                                        rank={joiner_avatar.rank}
-                                        username={joiner_avatar.username}
-                                        alt=""
-                                        accessory={joiner_avatar.accessory}
-                                        darkMode={isDarkMode}
-                                      />
-                                    </a>
-                                  ))}
-                                {row.joiner_avatars.length > 3 && (
-                                  <div className="avatar-square">
-                                    <div className="avatar-count">
-                                      +{row.joiner_avatars.length - 3}
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            ) : null}
-                          </div>
-
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </Grid>
-              )}
-            </div>
-          </>
-        ) : (
-          null
-        )}
-
-        {!isLiveGames && (
-          <Grid container spacing={2}>
-            {recent.length === 0 ? (
-              Array.from({ length: 4 }).map((_, index) => (
-                <Grid item xs={6} sm={4} md={3} lg={3} xl={3} key={index}>
-                  <div className="carousel-content table-row slide-in glass-container">
-                    <Skeleton variant="rect" width="100%" height={200} />
-                    <Skeleton width="60%" />
-                    <Skeleton width="40%" />
-                    <Skeleton width="80%" />
-                  </div>
-                </Grid>
-              ))
-            ) : (
-
-              recent.map((row) => {
-                const hostPrizeMinusBetAmount = row.host_pr - row.bet_amount;
-
-                return (
-                  <Grid item xs={6} sm={4} md={3} lg={3} xl={3} key={row._id}>
-                    <div
-                      className="carousel-content table-row slide-in glass-container"
-                      style={{
-                        padding: '25px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        borderRadius: '8px',
-                      }}
-                    >
-                      <a href={`/join/${row._id}`} className="table-cell" style={{ marginBottom: '5px', display: 'flex', alignItems: 'center' }}>
-                        {/* Left Column: Image */}
-                        {row.image && (
-                          <div style={{ marginRight: '10px' }}>
-                            <img
-                              src={row.image}
-                              alt=""
-                              className="game-type-icon"
-                              width={32}
-                              style={{ display: 'block' }}
-                            />
                           </div>
                         )}
-
-                        {/* Right Column: Two rows */}
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          {/* First Row: Room Name */}
-                          <span className="label cell" style={{ paddingRight: '5px', fontWeight: 'bold' }}>
-                            {row.name}
-                          </span>
-                          {/* Second Row: Room Details */}
-                          <span className="room-ticker" style={{ paddingRight: '5px', fontSize: 'xx-small' }}>
-                            {row.game_type.short_name + '-' + row.room_number}
-                          </span>
-                        </div>
-                      </a>
-
-                      <div className="cell label">
-                        {this.customFromNow(Moment(row.created_at))} <FontAwesomeIcon icon={faStopwatch} />&nbsp;<FontAwesomeIcon icon={faHeartBroken} />
                       </div>
-                      <div className="cell" style={{ fontSize: '0.8em' }}>
-                        <span className={`${this.getColorClass(hostPrizeMinusBetAmount)}`}>
-                          {convertToCurrency(hostPrizeMinusBetAmount, solPrice)}
-                        </span>
+                      {/* Cell-likes info */}
+                      <div className="table-cell cell-likes title">
+                        <div
+                          id="view"
+                          style={{
+                            color:
+                              parseFloat(row.user_bet) > row.bet_amount
+                                ? '#03ff3b'
+                                : parseFloat(row.user_bet) < row.bet_amount
+                                ? '#ff033e'
+                                : '#808080',
+                          }}
+                        >
+                          <Typography
+                            variant="body2"
+                            className={`label ${
+                              parseFloat(row.user_bet) > row.bet_amount
+                                ? 'green-text'
+                                : parseFloat(row.user_bet) < row.bet_amount
+                                ? 'red-text'
+                                : 'grey-text'
+                            }`}
+                            style={{ display: 'flex', alignItems: 'center' }}
+                          >
+                            Liquidity
+                          </Typography>
+                          <div
+                            style={{
+                              display: 'flex',
+                              flexDirection: 'row',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            <Typography
+                              variant="body1"
+                              className={`number ${
+                                parseFloat(row.user_bet) > row.bet_amount
+                                  ? 'green-text'
+                                  : parseFloat(row.user_bet) < row.bet_amount
+                                  ? 'red-text'
+                                  : 'grey-text'
+                              }`}
+                            >
+                              {convertToCurrency(row.user_bet, solPrice)}
+                            </Typography>
 
+                            {parseFloat(row.user_bet) > row.bet_amount && (
+                              <div className="chart-arrow">
+                                <TrendingUpOutlined style={{ marginRight: '-5px' }} />
+                                <span style={{ marginLeft: '5px', fontSize: 'xx-small' }}>
+                                  {`(${(
+                                    ((parseFloat(row.user_bet) - row.bet_amount) / row.bet_amount) *
+                                    100
+                                  ).toFixed(2)}%)`}
+                                </span>
+                              </div>
+                            )}
+                            {parseFloat(row.user_bet) < row.bet_amount && (
+                              <div className="chart-arrow">
+                                <TrendingDownOutlined style={{ marginRight: '-5px' }} />
+                                <span style={{ marginLeft: '5px', fontSize: 'xx-small' }}>
+                                  {`(${(
+                                    ((row.bet_amount - parseFloat(row.user_bet)) / row.bet_amount) *
+                                    100
+                                  ).toFixed(2)}%)`}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div
+                          id="view"
+                          style={{
+                            filter: isDarkMode ? 'brightness(3)' : 'none',
+                          }}
+                        >
+                          <Typography variant="body2" className="label">
+                            Battles
+                          </Typography>
+                          <Typography variant="body1" className="number">
+                            {row.battles}
+                          </Typography>
+                        </div>
+                        <div
+                          id="view"
+                          style={{
+                            filter: isDarkMode ? 'brightness(3)' : 'none',
+                          }}
+                        >
+                          <Typography variant="body2" className="label">
+                            Age
+                          </Typography>
+                          <Typography variant="body1" className="number">
+                            {customFromNow(Moment(row.created_at))}
+                          </Typography>
+                        </div>
                       </div>
                     </div>
-                  </Grid>
-                );
-              })
-            )}
-          </Grid>
-        )}
-        <Modal
-          isOpen={this.state.isCoHostModalOpen}
-          onRequestClose={this.handleCloseCoHostModal}
-          style={customStyles}
-          contentLabel="CoHost Modal"
-        >
-          <CoHostModal
-            isDarkMode={isDarkMode}
-            coHostAmount={coHostAmount}
-            selectedRow={selectedRow}
-            balance={balance}
-            user={user}
-            togglePopup={this.togglePopup}
-            handleClose={this.handleCloseCoHostModal}
-            handleSendCoHost={this.handleSendCoHost}
-            handleCoHostAmountChange={this.handleCoHostAmountChange}
-            has_joined={false}
-            input_only={false}
-            solPrice={solPrice}
-          />
-        </Modal>
-      </>
-    )
-  }
+                    {/* Mobile-only user info */}
+                    <div
+                      className="mobile-only"
+                      style={{ marginTop: '7.5px', marginBottom: '-5px' }}
+                    >
+                      <div className="table-cell cell-user-name">
+                        <a
+                          className="player"
+                          onClick={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            handleOpenPlayerModal(row.creator_id);
+                          }}
+                        >
+                          <Avatar
+                            className="avatar"
+                            src={row.creator_avatar}
+                            accessory={row.accessory}
+                            username={row.username}
+                            rank={row.rank}
+                            alt=""
+                            darkMode={isDarkMode}
+                          />
+                          <i
+                            className={`online-status${
+                              onlineUserList.filter((u) => u === row.creator_id).length > 0
+                                ? ' online'
+                                : ''
+                            }`}
+                          ></i>
+                        </a>
+                        {row.joiners && row.joiners.length > 0 && (
+                          <div className="table-cell mobile-only cell-joiners">
+                            <Battle />
+                            {row.joiner_avatars.slice(0, 3).map((joinerAvatar, index) => (
+                              <a
+                                key={index}
+                                className="player"
+                                onClick={(event) => {
+                                  event.preventDefault();
+                                  event.stopPropagation();
+                                  handleOpenPlayerModal(row.joiners[index]);
+                                }}
+                              >
+                                <Avatar
+                                  className="avatar mobile-only"
+                                  src={joinerAvatar.avatar}
+                                  rank={joinerAvatar.rank}
+                                  username={joinerAvatar.username}
+                                  alt=""
+                                  accessory={joinerAvatar.accessory}
+                                  darkMode={isDarkMode}
+                                />
+                              </a>
+                            ))}
+                            {row.joiner_avatars.length > 3 && (
+                              <div className="avatar-square">
+                                <div className="avatar-count">
+                                  +{row.joiner_avatars.length - 3}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </Grid>
+          )}
+        </div>
+      ) : (
+        // If filter === "Recently Ended"
+        <Grid container spacing={2}>
+          {recent.length === 0 ? (
+            Array.from({ length: 4 }).map((_, index) => (
+              <Grid item xs={6} sm={4} md={3} lg={3} xl={3} key={index}>
+                <div className="carousel-content table-row slide-in glass-container">
+                  <Skeleton variant="rect" width="100%" height={200} />
+                  <Skeleton width="60%" />
+                  <Skeleton width="40%" />
+                  <Skeleton width="80%" />
+                </div>
+              </Grid>
+            ))
+          ) : (
+            recent.map((row) => {
+              const hostPrizeMinusBetAmount = row.host_pr - row.bet_amount;
+              return (
+                <Grid
+                  item
+                  xs={6}
+                  sm={4}
+                  md={3}
+                  lg={3}
+                  xl={3}
+                  key={row._id}
+                >
+                  <div
+                    className="carousel-content table-row slide-in glass-container"
+                    style={{
+                      padding: '25px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      borderRadius: '8px',
+                    }}
+                  >
+                    <a
+                      href={`/join/${row._id}`}
+                      className="table-cell"
+                      style={{ marginBottom: '5px', display: 'flex', alignItems: 'center' }}
+                    >
+                      {row.image && (
+                        <div style={{ marginRight: '10px' }}>
+                          <img
+                            src={row.image}
+                            alt=""
+                            className="game-type-icon"
+                            width={32}
+                            style={{ display: 'block' }}
+                          />
+                        </div>
+                      )}
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span
+                          className="label cell"
+                          style={{
+                            paddingRight: '5px',
+                            fontWeight: 'bold',
+                          }}
+                        >
+                          {row.name}
+                        </span>
+                        <span
+                          className="room-ticker"
+                          style={{
+                            paddingRight: '5px',
+                            fontSize: 'xx-small',
+                          }}
+                        >
+                          {row.game_type.short_name + '-' + row.room_number}
+                        </span>
+                      </div>
+                    </a>
+                    <div className="cell label">
+                      {customFromNow(Moment(row.created_at))}{' '}
+                      <FontAwesomeIcon icon={faStopwatch} />
+                      &nbsp;
+                      <FontAwesomeIcon icon={faHeartBroken} />
+                    </div>
+                    <div className="cell" style={{ fontSize: '0.8em' }}>
+                      <span className={getColorClass(hostPrizeMinusBetAmount)}>
+                        {convertToCurrency(hostPrizeMinusBetAmount, solPrice)}
+                      </span>
+                    </div>
+                  </div>
+                </Grid>
+              );
+            })
+          )}
+        </Grid>
+      )}
+
+      {/* CoHost Modal */}
+      <Modal
+        isOpen={isCoHostModalOpen}
+        onRequestClose={handleCloseCoHostModal}
+        style={customStyles}
+        contentLabel="CoHost Modal"
+      >
+        <CoHostModal
+          isDarkMode={isDarkMode}
+          coHostAmount={coHostAmount}
+          selectedRow={selectedRow}
+          balance={balance}
+          user={user}
+          togglePopup={() => {}}
+          handleClose={handleCloseCoHostModal}
+          handleSendCoHost={handleSendCoHost}
+          handleCoHostAmountChange={handleCoHostAmountChange}
+          has_joined={false}
+          input_only={false}
+          solPrice={solPrice}
+        />
+      </Modal>
+    </>
+  );
 }
 
-const mapStateToProps = state => ({
+// -------------- REDUX CONNECT --------------
+const mapStateToProps = (state) => ({
   creator: state.logic.curRoomInfo.creator_name,
   joiners: state.logic.curRoomInfo.joiners,
   isAuthenticated: state.auth.isAuthenticated,
@@ -1032,7 +919,7 @@ const mapDispatchToProps = {
   setBalance,
   fetchMoreRooms,
   addNewTransaction,
-  coHost
+  coHost,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(OpenGamesTable);

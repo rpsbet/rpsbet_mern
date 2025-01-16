@@ -973,6 +973,7 @@ div.table.my-chat-table .table-cell button.btn_join {
 .room-link-icon:hover {
   color: #0056b3;
 }
+
 /***********************************/
 /*********** TABLES ****************/
 /***********************************/
@@ -1028,8 +1029,9 @@ div.table.main-history-table .table-row>div>.room-id {
 .top-wins .rank-icon {
   display: none !important;
 }
+
 .table-header .table-cell {
-	font-size: 0.9em;
+  font-size: 0.9em;
   white-space: nowrap;
 }
 
@@ -1039,9 +1041,11 @@ div.table.main-history-table .table-row>div>.room-id {
   margin-left: 10px;
   margin-top: 10px;
 }
+
 td {
   border-bottom: 1px solid #33333333;
 }
+
 .top-wins div.table-cell:hover {
   border: 2px solid #333;
 }
@@ -1104,7 +1108,7 @@ span.room-id.ai_mode {
 }
 
 span.room-id.qbot {
-white-space: nowrap;
+  white-space: nowrap;
   margin-left: 5px;
   margin-right: 10px;
   border: 1px solid #dab200;
@@ -1646,6 +1650,7 @@ div.table.main-game-table .cell-game-description {
   font-size: 0.8em;
   line-height: 1.4em;
 }
+
 div.table.main-game-table .cell-game-description span {
   color: #cfcfcf;
   font-size: 0.7em;
@@ -1661,8 +1666,10 @@ div.table.main-game-table .cell-game-description span {
 
 div.table.main-game-table .table-row .table-cell.cell-user-name {
   display: flex;
-  justify-content: center;
+  position: absolute;
   text-align: center;
+  right: 35px;
+  top: 24px;
 }
 
 div.table.main-game-table .table-row .table-cell.cell-user-name .avatar {
@@ -1715,9 +1722,8 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info {
   flex-direction: row;
   justify-content: space-evenly;
   align-items: center;
-  /* Center align the content */
   gap: 8px;
-  margin: 0 auto;
+  margin: 10px auto 0;
 }
 
 #view .liquidity {
@@ -1964,6 +1970,7 @@ h5.title {
   width: 80%;
   border-radius: 0.3em;
 }
+
 span.comment-time.title,
 .comment-content p {
   font-size: 0.8em;
@@ -3226,6 +3233,7 @@ input {
   box-shadow: none !important;
   border: none !important;
 }
+
 [class^="MuiPaper-root"] button:hover {
   border: none !important;
   box-shadow: none !important;
@@ -4318,6 +4326,7 @@ ul div {
 body {
   background: #420068;
 }
+
 .copyright {
   color: white;
   font-size: 1em;
@@ -5713,7 +5722,7 @@ div.table .table-row .table-cell img.avatar,
   margin-bottom: 30px;
 }
 
-.room-leaderboards-panel{
+.room-leaderboards-panel {
   padding: 20px;
 }
 
@@ -7639,6 +7648,7 @@ div[aria-label="How To Play Modal"] ul {
   .previous-guesses.drop {
     width: 344px;
   }
+
   #leftPortal {
     transform: translateX(160px) !important;
   }
@@ -7805,6 +7815,7 @@ div[aria-label="How To Play Modal"] ul {
   .spectate {
     top: 30px !important
   }
+
   .cell-action button {
     font-size: 1em !important;
   }

@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState } from 'react';
 import { connect } from 'react-redux';
 import history from '../../redux/history';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -9,7 +9,7 @@ import btc from '../icons/btc.png';
 import eth from '../icons/eth.png';
 import ltc from '../icons/ltc.png';
 import { withStyles } from '@material-ui/core/styles';
-import PrivacyModal from '../modal/PrivacyModal'
+import PrivacyModal from '../modal/PrivacyModal';
 import TermsModal from '../modal/TermsModal';
 import LeaderboardsModal from '../modal/LeaderboardsModal';
 
@@ -29,7 +29,7 @@ const styles = (theme) => ({
         padding: '40px 20px 10px',
         bottom: 0,
         left: 0,
-        width: props => props.open ? 'calc(100vw - 275px)' : 'calc(100vw - 5px)',
+        width: (props) => (props.open ? 'calc(100vw - 275px)' : 'calc(100vw - 5px)'),
         zIndex: 2,
     },
     address: {
@@ -38,22 +38,18 @@ const styles = (theme) => ({
         textAlign: 'center',
         fontWeight: '400',
         margin: '30px 0 20px',
-        textTransform: 'capitalize'
+        textTransform: 'capitalize',
     },
     links: {
         display: 'flex',
-        alignItems: 'flex-end'
-    },
-    link: {
-        marginTop: '10px',
-        color: '#b9bbbe'
+        alignItems: 'flex-end',
     },
     link: {
         marginTop: '10px',
         color: '#b9bbbe',
         '&:hover': {
             color: '#b9bbbe',
-            textDecoration: 'none'
+            textDecoration: 'none',
         },
     },
     proof: {
@@ -83,158 +79,117 @@ const styles = (theme) => ({
         width: '42px',
         filter: 'none',
         marginRight: '10px',
-
     },
 });
 
-class Footer extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            open: this.props.open,
-            showPrivacyModal: false,
-            showTermsModal: false,
-            showLeaderboardsModal: false,
-        }
-    }
+const Footer = (props) => {
+    const { classes, isDarkMode, open, style } = props;
 
-    static getDerivedStateFromProps(props, current_state) {
-        return null;
-    }
+    const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+    const [showTermsModal, setShowTermsModal] = useState(false);
+    const [showLeaderboardsModal, setShowLeaderboardsModal] = useState(false);
 
-    handleOpenLeaderboardsModal = () => {
-        this.setState({ showLeaderboardsModal: true });
-    };
+    const handleOpenLeaderboardsModal = () => setShowLeaderboardsModal(true);
+    const handleCloseLeaderboardsModal = () => setShowLeaderboardsModal(false);
 
-    handleCloseLeaderboardsModal = () => {
-        this.setState({ showLeaderboardsModal: false });
-    };
+    const handleOpenTermsModal = () => setShowTermsModal(true);
+    const handleCloseTermsModal = () => setShowTermsModal(false);
 
-    IsAuthenticatedReroute = () => {
-        if (!this.props.auth) {
+    const handleOpenPrivacyModal = () => setShowPrivacyModal(true);
+    const handleClosePrivacyModal = () => setShowPrivacyModal(false);
+
+    const IsAuthenticatedReroute = () => {
+        if (!props.auth) {
             history.push('/');
         }
     };
 
+    const bottomFooterClasses = `bottom-footer ${isDarkMode ? 'dark_mode' : ''}`;
 
-    handleOpenTermsModal = () => {
-        this.setState({ showTermsModal: true });
-    };
-    handleCloseTermsModal = () => {
-        this.setState({ showTermsModal: false });
-    };
-
-    handleOpenPrivacyModal = () => {
-        this.setState({ showPrivacyModal: true, anchorEl: null });
-    };
-    handleClosePrivacyModal = () => {
-        this.setState({ showPrivacyModal: false });
-    };
-
-
-    render() {
-        const { classes, isDarkMode } = this.props;
-
-        const { showLeaderboardsModal } = this.state;
-        const bottomFooterClasses = `bottom-footer ${isDarkMode ? 'dark_mode' : ''}`;
-
-        return (
-            <div className={bottomFooterClasses} style={this.props.style}>
-                <div id="footer-container" className={classes.footerContainer}>
-                    {showLeaderboardsModal && (
-                        <LeaderboardsModal
-                            modalIsOpen={showLeaderboardsModal}
-                            closeModal={this.handleCloseLeaderboardsModal}
-                            //   player_name={userName}
-                            //   balance={balance}
-                            isDarkMode={isDarkMode}
-                        />
-                    )}
-                    <div className="social-icons" style={{ display: 'flex', alignItems: 'center' }}>
-                      <span>CHECK SOCIALS FOR UPDATES ►</span>
-                        <a href="https://x.com/rpsdotgame">
-                            <FontAwesomeIcon icon={faXTwitter} />
-                        </a>
-                        <a href="https://t.me/rpsfinance">
-                            <FontAwesomeIcon icon={faTelegram} />
-                        </a>
-                        <a href="https://www.youtube.com/@rpsdotgame">
-                            <FontAwesomeIcon icon={faYoutube} />
-                        </a>
-                        <a href="https://www.tiktok.com/@rpsdotgame">
-                            <FontAwesomeIcon icon={faTiktok} />
-                        </a>
-                    </div>
-                    <div className={classes.currencies}>
-                        <img className={classes.availableCurrency} src={sol} alt="SOL" />
-                        {/* <img className={classes.availableCurrency} src={bnb} alt="BNB" /> */}
-                        <img className={classes.availableCurrency} src={btc} alt="BTC" />
-                        <img className={classes.availableCurrency} src={eth} alt="ETH" />
-                        <img className={classes.availableCurrency} src={ltc} alt="LTC" />
-                        <span>+ 50 MORE!</span>
-                    </div>
-
-                    <div className={classes.links}>
-                        <a className={(classes.link, 'mobile-only')} href="#"
-                            onClick={e => {
-                                e.preventDefault();
-                                this.handleOpenLeaderboardsModal();
-                            }} >Leaderboards</a><span className={(classes.link, 'mobile-only')} >
-                            &nbsp;✗&nbsp;
-
-                        </span>
-                        <a className={classes.link} href="https://blog.rps.game/">Blog</a>&nbsp;✗&nbsp;
-                        {/* <a className={classes.link} href="#">Faq</a>&nbsp;✗&nbsp; */}
-                        <a className={classes.link}
-                            href="#terms"
-                            id="terms"
-                            onClick={this.handleOpenTermsModal}
-                        >
-                            Terms
-                        </a>&nbsp;✗&nbsp;
-                        <a className={classes.link}
-                            href="#privacy"
-                            id="privacy"
-                            onClick={this.handleOpenPrivacyModal}
-                        >
-                            Privacy
-                        </a>
-                        {/* <a className={classes.link} href="#">Fair</a> */}
-                    </div>
-                    <div className={classes.address}>
-                        <p>RPS.Game has absolutely no involvement with any third-party gambling provider software or 'provably-fair' algorithms.
-                        </p>
-                    </div>
+    return (
+        <div className={bottomFooterClasses} style={style}>
+            <div id="footer-container" className={classes.footerContainer}>
+                {showLeaderboardsModal && (
+                    <LeaderboardsModal
+                        modalIsOpen={showLeaderboardsModal}
+                        closeModal={handleCloseLeaderboardsModal}
+                        isDarkMode={isDarkMode}
+                    />
+                )}
+                <div className="social-icons" style={{ display: 'flex', alignItems: 'center' }}>
+                    <span>CHECK SOCIALS FOR UPDATES ►</span>
+                    <a href="https://x.com/rpsdotgame">
+                        <FontAwesomeIcon icon={faXTwitter} />
+                    </a>
+                    <a href="https://t.me/rpsfinance">
+                        <FontAwesomeIcon icon={faTelegram} />
+                    </a>
+                    <a href="https://www.youtube.com/@rpsdotgame">
+                        <FontAwesomeIcon icon={faYoutube} />
+                    </a>
+                    <a href="https://www.tiktok.com/@rpsdotgame">
+                        <FontAwesomeIcon icon={faTiktok} />
+                    </a>
                 </div>
-                {this.state.showTermsModal && (
-                    <TermsModal
-                        modalIsOpen={this.state.showTermsModal}
-                        closeModal={this.handleCloseTermsModal}
-                        isDarkMode={this.props.isDarkMode}
-                    />
-                )}
-                {this.state.showPrivacyModal && (
-                    <PrivacyModal
-                        modalIsOpen={this.state.showPrivacyModal}
-                        closeModal={this.handleClosePrivacyModal}
-                        isDarkMode={this.props.isDarkMode}
-                    />
-                )}
-            </div>
-        );
-    }
-}
+                <div className={classes.currencies}>
+                    <img className={classes.availableCurrency} src={sol} alt="SOL" />
+                    <img className={classes.availableCurrency} src={btc} alt="BTC" />
+                    <img className={classes.availableCurrency} src={eth} alt="ETH" />
+                    <img className={classes.availableCurrency} src={ltc} alt="LTC" />
+                    <span>+ 50 MORE!</span>
+                </div>
 
-const mapStateToProps = state => ({
+                <div className={classes.links}>
+                    <a
+                        className={`${classes.link} mobile-only`}
+                        href="#"
+                        onClick={(e) => {
+                            e.preventDefault();
+                            handleOpenLeaderboardsModal();
+                        }}
+                    >
+                        Leaderboards
+                    </a>
+                    <span className={`${classes.link} mobile-only`}>&nbsp;✗&nbsp;</span>
+                    <a className={classes.link} href="https://blog.rps.game/">Blog</a>&nbsp;✗&nbsp;
+                    <a className={classes.link} href="#terms" onClick={handleOpenTermsModal}>
+                        Terms
+                    </a>&nbsp;✗&nbsp;
+                    <a className={classes.link} href="#privacy" onClick={handleOpenPrivacyModal}>
+                        Privacy
+                    </a>
+                </div>
+                <div className={classes.address}>
+                    <p>
+                        RPS.Game has absolutely no involvement with any third-party gambling
+                        provider software or 'provably-fair' algorithms.
+                    </p>
+                </div>
+            </div>
+            {showTermsModal && (
+                <TermsModal
+                    modalIsOpen={showTermsModal}
+                    closeModal={handleCloseTermsModal}
+                    isDarkMode={isDarkMode}
+                />
+            )}
+            {showPrivacyModal && (
+                <PrivacyModal
+                    modalIsOpen={showPrivacyModal}
+                    closeModal={handleClosePrivacyModal}
+                    isDarkMode={isDarkMode}
+                />
+            )}
+        </div>
+    );
+};
+
+const mapStateToProps = (state) => ({
     auth: state.auth.isAuthenticated,
     user_id: state.auth.user._id,
     isDarkMode: state.auth.isDarkMode,
 });
 
-const mapDispatchToProps = {
-};
-
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(withStyles(styles, { withTheme: true })(Footer));
+export default connect(mapStateToProps)(
+    withStyles(styles, { withTheme: true })(Footer)
+);

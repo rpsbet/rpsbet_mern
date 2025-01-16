@@ -1,35 +1,26 @@
-import React, { Component } from 'react';
+import React, { useEffect } from 'react';
 import { connect } from 'react-redux';
-// import { setUrl } from '../../../../redux/Auth/user.actions';
 import { warningMsgBar } from '../../../../redux/Notification/notification.actions';
 import { acQueryMyLoan } from '../../../../redux/Loan/loan.action';
-// import ContainerHeader from '../../../../components/ContainerHeader';
 import MyBankTable from './MyBankTable';
 
-export class MyBankPage extends Component {
-  componentDidMount() {
-    // this.props.setUrl(this.props.match.path);
-    this.props.acQueryMyLoan(30, 1, 'loan_amount', '');
-  }
+const MyBankPage = ({ acQueryMyLoan }) => {
+  useEffect(() => {
+    acQueryMyLoan(30, 1, 'loan_amount', '');
+  }, [acQueryMyLoan]);
 
-  render() {
-    return (
-      <>
-        <MyBankTable />
-      </>
-    );
-  }
-}
-
-const mapStateToProps = state => ({});
-
-const mapDispatchToProps = {
-  // setUrl,
-  warningMsgBar,
-  acQueryMyLoan
+  return (
+    <>
+      <MyBankTable />
+    </>
+  );
 };
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(MyBankPage);
+const mapStateToProps = (state) => ({});
+
+const mapDispatchToProps = {
+  warningMsgBar,
+  acQueryMyLoan,
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(MyBankPage);

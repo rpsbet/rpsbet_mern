@@ -1,16 +1,23 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect } from 'react';
 import Modal from 'react-modal';
 import { connect } from 'react-redux';
-
 import { Button, TextField } from '@material-ui/core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSignInAlt } from '@fortawesome/free-solid-svg-icons';
-import { setFocused, userSignIn, getUser, authenticateWithGoogle } from '../../redux/Auth/user.actions';
-import { getMyHistory, getMyChat, getNotifications } from '../../redux/Logic/logic.actions';
-import history from '../../redux/history';
+import { faSignInAlt, faExternalLinkAlt } from '@fortawesome/free-solid-svg-icons';
+
 import {
-  faExternalLinkAlt,
-} from '@fortawesome/free-solid-svg-icons';
+  setFocused,
+  userSignIn,
+  getUser,
+  authenticateWithGoogle
+} from '../../redux/Auth/user.actions';
+import {
+  getMyHistory,
+  getMyChat,
+  getNotifications
+} from '../../redux/Logic/logic.actions';
+
+import history from '../../redux/history';
 
 Modal.setAppElement('#root');
 
@@ -32,242 +39,282 @@ const customStyles = {
   }
 };
 
-class LoginModal extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      email: props.email,
-      password: props.password,
-      showVerificationModal: false,
-      isInvestorsPage: location.pathname.startsWith('/investors'),
-    };
-  }
+function LoginModal(props) {
+  const { email: initialEmail, password: initialPassword } = props;
 
-  onFocusHandler = () => {
-    this.props.setFocused(true);
-  }
+  // ------------------ LOCAL STATE ------------------
+  const [email, setEmail] = useState(initialEmail);
+  const [password, setPassword] = useState(initialPassword);
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const [isInvestorsPage, setIsInvestorsPage] = useState(
+    window.location.pathname.startsWith('/investors')
+  );
 
-  onBlurHandler = () => {
-    this.props.setFocused(false);
-  }
-
-  onChangeEmail = e => {
-    this.setState({ email: e.target.value });
+  // ------------------ HANDLERS ------------------
+  const onFocusHandler = () => {
+    props.setFocused(true);
   };
 
-  onChangePassword = e => {
-    this.setState({ password: e.target.value });
+  const onBlurHandler = () => {
+    props.setFocused(false);
   };
 
-  onKeyDownDocument = event => {
-    const { key } = event;
-    if (key === 'Enter') {
+  const onChangeEmail = (e) => {
+    setEmail(e.target.value);
+  };
+
+  const onChangePassword = (e) => {
+    setPassword(e.target.value);
+  };
+
+  const onKeyDownDocument = (event) => {
+    if (event.key === 'Enter') {
       event.preventDefault();
-      this.onSubmitForm(event);
+      onSubmitForm(event);
     }
   };
 
-  componentDidMount() {
-    document.addEventListener('keydown', this.onKeyDownDocument);
-    this.initializeGoogleSignIn();
-
+  const initializeGoogleSignIn = () => {
     setTimeout(() => {
       const buttonElement = document.getElementById('googleSignInButton');
-      this.initializeGoogleSignIn();
-    }, 100);
-    this.setState({ isInvestorsPage: location.pathname.startsWith('/investors') });
-
-  }
-
-  componentWillUnmount() {
-    document.removeEventListener('keydown', this.onKeyDownDocument);
-  }
-
-  initializeGoogleSignIn = () => {
-    setTimeout(() => {
-      const buttonElement = document.getElementById('googleSignInButton');
-
       if (buttonElement) {
-
+        /* global google */
         google.accounts.id.initialize({
-          client_id: '565609210873-2ajd0detnt4h6q8ufhrl5nvlv4h01ol0.apps.googleusercontent.com',
-          callback: this.handleGoogleCredentialResponse
+          client_id:
+            '565609210873-2ajd0detnt4h6q8ufhrl5nvlv4h01ol0.apps.googleusercontent.com',
+          callback: handleGoogleCredentialResponse
         });
 
-        google.accounts.id.renderButton(
-          buttonElement,
-          { theme: 'outline', size: 'large' }
-        );
+        google.accounts.id.renderButton(buttonElement, {
+          theme: 'outline',
+          size: 'large'
+        });
 
         google.accounts.id.prompt(); // Display the One Tap prompt automatically
       } else {
         console.error('Google Sign-In button element not found');
       }
-    }, 100); // 100 milliseconds delay, adjust as needed
-  }
+    }, 100);
+  };
 
-
-  handleGoogleCredentialResponse = response => {
-
+  const handleGoogleCredentialResponse = (response) => {
     if (!response || !response.credential) {
       console.error('No credential found in response');
       return;
     }
-
     const jwt = response.credential;
 
-    // Dispatch the authentication action
-    this.props.authenticateWithGoogle({ token: jwt })
-      .then(result => {
+    props
+      .authenticateWithGoogle({ token: jwt })
+      .then((result) => {
         if (result.status === 'success') {
-
-          this.props.closeModal();
-          this.onSuccessfulLogin(result.user);
+          props.closeModal();
+          onSuccessfulLogin(result.user);
         } else {
           console.error('Login failed:', result.error);
         }
       })
-      .catch(error => {
+      .catch((error) => {
         console.error('Error during authentication:', error);
       });
-  }
+  };
 
-  onSubmitForm = async e => {
+  const onSubmitForm = async (e) => {
     e.preventDefault();
-    const result = await this.props.userSignIn(this.state);
+    const result = await props.userSignIn({ email, password });
     if (result.status === 'success') {
-      this.onSuccessfulLogin(result.user);
+      onSuccessfulLogin(result.user);
     }
   };
 
-  onSuccessfulLogin = user => {
-    this.props.initSocket();
-    this.props.getNotifications();
-    this.props.getMyHistory();
-    this.props.getMyChat();
+  const onSuccessfulLogin = (user) => {
+    props.initSocket();
+    props.getNotifications();
+    props.getMyHistory();
+    props.getMyChat();
 
     // Check if the current URL is '/investors'
-    const currentPath = window.location.pathname; // Get the current URL path
-
-    if (currentPath.startsWith('/investors')) { // Checks if the URL starts with /investors
-      history.push('/investors'); // Push to /investors if the user is already there
+    const currentPath = window.location.pathname;
+    if (currentPath.startsWith('/investors')) {
+      history.push('/investors');
     } else {
-      history.push('/'); // Otherwise, push to home
+      history.push('/');
     }
 
-    this.props.closeModal();
+    props.closeModal();
   };
 
-  render() {
-    const { isInvestorsPage } = this.state;
-    return (
-      <Modal
-        closeTimeoutMS={500}
-        isOpen={this.props.modalIsOpen}
-        style={customStyles}
-        contentLabel={this.props.title}
-      >
-        <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
-          <div className="modal-header">
-            <h2 className="modal-title title">
-              <FontAwesomeIcon icon={faSignInAlt} className="mr-2" />
-              LOGIN
-            </h2>
-            <Button className="btn-close title" onClick={this.props.closeModal}>
-              ×
-            </Button>
-          </div>
-          <div className="modal-img title">
-            <img style={{ width: "100%", margin: "0px", overflow: "hidden" }} src="/img/giant-login.svg" alt="Login" />
-          </div>
-          <div className="modal-body" style={{ paddingTop: "0", paddingBottom: "5px" }}>
-            <form onSubmit={this.onSubmitForm}>
-              <TextField
-                type="text"
-                className="form-control"
-                variant="filled"
-                label="Username"
-                onFocus={this.onFocusHandler}
-                onBlur={this.onBlurHandler}
-                id="email"
-                value={this.state.email}
-                onChange={this.onChangeEmail}
-                autoComplete="on"
-              />
-              <TextField
-                type="password"
-                className="form-control"
-                id="password"
-                value={this.state.password}
-                label="Password"
-                variant="filled"
-                onFocus={this.onFocusHandler}
-                onBlur={this.onBlurHandler}
-                autoComplete="new-password"
-                onChange={this.onChangePassword}
-                onKeyDown={e => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    this.onSubmitForm(e);
-                  }
-                }}
-              />
-            </form>
-          </div>
-          <div className="modal-footer" style={{ margin: "flex", flexDirection: "column" }}>
-            <div style={{ margin: "flex", flexDirection: "row", display: "flex", width: "calc(100% - 10px)", marginLeft: "-2.5px", justifyContent: "space-between" }}>
+  // ------------------ LIFECYCLE: componentDidMount + WillUnmount ------------------
+  useEffect(() => {
+    document.addEventListener('keydown', onKeyDownDocument);
+    initializeGoogleSignIn();
 
-              <Button
-                onClick={this.onSubmitForm} className="btn-submit login" style={{ marginTop: "0px", padding: "10px" }} >
-                Login&nbsp;<span className='roll-tag'>[ ↵ ]</span>
-              </Button>
-              <div id="googleSignInButton"></div>
-            </div>
+    // Re-initialize after short delay
+    setTimeout(() => {
+      const buttonElement = document.getElementById('googleSignInButton');
+      initializeGoogleSignIn();
+    }, 100);
 
+    setIsInvestorsPage(window.location.pathname.startsWith('/investors'));
 
+    // Cleanup (componentWillUnmount)
+    return () => {
+      document.removeEventListener('keydown', onKeyDownDocument);
+    };
+  }, []);
+
+  // ------------------ RENDER ------------------
+  return (
+    <Modal
+      closeTimeoutMS={500}
+      isOpen={props.modalIsOpen}
+      style={customStyles}
+      contentLabel={props.title}
+    >
+      <div className={props.isDarkMode ? 'dark_mode' : ''}>
+        <div className="modal-header">
+          <h2 className="modal-title title">
+            <FontAwesomeIcon icon={faSignInAlt} className="mr-2" />
+            LOGIN
+          </h2>
+          <Button className="btn-close title" onClick={props.closeModal}>
+            ×
+          </Button>
+        </div>
+
+        <div className="modal-img title">
+          <img
+            style={{ width: '100%', margin: '0px', overflow: 'hidden' }}
+            src="/img/giant-login.svg"
+            alt="Login"
+          />
+        </div>
+
+        <div
+          className="modal-body"
+          style={{ paddingTop: '0', paddingBottom: '5px' }}
+        >
+          <form onSubmit={onSubmitForm}>
+            <TextField
+              type="text"
+              className="form-control"
+              variant="filled"
+              label="Username"
+              onFocus={onFocusHandler}
+              onBlur={onBlurHandler}
+              id="email"
+              value={email}
+              onChange={onChangeEmail}
+              autoComplete="on"
+            />
+            <TextField
+              type="password"
+              className="form-control"
+              id="password"
+              value={password}
+              label="Password"
+              variant="filled"
+              onFocus={onFocusHandler}
+              onBlur={onBlurHandler}
+              autoComplete="new-password"
+              onChange={onChangePassword}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  onSubmitForm(e);
+                }
+              }}
+            />
+          </form>
+        </div>
+
+        <div
+          className="modal-footer"
+          style={{
+            margin: 'flex',
+            flexDirection: 'column'
+          }}
+        >
+          <div
+            style={{
+              margin: 'flex',
+              flexDirection: 'row',
+              display: 'flex',
+              width: 'calc(100% - 10px)',
+              marginLeft: '-2.5px',
+              justifyContent: 'space-between'
+            }}
+          >
             <Button
-              style={{ width: "calc(100% - 10px)", margin: "10px 0 0 -10px" }}
+              onClick={onSubmitForm}
+              className="btn-submit login"
+              style={{ marginTop: '0px', padding: '10px' }}
+            >
+              Login&nbsp;<span className="roll-tag">[ ↵ ]</span>
+            </Button>
+            <div id="googleSignInButton"></div>
+          </div>
+
+          <Button
+            style={{
+              width: 'calc(100% - 10px)',
+              margin: '10px 0 0 -10px'
+            }}
+            className="btn-back"
+            onClick={() => {
+              props.closeModal();
+              props.openSignupModal();
+            }}
+          >
+            NEWBIE? GET REGISTERED →
+          </Button>
+
+          {!isInvestorsPage ? (
+            <a
+              style={{
+                textAlign: 'center',
+                padding: '5px',
+                textDecoration: 'underline',
+                color: '#ffd000',
+                width: 'calc(100% - 10px)',
+                margin: '10px 0 0 -10px'
+              }}
               className="btn-back"
-              onClick={e => {
-                this.props.closeModal();
-                this.props.openSignupModal();
+              onClick={() => {
+                props.closeModal();
+                history.push('/investors');
               }}
             >
-              NEWBIE?{' '}GET REGISTERED →
-            </Button>
-            {!isInvestorsPage ? (
-
-              <a
-                style={{ textAlign: 'center',  padding: '5px', textDecoration: 'underline', color: "#ffd000", width: "calc(100% - 10px)", margin: "10px 0 0 -10px" }}
-                className="btn-back"
-                onClick={e => {
-                  this.props.closeModal();
-                  history.push('/investors');
-                }}
-              >
-                INVESTOR? ($RPS PORTAL)&nbsp;<FontAwesomeIcon icon={faExternalLinkAlt} />
-              </a>
-            ) : (
-              <a
-                style={{ textAlign: 'center', padding: '5px', textDecoration: 'underline',  color: "#ffd000", width: "calc(100% - 10px)", margin: "10px 0 0 -10px" }}
-                className="btn-back"
-                onClick={e => {
-                  this.props.closeModal();
-                  history.push('/play');
-                }}
-              >
-                Play RPS.Game&nbsp;<FontAwesomeIcon icon={faExternalLinkAlt} />
-              </a>
-            )}
-
-          </div>
+              INVESTOR? ($RPS PORTAL)&nbsp;
+              <FontAwesomeIcon icon={faExternalLinkAlt} />
+            </a>
+          ) : (
+            <a
+              style={{
+                textAlign: 'center',
+                padding: '5px',
+                textDecoration: 'underline',
+                color: '#ffd000',
+                width: 'calc(100% - 10px)',
+                margin: '10px 0 0 -10px'
+              }}
+              className="btn-back"
+              onClick={() => {
+                props.closeModal();
+                history.push('/play');
+              }}
+            >
+              Play RPS.Game&nbsp;<FontAwesomeIcon icon={faExternalLinkAlt} />
+            </a>
+          )}
         </div>
-      </Modal>
-    );
-  }
+      </div>
+    </Modal>
+  );
 }
 
-const mapStateToProps = state => ({
+// ------------------ REDUX CONNECT ------------------
+const mapStateToProps = (state) => ({
   isDarkMode: state.auth.isDarkMode,
   email: state.auth.user.email,
   password: state.auth.user.password

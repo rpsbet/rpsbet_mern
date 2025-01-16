@@ -1,31 +1,55 @@
-import React from 'react';
-import { Tooltip, Typography, Button } from '@material-ui/core';
+import React, { useState, useRef, useEffect } from 'react';
+import { Tooltip, ButtonBase } from '@material-ui/core';
 import { Info } from '@material-ui/icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBrain, faDice } from '@fortawesome/free-solid-svg-icons';
+import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
+import SettingsRef from '../../components/SettingsRef';
 
-const GameSettingsPanel = ({ selectedStrategy, setSelectedStrategy, isDarkMode }) => {
-  const strategies = [
-    {
-      value: 'Markov',
-      name: 'AI',
-      description: 'Pattern-based reasoning for skill-based gameplay, attractive to players.',
-      icon: faBrain,
-    },
-    {
-      value: 'Random',
-      name: 'RNG',
-      description: 'Random number generator for safer hosting but less popular gameplay.',
-      icon: faDice,
-    },
-  ];
+const GameSettingsPanel = ({
+  ai_mode,
+  user,
+  rank,
+  strategies,
+  selectedStrategy,
+  setSelectedStrategy,
+  isDarkMode,
+}) => {
+  // State to manage the visibility of the settings panel
+  const [settingsPanelOpened, setSettingsPanelOpened] = useState(false);
+
+  // Ref to detect clicks outside the settings panel
+  const settingsRef = useRef(null);
+
+  // Toggle the settings panel visibility
+  const handleSettingsIconClick = () => {
+    setSettingsPanelOpened((prev) => !prev);
+  };
+
+  // Close the settings panel if clicked outside
+  const handleClickOutside = (e) => {
+    if (settingsRef.current && !settingsRef.current.contains(e.target)) {
+      setSettingsPanelOpened(false);
+    }
+  };
+
+  // Add event listener for clicks outside when the panel is open
+  useEffect(() => {
+    if (settingsPanelOpened) {
+      document.addEventListener('mousedown', handleClickOutside);
+    } else {
+      document.removeEventListener('mousedown', handleClickOutside);
+    }
+
+    // Cleanup the event listener on component unmount
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [settingsPanelOpened]);
 
   return (
     <div style={{ marginTop: '20px', marginBottom: '30px' }}>
       <h3 className="game-sub-title roll-tag">
         Choose Strategy&nbsp;
         <Tooltip
-          style={{ position: 'absolute', right: '20px' }}
           title="Select the strategy your game will use. AI offers patterns and reasoning, while RNG is randomized."
           placement="top"
         >
@@ -33,31 +57,44 @@ const GameSettingsPanel = ({ selectedStrategy, setSelectedStrategy, isDarkMode }
         </Tooltip>
       </h3>
 
-      <div className="qs-game-type-panel" style={{ textAlign: 'center', marginTop: '20px',display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              flexDirection: 'row', }}>
-        {strategies.map((strat) => (
-          <Button
-            key={strat.value}
-            className={`strategy-btn ${selectedStrategy === strat.value ? 'active' : ''}`}
-            onClick={() => setSelectedStrategy(strat.value)}
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              padding: '30px',
-              transition: 'all 0.3s ease',
-              textTransform: 'none',
-              fontSize: '0.875em',
-            }}
-          >
-            <FontAwesomeIcon icon={strat.icon} size="1x" style={{  color: isDarkMode ? '#f9f9f9' : '#333' }} />
-            <span style={{  color:  isDarkMode ? '#f9f9f9' : '#333', marginLeft: '10px' }}>
-              {strat.name}
-            </span>
-          </Button>
-        ))}
+      <div
+        className="qs-game-type-panel"
+        style={{
+          marginTop: '20px',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          flexDirection: 'row',
+        }}
+      >
+        <SettingsRef
+          strategies={strategies}
+          selectedStrategy={selectedStrategy}
+          setSelectedStrategy={setSelectedStrategy}
+          settings_panel_opened={settingsPanelOpened} // Pass the internal state
+          ai_mode={ai_mode}
+          user_id={user._id}
+          rank={rank}
+          settingsRef={settingsRef}
+          isDarkMode={isDarkMode}
+        />
+       <ButtonBase
+          onClick={handleSettingsIconClick}
+          style={{
+            boxShadow: 'unset',
+            color: isDarkMode ? 'white' : 'inherit', // Conditional color
+            borderRadius: '30px',
+            padding: '0 20px', // Added padding
+            background: 'transparent',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'color 0.3s ease', // Smooth transition for color changes
+          }}
+        >
+          <span style={{ textTransform: 'uppercase', marginRight: '5px' }}>{selectedStrategy}</span>
+          <SettingsOutlinedIcon style={{ color: isDarkMode ? 'white' : 'inherit' }} />
+        </ButtonBase>
       </div>
     </div>
   );

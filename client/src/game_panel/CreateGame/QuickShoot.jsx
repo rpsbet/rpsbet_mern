@@ -68,7 +68,6 @@ const StyledProductImage = styled.img`
 const QuickShoot = (props) => {
   const {
     step,
-    strategies,
     qs_game_type,
     bet_amount,
     qs_list,
@@ -82,8 +81,12 @@ const QuickShoot = (props) => {
     setSelectedStrategy,
     name,
     image,
+    strategies,
     game_type,
     defaultBetAmounts,
+    ai_mode,
+    user,
+    rank
   } = props;
 
   const [winChance, setWinChance] = useState(33);
@@ -220,8 +223,12 @@ const QuickShoot = (props) => {
 
             <GameSettingsPanel
               selectedStrategy={selectedStrategy}
+              user={user}
+              rank={rank}
+              ai_mode={ai_mode}
               setSelectedStrategy={setSelectedStrategy}
               isDarkMode={isDarkMode}
+              strategies={strategies}
             />
 
             <CoinInfo onChangeState={onChangeState} name={name} image={image} isDarkMode={isDarkMode} />
@@ -244,6 +251,7 @@ const mapStateToProps = (state) => ({
   auth: state.auth.isAuthenticated,
   isDarkMode: state.auth.isDarkMode,
   isFocused: state.auth.isFocused,
+  strategies: state.logic.strategies,
   gameTypeList: state.logic.gameTypeList,
   solPrice: state.logic.solPrice,
 });

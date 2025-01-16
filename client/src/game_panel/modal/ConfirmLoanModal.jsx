@@ -136,7 +136,7 @@ class ConfirmLoanModal extends Component {
       addNewTransaction(newTransaction);
       getUser(true, 5);
       acQueryLoan();
-      acCalculateRemainingLoans();
+      // acCalculateRemainingLoans();
     } else {
       closeConfirmLoanModal();
       alertModal(isDarkMode, response.message);

@@ -1,90 +1,70 @@
-import React, { Component } from 'react';
+import React, { useState, useRef } from 'react';
 import { TwitterShareButton } from 'react-share';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXTwitter } from '@fortawesome/free-brands-svg-icons';
-import { FaClipboard } from 'react-icons/fa';
 import { Tooltip } from '@material-ui/core';
 import FileCopy from '@material-ui/icons/FileCopy';
-const styles = {
-  focused: {
-    borderColor: '#fa3fa0'
-  }
-};
 
-export default class Share extends Component {
-  constructor(props) {
-    super(props);
+const Share = ({ socket, roomInfo }) => {
+  const [clicked, setClicked] = useState(true);
+  const [text, setText] = useState('');
+  const settingsRef = useRef(null);
 
-    this.settingsRef = React.createRef();
-    this.socket = this.props.socket;
-    this.state = {
-      betting: false,
-      clicked: true,
-      copied: false,
-    };
-  }
-
-  toggleBtnHandler = () => {
-    this.setState({
-      clicked: !this.state.clicked,
-      text: 'LINK GRABBED'
-    });
+  const toggleBtnHandler = () => {
+    setClicked(!clicked);
+    setText('LINK GRABBED');
     setTimeout(() => {
-      this.setState({
-        clicked: !this.state.clicked,
-        text: ''
-      });
+      setClicked(!clicked);
+      setText('');
     }, 1000);
   };
 
-
-  copy() {
-    const twitterLink = 'https://rps.game/join/' + this.props.roomInfo._id;
+  const copy = () => {
+    const twitterLink = `https://rps.game/join/${roomInfo._id}`;
     navigator.clipboard.writeText(twitterLink);
+  };
+
+  const twitterLink = `https://rps.game/join/${roomInfo._id}`;
+  const buttonStyles = ['copy-btn'];
+
+  if (clicked) {
+    buttonStyles.push('clicked');
   }
 
-  render() {
-    const styles = ['copy-btn'];
-    let text = 'COPY CONTRACT';
-
-    if (this.state.clicked) {
-      styles.push('clicked');
-      text = 'COPIED!';
-    }
-
-    const twitterLink = 'https://rps.game/join/' + this.props.roomInfo._id;
-
-    return (
-      <div className="share-options">
-        <TwitterShareButton
-          url={twitterLink}
-          title={`1v1 ME RPS, P*SSIES: ⚔`} // ${this.props.roomInfo.room_name}
-          className="Demo__some-network__share-button"
+  return (
+    <div className="share-options">
+      <TwitterShareButton
+        url={twitterLink}
+        title={`1v1 ME RPS, P*SSIES: ⚔`}
+        className="Demo__some-network__share-button"
+      >
+        <FontAwesomeIcon icon={faXTwitter} />
+      </TwitterShareButton>
+      <a
+        className={buttonStyles.join(' ')}
+        onClick={() => {
+          toggleBtnHandler();
+          copy();
+        }}
+      >
+        {clicked ? (
+          <input
+            type="text"
+            value={twitterLink}
+            readOnly
+            onClick={toggleBtnHandler}
+          />
+        ) : null}
+        <Tooltip
+          title={!clicked ? 'COPIED LINK!' : 'COPY LINK'}
+          placement="top"
         >
-             <FontAwesomeIcon icon={faXTwitter} />
-        </TwitterShareButton>
-        <a
-          className={styles.join('')}
-          onClick={() => {
-            this.toggleBtnHandler();
-            this.copy();
-          }}
-        >
-          {this.state.clicked ? (
-            <input
-              type="text"
-              value={twitterLink}
-              readOnly
-              onClick={this.toggleBtnHandler}
-            />
-          ) : null}
-          <Tooltip title={!this.state.clicked ? "COPIED LINK!" : "COPY LINK"} placement="top">
-          <FileCopy style={{ cursor: "pointer" }} />
-          
-          </Tooltip>
-          &nbsp;{this.state.text}
-        </a>
-      </div>
-    );
-  }
-}
+          <FileCopy style={{ cursor: 'pointer' }} />
+        </Tooltip>
+        &nbsp;{text}
+      </a>
+    </div>
+  );
+};
+
+export default Share;

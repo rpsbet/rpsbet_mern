@@ -8,7 +8,7 @@ import {
   Tooltip,
 } from '@material-ui/core';
 import Moment from 'moment';
-import ReactDOM from 'react-dom';
+// import ReactDOM from 'react-dom';
 import { renderLottieAvatarAnimation } from '../../util/LottieAvatarAnimations';
 import PlayerModal from '../modal/PlayerModal';
 import { faHeart, faHeartBroken, faStopwatch} from '@fortawesome/free-solid-svg-icons';
@@ -71,7 +71,7 @@ class MyHistoryTable extends Component {
     if (!this.isUnmounted) {
       this.updateReminderTime();
       this.attachUserLinkListeners();
-      this.attachAccessories();
+      // this.attachAccessories();
     }
 
     this.interval = setInterval(this.updateReminderTime, 3000);
@@ -82,24 +82,24 @@ class MyHistoryTable extends Component {
 
   }
 
-  componentDidUpdate(prevProps) {
-    if (prevProps.history !== this.props.history) {
-      this.attachUserLinkListeners();
-      this.attachAccessories();
-      this.setState({ history: updateFromNow(this.props.history) });
-    }
-  }
+  // componentDidUpdate(prevProps) {
+  //   if (prevProps.history !== this.props.history) {
+  //     this.attachUserLinkListeners();
+  //     this.attachAccessories();
+  //     this.setState({ history: updateFromNow(this.props.history) });
+  //   }
+  // }
 
-  attachAccessories = () => {
-    const userLinks = document.querySelectorAll('.user-link');
-    userLinks.forEach(element => {
-      const accessory = element.getAttribute('accessory');
-      const lottieAnimation = renderLottieAvatarAnimation(accessory);
-      const portalContainer = document.createElement('div');
-      ReactDOM.render(lottieAnimation, portalContainer);
-      element.parentNode.insertBefore(portalContainer, element);
-    });
-  };
+  // attachAccessories = () => {
+  //   const userLinks = document.querySelectorAll('.user-link');
+  //   userLinks.forEach(element => {
+  //     const accessory = element.getAttribute('accessory');
+  //     const lottieAnimation = renderLottieAvatarAnimation(accessory);
+  //     const portalContainer = document.createElement('div');
+  //     ReactDOM.render(lottieAnimation, portalContainer);
+  //     element.parentNode.insertBefore(portalContainer, element);
+  //   });
+  // };
 
   attachUserLinkListeners = () => {
     const userLinks = document.querySelectorAll('.user-link');

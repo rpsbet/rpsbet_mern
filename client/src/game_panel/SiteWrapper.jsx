@@ -667,7 +667,7 @@ class SiteWrapper extends Component {
         this.props.getNotifications(),
         this.props.getUser(),
         this.initSocket(),
-        this.props.acCalculateRemainingLoans(),
+        // this.props.acCalculateRemainingLoans(),
         this.initializeAudio(),
       ]);
       this.setState({ websiteLoading: false, transactions: this.props.transactions, notifications: this.props.notifications, vaultBal: initialBalance, loaded: true });

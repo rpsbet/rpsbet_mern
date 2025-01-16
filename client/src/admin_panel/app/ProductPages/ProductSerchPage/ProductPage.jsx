@@ -1,34 +1,26 @@
-import React, { Component } from 'react';
+import React, { useEffect } from 'react';
 import { connect } from 'react-redux';
 import { warningMsgBar } from '../../../../redux/Notification/notification.actions';
 import { acQueryItem } from '../../../../redux/Item/item.action';
 import ProductTable from './ProductTable';
 
-export class ProductPage extends Component {
+const ProductPage = ({ acQueryItem }) => {
+  useEffect(() => {
+    acQueryItem(100, 1, 'price', '653ee81117c9f5ee2124564b');
+  }, [acQueryItem]);
 
-  componentDidMount() {
-    this.props.acQueryItem(100, 1, 'price', '653ee81117c9f5ee2124564b');
-    
-  }
+  return (
+    <>
+      <ProductTable />
+    </>
+  );
+};
 
-  render() {
-    return (
-      <>
-        <ProductTable />
-      </>
-    );
-  }
-}
-
-const mapStateToProps = state => ({});
+const mapStateToProps = (state) => ({});
 
 const mapDispatchToProps = {
-  // setUrl,
   warningMsgBar,
   acQueryItem
 };
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(ProductPage);
+export default connect(mapStateToProps, mapDispatchToProps)(ProductPage);

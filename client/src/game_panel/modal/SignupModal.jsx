@@ -1,10 +1,20 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Modal from 'react-modal';
 import { connect } from 'react-redux';
 import { userSignUp } from '../../redux/Auth/user.actions';
 import { confirmAlert } from 'react-confirm-alert';
 import 'react-confirm-alert/src/react-confirm-alert.css';
-import { Button, TextField, Typography, ButtonBase, Checkbox, FormControlLabel, InputAdornment, IconButton, Tooltip } from '@material-ui/core';
+import {
+  Button,
+  TextField,
+  Typography,
+  ButtonBase,
+  Checkbox,
+  FormControlLabel,
+  InputAdornment,
+  IconButton,
+  Tooltip
+} from '@material-ui/core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUserPlus } from '@fortawesome/free-solid-svg-icons';
 import TermsModal from '../modal/TermsModal';
@@ -14,7 +24,7 @@ import Info from '@material-ui/icons/Info';
 import VisibilityOff from '@material-ui/icons/VisibilityOff';
 import { setFocused } from '../../redux/Auth/user.actions';
 
-Modal.setAppElement('#root')
+Modal.setAppElement('#root');
 
 const customStyles = {
   overlay: {
@@ -31,330 +41,355 @@ const customStyles = {
     minWidth: '380px',
     border: 'none'
   }
-}
+};
 
-class SignupModal extends Component {
-  constructor(props) {
-    super(props);
+function SignupModal(props) {
+  const {
+    modalIsOpen,
+    closeModal,
+    openLoginModal,
+    isDarkMode,
+    userSignUp,
+    setFocused,
+  } = props;
 
-    this.state = {
-      userName: '',
-      // email: '',
-      password: '',
-      bio: '',
-      avatar: '',
-      referralCode: '',
-      showTermsModal: false,
-      avatarMethod: 'robohash',
-      termsChecked: false,
-      password: '',
-      showPassword: false,
-      recaptchaToken: '',
-      loaded: false
+  // -------------------- LOCAL STATE --------------------
+  const [userName, setUserName] = useState('');
+  const [password, setPassword] = useState('');
+  const [bio, setBio] = useState('');
+  const [avatar, setAvatar] = useState('');
+  const [referralCode, setReferralCode] = useState('');
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [avatarMethod, setAvatarMethod] = useState('robohash');
+  const [termsChecked, setTermsChecked] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [recaptchaToken, setRecaptchaToken] = useState('');
+  const [loaded, setLoaded] = useState(false);
+
+  // For referencing the form element directly
+  const formRef = useRef(null);
+
+  // -------------------- EFFECTS --------------------
+  // componentDidMount equivalent
+  useEffect(() => {
+    setLoaded(true);
+  }, []);
+
+  // componentDidUpdate equivalent for `loaded` => attach form submit handler
+  useEffect(() => {
+    if (loaded && formRef.current) {
+      attachFormSubmitHandler();
     }
-  }
-  componentDidMount() {
-    this.setState({ loaded: true });
-  }
+  }, [loaded]);
 
-  componentDidUpdate(prevState) {
-    if (!prevState.loaded && this.state.loaded) {
-      this.attachFormSubmitHandler();
-    }
-  }
-
-  attachFormSubmitHandler = () => {
-    const form = document.getElementById('signupForm');
+  // -------------------- HANDLERS --------------------
+  const attachFormSubmitHandler = () => {
+    const form = formRef.current;
     if (form) {
-      form.addEventListener('submit', this.handleFormSubmit);
+      form.addEventListener('submit', handleFormSubmit);
     } else {
       console.error("Form element not found");
     }
   };
 
-  handleFormSubmit = (e) => {
+  const handleFormSubmit = (e) => {
     e.preventDefault();
     const form = e.target;
+    /* global grecaptcha */
     grecaptcha.ready(function () {
-      grecaptcha.execute('6Lfto1EpAAAAAD5UzhL6Fp7YCZeIDmenzpZewpCv', { action: 'submit' }).then(function (token) {
-        form.querySelector('input[name="recaptchaToken"]').value = token;
-        form.submit();
-      });
+      grecaptcha.execute('6Lfto1EpAAAAAD5UzhL6Fp7YCZeIDmenzpZewpCv', { action: 'submit' })
+        .then(function (token) {
+          form.querySelector('input[name="recaptchaToken"]').value = token;
+          form.submit();
+        });
     });
   };
-  handleRecaptchaToken = (token) => {
-    this.setState({ recaptchaToken: token });
+
+  const handleCheckboxChange = () => {
+    setTermsChecked(prev => !prev);
   };
 
-
-  handleCheckboxChange = () => {
-    this.setState((prevState) => ({ termsChecked: !prevState.termsChecked }));
+  const handleOpenTermsModal = () => {
+    setShowTermsModal(true);
   };
 
-  handleOpenTermsModal = () => {
-    this.setState({ showTermsModal: true });
-  };
-  handleCloseTermsModal = () => {
-    this.setState({ showTermsModal: false });
+  const handleCloseTermsModal = () => {
+    setShowTermsModal(false);
   };
 
-  onChangeAvatarMethod = (e) => {
-    this.setState({ avatarMethod: e.target.value });
+  const onChangeAvatarMethod = (value) => {
+    setAvatarMethod(value);
   };
 
-  onChangeUserName = (e) => {
+  const onChangeUserName = (e) => {
     const username = e.target.value;
-
-    // Define a regular expression for allowed characters (e.g., alphanumeric and underscores)
     const allowedCharsRegex = /^[a-zA-Z0-9_]+$/;
 
-    // Check if the input value is empty (deletion), allow it
     if (username === '') {
-      this.setState({ userName: '' });
+      setUserName('');
       return;
     }
 
     if (allowedCharsRegex.test(username)) {
-      this.setState({ userName: username });
+      setUserName(username);
     } else {
-      alertModal(this.props.isDarkMode, 'Invalid characters in username. Only alphanumeric characters and underscores are allowed.');
+      alertModal(isDarkMode, 'Invalid characters in username. Only alphanumeric characters and underscores are allowed.');
     }
-  }
-
-  onFocusHandler = () => {
-    this.props.setFocused(true);
-  }
-  onBlurHandler = () => {
-    this.props.setFocused(false);
-  }
-
-  onChangePassword = (e) => {
-    this.setState({ password: e.target.value });
-  }
-
-  togglePasswordVisibility = () => {
-    this.setState((prevState) => ({ showPassword: !prevState.showPassword }));
   };
 
+  const onFocusHandler = () => {
+    setFocused(true);
+  };
+  const onBlurHandler = () => {
+    setFocused(false);
+  };
 
-  onChangeReferralCode = (e) => {
-    this.setState({ referralCode: e.target.value });
-  }
+  const onChangePassword = (e) => {
+    setPassword(e.target.value);
+  };
 
+  const togglePasswordVisibility = () => {
+    setShowPassword(prev => !prev);
+  };
 
-  onSubmitForm = async (e) => {
+  const onChangeReferralCode = (e) => {
+    setReferralCode(e.target.value);
+  };
+
+  // reCAPTCHA: executes the reCAPTCHA to get a token
+  const executeRecaptcha = () => {
+    return new Promise((resolve) => {
+      window.grecaptcha.ready(() => {
+        window.grecaptcha.execute('6Lfto1EpAAAAAD5UzhL6Fp7YCZeIDmenzpZewpCv', { action: 'submit' })
+          .then((token) => {
+            resolve(token);
+          });
+      });
+    });
+  };
+
+  const onSubmitForm = async (e) => {
     e.preventDefault();
 
-    // Execute reCAPTCHA
-    const recaptchaToken = await this.executeRecaptcha();
-    this.setState({ recaptchaToken });
+    const token = await executeRecaptcha();
+    setRecaptchaToken(token);
 
-    // Check if reCAPTCHA token is available
-    if (!recaptchaToken) {
-      alertModal(this.props.isDarkMode, 'reCAPTCHA verification failed. Please try again.');
+    if (!token) {
+      alertModal(isDarkMode, 'reCAPTCHA verification failed. Please try again.');
       return;
     }
 
-
-    if (!this.state.termsChecked) {
-      alertModal(this.props.isDarkMode, 'Please agree to the Terms and Conditions.');
+    if (!termsChecked) {
+      alertModal(isDarkMode, 'Please agree to the Terms and Conditions.');
       return;
     }
 
+    const newUser = {
+      userName,
+      password,
+      bio,
+      avatar,
+      referralCode,
+      avatarMethod,
+      termsChecked,
+      showPassword,
+      recaptchaToken: token,
+    };
 
-    const result = await this.props.userSignUp(this.state);
+    const result = await userSignUp(newUser);
 
     if (result.status === 'success') {
       confirmAlert({
         customUI: ({ onClose }) => {
           return (
-            <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
-              <div className='modal-body'>
-                <h2 className='title'>WELCOME TO RPS.GAME TIGER! 🐯⚔</h2>
+            <div className={isDarkMode ? 'dark_mode' : ''}>
+              <div className="modal-body">
+                <h2 className="title">WELCOME TO RPS.GAME TIGER! 🐯⚔</h2>
                 <p>CLICK YOUR BALANCE TO MAKE A DEPOSIT</p>
               </div>
               <div className="modal-footer">
-                <Button id="login_now" onClick={() => {
-                  onClose();
-                  this.props.closeModal();
-                  this.props.openLoginModal();
-                }}>LOGIN NOW!</Button>
+                <Button
+                  id="login_now"
+                  onClick={() => {
+                    onClose();
+                    closeModal();
+                    openLoginModal();
+                  }}
+                >
+                  LOGIN NOW!
+                </Button>
               </div>
             </div>
           );
         }
       });
     }
-  }
-
-  executeRecaptcha = () => {
-    return new Promise((resolve) => {
-      window.grecaptcha.ready(() => {
-        window.grecaptcha.execute('6Lfto1EpAAAAAD5UzhL6Fp7YCZeIDmenzpZewpCv', { action: 'submit' }).then((token) => {
-          resolve(token);
-        });
-      });
-    });
   };
 
+  // -------------------- RENDER --------------------
+  return (
+    <Modal
+      isOpen={modalIsOpen}
+      style={customStyles}
+      contentLabel={props.title}
+    >
+      <div className={isDarkMode ? 'dark_mode' : ''}>
+        <div className="modal-container">
+          <div className="modal-left">
+            <img className="giant-picture" src="/img/giant.svg" alt="Register" />
+          </div>
 
-
-  render() {
-    const { modalIsOpen, closeModal, openLoginModal, isDarkMode } = this.props;
-    const { userName, password, referralCode, avatarMethod, termsChecked, showPassword } = this.state;
-
-    return (
-      <Modal
-        isOpen={modalIsOpen}
-        style={customStyles}
-        contentLabel={this.props.title}
-      >
-        <div className={isDarkMode ? 'dark_mode' : ''}>
-          <div className={"modal-container"}>
-            <div className='modal-left'>
-              {/* Left column with giant picture */}
-              <img className="giant-picture" src="/img/giant.svg" alt="Register" />
+          <div className="modal-right">
+            <div style={{ borderTopLeftRadius: '0' }} className="modal-header">
+              <h2 className="modal-title title">
+                <FontAwesomeIcon icon={faUserPlus} className="mr-2" />
+                REGISTER
+              </h2>
+              <Button className="btn-close title" onClick={closeModal}>×</Button>
             </div>
-            <div className='modal-right'>
-              <div style={{ borderTopLeftRadius: "0" }} className='modal-header'>
-                <h2 className='modal-title title'>
-                  <FontAwesomeIcon icon={faUserPlus} className="mr-2" />
 
-                  REGISTER
-                </h2>
-                <Button className="btn-close title" onClick={closeModal}>×</Button>
-              </div>
-              <div className="modal-body">
-                <h4 className='title'>JOIN THE CAT (FIGHT) CLUB! 🥋</h4>
-                <form onSubmit={this.onSubmitForm} id="signupForm">
-                  <TextField
-                    placeholder="e.g. PU55YD35TROY3R"
-                    label="Your Username"
-                    required
-                    value={userName}
-                    onChange={this.onChangeUserName}
-                    fullWidth
-                    className="form-control"
-                    variant="filled"
-                  />
+            <div className="modal-body">
+              <h4 className="title">JOIN THE CAT (FIGHT) CLUB! 🥋</h4>
+              <form onSubmit={onSubmitForm} id="signupForm" ref={formRef}>
+                <TextField
+                  placeholder="e.g. PU55YD35TROY3R"
+                  label="Your Username"
+                  required
+                  value={userName}
+                  onChange={onChangeUserName}
+                  fullWidth
+                  className="form-control"
+                  variant="filled"
+                />
 
-                  <div className="avatar-method-selection">
-                    <Typography>CHOOSE DEFAULT AVATAR</Typography>
-                    <ButtonBase
-                      focusRipple
-                      key="robohash"
-                      className={`avatar-option ${avatarMethod === 'robohash' ? 'selected' : ''}`}
-                      onClick={() => this.onChangeAvatarMethod({ target: { value: 'robohash' } })}
-                      style={{ borderRadius: "0.3em" }}
-                    >
-                      <img width="52px" height="52px" src="/img/robohashCat.webp" alt="Robohash" />
-                    </ButtonBase>
-                    <ButtonBase
-                      focusRipple
-                      style={{ borderRadius: "0.3em" }}
-                      key="jdenticon"
-                      className={`avatar-option ${avatarMethod === 'jdenticon' ? 'selected' : ''}`}
-                      onClick={() => this.onChangeAvatarMethod({ target: { value: 'jdenticon' } })}
-                    >
-                      <img width="52px" height="52px" src="/img/jdenticon.webp" alt="Jdenticon" />
-                    </ButtonBase>
-                  </div>
-                  <TextField
-                    required
-                    placeholder="●●●●●●"
-                    type={showPassword ? 'text' : 'password'}
-                    label="Your Password"
-                    value={password}
-                    onFocus={this.onFocusHandler}
-                    onBlur={this.onBlurHandler}
-                    onChange={this.onChangePassword}
-                    fullWidth
-                    className="form-control"
-                    variant="filled"
-                    InputProps={{
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <IconButton
-                            aria-label="toggle password visibility"
-                            onClick={this.togglePasswordVisibility}
-                            edge="end"
-                          >
-                            {showPassword ? <Visibility /> : <VisibilityOff />}
-                          </IconButton>
-                          <IconButton>
-                            <Tooltip title="You will not be able to reset your password."><Info /></Tooltip>
-                          </IconButton>
-                        </InputAdornment>
-                      )
-                    }}
-                  />
+                <div className="avatar-method-selection">
+                  <Typography>CHOOSE DEFAULT AVATAR</Typography>
+                  <ButtonBase
+                    focusRipple
+                    key="robohash"
+                    className={`avatar-option ${avatarMethod === 'robohash' ? 'selected' : ''}`}
+                    onClick={() => onChangeAvatarMethod('robohash')}
+                    style={{ borderRadius: '0.3em' }}
+                  >
+                    <img
+                      width="52px"
+                      height="52px"
+                      src="/img/robohashCat.webp"
+                      alt="Robohash"
+                    />
+                  </ButtonBase>
 
-                  <TextField
-                    placeholder="V9FTGY"
-                    label="Re-furr-al"
-                    value={referralCode}
-                    onFocus={this.onFocusHandler}
-                    onBlur={this.onBlurHandler}
-                    onChange={this.onChangeReferralCode}
-                    fullWidth
-                    className="form-control"
-                    variant="filled"
-                  />
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={termsChecked}
-                        onChange={this.handleCheckboxChange}
-                        color="primary"
-                      />
-                    }
-                    label={
-                      <span>
-                        I agree to the{' '}
-                        <a onClick={this.handleOpenTermsModal}>
-                          <Typography component="span" style={{color:'#ff8500'}} >
-                            Terms and Conditions
-                          </Typography>
-                        </a>
-                      </span>
-                    }
-                  />
-                  <input type="hidden" name="recaptchaToken" value={this.state.recaptchaToken} />
+                  <ButtonBase
+                    focusRipple
+                    style={{ borderRadius: '0.3em' }}
+                    key="jdenticon"
+                    className={`avatar-option ${avatarMethod === 'jdenticon' ? 'selected' : ''}`}
+                    onClick={() => onChangeAvatarMethod('jdenticon')}
+                  >
+                    <img
+                      width="52px"
+                      height="52px"
+                      src="/img/jdenticon.webp"
+                      alt="Jdenticon"
+                    />
+                  </ButtonBase>
+                </div>
 
-                </form>
+                <TextField
+                  required
+                  placeholder="●●●●●●"
+                  type={showPassword ? 'text' : 'password'}
+                  label="Your Password"
+                  value={password}
+                  onFocus={onFocusHandler}
+                  onBlur={onBlurHandler}
+                  onChange={onChangePassword}
+                  fullWidth
+                  className="form-control"
+                  variant="filled"
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton onClick={togglePasswordVisibility} edge="end">
+                          {showPassword ? <Visibility /> : <VisibilityOff />}
+                        </IconButton>
+                        <IconButton>
+                          <Tooltip title="You will not be able to reset your password.">
+                            <Info />
+                          </Tooltip>
+                        </IconButton>
+                      </InputAdornment>
+                    )
+                  }}
+                />
 
-              </div>
-              <div style={{ borderBottomLeftRadius: "0" }} className="modal-footer">
-                <Button className="btn-submit" style={{ margin: "20px 0 0" }} type="submit" form="signupForm">
-                  Register&nbsp;<span className='roll-tag'>[ ↵ ]</span>
+                <TextField
+                  placeholder="V9FTGY"
+                  label="Re-furr-al"
+                  value={referralCode}
+                  onFocus={onFocusHandler}
+                  onBlur={onBlurHandler}
+                  onChange={onChangeReferralCode}
+                  fullWidth
+                  className="form-control"
+                  variant="filled"
+                />
+
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={termsChecked}
+                      onChange={handleCheckboxChange}
+                      color="primary"
+                    />
+                  }
+                  label={
+                    <span>
+                      I agree to the{' '}
+                      <a onClick={handleOpenTermsModal}>
+                        <Typography component="span" style={{ color: '#ff8500' }}>
+                          Terms and Conditions
+                        </Typography>
+                      </a>
+                    </span>
+                  }
+                />
+                <input type="hidden" name="recaptchaToken" value={recaptchaToken} />
+              </form>
+            </div>
+
+            <div style={{ borderBottomLeftRadius: '0' }} className="modal-footer">
+              <Button
+                className="btn-submit"
+                style={{ margin: '20px 0 0' }}
+                type="submit"
+                form="signupForm"
+              >
+                Register&nbsp;<span className="roll-tag">[ ↵ ]</span>
+              </Button>
+              <p className="m-0 sm-text-center">
+                GOT ACCOUNT?{' '}
+                <Button onClick={() => { closeModal(); openLoginModal(); }}>
+                  LOGIN HERE →
                 </Button>
-                <p className="m-0 sm-text-center">
-                  GOT ACCOUNT?{' '}
-                  <Button onClick={(e) => { closeModal(); openLoginModal(); }}>
-                    LOGIN HERE →
-                  </Button>
-                </p>
-              </div>
+              </p>
             </div>
-
           </div>
         </div>
-        {this.state.showTermsModal && (
-          <TermsModal
-            modalIsOpen={this.state.showTermsModal}
-            closeModal={this.handleCloseTermsModal}
-            isDarkMode={this.props.isDarkMode}
-          />
-        )}
-      </Modal>
+      </div>
 
-    );
-  }
+      {showTermsModal && (
+        <TermsModal
+          modalIsOpen={showTermsModal}
+          closeModal={handleCloseTermsModal}
+          isDarkMode={isDarkMode}
+        />
+      )}
+    </Modal>
+  );
 }
 
-
-
-const mapStateToProps = state => ({
+const mapStateToProps = (state) => ({
   isDarkMode: state.auth.isDarkMode,
   isActiveLoadingOverlay: state.logic.isActiveLoadingOverlay
 });
@@ -364,7 +399,4 @@ const mapDispatchToProps = {
   setFocused
 };
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(SignupModal);
+export default connect(mapStateToProps, mapDispatchToProps)(SignupModal);

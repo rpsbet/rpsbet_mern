@@ -1,118 +1,141 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { connect } from 'react-redux';
-import { Skeleton } from "@material-ui/lab";
+import { Skeleton } from '@material-ui/lab';
 import PlayerModal from '../modal/PlayerModal';
 import Avatar from '../../components/Avatar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHandPointDown } from '@fortawesome/free-solid-svg-icons';
 import ButtonBase from '@material-ui/core/ButtonBase';
 
-import {
-  fetchId,
-} from '../../redux/Customer/customer.action';
+import { fetchId } from '../../redux/Customer/customer.action';
 
-class GlobalChat extends Component {
-  constructor(props) {
-    super(props);
+function GlobalChat(props) {
+  const {
+    globalChatList = [],
+    selectedMessage,
+    setSelectedMessage,
+    user,
+    isDarkMode,
+    isDrawerOpen,
+    onlineUserList,
+    emojis
+  } = props;
 
-    this.state = {
-      chat_list: [],
-      fetchedGloabal: false,
-      newMessages: 0,
-      showTooltip: false,
-      showPlayerModal: false,
-      selectedCreator: '',
-      isLoaded: false,
-      mentionedUsers: {}
+  // ------------------- State -------------------
+  const [chatList, setChatList] = useState(globalChatList || []);
+  const [fetchedGlobal, setFetchedGlobal] = useState(false); // not used in original code, but preserved
+  const [newMessages, setNewMessages] = useState(0);
+  const [showTooltip, setShowTooltip] = useState(false);
+  const [showPlayerModal, setShowPlayerModal] = useState(false);
+  const [selectedCreator, setSelectedCreator] = useState('');
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [mentionedUsers, setMentionedUsers] = useState({});
+
+  // ------------------- Refs -------------------
+  const chatBoxRef = useRef(null);
+
+  // We’ll use these to compare current vs. previous values in "componentDidUpdate"-like logic
+  const prevGlobalChatListLength = useRef(globalChatList.length);
+  const prevIsDrawerOpen = useRef(isDrawerOpen);
+
+  // ------------------- Lifecycle: componentDidMount / componentWillUnmount -------------------
+  useEffect(() => {
+    // Add scroll listener on mount
+    const chatBox = chatBoxRef.current;
+    if (chatBox) {
+      chatBox.addEventListener('scroll', handleScroll);
+    }
+
+    // Remove scroll listener on unmount
+    return () => {
+      if (chatBox) {
+        chatBox.removeEventListener('scroll', handleScroll);
+      }
     };
+  }, []);
 
-    this.chatBoxRef = React.createRef();
-  }
-
-  componentDidMount() {
-    this.chatBoxRef.current.addEventListener('scroll', this.handleScroll);
-
-    if (this.state.chat_list.length > 0) {
-      this.handleInitialScroll();
+  useEffect(() => {
+    // If we initially have some chat messages, scroll to bottom once
+    if (chatList.length > 0) {
+      handleInitialScroll();
     }
-  }
+    // eslint-disable-next-line
+  }, []);
 
-  componentDidUpdate(prevProps, prevState) {
+  // ------------------- Lifecycle: componentDidUpdate logic -------------------
+  useEffect(() => {
+    // 1) Check if globalChatList changed in length to see if new messages arrived
     if (
-      prevProps.globalChatList.length > 0 &&
-      prevProps.globalChatList.length < this.props.globalChatList.length
+      prevGlobalChatListLength.current > 0 &&
+      prevGlobalChatListLength.current < globalChatList.length
     ) {
-      this.setState(
-        {
-          newMessages:
-            this.props.globalChatList.length - prevProps.globalChatList.length,
-          showTooltip: true
-        }, () => {
-          if (this.props.globalChatList[this.props.globalChatList.length - 1].senderId === this.props.user._id) {
-            this.handleInitialScroll();
-          }
-        });
-    }
-    if (
-      prevProps.isDrawerOpen !== this.props.isDrawerOpen ||
-      prevProps.globalChatList.length < this.props.globalChatList.length
-    ) {
-      if (this.state.isLoaded === false) {
-        this.handleInitialScroll();
+      // Update new messages count & show the tooltip
+      const difference = globalChatList.length - prevGlobalChatListLength.current;
+      setNewMessages(difference);
+      setShowTooltip(true);
+
+      // If the newest message is from the current user, scroll to bottom
+      if (globalChatList[globalChatList.length - 1].senderId === user._id) {
+        handleInitialScroll();
       }
     }
-  }
-  componentWillUnmount() {
-    this.chatBoxRef.current.removeEventListener('scroll', this.handleScroll);
-  }
 
-  handleInitialScroll() {
+    // 2) If the drawer just opened/closed or if we have new messages
+    //    and haven't set isLoaded yet, scroll to bottom
+    if (
+      (!isLoaded &&
+        (prevIsDrawerOpen.current !== isDrawerOpen ||
+          prevGlobalChatListLength.current < globalChatList.length))
+    ) {
+      handleInitialScroll();
+    }
+
+    // Update refs for next cycle
+    prevGlobalChatListLength.current = globalChatList.length;
+    prevIsDrawerOpen.current = isDrawerOpen;
+  }, [globalChatList, isDrawerOpen, user._id, isLoaded]);
+
+  // ------------------- Sync local chatList with prop globalChatList (getDerivedStateFromProps) -------------------
+  useEffect(() => {
+    // If globalChatList changes length, update local chatList
+    if (globalChatList && globalChatList.length !== chatList.length) {
+      setChatList(globalChatList);
+    }
+  }, [globalChatList, chatList.length]);
+
+  // ------------------- Handlers -------------------
+  const handleInitialScroll = () => {
+    if (!chatBoxRef.current) return;
     const offset = 50;
-    this.chatBoxRef.current.scrollTop =
-      this.chatBoxRef.current.scrollHeight + offset;
+    chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight + offset;
+    setIsLoaded(true);
+  };
 
-    this.setState({ isLoaded: true });
+  const handleScroll = () => {
+    if (!chatBoxRef.current) return;
 
-  }
-
-  handleScroll = () => {
-    const chatBox = this.chatBoxRef.current;
-
-    // Calculate the difference between the scroll height and the scroll position plus the client height
+    const chatBox = chatBoxRef.current;
+    // difference between the total scroll height and (current scroll position + element's height)
     const scrollDifference = chatBox.scrollHeight - (chatBox.scrollTop + chatBox.clientHeight);
 
-    // If the difference is very small (considering potential floating point errors), assume the user is at the bottom
+    // If near the bottom, hide the tooltip
     if (scrollDifference < 30) {
-      this.setState({ showTooltip: false });
+      setShowTooltip(false);
     }
   };
 
-  static getDerivedStateFromProps(props, current_state) {
-    if (!props.globalChatList) return null;
-
-    if (current_state.chat_list.length !== props.globalChatList.length) {
-      return {
-        ...current_state,
-        chat_list: props.globalChatList
-      };
-    }
-
-    return null;
-  }
-
-  handleOpenPlayerModal = senderId => {
-    this.setState({ showPlayerModal: true, selectedCreator: senderId });
+  const handleOpenPlayerModal = (senderId) => {
+    setShowPlayerModal(true);
+    setSelectedCreator(senderId);
   };
 
-  handleClosePlayerModal = () => {
-    this.setState({ showPlayerModal: false });
+  const handleClosePlayerModal = () => {
+    setShowPlayerModal(false);
   };
 
-  handleMessageClick = message => {
-    const { selectedMessage, setSelectedMessage } = this.props;
-
+  const handleMessageClick = (message) => {
+    // If the clicked message is the same as the selected message, deselect
     if (selectedMessage.sender === message.sender) {
-      // Deselect the message if it was already selected
       setSelectedMessage({
         sender: null,
         senderId: null,
@@ -122,10 +145,10 @@ class GlobalChat extends Component {
         message: null,
         messageType: null,
         replyTo: null,
-        time: null
+        time: null,
       });
     } else {
-      // Select the clicked message
+      // Otherwise, select it
       setSelectedMessage({
         sender: message.sender,
         rank: message.rank,
@@ -135,91 +158,113 @@ class GlobalChat extends Component {
         message: message.message,
         messageType: message.messageType,
         replyTo: message.replyTo,
-        time: message.time
+        time: message.time,
       });
     }
   };
 
-  fetchAndUpdateId(username) {
-    // Check if the user is already in the stateƒ
-    const mentionedUser = this.state.mentionedUsers[username];
-
+  // This replicates your fetchAndUpdateId method for mentions
+  const fetchAndUpdateId = async (username) => {
+    // Check if we already have the user in state
+    const mentionedUser = mentionedUsers[username];
     if (mentionedUser && mentionedUser._id) {
-      // User already has an _id, no need to fetch
-      return Promise.resolve(mentionedUser);
+      return mentionedUser;
     } else {
-      // Fetch the _id for the mentioned user
-      return new Promise((resolve, reject) => {
-        fetchId(username)
-          .then(user => {
-            if (user && user._id) {
-              // Update the state with the fetched _id
-              this.setState(prevState => ({
-                mentionedUsers: {
-                  ...prevState.mentionedUsers,
-                  [username]: user
-                }
-              }));
-            }
-            resolve(user);
-          })
-          .catch(error => {
-            reject(error);
-          });
-      });
+      // If not found, fetch from the server
+      try {
+        const userData = await fetchId(username);
+        if (userData && userData._id) {
+          setMentionedUsers((prevState) => ({
+            ...prevState,
+            [username]: userData,
+          }));
+        }
+        return userData;
+      } catch (error) {
+        // handle error as needed
+        return null;
+      }
     }
-  }
+  };
 
-  render() {
-    const { chat_list } = this.state;
-    const { emojis, selectedMessage } = this.props;
-    const offset = 50;
-    const uniqueMessages = new Set();
+  // ------------------- Rendering -------------------
+  const offset = 50;
+  const uniqueMessages = new Set();
 
-    return (
-      <div className="chat-panel global-chat" ref={this.chatBoxRef} onScroll={this.handleScroll}>
-        {this.state.showTooltip && (
-          <ButtonBase
-            onClick={() => {
-              this.chatBoxRef.current.scrollTop =
-                this.chatBoxRef.current.scrollHeight + offset;
-              this.setState({ showTooltip: false });
-            }}
-            className="msgtooltip"
-          >
-            {this.state.newMessages} new chat(s) &nbsp;{' '}
-            <FontAwesomeIcon icon={faHandPointDown} />
-          </ButtonBase>
-        )}
-        {this.state.showPlayerModal && (
-          <PlayerModal
-            selectedCreator={this.state.selectedCreator}
-            modalIsOpen={this.state.showPlayerModal}
-            closeModal={this.handleClosePlayerModal}
-          />
-        )}
-        {chat_list && chat_list.length > 0 ? (
-          <>
-            {chat_list.map((chat, key) => {
-              const message = chat.message;
-              const messageTimePair = chat.message + chat.time;
-              if (uniqueMessages.has(messageTimePair)) {
-                return null;
-              }
-              uniqueMessages.add(messageTimePair);
+  return (
+    <div className="chat-panel global-chat" ref={chatBoxRef} onScroll={handleScroll}>
+      {/* Tooltip for new messages */}
+      {showTooltip && (
+        <ButtonBase
+          onClick={() => {
+            if (!chatBoxRef.current) return;
+            chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight + offset;
+            setShowTooltip(false);
+          }}
+          className="msgtooltip"
+        >
+          {newMessages} new chat(s) &nbsp;
+          <FontAwesomeIcon icon={faHandPointDown} />
+        </ButtonBase>
+      )}
 
-              const wrappedMessage = message
+      {/* Player Modal */}
+      {showPlayerModal && (
+        <PlayerModal
+          selectedCreator={selectedCreator}
+          modalIsOpen={showPlayerModal}
+          closeModal={handleClosePlayerModal}
+        />
+      )}
+
+      {/* Main Chat List */}
+      {chatList && chatList.length > 0 ? (
+        <>
+          {chatList.map((chat, index) => {
+            const message = chat.message;
+            // Combine message + time to identify unique messages
+            const messageTimeKey = message + chat.time;
+
+            if (uniqueMessages.has(messageTimeKey)) {
+              return null;
+            }
+            uniqueMessages.add(messageTimeKey);
+
+            // Split & replace emojis for main message
+            const wrappedMessage = message
+              .split(/(:\w+:)/g)
+              .map((part, i) => {
+                if (part.startsWith(':') && part.endsWith(':')) {
+                  const emojiObj = emojis.find((e) => e.command === part);
+                  if (emojiObj) {
+                    const { url, alt } = emojiObj;
+                    return (
+                      <img
+                        key={i}
+                        src={url}
+                        alt={alt}
+                        className="emoji"
+                      />
+                    );
+                  }
+                }
+                return part;
+              });
+
+            // Split & replace emojis for reply message
+            let wrappedReplyMessage = null;
+            if (chat.replyTo && chat.replyTo.message) {
+              const replyMessage = chat.replyTo.message;
+              wrappedReplyMessage = replyMessage
                 .split(/(:\w+:)/g)
-                .map((part, index) => {
+                .map((part, i) => {
                   if (part.startsWith(':') && part.endsWith(':')) {
-                    const emojiCommand = part;
-                    const emoji = emojis.find(emoji => emoji.command === emojiCommand);
-
-                    if (emoji) {
-                      const { url, alt } = emoji;
+                    const emojiObj = emojis.find((e) => e.command === part);
+                    if (emojiObj) {
+                      const { url, alt } = emojiObj;
                       return (
                         <img
-                          key={index}
+                          key={i}
                           src={url}
                           alt={alt}
                           className="emoji"
@@ -229,164 +274,145 @@ class GlobalChat extends Component {
                   }
                   return part;
                 });
+            }
 
-              let wrappedReplyMessage = null;
-              if (chat.replyTo && chat.replyTo.message) {
-                const replyMessage = chat.replyTo.message;
-                wrappedReplyMessage = replyMessage
-                  .split(/(:\w+:)/g)
-                  .map((part, index) => {
-                    if (part.startsWith(':') && part.endsWith(':')) {
-                      const emojiCommand = part;
-                      const emoji = emojis.find(emoji => emoji.command === emojiCommand);
-
-                      if (emoji) {
-                        const { url, alt } = emoji;
-                        return (
-                          <img
-                            key={index}
-                            src={url}
-                            alt={alt}
-                            className="emoji"
-                          />
-                        );
-                      }
-                    }
-                    return part;
-                  });
-              }
-
-              return (
-                <div
-                  key={key}
-                  className={`chat-line ${selectedMessage === chat ? 'selected' : ''} ${chat.sender === 'SYSTEM' ? 'special-message' : ''
-                    } ${chat.sender === 'SYSTEM' && chat.message.includes('rent') ? 'special-message-rent  ' : ''
-                    }`}
-                  onClick={() => this.handleMessageClick(chat)}
-                >
-                  {chat.replyTo && chat.replyTo.message && (
-                    <div className="reply-to">
-                      <a
-                        className="chat-player"
-                        onClick={() => this.handleOpenPlayerModal(chat.replyTo.senderId)}
-                      >
-                        <div className="reply-border"></div>
-                        <Avatar
-                          className="avatar"
-                          src={chat.replyTo.avatar}
-                          alt=""
-                          username={chat.replyTo.sender}
-                          rank={chat.replyTo.rank}
-                          accessory={chat.replyTo.accessory}
-                          darkMode={this.props.isDarkMode}
-                        />
-                        <i
-                          className={`online-status${this.props.onlineUserList.filter(
-                            user => user === chat.replyTo.senderId
-                          ).length > 0
-                              ? ' online'
-                              : ''
-                            }`}
-                        ></i>
-                      </a>
-
-                      <span className="reply-sender sender-name">
-                        {chat.replyTo.username}
-                      </span>
-                      <span className="reply-message chat-text title">
-                        {chat.replyTo.messageType === 'gif' ? (
-                          <img
-                            src={JSON.parse(chat.replyTo.message).content}
-                            alt="gif"
-                          />
-                        ) : (
-                          wrappedReplyMessage
-                        )}
-                      </span>
-                    </div>
-                  )}
-                  <div className="chat-content">
-                    <a
-                      className="chat-player"
-                      onClick={() => this.handleOpenPlayerModal(chat.senderId)}
-                    >
-                      <Avatar
-                        className="avatar"
-                        src={chat.avatar}
-                        accessory={chat.accessory}
-                        alt=""
-                        username={chat.sender}
-                        rank={chat.rank}
-                        darkMode={this.props.isDarkMode}
-                      />
-                      <i
-                        className={`online-status${this.props.onlineUserList.filter(
-                          user => user === chat.senderId
-                        ).length > 0
-                            ? ' online'
-                            : ''
-                          }`}
-                      ></i>
-                    </a>
-                    <div className="chat-msg">
-                      <span className="sender-name">{chat.sender}</span>
-
-                      <span className="chat-text title">
-                        {chat.messageType === 'gif' ? (
-                          <img
-                            src={JSON.parse(chat.message).content}
-                            alt="gif"
-                          />
-                        ) : (
-                          wrappedMessage
-                        )}
-                      </span>
-                    </div>
-
-                    <div className="chat-time">
-                      <div>{chat.time}</div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </>
-        ) : (
-          <div>
-            {[...Array(10)].map((_, index) => (
+            return (
               <div
                 key={index}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  marginBottom: '15px',
-                  gap: '10px',
-                }}
+                className={`chat-line ${
+                  selectedMessage === chat ? 'selected' : ''
+                } ${
+                  chat.sender === 'SYSTEM' ? 'special-message' : ''
+                } ${
+                  chat.sender === 'SYSTEM' && chat.message.includes('rent')
+                    ? 'special-message-rent'
+                    : ''
+                }`}
+                onClick={() => handleMessageClick(chat)}
               >
-                <Skeleton variant="circle" width={40} height={40} />
-                <div style={{ flex: 1 }}>
-                  <Skeleton variant="text" width="100%" />
-                  <Skeleton variant="text" width="80%" />
+                {/* If replying to another message */}
+                {chat.replyTo && chat.replyTo.message && (
+                  <div className="reply-to">
+                    <a
+                      className="chat-player"
+                      onClick={() => handleOpenPlayerModal(chat.replyTo.senderId)}
+                    >
+                      <div className="reply-border" />
+                      <Avatar
+                        className="avatar"
+                        src={chat.replyTo.avatar}
+                        alt=""
+                        username={chat.replyTo.sender}
+                        rank={chat.replyTo.rank}
+                        accessory={chat.replyTo.accessory}
+                        darkMode={isDarkMode}
+                      />
+                      <i
+                        className={`online-status${
+                          onlineUserList.includes(chat.replyTo.senderId)
+                            ? ' online'
+                            : ''
+                        }`}
+                      />
+                    </a>
+                    <span className="reply-sender sender-name">
+                      {chat.replyTo.username}
+                    </span>
+                    <span className="reply-message chat-text title">
+                      {chat.replyTo.messageType === 'gif' ? (
+                        <img
+                          src={JSON.parse(chat.replyTo.message).content}
+                          alt="gif"
+                        />
+                      ) : (
+                        wrappedReplyMessage
+                      )}
+                    </span>
+                  </div>
+                )}
+
+                {/* Main chat content */}
+                <div className="chat-content">
+                  <a
+                    className="chat-player"
+                    onClick={() => handleOpenPlayerModal(chat.senderId)}
+                  >
+                    <Avatar
+                      className="avatar"
+                      src={chat.avatar}
+                      accessory={chat.accessory}
+                      alt=""
+                      username={chat.sender}
+                      rank={chat.rank}
+                      darkMode={isDarkMode}
+                    />
+                    <i
+                      className={`online-status${
+                        onlineUserList.includes(chat.senderId)
+                          ? ' online'
+                          : ''
+                      }`}
+                    />
+                  </a>
+                  <div className="chat-msg">
+                    <span className="sender-name">{chat.sender}</span>
+                    <span className="chat-text title">
+                      {chat.messageType === 'gif' ? (
+                        <img
+                          src={JSON.parse(chat.message).content}
+                          alt="gif"
+                        />
+                      ) : (
+                        wrappedMessage
+                      )}
+                    </span>
+                  </div>
+                  <div className="chat-time">
+                    <div>{chat.time}</div>
+                  </div>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  }
+            );
+          })}
+        </>
+      ) : (
+        // If no messages, show skeleton placeholders
+        <div>
+          {[...Array(10)].map((_, index) => (
+            <div
+              key={index}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                marginBottom: '15px',
+                gap: '10px'
+              }}
+            >
+              <Skeleton variant="circle" width={40} height={40} />
+              <div style={{ flex: 1 }}>
+                <Skeleton variant="text" width="100%" />
+                <Skeleton variant="text" width="80%" />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
-const mapStateToProps = state => ({
+
+// ------------------- Redux -------------------
+const mapStateToProps = (state) => ({
   userName: state.auth.userName,
   user: state.auth.user,
   isDarkMode: state.auth.isDarkMode,
   socket: state.auth.socket,
   globalChatList: state.logic.globalChatList,
-  isDrawerOpen: state.auth.isDrawerOpen
+  isDrawerOpen: state.auth.isDrawerOpen,
 });
 
 const mapDispatchToProps = {
-  fetchId
+  fetchId,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(GlobalChat);

@@ -623,7 +623,7 @@ router.get('/room/:id', async (req, res) => {
       .populate({ path: 'joiners', model: User });
     let gameLogQuery = GameLog.find({ room: room })
       .sort({ created_at: 'desc' })
-      .populate({ path: 'room', model: Room, select: '_id winnings commission username creator status hosts room_number game_type bet_amount user_bet host_pr created_at' })
+      .populate({ path: 'room', model: Room, select: '_id winnings selectedStrategy commission username creator status hosts room_number game_type bet_amount user_bet host_pr created_at' })
       .populate({ path: 'game_type', model: GameType, select: 'short_name game_type_name' })
       .populate({ path: 'creator', model: User, select: '_id avatar username accessory totalWagered' })
       .populate({ path: 'joined_user', model: User, select: '_id avatar username accessory totalWagered' });
@@ -1146,13 +1146,9 @@ const getRoomList = async (pageSize, game_type, excludeIds = []) => {
           likes: room.likes,
           views: room.views,
           battles: room.battles,
-          hosts: room.hosts
+          hosts: room.hosts,
+          selectedStrategy: room.selectedStrategy
         };
-
-        // Conditionally include the selectedStrategy field
-        if (room.selectedStrategy === 'Random') {
-          temp.selectedStrategy = room.selectedStrategy;
-        }
 
         switch (temp.game_type.game_type_id) {
           case 1:

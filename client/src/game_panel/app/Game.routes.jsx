@@ -10,7 +10,6 @@ import JoinGame from '../main_pages/JoinGame';
 import ChatPage from '../MyGames/ChatPage';
 import ChangePasswordPage from '../main_pages/ChangePasswordPage';
 import LeaderboardsModal from '../modal/LeaderboardsModal';
-import ProfilePage from '../main_pages/ProfilePage';
 import MyGames from '../MyGames/MyGamesTable';
 
 export class GameMainRoute extends Component {
@@ -57,11 +56,6 @@ export class GameMainRoute extends Component {
           />
           <Route
             exact
-            path={`${match.path}profile/:user_id`}
-            component={ProfilePage}
-          />
-          <Route
-            exact
             path={`${match.path}leaderboards`}
             component={LeaderboardsModal}
           />
@@ -69,7 +63,7 @@ export class GameMainRoute extends Component {
           <Route
             exact
             path={`${match.path}dashboard`}
-            component={MainPage} // Use the MyGames component here for the Dashboard
+            component={MainPage}
           />
 
           <Route

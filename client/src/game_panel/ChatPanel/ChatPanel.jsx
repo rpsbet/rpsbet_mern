@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState, useRef } from 'react';
 import { connect } from 'react-redux';
 import axios from 'axios';
 import Moment from 'moment';
@@ -19,15 +19,8 @@ import Chat from '../icons/Chat.js';
 import ChatHover from '../icons/ChatHover';
 import ChatRoom from '../icons/ChatRoom';
 import ChatRoomHover from '../icons/ChatRoomHover.js';
-import { setFocused } from '../../redux/Auth/user.actions.js'
+import { setFocused } from '../../redux/Auth/user.actions.js';
 
-function updateFromNow(history) {
-  const result = JSON.parse(JSON.stringify(history));
-  for (let i = 0; i < result.length; i++) {
-    result[i]['from_now'] = Moment(result[i]['created_at']).fromNow();
-  }
-  return result;
-}
 
 const emojis = [
   { command: ':bot:', url: '/img/emotes/brokenbot.webp', alt: 'broken bot' },
@@ -131,189 +124,209 @@ const customStyles = {
   }
 };
 
-class ChatPanel extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      selected_tab_index: 1,
-      text: '',
-      showEmojiPanel: false,
-      showSearchPopup: false,
-      gifs: Array(10).fill(initialGifState),
-      emojis: {},
-      loading: false,
-      selectedMessage: {
-        sender: null,
-        avatar: null,
-        rank: null,
-        accessory: null,
-        message: null,
-        messageType: null,
-        time: null
-      }
-    };
-  }
+function ChatPanel(props) {
+  const {
+    isAuthenticated,
+    isDarkMode,
+    userName,
+    user,
+    socket,
+    onlineUserList,
+    is_mobile,
+    toggleDrawer,
+    setFocused
+  } = props;
 
-  
- 
-  onTextAreaKeyDown = e => {
+  // ------------------ LOCAL STATE ------------------
+  const [selectedTabIndex, setSelectedTabIndex] = useState(1);
+  const [text, setText] = useState('');
+  const [showEmojiPanel, setShowEmojiPanel] = useState(false);
+  const [showSearchPopup, setShowSearchPopup] = useState(false);
+  const [gifs, setGifs] = useState(Array(10).fill(initialGifState));
+  const [loading, setLoading] = useState(false);
+  const [selectedMessage, setSelectedMessage] = useState({
+    sender: null,
+    avatar: null,
+    rank: null,
+    accessory: null,
+    message: null,
+    messageType: null,
+    time: null
+  });
+  const [hoverTabIndex, setHoverTabIndex] = useState(-1);
+
+  // Reference to the TextField for focusing after inserting emoji
+  const textareaRef = useRef(null);
+
+  // ------------------ EVENT HANDLERS ------------------
+
+  const onTextAreaKeyDown = (e) => {
     e.stopPropagation();
-    if (!this.props.socket) return;
-    if (this.props.user && this.props.user._id) {
-      
+    if (!socket) return;
+    if (user && user._id) {
       if (e.keyCode === 13) {
         e.preventDefault();
-        const text = this.state.text.trim();
-
-        if (text !== '') {
-          const { selectedMessage } = this.state;
-          this.props.socket.emit('GLOBAL_CHAT_SEND', {
-            sender: this.props.userName,
-            senderId: this.props.user._id,
-            message: text,
-            avatar: this.props.user.avatar,
-            accessory: this.props.user.accessory,
-
+        const trimmedText = text.trim();
+        if (trimmedText !== '') {
+          socket.emit('GLOBAL_CHAT_SEND', {
+            sender: userName,
+            senderId: user._id,
+            message: trimmedText,
+            avatar: user.avatar,
+            accessory: user.accessory,
             replyTo: selectedMessage,
-            rank: this.props.user.totalWagered,
+            rank: user.totalWagered,
             showEmojiPanel: false,
             showSearchPopup: false
           });
-          this.handleClearTooltip();
-          this.setState({showEmojiPanel: false, showSearchPopup: false});
+          handleClearTooltip();
+          setShowEmojiPanel(false);
+          setShowSearchPopup(false);
         }
       }
     } else {
-      alertModal(this.props.isDarkMode, "FURR-SST LOG IN!");
+      alertModal(isDarkMode, 'FURR-SST LOG IN!');
       return;
     }
-  }
+  };
 
-  handleClearTooltip = () => {
-    this.setState({
-      selectedMessage: {
-        sender: null,
-        avatar: null,
-        accessory: null,
-        rank: null,
-        message: null,
-        messageType: null,
-        time: null,
-        showEmojiPanel: false
-      },
-      text: '' // Clear the text field input by updating the 'text' state
+  const handleClearTooltip = () => {
+    setSelectedMessage({
+      sender: null,
+      avatar: null,
+      accessory: null,
+      rank: null,
+      message: null,
+      messageType: null,
+      time: null
     });
+    setText(''); // Clear the text field input
   };
 
-  handleMouseEnter = index => {
-    this.setState({ hoverTabIndex: index });
+  const handleMouseEnter = (index) => {
+    setHoverTabIndex(index);
   };
 
-  handleMouseLeave = () => {
-    this.setState({ hoverTabIndex: -1 });
+  const handleMouseLeave = () => {
+    setHoverTabIndex(-1);
   };
 
-  handleGifClick = gifUrl => {
-    if (this.props.user && this.props.user._id) {
-      if (this.props.socket) {
-        // Send the clicked GIF to the chat
+  const handleGifClick = (gifUrl) => {
+    if (user && user._id) {
+      if (socket) {
         const message = {
           type: 'gif',
           content: gifUrl
         };
-
-        this.props.socket.emit('GLOBAL_CHAT_SEND', {
-          sender: this.props.userName,
-          senderId: this.props.user._id,
+        socket.emit('GLOBAL_CHAT_SEND', {
+          sender: userName,
+          senderId: user._id,
           message: JSON.stringify(message),
-          rank: this.props.user.totalWagered,
-          avatar: this.props.user.avatar,
-          accessory: this.props.user.accessory,
+          rank: user.totalWagered,
+          avatar: user.avatar,
+          accessory: user.accessory,
           messageType: 'gif'
         });
-
-        // Close the search popup and clear the search input
-        this.setState({ showSearchPopup: false, showEmojiPanel: false, searchInput: '' });
+        setShowSearchPopup(false);
+        setShowEmojiPanel(false);
       }
     } else {
-      alertModal(this.props.isDarkMode, "FURR-SST LOG IN!");
+      alertModal(isDarkMode, 'FURR-SST LOG IN!');
       return;
     }
   };
 
-
-  insertEmoji = emojiCommand => {
-    const emoji = emojis.find(emoji => emoji.command === emojiCommand);
-
-    if (emoji) {
-      const { command, url, alt } = emoji;
-      const updatedText = this.state.text + `${command}`;
-      this.setState({ text: updatedText });
-      this.textarea.focus();
+  const insertEmoji = (emojiCommand) => {
+    const foundEmoji = emojis.find((emoji) => emoji.command === emojiCommand);
+    if (foundEmoji) {
+      const updatedText = text + foundEmoji.command;
+      setText(updatedText);
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+      }
     }
   };
 
-  setSelectedMessage = message => {
-    this.setState({ selectedMessage: message });
+  const onChangeText = (e) => {
+    setText(e.target.value);
   };
 
-  onChangeText = e => {
-    this.setState({ text: e.target.value });
+  const handleTabChange = (event, newValue) => {
+    setSelectedTabIndex(newValue);
   };
 
-  handleTabChange = (event, newValue) => {
-    this.setState({ selected_tab_index: newValue });
+  const toggleEmojiPanel = () => {
+    setShowEmojiPanel((prev) => !prev);
+    setShowSearchPopup(false);
   };
 
-  toggleEmojiPanel = () => {
-    this.setState(prevState => ({
-      showEmojiPanel: !prevState.showEmojiPanel,
-      showSearchPopup: false
-    }));
+  const onFocusHandler = () => {
+    setFocused(true);
   };
 
-  onFocusHandler = () => {
-    this.props.setFocused(true);
-  }
-  onBlurHandler = () => {
-    this.props.setFocused(false);
-  }
-
-  toggleSearchPopup = () => {
-    this.setState(prevState => ({
-      showSearchPopup: !prevState.showSearchPopup,
-      showEmojiPanel: false
-    }));
+  const onBlurHandler = () => {
+    setFocused(false);
   };
 
-  renderSearchPopup() {
+  const toggleSearchPopup = () => {
+    setShowSearchPopup((prev) => !prev);
+    setShowEmojiPanel(false);
+  };
+
+  const handleGifLoad = (index) => {
+    const updatedGifs = [...gifs];
+    updatedGifs[index].loaded = true;
+    setGifs(updatedGifs);
+  };
+
+  const handleSearchInputChange = async (event) => {
+    const searchTerm = event.target.value;
+    const apiKey = 'EoYYQ1kbX7mRfqwJ6xC4M6wgQmds4Dq1'; // Replace with your Giphy API key
+    const url = `https://api.giphy.com/v1/gifs/search?api_key=${apiKey}&q=${searchTerm}`;
+
+    try {
+      setLoading(true);
+      const response = await axios.get(url);
+      const fetchedGifs = response.data.data.map((gif) => ({
+        ...initialGifState,
+        url: gif.images.fixed_height.url,
+        title: gif.title
+      }));
+      setGifs(fetchedGifs);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching GIFs:', error);
+      setLoading(false);
+    }
+  };
+
+  // ------------------ RENDER UTILITIES ------------------
+  const renderSearchPopup = () => {
     return (
-      <div
-        className={`search-popup ${this.state.showSearchPopup ? 'active' : ''}`}
-      >
-        {this.state.showSearchPopup && (
+      <div className={`search-popup ${showSearchPopup ? 'active' : ''}`}>
+        {showSearchPopup && (
           <>
             <div style={{ marginBottom: '10px' }}>
               <TextField
                 type="text"
                 placeholder="SEARCH GIFS..."
                 variant="filled"
-                onKeyDown={this.onTextAreaKeyDown}
-                onChange={this.handleSearchInputChange}
+                onKeyDown={onTextAreaKeyDown}
+                onChange={handleSearchInputChange}
               />
             </div>
 
-            {this.state.loading ? (
+            {loading ? (
               <div>Loading...</div>
             ) : (
               <div className="gif-results">
-                {this.state.gifs.map((gif, index) => (
+                {gifs.map((gif, index) => (
                   <img
                     key={index}
                     src={gif.url}
                     alt={gif.title}
-                    onLoad={() => this.handleGifLoad(index)}
-                    onClick={() => this.handleGifClick(gif.url)}
+                    onLoad={() => handleGifLoad(index)}
+                    onClick={() => handleGifClick(gif.url)}
                   />
                 ))}
               </div>
@@ -322,178 +335,138 @@ class ChatPanel extends Component {
         )}
       </div>
     );
-  }
-  handleGifLoad = index => {
-    const updatedGifs = [...this.state.gifs];
-    updatedGifs[index].loaded = true;
-    this.setState({ gifs: updatedGifs });
   };
 
-  handleSearchInputChange = async event => {
-    const searchTerm = event.target.value;
-    const apiKey = 'EoYYQ1kbX7mRfqwJ6xC4M6wgQmds4Dq1'; // Replace with your Giphy API key
-    const url = `https://api.giphy.com/v1/gifs/search?api_key=${apiKey}&q=${searchTerm}`;
+  // ------------------ RENDER ------------------
+  const isChatEnabled = isAuthenticated && getRank(user.totalWagered) > 10;
 
-    try {
-      this.setState({ loading: true });
-      const response = await axios.get(url);
-      const gifs = response.data.data.map(gif => ({
-        ...initialGifState,
-        url: gif.images.fixed_height.url,
-        title: gif.title,
-      }));
-      this.setState({ gifs, loading: false });
-    } catch (error) {
-      console.error('Error fetching GIFs:', error);
-      this.setState({ loading: false });
-    }
-  };
+  return (
+    <div className="chat-wrapper">
+      <Tabs
+        value={selectedTabIndex}
+        onChange={handleTabChange}
+        TabIndicatorProps={{ style: { background: '#ff0000' } }}
+        className="main-game-page-tabs"
+      >
+        <Tab
+          className={`custom-tab ${
+            hoverTabIndex === 0 ? 'fade-animation fade-in' : 'fade-animation fade-out'
+          }`}
+          label="Inbox"
+          icon={hoverTabIndex === 0 || selectedTabIndex === 0 ? <ChatHover /> : <Chat />}
+          style={customStyles.tabRoot}
+          onMouseEnter={() => handleMouseEnter(0)}
+          onMouseLeave={handleMouseLeave}
+        />
+        <Tab
+          className={`custom-tab ${
+            hoverTabIndex === 1 ? 'fade-animation fade-in' : 'fade-animation fade-out'
+          }`}
+          label="Chat"
+          icon={
+            hoverTabIndex === 1 || selectedTabIndex === 1 ? (
+              <ChatRoomHover />
+            ) : (
+              <ChatRoom />
+            )
+          }
+          style={customStyles.tabRoot}
+          onMouseEnter={() => handleMouseEnter(1)}
+          onMouseLeave={handleMouseLeave}
+        />
+      </Tabs>
 
-  render() {
-    const {
-      selectedMessage,
-      selected_tab_index,
-      hoverTabIndex,
-      showEmojiPanel
-    } = this.state;
-    const { selectedMainTabIndex, isAuthenticated, user } = this.props;
-    const isChatEnabled = isAuthenticated && getRank(user.totalWagered) > 10;
+      {selectedTabIndex === 0 ? (
+        <MyChat is_mobile={is_mobile} toggleDrawer={toggleDrawer} />
+      ) : (
+        <GlobalChat
+          emojis={emojis}
+          setSelectedMessage={setSelectedMessage}
+          selectedMessage={selectedMessage}
+          onlineUserList={onlineUserList}
+        />
+      )}
 
-    return (
-      <div className="chat-wrapper">
-        <Tabs
-          value={selected_tab_index}
-          onChange={this.handleTabChange}
-          TabIndicatorProps={{ style: { background: '#ff0000' } }}
-          className="main-game-page-tabs"
-        >
-          <Tab
-            className={`custom-tab ${hoverTabIndex === 0 || selectedMainTabIndex === 0
-              ? 'fade-animation fade-in'
-              : 'fade-animation fade-out'
-              }`}
-            label="Inbox"
-            labelplacement="left"
-            icon={
-              hoverTabIndex === 0 || selected_tab_index === 0 ? (
-                <ChatHover />
-              ) : (
-                <Chat />
-              )
-            }
-            style={customStyles.tabRoot}
-            onMouseEnter={() => this.handleMouseEnter(0)}
-            onMouseLeave={this.handleMouseLeave}
-          />
-          <Tab
-            className={`custom-tab ${hoverTabIndex === 0 || selectedMainTabIndex === 0
-              ? 'fade-animation fade-in'
-              : 'fade-animation fade-out'
-              }`}
-            label="Chat"
-            labelplacement="left"
-            icon={
-              hoverTabIndex === 1 || selected_tab_index === 1 ? (
-                <ChatRoomHover />
-              ) : (
-                <ChatRoom />
-              )
-            }
-            style={customStyles.tabRoot}
-            onMouseEnter={() => this.handleMouseEnter(1)}
-            onMouseLeave={this.handleMouseLeave}
-          />
-        </Tabs>
-        {selected_tab_index === 0 ? (
-          <MyChat is_mobile={this.props.is_mobile} toggleDrawer={this.props.toggleDrawer}/>
-        ) : (
-          <GlobalChat
-            emojis={emojis}
-            setSelectedMessage={this.setSelectedMessage}
-            selectedMessage={selectedMessage}
-            onlineUserList={this.props.onlineUserList}
-          />
-        )}
-        {selected_tab_index === 1 && (
-          <div className="chat-input-panel">
-            {selectedMessage && selectedMessage.sender && (
-              <div className="tooltip reply">
-                <div className="tooltip-content">
-                  Replying to:
-                  <div className="tooltip-avatar">
-                    <Avatar
-                      rank={selectedMessage.rank}
-                      accessory={selectedMessage.accessory}
-                      src={selectedMessage.avatar}
-                      username={selectedMessage.sender}
-                      alt="Avatar"
-                    />
-                    
-                  </div>
-                  {selectedMessage.sender}
-                  <Button className="tooltip-cross">
-                    <Clear onClick={this.handleClearTooltip} />
-                  </Button>
+      {selectedTabIndex === 1 && (
+        <div className="chat-input-panel">
+          {selectedMessage && selectedMessage.sender && (
+            <div className="tooltip reply">
+              <div className="tooltip-content">
+                Replying to:
+                <div className="tooltip-avatar">
+                  <Avatar
+                    rank={selectedMessage.rank}
+                    accessory={selectedMessage.accessory}
+                    src={selectedMessage.avatar}
+                    username={selectedMessage.sender}
+                    alt="Avatar"
+                  />
                 </div>
+                {selectedMessage.sender}
+                <Button className="tooltip-cross">
+                  <Clear onClick={handleClearTooltip} />
+                </Button>
               </div>
-            )}
-            {this.renderSearchPopup()}
-            <div className={`emoticon-panel ${showEmojiPanel ? 'active' : ''}`}>
-              {emojis.map(emoji => (
-                <img
-                  key={emoji.command}
-                  src={emoji.url}
-                  alt={emoji.alt}
-                  onClick={() => this.insertEmoji(emoji.command)}
-                />
-              ))}
             </div>
-            <TextField
-              type="text"
-              className="form-control"
-              variant="outlined"
-              onFocus={this.onFocusHandler}
-              onBlur={this.onBlurHandler}
-              onKeyDown={this.onTextAreaKeyDown}
-              placeholder={isChatEnabled ? "CHAT HERE..." : "RANK MUST BE 10+"}
-              onChange={this.onChangeText}
-              value={this.state.text}
-              ref={elem => {
-                this.textarea = elem;
-              }}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment
-                    position="end"
-                    style={{ minWidth: '60px', background: 'transparent' }}
-                  >
-                    <Button
-                      className="btn-show-emoticon"
-                      onClick={this.toggleEmojiPanel}
-                      style={{ minWidth: '32px' }}
-                    >
-                      <InsertEmoticon style={{ fontSize: '16px' }} />
-                    </Button>
-                    <Button
-                      className="btn-search-gifs"
-                      onClick={this.toggleSearchPopup}
-                      style={{ minWidth: '32px', marginLeft: '2px' }}
-                    >
-                      <Gif style={{ fontSize: '32px' }} />
-                    </Button>
-                  </InputAdornment>
-                )
-              }}
-              disabled={!isChatEnabled}
-            />
+          )}
+
+          {renderSearchPopup()}
+
+          <div className={`emoticon-panel ${showEmojiPanel ? 'active' : ''}`}>
+            {emojis.map((emojiItem) => (
+              <img
+                key={emojiItem.command}
+                src={emojiItem.url}
+                alt={emojiItem.alt}
+                onClick={() => insertEmoji(emojiItem.command)}
+              />
+            ))}
           </div>
-        )}
-      </div>
-    );
-  }
+
+          <TextField
+            type="text"
+            className="form-control"
+            variant="outlined"
+            onFocus={onFocusHandler}
+            onBlur={onBlurHandler}
+            onKeyDown={onTextAreaKeyDown}
+            placeholder={isChatEnabled ? 'CHAT HERE...' : 'RANK MUST BE 10+'}
+            onChange={onChangeText}
+            value={text}
+            inputRef={textareaRef}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment
+                  position="end"
+                  style={{ minWidth: '60px', background: 'transparent' }}
+                >
+                  <Button
+                    className="btn-show-emoticon"
+                    onClick={toggleEmojiPanel}
+                    style={{ minWidth: '32px' }}
+                  >
+                    <InsertEmoticon style={{ fontSize: '16px' }} />
+                  </Button>
+                  <Button
+                    className="btn-search-gifs"
+                    onClick={toggleSearchPopup}
+                    style={{ minWidth: '32px', marginLeft: '2px' }}
+                  >
+                    <Gif style={{ fontSize: '32px' }} />
+                  </Button>
+                </InputAdornment>
+              )
+            }}
+            disabled={!isChatEnabled}
+          />
+        </div>
+      )}
+    </div>
+  );
 }
 
-const mapStateToProps = state => ({
+// ------------------ REDUX CONNECT ------------------
+const mapStateToProps = (state) => ({
   isAuthenticated: state.auth.isAuthenticated,
   isDarkMode: state.auth.isDarkMode,
   userName: state.auth.userName,

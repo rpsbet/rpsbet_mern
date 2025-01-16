@@ -1,6 +1,5 @@
-import React, { Component } from 'react';
+import React, { useState } from 'react';
 import { connect } from 'react-redux';
-
 import Modal from 'react-modal';
 import MyProductPage from '../../admin_panel/app/ProductPages/ProductSerchPage/MyProductPage';
 import { Button } from '@material-ui/core';
@@ -17,7 +16,6 @@ const customStyles = {
     zIndex: 3,
     backgroundColor: 'rgba(0, 0, 0, 0.8)',
   },
-
   content: {
     top: '50%',
     left: '50%',
@@ -26,79 +24,75 @@ const customStyles = {
     transform: 'translate(-50%, -50%)',
     background: 'transparent',
     padding: 0,
-    border: 'none'
+    border: 'none',
   },
 };
 
-class InventoryModal extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      showMarketplaceModal: false,
-    };
-  }
+function InventoryModal(props) {
+  const { modalIsOpen, closeModal, isDarkMode, solPrice } = props;
 
-  handleOpenMarketplaceModal = () => {
-    this.setState({ showMarketplaceModal: true });
+  // Local state to track visibility of MarketplaceModal
+  const [showMarketplaceModal, setShowMarketplaceModal] = useState(false);
+
+  const handleOpenMarketplaceModal = () => {
+    setShowMarketplaceModal(true);
   };
 
-  handleCloseMarketplaceModal = () => {
-    this.setState({ showMarketplaceModal: false });
+  const handleCloseMarketplaceModal = () => {
+    setShowMarketplaceModal(false);
   };
 
-  render() {
-    const { solPrice } = this.props;
-    return (
-      <Modal
-        isOpen={this.props.modalIsOpen}
-        onRequestClose={this.props.closeModal}
-        style={customStyles}
-        contentLabel="Inventory Modal"
-      >
-        <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
-          <div className="modal-header">
-            <h2 className="modal-title title"><FontAwesomeIcon icon={faBox} className="mr-2" />&nbsp;Inventory</h2>
-            <Button className="btn-close title" onClick={this.props.closeModal}>
-              ×
-            </Button>
-          </div>
-          <div className="modal-body edit-modal-body inventory-modal-body">
-            <div className="modal-content-wrapper">
-              <div className="modal-content-panel">
-                <MyProductPage solPrice={solPrice} />
-              </div>
+  return (
+    <Modal
+      isOpen={modalIsOpen}
+      onRequestClose={closeModal}
+      style={customStyles}
+      contentLabel="Inventory Modal"
+    >
+      <div className={isDarkMode ? 'dark_mode' : ''}>
+        <div className="modal-header">
+          <h2 className="modal-title title">
+            <FontAwesomeIcon icon={faBox} className="mr-2" />
+            &nbsp;Inventory
+          </h2>
+          <Button className="btn-close title" onClick={closeModal}>
+            ×
+          </Button>
+        </div>
+        <div className="modal-body edit-modal-body inventory-modal-body">
+          <div className="modal-content-wrapper">
+            <div className="modal-content-panel">
+              <MyProductPage solPrice={solPrice} />
             </div>
           </div>
-          <div className="modal-footer">
-            <Button className="btn-back" onClick={this.handleOpenMarketplaceModal}>BUY More &nbsp; <AttachMoney /></Button>
-          </div>
         </div>
+        <div className="modal-footer">
+          <Button className="btn-back" onClick={handleOpenMarketplaceModal}>
+            BUY More &nbsp;
+            <AttachMoney />
+          </Button>
+        </div>
+      </div>
 
-        {this.state.showMarketplaceModal && (
-            <MarketplaceModal
-              modalIsOpen={this.state.showMarketplaceModal}
-              closeModal={this.handleCloseMarketplaceModal}
-              isDarkMode={this.props.isDarkMode}
-            />
-          )}
-  </Modal>
-    );
-  }
+      {showMarketplaceModal && (
+        <MarketplaceModal
+          modalIsOpen={showMarketplaceModal}
+          closeModal={handleCloseMarketplaceModal}
+          isDarkMode={isDarkMode}
+        />
+      )}
+    </Modal>
+  );
 }
 
-
-const mapStateToProps = state => ({
+const mapStateToProps = (state) => ({
   isDarkMode: state.auth.isDarkMode,
   solPrice: state.logic.solPrice,
-
 });
 
 const mapDispatchToProps = {
   warningMsgBar,
-  infoMsgBar
+  infoMsgBar,
 };
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(InventoryModal);
+export default connect(mapStateToProps, mapDispatchToProps)(InventoryModal);

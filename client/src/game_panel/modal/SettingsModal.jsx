@@ -1,7 +1,6 @@
-import React, { Component } from 'react';
+import React, { useState } from 'react';
 import Modal from 'react-modal';
 import { connect } from 'react-redux';
-import { withStyles } from '@material-ui/core/styles';
 import {
   setDarkMode,
   setNotificationsAllowed,
@@ -10,7 +9,7 @@ import {
   toggleLowGraphics,
   toggleGameSounds,
   toggleNotificationSounds,
-  toggleClickounds
+  toggleClickounds,
 } from '../../redux/Auth/user.actions';
 import {
   Button,
@@ -53,285 +52,218 @@ const customStyles = {
     transform: 'translate(-50%, -50%)',
     background: 'transparent',
     padding: 0,
-    border: 'none'
+    border: 'none',
   },
 };
 
-const styles = (theme) => ({
-  root: {
-    width: '150px',
-    padding: '8px 15px',
-    fontSize: '16px',
-    background: '#191a1d',
-  },
-  dropdownStyle: {},
-});
+const SettingsModal = ({
+  modalIsOpen,
+  closeModal,
+  isMuted,
+  isLowGraphics,
+  isDarkMode,
+  isNotificationsAllowed,
+  toggleLowGraphics,
+  setDarkMode,
+  toggleMute,
+  toggleMusic,
+  setNotificationsAllowed,
+  isMusicEnabled,
+  clickSounds,
+  gameSounds,
+  notificationSounds,
+  toggleClickounds,
+  toggleGameSounds,
+  toggleNotificationSounds,
+}) => {
+  const [showSubSettings, setShowSubSettings] = useState(false);
 
-class SettingsModal extends Component {
-  state = {
-    showSubSettings: false, // New state for toggling sub-settings visibility
-  };
-
-  // Handle the parent mute/unmute toggle
-  handleMuteToggle = () => {
-    const { isMuted, toggleMute, toggleClickounds, toggleGameSounds, toggleNotificationSounds, clickSounds, gameSounds, notificationSounds } = this.props;
-
-    // Toggle the main mute state
+  const handleMuteToggle = () => {
     toggleMute(!isMuted);
-
-    // If muting, mute all sub-settings; if unmuting, unmute all
-    if (isMuted) {
-      toggleClickounds(false);
-      toggleGameSounds(false);
-      toggleNotificationSounds(false);
-    } else {
-      toggleClickounds(true);
-      toggleGameSounds(true);
-      toggleNotificationSounds(true);
-    }
+    toggleClickounds(!isMuted);
+    toggleGameSounds(!isMuted);
+    toggleNotificationSounds(!isMuted);
   };
 
-  // Toggle the visibility of sub-settings
-  toggleSubSettingsVisibility = () => {
-    this.setState((prevState) => ({
-      showSubSettings: !prevState.showSubSettings,
-    }));
+  const toggleSubSettingsVisibility = () => {
+    setShowSubSettings((prev) => !prev);
   };
 
-  render() {
-    const {
-      isMuted,
-      isLowGraphics,
-      isDarkMode,
-      isNotificationsAllowed,
-      toggleLowGraphics,
-      setDarkMode,
-      toggleMusic,
-      setNotificationsAllowed,
-      isMusicEnabled,
-      clickSounds,
-      gameSounds,
-      notificationSounds,
-      toggleClickounds,
-      toggleGameSounds,
-      toggleNotificationSounds,
-    } = this.props;
+  return (
+    <Modal
+      isOpen={modalIsOpen}
+      onRequestClose={closeModal}
+      style={customStyles}
+      contentLabel="Settings Modal"
+    >
+      <div className={isDarkMode ? 'dark_mode' : ''}>
+        <div className="modal-header">
+          <h2 className="modal-title title">Settings</h2>
+          <Button className="btn-close title" onClick={closeModal}>
+            ×
+          </Button>
+        </div>
 
-    const { showSubSettings } = this.state;
+        <div className="modal-body edit-modal-body">
+          <div className="modal-content-wrapper">
+            <div className="modal-content-panel settings">
+              <Table>
+                <TableBody>
+                  <TableRow>
+                    <TableCell>
+                      {isMuted ? (
+                        <Button onClick={handleMuteToggle}>
+                          <VolumeOff />&nbsp; UNMUTE
+                        </Button>
+                      ) : (
+                        <Button onClick={handleMuteToggle}>
+                          <VolumeUp />&nbsp; MUTE
+                        </Button>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <IconButton onClick={toggleSubSettingsVisibility}>
+                        {showSubSettings ? <Remove /> : <Add />}
+                      </IconButton>
+                      <Checkbox checked={isMuted} onChange={handleMuteToggle} />
+                    </TableCell>
+                  </TableRow>
 
-    return (
-      <Modal
-        isOpen={this.props.modalIsOpen}
-        onRequestClose={this.props.closeModal}
-        style={customStyles}
-        contentLabel="Settings Modal"
-      >
-        <div className={isDarkMode ? 'dark_mode' : ''}>
-          <div className="modal-header">
-            <h2 className="modal-title title">Settings</h2>
-            <Button className="btn-close title" onClick={this.props.closeModal}>
-              ×
-            </Button>
-          </div>
-
-          <div className="modal-body edit-modal-body">
-            <div className="modal-content-wrapper">
-              <div className="modal-content-panel settings">
-                <Table>
-                  <TableBody>
-                    {/* Parent Mute/Unmute Control */}
-                    <TableRow>
-                      <TableCell>
-                        {isMuted ? (
-                          <Button
-                            className="playBtn"
-                            onClick={this.handleMuteToggle}
-                          >
-                            <VolumeOff />&nbsp; UNMUTE
+                  {showSubSettings && (
+                    <>
+                      <TableRow>
+                        <TableCell>
+                          <Button onClick={() => toggleClickounds(!clickSounds)}>
+                            {clickSounds ? <VolumeMute /> : <VolumeDown />}
+                            &nbsp; Typing & Clicks
                           </Button>
-                        ) : (
-                          <Button
-                            className="playBtn"
-                            onClick={this.handleMuteToggle}
-                          >
-                            <VolumeUp />&nbsp; MUTE
+                        </TableCell>
+                        <TableCell>
+                          <Checkbox
+                            checked={clickSounds}
+                            onChange={() => toggleClickounds(!clickSounds)}
+                          />
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>
+                          <Button onClick={() => toggleGameSounds(!gameSounds)}>
+                            {gameSounds ? <VolumeMute /> : <VolumeDown />}
+                            &nbsp; Game Sounds
                           </Button>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <IconButton
-                          onClick={this.toggleSubSettingsVisibility}
-                        >
-                          {showSubSettings ? <Remove /> : <Add />}
-                        </IconButton>
-                        <Checkbox
-                          checked={isMuted}
-                          onChange={this.handleMuteToggle}
-                        />
-                      </TableCell>
-                    </TableRow>
-
-                    {/* Sub-settings for Mute */}
-                    {showSubSettings && (
-                      <>
-                        <TableRow>
-                          <TableCell>
-                            <Button
-                              className="playBtn subsetting"
-                              onClick={() => toggleClickounds(!clickSounds)}
-                            >
-                              {!clickSounds ? (
-                                <VolumeDown />
-                              ) : (
-                                <VolumeMute />
-                              )}
-                              &nbsp; Typing & Clicks
-                            </Button>
-                          </TableCell>
-                          <TableCell>
-                            <Checkbox
-                              checked={clickSounds}
-                              onChange={() => toggleClickounds(!clickSounds)}
-                            />
-                          </TableCell>
-                        </TableRow>
-
-                        <TableRow>
-                          <TableCell>
-                            <Button
-                              className="playBtn subsetting"
-                              onClick={() => toggleGameSounds(!gameSounds)}
-                            >
-                              {!gameSounds ? (
-                                <VolumeDown />
-                              ) : (
-                                <VolumeMute />
-                              )}
-                              &nbsp; Game Sounds
-                            </Button>
-                          </TableCell>
-                          <TableCell>
-                            <Checkbox
-                              checked={gameSounds}
-                              onChange={() => toggleGameSounds(!gameSounds)}
-                            />
-                          </TableCell>
-                        </TableRow>
-
-                        <TableRow>
-                          <TableCell>
-                            <Button
-                              className="playBtn subsetting"
-                              onClick={() =>
-                                toggleNotificationSounds(!notificationSounds)
-                              }
-                            >
-                              {!notificationSounds ? (
-                                <VolumeDown />
-                              ) : (
-                                <VolumeMute />
-                              )}
-                              &nbsp; Notifications
-                            </Button>
-                          </TableCell>
-                          <TableCell>
-                            <Checkbox
-                              checked={notificationSounds}
-                              onChange={() =>
-                                toggleNotificationSounds(!notificationSounds)
-                              }
-                            />
-                          </TableCell>
-                        </TableRow>
-                      </>
-                    )}
-
-                    {/* Other Settings */}
-                    <TableRow>
-                      <TableCell>
-                        {isLowGraphics ? (
-                          <Button
-                            onClick={() => toggleLowGraphics(!isLowGraphics)}
-                          >
-                            <EcoOutlined />&nbsp; LOW GRAPHICS
-                          </Button>
-                        ) : (
-                          <Button
-                            onClick={() => toggleLowGraphics(!isLowGraphics)}
-                          >
-                            <Eco />&nbsp; HIGH GRAPHICS
-                          </Button>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Checkbox
-                          checked={isLowGraphics}
-                          onChange={() => toggleLowGraphics(!isLowGraphics)}
-                        />
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>
-                        {isDarkMode ? (
-                          <Button onClick={() => setDarkMode(!isDarkMode)}>
-                            <Brightness4 />&nbsp; DARK MODE
-                          </Button>
-                        ) : (
-                          <Button onClick={() => setDarkMode(!isDarkMode)}>
-                            <Brightness7 />&nbsp; LIGHT MODE
-                          </Button>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Checkbox
-                          checked={isDarkMode}
-                          onChange={() => setDarkMode(!isDarkMode)}
-                        />
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>
-                        {isNotificationsAllowed ? (
+                        </TableCell>
+                        <TableCell>
+                          <Checkbox
+                            checked={gameSounds}
+                            onChange={() => toggleGameSounds(!gameSounds)}
+                          />
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>
                           <Button
                             onClick={() =>
-                              setNotificationsAllowed(!isNotificationsAllowed)
+                              toggleNotificationSounds(!notificationSounds)
                             }
                           >
-                            <NotificationsActive />&nbsp; NOTIFICATIONS ON
+                            {notificationSounds ? (
+                              <VolumeMute />
+                            ) : (
+                              <VolumeDown />
+                            )}
+                            &nbsp; Notifications
                           </Button>
-                        ) : (
-                          <Button
-                            onClick={() =>
-                              setNotificationsAllowed(!isNotificationsAllowed)
+                        </TableCell>
+                        <TableCell>
+                          <Checkbox
+                            checked={notificationSounds}
+                            onChange={() =>
+                              toggleNotificationSounds(!notificationSounds)
                             }
-                          >
-                            <NotificationsOff />&nbsp; NOTIFICATIONS OFF
-                          </Button>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Checkbox
-                          checked={isNotificationsAllowed}
-                          onChange={() =>
+                          />
+                        </TableCell>
+                      </TableRow>
+                    </>
+                  )}
+
+                  <TableRow>
+                    <TableCell>
+                      {isLowGraphics ? (
+                        <Button onClick={() => toggleLowGraphics(!isLowGraphics)}>
+                          <EcoOutlined />&nbsp; LOW GRAPHICS
+                        </Button>
+                      ) : (
+                        <Button onClick={() => toggleLowGraphics(!isLowGraphics)}>
+                          <Eco />&nbsp; HIGH GRAPHICS
+                        </Button>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Checkbox
+                        checked={isLowGraphics}
+                        onChange={() => toggleLowGraphics(!isLowGraphics)}
+                      />
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>
+                      {isDarkMode ? (
+                        <Button onClick={() => setDarkMode(!isDarkMode)}>
+                          <Brightness4 />&nbsp; DARK MODE
+                        </Button>
+                      ) : (
+                        <Button onClick={() => setDarkMode(!isDarkMode)}>
+                          <Brightness7 />&nbsp; LIGHT MODE
+                        </Button>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Checkbox
+                        checked={isDarkMode}
+                        onChange={() => setDarkMode(!isDarkMode)}
+                      />
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>
+                      {isNotificationsAllowed ? (
+                        <Button
+                          onClick={() =>
                             setNotificationsAllowed(!isNotificationsAllowed)
                           }
-                        />
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </div>
+                        >
+                          <NotificationsActive />&nbsp; NOTIFICATIONS ON
+                        </Button>
+                      ) : (
+                        <Button
+                          onClick={() =>
+                            setNotificationsAllowed(!isNotificationsAllowed)
+                          }
+                        >
+                          <NotificationsOff />&nbsp; NOTIFICATIONS OFF
+                        </Button>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Checkbox
+                        checked={isNotificationsAllowed}
+                        onChange={() =>
+                          setNotificationsAllowed(!isNotificationsAllowed)
+                        }
+                      />
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
             </div>
           </div>
         </div>
-      </Modal>
-    );
-  }
-}
+      </div>
+    </Modal>
+  );
+};
 
 const mapStateToProps = (state) => ({
-  auth: state.auth.isAuthenticated,
-  user_id: state.auth.user._id,
   isDarkMode: state.auth.isDarkMode,
   isNotificationsAllowed: state.auth.isNotificationsAllowed,
   isMuted: state.auth.isMuted,
@@ -340,7 +272,6 @@ const mapStateToProps = (state) => ({
   notificationSounds: state.auth.notificationSounds,
   isMusicEnabled: state.auth.isMusicEnabled,
   isLowGraphics: state.auth.isLowGraphics,
-  loading: state.customerReducer.loading,
 });
 
 const mapDispatchToProps = {
@@ -354,7 +285,4 @@ const mapDispatchToProps = {
   setNotificationsAllowed,
 };
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(withStyles(styles)(SettingsModal));
+export default connect(mapStateToProps, mapDispatchToProps)(SettingsModal);

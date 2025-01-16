@@ -1,13 +1,20 @@
-import React, { Component } from 'react';
-import { Tabs, Tab, Checkbox, FormControlLabel, Typography, Box } from '@material-ui/core';
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  Tabs,
+  Tab,
+  Checkbox,
+  FormControlLabel,
+  Typography,
+  Box
+} from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
 import Leaderboards from './Leaderboards';
 import RoomHistory from './RoomHistory';
 import Comments from './Comments';
 import Moment from 'moment';
-import ReactDOM from 'react-dom';
+// import ReactDOM from 'react-dom';
 import { renderLottieAvatarAnimation } from '../util/LottieAvatarAnimations';
-import { Skeleton } from "@material-ui/lab";
+import { Skeleton } from '@material-ui/lab';
 import Joyride from 'react-joyride';
 import { tutorialStepsGame } from '../util/tutorialStepsGame';
 import RPS from '../game_panel/JoinGame/RPS';
@@ -16,28 +23,25 @@ import CoHostModal from '../game_panel/modal/CoHostModal';
 import { getRank } from '../util/getRank';
 
 function updateFromNow(history) {
-  if (!history) {
-    return [];
-  }
-
+  if (!history) return [];
   const result = JSON.parse(JSON.stringify(history));
   for (let i = 0; i < result.length; i++) {
-    result[i]['from_now'] = Moment(result[i]['created_at']).fromNow();
+    result[i].from_now = Moment(result[i].created_at).fromNow();
   }
   return result;
 }
 
-const styles = theme => ({
+const styles = (theme) => ({
   activeTab: {
-    color: props => (props.isDarkMode ? '#f9f9f9' : '#ff0000'),
+    color: (props) => (props.isDarkMode ? '#f9f9f9' : '#ff0000'),
     '& .MuiTab-wrapper': {
       color: '#ff0000',
     },
   },
   inactiveTab: {
-    color: props => (props.isDarkMode ? '#aaa' : '#ccc'),
+    color: (props) => (props.isDarkMode ? '#aaa' : '#ccc'),
     '& .MuiTab-wrapper': {
-      color: props => (props.isDarkMode ? '#aaa' : '#ccc'),
+      color: (props) => (props.isDarkMode ? '#aaa' : '#ccc'),
     },
   },
   flexContainer: {
@@ -56,163 +60,166 @@ const styles = theme => ({
     marginBottom: '0',
   },
   checkbox: {
-    color: props => (props.isDarkMode ? '#f9f9f9' : '#ff0000'),
-
+    color: (props) => (props.isDarkMode ? '#f9f9f9' : '#ff0000'),
   },
 });
 
-class TabbedContent extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      selectedTab: 0,
-      numToShow: 10,
-      showPlayerModal: false,
-      room_history: this.props.roomInfo.room_history,
-      activeTabs: [0, 1],
-      isMobile: window.innerWidth < 767,
-    };
-    this.handleLoadMore = this.handleLoadMore.bind(this);
-  }
+function TabbedContent(props) {
+  const {
+    classes,
+    roomInfo,
+    isLowGraphics,
+    isDarkMode,
+    solPrice,
+    balance,
+    user,
+    has_joined,
+    coHostAmount,
+    handleCoHostAmountChange,
+    handleSendCoHost,
+    handleCloseCoHostModal,
+    togglePopup,
+    // Joyride / tutorial
+    run,
+    handleJoyrideCallback,
+    // RPS / QuickShoot shared props:
+    strategies,
+    betting,
+    result,
+    attached,
+    ai_mode,
+    user_id,
+    bankroll,
+    betResult,
+    bgColorChanged,
+    playSound,
+    changeBgColor,
+    getAttachedRooms,
+    handleDetachAttachChange,
+    onChangeState,
+    is_mobile,
+    gameResult,
+    updateSelectedRps,
+    rpsbetitems,
+    refreshHistory,
+    handleOpenPlayerModal,
+    predictedBetAmount,
+    handleClosePlayerModal,
+    join,
+    selected_qs_position,
+    handleSwitchChange,
+    cp,
+    selected_rps,
+    total_wagered,
+    updateUserStrategy,
+    actionList,
+    getRoomData,
+    qsbetitems,
+    bet_amount,
+    borderColor,
+    updateSelectedQs,
+    changeBgColorQs
+  } = props;
 
-  static getDerivedStateFromProps(props, current_state) {
-    const { roomInfo } = props;
+  // ------------------ LOCAL STATE ------------------
+  const [selectedTab, setSelectedTab] = useState(0);
+  const [numToShow, setNumToShow] = useState(10);
+  const [showPlayerModal, setShowPlayerModal] = useState(false);
+  const [roomHistory, setRoomHistory] = useState(
+    updateFromNow(roomInfo.room_history || [])
+  );
+  const [activeTabs, setActiveTabs] = useState([0, 1]); // By default, tab "Play" (0) & "Chart" (1)
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 767);
+
+  // In the class version, we had getDerivedStateFromProps. 
+  // Here, we replicate that logic with a useEffect that listens to changes in `roomInfo`
+  useEffect(() => {
     if (
-      !current_state.room_history ||
-      current_state.room_history.length === 0 ||
+      !roomHistory ||
+      roomHistory.length === 0 ||
       (roomInfo?.room_history &&
-        current_state.room_history[0]?.created_at !== roomInfo.room_history[0]?.created_at)
+        roomHistory[0]?.created_at !== roomInfo.room_history[0]?.created_at)
     ) {
-      return {
-        ...current_state,
-        room_history: updateFromNow(roomInfo?.room_history || []),
-      };
+      setRoomHistory(updateFromNow(roomInfo?.room_history || []));
     }
-    return null;
-  }
+  }, [roomInfo.room_history]);
 
-  componentDidMount() {
-    this.attachUserLinkListeners();
-    this.attachAccessories();
-    window.addEventListener('resize', this.handleResize);
-  }
+  // componentDidMount logic → attachUserLinkListeners & attachAccessories, add event listener
+  useEffect(() => {
+    attachUserLinkListeners();
+    // attachAccessories();
+    window.addEventListener('resize', handleResize);
 
-  componentWillUnmount() {
-    window.removeEventListener('resize', this.handleResize);
-  }
+    return () => {
+      // componentWillUnmount logic
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
-  componentDidUpdate(prevProps) {
-    if (prevProps.roomInfo.room_history !== this.props.roomInfo.room_history) {
-      this.attachUserLinkListeners();
-      this.attachAccessories();
-    }
-  }
+  // componentDidUpdate logic for roomInfo.room_history → re-run attach logic if it changes
+  useEffect(() => {
+    attachUserLinkListeners();
+    // attachAccessories();
+  }, [roomInfo.room_history]);
 
-  handleResize = () => {
-    this.setState({ isMobile: window.innerWidth < 767 });
-  };
+  // ------------------ HANDLERS ------------------
+  const handleResize = useCallback(() => {
+    setIsMobile(window.innerWidth < 767);
+  }, []);
 
-  attachUserLinkListeners = () => {
+  const attachUserLinkListeners = useCallback(() => {
     const userLinks = document.querySelectorAll('.user-link');
-    userLinks.forEach(link => {
-      link.addEventListener('click', event => {
+    userLinks.forEach((link) => {
+      link.addEventListener('click', (event) => {
         const userId = event.target.getAttribute('data-userid');
-        this.handleOpenPlayerModal(userId);
+        handleOpenPlayerModalLocal(userId);
       });
     });
-  };
+  }, []);
 
-  attachAccessories = () => {
-    const { isLowGraphics } = this.props;
-    const userLinks = document.querySelectorAll('.user-link');
-    userLinks.forEach(element => {
-      const accessory = element.getAttribute('accessory');
-      const lottieAnimation = renderLottieAvatarAnimation(accessory, isLowGraphics);
-      const portalContainer = document.createElement('div');
-      ReactDOM.render(lottieAnimation, portalContainer);
-      element.parentNode.insertBefore(portalContainer, element);
+  // const attachAccessories = useCallback(() => {
+  //   const userLinks = document.querySelectorAll('.user-link');
+  //   userLinks.forEach((element) => {
+  //     const accessory = element.getAttribute('accessory');
+  //     const lottieAnimation = renderLottieAvatarAnimation(accessory, isLowGraphics);
+  //     const portalContainer = document.createElement('div');
+  //     ReactDOM.render(lottieAnimation, portalContainer);
+  //     element.parentNode.insertBefore(portalContainer, element);
+  //   });
+  // }, [isLowGraphics]);
+
+  const handleOpenPlayerModalLocal = useCallback((creator_id) => {
+    setShowPlayerModal(true);
+  }, []);
+
+  const handleClosePlayerModalLocal = useCallback(() => {
+    setShowPlayerModal(false);
+  }, []);
+
+  const handleLoadMore = useCallback(() => {
+    setNumToShow((prev) => prev + 10);
+  }, []);
+
+  const handleTabChange = useCallback((event, newValue) => {
+    setSelectedTab(newValue);
+  }, []);
+
+  const handleCheckboxChange = useCallback((event, tabIndex) => {
+    setActiveTabs((prevActiveTabs) => {
+      const isActive = prevActiveTabs.includes(tabIndex);
+      if (isActive) {
+        return prevActiveTabs.filter((tab) => tab !== tabIndex);
+      } else {
+        return [...prevActiveTabs, tabIndex];
+      }
     });
-  };
+  }, []);
 
-  handleOpenPlayerModal = creator_id => {
-    this.setState({ showPlayerModal: true, selectedCreator: creator_id });
-  };
-
-  handleClosePlayerModal = () => {
-    this.setState({ showPlayerModal: false });
-  };
-
-  handleLoadMore = () => {
-    this.setState(prevState => ({
-      numToShow: prevState.numToShow + 10,
-    }));
-  };
-
-  handleTabChange = (event, newValue) => {
-    this.setState({ selectedTab: newValue });
-  };
-
-  handleCheckboxChange = (event, tabIndex) => {
-    this.setState(prevState => {
-      const isActive = prevState.activeTabs.includes(tabIndex);
-      return {
-        activeTabs: isActive
-          ? prevState.activeTabs.filter(tab => tab !== tabIndex)
-          : [...prevState.activeTabs, tabIndex],
-      };
-    });
-  };
-
-  renderTabContent(tabIndex) {
-    const {
-      roomInfo,
-      isLowGraphics,
-      selectedCreator,
-      showPlayerModal,
-      strategies,
-      betting,
-      result,
-      attached,
-      ai_mode,
-      user_id,
-      bankroll,
-      betResult,
-      bgColorChanged,
-      playSound,
-      changeBgColor,
-      getAttachedRooms,
-      handleDetachAttachChange,
-      onChangeState,
-      is_mobile,
-      gameResult,
-      handleJoyrideCallback,
-      updateSelectedRps,
-      rpsbetitems,
-      refreshHistory,
-      handleOpenPlayerModal,
-      predictedBetAmount,
-      handleClosePlayerModal,
-      join,
-      selected_qs_position,
-      handleSwitchChange,
-      cp,
-      selected_rps,
-      isDarkMode,
-      total_wagered,
-      updateUserStrategy,
-      actionList,
-      getRoomData,
-      run,
-      qsbetitems,
-      bet_amount,
-      solPrice,
-      borderColor,
-      updateSelectedQs,
-      changeBgColorQs,
-    } = this.props;
-
+  // ------------------ RENDERERS ------------------
+  const renderTabContent = (tabIndex) => {
     switch (tabIndex) {
-      case 0: // "Play" Tab
+      case 0: {
+        // "Play" Tab
         if (!roomInfo || !roomInfo.game_type) {
           return (
             <div className="join-game-panel">
@@ -221,7 +228,7 @@ class TabbedContent extends Component {
                   <Skeleton variant="rect" width="100%" height={60} />
                   <div
                     className="game-info-panel"
-                    style={{ position: 'relative', zIndex: 10, paddingBottom: "90px" }}
+                    style={{ position: 'relative', zIndex: 10, paddingBottom: '90px' }}
                   >
                     <Skeleton variant="text" width="20%" height={30} />
                     <Skeleton variant="text" width="80%" height={30} />
@@ -235,7 +242,7 @@ class TabbedContent extends Component {
             </div>
           );
         }
-    
+
         return (
           <div className="join-game-panel">
             <Joyride
@@ -274,7 +281,6 @@ class TabbedContent extends Component {
                 },
               }}
             />
-    
             {roomInfo.game_type === 'RPS' ? (
               <RPS
                 changeBgColor={changeBgColor}
@@ -304,7 +310,6 @@ class TabbedContent extends Component {
                 rank={getRank(total_wagered)}
                 handleOpenPlayerModal={handleOpenPlayerModal}
                 handleClosePlayerModal={handleClosePlayerModal}
-                selectedCreator={selectedCreator}
                 showPlayerModal={showPlayerModal}
                 creator_id={roomInfo.creator_id}
                 bet_amount={bet_amount}
@@ -321,7 +326,6 @@ class TabbedContent extends Component {
               <QuickShoot
                 handleOpenPlayerModal={handleOpenPlayerModal}
                 handleClosePlayerModal={handleClosePlayerModal}
-                selectedCreator={selectedCreator}
                 showPlayerModal={showPlayerModal}
                 refreshHistory={refreshHistory}
                 handleDetachAttachChange={handleDetachAttachChange}
@@ -363,97 +367,115 @@ class TabbedContent extends Component {
             )}
           </div>
         );
-      case 1:
+      }
+
+      case 1: {
+        // "Chart" Tab (in your original code, it's labeled "CoHostModal" or something)
         return (
           <div>
             <CoHostModal
-              isDarkMode={this.props.isDarkMode}
-              coHostAmount={this.props.coHostAmount}
+              isDarkMode={isDarkMode}
+              coHostAmount={coHostAmount}
               selectedRow={roomInfo}
-              balance={this.props.balance}
-              user={this.props.user}
-              togglePopup={this.togglePopup}
-              handleClose={this.handleCloseCoHostModal}
-              handleSendCoHost={this.props.handleSendCoHost}
-              handleCoHostAmountChange={this.props.handleCoHostAmountChange}
-              has_joined={this.props.has_joined}
+              balance={balance}
+              user={user}
+              togglePopup={togglePopup}
+              handleClose={handleCloseCoHostModal}
+              handleSendCoHost={handleSendCoHost}
+              handleCoHostAmountChange={handleCoHostAmountChange}
+              has_joined={has_joined}
               solPrice={solPrice}
               input_only={false}
             />
           </div>
         );
-      case 2:
-        return <RoomHistory roomId={roomInfo._id} getRoomInfo={this.props.getRoomInfo} roomInfo={roomInfo} isLowGraphics={isLowGraphics} />;
-      case 3:
+      }
+
+      case 2: {
+        // "History" Tab
+        return (
+          <RoomHistory
+            roomId={roomInfo._id}
+            getRoomInfo={props.getRoomInfo}
+            roomInfo={roomInfo}
+            isLowGraphics={isLowGraphics}
+          />
+        );
+      }
+
+      case 3: {
+        // "Thread" Tab
         return (
           <div>
             <Comments roomId={roomInfo._id} />
           </div>
         );
-      case 4:
+      }
+
+      case 4: {
+        // "Insights" Tab
         return <Leaderboards roomId={roomInfo._id} />;
+      }
+
       default:
         return null;
     }
-  }
+  };
 
-  render() {
-    const { selectedTab, activeTabs, isMobile } = this.state;
-    const { classes } = this.props;
-
-    if (isMobile) {
-      return (
-        <div className='tabs-container'>
-          <Tabs
-            TabIndicatorProps={{ style: { background: '#ff0000' } }}
-            value={selectedTab}
-            onChange={this.handleTabChange}
-          >
-            <Tab label="Chart" />
-            <Tab label="History" />
-            <Tab label="Thread" />
-            <Tab label="Insights" />
-          </Tabs>
-          <div>
-            {selectedTab === 0 && this.renderTabContent(0)}
-            {selectedTab === 1 && this.renderTabContent(1)}
-            {selectedTab === 2 && this.renderTabContent(2)}
-            {selectedTab === 3 && this.renderTabContent(3)}
-          </div>
-        </div>
-      );
-    }
-
-    // Desktop view with checkboxes
+  // ------------------ RENDER ------------------
+  if (isMobile) {
+    // Mobile layout
     return (
-      <div>
-        <div className={classes.checkboxContainer}>
-          {['Play', 'Chart', 'History', 'Thread', 'Insights'].map((label, index) => (
-            <FormControlLabel
-              key={index}
-              className={classes.checkbox}
-              control={
-                <Checkbox
-                  checked={activeTabs.includes(index)}
-                  onChange={e => this.handleCheckboxChange(e, index)}
-                  color="secondary"
-                />
-              }
-              label={label}
-            />
-          ))}
-        </div>
-
-        <div className={classes.flexContainer}>
-          {activeTabs.map(tabIndex => (
-            <div key={tabIndex} className={classes.column}>
-              {this.renderTabContent(tabIndex)}
-            </div>
-          ))}
+      <div className="tabs-container">
+        <Tabs
+          TabIndicatorProps={{ style: { background: '#ff0000' } }}
+          value={selectedTab}
+          onChange={handleTabChange}
+        >
+          <Tab label="Chart" />
+          <Tab label="History" />
+          <Tab label="Thread" />
+          <Tab label="Insights" />
+        </Tabs>
+        <div>
+          {selectedTab === 0 && renderTabContent(0)}
+          {selectedTab === 1 && renderTabContent(1)}
+          {selectedTab === 2 && renderTabContent(2)}
+          {selectedTab === 3 && renderTabContent(3)}
         </div>
       </div>
     );
   }
+
+  // Desktop view with checkboxes
+  return (
+    <div>
+      <div className={classes.checkboxContainer}>
+        {['Play', 'Chart', 'History', 'Thread', 'Insights'].map((label, index) => (
+          <FormControlLabel
+            key={index}
+            className={classes.checkbox}
+            control={
+              <Checkbox
+                checked={activeTabs.includes(index)}
+                onChange={(e) => handleCheckboxChange(e, index)}
+                color="secondary"
+              />
+            }
+            label={label}
+          />
+        ))}
+      </div>
+
+      <div className={classes.flexContainer}>
+        {activeTabs.map((tabIndex) => (
+          <div key={tabIndex} className={classes.column}>
+            {renderTabContent(tabIndex)}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export default withStyles(styles)(TabbedContent);

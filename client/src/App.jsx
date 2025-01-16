@@ -9,6 +9,7 @@ import ChangePasswordPage from './game_panel/main_pages/ChangePasswordPage';
 import DepositModal from './game_panel/modal/DepositModal'
 import Error404Page from './admin_panel/Error404Page';
 import setAuthToken from './util/setAuthToken';
+import './global.css';
 
 if (localStorage.token) {
   setAuthToken(localStorage.token);

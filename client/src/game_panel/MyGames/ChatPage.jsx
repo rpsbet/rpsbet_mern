@@ -50,8 +50,6 @@ class ChatPage extends Component {
     };
   }
 
-
-
   insertEmoji = e => {
     this.setState({ text: this.state.text + e.target.innerHTML });
     this.textarea.focus();

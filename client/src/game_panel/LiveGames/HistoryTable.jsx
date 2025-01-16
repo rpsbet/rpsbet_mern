@@ -1,318 +1,191 @@
-import React, { Component } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { connect } from 'react-redux';
 import { getHistory } from '../../redux/Logic/logic.actions';
-import Moment from 'moment';
 import { getSettings } from '../../redux/Setting/setting.action';
+import Moment from 'moment';
 import { Skeleton } from "@material-ui/lab";
-import ReactDOM from 'react-dom';
-import { renderLottieAvatarAnimation } from '../../util/LottieAvatarAnimations';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHeart, faHeartBroken, faStopwatch, faArrowCircleDown } from '@fortawesome/free-solid-svg-icons';
-
+import { faHeart, faHeartBroken, faStopwatch } from '@fortawesome/free-solid-svg-icons';
 import FileCopyIcon from '@material-ui/icons/FileCopy';
-import {
-  Tooltip
-} from '@material-ui/core';
+import { Tooltip } from '@material-ui/core';
 import PlayerModal from '../modal/PlayerModal';
 
-Moment.relativeTimeThreshold('s', 10); // seconds
-Moment.relativeTimeThreshold('m', 60); // minutes
-Moment.relativeTimeThreshold('h', 24); // hours
-Moment.relativeTimeThreshold('d', 30); // days
-Moment.relativeTimeThreshold('M', 12); // months
-
-
-// Define a custom function to format the time duration
-function customFromNow(date) {
+const customFromNow = (date) => {
   const now = Moment();
   const duration = Moment.duration(now.diff(date));
+  if (duration.asSeconds() < 60) return `${Math.round(duration.asSeconds())}s ago`;
+  if (duration.asMinutes() < 60) return `${Math.round(duration.asMinutes())}m ago`;
+  if (duration.asHours() < 24) return `${Math.round(duration.asHours())}h ago`;
+  return `${Math.round(duration.asDays())}d ago`;
+};
 
-  if (duration.asSeconds() < 60) {
-    return `${Math.round(duration.asSeconds())}s ago`;
-  } else if (duration.asMinutes() < 60) {
-    return `${Math.round(duration.asMinutes())}m ago`;
-  } else if (duration.asHours() < 24) {
-    return `${Math.round(duration.asHours())}h ago`;
-  } else {
-    return `${Math.round(duration.asDays())}d ago`;
-  }
-}
+const updateFromNow = (history) =>
+  history.map((item) => ({
+    ...item,
+    from_now: customFromNow(Moment(item.created_at)),
+  }));
 
-function updateFromNow(history) {
-  const result = JSON.parse(JSON.stringify(history));
-  for (let i = 0; i < result.length; i++) {
-    result[i]['from_now'] = customFromNow(Moment(result[i]['created_at']));
-  }
-  return result;
-}
+const HistoryTable = ({
+  socket,
+  getHistory,
+  getSettings,
+  history: initialHistory,
+  userId,
+  isLowGraphics,
+  setHighlightedRooms,
+}) => {
+  const [history, setHistory] = useState(initialHistory);
+  const [showPlayerModal, setShowPlayerModal] = useState(false);
+  const [selectedCreator, setSelectedCreator] = useState(null);
+  const [copiedRowId, setCopiedRowId] = useState(null);
 
-class HistoryTable extends Component {
-  constructor(props) {
-    super(props);
-    this.socket = this.props.socket;
-
-    this.state = {
-      history: this.props.history,
-      showPlayerModal: false,
-      rain: 0,
-      copiedRowId: null
-
-    };
-    this.isComponentMounted = false;
-  }
-
-
-  async componentDidMount() {
-    this.isComponentMounted = true;
+  const fetchSettings = useCallback(async () => {
     try {
-      const settings = await this.props.getSettings();
-      if (this.isComponentMounted) {
-        this.setState({ ...settings });
-      }
+      const settings = await getSettings();
+      // You can use settings here if needed
     } catch (error) {
       console.error("Error fetching settings:", error);
     }
+  }, [getSettings]);
 
+  const fetchHistory = useCallback(async () => {
     try {
-      await this.props.getHistory();
+      await getHistory();
     } catch (error) {
       console.error("Error fetching history:", error);
     }
-    this.setupSocketConnection();
-  }
+  }, [getHistory]);
 
-
-  componentWillUnmount() {
-    this.isComponentMounted = false;
-    this.disconnectSocket();
-  }
-
-  setupSocketConnection = () => {
-    const { socket } = this.props;
-
-    if (socket) {
-      socket.on('NEW_LOG', this.handleNewLog);
-    } else {
-      this.retrySocketConnection();
-    }
-  }
-
-  disconnectSocket = () => {
-    const { socket } = this.props;
-    if (socket) {
-      socket.off('NEW_LOG', this.handleNewLog);
-    }
-  }
-
-  handleNewLog = (data) => {
-    if (!this.isComponentMounted) return;
-
+  const handleNewLog = (data) => {
     const newLog = data.newLog?.[0];
-
-    if (!newLog) {
-      console.warn("No valid log data received.");
-      return;
-    }
+    if (!newLog) return;
 
     const { room_id } = newLog;
+    if (!room_id) return;
 
-    if (!room_id) {
-      console.warn("No room_id found in new log data:", newLog);
-      return;
+    if (setHighlightedRooms) {
+      setHighlightedRooms(new Set([room_id]));
+      setTimeout(() => setHighlightedRooms(new Set()), 4000);
     }
 
-    if (this.props.setHighlightedRooms) {
-      this.props.setHighlightedRooms(new Set([room_id]));
+    setHistory(updateFromNow([newLog]));
+  };
 
-      setTimeout(() => {
-        if (this.isComponentMounted) {
-          this.props.setHighlightedRooms(new Set());
-        }
-      }, 4000);
+  const setupSocketConnection = useCallback(() => {
+    if (socket) {
+      socket.on('NEW_LOG', handleNewLog);
     }
+  }, [socket]);
 
-    this.setState((prevState) => {
-      const updatedHistory = [newLog]; // Only keep this newLog as the entire history
-      const finalHistory = updateFromNow(updatedHistory);
-    
-      return { history: finalHistory };
+  const disconnectSocket = useCallback(() => {
+    if (socket) {
+      socket.off('NEW_LOG', handleNewLog);
+    }
+  }, [socket]);
+
+  useEffect(() => {
+    fetchSettings();
+    fetchHistory();
+    setupSocketConnection();
+
+    return () => disconnectSocket();
+  }, [fetchSettings, fetchHistory, setupSocketConnection, disconnectSocket]);
+
+  useEffect(() => {
+    setHistory(updateFromNow(initialHistory));
+  }, [initialHistory]);
+
+  const handleOpenPlayerModal = (creatorId) => {
+    setShowPlayerModal(true);
+    setSelectedCreator(creatorId);
+  };
+
+  const handleClosePlayerModal = () => {
+    setShowPlayerModal(false);
+    setSelectedCreator(null);
+  };
+
+  const copyToClipboard = (rowId) => {
+    navigator.clipboard.writeText(rowId).then(() => {
+      setCopiedRowId(rowId);
+      setTimeout(() => setCopiedRowId(null), 1500);
     });
   };
 
-  retrySocketConnection = () => {
-    setTimeout(() => {
-      const { socket } = this.props;
-      if (socket) {
-        socket.on('NEW_LOG', this.handleNewLog);
-      } else {
-        this.retrySocketConnection();
-      }
-    }, 1000);
-  }
+  const uniqueHistory = history.filter(
+    (row, index, self) => index === self.findIndex((t) => t._id === row._id)
+  );
 
-  componentDidUpdate(prevProps, prevState) {
-    if (prevProps.history !== this.props.history) {
-      this.attachUserLinkListeners();
-      this.attachAccessories();
-      this.setState({ history: updateFromNow(this.props.history) });
-    }
-  }
-
-
-
-  attachUserLinkListeners = () => {
-    const userLinks = document.querySelectorAll('.user-link');
-    userLinks.forEach(link => {
-      link.addEventListener('click', event => {
-        const userId = event.target.getAttribute('data-userid');
-        this.handleOpenPlayerModal(userId);
-      });
-    });
-  };
-  attachAccessories = () => {
-    const { isLowGraphics } = this.props;
-    const userLinks = document.querySelectorAll('.user-link');
-    let counter = 0;
-    userLinks.forEach(element => {
-      if (counter < 3) {
-        const userId = element.getAttribute('data-userid');
-        const accessory = element.getAttribute('accessory');
-        const lottieAnimation = renderLottieAvatarAnimation(accessory, isLowGraphics);
-        const portalContainer = document.createElement('div');
-        ReactDOM.render(lottieAnimation, portalContainer);
-        element.parentNode.insertBefore(portalContainer, element);
-
-        portalContainer.addEventListener('click', () => {
-          this.handleOpenPlayerModal(userId);
-        });
-        portalContainer.style.cursor = 'pointer';
-        counter++;
-      } else {
-        return;
-      }
-    });
-  };
-
-
-  handleOpenPlayerModal = creator_id => {
-    this.setState({ showPlayerModal: true, selectedCreator: creator_id });
-  };
-
-  handleClosePlayerModal = () => {
-    this.setState({ showPlayerModal: false });
-  };
-
-  updateReminderTime = () => {
-    this.setState({ history: updateFromNow(this.state.history) });
-  };
-
-  copyToClipboard = (rowId) => {
-    navigator.clipboard.writeText(rowId)
-      .then(() => {
-        this.setState({ copiedRowId: rowId });
-        setTimeout(() => {
-          this.setState({ copiedRowId: null });
-        }, 1500);
-      })
-      .catch(err => {
-        console.error('Failed to copy: ', err);
-      });
-  };
-
-  render() {
-    const { isLowGraphics } = this.props;
-    const HeartIcon = ({ isOpen }) => {
-      const icon = isOpen ? faHeart : faHeartBroken;
-
-      return <FontAwesomeIcon icon={icon} />;
-    };
-    const uniqueHistory = this.state.history.filter((row, index, self) =>
-      index === self.findIndex((t) => (
-        t._id === row._id
-      ))
-    );
-
-
-    return (
-      <div className="overflowX">
-        <div className="table main-history-table">
-          {this.state.history?.length === 0 && (
-            <div className="dont-have-game-msg">
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
-                {[...Array(1)].map((_, index) => (
-                  <Skeleton key={index} variant="rect" width="100%" height={10} />
+  return (
+    <div className="overflowX">
+      <div className="table main-history-table">
+        {history?.length === 0 && (
+          <div className="dont-have-game-msg">
+            <Skeleton variant="rect" width="100%" height={10} />
+          </div>
+        )}
+        {uniqueHistory.map((row, key) => (
+          <div
+            key={row._id}
+            className={`table-row ${(row.creator?._id === userId || row.joined_user === userId) ? 'history-background' : ''} ${key < 50 ? 'slide-in' : ''}`}
+            style={{
+              animationDelay: `${key * 0.1}s`,
+              filter: row.status !== 'open' ? 'opacity(60%)' : 'none',
+            }}
+          >
+            <div>
+              <div className="table-cell">
+                <div
+                  className="desktop-only"
+                  dangerouslySetInnerHTML={{ __html: row.history }}
+                ></div>
+              </div>
+              <div className="table-cell row-copy">
+                <Tooltip title={copiedRowId === row._id ? "COPIED ID!" : "COPY BET ID"} placement="top">
+                  <a
+                    style={{ padding: "5px", cursor: "pointer" }}
+                    onClick={() => copyToClipboard(row._id)}
+                  >
+                    <FileCopyIcon style={{ width: "12px" }} />
+                  </a>
+                </Tooltip>
+                &nbsp;
+                {row.from_now && row.from_now.split('').map((char, index) => (
+                  <span key={index} style={{ fontSize: isNaN(char) ? '0.5em' : '0.8em' }}>{char}</span>
                 ))}
+                &nbsp;<FontAwesomeIcon icon={faStopwatch} />
               </div>
             </div>
-          )}
-          {uniqueHistory.map(
-            (row, key) => (
+            <div>
               <div
-                className={`table-row ${(row.creator?._id === this.props.userId || row.joined_user === this.props.userId) ? 'history-background' : ''} ${key < 50 ? 'slide-in' : ''}`}
-                style={{
-                  animationDelay: `${key * 0.1}s`,
-                  filter: row.status !== 'open' ? 'opacity(60%)' : 'none'
-                }}
-                key={row._id}
-              >
-                <div>
-                  <div className="table-cell">
-                   
-                    <div
-                      className="desktop-only"
-                      dangerouslySetInnerHTML={{ __html: row.history }}
-                    ></div>
-                  </div>
-           
-                  <div className="table-cell row-copy">
-                  &nbsp;
-                    <Tooltip title={this.state.copiedRowId === row._id ? "COPIED ID!" : "COPY BET ID"} placement="top">
-                      <a style={{ padding: "5px", cursor: "pointer" }} onClick={() => this.copyToClipboard(row._id)}>
-                        <FileCopyIcon style={{ width: "12px" }} />
-                      </a>
-                    </Tooltip>&nbsp;
-                    {row.from_now && row.from_now.split('').map((char, index) => (
-                      <span key={index} style={{ fontSize: isNaN(char) ? '0.5em' : '0.8em' }}>{char}</span>
-                    ))}
-                    &nbsp;<FontAwesomeIcon icon={faStopwatch} />
-                  </div>
-                </div>
-                <div>
-                  <div
-                    className="table-cell mobile-only"
-                    dangerouslySetInnerHTML={{ __html: row.history }}
-                  ></div>
-                </div>
-              </div>
-            ),
-            this
-          )}
-        </div>
-        {this.state.showPlayerModal && (
-          <PlayerModal
-            modalIsOpen={this.state.showPlayerModal}
-            closeModal={this.handleClosePlayerModal}
-            selectedCreator={this.state.selectedCreator}
-          />
-        )}
+                className="table-cell mobile-only"
+                dangerouslySetInnerHTML={{ __html: row.history }}
+              ></div>
+            </div>
+          </div>
+        ))}
       </div>
-    );
-  }
-}
+      {showPlayerModal && (
+        <PlayerModal
+          modalIsOpen={showPlayerModal}
+          closeModal={handleClosePlayerModal}
+          selectedCreator={selectedCreator}
+        />
+      )}
+    </div>
+  );
+};
 
-const mapStateToProps = state => ({
+const mapStateToProps = (state) => ({
   socket: state.auth.socket,
-  isAuthenticated: state.auth.isAuthenticated,
   history: state.logic.history,
-  pageNumber: state.logic.historyPageNumber,
-  totalPage: state.logic.historyTotalPage,
-  isDarkMode: state.auth.isDarkMode,
+  userId: state.auth.user._id,
   isLowGraphics: state.auth.isLowGraphics,
 });
 
 const mapDispatchToProps = {
   getHistory,
-  getSettings
+  getSettings,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(HistoryTable);

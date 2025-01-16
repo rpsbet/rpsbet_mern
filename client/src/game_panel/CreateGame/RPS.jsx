@@ -85,6 +85,10 @@ const RPS = (props) => {
     image,
     game_type,
     defaultBetAmounts,
+    strategies,
+    ai_mode,
+    user,
+    rank
   } = props;
 
   const gameTypeStyleClass = {
@@ -144,6 +148,10 @@ const RPS = (props) => {
               selectedStrategy={selectedStrategy}
               setSelectedStrategy={setSelectedStrategy}
               isDarkMode={isDarkMode}
+              strategies={strategies}
+              user={user}
+              rank={rank}
+              ai_mode={ai_mode}
             />
             <CoinInfo onChangeState={onChangeState} name={name} image={image} isDarkMode={isDarkMode} />
             <DefaultBetAmountPanel
@@ -164,6 +172,7 @@ const mapStateToProps = (state) => ({
   auth: state.auth.isAuthenticated,
   isDarkMode: state.auth.isDarkMode,
   data: state.itemReducer.myItemArray,
+  strategies: state.logic.strategies,
   isFocused: state.auth.isFocused,
   gameTypeList: state.logic.gameTypeList,
 });

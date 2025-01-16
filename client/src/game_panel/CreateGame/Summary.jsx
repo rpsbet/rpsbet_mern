@@ -1,112 +1,96 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect } from 'react';
 import { convertToCurrency } from '../../util/conversion';
 import { Warning, Info, CheckCircle } from '@material-ui/icons';
 import { Tooltip } from '@material-ui/core';
 
-class Summary extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      winChance: 0,
-      aveMultiplier: 0,
-      public_bet_amount: 0
-    };
-    if (this.props.game_mode === 'RPS') {
-      this.state.winChance = 33;
-    }
-  }
+const Summary = (props) => {
+  const [winChance, setWinChance] = useState(props.game_mode === 'RPS' ? 33 : 0);
 
-  pre_summery() {
-    const { solPrice } = this.props;
-    let public_max_return = convertToCurrency(this.props.max_prize, solPrice);
-    if (this.props.game_mode === 'Quick Shoot') {
-      public_max_return = convertToCurrency(this.props.max_return, solPrice);
-    } else if (this.props.game_mode === 'RPS') {
-      public_max_return = convertToCurrency(this.props.bet_amount, solPrice);
+  useEffect(() => {
+    if (props.game_mode === 'RPS') {
+      setWinChance(33);
+    } else if (props.game_mode === 'Quick Shoot') {
+      setWinChance(15);
+    }
+  }, [props.game_mode]);
+
+  const preSummary = () => {
+    const { solPrice, max_prize, max_return, bet_amount, game_mode } = props;
+    let public_max_return = convertToCurrency(max_prize, solPrice);
+
+    if (game_mode === 'Quick Shoot') {
+      public_max_return = convertToCurrency(max_return, solPrice);
+    } else if (game_mode === 'RPS') {
+      public_max_return = convertToCurrency(bet_amount, solPrice);
     }
 
     return (
       <div className="pre-summary-panel title">
         <div className="data-item">
           <div className="label your-bet-amount">YOUR BET</div>
-          <div className="value">
-            {convertToCurrency(this.props.bet_amount, solPrice)}
-          </div>
+          <div className="value">{convertToCurrency(bet_amount, solPrice)}</div>
         </div>
         <div className="data-item">
           <div className="label your-max-return">TARGET ROI</div>
-          <div className="value">
-            {convertToCurrency(this.props.max_return, solPrice)}
-          </div>
+          <div className="value">{convertToCurrency(max_return, solPrice)}</div>
         </div>
-
         <div className="data-item">
           <div className="label win-chance">Expected Value</div>
           <div className="value">
-            {convertToCurrency(this.props.winChance, solPrice) === -0
+            {convertToCurrency(props.winChance, solPrice) === -0
               ? convertToCurrency(0.0).toFixed(2)
-              : convertToCurrency(this.props.winChance, solPrice)}
+              : convertToCurrency(props.winChance, solPrice)}
           </div>
         </div>
       </div>
     );
-  }
+  };
 
-  componentDidUpdate(prevProps) {
-    if (prevProps.game_mode !== this.props.game_mode) {
-      if (this.props.game_mode === 'RPS') {
-        this.setState({ winChance: 33 });
-      } else if (this.props.game_mode === 'Quick Shoot') {
-        this.setState({ winChance: 15 });
-      }
-    }
-  }
-
-  total_summery() {
+  const totalSummary = () => {
     const {
-      rps_game_type,
       qs_game_type,
-      name,
       solPrice,
-      x_link,
-      image,
-      website_link,
-      telegram_link,
       bet_amount,
-      winChance,
       max_return,
-      public_bet_amount,
       max_prize,
+      public_bet_amount,
       game_mode,
       is_private,
       endgame_amount,
       endgame_type,
       selectedStrategy,
-      description
-    } = this.props;
-    let public_max_return = <> {convertToCurrency(max_prize, solPrice)} </>;
+      description,
+      winChance,
+    } = props;
 
     const isNegative = winChance < 0;
     const isPositive = winChance > 0;
 
-    let valueColor = 'default';
-    let backgroundColor = 'default';
-    let icon = <Info style={{ width: "10pt", cursor: "pointer", marginLeft: "5px" }} />;
-    let tooltipText = 'Zero (Neutral Fairness)';
+    const valueColor = isNegative ? '#ff0000' : isPositive ? 'rgb(40, 167, 69)' : 'default';
+    const backgroundColor = isNegative
+      ? '#ff000033'
+      : isPositive
+      ? 'rgba(40, 167, 69, 0.3)'
+      : 'default';
 
-    if (isNegative) {
-      valueColor = '#ff0000';
-      backgroundColor = '#ff000033';
-      icon = <Warning style={{ width: "10pt", cursor: "pointer", marginLeft: "5px" }} />;
-      tooltipText = 'High Risk Game';
-    } else if (isPositive) {
-      valueColor = 'rgb(40, 167, 69)';
-      backgroundColor = 'rgba(40, 167, 69, 0.3)';
-      icon = <CheckCircle style={{ width: "10pt", cursor: "pointer", marginLeft: "5px" }} />;
-      tooltipText = 'Low Risk Game';
-    }
+    const icon = isNegative ? (
+      <Warning style={{ width: '10pt', cursor: 'pointer', marginLeft: '5px' }} />
+    ) : isPositive ? (
+      <CheckCircle style={{ width: '10pt', cursor: 'pointer', marginLeft: '5px' }} />
+    ) : (
+      <Info style={{ width: '10pt', cursor: 'pointer', marginLeft: '5px' }} />
+    );
+
+    const tooltipText = isNegative
+      ? 'High Risk Game'
+      : isPositive
+      ? 'Low Risk Game'
+      : 'Zero (Neutral Fairness)';
+
+    let public_max_return = convertToCurrency(max_prize, solPrice);
+
     if (game_mode === 'Quick Shoot') {
-      public_max_return = convertToCurrency(this.props.max_return, solPrice);
+      public_max_return = convertToCurrency(props.max_return, solPrice);
     }
 
     return (
@@ -116,88 +100,63 @@ class Summary extends Component {
           <div className="summary-item">
             <div className="summary-item-name title">Expected Value</div>
             <div className="summary-item-value" style={{ color: valueColor, background: backgroundColor }}>
-              {(winChance) === -0
-                ? (0.0).toFixed(2)
-                : (winChance)}
-              <Tooltip title={tooltipText}>
-                {icon}
-              </Tooltip>
+              {winChance === -0 ? (0.0).toFixed(2) : winChance}
+              <Tooltip title={tooltipText}>{icon}</Tooltip>
             </div>
           </div>
           <div className="summary-item">
             <div className="summary-item-name title">Bet Amount</div>
-            <div className="summary-item-value">
-              {convertToCurrency(bet_amount, solPrice)}
-            </div>
+            <div className="summary-item-value">{convertToCurrency(bet_amount, solPrice)}</div>
           </div>
-
           {game_mode === 'Quick Shoot' && (
-            <div className="summary-item">
-              <div className="summary-item-name title">Game Mode</div>
-              <div className="summary-item-value">{qs_game_type}</div>
-            </div>
-          )}
-          <div className="summary-item">
-            <div className="summary-item-name title">AI Play Strategy</div>
-            <div className="summary-item-value">
-              {selectedStrategy}
-            </div>
-          </div>
-          {(game_mode === 'Quick Shoot') && (
-            <div className="summary-item">
-              <div className="summary-item-name title">Public Bet Amount</div>
-              <div className="summary-item-value">
-                {convertToCurrency(public_bet_amount, solPrice)}
+            <>
+              <div className="summary-item">
+                <div className="summary-item-name title">Game Mode</div>
+                <div className="summary-item-value">{qs_game_type}</div>
               </div>
-            </div>
-          )}
-
-          {game_mode === 'Quick Shoot' && (
-            <div className="summary-item">
-              <div className="summary-item-name title">Public Max Return</div>
-              <div className="summary-item-value">{convertToCurrency(public_max_return, solPrice)}</div>
-            </div>
+              <div className="summary-item">
+                <div className="summary-item-name title">Public Bet Amount</div>
+                <div className="summary-item-value">{convertToCurrency(public_bet_amount, solPrice)}</div>
+              </div>
+              <div className="summary-item">
+                <div className="summary-item-name title">Public Max Return</div>
+                <div className="summary-item-value">{convertToCurrency(public_max_return, solPrice)}</div>
+              </div>
+            </>
           )}
           <div className="summary-item">
             <div className="summary-item-name title">TARGET ROI</div>
-            <div className="summary-item-value">
-              {convertToCurrency(max_return, solPrice)}
-            </div>
+            <div className="summary-item-value">{convertToCurrency(max_return, solPrice)}</div>
           </div>
           {endgame_type && (
             <div className="summary-item">
               <div className="summary-item-name title">Payout</div>
-              <div className="summary-item-value">
-                {convertToCurrency(endgame_amount, solPrice)}
-              </div>
+              <div className="summary-item-value">{convertToCurrency(endgame_amount, solPrice)}</div>
             </div>
           )}
-
+          <div className="summary-item">
+            <div className="summary-item-name title">AI Play Strategy</div>
+            <div className="summary-item-value">{selectedStrategy}</div>
+          </div>
           <div className="summary-item">
             <div className="summary-item-name title">Description</div>
-            <div className="summary-item-value">
-              {description ? description : 'No Description'}
-            </div>
+            <div className="summary-item-value">{description || 'No Description'}</div>
           </div>
           <div className="summary-item">
             <div className="summary-item-name title">Privacy</div>
-            <div className="summary-item-value">
-              {is_private ? 'Private' : 'Public'}
-            </div>
+            <div className="summary-item-value">{is_private ? 'Private' : 'Public'}</div>
           </div>
         </div>
       </div>
     );
-  }
+  };
 
-  render() {
-    if (this.props.step === 2) {
-      return <></>;
-    } else if (this.props.step === 3) {
-      return this.total_summery();
-    }
-    return this.pre_summery();
+  if (props.step === 2) {
+    return <></>;
+  } else if (props.step === 3) {
+    return totalSummary();
   }
-}
+  return preSummary();
+};
 
 export default Summary;

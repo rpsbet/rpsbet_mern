@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
 import { connect } from 'react-redux';
 import { alertModal } from '../../../../game_panel/modal/ConfirmAlerts';
@@ -6,12 +6,16 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import MyLoansModal from '../../../../game_panel/modal/MyLoansModal';
 import RpsPriceChart from '../../../../components/RpsPriceChart';
 import { token } from '../../../../config/index.js';
-import { Skeleton } from "@material-ui/lab";
+import { Skeleton } from '@material-ui/lab';
 import {
   faClock,
   faSort,
   faFilter,
-  faUser, faMoneyBillAlt, faUsers, faMoneyCheckAlt, faChartLine
+  faUser,
+  faMoneyBillAlt,
+  faUsers,
+  faMoneyCheckAlt,
+  faChartLine
 } from '@fortawesome/free-solid-svg-icons';
 import {
   acQueryLoan,
@@ -30,8 +34,6 @@ import {
   TableContainer,
   TableRow,
   Tooltip,
-  Typography,
-  Grid,
   Menu,
   MenuItem
 } from '@material-ui/core';
@@ -65,25 +67,26 @@ const ProductGrid = styled.div`
   max-width: 100%;
   margin: 20px 0;
 `;
+
 const ProductCard = styled.div`
   position: relative;
   background: linear-gradient(156deg, #28a745, #007bff);
   border-radius: 20px;
   padding: 10px;
-  display: -ms-flexbox;
   display: flex;
-  -webkit-flex-direction: column;
-  -ms-flex-direction: column;
   flex-direction: column;
-  -webkit-align-loans: center;
-  -webkit-box-align: center;
-  -ms-flex-align: center;
   align-loans: center;
   cursor: pointer;
-  -webkit-transition: -webkit-transform 0.2s;
-  -webkit-transition: transform 0.2s;
   transition: transform 0.2s;
   position: relative;
+
+  &:hover {
+    transform: scale(1.03);
+  }
+
+  &:hover::before {
+    opacity: 1;
+  }
 
   &::before {
     content: '';
@@ -97,39 +100,25 @@ const ProductCard = styled.div`
     opacity: 0;
     transition: opacity 0.2s;
   }
-
-  &:hover::before {
-    opacity: 1;
-  }
-
-  &:hover {
-    transform: scale(1.03);
-  }
 `;
 
 const LoanButton = styled.div`
-opacity: 0;
+  opacity: 0;
   position: absolute;
-  margin-top: auto;
   bottom: 0;
-  
-  margin
-  right: 0; 
-    cursor: pointer;
-    -webkit-transition: -webkit-transform 0.2s;
-    -webkit-transition: transform 0.2s;
-    transition: transform 0.2s,  bottom 0.2s;
+  cursor: pointer;
+  transition: transform 0.2s, bottom 0.2s;
 
-    ${ProductCard}:hover & {
-      opacity: 1;
-        bottom: 30%;
-        left: 25%;
+  /* Show button on hover */
+  ${ProductCard}:hover & {
+    opacity: 1;
+    bottom: 30%;
+    left: 25%;
+  }
 `;
-
 
 const ProductCreator = styled.h5`
   max-width: 100%;
-  height: auto;
   left: 10px;
   position: absolute;
   z-index: 1;
@@ -142,13 +131,11 @@ const ProductInfo = styled.div`
 const LoanAmount = styled.h6`
   padding: 4px;
   font-size: 1rem;
-  margin-bottom: -5p;
+  margin-bottom: -5px;
   font-weight: 400;
   line-height: 1.75;
-  letter-spacing: 0.00938em;
   background: linear-gradient(354deg, #007bff75, #00ddff);
   width: 100%;
-  border: 1px soli#9c0c0c;
   border-radius: 23%;
   text-shadow: 2px -2px 4px #007bff;
   text-transform: uppercase;
@@ -159,11 +146,9 @@ const LoanAmount = styled.h6`
   border-top-left-radius: 30px;
 `;
 
-
 const APY = styled.span`
   position: absolute;
   top: -3px;
-  padding: 0 10px;
   right: 0;
   height: 30px;
   background: #28a745;
@@ -172,536 +157,552 @@ const APY = styled.span`
   color: #fff;
   font-weight: 500;
   text-align: center;
+  padding: 0 10px;
 `;
 
-const PaginationContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  align-loans: center;
-  margin-top: 20px;
-`;
+const BankTable = (props) => {
+  const {
+    data,
+    loading,
+    acQueryLoan,
+    setCurrentLoanId,
+    setCurrentLoanInfo,
+    openConfirmLoanModal,
+    solPrice,
+    prevLoans,
+    previousLoans,
+    isDarkMode,
+    user,
+    isLowGraphics
+  } = props;
 
-class BankTable extends Component {
-  constructor(props) {
-    super(props);
+  // ------------------- LOCAL STATE -------------------
+  const [customerInfo, setCustomerInfo] = useState({});
+  const [showPlayerModal, setShowPlayerModal] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+  const [selectedCreator, setSelectedCreator] = useState('');
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [showMyLoansModal, setShowMyLoansModal] = useState(false);
+  const [sortAnchorEl, setSortAnchorEl] = useState(null);
+  const [sortCriteria, setSortCriteria] = useState('updated_at');
+  const [loanType, setLoanType] = useState('');
+  const [loansWithProfit, setLoansWithProfit] = useState([]);
+  const [error, setError] = useState(null);
 
-    this.state = {
-      customerInfo: {},
-      showPlayerModal: false,
-      is_mobile: window.innerWidth < 1024 ? true : false,
-      selectedCreator: '',
-      anchorEl: null,
-      showMyLoansModal: false,
-      sortAnchorEl: null,
-      sortCriteria: 'updated_at',
-      loanType: '',
-      loansWithProfit: []
-    };
-  }
+  // ------------------- EFFECTS -------------------
 
-  async componentDidMount() {
-    const { acGetCustomerInfo } = this.props;
-    await this.props.previousLoans(30, 1, 'loan_amount', '');
-    const { prevLoans } = this.props;
+  // componentDidMount logic: fetch previous loans, then attach info
+  useEffect(() => {
+    (async () => {
+      // by default, fetch previousLoans(30, 1, 'loan_amount', '')
+      // then for each loan, attach customer info
+      await props.previousLoans(30, 1, 'loan_amount', '');
+      try {
+        const result = await attachLoansWithProfit(props.prevLoans);
+        setLoansWithProfit(result);
+      } catch (err) {
+        console.error('Error fetching customer info:', err);
+        setError(err);
+      }
+    })();
+  }, []);
 
-    try {
-      const loansWithProfit = await Promise.all(prevLoans.map(async loan => {
+  // componentDidUpdate logic for data length changes
+  useEffect(() => {
+    // if data has changed, re-check some conditions and maybe fetch again
+    if (
+      data &&
+      data.length &&
+      // check if there's difference in `loan_amount` from the previous iteration
+      data.some((currentLoan, index) => {
+        if (!props.data[index]) return false;
+        return currentLoan.loan_amount !== props.data[index].loan_amount;
+      })
+    ) {
+      fetchLoans();
+      props.previousLoans();
+    }
+  }, [data]);
+
+  // Similar to "componentWillReceiveProps" for when prevLoans changes
+  useEffect(() => {
+    // If prevLoans changes, re-attach the profit logic
+    (async () => {
+      try {
+        const result = await attachLoansWithProfit(props.prevLoans);
+        setLoansWithProfit(result);
+      } catch (err) {
+        console.error('Error fetching customer info:', err);
+        setError(err);
+      }
+    })();
+  }, [props.prevLoans]);
+
+  // On window resize, update isMobile
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 1024);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // ------------------- HELPER METHODS -------------------
+  const fetchLoans = useCallback(() => {
+    const { acQueryLoan, page } = props;
+    acQueryLoan(30, page, sortCriteria, loanType);
+  }, [props, sortCriteria, loanType]);
+
+  // fetchCustomerInfo on data changes
+  const fetchCustomerInfo = useCallback(async () => {
+    for (const product of data) {
+      if (!customerInfo[product.lender]) {
+        try {
+          const info = await props.acGetCustomerInfo(product.lender);
+          setCustomerInfo((prev) => ({
+            ...prev,
+            [product.lender]: info || {
+              username: 'Anon',
+              avatar: 'default-avatar-url',
+            },
+          }));
+        } catch (error) {
+          console.error(`Error fetching customer info for ${product.lender}:`, error);
+        }
+      }
+    }
+  }, [data, customerInfo, props]);
+
+  // Attach "profit" logic to each loan in prevLoans
+  const attachLoansWithProfit = async (loans) => {
+    const { acGetCustomerInfo } = props;
+    if (!loans) return [];
+
+    const result = await Promise.all(
+      loans.map(async (loan) => {
         let totalLoanerAmount = 0;
         let totalPaidBack = 0;
 
-        await Promise.all(loan.loaners.map(async loaner => {
-          totalLoanerAmount += loaner.amount;
-          const paidBack = parseFloat(loaner.paidBack); // Assuming paidBack is a string
-          totalPaidBack += paidBack;
-          const customerInfo = await acGetCustomerInfo(loaner.user);
+        await Promise.all(
+          loan.loaners.map(async (loaner) => {
+            totalLoanerAmount += loaner.amount;
+            const paidBack = parseFloat(loaner.paidBack) || 0;
+            totalPaidBack += paidBack;
 
-          loaner.customerInfo = customerInfo; // Attach customer info to loaner
-        }));
+            // fetch customer info for each loaner
+            const lInfo = await acGetCustomerInfo(loaner.user);
+            loaner.customerInfo = lInfo; // Attach to the local object
+          })
+        );
 
-        const profit = (totalPaidBack * loan.apy) - totalLoanerAmount;
-        const customerInfo = await acGetCustomerInfo(loan.lender);
+        const profit = totalPaidBack * loan.apy - totalLoanerAmount;
+        // fetch customer info for lender
+        const cInfo = await acGetCustomerInfo(loan.lender);
+
         return {
           ...loan,
-          totalLoanerAmount: totalLoanerAmount,
-          totalPaidBack: totalPaidBack,
-          profit: profit,
-          customerInfo: customerInfo
+          totalLoanerAmount,
+          totalPaidBack,
+          profit,
+          customerInfo: cInfo,
         };
-      }));
+      })
+    );
 
-      this.setState({ loansWithProfit });
-    } catch (error) {
-      console.error('Error fetching customer info:', error);
-      this.setState({ error });
-    }
-  }
+    return result;
+  };
 
+  // Ensure we re-run fetchCustomerInfo if needed
+  useEffect(() => {
+    fetchCustomerInfo();
+  }, [fetchCustomerInfo, data]);
 
-  componentDidUpdate(prevProps, prevState) {
-    const loanAmountChanged = this.props.data &&
-      prevProps.data &&
-      this.props.data.length === prevProps.data.length &&
-      this.props.data.some((currentLoan, index) =>
-        currentLoan &&
-        prevProps.data[index] &&
-        currentLoan.loan_amount !== prevProps.data[index].loan_amount
-      );
-    if (loanAmountChanged) {
-      this.fetchLoans();
-      this.props.previousLoans();
-    }
-  }
-
-  handleOpenMyLoansModal = () => {
-    if (!this.state.showMyLoansModal) {
-      this.setState({ showMyLoansModal: true, anchorEl: null });
+  // -------------- Handlers for UI actions --------------
+  const handleOpenMyLoansModal = () => {
+    if (!showMyLoansModal) {
+      setShowMyLoansModal(true);
+      setAnchorEl(null);
     }
   };
 
-  handleCloseMyLoansModal = () => {
-    this.setState({ showMyLoansModal: false });
+  const handleCloseMyLoansModal = () => {
+    setShowMyLoansModal(false);
   };
 
-  areLoanersEqual(prevLoaners, currentLoaners) {
-    return JSON.stringify(prevLoaners) === JSON.stringify(currentLoaners);
-  }
-
-  handleFilterChange() {
-    this.setState({ anchorEl: null });
-    this.fetchLoans();
+  const handleFilterChange = () => {
+    setAnchorEl(null);
+    fetchLoans();
   };
 
-  handleSortChange() {
-    this.setState({ sortAnchorEl: null });
-    this.fetchLoans();
-  }
-
-  fetchLoans() {
-    const { acQueryLoan, page } = this.props;
-    const { sortCriteria, loanType } = this.state;
-    acQueryLoan(30, page, sortCriteria, loanType);
-  }
-
-  handleFilterClick = event => {
-    this.setState({ anchorEl: event.currentTarget });
+  const handleSortChange = () => {
+    setSortAnchorEl(null);
+    fetchLoans();
   };
 
-  handleFilterClose = loanType => {
-    this.setState({ anchorEl: null, loanType }, () => {
-      this.handleFilterChange();
-    });
+  const handleFilterClick = (e) => {
+    setAnchorEl(e.currentTarget);
   };
 
-  handleSortClick = event => {
-    this.setState({ sortAnchorEl: event.currentTarget });
+  const handleFilterClose = (value) => {
+    setAnchorEl(null);
+    setLoanType(value);
+    handleFilterChange();
   };
 
-  handleSortClose = sortCriteria => {
-    this.setState({ sortAnchorEl: null, sortCriteria }, () => {
-      this.handleSortChange();
-    });
+  const handleSortClick = (e) => {
+    setSortAnchorEl(e.currentTarget);
   };
 
-  handleOpenPlayerModal = creator_id => {
-    this.setState({ showPlayerModal: true, selectedCreator: creator_id });
+  const handleSortClose = (criteria) => {
+    setSortAnchorEl(null);
+    setSortCriteria(criteria);
+    handleSortChange();
   };
 
-  handleClosePlayerModal = () => {
-    this.setState({ showPlayerModal: false });
+  const handleOpenPlayerModal = (creatorId) => {
+    setShowPlayerModal(true);
+    setSelectedCreator(creatorId);
   };
 
-  async fetchCustomerInfo() {
+  const handleClosePlayerModal = () => {
+    setShowPlayerModal(false);
+  };
 
-    const { data, acGetCustomerInfo } = this.props;
-    for (const product of data) {
-      if (!this.state.customerInfo[product.lender]) {
-        try {
-          const info = await acGetCustomerInfo(product.lender);
-          if (info) {
-            this.setState(prevState => ({
-              customerInfo: {
-                ...prevState.customerInfo,
-                [product.lender]: info
-              }
-            }));
-          } else {
-            this.setState(prevState => ({
-              customerInfo: {
-                ...prevState.customerInfo,
-                [product.lender]: {
-                  username: 'Anon',
-                  avatar: 'default-avatar-url'
-                }
-              }
-            }));
-          }
-        } catch (error) {
-          console.error(
-            `Error fetching customer info for ${ldata.lender}:`,
-            error
-          );
-        }
-      }
+  // ------------------- RENDER -------------------
+  return (
+    <MarketplaceContainer
+      style={{
+        padding: '20px',
+        background: 'rgb(170 170 170 / 6%)',
+        borderRadius: '20px',
+      }}
+    >
+      {/* Filter & Sort UI */}
+      <FilterSortContainer className=" desktop-only">
+        <div className="filters">
+          <Button onClick={handleFilterClick}>
+            Filter&nbsp;
+            <FontAwesomeIcon icon={faFilter} />
+          </Button>
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={() => handleFilterClose(null)}
+          >
+            <MenuItem onClick={() => handleFilterClose('FULL')} selected={loanType === ''}>
+              FULL
+            </MenuItem>
+          </Menu>
+        </div>
 
-    }
-  }
-  render() {
-    const {
-      data,
-      loading,
-      acQueryLoan,
-      setCurrentLoanId,
-      setCurrentLoanInfo,
-      openConfirmLoanModal,
-      solPrice,
-      prevLoans
-    } = this.props;
-
-    const {
-      customerInfo,
-      showPlayerModal,
-      selectedCreator,
-      sortCriteria,
-      anchorEl,
-      is_mobile,
-      sortAnchorEl,
-      loansWithProfit,
-      loanType
-    } = this.state;
-    this.fetchCustomerInfo();
-    return (
-      <MarketplaceContainer style={{ padding: "20px", background: "rgb(170 170 170 / 6%)", borderRadius: "20px" }}>
-        <FilterSortContainer className=" desktop-only">
-          <div className="filters">
-            <Button onClick={this.handleFilterClick}>
-              Filter&nbsp;
-              <FontAwesomeIcon icon={faFilter} />
-            </Button>
-            <Menu
-              anchorEl={anchorEl}
-              open={Boolean(anchorEl)}
-              onClose={() => this.handleFilterClose(null)}
+        <div className="filters">
+          <Button onClick={handleSortClick}>
+            Sort By&nbsp;
+            <FontAwesomeIcon icon={faSort} />
+          </Button>
+          <Menu
+            anchorEl={sortAnchorEl}
+            open={Boolean(sortAnchorEl)}
+            onClose={() => handleSortClose(null)}
+          >
+            <MenuItem
+              onClick={() => handleSortClose('updated_at')}
+              selected={sortCriteria === 'updated_at'}
             >
-              <MenuItem
-                onClick={() =>
-                  this.handleFilterClose('FULL')
-                }
-                selected={loanType === ''}
-              >
-                FULL
-              </MenuItem>
-
-            </Menu>
-          </div>
-          <div className="filters">
-            <Button onClick={this.handleSortClick}>
-              Sort By&nbsp;
-              <FontAwesomeIcon icon={faSort} />
-            </Button>
-            <Menu
-              anchorEl={sortAnchorEl}
-              open={Boolean(sortAnchorEl)}
-              onClose={() => this.handleSortClose(null)}
+              Sort by Date Added
+            </MenuItem>
+            <MenuItem
+              onClick={() => handleSortClose('period')}
+              selected={sortCriteria === 'period'}
             >
-              <MenuItem onClick={() =>
-                this.handleSortClose('updated_at')
-              }
-                selected={sortCriteria === 'updated_at'}>Sort by Date Added</MenuItem>
-              <MenuItem onClick={() =>
-                this.handleSortClose('period')
-              }
-                selected={sortCriteria === 'period'}>
-                Sort by Loan Period</MenuItem>
-            </Menu>
-          </div>
-        </FilterSortContainer>
-        {is_mobile && (
-          <>
-            <Button style={{ marginBottom: "30px" }} className="btn-submit" onClick={this.handleOpenMyLoansModal}>Manage Your Loans&nbsp; <AttachMoney /></Button>
-            <RpsPriceChart isDarkMode={this.props.isDarkMode} tokenMintAddress={token} />
-          </>
-        )}
-        {!loading ? (
-          <ProductGrid>
-            {showPlayerModal && (
-              <PlayerModal
-                selectedCreator={selectedCreator}
-                modalIsOpen={showPlayerModal}
-                closeModal={this.handleClosePlayerModal}
-              />
-            )}
-            {data.map(row => (
-              <ProductCard
-                key={row._id}
-                onClick={() => {
-                  setCurrentLoanId(row._id);
-                  setCurrentLoanInfo({
-                    lender: row.lender,
-                    loan_amount: row.loan_amount,
-                    loan_period: row.loan_period,
-                    apy: row.apy
-                  });
-                  history.push(`/loan/${row._id}`);
-                }}
-              >
-                <APY>{(row.apy * 100).toFixed(2)}%</APY>
+              Sort by Loan Period
+            </MenuItem>
+          </Menu>
+        </div>
+      </FilterSortContainer>
 
-                <ProductCreator>
-                  {customerInfo[row.lender] ? (
-                    <a
-                      className="player"
-                      onClick={() => this.handleOpenPlayerModal(row.lender)}
-                    >
-                      <Avatar
-                        className="avatar"
-                        src={customerInfo[row.lender].avatar}
-                        rank={customerInfo[row.lender].totalWagered}
-                        accessory={customerInfo[row.lender].accessory}
-                        username={customerInfo[row.lender].username}
-                        alt=""
-                        darkMode={this.props.isDarkMode}
-                      />
-                    </a>
-                  ) : (
-                    <div className="loading-spinner"></div>
-                  )}
-                </ProductCreator>
+      {isMobile && (
+        <>
+          <Button style={{ marginBottom: '30px' }} className="btn-submit" onClick={handleOpenMyLoansModal}>
+            Manage Your Loans&nbsp; <AttachMoney />
+          </Button>
+          <RpsPriceChart isDarkMode={isDarkMode} tokenMintAddress={token} />
+        </>
+      )}
 
-                <ProductInfo>
-                  <LoanAmount>{convertToCurrency(row.loan_amount, solPrice)}</LoanAmount>
-                  <TableContainer>
-                    <Table id="all-loans" className="product-detail">
-                      <TableBody>
-                        <TableRow>
-                          <TableCell>
-                            <FontAwesomeIcon icon={faClock} /> Loan Period:
-                          </TableCell>
-                          <TableCell className="value">
-                            {row.loan_period} Days
-                          </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell>
-                            <FontAwesomeIcon icon={faUsers} />&nbsp;Loaners:
-                          </TableCell>
-                          <TableCell className="value cell-joiners">
-                            {row.loaners && row.loaners.length > 0 ? (
-                              <>
-                                {row.loaners.slice(0, 2).map((loaner, index) => (
-                                  loaner && loaner.avatar ? (
-                                    <a
-                                      key={loaner._id || index}
-                                      className="player"
-                                      onClick={() => this.handleOpenPlayerModal(loaner._id)}
-                                    >
-                                      <Avatar
-                                        className="avatar"
-                                        src={loaner.avatar}
-                                        rank={loaner.totalWagered || 0}
-                                        username={loaner.username || ''}
-                                        accessory={loaner.accessory || ''}
-                                        alt={loaner.username || 'Unknown User'}
-                                        darkMode={this.props.isDarkMode}
-                                      />
-                                    </a>
-                                  ) : null
-                                ))}
-                                {row.loaners.length > 2 && (
-                                  <div className="avatar-square" style={{ marginLeft: "20px", zIndex: "0" }}>
-                                    <div className="avatar-count">
-                                      +{row.loaners.length - 2}
-                                    </div>
-                                  </div>
-                                )}
-                              </>
-                            ) : (
-                              <span>No Loaners</span>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-                </ProductInfo>
-                <LoanButton>
-                  <Tooltip title="Loan">
-                    <IconButton
-                      className="btn-back"
-                      onClick={() => {
-                        setCurrentLoanId(row._id);
-                        setCurrentLoanInfo(row.lender);
-                        if (row.lender !== this.props.user) {
-                          openConfirmLoanModal();
-                        } else {
-                          alertModal(
-                            this.props.isDarkMode,
-                            'THIS IS LITTER-ALLY YOURS ALREADY!'
-                          );
-                        }
-                      }}
-                    >
-                      Loan <SwapHoriz />
-                    </IconButton>
-                  </Tooltip>
-                </LoanButton>
-              </ProductCard>
-            ))}
-          </ProductGrid>
-        ) : (
-          // Skeleton Loader
-          <ProductGrid>
-            {[...Array(6)].map((_, index) => (
-              <ProductCard key={`skeleton-${index}`}>
-                <Skeleton variant="text" width="80%" height={30} />
-                <Skeleton variant="circle" width={40} height={40} style={{ margin: '10px 0' }} />
-                <Skeleton variant="rect" width="100%" height={100} />
-                <Skeleton variant="text" width="60%" height={20} style={{ margin: '10px 0' }} />
-              </ProductCard>
-            ))}
-          </ProductGrid>
-        )}
-        {/* <PaginationContainer >
-          <Pagination
-            limit={1}
-            offset={page - 1}
-            total={pages}
-            onClick={(e, offset) => {
-              acQueryLoan(30, offset + 1, sortCriteria, loanType);
-            }}
-          />
-        </PaginationContainer> */}
+      {/* Main Product Grid */}
+      {!loading ? (
+        <ProductGrid>
+          {showPlayerModal && (
+            <PlayerModal
+              selectedCreator={selectedCreator}
+              modalIsOpen={showPlayerModal}
+              closeModal={handleClosePlayerModal}
+            />
+          )}
 
+          {data.map((row) => (
+            <ProductCard
+              key={row._id}
+              onClick={() => {
+                setCurrentLoanId(row._id);
+                setCurrentLoanInfo({
+                  lender: row.lender,
+                  loan_amount: row.loan_amount,
+                  loan_period: row.loan_period,
+                  apy: row.apy,
+                });
+                history.push(`/loan/${row._id}`);
+              }}
+            >
+              <APY>{(row.apy * 100).toFixed(2)}%</APY>
+              <ProductCreator>
+                {customerInfo[row.lender] ? (
+                  <a className="player" onClick={() => handleOpenPlayerModal(row.lender)}>
+                    <Avatar
+                      className="avatar"
+                      src={customerInfo[row.lender].avatar}
+                      rank={customerInfo[row.lender].totalWagered}
+                      accessory={customerInfo[row.lender].accessory}
+                      username={customerInfo[row.lender].username}
+                      alt=""
+                      darkMode={isDarkMode}
+                    />
+                  </a>
+                ) : (
+                  <div className="loading-spinner" />
+                )}
+              </ProductCreator>
+              <ProductInfo>
+                <LoanAmount>{convertToCurrency(row.loan_amount, solPrice)}</LoanAmount>
+              </ProductInfo>
 
-        <div className="carousel-container" style={{ marginTop: "30px" }}>
-          <h6 className='title'>
-            PREVIOUS LOANS
-          </h6>
-          <div className="carousel">
-            {
-              loansWithProfit && loansWithProfit.length > 0 ? (
-                loansWithProfit.map(loan => (
-                  <div
-                    key={loan._id}
-                    className={`carousel-item ${loan.profit <= 0 ? 'red-gradient' : 'green-gradient'}`}
-                  >
-                    <div className="loan-details">
-                      <Table className="product-detail">
-                        <TableBody>
-                          <TableRow>
-                            <TableCell>
-                              <FontAwesomeIcon icon={faUser} /> LENDER:
-                            </TableCell>
-                            <TableCell style={{ float: "right" }}>
-                              <a
-                                className="player"
-                                onClick={() => this.handleOpenPlayerModal(loan.lender)}
-                              >
-                                <Avatar
-                                  className="avatar"
-                                  src={loan.customerInfo.avatar}
-                                  rank={loan.customerInfo.totalWagered}
-                                  accessory={loan.customerInfo.accessory}
-                                  username={loan.customerInfo.username}
-                                  alt=""
-                                  darkMode={this.props.isDarkMode}
-                                />
-                              </a>
-                            </TableCell>
-                          </TableRow>
-                          <TableRow>
-                            <TableCell>
-                              <FontAwesomeIcon icon={faClock} /> DAYS LEFT:
-                            </TableCell>
-                            <TableCell className="value">
-                              {loan.outstanding === true
-                                ? loan.totalLoanerAmount === 0
-                                  ? "CLEARED"
-                                  : "OUTSTANDING"
-                                : loan.outstanding}
-                            </TableCell>
-                          </TableRow>
-                          <TableRow>
-                            <TableCell>
-                              <FontAwesomeIcon icon={faMoneyBillAlt} /> UNPAID FUNDS:
-                            </TableCell>
-                            <TableCell className="value">{convertToCurrency(loan.totalLoanerAmount, solPrice)}</TableCell>
-                          </TableRow>
-                          <TableRow>
-                            <TableCell>
-                              <FontAwesomeIcon icon={faUsers} /> LOANERS:
-                            </TableCell>
-                            <TableCell className="cell-joiners">
-                              {loan.loaners.map((loaner, index) => (
+              <TableContainer>
+                <Table id="all-loans" className="product-detail">
+                  <TableBody>
+                    <TableRow>
+                      <TableCell>
+                        <FontAwesomeIcon icon={faClock} /> Loan Period:
+                      </TableCell>
+                      <TableCell className="value">{row.loan_period} Days</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>
+                        <FontAwesomeIcon icon={faUsers} />&nbsp;Loaners:
+                      </TableCell>
+                      <TableCell className="value cell-joiners">
+                        {row.loaners && row.loaners.length > 0 ? (
+                          <>
+                            {row.loaners.slice(0, 2).map((loaner, index) =>
+                              loaner && loaner.avatar ? (
                                 <a
-                                  key={index}
+                                  key={loaner._id || index}
                                   className="player"
-                                  onClick={() => this.handleOpenPlayerModal(loaner.user)}
+                                  onClick={() => handleOpenPlayerModal(loaner._id)}
                                 >
                                   <Avatar
                                     className="avatar"
-                                    src={loaner.customerInfo.avatar}
-                                    rank={loaner.customerInfo.totalWagered}
-                                    accessory={loaner.customerInfo.accessory}
-                                    username={loaner.customerInfo.username}
-                                    alt=""
-                                    darkMode={this.props.isDarkMode}
+                                    src={loaner.avatar}
+                                    rank={loaner.totalWagered || 0}
+                                    username={loaner.username || ''}
+                                    accessory={loaner.accessory || ''}
+                                    alt={loaner.username || 'Unknown User'}
+                                    darkMode={isDarkMode}
                                   />
                                 </a>
-                              ))}
-                            </TableCell>
-                          </TableRow>
-                          <TableRow>
-                            <TableCell>
-                              <FontAwesomeIcon icon={faMoneyCheckAlt} /> TOTAL PAID BACK:
-                            </TableCell>
-                            <TableCell className="value">{convertToCurrency(loan.totalPaidBack, solPrice)}</TableCell>
-                          </TableRow>
-                          <TableRow>
-                            <TableCell>
-                              <FontAwesomeIcon icon={faChartLine} /> PROFIT:
-                            </TableCell>
-                            <TableCell className={`value ${loan.profit <= 0 ? 'profit-negative' : 'profit-positive'}`}>
-                              {convertToCurrency(loan.profit, solPrice)}
-                            </TableCell>
-                          </TableRow>
-                        </TableBody>
-                      </Table>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                // Skeleton Loader for Carousel
-                [...Array(5)].map((_, index) => (
-                  <div key={`skeleton-carousel-item-${index}`} className="carousel-item skeleton-item">
-                    <div className="loan-details">
-                      <Skeleton variant="text" width="50%" height={30} style={{ marginBottom: "10px" }} />
-                      <Skeleton variant="circle" width={40} height={40} style={{ marginBottom: "10px" }} />
-                      <Skeleton variant="text" width="100%" height={20} style={{ marginBottom: "5px" }} />
-                      <Skeleton variant="text" width="80%" height={20} style={{ marginBottom: "5px" }} />
-                      <Skeleton variant="text" width="60%" height={20} style={{ marginBottom: "5px" }} />
-                      <Skeleton variant="rect" width="100%" height={50} style={{ marginBottom: "10px" }} />
-                    </div>
-                  </div>
-                ))
-              )
-            }
+                              ) : null
+                            )}
+                            {row.loaners.length > 2 && (
+                              <div
+                                className="avatar-square"
+                                style={{ marginLeft: '20px', zIndex: '0' }}
+                              >
+                                <div className="avatar-count">
+                                  +{row.loaners.length - 2}
+                                </div>
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <span>No Loaners</span>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </TableContainer>
 
-        {this.state.showMyLoansModal && is_mobile && (
-          <MyLoansModal
-            modalIsOpen={this.state.showMyLoansModal}
-            closeModal={this.handleCloseMyLoansModal}
-          />
-        )}
+              <LoanButton>
+                <Tooltip title="Loan">
+                  <IconButton
+                    className="btn-back"
+                    onClick={(e) => {
+                      e.stopPropagation(); // prevent triggering ProductCard onClick
+                      setCurrentLoanId(row._id);
+                      setCurrentLoanInfo(row.lender);
+                      if (row.lender !== user) {
+                        openConfirmLoanModal();
+                      } else {
+                        alertModal(isDarkMode, 'THIS IS LITTER-ALLY YOURS ALREADY!');
+                      }
+                    }}
+                  >
+                    Loan <SwapHoriz />
+                  </IconButton>
+                </Tooltip>
+              </LoanButton>
+            </ProductCard>
+          ))}
+        </ProductGrid>
+      ) : (
+        // Skeleton Loader
+        <ProductGrid>
+          {[...Array(6)].map((_, index) => (
+            <ProductCard key={`skeleton-${index}`}>
+              <Skeleton variant="text" width="80%" height={30} />
+              <Skeleton variant="circle" width={40} height={40} style={{ margin: '10px 0' }} />
+              <Skeleton variant="rect" width="100%" height={100} />
+              <Skeleton variant="text" width="60%" height={20} style={{ margin: '10px 0' }} />
+            </ProductCard>
+          ))}
+        </ProductGrid>
+      )}
 
+      {/* Carousel of previous loans */}
+      <div className="carousel-container" style={{ marginTop: '30px' }}>
+        <h6 className="title">PREVIOUS LOANS</h6>
+        <div className="carousel">
+          {loansWithProfit && loansWithProfit.length > 0 ? (
+            loansWithProfit.map((loan) => (
+              <div
+                key={loan._id}
+                className={`carousel-item ${
+                  loan.profit <= 0 ? 'red-gradient' : 'green-gradient'
+                }`}
+              >
+                <div className="loan-details">
+                  <Table className="product-detail">
+                    <TableBody>
+                      <TableRow>
+                        <TableCell>
+                          <FontAwesomeIcon icon={faUser} /> LENDER:
+                        </TableCell>
+                        <TableCell style={{ float: 'right' }}>
+                          <a
+                            className="player"
+                            onClick={() => handleOpenPlayerModal(loan.lender)}
+                          >
+                            <Avatar
+                              className="avatar"
+                              src={loan.customerInfo.avatar}
+                              rank={loan.customerInfo.totalWagered}
+                              accessory={loan.customerInfo.accessory}
+                              username={loan.customerInfo.username}
+                              alt=""
+                              darkMode={isDarkMode}
+                            />
+                          </a>
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>
+                          <FontAwesomeIcon icon={faClock} /> DAYS LEFT:
+                        </TableCell>
+                        <TableCell className="value">
+                          {loan.outstanding === true
+                            ? loan.totalLoanerAmount === 0
+                              ? 'CLEARED'
+                              : 'OUTSTANDING'
+                            : loan.outstanding}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>
+                          <FontAwesomeIcon icon={faMoneyBillAlt} /> UNPAID FUNDS:
+                        </TableCell>
+                        <TableCell className="value">
+                          {convertToCurrency(loan.totalLoanerAmount, solPrice)}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>
+                          <FontAwesomeIcon icon={faUsers} /> LOANERS:
+                        </TableCell>
+                        <TableCell className="cell-joiners">
+                          {loan.loaners.map((loaner, index) => (
+                            <a
+                              key={index}
+                              className="player"
+                              onClick={() => handleOpenPlayerModal(loaner.user)}
+                            >
+                              <Avatar
+                                className="avatar"
+                                src={loaner.customerInfo.avatar}
+                                rank={loaner.customerInfo.totalWagered}
+                                accessory={loaner.customerInfo.accessory}
+                                username={loaner.customerInfo.username}
+                                alt=""
+                                darkMode={isDarkMode}
+                              />
+                            </a>
+                          ))}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>
+                          <FontAwesomeIcon icon={faMoneyCheckAlt} /> TOTAL PAID BACK:
+                        </TableCell>
+                        <TableCell className="value">
+                          {convertToCurrency(loan.totalPaidBack, solPrice)}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>
+                          <FontAwesomeIcon icon={faChartLine} /> PROFIT:
+                        </TableCell>
+                        <TableCell
+                          className={`value ${
+                            loan.profit <= 0 ? 'profit-negative' : 'profit-positive'
+                          }`}
+                        >
+                          {convertToCurrency(loan.profit, solPrice)}
+                        </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            ))
+          ) : (
+            // Skeleton Loader for Carousel
+            [...Array(5)].map((_, index) => (
+              <div
+                key={`skeleton-carousel-item-${index}`}
+                className="carousel-item skeleton-item"
+              >
+                <div className="loan-details">
+                  <Skeleton variant="text" width="50%" height={30} style={{ marginBottom: '10px' }} />
+                  <Skeleton variant="circle" width={40} height={40} style={{ marginBottom: '10px' }} />
+                  <Skeleton variant="text" width="100%" height={20} style={{ marginBottom: '5px' }} />
+                  <Skeleton variant="text" width="80%" height={20} style={{ marginBottom: '5px' }} />
+                  <Skeleton variant="text" width="60%" height={20} style={{ marginBottom: '5px' }} />
+                  <Skeleton variant="rect" width="100%" height={50} style={{ marginBottom: '10px' }} />
+                </div>
+              </div>
+            ))
+          )}
+          {showMyLoansModal && isMobile && (
+            <MyLoansModal
+              modalIsOpen={showMyLoansModal}
+              closeModal={handleCloseMyLoansModal}
+            />
+          )}
+        </div>
       </div>
+    </MarketplaceContainer>
+  );
+};
 
-        </div >
-      </MarketplaceContainer >
-    );
-  }
-}
-
-const mapStateToProps = state => ({
+// ------------------ REDUX CONNECT ------------------
+const mapStateToProps = (state) => ({
   data: state.loanReducer.loanArray,
   prevLoans: state.loanReducer.previousLoans,
   pages: state.loanReducer.pages,
@@ -711,7 +712,7 @@ const mapStateToProps = state => ({
   isDarkMode: state.auth.isDarkMode,
   user: state.auth.user._id,
   isLowGraphics: state.auth.isLowGraphics,
-  solPrice: state.logic.solPrice
+  solPrice: state.logic.solPrice,
 });
 
 const mapDispatchToProps = {

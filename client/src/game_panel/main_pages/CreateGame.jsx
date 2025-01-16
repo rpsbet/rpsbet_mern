@@ -510,6 +510,7 @@ class CreateGame extends Component {
             selectedGameType={selectedGameType}
             ai_mode={this.props.user.ai_mode}
             user_id={this.props.user._id}
+            user={this.props.user}
             rank={getRank(this.props.user.totalWagered)}
             defaultBetAmounts={defaultBetAmounts}
             handleChange={this.handleChange}
@@ -541,6 +542,8 @@ class CreateGame extends Component {
             selectedGameType={selectedGameType}
             onChangeState={this.onChangeState}
             user_id={this.props.user._id}
+            user={this.props.user}
+            rank={getRank(this.props.user.totalWagered)}
             bet_amount={this.state.bet_amount}
             is_private={this.state.is_private}
             endgame_type={this.state.endgame_type}
@@ -688,7 +691,7 @@ class CreateGame extends Component {
             <div className="create-game-panel">
               <div className="game-page">
                 <div className="game-contents title">
-                  {/* {(this.state.step === 2 || this.state.step === 3 || this.state.step === 1) && (
+                  {(this.state.step === 2 || this.state.step === 3 || this.state.step === 1) && (
                     <Summary
                       bet_amount={this.state.bet_amount}
                       max_return={this.state.max_return}
@@ -709,7 +712,7 @@ class CreateGame extends Component {
                       winChance={this.state.winChance}
                       calcWinChance={this.props.calcWinChance}
                     />
-                  )} */}
+                  )}
                   {this.state.step === 1 && this.step1()}
                   {(this.state.step === 2) && (
                     <AdvancedSettings
@@ -933,7 +936,7 @@ const mapStateToProps = state => ({
   isDarkMode: state.auth.isDarkMode,
   isLowGraphics: state.auth.isLowGraphics,
   isDrawerOpen: state.auth.isDrawerOpen,
-  isFocused: state.auth.isFocused
+  isFocused: state.auth.isFocused,
 });
 
 const mapDispatchToProps = {
