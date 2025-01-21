@@ -88,7 +88,7 @@ const PreSummaryPanel = (props) => {
         </Box>
 
         <Box className="data-item">
-          <Typography variant="body2" className="label your-bet-amount">
+          <Typography variant="body2" className="label">
             <FontAwesomeIcon icon={faWater} style={{ marginRight: 8 }} />LIQUIDITY
           </Typography>
           <Tooltip title={

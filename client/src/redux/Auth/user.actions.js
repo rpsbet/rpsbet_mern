@@ -79,6 +79,11 @@ export const getUser = (is_reload, loadMore, filterType, sortType, search) => as
   }
 };
 
+export const showError = (message) => ({
+  type: MSG_ERROR,
+  payload: message
+});
+
 export const addBonus = () => async (dispatch) => {
   try {
     const { data } = await axios.post('/user/add-bonus');

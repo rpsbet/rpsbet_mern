@@ -10,11 +10,10 @@ function CustomizedSnackbar({ openSk, closeMsgBar, message, status }) {
   React.useEffect(() => {
     if (openSk) {
       enqueueSnackbar(
-        <Alert variant='text' severity={status} sx={{ width: '100%' }}>
-          {status === 'error' && <AlertTitle>Error</AlertTitle>}
-          {message}
-        </Alert>,
+          message,
         {
+          variant: status,
+          // key: new Date().getTime() + Math.random(),
           onClose: closeMsgBar,
           autoHideDuration: 3000,
         }

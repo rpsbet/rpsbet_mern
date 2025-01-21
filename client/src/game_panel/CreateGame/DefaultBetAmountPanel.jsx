@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { connect } from 'react-redux';
-import { Button, Tooltip, TextField } from '@mui/material';
-import ButtonGroup from '@mui/material/ButtonGroup';
+import { Box, ButtonGroup, Button, Tooltip, TextField } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { Info } from '@mui/icons-material';
 import { convertToCurrency } from '../../util/conversion';
@@ -20,6 +19,41 @@ const DefaultBetAmountPanel = ({
   const [isFocused, setIsFocused] = useState(false);
   const [isOther, setIsOther] = useState(false);
 
+  const theme = createTheme({
+    components: {
+      MuiInputLabel: { // Adjusting label styles
+        styleOverrides: {
+          root: {
+            color: isDarkMode ? 'white' : '#666', // Ensures label color
+          }
+        }
+      },
+      MuiOutlinedInput: { // Adjusting input field styles
+        styleOverrides: {
+          root: {
+            backgroundColor: isDarkMode ? '#2b2b2b' : 'white',
+            '& fieldset': {
+              borderColor: isDarkMode ? 'white' : '#666',
+            },
+            '&:hover fieldset': {
+              borderColor: isDarkMode ? 'white' : '#4caf50',
+            },
+            '&.Mui-focused fieldset': {
+              borderColor: isDarkMode ? '#4caf50' : '#4caf50',
+            },
+          },
+          input: {
+            color: isDarkMode ? 'white' : 'black', // Ensures input text color
+          }
+        }
+      }
+    },
+    palette: {
+      mode: isDarkMode ? 'dark' : 'light',
+    }
+  });
+
+
   const images = [
     '/img/icons/coins-xs.svg',
     '/img/icons/coins-s.svg',
@@ -28,6 +62,9 @@ const DefaultBetAmountPanel = ({
     '/img/icons/coins-xl.svg',
   ];
 
+  const handleInputChange = (field, value) => {
+    onChangeState({ [field]: value });
+  };
 
   const handleHalfXButtonClick = () => {
     const multipliedBetAmount = bet_amount * 0.5;
@@ -67,55 +104,56 @@ const DefaultBetAmountPanel = ({
   }, [bet_amount]);
 
   return (
-    <div className="default-bet-amount-panel" style={{ marginBottom: '30px' }}>
-      <h3 className="game-sub-title roll-tag">
-        Initial Buy-In (SOL)&nbsp;
-        <Tooltip
-          style={{ position: 'absolute', right: '20px' }}
-          title={'Liquidity / pot / pool of money for the game'}
-          placement="top"
-        >
-          <Info style={{ cursor: 'pointer', float: 'right' }} />
-        </Tooltip>
-      </h3>
-      <div className="bet-amounts">
-        {defaultBetAmounts.map((amount, index) => (
+    <ThemeProvider theme={theme}>
+      <div className="default-bet-amount-panel" style={{ marginBottom: '30px' }}>
+        <h3 className="game-sub-title roll-tag">
+          Initial Buy-In (SOL)&nbsp;
+          <Tooltip
+            style={{ position: 'absolute', right: '20px' }}
+            title={'Liquidity / pot / pool of money for the game'}
+            placement="top"
+          >
+            <Info style={{ cursor: 'pointer', float: 'right' }} />
+          </Tooltip>
+        </h3>
+        <div className="bet-amounts">
+          {defaultBetAmounts.map((amount, index) => (
+            <Button
+              color='secondary'
+              variant='outlined'
+              key={index}
+              className={!isOther && bet_amount === amount ? ' active' : ''}
+              onClick={() => {
+                setIsOther(false);
+                if (game_type === 'Quick Shoot') {
+                  onChangeState({
+                    bet_amount: amount,
+                    public_bet_amount: convertToCurrency((qs_game_type - 1) * amount),
+                    max_return: qs_game_type * amount,
+                  });
+                } else {
+                  onChangeState({
+                    bet_amount: amount,
+                    max_return: amount * 2,
+                  });
+                }
+              }}
+            >
+              <img width="20px" src={images[index]} alt={`Bet Amount: ${amount}`} />
+              {amount}
+            </Button>
+          ))}
           <Button
             color='secondary'
             variant='outlined'
-            key={index}
-            className={!isOther && bet_amount === amount ? ' active' : ''}
-            onClick={() => {
-              setIsOther(false);
-              if (game_type === 'Quick Shoot') {
-                onChangeState({
-                  bet_amount: amount,
-                  public_bet_amount: convertToCurrency((qs_game_type - 1) * amount),
-                  max_return: qs_game_type * amount,
-                });
-              } else {
-                onChangeState({
-                  bet_amount: amount,
-                  max_return: amount * 2,
-                });
-              }
-            }}
+            className={isOther ? 'other active' : 'other'}
+            onClick={() => setIsOther(true)}
           >
-            <img width="20px" src={images[index]} alt={`Bet Amount: ${amount}`} />
-            {amount}
+            Other
           </Button>
-        ))}
-        <Button
-          color='secondary'
-          variant='outlined'
-          className={isOther ? 'other active' : 'other'}
-          onClick={() => setIsOther(true)}
-        >
-          Other
-        </Button>
-      </div>
-      <div className={`edit-amount-panel ${isOther ? '' : 'hidden'}`}>
-        <div className="bet-amount">
+        </div>
+        <div className={`edit-amount-panel ${isOther ? '' : 'hidden'}`}>
+          <div className="bet-amount">
             <TextField color="secondary"
               type="text"
               name="betamount"
@@ -136,44 +174,29 @@ const DefaultBetAmountPanel = ({
                   setIsFocused(false);
                 },
                 endAdornment: (
-                  <ButtonGroup
-                    className={isFocused ? 'fade-in' : 'fade-out'}
-                  >
-                    <Button
-                      className='label'
-                      variant="outlined"
-                      color="secondary"
-                      onClick={handle2xButtonClick}
-                      style={{
-                        marginTop: '8px',
-                      }}
-                    >
-                      2x
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      className='label'
-                      color="secondary"
-                      onClick={handleHalfXButtonClick}
-                      style={{
-                        marginTop: '8px',
-                      }}
-                    >
-                      1/2x
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      className='label'
-
-                      color="secondary"
-                      onClick={handleMaxButtonClick}
-                      style={{
-                        marginTop: '8px',
-                      }}
-                    >
-                      Max
-                    </Button>
-                  </ButtonGroup>
+                  <Box sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    visibility: isFocused ? 'visible' : 'hidden',
+                    opacity: isFocused ? 1 : 0,
+                    transition: 'opacity 0.3s, visibility 0.3s',
+                    '& > *': {
+                      m: 1,
+                    },
+                  }}>
+                    <ButtonGroup variant="outlined" aria-label="Adjust bet amount">
+                      <Button onClick={handle2xButtonClick} color="secondary">
+                        2x
+                      </Button>
+                      <Button onClick={handleHalfXButtonClick} color="secondary">
+                        1/2x
+                      </Button>
+                      <Button onClick={handleMaxButtonClick} color="secondary">
+                        Max
+                      </Button>
+                    </ButtonGroup>
+                  </Box>
                 ),
               }}
               onChange={(e) => {
@@ -192,19 +215,19 @@ const DefaultBetAmountPanel = ({
                 }
               }}
             />
+          </div>
         </div>
-      </div>
-      <h3 className="game-sub-title roll-tag" style={{ marginTop: "30px" }}>
-        Tax&nbsp;
-        <Tooltip
-          style={{ position: 'absolute', right: '20px' }}
-          title={'The percentage of the bet amount taken as a fee or tax.'}
-          placement="top"
-        >
-          <Info style={{ cursor: 'pointer', float: 'right' }} />
-        </Tooltip>
-      </h3>
-      <div className="tax-input">
+        <h3 className="game-sub-title roll-tag" style={{ marginTop: "30px" }}>
+          Tax&nbsp;
+          <Tooltip
+            style={{ position: 'absolute', right: '20px' }}
+            title={'The percentage of the bet amount taken as a fee or tax.'}
+            placement="top"
+          >
+            <Info style={{ cursor: 'pointer', float: 'right' }} />
+          </Tooltip>
+        </h3>
+        <div className="tax-input">
           <TextField color="secondary"
             type="number"
             name="tax"
@@ -233,21 +256,18 @@ const DefaultBetAmountPanel = ({
             style={{
               width: '100%',
             }}
-            error={tax < 0 || tax > 33} // Adds error styling if the condition is met
+            error={tax < 0 || tax > 33}
+            helperText={
+              tax < 0
+                ? "Tax cannot be less than 0."
+                : tax > 33
+                  ? "Tax cannot be more than 33%."
+                  : ""
+            }
           />
-        {/* Display the error message if the value is out of range */}
-        {tax < 0 && (
-          <div style={{ color: 'red', fontSize: '0.875rem', marginTop: '4px' }}>
-            Tax cannot be less than 0.
-          </div>
-        )}
-        {tax > 33 && (
-          <div style={{ color: 'red', fontSize: '0.875rem', marginTop: '4px' }}>
-            Tax cannot be more than 33%.
-          </div>
-        )}
+        </div>
       </div>
-    </div>
+    </ThemeProvider>
   );
 };
 

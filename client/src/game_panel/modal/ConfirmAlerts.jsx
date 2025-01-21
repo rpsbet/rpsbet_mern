@@ -77,7 +77,6 @@ const showConfirm = (
 
             <div className="modal-footer">
               <Button
-                className="btn-submit"
                 onClick={() => {
                   callback();
                   onClose();
@@ -120,7 +119,6 @@ const showConfirmCall = (
 
             <div className="modal-footer">
               <Button
-                className="btn-submit"
                 onClick={() => {
                   callback();
                   onClose();

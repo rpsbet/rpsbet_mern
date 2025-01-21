@@ -4,7 +4,6 @@ const User = require('../../model/User');
 const Transaction = require('../../model/Transaction');
 const axios = require('axios');
 const moment = require('moment');
-const convertToCurrency = require('../../helper/util/conversion');
 
 const saveDocumentWithRetry = require('./retrySave');
 const socketController = require('../../socketController');
@@ -101,7 +100,7 @@ async function checkConfirmations(io) {
                     to: referralOwner._id,
                     amount: amountRaw * 0.05,
                     room: '',
-                    message: `Received ${convertToCurrency(amountRaw * 0.05)} in referral rewards.`
+                    message: `Received ${(amountRaw * 0.05)} in referral rewards.`
                   });
 
                   const notificationDataJ = {
@@ -133,7 +132,7 @@ async function checkConfirmations(io) {
                   to: user._id,
                   amount: amountRaw,
                   room: '',
-                  message: `Deposit successful, received ${convertToCurrency(amountRaw)}`
+                  message: `Deposit successful, received ${(amountRaw)}`
                 });
 
                 const notificationData = {
@@ -263,7 +262,7 @@ async function checkConfirmations(io) {
                   to: referralOwner._id,
                   amount: transaction.amount * 0.05,
                   room: '',
-                  message: `Received ${convertToCurrency(transaction.amount * 0.05)} in referral rewards.`
+                  message: `Received ${(transaction.amount * 0.05)} in referral rewards.`
                 });
     
                 const notificationDataJ = {
@@ -294,7 +293,7 @@ async function checkConfirmations(io) {
                 to: user._id,
                 amount: transaction.amount,
                 room: '',
-                message: `Deposit successful, received ${convertToCurrency(transaction.amount)}`
+                message: `Deposit successful, received ${(transaction.amount)}`
               });
     
               const notificationData = {

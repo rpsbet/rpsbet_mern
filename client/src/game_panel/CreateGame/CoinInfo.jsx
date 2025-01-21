@@ -11,38 +11,50 @@ const CoinInfo = ({
   image,
   isDarkMode,
 }) => {
+  const [inputError, setInputError] = useState('');
 
   const dispatch = useDispatch();
 
   const theme = createTheme({
-    overrides: {
-      MuiFormLabel: {
-        root: {
-          color: isDarkMode ? 'white' : '#666',
-          fontSize: '12px',
-        },
+    components: {
+      MuiInputLabel: { // Adjusting label styles
+        styleOverrides: {
+          root: {
+            color: isDarkMode ? 'white' : '#666', // Ensures label color
+          }
+        }
       },
-      MuiOutlinedInput: {
-        input: {
-          color: isDarkMode ? 'white' : 'black',
-        },
-        root: {
-          backgroundColor: isDarkMode ? '#2b2b2b' : 'white',
-          '& fieldset': {
-            borderColor: isDarkMode ? 'white' : '#666',
+      MuiOutlinedInput: { // Adjusting input field styles
+        styleOverrides: {
+          root: {
+            backgroundColor: isDarkMode ? '#2b2b2b' : 'white',
+            '& fieldset': {
+              borderColor: isDarkMode ? 'white' : '#666',
+            },
+            '&:hover fieldset': {
+              borderColor: isDarkMode ? 'white' : '#4caf50',
+            },
+            '&.Mui-focused fieldset': {
+              borderColor: isDarkMode ? '#4caf50' : '#4caf50',
+            },
           },
-          '&:hover fieldset': {
-            borderColor: isDarkMode ? 'white' : '#4caf50',
-          },
-          '&$focused fieldset': {
-            borderColor: isDarkMode ? '#4caf50' : '#4caf50',
-          },
-        },
-      },
+          input: {
+            color: isDarkMode ? 'white' : 'black', // Ensures input text color
+          }
+        }
+      }
     },
+    palette: {
+      mode: isDarkMode ? 'dark' : 'light',
+    }
   });
 
   const handleInputChange = (field, value) => {
+    if (value.length > 10) {
+      setInputError('10 character limit'); // Set error message for character limit
+    } else {
+      setInputError(''); // Clear error message when within limit
+    }
     onChangeState({ [field]: value });
   };
 
@@ -91,47 +103,27 @@ const CoinInfo = ({
       </h3>
       <ThemeProvider theme={theme}>
         {/* Coin Name */}
-         <TextField color="secondary" 
+        <TextField
+          color={inputError ? "error" : "secondary"}
           label="Name"
           variant="filled"
           fullWidth
           margin="normal"
           value={name}
           onChange={(e) => handleInputChange('name', e.target.value)}
-          onFocus={() => dispatch(setFocused(true))} // Dispatch on focus
-          onBlur={() => dispatch(setFocused(false))} // Dispatch on blur
-          inputProps={{
-            maxLength: 10,
+          onFocus={() => {
+            dispatch(setFocused(true));
+            setInputError(''); // Optionally clear error on focus
           }}
+          onBlur={() => {
+            dispatch(setFocused(false));
+            if (name.length > 10) {
+              setInputError('10 character limit'); // Ensure error remains if still over limit on blur
+            }
+          }}
+          error={!!inputError}
+          helperText={inputError}
         />
-
-        {/*  <TextField color="secondary" 
-          label="Ticker"
-          variant="filled"
-          fullWidth
-          margin="normal"
-          InputProps={{
-            startAdornment: (
-              <span
-                style={{
-                  fontSize: '12px',
-                  marginTop: '16px',
-                  marginRight: '8px',
-                  color: isDarkMode ? 'white' : '#666',
-                }}
-              >
-                $
-              </span>
-            ),
-          }}
-          inputProps={{
-            maxLength: 10,
-          }}
-          value={ticker}
-          onChange={(e) => handleInputChange('ticker', e.target.value)}
-          onFocus={() => dispatch(setFocused(true))}
-          onBlur={() => dispatch(setFocused(false))}
-        /> */}
 
         {/* Dropzone for Image Upload */}
         <div

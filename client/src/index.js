@@ -35,7 +35,7 @@ ReactDOM.render(
     <Provider store={store}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <SnackbarProvider maxSnack={3} anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }} autoHideDuration={3000}>
+        <SnackbarProvider maxSnack={10} anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }} autoHideDuration={3000}>
           <BrowserRouter>
             <Router history={history}>
               <App />

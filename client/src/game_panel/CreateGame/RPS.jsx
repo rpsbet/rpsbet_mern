@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { connect } from 'react-redux';
-import { Button, Tooltip, RadioGroup, IconButton, ButtonBase, Radio, FormControlLabel } from '@mui/material';
+import { Button, Tooltip, RadioGroup, IconButton, Box, Radio, FormControlLabel } from '@mui/material';
 import { Info } from '@mui/icons-material';
 import styled from 'styled-components';
 import DefaultBetAmountPanel from './DefaultBetAmountPanel';
@@ -101,48 +101,43 @@ const RPS = (props) => {
   return (
     <>
       {step === 1 && rps_game_type === 0 && (
-        <div className="game-info-panel">
-          <div className="" style={{ display: 'flex', flexDirection: 'column' }}>
-            <div>
-              <div style={{ marginBottom: '30px' }}>
-                <RadioGroup value={selectedGameType} onChange={handleChange}>
-                  <h3 className="game-sub-title roll-tag">
-                    Choose Game Mode&nbsp;
-                    <Tooltip
-                      style={{ position: 'absolute', right: '20px' }}
-                      title="Select a game-mode to use as collateral against your capital."
-                      placement="top"
-                    >
-                      <Info style={{ cursor: 'pointer', float: 'right' }} />
-                    </Tooltip>
-                  </h3>
-                  <StyledRadioGrid>
-                    {gameTypeList.map((gameType, index) => (
-                      <FormControlLabel
-                        key={index}
-                        value={gameType.short_name}
-                        control={<Radio icon={<div style={{ display: 'none' }} />} checkedIcon={<div style={{ display: 'none' }} />} />}
-                        label={
-                          <StyledProductCard
-                            id="rps-game-type-radio"
-                            isDarkMode={isDarkMode}
-                            className={`btn-game-type title btn-icon ${gameTypeStyleClass[gameType.short_name]} ${
-                              selectedGameType === gameType.short_name ? 'active' : ''
-                            }`}
-                          >
-                            <StyledProductImage
-                              src={`/img/gametype/icons/${gameType.short_name}.svg`}
-                              alt={gameType.game_type_name}
-                            />
-                            <span style={{ color: '#f9f9f9', marginTop: '0' }}>{gameType.game_type_name}</span>
-                          </StyledProductCard>
-                        }
-                      />
-                    ))}
-                  </StyledRadioGrid>
-                </RadioGroup>
-              </div>
-            </div>
+        <Box className="game-info-panel">
+          <Box className="glass-container" style={{ marginBottom: '30px', display: 'flex', flexDirection: 'column' }}>
+            <RadioGroup value={selectedGameType} onChange={handleChange}>
+              <h3 className="game-sub-title roll-tag">
+                Choose Game Mode&nbsp;
+                <Tooltip
+                  style={{ position: 'absolute', right: '20px' }}
+                  title="Select a game-mode to use as collateral against your capital."
+                  placement="top"
+                >
+                  <Info style={{ cursor: 'pointer', float: 'right' }} />
+                </Tooltip>
+              </h3>
+              <StyledRadioGrid>
+                {gameTypeList.map((gameType, index) => (
+                  <FormControlLabel
+                    key={index}
+                    value={gameType.short_name}
+                    control={<Radio icon={<div style={{ display: 'none' }} />} checkedIcon={<div style={{ display: 'none' }} />} />}
+                    label={
+                      <StyledProductCard
+                        id="rps-game-type-radio"
+                        isDarkMode={isDarkMode}
+                        className={`btn-game-type title btn-icon ${gameTypeStyleClass[gameType.short_name]} ${selectedGameType === gameType.short_name ? 'active' : ''
+                          }`}
+                      >
+                        <StyledProductImage
+                          src={`/img/gametype/icons/${gameType.short_name}.svg`}
+                          alt={gameType.game_type_name}
+                        />
+                        <span style={{ color: '#f9f9f9', marginTop: '0' }}>{gameType.game_type_name}</span>
+                      </StyledProductCard>
+                    }
+                  />
+                ))}
+              </StyledRadioGrid>
+            </RadioGroup>
 
             <GameSettingsPanel
               selectedStrategy={selectedStrategy}
@@ -161,8 +156,8 @@ const RPS = (props) => {
               game_type={game_type}
               defaultBetAmounts={defaultBetAmounts}
             />
-          </div>
-        </div>
+          </Box>
+        </Box>
       )}
     </>
   );

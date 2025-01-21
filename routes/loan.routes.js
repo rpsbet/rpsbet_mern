@@ -5,7 +5,6 @@ const express = require('express');
 const auth = require('../middleware/auth');
 const admin = require('../middleware/admin');
 const socket = require('../socketController.js');
-const convertToCurrency = require('../helper/util/conversion');
 const moment = require('moment');
 const saveDocumentWithRetry = require('../helper/util/retrySave');
 const check_access_time = require('../helper/util/checkAccessTime');
@@ -90,15 +89,15 @@ router.post('/create-and-lend', auth, async (req, res) => {
     });
 
     let loanMessage = loanType === 'FRACTIONAL'
-      ? `Fractional Loan created ${convertToCurrency(oldBalance)}`
-      : `Loan created ${convertToCurrency(parsedLoanAmount)}`;
+      ? `Fractional Loan created ${(oldBalance)}`
+      : `Loan created ${(parsedLoanAmount)}`;
 
     let notificationJ = new Notification({
       from: originalLender._id,
       to: currentUser._id,
       room: '',
       amount: parsedLoanAmount,
-      message: `Loan received ${convertToCurrency(parsedLoanAmount)}`,
+      message: `Loan received ${(parsedLoanAmount)}`,
       is_read: false
     });
 
@@ -271,8 +270,8 @@ router.post('/create', auth, async (req, res) => {
     currentUser.balance = updatedBalance;
 
     const notificationMessage = loanType === 'FRACTIONAL'
-      ? `Fractional loan created: ${convertToCurrency(oldBalance)}`
-      : `Loan created: ${convertToCurrency(parsedLoanAmount)}`;
+      ? `Fractional loan created: ${(oldBalance)}`
+      : `Loan created: ${(parsedLoanAmount)}`;
 
     const notification = new Notification({
       from: currentUser._id,
@@ -431,7 +430,7 @@ router.post('/payback', auth, async (req, res) => {
       to: currentUser._id,
       amount: -amount,
       room: '',
-      message: `Repayed ${convertToCurrency(amount)} loan${isLenderSameAsCurrentUser ? '' : ` to ${lender.username}`}`,
+      message: `Repayed ${(amount)} loan${isLenderSameAsCurrentUser ? '' : ` to ${lender.username}`}`,
       is_read: false
     });
 
@@ -466,7 +465,7 @@ router.post('/payback', auth, async (req, res) => {
         to: lender._id,
         amount: amount,
         room: '',
-        message: `Received ${convertToCurrency(amount)} loan repayment from ${currentUser.username}`,
+        message: `Received ${(amount)} loan repayment from ${currentUser.username}`,
         is_read: false
       });
 
@@ -518,7 +517,7 @@ router.post('/payback', auth, async (req, res) => {
 
     return res.json({
       success: true,
-      message: `Loan ${convertToCurrency(amount)} paid back successfully`,
+      message: `Loan ${(amount)} paid back successfully`,
       balance: currentUser.balance,
       newTransaction: newTransactionC,
     });
@@ -779,7 +778,7 @@ router.post('/lend', auth, async (req, res) => {
       to: currentUser._id,
       room: '',
       amount: parseFloat(responseText),
-      message: `Loan received ${convertToCurrency(parseFloat(responseText))}`,
+      message: `Loan received ${(parseFloat(responseText))}`,
       is_read: false
     });
 
@@ -787,7 +786,7 @@ router.post('/lend', auth, async (req, res) => {
       from: currentUser._id,
       to: originalLender._id,
       room: '',
-      message: `Loan to ${currentUser.username} ${convertToCurrency(parseFloat(responseText))}`,
+      message: `Loan to ${currentUser.username} ${(parseFloat(responseText))}`,
       is_read: false
     });
 
@@ -1000,7 +999,7 @@ router.post('/withdraw-loan', auth, async (req, res) => {
       from: currentUser._id,
       to: currentUser._id,
       room: '',
-      message: `Loan withdrawal ${convertToCurrency(amount)}`,
+      message: `Loan withdrawal ${(amount)}`,
       is_read: false
     });
 
@@ -1032,7 +1031,7 @@ router.post('/withdraw-loan', auth, async (req, res) => {
 
     return res.json({
       success: true,
-      message: `Loan successfully withdrawn, ${convertToCurrency(amount)} has been returned to your balance.`,
+      message: `Loan successfully withdrawn, ${(amount)} has been returned to your balance.`,
       balance: currentUser.balance,
       newTransaction: newTransaction
     });

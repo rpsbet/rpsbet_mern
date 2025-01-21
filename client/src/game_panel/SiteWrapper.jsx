@@ -1261,7 +1261,7 @@ class SiteWrapper extends Component {
             </div>
           </div>
         )}
-        <div className={`site_wrapper row ${isDarkMode ? 'dark_mode' : ''}`}>
+        <div className={`site_wrapper ${isDarkMode ? 'dark_mode' : ''}`}>
 
           <div className="game_header">
             <div className="main_header">

@@ -9,7 +9,6 @@ const RpsBetItem = require('../../model/RpsBetItem');
 const QsBetItem = require('../../model/QsBetItem');
 const Transaction = require('../../model/Transaction');
 const GameLog = require('../../model/GameLog');
-const convertToCurrency = require('./conversion');
 const socket = require('../../socketController');
 const moment = require('moment');
 const {
@@ -322,9 +321,9 @@ const addToQueue = async (req, bot = false) => {
 
           // if win
           if (
-            (bet_item.rps === 'R' && req.body.selected_rps == 'l') ||
-            (bet_item.rps === 'P' && req.body.selected_rps == 'l') ||
-            (bet_item.rps === 'S' && req.body.selected_rps == 'l')
+            (bet_item.rps === 'R' && req.body.selected_rps == 'P') ||
+            (bet_item.rps === 'P' && req.body.selected_rps == 'S') ||
+            (bet_item.rps === 'S' && req.body.selected_rps == 'R')
           ) {
             game_result = 1;
             newTransactionAmount += betAmount * 2 * ((100 - commission) / 100);
@@ -355,14 +354,14 @@ const addToQueue = async (req, bot = false) => {
             // send notification
             message.message =
               'Won ' +
-              convertToCurrency(req.body.bet_amount * 2) +
+              (req.body.bet_amount * 2) +
               ' in ' +
               roomInfo['game_type']['short_name'] +
               '-' +
               roomInfo['room_number'];
 
             // if draw
-          } else if (bet_item.rps === 'req.body.selected_rps') {
+          } else if (bet_item.rps === req.body.selected_rps) {
             game_result = 0;
 
             roomInfo['user_bet'] =
@@ -377,7 +376,7 @@ const addToQueue = async (req, bot = false) => {
 
             message.message =
               'Split ' +
-              convertToCurrency(req.body.bet_amount * 2) +
+              (req.body.bet_amount * 2) +
               ' in ' +
               roomInfo['game_type']['short_name'] +
               '-' +
@@ -435,13 +434,13 @@ const addToQueue = async (req, bot = false) => {
 
             message.message =
               'Lost ' +
-              convertToCurrency(req.body.bet_amount) +
+              (req.body.bet_amount) +
               ' in ' +
               roomInfo['game_type']['short_name'] +
               '-' +
               roomInfo['room_number'];
           }
-          newGameLog.winnings = convertToCurrency(req.body.bet_amount) * 2;
+          newGameLog.winnings = (req.body.bet_amount) * 2;
         }
         if (roomInfo['rps_game_type'] === 0) {
           winnings = betAmount * 2;
@@ -543,7 +542,7 @@ const addToQueue = async (req, bot = false) => {
         //     game_result = 1;
         //     message.message =
         //         'Won ' +
-        //         convertToCurrency(roomInfo['host_pr'] + roomInfo['bet_amount']) +
+        //         (roomInfo['host_pr'] + roomInfo['bet_amount']) +
         //         ' in ' +
         //         roomInfo['game_type']['short_name'] +
         //         '-' +
@@ -726,7 +725,7 @@ const addToQueue = async (req, bot = false) => {
 
           message.message =
             'Lost ' +
-            convertToCurrency(req.body.bet_amount) +
+            (req.body.bet_amount) +
             ' in ' +
             roomInfo['game_type']['short_name'] +
             '-' +
@@ -765,9 +764,7 @@ const addToQueue = async (req, bot = false) => {
 
           message.message =
             'Won ' +
-            convertToCurrency(
-              betAmount / parseFloat(roomInfo['qs_game_type'] - 1) + betAmount,
-            ) +
+            betAmount / parseFloat(roomInfo['qs_game_type'] - 1) + betAmount +
             ' in ' +
             roomInfo['game_type']['short_name'] +
             '-' +
@@ -858,7 +855,7 @@ const addToQueue = async (req, bot = false) => {
         //     game_result = 1;
         //     message.message =
         //         'Won ' +
-        //         convertToCurrency(roomInfo['host_pr'] + roomInfo['bet_amount']) +
+        //         (roomInfo['host_pr'] + roomInfo['bet_amount']) +
         //         ' in ' +
         //         roomInfo['game_type']['short_name'] +
         //         '-' +
@@ -933,7 +930,7 @@ const addToQueue = async (req, bot = false) => {
         notification.to = roomInfo['creator']._id;
         notification.message =
           'Hosting ' +
-          convertToCurrency(newTransactionC.amount) +
+          (newTransactionC.amount) +
           ' auto-payout in ' +
           roomInfo.game_type.short_name +
           '-' +
@@ -1025,7 +1022,7 @@ const addToQueue = async (req, bot = false) => {
           notification.to = host.host;
           notification.message =
             'Co-Hosting ' +
-            convertToCurrency(amountForHost) +
+            (amountForHost) +
             ' auto-payout in ' +
             roomInfo.game_type.short_name +
             '-' +

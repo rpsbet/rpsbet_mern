@@ -20,7 +20,7 @@ const GameLogSchema = new Schema({
     },
     bet_amount: {
         type: Number,
-        default: 0
+        default: 0.0
     },
     selected_rps: {
         type: String,
@@ -36,7 +36,7 @@ const GameLogSchema = new Schema({
     },
     commission: {
         type: Number,
-        default: 0
+        default: 0.0
     },
     game_result: {
         type: Number,
@@ -44,21 +44,19 @@ const GameLogSchema = new Schema({
     },
     winnings: {
         type: Number,
-        default: 0
+        default: 0.0
     },
-
     endgame_amount: {
         type: Number,
-        default: 0
+        default: 0.0
     },
-
     host_pr: {
         type: Number,
-        default: 0
+        default: 0.0
     },
     user_bet: {
         type: Number,
-        default: 0
+        default: 0.0
     },
     status: {
         type: String,
@@ -87,7 +85,7 @@ const GameLogSchema = new Schema({
         },
         rank: {
             type: Number,
-            default: 0
+            default: 0.0
         },
         avatar: {
             type: String,
@@ -99,11 +97,11 @@ const GameLogSchema = new Schema({
         },
         share: {
             type: Number,
-            default: 0
+            default: 0.0
         },
         initial_stake: {
             type: Number,
-            default: 0
+            default: 0.0
         },
     }],
 });

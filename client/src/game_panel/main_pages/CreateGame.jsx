@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { Snackbar, Alert, AlertTitle, Button, Tabs, Tab, Drawer } from '@mui/material';
+import { Button, Tabs, Tab, Drawer } from '@mui/material';
 import LoadingOverlay from 'react-loading-overlay';
 import Lottie from 'react-lottie';
 import Footer from './Footer';
@@ -13,7 +13,7 @@ import animationData from '../LottieAnimations/cat-place-bet.json';
 import RPS from '../CreateGame/RPS';
 import QuickShoot from '../CreateGame/QuickShoot';
 import history from '../../redux/history';
-import { toggleDrawer } from '../../redux/Auth/user.actions';
+import { toggleDrawer, showError } from '../../redux/Auth/user.actions';
 import {
   createRoom,
   setGameMode,
@@ -51,7 +51,6 @@ class CreateGame extends Component {
       is_mobile: window.innerWidth < 1024 ? true : false,
       selectedMobileTab: 'live_games',
       step: 1,
-      showError: false,
       alertTitle: "",
       alertMessage: "",
       child_step: 1,
@@ -304,57 +303,48 @@ class CreateGame extends Component {
       selectedStrategy,
     } = this.state;
 
-    const { isDarkMode } = this.props;
-
-    const showAlert = (title, message) => {
-      this.setState({
-        showError: true,
-        alertTitle: title,
-        alertMessage: message,
-      });
-      console.log("title, message", title, message, this.state.showError)
-    };
+    const { showError } = this.props;
 
     if (step === 1) {
       if (parseFloat(bet_amount) <= 0 || isNaN(parseFloat(bet_amount))) {
-        showAlert("Invalid Bet", "YOU DIDN'T BET (CAT) SHIT!!!");
+        showError("Invalid Bet", "YOU DIDN'T BET (CAT) SHIT!!!");
         return;
       }
       if (parseFloat(bet_amount) < 0.01) {
-        showAlert("Minimum Buy-in", "MEOWNIMUM BUY-IN IS 0.01 SOL!");
+        showError("Minimum Buy-in", "MEOWNIMUM BUY-IN IS 0.01 SOL!");
         return;
       }
       if (name == null || name.trim() === '') {
-        showAlert("Missing Name", "ADD A NAME DUMBASS!");
+        showError("Missing Name", "ADD A NAME DUMBASS!");
         return;
       }
       if (image == null || image.trim() === '') {
-        showAlert("Missing Image", "ADD AN IMAGE DUMBASS!");
+        showError("Missing Image", "ADD AN IMAGE DUMBASS!");
         return;
       }
       if (bet_amount > balance) {
-        showAlert("Insufficient Funds", "NOT ENUFF FUNDS AT THIS MEOWMENT");
+        showError("Insufficient Funds", "NOT ENUFF FUNDS AT THIS MEOWMENT");
         return;
       }
 
       const list = game_mode === 'Quick Shoot' || game_mode === 'QS' ? qs_list : rps_list;
       if (selectedStrategy === 'Hidden Markov' && list.length < 3) {
-        showAlert("Training Data Insufficient", "PURR-HAPS IT WOULD BE WISE TO AT LEAST 3 RUNS FOR AI TRAINING DATA");
+        showError("Training Data Insufficient", "PURR-HAPS IT WOULD BE WISE TO AT LEAST 3 RUNS FOR AI TRAINING DATA");
         return;
       }
     }
 
     if (step === 2) {
       if (isNaN(endgame_amount)) {
-        showAlert("Invalid Input", "IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!");
+        showError("Invalid Input", "IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!");
         return;
       }
       if (endgame_type && endgame_amount < parseFloat(bet_amount)) {
-        showAlert("Invalid Endgame Amount", "CANNOT BE LOWER THAN BANKROLL");
+        showError("Invalid Endgame Amount", "CANNOT BE LOWER THAN BANKROLL");
         return;
       }
       if (is_private && !room_password) {
-        showAlert("Missing Password", "SET THE PASSWORD TO JOIN YOUR GAME!");
+        showError("Missing Password", "SET THE PASSWORD TO JOIN YOUR GAME!");
         return;
       }
 
@@ -582,7 +572,7 @@ class CreateGame extends Component {
             </Button>
           )}
 
-          {this.state.step === 3 && (
+          {this.state.step === 2 && (
             <>
               <div style={{ position: 'relative', marginLeft: '-37.5%' }}>
                 <Button id="btn_bet" onClick={this.onCreateRoom}>
@@ -605,21 +595,14 @@ class CreateGame extends Component {
               </div>
             </>
           )}
-          {this.state.step < 3 && (
+          {this.state.step < 2 && (
             <Button id="btn_next" color='error' onClick={this.onNextButtonClicked}>
-              Next&nbsp;<span className="roll-tag">[Enter]</span>
+              Next
             </Button>
           )}
         </div>
       </>
     );
-  };
-  handleCloseSnackbar = (_, reason) => {
-    // Prevent auto-hide if user interacts with the snackbar
-    if (reason === 'clickaway') {
-      return;
-    }
-    this.setState({ showError: false });
   };
 
   render() {
@@ -694,44 +677,7 @@ class CreateGame extends Component {
             <div className="create-game-panel">
               <div className="game-page">
                 <div className="game-contents title">
-                  {/* {(this.state.step === 2 || this.state.step === 3 || this.state.step === 1) && (
-                    <Summary
-                      bet_amount={this.state.bet_amount}
-                      max_return={this.state.max_return}
-                      endgame_type={this.state.endgame_type}
-                      selectedStrategy={selectedStrategy}
-                      endgame_amount={this.state.endgame_amount}
-                      is_private={this.state.is_private}
-                      step={this.state.step}
-                      description={this.state.description}
-                      solPrice={solPrice}
-                      aveMultiplier={this.state.aveMultiplier}
-                      calcAveMultiplier={this.props.calcAveMultiplier}
-                      child_step={this.state.child_step}
-                      rps_game_type={this.state.rps_game_type}
-                      qs_game_type={this.state.qs_game_type}
-                      game_mode={this.state.game_mode}
-                      public_bet_amount={this.state.public_bet_amount}
-                      winChance={this.state.winChance}
-                      calcWinChance={this.props.calcWinChance}
-                    />
-                  )} */}
-                  <Snackbar
-                    open={showError}
-                    autoHideDuration={3000} // Adjust auto-hide duration as needed
-                    onClose={this.handleCloseSnackbar}
-                    anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-                  >
-                    <Alert
-                      severity="error"
-                      onClose={this.handleCloseSnackbar}
-                      variant="contained"
-                      sx={{ width: '100%' }} // Ensures the alert fills the Snackbar
-                    >
-                      <AlertTitle>{alertTitle}</AlertTitle>
-                      {alertMessage}
-                    </Alert>
-                  </Snackbar>
+                  
                   {this.state.step === 1 && this.step1()}
                   {(this.state.step === 2) && (
                     <AdvancedSettings
@@ -964,6 +910,7 @@ const mapDispatchToProps = {
   getMyHistory,
   getGameTypeList,
   getMyChat,
+  showError,
   toggleDrawer
 };
 

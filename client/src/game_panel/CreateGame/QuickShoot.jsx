@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { connect } from 'react-redux';
-import { Button, Tooltip, FormControlLabel, RadioGroup, Radio } from '@mui/material';
+import { Button, Tooltip, FormControlLabel, RadioGroup, Radio, Box } from '@mui/material';
 import { Info } from '@mui/icons-material';
 import styled from 'styled-components';
 import GameSettingsPanel from './GameSettingsPanel';
@@ -144,9 +144,9 @@ const QuickShoot = (props) => {
   return (
     <>
       {step === 1 && (
-        <div className="game-info-panel">
-          <div className="">
-            <div style={{ marginBottom: '30px' }}>
+        <Box className="game-info-panel">
+          <Box className="glass-container">
+            <Box style={{ marginBottom: '30px' }}>
               <RadioGroup value={selectedGameType} onChange={props.handleChange}>
                 <h3 className="game-sub-title roll-tag">
                   Choose Game Mode&nbsp;
@@ -189,7 +189,7 @@ const QuickShoot = (props) => {
                   ))}
                 </StyledRadioGrid>
               </RadioGroup>
-            </div>
+            </Box>
 
             <h3 className="game-sub-title roll-tag">
               Choose a Game Type&nbsp;
@@ -201,7 +201,7 @@ const QuickShoot = (props) => {
                 <Info style={{ cursor: 'pointer', float: 'right' }} />
               </Tooltip>
             </h3>
-            <div className="qs-game-type-panel" style={{ textAlign: 'center', marginBottom: '30px' }}>
+            <Box className="qs-game-type-panel" style={{ textAlign: 'center', marginBottom: '30px' }}>
               {[2, 3, 4, 5].map((i) => (
                 <Button
                   variant='outlined'
@@ -220,7 +220,7 @@ const QuickShoot = (props) => {
                   {i}x
                 </Button>
               ))}
-            </div>
+            </Box>
 
             <GameSettingsPanel
               selectedStrategy={selectedStrategy}
@@ -241,8 +241,8 @@ const QuickShoot = (props) => {
               game_type={game_type}
               defaultBetAmounts={defaultBetAmounts}
             />
-          </div>
-        </div>
+          </Box>
+        </Box>
       )}
     </>
   );

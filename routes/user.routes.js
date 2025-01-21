@@ -12,7 +12,6 @@ const auth = require('../middleware/auth');
 const admin = require('../middleware/admin');
 const socket = require('../socketController');
 const saveDocumentWithRetry = require('../helper/util/retrySave');
-const convertToCurrency = require('../helper/util/conversion');
 const check_access_time = require('../helper/util/checkAccessTime');
 // User Model
 const User = require('../model/User');
@@ -456,7 +455,7 @@ router.post('/deposit', auth, async (req, res) => {
       from: userId,
       to: userId,
       room: '',
-      message: `You deposited ${convertToCurrency(parsedAmount)} into your vault`
+      message: `You deposited ${(parsedAmount)} into your vault`
     });
 
     const notificationData = {
@@ -542,7 +541,7 @@ router.post('/withdraw', auth, async (req, res) => {
       from: userId,
       to: userId,
       room: '',
-      message: `You withdrew ${convertToCurrency(parsedAmount)} from your vault`
+      message: `You withdrew ${(parsedAmount)} from your vault`
     });
 
     const notificationData = {
@@ -761,11 +760,11 @@ router.post('/add-bonus', auth, async (req, res) => {
       from: user._id,
       to: user._id,
       room: '',
-      message: `You received a bonus of ${convertToCurrency(number)}`,
+      message: `You received a bonus of ${(number)}`,
     });
 
     const notificationData = {
-      message: `You received a bonus of ${convertToCurrency(number)}`,
+      message: `You received a bonus of ${(number)}`,
       username: user.username,
       avatar: user.avatar,
       accessory: user.accessory,

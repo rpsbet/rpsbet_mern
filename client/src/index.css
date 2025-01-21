@@ -224,6 +224,11 @@ a {
   border-radius: 0.3em;
 }
 
+.create-game-panel .game-contents {
+  max-height: 600px;
+  overflow: scroll;
+}
+
 .game-contents .game-info-panel button {
   margin-left: 5px !important;
   margin-right: 10px;
@@ -1554,8 +1559,12 @@ table td.amount.red {
 
 .pre-summary-panel {
   display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #f2f2f20a;
+  margin-top: 0.25rem;
   color: #4f5660;
-  padding: 8px 0;
+  padding: 1.5em;
   border-top-left-radius: 0.3em;
   border-top-right-radius: 0.3em;
   width: 100%;
@@ -1579,15 +1588,6 @@ table td.amount.red {
   padding: 8px 16px;
 }
 
-.pre-summary-panel {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.9rem !important;
-  background-color: #f2f2f20a;
-  margin-top: 0.25rem;
-}
-
 .pre-summary-panel.title {
   overflow-x: auto !important;
 }
@@ -1596,7 +1596,8 @@ table td.amount.red {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  height: 100%;
+  justify-content: space-between;
   text-align: center;
   max-width: 100px;
   min-width: 150px !important;
@@ -1605,7 +1606,6 @@ table td.amount.red {
 .pre-summary-panel .label {
   font-weight: bold;
   font-size: 0.65em;
-  padding-left: 25px;
   white-space: nowrap;
   padding-top: 0px;
 }
@@ -1767,13 +1767,6 @@ input {
   /* padding-top: 15px; */
 }
 
-.game-page .game-contents p {
-  font-size: 13px;
-  line-height: 14px;
-  color: #747f8d;
-  margin-top: 14px;
-}
-
 .game-page .game-contents .game-info-panel {
   display: flex;
   flex-direction: column;
@@ -1871,17 +1864,6 @@ input {
 
 }
 
-.game-page .game-contents .game-info-panel .edit-amount-panel input,
-#betamount {
-  height: 40px;
-  line-height: 32px;
-  font-size: 16px;
-  font-weight: 600;
-  padding: 2px 10px;
-  background-color: transparent;
-  transition: all 0.2s ease-in-out;
-  outline: 0;
-}
 
 svg#delete:hover {
   transform: scale(1.1);
@@ -3677,11 +3659,6 @@ circle {
   position: relative;
 }
 
-.pre-summary-panel {
-  display: flex;
-  overflow-y: hidden;
-}
-
 .pre-summary-panel__inner {
   display: flex;
   flex-wrap: nowrap;
@@ -3996,11 +3973,6 @@ div.table .table-row .table-cell img.avatar,
 
 .btn-send-message:hover {
   height: 31px !important;
-}
-
-.game_wrapper {
-  z-index: 1;
-  width: 100%;
 }
 
 .contents_wrapper {
@@ -4382,18 +4354,6 @@ div.table .table-row .table-cell img.avatar,
 
 .modal-footer button {
  width: 100%;
-}
-
-.modal-footer button.btn-submit {
-  margin: 30px 0 10px;
-  width: 100%;
-  height: 55px !important;
-  background-image: linear-gradient(to top, #ff4040, #ff0000);
-  color: white;
-  border-radius: 0.25em;
-  padding: 0 20px;
-  font-weight: 600;
-  border: 0;
 }
 
 .modal-footer p {

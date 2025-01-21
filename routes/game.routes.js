@@ -24,7 +24,6 @@ const RpsBetItem = require('../model/RpsBetItem');
 const QsBetItem = require('../model/QsBetItem');
 const { convertGameLogToHistoryStyle } = require('../helper/util/convertGameLogToHistoryStyle');
 const avatarUtils = require('../helper/util/getRank');
-const convertToCurrency = require('../helper/util/conversion');
 const executeBet2 = require('../helper/util/betExecutor2');
 const executeBet3 = require('../helper/util/betExecutor3');
 const saveDocumentWithRetry = require('../helper/util/retrySave');
@@ -2140,7 +2139,7 @@ router.post('/unstake', auth, async (req, res) => {
 
     roomInfo.hosts.forEach(host => {
       const isCurrentUserHost = req.user._id === host.host;
-      const message = `${isCurrentUserHost ? "You" : req.user.username} jeeted ${convertToCurrency(stakeAmount)} in ${gameType.short_name}-${roomInfo.room_number}, your new Share is ${(host.share).toFixed(2)}%`;
+      const message = `${isCurrentUserHost ? "You" : req.user.username} jeeted ${(stakeAmount)} in ${gameType.short_name}-${roomInfo.room_number}, your new Share is ${(host.share).toFixed(2)}%`;
 
       const notificationData = {
         _id: userId,
@@ -2862,7 +2861,7 @@ router.post('/tip', auth, async (req, res) => {
       from: req.user._id,
       to: userToTip._id,
       room: '',
-      message: `Tipped you ${convertToCurrency(tipAmount)} ${tipMessage}`,
+      message: `Tipped you ${(tipAmount)} ${tipMessage}`,
       amount: tipAmount,
       is_read: false
     });
@@ -2871,7 +2870,7 @@ router.post('/tip', auth, async (req, res) => {
       from: userToTip,
       to: req.user._id,
       room: '',
-      message: `You Tipped ${convertToCurrency(tipAmount)} ${tipMessage}`,
+      message: `You Tipped ${(tipAmount)} ${tipMessage}`,
       amount: -tipAmount,
       is_read: false
     });

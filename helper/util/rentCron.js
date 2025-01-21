@@ -7,7 +7,6 @@ const SystemSetting = require('../../model/SystemSetting');
 const moment = require('moment');
 const Notification = require('../../model/Notification');
 const saveDocumentWithRetry = require('./retrySave');
-const convertToCurrency = require('./conversion');
 
 let socketio = null;
 
@@ -152,7 +151,7 @@ async function checkRentalPayments(io) {
                     from: currentUser,
                     to: originalOwner,
                     room: '',
-                    message: `Received ${convertToCurrency(amountToDeduct)} Rental Payment from ${item.productName}`,
+                    message: `Received ${(amountToDeduct)} Rental Payment from ${item.productName}`,
                     is_read: false
                   })
 
@@ -172,7 +171,7 @@ async function checkRentalPayments(io) {
                     to: currentUser,
                     room: '',
                     amount: -amountToDeduct,
-                    message: `Paid ${convertToCurrency(amountToDeduct)} Rental Payment for ${item.productName}`,
+                    message: `Paid ${(amountToDeduct)} Rental Payment for ${item.productName}`,
                     is_read: false
                   })
 
