@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { connect } from 'react-redux';
 import Modal from 'react-modal';
 import MyProductPage from '../../admin_panel/app/ProductPages/ProductSerchPage/MyProductPage';
-import { Button } from '@material-ui/core';
+import {
+  Button
+} from '@mui/material';
 import AttachMoney from '@mui/icons-material/AttachMoney';
 import { warningMsgBar, infoMsgBar } from '../../redux/Notification/notification.actions';
 import MarketplaceModal from './MarketplaceModal';
@@ -55,7 +57,7 @@ function InventoryModal(props) {
             <FontAwesomeIcon icon={faBox} className="mr-2" />
             &nbsp;Inventory
           </h2>
-          <Button className="btn-close title" onClick={closeModal}>
+          <Button className="btn-close" variant='text' color='error' onClick={closeModal}>
             ×
           </Button>
         </div>
@@ -67,7 +69,7 @@ function InventoryModal(props) {
           </div>
         </div>
         <div className="modal-footer">
-          <Button className="btn-back" onClick={handleOpenMarketplaceModal}>
+          <Button variant='contained' color='secondary' onClick={handleOpenMarketplaceModal}>
             BUY More &nbsp;
             <AttachMoney />
           </Button>

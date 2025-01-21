@@ -15,7 +15,6 @@ const Notification = require('../model/Notification');
 const User = require('../model/User');
 const Transaction = require('../model/Transaction');
 
-
 router.post('/create-and-lend', auth, async (req, res) => {
   try {
     const { loan_amount, loan_period, apy, lender } = req.body;

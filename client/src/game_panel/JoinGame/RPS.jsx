@@ -24,7 +24,7 @@ import {
   Switch,
   IconButton,
   Tooltip,
-} from '@material-ui/core';
+} from '@mui/material';
 import BetAmountInput from '../../components/BetAmountInput';
 import Lottie from 'react-lottie';
 import {
@@ -534,7 +534,7 @@ class RPS extends Component {
          
           <div
             className="game-info-panel"
-            style={{ position: 'relative', zIndex: 10 }}
+            style={{ position: 'relative' }}
           >
             
             <div className="guesses">
@@ -631,7 +631,6 @@ class RPS extends Component {
                   {startedPlaying && (
                     <div
                       id="rps-radio"
-                      style={{ zIndex: 1 }}
                       className={this.props.ai_mode !== 'Skill-issue' ? '' : ''}
                     >
 
@@ -688,7 +687,7 @@ class RPS extends Component {
                     </div>
                   )}
                   {!startedPlaying ? (
-                    <h3 style={{ zIndex: 9 }} className="game-sub-title roll-tag">Select: R - P - S! &nbsp;<Tooltip
+                    <h3 className="game-sub-title roll-tag">Select: R - P - S! &nbsp;<Tooltip
                       style={{ position: "absolute", right: "20px", marginBottom: "30px" }}
                       title={'Play against the AI, at the same time, train your AI.'}
                       placement="top"
@@ -697,7 +696,7 @@ class RPS extends Component {
                     </Tooltip></h3>
                   ) : (
 
-                    <h3 style={{ zIndex: 9 }} className="game-sub-title roll-tag fade-out">Select: R - P - S! &nbsp;<Tooltip
+                    <h3 className="game-sub-title roll-tag fade-out">Select: R - P - S! &nbsp;<Tooltip
                       style={{ position: "absolute", right: "20px", marginBottom: "30px" }}
                       title={'Play against the AI, at the same time, train your AI.'}
                       placement="top"
@@ -705,11 +704,12 @@ class RPS extends Component {
                       <Info style={{ cursor: "pointer", float: "right" }} />
                     </Tooltip></h3>
                   )}
-                  <div id="rps-radio" style={{ zIndex: 1, marginTop: "45px" }}>
+                  <div id="rps-radio" style={{ marginTop: "45px" }}>
                     {options.map(({ classname, selection }, index) => (
                       <Button
                         key={index}
                         variant="contained"
+                        color='secondary'
                         id={`rps-${classname}`}
                         className={`rps-option ${classname}${joinerRpsValueAtLastIndex === selection ? ' active' : ''}${bgColorChanged && betResult === -1 && joinerRpsValueAtLastIndex === selection ? ' lose-bg' : ''}${betResult === 0 && joinerRpsValueAtLastIndex === selection ? ' draw-bg' : ''}${betResult === 1 && joinerRpsValueAtLastIndex === selection ? ' win-bg' : ''}${this.props.is_betting ? ' disabled' : ''}`} // Add 'disabled' class when this.props.betting is true
                         onClick={() => {
@@ -726,6 +726,8 @@ class RPS extends Component {
                   {creator_id && user_id && creator_id.toString() === user_id.toString() ? (
                     <div className='host-controls'>
                       <Button
+                      variant='outlined'
+                      color='secondary'
                         onClick={this.handleBotClick}
                         className="hover-text-button"
                       >

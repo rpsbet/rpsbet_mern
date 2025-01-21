@@ -19,7 +19,7 @@ import {
   TableCell,
   Checkbox,
   IconButton,
-} from '@material-ui/core';
+} from '@mui/material';
 import {
   MusicNote,
   MusicOff,
@@ -99,7 +99,7 @@ const SettingsModal = ({
       <div className={isDarkMode ? 'dark_mode' : ''}>
         <div className="modal-header">
           <h2 className="modal-title title">Settings</h2>
-          <Button className="btn-close title" onClick={closeModal}>
+          <Button className="btn-close" variant='text' color='error'  onClick={closeModal}>
             ×
           </Button>
         </div>

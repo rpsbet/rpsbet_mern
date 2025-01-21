@@ -1,6 +1,6 @@
 import React from 'react';
-import { Slider } from '@material-ui/core/';
-import IconButton from '@material-ui/core/IconButton';
+import { Slider } from '@mui/material/';
+import IconButton from '@mui/material/IconButton';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
 

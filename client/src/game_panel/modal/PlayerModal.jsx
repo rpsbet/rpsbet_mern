@@ -40,8 +40,10 @@ import {
   TableBody,
   TableCell,
   TableRow,
-  Typography
-} from '@material-ui/core';
+  Typography,
+  Skeleton,
+  Box
+} from '@mui/material';
 
 import { Warning } from '@mui/icons-material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -49,7 +51,6 @@ import { faMoneyBill, faUser, faCog, faEnvelope, faCoins, faRobot } from '@forta
 
 import Avatar from '../../components/Avatar';
 import StatisticsForm from '../../admin_panel/app/Customer/EditCustomerPage/StatisticsForm';
-import { Skeleton } from '@material-ui/lab';
 
 Modal.setAppElement('#root');
 
@@ -473,7 +474,7 @@ function PlayerModal(props) {
               top: '0',
               left: '0',
               height: '100vh',
-              zIndex: '99'
+              zIndex: '3'
             }
           }}
         />
@@ -507,7 +508,7 @@ function PlayerModal(props) {
                   </>
                 )}
               </h2>
-              <Button className="btn-close title" onClick={handleCloseModal}>
+              <Button className="btn-close" variant='text' color='error'  onClick={handleCloseModal}>
                 ×
               </Button>
             </div>
@@ -530,7 +531,6 @@ function PlayerModal(props) {
                         position: 'fixed',
                         left: '15px',
                         top: '65px',
-                        zIndex: '9'
                       }}
                     >
                       <span>
@@ -601,20 +601,18 @@ function PlayerModal(props) {
 
               {/* Statistics / Skeleton */}
               {!username ? (
-                <div className="user-statistics">
+                <Box className="user-statistics" sx={{ width: '100%' }}>
                   <Skeleton
-                    variant="rect"
-                    width="100%"
-                    height={300}
-                    style={{ marginBottom: '20px', borderRadius: '8px' }}
+                    variant="rectangular"
+                    sx={{ width: '100%', height: 300, marginBottom: 2, borderRadius: 1 }}
                   />
                   {[...Array(5)].map((_, idx) => (
-                    <div style={{ marginBottom: '10px' }} key={idx}>
-                      <Skeleton variant="text" width={`${30 + idx * 10}%`} height={20} />
-                      <Skeleton variant="text" width={`${70 - idx * 10}%`} height={20} />
-                    </div>
+                    <Box sx={{ marginBottom: 1 }} key={idx}>
+                      <Skeleton variant="text" sx={{ width: `${30 + idx * 10}%`, height: 20 }} />
+                      <Skeleton variant="text" sx={{ width: `${70 - idx * 10}%`, height: 20 }} />
+                    </Box>
                   ))}
-                </div>
+                </Box>
               ) : (
                 <div className="user-statistics">
                   <StatisticsForm
@@ -730,7 +728,7 @@ function PlayerModal(props) {
                   <FontAwesomeIcon icon={faMoneyBill} className="mr-2" />
                   ENTER TIP AMOUNT
                 </h2>
-                <Button className="btn-close title" onClick={handleCloseModal}>
+                <Button className="btn-close" variant='text' color='error'  onClick={handleCloseModal}>
                   ×
                 </Button>
               </div>
@@ -738,7 +736,7 @@ function PlayerModal(props) {
                 <div className="modal-content-wrapper">
                   <div className="modal-content-panel">
                     <div className="input-amount">
-                      <TextField
+                       <TextField color="secondary" 
                         label="Amount"
                         value={tipAmount || 0}
                         type="number"
@@ -783,7 +781,7 @@ function PlayerModal(props) {
                     </Table>
                     <div className="input-amount">
                       <Typography>Add Message?</Typography>
-                      <TextField
+                       <TextField color="secondary" 
                         label="Message"
                         value={message}
                         onChange={handleMessage}
@@ -797,10 +795,10 @@ function PlayerModal(props) {
                 </div>
               </div>
               <div className="modal-footer">
-                <Button className="btn-submit" onClick={handleSendTip}>
+                <Button variant='contained' color='error' onClick={handleSendTip}>
                   Send Tip
                 </Button>
-                <Button className="btn-back" onClick={handleCloseTipModal}>
+                <Button variant='contained' color='secondary' onClick={handleCloseTipModal}>
                   Cancel
                 </Button>
               </div>

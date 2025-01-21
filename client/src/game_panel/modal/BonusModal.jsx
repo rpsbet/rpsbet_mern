@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Modal from 'react-modal';
 import { connect } from 'react-redux';
-import { withStyles } from '@material-ui/core/styles';
+import { styled } from '@mui/material/styles';
 import Moment from 'moment';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStar, faClock, faSyncAlt } from '@fortawesome/free-solid-svg-icons';
 import { addBonus, getUser } from '../../redux/Auth/user.actions';
-import { Button } from '@material-ui/core';
+import Button from '@mui/material/Button';
 import { convertToCurrency } from '../../util/conversion';
 
 Modal.setAppElement('#root');
@@ -28,19 +28,60 @@ const customStyles = {
   },
 };
 
-const styles = (theme) => ({
-  root: {
-    width: '150px',
-    padding: '8px 15px',
-    fontSize: '16px',
-    background: '#191a1d',
+const ModalHeader = styled('div')(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  padding: '16px',
+  backgroundColor: theme.palette.background.paper,
+  borderBottom: `1px solid ${theme.palette.divider}`,
+}));
+
+const ModalTitle = styled('h2')(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  color: theme.palette.text.primary,
+}));
+
+const CloseButton = styled(Button)(({ theme }) => ({
+  minWidth: 'unset',
+  padding: '0',
+  color: theme.palette.text.primary,
+  '&:hover': {
+    backgroundColor: 'transparent',
   },
-  dropdownStyle: {},
-});
+}));
+
+const ModalBody = styled('div')(({ theme }) => ({
+  background: 'radial-gradient(rgb(50 16 206), #a000ff)',
+  overflowY: 'scroll',
+  overflowX: 'hidden',
+  padding: '16px',
+  borderRadius: '8px',
+}));
+
+const SpinResult = styled('div')(({ theme, showFlash }) => ({
+  textAlign: 'center',
+  marginTop: '20px',
+  padding: '10px',
+  borderRadius: '4px',
+  backgroundColor: showFlash ? theme.palette.success.light : 'transparent',
+  transition: 'background-color 0.3s ease',
+}));
+
+const SpinButton = styled(Button)(({ theme }) => ({
+  marginTop: '20px',
+  padding: '10px 20px',
+  fontSize: '16px',
+  backgroundColor: '#191a1d',
+  color: '#fff',
+  '&:hover': {
+    backgroundColor: '#333',
+  },
+}));
 
 function BonusModal(props) {
   const {
-    classes,
     modalIsOpen,
     closeModal,
     isDarkMode,
@@ -53,9 +94,7 @@ function BonusModal(props) {
     gameSounds,
   } = props;
 
-  // -----------------------------
-  // State
-  // -----------------------------
+  // State Hooks
   const [spinning, setSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
   const [landedNumber, setLandedNumber] = useState(null);
@@ -64,22 +103,18 @@ function BonusModal(props) {
     window.innerWidth <= 600 ? '100px' : '120px'
   );
 
-  // -----------------------------
-  // Lifecycle (componentDidMount / componentWillUnmount)
-  // -----------------------------
+  // Handlers
+  const handleResize = useCallback(() => {
+    setTranslateDistance(window.innerWidth <= 600 ? '100px' : '120px');
+  }, []);
+
+  // Effect Hook for Window Resize
   useEffect(() => {
     window.addEventListener('resize', handleResize);
     return () => {
       window.removeEventListener('resize', handleResize);
     };
-  }, []);
-
-  // -----------------------------
-  // Handlers
-  // -----------------------------
-  const handleResize = useCallback(() => {
-    setTranslateDistance(window.innerWidth <= 600 ? '100px' : '120px');
-  }, []);
+  }, [handleResize]);
 
   const spinWheel = useCallback(async () => {
     if (spinning) return;
@@ -87,7 +122,7 @@ function BonusModal(props) {
     // Random rotation between 360° and 720°
     const randomRotation = Math.floor(Math.random() * 360) + 360;
     setSpinning(true);
-    setRotation(randomRotation);
+    setRotation(rotation + randomRotation);
     setLandedNumber(null);
     setShowFlash(false);
 
@@ -95,7 +130,7 @@ function BonusModal(props) {
     if (!isMuted || !gameSounds) {
       const audio = new Audio('/sounds/wheel.mp3');
       audio.play().catch(() => {
-        // Catch the play() promise rejection if user hasn't interacted with the page
+        // Handle play() promise rejection if user hasn't interacted with the page
       });
     }
 
@@ -110,20 +145,18 @@ function BonusModal(props) {
 
     // Remove flash effect after a short delay
     setTimeout(() => setShowFlash(false), 1500);
-  }, [spinning, isMuted, gameSounds, addBonus, getUser]);
+  }, [spinning, isMuted, gameSounds, addBonus, getUser, rotation]);
 
   const formatNumber = (number) => {
     if (number >= 1000000) {
-      return number / 1000000 + 'M';
+      return (number / 1000000).toFixed(2) + 'M';
     } else if (number >= 1000) {
-      return number / 1000 + 'K';
+      return (number / 1000).toFixed(2) + 'K';
     }
-    return number;
+    return number.toFixed(2);
   };
 
-  // -----------------------------
   // Bonus Timing / Wheel Content
-  // -----------------------------
   const numbers = [0.04, 0, 0.01, 0.03, 0.3, 0, 0.2, 0.1, 0.05, 0.02];
 
   const lastBonus = user.last_bonus ? new Date(user.last_bonus) : null;
@@ -145,14 +178,15 @@ function BonusModal(props) {
       isOpen={modalIsOpen}
       onRequestClose={closeModal}
       style={customStyles}
-      contentLabel="Settings Modal"
+      contentLabel="Bonus Modal"
     >
       <div className={isDarkMode ? 'dark_mode' : ''}>
-        <div className="modal-header">
-          <h2 className="modal-title title">
+        {/* Modal Header */}
+        <ModalHeader>
+          <ModalTitle>
             <FontAwesomeIcon icon={faStar} />
             &nbsp;CORN WHEEL
-          </h2>
+          </ModalTitle>
           <img
             style={{
               transform: 'rotate(167deg) scaleY(-1) translate(10px, 7px) rotate(5deg)',
@@ -162,20 +196,13 @@ function BonusModal(props) {
             src="../img/icons/corn.svg"
             alt="corn"
           />
-
-          <Button className="btn-close title" onClick={closeModal}>
+          <CloseButton onClick={closeModal}>
             ×
-          </Button>
-        </div>
+          </CloseButton>
+        </ModalHeader>
 
-        <div
-          className="modal-body edit-modal-body"
-          style={{
-            background: 'radial-gradient(rgb(50 16 206), #a000ff)',
-            overflowY: 'scroll',
-            overflowX: 'hidden',
-          }}
-        >
+        {/* Modal Body */}
+        <ModalBody>
           <div className="modal-content-wrapper">
             <div className="modal-content-panel">
               <div
@@ -196,7 +223,7 @@ function BonusModal(props) {
                 <h5 style={{ color: '#ff8500' }}>{remainingTime}</h5>
               </div>
 
-              {/* The wheel */}
+              {/* The Wheel */}
               <div
                 className="wheel"
                 style={{
@@ -223,13 +250,14 @@ function BonusModal(props) {
             </div>
           </div>
 
+          {/* Spin Result or Spin Button */}
           {landedNumber !== null ? (
-            <div className={`spin-result ${showFlash ? 'flash' : ''}`}>
+            <SpinResult showFlash={showFlash}>
               {landedNumber} SOL ({convertToCurrency(landedNumber, solPrice)})
-            </div>
+            </SpinResult>
           ) : (
-            <Button
-              className="spin-button"
+            <SpinButton
+              variant="contained"
               onClick={spinWheel}
               disabled={spinning || totalWagered < 9410}
             >
@@ -251,9 +279,9 @@ function BonusModal(props) {
                   />
                 </>
               )}
-            </Button>
+            </SpinButton>
           )}
-        </div>
+        </ModalBody>
       </div>
     </Modal>
   );
@@ -279,7 +307,5 @@ const mapDispatchToProps = {
   getUser,
 };
 
-// Keep using connect + withStyles to preserve existing logic
-export default connect(mapStateToProps, mapDispatchToProps)(
-  withStyles(styles)(BonusModal)
-);
+// Connect and Export the Component
+export default connect(mapStateToProps, mapDispatchToProps)(BonusModal);

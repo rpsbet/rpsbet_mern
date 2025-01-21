@@ -6,7 +6,7 @@ import {
   closeGamePasswordModal,
 } from '../../redux/Notification/notification.actions';
 import { checkGamePassword } from '../../redux/Logic/logic.actions';
-import { Button, TextField } from '@material-ui/core';
+import { Button, TextField } from '@mui/material';
 import { alertModal } from '../modal/ConfirmAlerts';
 
 Modal.setAppElement('#root');
@@ -64,7 +64,7 @@ function GamePasswordModal(props) {
         <div className="modal-body alert-body password-modal-body">
           <div className={`modal-icon result-icon-password`} />
           <h5>PASSWORD REQUIRED</h5>
-          <TextField
+           <TextField color="secondary" 
             id="game_password"
             variant="filled"
             value={password}
@@ -72,10 +72,10 @@ function GamePasswordModal(props) {
             className="form-control"
             style={{ marginBottom: '15px' }}
           />
-          <Button className="btn-submit" onClick={handleOkClick}>
+          <Button variant='contained' color='error' onClick={handleOkClick}>
             Continue Bet
           </Button>
-          <Button className="btn-back" onClick={handleCancelClick}>
+          <Button variant='contained' color='secondary' onClick={handleCancelClick}>
             Cancel
           </Button>
         </div>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { connect } from 'react-redux';
-import Button from '@material-ui/core/Button'; // Import Material-UI Button
+import Button from '@mui/material/Button'; // Import Material-UI Button
 import { showCookieConsent } from '../redux/Auth/user.actions'; // Adjust import as needed
 
 const CookieConsent = ({ showCookieConsent }) => {
@@ -21,7 +21,7 @@ const CookieConsent = ({ showCookieConsent }) => {
 
           <Button
             variant="contained"
-            color="primary"
+            color='error'
             onClick={handleAccept}
           >
             Accept Cookies

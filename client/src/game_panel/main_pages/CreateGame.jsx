@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { Button, Tabs, Tab, Drawer } from '@material-ui/core';
+import { Snackbar, Alert, AlertTitle, Button, Tabs, Tab, Drawer } from '@mui/material';
 import LoadingOverlay from 'react-loading-overlay';
 import Lottie from 'react-lottie';
 import Footer from './Footer';
@@ -51,6 +51,9 @@ class CreateGame extends Component {
       is_mobile: window.innerWidth < 1024 ? true : false,
       selectedMobileTab: 'live_games',
       step: 1,
+      showError: false,
+      alertTitle: "",
+      alertMessage: "",
       child_step: 1,
       game_type: 1,
       game_mode: 'RPS',
@@ -115,7 +118,6 @@ class CreateGame extends Component {
         game_mode: 'Quick Shoot',
       });
     }
-    this.IsAuthenticatedReroute();
     const gameTypeName = this.props.match.params.game_type_name || 'RPS';
 
     this.props.getGameTypeList();
@@ -225,12 +227,6 @@ class CreateGame extends Component {
     }
   }
 
-  IsAuthenticatedReroute = () => {
-    if (!this.props.auth) {
-      history.push('/');
-    }
-  };
-
   onSkipButtonClicked = () => {
     if ((this.state.step === 2)) {
       this.setState({
@@ -310,56 +306,55 @@ class CreateGame extends Component {
 
     const { isDarkMode } = this.props;
 
-    const alertAndReturn = (message) => {
-      alertModal(isDarkMode, message);
-      return;
+    const showAlert = (title, message) => {
+      this.setState({
+        showError: true,
+        alertTitle: title,
+        alertMessage: message,
+      });
+      console.log("title, message", title, message, this.state.showError)
     };
 
     if (step === 1) {
       if (parseFloat(bet_amount) <= 0 || isNaN(parseFloat(bet_amount))) {
-        alertAndReturn("YOU DIDN'T BET (CAT) SHIT!!!");
+        showAlert("Invalid Bet", "YOU DIDN'T BET (CAT) SHIT!!!");
         return;
       }
       if (parseFloat(bet_amount) < 0.01) {
-        alertAndReturn("MEOWNIMUM BUY-IN IS 0.01 SOL!");
+        showAlert("Minimum Buy-in", "MEOWNIMUM BUY-IN IS 0.01 SOL!");
         return;
       }
       if (name == null || name.trim() === '') {
-        alertAndReturn("ADD A NAME DUMBASS!");
+        showAlert("Missing Name", "ADD A NAME DUMBASS!");
         return;
       }
-
-
       if (image == null || image.trim() === '') {
-        alertAndReturn("ADD AN IMAGE DUMBASS!");
+        showAlert("Missing Image", "ADD AN IMAGE DUMBASS!");
         return;
       }
       if (bet_amount > balance) {
-        alertAndReturn('NOT ENUFF FUNDS AT THIS MEOWMENT');
+        showAlert("Insufficient Funds", "NOT ENUFF FUNDS AT THIS MEOWMENT");
         return;
       }
 
       const list = game_mode === 'Quick Shoot' || game_mode === 'QS' ? qs_list : rps_list;
-      if (
-        selectedStrategy === 'Hidden Markov' &&
-        list.length < 3
-      ) {
-        alertAndReturn('PURR-HAPS IT WOULD BE WISE TO AT LEAST 3 RUNS FOR AI TRAINING DATA');
+      if (selectedStrategy === 'Hidden Markov' && list.length < 3) {
+        showAlert("Training Data Insufficient", "PURR-HAPS IT WOULD BE WISE TO AT LEAST 3 RUNS FOR AI TRAINING DATA");
         return;
       }
     }
 
     if (step === 2) {
       if (isNaN(endgame_amount)) {
-        alertAndReturn('IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!');
+        showAlert("Invalid Input", "IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!");
         return;
       }
       if (endgame_type && endgame_amount < parseFloat(bet_amount)) {
-        alertAndReturn('CANNOT BE LOWER THAN BANKROLL');
+        showAlert("Invalid Endgame Amount", "CANNOT BE LOWER THAN BANKROLL");
         return;
       }
       if (is_private && !room_password) {
-        alertAndReturn('SET THE PASSWORD TO JOIN YOUR GAME!');
+        showAlert("Missing Password", "SET THE PASSWORD TO JOIN YOUR GAME!");
         return;
       }
 
@@ -367,10 +362,12 @@ class CreateGame extends Component {
         this.setState({ endgame_type: false });
       }
     }
+
     if (this.state.step !== 3) {
       this.setState({ step: step + 1 });
     }
   };
+
 
   onCreateRoom = async () => {
     const saveImage = async (imageSrc) => {
@@ -570,7 +567,7 @@ class CreateGame extends Component {
     const { isLowGraphics } = this.props;
     return (
       <>
-        <div className="action-panel" style={{ display: "flex", justifyContent: "space-between", width: "100%", bottom: "20%", zIndex: 999 }} >
+        <div className="action-panel" style={{ display: "flex", justifyContent: "space-between", width: "100%", bottom: "20%" }} >
           {
             this.state.step === 1 ? (
               <span></span>
@@ -609,7 +606,7 @@ class CreateGame extends Component {
             </>
           )}
           {this.state.step < 3 && (
-            <Button id="btn_next" onClick={this.onNextButtonClicked}>
+            <Button id="btn_next" color='error' onClick={this.onNextButtonClicked}>
               Next&nbsp;<span className="roll-tag">[Enter]</span>
             </Button>
           )}
@@ -617,11 +614,17 @@ class CreateGame extends Component {
       </>
     );
   };
-
+  handleCloseSnackbar = (_, reason) => {
+    // Prevent auto-hide if user interacts with the snackbar
+    if (reason === 'clickaway') {
+      return;
+    }
+    this.setState({ showError: false });
+  };
 
   render() {
     const { solPrice } = this.props;
-    const { selectedStrategy } = this.state;
+    const { selectedStrategy, showError, alertTitle, alertMessage } = this.state;
     return (
       <LoadingOverlay
         className="custom-loading-overlay"
@@ -643,6 +646,7 @@ class CreateGame extends Component {
           </div>
         }
       >
+
         <div
           className="main-game"
           style={{
@@ -651,18 +655,17 @@ class CreateGame extends Component {
               : '100%'
           }}
         >
-          {((this.state.is_mobile && this.state.selectedMobileTab === 'chat') ||
-            !this.state.is_mobile) && (
-              <Drawer
-                className="mat-chat"
-                style={{ display: this.props.isDrawerOpen ? 'flex' : 'none' }}
-                variant="persistent"
-                anchor="left"
-                open={this.props.isDrawerOpen}
-              >
-                <ChatPanel />
-              </Drawer>
-            )}
+          {(this.state.is_mobile && this.state.selectedMobileTab === 'chat') && (
+            <Drawer
+              className="mat-chat"
+              style={{ display: this.props.isDrawerOpen ? 'flex' : 'none' }}
+              variant="persistent"
+              anchor="left"
+              open={this.props.isDrawerOpen}
+            >
+              <ChatPanel />
+            </Drawer>
+          )}
           {!this.state.is_mobile &&
             (!this.state.selectedMobileTab === 'live_games' ||
               !this.state.selectedMobileTab === 'my_games') && (
@@ -691,7 +694,7 @@ class CreateGame extends Component {
             <div className="create-game-panel">
               <div className="game-page">
                 <div className="game-contents title">
-                  {(this.state.step === 2 || this.state.step === 3 || this.state.step === 1) && (
+                  {/* {(this.state.step === 2 || this.state.step === 3 || this.state.step === 1) && (
                     <Summary
                       bet_amount={this.state.bet_amount}
                       max_return={this.state.max_return}
@@ -712,7 +715,23 @@ class CreateGame extends Component {
                       winChance={this.state.winChance}
                       calcWinChance={this.props.calcWinChance}
                     />
-                  )}
+                  )} */}
+                  <Snackbar
+                    open={showError}
+                    autoHideDuration={3000} // Adjust auto-hide duration as needed
+                    onClose={this.handleCloseSnackbar}
+                    anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+                  >
+                    <Alert
+                      severity="error"
+                      onClose={this.handleCloseSnackbar}
+                      variant="contained"
+                      sx={{ width: '100%' }} // Ensures the alert fills the Snackbar
+                    >
+                      <AlertTitle>{alertTitle}</AlertTitle>
+                      {alertMessage}
+                    </Alert>
+                  </Snackbar>
                   {this.state.step === 1 && this.step1()}
                   {(this.state.step === 2) && (
                     <AdvancedSettings
@@ -910,7 +929,6 @@ class CreateGame extends Component {
           <Footer
             className="footer"
             open={this.props.isDrawerOpen}
-            style={{ marginLeft: this.props.isDrawerOpen ? '270px' : '0' }}
           />
         </div>
       </LoadingOverlay>

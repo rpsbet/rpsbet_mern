@@ -147,7 +147,7 @@ const Gravestone = styled(Box)(({ theme }) => ({
   zIndex: 1,
   '&:hover': {
     filter: 'sepia(1)',
-    zIndex: 10,
+    zIndex: 3,
     animation: `${pulse} 0.5s`,
   },
 }));
@@ -870,26 +870,26 @@ const CountdownPage = ({
                     </a>
                   </Box>
 
-                  <Box className="countdown" sx={{ marginTop: '10px' }}>
-                    <a className="link" href="https://blog.rps.game/">
-                      Blog
-                    </a>
+                  <Box
+                    sx={{
+                      marginTop: '10px',
+                      '& a': {
+                        textDecoration: 'none',
+                        color: 'inherit',
+                        cursor: 'pointer',
+                        '&:hover': {
+                          textDecoration: 'underline',
+                        },
+                      },
+                    }}
+                  >
+                    <a href="https://blog.rps.game/">Blog</a>
                     &nbsp;✗&nbsp;
-                    <a
-                      className="link"
-                      id="terms"
-                      onClick={handleOpenTermsModal}
-                      style={{ cursor: 'pointer' }}
-                    >
+                    <a id="terms" onClick={handleOpenTermsModal}>
                       Terms
                     </a>
                     &nbsp;✗&nbsp;
-                    <a
-                      className="link"
-                      id="privacy"
-                      onClick={handleOpenPrivacyModal}
-                      style={{ cursor: 'pointer' }}
-                    >
+                    <a id="privacy" onClick={handleOpenPrivacyModal}>
                       Privacy
                     </a>
                   </Box>
@@ -1023,7 +1023,21 @@ const CountdownPage = ({
                 <FontAwesomeIcon icon={faTiktok} />
               </a>
             </Box>
-            <Box className="countdown" sx={{ marginTop: '10px' }}>
+            <Box
+              sx={{
+                marginTop: '10px',
+                '& .link': {
+                  textDecoration: 'none',
+                  color: 'inherit',
+                  '&:hover': {
+                    textDecoration: 'underline',
+                  },
+                },
+                '& a': {
+                  cursor: 'pointer',
+                },
+              }}
+            >
               <a className="link" href="https://blog.rps.game/">
                 Blog
               </a>
@@ -1032,7 +1046,6 @@ const CountdownPage = ({
                 className="link"
                 id="terms"
                 onClick={handleOpenTermsModal}
-                style={{ cursor: 'pointer' }}
               >
                 Terms
               </a>
@@ -1041,7 +1054,6 @@ const CountdownPage = ({
                 className="link"
                 id="privacy"
                 onClick={handleOpenPrivacyModal}
-                style={{ cursor: 'pointer' }}
               >
                 Privacy
               </a>

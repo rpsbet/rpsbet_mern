@@ -1,68 +1,48 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { Provider } from 'react-redux';
+import { BrowserRouter, Router } from 'react-router-dom';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import { SnackbarProvider } from 'notistack';
+import store from './redux/store';
+import App from './App';
+import history from './redux/history';
+import MessageBar from './components/MessageBar';
 import './index.css';
 import './dark.css';
 
-import { Provider } from 'react-redux';
-import store from './redux/store';
-
-import { BrowserRouter, Router } from 'react-router-dom';
-
-// Updated imports for MUI v5
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline'; // For CSS baseline
-
-import { styleColor } from './Styles/styleThem';
-import App from './App';
-import GlobalStyle from './Styles/global.styles';
-import history from './redux/history';
-import MessageBar from './components/MessageBar'; // Check if spelling is correct
-import buttonHoverSound from './main-select.mp3'; // Replace with the actual path
-import typingSound from './typing-sound.mp3'; // Replace with the actual path
-
-const theme = createTheme({
+// Define a function to create theme based on mode
+const getTheme = (mode) => createTheme({
   palette: {
-    mode: 'dark', // updated for v5 from type: 'dark'
-    primary: { main: styleColor.primary.main },
-    secondary: { main: styleColor.secondary.main },
-    error: { main: styleColor.error.main },
+    mode: mode,
+    primary: { main: '#3949ab' },  // Example primary color
+    secondary: { main: '#f50057' },  // Example secondary color
+    error: { main: '#f44336' },  // Example error color
+    background: {
+      default: mode === 'dark' ? '#400068' : '#f4f6f8',  // Conditional background color
+    },
   },
 });
 
-const shouldPlaySound = () => {
-  const state = store.getState();
-  const { isMuted, clickSounds } = state.auth;
-  return !isMuted && clickSounds; // Updated condition based on your comment
-};
+// Use a state or a global context to toggle between light and dark mode, here for example purposes
+const currentMode = 'dark';  // Change to 'light' as needed
 
-const playSound = () => {
-  if (shouldPlaySound()) {
-    const audio = new Audio(buttonHoverSound);
-    audio.volume = 0.03;
-    audio.play();
-  }
-};
-
-const playSoundTyping = () => {
-  if (shouldPlaySound()) {
-    const audio = new Audio(typingSound);
-    audio.volume = 0.03;
-    audio.play();
-  }
-};
+const theme = getTheme(currentMode);
 
 ReactDOM.render(
   <React.Fragment>
     <Provider store={store}>
-      <GlobalStyle />
       <ThemeProvider theme={theme}>
-        <CssBaseline /> {/* Ensures consistent baseline styles */}
-        <BrowserRouter>
-          <Router history={history}>
-            <App />
-          </Router>
-          <MessageBar />
-        </BrowserRouter>
+        <CssBaseline />
+        <SnackbarProvider maxSnack={3} anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }} autoHideDuration={3000}>
+          <BrowserRouter>
+            <Router history={history}>
+              <App />
+              <MessageBar />
+            </Router>
+          </BrowserRouter>
+        </SnackbarProvider>
       </ThemeProvider>
     </Provider>
   </React.Fragment>,

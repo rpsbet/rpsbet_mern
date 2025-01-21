@@ -4,7 +4,7 @@ import Moment from 'moment';
 import { getTransactionCandles, unstake, addNewTransaction, addNewCandle, getMyGames } from '../../redux/Logic/logic.actions';
 import { setBalance } from '../../redux/Auth/user.actions'
 import Chart from "react-apexcharts";
-import { Box, Tooltip, Typography, Button, TextField, TableHead, Table, TableBody, TableCell, TableRow, ButtonGroup } from "@material-ui/core";
+import { Box, Tooltip, Typography, Button, TextField, TableHead, Table, TableBody, TableCell, TableRow, ButtonGroup } from "@mui/material";
 import { ShowChartOutlined, TrendingUpOutlined, TrendingDownOutlined } from "@mui/icons-material";
 import { convertToCurrency } from '../../util/conversion';
 import Avatar from '../../components/Avatar';
@@ -67,7 +67,6 @@ function CoHostModal({
 
   useEffect(() => {
     if (selectedRow?._id && has_joined && !input_only) {
-      console.log(selectedRow?._id, has_joined, !input_only)
       dispatch(getTransactionCandles({ roomId: selectedRow._id, timeFrame }));
     }
   }, [dispatch, selectedRow?._id, timeFrame]);
@@ -160,12 +159,12 @@ function CoHostModal({
     tooltip: {
       custom: function ({ series, seriesIndex, dataPointIndex, w }) {
         const candle = chartData[dataPointIndex];
-  
+
         if (!candle || !candle.y || candle.y.length !== 4) {
           console.error("Invalid candle data:", candle);
           return '';
         }
-  
+
         const [open, high, low, close] = candle.y;
         return `
         <div class="chart-tooltip">
@@ -198,7 +197,7 @@ function CoHostModal({
       mode: isDarkMode ? 'dark' : 'light',
     },
   };
-  
+
   // Populate chart data and remove gaps between candles
   if (transactionCandles && transactionCandles.length > 0) {
     transactionCandles.forEach((candle, index) => {
@@ -208,7 +207,7 @@ function CoHostModal({
         startTime: candle.startTime, // Keep startTime for tooltip and reference
       });
     });
-  
+
     // Validate the candles for debugging
     chartData.forEach((candle, index) => {
       if (!candle.y || candle.y.length !== 4) {
@@ -218,7 +217,7 @@ function CoHostModal({
   } else {
     console.warn("No candles available to display.");
   }
-  
+
   // X-axis labelling logic
   chartOptions.xaxis.labels.formatter = (value, timestamp) => {
     if (value === 0) {
@@ -374,7 +373,10 @@ function CoHostModal({
             <ShowChartOutlined className="mr-2" />
             Trade
           </h2>
-          <Button className="btn-close title" onClick={handleClose}>
+          <Button
+            className="btn-close" variant='text' color='error'
+            onClick={handleClose}
+          >
             ×
           </Button>
         </div>
@@ -392,7 +394,7 @@ function CoHostModal({
         >
           {/* Timeframe Buttons */}
           {!input_only && !has_joined && (
-            <div className="glass-container" style={{ marginBottom: "15px", paddingBottom: "10px" }}>
+            <div className="" style={{ marginBottom: "15px", paddingBottom: "10px" }}>
 
               <Box
                 sx={{
@@ -501,60 +503,46 @@ function CoHostModal({
             {/* Tabs */}
             {!has_joined && (
               <>
-                <div style={{ display: "flex", justifyContent: "center", marginBottom: "5px" }}>
-                  <Button
-                    onClick={() => handleTabChange("PUMP")}
-                    variant={selectedTab === "PUMP" ? "contained" : "outlined"}
-                    color="secondary"
-                    style={{
-                      marginRight: "10px",
-                      width: "100%",
-                      padding: "10px 15px",
-                      textTransform: "none",
-                      backgroundColor: selectedTab === "PUMP" ? "#28a745" : "transparent",
-                      color: selectedTab === "PUMP" ? "#fff" : "#28a745",
-                    }}
-                  >
-                    PUMP
-                    <TrendingUpOutlined
-                      style={{
-                        color: "#fff",
-                        marginLeft: "8px",
-                        background: "linear-gradient(357deg, #00ff17, #28a745)",
-                        padding: "2px",
-                        borderRadius: "50%",
-                        fontSize: "18px",
-                      }}
-                    />
-                  </Button>
+                <Box sx={{ display: "flex", justifyContent: "center", marginBottom: "5px" }}>
+      {/* PUMP Button */}
+      <Button
+        onClick={() => handleTabChange("PUMP")}
+        variant={selectedTab === "PUMP" ? "contained" : "outlined"}
+        color={selectedTab === "PUMP" ? "success" : "inherit"} // Use success color when active
+        sx={{
+          marginRight: "10px",
+          flexGrow: 1,
+          textTransform: "none",
+          borderColor: selectedTab !== "PUMP" ? "#4caf50" : "", // Enhance border color when not active
+          color: selectedTab !== "PUMP" ? "#4caf50" : "", // Enhance text color when not active
+        }}
+      >
+        PUMP
+        <TrendingUpOutlined sx={{
+          marginLeft: "8px",
+          color: selectedTab === "PUMP" ? "#fff" : "#4caf50" // Enhance icon color when not active
+        }} />
+      </Button>
 
-                  <Button
-                    onClick={() => handleTabChange("JEET")}
-                    variant={selectedTab === "JEET" ? "contained" : "outlined"}
-                    color="secondary"
-                    style={{
-                      width: "100%",
-                      padding: "10px 15px",
-                      borderRadius: "0.3em",
-                      textTransform: "none",
-                      backgroundColor: selectedTab === "JEET" ? "#ff0000" : "transparent", // Red background when selected
-                      color: selectedTab === "JEET" ? "#fff" : "#ff0000", // White text when selected
-                      // boxShadow: selectedTab === "JEET" ? "0px 4px 12px rgba(255, 0, 0, 0.2)" : "none",
-                    }}
-                  >
-                    JEET
-                    <TrendingDownOutlined
-                      style={{
-                        color: "#fff",
-                        marginLeft: "4px",
-                        background: "linear-gradient(357deg, #ff0000, rgb(244 38 38))",
-                        padding: "2px",
-                        borderRadius: "50%",
-                        fontSize: "18px",
-                      }}
-                    />
-                  </Button>
-                </div>
+      {/* JEET Button */}
+      <Button
+        onClick={() => handleTabChange("JEET")}
+        variant={selectedTab === "JEET" ? "contained" : "outlined"}
+        color="error" // Always use error color for JEET
+        sx={{
+          flexGrow: 1,
+          textTransform: "none",
+          borderColor: selectedTab !== "JEET" ? "#f44336" : "", // Enhance border color when not active
+          color: selectedTab !== "JEET" ? "#f44336" : "", // Enhance text color when not active
+        }}
+      >
+        JEET
+        <TrendingDownOutlined sx={{
+          marginLeft: "8px",
+          color: selectedTab === "JEET" ? "#fff" : "#f44336" // Keep icon color consistent
+        }} />
+      </Button>
+    </Box>
                 <div
                   style={{
                     display: "flex",
@@ -566,8 +554,8 @@ function CoHostModal({
                 >
                   <div className="bet-amount" style={{ width: "100%" }}>
                     {/* Button Group Positioned Above */}
-                    <div
-                      style={{
+                    <Box
+                      sx={{
                         display: "flex",
                         marginBottom: "5px",
                         width: "100%",
@@ -575,34 +563,42 @@ function CoHostModal({
                       }}
                     >
                       <Button
-                        variant="contained"
-                        color="primary"
+                        variant="outlined"
+                        color="secondary"
                         onClick={() => handleButtonClick(0.01)} // Set coHostAmount to 0.01
-                        style={{ flex: 1, padding: "7.5px" }}
+                        sx={{
+                          flex: 1,
+                          padding: "7.5px",
+                        }}
                       >
                         0.01
                       </Button>
                       <Button
-                        variant="contained"
-                        color="primary"
+                        variant="outlined"
+                        color="secondary"
                         onClick={() => handleButtonClick(0.1)} // Set coHostAmount to 0.1
-                        style={{ flex: 1, padding: "7.5px" }}
+                        sx={{
+                          flex: 1,
+                          padding: "7.5px",
+                        }}
                       >
                         0.1
                       </Button>
                       <Button
-                        variant="contained"
-                        color="primary"
+                        variant="outlined"
+                        color="secondary"
                         onClick={() => handleButtonClick(1)} // Set coHostAmount to 1
-                        style={{ flex: 1, padding: "7.5px" }}
+                        sx={{
+                          flex: 1,
+                          padding: "7.5px",
+                        }}
                       >
                         1
                       </Button>
-
-                    </div>
+                    </Box>
 
                     {/* TextField Positioned Below */}
-                    <TextField
+                     <TextField color="secondary" 
                       value={localCoHostAmount}
                       onChange={handleInputChange}
                       variant="filled"
@@ -625,12 +621,11 @@ function CoHostModal({
                             }}
                           >
                             <Button
+                            variant='contained'
+                            color='secondary'
                               style={{
                                 width: "100%",
                                 padding: "10px",
-                                border: "2px solid rgb(0, 255, 58)", // Green border
-                                backgroundColor: "rgba(0, 255, 58, 0.1)", // Green background with opacity
-                                color: "rgb(0, 255, 58)", // Green font color
                                 fontWeight: "bold", // Optional for emphasis
                               }}
                               className="button-submit"
@@ -654,7 +649,7 @@ function CoHostModal({
                                 width: "100%",
                                 padding: "10px",
                               }}
-                              className="btn-back"
+                              variant='contained' color='secondary'
                               onClick={() =>
                                 handleUnstake(
                                   selectedRow?.winnings ??
@@ -858,12 +853,12 @@ function CoHostModal({
       {!input_only && (
 
         <div className={`modal-footer ${has_joined ? 'mobile-only' : ''}`}>
-          <Button className="btn-submit" onClick={handleSendCoHost}>
+          <Button variant='contained' color='error' onClick={handleSendCoHost}>
             PUMP
             <TrendingUpOutlined style={{ color: "#fff", marginLeft: "8px" }} />
           </Button>
           <Button
-            className="btn-submit"
+            variant='contained' color='error'
             onClick={() =>
               handleUnstake(
                 selectedRow?.winnings ?? parseFloat(selectedRow?.user_bet || 0), // Use winnings if available, otherwise fallback

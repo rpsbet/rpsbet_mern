@@ -22,7 +22,7 @@ import BattleHover from '../icons/BattleHover';
 import Manage from '../icons/Manage.js';
 import ManageHover from '../icons/ManageHover';
 import animationData from '../LottieAnimations/live';
-import { Button, Tabs, Tab, Drawer, IconButton, Tooltip } from '@material-ui/core';
+import { Button, Tabs, Tab, Drawer, Box, Tooltip } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCoins, faStore, faLink } from '@fortawesome/free-solid-svg-icons';
 import Avatar from '../../components/Avatar';
@@ -209,7 +209,7 @@ function MainPage(props) {
     ) {
       return (
         <div className="create-room-btn-panel">
-          <Button className="btn-create-room" onClick={handleCreateBtnClicked}>
+          <Button variant="text" className="btn-create-room" onClick={handleCreateBtnClicked}>
             START NEW GAME +
           </Button>
         </div>
@@ -221,16 +221,17 @@ function MainPage(props) {
 
   // ------------------- RENDER -------------------
   return (
-    <div
+    <Box
       className="main-game"
-      style={{
-        gridTemplateColumns: isDrawerOpen
-          ? '260px calc(100% - 260px)'
-          : '100%',
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: isDrawerOpen && !isMobile
+          ? '260px calc(100% - 260px)' // Two columns for desktop
+          : '100%', // Full width for mobile or when the drawer is closed
       }}
     >
       {/* If mobile & in chat tab, or if not mobile -> show Chat Drawer */}
-      {(isMobile && selectedMobileTab === 'chat') || !isMobile ? (
+      {(isMobile && selectedMobileTab === 'chat') ? (
         <Drawer
           className="mat-chat"
           style={{ display: isDrawerOpen ? 'flex' : 'none' }}
@@ -282,10 +283,10 @@ function MainPage(props) {
               showOpenGame === 0 && selectedMobileTab === 'live_games'
                 ? 'PVP'
                 : showOpenGame === 0 && selectedMobileTab === 'my_games'
-                ? 'MANAGE'
-                : selectedMobileTab === 'live_games'
-                ? 'PVP'
-                : 'MANAGE'
+                  ? 'MANAGE'
+                  : selectedMobileTab === 'live_games'
+                    ? 'PVP'
+                    : 'MANAGE'
             }
             icon={
               showOpenGame === 0 && selectedMobileTab === 'live_games' ? (
@@ -498,9 +499,8 @@ function MainPage(props) {
       <Footer
         className="footer"
         open={isDrawerOpen}
-        style={{ marginLeft: isDrawerOpen ? '270px' : '0' }}
       />
-    </div>
+    </Box>
   );
 }
 

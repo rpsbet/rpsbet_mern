@@ -19,7 +19,6 @@ import {
   SET_ALL_TIME_PROFIT,
   NEW_TRANSACTION,
   LOAD_MORE_TRANSACTIONS,
-  VERIFICATION_SUCCESS,
   SET_USERNAME_PASSWORD,
   SET_DARK_MODE,
   SET_SPECTATE_MODE,
@@ -228,11 +227,6 @@ export default function (state = initialState, action) {
         token: payload.token,
         isAuthenticated: true,
         loading: false
-      };
-    case VERIFICATION_SUCCESS:
-      return {
-        ...state,
-        isActivated: payload
       };
     case REGISTER_FAIL:
     case AUTH_ERROR:

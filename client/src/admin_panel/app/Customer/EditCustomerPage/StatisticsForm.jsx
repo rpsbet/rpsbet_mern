@@ -1,21 +1,14 @@
 import React from 'react';
 import ReactApexChart from 'react-apexcharts';
+import styled from 'styled-components';
+import Elevation from '../../../../Styles/Elevation';
 import moment from 'moment';
-import { 
-  FormControl, 
-  MenuItem, 
-  Select, 
-  Button, 
-  Tooltip, 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableRow 
-} from '@mui/material';
+import './style.css';
+import { FormControl, MenuItem, Select, Button, Tooltip, Table, TableBody, Box, TableCell, TableRow } from '@mui/material';
 import InfoIcon from '@mui/icons-material/Info';
 import LinkIcon from '@mui/icons-material/Link';
 import { convertToCurrency } from '../../../../util/conversion';
-
+import { updateDigitToPoint2 } from '../../../../util/helper';
 function generateData(gameLogList) {
   const series = [];
   let totalProfit = 0;
@@ -119,20 +112,47 @@ class StatisticsForm extends React.Component {
     const rankPlusOne = rank + 1;
 
     return (
-      <div>
-        <div className="progress-bar-outer" style={{ width: `${progressBarWidth}px`, position: 'relative' }}>
-          <div className="progress-bar-filled" style={{ width: `${roundedProgress}%` }}>
-            <div className="progress-label progress-label-left">{`${roundedProgress}%`}</div>
-          </div>
-          <div className="progress-bar-remaining" style={{ width: `${remainingProgress}%` }}>
-            <div className="progress-label progress-label-right">{`${remainingProgress}%`}</div>
-          </div>
-        </div>
-        <div className="rank-indicators">
-          <div className="rank-minus-one">{`${rank}`}</div>
-          <div className="rank-plus-one">{`${rankPlusOne}`}</div>
-        </div>
-      </div>
+      <Box>
+        <Box
+          sx={{
+            width: progressBarWidth + 'px', // Dynamic width based on progress
+            position: 'relative'
+          }}
+        >
+          <Box
+            sx={{
+              width: roundedProgress + '%', // Dynamic width based on progress
+              display: 'flex',
+              alignItems: 'center',
+              backgroundColor: 'primary.main', // Example of using theme colors
+            }}
+          >
+            <Box component="span" sx={{ flexGrow: 1, textAlign: 'center' }}>
+              {`${roundedProgress}%`}
+            </Box>
+          </Box>
+          <Box
+            sx={{
+              width: remainingProgress + '%', // Dynamic width for the remaining part
+              backgroundColor: 'grey.300', // Example of using theme colors
+            }}
+          >
+            <Box component="span" sx={{ flexGrow: 1, textAlign: 'center' }}>
+              {`${remainingProgress}%`}
+            </Box>
+          </Box>
+        </Box>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            mt: 1 // Margin top for spacing
+          }}
+        >
+          <Box>{`${rank}`}</Box>
+          <Box>{`${rankPlusOne}`}</Box>
+        </Box>
+      </Box>
     );
   }
 
@@ -373,208 +393,219 @@ class StatisticsForm extends React.Component {
     const roundedCreditScore = Math.ceil(this.props.creditScore);
 
     return (
-        <Box
-          sx={{
-            gridArea: 'Charts',
-            justifySelf: 'center',
-            width: '100%',
-            borderRadius: '5px',
-            backgroundColor: '#424242',
-            padding: '25px',
-            alignItems: 'center',
-            boxShadow: 2, // Equivalent to Elevation[2]
-          }}
-        >
-          {/* Rank Badge */}
-          <Box className="rank-badge" sx={{ marginBottom: '20px' }}>
-            <Typography variant="h5" sx={{ marginBottom: '10px' }}>
-              BREAKDOWN
-            </Typography>
-            <Table>
-              <TableBody>
-                <TableRow>
-                  <TableCell>
-                    <Typography sx={{ opacity: 0.6, fontSize: '0.9em', fontWeight: 500 }}>
-                      LAST SEEN
-                    </Typography>
-                  </TableCell>
-                  <TableCell sx={{ color: '#ff8500', textAlign: 'center' }}>
-                    {lastSeenAgo}
-                  </TableCell>
-                </TableRow>
-                {/* Repeat for other TableRows */}
-                <TableRow>
-                  <TableCell>
-                    <Typography sx={{ opacity: 0.6, fontSize: '0.9em', fontWeight: 500 }}>
-                      SPENDING
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Box className="hexagon">
-                      <Box className="hex-content">
-                        <Typography variant="h6" sx={{ color }}>
-                          {title}
-                        </Typography>
-                        <Box className="payout-bar">
-                          <Box className="value" sx={barStyle}></Box>
-                        </Box>
-                        <Box className="message" sx={{ display: 'flex', alignItems: 'center' }}>
-                          {message}
-                          <Tooltip title="Calculated using your average wager and All-Time-High" placement="top">
-                            <IconButton sx={{ padding: '5px', cursor: 'pointer' }}>
-                              <InfoIcon sx={{ width: '12px' }} />
-                            </IconButton>
-                          </Tooltip>
-                        </Box>
-                      </Box>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-                {/* Continue for CREDIT SCORE and other rows */}
-              </TableBody>
-            </Table>
-          </Box>
-      
-          {/* Statistics Container */}
-          <Box className="statistics-container" sx={{ marginBottom: '20px' }}>
-            <Box>
-              <Box className="statistics-panel">
-                <Typography variant="h5" sx={{ marginBottom: '10px' }}>
-                  PERFORMANCE
-                </Typography>
-                <Box className='filters' sx={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-                  <FormControl fullWidth>
-                    <Select
-                      value={actorType}
-                      onChange={handleActorTypeChange}
-                      displayEmpty
-                      variant="outlined"
-                    >
-                      <MenuItem value="Both">Both</MenuItem>
-                      <MenuItem value="As Host">As Host</MenuItem>
-                      <MenuItem value="As Player">As Player</MenuItem>
-                    </Select>
-                  </FormControl>
-                  <FormControl fullWidth>
-                    <Select
-                      value={gameType}
-                      onChange={handleGameTypeChange}
-                      displayEmpty
-                      variant="outlined"
-                    >
-                      <MenuItem value="All">All</MenuItem>
-                      <MenuItem value="62a25d2a723b9f15709d1ae7">RPS</MenuItem>
-                      <MenuItem value="62a25d2a723b9f15709d1aeb">Quick Shoot</MenuItem>
-                    </Select>
-                  </FormControl>
-                  <FormControl fullWidth>
-                    <Select
-                      value={timeType}
-                      onChange={handleTimeTypeChange}
-                      displayEmpty
-                      variant="outlined"
-                    >
-                      <MenuItem value="1">Last Hour</MenuItem>
-                      <MenuItem value="24">Last 24 Hours</MenuItem>
-                      <MenuItem value="7">Last 7 Days</MenuItem>
-                      <MenuItem value="30">Last 30 Days</MenuItem>
-                      <MenuItem value="allTime">All-time</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Box>
-                {!loaded ? (
-                  <Typography variant="body1" sx={{ textAlign: 'center', color: '#fff' }}>
-                    LOADING...
-                  </Typography>
-                ) : (
-                  <Table>
-                    <TableBody>
-                      <TableRow>
-                        <TableCell className="label">
-                          <Typography sx={{ fontWeight: 500 }}>Games Played</Typography>
-                        </TableCell>
-                        <TableCell className="value" align="center">
-                          <Typography>{gamePlayed}</Typography>
-                          <Box className="bar" sx={{ display: 'flex', justifyContent: 'center', gap: '5px', marginTop: '5px' }}>
-                            <Box
-                              className="vs-bar host"
-                              sx={{
-                                width: `${(gameHosted / gamePlayed) * 100}%`,
-                                height: '10px',
-                                backgroundColor: '#3f51b5',
-                                borderRadius: '5px',
-                              }}
-                              title={`As Host: ${gameHosted}`}
-                            ></Box>
-                            <Box
-                              className="vs-bar player"
-                              sx={{
-                                width: `${(gameJoined / gamePlayed) * 100}%`,
-                                height: '10px',
-                                backgroundColor: '#ff8500',
-                                borderRadius: '5px',
-                              }}
-                              title={`As Player: ${gameJoined}`}
-                            ></Box>
-                          </Box>
-                        </TableCell>
-                      </TableRow>
-                      {/* Repeat for other TableRows */}
-                      <TableRow>
-                        <TableCell className="label">
-                          <Typography sx={{ fontWeight: 500 }}>Total Wagered</Typography>
-                        </TableCell>
-                        <TableCell className="value" align="center">
-                          {convertToCurrency(totalWagered)}
-                        </TableCell>
-                      </TableRow>
-                      {/* Continue for Net Profit, Ave. Wager, etc. */}
-                    </TableBody>
-                  </Table>
-                )}
-              </Box>
-            </Box>
-          </Box>
-      
-          {/* Chart Section */}
-          <Typography variant="h5" sx={{ marginBottom: '20px' }}>
-            CHART
-          </Typography>
-          <Box
-            sx={{
-              width: '100%',
-              height: '350px',
-            }}
+      <ChartDivEl>
+        <div className="rank-badge">
+          <h5>BREAKDOWN</h5>
+          <Table>
+            <TableBody>
+              <TableRow>
+                <TableCell><b style={{ opacity: "0.6", fontSize: '0.9em', fontWeight: '500' }}>LAST SEEN</b></TableCell>
+                <TableCell style={{ color: "#ff8500", textAlign: 'center' }}>{lastSeenAgo}</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell><b style={{ opacity: "0.6", fontSize: '0.9em', fontWeight: '500' }}>JOINED</b></TableCell>
+                <TableCell style={{ color: "#ff8500", textAlign: 'center' }}>{joinedAgo}</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell><b style={{ opacity: "0.6", fontSize: '0.9em', fontWeight: '500' }}>RANK</b></TableCell>
+                <TableCell> <div className="stars" style={{ display: "flex", justifyContent: "center" }}>{this.getRank(this.props.rank)}</div></TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell><b style={{ opacity: "0.6", fontSize: '0.9em', fontWeight: '500' }}>SPENDING</b></TableCell>
+                <TableCell>
+                  <div className="hexagon">
+                    <div className="hex-content">
+                      <h2 style={{ color }}>{title}</h2>
+                      <div className="payout-bar">
+                        <div className="value" style={barStyle}></div>
+                      </div>
+                      <div className="message">
+                        {message}  <Tooltip title={"Calculated using your average wager and All-Time-High"} placement="top">
+                          <a style={{ padding: "5px", cursor: "pointer" }}>
+                            <InfoIcon style={{ width: "12px" }} />
+                          </a>
+                        </Tooltip>
+                      </div>
+                    </div>
+                  </div>
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell><b style={{ opacity: "0.6", fontSize: '0.9em', fontWeight: '500' }}>CREDIT SCORE</b></TableCell>
+                <TableCell>
+                  <div className="creditScore">
+                    <svg className="dial" width="120" height="120">
+                      <svg width="120" height="120">
+                        {hexagon}
+                      </svg>
+                      <text x="50%" y="40%" textAnchor="middle" alignmentBaseline="middle" className="creditScoreStatus" style={{ fill: '#ff8500' }}>
+                        {roundedCreditScore >= 1000 && roundedCreditScore <= 1500 && 'OK'}
+                        {roundedCreditScore > 1500 && roundedCreditScore <= 2000 && 'HIGH'}
+                        {roundedCreditScore < 1000 && 'BAD'}
+                      </text>
+                      <text x="50%" y="60%" textAnchor="middle" alignmentBaseline="middle" className="creditScoreValue" style={{ fill: '#ff8500' }}>
+                        {roundedCreditScore} / 2000
+                      </text>
+                    </svg>
+                  </div>
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </div>
+
+        <div className="statistics-container">
+          <div>
+            <div className="statistics-panel">
+              <h5>PERFORMANCE</h5>
+              <div className='filters'>
+                <FormControl>
+                  <Select
+                    value={this.props.actorType}
+                    onChange={this.handleActorTypeChange}
+                  >
+                    <MenuItem value="Both">Both</MenuItem>
+                    <MenuItem value="As Host">As Host</MenuItem>
+                    <MenuItem value="As Player">As Player</MenuItem>
+                  </Select>
+                </FormControl>
+
+                <FormControl>
+                  <Select
+                    value={this.props.gameType}
+                    onChange={this.handleGameTypeChange}
+                  >
+                    <MenuItem value="All">All</MenuItem>
+                    <MenuItem value="62a25d2a723b9f15709d1ae7">RPS</MenuItem>
+                    <MenuItem value="62a25d2a723b9f15709d1aeb">Quick Shoot</MenuItem>
+                  </Select>
+                </FormControl>
+                <FormControl>
+                  <Select
+                    value={this.props.timeType}
+                    onChange={this.handleTimeTypeChange}
+                  >
+                    <MenuItem value="1">Last Hour</MenuItem>
+                    <MenuItem value="24">Last 24 Hours</MenuItem>
+                    <MenuItem value="7">Last 7 Days</MenuItem>
+                    <MenuItem value="30">Last 30 Days</MenuItem>
+                    <MenuItem value="allTime">All-time</MenuItem>
+                  </Select>
+                </FormControl>
+              </div>
+              {!this.state.loaded ? (
+                <div className="loading">LOADING...</div>
+              ) : (
+                <Table>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell className="label">Games Played</TableCell>
+                      <TableCell className="value" align="center">
+                        <span>{gamePlayed}</span>
+                        <span className="bar">
+                          <div
+                            className="vs-bar host"
+                            style={{
+                              width: `${(gameHosted / gamePlayed) * 100}%`
+                            }}
+                            title={`As Host: ${gameHosted}`}
+                          ></div>
+                          <div
+                            className="vs-bar player"
+                            style={{
+                              width: `${(gameJoined / gamePlayed) * 100}%`
+                            }}
+                            title={`As Player: ${gameJoined}`}
+                          ></div>
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="label">Total Wagered</TableCell>
+                      <TableCell className="value" align="center">
+                        {convertToCurrency(totalWagered)}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="label">Net Profit</TableCell>
+                      <TableCell className="value" align="center">{convertToCurrency(gameProfit, solPrice)}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="label">Ave. Wager</TableCell>
+                      <TableCell className="value" align="center">{convertToCurrency(averageWager, solPrice)}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="label">Ave. Games Played Per Room</TableCell>
+                      <TableCell className="value" align="center">{updateDigitToPoint2(averageGamesPlayedPerRoom, solPrice)}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="label">Ave. Profit Per Game</TableCell>
+                      <TableCell className="value" align="center">{convertToCurrency(averageProfit, solPrice)}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="label">Profit ATH</TableCell>
+                      <TableCell className="value" align="center">{convertToCurrency(profitAllTimeHigh, solPrice)}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="label">Profit ATL</TableCell>
+                      <TableCell className="value" align="center">{convertToCurrency(profitAllTimeLow, solPrice)}</TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              )}
+            </div>
+          </div>
+        </div>
+        <h5>CHART</h5>
+        <ChartEl
+          options={options}
+          series={series}
+          className={
+            series[0].data.length > 100
+              ? 'step-10'
+              : series[0].data.length > 20
+                ? 'step-5'
+                : 'step-1'
+          }
+          type="line"
+          height="350"
+          width="100%"
+        />
+        {this.state.showButton && (
+          <Button
+            className="room-link"
+            onClick={() => (window.location.href = this.state.url)}
           >
-            <ReactApexChart
-              options={options}
-              series={series}
-              type="line"
-              height={350}
-              width="100%"
-              className={
-                series[0].data.length > 100
-                  ? 'step-10'
-                  : series[0].data.length > 20
-                    ? 'step-5'
-                    : 'step-1'
-              }
-            />
-          </Box>
-          {showButton && (
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<LinkIcon />}
-              onClick={() => (window.location.href = url)}
-              sx={{ marginTop: '20px' }}
-            >
-              {roomName}
-            </Button>
-          )}
-        </Box>
-      );
+            {this.state.roomName}
+            <LinkIcon />
+          </Button>
+        )}
+      </ChartDivEl>
+    );
   }
 }
 
 export default StatisticsForm;
+
+const ChartDivEl = styled.div`
+  grid-area: Charts;
+  justify-self: center;
+  width: 100%;
+  border-radius: 5px;
+  background-color: #424242;
+  padding: 25px;
+  align-items: center;
+  ${Elevation[2]}
+`;
+
+const H2 = styled.h2`
+  border-bottom: 3px solid white;
+`;
+
+const Span = styled.span`
+  font-size: 14px;
+  float: right;
+  margin-top: 18px;
+`;
+
+const ChartEl = styled(ReactApexChart)``;

@@ -9,7 +9,7 @@ import {
   acQueryLoan,
   acCalculateRemainingLoans,
 } from '../../redux/Loan/loan.action';
-import { Button } from '@material-ui/core';
+import { Button } from '@mui/material';
 import { alertModal } from './ConfirmAlerts';
 import { getUser } from '../../redux/Auth/user.actions';
 import { deListLoan } from '../../redux/Logic/logic.actions';
@@ -18,7 +18,7 @@ Modal.setAppElement('#root');
 
 const customStyles = {
   overlay: {
-    zIndex: 99,
+    zIndex: 3,
     backgroundColor: 'rgba(0, 0, 0, 0.8)',
   },
   content: {
@@ -81,10 +81,10 @@ const DeListLoanModal = () => {
           <br />
         </div>
         <div className="modal-footer">
-          <Button className="btn-submit" onClick={handleConfirm}>
+          <Button variant='contained' color='error' onClick={handleConfirm}>
             CONFIRM
           </Button>
-          <Button className="btn-back" onClick={handleCancel}>
+          <Button variant='contained' color='secondary' onClick={handleCancel}>
             CANCEL
           </Button>
         </div>

@@ -2,7 +2,6 @@ import React, { useEffect } from 'react';
 import { connect } from 'react-redux';
 import { Route, Switch, Redirect } from 'react-router-dom';
 import { getUser } from './redux/Auth/user.actions';
-import { getAdmin } from './redux/AdminAuth/admin.actions';
 import GameMainRoute from './game_panel/app/Game.routes';
 import AppMainRoute from './admin_panel/app/App.routes';
 import ChangePasswordPage from './game_panel/main_pages/ChangePasswordPage';
@@ -51,6 +50,6 @@ const mapStateToProps = state => ({
   admin_auth: state.admin_auth,
 });
 
-const mapDispatchToProps = { getUser, getAdmin };
+const mapDispatchToProps = { getUser };
 
 export default connect(mapStateToProps, mapDispatchToProps)(App);

@@ -28,9 +28,7 @@ export const convertToCurrency = (input, solPrice) => {
     }
 
     return (
-      <>
-        ${formattedNumber}
-      </>
+      `$${formattedNumber}`
     );
   } else {
     return input;

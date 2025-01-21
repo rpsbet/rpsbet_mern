@@ -8,7 +8,6 @@ export const AUTH_ERROR = 'AUTH_ERROR';
 export const LOGIN_SUCCESS = 'LOGIN_SUCCESS';
 export const LOGIN_FAIL = 'LOGIN_FAIL';
 export const LOGOUT = 'LOGOUT';
-export const VERIFICATION_SUCCESS = 'VERIFICATION_SUCCESS';
 export const SET_UNREAD_MESSAGE_COUNT = 'SET_UNREAD_MESSAGE_COUNT';
 export const SET_BALANCE = 'SET_BALANCE';
 export const SET_GASFEE = 'SET_GASFEE';

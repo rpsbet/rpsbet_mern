@@ -10,7 +10,7 @@ import Button from '@mui/material/Button';
 import Fade from '@mui/material/Fade';
 import Grow from '@mui/material/Grow';
 import Slide from '@mui/material/Slide';
-import { RemoveLickLine } from '../Styles/Elements/ButtonEls';
+// import { RemoveLickLine } from '../Styles/Elements/ButtonEls';
 import { Helmet } from 'react-helmet';
 
 const ErrorTextEL = styled.h1`
@@ -84,11 +84,11 @@ const Error404Page = () => {
         </form>
       </Slide>
       <Grow in={openPage}>
-        <RemoveLickLine to="/">
-          <Button variant="contained" color="primary">
+        {/* <RemoveLickLine to="/">
+          <Button variant="contained" color='error'>
             Go To Home Page
           </Button>
-        </RemoveLickLine>
+        </RemoveLickLine> */}
       </Grow>
     </MainContainerEl>
   );

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { connect } from 'react-redux';
 import chroma from 'chroma-js';
-import Lottie from 'react-lottie';
 import verified from '../game_panel/LottieAnimations/verified.json';
-
+import { Box, Avatar as MUIAvatar } from '@mui/material';
+import Lottie from 'react-lottie';
 import { renderLottieAvatarAnimation } from '../util/LottieAvatarAnimations';
 import { getRank } from '../util/getRank';
 
@@ -143,20 +143,21 @@ function Avatar(props) {
   const isVerified = verifiedUsernames.includes(usernameString);
 
   const backgroundColorStyle = rankColors[adjustedRank] ? rankColors[adjustedRank] : 'transparent';
-
   return (
-    <div
+    <Box
       className="avatar"
-      style={{
+      sx={{
         position: 'relative',
         backgroundColor: 'transparent',
       }}
     >
-      <img
+      {/* Avatar Image */}
+      <MUIAvatar
         id="user-avatar"
         src={src}
         alt={alt}
-        style={{
+        variant="rounded" // Makes the avatar square with rounded corners
+        sx={{
           width: '100%',
           height: '100%',
           border: isBot
@@ -176,32 +177,36 @@ function Avatar(props) {
             : '/img/profile-thumbnail.svg';
         }}
       />
+  
+      {/* Lottie Animation */}
       {renderLottieAvatarAnimation(accessory, isLowGraphics)}
-
+  
+      {/* Dominant Color Background */}
       {dominantColor && (
-        <div
-          style={{
+        <Box
+          sx={{
             position: 'absolute',
             top: 0,
             left: 0,
             width: '100%',
             height: '100%',
-            zIndex: '-1',
+            zIndex: -1,
             boxShadow: isBot
               ? 'none'
               : isSystem
               ? 'none'
               : `0 6px 20px 0px ${rankColor}, 0 0 5px ${shadedColor}`,
             boxSizing: 'border-box',
-            borderRadius: '0.3em',
+            borderRadius: '0.3em', // Slightly rounded corners for background
           }}
         />
       )}
-
+  
+      {/* Rank Icon */}
       {!isBot && !isSystem && adjustedRank !== null && adjustedRank !== '' && (
-        <div
+        <Box
           className="rank-icon"
-          style={{
+          sx={{
             position: 'absolute',
             bottom: '1px',
             left: '-6px',
@@ -209,7 +214,7 @@ function Avatar(props) {
             height: '1.8em',
             backgroundColor: backgroundColorStyle,
             color: isDarkMode ? '#2d2d2d' : '#f9f9f9',
-            borderRadius: '5px',
+            borderRadius: '5px', // Slightly rounded corners for the rank icon
             fontSize: '0.55em',
             fontWeight: 'bold',
             display: 'flex',
@@ -218,18 +223,19 @@ function Avatar(props) {
           }}
         >
           {adjustedRank}
-        </div>
+        </Box>
       )}
-
+  
+      {/* Verified Badge */}
       {isVerified && (
-        <div
+        <Box
           className="verified"
-          style={{
+          sx={{
             width: '32px',
             height: '32px',
             position: 'absolute',
-            top: '0',
-            right: '0',
+            top: 0,
+            right: 0,
             marginTop: '-15px',
             marginRight: '-14px',
             transform: 'scale(0.7)',
@@ -247,9 +253,9 @@ function Avatar(props) {
               height: '100%',
             }}
           />
-        </div>
+        </Box>
       )}
-    </div>
+    </Box>
   );
 }
 

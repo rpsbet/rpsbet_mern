@@ -1,6 +1,5 @@
 const ObjectId = require('mongoose').Types.ObjectId;
 const socket_io = require('socket.io');
-const { server, io } = require('./server.js');
 const Message = require('./model/Message');
 const Moment = require('moment');
 const Chat = require('./model/Chat');
@@ -13,6 +12,7 @@ const send = (msg_type, to_id, data) => {
     sockets[to_id].emit(msg_type, data);
   }
 };
+
 
 const globalChatSend = (io, data) => {
   const {
@@ -39,15 +39,15 @@ const globalChatSend = (io, data) => {
     accessory: accessory,
     replyTo: replyTo
       ? {
-          sender: replyTo.senderId,
-          username: replyTo.username,
-          rank: replyTo.rank,
-          avatar: replyTo.avatar,
-          accessory: replyTo.accessory,
-          message: replyTo.message,
-          messageType: replyTo.messageType,
-          time: Moment(replyTo.created_at).format('hh:mm')
-        }
+        sender: replyTo.senderId,
+        username: replyTo.username,
+        rank: replyTo.rank,
+        avatar: replyTo.avatar,
+        accessory: replyTo.accessory,
+        message: replyTo.message,
+        messageType: replyTo.messageType,
+        time: Moment(replyTo.created_at).format('hh:mm')
+      }
       : null
   });
 
@@ -79,15 +79,15 @@ const globalChatSend = (io, data) => {
             rank: rank,
             replyTo: replyTo
               ? {
-                  sender: replyTo._id,
-                  username: replyToUsername,
-                  avatar: replyTo.avatar,
-                  accessory: replyTo.accessory,
-                  rank: replyTo.rank,
-                  message: replyTo.message,
-                  messageType: replyTo.messageType,
-                  time: Moment(replyTo.created_at).format('hh:mm')
-                }
+                sender: replyTo._id,
+                username: replyToUsername,
+                avatar: replyTo.avatar,
+                accessory: replyTo.accessory,
+                rank: replyTo.rank,
+                message: replyTo.message,
+                messageType: replyTo.messageType,
+                time: Moment(replyTo.created_at).format('hh:mm')
+              }
               : null, // Include the replyTo message details if it exists
             time: Moment(savedChat.created_at).format('hh:mm')
           });
@@ -99,10 +99,9 @@ const globalChatSend = (io, data) => {
     .catch(error => {
       console.error('Error saving chat:', error);
 
-});
+    });
 };
 module.exports.globalChatSend = globalChatSend;
-
 
 module.exports.playSound = (from_user_id, data) => {
   send('PLAY_SOUND', from_user_id, data);
@@ -122,7 +121,7 @@ module.exports.newTransaction = transaction => {
 
 module.exports.socketio = server => {
   const io = socket_io(server);
-  
+
   io.on('connection', (socket) => {
     socket.on('connect_error', (error) => {
       console.error('Socket connection error:', error);
@@ -132,7 +131,7 @@ module.exports.socketio = server => {
       try {
         // Update last_seen for the user
         await User.updateOne({ _id: data.user_id }, { last_seen: new Date() });
-    
+
         sockets[data.user_id] = socket;
         const onlineUsers = Object.keys(sockets);
         io.sockets.emit('ONLINE_STATUS_UPDATED', {
@@ -142,7 +141,7 @@ module.exports.socketio = server => {
         console.error('Error updating user last_seen:', error);
       }
     });
-    
+
     socket.on('GLOBAL_CHAT_SEND', data => {
       globalChatSend(io, data);
     });
@@ -173,15 +172,15 @@ module.exports.socketio = server => {
                 replyTo && replyTo.length > 0 ? replyTo[0] : null;
               const transformedReplyTo = extractedReplyTo
                 ? {
-                    sender: extractedReplyTo.sender?.username ?? '',
-                    senderId: extractedReplyTo.sender?._id ?? '',
-                    avatar: extractedReplyTo.sender?.avatar ?? '',
-                    rank: extractedReplyTo.sender?.totalWagered ?? '',
-                    accessory: extractedReplyTo.sender?.accessory ?? '',
-                    message: extractedReplyTo.message,
-                    messageType: extractedReplyTo.messageType,
-                    time: Moment(extractedReplyTo.created_at).format('hh:mm')
-                  }
+                  sender: extractedReplyTo.sender?.username ?? '',
+                  senderId: extractedReplyTo.sender?._id ?? '',
+                  avatar: extractedReplyTo.sender?.avatar ?? '',
+                  rank: extractedReplyTo.sender?.totalWagered ?? '',
+                  accessory: extractedReplyTo.sender?.accessory ?? '',
+                  message: extractedReplyTo.message,
+                  messageType: extractedReplyTo.messageType,
+                  time: Moment(extractedReplyTo.created_at).format('hh:mm')
+                }
                 : null;
 
               return {
@@ -224,7 +223,7 @@ module.exports.socketio = server => {
     socket.on('RPS_1', data => {
       socket.broadcast.emit('RPS_1', data);
     });
-   
+
     socket.on('INITIAL_STATE', data => {
       const roomId = data.roomId; // assuming roomId is passed in the data object
       socket.to(roomId).emit('INITIAL_STATE', data);

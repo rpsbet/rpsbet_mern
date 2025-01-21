@@ -12,8 +12,6 @@ import HistoryTable from '../LiveGames/HistoryTable';
 import MyHistoryTable from '../MyGames/MyHistoryTable';
 import MyGamesTable from '../MyGames/MyGamesTable';
 import ChatPanel from '../ChatPanel/ChatPanel';
-import { Skeleton } from "@material-ui/lab";
-
 import {
   loadRoomInfo,
   setCurRoomInfo,
@@ -22,17 +20,8 @@ import {
   getGameTypeList
 } from '../../redux/Logic/logic.actions';
 import { toggleDrawer } from '../../redux/Auth/user.actions';
-import { Button, Tabs, Tab, Drawer, withStyles } from '@material-ui/core';
-import Lottie from 'react-lottie';
-import animationData from '../LottieAnimations/live';
+import { Button, Tabs, Tab, Drawer, Box, Skeleton } from '@mui/material';
 
-const styles = {
-  drawerPaper: {
-    backgroundColor: "transparent !important", // Override default background
-    boxShadow: "none !important", // Remove shadow
-    border: "none", // Optional: remove borders
-  },
-};
 
 const moment = require('moment');
 
@@ -199,7 +188,7 @@ class ChatPage extends Component {
             closeModal={this.handleClosePlayerModal}
           />
         )}
-        {((is_mobile && selectedMobileTab === 'chat') || !is_mobile) && (
+        {((is_mobile && selectedMobileTab === 'chat')) && (
           <Drawer
             className="mat-chat"
             style={{ display: isDrawerOpen ? "flex" : "none" }}
@@ -239,7 +228,7 @@ class ChatPage extends Component {
             }}
           >
             <Button
-              className="btn-back title"
+              variant='contained' color='secondary'
               onClick={() => {
                 history.push('/');
               }}
@@ -585,7 +574,6 @@ class ChatPage extends Component {
         <Footer
           className="footer"
           open={isDrawerOpen}
-          style={{ marginLeft: isDrawerOpen ? '270px' : '0' }}
         />
       </div>
     );

@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import Modal from 'react-modal';
-import { Button } from '@material-ui/core';
+import { Button } from '@mui/material';
 
 Modal.setAppElement('#root');
 
@@ -58,7 +58,7 @@ class ImageResultModal extends Component {
           className={isDarkMode ? 'dark_mode' : ''}
         >
           <div className="modal-body alert-body result-body">
-            <Button className="btn-close title" onClick={this.props.closeModal}>
+            <Button className="btn-close" variant='text' color='error'  onClick={this.props.closeModal}>
               ×
             </Button>
             <h1

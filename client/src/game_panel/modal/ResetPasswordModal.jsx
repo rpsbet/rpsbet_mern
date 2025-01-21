@@ -56,12 +56,12 @@ class ResetPasswordModal extends Component {
                 >
                     <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
                         <div className="modal-body">
-                            <button className="btn-close title" onClick={this.props.closeModal}>×</button>
+                            <button className="btn-close" variant='text' color='error'  onClick={this.props.closeModal}>×</button>
                             <h2>RECOVER PASSWORD</h2>
                             <form onSubmit={this.onSubmitForm}>
                                 <p>YOUR EMAIL ADDRESS</p>
                                 <input type="text" className="form-control" value={this.state.email} onChange={this.onChangeEmail} />
-                                <button className="btn-submit">Send Email</button>
+                                <button variant='contained' color='error'>Send Email</button>
                                 <p className="m-0 sm-text-center"><button onClick={(e) => { this.props.closeModal(); this.props.openLoginModal(); }}>Back to Login →</button></p>
                             </form>
                         </div>

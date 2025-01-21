@@ -2,9 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { setBalance, updateTutorialCompleted } from '../../redux/Auth/user.actions';
 import Modal from 'react-modal';
-import { Skeleton } from '@material-ui/lab';
 import { Info } from '@mui/icons-material';
-import { Warning, Link } from '@mui/icons-material';
 import SettingsRef from '../../components/SettingsRef';
 import {
   getMyGames,
@@ -21,12 +19,10 @@ import {
   coHost
 } from '../../redux/Logic/logic.actions';
 import { getRank } from '../../util/getRank';
-import { faFilter, faSort, faEdit, faPiggyBank, faMoneyCheckAlt } from '@fortawesome/free-solid-svg-icons';
+import { faMoneyCheckAlt } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Battle from '../icons/Battle';
-import blob from '../LottieAnimations/blob.json';
 import { alertModal, confirmModalClosed, confirmModalCreate } from '../modal/ConfirmAlerts';
-// import Pagination from '../../components/Pagination';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import AddCircleOutline from '@mui/icons-material/AddCircleOutline';
 import EditOutline from '@mui/icons-material/EditOutlined';
@@ -34,12 +30,11 @@ import history from '../../redux/history';
 import { convertToCurrency } from '../../util/conversion';
 import Lottie from 'react-lottie';
 import animationData from '../LottieAnimations/add';
-import loadingChart from '../LottieAnimations/loadingChart';
 import pressHold from '../LottieAnimations/pressHold.json';
 import Joyride from 'react-joyride';
 import CoHostModal from '../modal/CoHostModal';
 import { tutorialStepsCreate } from '../../util/tutorialStepsCreate';
-import { InputAdornment, Button, ButtonGroup, Tooltip, TextField, Table, TableBody, TableRow, TableCell, Radio, RadioGroup, FormControlLabel } from '@material-ui/core';
+import { InputAdornment, Button, Skeleton, Box, Tooltip, TextField, Table, TableBody, TableRow, TableCell, Radio, RadioGroup, FormControlLabel } from '@mui/material';
 
 const gifUrls = ['/img/rock.gif', '/img/paper.gif', '/img/scissors.gif'];
 const randomGifUrl = gifUrls[Math.floor(Math.random() * gifUrls.length)];
@@ -108,9 +103,7 @@ class MyGamesTable extends Component {
     ) {
       this.fetchData();
     }
-
     if (prevProps.myGames !== this.props.myGames) {
-      console.log("cd", prevProps.myGames, this.props.myGames)
       this.setState({ myGames: this.props.myGames, isLoading: false });
     }
   }
@@ -172,13 +165,13 @@ class MyGamesTable extends Component {
 
   fetchData = () => {
     const { selectedFilter, selectedGameType, selectedSort } = this.state;
-  
+
     // Quick return of myGames from props/localStorage
     this.setState({ myGames: this.props.myGames });
-  
+
     // Fetch strategies in the background
     this.props.getStrategies();
-  
+
     // Fetch updated games in the background
     this.props.getMyGames(
       {
@@ -350,7 +343,6 @@ class MyGamesTable extends Component {
   };
 
   endRoom = async (winnings, room_id) => {
-    console.log("winnings, room_id", winnings, room_id);
     this.setState(prevState => ({
       [room_id]: {
         ...prevState[room_id],
@@ -370,8 +362,6 @@ class MyGamesTable extends Component {
             closing: false
           }
         }));
-    console.log("finishedeeddd");
-
       }
     });
   };
@@ -554,27 +544,27 @@ class MyGamesTable extends Component {
         </div>
         {isLoading && loading ? (
           <>
-          {[...Array(5)].map((_, key) => (  // You can adjust the number of skeleton rows
-            <div
-              className="table-row"
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr 1fr 2fr 1fr 2fr 2fr",
-                gap: "10px",
-                padding: "10px 20px",
-                animationDelay: `${key * 0.1}s`,
-              }}
-              key={key}
-            >
-              <Skeleton variant="rect" width="100%" height={40} />
-              <Skeleton variant="text" width="60%" height={20} />
-              <Skeleton variant="text" width="80%" height={20} />
-              <Skeleton variant="text" width="50%" height={20} />
-              <Skeleton variant="text" width="70%" height={20} />
-              <Skeleton variant="text" width="60%" height={20} />
-              <Skeleton variant="text" width="90%" height={20} />
-            </div>
-          ))}
+            {[...Array(5)].map((_, key) => (
+              <Box
+                className="table-row"
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr 1fr 2fr 1fr 2fr 2fr',
+                  gap: 2,
+                  padding: '10px 20px',
+                  animationDelay: `${key * 0.1}s`,
+                }}
+                key={key}
+              >
+                <Skeleton variant="rectangular" sx={{ width: '100%', height: 40 }} />
+                <Skeleton variant="text" sx={{ width: '60%', height: 20 }} />
+                <Skeleton variant="text" sx={{ width: '80%', height: 20 }} />
+                <Skeleton variant="text" sx={{ width: '50%', height: 20 }} />
+                <Skeleton variant="text" sx={{ width: '70%', height: 20 }} />
+                <Skeleton variant="text" sx={{ width: '60%', height: 20 }} />
+                <Skeleton variant="text" sx={{ width: '90%', height: 20 }} />
+              </Box>
+            ))}
           </>
 
         ) : (
@@ -953,7 +943,7 @@ class MyGamesTable extends Component {
 
                 AUTO-PAYOUT
               </h2>
-              <Button className="btn-close title" onClick={this.handleClosePayoutModal}>
+              <Button className="btn-close" variant='text' color='error'  onClick={this.handleClosePayoutModal}>
                 ×
               </Button>
             </div>
@@ -992,7 +982,7 @@ class MyGamesTable extends Component {
                     </RadioGroup>
 
                     <div className="input-amount">
-                      <TextField
+                       <TextField color="secondary" 
                         label="Amount"
                         value={this.state.payoutAmount || 0}
                         type="number"
@@ -1016,11 +1006,11 @@ class MyGamesTable extends Component {
               </div>
             </div>
             <div className="modal-footer">
-              <Button className="btn-submit" onClick={this.handleSendPayout}>
+              <Button variant='contained' color='error' onClick={this.handleSendPayout}>
                 Update
               </Button>
               <Button
-                className="btn-back"
+                variant='contained' color='secondary'
                 onClick={this.handleClosePayoutModal}
               >
                 Cancel

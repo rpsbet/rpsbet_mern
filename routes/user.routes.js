@@ -9,7 +9,6 @@ const robohashAvatars = require("robohash-avatars");
 const jwt = require('jsonwebtoken');
 const moment = require('moment');
 const auth = require('../middleware/auth');
-const sendgrid = require('../helper/sendgrid');
 const admin = require('../middleware/admin');
 const socket = require('../socketController');
 const saveDocumentWithRetry = require('../helper/util/retrySave');
@@ -245,7 +244,6 @@ router.post('/', async (req, res) => {
           { user: newUser, is_admin: 0 },
           process.env.SECRET_OR_KEY,
           (err, token) => {
-            // sendgrid.sendWelcomeEmail(email, username, verification_code);
             res.json({
               success: true,
               message: 'new user created',

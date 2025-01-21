@@ -4,7 +4,6 @@ const socket = require('../socketController.js');
 const router = express.Router();
 const moment = require('moment');
 const auth = require('../middleware/auth');
-const admin = require('../middleware/admin');
 const { v4: uuidv4 } = require('uuid');
 const Comment = require('../model/Comment');
 
@@ -14,6 +13,7 @@ const Room = require('../model/Room');
 const GameType = require('../model/GameType');
 const Strategy = require('../model/Strategy');
 const GameLog = require('../model/GameLog');
+const AttachedPlayer = require('../model/AttachedPlayer');
 const Receipt = require('../model/Receipt');
 const Message = require('../model/Message');
 const Notification = require('../model/Notification');
@@ -242,17 +242,17 @@ router.get('/getattachedrooms', auth, async (req, res) => {
   const user_id = req.user._id;
   try {
     const attachments = await AttachedPlayer.find({ user: user_id });
-
     return res.json({
       success: true,
-      attachments: attachments
+      attachments: attachments || [],
     });
   } catch (err) {
     console.error('Error finding attachments:', err.message);
+
     res.status(500).json({
       success: false,
       message: 'Internal server error',
-      error: err.message
+      error: err.message,
     });
   }
 });
@@ -964,11 +964,9 @@ router.delete('/comments/:comment_id', async (req, res) => {
       return res.status(404).json({ message: 'Comment not found' });
     }
 
-    // Delete the comment
     await Comment.findByIdAndDelete(commentId);
 
     req.io.sockets.emit('DELETE_COMMENT', { commentId });
-    console.log("emitted")
 
     res.json({
       success: true,
@@ -1647,8 +1645,6 @@ router.post('/end_game', auth, async (req, res) => {
     const { _id: userId, updated_at, dailyWithdrawals, username, avatar, accessory, totalWagered } = req.user;
     const { room_id: roomId } = req.body;
 
-    console.log("called");
-
     const timeDifference = (new Date() - new Date(updated_at)) / 1000; // Difference in seconds
     if (timeDifference <= 1.5) {
       return res.json({
@@ -1746,7 +1742,6 @@ router.post('/end_game', auth, async (req, res) => {
 
     await Promise.all([saveDocumentWithRetry(newGameLog), saveDocumentWithRetry(newTransactionC)]);
 
-    console.log('ROOM_ENDED socket emitting data:', { roomId });
     req.io.sockets.emit('ROOM_ENDED', { roomId });
 
 

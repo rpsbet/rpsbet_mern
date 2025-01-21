@@ -1,15 +1,20 @@
 import React, { Component } from 'react';
 import {
   createTheme,
-  MuiThemeProvider,
   Button,
   Menu,
   MenuItem,
   ListItemIcon,
+  Box,
+  Skeleton,
   ListItemText,
   Divider,
   Tooltip,
-} from '@material-ui/core';
+  Paper,
+  Popover,
+  Typography, Table, TableBody, TableCell, TableContainer, TableRow,
+} from '@mui/material';
+import { ThemeProvider } from '@mui/material/styles';
 import Countdown from 'react-countdown';
 import HistoryTable from '../game_panel/LiveGames/HistoryTable.jsx'
 import axios from '../util/Api';
@@ -40,7 +45,6 @@ import Moment from 'moment';
 import Avatar from '../components/Avatar';
 import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { Skeleton } from "@material-ui/lab";
 import ProfileModal from './modal/ProfileModal';
 import PlayerModal from './modal/PlayerModal';
 import HowToPlayModal from './modal/HowToPlayModal';
@@ -58,26 +62,17 @@ import DeListLoanModal from './modal/DeListLoanModal';
 import GamePasswordModal from './modal/GamePasswordModal';
 import LoginModal from './modal/LoginModal';
 import SignupModal from './modal/SignupModal';
-import VerificationModal from './modal/VerificationModal';
 import DepositModal from './modal/DepositModal';
 import WithdrawModal from './modal/WithdrawModal';
 import InventoryModal from './modal/InventoryModal';
 import VaultModal from './modal/VaultModal';
-import ResetPasswordModal from './modal/ResetPasswordModal';
 import { Info } from '@mui/icons-material';
-import Notifications from './icons/Notifications.js';
-import NotificationsHover from './icons/NotificationsHover';
-import Leaderboards from './icons/Leaderboards.js';
-import LeaderboardsHover from './icons/LeaderboardsHover';
-import Store from './icons/Store.js';
-import StoreHover from './icons/StoreHover';
-import Bank from './icons/Bank.js';
-import BankHover from './icons/BankHover';
+import AccountBalanceOutlined from '@mui/icons-material/AccountBalanceOutlined';
+import StorefrontOutlinedIcon from '@mui/icons-material/StorefrontOutlined';
+import LeaderboardOutlined from '@mui/icons-material/LeaderboardOutlined';
+import NotificationsOutlined from '@mui/icons-material/NotificationsOutlined';
+import Badge from '@mui/material/Badge';
 import Joyride from 'react-joyride';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faExternalLinkAlt,
-} from '@fortawesome/free-solid-svg-icons';
 import { tutorialStepsMain } from '../util/tutorialStepsMain';
 import { token } from '../config/index.js';
 
@@ -108,9 +103,13 @@ import {
   getWithdrawals,
   removeRoomFromList,
 } from '../redux/Logic/logic.actions';
-import { alertModal } from './modal/ConfirmAlerts.jsx';
 import CookieConsent from '../util/cookieConsent';
 import { convertToCurrency } from '../util/conversion';
+import Inventory2Outlined from '@mui/icons-material/Inventory2Outlined';
+import AccountBalanceWalletOutlined from '@mui/icons-material/AccountBalanceWalletOutlined';
+import SavingsOutlined from '@mui/icons-material/SavingsOutlined';
+import AttachMoneyOutlined from '@mui/icons-material/AttachMoneyOutlined';
+import MoneyOffCsredOutlined from '@mui/icons-material/MoneyOffCsredOutlined';
 
 LoadingOverlay.propTypes = undefined;
 
@@ -176,7 +175,6 @@ class SiteWrapper extends Component {
   constructor(props) {
     super(props);
     const currentPath = window.location.pathname;
-    this.notificationsRef = React.createRef();
     this.gameLogsRef = React.createRef();
     this.state = {
       endpoint:
@@ -187,6 +185,9 @@ class SiteWrapper extends Component {
       balance: this.props.balance,
       oldBalance: this.props.balance,
       hoverTabIndex: -1,
+      anchorEl: null,
+      anchorElProfile: null,
+      anchorElGameLog: null,
       betResult: this.props.betResult,
       showProfileModal: false,
       showPlayerModal: false,
@@ -202,15 +203,11 @@ class SiteWrapper extends Component {
       isPlaying: false,
       showLoginModal: false,
       showSignupModal: false,
-      showVerificationModal: false,
       showWithdrawModal: false,
       showDepositModal: currentPath === '/deposit/' || currentPath === '/deposit',
       showInventoryModal: false,
       showVaultModal: false,
-      showResetPasswordModal: false,
-      showGameLog: false,
       notifications: [],
-      showNotifications: false,
       loadMore: 10,
       isLive: false,
       blurValue: 3,
@@ -226,7 +223,6 @@ class SiteWrapper extends Component {
       transactions: [],
       isHovered: false,
       websiteLoading: true,
-      anchorEl: null,
       sortAnchorEl: null,
       filterAnchorEl: null,
       sortType: 'date',
@@ -251,7 +247,10 @@ class SiteWrapper extends Component {
       'https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExdnNza2NvZTdsZ3AwOWlweGJmYmV1cGc5anhyeW1rZ2NpM3l1cWc4YyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/UxVOH4FZjQ9wBk1hJa/giphy.gif',
       'https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExeXZ5YjY4ZWhnY2NmMjY4N205aHRnOW1wenF6bzFjcTZuanllNzdoZiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/MNNLoVzRBXiW7ndcqb/giphy.gif'
     ];
+    this.handleNotificationsClick = this.handleNotificationsClick.bind(this);
+    this.handleBalanceClick = this.handleBalanceClick.bind(this);
   }
+
   static getDerivedStateFromProps(props, currentState) {
     const { balance, betResult, userName, notifications } = props;
 
@@ -286,15 +285,6 @@ class SiteWrapper extends Component {
       if (!this.props.isLowGraphics) {
         this.playCoinsAnimation();
       }
-    }
-
-    if (prevState.showNotifications !== this.state.showNotifications && !this.state.showNotifications) {
-      this.props.readNotifications();
-      const updatedNotifications = this.state.notifications.map(notification => ({
-        ...notification,
-        is_read: true
-      }));
-      this.setState({ notifications: updatedNotifications });
     }
 
     const shouldUpdate =
@@ -464,12 +454,12 @@ class SiteWrapper extends Component {
     });
   };
 
-  handleClickMenu = e => {
-    this.setState({ anchorEl: e.currentTarget });
+  handleOpenProfileMenu = e => {
+    this.setState({ anchorElProfile: e.currentTarget });
   };
 
-  handleCloseMenu = () => {
-    this.setState({ anchorEl: null });
+  handleCloseProfileMenu = () => {
+    this.setState({ anchorElProfile: null });
   };
 
   updateReminderTime = debounce(() => {
@@ -483,9 +473,8 @@ class SiteWrapper extends Component {
     try {
       const delay = 3000;
       await new Promise(resolve => setTimeout(resolve, delay));
-      let socket = socketIOClient(this.state.endpoint);
-
-      socket.on('CONNECTED', async data => {
+      let socket = socketIOClient(this.state.endpoint, { transports: ['websocket'] });
+      socket.on('CONNECTED', async (data) => {
         socket.emit('STORE_CLIENT_USER_ID', { user_id: this.props.user._id });
         socket.emit('FETCH_GLOBAL_CHAT');
       });
@@ -495,7 +484,6 @@ class SiteWrapper extends Component {
       });
 
       socket.on('ROOM_ENDED', data => {
-        console.log("data", data)
         this.props.removeRoomFromList(data.roomId);
       });
 
@@ -581,18 +569,12 @@ class SiteWrapper extends Component {
         }
       });
 
-
       socket.on('SET_UNREAD_MESSAGE_COUNT', data => {
         this.props.setUnreadMessageCount(data);
       });
 
       socket.on('ONLINE_STATUS_UPDATED', data => {
         this.props.updateOnlineUserList(data.user_list);
-        // if (this.props.isAuthenticated && !this.state.bonusCheck) {
-        //   this.setState({ bonusCheck: true }, () => {
-        //     this.checkBonusTime();
-        //   });
-        // }
       });
 
 
@@ -655,7 +637,6 @@ class SiteWrapper extends Component {
     }
   };
 
-
   async componentDidMount() {
     try {
       const initialBalance = await this.props.fetchVaultBalance();
@@ -682,31 +663,10 @@ class SiteWrapper extends Component {
       if (this.state.isPlayer) {
         this.closeTokenModal();
       }
-
     } catch (error) {
       console.error(error);
     }
-
   }
-
-  handleClickOutside = (event) => {
-    const { showNotifications, showGameLog } = this.state;
-    if (
-      showNotifications &&
-      this.notificationsRef.current &&
-      !this.notificationsRef.current.contains(event.target)
-    ) {
-      this.setState({ showNotifications: false });
-    }
-
-    if (
-      showGameLog &&
-      this.gameLogsRef.current &&
-      !this.gameLogsRef.current.contains(event.target)
-    ) {
-      this.setState({ showGameLog: false });
-    }
-  };
 
   handleCreatePage() {
     const currentUrl = window.location.pathname;
@@ -763,15 +723,13 @@ class SiteWrapper extends Component {
     clearInterval(this.historyInterval);
     window.removeEventListener('mousemove', this.handleMouseMove);
     document.removeEventListener('mousedown', this.handleClickOutside);
-
   }
 
   handleLogout = clear_token => {
     this.setState({
       walletAddress: null,
       solanaBalance: null,
-      anchorEl: null,
-      showGameLog: false
+      anchorElProfile: null,
     });
 
     const { socket, userSignOut } = this.props;
@@ -784,12 +742,15 @@ class SiteWrapper extends Component {
   handleOpenSettingsModal = () => {
     this.setState({ showSettingsModal: true });
   };
+
   handleBonusModal = () => {
     this.setState({ showBonusModal: true });
   };
+
   handleCloseSettingsModal = () => {
     this.setState({ showSettingsModal: false });
   };
+
   handleCloseBonusModal = () => {
     this.setState({ showBonusModal: false });
   };
@@ -797,6 +758,7 @@ class SiteWrapper extends Component {
   handleOpenLoginModal = () => {
     this.setState({ showLoginModal: true });
   };
+
   handleCloseLoginModal = () => {
     this.setState({ showLoginModal: false });
   };
@@ -804,34 +766,31 @@ class SiteWrapper extends Component {
   handleOpenDebtsModal = () => {
     this.setState({ showDebtsModal: true });
   };
+
   handleCloseDebtsModal = () => {
     this.setState({ showDebtsModal: false });
   };
 
-
   handleOpenSignupModal = () => {
     this.setState({ showSignupModal: true });
   };
+
   handleCloseSignupModal = () => {
     this.setState({ showSignupModal: false });
-  };
-
-  handleOpenVerificationModal = () => {
-    this.setState({ showVerificationModal: true });
-  };
-  handleCloseVerificationModal = () => {
-    this.setState({ showVerificationModal: false });
   };
 
   handleOpenProfileModal = () => {
     this.setState({ showProfileModal: true, anchorEl: null });
   };
+
   handleCloseProfileModal = () => {
     this.setState({ showProfileModal: false });
   };
+
   handleOpenPlayerModal = selectedCreator => {
     this.setState({ showPlayerModal: true, selectedCreator: selectedCreator });
   };
+
   handleClosePlayerModal = () => {
     this.setState({ showPlayerModal: false });
   };
@@ -839,6 +798,7 @@ class SiteWrapper extends Component {
   handleOpenHowToPlayModal = () => {
     this.setState({ showHowToPlayModal: true });
   };
+
   handleCloseHowToPlayModal = () => {
     this.setState({ showHowToPlayModal: false });
   };
@@ -846,22 +806,23 @@ class SiteWrapper extends Component {
   handleOpenMarketplaceModal = () => {
     this.setState({ showMarketplaceModal: true });
   };
+
   handleCloseMarketplaceModal = () => {
     this.setState({ showMarketplaceModal: false });
   };
 
-
   handleOpenBankModal = () => {
     this.setState({ showBankModal: true });
   };
+
   handleCloseBankModal = () => {
     this.setState({ showBankModal: false });
   };
 
-
   handleOpenLeaderboardsModal = () => {
     this.setState({ showLeaderboardsModal: true });
   };
+
   handleCloseLeaderboardsModal = () => {
     this.setState({ showLeaderboardsModal: false });
   };
@@ -869,6 +830,7 @@ class SiteWrapper extends Component {
   handleOpenDepositModal = () => {
     this.setState({ showDepositModal: true, anchorEl: null });
   };
+
   handleCloseDepositModal = () => {
     this.setState({ showDepositModal: false });
   };
@@ -876,12 +838,15 @@ class SiteWrapper extends Component {
   handleOpenInventoryModal = () => {
     this.setState({ showInventoryModal: true, anchorEl: null });
   };
+
   handleCloseInventoryModal = () => {
     this.setState({ showInventoryModal: false });
   };
+
   handleOpenVaultModal = () => {
     this.setState({ showVaultModal: true, anchorEl: null });
   };
+
   handleCloseVaultModal = () => {
     this.setState({ showVaultModal: false });
   };
@@ -889,23 +854,41 @@ class SiteWrapper extends Component {
   handleOpenWithdrawModal = () => {
     this.setState({ showWithdrawModal: true, anchorEl: null });
   };
+
   handleCloseWithdrawModal = () => {
     this.setState({ showWithdrawModal: false });
   };
 
-  handleOpenResetPasswordModal = () => {
-    this.setState({ showResetPasswordModal: true });
-  };
-  handleCloseResetPasswordModal = () => {
-    this.setState({ showResetPasswordModal: false });
-  };
-
-  handleBalanceClick = () => {
-    this.setState({ showGameLog: !this.state.showGameLog });
+  handleBalanceClick = (event) => {
+    this.setState({ anchorElGameLog: event.currentTarget }, () => {
+      console.log("Cwd", this.state.anchorElGameLog);
+    });
   };
 
-  handleNotificationsClick = async () => {
-    this.setState({ showNotifications: !this.state.showNotifications });
+  handleNotificationsClick = (event) => {
+    this.setState({ anchorElNotifications: event.currentTarget });
+  };
+
+  handleClickOutside = () => {
+    const { anchorElProfile } = this.state;
+    if (anchorElProfile) {
+      this.setState({ anchorEl: null });
+    }
+  };
+
+  handleCloseGameLog = () => {
+    this.setState({
+      anchorElGameLog: null,
+    });
+  };
+
+  handleCloseNotifications = () => {
+    this.props.readNotifications();
+    const updatedNotifications = this.state.notifications.map(notification => ({
+      ...notification,
+      is_read: true
+    }));
+    this.setState({ anchorElNotifications: null, notifications: updatedNotifications });
   };
 
   handleSearchClose = event => {
@@ -1068,23 +1051,22 @@ class SiteWrapper extends Component {
       userName,
       showInventoryModal,
       showVaultModal,
-      showNotifications,
       showProfileModal,
       showPlayerModal,
       selectedCreator,
       showWithdrawModal,
-      showResetPasswordModal,
       showDepositModal,
-      showAllGameLogs,
       showLeaderboardsModal,
       showHowToPlayModal,
-      showVerificationModal,
       showMarketplaceModal,
       showBankModal,
       showLoginModal,
       showSignupModal,
       showDebtsModal,
       anchorEl,
+      anchorElProfile,
+      anchorElNotifications,
+      anchorElGameLog,
       isCoinsAnimation,
       showSettingsModal,
       showBonusModal,
@@ -1092,6 +1074,7 @@ class SiteWrapper extends Component {
       notifications,
       tokenModalOpen,
       isInvestorsPage,
+      showAllGameLogs,
       countdownWidth, youtubeWidth, countdownOpacity, youtubeOpacity
     } = this.state;
     const {
@@ -1117,7 +1100,7 @@ class SiteWrapper extends Component {
 
     this.secondsRemaining = Math.floor(timeRemaining / 1000);
     return (
-      <MuiThemeProvider theme={isDarkMode ? darkTheme : mainTheme}>
+      <ThemeProvider theme={isDarkMode ? darkTheme : mainTheme}>
         {showCookieConsent && <CookieConsent />}
 
         {(width >= 600 && isLive && tokenModalOpen && !isAuthenticated) && (
@@ -1132,7 +1115,7 @@ class SiteWrapper extends Component {
               transform: 'translate(-50%, -50%)',
               textAlign: 'center',
               padding: '50px',
-              zIndex: '999',
+              zIndex: '4',
               backdropFilter: `blur(${blurValue}px)`,
               background: `url(${currentGif})`,
               backgroundSize: '100vw',
@@ -1308,7 +1291,9 @@ class SiteWrapper extends Component {
               <div className="header_action_panel">
                 {(this.props.user && this.state.oldBalance) ? (
                   <>
-                    <a
+                    {/* Bank Icon */}
+                    <Box
+                      component="a"
                       href="#"
                       className="desktop-only"
                       onClick={e => {
@@ -1318,14 +1303,24 @@ class SiteWrapper extends Component {
                       id="btn_bank"
                       onMouseEnter={() => this.handleMouseEnter(6)}
                       onMouseLeave={this.handleMouseLeave}
+                      sx={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        transition: 'color 0.3s ease',
+                        '& svg': {
+                          color: hoverTabIndex === 6 ? 'red' : 'inherit',
+                          transition: 'color 0.3s ease',
+                        },
+                      }}
                     >
-                      {hoverTabIndex === 6 ? (
-                        <BankHover width="18pt" />
-                      ) : (
-                        <Bank />
-                      )}
-                    </a>
-                    <a
+                      <AccountBalanceOutlined fontSize="medium" />
+                    </Box>
+
+                    {/* Store Icon */}
+                    <Box
+                      component="a"
                       href="#"
                       className="desktop-only"
                       onClick={e => {
@@ -1335,16 +1330,26 @@ class SiteWrapper extends Component {
                       id="btn_marketplace"
                       onMouseEnter={() => this.handleMouseEnter(5)}
                       onMouseLeave={this.handleMouseLeave}
+                      sx={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        transition: 'color 0.3s ease',
+                        '& svg': {
+                          color: hoverTabIndex === 5 ? 'red' : 'inherit',
+                          transition: 'color 0.3s ease',
+                        },
+                      }}
                     >
-                      {hoverTabIndex === 5 ? (
-                        <StoreHover width="18pt" />
-                      ) : (
-                        <Store />
-                      )}
-                    </a>
-                    <a
-                      className="desktop-only"
+                      <StorefrontOutlinedIcon fontSize="medium" />
+                    </Box>
+
+                    {/* Leaderboard Icon */}
+                    <Box
+                      component="a"
                       href="#"
+                      className="desktop-only"
                       onClick={e => {
                         e.preventDefault();
                         this.handleOpenLeaderboardsModal();
@@ -1352,41 +1357,61 @@ class SiteWrapper extends Component {
                       id="btn_leaderboards"
                       onMouseEnter={() => this.handleMouseEnter(4)}
                       onMouseLeave={this.handleMouseLeave}
+                      sx={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        transition: 'color 0.3s ease',
+                        '& svg': {
+                          color: hoverTabIndex === 4 ? 'red' : 'inherit',
+                          transition: 'color 0.3s ease',
+                        },
+                      }}
                     >
-                      {hoverTabIndex === 4 ? (
-                        <LeaderboardsHover width="18pt" />
-                      ) : (
-                        <Leaderboards />
-                      )}
-                    </a>
-                    <a
+                      <LeaderboardOutlined fontSize="medium" />
+                    </Box>
+
+                    {/* Notifications Icon */}
+                    <Box
+                      component="a"
                       href="#"
                       className="desktop-only"
                       onClick={e => {
                         e.preventDefault();
-                        this.handleNotificationsClick();
+                        this.handleNotificationsClick(e);
                       }}
                       id="btn_notifications"
                       onMouseEnter={() => this.handleMouseEnter(3)}
                       onMouseLeave={this.handleMouseLeave}
+                      sx={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        transition: 'color 0.3s ease',
+                        '& svg': {
+                          color: hoverTabIndex === 3 ? 'red' : 'inherit',
+                          transition: 'color 0.3s ease',
+                        },
+                      }}
                     >
-                      {unreadNotificationsCount > 0 && (
-                        <span className="unread_message_badge notifications">
-                          {unreadNotificationsCount > 10 ? '9+' : unreadNotificationsCount}
-                        </span>
-                      )}
-
-                      {hoverTabIndex === 3 ? (
-                        <NotificationsHover width="18pt" />
-                      ) : (
-                        <Notifications />
-                      )}
-                    </a>
+                      <Badge
+                        badgeContent={unreadNotificationsCount > 10 ? '9+' : unreadNotificationsCount}
+                        color="error"
+                        sx={{
+                          '& .MuiBadge-badge': {
+                            fontSize: '10px',
+                            height: '16px',
+                            minWidth: '16px',
+                          },
+                        }}
+                      >
+                        <NotificationsOutlined fontSize="medium" />
+                      </Badge>
+                    </Box>
                   </>
-
-                ) : (
-                  null
-                )}
+                ) : null}
                 {this.state.loaded ? (
                   isAuthenticated ? (
                     <>
@@ -1442,7 +1467,10 @@ class SiteWrapper extends Component {
                             maxHeight: "33px",
                             borderRadius: "0.25em",
                           }}
-                          onClick={this.handleBalanceClick}
+                          onClick={e => {
+                            e.preventDefault();
+                            this.handleBalanceClick(e);
+                          }}
                         >
                           <AccountBalanceWallet
                             style={{
@@ -1466,29 +1494,48 @@ class SiteWrapper extends Component {
                           </span>
                         </Button>
                       </div>
-
-                      <a
+                      <Box
+                        component="a"
                         href="#"
                         className="mobile-only"
                         onClick={(e) => {
                           e.preventDefault();
-                          this.handleNotificationsClick();
+                          this.handleNotificationsClick(e);
                         }}
                         id="btn_notifications"
                         onMouseEnter={() => this.handleMouseEnter(3)}
                         onMouseLeave={this.handleMouseLeave}
+                        sx={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          transition: 'color 0.3s ease',
+                          '& svg': {
+                            color: hoverTabIndex === 3 ? 'red' : 'inherit',
+                            transition: 'color 0.3s ease',
+                          },
+                        }}
                       >
-                        {hoverTabIndex === 3 ? (
-                          <NotificationsHover width="18pt" />
-                        ) : (
-                          <Notifications />
-                        )}
-                      </a>
+                        <Badge
+                          badgeContent={unreadNotificationsCount > 10 ? '9+' : unreadNotificationsCount}
+                          color="error"
+                          sx={{
+                            '& .MuiBadge-badge': {
+                              fontSize: '10px',
+                              height: '16px',
+                              minWidth: '16px',
+                            },
+                          }}
+                        >
+                          <NotificationsOutlined fontSize="medium" />
+                        </Badge>
+                      </Box>
 
                       <Button
                         aria-controls="profile-menu"
                         aria-haspopup="true"
-                        onClick={this.handleClickMenu}
+                        onClick={this.handleOpenProfileMenu}
                         className="profile-menu"
                       >
                         <Avatar
@@ -1504,11 +1551,10 @@ class SiteWrapper extends Component {
                       </Button>
 
                       <Menu
-                        id="profile-menu"
-                        anchorEl={anchorEl}
+                        anchorEl={anchorElProfile}
                         getContentAnchorEl={null}
-                        open={Boolean(anchorEl)}
-                        onClose={this.handleCloseMenu}
+                        open={Boolean(anchorElProfile)}
+                        onClose={this.handleCloseProfileMenu}
                         anchorOrigin={{
                           vertical: "bottom",
                           horizontal: "center",
@@ -1517,16 +1563,7 @@ class SiteWrapper extends Component {
                           vertical: "top",
                           horizontal: "center",
                         }}
-                        PaperProps={{
-                          style: {
-                            width: "200px",
-                            border: "none",
-                            filter: isDarkMode ? "unset" : "hue-rotate(25deg)",
-                            background: isDarkMode
-                              ? "linear-gradient(45deg, #7300c8, #620096)"
-                              : "linear-gradient(45deg, #e300ea, #a700ff)",
-                          },
-                        }}
+
                         BackdropProps={{
                           invisible: true,
                         }}
@@ -1608,25 +1645,31 @@ class SiteWrapper extends Component {
                   )
                 ) : (
                   // Skeleton Loader
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                    <Skeleton variant="rect" width={80} height={30} />
-                    <Skeleton variant="text" width={100} height={30} />
-                    <Skeleton variant="circle" width={40} height={40} />
-                  </div>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Skeleton variant="rectangular" sx={{ width: 80, height: 30 }} />
+                    <Skeleton variant="text" sx={{ width: 100, height: 30 }} />
+                    <Skeleton variant="circular" sx={{ width: 40, height: 40 }} />
+                  </Box>
                 )}
               </div>
             </div>
             {this.state.loaded ? (
               <>
-                <div
-                  id="notifications"
-                  ref={this.notificationsRef}
-                  className={showNotifications ? '' : 'hidden'}
-                  onClick={this.handleNotificationsClick}
+                <Popover
+                  open={anchorElNotifications}
+                  anchorEl={anchorElNotifications}
+                  onClose={this.handleCloseNotifications}
+                  anchorOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'center',
+                  }}
+                  transformOrigin={{
+                    vertical: 'top',
+                    horizontal: 'center',
+                  }}
                 >
-                  <div className="arrow-up"></div>
-                  <div className="header_panel_contents">
-                    {<h2 className='title'>NOTIFICATIONS</h2>}
+                  <Typography sx={{ p: 2 }}>NOTIFICATIONS</Typography>
+                  <div>
                     {
                       <div className="notification-element">
                         {notificationsArray.length > 0 ? (
@@ -1670,7 +1713,8 @@ class SiteWrapper extends Component {
                       </div>
                     }
                   </div>
-                </div>
+                </Popover>
+
                 {showAllGameLogs && (
                   <AllTransactionsModal
                     modalIsOpen={showAllGameLogs}
@@ -1700,14 +1744,20 @@ class SiteWrapper extends Component {
                   />
                 )}
 
-                <div
-                  id="game_logs"
-                  ref={this.gameLogsRef}
-                  className={this.state.showGameLog ? '' : 'hidden'}
-                  onClick={this.handleBalanceClick}
+                <Popover
+                  open={anchorElGameLog}
+                  anchorEl={anchorElGameLog}
+                  onClose={this.handleCloseGameLog}
+                  anchorOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'center',
+                  }}
+                  transformOrigin={{
+                    vertical: 'top',
+                    horizontal: 'center',
+                  }}
                 >
-                  <div className="arrow-up"></div>
-                  <div className="header_panel_contents">
+                  <>
                     {
                       <Tooltip
                         style={{ position: "absolute", right: "20px" }}
@@ -1748,127 +1798,111 @@ class SiteWrapper extends Component {
                     }
 
 
-                    <h2 className='title'>BALANCE HISTORY</h2>
+                    <Typography sx={{ p: 2 }}>BALANCE HISTORY</Typography>
 
-                    {
-                      <div>
-                        <table id="balance-history">
-                          <tbody>
-                            {transactions.length === 0 ? (
-                              <tr>
-                                <td>...</td>
-                              </tr>
-                            ) : (
-                              transactions.slice(0, 5).map((row, key) => (
-                                <tr key={key}>
-                                  {row.hash && row.hash.length !== 10 ? (
-                                    <>
-                                      {row.status !== "processing" ? (
-                                        <a href={`https://explorer.solana.com/tx/${row.hash}?cluster=mainnet`} rel="noopener noreferrer" target="_blank">
-                                          <td className={`amount ${row.status === "waiting" || row.status === "pending" || row.status === "processing" ? 'grey' : (row.amount > 0 ? 'green' : 'red')}`}>
-                                            {row.amount > 0 ? (
-                                              <>
-                                                {'+ '}
-                                                {convertToCurrency(row.amount, solPrice)}
-                                              </>
-                                            ) : (
-                                              <>
-                                                {'- '}
-                                                {convertToCurrency(Math.abs(row.amount), solPrice)}
-                                              </>
-                                            )}
-                                          </td>
-                                          <td className="fromNow">{row.from_now}</td>
-                                        </a>
-                                      ) : (
-                                        <>
-                                          <td className={`amount grey`} >
-                                            {row.amount > 0 ? (
-                                              <>
-                                                {'+ '}
-                                                {convertToCurrency(row.amount, solPrice)}
-                                              </>
-                                            ) : (
-                                              <>
-                                                {'- '}
-                                                {convertToCurrency(Math.abs(row.amount), solPrice)}
-                                              </>
-                                            )}
-                                          </td>
-                                          <td className="fromNow">{row.from_now}</td>
-                                        </>
-                                      )}
-                                    </>
-
-                                  ) : (
-                                    <>
-                                      <td className={`amount ${row.status === "waiting" || row.status === "pending" || row.status === "processing" || row.status === "in_process" ? 'grey' : (row.amount > 0 ? 'green' : 'red')}`}>
-                                        {row.amount > 0 ? (
-                                          <>
-                                            {'+ '}
-                                            {convertToCurrency(row.amount, solPrice)}
-                                          </>
-                                        ) : (
-                                          <>
-                                            {'- '}
-                                            {convertToCurrency(Math.abs(row.amount), solPrice)}
-                                          </>
-                                        )}
-                                      </td>
-                                      <td className="fromNow">{row.from_now}</td>
-                                    </>
-                                  )}
-                                </tr>
-                              ))
-                            )}
-                          </tbody>
-                        </table>
-                        <Button onClick={this.toggleAllTransactions}>ALL TRANSACTIONS</Button>
-                      </div>
-                    }
+                    <TableContainer component={Paper}>
+                      <Table aria-label="a dense table" size="small">
+                        <TableBody>
+                          {transactions.length === 0 ? (
+                            <TableRow>
+                              <TableCell>...</TableCell>
+                            </TableRow>
+                          ) : (
+                            transactions.slice(0, 5).map((row, key) => (
+                              <TableRow
+                                key={key}
+                                onClick={() => {
+                                  if (row.hash && row.hash.length !== 10 && row.status !== "processing") {
+                                    window.open(`https://explorer.solana.com/tx/${row.hash}?cluster=mainnet`, '_blank');
+                                  }
+                                }}
+                                sx={{
+                                  cursor: row.hash && row.hash.length !== 10 && row.status !== "processing" ? 'pointer' : 'default',
+                                  '&:hover': {
+                                    backgroundColor: row.hash && row.hash.length !== 10 && row.status !== "processing" ? 'rgba(0, 0, 0, 0.04)' : 'inherit'
+                                  },
+                                }}
+                              >
+                                <TableCell sx={{
+                                  color: (row.status === "waiting" || row.status === "pending" || row.status === "processing" || row.status === "in_process") ? 'grey' :
+                                    (row.amount > 0 ? 'green' : 'red')
+                                }}>
+                                  {row.amount > 0 ? `+ ${convertToCurrency(row.amount, solPrice)}` : `- ${convertToCurrency(Math.abs(row.amount), solPrice)}`}
+                                </TableCell>
+                                <TableCell>
+                                  {row.from_now}
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          )}
+                        </TableBody>
+                      </Table>
+                      <Button onClick={this.toggleAllTransactions}>ALL TRANSACTIONS</Button>
+                    </TableContainer>
 
                     <div className="transaction-panel">
+                      {/* Inventory Button */}
                       <Button
                         className="btn-inventory title"
                         onClick={this.handleOpenInventoryModal}
+                        startIcon={<Inventory2Outlined />}
                       >
                         Inventory
                       </Button>
+
+                      {/* Vault Button */}
                       <Button
                         className="btn-vault title"
                         onClick={this.handleOpenVaultModal}
+                        startIcon={<SavingsOutlined />}
                       >
                         Vault&nbsp;
-                        <span style={{ border: "2px solid", background: "#1284cc11", color: "#1284ff", padding: "2px 5px", marginLeft: "10px", borderRadius: "0.4em" }}>
-                          {this.state.vaultBal ? convertToCurrency(this.state.vaultBal, solPrice) : 0}
+                        <span
+                          style={{
+                            border: '2px solid',
+                            background: '#1284cc11',
+                            color: '#1284ff',
+                            padding: '2px 5px',
+                            marginLeft: '10px',
+                            borderRadius: '0.4em',
+                          }}
+                        >
+                          {this.state.vaultBal
+                            ? convertToCurrency(this.state.vaultBal, solPrice)
+                            : 0}
                         </span>
                       </Button>
                     </div>
+
                     <div className="transaction-panel">
+                      {/* Withdraw or Debt Button */}
                       {this.state.remainingLoans > 0 ? (
                         <Button
                           className="btn-withdraw debt title"
                           onClick={this.handleOpenDebtsModal}
+                          startIcon={<MoneyOffCsredOutlined />}
                         >
-                          <div>{convertToCurrency(this.state.remainingLoans, solPrice)} IN DEBT</div>
+                          {convertToCurrency(this.state.remainingLoans, solPrice)} IN DEBT
                         </Button>
                       ) : (
                         <Button
                           className="btn-withdraw title"
                           onClick={this.handleOpenWithdrawModal}
-                        // isDarkMode={isDarkMode}
+                          startIcon={<AttachMoneyOutlined />}
                         >
                           Withdraw
                         </Button>
                       )}
 
+                      {/* Deposit Button */}
                       <Button
                         className="btn-deposit title"
                         onClick={this.handleOpenDepositModal}
-                      // isDarkMode={isDarkMode}
+                        startIcon={<AccountBalanceWalletOutlined />}
                       >
                         Deposit
                       </Button>
+
                       <hr />
                       {walletAddress ? (
                         <>
@@ -1884,12 +1918,12 @@ class SiteWrapper extends Component {
                         </>
                       ) : (
                         <Button className="connect title" onClick={this.loadSolanaWallet}>
-                          CONNECT WALLET&nbsp;<FontAwesomeIcon icon={faExternalLinkAlt} />
+                          CONNECT WALLET
                         </Button>
                       )}
                     </div>
-                  </div>
-                </div>
+                  </>
+                </Popover>
               </>
             ) : (
               null
@@ -1979,9 +2013,7 @@ class SiteWrapper extends Component {
               modalIsOpen={showLoginModal}
               closeModal={this.handleCloseLoginModal}
               openSignupModal={this.handleOpenSignupModal}
-              openVerificationModal={this.handleOpenVerificationModal}
               initSocket={this.initSocket}
-              openResetPasswordModal={this.handleOpenResetPasswordModal}
             />
           )}
           {showDebtsModal && (
@@ -1996,12 +2028,6 @@ class SiteWrapper extends Component {
               modalIsOpen={showSignupModal}
               closeModal={this.handleCloseSignupModal}
               openLoginModal={this.handleOpenLoginModal}
-            />
-          )}
-          {showVerificationModal && (
-            <VerificationModal
-              modalIsOpen={showVerificationModal}
-              closeModal={this.handleCloseVerificationModal}
             />
           )}
           {showDepositModal && (
@@ -2038,13 +2064,6 @@ class SiteWrapper extends Component {
               account={walletAddress}
             />
           )}
-          {showResetPasswordModal && (
-            <ResetPasswordModal
-              modalIsOpen={showResetPasswordModal}
-              closeModal={this.handleCloseResetPasswordModal}
-              openLoginModal={this.handleOpenLoginModal}
-            />
-          )}
           <ListItemModal />
           <DeListItemModal />
           <ConfirmTradeModal />
@@ -2061,7 +2080,7 @@ class SiteWrapper extends Component {
             showSkipButton
             styles={{
               options: {
-                zIndex: 10000,
+                zIndex: 9,
                 backgroundColor: isDarkMode ? 'rgb(255 0 234 / 60%)' : '#ccc9',
                 primaryColor: '#ff0000',
                 arrowColor: isDarkMode ? 'rgb(255 0 234 / 60%)' : '#ccc9',
@@ -2093,7 +2112,7 @@ class SiteWrapper extends Component {
 
         </div>
 
-      </MuiThemeProvider>
+      </ThemeProvider >
     );
   }
 }

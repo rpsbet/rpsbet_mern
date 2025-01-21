@@ -27,8 +27,9 @@ import {
   FormControlLabel,
   Icon,
   Tooltip,
-  Typography
-} from '@material-ui/core';
+  Typography,
+  Box
+} from '@mui/material';
 import { Warning, Info, Link, FiberManualRecord, AccountBalanceWallet } from '@mui/icons-material';
 import QRCodeIcon from '@mui/icons-material/CropFreeOutlined';
 import WalletIcon from '@mui/icons-material/AccountBalanceWallet';
@@ -36,7 +37,7 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import axios from '../../util/Api';
 import { alertModal } from '../modal/ConfirmAlerts';
 import { convertToCurrency } from '../../util/conversion';
-import { withStyles } from '@material-ui/core/styles';
+import { styled } from '@mui/material/styles';
 import { token } from '../../config/index.js';
 
 Modal.setAppElement('#root');
@@ -58,104 +59,46 @@ const customStyles = {
   },
 };
 
-const suggestionsListStyle = {
-  listStyleType: 'none',
-  padding: '0',
-  margin: '4px 0',
-  border: '1px solid #ccc',
-  borderRadius: '4px',
-  backgroundColor: '#e5e5e5',
-  position: 'absolute',
-  maxHeight: '100px',
-  overflowY: 'auto',
-  zIndex: '1',
-  width: 'calc(80% - 2px)', // Adjusting width to match the text field
-};
+// Styled Components
+const Root = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  padding: theme.spacing(2),
+  backgroundColor: '#f9f9f9',
+  borderRadius: '8px',
+  boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+}));
 
-const suggestionStyle = {
-  padding: '8px 12px',
-  cursor: 'pointer',
-  borderBottom: '1px solid #ccc',
-};
+const PaymentMethodContainer = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  marginBottom: theme.spacing(2),
+}));
 
-const styles = (theme) => ({
-  root: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    padding: theme.spacing(2),
-    backgroundColor: '#f9f9f9',
-    borderRadius: '8px',
-    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
-  },
-  paymentMethodContainer: {
-    display: 'flex',
-    alignItems: 'center',
-    marginBottom: theme.spacing(2),
-  },
-  radioLabel: {
-    marginRight: theme.spacing(2),
-    fontWeight: 'bold',
-    display: 'flex',
-    alignItems: 'center',
-    color: (props) => (props.isDarkMode ? '#f9f9f9' : '#333'),
-  },
-  radioGroup: {
-    flexDirection: 'row',
-  },
-  customButton: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    cursor: 'pointer',
-    height: '100% !important',
-    width: '100% !important',
-    borderRadius: '0.3em',
-    padding: '10px',
-    marginLeft: '-15px !important',
-    background: '#0076ff',
-    '&:hover': {
-      outline: '2px solid white',
-    },
-  },
-  description: {
-    marginTop: theme.spacing(2),
-    textAlign: 'center',
-    color: '#666',
-  },
-  price: {
-    margin: theme.spacing(0.5),
-    color: '#dfeeff',
-    background: '#2e3fa1',
-    padding: '2.5px 5px',
-    border: '2px solid #c2e0ff',
-    borderRadius: '30px',
-    whiteSpace: 'nowrap',
-  },
-  labelContainer: {
-    display: 'flex',
-    alignItems: 'center',
-    color: '#333',
-  },
-  radioInputChecked: {
-    '&$radioInput': {
-      outline: '2px solid white',
-    },
-  },
-  icon: {
-    marginRight: theme.spacing(1),
-  },
-  radioInput: {
-    display: 'none',
-  },
-  additionalText: {
-    color: '#f9f9f9',
-  },
-});
+const RadioLabel = styled(Typography)(({ isDarkMode }) => ({
+  marginRight: '16px',
+  fontWeight: 'bold',
+  display: 'flex',
+  alignItems: 'center',
+  color: isDarkMode ? '#f9f9f9' : '#333',
+}));
+
+const LabelContainer = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  position: 'relative',
+}));
+
+const Description = styled(Typography)(({ theme }) => ({
+  marginTop: theme.spacing(2),
+  textAlign: 'center',
+  color: '#666',
+}));
+
 
 function WithdrawModal(props) {
   const {
-    classes,
     userInfo,
     isDarkMode,
     gasfee,
@@ -309,7 +252,7 @@ function WithdrawModal(props) {
           token,
         },
       });
-      const estAmt = response.data.estimated_amount - gasfee; 
+      const estAmt = response.data.estimated_amount - gasfee;
       setEstimatedAmount(estAmt);
     } catch (error) {
       // console.error('Error in estimating amount:', error);
@@ -446,7 +389,7 @@ function WithdrawModal(props) {
             position: 'fixed',
             width: '100%',
             height: '100vh',
-            zIndex: isLoading ? 999 : 0,
+            zIndex: isLoading ? 3 : 0,
           },
         }}
       />
@@ -462,7 +405,7 @@ function WithdrawModal(props) {
               <Icon component={AccountBalanceWallet} className="mr-2" />
               WITHDRAW
             </h2>
-            <Button className="btn-close title" onClick={closeModal}>
+            <Button className="btn-close" variant='text' color='error'  onClick={closeModal}>
               ×
             </Button>
           </div>
@@ -470,30 +413,27 @@ function WithdrawModal(props) {
             <div className="modal-content-wrapper">
               <div className="modal-content-panel">
                 {/* Payment Method Selection */}
-                <div className={classes.root}>
-                  <h4 className={classes.radioLabel}>Select Withdrawal Method:</h4>
-                  <div className={classes.paymentMethodContainer}>
+                <Root>
+                  <RadioLabel isDarkMode={isDarkMode}>Select Withdrawal Method:</RadioLabel>
+                  <PaymentMethodContainer>
                     <RadioGroup
                       aria-label="payment-method"
                       name="payment-method"
                       value={paymentMethod}
                       onChange={handlePaymentMethodChange}
-                      className={classes.radioGroup}
+                      sx={{ flexDirection: 'row' }}
                     >
                       <FormControlLabel
                         value="web3"
-                        control={<Radio color="primary" />}
+                        control={<Radio color='error' />}
                         label={
-                          <div
-                            className={classes.labelContainer}
-                            style={{ position: 'relative' }}
-                          >
-                            <WalletIcon className={classes.icon} />
+                          <LabelContainer>
+                            <WalletIcon sx={{ marginRight: 1 }} />
                             <span>SOL</span>
                             {paymentMethod === 'web3' && (
-                              <span
+                              <Box
                                 className="roll-tag"
-                                style={{
+                                sx={{
                                   position: 'absolute',
                                   transform: 'translateY(30px)',
                                   filter: 'invert(1)',
@@ -501,40 +441,33 @@ function WithdrawModal(props) {
                                 }}
                               >
                                 INSTANT&nbsp;
-                                <FontAwesomeIcon
-                                  icon={faBolt}
-                                  style={{ marginLeft: '0.2em' }}
-                                />
-                              </span>
+                                <FontAwesomeIcon icon={faBolt} style={{ marginLeft: '0.2em' }} />
+                              </Box>
                             )}
-                          </div>
+                          </LabelContainer>
                         }
-                        className={classes.radioLabel}
                       />
                       <FormControlLabel
                         value="web2"
-                        control={<Radio color="primary" />}
+                        control={<Radio color='error' />}
                         label={
-                          <div className={classes.labelContainer}>
-                            <QRCodeIcon className={classes.icon} />
+                          <LabelContainer>
+                            <QRCodeIcon sx={{ marginRight: 1 }} />
                             <span>Web2</span>
-                          </div>
+                          </LabelContainer>
                         }
-                        className={classes.radioLabel}
                       />
                     </RadioGroup>
-                  </div>
-                  <Typography variant="body2" className={classes.description}>
-                    {description}
-                  </Typography>
-                </div>
+                  </PaymentMethodContainer>
+                  <Description variant="body2">{description}</Description>
+                </Root>
                 {/* Payment Method-Specific Fields */}
                 {paymentMethod === 'web3' ? (
                   <>
                     <p className="step-tag">Step 1 out of 2</p>
                     <div className="input-amount">
                       <Typography>WITHDRAWAL AMOUNT</Typography>
-                      <TextField
+                       <TextField color="secondary" 
                         pattern="^\\d*\\.?\\d*$"
                         variant="filled"
                         autoComplete="off"
@@ -553,7 +486,7 @@ function WithdrawModal(props) {
                       <div style={{ display: 'flex', alignItems: 'center' }}>
                         <Typography variant="body2">SEND TO ADDRESS</Typography>
                         {isConnected ? (
-                          <TextField
+                           <TextField color="secondary" 
                             label="Account"
                             variant="filled"
                             style={{ width: '100%' }}
@@ -564,7 +497,7 @@ function WithdrawModal(props) {
                             className="form-control"
                           />
                         ) : (
-                          <TextField
+                           <TextField color="secondary" 
                             label="Account"
                             variant="filled"
                             style={{ width: '100%' }}
@@ -620,7 +553,7 @@ function WithdrawModal(props) {
                       <Typography style={{ whiteSpace: 'nowrap' }}>
                         CURRENCY TYPE
                       </Typography>
-                      <TextField
+                       <TextField color="secondary" 
                         type="text"
                         variant="filled"
                         autoComplete="off"
@@ -665,7 +598,7 @@ function WithdrawModal(props) {
                     <p className="step-tag">Step 2 out of 3</p>
                     <div className="input-amount">
                       <Typography>WITHDRAWAL AMOUNT</Typography>
-                      <TextField
+                       <TextField color="secondary" 
                         pattern="^\\d*\\.?\\d*$"
                         variant="filled"
                         autoComplete="off"
@@ -681,7 +614,7 @@ function WithdrawModal(props) {
                     </div>
                     <div className="input-amount">
                       <Typography>RECEIVE AMOUNT</Typography>
-                      <TextField
+                       <TextField color="secondary" 
                         variant="outlined"
                         value={estimatedAmount}
                         InputProps={{
@@ -701,7 +634,7 @@ function WithdrawModal(props) {
                     <div style={{ marginTop: '20px' }}>
                       <Typography variant="body2">SEND TO ADDRESS</Typography>
                       <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <TextField
+                         <TextField color="secondary" 
                           variant="filled"
                           fullWidth
                           error={!validAddress}
@@ -731,7 +664,7 @@ function WithdrawModal(props) {
                           MEMO / DESTINATION TAG ETC. (OPTIONAL)
                         </Typography>
                         <div style={{ display: 'flex', alignItems: 'center' }}>
-                          <TextField
+                           <TextField color="secondary" 
                             variant="filled"
                             fullWidth
                             value={extraId}
@@ -810,13 +743,13 @@ function WithdrawModal(props) {
           {/* Modal Footer */}
           <div className="modal-footer">
             <Button
-              className="btn-submit"
+              variant='contained' color='error'
               onClick={paymentMethod === 'web3' ? send : createPayoutAndClose}
             >
               {/* COMING SOON! (INVITE ONLY) or 'Withdraw' */}
               COMING SOON! (INVITE ONLY)
             </Button>
-            {/* <Button className="btn-back" onClick={closeModal}>
+            {/* <Button variant='contained' color='secondary' onClick={closeModal}>
               CANCEL
             </Button> */}
           </div>
@@ -843,7 +776,4 @@ const mapDispatchToProps = {
   getCustomerStatisticsData,
 };
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(withStyles(styles)(WithdrawModal));
+export default connect(mapStateToProps, mapDispatchToProps)(WithdrawModal);

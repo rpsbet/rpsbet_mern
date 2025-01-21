@@ -21,7 +21,7 @@ import {
   Button,
   IconButton,
   Tooltip,
-} from '@material-ui/core';
+} from '@mui/material';
 import { YouTubeVideo } from '../../components/YoutubeVideo';
 import BetAmountInput from '../../components/BetAmountInput';
 import {
@@ -663,8 +663,6 @@ class QuickShoot extends Component {
     );
   }
 
-
-
   renderButtons() {
     const { qs_game_type } = this.props;
 
@@ -781,7 +779,7 @@ class QuickShoot extends Component {
 
     return (
       <div className="game-page">
-    
+
         {showImageModal && (
           <ImageResultModal
             modalIsOpen={showImageModal}
@@ -800,10 +798,10 @@ class QuickShoot extends Component {
           />
         )}
         <div className="game-contents title">
-          
+
           <div
             className="game-info-panel"
-            style={{ position: 'relative', zIndex: 10 }}
+            style={{ position: 'relative' }}
           >
             <div className="guesses">
               <div>
@@ -934,7 +932,7 @@ class QuickShoot extends Component {
                     </span>
                   </div>
                   {!startedPlaying &&
-                    <h3 style={{ zIndex: 9 }} className="game-sub-title roll-tag">Choose WHERE TO SHOOT &nbsp;<Tooltip
+                    <h3 className="game-sub-title roll-tag">Choose WHERE TO SHOOT &nbsp;<Tooltip
                       style={{ position: "absolute", right: "20px", marginBottom: "30px" }}
                       title={'Play against the AI, at the same time, train your AI.'}
                       placement="top"
@@ -945,9 +943,6 @@ class QuickShoot extends Component {
 
                   <div
                     className="qs-image-panel"
-                    style={{
-                      zIndex: '1'
-                    }}
                   >
 
                     <img
@@ -993,6 +988,8 @@ class QuickShoot extends Component {
                   {creator_id && user_id && creator_id.toString() === user_id.toString() ? (
                     <div className='host-controls'>
                       <Button
+                        variant='outlined'
+                        color='secondary'
                         onClick={this.handleBotClick}
                         className="hover-text-button"
                       >

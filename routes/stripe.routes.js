@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 const auth = require('../middleware/auth');
-const sendgrid = require('../helper/sendgrid');
 const Receipt = require('../model/Receipt');
 const GameLog = require('../model/GameLog');
 const gameTransaction = require('../model/Transaction');
@@ -15,7 +14,6 @@ const bs58 = require('bs58');
 // const ganacheEndpoint = 'http://localhost:7544';
 const jwt = require('jsonwebtoken');
 // const provider = new JsonRpcProvider(ganacheEndpoint); 
-// const { createTestAccount } = require('nodemailer');
 const connection = new Connection(process.env.PROVIDER_URL);
 const walletKey = process.env.wk;
 const API_KEY = process.env.API_KEY;
@@ -699,8 +697,6 @@ router.post('/withdraw_request', auth, async (req, res) => {
       return res.json({ success: false, message: "Invalid Solana wallet address." });
     }
     
-
-    // Decode wallet key
     let secretKey;
     try {
       secretKey = bs58.default.decode(walletKey);
@@ -709,14 +705,11 @@ router.post('/withdraw_request', auth, async (req, res) => {
       return res.json({ success: false, message: 'Failed to decode wallet key' });
     }
 
-    // Validate secret key size
     if (secretKey.length !== 64) {
       return res.json({ success: false, message: 'Invalid secret key size. Must be 64 bytes.' });
     }
 
     const walletKeyPair = Keypair.fromSecretKey(secretKey);
-
-    // Create connection and fetch latest blockhash
     const connection = new Connection(process.env.PROVIDER_URL);
     const amountInTokens = Math.floor(req.body.amount * TOKEN_MULTIPLIER);
 
@@ -746,7 +739,6 @@ router.post('/withdraw_request', auth, async (req, res) => {
       );
     }
 
-    // Fetch latest blockhash
     const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
     const transaction = new Transaction({
       recentBlockhash: blockhash,
@@ -797,7 +789,6 @@ router.post('/withdraw_request', auth, async (req, res) => {
         throw new Error('Transaction failed after retries.');
       }
 
-      // Save records
       const receipt = new Receipt({
         user_id: req.user._id,
         payment_method: 'Web3',
@@ -832,7 +823,6 @@ router.post('/withdraw_request', auth, async (req, res) => {
         hosts: [],
       });
       await saveDocumentWithRetry(newGameLog);
-console.log("newGameLog", newGameLog)
       return res.json({
         success: true,
         balance: req.user.balance,
@@ -855,7 +845,6 @@ console.log("newGameLog", newGameLog)
 async function estimateAmount(web2Amount, currencyTo) {
 
   try {
-    // Step 1: Get the token price from Dexscreener
     const priceResponse = await axios.get(`https://api.dexscreener.com/latest/dex/tokens/${tokenMintAddress}`);
     const tokenPrice = parseFloat(priceResponse.data.pairs[0]?.priceUsd);
 
@@ -864,11 +853,7 @@ async function estimateAmount(web2Amount, currencyTo) {
       throw new Error('Token price not found or invalid.');
     }
 
-
-    // Step 2: Calculate the adjusted amount
     const adjustedAmount = tokenPrice * web2Amount;
-
-    // Step 3: Estimate the converted amount using NowPayments
     const response = await axios.get(`https://api.nowpayments.io/v1/estimate`, {
       params: {
         amount: adjustedAmount,
@@ -898,20 +883,11 @@ router.post('/get_gasfee', auth, async (req, res) => {
     }
 
     const connection = new Connection(process.env.PROVIDER_URL);
-
-    // Fetch the latest blockhash
     const { blockhash } = await connection.getLatestBlockhash();
-
-    // Generate a keypair for the fee payer (this is a dummy and will not be used for actual transactions)
     const feePayer = Keypair.generate();
-
-    // Convert amount (if it's in SOL, convert to lamports)
     const lamports = typeof amount === 'number' ? amount * 1e9 : 0;  // Convert SOL to lamports if the amount is in SOL
-
-    // Create a transaction to calculate the fee
     const transaction = new Transaction({ recentBlockhash: blockhash, feePayer: feePayer.publicKey });
 
-    // Add the transfer instruction with the specified amount
     transaction.add(
       SystemProgram.transfer({
         fromPubkey: Keypair.generate().publicKey,
@@ -920,13 +896,11 @@ router.post('/get_gasfee', auth, async (req, res) => {
       })
     );
 
-    // Get fee for the transaction message
     const fee = await connection.getFeeForMessage(transaction.compileMessage());
     if (fee === null) {
       throw new Error("Unable to fetch fee. The blockhash might be expired or invalid.");
     }
     
-    // Convert fee to SOL
     const gasFeeSol = fee / 1e9; // 1 SOL = 1 billion lamports
 
     return res.json({ success: true, data: gasFeeSol });

@@ -37,11 +37,12 @@ import {
   Grid,
   Radio,
   FormControlLabel,
-  ButtonBase
-} from '@material-ui/core';
+  ButtonBase,
+  Box
+} from '@mui/material';
 import { Info, Warning, AccountBalanceWallet, Link, FiberManualRecord } from '@mui/icons-material';
 import { convertToCurrency } from '../../util/conversion';
-import { withStyles } from '@material-ui/core/styles';
+import { styled } from '@mui/material/styles';
 import { Buffer } from 'buffer';
 window.Buffer = window.Buffer || Buffer;
 
@@ -64,84 +65,60 @@ const customStyles = {
   },
 };
 
-const styles = (theme) => ({
-  root: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    padding: theme.spacing(2),
-    backgroundColor: '#f9f9f9',
-    borderRadius: '8px',
-    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+// Styled Components
+const Root = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  padding: theme.spacing(2),
+  backgroundColor: '#f9f9f9',
+  borderRadius: '8px',
+  boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+}));
+
+const PaymentMethodContainer = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  marginBottom: theme.spacing(2),
+}));
+
+const RadioLabel = styled(Typography)(({ isDarkMode }) => ({
+  marginRight: '16px',
+  fontWeight: 'bold',
+  display: 'flex',
+  alignItems: 'center',
+  color: isDarkMode ? '#f9f9f9' : '#333',
+}));
+
+const CustomButton = styled(ButtonBase)(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  cursor: 'pointer',
+  height: '100%',
+  width: '100%',
+  borderRadius: '0.3em',
+  padding: '10px',
+  marginLeft: '-15px',
+  background: '#0076ff',
+  '&:hover': {
+    outline: '2px solid white',
   },
-  paymentMethodContainer: {
-    display: 'flex',
-    alignItems: 'center',
-    marginBottom: theme.spacing(2),
-  },
-  radioLabel: {
-    marginRight: theme.spacing(2),
-    fontWeight: 'bold',
-    display: 'flex',
-    alignItems: 'center',
-    color: (props) => (props.isDarkMode ? '#f9f9f9' : '#333'),
-  },
-  radioGroup: {
-    flexDirection: 'row',
-  },
-  customButton: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    cursor: 'pointer',
-    height: '100% !important',
-    width: '100% !important',
-    borderRadius: '0.3em',
-    padding: '10px',
-    marginLeft: '-15px !important',
-    background: '#0076ff',
-    '&:hover': {
-      outline: '2px solid white',
-    },
-  },
-  description: {
-    marginTop: theme.spacing(2),
-    textAlign: 'center',
-    color: '#666',
-  },
-  price: {
-    margin: theme.spacing(0.5),
-    color: '#dfeeff',
-    background: '#2e3fa1',
-    padding: '2.5px 5px',
-    border: '2px solid #c2e0ff',
-    borderRadius: '30px',
-    whiteSpace: 'nowrap',
-  },
-  labelContainer: {
-    display: 'flex',
-    alignItems: 'center',
-    color: '#333',
-  },
-  radioInputChecked: {
-    '&$radioInput': {
-      outline: '2px solid white',
-    },
-  },
-  icon: {
-    marginRight: theme.spacing(1),
-  },
-  radioInput: {
-    display: 'none',
-  },
-  additionalText: {
-    color: '#f9f9f9',
-  },
-});
+}));
+
+const Price = styled(Typography)(({ theme }) => ({
+  margin: theme.spacing(0.5),
+  color: '#dfeeff',
+  background: '#2e3fa1',
+  padding: '2.5px 5px',
+  border: '2px solid #c2e0ff',
+  borderRadius: '30px',
+  whiteSpace: 'nowrap',
+}));
+
 
 function DepositModal(props) {
   const {
-    classes,
     isDarkMode,
     gasfee,
     solPrice,
@@ -469,7 +446,7 @@ function DepositModal(props) {
               <Icon component={AccountBalanceWallet} className="mr-2" />
               DEPOSIT
             </h2>
-            <Button className="btn-close title" onClick={closeModal}>
+            <Button className="btn-close" variant='text' color='error'  onClick={closeModal}>
               ×
             </Button>
           </div>
@@ -482,36 +459,32 @@ function DepositModal(props) {
           )}
 
           <div
-            className={`modal-body edit-modal-body deposit-modal-body ${
-              isBlurred ? 'blur' : ''
-            }`}
+            className={`modal-body edit-modal-body deposit-modal-body ${isBlurred ? 'blur' : ''
+              }`}
           >
             <div className="modal-content-wrapper">
               <div className="modal-content-panel">
-                <div className={classes.root}>
-                  <h4 className={classes.radioLabel}>Select Deposit Method:</h4>
-                  <div className={classes.paymentMethodContainer}>
+                <Root>
+                  <RadioLabel isDarkMode={isDarkMode}>Select Deposit Method:</RadioLabel>
+                  <PaymentMethodContainer>
                     <RadioGroup
                       aria-label="payment-method"
                       name="payment-method"
                       value={paymentMethod}
                       onChange={handlePaymentMethodChange}
-                      className={classes.radioGroup}
+                      sx={{ flexDirection: 'row' }}
                     >
                       <FormControlLabel
                         value="web3"
-                        control={<Radio color="primary" />}
+                        control={<Radio color='error' />}
                         label={
-                          <div
-                            className={classes.labelContainer}
-                            style={{ position: 'relative' }}
-                          >
-                            <WalletIcon className={classes.icon} />
+                          <Box sx={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                            <WalletIcon sx={{ marginRight: 1 }} />
                             <span>SOL</span>
                             {paymentMethod === 'web3' && (
-                              <span
+                              <Box
                                 className="roll-tag"
-                                style={{
+                                sx={{
                                   position: 'absolute',
                                   transform: 'translateY(30px)',
                                   filter: 'invert(1)',
@@ -519,40 +492,35 @@ function DepositModal(props) {
                                 }}
                               >
                                 FASTEST&nbsp;
-                                <FontAwesomeIcon
-                                  icon={faBolt}
-                                  style={{ marginLeft: '0.2em' }}
-                                />
-                              </span>
+                                <FontAwesomeIcon icon={faBolt} style={{ marginLeft: '0.2em' }} />
+                              </Box>
                             )}
-                          </div>
+                          </Box>
                         }
-                        className={classes.radioLabel}
                       />
                       <FormControlLabel
                         value="web2"
-                        control={<Radio color="primary" />}
+                        control={<Radio color='error' />}
                         label={
-                          <div className={classes.labelContainer}>
-                            <QRCodeIcon className={classes.icon} />
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <QRCodeIcon sx={{ marginRight: 1 }} />
                             <span>Other currencies</span>
-                          </div>
+                          </Box>
                         }
-                        className={classes.radioLabel}
                       />
                     </RadioGroup>
-                  </div>
-                  <Typography variant="body2" className={classes.description}>
+                  </PaymentMethodContainer>
+                  <Typography variant="body2" sx={{ textAlign: 'center', color: '#666', marginTop: 2 }}>
                     {description}
                   </Typography>
-                </div>
+                </Root>
                 <hr />
                 <p className="step-tag">
                   {paymentMethod === 'web2'
                     ? 'Step 1 out of 4'
                     : paymentMethod === 'web3'
-                    ? 'Step 1 out of 3'
-                    : ''}
+                      ? 'Step 1 out of 3'
+                      : ''}
                 </p>
                 <Typography>CHOOSE PACK</Typography>
                 <Grid
@@ -564,14 +532,12 @@ function DepositModal(props) {
                     const tokenAmt = tokenPrice ? price / tokenPrice : 0;
                     return (
                       <Grid item xs={12} sm={6} md={6} lg={6} key={index}>
-                        <ButtonBase
-                          className={`${classes.customButton} ${
-                            selectedOption === index ? 'selected' : ''
-                          }`}
+                        <CustomButton
                           onClick={() => handleOptionChange(index)}
                           value={price}
+                          className={selectedOption === index ? 'selected' : ''}
                         >
-                          <Typography className={classes.additionalText}>
+                          <Typography sx={{ color: '#f9f9f9' }}>
                             {additionalTexts[index].toUpperCase()}
                           </Typography>
                           <img
@@ -579,8 +545,8 @@ function DepositModal(props) {
                             src={images[index]}
                             alt={`option-${index}`}
                           />
-                          <div
-                            style={{
+                          <Box
+                            sx={{
                               width: '100%',
                               display: 'flex',
                               justifyContent: 'center',
@@ -588,20 +554,14 @@ function DepositModal(props) {
                               flexDirection: 'row',
                             }}
                           >
-                            <Typography className={classes.price}>
+                            <Price>
                               {paymentMethod === 'web2'
-                                ? convertToCurrency(
-                                    tokenAmt - tokenAmt * 0.008,
-                                    solPrice
-                                  )
+                                ? convertToCurrency(tokenAmt - tokenAmt * 0.008, solPrice)
                                 : convertToCurrency(tokenAmt, solPrice)}
-                              &nbsp;
-                            </Typography>
-                            <Typography className={classes.price}>
-                              {`($${price})`}
-                            </Typography>
-                          </div>
-                        </ButtonBase>
+                            </Price>
+                            <Price>{`($${price})`}</Price>
+                          </Box>
+                        </CustomButton>
                       </Grid>
                     );
                   })}
@@ -622,7 +582,7 @@ function DepositModal(props) {
                           CONNECT ACCOUNT
                         </Typography>
                         {isConnected ? (
-                          <TextField
+                           <TextField color="secondary" 
                             label="Account"
                             variant="filled"
                             value={
@@ -636,7 +596,7 @@ function DepositModal(props) {
                             style={{ width: '100%' }}
                           />
                         ) : (
-                          <TextField
+                           <TextField color="secondary" 
                             label="Account"
                             variant="filled"
                             value="NO WALLET CONNECTED"
@@ -705,7 +665,7 @@ function DepositModal(props) {
                         <Typography style={{ whiteSpace: 'nowrap' }}>
                           DEPOSIT AMOUNT
                         </Typography>
-                        <TextField
+                         <TextField color="secondary" 
                           pattern="^\\d*\\.?\\d*$"
                           type="text"
                           variant="outlined"
@@ -787,7 +747,7 @@ function DepositModal(props) {
                       <Typography style={{ whiteSpace: 'nowrap' }}>
                         CURRENCY TYPE
                       </Typography>
-                      <TextField
+                       <TextField color="secondary" 
                         type="text"
                         variant="filled"
                         autoComplete="off"
@@ -847,7 +807,7 @@ function DepositModal(props) {
                           <Typography style={{ whiteSpace: 'nowrap' }}>
                             DEPOSIT AMOUNT
                           </Typography>
-                          <TextField
+                           <TextField color="secondary" 
                             pattern="^\\d*\\.?\\d*$"
                             type="text"
                             variant="outlined"
@@ -875,7 +835,7 @@ function DepositModal(props) {
                         <div style={{ marginTop: '20px' }}>
                           <Typography variant="body2">PAYMENT ADDRESS</Typography>
                           <div style={{ display: 'flex', alignItems: 'center' }}>
-                            <TextField
+                             <TextField color="secondary" 
                               variant="outlined"
                               fullWidth
                               value={sendAddress}
@@ -906,7 +866,7 @@ function DepositModal(props) {
                               <div
                                 style={{ display: 'flex', alignItems: 'center' }}
                               >
-                                <TextField
+                                 <TextField color="secondary" 
                                   variant="outlined"
                                   fullWidth
                                   value={payinExtraId}
@@ -972,7 +932,7 @@ function DepositModal(props) {
                               <div
                                 style={{ display: 'flex', alignItems: 'center' }}
                               >
-                                <TextField
+                                 <TextField color="secondary" 
                                   variant="outlined"
                                   fullWidth
                                   value={paymentId}
@@ -1039,13 +999,13 @@ function DepositModal(props) {
                 {/* {paymentMethod === 'web3' ? 'Deposit' : 'I have paid'} */}
                 COMING SOON! (INVITE ONLY)
               </Button>
-              {/* <Button className="btn-back" onClick={closeModal}>
+              {/* <Button variant='contained' color='secondary' onClick={closeModal}>
                 CANCEL
               </Button> */}
             </div>
           )}
         </div>
-      </Modal>
+      </Modal >
     </>
   );
 }
@@ -1085,7 +1045,4 @@ const mapDispatchToProps = {
   addNewTransaction,
 };
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(withStyles(styles)(DepositModal));
+export default connect(mapStateToProps, mapDispatchToProps)(DepositModal);

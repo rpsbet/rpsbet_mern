@@ -12,7 +12,7 @@ import {
   TableContainer,
   TableRow,
   Typography,
-} from '@material-ui/core';
+} from '@mui/material';
 import { warningMsgBar, infoMsgBar } from '../../redux/Notification/notification.actions';
 import { paybackLoan, acCalculateRemainingLoans } from '../../redux/Loan/loan.action';
 import { alertModal } from '../modal/ConfirmAlerts';
@@ -126,7 +126,7 @@ const DebtsModal = ({ modalIsOpen, closeModal }) => {
       <div className={isDarkMode ? 'dark_mode' : ''}>
         <div className="modal-header">
           <h2 className="modal-title title">Your Debts</h2>
-          <Button className="btn-close title" onClick={closeModal}>
+          <Button className="btn-close" variant='text' color='error'  onClick={closeModal}>
             ×
           </Button>
         </div>
@@ -176,7 +176,7 @@ const DebtsModal = ({ modalIsOpen, closeModal }) => {
           </Grid>
         </div>
         <div className="modal-footer">
-          <Button className="btn-back" onClick={closeModal}>
+          <Button variant='contained' color='secondary' onClick={closeModal}>
             Close
           </Button>
         </div>
@@ -191,7 +191,7 @@ const DebtsModal = ({ modalIsOpen, closeModal }) => {
         <div className={isDarkMode ? 'dark_mode' : ''}>
           <div className="modal-header">
             <h2 className="modal-title title">Pay back Loan</h2>
-            <Button className="btn-close title" onClick={closePaybackModal}>
+            <Button className="btn-close" variant='text' color='error'  onClick={closePaybackModal}>
               ×
             </Button>
           </div>
@@ -205,7 +205,7 @@ const DebtsModal = ({ modalIsOpen, closeModal }) => {
                 <span style={{ marginTop: '10px', color: '#fff' }}>{`Repaying loan...`}</span>
               </div>
             ) : (
-              <TextField
+               <TextField color="secondary" 
                 label="Pay Back"
                 variant="filled"
                 fullWidth
@@ -234,7 +234,7 @@ const DebtsModal = ({ modalIsOpen, closeModal }) => {
             )}
           </div>
           <div className="modal-footer">
-            <Button className="btn-back" onClick={handlePaybackLoan}>
+            <Button variant='contained' color='secondary' onClick={handlePaybackLoan}>
               Pay Back
             </Button>
           </div>

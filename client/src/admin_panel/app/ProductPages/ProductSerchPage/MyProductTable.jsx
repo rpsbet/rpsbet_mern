@@ -37,11 +37,13 @@ import {
   TableCell,
   TableContainer,
   TableRow,
+  Box,
   Tooltip,
-  Select
-} from '@material-ui/core';
+  Select,
+  Pagination,
+  Card
+} from '@mui/material';
 import { acGetCustomerInfo } from '../../../../redux/Customer/customer.action';
-import Pagination from 'material-ui-flat-pagination';
 import { SwapHoriz, Cancel } from '@mui/icons-material';
 import { convertToCurrency } from '../../../../util/conversion';
 import { alertModal } from '../../../../game_panel/modal/ConfirmAlerts';
@@ -70,8 +72,6 @@ const ProductGrid = styled.div`
 `;
 const ProductCard = styled.div`
   position: relative;
-  background: linear-gradient(156deg, #8a0290, #cf0c0e);
-  border-radius: 20px;
   padding: 10px;
   display: -ms-flexbox;
   display: flex;
@@ -291,13 +291,6 @@ const LinearContainer = styled.div`
   margin: 20px 0;
 `;
 
-const PaginationContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-top: 20px;
-`;
-
 class MyProductTable extends Component {
   constructor(props) {
     super(props);
@@ -502,11 +495,11 @@ class MyProductTable extends Component {
               >
                 Accessory
               </MenuItem>
-            
+
             </Menu>
           </div>
           <div className="filters">
-         
+
             <Menu
               sortAnchorEl={sortAnchorEl}
               open={Boolean(sortAnchorEl)}
@@ -533,189 +526,179 @@ class MyProductTable extends Component {
             )}
 
             {data.map(row => (
-              <ProductCard
-                key={row._id}
-                onClick={() => {
-                  setCurrentProductId(row._id);
-                  setCurrentProductInfo({
-                    item_type: row.item_type,
-                    productName: row.productName,
-                    rentOption: row.rentOption,
-                    price: row.price,
-                    onSale: row.onSale,
-                  });
-                  history.push(`/product/${row._id}`);
-                }}
-              >
-                {row.image && renderLottieAnimation(row.image, isLowGraphics) ? (
-                  renderLottieAnimation(row.image, isLowGraphics)
-                ) : (
-                  <ProductImage src={row.image} alt={row.productName} />
-                )}
-                {/* {row.item_type === '653ee81117c9f5ee2124564b' ? (
-                  <PowerContainer>
-                    <PowerItem>
-                      <PercentageBar percentage={row.CP} color="#28a745" />
-                      <PercentageBar percentage={row.DP} color="#dc3545" />
-                    </PowerItem>
-                    <PowerItem>
-                      <CommissionPower>CP: {row.CP}%</CommissionPower>
-                      <DefensePower>BP: {row.DP}%</DefensePower>
-                    </PowerItem>
-                  </PowerContainer>
-                ) : (
-                  ''
-                )} */}
-                {row.onSale === 0 && row.rentOption ? (
-                  <RentingLabel>RENTING</RentingLabel>
-                ) : (
-                  <RentingLabel isOwner={true}>OWNER</RentingLabel>
-                )}
-                <ProductInfo>
-                  <ProductName>{row.productName}</ProductName>
-                  <TableContainer>
-                    <Table id="my-products" className="product-detail">
-                      <TableBody>
-                        {row.rentOption && row.onSale === 0 ? (
-                          // Display Cost per Month when rentOption is true and onSale is 0
+              <Card sx={{ maxWidth: 345, position: 'relative', m: 1, background: 'linear-gradient(156deg, #8a0290, #cf0c0e)' }}>
+
+                <ProductCard
+                  key={row._id}
+                  onClick={() => {
+                    setCurrentProductId(row._id);
+                    setCurrentProductInfo({
+                      item_type: row.item_type,
+                      productName: row.productName,
+                      rentOption: row.rentOption,
+                      price: row.price,
+                      onSale: row.onSale,
+                    });
+                    history.push(`/product/${row._id}`);
+                  }}
+                >
+                  {row.image && renderLottieAnimation(row.image, isLowGraphics) ? (
+                    renderLottieAnimation(row.image, isLowGraphics)
+                  ) : (
+                    <ProductImage src={row.image} alt={row.productName} />
+                  )}
+
+                  {row.onSale === 0 && row.rentOption ? (
+                    <RentingLabel>RENTING</RentingLabel>
+                  ) : (
+                    <RentingLabel isOwner={true}>OWNER</RentingLabel>
+                  )}
+                  <ProductInfo>
+                    <ProductName>{row.productName}</ProductName>
+                    <TableContainer>
+                      <Table id="my-products" className="product-detail">
+                        <TableBody>
+                          {row.rentOption && row.onSale === 0 ? (
+                            // Display Cost per Month when rentOption is true and onSale is 0
+                            <TableRow>
+                              <TableCell>
+                                <FontAwesomeIcon icon={faTag} /> Cost Per Month:
+                              </TableCell>
+                              <TableCell className="value">
+                                {convertToCurrency(row.price, solPrice)}
+                              </TableCell>
+                            </TableRow>
+                          ) : (
+                            // Display Price Per Month or Price Per Unit based on rentOption
+                            <TableRow>
+                              <TableCell>
+                                <FontAwesomeIcon icon={faTag} />
+                                {row.rentOption ? ' Price Per Month:' : ' Price Per Unit:'}
+                              </TableCell>
+                              <TableCell className="value">
+                                {convertToCurrency(row.price, solPrice)}
+                              </TableCell>
+                            </TableRow>
+                          )}
+
+
+                          {row.rentOption && row.onSale === 0 ? null : (
+                            <TableRow>
+                              <TableCell>
+                                <FontAwesomeIcon icon={faDollarSign} />
+                                {row.rentOption ? ' Renting Out:' : ' On Sale:'}
+                              </TableCell>
+                              <TableCell className="value">{row.onSale}</TableCell>
+                            </TableRow>
+                          )}
+
+
                           <TableRow>
                             <TableCell>
-                              <FontAwesomeIcon icon={faTag} /> Cost Per Month:
+                              <FontAwesomeIcon icon={faCubes} /> Total:
                             </TableCell>
                             <TableCell className="value">
-                              {convertToCurrency(row.price, solPrice)}
+                              {row.total_count}
                             </TableCell>
                           </TableRow>
-                        ) : (
-                          // Display Price Per Month or Price Per Unit based on rentOption
+                          {row.rentOption}
                           <TableRow>
                             <TableCell>
-                              <FontAwesomeIcon icon={faTag} />
-                              {row.rentOption ? ' Price Per Month:' : ' Price Per Unit:'}
+                              <FontAwesomeIcon icon={faGem} /> Type:
                             </TableCell>
-                            <TableCell className="value">
-                              {convertToCurrency(row.price, solPrice)}
-                            </TableCell>
-                          </TableRow>
-                        )}
-
-
-                        {row.rentOption && row.onSale === 0 ? null : (
-                          <TableRow>
                             <TableCell>
-                              <FontAwesomeIcon icon={faDollarSign} />
-                              {row.rentOption ? ' Renting Out:' : ' On Sale:'}
+                              {itemTypeMap[row.item_type] || 'Unknown'}
                             </TableCell>
-                            <TableCell className="value">{row.onSale}</TableCell>
                           </TableRow>
-                        )}
-
-
-                        <TableRow>
-                          <TableCell>
-                            <FontAwesomeIcon icon={faCubes} /> Total:
-                          </TableCell>
-                          <TableCell className="value">
-                            {row.total_count}
-                          </TableCell>
-                        </TableRow>
-                        {row.rentOption}
-                        <TableRow>
-                          <TableCell>
-                            <FontAwesomeIcon icon={faGem} /> Type:
-                          </TableCell>
-                          <TableCell>
-                            {itemTypeMap[row.item_type] || 'Unknown'}
-                          </TableCell>
-                        </TableRow>
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-                </ProductInfo>
-                {row.onSale !== 0 ? null : (
-                  <EquipItemButton>
-                    {row.item_type !== '653ee81117c9f5ee2124564b' ? null : (
-                      <Tooltip
-                        title={
-                          accessory && accessory === row.image
-                            ? 'Unequip Item'
-                            : 'Equip Item'
-                        }
-                      >
-                        <IconButton
-                          className="btn-back"
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </ProductInfo>
+                  {row.onSale !== 0 ? null : (
+                    <EquipItemButton>
+                      {row.item_type !== '653ee81117c9f5ee2124564b' ? null : (
+                        <Tooltip
+                          title={
+                            accessory && accessory === row.image
+                              ? 'Unequip Item'
+                              : 'Equip Item'
+                          }
+                        >
+                          <Button
+                            variant='contained' color='secondary'
+                            onClick={() => {
+                              this.equipItem(row._id);
+                            }}
+                          >
+                            {accessory && accessory === row.image
+                              ? 'UNEQUIP'
+                              : 'EQUIP'}{' '}
+                            <SwapHoriz />
+                          </Button>
+                        </Tooltip>
+                      )}
+                    </EquipItemButton>
+                  )}
+                  {row.onSale === 0 && row.rentOption ? (
+                    // Show "Discontinue" button
+                    <DiscontinueButton>
+                      <Tooltip title="Discontinue Renting">
+                        <Button
+                          variant='contained' color='secondary'
                           onClick={() => {
-                            this.equipItem(row._id);
+                            setCurrentProductId(row._id);
+                            returnItem(row._id)
                           }}
                         >
-                          {accessory && accessory === row.image
-                            ? 'UNEQUIP'
-                            : 'EQUIP'}{' '}
-                          <SwapHoriz />
-                        </IconButton>
+                          RETURN <Cancel />
+                        </Button>
                       </Tooltip>
-                    )}
-                  </EquipItemButton>
-                )}
-                {row.onSale === 0 && row.rentOption ? (
-                  // Show "Discontinue" button
-                  <DiscontinueButton>
-                    <Tooltip title="Discontinue Renting">
-                      <IconButton
-                        className="btn-back"
-                        onClick={() => {
-                          setCurrentProductId(row._id);
-                          returnItem(row._id)
-                        }}
-                      >
-                        RETURN <Cancel />
-                      </IconButton>
-                    </Tooltip>
-                  </DiscontinueButton>
-                ) : (
-                  // Show List and De-List buttons
-                  <>
-                    <ListItemButton>
-                      {accessory && accessory === row.image || row.onSale === row.total_count ? null : (
-                        <Tooltip title="List Item">
-                          <IconButton
-                            className="btn-back"
-                            onClick={() => {
-                              setCurrentProductId(row._id);
-                              setCurrentProductInfo({
-                                item_type: row.item_type,
-                                productName: row.productName,
-                                rentOption: row.rentOption,
-                                price: row.price,
-                                onSale: row.onSale,
-                              });
-                              openListItemModal();
-                            }}
-                          >
-                            List <SwapHoriz />
-                          </IconButton>
-                        </Tooltip>
-                      )}
-                    </ListItemButton>
+                    </DiscontinueButton>
+                  ) : (
+                    // Show List and De-List buttons
+                    <>
+                      <ListItemButton>
+                        {accessory && accessory === row.image || row.onSale === row.total_count ? null : (
+                          <Tooltip title="List Item">
+                            <Button
+                              variant='contained' color='secondary'
+                              onClick={() => {
+                                setCurrentProductId(row._id);
+                                setCurrentProductInfo({
+                                  item_type: row.item_type,
+                                  productName: row.productName,
+                                  rentOption: row.rentOption,
+                                  price: row.price,
+                                  onSale: row.onSale,
+                                });
+                                openListItemModal();
+                              }}
+                            >
+                              List <SwapHoriz />
+                            </Button>
+                          </Tooltip>
+                        )}
+                      </ListItemButton>
 
-                    <DeListItemButton>
-                      {row.onSale === 0 ? null : (
-                        <Tooltip title="De-List Item">
-                          <IconButton
-                            className="btn-back"
-                            onClick={() => {
-                              setCurrentProductId(row._id);
-                              openDeListItemModal();
-                            }}
-                          >
-                            De-List <SwapHoriz />
-                          </IconButton>
-                        </Tooltip>
-                      )}
-                    </DeListItemButton>
-                  </>
-                )}
-              </ProductCard>
+                      <DeListItemButton>
+                        {row.onSale === 0 ? null : (
+                          <Tooltip title="De-List Item">
+                            <Button
+                              variant='contained' color='secondary'
+                              onClick={() => {
+                                setCurrentProductId(row._id);
+                                openDeListItemModal();
+                              }}
+                            >
+                              De-List <SwapHoriz />
+                            </Button>
+                          </Tooltip>
+                        )}
+                      </DeListItemButton>
+                    </>
+                  )}
+                </ProductCard>
+              </Card>
             ))}
           </ProductGrid>
         ) : (
@@ -723,16 +706,19 @@ class MyProductTable extends Component {
             <LinearProgress color="secondary" />
           </LinearContainer>
         )}
-        <PaginationContainer>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: 2 }}>
           <Pagination
-            limit={1}
-            offset={page - 1}
-            total={pages}
-            onClick={(e, offset) => {
-              acQueryMyItem(100, offset + 1, this.state.sortCriteria, this.state.itemType);
+            count={pages} // Total number of pages
+            page={page} // Current page (1-based index)
+            onChange={(event, value) => {
+              acQueryMyItem(100, value, this.state.sortCriteria, this.state.itemType);
             }}
+            siblingCount={1}
+            boundaryCount={1}
+            shape="rounded"
+            color='error'
           />
-        </PaginationContainer>
+        </Box>
       </MarketplaceContainer>
     );
   }

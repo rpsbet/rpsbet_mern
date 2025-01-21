@@ -1,19 +1,18 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Modal from 'react-modal';
 import { connect } from 'react-redux';
-import { withStyles } from '@material-ui/core/styles';
 import Chart from 'react-apexcharts';
-import { Skeleton } from '@material-ui/lab';
-
 import {
   Button,
   Table,
   TableHead,
-  Paper,
+  Skeleton,
+  Box,
   TableRow,
   TableCell,
-  TableBody
-} from '@material-ui/core';
+  TableBody,
+  Typography
+} from '@mui/material';
 
 import { Sort } from '@mui/icons-material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -27,7 +26,6 @@ import {
   fetchEquityDistribution
 } from '../../redux/Customer/customer.action';
 import { convertToCurrency } from '../../util/conversion';
-import happyCat from '../../util/happyCat.svg'; // Not referenced but preserved if needed
 
 Modal.setAppElement('#root');
 
@@ -48,16 +46,6 @@ const customStyles = {
   }
 };
 
-const styles = (theme) => ({
-  root: {
-    width: '150px',
-    padding: '8px 15px',
-    fontSize: '16px',
-    background: '#191a1d'
-  },
-  dropdownStyle: {}
-});
-
 function LeaderboardsModal(props) {
   const {
     modalIsOpen,
@@ -73,7 +61,6 @@ function LeaderboardsModal(props) {
     fetchLeaderboardsData,
     fetchEquityDistribution,
     fetchReceiptStatistics,
-    classes
   } = props;
 
   // ---------------------------
@@ -230,11 +217,11 @@ function LeaderboardsModal(props) {
   // Receipt Chart
   const receiptChartSeries = receiptChartData
     ? [
-        receiptChartData.overTenMillion,
-        receiptChartData.betweenOneAndTenMillion,
-        receiptChartData.betweenZeroAndOneMillion,
-        receiptChartData.lessThanZero
-      ]
+      receiptChartData.overTenMillion,
+      receiptChartData.betweenOneAndTenMillion,
+      receiptChartData.betweenZeroAndOneMillion,
+      receiptChartData.lessThanZero
+    ]
     : [];
   const receiptChartOptions = {
     chart: {
@@ -291,10 +278,10 @@ function LeaderboardsModal(props) {
   // ---------------------------
   const sortedLeaderboards = leaderboards
     ? [...leaderboards].sort((a, b) => {
-        const aValue = a[sortField];
-        const bValue = b[sortField];
-        return sortOrder === 'asc' ? aValue - bValue : bValue - aValue;
-      })
+      const aValue = a[sortField];
+      const bValue = b[sortField];
+      return sortOrder === 'asc' ? aValue - bValue : bValue - aValue;
+    })
     : [];
 
   // ---------------------------
@@ -313,7 +300,7 @@ function LeaderboardsModal(props) {
             <FontAwesomeIcon icon={faList} className="mr-2" />
             Leaderboards
           </h2>
-          <Button className="btn-close title" onClick={closeModal}>
+          <Button className="btn-close" variant='text' color='error'  onClick={closeModal}>
             ×
           </Button>
         </div>
@@ -352,17 +339,13 @@ function LeaderboardsModal(props) {
                   }}
                 >
                   {/* Capital Distribution */}
-                  <div style={{ textAlign: 'center' }}>
-                    <h5 className="title">Capital Distribution</h5>
+                  <Box sx={{ textAlign: 'center', marginBottom: 4 }}>
+                    <Typography variant="h5" className="title">Capital Distribution</Typography>
                     {loadingEquityChartData ? (
-                      <div style={{ marginTop: '20px' }}>
-                        <Skeleton variant="circle" width={350} height={350} />
-                        <Skeleton
-                          variant="text"
-                          width="60%"
-                          style={{ margin: '10px auto' }}
-                        />
-                      </div>
+                      <Box sx={{ marginTop: 2 }}>
+                        <Skeleton variant="circular" sx={{ width: 350, height: 350, margin: '0 auto' }} />
+                        <Skeleton variant="text" sx={{ width: '60%', margin: '10px auto' }} />
+                      </Box>
                     ) : (
                       chartSeries.length > 0 && (
                         <Chart
@@ -373,20 +356,16 @@ function LeaderboardsModal(props) {
                         />
                       )
                     )}
-                  </div>
+                  </Box>
 
                   {/* Profit Distribution */}
-                  <div style={{ textAlign: 'center' }}>
-                    <h5 className="title">Profit Distribution</h5>
+                  <Box sx={{ textAlign: 'center' }}>
+                    <Typography variant="h5" className="title">Profit Distribution</Typography>
                     {loadingReceiptChartData ? (
-                      <div style={{ marginTop: '20px' }}>
-                        <Skeleton variant="circle" width={350} height={350} />
-                        <Skeleton
-                          variant="text"
-                          width="60%"
-                          style={{ margin: '10px auto' }}
-                        />
-                      </div>
+                      <Box sx={{ marginTop: 2 }}>
+                        <Skeleton variant="circular" sx={{ width: 350, height: 350, margin: '0 auto' }} />
+                        <Skeleton variant="text" sx={{ width: '60%', margin: '10px auto' }} />
+                      </Box>
                     ) : (
                       receiptChartSeries.length > 0 && (
                         <Chart
@@ -397,7 +376,7 @@ function LeaderboardsModal(props) {
                         />
                       )
                     )}
-                  </div>
+                  </Box>
                 </div>
               </div>
 
@@ -526,7 +505,4 @@ const mapDispatchToProps = {
   fetchReceiptStatistics
 };
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(withStyles(styles)(LeaderboardsModal));
+export default connect(mapStateToProps, mapDispatchToProps)(LeaderboardsModal);

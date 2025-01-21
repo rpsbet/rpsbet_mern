@@ -67,7 +67,7 @@ function CreateProductForm({ updateTextField, user_balance, solPrice }) {
             {/* Loan Amount Row */}
             <TableRow>
               <TableCell>
-                <TextField
+                 <TextField color="secondary" 
                   autoFocus
                   variant="filled"
                   label="Loan Amount"
@@ -124,7 +124,7 @@ function CreateProductForm({ updateTextField, user_balance, solPrice }) {
             {/* Loan Period Row */}
             <TableRow>
               <TableCell>
-                <TextField
+                 <TextField color="secondary" 
                   label="Loan Period"
                   variant="filled"
                   name="loan_period"
@@ -153,7 +153,7 @@ function CreateProductForm({ updateTextField, user_balance, solPrice }) {
             {/* Interest Rate Row */}
             <TableRow>
               <TableCell sx={{ borderBottom: 'none' }}>
-                <TextField
+                 <TextField color="secondary" 
                   label="Interest Rate"
                   name="apy"
                   variant="filled"

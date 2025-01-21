@@ -6,7 +6,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import MyLoansModal from '../../../../game_panel/modal/MyLoansModal';
 import RpsPriceChart from '../../../../components/RpsPriceChart';
 import { token } from '../../../../config/index.js';
-import { Skeleton } from '@material-ui/lab';
 import {
   faClock,
   faSort,
@@ -35,10 +34,11 @@ import {
   TableRow,
   Tooltip,
   Menu,
-  MenuItem
-} from '@material-ui/core';
+  MenuItem,
+  Skeleton,
+  Box
+} from '@mui/material';
 import { acGetCustomerInfo } from '../../../../redux/Customer/customer.action';
-import Pagination from 'material-ui-flat-pagination';
 import SwapHoriz from '@mui/icons-material/SwapHoriz';
 import AttachMoney from '@mui/icons-material/AttachMoney';
 import { convertToCurrency } from '../../../../util/conversion';
@@ -421,7 +421,7 @@ const BankTable = (props) => {
 
       {isMobile && (
         <>
-          <Button style={{ marginBottom: '30px' }} className="btn-submit" onClick={handleOpenMyLoansModal}>
+          <Button style={{ marginBottom: '30px' }} variant='contained' color='error' onClick={handleOpenMyLoansModal}>
             Manage Your Loans&nbsp; <AttachMoney />
           </Button>
           <RpsPriceChart isDarkMode={isDarkMode} tokenMintAddress={token} />
@@ -533,7 +533,7 @@ const BankTable = (props) => {
               <LoanButton>
                 <Tooltip title="Loan">
                   <IconButton
-                    className="btn-back"
+                    variant='contained' color='secondary'
                     onClick={(e) => {
                       e.stopPropagation(); // prevent triggering ProductCard onClick
                       setCurrentLoanId(row._id);
@@ -553,15 +553,14 @@ const BankTable = (props) => {
           ))}
         </ProductGrid>
       ) : (
-        // Skeleton Loader
         <ProductGrid>
           {[...Array(6)].map((_, index) => (
-            <ProductCard key={`skeleton-${index}`}>
-              <Skeleton variant="text" width="80%" height={30} />
-              <Skeleton variant="circle" width={40} height={40} style={{ margin: '10px 0' }} />
-              <Skeleton variant="rect" width="100%" height={100} />
-              <Skeleton variant="text" width="60%" height={20} style={{ margin: '10px 0' }} />
-            </ProductCard>
+            <Box key={`skeleton-${index}`} sx={{ padding: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <Skeleton variant="text" sx={{ width: '80%', height: 30 }} />
+              <Skeleton variant="circular" sx={{ width: 40, height: 40, margin: '10px 0' }} />
+              <Skeleton variant="rectangular" sx={{ width: '100%', height: 100 }} />
+              <Skeleton variant="text" sx={{ width: '60%', height: 20, margin: '10px 0' }} />
+            </Box>
           ))}
         </ProductGrid>
       )}
@@ -574,9 +573,8 @@ const BankTable = (props) => {
             loansWithProfit.map((loan) => (
               <div
                 key={loan._id}
-                className={`carousel-item ${
-                  loan.profit <= 0 ? 'red-gradient' : 'green-gradient'
-                }`}
+                className={`carousel-item ${loan.profit <= 0 ? 'red-gradient' : 'green-gradient'
+                  }`}
               >
                 <div className="loan-details">
                   <Table className="product-detail">
@@ -659,9 +657,8 @@ const BankTable = (props) => {
                           <FontAwesomeIcon icon={faChartLine} /> PROFIT:
                         </TableCell>
                         <TableCell
-                          className={`value ${
-                            loan.profit <= 0 ? 'profit-negative' : 'profit-positive'
-                          }`}
+                          className={`value ${loan.profit <= 0 ? 'profit-negative' : 'profit-positive'
+                            }`}
                         >
                           {convertToCurrency(loan.profit, solPrice)}
                         </TableCell>

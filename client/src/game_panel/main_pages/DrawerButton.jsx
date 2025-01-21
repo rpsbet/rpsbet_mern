@@ -1,5 +1,5 @@
 import React from 'react';
-import IconButton from '@material-ui/core/IconButton';
+import IconButton from '@mui/material/IconButton';
 import { Chat, Close } from '@mui/icons-material';
 
 const DrawerButton = ({ open, toggleDrawer }) => (

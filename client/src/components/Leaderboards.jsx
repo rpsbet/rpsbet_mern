@@ -22,7 +22,6 @@ const Leaderboards = ({
   useEffect(() => {
     const fetchRoomStatistics = async () => {
       await getRoomStatisticsData(roomId, 30);
-      isAuthenticatedReroute();
     };
     fetchRoomStatistics();
   }, [getRoomStatisticsData, roomId]);

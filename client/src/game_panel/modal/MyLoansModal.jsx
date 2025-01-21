@@ -12,7 +12,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-} from '@material-ui/core';
+} from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCoins } from '@fortawesome/free-solid-svg-icons';
 import AttachMoney from '@mui/icons-material/AttachMoney';
@@ -204,7 +204,7 @@ function MyLoansModal(props) {
             <FontAwesomeIcon icon={faCoins} className="mr-2" />
             Your Loans
           </h2>
-          <Button className="btn-close title" onClick={closeModal}>
+          <Button className="btn-close" variant='text' color='error'  onClick={closeModal}>
             ×
           </Button>
         </div>
@@ -219,7 +219,7 @@ function MyLoansModal(props) {
           {remainingLoans > 0 ? (
             <div style={{ color: '#ff0000' }}>CLEAR DEBT FIRST TO CREATE A LOAN</div>
           ) : (
-            <Button className="btn-back" onClick={openProductCreateModal}>
+            <Button variant='contained' color='secondary'  onClick={openProductCreateModal}>
               CREATE A LOAN &nbsp; <AttachMoney />
             </Button>
           )}
@@ -235,7 +235,7 @@ function MyLoansModal(props) {
         <div className={isDarkMode ? 'dark_mode' : ''}>
           <div className="modal-header">
             <h2 className="modal-title title">New Loan</h2>
-            <Button className="btn-close title" onClick={closeProductCreateModal}>
+            <Button className="btn-close" variant='text' color='error'  onClick={closeProductCreateModal}>
               ×
             </Button>
           </div>
@@ -320,7 +320,7 @@ function MyLoansModal(props) {
             </div>
           </div>
           <div className="modal-footer">
-            <Button className="btn-submit" onClick={onSubmitFrom}>
+            <Button variant='contained' color='error' onClick={onSubmitFrom}>
               Submit
             </Button>
           </div>

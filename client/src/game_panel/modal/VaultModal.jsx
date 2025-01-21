@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { connect } from 'react-redux';
 import Modal from 'react-modal';
-import { Button, TextField } from '@material-ui/core';
+import { Box, Typography, Table, TableBody, TableRow, TableCell, Paper, Button, TextField } from '@mui/material';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import MoneyOffIcon from '@mui/icons-material/MoneyOff';
 import { faLock } from '@fortawesome/free-solid-svg-icons';
@@ -38,23 +38,10 @@ const customStyles = {
 };
 
 const modalContentStyles = {
-  background: 'linear-gradient(to right, #3949ab, #1e88e5)',
-  color: '#fff',
-  padding: '20px',
-  borderRadius: '10px',
+  padding: 2,
   textAlign: 'center',
 };
 
-const labelStyle = {
-  fontSize: '1rem',
-  color: '#ccc',
-};
-
-const valueStyle = {
-  fontSize: '1.5rem',
-  fontWeight: 'bold',
-  margin: '10px 0',
-};
 
 function VaultModal(props) {
   const {
@@ -171,17 +158,17 @@ function VaultModal(props) {
             <FontAwesomeIcon icon={faLock} className="mr-2" />
             &nbsp;Vault
           </h2>
-          <Button className="btn-close title" onClick={closeModal}>
+          <Button className="btn-close" variant='text' color='error' onClick={closeModal}>
             ×
           </Button>
         </div>
-        <div className="modal-body edit-modal-body vault-modal-body">
-          <div className="modal-content-wrapper">
-            <div className="modal-content-panel" style={modalContentStyles}>
-              <p style={labelStyle}>Your Vault Balance</p>
-              <p id="vault-bal" style={valueStyle} className={balanceClass}>
+        <Box className="modal-body edit-modal-body">
+          <Box className="modal-content-wrapper">
+            <Box className="modal-content-panel" component={Paper} sx={modalContentStyles}>
+              <Typography className='title' variant="h5">Your Vault Balance</Typography>
+              <Typography variant="h4" id="vault-bal">
                 <CountUp
-                  start={animate ? lastUpdatedBalance : null}
+                  start={0}
                   end={vaultBal}
                   duration={1.5}
                   separator=","
@@ -190,58 +177,58 @@ function VaultModal(props) {
                   useGrouping={true}
                 />{' '}
                 SOL (${(vaultBal * solPrice).toFixed(2)})
-              </p>
+              </Typography>
               <TextField
+                color="secondary"
                 label="Enter Amount"
                 variant="outlined"
                 type="number"
                 value={amount}
                 onChange={handleChange}
                 fullWidth
+                sx={{ marginTop: 2, input: { color: '#3949ab' } }}  // Assuming original TextField color style
               />
-            </div>
-            <div className="recent-transactions">
-              <h4>Recent Transactions</h4>
-              <table
-                className="transaction-table"
-                style={{ borderRadius: '0.4em', overflow: 'hidden' }}
+            </Box>
+            <Box 
+            component={Paper}
+            >
+              <Typography className='title' variant="h5" sx={{ marginTop: 2 }}>Recent Transactions</Typography>
+              <Table
+               size="small" aria-label="a dense table"
+                sx={{
+                  borderRadius: '0.4em',
+                  overflow: 'hidden',
+                  marginTop: 1,
+                }}
               >
-                <tbody>
-                  {vaultTransactions.map((transaction) => (
-                    <tr
-                      key={transaction?._id}
-                      className={
-                        transaction?.description.includes('withdrawal')
-                          ? 'withdrawal'
-                          : 'deposit'
-                      }
+                <TableBody>
+                  {vaultTransactions.map((transaction, index) => (
+                    <TableRow
+                      key={index}
+                      sx={{
+                        backgroundColor: transaction.description.includes('withdrawal') ? '#ffebee' : '#e8f5e9',  // Specific background color styling
+                      }}
                     >
-                      <td>
-                        {transaction?.description.includes('withdrawal')
-                          ? '-'
-                          : '+'}
-                      </td>
-                      <td>{convertToCurrency(transaction?.amount, solPrice)}</td>
-                      <td>
-                        {new Date(transaction?.created_at).toLocaleString()}
-                      </td>
-                    </tr>
+                      <TableCell>{transaction.description.includes('withdrawal') ? '-' : '+'}</TableCell>
+                      <TableCell>{convertToCurrency(transaction.amount, solPrice)}</TableCell>
+                      <TableCell>{new Date(transaction.created_at).toLocaleString()}</TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
+                </TableBody>
+              </Table>
+            </Box>
+          </Box>
+        </Box>
         <div className="modal-footer">
           <Button
-            className="btn-back"
+            variant='contained' color='success'
             style={{ minWidth: '100px' }}
             onClick={handleDeposit}
           >
             Deposit &nbsp; <AttachMoneyIcon />
           </Button>
           <Button
-            className="btn-back"
+            variant='contained' color='error'
             style={{ minWidth: '100px' }}
             onClick={handleWithdraw}
           >

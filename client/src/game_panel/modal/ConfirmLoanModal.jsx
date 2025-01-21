@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import Modal from 'react-modal';
 import { connect } from 'react-redux';
-import { Table, TableBody, Button, TextField, TableCell, TableContainer, TableHead, TableRow, Tooltip, InputAdornment } from '@material-ui/core';
+import { Table, TableBody, Button, TextField, TableCell, TableContainer, TableHead, TableRow, Tooltip, InputAdornment } from '@mui/material';
 import { acQueryLoan, acCalculateRemainingLoans } from '../../redux/Loan/loan.action';
 import Lottie from 'react-lottie';
 import { convertToCurrency } from '../../util/conversion';
@@ -19,7 +19,7 @@ Modal.setAppElement('#root');
 
 const customStyles = {
   overlay: {
-    zIndex: 99,
+    zIndex: 3,
     backgroundColor: 'rgba(0, 0, 0, 0.8)'
   },
   content: {
@@ -266,7 +266,7 @@ class ConfirmLoanModal extends Component {
                   {/* TextField on its own line */}
                   <TableRow>
                     <TableCell colSpan={2} style={{ textAlign: "center", borderBottom: "none" }}>
-                      <TextField
+                       <TextField color="secondary" 
                         label="Loan"
                         variant="filled"
                         className="label"
@@ -396,11 +396,11 @@ class ConfirmLoanModal extends Component {
             )}
           </div>
           <div className="modal-footer">
-            <Button className="btn-submit" onClick={this.onBtnOkClicked}>
+            <Button variant='contained' color='error' onClick={this.onBtnOkClicked}>
               ACCEPT
             </Button>
             <Button
-              className="btn-back"
+              variant='contained' color='secondary'
               onClick={this.props.closeConfirmLoanModal}
             >
               Cancel

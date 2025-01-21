@@ -10,10 +10,8 @@ import {
   coHost,
 } from '../../redux/Logic/logic.actions';
 
-import { TrendingUpOutlined, TrendingDownOutlined } from '@mui/icons-material';
-import { Grid, Tooltip, Typography } from '@material-ui/core';
-import { Skeleton } from '@material-ui/lab';
-import { Warning, Add, Remove, Visibility } from '@mui/icons-material';
+import { TrendingUpOutlined, TrendingDownOutlined, ShowChartOutlined, LockOutlined, Add, Remove, } from '@mui/icons-material';
+import { Grid, Link, Tooltip, Typography, Skeleton, Box, Button, Card } from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import Moment from 'moment';
 import { faHeart, faHeartBroken, faStopwatch } from '@fortawesome/free-solid-svg-icons';
@@ -22,20 +20,13 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { setBalance } from '../../redux/Auth/user.actions';
 import CoHostModal from '../modal/CoHostModal';
 import Avatar from '../../components/Avatar';
-import ShowChartOutlined from '@mui/icons-material/ShowChartOutlined';
-import LockOutlined from '@mui/icons-material/LockOutlined';
 import Modal from 'react-modal';
 import { convertToCurrency } from '../../util/conversion';
-import Lottie from 'react-lottie';
 import { getRoomStatisticsData } from '../../redux/Customer/customer.action';
 import Battle from '../icons/Battle';
 import { alertModal } from '../modal/ConfirmAlerts';
 import PlayerModal from '../modal/PlayerModal';
-import blob from '../LottieAnimations/loadingChart.json';
 import history from '../../redux/history';
-
-const gifUrls = ['/img/rock.gif', '/img/paper.gif', '/img/scissors.gif'];
-const randomGifUrl = gifUrls[Math.floor(Math.random() * gifUrls.length)];
 
 const customStyles = {
   overlay: {
@@ -393,9 +384,9 @@ function OpenGamesTable(props) {
                 // Skeleton
                 Array.from({ length: 5 }).map((_, index) => (
                   <Grid item xs={12} sm={6} md={4} key={index}>
-                    <Skeleton variant="rect" width="100%" height={100} />
-                    <Skeleton width="60%" />
-                    <Skeleton width="40%" />
+                    <Skeleton variant="rectangular" sx={{ width: '100%', height: 100 }} />
+                    <Skeleton sx={{ width: '60%' }} />
+                    <Skeleton sx={{ width: '40%' }} />
                   </Grid>
                 ))
               ) : (
@@ -476,29 +467,28 @@ function OpenGamesTable(props) {
                       </div>
                       {/* CoHost icon / Private icon */}
                       <div className="cell-coHost">
-                        <a
-                          className="ml-1"
+                        <Button
+                          variant='outlined'
+                          color='secondary'
                           onClick={(event) => {
                             event.preventDefault();
                             event.stopPropagation();
                             handleCoHost(row);
                           }}
-                          style={{
-                            color: 'rgb(0 255 58)',
+                          sx={{
                             padding: '8px 12px',
                             display: 'flex',
                             justifyContent: 'center',
                             alignItems: 'center',
-                            background: 'linear-gradient(45deg, #28a74544, #33e74533)',
-                            border: '2px solid rgb(0 255 58)',
                             cursor: 'pointer',
-                            borderRadius: '0.3em',
+                            borderRadius: '0.3em', // Rounded corners but not fully circular
                             fontSize: '14px',
                             textDecoration: 'none',
+
                           }}
                         >
-                          <ShowChartOutlined style={{ width: '20px' }} />
-                        </a>
+                          <ShowChartOutlined sx={{ fontSize: 20 }} />
+                        </Button>
                         {row.is_private && (
                           <Tooltip title="A password is required to battle this room." arrow>
                             <div
@@ -520,7 +510,7 @@ function OpenGamesTable(props) {
                         )}
                       </div>
                       {/* Desktop-only info */}
-                      <div style={{ zIndex: '2' }} className="table-cell desktop-only cell-user-name">
+                      <div className="table-cell desktop-only cell-user-name">
                         <a
                           className="player"
                           onClick={(event) => {
@@ -540,11 +530,10 @@ function OpenGamesTable(props) {
                           />
                         </a>
                         <i
-                          className={`online-status${
-                            onlineUserList.filter((u) => u === row.creator_id).length > 0
-                              ? ' online'
-                              : ''
-                          }`}
+                          className={`online-status${onlineUserList.filter((u) => u === row.creator_id).length > 0
+                            ? ' online'
+                            : ''
+                            }`}
                         ></i>
                         {row.hosts && row.hosts.slice(1, 1).map((host, index) => (
                           <div className="hosts" key={index}>
@@ -617,19 +606,18 @@ function OpenGamesTable(props) {
                               parseFloat(row.user_bet) > row.bet_amount
                                 ? '#03ff3b'
                                 : parseFloat(row.user_bet) < row.bet_amount
-                                ? '#ff033e'
-                                : '#808080',
+                                  ? '#ff033e'
+                                  : '#808080',
                           }}
                         >
                           <Typography
                             variant="body2"
-                            className={`label ${
-                              parseFloat(row.user_bet) > row.bet_amount
-                                ? 'green-text'
-                                : parseFloat(row.user_bet) < row.bet_amount
+                            className={`label ${parseFloat(row.user_bet) > row.bet_amount
+                              ? 'green-text'
+                              : parseFloat(row.user_bet) < row.bet_amount
                                 ? 'red-text'
                                 : 'grey-text'
-                            }`}
+                              }`}
                             style={{ display: 'flex', alignItems: 'center' }}
                           >
                             Liquidity
@@ -643,13 +631,12 @@ function OpenGamesTable(props) {
                           >
                             <Typography
                               variant="body1"
-                              className={`number ${
-                                parseFloat(row.user_bet) > row.bet_amount
-                                  ? 'green-text'
-                                  : parseFloat(row.user_bet) < row.bet_amount
+                              className={`number ${parseFloat(row.user_bet) > row.bet_amount
+                                ? 'green-text'
+                                : parseFloat(row.user_bet) < row.bet_amount
                                   ? 'red-text'
                                   : 'grey-text'
-                              }`}
+                                }`}
                             >
                               {convertToCurrency(row.user_bet, solPrice)}
                             </Typography>
@@ -730,11 +717,10 @@ function OpenGamesTable(props) {
                             darkMode={isDarkMode}
                           />
                           <i
-                            className={`online-status${
-                              onlineUserList.filter((u) => u === row.creator_id).length > 0
-                                ? ' online'
-                                : ''
-                            }`}
+                            className={`online-status${onlineUserList.filter((u) => u === row.creator_id).length > 0
+                              ? ' online'
+                              : ''
+                              }`}
                           ></i>
                         </a>
                         {row.joiners && row.joiners.length > 0 && (
@@ -784,12 +770,12 @@ function OpenGamesTable(props) {
           {recent.length === 0 ? (
             Array.from({ length: 4 }).map((_, index) => (
               <Grid item xs={6} sm={4} md={3} lg={3} xl={3} key={index}>
-                <div className="carousel-content table-row slide-in glass-container">
-                  <Skeleton variant="rect" width="100%" height={200} />
-                  <Skeleton width="60%" />
-                  <Skeleton width="40%" />
-                  <Skeleton width="80%" />
-                </div>
+                <Box className="carousel-content table-row slide-in " sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <Skeleton variant="rectangular" sx={{ width: '100%', height: 200 }} />
+                  <Skeleton sx={{ width: '60%' }} />
+                  <Skeleton sx={{ width: '40%' }} />
+                  <Skeleton sx={{ width: '80%' }} />
+                </Box>
               </Grid>
             ))
           ) : (
@@ -805,23 +791,22 @@ function OpenGamesTable(props) {
                   xl={3}
                   key={row._id}
                 >
-                  <div
-                    className="carousel-content table-row slide-in glass-container"
-                    style={{
-                      padding: '25px',
+                  <Card
+                    sx={{
+                      p: 3,
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
-                      borderRadius: '8px',
+                      borderRadius: 2, // equivalent to '8px'
                     }}
+                    className="carousel-content table-row slide-in"
                   >
-                    <a
+                    <Link
                       href={`/join/${row._id}`}
-                      className="table-cell"
-                      style={{ marginBottom: '5px', display: 'flex', alignItems: 'center' }}
+                      sx={{ mb: 1, display: 'flex', alignItems: 'center' }}
                     >
                       {row.image && (
-                        <div style={{ marginRight: '10px' }}>
+                        <Box sx={{ mr: 1.25, display: 'block' }}>
                           <img
                             src={row.image}
                             alt=""
@@ -829,41 +814,43 @@ function OpenGamesTable(props) {
                             width={32}
                             style={{ display: 'block' }}
                           />
-                        </div>
+                        </Box>
                       )}
-                      <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <span
-                          className="label cell"
-                          style={{
-                            paddingRight: '5px',
+                      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                        <Typography
+                          component="span"
+                          sx={{
                             fontWeight: 'bold',
+                            paddingRight: 0.625,
                           }}
                         >
                           {row.name}
-                        </span>
-                        <span
-                          className="room-ticker"
-                          style={{
-                            paddingRight: '5px',
+                        </Typography>
+                        <Typography
+                          component="span"
+                          sx={{
                             fontSize: 'xx-small',
+                            paddingRight: 0.625,
                           }}
                         >
-                          {row.game_type.short_name + '-' + row.room_number}
-                        </span>
-                      </div>
-                    </a>
-                    <div className="cell label">
+                          {`${row.game_type.short_name}-${row.room_number}`}
+                        </Typography>
+                      </Box>
+                    </Link>
+                    <Box sx={{ display: 'flex', alignItems: 'center', typography: 'body2' }}>
                       {customFromNow(Moment(row.created_at))}{' '}
-                      <FontAwesomeIcon icon={faStopwatch} />
-                      &nbsp;
+                      <FontAwesomeIcon icon={faStopwatch} /> &nbsp;
                       <FontAwesomeIcon icon={faHeartBroken} />
-                    </div>
-                    <div className="cell" style={{ fontSize: '0.8em' }}>
-                      <span className={getColorClass(hostPrizeMinusBetAmount)}>
-                        {convertToCurrency(hostPrizeMinusBetAmount, solPrice)}
-                      </span>
-                    </div>
-                  </div>
+                    </Box>
+                    <Typography
+                      sx={{
+                        fontSize: '0.8em',
+                        color: getColorClass(hostPrizeMinusBetAmount),  // Assuming this returns a valid CSS color
+                      }}
+                    >
+                      {convertToCurrency(hostPrizeMinusBetAmount, solPrice)}
+                    </Typography>
+                  </Card>
                 </Grid>
               );
             })
@@ -884,7 +871,7 @@ function OpenGamesTable(props) {
           selectedRow={selectedRow}
           balance={balance}
           user={user}
-          togglePopup={() => {}}
+          togglePopup={() => { }}
           handleClose={handleCloseCoHostModal}
           handleSendCoHost={handleSendCoHost}
           handleCoHostAmountChange={handleCoHostAmountChange}

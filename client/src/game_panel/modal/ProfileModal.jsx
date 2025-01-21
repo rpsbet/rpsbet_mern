@@ -28,7 +28,7 @@ import {
   TextField,
   Grid,
   Typography
-} from '@material-ui/core';
+} from '@mui/material';
 
 import StatisticsForm from '../../admin_panel/app/Customer/EditCustomerPage/StatisticsForm';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -500,7 +500,7 @@ function ProfileModal(props) {
             <FontAwesomeIcon icon={faUser} className="mr-2" />
             Your Profile
           </h2>
-          <Button className="btn-close title" onClick={handleCloseModal}>
+          <Button className="btn-close" variant='text' color='error'  onClick={handleCloseModal}>
             ×
           </Button>
         </div>
@@ -580,7 +580,7 @@ function ProfileModal(props) {
 
               <div className="modal-edit-panel">
                 <div>
-                  <TextField
+                   <TextField color="secondary" 
                     className="form-control"
                     variant="filled"
                     label="REFERRAL CODE"
@@ -638,7 +638,7 @@ function ProfileModal(props) {
                 </div>
 
                 <div>
-                  <TextField
+                   <TextField color="secondary" 
                     className="form-control"
                     value={link}
                     variant="filled"
@@ -653,7 +653,7 @@ function ProfileModal(props) {
                 </div>
 
                 <div>
-                  <TextField
+                   <TextField color="secondary" 
                     className="form-control"
                     value={username}
                     variant="filled"
@@ -668,7 +668,7 @@ function ProfileModal(props) {
                 </div>
 
                 <div>
-                  <TextField
+                   <TextField color="secondary" 
                     type="password"
                     InputLabelProps={{
                       shrink: true
@@ -682,7 +682,7 @@ function ProfileModal(props) {
                   />
                 </div>
                 <div>
-                  <TextField
+                   <TextField color="secondary" 
                     type="password"
                     InputLabelProps={{
                       shrink: true
@@ -739,7 +739,7 @@ function ProfileModal(props) {
         {/* Footer */}
         {activeTab === 0 && (
           <div className="modal-footer">
-            <Button className="btn-submit" onClick={saveUserInfo}>
+            <Button variant='contained' color='error' onClick={saveUserInfo}>
               Save
             </Button>
           </div>
@@ -756,7 +756,7 @@ function ProfileModal(props) {
         <div className={isDarkMode ? 'dark_mode' : ''}>
           <div className="modal-header">
             <h2 className="modal-title title">ENTER NEW USERNAME</h2>
-            <Button className="btn-close title" onClick={handleCloseModal}>
+            <Button className="btn-close" variant='text' color='error'  onClick={handleCloseModal}>
               ×
             </Button>
           </div>
@@ -764,7 +764,7 @@ function ProfileModal(props) {
             <div className="modal-content-wrapper">
               <div className="modal-content-panel">
                 <div className="input-username">
-                  <TextField
+                   <TextField color="secondary" 
                     label="e.g. PUSSY_D3STROY3R"
                     value={newUsername}
                     onChange={handleChangeUsername}
@@ -778,10 +778,10 @@ function ProfileModal(props) {
             </div>
           </div>
           <div className="modal-footer">
-            <Button className="btn-submit" onClick={changeUserNameHandler}>
+            <Button variant='contained' color='error' onClick={changeUserNameHandler}>
               Update
             </Button>
-            <Button className="btn-back" onClick={handleCloseNewUsernameModal}>
+            <Button variant='contained' color='secondary' onClick={handleCloseNewUsernameModal}>
               Cancel
             </Button>
           </div>
@@ -798,7 +798,7 @@ function ProfileModal(props) {
         <div className={isDarkMode ? 'dark_mode' : ''}>
           <div className="modal-header">
             <h2 className="modal-title title">ENTER NEW BIO</h2>
-            <Button className="btn-close title" onClick={handleCloseModal}>
+            <Button className="btn-close" variant='text' color='error'  onClick={handleCloseModal}>
               ×
             </Button>
           </div>
@@ -806,7 +806,7 @@ function ProfileModal(props) {
             <div className="modal-content-wrapper">
               <div className="modal-content-panel">
                 <div className="input-username">
-                  <TextField
+                   <TextField color="secondary" 
                     label="e.g. a link"
                     value={link}
                     onChange={handleChangeLink}
@@ -822,10 +822,10 @@ function ProfileModal(props) {
             </div>
           </div>
           <div className="modal-footer">
-            <Button className="btn-submit" onClick={changeLinkHandler}>
+            <Button variant='contained' color='error' onClick={changeLinkHandler}>
               Update
             </Button>
-            <Button className="btn-back" onClick={handleCloseLinkModal}>
+            <Button variant='contained' color='secondary' onClick={handleCloseLinkModal}>
               Cancel
             </Button>
           </div>
@@ -842,7 +842,7 @@ function ProfileModal(props) {
         <div className={isDarkMode ? 'dark_mode' : ''}>
           <div className="modal-header">
             <h2 className="modal-title title">ALL REFERRALS</h2>
-            <Button className="btn-close title" onClick={handleCloseModal}>
+            <Button className="btn-close" variant='text' color='error'  onClick={handleCloseModal}>
               ×
             </Button>
           </div>
@@ -905,7 +905,7 @@ function ProfileModal(props) {
             </div>
           </div>
           <div className="modal-footer">
-            <Button className="btn-back" onClick={handleCloseReferralsModal}>
+            <Button variant='contained' color='secondary' onClick={handleCloseReferralsModal}>
               Close
             </Button>
           </div>

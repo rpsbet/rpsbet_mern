@@ -3,12 +3,14 @@ import Avatar from '../components/Avatar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXTwitter, faTelegram } from '@fortawesome/free-brands-svg-icons';
 import { faGlobe } from '@fortawesome/free-solid-svg-icons';
-import Share from '../components/Share';
 import { convertToCurrency } from '../util/conversion';
-
+import {
+    Box,
+  } from '@mui/material';
+  
 const RoomTokenDetails = ({ roomInfo, solPrice, isDarkMode, handleOpenPlayerModal, progressPercentage }) => {
     return (
-        <div className="glass-container room-details">
+        <Box  className="room-details">
             {/* Room Header: Image on the Left, Name/Ticker and Description on the Right */}
             <div className="room-header">
                 <img
@@ -129,10 +131,8 @@ const RoomTokenDetails = ({ roomInfo, solPrice, isDarkMode, handleOpenPlayerModa
                         ))}
                 </div>
             )}
-            <div className="action-panel">
-                <Share roomInfo={roomInfo} />
-            </div>
-        </div>
+          
+        </Box>
     );
 };
 

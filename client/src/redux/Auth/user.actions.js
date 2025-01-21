@@ -21,7 +21,6 @@ import {
   SET_SEVEN_DAY_PROFIT,
   SET_ONE_DAY_PROFIT,
   SET_ALL_TIME_PROFIT,
-  VERIFICATION_SUCCESS,
   SET_USERNAME_PASSWORD,
   SET_DARK_MODE,
   SET_SPECTATE_MODE,
@@ -218,6 +217,21 @@ export const changePasswordAndAvatar = (new_password, new_avatar) => async dispa
   return false;
 };
 
+export const resetPassword = (params) => async dispatch => {
+  try {
+    const { data } = await axios.post('/auth/resetPassword', params);
+    if (data.success) {
+      dispatch({ type: MSG_INFO, payload: 'Password has been changed.' })
+      return true;
+    } else {
+      dispatch({ type: MSG_ERROR, payload: data.error })
+    }
+  } catch (e) {
+    console.log('error', e)
+  }
+  return false;
+}
+
 // Delete Account
 export const deleteAccount = () => async dispatch => {
   try {
@@ -252,67 +266,6 @@ export const userSignOut = clear_token => async dispatch => {
     dispatch({ type: MSG_WARNING, payload: error });
   }
 };
-
-export const verifyEmail = verification_code => async dispatch => {
-  try {
-    const { data } = await axios.post('/auth/verify_email', { verification_code });
-    if (data.success) {
-      dispatch({ type: VERIFICATION_SUCCESS, payload: true });
-      dispatch({ type: MSG_INFO, payload: 'Your account has been successfully verified.' });
-      return true;
-    } else {
-      dispatch({ type: MSG_ERROR, payload: data.error });
-    }
-  } catch (error) {
-    console.log('error', error);
-    dispatch({ type: MSG_WARNING, payload: error });
-  }
-  return false;
-};
-
-export const resendVerificationEmail = () => async dispatch => {
-  try {
-    const { data } = await axios.post('/auth/resend_verification_email');
-    if (data.success) {
-      dispatch({ type: MSG_INFO, payload: data.message });
-      return true;
-    } else {
-      dispatch({ type: MSG_ERROR, payload: data.error });
-    }
-  } catch (error) {
-    console.log('error', error);
-    dispatch({ type: MSG_WARNING, payload: error });
-  }
-  return false;
-};
-
-export const sendResetPasswordEmail = (email) => async dispatch => {
-  try {
-    const { data } = await axios.post('/auth/sendResetPasswordEmail', { email });
-    if (data.success) {
-      dispatch({ type: MSG_INFO, payload: 'Recover Password Email has been sent. Please check your mail box (including spam).' })
-    } else {
-      dispatch({ type: MSG_ERROR, payload: data.error })
-    }
-  } catch (e) {
-    console.log('error', e)
-  }
-}
-
-export const resetPassword = (params) => async dispatch => {
-  try {
-    const { data } = await axios.post('/auth/resetPassword', params);
-    if (data.success) {
-      dispatch({ type: MSG_INFO, payload: 'Password has been changed.' })
-      return true;
-    } else {
-      dispatch({ type: MSG_ERROR, payload: data.error })
-    }
-  } catch (e) {
-    console.log('error', e)
-  }
-  return false;
-}
 
 export const setSocket = socket => dispatch => {
   dispatch({ type: SET_SOCKET, payload: socket });

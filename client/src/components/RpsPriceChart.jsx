@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Typography, Card, Button, CardContent, Grid, Box } from '@material-ui/core';
+import { Typography, Card, Button, CardContent, Grid, Box } from '@mui/material';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';

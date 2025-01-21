@@ -30,7 +30,6 @@ const initialState = {
   status: null,
   showLogin: false,
   showSignup: false,
-  showVerification: false,
   showAlert: false,
   showGamePasswordModal: false,
   showConfirmTradeModal: false,

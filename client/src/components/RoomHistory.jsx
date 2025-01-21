@@ -3,24 +3,10 @@ import Moment from 'moment';
 import { connect } from 'react-redux';
 import { renderLottieAvatarAnimation } from '../util/LottieAvatarAnimations';
 import PlayerModal from '../game_panel/modal/PlayerModal';
-import { Button } from '@material-ui/core';
+import { Button } from '@mui/material';
 import ReactDOM from 'react-dom';
-import { Skeleton } from "@material-ui/lab";
+import { Skeleton, Box } from '@mui/material';
 
-function customFromNow(date) {
-  const now = Moment();
-  const duration = Moment.duration(now.diff(date));
-
-  if (duration.asSeconds() < 60) {
-    return `${Math.round(duration.asSeconds())}s ago`;
-  } else if (duration.asMinutes() < 60) {
-    return `${Math.round(duration.asMinutes())}m ago`;
-  } else if (duration.asHours() < 24) {
-    return `${Math.round(duration.asHours())}h ago`;
-  } else {
-    return `${Math.round(duration.asDays())}d ago`;
-  }
-}
 
 const RoomHistory = (props) => {
   const { socket, roomInfo, getRoomInfo, roomId, isLowGraphics, loading, userId } = props;
@@ -181,7 +167,7 @@ const RoomHistory = (props) => {
           ))}
           {roomInfo && numToShow < roomInfo.totalGameLogsCount && (
             <div className="load-more-btn">
-              <Button id="load-btn" variant="contained" color="primary" onClick={handleLoadMore}>
+              <Button id="load-btn" variant="contained" color='error' onClick={handleLoadMore}>
                 Load More
               </Button>
             </div>
@@ -192,13 +178,13 @@ const RoomHistory = (props) => {
           NO History
         </p>
       ) : (
-        <div className="loading-skeleton">
-          <Skeleton variant="rect" width="100%" height={60} />
-          <Skeleton variant="text" width="80%" height={30} />
-          <Skeleton variant="text" width="60%" height={20} />
-          <Skeleton variant="text" width="80%" height={30} />
-          <Skeleton variant="text" width="60%" height={20} />
-        </div>
+        <Box className="loading-skeleton" sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <Skeleton variant="rectangular" sx={{ width: '100%', height: 60 }} />
+          <Skeleton variant="text" sx={{ width: '80%', height: 30 }} />
+          <Skeleton variant="text" sx={{ width: '60%', height: 20 }} />
+          <Skeleton variant="text" sx={{ width: '80%', height: 30 }} />
+          <Skeleton variant="text" sx={{ width: '60%', height: 20 }} />
+        </Box>
       )}
     </div>
   );

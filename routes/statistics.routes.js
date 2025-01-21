@@ -783,14 +783,7 @@ router.get('/get-marketing-stat', async (req, res) => {
     ]);
 
     const avgGamePlayed = top1PercentPlayers.length > 0 ? (top1PercentPlayers.reduce((sum, player) => sum + player.gamePlayed, 0) / top1PercentPlayers.length) : 0;
-    // console.log("Average gamePlayed for top 1% players:", avgGamePlayed);
-
     const lastPlayerTotalBalance = top1PercentPlayers.length > 0 ? top1PercentPlayers[top1PercentPlayers.length - 1].totalBalance : 0;
-    // console.log("Total balance of the last player in the top 1%:", lastPlayerTotalBalance);
-
-    const top1PercentUsernames = top1PercentPlayers.map(player => player.username);
-    // console.log("Top 1% player usernames:", top1PercentUsernames);
-
     const totalUsersWithGamePlayed = await User.countDocuments({ gamePlayed: { $gt: 0 } });
 
     if (totalUsersWithGamePlayed === 0) {

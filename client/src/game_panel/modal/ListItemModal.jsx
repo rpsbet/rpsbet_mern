@@ -10,14 +10,14 @@ import {
   RadioGroup,
   FormControlLabel,
   InputAdornment,
-} from '@material-ui/core';
+} from '@mui/material';
 import { alertModal } from './ConfirmAlerts';
 
 Modal.setAppElement('#root');
 
 const customStyles = {
   overlay: {
-    zIndex: 99,
+    zIndex: 3,
     backgroundColor: 'rgba(0, 0, 0, 0.8)',
   },
   content: {
@@ -124,7 +124,7 @@ function ListItemModal(props) {
             )}
 
             {rentOption ? (
-              <TextField
+               <TextField color="secondary" 
                 type="text"
                 name="rentPrice"
                 variant="filled"
@@ -147,7 +147,7 @@ function ListItemModal(props) {
                 }}
               />
             ) : (
-              <TextField
+               <TextField color="secondary" 
                 type="text"
                 name="price"
                 variant="filled"
@@ -172,10 +172,10 @@ function ListItemModal(props) {
             )}
           </div>
           <div className="modal-footer">
-            <Button className="btn-submit" onClick={onBtnOkClicked}>
+            <Button variant='contained' color='error' onClick={onBtnOkClicked}>
               Confirm
             </Button>
-            <Button className="btn-back" onClick={onBtnCancelClicked}>
+            <Button variant='contained' color='secondary' onClick={onBtnCancelClicked}>
               Cancel
             </Button>
           </div>

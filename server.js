@@ -1,109 +1,68 @@
 require('dotenv').config();
 
 const express = require('express');
-const fs = require('fs');
 const mongoose = require('mongoose');
 const path = require('path');
-const https = require('https');
 const cors = require('cors');
-const fileUpload = require('express-fileupload');
-const socketContoller = require('./socketController.js');
 const session = require('express-session');
+const fileUpload = require('express-fileupload');
+const socketController = require('./socketController.js');
+const helmet = require('helmet'); // Security headers middleware
+const bodyParser = require('body-parser');
+
 const app = express();
 
-const server = app.listen(process.env.PORT, () =>
-  console.log(`server running on port ${process.env.PORT}`)
-);
+// -------------------- Server Setup --------------------
+const PORT = process.env.PORT || 5001;
+const server = app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
 
-const io = socketContoller.socketio(server, { origins: '*:*' });
-app.use(function(req, res, next) {
+// -------------------- Socket.io Setup --------------------
+const io = socketController.socketio(server, {
+  cors: {
+    origin: 'http://localhost:1337', // Allow requests from your frontend
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Allowed HTTP methods
+    credentials: true, // Enable cookies for cross-origin
+  },
+});
+
+// Attach io instance to each request for easy access
+app.use((req, res, next) => {
   req.io = io;
   next();
 });
 
-var corsOptions = {
-  origin: 'http://localhost:1337',
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-  credentials: true,
-  optionsSuccessStatus: 200
+// -------------------- CORS Configuration --------------------
+const corsOptions = {
+  origin: 'http://localhost:1337', // Frontend URL
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Allowed HTTP methods
+  credentials: true, // Allow cookies and credentials
 };
 
 app.use(cors(corsOptions));
-// app.use(cors());
 
-const adminAuthRoutes = require('./routes/admin_auth.routes');
-const authRoutes = require('./routes/auth.routes');
-const userRoutes = require('./routes/user.routes');
-const landingRoutes = require('./routes/landing.routes');
-const gameRoutes = require('./routes/game.routes');
-const itemRoutes = require('./routes/item.routes');
-const loanRoutes = require('./routes/loan.routes');
-const stripeRoutes = require('./routes/stripe.routes');
-const statisticsRoutes = require('./routes/statistics.routes');
-const systemSetting = require('./routes/settings.routes');
-const helmet = require('helmet'); // for sec headers
-const { OAuth2Client } = require('google-auth-library');
-const bodyParser = require('body-parser');
-const cronJob = require('./helper/util/createCronJob.js');
-const creditScoreCron = require('./helper/util/creditScoreCron.js');
-const notificationCron = require('./helper/util/notificationCron.js');
-const interestCron = require('./helper/util/interestCron.js');
-const rentCron = require('./helper/util/rentCron.js');
-const callBotCron = require('./helper/util/callBotCron.js');
-const withdrawalCron = require('./helper/util/withdrawalCron.js');
-
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-
-// Initialize the cron job to periodically check for confirmations
-creditScoreCron.checkOutstandingLoans(io);
-rentCron.checkRentalPayments(io);
-notificationCron.deleteNotifications();
-callBotCron.callCronJobs(io);
-withdrawalCron.resetWithdrawalLimits();
-cronJob.checkConfirmations(io);
-interestCron.updateRoomInterests(io);
-
-app.use(helmet());
+// -------------------- Middleware --------------------
+app.use(helmet()); // Add security headers
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-
-app.use(express.json({ extended: false }));
 app.use(fileUpload());
-app.use(bodyParser.json());
-app.use(session({
-  secret: process.env.SESSION_SECRET,
-  resave: false,
-  saveUninitialized: true,
-  cookie: {
-    secure: process.env.NODE_ENV === 'production',
-    httpOnly: true,
-    sameSite: 'strict',
-  }
-}));
 
-// Google OAuth 2.0 token verification
-async function verify(token) {
-  const ticket = await client.verifyIdToken({
-    idToken: token,
-    audience: process.env.GOOGLE_CLIENT_ID
-  });
-  const payload = ticket.getPayload();
-  return payload;
-}
+// Session configuration
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || 'default_secret',
+    resave: false,
+    saveUninitialized: true,
+    cookie: {
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      sameSite: 'strict',
+    },
+  })
+);
 
-// Login route
-app.post('/auth/google', async (req, res) => {
-  const token = req.body.token;
-  try {
-    const user = await verify(token);
-    // Create a session or token for the user
-    req.session.user = user;
-    res.json({ success: true, user });
-  } catch (error) {
-    res.status(401).json({ success: false, error: 'Invalid token' });
-  }
-});
-
+// -------------------- MongoDB Connection --------------------
 const connectWithRetry = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI, {
@@ -113,15 +72,25 @@ const connectWithRetry = async () => {
     console.log('*** MongoDB connected');
   } catch (error) {
     console.error('MongoDB connection error:', error);
-    // Retry connection after a delay
     console.log('Retrying MongoDB connection in 5 seconds...');
-    await new Promise(resolve => setTimeout(resolve, 5000));
-    await connectWithRetry();
+    setTimeout(connectWithRetry, 5000); // Retry connection after 5 seconds
   }
 };
-
 connectWithRetry();
 
+// -------------------- Routes --------------------
+const adminAuthRoutes = require('./routes/admin_auth.routes');
+const authRoutes = require('./routes/auth.routes');
+const userRoutes = require('./routes/user.routes');
+const landingRoutes = require('./routes/landing.routes');
+const gameRoutes = require('./routes/game.routes');
+const itemRoutes = require('./routes/item.routes');
+const loanRoutes = require('./routes/loan.routes');
+const stripeRoutes = require('./routes/stripe.routes');
+const statisticsRoutes = require('./routes/statistics.routes');
+const systemSettingRoutes = require('./routes/settings.routes');
+
+// API routes
 app.use('/api/admin/auth', adminAuthRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
@@ -131,22 +100,22 @@ app.use('/api/item', itemRoutes);
 app.use('/api/loan', loanRoutes);
 app.use('/api/stripe', stripeRoutes);
 app.use('/api/statistics', statisticsRoutes);
-app.use('/api/settings', systemSetting);
+app.use('/api/settings', systemSettingRoutes);
 
-// Set static folder
-app.use(express.static('client/build'));
+// -------------------- Static Files --------------------
+// Serve static files in production
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.resolve(__dirname, 'client', 'build')));
+  app.get('*', (req, res) => {
+    res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
+  });
+}
 
-// app.get('*', (req, res) => {
-//   res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
-// });
-// Serve static assets in production
-// if (process.env.NODE_ENV === 'production') {
-//   // Set static folder
-//   app.use(express.static('client/build'));
+// -------------------- Error Handling --------------------
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send('Something went wrong!');
+});
 
-//   app.get('*', (req, res) => {
-//     res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
-//   });
-// }
-
+// -------------------- Exports --------------------
 module.exports = { app, server, io };

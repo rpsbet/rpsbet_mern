@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { connect } from 'react-redux';
-import { Button } from '@material-ui/core';
+import { Button } from '@mui/material';
 import Modal from 'react-modal';
 import BankPage from '../../admin_panel/app/ProductPages/ProductSerchPage/BankPage';
 import { Help } from '@mui/icons-material';
@@ -50,7 +50,10 @@ const BankModal = ({ modalIsOpen, closeModal, isDarkMode, remainingLoans }) => {
             <FontAwesomeIcon icon={faCoins} className="mr-2" />
             CENTRAL BANK
           </h2>
-          <Button className="btn-close title" onClick={closeModal}>
+          <Button
+            className="btn-close" variant='text' color='error'
+            onClick={closeModal}
+          >
             ×
           </Button>
         </div>
@@ -75,7 +78,7 @@ const BankModal = ({ modalIsOpen, closeModal, isDarkMode, remainingLoans }) => {
         </div>
 
         <div className="modal-footer">
-          <Button className="btn-back" onClick={() => setShowMyLoansModal(true)}>
+          <Button variant='contained' color='secondary' onClick={() => setShowMyLoansModal(true)}>
             Manage Your Loans&nbsp; <AttachMoney />
           </Button>
         </div>

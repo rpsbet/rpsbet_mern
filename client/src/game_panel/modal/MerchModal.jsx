@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import Modal from 'react-modal';
-import { Button } from '@material-ui/core';
+import { Button } from '@mui/material';
 
 Modal.setAppElement('#root');
 
@@ -192,7 +192,7 @@ class MerchModal extends Component {
                         <h2 className="modal-title title">
                             <span style={{ color: "#d81719" }}>RPS</span>.<span style={{ color: "#ebddca" }}>Game</span> Merch
                         </h2>
-                        <Button className="btn-close title" onClick={this.props.closeModal}>×</Button>
+                        <Button className="btn-close" variant='text' color='error'  onClick={this.props.closeModal}>×</Button>
                     </div>
                     <div className="modal-body edit-modal-body merch-modal-body"  style={{background:"#fff"}}>
                         <div id={this.productComponentId1}></div>

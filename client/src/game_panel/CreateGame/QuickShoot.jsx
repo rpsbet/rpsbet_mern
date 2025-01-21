@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { connect } from 'react-redux';
-import { Button, Tooltip, FormControlLabel, RadioGroup, Radio } from '@material-ui/core';
+import { Button, Tooltip, FormControlLabel, RadioGroup, Radio } from '@mui/material';
 import { Info } from '@mui/icons-material';
 import styled from 'styled-components';
 import GameSettingsPanel from './GameSettingsPanel';
@@ -145,7 +145,7 @@ const QuickShoot = (props) => {
     <>
       {step === 1 && (
         <div className="game-info-panel">
-          <div className="glass-container">
+          <div className="">
             <div style={{ marginBottom: '30px' }}>
               <RadioGroup value={selectedGameType} onChange={props.handleChange}>
                 <h3 className="game-sub-title roll-tag">
@@ -173,9 +173,8 @@ const QuickShoot = (props) => {
                         <StyledProductCard
                           id="rps-game-type-radio"
                           isDarkMode={isDarkMode}
-                          className={`btn-game-type title btn-icon ${gameTypeStyleClass[gameType.short_name]} ${
-                            selectedGameType === gameType.short_name ? 'active' : ''
-                          }`}
+                          className={`btn-game-type title btn-icon ${gameTypeStyleClass[gameType.short_name]} ${selectedGameType === gameType.short_name ? 'active' : ''
+                            }`}
                         >
                           <StyledProductImage
                             src={`/img/gametype/icons/${gameType.short_name}.svg`}
@@ -205,8 +204,10 @@ const QuickShoot = (props) => {
             <div className="qs-game-type-panel" style={{ textAlign: 'center', marginBottom: '30px' }}>
               {[2, 3, 4, 5].map((i) => (
                 <Button
+                  variant='outlined'
+                  color='secondary'
                   key={i}
-                  className={qs_game_type === i ? 'label active' : 'label'}
+                  className={qs_game_type === i ? 'active' : ''}
                   onClick={() => {
                     onChangeState({
                       qs_game_type: i,

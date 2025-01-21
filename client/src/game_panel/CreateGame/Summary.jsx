@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { convertToCurrency } from '../../util/conversion';
 import { Warning, Info, CheckCircle } from '@mui/icons-material';
-import { Tooltip } from '@material-ui/core';
+import { Tooltip } from '@mui/material';
 
 const Summary = (props) => {
   const [winChance, setWinChance] = useState(props.game_mode === 'RPS' ? 33 : 0);
@@ -94,7 +94,7 @@ const Summary = (props) => {
     }
 
     return (
-      <div className="summary-panel glass-container">
+      <div className="summary-panel ">
         <h3 className="game-sub-title">Room Summary</h3>
         <div className="summary-info">
           <div className="summary-item">

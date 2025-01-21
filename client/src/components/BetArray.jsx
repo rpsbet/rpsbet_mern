@@ -253,7 +253,7 @@ const PlaceholderComponent = ({ selectedTab, myGames, solPrice, updateQbot, hand
         ) : (
           <Button
             variant="contained"
-            color="primary"
+            color='error'
             startIcon={<FontAwesomeIcon icon={faCrown} />}
             style={{ background: 'linear-gradient(340deg, #ff8500, #ff5100c7)', color: '#fff', textTransform: 'none', fontSize: '16px' }}
           >
@@ -638,10 +638,6 @@ function BetArray({
     };
   }, [fetchAttachedRooms]);
 
-
-  useEffect(() => {
-    fetchAttachedRooms();
-  }, [fetchAttachedRooms]);
 
   const handleSwitchChangeWithFetch = async (event) => {
     await handleDetachAttachChange(event);
@@ -1366,7 +1362,7 @@ function BetArray({
                     <Typography id="edit-modal-title" variant="h6" component="h2" gutterBottom>
                       {modalTitle}
                     </Typography>
-                    <TextField
+                     <TextField color="secondary" 
                       label="EDIT VALUE"
                       value={editedValue}
                       onChange={(e) => setEditedValue(e.target.value)}
@@ -1374,7 +1370,7 @@ function BetArray({
                       variant="outlined"
                       sx={{ marginBottom: '20px' }}
                     />
-                    <Button variant="contained" color="primary" onClick={() => handleUpdateCellData(isDarkMode)} fullWidth>
+                    <Button variant="contained" color='error' onClick={() => handleUpdateCellData(isDarkMode)} fullWidth>
                       Update
                     </Button>
                   </Box>
@@ -1413,7 +1409,7 @@ function BetArray({
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {attachedRooms.length > 0 ? (
+                    {attachedRooms && attachedRooms.length > 0 ? (
                       attachedRooms.map((room) => {
                         const betAmounts = room.bet_amounts;
                         const minBet = Math.min(...betAmounts);
@@ -1469,7 +1465,7 @@ function BetArray({
                     <Typography id="edit-modal-title" variant="h6" component="h2" gutterBottom>
                       {modalTitle}
                     </Typography>
-                    <TextField
+                     <TextField color="secondary" 
                       label="EDIT VALUE"
                       value={editedValue}
                       onChange={(e) => setEditedValue(e.target.value)}
@@ -1477,7 +1473,7 @@ function BetArray({
                       variant="outlined"
                       sx={{ marginBottom: '20px' }}
                     />
-                    <Button variant="contained" color="primary" onClick={() => handleUpdateCellData(isDarkMode)} fullWidth>
+                    <Button variant="contained" color='error' onClick={() => handleUpdateCellData(isDarkMode)} fullWidth>
                       Update
                     </Button>
                   </Box>

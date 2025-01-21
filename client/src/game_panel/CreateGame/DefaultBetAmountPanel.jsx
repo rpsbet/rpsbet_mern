@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { connect } from 'react-redux';
-import { Button, Tooltip, TextField } from '@material-ui/core';
-import ButtonGroup from '@material-ui/core/ButtonGroup';
-import { createTheme, ThemeProvider } from '@material-ui/core/styles';
+import { Button, Tooltip, TextField } from '@mui/material';
+import ButtonGroup from '@mui/material/ButtonGroup';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { Info } from '@mui/icons-material';
 import { convertToCurrency } from '../../util/conversion';
 
@@ -28,49 +28,6 @@ const DefaultBetAmountPanel = ({
     '/img/icons/coins-xl.svg',
   ];
 
-  const theme = createTheme({
-    overrides: {
-      MuiOutlinedInput: {
-        adornedEnd: {
-          paddingRight: '6px',
-        },
-        root: {
-          '& $notchedOutline': {
-            borderColor: 'gray',
-            transition: 'border-color 0.3s ease-in-out',
-            paddingRight: '6px',
-          },
-          '&:hover $notchedOutline': {
-            borderColor: 'gray',
-          },
-          '&$focused $notchedOutline': {
-            borderColor: 'red',
-            boxShadow: '0 0 0 4px rgba(255, 0, 0, 0.3)',
-          },
-          '&$focused': {
-            backgroundColor: '#10101011',
-          },
-          '&:not($focused):not($error) $notchedOutline': {
-            borderColor: isDarkMode ? 'white' : '#101010',
-          },
-          '& input': {
-            color: isDarkMode ? 'white' : '#101010',
-            backgroundColor: '#10101011',
-          },
-        },
-        input: {
-          '&::placeholder': {
-            color: 'gray',
-          },
-        },
-      },
-      MuiFormLabel: {
-        root: {
-          color: isDarkMode ? 'white' : '#101010',
-        },
-      },
-    },
-  });
 
   const handleHalfXButtonClick = () => {
     const multipliedBetAmount = bet_amount * 0.5;
@@ -124,6 +81,8 @@ const DefaultBetAmountPanel = ({
       <div className="bet-amounts">
         {defaultBetAmounts.map((amount, index) => (
           <Button
+            color='secondary'
+            variant='outlined'
             key={index}
             className={!isOther && bet_amount === amount ? ' active' : ''}
             onClick={() => {
@@ -147,6 +106,8 @@ const DefaultBetAmountPanel = ({
           </Button>
         ))}
         <Button
+          color='secondary'
+          variant='outlined'
           className={isOther ? 'other active' : 'other'}
           onClick={() => setIsOther(true)}
         >
@@ -155,8 +116,7 @@ const DefaultBetAmountPanel = ({
       </div>
       <div className={`edit-amount-panel ${isOther ? '' : 'hidden'}`}>
         <div className="bet-amount">
-          <ThemeProvider theme={theme}>
-            <TextField
+            <TextField color="secondary"
               type="text"
               name="betamount"
               id="betAmount"
@@ -181,41 +141,34 @@ const DefaultBetAmountPanel = ({
                   >
                     <Button
                       className='label'
-                      variant="contained"
-                      color="primary"
+                      variant="outlined"
+                      color="secondary"
                       onClick={handle2xButtonClick}
                       style={{
                         marginTop: '8px',
-                        border: '1px solid red', // Red border
-                        color: 'red', // Optional: text color
                       }}
                     >
                       2x
                     </Button>
                     <Button
-                      variant="contained"
+                      variant="outlined"
                       className='label'
-
-                      color="primary"
+                      color="secondary"
                       onClick={handleHalfXButtonClick}
                       style={{
                         marginTop: '8px',
-                        border: '1px solid red', // Red border
-                        color: 'red', // Optional: text color
                       }}
                     >
                       1/2x
                     </Button>
                     <Button
-                      variant="contained"
+                      variant="outlined"
                       className='label'
 
-                      color="primary"
+                      color="secondary"
                       onClick={handleMaxButtonClick}
                       style={{
                         marginTop: '8px',
-                        border: '1px solid red', // Red border
-                        color: 'red', // Optional: text color
                       }}
                     >
                       Max
@@ -239,7 +192,6 @@ const DefaultBetAmountPanel = ({
                 }
               }}
             />
-          </ThemeProvider>
         </div>
       </div>
       <h3 className="game-sub-title roll-tag" style={{ marginTop: "30px" }}>
@@ -253,8 +205,7 @@ const DefaultBetAmountPanel = ({
         </Tooltip>
       </h3>
       <div className="tax-input">
-        <ThemeProvider theme={theme}>
-          <TextField
+          <TextField color="secondary"
             type="number"
             name="tax"
             id="taxInput"
@@ -284,7 +235,6 @@ const DefaultBetAmountPanel = ({
             }}
             error={tax < 0 || tax > 33} // Adds error styling if the condition is met
           />
-        </ThemeProvider>
         {/* Display the error message if the value is out of range */}
         {tax < 0 && (
           <div style={{ color: 'red', fontSize: '0.875rem', marginTop: '4px' }}>

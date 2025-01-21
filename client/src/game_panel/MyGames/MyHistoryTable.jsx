@@ -6,7 +6,7 @@ import { getSettings } from '../../redux/Setting/setting.action';
 import FileCopyIcon from '@mui/icons-material/FileCopy';
 import {
   Tooltip,
-} from '@material-ui/core';
+} from '@mui/material';
 import Moment from 'moment';
 // import ReactDOM from 'react-dom';
 import { renderLottieAvatarAnimation } from '../../util/LottieAvatarAnimations';

@@ -14,7 +14,7 @@ import {
   InputAdornment,
   IconButton,
   Tooltip
-} from '@material-ui/core';
+} from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUserPlus } from '@fortawesome/free-solid-svg-icons';
 import TermsModal from '../modal/TermsModal';
@@ -245,13 +245,13 @@ function SignupModal(props) {
                 <FontAwesomeIcon icon={faUserPlus} className="mr-2" />
                 REGISTER
               </h2>
-              <Button className="btn-close title" onClick={closeModal}>×</Button>
+              <Button className="btn-close" variant='text' color='error'  onClick={closeModal}>×</Button>
             </div>
 
             <div className="modal-body">
               <h4 className="title">JOIN THE CAT (FIGHT) CLUB! 🥋</h4>
               <form onSubmit={onSubmitForm} id="signupForm" ref={formRef}>
-                <TextField
+                 <TextField color="secondary" 
                   placeholder="e.g. PU55YD35TROY3R"
                   label="Your Username"
                   required
@@ -295,7 +295,7 @@ function SignupModal(props) {
                   </ButtonBase>
                 </div>
 
-                <TextField
+                 <TextField color="secondary" 
                   required
                   placeholder="●●●●●●"
                   type={showPassword ? 'text' : 'password'}
@@ -323,7 +323,7 @@ function SignupModal(props) {
                   }}
                 />
 
-                <TextField
+                 <TextField color="secondary" 
                   placeholder="V9FTGY"
                   label="Re-furr-al"
                   value={referralCode}
@@ -340,7 +340,7 @@ function SignupModal(props) {
                     <Checkbox
                       checked={termsChecked}
                       onChange={handleCheckboxChange}
-                      color="primary"
+                      color='error'
                     />
                   }
                   label={
@@ -360,7 +360,7 @@ function SignupModal(props) {
 
             <div style={{ borderBottomLeftRadius: '0' }} className="modal-footer">
               <Button
-                className="btn-submit"
+                variant='contained' color='error'
                 style={{ margin: '20px 0 0' }}
                 type="submit"
                 form="signupForm"
@@ -369,7 +369,7 @@ function SignupModal(props) {
               </Button>
               <p className="m-0 sm-text-center">
                 GOT ACCOUNT?{' '}
-                <Button onClick={() => { closeModal(); openLoginModal(); }}>
+                <Button variant='text' color='error' onClick={() => { closeModal(); openLoginModal(); }}>
                   LOGIN HERE →
                 </Button>
               </p>

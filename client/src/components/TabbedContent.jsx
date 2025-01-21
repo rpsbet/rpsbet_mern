@@ -3,18 +3,16 @@ import {
   Tabs,
   Tab,
   Checkbox,
-  FormControlLabel,
-  Typography,
-  Box
-} from '@material-ui/core';
-import { withStyles } from '@material-ui/core/styles';
+  Skeleton,
+  Box,
+  Chip,
+  Paper
+} from '@mui/material';
+import { styled } from '@mui/material/styles';
 import Leaderboards from './Leaderboards';
 import RoomHistory from './RoomHistory';
 import Comments from './Comments';
 import Moment from 'moment';
-// import ReactDOM from 'react-dom';
-import { renderLottieAvatarAnimation } from '../util/LottieAvatarAnimations';
-import { Skeleton } from '@material-ui/lab';
 import Joyride from 'react-joyride';
 import { tutorialStepsGame } from '../util/tutorialStepsGame';
 import RPS from '../game_panel/JoinGame/RPS';
@@ -31,38 +29,34 @@ function updateFromNow(history) {
   return result;
 }
 
-const styles = (theme) => ({
-  activeTab: {
-    color: (props) => (props.isDarkMode ? '#f9f9f9' : '#ff0000'),
-    '& .MuiTab-wrapper': {
-      color: '#ff0000',
-    },
+const StyledTab = styled(Tab)(({ theme, isDarkMode, active }) => ({
+  color: active
+    ? isDarkMode
+      ? '#f9f9f9'
+      : '#ff0000'
+    : isDarkMode
+      ? '#aaa'
+      : '#ccc',
+  '& .MuiTab-wrapper': {
+    color: active ? '#ff0000' : isDarkMode ? '#aaa' : '#ccc',
   },
-  inactiveTab: {
-    color: (props) => (props.isDarkMode ? '#aaa' : '#ccc'),
-    '& .MuiTab-wrapper': {
-      color: (props) => (props.isDarkMode ? '#aaa' : '#ccc'),
-    },
-  },
-  flexContainer: {
-    display: 'flex',
-    gap: '16px',
-    flexWrap: 'wrap',
-  },
-  column: {
-    flex: 1,
-    minWidth: '100%',
-  },
-  checkboxContainer: {
-    marginTop: '5px',
-    display: 'flex',
-    gap: '16px',
-    marginBottom: '0',
-  },
-  checkbox: {
-    color: (props) => (props.isDarkMode ? '#f9f9f9' : '#ff0000'),
-  },
+}));
+
+const StyledCheckbox = styled(Checkbox)(({ theme, isDarkMode }) => ({
+  color: isDarkMode ? '#f9f9f9' : '#ff0000',
+}));
+
+const FlexContainer = styled('div')({
+  display: 'flex',
+  gap: '16px',
+  flexWrap: 'wrap',
 });
+
+const Column = styled('div')({
+  flex: 1,
+  minWidth: '100%',
+});
+
 
 function TabbedContent(props) {
   const {
@@ -204,13 +198,13 @@ function TabbedContent(props) {
     setSelectedTab(newValue);
   }, []);
 
-  const handleCheckboxChange = useCallback((event, tabIndex) => {
+  const handleChipClick = useCallback((index) => {
     setActiveTabs((prevActiveTabs) => {
-      const isActive = prevActiveTabs.includes(tabIndex);
+      const isActive = prevActiveTabs.includes(index);
       if (isActive) {
-        return prevActiveTabs.filter((tab) => tab !== tabIndex);
+        return prevActiveTabs.filter((tab) => tab !== index);
       } else {
-        return [...prevActiveTabs, tabIndex];
+        return [...prevActiveTabs, index];
       }
     });
   }, []);
@@ -222,29 +216,31 @@ function TabbedContent(props) {
         // "Play" Tab
         if (!roomInfo || !roomInfo.game_type) {
           return (
-            <div className="join-game-panel">
-              <div className="game-page loading-skeleton">
-                <div className="game-contents">
-                  <Skeleton variant="rect" width="100%" height={60} />
-                  <div
+            <Box square component={Paper} className="join-game-panel">
+              <Box className="game-page loading-skeleton" sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <Box className="game-contents" sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <Skeleton variant="rectangular" sx={{ width: '100%', height: 60 }} />
+                  <Box
                     className="game-info-panel"
-                    style={{ position: 'relative', zIndex: 10, paddingBottom: '90px' }}
+                    sx={{ position: 'relative', paddingBottom: '90px', display: 'flex', flexDirection: 'column', gap: 2 }}
                   >
-                    <Skeleton variant="text" width="20%" height={30} />
-                    <Skeleton variant="text" width="80%" height={30} />
-                    <Skeleton variant="text" width="60%" height={100} />
-                    <Skeleton variant="text" width="80%" height={30} />
-                    <Skeleton variant="text" width="10%" height={90} />
-                    <Skeleton variant="text" width="20%" height={90} />
-                  </div>
-                </div>
-              </div>
-            </div>
+                    <Skeleton variant="text" sx={{ width: '20%', height: 30 }} />
+                    <Skeleton variant="text" sx={{ width: '80%', height: 30 }} />
+                    <Skeleton variant="text" sx={{ width: '60%', height: 100 }} />
+                    <Skeleton variant="text" sx={{ width: '80%', height: 30 }} />
+                    <Skeleton variant="text" sx={{ width: '10%', height: 90 }} />
+                    <Skeleton variant="text" sx={{ width: '20%', height: 90 }} />
+                  </Box>
+                </Box>
+              </Box>
+            </Box>
           );
         }
 
         return (
-          <div className="join-game-panel">
+          <Paper square variant='inherit' sx={{
+            backgroundColor: 'transparent',
+          }} className="join-game-panel">
             <Joyride
               steps={tutorialStepsGame}
               run={run}
@@ -254,7 +250,7 @@ function TabbedContent(props) {
               showSkipButton
               styles={{
                 options: {
-                  zIndex: 10000,
+                  zIndex: 9,
                   backgroundColor: isDarkMode ? 'rgb(81 48 98 / 60%)' : '#ccc9',
                   primaryColor: '#ff0000',
                   arrowColor: isDarkMode ? 'rgb(81 48 98 / 60%)' : '#ccc9',
@@ -365,29 +361,27 @@ function TabbedContent(props) {
             ) : (
               <div>Unsupported game type.</div>
             )}
-          </div>
+          </Paper>
         );
       }
 
       case 1: {
         // "Chart" Tab (in your original code, it's labeled "CoHostModal" or something)
         return (
-          <div>
-            <CoHostModal
-              isDarkMode={isDarkMode}
-              coHostAmount={coHostAmount}
-              selectedRow={roomInfo}
-              balance={balance}
-              user={user}
-              togglePopup={togglePopup}
-              handleClose={handleCloseCoHostModal}
-              handleSendCoHost={handleSendCoHost}
-              handleCoHostAmountChange={handleCoHostAmountChange}
-              has_joined={has_joined}
-              solPrice={solPrice}
-              input_only={false}
-            />
-          </div>
+          <CoHostModal
+            isDarkMode={isDarkMode}
+            coHostAmount={coHostAmount}
+            selectedRow={roomInfo}
+            balance={balance}
+            user={user}
+            togglePopup={togglePopup}
+            handleClose={handleCloseCoHostModal}
+            handleSendCoHost={handleSendCoHost}
+            handleCoHostAmountChange={handleCoHostAmountChange}
+            has_joined={has_joined}
+            solPrice={solPrice}
+            input_only={false}
+          />
         );
       }
 
@@ -432,10 +426,10 @@ function TabbedContent(props) {
           value={selectedTab}
           onChange={handleTabChange}
         >
-          <Tab label="Chart" />
-          <Tab label="History" />
-          <Tab label="Thread" />
-          <Tab label="Insights" />
+          <StyledTab label="Chart" active={selectedTab === 0} isDarkMode={isDarkMode} />
+          <StyledTab label="History" active={selectedTab === 1} isDarkMode={isDarkMode} />
+          <StyledTab label="Thread" active={selectedTab === 2} isDarkMode={isDarkMode} />
+          <StyledTab label="Insights" active={selectedTab === 3} isDarkMode={isDarkMode} />
         </Tabs>
         <div>
           {selectedTab === 0 && renderTabContent(0)}
@@ -450,32 +444,26 @@ function TabbedContent(props) {
   // Desktop view with checkboxes
   return (
     <div>
-      <div className={classes.checkboxContainer}>
+      <Box component={Paper} elevation={0} square variant='filled' sx={{ background: '#501272', padding: '20px 10px', marginTop: '5px', display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
         {['Play', 'Chart', 'History', 'Thread', 'Insights'].map((label, index) => (
-          <FormControlLabel
+          <Chip
             key={index}
-            className={classes.checkbox}
-            control={
-              <Checkbox
-                checked={activeTabs.includes(index)}
-                onChange={(e) => handleCheckboxChange(e, index)}
-                color="secondary"
-              />
-            }
             label={label}
+            onClick={() => handleChipClick(index)}
+            color={activeTabs.includes(index) ? "secondary" : "secondary"}
+            variant={activeTabs.includes(index) ? "filled" : "outlined"}
+            clickable
           />
         ))}
-      </div>
+      </Box>
 
-      <div className={classes.flexContainer}>
+      <FlexContainer>
         {activeTabs.map((tabIndex) => (
-          <div key={tabIndex} className={classes.column}>
-            {renderTabContent(tabIndex)}
-          </div>
+          <Column key={tabIndex}>{renderTabContent(tabIndex)}</Column>
         ))}
-      </div>
+      </FlexContainer>
     </div>
   );
 }
 
-export default withStyles(styles)(TabbedContent);
+export default TabbedContent;

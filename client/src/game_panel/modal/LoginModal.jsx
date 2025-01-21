@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Modal from 'react-modal';
 import { connect } from 'react-redux';
-import { Button, TextField } from '@material-ui/core';
+import { Button, TextField } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSignInAlt, faExternalLinkAlt } from '@fortawesome/free-solid-svg-icons';
 
@@ -45,7 +45,6 @@ function LoginModal(props) {
   // ------------------ LOCAL STATE ------------------
   const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState(initialPassword);
-  const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [isInvestorsPage, setIsInvestorsPage] = useState(
     window.location.pathname.startsWith('/investors')
   );
@@ -177,7 +176,7 @@ function LoginModal(props) {
             <FontAwesomeIcon icon={faSignInAlt} className="mr-2" />
             LOGIN
           </h2>
-          <Button className="btn-close title" onClick={props.closeModal}>
+          <Button className="btn-close" variant='text' color='error'  onClick={props.closeModal}>
             ×
           </Button>
         </div>
@@ -195,7 +194,7 @@ function LoginModal(props) {
           style={{ paddingTop: '0', paddingBottom: '5px' }}
         >
           <form onSubmit={onSubmitForm}>
-            <TextField
+             <TextField color="secondary" 
               type="text"
               className="form-control"
               variant="filled"
@@ -207,7 +206,7 @@ function LoginModal(props) {
               onChange={onChangeEmail}
               autoComplete="on"
             />
-            <TextField
+             <TextField color="secondary" 
               type="password"
               className="form-control"
               id="password"
@@ -247,7 +246,9 @@ function LoginModal(props) {
           >
             <Button
               onClick={onSubmitForm}
-              className="btn-submit login"
+              variant='contained'
+              color='error'
+              className="login"
               style={{ marginTop: '0px', padding: '10px' }}
             >
               Login&nbsp;<span className="roll-tag">[ ↵ ]</span>
@@ -260,7 +261,7 @@ function LoginModal(props) {
               width: 'calc(100% - 10px)',
               margin: '10px 0 0 -10px'
             }}
-            className="btn-back"
+            variant='contained' color='secondary'
             onClick={() => {
               props.closeModal();
               props.openSignupModal();
@@ -279,7 +280,7 @@ function LoginModal(props) {
                 width: 'calc(100% - 10px)',
                 margin: '10px 0 0 -10px'
               }}
-              className="btn-back"
+              variant='contained' color='secondary'
               onClick={() => {
                 props.closeModal();
                 history.push('/investors');
@@ -298,7 +299,7 @@ function LoginModal(props) {
                 width: 'calc(100% - 10px)',
                 margin: '10px 0 0 -10px'
               }}
-              className="btn-back"
+              variant='contained' color='secondary'
               onClick={() => {
                 props.closeModal();
                 history.push('/play');

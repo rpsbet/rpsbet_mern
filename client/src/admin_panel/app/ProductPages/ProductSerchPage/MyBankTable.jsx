@@ -37,9 +37,10 @@ import {
   TableContainer,
   TableRow,
   Tooltip,
-  Select
-} from '@material-ui/core';
-import { Skeleton } from "@material-ui/lab";
+  Select,
+  Skeleton,
+  Box
+} from '@mui/material';
 import { acGetCustomerInfo } from '../../../../redux/Customer/customer.action';
 import Avatar from '../../../../components/Avatar';
 import PlayerModal from '../../../../game_panel/modal/PlayerModal';
@@ -341,17 +342,29 @@ class MyBankTable extends Component {
             </Menu>
           </div>
         </FilterSortContainer>
-        {data && data.length === 0? (
+        {data && data.length === 0 ? (
           <ProductGrid>
             {[...Array(5)].map((_, index) => (
-              <ProductCard key={index}>
-                <Skeleton variant="text" width="80%" height={30} />
-                <Skeleton variant="rect" width="100%" height={200} />
-                <Skeleton variant="text" width="50%" height={20} />
-                <Skeleton variant="text" width="70%" height={20} />
-                <Skeleton variant="text" width="60%" height={20} />
-                <Skeleton variant="text" width="50%" height={20} />
-              </ProductCard>
+              <Box
+                key={index}
+                sx={{
+                  padding: 2,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  border: '1px solid #ddd',
+                  borderRadius: 2,
+                  boxShadow: 1,
+                  marginBottom: 2,
+                }}
+              >
+                <Skeleton variant="text" sx={{ width: '80%', height: 30 }} />
+                <Skeleton variant="rectangular" sx={{ width: '100%', height: 200, marginY: 1 }} />
+                <Skeleton variant="text" sx={{ width: '50%', height: 20 }} />
+                <Skeleton variant="text" sx={{ width: '70%', height: 20, marginY: 1 }} />
+                <Skeleton variant="text" sx={{ width: '60%', height: 20 }} />
+                <Skeleton variant="text" sx={{ width: '50%', height: 20, marginTop: 1 }} />
+              </Box>
             ))}
           </ProductGrid>
         ) : (
@@ -459,8 +472,8 @@ class MyBankTable extends Component {
                     {row.onSale === 0 ? null : (
                       <Tooltip title="Withdraw Funds">
                         <Button
-                        style={{left: '40%'}}
-                          className="btn-back"
+                          style={{ left: '40%' }}
+                          variant='contained' color='secondary'
                           onClick={() => {
                             setCurrentLoanId(row._id);
                             openDeListLoanModal();

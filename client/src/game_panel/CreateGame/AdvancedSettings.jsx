@@ -9,7 +9,7 @@ import {
   TextField,
   Tooltip,
   InputAdornment,
-} from '@material-ui/core';
+} from '@mui/material';
 import { Info } from '@mui/icons-material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPenSquare } from '@fortawesome/free-solid-svg-icons';
@@ -27,7 +27,7 @@ const AdvancedSettings = (props) => {
   return (
     <div id="advanced_panel">
       {/* Step 1: Privacy */}
-      <div className="game-privacy-panel game-info-panel glass-container ">
+      <div className="game-privacy-panel game-info-panel  ">
         <h3 className="game-sub-title roll-tag">Advanced Settings&nbsp;<Tooltip
           style={{ position: "absolute", right: "20px" }}
           title={'Optional - Skip if needed.'}
@@ -67,7 +67,7 @@ const AdvancedSettings = (props) => {
               </Button>
             </div>
             {props.is_private && (
-              <TextField
+               <TextField color="secondary" 
                 id="room_password"
                 variant="filled"
                 value={props.room_password}
@@ -105,7 +105,7 @@ const AdvancedSettings = (props) => {
               </Button>
             </div>
             {props.endgame_type && (
-              <TextField
+               <TextField color="secondary" 
                 id="endgame_amount"
                 variant="filled"
                 value={props.endgame_amount}
@@ -132,7 +132,7 @@ const AdvancedSettings = (props) => {
 
           <div className="grid-item content" style={{ justifyItems: "center", }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: "center", width: '100%' }}>
-              <TextField
+               <TextField color="secondary" 
                 label="Add Description"
                 value={props.description}
                 placeholder="e.g. This gonna go crazy"
@@ -169,7 +169,7 @@ const AdvancedSettings = (props) => {
           </div>
           {showOptions && (
             <div>
-              <TextField
+               <TextField color="secondary" 
                 label="X Link"
                 variant="filled"
                 fullWidth
@@ -180,7 +180,7 @@ const AdvancedSettings = (props) => {
                 onFocus={() => dispatch(setFocused(true))}
                 onBlur={() => dispatch(setFocused(false))}
               />
-              <TextField
+               <TextField color="secondary" 
                 label="Website Link"
                 variant="filled"
                 fullWidth
@@ -191,7 +191,7 @@ const AdvancedSettings = (props) => {
                 onFocus={() => dispatch(setFocused(true))}
                 onBlur={() => dispatch(setFocused(false))}
               />
-              <TextField
+               <TextField color="secondary" 
                 label="Telegram Link"
                 variant="filled"
                 fullWidth

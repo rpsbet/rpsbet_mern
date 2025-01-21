@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import IconButton from '@material-ui/core/IconButton';
+import IconButton from '@mui/material/IconButton';
 import { ContactSupport, Close } from '@mui/icons-material';
 
 const SupportButton = () => {

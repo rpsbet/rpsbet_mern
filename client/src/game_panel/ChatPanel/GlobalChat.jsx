@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { connect } from 'react-redux';
-import { Skeleton } from '@material-ui/lab';
 import PlayerModal from '../modal/PlayerModal';
 import Avatar from '../../components/Avatar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHandPointDown } from '@fortawesome/free-solid-svg-icons';
-import ButtonBase from '@material-ui/core/ButtonBase';
+import { Skeleton, Box, ButtonBase, Stack, Typography } from '@mui/material';
+
 
 import { fetchId } from '../../redux/Customer/customer.action';
 
@@ -64,24 +64,19 @@ function GlobalChat(props) {
 
   // ------------------- Lifecycle: componentDidUpdate logic -------------------
   useEffect(() => {
-    // 1) Check if globalChatList changed in length to see if new messages arrived
     if (
       prevGlobalChatListLength.current > 0 &&
       prevGlobalChatListLength.current < globalChatList.length
     ) {
-      // Update new messages count & show the tooltip
       const difference = globalChatList.length - prevGlobalChatListLength.current;
       setNewMessages(difference);
       setShowTooltip(true);
 
-      // If the newest message is from the current user, scroll to bottom
       if (globalChatList[globalChatList.length - 1].senderId === user._id) {
         handleInitialScroll();
       }
     }
 
-    // 2) If the drawer just opened/closed or if we have new messages
-    //    and haven't set isLoaded yet, scroll to bottom
     if (
       (!isLoaded &&
         (prevIsDrawerOpen.current !== isDrawerOpen ||
@@ -191,8 +186,9 @@ function GlobalChat(props) {
   const offset = 50;
   const uniqueMessages = new Set();
 
+
   return (
-    <div className="chat-panel global-chat" ref={chatBoxRef} onScroll={handleScroll}>
+    <Box className="chat-panel global-chat" ref={chatBoxRef} onScroll={handleScroll} sx={{ maxHeight: 'calc(100vh - 140px)', overflowY: 'auto' }}>
       {/* Tooltip for new messages */}
       {showTooltip && (
         <ButtonBase
@@ -279,15 +275,12 @@ function GlobalChat(props) {
             return (
               <div
                 key={index}
-                className={`chat-line ${
-                  selectedMessage === chat ? 'selected' : ''
-                } ${
-                  chat.sender === 'SYSTEM' ? 'special-message' : ''
-                } ${
-                  chat.sender === 'SYSTEM' && chat.message.includes('rent')
+                className={`chat-line ${selectedMessage === chat ? 'selected' : ''
+                  } ${chat.sender === 'SYSTEM' ? 'special-message' : ''
+                  } ${chat.sender === 'SYSTEM' && chat.message.includes('rent')
                     ? 'special-message-rent'
                     : ''
-                }`}
+                  }`}
                 onClick={() => handleMessageClick(chat)}
               >
                 {/* If replying to another message */}
@@ -308,11 +301,10 @@ function GlobalChat(props) {
                         darkMode={isDarkMode}
                       />
                       <i
-                        className={`online-status${
-                          onlineUserList.includes(chat.replyTo.senderId)
+                        className={`online-status${onlineUserList.includes(chat.replyTo.senderId)
                             ? ' online'
                             : ''
-                        }`}
+                          }`}
                       />
                     </a>
                     <span className="reply-sender sender-name">
@@ -347,11 +339,10 @@ function GlobalChat(props) {
                       darkMode={isDarkMode}
                     />
                     <i
-                      className={`online-status${
-                        onlineUserList.includes(chat.senderId)
+                      className={`online-status${onlineUserList.includes(chat.senderId)
                           ? ' online'
                           : ''
-                      }`}
+                        }`}
                     />
                   </a>
                   <div className="chat-msg">
@@ -397,7 +388,7 @@ function GlobalChat(props) {
           ))}
         </div>
       )}
-    </div>
+    </Box>
   );
 }
 

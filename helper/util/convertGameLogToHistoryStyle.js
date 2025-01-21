@@ -104,7 +104,6 @@ const convertGameLogToHistoryStyle = async gameLogList => {
       }
       result.push(temp);
     } catch (e) {
-      console.log("E", e)
       return;
     }
   });

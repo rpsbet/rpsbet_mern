@@ -19,8 +19,6 @@ const ChangePasswordRequest = require('../model/ChangePasswordRequest');
 const { OAuth2Client } = require('google-auth-library');
 
 const auth = require('../middleware/auth');
-const sendgrid = require('../helper/sendgrid');
-const { resetPassword } = require('../helper/mailer');
 
 // @route   POST api/auth
 // @desc    Auth user
@@ -167,6 +165,49 @@ router.post('/', (req, res) => {
   });
 });
 
+
+// Forgot Password
+router.post('/resetPassword', async (req, res) => {
+  try {
+    const params = req.body.code.split('-');
+    if (params.length !== 2) {
+      return res.json({
+        success: false,
+        error: 'Invalid Action'
+      });
+    }
+
+    const request = await ChangePasswordRequest.findOne({
+      _id: params[0]
+    }).populate({ path: 'user', model: User });
+
+    if (request.user._id != params[1]) {
+      return res.json({
+        success: false,
+        error: 'Invalid Action'
+      });
+    }
+
+    bcrypt.genSalt(10, (err, salt) => {
+      bcrypt.hash(req.body.password, salt, (err, hash) => {
+        if (err) throw err;
+        request.user.password = hash;
+        try {
+          saveDocumentWithRetry(request.user);
+        } catch (error) {
+          console.error("Error saving  request.user:", error);
+        }
+        return res.json({
+          success: true
+        });
+      });
+    });
+  } catch (error) {
+    res.json({ success: false, error: error.toString() });
+  }
+});
+
+
 // New endpoint for fetching profit data
 router.get('/profit', auth, async (req, res) => {
   try {
@@ -237,78 +278,6 @@ const getProfitData = (transactions) => ({
 });
 
 
-// Forgot Password
-router.post('/sendResetPasswordEmail', async (req, res) => {
-  try {
-    User.findOne({ email: req.body.email }).then(async user => {
-      if (!user || user.is_deleted === true)
-        return res.json({
-          success: false,
-          error: 'Email does not exist in our community.'
-        });
-
-      const request = new ChangePasswordRequest({ user: user });
-      try {
-        await saveDocumentWithRetry(request);
-      } catch (error) {
-        console.error("Error saving request:", error);
-      }
-
-      resetPassword(
-        user.email,
-        user.username,
-        `${request._id}-${user._id}`
-      ).then(() =>
-        res.json({
-          success: true
-        })
-      );
-    });
-  } catch (error) {
-    res.json({ success: false, error: error.toString() });
-  }
-});
-
-// Forgot Password
-router.post('/resetPassword', async (req, res) => {
-  try {
-    const params = req.body.code.split('-');
-    if (params.length !== 2) {
-      return res.json({
-        success: false,
-        error: 'Invalid Action'
-      });
-    }
-
-    const request = await ChangePasswordRequest.findOne({
-      _id: params[0]
-    }).populate({ path: 'user', model: User });
-
-    if (request.user._id != params[1]) {
-      return res.json({
-        success: false,
-        error: 'Invalid Action'
-      });
-    }
-
-    bcrypt.genSalt(10, (err, salt) => {
-      bcrypt.hash(req.body.password, salt, (err, hash) => {
-        if (err) throw err;
-        request.user.password = hash;
-        try {
-          saveDocumentWithRetry(request.user);
-        } catch (error) {
-          console.error("Error saving  request.user:", error);
-        }
-        return res.json({
-          success: true
-        });
-      });
-    });
-  } catch (error) {
-    res.json({ success: false, error: error.toString() });
-  }
-});
 
 // Change Password in EditAccountModal
 router.post('/changePasswordAndAvatar', auth, async (req, res) => {
@@ -375,61 +344,6 @@ router.post('/logout', auth, async (req, res) => {
       success: true,
       message: 'LOGGED TF OUT!'
     });
-  } catch (error) {
-    res.json({ success: false, error });
-  }
-});
-
-router.post('/resend_verification_email', auth, async (req, res) => {
-  try {
-    const verification_code = Math.floor(Math.random() * 8999) + 1000;
-    req.user.verification_code = verification_code;
-
-    try {
-      await saveDocumentWithRetry(req.user);
-    } catch (error) {
-      console.error("Error saving req.user:", error);
-    }
-
-
-    sendgrid.sendWelcomeEmail(
-      req.user.email,
-
-      req.user.username,
-
-      verification_code
-    );
-
-    res.json({
-      success: true,
-      message: 'Email has been sent. Please check your inbox (including spam).'
-    });
-  } catch (error) {
-    res.json({ success: false, error });
-  }
-});
-
-router.post('/verify_email', auth, async (req, res) => {
-  try {
-    if (req.user.verification_code === req.body.verification_code) {
-      req.user.is_activated = true;
-      try {
-        await saveDocumentWithRetry(req.user);
-      } catch (error) {
-        console.error("Error saving req.user:", error);
-      }
-
-
-      res.json({
-        success: true,
-        message: ''
-      });
-    } else {
-      res.json({
-        success: false,
-        error: 'Wrong Verification Code'
-      });
-    }
   } catch (error) {
     res.json({ success: false, error });
   }

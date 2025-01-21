@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import Modal from 'react-modal';
 import { connect } from 'react-redux';
-import { Typography, Table, TableBody, Button, TextField, TableCell, TableContainer, TableHead, TableRow, Tooltip, InputAdornment } from '@material-ui/core';
+import { Typography, Table, TableBody, Button, TextField, TableCell, TableContainer, TableHead, TableRow, Tooltip, InputAdornment } from '@mui/material';
 import { acQueryLoan, acCalculateRemainingLoans, emitLoanOffer, cancelledOffer, reconsiderOffer, offerLoan, createAndLend } from '../../redux/Loan/loan.action';
 import { getUser } from '../../redux/Auth/user.actions';
 import { setBalance } from '../../redux/Auth/user.actions';
@@ -22,14 +22,9 @@ import Avatar from '../../components/Avatar';
 
 Modal.setAppElement('#root');
 
-const cellStyles = {
-  borderBottom: "none",
-  padding: '5px',
-};
-
 const customStyles = {
   overlay: {
-    zIndex: 99,
+    zIndex: 3,
     backgroundColor: 'rgba(0, 0, 0, 0.8)'
   },
   content: {
@@ -405,7 +400,7 @@ class OfferLoanModal extends Component {
                   <Table style={{ borderCollapse: 'collapse' }}>
                     <TableRow>
                       <TableCell style={inputCellStyle}>
-                        <TextField
+                         <TextField color="secondary" 
                           variant="filled"
                           label="Loan Amount"
                           value={responseText}
@@ -441,7 +436,7 @@ class OfferLoanModal extends Component {
                     )}
                     <TableRow>
                       <TableCell style={inputCellStyle}>
-                        <TextField
+                         <TextField color="secondary" 
                           variant="filled"
                           label="Loan Period"
                           value={loanPeriodText}
@@ -465,7 +460,7 @@ class OfferLoanModal extends Component {
 
                     <TableRow>
                       <TableCell style={inputCellStyle}>
-                        <TextField
+                         <TextField color="secondary" 
                           variant="filled"
                           label="Interest Rate"
                           value={interestRateText}
@@ -734,14 +729,14 @@ class OfferLoanModal extends Component {
 
             {this.props.offerInfo.isLender ? (
               <Button
-                className="btn-back"
+                variant='contained' color='secondary'
                 onClick={this.onBtnCancelClicked}
               >
                 Cancel
               </Button>
             ) : (
               <Button
-                className="btn-back"
+                variant='contained' color='secondary'
                 onClick={this.onBtnCancelClicked}
               >
                 Reject

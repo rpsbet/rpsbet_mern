@@ -2,8 +2,6 @@ import React, { Component } from 'react';
 import styled from 'styled-components';
 import { connect } from 'react-redux';
 import { alertModal } from '../../../../game_panel/modal/ConfirmAlerts';
-import { Skeleton } from "@material-ui/lab";
-
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faTag,
@@ -19,23 +17,31 @@ import {
 } from '../../../../redux/Item/item.action';
 import { openConfirmTradeModal } from '../../../../redux/Notification/notification.actions';
 import history from '../../../../redux/history';
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
+
 import {
-  LinearProgress,
+  Skeleton,
   Button,
-  IconButton,
+  Box,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableRow,
+  Typography,
+  Card,
+  CardActionArea,
+  CardActions,
+  CardContent,
+  CardMedia,
   Tooltip,
   Menu,
-  MenuItem
-} from '@material-ui/core';
+  MenuItem,
+  Pagination,
+} from '@mui/material';
 import { acGetCustomerInfo } from '../../../../redux/Customer/customer.action';
 import Avatar from '../../../../components/Avatar';
 import PlayerModal from '../../../../game_panel/modal/PlayerModal';
-import Pagination from 'material-ui-flat-pagination';
 import SwapHoriz from '@mui/icons-material/SwapHoriz';
 import { convertToCurrency } from '../../../../util/conversion';
 import { renderLottieAnimation } from '../../../../util/LottieAnimations';
@@ -63,9 +69,6 @@ const ProductGrid = styled.div`
 `;
 const ProductCard = styled.div`
   position: relative;
-  background: linear-gradient(156deg, #df00ff, #ff8500);
-  border-radius: 20px;
-  padding: 10px;
   display: -ms-flexbox;
   display: flex;
   -webkit-flex-direction: column;
@@ -76,11 +79,8 @@ const ProductCard = styled.div`
   -ms-flex-align: center;
   align-items: center;
   cursor: pointer;
-  -webkit-transition: -webkit-transform 0.2s;
-  -webkit-transition: transform 0.2s;
-  transition: transform 0.2s;
   position: relative;
-
+height: 100%;
   &::before {
     content: '';
     position: absolute;
@@ -89,17 +89,11 @@ const ProductCard = styled.div`
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.5);
-    border-radius: 20px;
     opacity: 0;
-    transition: opacity 0.2s;
   }
 
   &:hover::before {
     opacity: 1;
-  }
-
-  &:hover {
-    transform: scale(1.03);
   }
 `;
 
@@ -141,6 +135,8 @@ const ProductCreator = styled.h5`
 `;
 
 const ProductInfo = styled.div`
+width: 100%;
+  height: 100%;
   text-align: center;
 `;
 
@@ -344,7 +340,7 @@ class ProductTable extends Component {
               open={Boolean(anchorEl)}
               onClose={() => this.handleFilterClose(null)}
             >
-        
+
               <MenuItem
                 onClick={() =>
                   this.handleFilterClose('653ee81117c9f5ee2124564b')
@@ -353,7 +349,7 @@ class ProductTable extends Component {
               >
                 Accessories
               </MenuItem>
-            
+
             </Menu>
           </div>
           <div className="filters">
@@ -388,148 +384,165 @@ class ProductTable extends Component {
               />
             )}
             {data.map(row => (
-              <ProductCard
-                key={`${row._id}-${row.owners[0].user}`}
-                onClick={() => {
-                  setCurrentProductId(row._id);
-                  setCurrentProductInfo({
-                    owner: row.owners[0].user,
-                    productName: row.productName,
-                    rentOption: row.owners[0].rentOption,
-                    price: row.owners[0].price
-                  });
-                  history.push(`/product/${row._id}`);
-                }}
-              >
+              <Card sx={{ maxWidth: 345, position: 'relative', m: 1, background: 'linear-gradient(156deg, #df00ff, #ff8500)' }}>
+                <ProductCard
+                  key={`${row._id}-${row.owners[0].user}`}
+                  onClick={() => {
+                    setCurrentProductId(row._id);
+                    setCurrentProductInfo({
+                      owner: row.owners[0].user,
+                      productName: row.productName,
+                      rentOption: row.owners[0].rentOption,
+                      price: row.owners[0].price
+                    });
+                    history.push(`/product/${row._id}`);
+                  }}
+                >
 
-                {row.owners.map(owner => (
-                  <ProductCreator key={owner.user}>
-                    {customerInfo[owner.user] ? (
-                      <a
-                        className="player"
-                        onClick={() => this.handleOpenPlayerModal(owner.user)}
-                      >
-                        <Avatar
-                          className="avatar"
-                          src={customerInfo[owner.user].avatar}
-                          rank={customerInfo[owner.user].totalWagered}
-                          accessory={customerInfo[owner.user].accessory}
-                          alt=""
-                          username={customerInfo[owner.user].username}
-                          darkMode={this.props.isDarkMode}
-                        />
-                      </a>
-                    ) : (
-                      <div className="loading-spinner"></div>
-                    )}
-                  </ProductCreator>
-                ))}
-                {row.image &&
-                  renderLottieAnimation(row.image, isLowGraphics) ? (
-                  renderLottieAnimation(row.image, isLowGraphics)
-                ) : (
-                  <ProductImage src={row.image} alt={row.productName} />
-                )}
-                <ProductInfo>
-                  <ProductName>{row.productName}</ProductName>
-                  <TableContainer>
-                    <Table id="all-trades" className="product-detail">
-                      <TableBody>
-                        <TableRow>
-                          <TableCell>
-                            <FontAwesomeIcon icon={faTag} />
-                            {row.owners[0].rentOption ? ' Price per month' : ' Price per unit'}:
-                          </TableCell>
-                          <TableCell className="value">
-                            {convertToCurrency(row.owners[0].price, solPrice)}
-                          </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell>
-                            <FontAwesomeIcon icon={faCubes} /> Quantity:
-                          </TableCell>
-                          <TableCell className="value">
-                            {row.owners[0].onSale} / {row.total_count}
-                          </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell>
-                            <FontAwesomeIcon icon={faGem} /> Type:
-                          </TableCell>
-                          <TableCell>
-                            {itemTypeMap[row.item_type] || 'Unknown'}
-                          </TableCell>
-                        </TableRow>
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-                </ProductInfo>
-                <TradeButton>
-                  <Tooltip title={row.owners[0].rentOption ? 'Rent' : 'Trade'}>
-                    <Button
-                      className="btn-back"
-                      onClick={() => {
-                        setCurrentProductId(row._id);
-                        setCurrentProductInfo({
-                          owner: row.owners[0].user,
-                          productName: row.productName,
-                          rentOption: row.owners[0].rentOption,
-                          price: row.owners[0].price
-                        });
+                  {row.owners.map(owner => (
+                    <ProductCreator key={owner.user}>
+                      {customerInfo[owner.user] ? (
+                        <a
+                          className="player"
+                          onClick={() => this.handleOpenPlayerModal(owner.user)}
+                        >
+                          <Avatar
+                            className="avatar"
+                            src={customerInfo[owner.user].avatar}
+                            rank={customerInfo[owner.user].totalWagered}
+                            accessory={customerInfo[owner.user].accessory}
+                            alt=""
+                            username={customerInfo[owner.user].username}
+                            darkMode={this.props.isDarkMode}
+                          />
+                        </a>
+                      ) : (
+                        <div className="loading-spinner"></div>
+                      )}
+                    </ProductCreator>
+                  ))}
+                  {row.image &&
+                    renderLottieAnimation(row.image, isLowGraphics) ? (
+                    renderLottieAnimation(row.image, isLowGraphics)
+                  ) : (
+                    <ProductImage src={row.image} alt={row.productName} />
+                  )}
+                  <ProductInfo>
+                    <ProductName>{row.productName}</ProductName>
+                    <TableContainer>
+                      <Table id="all-trades" className="product-detail">
+                        <TableBody>
+                          <TableRow>
+                            <TableCell>
+                              <FontAwesomeIcon icon={faTag} />
+                              {row.owners[0].rentOption ? ' Price per month' : ' Price per unit'}:
+                            </TableCell>
+                            <TableCell className="value">
+                              {convertToCurrency(row.owners[0].price, solPrice)}
+                            </TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell>
+                              <FontAwesomeIcon icon={faCubes} /> Quantity:
+                            </TableCell>
+                            <TableCell className="value">
+                              {row.owners[0].onSale} / {row.total_count}
+                            </TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell>
+                              <FontAwesomeIcon icon={faGem} /> Type:
+                            </TableCell>
+                            <TableCell>
+                              {itemTypeMap[row.item_type] || 'Unknown'}
+                            </TableCell>
+                          </TableRow>
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </ProductInfo>
+                  <TradeButton>
+                    <Tooltip title={row.owners[0].rentOption ? 'Rent' : 'Trade'}>
+                      <Button
+                        variant='contained' color='secondary'
+                        onClick={() => {
+                          setCurrentProductId(row._id);
+                          setCurrentProductInfo({
+                            owner: row.owners[0].user,
+                            productName: row.productName,
+                            rentOption: row.owners[0].rentOption,
+                            price: row.owners[0].price
+                          });
 
-                        if (row.owners[0].user !== this.props.user) {
-                          if (row.showConfirmationModal) {
-                            const userConfirmed = window.confirm(row.message);
+                          if (row.owners[0].user !== this.props.user) {
+                            if (row.showConfirmationModal) {
+                              const userConfirmed = window.confirm(row.message);
 
-                            if (userConfirmed) {
-                              openConfirmTradeModal(row.owners[0].rentOption ? 'rent' : 'trade');
+                              if (userConfirmed) {
+                                openConfirmTradeModal(row.owners[0].rentOption ? 'rent' : 'trade');
+                              } else {
+                                alertModal(
+                                  this.props.isDarkMode,
+                                  'TRADE ACTION CANCELLED,PUSSY-ED OUT'
+                                );
+                              }
                             } else {
-                              alertModal(
-                                this.props.isDarkMode,
-                                'TRADE ACTION CANCELLED,PUSSY-ED OUT'
-                              );
+                              openConfirmTradeModal(row.owners[0].rentOption ? 'rent' : 'trade');
                             }
                           } else {
-                            openConfirmTradeModal(row.owners[0].rentOption ? 'rent' : 'trade');
+                            alertModal(
+                              this.props.isDarkMode,
+                              'THIS IS LITTER-ALLY YOURS ALREADY!'
+                            );
                           }
-                        } else {
-                          alertModal(
-                            this.props.isDarkMode,
-                            'THIS IS LITTER-ALLY YOURS ALREADY!'
-                          );
-                        }
-                      }}
-                    >
-                      {row.owners[0].rentOption ? 'Rent' : 'Trade'} <SwapHoriz />
-                    </Button>
-                  </Tooltip>
-                </TradeButton>
-              </ProductCard>
+                        }}
+                      >
+                        {row.owners[0].rentOption ? 'Rent' : 'Trade'} <SwapHoriz />
+                      </Button>
+                    </Tooltip>
+                  </TradeButton>
+                </ProductCard>
+              </Card>
             ))}
           </ProductGrid>
         ) : (
           <ProductGrid>
             {[...Array(6)].map((_, index) => (
-              <ProductCard key={`skeleton-product-${index}`}>
-                <Skeleton variant="rect" width="100%" height={150} style={{ marginBottom: "10px" }} />
-                <Skeleton variant="text" width="60%" height={20} style={{ marginBottom: "10px" }} />
-                <Skeleton variant="text" width="80%" height={20} style={{ marginBottom: "10px" }} />
-                <Skeleton variant="text" width="40%" height={20} style={{ marginBottom: "10px" }} />
-                <Skeleton variant="circle" width={40} height={40} style={{ marginBottom: "10px" }} />
-              </ProductCard>
+              <Box
+                key={`skeleton-product-${index}`}
+                sx={{
+                  padding: 2,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  border: '1px solid #ddd',
+                  borderRadius: 2,
+                  boxShadow: 1,
+                  marginBottom: 2,
+                }}
+              >
+                <Skeleton variant="rectangular" sx={{ width: '100%', height: 150, marginBottom: 1 }} />
+                <Skeleton variant="text" sx={{ width: '60%', height: 20, marginBottom: 1 }} />
+                <Skeleton variant="text" sx={{ width: '80%', height: 20, marginBottom: 1 }} />
+                <Skeleton variant="text" sx={{ width: '40%', height: 20, marginBottom: 1 }} />
+                <Skeleton variant="circular" sx={{ width: 40, height: 40, marginBottom: 1 }} />
+              </Box>
             ))}
           </ProductGrid>
         )}
-        <PaginationContainer className='desktop-only'>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: 2 }}>
           <Pagination
-            limit={1}
-            offset={page - 1}
-            total={pages}
-            onClick={(e, offset) => {
-              acQueryItem(100, offset + 1, sortCriteria, itemType);
+            count={pages} // Number of total pages
+            page={page} // Current page (1-based index)
+            onChange={(event, value) => {
+              acQueryMyItem(100, value, this.state.sortCriteria, this.state.itemType);
             }}
+            siblingCount={1}
+            boundaryCount={1}
+            shape="rounded"
+            color='error'
           />
-        </PaginationContainer>
+        </Box>
       </MarketplaceContainer>
     );
   }

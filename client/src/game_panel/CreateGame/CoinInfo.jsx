@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { TextField, Button, Tooltip } from '@material-ui/core';
-import { createTheme, ThemeProvider } from '@material-ui/core/styles';
+import { TextField, Button, Tooltip } from '@mui/material';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { CloudUpload as UploadIcon, Info } from '@mui/icons-material';
 import { useDispatch } from 'react-redux';
 import { setFocused } from '../../redux/Auth/user.actions';
@@ -91,7 +91,7 @@ const CoinInfo = ({
       </h3>
       <ThemeProvider theme={theme}>
         {/* Coin Name */}
-        <TextField
+         <TextField color="secondary" 
           label="Name"
           variant="filled"
           fullWidth
@@ -105,7 +105,7 @@ const CoinInfo = ({
           }}
         />
 
-        {/* <TextField
+        {/*  <TextField color="secondary" 
           label="Ticker"
           variant="filled"
           fullWidth

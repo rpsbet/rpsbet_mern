@@ -5,7 +5,7 @@ import {
   closeConfirmTradeModal
 } from '../../redux/Notification/notification.actions';
 import { confirmTrade, addNewTransaction } from '../../redux/Logic/logic.actions';
-import { Button } from '@material-ui/core';
+import { Button } from '@mui/material';
 import { alertModal } from '../modal/ConfirmAlerts';
 import { setBalance } from '../../redux/Auth/user.actions';
 import { acQueryItem } from '../../redux/Item/item.action';
@@ -17,7 +17,7 @@ Modal.setAppElement('#root');
 
 const customStyles = {
   overlay: {
-    zIndex: 99,
+    zIndex: 3,
     backgroundColor: 'rgba(0, 0, 0, 0.8)'
   },
   content: {
@@ -121,10 +121,10 @@ function ConfirmTradeModal(props) {
 
         {!loading && (
           <div className="modal-footer">
-            <Button className="btn-submit" onClick={onBtnOkClicked}>
+            <Button variant='contained' color='error' onClick={onBtnOkClicked}>
               {rentOption ? 'RENT' : 'TRADE'}
             </Button>
-            <Button className="btn-back" onClick={onBtnCancelClicked}>
+            <Button variant='contained' color='secondary' onClick={onBtnCancelClicked}>
               Cancel
             </Button>
           </div>

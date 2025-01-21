@@ -1,8 +1,8 @@
 import React, { useState, useRef } from 'react';
-import { Button, Tooltip } from '@material-ui/core';
+import { Button, Tooltip } from '@mui/material';
 import LockIcon from '@mui/icons-material/Lock';
-import { green, yellow } from '@material-ui/core/colors';
-import useMediaQuery from '@material-ui/core/useMediaQuery';
+import { green, yellow } from '@mui/material/colors';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 

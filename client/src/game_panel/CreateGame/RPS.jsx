@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { connect } from 'react-redux';
-import { Button, Tooltip, RadioGroup, IconButton, ButtonBase, Radio, FormControlLabel } from '@material-ui/core';
+import { Button, Tooltip, RadioGroup, IconButton, ButtonBase, Radio, FormControlLabel } from '@mui/material';
 import { Info } from '@mui/icons-material';
 import styled from 'styled-components';
 import DefaultBetAmountPanel from './DefaultBetAmountPanel';
@@ -102,7 +102,7 @@ const RPS = (props) => {
     <>
       {step === 1 && rps_game_type === 0 && (
         <div className="game-info-panel">
-          <div className="glass-container" style={{ display: 'flex', flexDirection: 'column' }}>
+          <div className="" style={{ display: 'flex', flexDirection: 'column' }}>
             <div>
               <div style={{ marginBottom: '30px' }}>
                 <RadioGroup value={selectedGameType} onChange={handleChange}>

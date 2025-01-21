@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import "./AvatarDropzone.css";
 import Avatar from "../../../components/Avatar";
 import { alertModal } from "../ConfirmAlerts";
-import { Button, TextField, Grid } from '@material-ui/core';
+import { Button, TextField, Grid } from '@mui/material';
 const uniqid = require('uniqid');
 
 
@@ -76,7 +76,6 @@ class Dropzone extends Component {
           const uniqueName = `${uniqid('IMG_')}.${fileExt}`;
         
           blob.name = uniqueName; // Assign the dynamically generated name
-          console.log("Blob created with name:", blob.name);
         
           this.previewImage(blob);
           if (this.props.onFileAdded) {
@@ -183,7 +182,7 @@ class Dropzone extends Component {
             <Grid item>
               {this.state.showAIText ? (
                 <>
-                  <TextField
+                   <TextField color="secondary" 
                     label="ENTER PROMPT"
                     variant="filled"
                     fullWidth

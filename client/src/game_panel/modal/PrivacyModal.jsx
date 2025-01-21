@@ -1,6 +1,6 @@
 import React from 'react';
 import Modal from 'react-modal';
-import { Button } from '@material-ui/core';
+import { Button } from '@mui/material';
 
 Modal.setAppElement('#root');
 
@@ -35,7 +35,7 @@ const PrivacyModal = ({ modalIsOpen, closeModal, isDarkMode }) => {
             Privacy <span style={{ color: '#d81719' }}>RPS</span>
             <span style={{ color: '#ebddca' }}>Game</span>
           </h2>
-          <Button className="btn-close title" onClick={closeModal}>
+          <Button className="btn-close" variant='text' color='error'  onClick={closeModal}>
             ×
           </Button>
         </div>

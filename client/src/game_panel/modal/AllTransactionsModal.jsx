@@ -4,18 +4,21 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import FileCopyIcon from '@mui/icons-material/FileCopy';
 import { convertToCurrency } from '../../util/conversion';
 import {
-  faSort,
-  faSearch,
-  faFilter,
-  faArrowAltCircleDown,
-  faArrowAltCircleUp,
-  faExchangeAlt,
-  faGift,
   faCreditCard,
 } from '@fortawesome/free-solid-svg-icons';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
+import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
+import SortIcon from '@mui/icons-material/Sort';
+import SearchIcon from '@mui/icons-material/Search';
 import {
   Button,
   LinearProgress,
+  TableContainer,
+  Paper,
+  TableHead,
   TextField,
   TableBody,
   IconButton,
@@ -24,8 +27,9 @@ import {
   TableCell,
   TableRow,
   Menu,
+  CircularProgress,
   MenuItem,
-} from '@material-ui/core';
+} from '@mui/material';
 import { Link } from '@mui/icons-material';
 
 Modal.setAppElement('#root');
@@ -106,7 +110,10 @@ const AllTransactionsModal = ({
             <FontAwesomeIcon icon={faCreditCard} className="mr-2" />
             ALL TRANSACTIONS
           </h2>
-          <Button className="btn-close title" onClick={close}>
+          <Button
+            className="btn-close" variant='text' color='error'
+            onClick={close}
+          >
             ×
           </Button>
         </div>
@@ -119,85 +126,55 @@ const AllTransactionsModal = ({
                     <div className="summary-flex">
                       <div className="filters">
                         <Button onClick={handleFilterClick}>
-                          Filter&nbsp;
-                          <FontAwesomeIcon icon={faFilter} />
+                          Filter <FilterListIcon />
                         </Button>
                         <Menu
                           anchorEl={filterAnchorEl}
                           open={Boolean(filterAnchorEl)}
                           onClose={() => handleFilterClose(null)}
                         >
-                          <MenuItem
-                            onClick={() => handleFilterClose(null)}
-                            selected={filterType === null}
-                          >
-                            &nbsp;Show All
+                          <MenuItem onClick={() => handleFilterClose(null)} selected={filterType === null}>
+                            Show All
                           </MenuItem>
-                          <MenuItem
-                            onClick={() => handleFilterClose('showDeposits')}
-                            selected={filterType === 'showDeposits'}
-                          >
-                            <FontAwesomeIcon icon={faArrowAltCircleUp} />
-                            &nbsp;Show Deposits
+                          <MenuItem onClick={() => handleFilterClose('showDeposits')} selected={filterType === 'showDeposits'}>
+                            <ArrowUpwardIcon />&nbsp;Show Deposits
                           </MenuItem>
-                          <MenuItem
-                            onClick={() => handleFilterClose('showWithdrawals')}
-                            selected={filterType === 'showWithdrawals'}
-                          >
-                            <FontAwesomeIcon icon={faArrowAltCircleDown} />
-                            &nbsp;Show Withdrawals
+                          <MenuItem onClick={() => handleFilterClose('showWithdrawals')} selected={filterType === 'showWithdrawals'}>
+                            <ArrowDownwardIcon />&nbsp;Show Withdrawals
                           </MenuItem>
-                          <MenuItem
-                            onClick={() => handleFilterClose('showTrades')}
-                            selected={filterType === 'showTrades'}
-                          >
-                            <FontAwesomeIcon icon={faExchangeAlt} />
-                            &nbsp;Show Trades
+                          <MenuItem onClick={() => handleFilterClose('showTrades')} selected={filterType === 'showTrades'}>
+                            <SwapHorizIcon />&nbsp;Show Trades
                           </MenuItem>
-                          <MenuItem
-                            onClick={() => handleFilterClose('showLoans')}
-                            selected={filterType === 'showLoans'}
-                          >
-                            <FontAwesomeIcon icon={faExchangeAlt} />
-                            &nbsp;Show Loans
+                          <MenuItem onClick={() => handleFilterClose('showLoans')} selected={filterType === 'showLoans'}>
+                            <SwapHorizIcon />&nbsp;Show Loans
                           </MenuItem>
-                          <MenuItem
-                            onClick={() => handleFilterClose('showTips')}
-                            selected={filterType === 'showTips'}
-                          >
-                            <FontAwesomeIcon icon={faGift} />
-                            &nbsp;Show Tips
+                          <MenuItem onClick={() => handleFilterClose('showTips')} selected={filterType === 'showTips'}>
+                            <CardGiftcardIcon />&nbsp;Show Tips
                           </MenuItem>
                         </Menu>
                       </div>
+
                       <div className="filters">
                         <Button onClick={handleSortClick}>
-                          Sort By&nbsp;
-                          <FontAwesomeIcon icon={faSort} />
+                          Sort By <SortIcon />
                         </Button>
                         <Menu
                           anchorEl={sortAnchorEl}
                           open={Boolean(sortAnchorEl)}
                           onClose={() => handleSortClose(null)}
                         >
-                          <MenuItem
-                            onClick={() => handleSortClose('date')}
-                            selected={sortType === 'date'}
-                          >
+                          <MenuItem onClick={() => handleSortClose('date')} selected={sortType === 'date'}>
                             Sort by Date
                           </MenuItem>
-                          <MenuItem
-                            onClick={() => handleSortClose('amount')}
-                            selected={sortType === 'amount'}
-                          >
+                          <MenuItem onClick={() => handleSortClose('amount')} selected={sortType === 'amount'}>
                             Sort by Amount
                           </MenuItem>
                         </Menu>
                       </div>
+
                       <div className="filters">
                         <Button onClick={handleSearchClick}>
-                          SEARCH&nbsp;
-                          <FontAwesomeIcon icon={faSearch} />
+                          SEARCH <SearchIcon />
                         </Button>
                         <Menu
                           anchorEl={searchAnchorEl}
@@ -205,47 +182,42 @@ const AllTransactionsModal = ({
                           onClose={() => handleSearchClose(null)}
                         >
                           <MenuItem>
-                            <div className="search">
-                              <div className="search-content">
-                                <TextField
-                                  name="search"
-                                  margin="normal"
-                                  value={searchQuery}
-                                  onChange={(e) => onSearchQueryChange(e.target.value)}
-                                />
-                              </div>
-                            </div>
+                            <TextField
+                              color="secondary"
+                              name="search"
+                              margin="normal"
+                              value={searchQuery}
+                              onChange={(e) => onSearchQueryChange(e.target.value)}
+                              fullWidth
+                            />
                           </MenuItem>
                         </Menu>
                       </div>
                     </div>
                   </div>
                 </div>
-                <div
-                  className="game-logs-container"
-                  onScroll={handleScroll}
-                  style={{ maxHeight: '380px', overflowY: 'scroll' }}
-                >
-                  <Table className="game-logs-table">
-                    <TableBody>
+
+                <TableContainer onScroll={handleScroll}  style={{ maxHeight: 380, overflowY: 'auto' }}>
+                  <Table stickyHeader aria-label="transactions table">
+                   
+                    <TableBody onScroll={handleScroll}>
                       {transactions.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={5}>NO TRANSACTIONS FOUND</TableCell>
+                          <TableCell colSpan={6} align="center">No transactions found</TableCell>
                         </TableRow>
                       ) : (
                         transactions.map((transaction) => (
                           <TableRow key={transaction._id}>
                             <TableCell
-                              className={`amount ${
-                                transaction.status === 'waiting' ||
+                              className={`amount ${transaction.status === 'waiting' ||
                                 transaction.status === 'pending' ||
                                 transaction.status === 'processing' ||
                                 transaction.status === 'in_process'
-                                  ? 'grey'
-                                  : transaction.amount > 0
+                                ? 'grey'
+                                : transaction.amount > 0
                                   ? 'green'
                                   : 'red'
-                              }`}
+                                }`}
                             >
                               {transaction.amount > 0 ? (
                                 <> + ({convertToCurrency(transaction.amount, solPrice)})</>
@@ -253,58 +225,19 @@ const AllTransactionsModal = ({
                                 <> - ({convertToCurrency(Math.abs(transaction.amount), solPrice)})</>
                               )}
                             </TableCell>
-                            <TableCell className="fromNow">{transaction.from_now}</TableCell>
-                            <TableCell className="description">{transaction.description}</TableCell>
-                            <TableCell className="description">
-                              {transaction.status && <>{transaction.status}</>}
-                            </TableCell>
-                            <TableCell className="hash">
+                            <TableCell>{transaction.from_now}</TableCell>
+                            <TableCell>{transaction.description}</TableCell>
+                            <TableCell>{transaction.status}</TableCell>
+                            <TableCell>
                               {transaction.hash ? (
-                                transaction.hash.startsWith('0x') ? (
-                                  <a
-                                    href={`https://solscan.io/tx/${transaction.hash}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                  >
-                                    <Link />
-                                  </a>
-                                ) : (
-                                  ''
-                                )
-                              ) : transaction.room ? (
-                                <a
-                                  href={`/join/${transaction.room}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                >
-                                  <Link />
-                                </a>
-                              ) : (
-                                ''
-                              )}
+                                <Link href={`https://solscan.io/tx/${transaction.hash}`} target="_blank">
+                                  View
+                                </Link>
+                              ) : ''}
                             </TableCell>
                             <TableCell>
-                              <Tooltip
-                                title={
-                                  copiedRowId ===
-                                  (transaction.hash && transaction.hash.length === 10
-                                    ? transaction.hash
-                                    : transaction._id)
-                                    ? 'Copied!'
-                                    : 'Copy ID'
-                                }
-                                placement="top"
-                              >
-                                <IconButton
-                                  color="inherit"
-                                  onClick={() =>
-                                    copyToClipboard(
-                                      transaction.hash && transaction.hash.length === 10
-                                        ? transaction.hash
-                                        : transaction._id
-                                    )
-                                  }
-                                >
+                              <Tooltip title={copiedRowId === transaction._id ? 'Copied!' : 'Copy ID'} placement="top">
+                                <IconButton onClick={() => copyToClipboard(transaction._id)}>
                                   <FileCopyIcon />
                                 </IconButton>
                               </Tooltip>
@@ -314,14 +247,14 @@ const AllTransactionsModal = ({
                       )}
                       {tnxComplete && (
                         <TableRow>
-                          <TableCell colSpan={5}>
-                            <div className="loading-spinner"></div>
+                          <TableCell colSpan={6} align="center">
+                            <CircularProgress color="secondary" />
                           </TableCell>
                         </TableRow>
                       )}
                     </TableBody>
                   </Table>
-                </div>
+                </TableContainer>
               </>
             ) : (
               <div>

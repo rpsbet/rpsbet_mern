@@ -1,7 +1,7 @@
 import React, { useEffect, useCallback, useState } from 'react';
-import TextField from '@material-ui/core/TextField';
-import Button from '@material-ui/core/Button';
-import { createTheme, ThemeProvider } from '@material-ui/core/styles';
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { debounce } from 'lodash';
 
 export default function BetAmountInput(props) {
@@ -98,7 +98,7 @@ export default function BetAmountInput(props) {
         >
           <Button
             variant="contained"
-            color="primary"
+            color='secondary'
             style={{ flex: 1 }}
             onClick={handle2x}
           >
@@ -106,7 +106,7 @@ export default function BetAmountInput(props) {
           </Button>
           <Button
             variant="contained"
-            color="primary"
+            color='secondary'
             style={{ flex: 1 }}
             onClick={handleHalfX}
           >
@@ -114,7 +114,7 @@ export default function BetAmountInput(props) {
           </Button>
           <Button
             variant="contained"
-            color="primary"
+            color='secondary'
             style={{ flex: 1 }}
             onClick={handleMax}
           >
@@ -122,7 +122,7 @@ export default function BetAmountInput(props) {
           </Button>
         </div>
 
-        <TextField
+         <TextField color="secondary" 
           type="text"
           name="betamount"
           variant="filled"

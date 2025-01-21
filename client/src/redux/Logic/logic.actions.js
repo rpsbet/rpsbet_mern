@@ -1154,7 +1154,6 @@ export const getTransactionCandles = ({ roomId, timeFrame }) => async (dispatch)
     const res = await axios.get(`/game/candles/${roomId}`, {
       params: { timeFrame }
     });
-console.log("cancled", res.data)
     if (res.data.success) {
       dispatch({
         type: 'TRANSACTION_CANDLES_LOADED',

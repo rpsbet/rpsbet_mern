@@ -3,11 +3,10 @@ import { connect } from 'react-redux';
 import { getHistory } from '../../redux/Logic/logic.actions';
 import { getSettings } from '../../redux/Setting/setting.action';
 import Moment from 'moment';
-import { Skeleton } from "@material-ui/lab";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHeart, faHeartBroken, faStopwatch } from '@fortawesome/free-solid-svg-icons';
 import FileCopyIcon from '@mui/icons-material/FileCopy';
-import { Tooltip } from '@material-ui/core';
+import { Tooltip, Skeleton, Box } from '@mui/material';
 import PlayerModal from '../modal/PlayerModal';
 
 const customFromNow = (date) => {
@@ -120,9 +119,9 @@ const HistoryTable = ({
     <div className="overflowX">
       <div className="table main-history-table">
         {history?.length === 0 && (
-          <div className="dont-have-game-msg">
-            <Skeleton variant="rect" width="100%" height={10} />
-          </div>
+          <Box className="dont-have-game-msg" sx={{ width: '100%' }}>
+            <Skeleton variant="rectangular" sx={{ width: '100%', height: 10 }} />
+          </Box>
         )}
         {uniqueHistory.map((row, key) => (
           <div

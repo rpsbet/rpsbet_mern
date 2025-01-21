@@ -171,7 +171,7 @@ const Comments = ({
             mb: 2 
           }}
         >
-          <TextField
+           <TextField color="secondary" 
             label="Reply"
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}

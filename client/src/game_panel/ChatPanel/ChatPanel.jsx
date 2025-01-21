@@ -11,14 +11,12 @@ import {
   Button,
   InputAdornment,
   TextField
-} from '@material-ui/core';
+} from '@mui/material';
 import { InsertEmoticon, Gif, Clear } from '@mui/icons-material';
 import GlobalChat from './GlobalChat';
 import MyChat from './MyChat';
-import Chat from '../icons/Chat.js';
-import ChatHover from '../icons/ChatHover';
-import ChatRoom from '../icons/ChatRoom';
-import ChatRoomHover from '../icons/ChatRoomHover.js';
+import ChatOutlined from '@mui/icons-material/ChatOutlined';
+import ChatBubbleOutlineOutlined from '@mui/icons-material/ChatBubbleOutlineOutlined';
 import { setFocused } from '../../redux/Auth/user.actions.js';
 
 
@@ -307,7 +305,7 @@ function ChatPanel(props) {
         {showSearchPopup && (
           <>
             <div style={{ marginBottom: '10px' }}>
-              <TextField
+              <TextField color="secondary"
                 type="text"
                 placeholder="SEARCH GIFS..."
                 variant="filled"
@@ -348,29 +346,46 @@ function ChatPanel(props) {
         TabIndicatorProps={{ style: { background: '#ff0000' } }}
         className="main-game-page-tabs"
       >
+        {/* Inbox Tab */}
         <Tab
-          className={`custom-tab ${
-            hoverTabIndex === 0 ? 'fade-animation fade-in' : 'fade-animation fade-out'
-          }`}
+          className={`custom-tab ${hoverTabIndex === 0 ? 'fade-animation fade-in' : 'fade-animation fade-out'
+            }`}
           label="Inbox"
-          icon={hoverTabIndex === 0 || selectedTabIndex === 0 ? <ChatHover /> : <Chat />}
-          style={customStyles.tabRoot}
+          icon={
+            <ChatOutlined
+              sx={{
+                color: hoverTabIndex === 0 || selectedTabIndex === 0 ? 'red' : 'inherit',
+                transition: 'color 0.3s ease',
+              }}
+            />
+          }
+          sx={{
+            '&:hover .MuiTab-iconWrapper': {
+              color: 'red', // Set icon color to red on hover
+            },
+          }}
           onMouseEnter={() => handleMouseEnter(0)}
           onMouseLeave={handleMouseLeave}
         />
+
+        {/* Chat Tab */}
         <Tab
-          className={`custom-tab ${
-            hoverTabIndex === 1 ? 'fade-animation fade-in' : 'fade-animation fade-out'
-          }`}
+          className={`custom-tab ${hoverTabIndex === 1 ? 'fade-animation fade-in' : 'fade-animation fade-out'
+            }`}
           label="Chat"
           icon={
-            hoverTabIndex === 1 || selectedTabIndex === 1 ? (
-              <ChatRoomHover />
-            ) : (
-              <ChatRoom />
-            )
+            <ChatBubbleOutlineOutlined
+              sx={{
+                color: hoverTabIndex === 1 || selectedTabIndex === 1 ? 'red' : 'inherit',
+                transition: 'color 0.3s ease',
+              }}
+            />
           }
-          style={customStyles.tabRoot}
+          sx={{
+            '&:hover .MuiTab-iconWrapper': {
+              color: 'red', // Set icon color to red on hover
+            },
+          }}
           onMouseEnter={() => handleMouseEnter(1)}
           onMouseLeave={handleMouseLeave}
         />
@@ -423,7 +438,7 @@ function ChatPanel(props) {
             ))}
           </div>
 
-          <TextField
+          <TextField color="secondary"
             type="text"
             className="form-control"
             variant="outlined"
