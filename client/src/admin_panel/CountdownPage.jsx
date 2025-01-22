@@ -170,7 +170,7 @@ const Gravestone = styled(Box)(() => ({
   backgroundSize: 'contain',
   backgroundPosition: 'center',
   backgroundRepeat: 'no-repeat',
-  padding: '44px',
+  padding: '33px',
   textAlign: 'center',
   cursor: 'pointer',
   transition: 'transform 0.3s, box-shadow 0.3s, z-index 0.3s',
@@ -385,7 +385,7 @@ const CountdownPage = ({
   // Buttons that appear on random positions
   const COUNTDOWN_BUTTONS = [
     { label: 'Home', section: 'home', icon: <GamepadIcon /> },
-    { label: 'Catenomics', section: 'catenomics', icon: <PieChartIcon /> },
+    // { label: 'Catenomics', section: 'catenomics', icon: <PieChartIcon /> },
     { label: 'Chart', section: 'chart', icon: <ShowChartIcon /> },
     { label: 'Buy', section: 'buy', icon: <AttachMoneyIcon /> },
     { label: 'About', section: 'about', icon: <DescriptionIcon /> },
@@ -956,7 +956,7 @@ const CountdownPage = ({
             <a href="https://www.youtube.com/@rpsdotgame">
               <FontAwesomeIcon icon={faYoutube} />
             </a>
-            <a href="https://www.tiktok.com/@rpsdotgame">
+            <a href="https://www.tiktok.com/@rpsdotgames">
               <FontAwesomeIcon icon={faTiktok} />
             </a>
           </Box>

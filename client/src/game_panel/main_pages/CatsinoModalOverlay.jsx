@@ -460,7 +460,7 @@ function CatsinoModalOverlay({
               '&:hover': { color: '#ff0050' }
             }}
             onClick={() =>
-              window.open('https://www.tiktok.com/@rpsdotgame', '_blank')
+              window.open('https://www.tiktok.com/@rpsdotgames', '_blank')
             }
           >
             <FontAwesomeIcon icon={faTiktok} size="lg" />
