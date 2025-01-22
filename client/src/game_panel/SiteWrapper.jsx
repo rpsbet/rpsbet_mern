@@ -6,6 +6,8 @@ import {
   MenuItem,
   ListItemIcon,
   Box,
+  Grid,
+  IconButton,
   Skeleton,
   ListItemText,
   Divider,
@@ -14,6 +16,7 @@ import {
   Popover,
   Typography, Table, TableBody, TableCell, TableContainer, TableRow,
 } from '@mui/material';
+import CatsinoModalOverlay from '../game_panel/main_pages/CatsinoModalOverlay.jsx'
 import { ThemeProvider } from '@mui/material/styles';
 import Countdown from 'react-countdown';
 import HistoryTable from '../game_panel/LiveGames/HistoryTable.jsx'
@@ -211,7 +214,7 @@ class SiteWrapper extends Component {
       showVaultModal: false,
       notifications: [],
       loadMore: 10,
-      isLive: false,
+      isLive: true,
       blurValue: 3,
       isCountdownHovered: false,
       isYoutubeHovered: false,
@@ -1095,7 +1098,7 @@ class SiteWrapper extends Component {
     const numDecimals = decimalIndex !== -1 ? Math.min(2, balanceString.length - decimalIndex - 1) : 0;
     const width = window.innerWidth;
     const notificationsArray = updateFromNow(Object.values(notifications));
-    const halloween = new Date(`${new Date().getFullYear()}-10-29T00:00:00`);
+    const halloween = new Date(`${new Date().getFullYear()}-02-14T00:00:00`);
     const currentDate = new Date();
     const timeRemaining = halloween - currentDate;
     const unreadNotificationsCount = notifications.filter(notification => !notification.is_read).length;
@@ -1105,161 +1108,15 @@ class SiteWrapper extends Component {
       <ThemeProvider theme={isDarkMode ? darkTheme : mainTheme}>
         {showCookieConsent && <CookieConsent />}
 
-        {(width >= 600 && isLive && tokenModalOpen && !isAuthenticated) && (
-          <div
-            className="coming-home-screen"
-            style={{
-              position: 'fixed',
-              width: '100%',
-              height: '100%',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              textAlign: 'center',
-              padding: '50px',
-              zIndex: '4',
-              backdropFilter: `blur(${blurValue}px)`,
-              background: `url(${currentGif})`,
-              backgroundSize: '100vw',
-              backgroundPosition: 'center',
-            }}
-          >
-            <img className="desktop-only" style={{ maxWidth: "150px", marginBottom: '60px' }} src="../img/dark-game-logo.svg" />
-            <p style={{ textTransform: 'uppercase', color: "#fff" }}>GET RICH 💰 OR DIE 🩸 😼</p>
-            <div className="countdown" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 1, height: '400px', overflow: 'hidden' }}>
-              <div
-                className="countdown-side"
-                style={{
-                  width: countdownWidth,
-                  padding: '30px',
-                  display: 'flex',
-                  position: 'relative',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  flexDirection: 'column',
-                  height: '400px',
-                  opacity: countdownOpacity,
-                  transition: 'width 0.5s ease, opacity 0.5s ease',
-                  boxSizing: 'border-box',
-                }}
-                onMouseEnter={this.handleCountdownHover}
-                onMouseLeave={this.handleCountdownLeave}
-              >
-                <div >
-                  <iframe
-                    width="400"
-                    height="215"
-                    src="https://www.youtube.com/embed/4jb0Oq8zrXc"
-                    title="YouTube video player"
-                    frameborder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowfullscreen
-                    style={{ borderRadius: "10px", border: "3px solid rgb(98 3 172)" }}
-                  ></iframe>
-                </div>
-                <Countdown
-                  date={halloween}
-                  renderer={({ days, hours, minutes, seconds, completed }) => (
-                    <div style={{ zIndex: '1', height: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <h4 style={{ transform: 'rotate(-20deg) translateX(-200px)', position: 'absolute', top: '5px', color: '#f9f9f9', background: '#ff0000', padding: '5px 10px' }}>$RPS 🚀🚀🚀</h4>
-                      {!completed ? (
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                          <div style={{ fontSize: '2.2em', fontWeight: 'bold', marginBottom: '5px' }}>{days}</div>
-                          <div style={{ fontSize: '0.5em', color: '#666' }}>days</div>
-                        </div>
-                      ) : (
-                        null
-                        // <div style={{ fontSize: '2em', color: '#e91e63', fontWeight: 'bold' }}>Countdown completed!</div>
-                      )}
-
-                      {!completed ? (
-                        <div style={{ margin: '0 20px', fontSize: '2em', fontWeight: 'bold' }}>:</div>
-                      ) : null}
-
-                      {!completed ? (
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                          <div style={{ fontSize: '2.2em', fontWeight: 'bold', marginBottom: '5px' }}>{hours}</div>
-                          <div style={{ fontSize: '0.5em', color: '#666' }}>hours</div>
-                        </div>
-                      ) : null}
-
-                      {!completed ? (
-                        <div className="desktop-only" style={{ margin: '0 20px', fontSize: '2em', fontWeight: 'bold' }}>:</div>
-                      ) : null}
-
-                      {!completed ? (
-                        <div className="desktop-only" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                          <div style={{ fontSize: '2.2em', fontWeight: 'bold', marginBottom: '5px' }}>{minutes}</div>
-                          <div style={{ fontSize: '0.5em', color: '#666' }}>minutes</div>
-                        </div>
-                      ) : null}
-
-                      {!completed ? (
-                        <div className="desktop-only" style={{ margin: '0 20px', fontSize: '2em', fontWeight: 'bold' }}>:</div>
-                      ) : null}
-
-                      {!completed ? (
-                        <div className="desktop-only" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                          <div style={{ fontSize: '2.2em', fontWeight: 'bold', marginBottom: '5px' }}>{seconds}</div>
-                          <div style={{ fontSize: '0.5em', color: '#666' }}>seconds</div>
-                        </div>
-                      ) : null}
-                    </div>
-                  )}
-                />
-                <Button
-                  style={{
-                    marginTop: '20px',
-                    padding: '10px 20px',
-                    backgroundColor: 'rgb(98 3 172)',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: 1,
-                    cursor: 'pointer',
-                  }}
-                  onClick={this.handleCountdownButtonClick}
-                >
-                  Investor Portal
-                </Button>
-              </div>
-              <div
-                className="youtube-side"
-                style={{
-                  width: youtubeWidth,
-                  padding: '30px',
-                  height: '400px',
-                  opacity: youtubeOpacity,
-                  transition: 'width 0.5s ease, opacity 0.5s ease',
-                  boxSizing: 'border-box',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  alignItems: 'center'
-                }}
-                onMouseEnter={this.handleYoutubeHover} // Handle hover state
-                onMouseLeave={this.handleYoutubeLeave}
-              >
-                <div style={{ width: "100%", display: "flex", justifyContent: "center", alignItems: "center" }}>
-                  <img style={{ width: "400px", border: "3px solid rgb(98 3 172)", borderRadius: "12px" }} src="../img/giant-login-2.svg" />
-                </div>
-
-                <Button
-                  style={{
-                    marginTop: '20px',
-                    padding: '10px 20px',
-                    backgroundColor: 'rgb(98 3 172)',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: 1,
-                    cursor: 'pointer',
-                  }}
-                  onClick={this.handleYoutubeButtonClick}
-                >
-                  Game Portal
-                </Button>
-              </div>
-            </div>
-          </div>
+        {(isLive && tokenModalOpen) && (
+          <CatsinoModalOverlay
+          currentGif={currentGif}
+          blurValue={blurValue}
+          halloween={halloween}
+          handleCountdownButtonClick={this.handleCountdownButtonClick}
+          handleYoutubeButtonClick={this.handleYoutubeButtonClick}
+        />
+        
         )}
         <div className={`site_wrapper ${isDarkMode ? 'dark_mode' : ''}`}>
 
@@ -1282,7 +1139,7 @@ class SiteWrapper extends Component {
               </a>
               {!isInvestorsPage ? (
                 <div className='desktop-only' style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginTop: "10px" }}>
-                  <HistoryTable setHighlightedRooms={this.setHighlightedRooms} userId={this.props.user._id} />
+                  {/* <HistoryTable setHighlightedRooms={this.setHighlightedRooms} userId={this.props.user._id} /> */}
                 </div>
               ) : (
                 <div style={{ padding: width < 600 ? "0" : "48px" }}>

@@ -189,7 +189,6 @@ function RPS(props) {
 
     // --- LISTENERS ---
     const handleSocketData = (data) => {
-      console.log("UPDATED_BANKROLL data", data);
       if (!data) {
         console.error('Error: Received undefined or null data from the socket.');
         return;
@@ -287,7 +286,6 @@ function RPS(props) {
     async (chosenRps) => {
       if (!join) return;
       onChangeState({ result: '' });
-      console.log("chosenRps", chosenRps)
 
       const resultData = await join({
         bet_amount: parseFloat(currentBetAmount),
@@ -448,7 +446,6 @@ function RPS(props) {
       balance,
       bankroll
     } = props;
-    console.log("selection", selection)
 
     setLocalSelectedRps(selection);
     updateSelectedRps(selection, async () => {
