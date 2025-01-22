@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import Modal from 'react-modal';
 import { connect } from 'react-redux';
 import LoadingOverlay from 'react-loading-overlay';
-import styled from 'styled-components';
+
 import axios from '../../util/Api';
 import history from '../../redux/history';
 
@@ -11,7 +10,7 @@ import { convertToCurrency } from '../../util/conversion';
 import { alertModal } from '../modal/ConfirmAlerts';
 
 import {
-  setBalance,
+  setBalance
 } from '../../redux/Auth/user.actions';
 import {
   setCurrentOfferTargetInfo
@@ -36,13 +35,15 @@ import {
   Button,
   TextField,
   Table,
-  InputAdornment,
   TableBody,
   TableCell,
   TableRow,
   Typography,
+  Box,
   Skeleton,
-  Box
+  Grid,
+  Modal,
+  InputAdornment
 } from '@mui/material';
 
 import { Warning } from '@mui/icons-material';
@@ -52,108 +53,6 @@ import { faMoneyBill, faUser, faCog, faEnvelope, faCoins, faRobot } from '@forta
 import Avatar from '../../components/Avatar';
 import StatisticsForm from '../../admin_panel/app/Customer/EditCustomerPage/StatisticsForm';
 
-Modal.setAppElement('#root');
-
-const customStyles = {
-  overlay: {
-    zIndex: 3,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)'
-  },
-  content: {
-    top: '50%',
-    left: '50%',
-    right: 'auto',
-    bottom: 'auto',
-    transform: 'translate(-50%, -50%)',
-    background: 'transparent',
-    padding: 0,
-    border: 'none'
-  }
-};
-
-// -----------------------------
-// Styled Components
-// -----------------------------
-const MarketplaceContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-`;
-
-const ProductGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
-  gap: 20px;
-  max-width: 100%;
-  margin: 20px 0;
-`;
-
-const ProductCard = styled.div`
-  position: relative;
-  background: linear-gradient(156deg, #5d28a7, #ff8500);
-  border-radius: 20px;
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  cursor: pointer;
-  transition: transform 0.2s;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    border-radius: 20px;
-    opacity: 0;
-    transition: opacity 0.2s;
-  }
-  &:hover::before {
-    opacity: 1;
-  }
-  &:hover {
-    transform: scale(1.03);
-  }
-`;
-
-const ProductImage = styled.img`
-  max-width: 50%;
-  height: auto;
-  background: #fff;
-  border: 1px solid #f9f9;
-  box-shadow: 0 1px 17px #333;
-  border-radius: 10px;
-`;
-
-const ProductInfo = styled.div`
-  text-align: center;
-`;
-
-const ProductName = styled.h6`
-  padding: 4px;
-  font-size: 1rem;
-  margin-bottom: -5px;
-  font-weight: 400;
-  line-height: 1.75;
-  letter-spacing: 0.00938em;
-  background: linear-gradient(354deg, #ffdd0775, #494e54);
-  width: 100%;
-  border-radius: 23%;
-  text-shadow: 2px -2px 4px #f3b01b;
-  text-transform: uppercase;
-  box-shadow: inset 0px 1px 14px #28a74524, -1px 2px #dabf1475;
-  color: #fff;
-  margin-top: 10px;
-  border-bottom-right-radius: 21px;
-  border-top-left-radius: 30px;
-`;
-
-// -----------------------------
-// Functional Component
-// -----------------------------
 function PlayerModal(props) {
   const {
     modalIsOpen,
@@ -167,7 +66,6 @@ function PlayerModal(props) {
     isLowGraphics,
     solPrice,
     loading,
-
     // Redux actions
     setBalance: dispatchSetBalance,
     addNewTransaction,
@@ -187,12 +85,10 @@ function PlayerModal(props) {
   const [username, setUsername] = useState('');
   const [avatar, setAvatar] = useState('');
   const [accessory, setAccessory] = useState('');
-  const [selectedCreatorBalance, setSelectedCreatorBalance] = useState('');
   const [rank, setRank] = useState('');
   const [bio, setBio] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
 
-  // For player "status" details
+  const [isLoading, setIsLoading] = useState(false);
   const [status, setStatus] = useState('');
 
   // Stats
@@ -200,12 +96,11 @@ function PlayerModal(props) {
   const [gameType, setGameType] = useState('All');
   const [timeType, setTimeType] = useState('24');
 
-  // Local stats from getCustomerStatisticsData
   const [gameLogList, setGameLogList] = useState([]);
   const [deposit, setDeposit] = useState(0);
   const [withdraw, setWithdraw] = useState(0);
   const [gameProfit, setGameProfit] = useState(0);
-  const [playerBalance, setPlayerBalance] = useState(balance); // local copy
+  const [playerBalance, setPlayerBalance] = useState(balance);
   const [gamePlayed, setGamePlayed] = useState(0);
   const [gameHosted, setGameHosted] = useState(0);
   const [gameJoined, setGameJoined] = useState(0);
@@ -228,9 +123,43 @@ function PlayerModal(props) {
   const [message, setMessage] = useState('');
 
   // -----------------------------
-  // Effects / Lifecycle
+  // MUI Modal Styles
   // -----------------------------
-  // Equivalent to componentDidMount
+  const modalBoxStyle = {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    bgcolor: '#400068', // Purple background
+    color: '#fff',
+    boxShadow: 24,
+    borderRadius: 1,
+    p: 3,
+    width: 700,
+    maxWidth: '90vw',
+    maxHeight: '90vh',
+    overflowY: 'auto'
+  };
+
+  const tipModalBoxStyle = {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    bgcolor: '#400068',
+    color: '#fff',
+    boxShadow: 24,
+    borderRadius: 1,
+    p: 3,
+    width: 400,
+    maxWidth: '90vw',
+    maxHeight: '90vh',
+    overflowY: 'auto'
+  };
+
+  // -----------------------------
+  // Effects
+  // -----------------------------
   useEffect(() => {
     // Fetch stats & user data
     (async function loadData() {
@@ -245,14 +174,8 @@ function PlayerModal(props) {
       // Query products for this user
       await dispatchQueryProducts(127, 1, id);
     })();
+    // eslint-disable-next-line
   }, []);
-
-  // Simulate componentWillReceiveProps to detect changes in some prop
-  // (This is rarely needed, but included to match your original code.)
-  useEffect(() => {
-    // If the parent updates `_id` prop (not typical, but if so):
-    // set isLoading(false) or re-fetch data as needed
-  }, [props._id]);
 
   // -----------------------------
   // Data Fetching
@@ -261,14 +184,14 @@ function PlayerModal(props) {
     const result = await dispatchGetCustomerStatisticsData(id, actorType, gameType, timeType);
     const userData = await acGetCustomerInfo(selectedCreator);
 
-    // If either API call fails or returns null, handle gracefully
     if (!result || !userData) return;
 
     setGameLogList(result.gameLogList || []);
     setDeposit(result.deposit || 0);
     setWithdraw(result.withdraw || 0);
     setGameProfit(result.gameProfit || 0);
-    setPlayerBalance(result.balance || balance); // fallback to existing balance
+    setPlayerBalance(result.balance || balance);
+
     setGamePlayed(result.gamePlayed || 0);
     setGameHosted(result.gameHosted || 0);
     setGameJoined(result.gameJoined || 0);
@@ -320,63 +243,22 @@ function PlayerModal(props) {
       case 'good':
         return { color: 'rgb(3 221 255)', title: 'SEASONED CZAR', message: 'Your spending habits are commendable.', progress: 80 };
       case 'average':
-        return { color: '#ffc107', title: 'UNCONSCIOUS COMPETENT', message: 'You’re doing fine, but bitch don’t get too comfortable.', progress: 60 };
+        return { color: '#ffc107', title: 'UNCONSCIOUS COMPETENT', message: 'Keep an eye on your spending.', progress: 60 };
       case 'bad':
-        return { color: '#fd7e14', title: 'PEASANT PUPPET', message: 'Consider revisiting your spending strategy.', progress: 40 };
+        return { color: '#fd7e14', title: 'PEASANT PUPPET', message: 'Consider revisiting your strategy.', progress: 40 };
       case 'very bad':
-        return { color: '#dc3545', title: 'MISERABLE MULE', message: 'Your spending habits make you miserable.', progress: 20 };
+        return { color: '#dc3545', title: 'MISERABLE MULE', message: 'Your spending habits are hurting you.', progress: 20 };
       default:
         return { color: '#6c757d', title: 'Unknown', message: 'Unable to determine spending habits.', progress: 0 };
     }
   }, []);
 
   const { color, title, message: spendingMessage, progress } = getStatusDetails(status);
-  const barStyle = {
-    width: `${progress}%`,
-    backgroundColor: progress <= 50 ? 'yellow' : 'red'
-  };
 
   // -----------------------------
   // Handlers
   // -----------------------------
-  const handleMessage = (event) => {
-    setMessage(event.target.value);
-  };
-
-  const handleOpenOfferModal = () => {
-    openOfferLoanModal();
-    closeModal();
-  };
-
-  const handleOpenChat = (e) => {
-    const selected = selectedCreator;
-    const chatExists = false; // replicate logic if needed
-
-    if (!chatExists) {
-      const newChatRoom = {
-        _id: selected,
-        username,
-        avatar,
-        accessory,
-        rank,
-        chatLogs: []
-      };
-      setChatRoomInfo(newChatRoom);
-      history.push('/chat/' + selected);
-    } else {
-      // If chat exists, do whatever the original code did
-      setChatRoomInfo({
-        avatar,
-        rank,
-        accessory,
-        username,
-        chatLogs: []
-      });
-      history.push('/chat/' + selected);
-    }
-  };
-
-  const handleCloseModal = () => {
+  const handleClosePlayerModal = () => {
     closeModal();
   };
 
@@ -390,6 +272,10 @@ function PlayerModal(props) {
 
   const handleTipAmountChange = (event) => {
     setTipAmount(event.target.value);
+  };
+
+  const handleMessage = (event) => {
+    setMessage(event.target.value);
   };
 
   const handleSendTip = useCallback(async () => {
@@ -426,25 +312,41 @@ function PlayerModal(props) {
     }
   }, [tipAmount, balance, id, message, isDarkMode, addNewTransaction, dispatchSetBalance, closeModal]);
 
-  // Example for "Send Offer" if needed:
-  // (your original code has a handleSendOffer, not triggered in the UI except in `handleOpenOfferModal`)
-  // You could replicate that logic or remove it if no longer used.
+  const handleOpenOfferModal = () => {
+    openOfferLoanModal();
+    handleClosePlayerModal();
+  };
+
+  const handleOpenChat = () => {
+    const selected = selectedCreator;
+    // If no existing chat, create new
+    const newChatRoom = {
+      _id: selected,
+      username,
+      avatar,
+      accessory,
+      rank,
+      chatLogs: []
+    };
+    setChatRoomInfo(newChatRoom);
+    history.push('/chat/' + selected);
+  };
 
   const handleDropdownChange = async (dropdownName, selectedValue) => {
     if (dropdownName === 'actorType') setActorType(selectedValue);
     if (dropdownName === 'gameType') setGameType(selectedValue);
     if (dropdownName === 'timeType') setTimeType(selectedValue);
 
-    // Re-fetch stats after state updates
+    // Re-fetch stats after updates
     setTimeout(() => {
       fetchStatisticsData();
     }, 0);
   };
 
   // -----------------------------
-  // Conditions / Display Flags
+  // Conditions
   // -----------------------------
-  const isBot = username.toUpperCase().includes('BOT');
+  const isBot = username?.toUpperCase().includes('BOT');
   const systemUsernames = [
     'pimpedpistols',
     'GIGACHAD',
@@ -458,10 +360,14 @@ function PlayerModal(props) {
     'NO BROKIES'
   ];
   const isSystem = systemUsernames.includes(username);
-  const isBio = /^https?:\/\//.test(bio);
+  const isBioLink = /^https?:\/\//.test(bio);
 
+  // -----------------------------
+  // Render
+  // -----------------------------
   return (
     <>
+      {/* Loading Overlay for tip process */}
       {isLoading && (
         <LoadingOverlay
           active={isLoading}
@@ -471,341 +377,371 @@ function PlayerModal(props) {
             wrapper: {
               position: 'fixed',
               width: '100%',
-              top: '0',
-              left: '0',
               height: '100vh',
-              zIndex: '3'
+              zIndex: 3000
             }
           }}
         />
       )}
 
-      {!isLoading && (
-        <Modal
-          isOpen={modalIsOpen}
-          onRequestClose={handleCloseModal}
-          style={customStyles}
-          contentLabel="Player Modal"
-        >
-          <div className={isDarkMode ? 'dark_mode' : ''}>
-            {/* Header */}
-            <div className="modal-header">
-              <h2 className="modal-title title">
-                {isBot ? (
-                  <>
-                    <FontAwesomeIcon icon={faRobot} className="mr-2" style={{ color: 'red' }} />
-                    Bot Card
-                  </>
-                ) : isSystem ? (
-                  <>
-                    <FontAwesomeIcon icon={faCog} className="mr-2" style={{ color: 'grey' }} />
-                    ADMIN
-                  </>
-                ) : (
-                  <>
-                    <FontAwesomeIcon icon={faUser} className="mr-2" />
-                    Player Card
-                  </>
-                )}
-              </h2>
-              <Button className="btn-close" variant='text' color='error'  onClick={handleCloseModal}>
-                ×
-              </Button>
-            </div>
+      {/* Main Player Modal */}
+      <Modal
+        open={modalIsOpen}
+        onClose={handleClosePlayerModal}
+        sx={{ zIndex: 1300 }}
+        BackdropProps={{
+          style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' }
+        }}
+      >
+        <Box sx={modalBoxStyle}>
+          {/* HEADER */}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+            <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center' }}>
+              {isBot ? (
+                <>
+                  <FontAwesomeIcon icon={faRobot} style={{ marginRight: 8, color: 'red' }} />
+                  Bot Card
+                </>
+              ) : isSystem ? (
+                <>
+                  <FontAwesomeIcon icon={faCog} style={{ marginRight: 8, color: 'grey' }} />
+                  ADMIN
+                </>
+              ) : (
+                <>
+                  <FontAwesomeIcon icon={faUser} style={{ marginRight: 8 }} />
+                  Player Card
+                </>
+              )}
+            </Typography>
+            <Button variant="text" color="error" onClick={handleClosePlayerModal}>
+              X
+            </Button>
+          </Box>
 
-            {/* Body */}
-            <div className="modal-body player-modal edit-modal-body">
-              <div className="align-center">
-                {!avatar ? (
-                  // Could show a skeleton or loading state if avatar not loaded
-                  null
-                ) : (
-                  <>
-                    <div
-                      style={{
-                        margin: '30px auto -10px',
-                        padding: '10px',
-                        borderRadius: '4px',
-                        maxWidth: '150px',
-                        background: '#6c757d26',
-                        position: 'fixed',
-                        left: '15px',
-                        top: '65px',
+          {/* BODY */}
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {/* AVATAR & INFO */}
+            <Box sx={{ textAlign: 'center' }}>
+              {/* Online/offline status */}
+              <Box
+                sx={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  backgroundColor: '#6c757d26',
+                  px: 2,
+                  py: 1,
+                  borderRadius: 1,
+                  mb: 1
+                }}
+              >
+                <Typography variant="body2" sx={{ mr: 1 }}>
+                  {onlineUserList.includes(selectedCreator) ? 'online' : 'offline'}
+                </Typography>
+                <Box
+                  component="i"
+                  sx={{
+                    display: 'inline-block',
+                    width: 10,
+                    height: 10,
+                    borderRadius: '50%',
+                    backgroundColor: onlineUserList.includes(selectedCreator)
+                      ? '#28a745'
+                      : '#ff0000'
+                  }}
+                />
+              </Box>
+
+              {/* Avatar */}
+              {avatar ? (
+
+                  <Avatar
+                    src={avatar || '/img/profile-thumbnail.svg'}
+                    accessory={accessory}
+                    username={username}
+                    rank={rank}
+                    alt=""
+                  />
+                  ) : (
+                  <Skeleton variant="circular" width={120} height={120} sx={{ mx: 'auto' }} />
+              )}
+
+                  {/* Username */}
+                  <Typography variant="h5" sx={{ mt: 2, fontWeight: 'bold' }}>
+                    {username}
+                  </Typography>
+
+                  {/* Bio */}
+                  {bio && (
+                    <Box
+                      sx={{
+                        borderTop: '2px solid',
+                        borderBottom: '2px solid',
+                        py: 1,
+                        mt: 1
                       }}
                     >
-                      <span>
-                        {onlineUserList.includes(selectedCreator) ? 'online' : 'offline'}
-                      </span>
-                      &nbsp;
-                      <i
-                        style={{ margin: 'unset', transform: 'unset' }}
-                        className={`online-status${onlineUserList.includes(selectedCreator) ? ' online' : ''}`}
-                      />
-                    </div>
-
-                    <div className="avatar-border">
-                      <Avatar
-                        src={avatar || '/img/profile-thumbnail.svg'}
-                        accessory={accessory}
-                        username={username}
-                        rank={rank}
-                        alt=""
-                      />
-                      <h1 className="player-username" style={{ marginTop: '60px' }}>
-                        {username}
-                      </h1>
-                      <div
-                        id="user-bio"
-                        style={{
-                          position: 'relative',
-                          marginTop: '20px',
-                          borderBottom: '2px solid',
-                          borderTop: '2px solid'
-                        }}
-                      >
-                        <div
-                          className="player-username"
-                          style={{ color: isDarkMode ? '#e5e5e5' : '#333' }}
+                      {isBioLink ? (
+                        <Typography
+                          component="a"
+                          href={bio}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          sx={{ color: '#fff' }}
                         >
-                          {isBio ? (
-                            <a
-                              href={bio}
-                              style={{
-                                fontSize: '1.1em',
-                                marginBottom: '2px',
-                                color: isDarkMode ? '#e5e5e5' : '#333'
-                              }}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              {bio}
-                            </a>
-                          ) : (
-                            <span
-                              style={{
-                                fontSize: '1.1em',
-                                marginBottom: '20px',
-                                paddingBottom: '10px',
-                                color: isDarkMode ? '#e5e5e5' : '#333'
-                              }}
-                            >
-                              {bio}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
+                          {bio}
+                        </Typography>
+                      ) : (
+                        <Typography variant="body2" sx={{ color: '#f5f5f5' }}>
+                          {bio}
+                        </Typography>
+                      )}
+                    </Box>
+                  )}
+                </Box>
 
-              {/* Statistics / Skeleton */}
+            {/* STATS FORM */}
               {!username ? (
-                <Box className="user-statistics" sx={{ width: '100%' }}>
-                  <Skeleton
-                    variant="rectangular"
-                    sx={{ width: '100%', height: 300, marginBottom: 2, borderRadius: 1 }}
-                  />
+                <Box sx={{ width: '100%' }}>
+                  <Skeleton variant="rectangular" sx={{ width: '100%', height: 300, borderRadius: 1 }} />
                   {[...Array(5)].map((_, idx) => (
-                    <Box sx={{ marginBottom: 1 }} key={idx}>
+                    <Box sx={{ mt: 1 }} key={idx}>
                       <Skeleton variant="text" sx={{ width: `${30 + idx * 10}%`, height: 20 }} />
                       <Skeleton variant="text" sx={{ width: `${70 - idx * 10}%`, height: 20 }} />
                     </Box>
                   ))}
                 </Box>
               ) : (
-                <div className="user-statistics">
-                  <StatisticsForm
-                    onDropdownChange={handleDropdownChange}
-                    username={username}
-                    title={title}
-                    barStyle={barStyle}
-                    solPrice={solPrice}
-                    color={color}
-                    message={spendingMessage}
-                    actorType={actorType}
-                    gameType={gameType}
-                    timeType={timeType}
-                    dateJoined={dateJoined}
-                    last_seen={lastSeen}
-                    creditScore={creditScore}
-                    gameLogList={gameLogList}
-                    deposit={deposit}
-                    withdraw={withdraw}
-                    gameProfit={gameProfit}
-                    balance={playerBalance}
-                    gamePlayed={gamePlayed}
-                    gameHosted={gameHosted}
-                    gameJoined={gameJoined}
-                    totalWagered={totalWagered}
-                    rank={rank}
-                    netProfit={netProfit}
-                    profitAllTimeHigh={profitAllTimeHigh}
-                    profitAllTimeLow={profitAllTimeLow}
-                    averageWager={averageWager}
-                    averageGamesPlayedPerRoom={averageGamesPlayedPerRoom}
-                    averageProfit={averageProfit}
-                  />
-                </div>
+                <StatisticsForm
+                  onDropdownChange={handleDropdownChange}
+                  username={username}
+                  title={title}
+                  color={color}
+                  solPrice={solPrice}
+                  message={spendingMessage}
+                  actorType={actorType}
+                  gameType={gameType}
+                  timeType={timeType}
+                  dateJoined={dateJoined}
+                  last_seen={lastSeen}
+                  creditScore={creditScore}
+                  gameLogList={gameLogList}
+                  deposit={deposit}
+                  withdraw={withdraw}
+                  gameProfit={gameProfit}
+                  balance={playerBalance}
+                  gamePlayed={gamePlayed}
+                  gameHosted={gameHosted}
+                  gameJoined={gameJoined}
+                  totalWagered={totalWagered}
+                  rank={rank}
+                  netProfit={netProfit}
+                  profitAllTimeHigh={profitAllTimeHigh}
+                  profitAllTimeLow={profitAllTimeLow}
+                  averageWager={averageWager}
+                  averageGamesPlayedPerRoom={averageGamesPlayedPerRoom}
+                  averageProfit={averageProfit}
+                />
               )}
 
               {/* INVENTORY */}
-              <MarketplaceContainer>
-                <h5>INVENTORY</h5>
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="h6" sx={{ textAlign: 'center', mb: 2 }}>
+                  INVENTORY
+                </Typography>
                 {productArray && productArray.length > 0 ? (
-                  <ProductGrid>
+                  <Grid container spacing={2}>
                     {productArray.map((row) => (
-                      <ProductCard key={row._id}>
-                        {row.image && renderLottieAnimation(row.image, isLowGraphics) ? (
-                          renderLottieAnimation(row.image, isLowGraphics)
-                        ) : (
-                          <ProductImage src={row.image} alt={row.productName} />
-                        )}
-                        <ProductInfo>
-                          <ProductName>{row.productName}</ProductName>
-                        </ProductInfo>
-                      </ProductCard>
-                    ))}
-                  </ProductGrid>
-                ) : (
-                  <ProductGrid>
-                    {/* Skeleton inventory placeholders */}
-                    {[...Array(6)].map((_, index) => (
-                      <ProductCard key={index}>
-                        <Skeleton
-                          variant="rect"
-                          width="100%"
-                          height={150}
-                          style={{ marginBottom: '10px', borderRadius: '8px' }}
-                        />
-                        <ProductInfo>
-                          <Skeleton
-                            variant="text"
-                            width="60%"
-                            height={20}
-                            style={{ marginBottom: '8px' }}
+                      <Grid item xs={6} sm={4} md={3} lg={2} key={row._id}>
+                        <Box
+                          sx={{
+                            background: 'linear-gradient(156deg, #5d28a7, #ff8500)',
+                            borderRadius: 1,
+                            p: 1,
+                            cursor: 'pointer',
+                            position: 'relative',
+                            transition: 'transform 0.2s',
+                            '&:hover': {
+                              transform: 'scale(1.03)'
+                            }
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              position: 'absolute',
+                              width: '100%',
+                              height: '100%',
+                              top: 0,
+                              left: 0,
+                              borderRadius: 1,
+                              backgroundColor: 'rgba(0,0,0,0.5)',
+                              opacity: 0,
+                              transition: 'opacity 0.2s',
+                              '&:hover': { opacity: 1 }
+                            }}
                           />
-                          <Skeleton variant="text" width="40%" height={15} />
-                        </ProductInfo>
-                      </ProductCard>
+                          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
+                            {row.image && renderLottieAnimation(row.image, isLowGraphics) ? (
+                              renderLottieAnimation(row.image, isLowGraphics)
+                            ) : (
+                              <Box
+                                component="img"
+                                src={row.image}
+                                alt={row.productName}
+                                sx={{
+                                  maxWidth: '50%',
+                                  border: '1px solid #f9f9f9',
+                                  boxShadow: '0 1px 17px #333',
+                                  borderRadius: 1
+                                }}
+                              />
+                            )}
+                          </Box>
+                          <Box sx={{ textAlign: 'center' }}>
+                            <Typography
+                              variant="subtitle2"
+                              sx={{
+                                background: 'linear-gradient(354deg, #ffdd0775, #494e54)',
+                                borderRadius: '20% 0 20% 0',
+                                color: '#fff',
+                                py: 0.5,
+                                textTransform: 'uppercase',
+                                fontWeight: 'bold'
+                              }}
+                            >
+                              {row.productName}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </Grid>
                     ))}
-                  </ProductGrid>
+                  </Grid>
+                ) : (
+                  // Skeleton placeholders
+                  <Grid container spacing={2}>
+                    {[...Array(6)].map((_, idx) => (
+                      <Grid item xs={6} sm={4} md={3} lg={2} key={idx}>
+                        <Box
+                          sx={{
+                            background: 'linear-gradient(156deg, #5d28a7, #ff8500)',
+                            borderRadius: 1,
+                            p: 1,
+                            position: 'relative'
+                          }}
+                        >
+                          <Skeleton
+                            variant="rectangular"
+                            width="100%"
+                            height={80}
+                            sx={{ borderRadius: 1, mb: 1 }}
+                          />
+                          <Skeleton variant="text" width="60%" />
+                        </Box>
+                      </Grid>
+                    ))}
+                  </Grid>
                 )}
-              </MarketplaceContainer>
-            </div>
+              </Box>
+            </Box>
 
-            {/* Footer (only if current user != selected user) */}
+            {/* FOOTER (only if current user != selected user) */}
             {userInfo._id !== id && (
-              <div className="modal-footer">
+              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 3 }}>
                 {onlineUserList.includes(selectedCreator) && (
-                  <Button className="tip-button" onClick={handleOpenOfferModal}>
-                    Lend&nbsp;
-                    <FontAwesomeIcon icon={faCoins} />
+                  <Button variant="contained" onClick={handleOpenOfferModal}>
+                    Lend <FontAwesomeIcon icon={faCoins} style={{ marginLeft: 6 }} />
                   </Button>
                 )}
-                <Button className="tip-button" onClick={handleTip}>
-                  Tip&nbsp;
-                  <FontAwesomeIcon icon={faMoneyBill} />
+                <Button variant="contained" onClick={handleTip}>
+                  Tip <FontAwesomeIcon icon={faMoneyBill} style={{ marginLeft: 6 }} />
                 </Button>
-                <Button className="send-msg" onClick={handleOpenChat}>
-                  DM&nbsp;
-                  <FontAwesomeIcon icon={faEnvelope} />
+                <Button variant="contained" onClick={handleOpenChat}>
+                  DM <FontAwesomeIcon icon={faEnvelope} style={{ marginLeft: 6 }} />
                 </Button>
-              </div>
+              </Box>
             )}
-          </div>
+          </Box>
+      </Modal>
 
-          {/* Tip Modal */}
-          <Modal
-            isOpen={isTipModalOpen}
-            onRequestClose={handleCloseTipModal}
-            style={customStyles}
-            contentLabel="Tip Modal"
-          >
-            <div className={isDarkMode ? 'dark_mode' : ''}>
-              <div className="modal-header">
-                <h2 className="modal-title title">
-                  <FontAwesomeIcon icon={faMoneyBill} className="mr-2" />
-                  ENTER TIP AMOUNT
-                </h2>
-                <Button className="btn-close" variant='text' color='error'  onClick={handleCloseModal}>
-                  ×
-                </Button>
-              </div>
-              <div className="modal-body">
-                <div className="modal-content-wrapper">
-                  <div className="modal-content-panel">
-                    <div className="input-amount">
-                       <TextField color="secondary" 
-                        label="Amount"
-                        value={tipAmount || 0}
-                        type="number"
-                        onChange={handleTipAmountChange}
-                        pattern="^\\d*\\.?\\d*$"
-                        variant="filled"
-                        autoComplete="off"
-                        InputProps={{
-                          endAdornment: <InputAdornment position="end">RPS</InputAdornment>
-                        }}
-                        className="form-control"
-                      />
-                    </div>
-                    <Table>
-                      <TableBody>
-                        <TableRow>
-                          <TableCell>
-                            <span>IN-GAME BALANCE:</span>
-                          </TableCell>
-                          <TableCell>
-                            {convertToCurrency(balance, solPrice)}
-                          </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell>
-                            <span>TIP AMOUNT:</span>
-                          </TableCell>
-                          <TableCell style={{ color: 'red' }}>
-                            {convertToCurrency(tipAmount * -1, solPrice)}
-                          </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell>
-                            <span>NEW BALANCE:</span>
-                          </TableCell>
-                          <TableCell>
-                            {convertToCurrency(balance - tipAmount, solPrice)}&nbsp;
-                            {balance - tipAmount < 0 && <Warning width="15pt" />}
-                          </TableCell>
-                        </TableRow>
-                      </TableBody>
-                    </Table>
-                    <div className="input-amount">
-                      <Typography>Add Message?</Typography>
-                       <TextField color="secondary" 
-                        label="Message"
-                        value={message}
-                        onChange={handleMessage}
-                        variant="filled"
-                        autoComplete="off"
-                        className="form-control"
-                        inputProps={{ maxLength: 8 }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="modal-footer">
-                <Button variant='contained' color='error' onClick={handleSendTip}>
-                  Send Tip
-                </Button>
-                <Button variant='contained' color='secondary' onClick={handleCloseTipModal}>
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          </Modal>
-        </Modal>
-      )}
+      {/* Tip Modal */}
+      <Modal
+        open={isTipModalOpen}
+        onClose={handleCloseTipModal}
+        sx={{ zIndex: 1300 }}
+        BackdropProps={{
+          style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' }
+        }}
+      >
+        <Box sx={tipModalBoxStyle}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+            <Typography
+              variant="h6"
+              sx={{ display: 'flex', alignItems: 'center', fontWeight: 'bold' }}
+            >
+              <FontAwesomeIcon icon={faMoneyBill} style={{ marginRight: 8 }} />
+              ENTER TIP AMOUNT
+            </Typography>
+            <Button variant="text" color="error" onClick={handleClosePlayerModal}>
+              X
+            </Button>
+          </Box>
+
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <TextField
+              label="Amount"
+              variant="filled"
+              color="secondary"
+              value={tipAmount || 0}
+              type="number"
+              onChange={handleTipAmountChange}
+              InputProps={{
+                endAdornment: <InputAdornment position="end">RPS</InputAdornment>
+              }}
+            />
+
+            <Table>
+              <TableBody>
+                <TableRow>
+                  <TableCell>IN-GAME BALANCE:</TableCell>
+                  <TableCell>{convertToCurrency(balance, solPrice)}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>TIP AMOUNT:</TableCell>
+                  <TableCell sx={{ color: 'red' }}>
+                    {convertToCurrency(tipAmount * -1, solPrice)}
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>NEW BALANCE:</TableCell>
+                  <TableCell>
+                    {convertToCurrency(balance - tipAmount, solPrice)}
+                    {(balance - tipAmount < 0) && <Warning sx={{ ml: 1 }} />}
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+
+            <Typography>Add Message?</Typography>
+            <TextField
+              label="Message"
+              variant="filled"
+              color="secondary"
+              value={message}
+              onChange={handleMessage}
+              inputProps={{ maxLength: 8 }} // if you want an 8-char limit
+            />
+          </Box>
+
+          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 3 }}>
+            <Button variant="contained" color="error" onClick={handleSendTip}>
+              Send Tip
+            </Button>
+            <Button variant="contained" color="secondary" onClick={handleCloseTipModal}>
+              Cancel
+            </Button>
+          </Box>
+        </Box>
+      </Modal>
     </>
   );
 }

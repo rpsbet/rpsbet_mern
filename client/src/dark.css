@@ -24,13 +24,6 @@
 	color: #ff0000 !important;
 }
 
-.dark_mode .modal-body .modal-content-wrapper div.modal-content-panel input,
-.dark_mode input,
-.dark_mode input:focus {
-	background-color: #f9f9f903;
-	color: white;
-	box-shadow: none;
-}
 
 .dark_mode .notification p:first-child {
 	color: #e9ecef;
@@ -72,9 +65,6 @@
 	background: linear-gradient(45deg, #8864be96, #9f04b799, #8a35dc45);
 }
 
-.dark_mode .profile.modal-body .avatar-border div div {
-	box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 18px, rgb(0, 0, 0) 0px 6px 30px 0px, rgba(31, 31, 31, 0.725) 0px 0px 20px inset !important;
-}
 
 .dark_mode .gamified-container {
 	border: 2px solid #333;

@@ -11,7 +11,7 @@ import {
 } from '../../redux/Logic/logic.actions';
 
 import { TrendingUpOutlined, TrendingDownOutlined, ShowChartOutlined, LockOutlined, Add, Remove, } from '@mui/icons-material';
-import { Grid, Link, Tooltip, Typography, Skeleton, Box, Button, Card } from '@mui/material';
+import { Grid, Link, Tooltip, Typography, Skeleton, Box, Button, Card, Modal } from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import Moment from 'moment';
 import { faHeart, faHeartBroken, faStopwatch } from '@fortawesome/free-solid-svg-icons';
@@ -20,7 +20,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { setBalance } from '../../redux/Auth/user.actions';
 import CoHostModal from '../modal/CoHostModal';
 import Avatar from '../../components/Avatar';
-import Modal from 'react-modal';
 import { convertToCurrency } from '../../util/conversion';
 import { getRoomStatisticsData } from '../../redux/Customer/customer.action';
 import Battle from '../icons/Battle';
@@ -28,22 +27,6 @@ import { alertModal } from '../modal/ConfirmAlerts';
 import PlayerModal from '../modal/PlayerModal';
 import history from '../../redux/history';
 
-const customStyles = {
-  overlay: {
-    zIndex: 3,
-    backgroundColor: 'unset',
-  },
-  content: {
-    top: '50%',
-    left: '50%',
-    right: 'auto',
-    bottom: 'auto',
-    transform: 'translate(-50%, -50%)',
-    background: 'transparent',
-    border: 'none',
-    padding: 0,
-  },
-};
 
 function OpenGamesTable(props) {
   const {
@@ -454,7 +437,7 @@ function OpenGamesTable(props) {
                                 fontSize: 'xx-small',
                                 border: '1px solid rgb(255, 208, 0)',
                                 background: 'linear-gradient(45deg, #7a5958, #a27955)',
-                                borderRadius: '4px',
+                                borderRadius: '0.3em',
                                 color: 'rgb(255, 208, 0)',
                                 padding: '0px 5px',
                                 lineHeight: '20px',
@@ -481,7 +464,7 @@ function OpenGamesTable(props) {
                             justifyContent: 'center',
                             alignItems: 'center',
                             cursor: 'pointer',
-                            borderRadius: '0.3em', // Rounded corners but not fully circular
+                            borderRadius: 1, // Rounded corners but not fully circular
                             fontSize: '14px',
                             textDecoration: 'none',
 
@@ -497,7 +480,7 @@ function OpenGamesTable(props) {
                                 justifyContent: 'center',
                                 alignItems: 'center',
                                 padding: '8px',
-                                borderRadius: '0.3em',
+                                borderRadius: 1,
                                 backgroundColor: '#f1f1f1',
                                 border: '2px solid #cccccc',
                                 cursor: 'default',
@@ -797,7 +780,6 @@ function OpenGamesTable(props) {
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
-                      borderRadius: 2, // equivalent to '8px'
                     }}
                     className="carousel-content table-row slide-in"
                   >
@@ -860,25 +842,45 @@ function OpenGamesTable(props) {
 
       {/* CoHost Modal */}
       <Modal
-        isOpen={isCoHostModalOpen}
-        onRequestClose={handleCloseCoHostModal}
-        style={customStyles}
-        contentLabel="CoHost Modal"
+        open={isCoHostModalOpen}
+        onClose={handleCloseCoHostModal}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+        closeAfterTransition
+
       >
-        <CoHostModal
-          isDarkMode={isDarkMode}
-          coHostAmount={coHostAmount}
-          selectedRow={selectedRow}
-          balance={balance}
-          user={user}
-          togglePopup={() => { }}
-          handleClose={handleCloseCoHostModal}
-          handleSendCoHost={handleSendCoHost}
-          handleCoHostAmountChange={handleCoHostAmountChange}
-          has_joined={false}
-          input_only={false}
-          solPrice={solPrice}
-        />
+        <Box
+          sx={{
+            width: '95%',
+            maxWidth: 1000,
+            maxHeight: '90vh',
+            overflowY: 'auto',
+            bgcolor: '#400068',
+            borderRadius: 1,
+            p: 3,
+            color: '#fff'  // for readable text
+          }}
+        >
+
+          <CoHostModal
+            isDarkMode={isDarkMode}
+            coHostAmount={coHostAmount}
+            selectedRow={selectedRow}
+            balance={balance}
+            user={user}
+            togglePopup={() => { }}
+            handleClose={handleCloseCoHostModal}
+            handleSendCoHost={handleSendCoHost}
+            handleCoHostAmountChange={handleCoHostAmountChange}
+            has_joined={false}
+            input_only={false}
+            solPrice={solPrice}
+          />
+        </Box>
+
       </Modal>
     </>
   );

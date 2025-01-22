@@ -21,6 +21,13 @@ import {
   Button,
   IconButton,
   Tooltip,
+  FormControlLabel,
+  Checkbox,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Typography
 } from '@mui/material';
 import { YouTubeVideo } from '../../components/YoutubeVideo';
 import BetAmountInput from '../../components/BetAmountInput';
@@ -33,14 +40,16 @@ import {
 
 import Lottie from 'react-lottie';
 import ImageResultModal from '../modal/ImageResultModal';
+// REMOVED: confirmModalCreate import
 import {
   getQsBetItems,
   getRoomBotCount,
 } from '../../redux/Logic/logic.actions';
 import animationData from '../LottieAnimations/spinningIcon';
+// We keep alertModal if you still use it:
 import {
   alertModal,
-  confirmModalCreate,
+  // confirmModalCreate, <== removed
 } from '../modal/ConfirmAlerts';
 import history from '../../redux/history';
 import { convertToCurrency } from '../../util/conversion';
@@ -54,6 +63,7 @@ const defaultOptions = {
     preserveAspectRatio: 'xMidYMid slice'
   }
 };
+
 class QuickShoot extends Component {
   constructor(props) {
     super(props);
@@ -86,7 +96,13 @@ class QuickShoot extends Component {
       status: this.props.roomInfo.status,
       image: '',
       showImageModal: false,
-      isPasswordCorrect: this.props.isPasswordCorrect
+      isPasswordCorrect: this.props.isPasswordCorrect,
+
+      // ADDED: For MUI v5 confirmation dialog
+      openConfirmBet: false,
+      confirmBetMessage: '',
+      confirmBetCallback: null,
+      skipConfirm: localStorage.getItem('hideConfirmModal') === 'true'
     };
     this.onChangeState = this.onChangeState.bind(this);
     this.handleKeyPress = this.handleKeyPress.bind(this);
@@ -103,11 +119,8 @@ class QuickShoot extends Component {
 
     try {
       const botsCount = await this.props.getRoomBotCount(this.props.roomInfo._id);
-
       if (this.isComponentMounted) {
-        this.setState({
-          botsCount,
-        });
+        this.setState({ botsCount });
       }
     } catch (error) {
       console.error('Error in componentDidMount:', error);
@@ -129,8 +142,14 @@ class QuickShoot extends Component {
         this.setState({ socket: initializedSocket });
 
         if (initializedSocket) {
-          initializedSocket.on(`UPDATED_BANKROLL_QS_${roomInfo._id}`, this.handleSocketData);
-          initializedSocket.on(`UPDATED_BANKROLL_QS2_${roomInfo._id}`, this.handleSocketData2);
+          initializedSocket.on(
+            `UPDATED_BANKROLL_QS_${roomInfo._id}`,
+            this.handleSocketData
+          );
+          initializedSocket.on(
+            `UPDATED_BANKROLL_QS2_${roomInfo._id}`,
+            this.handleSocketData2
+          );
         } else {
           setTimeout(() => {
             if (this.isComponentMounted) initializeSocket();
@@ -147,25 +166,26 @@ class QuickShoot extends Component {
     initializeSocket();
   }
 
-
   removeSocketListeners() {
     const { socket, roomInfo } = this.props;
     if (socket) {
       socket.off(`UPDATED_BANKROLL_QS_${roomInfo._id}`, this.handleSocketData);
-
+      socket.off(`UPDATED_BANKROLL_QS2_${roomInfo._id}`, this.handleSocketData2);
     }
   }
 
   handleSocketData = (data) => {
-    this.setState(prevState => {
+    this.setState((prevState) => {
       let updatedPlayers = [...prevState.players, data.user];
       if (updatedPlayers.length > 5) {
         updatedPlayers.shift();
       }
       this.props.playSound('blip');
-      let filteredQS = data.qs.filter(game => game.joiner === this.props.user_id);
+      let filteredQS = data.qs.filter((game) => game.joiner === this.props.user_id);
       let qsState = filteredQS.length > 0 ? filteredQS : prevState.qs;
-      let qsValueAtLastIndex = data.qs.length > 0 ? parseInt(data.qs[data.qs.length - 1].joiner_qs) : null;
+      let qsValueAtLastIndex = data.qs.length > 0
+        ? parseInt(data.qs[data.qs.length - 1].joiner_qs)
+        : null;
       this.props.onChangeState({ bankroll: data.bankroll });
 
       return {
@@ -177,21 +197,13 @@ class QuickShoot extends Component {
         qsValueAtLastIndex: qsValueAtLastIndex
       };
     }, () => {
-      if (!(this.props.isWatching && data.qs.every(game => game.joiner !== this.props.user_id))) {
+      if (
+        !(this.props.isWatching &&
+          data.qs.every((game) => game.joiner !== this.props.user_id))
+      ) {
         this.updateAnimation();
       }
     });
-  };
-
-
-  handleClickOutside = e => {
-    if (
-      this.settingsRef &&
-      this.settingsRef.current &&
-      !this.settingsRef.current.contains(e.target)
-    ) {
-      this.setState({ settings_panel_opened: false });
-    }
   };
 
   handleSocketData2 = (data) => {
@@ -257,13 +269,11 @@ class QuickShoot extends Component {
   }
 
   updateAnimation = async () => {
-
     let qsIndex = parseInt(this.state.qs[this.state.qs.length - 1].qs);
     let position_short_name = ['center', 'tl', 'tr', 'bl', 'br'];
 
     if (this.props.qs_game_type === 2) {
       position_short_name = ['bl', 'br'];
-
     } else if (this.props.qs_game_type === 3) {
       position_short_name = ['bl', 'center', 'br'];
     } else if (this.props.qs_game_type === 4) {
@@ -275,13 +285,11 @@ class QuickShoot extends Component {
       position_short_name[qsIndex]
     );
 
-
     this.setState({
       animation: (
         <div
           className="qs-image-panel"
           id="quickShoot_lottie"
-
         >
           <Lottie
             options={{
@@ -294,16 +302,11 @@ class QuickShoot extends Component {
         </div>
       )
     });
-    // if (position_short_name[qsIndex] === 'center') {
-    //   this.props.playSound('grunt2');
-    // } else {
-    //   this.props.playSound('grunt')
-    // }
   };
 
   async componentDidUpdate(prevProps, prevState) {
-    const { roomInfo, actionList, is_betting, bgColorChanged } = this.props;
-    const { isPasswordCorrect, qs, qsValueAtLastIndex } = this.state;
+    const { roomInfo, actionList, is_betting } = this.props;
+    const { isPasswordCorrect, qs } = this.state;
 
     if (prevProps.actionList !== actionList) {
       this.setState({
@@ -315,14 +318,16 @@ class QuickShoot extends Component {
       this.removeSocketListeners();
       this.setupSocket();
     }
-    if (prevProps.balance !== this.props.balance && this.props.gameResult !== -1 && this.state.isMax) {
-      this.handleMaxButtonClick();
-    }
-
-    if (prevProps.is_betting !== is_betting && !is_betting) {
-      const prevLastItemId = this.props.qsbetitems.length > 4 ? this.props.qsbetitems.slice(0, 5).reverse()[4]._id : null;
-      const currentLastItemId = qs.length > 4 ? qs[4]._id : null;
-
+    if (
+      prevProps.is_betting !== is_betting &&
+      !is_betting
+    ) {
+      const prevLastItemId =
+        this.props.qsbetitems.length > 4
+          ? this.props.qsbetitems.slice(0, 5).reverse()[4]._id
+          : null;
+      const currentLastItemId =
+        qs.length > 4 ? qs[4]._id : null;
 
       if (prevLastItemId === currentLastItemId) {
         await this.props.getQsBetItems(roomInfo._id);
@@ -341,6 +346,7 @@ class QuickShoot extends Component {
       }
     }
 
+    // If newly correct password, auto-join the game
     if (
       prevState.isPasswordCorrect !== isPasswordCorrect &&
       isPasswordCorrect === true
@@ -349,21 +355,21 @@ class QuickShoot extends Component {
     }
   }
 
+  // Called once user truly joins the game after password check OR direct join
   joinGame = async () => {
     const {
-      qs_game_type,
       onChangeState,
       playSound,
-      selected_qs_position,
       changeBgColor,
       solPrice,
       bet_amount
     } = this.props;
+
     onChangeState({ result: '' });
 
     const result = await this.props.join({
       bet_amount: parseFloat(bet_amount),
-      selected_qs_position: selected_qs_position,
+      selected_qs_position: this.props.selected_qs_position
     });
 
     playSound('ballKick');
@@ -382,32 +388,28 @@ class QuickShoot extends Component {
     }
 
     const currencyElement = convertToCurrency(Math.abs(result.amount), solPrice);
-
     const fragmentStyle = {
-      color: color,
+      color: color
     };
 
     onChangeState({
       result: (
         <React.Fragment>
-          <span style={fragmentStyle}> {text} {currencyElement}</span>
+          <span style={fragmentStyle}>
+            {text} {currencyElement}
+          </span>
         </React.Fragment>
-      ), gameResult: result.betResult
+      ),
+      gameResult: result.betResult
     });
-  }
-
+  };
 
   handleHalfXButtonClick = () => {
     const multipliedBetAmount = this.state.bet_amount * 0.5;
     const roundedBetAmount = Math.floor(multipliedBetAmount * 100000) / 100000;
-    this.setState(
-      {
-        bet_amount: roundedBetAmount
-      },
-      () => {
-        document.getElementById('betamount').focus();
-      }
-    );
+    this.setState({ bet_amount: roundedBetAmount }, () => {
+      document.getElementById('betamount')?.focus();
+    });
   };
 
   handle2xButtonClick = () => {
@@ -420,50 +422,87 @@ class QuickShoot extends Component {
     ) {
       alertModal(this.props.isDarkMode, 'EXCEEDED BANKROLL');
     } else {
-      this.setState(
-        {
-          bet_amount: roundedBetAmount
-        },
-        () => {
-          document.getElementById('betamount').focus();
-        }
-      );
+      this.setState({ bet_amount: roundedBetAmount }, () => {
+        document.getElementById('betamount')?.focus();
+      });
     }
   };
 
   handleMaxButtonClick = () => {
     const maxBetAmount = Math.floor(this.state.balance * 100000) / 100000;
 
-    this.setState(
-      {
-        bet_amount: Math.floor(Math.min(
+    this.setState({
+      bet_amount: Math.floor(
+        Math.min(
           maxBetAmount,
           this.state.bankroll * (this.props.qs_game_type - 1)
-        ) * 100000) / 100000
-      },
-      () => {
-        document.getElementById('betamount').focus();
-      }
-    );
+        ) * 100000
+      ) / 100000
+    }, () => {
+      document.getElementById('betamount')?.focus();
+    });
   };
 
   updatePotentialReturn = () => {
     this.setState({
       potential_return:
         (this.state.bet_amount / (this.props.qs_game_type - 1) +
-          parseFloat(this.state.bet_amount) - this.state.bet_amount)/* 0.95 */
+          parseFloat(this.state.bet_amount) -
+          this.state.bet_amount) /* 0.95 */
     });
   };
 
   toggleImageModal = () => {
-    this.setState({
-      showImageModal: false
-    });
+    this.setState({ showImageModal: false });
   };
 
   onChangeState(e) {
-    this.setState({ bet_amount: e.target.value, }, this.updatePotentialReturn);
+    this.setState({ bet_amount: e.target.value }, this.updatePotentialReturn);
   }
+
+  // ADDED: MUI v5 confirm dialog handling
+  openConfirmBetDialog = (message, callback) => {
+    // Check localStorage or this.state.skipConfirm
+    if (localStorage.getItem('hideConfirmModal') === 'true') {
+      // If user previously checked "Don't show again", 
+      // immediately run the callback instead of opening dialog
+      callback();
+      return;
+    }
+    // Otherwise show the dialog
+    this.setState({
+      openConfirmBet: true,
+      confirmBetMessage: message,
+      confirmBetCallback: callback
+    });
+  };
+
+  closeConfirmBetDialog = () => {
+    this.setState({
+      openConfirmBet: false,
+      confirmBetMessage: '',
+      confirmBetCallback: null
+    });
+  };
+
+  handleConfirmBet = async () => {
+    const { confirmBetCallback } = this.state;
+
+    if (confirmBetCallback) {
+      await confirmBetCallback();
+    }
+
+    this.closeConfirmBetDialog();
+  };
+
+  handleSkipConfirmChange = (event) => {
+    const checked = event.target.checked;
+    this.setState({ skipConfirm: checked }, () => {
+      // Save the user preference to localStorage
+      localStorage.setItem('hideConfirmModal', checked ? 'true' : 'false');
+    });
+  };
+  // END of MUI confirm code
 
   onBtnBetClick = (position) => {
     const {
@@ -481,11 +520,15 @@ class QuickShoot extends Component {
       bankroll
     } = this.props;
 
-    if (creator_id && user_id && creator_id.toString() === user_id.toString()) {
+    if (
+      creator_id &&
+      user_id &&
+      creator_id.toString() === user_id.toString()
+    ) {
       callBot(creator_id, roomInfo._id, user_id, isDarkMode, async () => {
         const botAttached = await updateRoomBot(roomInfo._id);
         if (botAttached) {
-          this.setState(prevState => ({
+          this.setState((prevState) => ({
             botsCount: prevState.botsCount + 1
           }));
         }
@@ -517,8 +560,7 @@ class QuickShoot extends Component {
     const passwordCorrect = rooms[roomInfo._id];
 
     updateSelectedQs(position, () => {
-
-
+      // Here we used to call confirmModalCreate, now replaced by MUI v5 dialog:
       if (localStorage.getItem('hideConfirmModal') === 'true') {
         if (is_private === true && passwordCorrect !== true) {
           openGamePasswordModal();
@@ -526,11 +568,8 @@ class QuickShoot extends Component {
           this.joinGame();
         }
       } else {
-        confirmModalCreate(
-          isDarkMode,
+        this.openConfirmBetDialog(
           'ARE YOU SURE YOU WANT TO PLACE THIS BET?',
-          'Yes',
-          'Cancel',
           async () => {
             if (is_private === true && passwordCorrect !== true) {
               openGamePasswordModal();
@@ -544,27 +583,36 @@ class QuickShoot extends Component {
   };
 
   handleBotClick = () => {
-    const { creator_id, user_id, roomInfo, isDarkMode, updateRoomBot } = this.props;
-    if (creator_id && user_id && creator_id.toString() === user_id.toString()) {
+    const { creator_id, user_id, roomInfo, isDarkMode, updateRoomBot } =
+      this.props;
+    if (
+      creator_id &&
+      user_id &&
+      creator_id.toString() === user_id.toString()
+    ) {
       callBot(creator_id, roomInfo._id, user_id, isDarkMode, async () => {
         const botAttached = await updateRoomBot(roomInfo._id);
         if (botAttached) {
-          this.setState(prevState => ({
+          this.setState((prevState) => ({
             botsCount: prevState.botsCount + 1
           }));
         }
       });
     }
-  }
+  };
 
   bootBots = async () => {
     const { creator_id, user_id, roomInfo, kickBots } = this.props;
     this.setState({ botsCount: 0 }, async () => {
-      if (creator_id && user_id && creator_id.toString() === user_id.toString()) {
+      if (
+        creator_id &&
+        user_id &&
+        creator_id.toString() === user_id.toString()
+      ) {
         await kickBots(roomInfo._id);
       }
     });
-  }
+  };
 
   handleEndClick = async () => {
     const { roomInfo } = this.props;
@@ -572,12 +620,9 @@ class QuickShoot extends Component {
       await this.props.endGame(roomInfo._id);
       this.setState({ status: 'finished' });
     } else {
-      alertModal(
-        this.props.isDarkMode,
-        "THIS GAME HAS ALREADY ENDED."
-      );
+      alertModal(this.props.isDarkMode, 'THIS GAME HAS ALREADY ENDED.');
     }
-  }
+  };
 
   getPositionLetter = (position) => {
     switch (position) {
@@ -606,17 +651,31 @@ class QuickShoot extends Component {
       classes.push('active');
     }
 
-    if (bgColorChanged && qsValueAtLastIndex === position && !is_betting) {
+    if (
+      bgColorChanged &&
+      qsValueAtLastIndex === position &&
+      !is_betting
+    ) {
       setTimeout(() => {
         this.setState({ showBall: true });
       }, 1000);
     }
 
-    if (bgColorChanged && betResult === -1 && qsValueAtLastIndex === position) {
+    if (
+      bgColorChanged &&
+      betResult === -1 &&
+      qsValueAtLastIndex === position
+    ) {
       classes.push('lose-bg');
-    } else if (betResult === 0 && qsValueAtLastIndex === position) {
+    } else if (
+      betResult === 0 &&
+      qsValueAtLastIndex === position
+    ) {
       classes.push('draw-bg');
-    } else if (betResult === 1 && qsValueAtLastIndex === position) {
+    } else if (
+      betResult === 1 &&
+      qsValueAtLastIndex === position
+    ) {
       classes.push('win-bg');
     }
 
@@ -642,23 +701,28 @@ class QuickShoot extends Component {
         style={buttonStyle}
         disabled={is_betting}
       >
-        <span className="roll-tag">{this.getPositionLetter(position)}</span>
-        {showBall && bgColorChanged && qsValueAtLastIndex === position && !is_betting && (
-          <img
-            src="/img/football.svg"
-            alt="ball"
-            className="ball-kicked"
-            onAnimationEnd={() => this.setState({ showBall: false })}
-            style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              width: '30px',
-              height: '30px'
-            }}
-          />
-        )}
+        <span className="roll-tag">
+          {this.getPositionLetter(position)}
+        </span>
+        {showBall &&
+          bgColorChanged &&
+          qsValueAtLastIndex === position &&
+          !is_betting && (
+            <img
+              src="/img/football.svg"
+              alt="ball"
+              className="ball-kicked"
+              onAnimationEnd={() => this.setState({ showBall: false })}
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: '30px',
+                height: '30px'
+              }}
+            />
+          )}
       </IconButton>
     );
   }
@@ -717,8 +781,11 @@ class QuickShoot extends Component {
       qs,
       players,
       isQbot,
-      prev_qs
+      prev_qs,
+      openConfirmBet,
+      confirmBetMessage
     } = this.state;
+
     const {
       selectedCreator,
       showPlayerModal,
@@ -760,25 +827,62 @@ class QuickShoot extends Component {
       'Bottom-Right'
     ];
     let position_short_name = ['c', 'tl', 'tr', 'bl', 'br'];
-    let arrayName;
     if (qs_game_type === 2) {
       position_name = ['Left', 'Right'];
       position_short_name = ['bl', 'br'];
-      arrayName = 'qs_array_2';
     } else if (qs_game_type === 3) {
       position_name = ['Bottom-Left', 'Center', 'Bottom-Right'];
       position_short_name = ['bl', 'c', 'br'];
-      arrayName = 'qs_array_3';
     } else if (qs_game_type === 4) {
       position_name = ['Top-Left', 'Top-Right', 'Bottom-Left', 'Bottom-Right'];
       position_short_name = ['tl', 'tr', 'bl', 'br'];
-      arrayName = 'qs_array_4';
-    } else if (qs_game_type === 5) {
-      arrayName = 'qs_array_5';
     }
 
     return (
       <div className="game-page">
+
+        {/* ADDED: MUI confirm dialog for Bet */}
+        <Dialog
+          open={this.state.openConfirmBet}
+          onClose={this.closeConfirmBetDialog}
+          aria-labelledby="confirm-dialog-title"
+          aria-describedby="confirm-dialog-description"
+        >
+          <DialogTitle id="confirm-dialog-title">
+            Confirmation
+          </DialogTitle>
+          <DialogContent>
+            <Typography>{this.state.confirmBetMessage}</Typography>
+
+            {/* “Don’t show again” checkbox */}
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={this.state.skipConfirm}
+                  onChange={this.handleSkipConfirmChange}
+                  color="primary"
+                />
+              }
+              label="Don’t show this again"
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={this.closeConfirmBetDialog}
+              color="error"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={this.handleConfirmBet}
+              color="primary"
+              autoFocus
+            >
+              Yes
+            </Button>
+          </DialogActions>
+        </Dialog>
+        {/* END of MUI confirm dialog */}
 
         {showImageModal && (
           <ImageResultModal
@@ -794,35 +898,28 @@ class QuickShoot extends Component {
             selectedCreator={selectedCreator}
             modalIsOpen={showPlayerModal}
             closeModal={handleClosePlayerModal}
-          // {...this.state.selectedRow}
           />
         )}
+
         <div className="game-contents title">
-
-          <div
-            className="game-info-panel"
-            style={{ position: 'relative' }}
-          >
+          <div className="game-info-panel" style={{ position: 'relative' }}>
             <div className="guesses">
               <div>
-
-                {prev_qs
-                  .slice()
-                  .map((item, index) => (
-                    <p key={index}>{item.qs}</p>
-                  ))}
+                {prev_qs.slice().map((item, index) => (
+                  <p key={index}>{item.qs}</p>
+                ))}
               </div>
               <div>
-
                 {this.state.players.length !== 0 && (
                   <>
                     {this.state.players.slice(0, 5).map((player, index) => (
-                      <div key={index} style={{ opacity: "0.4", width: "29px", cursor: "pointer" }}>
+                      <div
+                        key={index}
+                        style={{ opacity: '0.4', width: '29px', cursor: 'pointer' }}
+                      >
                         <a
                           className="avatar"
-                          onClick={() =>
-                            handleOpenPlayerModal(player._id)
-                          }
+                          onClick={() => handleOpenPlayerModal(player._id)}
                         >
                           <Avatar
                             className="avatar"
@@ -834,34 +931,30 @@ class QuickShoot extends Component {
                             darkMode={this.props.isDarkMode}
                           />
                         </a>
-
                       </div>
                     ))}
                   </>
-
                 )}
               </div>
             </div>
 
             <div className="guesses">
               <div>
-                {prev_qs
-                  .slice()
-                  .map((item, index) => (
-                    <p key={index}>{item.qs}</p>
-                  ))}
+                {prev_qs.slice().map((item, index) => (
+                  <p key={index}>{item.qs}</p>
+                ))}
               </div>
               <div>
-
                 {this.state.players.length !== 0 && (
                   <>
                     {this.state.players.slice(0, 5).map((player, index) => (
-                      <div key={index} style={{ opacity: "0.4", width: "29px", cursor: "pointer" }}>
+                      <div
+                        key={index}
+                        style={{ opacity: '0.4', width: '29px', cursor: 'pointer' }}
+                      >
                         <a
                           className="avatar"
-                          onClick={() =>
-                            handleOpenPlayerModal(player._id)
-                          }
+                          onClick={() => handleOpenPlayerModal(player._id)}
                         >
                           <Avatar
                             className="avatar"
@@ -873,31 +966,64 @@ class QuickShoot extends Component {
                             darkMode={this.props.isDarkMode}
                           />
                         </a>
-
                       </div>
                     ))}
                   </>
-
                 )}
               </div>
             </div>
+
             {status === 'open' ? (
               <>
-                <Tooltip title={!isWatching ? "CLICK TO STOP WATCHING" : "CLICK TO START WATCHING"}>
-                  <IconButton className="spectate title" onClick={this.handleSpectateMode}>
-                    {isWatching ? <>PLAYING&nbsp;<SwordsIcon /></> : <>SPECTATING&nbsp;<ViewIcon /></>}
-
+                <Tooltip
+                  title={
+                    !isWatching
+                      ? 'CLICK TO STOP WATCHING'
+                      : 'CLICK TO START WATCHING'
+                  }
+                >
+                  <IconButton
+                    className="spectate title"
+                    onClick={this.handleSpectateMode}
+                  >
+                    {isWatching ? (
+                      <>
+                        PLAYING&nbsp;
+                        <SwordsIcon />
+                      </>
+                    ) : (
+                      <>
+                        SPECTATING&nbsp;
+                        <ViewIcon />
+                      </>
+                    )}
                   </IconButton>
                 </Tooltip>
+
                 <div className="game-info-panel">
-                  <div className={`rps-radio-host ${this.props.is_betting || this.props.betting ? 'blueish-hue' : ''}`} style={{ top: "25px", right: "25px", boxShadow: "0px 0 5px 0px #ffc107", background: "radial-gradient(#ffd000, rgb(255, 0, 0, 0.2)", position: "absolute", width: "12.5px", height: "12.5px", borderRadius: "50%" }}>
-                    <span className='result' style={{ display: (!startedPlaying) ? 'none' : 'flex' }}>
+                  <div
+                    className={`rps-radio-host ${this.props.is_betting || this.props.betting
+                        ? 'blueish-hue'
+                        : ''
+                      }`}
+                    style={{
+                      top: '25px',
+                      right: '25px',
+                      position: 'absolute',
+                      width: '12.5px',
+                      height: '12.5px',
+                      borderRadius: '50%'
+                    }}
+                  >
+                    <span
+                      className="result"
+                      style={{ display: !startedPlaying ? 'none' : 'flex' }}
+                    >
                       {this.props.result !== '' ? (
                         <>
                           {this.props.result}
                           {this.props.betting && (
-
-                            <div className='lottie-pressHold'>
+                            <div className="lottie-pressHold">
                               <Lottie
                                 options={{
                                   loop: isLowGraphics ? false : true,
@@ -906,7 +1032,14 @@ class QuickShoot extends Component {
                                 }}
                                 style={{
                                   position: 'relative',
-                                  filter: `hue-rotate(${this.props.gameResult === -1 ? 0 : (this.props.gameResult === 0 ? 195 : (this.props.gameResult === 1 ? 80 : 20))}deg)`
+                                  filter: `hue-rotate(${this.props.gameResult === -1
+                                      ? 0
+                                      : this.props.gameResult === 0
+                                        ? 195
+                                        : this.props.gameResult === 1
+                                          ? 80
+                                          : 20
+                                    }deg)`
                                 }}
                               />
                             </div>
@@ -914,94 +1047,90 @@ class QuickShoot extends Component {
                         </>
                       ) : (
                         <>
-                          <span><FontAwesomeIcon icon={faBrain} />&nbsp;<span className='desktop-only'>thinking...</span></span>
-                          <div className='lottie-progress'>
+                          <span>
+                            <FontAwesomeIcon icon={faBrain} />
+                            &nbsp;<span className="desktop-only">thinking...</span>
+                          </span>
+                          <div className="lottie-progress">
                             <Lottie
                               options={{
                                 loop: isLowGraphics ? false : true,
                                 autoplay: isLowGraphics ? false : true,
                                 animationData: progress
                               }}
-                              style={{
-                                position: 'relative',
-                              }}
+                              style={{ position: 'relative' }}
                             />
                           </div>
                         </>
                       )}
                     </span>
                   </div>
-                  {!startedPlaying &&
-                    <h3 className="game-sub-title roll-tag">Choose WHERE TO SHOOT &nbsp;<Tooltip
-                      style={{ position: "absolute", right: "20px", marginBottom: "30px" }}
-                      title={'Play against the AI, at the same time, train your AI.'}
-                      placement="top"
-                    >
-                      <Info style={{ cursor: "pointer", float: "right" }} />
-                    </Tooltip></h3>
-                  }
 
-                  <div
-                    className="qs-image-panel"
-                  >
+                  {!startedPlaying && (
+                    <h3 className="game-sub-title roll-tag">
+                      Choose WHERE TO SHOOT &nbsp;
+                      <Tooltip
+                        style={{ position: 'absolute', right: '20px', marginBottom: '30px' }}
+                        title={'Play against the AI, at the same time, train your AI.'}
+                        placement="top"
+                      >
+                        <Info
+                          style={{
+                            cursor: 'pointer',
+                            float: 'right'
+                          }}
+                        />
+                      </Tooltip>
+                    </h3>
+                  )}
 
+                  <div className="qs-image-panel">
                     <img
                       src={`/img/gametype/quick_shoot/gametype${qs_game_type}/type${qs_game_type}-${position_short_name[selected_qs_position]}.png`}
                       alt=""
                       style={{
                         width: '600px',
                         maxWidth: '100%',
-                        borderRadius: '10px',
+                        borderRadius: '0.3em',
                         border: `3px solid ${borderColor}`,
-                        boxShadow: `0 0 20px ${borderColor}`,
-                        opacity: '0.5',
                         height: '238px'
                       }}
                     />
 
                     {this.props.result !== '' && (
-
-                      <div
-                        id="cat-football"
-                      >
-
+                      <div id="cat-football">
                         <Lottie
                           options={{
                             loop: true,
                             autoplay: true,
                             animationData: football
                           }}
-                          style={{ transform: 'translate(15px, 60px)', width: '100px', }}
+                          style={{ transform: 'translate(15px, 60px)', width: '100px' }}
                         />
                       </div>
                     )}
-                    {this.props.result !== '' && (
-                      <>
-                        {this.state.animation}
-                      </>
-                    )}
+                    {this.props.result !== '' && <>{this.state.animation}</>}
 
                     {this.renderButtons()}
                   </div>
 
-
-                  {creator_id && user_id && creator_id.toString() === user_id.toString() ? (
-                    <div className='host-controls'>
+                  {creator_id &&
+                    user_id &&
+                    creator_id.toString() === user_id.toString() ? (
+                    <div className="host-controls">
                       <Button
-                        variant='outlined'
-                        color='secondary'
+                        variant="outlined"
+                        color="secondary"
                         onClick={this.handleBotClick}
                         className="hover-text-button"
                       >
                         <FontAwesomeIcon className="button-icon" icon={faRobot} />
-                        <span className="button-text">&nbsp;CALL BOT? [{botsCount}]</span>
+                        <span className="button-text">
+                          &nbsp;CALL BOT? [{botsCount}]
+                        </span>
                       </Button>
                       {botsCount > 0 && (
-
-                        <Button
-                          onClick={this.bootBots}
-                          className="hover-text-button"
-                        >
+                        <Button onClick={this.bootBots} className="hover-text-button">
                           <FontAwesomeIcon className="button-icon" icon={faBan} />
                           <span className="button-text">&nbsp;KICK BOTS?</span>
                         </Button>
@@ -1009,7 +1138,6 @@ class QuickShoot extends Component {
                     </div>
                   ) : (
                     <>
-
                       {this.props.is_mobile && (
                         <AiPanel
                           qsbetitems={this.props.qsbetitems}
@@ -1034,22 +1162,20 @@ class QuickShoot extends Component {
                         />
                       )}
                     </>
-
                   )}
                 </div>
               </>
-
             ) : (
-              <span style={{ color: "#ff0000" }}>THIS GAME HAS ENDED</span>
+              <span style={{ color: '#ff0000' }}>THIS GAME HAS ENDED</span>
             )}
           </div>
         </div>
-      </div >
+      </div>
     );
   }
 }
 
-const mapStateToProps = state => ({
+const mapStateToProps = (state) => ({
   socket: state.auth.socket,
   isAuthenticated: state.auth.isAuthenticated,
   isPasswordCorrect: state.snackbar.isPasswordCorrect,
@@ -1058,7 +1184,6 @@ const mapStateToProps = state => ({
   isWatching: state.auth.isWatching,
   is_betting: state.logic.is_betting,
   solPrice: state.logic.solPrice,
-  balance: state.auth.balance,
   creator: state.logic.curRoomInfo.creator_name,
   creator_avatar: state.logic.curRoomInfo.creator_avatar,
   rank: state.logic.curRoomInfo.rank,
@@ -1075,6 +1200,7 @@ const mapDispatchToProps = {
   getQsBetItems,
   updateRoomBot,
   kickBots,
-  setSpectateMode,
+  setSpectateMode
 };
+
 export default connect(mapStateToProps, mapDispatchToProps)(QuickShoot);

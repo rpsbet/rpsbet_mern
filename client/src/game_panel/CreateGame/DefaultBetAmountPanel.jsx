@@ -4,6 +4,7 @@ import { Box, ButtonGroup, Button, Tooltip, TextField } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { Info } from '@mui/icons-material';
 import { convertToCurrency } from '../../util/conversion';
+import { getCustomTheme } from '../../config/theme';
 
 const DefaultBetAmountPanel = ({
   bet_amount,
@@ -19,40 +20,7 @@ const DefaultBetAmountPanel = ({
   const [isFocused, setIsFocused] = useState(false);
   const [isOther, setIsOther] = useState(false);
 
-  const theme = createTheme({
-    components: {
-      MuiInputLabel: { // Adjusting label styles
-        styleOverrides: {
-          root: {
-            color: isDarkMode ? 'white' : '#666', // Ensures label color
-          }
-        }
-      },
-      MuiOutlinedInput: { // Adjusting input field styles
-        styleOverrides: {
-          root: {
-            backgroundColor: isDarkMode ? '#2b2b2b' : 'white',
-            '& fieldset': {
-              borderColor: isDarkMode ? 'white' : '#666',
-            },
-            '&:hover fieldset': {
-              borderColor: isDarkMode ? 'white' : '#4caf50',
-            },
-            '&.Mui-focused fieldset': {
-              borderColor: isDarkMode ? '#4caf50' : '#4caf50',
-            },
-          },
-          input: {
-            color: isDarkMode ? 'white' : 'black', // Ensures input text color
-          }
-        }
-      }
-    },
-    palette: {
-      mode: isDarkMode ? 'dark' : 'light',
-    }
-  });
-
+  const theme = getCustomTheme(isDarkMode);
 
   const images = [
     '/img/icons/coins-xs.svg',

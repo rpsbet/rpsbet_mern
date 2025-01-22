@@ -1,89 +1,108 @@
 import React, { useState } from 'react';
 import { connect } from 'react-redux';
-import { Button } from '@mui/material';
-import Modal from 'react-modal';
-import BankPage from '../../admin_panel/app/ProductPages/ProductSerchPage/BankPage';
-import { Help } from '@mui/icons-material';
-import MyLoansModal from '../modal/MyLoansModal';
-import AttachMoney from '@mui/icons-material/AttachMoney';
-import { warningMsgBar, infoMsgBar } from '../../redux/Notification/notification.actions';
+import {
+  Modal,
+  Box,
+  Button,
+  Typography,
+  IconButton
+} from '@mui/material';
+import { Help, AttachMoney } from '@mui/icons-material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCoins, faAdjust } from '@fortawesome/free-solid-svg-icons';
 
-Modal.setAppElement('#root');
+import BankPage from '../../admin_panel/app/ProductPages/ProductSerchPage/BankPage';
+import MyLoansModal from '../modal/MyLoansModal';
+import { warningMsgBar, infoMsgBar } from '../../redux/Notification/notification.actions';
 
-const customStyles = {
-  overlay: {
-    zIndex: 3,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-  },
-  content: {
-    top: '50%',
-    left: '50%',
-    right: 'auto',
-    bottom: 'auto',
-    transform: 'translate(-50%, -50%)',
-    background: 'transparent',
-    padding: 0,
-    border: 'none',
-  },
-};
-
-const BankModal = ({ modalIsOpen, closeModal, isDarkMode, remainingLoans }) => {
+function BankModal({ modalIsOpen, closeModal, isDarkMode, remainingLoans }) {
   const [showMyLoansModal, setShowMyLoansModal] = useState(false);
-  const [showPopup, setShowPopup] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const [invertFilter, setInvertFilter] = useState(false);
 
-  const togglePopup = () => setShowPopup(!showPopup);
-  const toggleInvertFilter = () => setInvertFilter(!invertFilter);
+  const handleToggleHelp = () => setShowHelp((prev) => !prev);
+  const handleToggleInvert = () => setInvertFilter((prev) => !prev);
 
   return (
-    <Modal
-      isOpen={modalIsOpen}
-      onRequestClose={closeModal}
-      style={customStyles}
-      contentLabel="CENTRAL BANK Modal"
-    >
-      <div className={`${isDarkMode ? 'dark_mode' : ''} big-modal`}>
-        <div className="modal-header">
-          <h2 className="modal-title title">
-            <FontAwesomeIcon icon={faCoins} className="mr-2" />
-            CENTRAL BANK
-          </h2>
-          <Button
-            className="btn-close" variant='text' color='error'
-            onClick={closeModal}
+    <>
+      {/* MAIN BANK MODAL */}
+      <Modal
+        open={modalIsOpen}
+        onClose={closeModal}
+        closeAfterTransition
+        BackdropProps={{
+          style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' }
+        }}
+      >
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            bgcolor: isDarkMode ? '#400068' : '#fff',
+            color: isDarkMode ? '#fff' : '#000',
+            width: '80vw',
+            maxWidth: 600,
+            maxHeight: '80vh',
+            overflowY: 'auto',
+            borderRadius: '0.3em',
+            p: 3,
+            boxShadow: 24
+          }}
+        >
+          {/* Header */}
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              mb: 2
+            }}
           >
-            ×
-          </Button>
-        </div>
+            <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <FontAwesomeIcon icon={faCoins} />
+              CENTRAL BANK
+            </Typography>
+            <Button variant="text" color="error" onClick={closeModal} sx={{ fontSize: '1.25rem' }}>
+              ×
+            </Button>
+          </Box>
 
-        <div className="modal-body edit-modal-body banking-modal-body">
-          <div className="modal-content-wrapper">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h1 className="modal-title title">PRIVATE LENDERS</h1>
-              <div style={{ width: '50%', textAlign: 'right', padding: '20px' }}>
-                <span>HELP</span>&nbsp;
-                <Help
-                  style={{ width: '16', marginTop: '-3px', cursor: 'pointer' }}
-                  onClick={togglePopup}
-                />
-              </div>
-            </div>
+          {/* Body */}
+          <Box sx={{ mb: 2 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                mb: 2
+              }}
+            >
+              <Typography variant="h5">PRIVATE LENDERS</Typography>
+              <IconButton onClick={handleToggleHelp}>
+                <Help />
+              </IconButton>
+            </Box>
 
-            <div className="modal-content-panel">
-              <BankPage itemType="loanType" sortCriteria="sortCriteria" />
-            </div>
-          </div>
-        </div>
+            <BankPage itemType="loanType" sortCriteria="sortCriteria" />
+          </Box>
 
-        <div className="modal-footer">
-          <Button variant='contained' color='secondary' onClick={() => setShowMyLoansModal(true)}>
-            Manage Your Loans&nbsp; <AttachMoney />
-          </Button>
-        </div>
-      </div>
+          {/* Footer */}
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <Button
+              variant="contained"
+              color="secondary"
+              onClick={() => setShowMyLoansModal(true)}
+              startIcon={<AttachMoney />}
+            >
+              Manage Your Loans
+            </Button>
+          </Box>
+        </Box>
+      </Modal>
 
+      {/* MY LOANS MODAL (still using your existing MyLoansModal) */}
       {showMyLoansModal && (
         <MyLoansModal
           modalIsOpen={showMyLoansModal}
@@ -92,113 +111,90 @@ const BankModal = ({ modalIsOpen, closeModal, isDarkMode, remainingLoans }) => {
         />
       )}
 
-      {showPopup && (
-        <div className={`${isDarkMode ? 'popup-overlay dark_mode' : 'popup-overlay'}`}>
-          <div className="popup title">
-            <h2 className="modal-title title" style={{ textAlign: 'center', marginBottom: '20px' }}>
+      {/* HELP POPUP AS A SECOND MUI MODAL */}
+      <Modal
+        open={showHelp}
+        onClose={handleToggleHelp}
+        closeAfterTransition
+        BackdropProps={{
+          style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' }
+        }}
+      >
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            bgcolor: isDarkMode ? '#333' : '#fff',
+            color: isDarkMode ? '#fff' : '#000',
+            width: '80vw',
+            maxWidth: 600,
+            maxHeight: '80vh',
+            overflowY: 'auto',
+            borderRadius: '0.3em',
+            p: 3,
+            boxShadow: 24
+          }}
+        >
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+            <Typography variant="h6" sx={{ textAlign: 'center', width: '100%' }}>
               Loan Information
-            </h2>
-            <div className="popup-content">
-              <div style={{ position: 'relative' }}>
-                <img
-                  src="../img/loans.svg"
-                  style={{
-                    borderRadius: '20px',
-                    border: '1px solid #aaa9',
-                    overflow: 'hidden',
-                    filter: invertFilter ? 'invert(1)' : 'none',
-                  }}
-                  alt="Loans"
-                />
-                <Button
-                  onClick={toggleInvertFilter}
-                  style={{
-                    position: 'absolute',
-                    bottom: '10px',
-                    right: '10px',
-                    borderRadius: '100px',
-                    padding: '0',
-                  }}
-                >
-                  <FontAwesomeIcon icon={faAdjust} />
-                </Button>
-              </div>
-              <h3
-                style={{
-                  fontSize: '24px',
-                  fontWeight: '600',
-                  marginBottom: '15px',
-                  textAlign: 'center',
-                  letterSpacing: '0.5px',
-                }}
-              >
-                Central Bank Overview
-              </h3>
-              <p
-                style={{
-                  fontSize: '16px',
-                  lineHeight: '1.6',
-                  marginBottom: '15px',
-                  textAlign: 'justify',
-                  padding: '0 20px',
-                }}
-              >
-                The central bank is funded by private lenders, A.K.A Peer-to-peer lending (P2P). P2P
-                lending connects borrowers directly with investors.
-              </p>
-              <h3
-                style={{
-                  fontSize: '24px',
-                  fontWeight: '600',
-                  marginTop: '30px',
-                  marginBottom: '15px',
-                  textAlign: 'center',
-                  letterSpacing: '0.5px',
-                }}
-              >
-                Definitions
-              </h3>
-              <h4
-                style={{
-                  fontSize: '20px',
-                  fontWeight: '600',
-                  color: '#16e100',
-                  marginBottom: '10px',
-                  padding: '0 20px',
-                }}
-              >
-                Fractional Reserve Banking
-              </h4>
-              <p
-                style={{
-                  fontSize: '16px',
-                  lineHeight: '1.6',
-                  marginBottom: '15px',
-                  textAlign: 'justify',
-                  padding: '0 20px',
-                }}
-              >
-                Fractional Reserve Banking is a system in which only a fraction of bank deposits are
-                backed by actual cash on hand and available for withdrawal. The remainder is lent out
-                to borrowers.
-              </p>
+            </Typography>
+            <Button variant="text" color="error" onClick={handleToggleHelp} sx={{ fontSize: '1.25rem' }}>
+              ×
+            </Button>
+          </Box>
 
-              <Button
-                style={{ display: 'block', margin: 'auto' }}
-                onClick={togglePopup}
+          <Box sx={{ textAlign: 'center' }}>
+            <Box sx={{ position: 'relative', display: 'inline-block', mb: 2 }}>
+              <img
+                src="../img/loans.svg"
+                alt="Loans"
+                style={{
+                  borderRadius: 1,
+                  filter: invertFilter ? 'invert(1)' : 'none'
+                }}
+              />
+              <IconButton
+                sx={{ position: 'absolute', bottom: 8, right: 8 }}
+                onClick={handleToggleInvert}
               >
-                OK, GOT IT!
-              </Button>
-            </div>
-            <button className="popup-close" onClick={togglePopup}>
-              &times;
-            </button>
-          </div>
-        </div>
-      )}
-    </Modal>
+                <FontAwesomeIcon icon={faAdjust} />
+              </IconButton>
+            </Box>
+          </Box>
+
+          <Typography variant="h5" align="center" sx={{ mb: 2 }}>
+            Central Bank Overview
+          </Typography>
+          <Typography variant="body1" sx={{ mb: 2 }}>
+            The central bank is funded by private lenders, A.K.A Peer-to-peer (P2P) lending.
+            P2P lending connects borrowers directly with investors.
+          </Typography>
+
+          <Typography variant="h5" align="center" sx={{ mt: 2, mb: 1 }}>
+            Definitions
+          </Typography>
+          <Typography variant="h6" sx={{ color: '#16e100', mb: 1 }}>
+            Fractional Reserve Banking
+          </Typography>
+          <Typography variant="body1" sx={{ mb: 2 }}>
+            Fractional Reserve Banking is a system in which only a fraction of bank deposits are
+            backed by actual cash on hand and available for withdrawal. The remainder is lent out
+            to borrowers.
+          </Typography>
+
+          <Box sx={{ textAlign: 'center' }}>
+            <Button variant="contained" color="secondary" onClick={handleToggleHelp}>
+              OK, GOT IT!
+            </Button>
+          </Box>
+        </Box>
+      </Modal>
+    </>
   );
-};
+}
 
 const mapStateToProps = (state) => ({
   isDarkMode: state.auth.isDarkMode,

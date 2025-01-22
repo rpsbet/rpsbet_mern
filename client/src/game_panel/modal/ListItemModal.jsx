@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
-import Modal from 'react-modal';
 import { connect } from 'react-redux';
-import { closeListItemModal } from '../../redux/Notification/notification.actions';
-import { listItem } from '../../redux/Logic/logic.actions';
+import {
+  closeListItemModal
+} from '../../redux/Notification/notification.actions';
+import {
+  listItem
+} from '../../redux/Logic/logic.actions';
 import {
   Button,
   TextField,
@@ -10,27 +13,12 @@ import {
   RadioGroup,
   FormControlLabel,
   InputAdornment,
+  Modal,
+  Box,
+  Typography
 } from '@mui/material';
+
 import { alertModal } from './ConfirmAlerts';
-
-Modal.setAppElement('#root');
-
-const customStyles = {
-  overlay: {
-    zIndex: 3,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-  },
-  content: {
-    top: '50%',
-    left: '50%',
-    right: 'auto',
-    bottom: 'auto',
-    transform: 'translate(-50%, -50%)',
-    padding: 0,
-    background: 'transparent',
-    border: 'none',
-  },
-};
 
 function ListItemModal(props) {
   const {
@@ -41,47 +29,68 @@ function ListItemModal(props) {
     oldRentOption,
     productName,
     itemType,
+    item,
     closeListItemModal,
-    listItem, // from mapDispatchToProps
+    listItem  // from mapDispatchToProps
   } = props;
 
   const [price, setPrice] = useState(0);
   const [rentOption, setRentOption] = useState(false);
   const [showOverrideConfirmation, setShowOverrideConfirmation] = useState(false);
 
+  // ------------------------------
+  // MUI Modal Styles
+  // ------------------------------
+  const modalBoxStyle = {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    bgcolor: '#400068',  // Purple background
+    color: '#fff',
+    boxShadow: 24,
+    borderRadius: 1,
+    p: 3,
+    width: 400,
+    maxWidth: '90vw',
+    maxHeight: '90vh',
+    overflowY: 'auto'
+  };
+
   const onBtnOkClicked = () => {
-    // Check if item is already on sale and price/rentOption changed
+    // If item is already on sale and the user changes the price or rent option
     if (onSale > 0 && (price !== oldPrice || rentOption !== oldRentOption)) {
-      // Show custom confirmation modal
       setShowOverrideConfirmation(true);
     } else {
-      // Otherwise, proceed with listing
+      // Otherwise, proceed directly
       handleListItem();
     }
   };
 
-  const handleOverrideConfirmation = async () => {
-    closeListItemModal();
-    handleListItem();
+  const handleListItem = async () => {
+    try {
+      const response = await listItem({
+        item_id: item,
+        price: price,
+        rentOption: rentOption
+      });
+
+      if (response.success) {
+        alertModal(isDarkMode, response.message, '-cat');
+        closeListItemModal();
+        setShowOverrideConfirmation(false);
+      } else {
+        alertModal(isDarkMode, response.message);
+      }
+    } catch (error) {
+      console.error('Error listing item:', error);
+      alertModal(isDarkMode, 'Failed to list the item.');
+    }
   };
 
-  const handleListItem = async () => {
-    // 'item' prop contains the item ID from mapStateToProps
-    const { item } = props;
-
-    const response = await listItem({
-      item_id: item,
-      price: price,
-      rentOption: rentOption,
-    });
-    if (response.success) {
-      const { message } = response;
-      closeListItemModal();
-      alertModal(isDarkMode, message, '-cat');
-      setShowOverrideConfirmation(false);
-    } else {
-      alertModal(isDarkMode, response.message);
-    }
+  const handleOverrideConfirmation = () => {
+    closeListItemModal();
+    handleListItem();
   };
 
   const onBtnCancelClicked = () => {
@@ -94,112 +103,134 @@ function ListItemModal(props) {
 
   return (
     <>
-      {/* Main Modal */}
-      <Modal isOpen={isOpen} style={customStyles}>
-        <div className={isDarkMode ? 'dark_mode' : ''}>
-          <div className="modal-body alert-body password-modal-body">
-            <div className="modal-icon result-icon-trade"></div>
-            <h5>
-              CONFIRM{' '}
-              <span style={{ color: '#ffd000' }}>{productName}</span> LISTING
-            </h5>
+      {/* Main "List Item" Modal */}
+      <Modal
+        open={isOpen}
+        onClose={closeListItemModal}
+        sx={{ zIndex: 1300 }}
+        BackdropProps={{
+          style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' }
+        }}
+      >
+        <Box sx={modalBoxStyle}>
+          <Typography
+            variant="h6"
+            sx={{ textAlign: 'center', mb: 2, fontWeight: 'bold' }}
+          >
+            CONFIRM <span style={{ color: '#ffd000' }}>{productName}</span> LISTING
+          </Typography>
 
-            {itemType === '653ee81117c9f5ee2124564b' && (
-              <RadioGroup
-                aria-label="rentOption"
-                name="rentOption"
-                value={rentOption ? 'rent' : 'sell'}
-                onChange={handleRentOptionChange}
-                style={{
-                  marginBottom: '10px',
-                  display: 'flex',
-                  flexDirection: 'row',
-                  justifyContent: 'center',
-                }}
-              >
-                <FormControlLabel value="sell" control={<Radio />} label="SELL" />
-                &nbsp;&nbsp;&nbsp;
-                <FormControlLabel value="rent" control={<Radio />} label="RENT OUT" />
-              </RadioGroup>
-            )}
+          {/* If itemType matches, show RENT vs. SELL radio options */}
+          {itemType === '653ee81117c9f5ee2124564b' && (
+            <RadioGroup
+              aria-label="rentOption"
+              name="rentOption"
+              value={rentOption ? 'rent' : 'sell'}
+              onChange={handleRentOptionChange}
+              row
+              sx={{ justifyContent: 'center', mb: 2 }}
+            >
+              <FormControlLabel value="sell" control={<Radio />} label="SELL" />
+              <FormControlLabel value="rent" control={<Radio />} label="RENT OUT" />
+            </RadioGroup>
+          )}
 
-            {rentOption ? (
-               <TextField color="secondary" 
-                type="text"
-                name="rentPrice"
-                variant="filled"
-                id="rentPrice"
-                label="Rent price"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                placeholder="0.0002"
-                inputProps={{
-                  pattern: '^\\d*\\.?\\d*$',
-                  maxLength: 9,
-                }}
-                InputLabelProps={{
-                  shrink: true,
-                }}
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">&nbsp;RPS / MONTH</InputAdornment>
-                  ),
-                }}
-              />
-            ) : (
-               <TextField color="secondary" 
-                type="text"
-                name="price"
-                variant="filled"
-                id="price"
-                label="Set price"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                placeholder="0.0002"
-                inputProps={{
-                  pattern: '^\\d*\\.?\\d*$',
-                  maxLength: 9,
-                }}
-                InputLabelProps={{
-                  shrink: true,
-                }}
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">&nbsp;RPS</InputAdornment>
-                  ),
-                }}
-              />
-            )}
-          </div>
-          <div className="modal-footer">
-            <Button variant='contained' color='error' onClick={onBtnOkClicked}>
+          {rentOption ? (
+            <TextField
+              variant="filled"
+              color="secondary"
+              type="text"
+              label="Rent price"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              placeholder="0.0002"
+              inputProps={{
+                pattern: '^\\d*\\.?\\d*$',
+                maxLength: 9
+              }}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    &nbsp;RPS / MONTH
+                  </InputAdornment>
+                )
+              }}
+              sx={{ width: '100%', mb: 2 }}
+            />
+          ) : (
+            <TextField
+              variant="filled"
+              color="secondary"
+              type="text"
+              label="Set price"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              placeholder="0.0002"
+              inputProps={{
+                pattern: '^\\d*\\.?\\d*$',
+                maxLength: 9
+              }}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    &nbsp;RPS
+                  </InputAdornment>
+                )
+              }}
+              sx={{ width: '100%', mb: 2 }}
+            />
+          )}
+
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+            <Button variant="contained" color="error" onClick={onBtnOkClicked}>
               Confirm
             </Button>
-            <Button variant='contained' color='secondary' onClick={onBtnCancelClicked}>
+            <Button variant="contained" color="secondary" onClick={onBtnCancelClicked}>
               Cancel
             </Button>
-          </div>
-        </div>
+          </Box>
+        </Box>
       </Modal>
 
       {/* Override Confirmation Modal */}
-      <Modal isOpen={showOverrideConfirmation} style={customStyles}>
-        <div className={isDarkMode ? 'dark_mode' : ''}>
-          <div className="modal-body alert-body password-modal-body">
-            <div className="modal-icon result-icon-prize"></div>
-            <h5>
-              You have this item already listed but with different settings; click
-              confirm to override with these new settings
-            </h5>
-            <Button onClick={handleOverrideConfirmation}>Confirm</Button>
-            <Button onClick={() => setShowOverrideConfirmation(false)}>Cancel</Button>
-          </div>
-        </div>
+      <Modal
+        open={showOverrideConfirmation}
+        onClose={() => setShowOverrideConfirmation(false)}
+        sx={{ zIndex: 1300 }}
+        BackdropProps={{
+          style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' }
+        }}
+      >
+        <Box sx={modalBoxStyle}>
+          <Typography
+            variant="h6"
+            sx={{ textAlign: 'center', mb: 2, fontWeight: 'bold' }}
+          >
+            OVERRIDE PREVIOUS LISTING?
+          </Typography>
+          <Typography variant="body2" sx={{ mb: 3 }}>
+            You already have this item listed with different settings. Click "Confirm" to override
+            the previous listing.
+          </Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+            <Button variant="contained" onClick={handleOverrideConfirmation}>
+              Confirm
+            </Button>
+            <Button
+              variant="contained"
+              color="error"
+              onClick={() => setShowOverrideConfirmation(false)}
+            >
+              Cancel
+            </Button>
+          </Box>
+        </Box>
       </Modal>
     </>
   );
 }
 
+// -------------- REDUX --------------
 const mapStateToProps = (state) => ({
   isDarkMode: state.auth.isDarkMode,
   title: state.snackbar.title,
@@ -207,17 +238,14 @@ const mapStateToProps = (state) => ({
   itemType: state.itemReducer.data.item_type,
   isOpen: state.snackbar.showListItemModal,
   oldPrice: state.itemReducer.data.price,
-  isLowGraphics: state.auth.isLowGraphics,
   productName: state.itemReducer.data.productName,
   onSale: state.itemReducer.data.onSale,
-  oldRentOption: state.itemReducer.data.rentOption,
-  alertMessage: state.snackbar.alertMessage,
-  alertType: state.snackbar.alertType,
+  oldRentOption: state.itemReducer.data.rentOption
 });
 
 const mapDispatchToProps = {
   closeListItemModal,
-  listItem,
+  listItem
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(ListItemModal);

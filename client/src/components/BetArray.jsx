@@ -40,30 +40,7 @@ import Lottie from 'react-lottie';
 import animationData from '../game_panel/LottieAnimations/spinningIcon.json';
 import BetAmountInput from '../components/BetAmountInput.jsx';
 import SettingsRef from './SettingsRef';
-
-const theme = createTheme({
-  components: {
-    MuiTabs: {
-      styleOverrides: {
-        indicator: {
-          backgroundColor: '#ff0000',
-        },
-      },
-    },
-    MuiTooltip: {
-      styleOverrides: {
-        tooltip: {
-          backgroundColor: 'red',
-          color: 'white',
-          fontSize: '1em',
-          padding: '8px',
-        },
-      },
-    },
-    // Add other component overrides here if necessary
-  },
-});
-
+import { getCustomTheme } from '../config/theme';
 
 const defaultOptions = {
   loop: true,
@@ -88,12 +65,14 @@ const SideTabs = ({ selectedTab, handleTabChange }) => (
 );
 
 
-const PlaceholderComponent = ({ selectedTab, myGames, solPrice, updateQbot, handleTabChange, getMyGames, getQbot, ownRoom, user_id, totalWagered, game_type }) => {
+const PlaceholderComponent = ({ selectedTab, myGames, solPrice, updateQbot, handleTabChange, getMyGames, getQbot, ownRoom, user_id, totalWagered, isDarkMode }) => {
 
   const [betting, setBetting] = useState(false);
   const [rank, setRank] = useState(null);
   const [isActive, setIsActive] = useState(false);
   const [timerValue, setTimerValue] = useState(2000);
+  const theme = getCustomTheme(isDarkMode);
+
   const chartOptions = {
     chart: {
       type: 'line',
@@ -700,6 +679,7 @@ function BetArray({
     setAccumulativeProfit(calculatedProfit);
   }, [rpsbetitems, qsbetitems, game_type, qs_game_type]);
 
+  const theme = getCustomTheme(isDarkMode);
 
   const chartData = {
     options: {
@@ -863,6 +843,7 @@ function BetArray({
         ownRoom={false}
         user_id={user_id}
         solPrice={solPrice}
+        isDarkMode={isDarkMode}
         updateQbot={updateQbot}
         totalWagered={totalWagered}
         settingsRef={settingsRef}
@@ -931,7 +912,7 @@ function BetArray({
                       ? 'inset #28a745 0px 0px 6px 0px'
                       : 'inset #007bff 0px 0px 6px 0px'
                     : 'inset #ff0000 0px 0px 6px 0px',
-                  borderRadius: '0.3em',
+                  borderRadius: 1,
                   justifyContent: 'center',
                   padding: '5px 10px',
                   overflow: 'hidden',
@@ -1014,7 +995,7 @@ function BetArray({
                     alignItems: 'center',
                     width: '50%',
                     boxShadow: 'inset 0px 0px 6px 0px #b4b4b4a8',
-                    borderRadius: '0.3em',
+                    borderRadius: 1,
                     justifyContent: 'center',
                     padding: '5px 10px',
                     overflow: 'hidden',
@@ -1055,7 +1036,7 @@ function BetArray({
                     alignItems: 'center',
                     width: '50%',
                     boxShadow: 'inset 0px 0px 6px 0px #b4b4b4a8',
-                    borderRadius: '0.3em',
+                    borderRadius: 1,
                     justifyContent: 'center',
                     padding: '5px 10px',
                     overflow: 'hidden',
@@ -1081,7 +1062,7 @@ function BetArray({
                   <Tooltip title="CHANGE AI PLAY STRATEGY">
                     <IconButton
                       id="btn-rps-settings"
-                      sx={{ borderRadius: '0.5em' }}
+                      sx={{ borderRadius: 1 }}
                       onClick={handleSettingsIconClick}
                     >
                       <Typography sx={{ fontSize: '0.5em', marginRight: '2px' }}>EDIT</Typography>
@@ -1106,7 +1087,7 @@ function BetArray({
                         width: '100%',
                         textAlign: 'center',
                         boxShadow: 'inset 0px 0px 6px 0px #b4b4b4a8',
-                        borderRadius: '0.3em',
+                        borderRadius: 1,
                         padding: '5px 10px',
                         overflow: 'hidden',
                       }}
@@ -1127,7 +1108,7 @@ function BetArray({
                   alignItems: 'center',
                   width: '100%',
                   boxShadow: 'inset 0px 0px 6px 0px #b4b4b4a8',
-                  borderRadius: '0.3em',
+                  borderRadius: 1,
                   justifyContent: 'center',
                   padding: '5px 10px',
                   overflow: 'hidden',
@@ -1219,7 +1200,7 @@ function BetArray({
                     alignItems: 'center',
                     width: '100%',
                     boxShadow: 'inset 0px 0px 6px 0px #b4b4b4a8',
-                    borderRadius: '0.3em',
+                    borderRadius: 1,
                     justifyContent: 'center',
                     padding: '5px 10px',
                     overflow: 'hidden',
@@ -1354,7 +1335,7 @@ function BetArray({
                     sx={{
                       backgroundColor: isDarkMode ? '#424242' : '#fff',
                       padding: '20px',
-                      borderRadius: '5px',
+                      borderRadius: 1,
                       boxShadow: 24,
                       width: '300px',
                     }}
@@ -1362,7 +1343,7 @@ function BetArray({
                     <Typography id="edit-modal-title" variant="h6" component="h2" gutterBottom>
                       {modalTitle}
                     </Typography>
-                     <TextField color="secondary" 
+                    <TextField color="secondary"
                       label="EDIT VALUE"
                       value={editedValue}
                       onChange={(e) => setEditedValue(e.target.value)}
@@ -1457,7 +1438,7 @@ function BetArray({
                     sx={{
                       backgroundColor: isDarkMode ? '#424242' : '#fff',
                       padding: '20px',
-                      borderRadius: '5px',
+                      borderRadius: 1,
                       boxShadow: 24,
                       width: '300px',
                     }}
@@ -1465,7 +1446,7 @@ function BetArray({
                     <Typography id="edit-modal-title" variant="h6" component="h2" gutterBottom>
                       {modalTitle}
                     </Typography>
-                     <TextField color="secondary" 
+                    <TextField color="secondary"
                       label="EDIT VALUE"
                       value={editedValue}
                       onChange={(e) => setEditedValue(e.target.value)}

@@ -1,96 +1,151 @@
 import React from 'react';
-import Modal from 'react-modal';
-import { Button } from '@mui/material';
+import {
+  Modal,
+  Box,
+  Typography,
+  Button
+} from '@mui/material';
 
-Modal.setAppElement('#root');
-
-const customStyles = {
-  overlay: {
-    zIndex: 3,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-  },
-  content: {
+function TermsModal({ modalIsOpen, closeModal }) {
+  // MUI styles
+  const modalBoxStyle = {
+    position: 'absolute',
     top: '50%',
     left: '50%',
-    right: 'auto',
-    bottom: 'auto',
     transform: 'translate(-50%, -50%)',
-    background: 'transparent',
-    padding: 0,
-    border: 'none',
-  },
-};
+    bgcolor: '#400068',  // Purple background
+    color: '#fff',
+    boxShadow: 24,
+    borderRadius: 1,
+    p: 3,
+    width: 600,
+    maxWidth: '90vw',
+    maxHeight: '90vh',
+    overflowY: 'auto'
+  };
 
-const TermsModal = ({ modalIsOpen, closeModal, isDarkMode }) => {
   return (
     <Modal
-      isOpen={modalIsOpen}
-      onRequestClose={closeModal}
-      style={customStyles}
-      contentLabel="Terms Modal"
+      open={modalIsOpen}
+      onClose={closeModal}
+      sx={{ zIndex: 1300 }}
+      BackdropProps={{
+        style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' }
+      }}
     >
-      <div className={isDarkMode ? 'dark_mode' : ''}>
-        <div className="modal-header">
-          <h2 className="modal-title title">
-            Terms <span style={{ color: '#d81719' }}>RPS</span> <span style={{ color: '#ebddca' }}>Game</span>
-          </h2>
-          <Button className="btn-close" variant='text' color='error'  onClick={closeModal}>
-            ×
+      <Box sx={modalBoxStyle}>
+        {/* HEADER */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+          <Typography
+            variant="h6"
+            sx={{ display: 'flex', alignItems: 'center', fontWeight: 'bold' }}
+          >
+            Terms&nbsp;
+            <Typography
+              component="span"
+              sx={{ color: '#d81719', fontWeight: 'inherit' }}
+            >
+              RPS
+            </Typography>
+            &nbsp;
+            <Typography
+              component="span"
+              sx={{ color: '#ebddca', fontWeight: 'inherit' }}
+            >
+              Game
+            </Typography>
+          </Typography>
+          <Button variant="text" color="error" onClick={closeModal}>
+            X
           </Button>
-        </div>
-        <div className="modal-body edit-modal-body terms-modal-body">
-          <div>
-            <h2 className="title">Terms of Service</h2>
-            <br />
-            <h5>Last updated: 3rd January 2025</h5>
-            <br />
-            <h5>Welcome to RPS GAME!</h5>
-            <br />
-            These terms and conditions outline the rules and regulations for the use of RPS Game's site, located at rps.game. By accessing this site we assume you accept these terms and conditions. Do not continue to use RPS Game if you do not agree to take all of the terms and conditions stated on this page. 
-            <br />
-            <br />
-            <h5>1.0 General</h5>
-            <h5>1.1 Cookies</h5>
-            We employ the use of cookies. By accessing RPS Game, you agreed to use cookies in agreement with the RPS Game's Privacy Policy.
-            <br />
-            <br />
-            <h5>1.2 License</h5>
-            Unless otherwise stated, RPS Game and/or its licensors own the intellectual property rights for all material on RPS Game.
-            <br />
-            <br />
-            <h5>1.3 Hyperlinking to our Content</h5>
-            The following organizations may link to our site without prior written approval: government agencies, search engines, news organizations, and online directory distributors.
-            <br />
-            <br />
-            <h5>1.4 iFrames</h5>
-            Without prior approval and written permission, you may not create frames around our web pages that alter in any way the visual presentation or appearance of our site.
-            <br />
-            <br />
-            <h5>1.5 Content Liability</h5>
-            We shall not be held responsible for any content that appears on your site.
-            <br />
-            <br />
-            <h5>2.0 Your Dealings With Other Players</h5>
-            You are responsible for your interactions with other players. If you have a dispute with another player, you release RPS Game from responsibility, claims, demands, and/or damages.
-            <br />
-            <br />
-            <h5>3.0 Payment Terms</h5>
-            We provide a service in the form of holding payments between peers within a game of "Rock" - "Paper" - "Scissors".
-            <br />
-            <br />
-            <h5>Contact Us</h5>
-            If you have any questions about this Terms Policy, please contact <u>support@rps.game</u>.
-          </div>
+        </Box>
 
-          <h5 className="mt-3">For All Enquiries</h5>
-          <p>
-            For any technical/general problems, please contact{' '}
-            <u style={{ color: '#f5b22d' }}>support@rps.game</u>. We thank you for playing!
-          </p>
-        </div>
-      </div>
+        {/* BODY */}
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+            Terms of Service
+          </Typography>
+          <Typography variant="body2">
+            <strong>Last updated:</strong> 3rd January 2025
+          </Typography>
+          <Typography variant="h6" sx={{ mt: 1 }}>
+            Welcome to RPS GAME!
+          </Typography>
+          <Typography variant="body2" paragraph>
+            These terms and conditions outline the rules and regulations
+            for the use of RPS Game's site, located at rps.game.
+            By accessing this site we assume you accept these terms
+            and conditions. Do not continue to use RPS Game if you do
+            not agree to take all of the terms and conditions stated
+            on this page.
+          </Typography>
+
+          <Typography variant="h6">1.0 General</Typography>
+          <Typography variant="h6">1.1 Cookies</Typography>
+          <Typography variant="body2" paragraph>
+            We employ the use of cookies. By accessing RPS Game, you agreed
+            to use cookies in agreement with the RPS Game's Privacy Policy.
+          </Typography>
+
+          <Typography variant="h6">1.2 License</Typography>
+          <Typography variant="body2" paragraph>
+            Unless otherwise stated, RPS Game and/or its licensors own the
+            intellectual property rights for all material on RPS Game.
+          </Typography>
+
+          <Typography variant="h6">1.3 Hyperlinking to our Content</Typography>
+          <Typography variant="body2" paragraph>
+            The following organizations may link to our site without prior
+            written approval: government agencies, search engines, news
+            organizations, and online directory distributors.
+          </Typography>
+
+          <Typography variant="h6">1.4 iFrames</Typography>
+          <Typography variant="body2" paragraph>
+            Without prior approval and written permission, you may not create
+            frames around our web pages that alter in any way the visual
+            presentation or appearance of our site.
+          </Typography>
+
+          <Typography variant="h6">1.5 Content Liability</Typography>
+          <Typography variant="body2" paragraph>
+            We shall not be held responsible for any content that appears
+            on your site.
+          </Typography>
+
+          <Typography variant="h6">2.0 Your Dealings With Other Players</Typography>
+          <Typography variant="body2" paragraph>
+            You are responsible for your interactions with other players. If
+            you have a dispute with another player, you release RPS Game from
+            responsibility, claims, demands, and/or damages.
+          </Typography>
+
+          <Typography variant="h6">3.0 Payment Terms</Typography>
+          <Typography variant="body2" paragraph>
+            We provide a service in the form of holding payments between peers
+            within a game of "Rock" - "Paper" - "Scissors".
+          </Typography>
+
+          <Typography variant="h6">Contact Us</Typography>
+          <Typography variant="body2" paragraph>
+            If you have any questions about this Terms Policy, please contact
+            <strong> support@rps.game</strong>.
+          </Typography>
+
+          <Typography variant="h6" sx={{ mt: 2 }}>
+            For All Enquiries
+          </Typography>
+          <Typography variant="body2" paragraph>
+            For any technical/general problems, please contact&nbsp;
+            <Typography component="span" sx={{ color: '#f5b22d', textDecoration: 'underline' }}>
+              support@rps.game
+            </Typography>
+            . We thank you for playing!
+          </Typography>
+        </Box>
+      </Box>
     </Modal>
   );
-};
+}
 
 export default TermsModal;

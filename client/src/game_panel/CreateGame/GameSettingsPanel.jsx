@@ -82,10 +82,11 @@ const GameSettingsPanel = ({
           style={{
             boxShadow: 'unset',
             color: isDarkMode ? 'white' : 'inherit', // Conditional color
-            borderRadius: '30px',
+            borderRadius: 1,
             padding: '0 20px', // Added padding
             background: 'transparent',
             display: 'flex',
+            borderRadius: '0.3em',
             alignItems: 'center',
             justifyContent: 'center',
             transition: 'color 0.3s ease', // Smooth transition for color changes

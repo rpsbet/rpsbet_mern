@@ -96,7 +96,7 @@ const ProductCard = styled.div`
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.5);
-    border-radius: 20px;
+    border-radius: 1em;
     opacity: 0;
     transition: opacity 0.2s;
   }
@@ -189,7 +189,7 @@ const ProductImage = styled.img`
   background: #fff;
   border: 1px solid #f9f9;
   box-shadow: 0 1px 17px #333;
-  border-radius: 10px;
+  border-radius: 1em;
 `;
 
 const RentingLabel = styled.span`
@@ -199,7 +199,7 @@ const RentingLabel = styled.span`
   width: 80px; /* Adjust width as needed */
   height: 30px;
   background: ${({ isOwner }) => (isOwner ? 'linear-gradient(155deg, #cd81ff, #1976D2)' : 'linear-gradient(155deg, #f50057, #8a17d8)')};
-  border-radius: 10px;
+  border-radius: 1em;
   box-shadow: inset 0px -1px 11px ${({ isOwner }) => (isOwner ? '#1565C0' : '#9f3fb5')};
   color: #fff;
   font-weight: 500;
@@ -224,7 +224,7 @@ const PowerItem = styled.div`
 const PowerLabel = styled.span`
   width: 40px;
   height: 20px;
-  border-radius: 10px;
+  border-radius: 1em;
   color: #fff;
   font-weight: 500;
   padding-top: 2.5px;
@@ -249,7 +249,7 @@ const PercentageBar = styled.div`
   width: 100px;
   height: 10px;
   background: #e0e0e0;
-  border-radius: 5px;
+  border-radius: 1em;
   overflow: hidden;
 margin-top: 10px;
   &::before {

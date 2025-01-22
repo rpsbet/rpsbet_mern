@@ -92,7 +92,7 @@ function MyChat(props) {
 
 								{/* Skeleton for Button */}
 								<Box>
-									<Skeleton variant="rectangular" sx={{ width: 60, height: 30, borderRadius: '5px' }} />
+									<Skeleton variant="rectangular" sx={{ width: 60, height: 30, borderRadius: 1 }} />
 								</Box>
 							</Box>
 						))}

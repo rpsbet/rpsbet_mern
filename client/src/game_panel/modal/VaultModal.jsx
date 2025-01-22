@@ -1,12 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { connect } from 'react-redux';
-import Modal from 'react-modal';
-import { Box, Typography, Table, TableBody, TableRow, TableCell, Paper, Button, TextField } from '@mui/material';
+import {
+  Modal,
+  Box,
+  Typography,
+  Table,
+  TableBody,
+  TableRow,
+  TableCell,
+  Button,
+  TextField
+} from '@mui/material';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import MoneyOffIcon from '@mui/icons-material/MoneyOff';
 import { faLock } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import CountUp from 'react-countup';
+
 import {
   vaultDeposit,
   vaultWithdraw,
@@ -17,32 +27,10 @@ import {
 import { addNewTransaction } from '../../redux/Logic/logic.actions';
 import { convertToCurrency } from '../../util/conversion';
 import { alertModal } from './ConfirmAlerts';
+import history from '../../redux/history';
 
-Modal.setAppElement('#root');
-
-const customStyles = {
-  overlay: {
-    zIndex: 3,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-  },
-  content: {
-    top: '50%',
-    left: '50%',
-    right: 'auto',
-    bottom: 'auto',
-    transform: 'translate(-50%, -50%)',
-    background: 'transparent',
-    padding: 0,
-    border: 'none',
-  },
-};
-
-const modalContentStyles = {
-  padding: 2,
-  textAlign: 'center',
-};
-
-
+// Remove react-modal usage and .setAppElement()
+// MUI handles that internally.
 function VaultModal(props) {
   const {
     vaultBal: initialVaultBal,
@@ -54,23 +42,24 @@ function VaultModal(props) {
     vaultWithdraw,
     user,
     solPrice,
-    isDarkMode,
     setBalance,
-    addNewTransaction,
+    addNewTransaction
   } = props;
 
-  // Local state
+  // ------------------ LOCAL STATE ------------------
   const [vaultBal, setVaultBal] = useState(initialVaultBal);
   const [amount, setAmount] = useState('');
   const [animate, setAnimate] = useState(false);
   const [lastUpdatedBalance, setLastUpdatedBalance] = useState(0);
   const [isWithdraw, setIsWithdraw] = useState(false);
   const [loaded, setLoaded] = useState(false);
-  const [vaultTransactions, setVaultTransactions] = useState([]); // local copy
+  const [vaultTransactions, setVaultTransactions] = useState([]);
 
+  // ------------------ EFFECTS ------------------
   useEffect(() => {
+    // Fetch recent transactions right away
+    fetchRecentVaultTransactions();
     setAnimate(true);
-    fetchRecentVaultTransactions(); // Fetch recent transactions on mount
     // eslint-disable-next-line
   }, []);
 
@@ -82,166 +71,199 @@ function VaultModal(props) {
     setVaultTransactions(propVaultTransactions);
   }, [propVaultTransactions]);
 
+  // ------------------ HANDLERS ------------------
   const handleChange = (event) => {
     setAmount(event.target.value);
   };
 
   const handleDeposit = async () => {
-    if (amount) {
-      const amountParsed = parseFloat(amount);
+    if (!amount) return;
+    const amountParsed = parseFloat(amount);
 
-      if (
-        isNaN(amountParsed) ||
-        amountParsed <= 0 ||
-        amountParsed > user.balance
-      ) {
-        alertModal(isDarkMode, 'IM-PAW-SIBBLEEE, ENTER A VALID AMOUNT!');
-        return;
-      }
-
-      const result = await vaultDeposit(amount);
-      const newTransaction = result.newTransaction;
-
-      setVaultTransactions([newTransaction, ...vaultTransactions]);
-      setVaultBal(result.vaultBalance);
-      setLastUpdatedBalance(vaultBal);
-      setAmount('');
-      setIsWithdraw(false);
-      setLoaded(true);
-
-      setBalance(result.newBalance);
-      addNewTransaction(result.newTransaction);
+    // Basic validation
+    if (
+      isNaN(amountParsed) ||
+      amountParsed <= 0 ||
+      amountParsed > user.balance
+    ) {
+      alertModal(false, 'IM-PAW-SIBBLEEE, ENTER A VALID AMOUNT!');
+      return;
     }
+
+    const result = await vaultDeposit(amount);
+    const newTransaction = result.newTransaction;
+
+    // Update local state
+    setVaultTransactions([newTransaction, ...vaultTransactions]);
+    setVaultBal(result.vaultBalance);
+    setLastUpdatedBalance(vaultBal);
+    setAmount('');
+    setIsWithdraw(false);
+    setLoaded(true);
+
+    // Redux updates
+    setBalance(result.newBalance);
+    addNewTransaction(result.newTransaction);
   };
 
   const handleWithdraw = async () => {
-    if (amount) {
-      const amountParsed = parseFloat(amount);
+    if (!amount) return;
+    const amountParsed = parseFloat(amount);
 
-      if (isNaN(amountParsed) || amountParsed <= 0 || amountParsed > vaultBal) {
-        alertModal(isDarkMode, 'IM-PAW-SIBBLEEE, ENTER A VALID AMOUNT!');
-        return;
-      }
-
-      const result = await vaultWithdraw(amount);
-      const newTransaction = result.newTransaction;
-
-      setVaultTransactions([newTransaction, ...vaultTransactions]);
-      setVaultBal(result.vaultBalance);
-      setLastUpdatedBalance(vaultBal);
-      setAmount('');
-      setIsWithdraw(true);
-      setLoaded(true);
-
-      setBalance(result.newBalance);
-      addNewTransaction(result.newTransaction);
+    // Basic validation
+    if (isNaN(amountParsed) || amountParsed <= 0 || amountParsed > vaultBal) {
+      alertModal(false, 'IM-PAW-SIBBLEEE, ENTER A VALID AMOUNT!');
+      return;
     }
+
+    const result = await vaultWithdraw(amount);
+    const newTransaction = result.newTransaction;
+
+    // Update local state
+    setVaultTransactions([newTransaction, ...vaultTransactions]);
+    setVaultBal(result.vaultBalance);
+    setLastUpdatedBalance(vaultBal);
+    setAmount('');
+    setIsWithdraw(true);
+    setLoaded(true);
+
+    // Redux updates
+    setBalance(result.newBalance);
+    addNewTransaction(result.newTransaction);
   };
 
-  let balanceClass = '';
-  if (isWithdraw && loaded) {
-    balanceClass = 'red';
-  } else if (!isWithdraw && loaded) {
-    balanceClass = 'green';
-  }
+  // ------------------ STYLES (MUI) ------------------
+  const modalBoxStyle = {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    bgcolor: '#400068',  // same background color as your login modal
+    color: '#fff',
+    boxShadow: 24,
+    borderRadius: 1,
+    p: 3,
+    width: 500,
+    maxWidth: '90vw',
+    maxHeight: '90vh',
+    overflowY: 'auto'
+  };
 
+  // ------------------ RENDER ------------------
   return (
     <Modal
-      isOpen={modalIsOpen}
-      onRequestClose={closeModal}
-      style={customStyles}
-      contentLabel="Vault Modal"
+      open={modalIsOpen}
+      onClose={closeModal}
+      closeAfterTransition
+      sx={{ zIndex: 1300 }}
+      BackdropProps={{
+        style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' }
+      }}
     >
-      <div className={isDarkMode ? 'dark_mode' : ''}>
-        <div className="modal-header">
-          <h2 className="modal-title title">
-            <FontAwesomeIcon icon={faLock} className="mr-2" />
-            &nbsp;Vault
-          </h2>
-          <Button className="btn-close" variant='text' color='error' onClick={closeModal}>
-            ×
+      <Box sx={modalBoxStyle}>
+        {/* HEADER */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+          <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center' }}>
+            <FontAwesomeIcon icon={faLock} style={{ marginRight: 8 }} />
+            Vault
+          </Typography>
+          <Button variant="text" color="error" onClick={closeModal}>
+            X
           </Button>
-        </div>
-        <Box className="modal-body edit-modal-body">
-          <Box className="modal-content-wrapper">
-            <Box className="modal-content-panel" component={Paper} sx={modalContentStyles}>
-              <Typography className='title' variant="h5">Your Vault Balance</Typography>
-              <Typography variant="h4" id="vault-bal">
-                <CountUp
-                  start={0}
-                  end={vaultBal}
-                  duration={1.5}
-                  separator=","
-                  decimals={2}
-                  useEasing={true}
-                  useGrouping={true}
-                />{' '}
-                SOL (${(vaultBal * solPrice).toFixed(2)})
-              </Typography>
-              <TextField
-                color="secondary"
-                label="Enter Amount"
-                variant="outlined"
-                type="number"
-                value={amount}
-                onChange={handleChange}
-                fullWidth
-                sx={{ marginTop: 2, input: { color: '#3949ab' } }}  // Assuming original TextField color style
-              />
-            </Box>
-            <Box 
-            component={Paper}
-            >
-              <Typography className='title' variant="h5" sx={{ marginTop: 2 }}>Recent Transactions</Typography>
-              <Table
-               size="small" aria-label="a dense table"
-                sx={{
-                  borderRadius: '0.4em',
-                  overflow: 'hidden',
-                  marginTop: 1,
-                }}
-              >
-                <TableBody>
-                  {vaultTransactions.map((transaction, index) => (
+        </Box>
+
+        {/* BODY */}
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {/* Balance Section */}
+          <Box>
+            <Typography variant="h5" textAlign="center">
+              Your Vault Balance
+            </Typography>
+            <Typography variant="h4" textAlign="center">
+              <CountUp
+                start={0}
+                end={vaultBal}
+                duration={1.5}
+                separator=","
+                decimals={2}
+                useEasing={true}
+                useGrouping={true}
+              />{' '}
+              SOL (${(vaultBal * solPrice).toFixed(2)})
+            </Typography>
+
+            <TextField
+              color="secondary"
+              label="Enter Amount"
+              variant="outlined"
+              type="number"
+              value={amount}
+              onChange={handleChange}
+              fullWidth
+              sx={{ mt: 2 }}
+            />
+          </Box>
+
+          {/* Recent Transactions */}
+          <Box>
+            <Typography variant="h5" textAlign="center">
+              Recent Transactions
+            </Typography>
+            <Table size="small" sx={{ mt: 1 }}>
+              <TableBody>
+                {vaultTransactions.map((transaction, index) => {
+                  const isWithdrawal =
+                    transaction.description.includes('withdrawal');
+                  return (
                     <TableRow
                       key={index}
                       sx={{
-                        backgroundColor: transaction.description.includes('withdrawal') ? '#ffebee' : '#e8f5e9',  // Specific background color styling
+                        backgroundColor: isWithdrawal ? '#ffebee' : '#e8f5e9'
                       }}
                     >
-                      <TableCell>{transaction.description.includes('withdrawal') ? '-' : '+'}</TableCell>
-                      <TableCell>{convertToCurrency(transaction.amount, solPrice)}</TableCell>
-                      <TableCell>{new Date(transaction.created_at).toLocaleString()}</TableCell>
+                      <TableCell>{isWithdrawal ? '-' : '+'}</TableCell>
+                      <TableCell>
+                        {convertToCurrency(transaction.amount, solPrice)}
+                      </TableCell>
+                      <TableCell>
+                        {new Date(transaction.created_at).toLocaleString()}
+                      </TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </Box>
+                  );
+                })}
+              </TableBody>
+            </Table>
           </Box>
         </Box>
-        <div className="modal-footer">
+
+        {/* FOOTER (Deposit / Withdraw Buttons) */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
           <Button
-            variant='contained' color='success'
-            style={{ minWidth: '100px' }}
+            variant="contained"
+            color="success"
             onClick={handleDeposit}
+            startIcon={<AttachMoneyIcon />}
+            sx={{ minWidth: 120 }}
           >
-            Deposit &nbsp; <AttachMoneyIcon />
+            Deposit
           </Button>
           <Button
-            variant='contained' color='error'
-            style={{ minWidth: '100px' }}
+            variant="contained"
+            color="error"
             onClick={handleWithdraw}
+            startIcon={<MoneyOffIcon />}
+            sx={{ minWidth: 120 }}
           >
-            Withdraw &nbsp; <MoneyOffIcon />
+            Withdraw
           </Button>
-        </div>
-      </div>
+        </Box>
+      </Box>
     </Modal>
   );
 }
 
+// ------------------ REDUX CONNECT ------------------
 const mapStateToProps = (state) => ({
-  isDarkMode: state.auth.isDarkMode,
   user: state.auth.user,
   vaultTransactions: state.auth.vaultTransactions,
   solPrice: state.logic.solPrice,

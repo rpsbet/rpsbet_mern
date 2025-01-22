@@ -508,19 +508,19 @@ class MyGamesTable extends Component {
                 borderRadius: 5,
               },
               buttonClose: {
-                borderRadius: '0.3em',
+                borderRadius: 1,
                 color: isDarkMode ? '#f9f9f9' : '#333',
               },
               buttonBack: {
-                borderRadius: '0.3em',
+                borderRadius: 1,
                 color: isDarkMode ? '#f9f9f9' : '#333',
               },
               buttonNext: {
-                borderRadius: '0.3em',
+                borderRadius: 1,
                 color: isDarkMode ? '#f9f9f9' : '#333',
               },
               buttonSkip: {
-                borderRadius: '0.3em',
+                borderRadius: 1,
                 color: isDarkMode ? '#f9f9f9' : '#333',
               },
             }}

@@ -74,7 +74,6 @@ import NotificationsOutlined from '@mui/icons-material/NotificationsOutlined';
 import Badge from '@mui/material/Badge';
 import Joyride from 'react-joyride';
 import { tutorialStepsMain } from '../util/tutorialStepsMain';
-import { token } from '../config/index.js';
 
 import {
   setSocket,
@@ -112,6 +111,9 @@ import AttachMoneyOutlined from '@mui/icons-material/AttachMoneyOutlined';
 import MoneyOffCsredOutlined from '@mui/icons-material/MoneyOffCsredOutlined';
 
 LoadingOverlay.propTypes = undefined;
+
+const token = 'BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump';
+
 
 const customTextFieldStyles = {
   MuiOutlinedInput: {
@@ -1123,9 +1125,8 @@ class SiteWrapper extends Component {
             }}
           >
             <img className="desktop-only" style={{ maxWidth: "150px", marginBottom: '60px' }} src="../img/dark-game-logo.svg" />
-
             <p style={{ textTransform: 'uppercase', color: "#fff" }}>GET RICH 💰 OR DIE 🩸 😼</p>
-            <div className="countdown" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '0.5em', height: '400px', overflow: 'hidden' }}>
+            <div className="countdown" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 1, height: '400px', overflow: 'hidden' }}>
               <div
                 className="countdown-side"
                 style={{
@@ -1213,7 +1214,7 @@ class SiteWrapper extends Component {
                     backgroundColor: 'rgb(98 3 172)',
                     color: '#fff',
                     border: 'none',
-                    borderRadius: '5px',
+                    borderRadius: 1,
                     cursor: 'pointer',
                   }}
                   onClick={this.handleCountdownButtonClick}
@@ -1239,7 +1240,6 @@ class SiteWrapper extends Component {
                 onMouseLeave={this.handleYoutubeLeave}
               >
                 <div style={{ width: "100%", display: "flex", justifyContent: "center", alignItems: "center" }}>
-
                   <img style={{ width: "400px", border: "3px solid rgb(98 3 172)", borderRadius: "12px" }} src="../img/giant-login-2.svg" />
                 </div>
 
@@ -1250,7 +1250,7 @@ class SiteWrapper extends Component {
                     backgroundColor: 'rgb(98 3 172)',
                     color: '#fff',
                     border: 'none',
-                    borderRadius: '5px',
+                    borderRadius: 1,
                     cursor: 'pointer',
                   }}
                   onClick={this.handleYoutubeButtonClick}
@@ -1465,7 +1465,7 @@ class SiteWrapper extends Component {
                           style={{
                             minWidth: "32px",
                             maxHeight: "33px",
-                            borderRadius: "0.25em",
+                            borderRadius: 1,
                           }}
                           onClick={e => {
                             e.preventDefault();
@@ -1555,6 +1555,7 @@ class SiteWrapper extends Component {
                         getContentAnchorEl={null}
                         open={Boolean(anchorElProfile)}
                         onClose={this.handleCloseProfileMenu}
+                        transitionDuration={0}
                         anchorOrigin={{
                           vertical: "bottom",
                           horizontal: "center",
@@ -1659,6 +1660,7 @@ class SiteWrapper extends Component {
                   open={anchorElNotifications}
                   anchorEl={anchorElNotifications}
                   onClose={this.handleCloseNotifications}
+                  transitionDuration={0}
                   anchorOrigin={{
                     vertical: 'bottom',
                     horizontal: 'center',
@@ -1748,6 +1750,7 @@ class SiteWrapper extends Component {
                   open={anchorElGameLog}
                   anchorEl={anchorElGameLog}
                   onClose={this.handleCloseGameLog}
+                  transitionDuration={0}
                   anchorOrigin={{
                     vertical: 'bottom',
                     horizontal: 'center',
@@ -2091,19 +2094,19 @@ class SiteWrapper extends Component {
               },
 
               buttonClose: {
-                borderRadius: '0.3em',
+                borderRadius: 1,
                 color: isDarkMode ? '#f9f9f9' : '#333',
               },
               buttonBack: {
-                borderRadius: '0.3em',
+                borderRadius: 1,
                 color: isDarkMode ? '#f9f9f9' : '#333',
               },
               buttonNext: {
-                borderRadius: '0.3em',
+                borderRadius: 1,
                 color: isDarkMode ? '#f9f9f9' : '#333',
               },
               buttonSkip: {
-                borderRadius: '0.3em',
+                borderRadius: 1,
                 color: isDarkMode ? '#f9f9f9' : '#333',
               },
 

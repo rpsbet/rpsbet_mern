@@ -3,6 +3,7 @@ import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { debounce } from 'lodash';
+import { getCustomTheme } from '../config/theme';
 
 export default function BetAmountInput(props) {
   const {
@@ -47,34 +48,8 @@ export default function BetAmountInput(props) {
     handleMaxButtonClick();
   };
 
-  const theme = createTheme({
-    overrides: {
-      MuiOutlinedInput: {
-        root: {
-          '& $notchedOutline': {
-            borderColor: 'gray',
-            transition: 'border-color 0.3s ease-in-out',
-          },
-          '&:hover $notchedOutline': {
-            borderColor: 'gray',
-          },
-          '&$focused $notchedOutline': {
-            borderColor: 'red',
-            boxShadow: '0 0 0 4px rgba(255, 0, 0, 0.3)',
-          },
-          '& input': {
-            color: isDarkMode ? 'white' : '#101010',
-            backgroundColor: '#10101011',
-          },
-        },
-      },
-      MuiFormLabel: {
-        root: {
-          color: isDarkMode ? 'white' : '#101010',
-        },
-      },
-    },
-  });
+  const theme = getCustomTheme(isDarkMode);
+
 
   return (
     <div

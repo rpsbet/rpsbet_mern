@@ -68,7 +68,7 @@ class RpsPriceChart extends Component {
       <>
         <div style={{ display: 'flex', justifyContent: 'center', padding: '20px' }}>
           <Card style={{ width: '100%', 
-                filter: !this.props.isDarkMode ? 'invert(1)' : 'none', borderRadius: '0.3em', boxShadow: '0px 4px 15px rgba(0, 0, 0, 0.15)', backgroundColor: 'unset', background: 'linear-gradient(-45deg, #3f51b5,  #6c0066)' }}>
+                filter: !this.props.isDarkMode ? 'invert(1)' : 'none', borderRadius: 1, boxShadow: '0px 4px 15px rgba(0, 0, 0, 0.15)', backgroundColor: 'unset', background: 'linear-gradient(-45deg, #3f51b5,  #6c0066)' }}>
             <CardContent
               style={{
                 textAlign: 'center',

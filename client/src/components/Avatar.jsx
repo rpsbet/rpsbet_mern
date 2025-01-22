@@ -169,7 +169,7 @@ function Avatar(props) {
             ? 'none'
             : isSystem
             ? 'none'
-            : `0 6px 20px 0px ${rankColor}`,
+            : `0 0px 2px 0px ${rankColor}`,
         }}
         onError={(e) => {
           e.target.src = darkMode
@@ -191,13 +191,8 @@ function Avatar(props) {
             width: '100%',
             height: '100%',
             zIndex: -1,
-            boxShadow: isBot
-              ? 'none'
-              : isSystem
-              ? 'none'
-              : `0 6px 20px 0px ${rankColor}, 0 0 5px ${shadedColor}`,
             boxSizing: 'border-box',
-            borderRadius: '0.3em', // Slightly rounded corners for background
+            borderRadius: 1, // Slightly rounded corners for background
           }}
         />
       )}
@@ -214,7 +209,7 @@ function Avatar(props) {
             height: '1.8em',
             backgroundColor: backgroundColorStyle,
             color: isDarkMode ? '#2d2d2d' : '#f9f9f9',
-            borderRadius: '5px', // Slightly rounded corners for the rank icon
+            borderRadius: 1, // Slightly rounded corners for the rank icon
             fontSize: '0.55em',
             fontWeight: 'bold',
             display: 'flex',

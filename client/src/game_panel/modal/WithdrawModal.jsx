@@ -1,9 +1,51 @@
 import React, { useState, useEffect } from 'react';
 import { connect } from 'react-redux';
 import LoadingOverlay from 'react-loading-overlay';
-import { setBalance, setGasfee } from '../../redux/Auth/user.actions';
-import { addNewTransaction } from '../../redux/Logic/logic.actions';
-import { getCustomerStatisticsData } from '../../redux/Customer/customer.action';
+import axios from '../../util/Api';
+import { alertModal } from '../modal/ConfirmAlerts';
+import { convertToCurrency } from '../../util/conversion';
+import {
+  setBalance,
+  setGasfee
+} from '../../redux/Auth/user.actions';
+import {
+  addNewTransaction
+} from '../../redux/Logic/logic.actions';
+import {
+  getCustomerStatisticsData
+} from '../../redux/Customer/customer.action';
+
+import {
+  Box,
+  Modal,
+  Button,
+  TextField,
+  Table,
+  TableBody,
+  TableRow,
+  TableCell,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
+  InputAdornment,
+  Tooltip,
+  IconButton,
+  Typography
+} from '@mui/material';
+
+import {
+  Warning,
+  Info,
+  Link,
+  FiberManualRecord,
+  AccountBalanceWallet,
+  CheckCircleOutline as CheckCircleOutlineIcon
+} from '@mui/icons-material';
+
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import QRCodeIcon from '@mui/icons-material/CropFreeOutlined';
+import WalletIcon from '@mui/icons-material/AccountBalanceWallet';
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faBolt,
@@ -12,90 +54,7 @@ import {
   faClock
 } from '@fortawesome/free-solid-svg-icons';
 
-import Modal from 'react-modal';
-import {
-  Button,
-  TextField,
-  Table,
-  TableBody,
-  TableRow,
-  TableCell,
-  IconButton,
-  RadioGroup,
-  Radio,
-  InputAdornment,
-  FormControlLabel,
-  Icon,
-  Tooltip,
-  Typography,
-  Box
-} from '@mui/material';
-import { Warning, Info, Link, FiberManualRecord, AccountBalanceWallet } from '@mui/icons-material';
-import QRCodeIcon from '@mui/icons-material/CropFreeOutlined';
-import WalletIcon from '@mui/icons-material/AccountBalanceWallet';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import axios from '../../util/Api';
-import { alertModal } from '../modal/ConfirmAlerts';
-import { convertToCurrency } from '../../util/conversion';
-import { styled } from '@mui/material/styles';
-import { token } from '../../config/index.js';
-
-Modal.setAppElement('#root');
-
-const customStyles = {
-  overlay: {
-    zIndex: 3,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-  },
-  content: {
-    top: '50%',
-    left: '50%',
-    right: 'auto',
-    bottom: 'auto',
-    transform: 'translate(-50%, -50%)',
-    padding: 0,
-    background: 'transparent',
-    border: 'none',
-  },
-};
-
-// Styled Components
-const Root = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  padding: theme.spacing(2),
-  backgroundColor: '#f9f9f9',
-  borderRadius: '8px',
-  boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
-}));
-
-const PaymentMethodContainer = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  marginBottom: theme.spacing(2),
-}));
-
-const RadioLabel = styled(Typography)(({ isDarkMode }) => ({
-  marginRight: '16px',
-  fontWeight: 'bold',
-  display: 'flex',
-  alignItems: 'center',
-  color: isDarkMode ? '#f9f9f9' : '#333',
-}));
-
-const LabelContainer = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  position: 'relative',
-}));
-
-const Description = styled(Typography)(({ theme }) => ({
-  marginTop: theme.spacing(2),
-  textAlign: 'center',
-  color: '#666',
-}));
-
+const token = 'BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump';
 
 function WithdrawModal(props) {
   const {
@@ -103,22 +62,19 @@ function WithdrawModal(props) {
     isDarkMode,
     gasfee,
     solPrice,
-    balance,       // from props, user's in-game token balance
-    account,       // from props, user's connected wallet account
+    balance,
+    account,
     modalIsOpen,
     closeModal,
     setBalance,
     setGasfee,
     addNewTransaction,
-    getCustomerStatisticsData,
+    getCustomerStatisticsData
   } = props;
 
-  // --------------------- Local States ---------------------
-  const [userId, setUserId] = useState(userInfo._id);
+  // ----------------- LOCAL STATE -----------------
+  const [amountToWithdraw, setAmountToWithdraw] = useState(0);
   const [web2Amount, setWeb2Amount] = useState(balance);
-  const [localBalance, setLocalBalance] = useState(balance);
-  const [isLoading, setIsLoading] = useState(false);
-  const [estimatedAmount, setEstimatedAmount] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState('web3');
   const [extraId, setExtraId] = useState('');
   const [validAddress, setValidAddress] = useState(true);
@@ -128,38 +84,55 @@ function WithdrawModal(props) {
   const [sendAddress, setSendAddress] = useState('');
   const [hoveredSuggestion, setHoveredSuggestion] = useState(null);
   const [suggestions, setSuggestions] = useState([]);
-  const [amountToWithdraw, setAmountToWithdraw] = useState(0);
+  const [estimatedAmount, setEstimatedAmount] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // --------------------- Lifecycle: componentDidMount ---------------------
+  // ----------------- EFFECTS -----------------
   useEffect(() => {
-    const init = async () => {
-      // Fetch user stats
-      await getCustomerStatisticsData(userId);
-      // Fetch supported currencies
+    async function init() {
+      // Fetch stats and currencies on mount
+      await getCustomerStatisticsData(userInfo._id);
       await handleGetPaymentMethods();
-    };
+    }
     init();
     // eslint-disable-next-line
   }, []);
 
-  // --------------------- Handlers & API Calls ---------------------
+  // ----------------- HANDLERS & API CALLS -----------------
   const handleGetPaymentMethods = async () => {
     try {
       const response = await axios.get('/stripe/get_currencies');
-      const fetchedCurrencies = response.data.currencies.map((c) => c.currency.toLowerCase());
+      const fetchedCurrencies = response.data.currencies.map((c) =>
+        c.currency.toLowerCase()
+      );
       setCurrencies(fetchedCurrencies);
     } catch (error) {
-      console.error('Error fetching deposit address:', error);
+      console.error('Error fetching currencies:', error);
     }
   };
 
-  const handleSuggestionMouseEnter = (suggestion) => {
-    setHoveredSuggestion(suggestion);
+  const handlePaymentMethodChange = (e) => {
+    const selected = e.target.value;
+    setPaymentMethod(selected);
+    if (selected === 'web3') {
+      // Force "sol" if user picks web3
+      setCurrencyTo('sol');
+    }
   };
 
-  const handleSuggestionMouseLeave = () => {
-    setHoveredSuggestion(null);
+  const setCurrency = (e) => {
+    const value = e.target.value;
+    const valid = currencies.includes(value.toLowerCase());
+    const filtered = currencies.filter((c) =>
+      c.toLowerCase().startsWith(value.toLowerCase())
+    );
+    setCurrencyTo(value);
+    setIsValidCurrency(valid);
+    setSuggestions(filtered);
   };
+
+  const handleSuggestionMouseEnter = (suggestion) => setHoveredSuggestion(suggestion);
+  const handleSuggestionMouseLeave = () => setHoveredSuggestion(null);
 
   const handleSuggestionClick = (suggestion) => {
     setCurrencyTo(suggestion);
@@ -167,21 +140,20 @@ function WithdrawModal(props) {
     setIsValidCurrency(true);
   };
 
-  const handleSendAddress = (event) => {
-    const value = event.target.value;
-    setSendAddress(value);
-    // Validate if currency is selected
+  const handleSendAddress = (e) => {
+    const val = e.target.value;
+    setSendAddress(val);
     if (currencyTo) {
-      validateAddress(value, currencyTo);
+      validateAddress(val, currencyTo);
     }
   };
 
-  const validateAddress = async (address, currency) => {
+  const validateAddress = async (addr, currency) => {
     try {
       setIsLoading(true);
       const response = await axios.post('/stripe/validate_address', {
-        sendAddress: address,
-        currencyTo: currency,
+        sendAddress: addr,
+        currencyTo: currency
       });
       setValidAddress(response.status === 200);
     } catch (error) {
@@ -192,92 +164,61 @@ function WithdrawModal(props) {
     }
   };
 
-  const handlePaymentMethodChange = (e) => {
-    const selectedPaymentMethod = e.target.value;
-    setPaymentMethod(selectedPaymentMethod);
-
-    if (selectedPaymentMethod === 'web3') {
-      // For demonstration, you might override currency to 'sol'
-      setCurrencyTo('sol');
-    }
-  };
+  const handleExtraId = (e) => setExtraId(e.target.value);
 
   const handleAmountChange = (e) => {
-    e.preventDefault();
-    const newAmount = Math.floor(e.target.value * 100) / 100;
-    setAmountToWithdraw(newAmount);
-    setWeb2Amount(newAmount - newAmount * 0.0088);
+    const val = Math.floor(e.target.value * 100) / 100;
+    setAmountToWithdraw(val);
+    setWeb2Amount(val - val * 0.0088);
 
-    // Prepare params for setting gas fee
-    const params = {
-      addressTo: account,
-      amount: newAmount,
-    };
+    const params = { addressTo: account, amount: val };
     setGasfee(params);
-    handleEstimateAmount(newAmount);
+
+    handleEstimateAmount(val);
   };
 
-  const handleExtraId = (e) => {
-    setExtraId(e.target.value);
-  };
-
-  const setCurrency = (event) => {
-    const value = event.target.value;
-    const valid = currencies.includes(value.toLowerCase());
-    const filteredSuggestions = currencies.filter((c) =>
-      c.toLowerCase().startsWith(value.toLowerCase())
-    );
-    setCurrencyTo(value);
-    setIsValidCurrency(valid);
-    setSuggestions(filteredSuggestions);
-  };
-
-  const handleEstimateAmount = async (newAmount) => {
+  const handleEstimateAmount = async (amt) => {
     try {
-      if (!newAmount) return;
-
+      if (!amt) return;
       let amountToSend = 0;
       if (paymentMethod === 'web2') {
         amountToSend = web2Amount;
       } else if (paymentMethod === 'web3') {
-        amountToSend = newAmount;
+        amountToSend = amt;
       }
-
       if (amountToSend === 0) return;
 
       const response = await axios.get('/stripe/estimate_amount', {
         params: {
           web2Amount: amountToSend,
           currencyTo,
-          token,
-        },
+          token
+        }
       });
       const estAmt = response.data.estimated_amount - gasfee;
       setEstimatedAmount(estAmt);
     } catch (error) {
-      // console.error('Error in estimating amount:', error);
+      console.error('Error estimating amount:', error);
     }
   };
 
+  // ----------------- WITHDRAW HANDLERS (WEB2 / WEB3) -----------------
   const createPayoutAndClose = async () => {
-    // Web2 Withdraw
+    // Daily, max, balance checks
     if (userInfo.dailyWithdrawals > 4.269) {
-      alertModal(
-        isDarkMode,
-        `EXCEEDED DAILY WITHDRAWAL LIMIT, TRY AGAIN TOMORROW! (WITHDRAWAL LIMITS DURING LAUNCH PHASE ONLY)`
-      );
+      alertModal(isDarkMode, 'EXCEEDED DAILY WITHDRAWAL LIMIT! (LAUNCH PHASE)');
       return;
     }
     if (amountToWithdraw <= 0) {
-      alertModal(isDarkMode, `IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!`);
+      alertModal(isDarkMode, 'ENTER A VALID NUMBER!');
       return;
     }
     if (amountToWithdraw >= 4.269) {
-      alertModal(isDarkMode, `MAXIMUM PER DAY IS 4.269 SOL DURING LAUNCH PHASE`);
+      alertModal(isDarkMode, 'MAX PER DAY IS 4.269 SOL DURING LAUNCH PHASE');
       return;
     }
     if (amountToWithdraw > balance) {
-      alertModal(isDarkMode, `NOT ENUFF FUNDS AT THIS MEOWMENT`);
+      alertModal(isDarkMode, 'NOT ENUFF FUNDS');
       return;
     }
 
@@ -287,7 +228,7 @@ function WithdrawModal(props) {
         amount: amountToWithdraw,
         currency: currencyTo,
         address: sendAddress,
-        extra_id: extraId,
+        extra_id: extraId
       });
 
       if (response.data.success) {
@@ -302,30 +243,27 @@ function WithdrawModal(props) {
       }
     } catch (error) {
       setIsLoading(false);
-      alertModal(isDarkMode, 'Something went wrong, try again later.');
+      alertModal(isDarkMode, 'Something went wrong.');
       console.error(error);
     }
   };
 
   const send = async () => {
-    // Web3 Withdraw
+    // Web3
     if (userInfo.dailyWithdrawals > 4.269) {
-      alertModal(
-        isDarkMode,
-        `EXCEEDED DAILY WITHDRAWAL LIMIT, TRY AGAIN TOMORROW! (WITHDRAWAL LIMITS DURING LAUNCH PHASE ONLY)`
-      );
+      alertModal(isDarkMode, 'EXCEEDED DAILY WITHDRAWAL LIMIT! (LAUNCH PHASE)');
       return;
     }
     if (amountToWithdraw <= 0) {
-      alertModal(isDarkMode, `IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!`);
+      alertModal(isDarkMode, 'ENTER A VALID NUMBER!');
       return;
     }
     if (amountToWithdraw >= 4.269) {
-      alertModal(isDarkMode, `MAXIMUM PER DAY IS 4.269 SOL DURING LAUNCH PHASE`);
+      alertModal(isDarkMode, 'MAX PER DAY IS 4.269 SOL DURING LAUNCH PHASE');
       return;
     }
     if (amountToWithdraw > balance) {
-      alertModal(isDarkMode, `NOT ENUFF FUNDS AT THIS MEOWMENT`);
+      alertModal(isDarkMode, 'NOT ENUFF FUNDS');
       return;
     }
 
@@ -333,7 +271,7 @@ function WithdrawModal(props) {
       setIsLoading(true);
       const result = await axios.post('/stripe/withdraw_request/', {
         amount: amountToWithdraw,
-        addressTo: account,
+        addressTo: account
       });
 
       if (result.data.success) {
@@ -341,8 +279,7 @@ function WithdrawModal(props) {
         setBalance(result.data.balance);
         addNewTransaction(result.data.newTransaction);
         setIsLoading(false);
-        // Optionally close modal after success
-        // closeModal();
+        // closeModal(); // Optional if you want to close after success
       } else {
         setIsLoading(false);
         alertModal(isDarkMode, result.data.message);
@@ -354,29 +291,49 @@ function WithdrawModal(props) {
     }
   };
 
-  // --------------------- Rendering ---------------------
+  // ----------------- RENDERING -----------------
   const isConnected = !!account;
-  let description = '';
+  let description = paymentMethod === 'web2'
+    ? 'Via Manual Transfer (50+ Cryptocurrencies supported)'
+    : 'Via Connect Wallet (Phantom recommended), SOL only, lowest fees';
 
-  switch (paymentMethod) {
-    case 'web2':
-      description = 'Via Manual Transfer (50+ Cryptocurrencies supported)';
-      break;
-    case 'web3':
-      description = 'Via Connect Wallet (Phantom Wallet recommended), SOL only, lowest fees';
-      break;
-    default:
-      description = '';
-  }
+  const modalBoxStyle = {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    bgcolor: '#400068', // Same purple background
+    color: '#fff',
+    boxShadow: 24,
+    borderRadius: 1,
+    p: 3,
+    width: 500,
+    maxWidth: '90vw',
+    maxHeight: '90vh',
+    overflowY: 'auto'
+  };
 
-  const disclaimerClass = paymentMethod === 'web2' ? 'disclaimer-web2' : 'disclaimer-web3';
+  // Suggestions style for currency input
+  const suggestionsListStyle = {
+    position: 'absolute',
+    backgroundColor: '#fff',
+    zIndex: 9999,
+    listStyle: 'none',
+    margin: 0,
+    padding: '0.5rem',
+    border: '1px solid #ddd',
+    width: '100%'
+  };
 
-  // Decide which icon to show in the disclaimer (web2 => 12 hours, web3 => 30 seconds)
-  let icon = paymentMethod === 'web2' ? (
-    <FontAwesomeIcon icon={faClock} />
-  ) : (
-    <FontAwesomeIcon icon={faTachometerAlt} />
-  );
+  const suggestionStyle = {
+    padding: '0.3rem',
+    cursor: 'pointer'
+  };
+
+  // Icon for disclaimers
+  const icon = paymentMethod === 'web2'
+    ? <FontAwesomeIcon icon={faClock} />
+    : <FontAwesomeIcon icon={faTachometerAlt} />;
 
   return (
     <>
@@ -389,391 +346,397 @@ function WithdrawModal(props) {
             position: 'fixed',
             width: '100%',
             height: '100vh',
-            zIndex: isLoading ? 3 : 0,
-          },
+            zIndex: isLoading ? 3000 : 0
+          }
         }}
       />
+
       <Modal
-        isOpen={modalIsOpen}
-        onRequestClose={closeModal}
-        style={customStyles}
-        contentLabel="Withdrawal Modal"
+        open={modalIsOpen}
+        onClose={closeModal}
+        sx={{ zIndex: 1300 }}
+        BackdropProps={{
+          style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' }
+        }}
       >
-        <div className={isDarkMode ? 'dark_mode' : ''}>
-          <div className="modal-header">
-            <h2 className="modal-title title">
-              <Icon component={AccountBalanceWallet} className="mr-2" />
+        <Box sx={modalBoxStyle}>
+          {/* HEADER */}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+            <Typography
+              variant="h6"
+              sx={{ display: 'flex', alignItems: 'center', fontWeight: 'bold' }}
+            >
+              <AccountBalanceWallet sx={{ mr: 1 }} />
               WITHDRAW
-            </h2>
-            <Button className="btn-close" variant='text' color='error'  onClick={closeModal}>
-              ×
+            </Typography>
+            <Button variant="text" color="error" onClick={closeModal}>
+              X
             </Button>
-          </div>
-          <div className="modal-body edit-modal-body deposit-modal-body">
-            <div className="modal-content-wrapper">
-              <div className="modal-content-panel">
-                {/* Payment Method Selection */}
-                <Root>
-                  <RadioLabel isDarkMode={isDarkMode}>Select Withdrawal Method:</RadioLabel>
-                  <PaymentMethodContainer>
-                    <RadioGroup
-                      aria-label="payment-method"
-                      name="payment-method"
-                      value={paymentMethod}
-                      onChange={handlePaymentMethodChange}
-                      sx={{ flexDirection: 'row' }}
-                    >
-                      <FormControlLabel
-                        value="web3"
-                        control={<Radio color='error' />}
-                        label={
-                          <LabelContainer>
-                            <WalletIcon sx={{ marginRight: 1 }} />
-                            <span>SOL</span>
-                            {paymentMethod === 'web3' && (
-                              <Box
-                                className="roll-tag"
-                                sx={{
-                                  position: 'absolute',
-                                  transform: 'translateY(30px)',
-                                  filter: 'invert(1)',
-                                  letterSpacing: '0.1em',
-                                }}
+          </Box>
+
+          {/* BODY */}
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {/* Payment Method Section */}
+            <Box>
+              <Typography variant="subtitle1" sx={{ mb: 1 }}>
+                Select Withdrawal Method:
+              </Typography>
+              <RadioGroup
+                row
+                name="payment-method"
+                value={paymentMethod}
+                onChange={handlePaymentMethodChange}
+              >
+                <FormControlLabel
+                  value="web3"
+                  control={<Radio color="error" />}
+                  label={
+                    <Box sx={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                      <WalletIcon sx={{ mr: 1 }} />
+                      <Typography component="span">SOL</Typography>
+                      {paymentMethod === 'web3' && (
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            top: '100%',
+                            left: 0,
+                            transform: 'translateY(0.2rem)',
+                            fontSize: '0.8rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            color: '#fff'
+                          }}
+                        >
+                          INSTANT&nbsp;
+                          <FontAwesomeIcon icon={faBolt} />
+                        </Box>
+                      )}
+                    </Box>
+                  }
+                />
+                <FormControlLabel
+                  value="web2"
+                  control={<Radio color="error" />}
+                  label={
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <QRCodeIcon sx={{ mr: 1 }} />
+                      <Typography component="span">Web2</Typography>
+                    </Box>
+                  }
+                />
+              </RadioGroup>
+              <Typography variant="body2" sx={{ mt: 1, color: '#ccc' }}>
+                {description}
+              </Typography>
+            </Box>
+
+            {/* Payment Method-Specific Fields */}
+            {paymentMethod === 'web3' ? (
+              // WEB3
+              <>
+                <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                  Step 1 of 2
+                </Typography>
+                <Box sx={{ mb: 2 }}>
+                  <Typography>WITHDRAWAL AMOUNT</Typography>
+                  <TextField
+                    color="secondary"
+                    variant="filled"
+                    type="number"
+                    value={amountToWithdraw}
+                    onChange={handleAmountChange}
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          RPS
+                        </InputAdornment>
+                      )
+                    }}
+                    sx={{ mt: 1, width: '100%' }}
+                  />
+                </Box>
+
+                <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                  Step 2 of 2
+                </Typography>
+                <Box>
+                  <Typography variant="body2">SEND TO ADDRESS</Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+                    <TextField
+                      color="secondary"
+                      variant="filled"
+                      fullWidth
+                      value={isConnected ? account : 'Connect Wallet'}
+                      InputProps={{
+                        readOnly: true
+                      }}
+                    />
+                    <FiberManualRecord
+                      sx={{
+                        color: isConnected ? 'green' : 'red',
+                        fontSize: '1rem'
+                      }}
+                    />
+                    <Tooltip title={isConnected ? 'Connected' : 'How do I connect?'} arrow>
+                      <IconButton
+                        href={isConnected ? undefined : 'your_connect_wallet_link_here'}
+                        target={isConnected ? undefined : '_blank'}
+                        rel="noopener noreferrer"
+                        size="small"
+                      >
+                        <Info fontSize="small" />
+                        {!isConnected && (
+                          <Link fontSize="small" sx={{ ml: 0.5 }} />
+                        )}
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                </Box>
+              </>
+            ) : (
+              // WEB2
+              <>
+                <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                  Step 1 of 3
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Typography sx={{ whiteSpace: 'nowrap' }}>CURRENCY TYPE</Typography>
+                  <TextField
+                    color="secondary"
+                    variant="filled"
+                    value={currencyTo.toUpperCase()}
+                    onChange={setCurrency}
+                    error={!isValidCurrency}
+                    helperText={!isValidCurrency ? 'Invalid currency' : ''}
+                  />
+                  <Tooltip title="Choose currency you want to receive in.">
+                    <IconButton size="small">
+                      <Info />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+
+                {suggestions.length > 0 && (
+                  <Box component="ul" sx={suggestionsListStyle}>
+                    {suggestions.map((suggestion) => (
+                      <Box
+                        key={suggestion}
+                        component="li"
+                        onMouseEnter={() => handleSuggestionMouseEnter(suggestion)}
+                        onMouseLeave={handleSuggestionMouseLeave}
+                        onClick={() => handleSuggestionClick(suggestion)}
+                        sx={{
+                          ...suggestionStyle,
+                          backgroundColor:
+                            hoveredSuggestion === suggestion
+                              ? '#ffc107'
+                              : 'transparent',
+                          color:
+                            hoveredSuggestion === suggestion
+                              ? '#060607'
+                              : '#212529'
+                        }}
+                      >
+                        <Typography>{suggestion.toUpperCase()}</Typography>
+                      </Box>
+                    ))}
+                  </Box>
+                )}
+
+                <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mt: 2 }}>
+                  Step 2 of 3
+                </Typography>
+                <Box>
+                  <Typography>WITHDRAWAL AMOUNT</Typography>
+                  <TextField
+                    color="secondary"
+                    variant="filled"
+                    type="number"
+                    value={amountToWithdraw}
+                    onChange={handleAmountChange}
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          RPS
+                        </InputAdornment>
+                      )
+                    }}
+                    sx={{ mt: 1, width: '100%' }}
+                  />
+                </Box>
+                <Box sx={{ mt: 2 }}>
+                  <Typography>RECEIVE AMOUNT</Typography>
+                  <TextField
+                    color="secondary"
+                    variant="outlined"
+                    value={estimatedAmount}
+                    InputProps={{
+                      readOnly: true,
+                      endAdornment: isValidCurrency && (
+                        <InputAdornment position="end">
+                          <Typography variant="body2">
+                            {currencyTo.toUpperCase()}
+                          </Typography>
+                        </InputAdornment>
+                      )
+                    }}
+                    sx={{ mt: 1, width: '100%' }}
+                  />
+                </Box>
+
+                <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mt: 2 }}>
+                  Step 3 of 3
+                </Typography>
+                <Box sx={{ mt: 1 }}>
+                  <Typography variant="body2">SEND TO ADDRESS</Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+                    <TextField
+                      color="secondary"
+                      variant="filled"
+                      fullWidth
+                      value={sendAddress}
+                      onChange={handleSendAddress}
+                      error={!validAddress}
+                      helperText={
+                        sendAddress
+                          ? (!validAddress
+                            ? 'Invalid address'
+                            : (
+                              <Typography
+                                component="span"
+                                sx={{ color: '#28a745', display: 'flex', alignItems: 'center' }}
                               >
-                                INSTANT&nbsp;
-                                <FontAwesomeIcon icon={faBolt} style={{ marginLeft: '0.2em' }} />
-                              </Box>
-                            )}
-                          </LabelContainer>
-                        }
-                      />
-                      <FormControlLabel
-                        value="web2"
-                        control={<Radio color='error' />}
-                        label={
-                          <LabelContainer>
-                            <QRCodeIcon sx={{ marginRight: 1 }} />
-                            <span>Web2</span>
-                          </LabelContainer>
-                        }
-                      />
-                    </RadioGroup>
-                  </PaymentMethodContainer>
-                  <Description variant="body2">{description}</Description>
-                </Root>
-                {/* Payment Method-Specific Fields */}
-                {paymentMethod === 'web3' ? (
-                  <>
-                    <p className="step-tag">Step 1 out of 2</p>
-                    <div className="input-amount">
-                      <Typography>WITHDRAWAL AMOUNT</Typography>
-                       <TextField color="secondary" 
-                        pattern="^\\d*\\.?\\d*$"
-                        variant="filled"
-                        autoComplete="off"
-                        value={amountToWithdraw}
-                        onChange={handleAmountChange}
-                        InputProps={{
-                          endAdornment: (
-                            <InputAdornment position="end">&nbsp;RPS</InputAdornment>
-                          ),
-                        }}
-                        className="form-control"
-                      />
-                    </div>
-                    <div className="account">
-                      <p className="step-tag">Step 2 out of 2</p>
-                      <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <Typography variant="body2">SEND TO ADDRESS</Typography>
-                        {isConnected ? (
-                           <TextField color="secondary" 
-                            label="Account"
-                            variant="filled"
-                            style={{ width: '100%' }}
-                            value={account}
-                            InputProps={{
-                              readOnly: true,
-                            }}
-                            className="form-control"
-                          />
-                        ) : (
-                           <TextField color="secondary" 
-                            label="Account"
-                            variant="filled"
-                            style={{ width: '100%' }}
-                            value="Connect Wallet"
-                            InputProps={{
-                              readOnly: true,
-                            }}
-                            className="form-control"
-                          />
-                        )}
-                        {isConnected ? (
-                          <FiberManualRecord
-                            className="light"
-                            style={{ background: '#28a745', color: 'green' }}
-                          />
-                        ) : (
-                          <FiberManualRecord
-                            className="light"
-                            style={{ background: '#ff0000', color: 'red' }}
-                          />
-                        )}
-                        {isConnected ? (
-                          <Tooltip title="Connected account" arrow>
-                            <Info />
-                          </Tooltip>
-                        ) : (
-                          <Tooltip title="How do I connect?" arrow>
-                            <a
-                              href="your_connect_wallet_link_here"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                textDecoration: 'none',
-                              }}
-                            >
-                              <Info />
-                              <Link fontSize="small" style={{ marginLeft: '4px' }} />
-                            </a>
-                          </Tooltip>
-                        )}
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <div>
-                    <p className="step-tag">Step 1 out of 3</p>
-                    <div
-                      className="account"
-                      style={{ display: 'flex', alignItems: 'center' }}
-                    >
-                      <Typography style={{ whiteSpace: 'nowrap' }}>
-                        CURRENCY TYPE
-                      </Typography>
-                       <TextField color="secondary" 
-                        type="text"
-                        variant="filled"
-                        autoComplete="off"
-                        value={currencyTo.toUpperCase()}
-                        onChange={setCurrency}
-                        error={!isValidCurrency}
-                        helperText={!isValidCurrency ? 'Invalid currency' : ''}
-                        className="form-control"
-                      />
-                      <Tooltip title="Choose currency you want to receive in.">
-                        <IconButton color="inherit" size="small">
-                          <Info />
-                        </IconButton>
-                      </Tooltip>
-                    </div>
-                    {suggestions.length > 0 && (
-                      <ul style={suggestionsListStyle}>
-                        {suggestions.map((suggestion) => (
-                          <a key={suggestion}>
-                            <li
-                              onMouseEnter={() => handleSuggestionMouseEnter(suggestion)}
-                              onMouseLeave={handleSuggestionMouseLeave}
-                              style={{
-                                ...suggestionStyle,
-                                backgroundColor:
-                                  hoveredSuggestion === suggestion
-                                    ? '#ffc107'
-                                    : 'transparent',
-                                color:
-                                  hoveredSuggestion === suggestion
-                                    ? '#060607'
-                                    : '#212529',
-                              }}
-                              onClick={() => handleSuggestionClick(suggestion)}
-                            >
-                              <Typography>{suggestion.toUpperCase()}</Typography>
-                            </li>
-                          </a>
-                        ))}
-                      </ul>
-                    )}
-                    <p className="step-tag">Step 2 out of 3</p>
-                    <div className="input-amount">
-                      <Typography>WITHDRAWAL AMOUNT</Typography>
-                       <TextField color="secondary" 
-                        pattern="^\\d*\\.?\\d*$"
-                        variant="filled"
-                        autoComplete="off"
-                        value={amountToWithdraw}
-                        onChange={handleAmountChange}
-                        InputProps={{
-                          endAdornment: (
-                            <InputAdornment position="end">&nbsp;RPS</InputAdornment>
-                          ),
-                        }}
-                        className="form-control"
-                      />
-                    </div>
-                    <div className="input-amount">
-                      <Typography>RECEIVE AMOUNT</Typography>
-                       <TextField color="secondary" 
-                        variant="outlined"
-                        value={estimatedAmount}
-                        InputProps={{
-                          readOnly: true,
-                          endAdornment: isValidCurrency && (
-                            <InputAdornment position="end">
-                              <Typography variant="body2" component="span">
-                                {currencyTo.toUpperCase()}
+                                Valid address!
+                                <CheckCircleOutlineIcon sx={{ ml: 0.5, fontSize: '1rem' }} />
                               </Typography>
-                            </InputAdornment>
-                          ),
-                        }}
-                        className="form-control"
-                      />
-                    </div>
-                    <p className="step-tag">Step 3 out of 3</p>
-                    <div style={{ marginTop: '20px' }}>
-                      <Typography variant="body2">SEND TO ADDRESS</Typography>
-                      <div style={{ display: 'flex', alignItems: 'center' }}>
-                         <TextField color="secondary" 
-                          variant="filled"
-                          fullWidth
-                          error={!validAddress}
-                          onChange={handleSendAddress}
-                          value={sendAddress}
-                          helperText={
-                            sendAddress
-                              ? !validAddress
-                                ? 'Invalid address'
-                                : (
-                                  <p style={{ color: '#28a745' }}>
-                                    Valid address!
-                                    <CheckCircleOutlineIcon style={{ width: '12px' }} />
-                                  </p>
-                                )
-                              : ''
-                          }
-                        />
-                        <Tooltip title="Address to send to" arrow>
+                            )
+                          )
+                          : ''
+                      }
+                    />
+                    <Tooltip title="Address to send to" arrow>
+                      <IconButton size="small">
+                        <Info />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                </Box>
+                <Box sx={{ mt: 2 }}>
+                  <Typography variant="body2">
+                    MEMO / DESTINATION TAG ETC. (OPTIONAL)
+                  </Typography>
+                  <TextField
+                    color="secondary"
+                    variant="filled"
+                    fullWidth
+                    value={extraId}
+                    onChange={handleExtraId}
+                    sx={{ mt: 1 }}
+                  />
+                </Box>
+              </>
+            )}
+
+            {/* BALANCE / FEE TABLE */}
+            <Box sx={{ mt: 2 }}>
+              <Table size="small">
+                <TableBody>
+                  <TableRow>
+                    <TableCell>IN-GAME BALANCE:</TableCell>
+                    <TableCell>{convertToCurrency(balance, solPrice)}</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>WITHDRAWAL AMOUNT:</TableCell>
+                    <TableCell sx={{ color: 'red' }}>
+                      {convertToCurrency(amountToWithdraw * -1, solPrice)}
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>NEW BALANCE:</TableCell>
+                    <TableCell>
+                      {convertToCurrency(balance - amountToWithdraw, solPrice)}{' '}
+                      {balance - amountToWithdraw < 0 && <Warning fontSize="small" />}
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+
+              {paymentMethod === 'web3' && (
+                <Table size="small" sx={{ mt: 2 }}>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell>
+                        <FontAwesomeIcon icon={faGasPump} />
+                        &nbsp;GAS FEE:
+                      </TableCell>
+                      <TableCell>{gasfee} SOL</TableCell>
+                      <TableCell>
+                        <Tooltip
+                          title="Real-time Gas fee covers network processing & validation."
+                          arrow
+                        >
                           <IconButton size="small">
                             <Info />
                           </IconButton>
                         </Tooltip>
-                      </div>
-                      <div style={{ marginTop: '20px' }}>
-                        <Typography variant="body2">
-                          MEMO / DESTINATION TAG ETC. (OPTIONAL)
-                        </Typography>
-                        <div style={{ display: 'flex', alignItems: 'center' }}>
-                           <TextField color="secondary" 
-                            variant="filled"
-                            fullWidth
-                            value={extraId}
-                            onChange={handleExtraId}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                <hr />
-                <Table>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell>
-                        <span>IN-GAME BALANCE:</span>
-                      </TableCell>
-                      <TableCell>{convertToCurrency(balance, solPrice)}</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>
-                        <span>WITHDRAWAL AMOUNT:</span>
-                      </TableCell>
-                      <TableCell style={{ color: 'red' }}>
-                        {convertToCurrency(amountToWithdraw * -1, solPrice)}
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>
-                        <span>NEW BALANCE:</span>
-                      </TableCell>
-                      <TableCell>
-                        {convertToCurrency(balance - amountToWithdraw, solPrice)}&nbsp;
-                        {balance - amountToWithdraw < 0 && <Warning width="15pt" />}
                       </TableCell>
                     </TableRow>
                   </TableBody>
                 </Table>
-                {paymentMethod === 'web3' && (
-                  <Table>
-                    <TableBody>
-                      <TableRow>
-                        <TableCell>
-                          <FontAwesomeIcon icon={faGasPump} />
-                          &nbsp;&nbsp;<span>GAS FEE:</span>
-                        </TableCell>
-                        <TableCell>{gasfee} SOL</TableCell>
-                        <TableCell>
-                          <Tooltip
-                            title="Real-time Gas fee is the cost associated with performing a transaction. It covers network processing and validation."
-                            arrow
-                          >
-                            <IconButton size="small">
-                              <Info />
-                            </IconButton>
-                          </Tooltip>
-                        </TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                )}
-                <div className={'disclaimer'}>
-                  {paymentMethod === 'web2' ? (
-                    <Typography className={disclaimerClass}>
-                      Receive within <i style={{ fontWeight: 800 }}>12</i> hours&nbsp;{icon}
-                    </Typography>
-                  ) : (
-                    <Typography className={disclaimerClass}>
-                      Receive within <i style={{ fontWeight: 800 }}>30</i> seconds&nbsp;{icon}
-                    </Typography>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-          {/* Modal Footer */}
-          <div className="modal-footer">
+              )}
+            </Box>
+
+            {/* DISCLAIMER */}
+            <Box sx={{ mt: 2 }}>
+              {paymentMethod === 'web2' ? (
+                <Typography variant="body2">
+                  Receive within <strong>12</strong> hours&nbsp;{icon}
+                </Typography>
+              ) : (
+                <Typography variant="body2">
+                  Receive within <strong>30</strong> seconds&nbsp;{icon}
+                </Typography>
+              )}
+            </Box>
+          </Box>
+
+          {/* FOOTER */}
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
             <Button
-              variant='contained' color='error'
+              variant="contained"
+              color="error"
               onClick={paymentMethod === 'web3' ? send : createPayoutAndClose}
             >
-              {/* COMING SOON! (INVITE ONLY) or 'Withdraw' */}
               COMING SOON! (INVITE ONLY)
             </Button>
-            {/* <Button variant='contained' color='secondary' onClick={closeModal}>
-              CANCEL
-            </Button> */}
-          </div>
-        </div>
+            {/* 
+              If you want a cancel button, uncomment below:
+              <Button variant="contained" color="secondary" onClick={closeModal} sx={{ ml: 2 }}>
+                CANCEL
+              </Button> 
+            */}
+          </Box>
+        </Box>
       </Modal>
     </>
   );
 }
 
-// --------------------- Redux Connections ---------------------
+// ----------------- REDUX CONNECTION -----------------
 const mapStateToProps = (state) => ({
   isDarkMode: state.auth.isDarkMode,
   userInfo: state.auth.user,
   gasfee: state.auth.gasfee,
   solPrice: state.logic.solPrice,
   balance: state.auth.user.balance,
-  account: state.auth.user.account, // Make sure your store provides this if needed
+  account: state.auth.user.account
 });
 
 const mapDispatchToProps = {
   setBalance,
   setGasfee,
   addNewTransaction,
-  getCustomerStatisticsData,
+  getCustomerStatisticsData
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(WithdrawModal);

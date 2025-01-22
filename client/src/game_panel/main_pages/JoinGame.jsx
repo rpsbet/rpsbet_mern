@@ -1073,6 +1073,7 @@ class JoinGame extends Component {
           />
           <TabbedContent
             changeBgColor={this.changeBgColor}
+            changeBgColorQs={this.changeBgColorQs}
             bgColorChanged={bgColorChanged}
             betting={betting}
             strategies={strategies}

@@ -53,7 +53,7 @@ const Leaderboards = ({
                   sx={{ 
                     minWidth: 650, 
                     bgcolor: isDarkMode ? '#1e1e1e' : '#f9f9f9', 
-                    borderRadius: 2, 
+                    borderRadius: 1, 
                     overflow: 'hidden' 
                   }}
                 >

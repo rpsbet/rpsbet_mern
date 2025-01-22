@@ -1,7 +1,30 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import Modal from 'react-modal';
 import { connect } from 'react-redux';
+import moment from 'moment';
+
+import {
+  Tabs,
+  Tab,
+  Button,
+  Tooltip,
+  IconButton,
+  TextField,
+  Grid,
+  Typography,
+  Box,
+  Modal,
+  Skeleton,
+  InputAdornment
+} from '@mui/material';
+import FileCopyIcon from '@mui/icons-material/FileCopy';
+import { Info, Warning } from '@mui/icons-material';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faUser, faEdit, faChartBar } from '@fortawesome/free-solid-svg-icons';
+
 import AvatarUpload from './upload/AvatarUpload';
+import StatisticsForm from '../../admin_panel/app/Customer/EditCustomerPage/StatisticsForm';
+import PlayerModal from './PlayerModal';
+import Avatar from '../../components/Avatar';
 
 import {
   setUserInfo,
@@ -18,46 +41,7 @@ import {
 } from '../../redux/Customer/customer.action';
 
 import { alertModal } from './ConfirmAlerts';
-import FileCopyIcon from '@mui/icons-material/FileCopy';
-import {
-  Tabs,
-  Tab,
-  Button,
-  Tooltip,
-  IconButton,
-  TextField,
-  Grid,
-  Typography
-} from '@mui/material';
-
-import StatisticsForm from '../../admin_panel/app/Customer/EditCustomerPage/StatisticsForm';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Info } from '@mui/icons-material';
-import PlayerModal from './PlayerModal';
-import { faUser, faEdit, faChartBar } from '@fortawesome/free-solid-svg-icons';
-import Avatar from '../../components/Avatar';
-
-import moment from 'moment';
 import { convertToCurrency } from '../../util/conversion';
-
-Modal.setAppElement('#root');
-
-const customStyles = {
-  overlay: {
-    zIndex: 3,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)'
-  },
-  content: {
-    top: '50%',
-    left: '50%',
-    right: 'auto',
-    bottom: 'auto',
-    transform: 'translate(-50%, -50%)',
-    background: 'transparent',
-    padding: 0,
-    border: 'none'
-  }
-};
 
 function ProfileModal(props) {
   const {
@@ -78,38 +62,84 @@ function ProfileModal(props) {
   } = props;
 
   // -----------------------------
+  // MUI "Modal" Styles
+  // -----------------------------
+  const modalBoxStyle = {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    bgcolor: '#400068', // Purple background
+    color: '#fff',
+    boxShadow: 24,
+    borderRadius: 1,
+    p: 3,
+    width: 600,
+    maxWidth: '90vw',
+    maxHeight: '90vh',
+    overflowY: 'auto'
+  };
+
+  // We can reuse the same style for nested modals:
+  const nestedModalBoxStyle = {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    bgcolor: '#400068',
+    color: '#fff',
+    boxShadow: 24,
+    borderRadius: 1,
+    p: 3,
+    width: 500,
+    maxWidth: '90vw',
+    maxHeight: '90vh',
+    overflowY: 'auto'
+  };
+
+  // -----------------------------
   // State
   // -----------------------------
   const [actorType, setActorType] = useState('Both');
   const [gameType, setGameType] = useState('All');
   const [timeType, setTimeType] = useState('24');
+
   const [referralCode, setReferralCode] = useState(userInfo.referralCode || '');
   const [rewards, setRewards] = useState(userInfo.rewards || []);
   const [username, setUsername] = useState(userInfo.username);
   const [link, setLink] = useState(userInfo.bio || '');
   const [profitAllTimeHigh, setProfitAllTimeHigh] = useState(userInfo.profitAllTimeHigh);
   const [profitAllTimeLow, setProfitAllTimeLow] = useState(userInfo.profitAllTimeLow);
+
   const [customerInfo, setCustomerInfo] = useState({});
   const [copied, setCopied] = useState(false);
-  const [activeTab, setActiveTab] = useState(0);
-  const [isReferralsModalOpen, setIsReferralsModalOpen] = useState(false);
 
+  const [activeTab, setActiveTab] = useState(0);
+
+  // Manage modals
+  const [isReferralsModalOpen, setIsReferralsModalOpen] = useState(false);
+  const [isNewUsernameModalOpen, setIsNewUsernameModalOpen] = useState(false);
+  const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
+
+  // Password fields
   const [password, setPassword] = useState('');
   const [passwordConfirmation, setPasswordConfirmation] = useState('');
+
+  // Spending status
   const [status, setStatus] = useState('');
+
+  // Nested PlayerModal
   const [showPlayerModal, setShowPlayerModal] = useState(false);
   const [selectedCreator, setSelectedCreator] = useState('');
+
+  // Profile fields
   const [avatar, setAvatar] = useState(userInfo.avatar);
   const [rank, setRank] = useState(userInfo.totalWagered);
   const [dateJoined, setDateJoined] = useState(userInfo.created_at);
   const [creditScore, setCreditScore] = useState(userInfo.credit_score);
-
-  // Username & Link modals
   const [newUsername, setNewUsername] = useState('');
-  const [isNewUsernameModalOpen, setIsNewUsernameModalOpen] = useState(false);
-  const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
 
-  // Local stats from fetchStatisticsData
+  // Stats from fetchStatisticsData
   const [gameLogList, setGameLogList] = useState([]);
   const [deposit, setDeposit] = useState(0);
   const [withdraw, setWithdraw] = useState(0);
@@ -124,44 +154,32 @@ function ProfileModal(props) {
   const [averageGamesPlayedPerRoom, setAverageGamesPlayedPerRoom] = useState(0);
   const [averageProfit, setAverageProfit] = useState(0);
 
-  // Loading state for actions like updating password/username
+  // Loading state for updates
   const [isLoading, setIsLoading] = useState(false);
 
   // -----------------------------
-  // Derived State (Similar to getDerivedStateFromProps)
+  // Lifecycle & Derived State
   // -----------------------------
   useEffect(() => {
-    // If parent updates the userInfo, reflect the changes
+    // If parent updates userInfo, reflect changes
     setAvatar(userInfo.avatar);
     setUsername(userInfo.username);
     setReferralCode(userInfo.referralCode || '');
     setRewards(userInfo.rewards || []);
-  }, [
-    userInfo.avatar,
-    userInfo.username,
-    userInfo.referralCode,
-    userInfo.rewards
-  ]);
+  }, [userInfo]);
 
-  // -----------------------------
-  // componentDidMount
-  // -----------------------------
   useEffect(() => {
-    // On mount, fetch spending habit & user statistics data
+    // On mount, fetch spending habit & user stats
     const loadData = async () => {
       const data = await dispatchGetSpendingHabit(userInfo._id);
       if (data) {
         setStatus(data.status);
       }
 
-      // For each reward, load customer info
       rewards.forEach(async (reward) => {
         const info = await acGetCustomerInfo(reward.user);
         if (info) {
-          setCustomerInfo((prev) => ({
-            ...prev,
-            [reward.user]: info
-          }));
+          setCustomerInfo((prev) => ({ ...prev, [reward.user]: info }));
         }
       });
 
@@ -169,10 +187,11 @@ function ProfileModal(props) {
     };
 
     loadData();
+    // eslint-disable-next-line
   }, []);
 
   // -----------------------------
-  // Functions
+  // Data Fetch
   // -----------------------------
   const fetchStatisticsData = async () => {
     const result = await dispatchGetCustomerStatisticsData(
@@ -183,8 +202,6 @@ function ProfileModal(props) {
     );
     if (!result) return;
 
-    // We assume `result` has the same shape as
-    // the class-based code expects to set on state
     setGameLogList(result.gameLogList || []);
     setDeposit(result.deposit || 0);
     setWithdraw(result.withdraw || 0);
@@ -206,6 +223,9 @@ function ProfileModal(props) {
     }
   };
 
+  // -----------------------------
+  // Spending Habits
+  // -----------------------------
   const getStatusDetails = useCallback((spendingStatus) => {
     switch (spendingStatus) {
       case 'very good':
@@ -253,24 +273,42 @@ function ProfileModal(props) {
     }
   }, []);
 
-  const handleChangeUsername = (event) => {
-    setNewUsername(event.target.value);
+  const { color, title, message, progress } = getStatusDetails(status);
+  const barStyle = {
+    width: `${progress}%`,
+    backgroundColor: progress <= 50 ? 'yellow' : 'green'
   };
 
-  const handleChangeLink = (event) => {
-    setLink(event.target.value);
+  // -----------------------------
+  // Handlers
+  // -----------------------------
+  const handleCloseProfileModal = () => {
+    // Re-fetch user info from the server to reflect any changes
+    getUser(true);
+    closeModal();
   };
 
-  const handleLink = () => {
-    setIsLinkModalOpen(true);
+  const handleTabChange = (event, newValue) => {
+    setActiveTab(newValue);
   };
 
-  const handleNewUsername = () => {
-    setIsNewUsernameModalOpen(true);
+  const handleCopyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
   };
 
-  const handleReferrals = () => {
-    setIsReferralsModalOpen(true);
+  const handleChangePassword = (e) => setPassword(e.target.value);
+  const handleChangePasswordConfirmation = (e) => setPasswordConfirmation(e.target.value);
+
+  const handleDropdownChange = async (dropdownName, selectedValue) => {
+    if (dropdownName === 'actorType') setActorType(selectedValue);
+    if (dropdownName === 'gameType') setGameType(selectedValue);
+    if (dropdownName === 'timeType') setTimeType(selectedValue);
+
+    setTimeout(() => {
+      fetchStatisticsData();
+    }, 0);
   };
 
   const containsBadLanguage = (str) => {
@@ -291,122 +329,9 @@ function ProfileModal(props) {
     return explicitWords.some((word) => lowercased.includes(word));
   };
 
-  const changeUserNameHandler = async () => {
-    if (containsBadLanguage(newUsername)) {
-      alertModal(isDarkMode, `Username contains reserved words.`);
-      return;
-    }
-    if (newUsername.trim() === '') {
-      alertModal(isDarkMode, 'Username cannot be thin air. Please enter some text.');
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      const result = await dispatchChangeUserName(newUsername);
-      setIsLoading(false);
-
-      if (result.success) {
-        alertModal(isDarkMode, result.message, '-cat');
-        handleCloseNewUsernameModal();
-      } else {
-        alertModal(isDarkMode, 'USERNAME ALREADY EXISTS. CHOOSE A DIFFERENT ONE.');
-      }
-    } catch (error) {
-      setIsLoading(false);
-      alertModal(
-        isDarkMode,
-        'Username might be taken. Try something else more original.'
-      );
-    }
-  };
-
-  const changeLinkHandler = async () => {
-    if (containsBadLanguage(link)) {
-      alertModal(isDarkMode, `Bio contains reserved words.`);
-      return;
-    }
-    try {
-      setIsLoading(true);
-      const result = await dispatchChangeLink(link);
-      setIsLoading(false);
-
-      if (result.success) {
-        alertModal(isDarkMode, result.message, '-cat');
-        handleCloseLinkModal();
-      } else {
-        alertModal(isDarkMode, 'FAILED TO UPDATE BIO');
-      }
-    } catch (error) {
-      setIsLoading(false);
-      alertModal(isDarkMode, 'FAILED TO UPDATE BIO');
-    }
-  };
-
-  const handleOpenPlayerModal = (creator_id) => {
-    setShowPlayerModal(true);
-    setSelectedCreator(creator_id);
-  };
-
-  const handleClosePlayerModal = () => {
-    setShowPlayerModal(false);
-  };
-
-  const handleTabChange = (event, newValue) => {
-    setActiveTab(newValue);
-  };
-
-  const handleCloseNewUsernameModal = () => {
-    setIsNewUsernameModalOpen(false);
-  };
-
-  const handleCloseLinkModal = () => {
-    setIsLinkModalOpen(false);
-  };
-
-  const handleCloseReferralsModal = () => {
-    setIsReferralsModalOpen(false);
-  };
-
-  const handleDropdownChange = async (dropdownName, selectedValue) => {
-    // Each dropdown changes a piece of state, then calls fetchStatisticsData
-    if (dropdownName === 'actorType') setActorType(selectedValue);
-    if (dropdownName === 'gameType') setGameType(selectedValue);
-    if (dropdownName === 'timeType') setTimeType(selectedValue);
-
-    // Wait a tick for state to update
-    setTimeout(() => {
-      fetchStatisticsData();
-    }, 0);
-  };
-
-  const handleCopyToClipboard = (text) => {
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  };
-
-  const handleAvatarLoaded = (filename) => {
-    // Update Redux store with new avatar
-    setUserInfo({ ...userInfo, avatar: filename });
-  };
-
-  const handleChangePassword = (e) => {
-    e.preventDefault();
-    setPassword(e.target.value);
-  };
-
-  const handleChangePasswordConfirmation = (e) => {
-    e.preventDefault();
-    setPasswordConfirmation(e.target.value);
-  };
-
-  const handleCloseModal = () => {
-    getUser(true);
-    closeModal();
-  };
-
-
+  // -----------------------------
+  // Save / Update Profile
+  // -----------------------------
   const saveUserInfo = useCallback(
     async (e) => {
       e.preventDefault();
@@ -414,12 +339,11 @@ function ProfileModal(props) {
         alertModal(isDarkMode, `PASSWORD CONFIRMATION DOESN'T MATCH NEW PASSWORD`);
         return;
       }
-
       try {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         const img = new Image();
-        img.crossOrigin = 'anonymous'; // to avoid tainted canvas
+        img.crossOrigin = 'anonymous';
         img.src = avatar;
 
         img.onload = () => {
@@ -451,9 +375,9 @@ function ProfileModal(props) {
               reader.readAsDataURL(blob);
               reader.onloadend = async () => {
                 const base64Avatar = reader.result;
-                const is_success = await changePasswordAndAvatar(password, base64Avatar);
-                if (is_success) {
-                  handleCloseModal();
+                const success = await changePasswordAndAvatar(password, base64Avatar);
+                if (success) {
+                  handleCloseProfileModal();
                 }
               };
             },
@@ -472,236 +396,302 @@ function ProfileModal(props) {
       avatar,
       isDarkMode,
       changePasswordAndAvatar,
-      handleCloseModal
+      handleCloseProfileModal
     ]
   );
 
-  // -----------------------------------
-  // Rendering & Markup
-  // -----------------------------------
-  const { color, title, message, progress } = getStatusDetails(status);
-  const barStyle = {
-    width: `${progress}%`,
-    backgroundColor: progress <= 50 ? 'yellow' : 'green'
+  // -----------------------------
+  // Username
+  // -----------------------------
+  const handleNewUsername = () => setIsNewUsernameModalOpen(true);
+  const handleCloseNewUsernameModal = () => setIsNewUsernameModalOpen(false);
+  const handleChangeUsername = (e) => setNewUsername(e.target.value);
+
+  const changeUserNameHandler = async () => {
+    if (containsBadLanguage(newUsername)) {
+      alertModal(isDarkMode, `Username contains reserved words.`);
+      return;
+    }
+    if (newUsername.trim() === '') {
+      alertModal(isDarkMode, 'Username cannot be empty. Please enter something.');
+      return;
+    }
+    try {
+      setIsLoading(true);
+      const result = await dispatchChangeUserName(newUsername);
+      setIsLoading(false);
+
+      if (result.success) {
+        alertModal(isDarkMode, result.message, '-cat');
+        handleCloseNewUsernameModal();
+      } else {
+        alertModal(isDarkMode, 'USERNAME ALREADY EXISTS. CHOOSE A DIFFERENT ONE.');
+      }
+    } catch (error) {
+      setIsLoading(false);
+      alertModal(
+        isDarkMode,
+        'Username might be taken or an error occurred. Try again.'
+      );
+    }
   };
-  const isLink = /^https?:\/\//.test(link);
 
+  // -----------------------------
+  // Link / Bio
+  // -----------------------------
+  const handleLink = () => setIsLinkModalOpen(true);
+  const handleCloseLinkModal = () => setIsLinkModalOpen(false);
+  const handleChangeLink = (e) => setLink(e.target.value);
+
+  const changeLinkHandler = async () => {
+    if (containsBadLanguage(link)) {
+      alertModal(isDarkMode, `Bio contains reserved words.`);
+      return;
+    }
+    try {
+      setIsLoading(true);
+      const result = await dispatchChangeLink(link);
+      setIsLoading(false);
+
+      if (result.success) {
+        alertModal(isDarkMode, result.message, '-cat');
+        handleCloseLinkModal();
+      } else {
+        alertModal(isDarkMode, 'FAILED TO UPDATE BIO');
+      }
+    } catch (error) {
+      setIsLoading(false);
+      alertModal(isDarkMode, 'FAILED TO UPDATE BIO');
+    }
+  };
+
+  // -----------------------------
+  // Referrals
+  // -----------------------------
+  const handleReferrals = () => {
+    setIsReferralsModalOpen(true);
+  };
+  const handleCloseReferralsModal = () => setIsReferralsModalOpen(false);
+
+  // -----------------------------
+  // PlayerModal for each referral
+  // -----------------------------
+  const handleOpenPlayerModal = (creator_id) => {
+    setSelectedCreator(creator_id);
+    setShowPlayerModal(true);
+  };
+  const handleClosePlayerModal = () => {
+    setShowPlayerModal(false);
+  };
+
+  // -----------------------------
+  // Derived Data
+  // -----------------------------
+  const isLinkUrl = /^https?:\/\//.test(link);
+
+  // -----------------------------
+  // Render
+  // -----------------------------
   return (
-    <Modal
-      isOpen={modalIsOpen}
-      onRequestClose={handleCloseModal}
-      style={customStyles}
-      contentLabel="Profile Modal"
-    >
-      <div className={isDarkMode ? 'dark_mode' : ''}>
-        {/* Header */}
-        <div className="modal-header">
-          <h2 className="modal-title title">
-            <FontAwesomeIcon icon={faUser} className="mr-2" />
-            Your Profile
-          </h2>
-          <Button className="btn-close" variant='text' color='error'  onClick={handleCloseModal}>
-            ×
-          </Button>
-        </div>
+    <>
+      {/* Main Profile Modal */}
+      <Modal
+        open={modalIsOpen}
+        onClose={handleCloseProfileModal}
+        sx={{ zIndex: 1300 }}
+        BackdropProps={{ style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' } }}
+      >
+        <Box sx={modalBoxStyle}>
+          {/* HEADER */}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+            <Typography
+              variant="h6"
+              sx={{ display: 'flex', alignItems: 'center', fontWeight: 'bold' }}
+            >
+              <FontAwesomeIcon icon={faUser} style={{ marginRight: 8 }} />
+              Your Profile
+            </Typography>
+            <Button variant="text" color="error" onClick={handleCloseProfileModal}>
+              X
+            </Button>
+          </Box>
 
-        {/* Body */}
-        <div className="modal-body profile edit-modal-body">
-          <Tabs value={activeTab} onChange={handleTabChange}>
+          {/* BODY */}
+          <Tabs value={activeTab} onChange={handleTabChange} textColor="inherit">
             <Tab
               label={
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <FontAwesomeIcon icon={faEdit} className="mr-2" />
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <FontAwesomeIcon icon={faEdit} />
                   Edit Profile
-                </div>
+                </Box>
               }
             />
             <Tab
               label={
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <FontAwesomeIcon icon={faChartBar} className="mr-2" />
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <FontAwesomeIcon icon={faChartBar} />
                   Stats
-                </div>
+                </Box>
               }
             />
           </Tabs>
 
-          {/* Tab 0: Edit Profile */}
+          {/* EDIT PROFILE TAB */}
           {activeTab === 0 && (
-            <div>
-              <div className="align-center">
-                {loading ? (
-                  <div className="loading-spinner" />
-                ) : (
-                  <div className="edit-avatar-panel">
-                    <AvatarUpload
-                      setImageFilename={handleAvatarLoaded}
-                      darkMode={isDarkMode}
-                      rank={rank}
-                      username={username}
-                      avatar={avatar}
-                    />
-                    <div style={{ marginTop: '30px', borderBottom: '2px solid' }}>
-                      <h4 className="modal-title title">{username}</h4>
-                      <div
-                        style={{
-                          marginBottom: '20px',
-                          color: isDarkMode ? '#e5e5e5' : '#333'
-                        }}
-                      >
-                        {isLink ? (
-                          <a
-                            href={link}
-                            style={{
-                              marginBottom: '20px',
-                              color: isDarkMode ? '#e5e5e5' : '#333'
-                            }}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            {link}
-                          </a>
-                        ) : (
-                          <span
-                            style={{
-                              marginBottom: '20px',
-                              paddingBottom: '10px',
-                              color: isDarkMode ? '#e5e5e5' : '#333'
-                            }}
-                          >
-                            {link}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="modal-edit-panel">
-                <div>
-                   <TextField color="secondary" 
-                    className="form-control"
-                    variant="filled"
-                    label="REFERRAL CODE"
-                    value={referralCode}
-                    InputProps={{
-                      readOnly: true,
-                      endAdornment: (
-                        <Tooltip title={copied ? 'Copied!' : 'Copy to clipboard'} placement="top">
-                          <IconButton color="inherit" onClick={() => handleCopyToClipboard(referralCode)}>
-                            <FileCopyIcon />
-                          </IconButton>
-                        </Tooltip>
-                      )
+            <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+              {loading ? (
+                <Skeleton variant="rectangular" sx={{ width: '100%', height: 200 }} />
+              ) : (
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <AvatarUpload
+                    setImageFilename={(filename) => {
+                      setUserInfo({ ...userInfo, avatar: filename });
                     }}
+                    darkMode={isDarkMode}
+                    rank={rank}
+                    username={username}
+                    avatar={avatar}
                   />
-                </div>
 
-                <div
-                  className="input-wrapper"
-                  style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}
-                >
-                  <Button className="form-control" onClick={handleReferrals}>
+                  <Box
+                    sx={{
+                      mt: 3,
+                      borderTop: '2px solid',
+                      borderBottom: '2px solid',
+                      textAlign: 'center',
+                      py: 1
+                    }}
+                  >
+                    <Typography variant="h6" sx={{ mb: 1, fontWeight: 'bold' }}>
+                      {username}
+                    </Typography>
+                    {isLinkUrl ? (
+                      <Typography
+                        component="a"
+                        href={link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        sx={{ color: '#fff' }}
+                      >
+                        {link}
+                      </Typography>
+                    ) : (
+                      <Typography variant="body2" sx={{ color: '#fff' }}>
+                        {link}
+                      </Typography>
+                    )}
+                  </Box>
+                </Box>
+              )}
+
+              {/* FORM FIELDS */}
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                {/* Referral Code */}
+                <TextField
+                  variant="filled"
+                  color="secondary"
+                  label="REFERRAL CODE"
+                  value={referralCode}
+                  InputProps={{
+                    readOnly: true,
+                    endAdornment: (
+                      <Tooltip title={copied ? 'Copied!' : 'Copy to clipboard'} arrow>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleCopyToClipboard(referralCode)}
+                        >
+                          <FileCopyIcon />
+                        </IconButton>
+                      </Tooltip>
+                    )
+                  }}
+                />
+
+                {/* See Referrals */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Button variant="contained" onClick={handleReferrals}>
                     See All Referrals
                   </Button>
                   <Tooltip
                     title={
-                      <>
-                        <h6 style={{ marginBottom: '0.5rem' }}>
+                      <Box>
+                        <Typography variant="subtitle1">
                           HOW DO I EARN REFERRAL REWARDS?
-                        </h6>
-                        <p style={{ marginBottom: '0.5rem' }}>
-                          Referral earnings depend on your referrals' deposit activity and
-                          are calculated based on{' '}
-                          <span style={{ fontWeight: 'bold', color: '#28a745' }}>5%</span> of
-                          the deposit amount of your referred users.
-                        </p>
-                        <p style={{ marginBottom: '0.5rem' }}>
-                          For example, if your referral deposits{' '}
-                          <strong>{convertToCurrency(100, solPrice)}</strong> in total, you
-                          will earn 5% which is{' '}
+                        </Typography>
+                        <Typography variant="body2">
+                          Referral earnings depend on your referrals' deposit activity, usually 5%
+                          of their deposit total. If your referral deposits{' '}
+                          <strong>{convertToCurrency(100, solPrice)}</strong> total, you earn{' '}
                           <strong>{convertToCurrency(5, solPrice)}</strong>.
-                        </p>
-                      </>
+                        </Typography>
+                      </Box>
                     }
                     placement="top"
                   >
-                    <Info
-                      style={{
-                        cursor: 'pointer',
-                        float: 'right',
-                        paddingLeft: '5px'
-                      }}
-                    />
+                    <Info sx={{ cursor: 'pointer' }} />
                   </Tooltip>
-                </div>
+                </Box>
 
-                <div>
-                   <TextField color="secondary" 
-                    className="form-control"
-                    value={link}
+                {/* Bio */}
+                <Box sx={{ display: 'flex', gap: 2 }}>
+                  <TextField
                     variant="filled"
+                    color="secondary"
                     label="CHANGE BIO"
-                    readOnly
+                    value={link}
+                    InputProps={{
+                      readOnly: true
+                    }}
+                    sx={{ flex: 1 }}
                   />
-                </div>
-                <div>
-                  <Button className="form-control" onClick={handleLink}>
-                    CHANGE BIO
+                  <Button variant="contained" onClick={handleLink}>
+                    Change Bio
                   </Button>
-                </div>
+                </Box>
 
-                <div>
-                   <TextField color="secondary" 
-                    className="form-control"
-                    value={username}
+                {/* Username */}
+                <Box sx={{ display: 'flex', gap: 2 }}>
+                  <TextField
                     variant="filled"
+                    color="secondary"
                     label="USERNAME"
-                    readOnly
+                    value={username}
+                    InputProps={{ readOnly: true }}
+                    sx={{ flex: 1 }}
                   />
-                </div>
-                <div>
-                  <Button className="form-control" onClick={handleNewUsername}>
+                  <Button variant="contained" onClick={handleNewUsername}>
                     Change Username
                   </Button>
-                </div>
+                </Box>
 
-                <div>
-                   <TextField color="secondary" 
-                    type="password"
-                    InputLabelProps={{
-                      shrink: true
-                    }}
-                    className="form-control"
-                    value={password}
-                    variant="filled"
-                    label="PASSWORD"
-                    autoComplete="off"
-                    onChange={handleChangePassword}
-                  />
-                </div>
-                <div>
-                   <TextField color="secondary" 
-                    type="password"
-                    InputLabelProps={{
-                      shrink: true
-                    }}
-                    className="form-control"
-                    variant="filled"
-                    label="PASSWORD"
-                    autoComplete="off"
-                    value={passwordConfirmation}
-                    onChange={handleChangePasswordConfirmation}
-                  />
-                </div>
-              </div>
-            </div>
+                {/* Password */}
+                <TextField
+                  variant="filled"
+                  color="secondary"
+                  type="password"
+                  label="PASSWORD"
+                  autoComplete="off"
+                  value={password}
+                  onChange={handleChangePassword}
+                />
+
+                {/* Password Confirmation */}
+                <TextField
+                  variant="filled"
+                  color="secondary"
+                  type="password"
+                  label="CONFIRM PASSWORD"
+                  autoComplete="off"
+                  value={passwordConfirmation}
+                  onChange={handleChangePasswordConfirmation}
+                />
+              </Box>
+            </Box>
           )}
 
-          {/* Tab 1: Stats */}
+          {/* STATS TAB */}
           {activeTab === 1 && (
-            <div className="user-statistics">
+            <Box sx={{ mt: 2 }}>
               <StatisticsForm
                 onDropdownChange={handleDropdownChange}
                 username={username}
@@ -732,120 +722,122 @@ function ProfileModal(props) {
                 solPrice={solPrice}
                 averageProfit={averageProfit}
               />
-            </div>
+            </Box>
           )}
-        </div>
 
-        {/* Footer */}
-        {activeTab === 0 && (
-          <div className="modal-footer">
-            <Button variant='contained' color='error' onClick={saveUserInfo}>
-              Save
-            </Button>
-          </div>
-        )}
-      </div>
-
-      {/* New Username Modal */}
-      <Modal
-        isOpen={isNewUsernameModalOpen}
-        onRequestClose={handleCloseNewUsernameModal}
-        style={customStyles}
-        contentLabel="New Username Modal"
-      >
-        <div className={isDarkMode ? 'dark_mode' : ''}>
-          <div className="modal-header">
-            <h2 className="modal-title title">ENTER NEW USERNAME</h2>
-            <Button className="btn-close" variant='text' color='error'  onClick={handleCloseModal}>
-              ×
-            </Button>
-          </div>
-          <div className="modal-body">
-            <div className="modal-content-wrapper">
-              <div className="modal-content-panel">
-                <div className="input-username">
-                   <TextField color="secondary" 
-                    label="e.g. PUSSY_D3STROY3R"
-                    value={newUsername}
-                    onChange={handleChangeUsername}
-                    variant="filled"
-                    autoComplete="off"
-                    className="form-control"
-                    inputProps={{ maxLength: 12 }}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="modal-footer">
-            <Button variant='contained' color='error' onClick={changeUserNameHandler}>
-              Update
-            </Button>
-            <Button variant='contained' color='secondary' onClick={handleCloseNewUsernameModal}>
-              Cancel
-            </Button>
-          </div>
-        </div>
+          {/* FOOTER (Only show SAVE if on Edit Profile tab) */}
+          {activeTab === 0 && (
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
+              <Button variant="contained" color="error" onClick={saveUserInfo}>
+                Save
+              </Button>
+            </Box>
+          )}
+        </Box>
       </Modal>
 
-      {/* Link Modal */}
+      {/* NEW USERNAME MODAL */}
       <Modal
-        isOpen={isLinkModalOpen}
-        onRequestClose={handleCloseLinkModal}
-        style={customStyles}
-        contentLabel="New Link Modal"
+        open={isNewUsernameModalOpen}
+        onClose={handleCloseNewUsernameModal}
+        sx={{ zIndex: 1300 }}
+        BackdropProps={{ style: { backgroundColor: 'rgba(0,0,0,0.8)' } }}
       >
-        <div className={isDarkMode ? 'dark_mode' : ''}>
-          <div className="modal-header">
-            <h2 className="modal-title title">ENTER NEW BIO</h2>
-            <Button className="btn-close" variant='text' color='error'  onClick={handleCloseModal}>
-              ×
+        <Box sx={nestedModalBoxStyle}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+            <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+              ENTER NEW USERNAME
+            </Typography>
+            <Button variant="text" color="error" onClick={handleCloseProfileModal}>
+              X
             </Button>
-          </div>
-          <div className="modal-body">
-            <div className="modal-content-wrapper">
-              <div className="modal-content-panel">
-                <div className="input-username">
-                   <TextField color="secondary" 
-                    label="e.g. a link"
-                    value={link}
-                    onChange={handleChangeLink}
-                    variant="filled"
-                    autoComplete="off"
-                    multiline
-                    maxRows={4}
-                    className="form-control"
-                    inputProps={{ maxLength: 40 }}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="modal-footer">
-            <Button variant='contained' color='error' onClick={changeLinkHandler}>
+          </Box>
+
+          <Box sx={{ mb: 2 }}>
+            <TextField
+              variant="filled"
+              color="secondary"
+              label="e.g. PUSSY_D3STROY3R"
+              value={newUsername}
+              onChange={handleChangeUsername}
+              autoComplete="off"
+              inputProps={{ maxLength: 12 }}
+              fullWidth
+            />
+          </Box>
+
+          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+            <Button variant="contained" color="error" onClick={changeUserNameHandler}>
               Update
             </Button>
-            <Button variant='contained' color='secondary' onClick={handleCloseLinkModal}>
+            <Button variant="contained" color="secondary" onClick={handleCloseNewUsernameModal}>
               Cancel
             </Button>
-          </div>
-        </div>
+          </Box>
+        </Box>
       </Modal>
 
-      {/* Referrals Modal */}
+      {/* LINK (BIO) MODAL */}
       <Modal
-        isOpen={isReferralsModalOpen}
-        onRequestClose={handleCloseReferralsModal}
-        style={customStyles}
-        contentLabel="Referrals Modal"
+        open={isLinkModalOpen}
+        onClose={handleCloseLinkModal}
+        sx={{ zIndex: 1300 }}
+        BackdropProps={{ style: { backgroundColor: 'rgba(0,0,0,0.8)' } }}
       >
-        <div className={isDarkMode ? 'dark_mode' : ''}>
-          <div className="modal-header">
-            <h2 className="modal-title title">ALL REFERRALS</h2>
-            <Button className="btn-close" variant='text' color='error'  onClick={handleCloseModal}>
-              ×
+        <Box sx={nestedModalBoxStyle}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+            <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+              ENTER NEW BIO
+            </Typography>
+            <Button variant="text" color="error" onClick={handleCloseProfileModal}>
+              X
             </Button>
-          </div>
+          </Box>
+
+          <Box sx={{ mb: 2 }}>
+            <TextField
+              variant="filled"
+              color="secondary"
+              label="e.g. a link"
+              value={link}
+              onChange={handleChangeLink}
+              autoComplete="off"
+              multiline
+              maxRows={4}
+              inputProps={{ maxLength: 40 }}
+              fullWidth
+            />
+          </Box>
+
+          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+            <Button variant="contained" color="error" onClick={changeLinkHandler}>
+              Update
+            </Button>
+            <Button variant="contained" color="secondary" onClick={handleCloseLinkModal}>
+              Cancel
+            </Button>
+          </Box>
+        </Box>
+      </Modal>
+
+      {/* REFERRALS MODAL */}
+      <Modal
+        open={isReferralsModalOpen}
+        onClose={handleCloseReferralsModal}
+        sx={{ zIndex: 1300 }}
+        BackdropProps={{ style: { backgroundColor: 'rgba(0,0,0,0.8)' } }}
+      >
+        <Box sx={modalBoxStyle}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+            <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+              ALL REFERRALS
+            </Typography>
+            <Button variant="text" color="error" onClick={handleCloseProfileModal}>
+              X
+            </Button>
+          </Box>
+
+          {/* PlayerModal for each referral (nested) */}
           {showPlayerModal && (
             <PlayerModal
               selectedCreator={selectedCreator}
@@ -853,65 +845,56 @@ function ProfileModal(props) {
               closeModal={handleClosePlayerModal}
             />
           )}
-          <div className="modal-body">
-            <div className="modal-content-wrapper">
-              <div className="modal-content-panel">
-                <Grid container spacing={2}>
-                  {rewards.map((reward, index) => (
-                    <Grid item xs={12} sm={6} md={4} key={index}>
-                      {customerInfo[reward.user] && (
-                        <Grid container direction="column" alignItems="center">
-                          <Grid item>
-                            <a
-                              className="player"
-                              onClick={() =>
-                                handleOpenPlayerModal(customerInfo[reward.user]._id)
-                              }
-                            >
-                              <Avatar
-                                src={customerInfo[reward.user].avatar}
-                                alt="User Avatar"
-                                rank={customerInfo[reward.user].totalWagered}
-                                accessory={customerInfo[reward.user].accessory}
-                                username={customerInfo[reward.user].username}
-                              />
-                            </a>
-                          </Grid>
-                          <Grid item>
-                            <Typography variant="body1">
-                              {customerInfo[reward.user].username}
-                            </Typography>
-                          </Grid>
-                        </Grid>
-                      )}
-                      <div
-                        style={{
-                          border: '2px solid rgb(40, 167, 69)',
-                          borderRadius: '0.3em',
-                          padding: '2px'
-                        }}
+
+          <Box sx={{ mt: 2 }}>
+            <Grid container spacing={2}>
+              {rewards.map((reward, idx) => (
+                <Grid item xs={12} sm={6} md={4} key={idx}>
+                  {customerInfo[reward.user] && (
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      <Button
+                        variant="text"
+                        onClick={() => handleOpenPlayerModal(customerInfo[reward.user]._id)}
+                        sx={{ p: 0, minWidth: 0 }}
                       >
-                        <Typography
-                          style={{ margin: 'auto', textAlign: 'center', color: 'rgb(40, 167, 69)' }}
-                          variant="body2"
-                        >
-                          + {convertToCurrency(reward.amount, solPrice)}
-                        </Typography>
-                      </div>
-                    </Grid>
-                  ))}
+                        <Avatar
+                          src={customerInfo[reward.user].avatar}
+                          rank={customerInfo[reward.user].totalWagered}
+                          accessory={customerInfo[reward.user].accessory}
+                          username={customerInfo[reward.user].username}
+                        />
+                      </Button>
+                      <Typography variant="body1">
+                        {customerInfo[reward.user].username}
+                      </Typography>
+                    </Box>
+                  )}
+                  <Box
+                    sx={{
+                      border: '2px solid rgb(40, 167, 69)',
+                      borderRadius: 1,
+                      p: 0.5,
+                      mt: 1,
+                      textAlign: 'center'
+                    }}
+                  >
+                    <Typography sx={{ color: 'rgb(40, 167, 69)' }} variant="body2">
+                      + {convertToCurrency(reward.amount, solPrice)}
+                    </Typography>
+                  </Box>
                 </Grid>
-              </div>
-            </div>
-          </div>
-          <div className="modal-footer">
-            <Button variant='contained' color='secondary' onClick={handleCloseReferralsModal}>
+              ))}
+            </Grid>
+          </Box>
+
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
+            <Button variant="contained" color="secondary" onClick={handleCloseReferralsModal}>
               Close
             </Button>
-          </div>
-        </div>
+          </Box>
+        </Box>
       </Modal>
-    </Modal>
+    </>
   );
 }
 

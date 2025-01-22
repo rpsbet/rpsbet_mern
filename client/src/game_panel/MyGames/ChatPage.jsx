@@ -324,7 +324,7 @@ class ChatPage extends Component {
                         width={60}
                         height={15}
                         style={{
-                          borderRadius: '5px',
+                          borderRadius: 1,
                         }}
                       />
                     </div>

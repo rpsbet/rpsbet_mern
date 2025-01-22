@@ -122,7 +122,7 @@ function TabbedContent(props) {
   const [roomHistory, setRoomHistory] = useState(
     updateFromNow(roomInfo.room_history || [])
   );
-  const [activeTabs, setActiveTabs] = useState([0, 1]); // By default, tab "Play" (0) & "Chart" (1)
+  const [activeTabs, setActiveTabs] = useState([0]); // By default, tab "Play" (0) & "Chart" (1)
   const [isMobile, setIsMobile] = useState(window.innerWidth < 767);
 
   // In the class version, we had getDerivedStateFromProps. 
@@ -260,19 +260,19 @@ function TabbedContent(props) {
                   borderRadius: 5,
                 },
                 buttonClose: {
-                  borderRadius: '0.3em',
+                  borderRadius: 1,
                   color: isDarkMode ? '#f9f9f9' : '#333',
                 },
                 buttonBack: {
-                  borderRadius: '0.3em',
+                  borderRadius: 1,
                   color: isDarkMode ? '#f9f9f9' : '#333',
                 },
                 buttonNext: {
-                  borderRadius: '0.3em',
+                  borderRadius: 1,
                   color: isDarkMode ? '#f9f9f9' : '#333',
                 },
                 buttonSkip: {
-                  borderRadius: '0.3em',
+                  borderRadius: 1,
                   color: isDarkMode ? '#f9f9f9' : '#333',
                 },
               }}
@@ -320,6 +320,8 @@ function TabbedContent(props) {
               />
             ) : roomInfo.game_type === 'Quick Shoot' ? (
               <QuickShoot
+              changeBgColor={changeBgColorQs}
+
                 handleOpenPlayerModal={handleOpenPlayerModal}
                 handleClosePlayerModal={handleClosePlayerModal}
                 showPlayerModal={showPlayerModal}
@@ -334,7 +336,6 @@ function TabbedContent(props) {
                 updateUserStrategy={updateUserStrategy}
                 borderColor={borderColor}
                 bgColorChanged={bgColorChanged}
-                changeBgColor={changeBgColorQs}
                 updateSelectedQs={updateSelectedQs}
                 user_id={user_id}
                 betResult={betResult}

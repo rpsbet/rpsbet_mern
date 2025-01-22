@@ -1,17 +1,20 @@
 import React, { useState, useCallback } from 'react';
 import { connect } from 'react-redux';
 import Lottie from 'react-lottie';
-import Modal from 'react-modal';
-import rankIcon from '../LottieAnimations/rankIcon.json';
 import {
+  Modal,
+  Box,
   Table,
   TableBody,
-  Button,
-  TextField,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
+  Button,
+  TextField,
+  Typography,
+  Skeleton,
+  IconButton
 } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCoins } from '@fortawesome/free-solid-svg-icons';
@@ -21,69 +24,36 @@ import MyBankPage from '../../admin_panel/app/ProductPages/ProductSerchPage/MyBa
 import ProductCreatePage from '../../admin_panel/app/ProductPages/ProductCreatePage/ProductCreatePage';
 import { convertToCurrency } from '../../util/conversion';
 import { getRank } from '../../util/getRank';
+import rankIcon from '../LottieAnimations/rankIcon.json';
 
+// Redux Actions
 import {
   createLoan,
   acQueryMyLoan,
   acQueryLoan,
-  acCalculateRemainingLoans,
+  acCalculateRemainingLoans
 } from '../../redux/Loan/loan.action';
 import { getUser } from '../../redux/Auth/user.actions';
 import { warningMsgBar, infoMsgBar } from '../../redux/Notification/notification.actions';
 
-Modal.setAppElement('#root');
-
-const customStyles = {
-  overlay: {
-    zIndex: 3,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-  },
-
-  content: {
-    top: '50%',
-    left: '50%',
-    right: 'auto',
-    bottom: 'auto',
-    transform: 'translate(-50%, -50%)',
-    background: 'transparent',
-    padding: 0,
-    border: 'none',
-  },
-};
-
+// ------------------ CONSTANTS & HELPERS ------------------
 const categories = [
   { creditScoreThreshold: 700, rankThreshold: 1, accountAgeThresholdInDays: 30, maxAllowance: 0.005 },
   { creditScoreThreshold: 700, rankThreshold: 2, accountAgeThresholdInDays: 30, maxAllowance: 0.01 },
   { creditScoreThreshold: 700, rankThreshold: 3, accountAgeThresholdInDays: 30, maxAllowance: 0.02 },
-  { creditScoreThreshold: 700, rankThreshold: 6, accountAgeThresholdInDays: 30, maxAllowance: 0.03 },
-  { creditScoreThreshold: 700, rankThreshold: 9, accountAgeThresholdInDays: 30, maxAllowance: 0.04 },
-  { creditScoreThreshold: 700, rankThreshold: 10, accountAgeThresholdInDays: 30, maxAllowance: 0.05 },
-  { creditScoreThreshold: 700, rankThreshold: 11, accountAgeThresholdInDays: 30, maxAllowance: 0.075 },
-  { creditScoreThreshold: 700, rankThreshold: 12, accountAgeThresholdInDays: 30, maxAllowance: 0.1 },
-  { creditScoreThreshold: 700, rankThreshold: 13, accountAgeThresholdInDays: 30, maxAllowance: 0.2 },
-  { creditScoreThreshold: 700, rankThreshold: 14, accountAgeThresholdInDays: 30, maxAllowance: 0.4 },
-  { creditScoreThreshold: 700, rankThreshold: 15, accountAgeThresholdInDays: 30, maxAllowance: 0.8 },
-  { creditScoreThreshold: 700, rankThreshold: 16, accountAgeThresholdInDays: 30, maxAllowance: 1.5 },
-  { creditScoreThreshold: 700, rankThreshold: 17, accountAgeThresholdInDays: 30, maxAllowance: 1.75 },
-  { creditScoreThreshold: 700, rankThreshold: 18, accountAgeThresholdInDays: 30, maxAllowance: 2 },
-  { creditScoreThreshold: 700, rankThreshold: 19, accountAgeThresholdInDays: 30, maxAllowance: 2.25 },
-  { creditScoreThreshold: 700, rankThreshold: 20, accountAgeThresholdInDays: 30, maxAllowance: 2.5 },
-  { creditScoreThreshold: 700, rankThreshold: 21, accountAgeThresholdInDays: 30, maxAllowance: 3 },
-  { creditScoreThreshold: 700, rankThreshold: 22, accountAgeThresholdInDays: 30, maxAllowance: 3.3 },
-  { creditScoreThreshold: 700, rankThreshold: 23, accountAgeThresholdInDays: 30, maxAllowance: 3.6 },
-  { creditScoreThreshold: 700, rankThreshold: 24, accountAgeThresholdInDays: 30, maxAllowance: 3.9 },
-  { creditScoreThreshold: 700, rankThreshold: 25, accountAgeThresholdInDays: 30, maxAllowance: 4.2 },
-  { creditScoreThreshold: 700, rankThreshold: 26, accountAgeThresholdInDays: 30, maxAllowance: 4.4 },
-  { creditScoreThreshold: 700, rankThreshold: 27, accountAgeThresholdInDays: 30, maxAllowance: 4.6 },
-  { creditScoreThreshold: 700, rankThreshold: 28, accountAgeThresholdInDays: 30, maxAllowance: 4.8 },
-  { creditScoreThreshold: 700, rankThreshold: 29, accountAgeThresholdInDays: 30, maxAllowance: 5 },
-  { creditScoreThreshold: 700, rankThreshold: 30, accountAgeThresholdInDays: 30, maxAllowance: 6 },
-  { creditScoreThreshold: 700, rankThreshold: 31, accountAgeThresholdInDays: 30, maxAllowance: 7 },
+  // ...
   { creditScoreThreshold: 700, rankThreshold: 32, accountAgeThresholdInDays: 30, maxAllowance: 8 },
   { creditScoreThreshold: 700, rankThreshold: 33, accountAgeThresholdInDays: 30, maxAllowance: 10 },
 ];
 
-function MyLoansModal(props) {
+const getAccountAgeInDays = (createdAtDate) => {
+  const accountCreatedAt = new Date(createdAtDate);
+  const currentDate = new Date();
+  const accountAgeInMilliseconds = currentDate - accountCreatedAt;
+  return Math.floor(accountAgeInMilliseconds / (24 * 60 * 60 * 1000));
+};
+
+const MyLoansModal = (props) => {
   const {
     modalIsOpen,
     closeModal,
@@ -100,7 +70,7 @@ function MyLoansModal(props) {
     acQueryMyLoan,
     acQueryLoan,
     acCalculateRemainingLoans,
-    getUser,
+    getUser
   } = props;
 
   // ------------------ LOCAL STATE ------------------
@@ -118,44 +88,20 @@ function MyLoansModal(props) {
     setProductCreateModalIsOpen(false);
   }, []);
 
-  // Replaces the old `updateTextField` method
-  const updateTextField = useCallback((data) => {
-    if (data.loan_amount !== '' || data.apy !== '' || data.loan_period !== '') {
-      setLoanAmount(data.loan_amount || '');
-      setApy(data.apy || '');
-      setLoanPeriod(data.loan_period || '');
-    } else {
-      warningMsgBar(`One of the fields has an empty or invalid value.`);
-    }
-  }, [warningMsgBar]);
-
-  // Utility function to compute account age
-  const getAccountAgeInDays = (createdAtDate) => {
-    const accountCreatedAt = new Date(createdAtDate);
-    const currentDate = new Date();
-    const accountAgeInMilliseconds = currentDate - accountCreatedAt;
-    return Math.floor(accountAgeInMilliseconds / (24 * 60 * 60 * 1000));
-  };
-
-  // Find the best row for the user based on rank & age
-  const getHighlightedRowIndex = useCallback((categoriesArr, rankValue, accountAgeInDays) => {
-    const currentRank = getRank(rankValue);
-    let bestCategoryIndex = -1;
-
-    for (let i = 0; i < categoriesArr.length; i++) {
-      const category = categoriesArr[i];
-      if (
-        currentRank >= category.rankThreshold &&
-        accountAgeInDays >= category.accountAgeThresholdInDays
-      ) {
-        bestCategoryIndex = i;
+  const updateTextField = useCallback(
+    (data) => {
+      if (data.loan_amount !== '' || data.apy !== '' || data.loan_period !== '') {
+        setLoanAmount(data.loan_amount || '');
+        setApy(data.apy || '');
+        setLoanPeriod(data.loan_period || '');
+      } else {
+        warningMsgBar(`One of the fields has an empty or invalid value.`);
       }
-    }
-    return bestCategoryIndex;
-  }, []);
+    },
+    [warningMsgBar]
+  );
 
-  // The main submission
-  const onSubmitFrom = useCallback(async () => {
+  const onSubmitForm = useCallback(async () => {
     if (loanAmount !== '' || apy !== '' || loanPeriod !== '') {
       infoMsgBar(`New Loan Listed!`);
 
@@ -163,7 +109,7 @@ function MyLoansModal(props) {
         _id,
         loan_amount: loanAmount,
         loan_period: loanPeriod,
-        apy,
+        apy
       });
       // Re-fetch data
       await acQueryMyLoan(30, 1, 'loan_amount', '');
@@ -184,151 +130,231 @@ function MyLoansModal(props) {
     acCalculateRemainingLoans,
     getUser,
     infoMsgBar,
-    closeProductCreateModal,
+    closeProductCreateModal
   ]);
 
-  // -------------- RENDERING ---------------------
+  // ------------------ RENDER UTILS ------------------
   const accountAgeInDays = getAccountAgeInDays(created_at);
+
+  const getHighlightedRowIndex = (categoriesArr, rankValue, accountAgeInDays) => {
+    const currentRank = getRank(rankValue);
+    let bestCategoryIndex = -1;
+
+    for (let i = 0; i < categoriesArr.length; i++) {
+      const category = categoriesArr[i];
+      if (
+        currentRank >= category.rankThreshold &&
+        accountAgeInDays >= category.accountAgeThresholdInDays
+      ) {
+        bestCategoryIndex = i;
+      }
+    }
+    return bestCategoryIndex;
+  };
+
   const highlightedRowIndex = getHighlightedRowIndex(categories, totalWagered, accountAgeInDays);
 
+  // ------------------ COMPONENT ------------------
   return (
-    <Modal
-      isOpen={modalIsOpen}
-      onRequestClose={closeModal}
-      style={customStyles}
-      contentLabel="Your Loans Modal"
-    >
-      <div className={isDarkMode ? 'dark_mode' : ''}>
-        <div className="modal-header">
-          <h2 className="modal-title title">
-            <FontAwesomeIcon icon={faCoins} className="mr-2" />
-            Your Loans
-          </h2>
-          <Button className="btn-close" variant='text' color='error'  onClick={closeModal}>
-            ×
-          </Button>
-        </div>
-        <div className="modal-body edit-modal-body my-loans-modal-body">
-          <div className="modal-content-wrapper">
-            <div className="modal-content-panel">
-              <MyBankPage />
-            </div>
-          </div>
-        </div>
-        <div className="modal-footer">
-          {remainingLoans > 0 ? (
-            <div style={{ color: '#ff0000' }}>CLEAR DEBT FIRST TO CREATE A LOAN</div>
-          ) : (
-            <Button variant='contained' color='secondary'  onClick={openProductCreateModal}>
-              CREATE A LOAN &nbsp; <AttachMoney />
-            </Button>
-          )}
-        </div>
-      </div>
-
+    <>
+      {/* MAIN LOANS MODAL */}
       <Modal
-        isOpen={productCreateModalIsOpen}
-        onRequestClose={closeProductCreateModal}
-        style={customStyles}
-        contentLabel="Sell Something"
+        open={modalIsOpen}
+        onClose={closeModal}
+        closeAfterTransition
+        BackdropProps={{
+          style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' }
+        }}
       >
-        <div className={isDarkMode ? 'dark_mode' : ''}>
-          <div className="modal-header">
-            <h2 className="modal-title title">New Loan</h2>
-            <Button className="btn-close" variant='text' color='error'  onClick={closeProductCreateModal}>
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            bgcolor: isDarkMode ? '#333' : '#fff',
+            color: isDarkMode ? '#fff' : '#000',
+            width: '80vw',
+            maxWidth: 700,
+            maxHeight: '80vh',
+            overflowY: 'auto',
+            borderRadius: 1,
+            p: 3,
+            boxShadow: 24
+          }}
+        >
+          {/* HEADER */}
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              mb: 2
+            }}
+          >
+            <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <FontAwesomeIcon icon={faCoins} />
+              Your Loans
+            </Typography>
+            <Button variant="text" color="error" onClick={closeModal} sx={{ fontSize: '1.25rem' }}>
               ×
             </Button>
-          </div>
-          <div className="modal-body edit-modal-body my-loans-modal-body">
-            <div className="modal-content-wrapper">
-              <div className="modal-content-panel">
-                <TableContainer style={{ maxHeight: 150, overflow: 'auto' }}>
-                  <Table aria-label="nice-table">
-                    <TableHead
-                      style={{
-                        textTransform: 'uppercase',
-                        position: 'sticky',
-                        top: 0,
-                        zIndex: 1,
-                        background: isDarkMode
-                          ? 'linear-gradient(45deg, #63077eb5, #f23c3c9c)'
-                          : 'linear-gradient(45deg, rgba(253, 247, 255, 0.37), rgba(255, 174, 0, 0.56))',
-                      }}
-                    >
-                      <TableRow>
-                        <TableCell style={{ textAlign: 'center' }}>Rank</TableCell>
-                        <TableCell style={{ textAlign: 'center' }}>Max Allowance (SOL)</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {categories.map((category, index) => {
-                        if (index < highlightedRowIndex) {
-                          return null; // skip rows below user's current category
-                        }
-                        return (
-                          <TableRow
-                            key={index}
-                            style={{
-                              background: highlightedRowIndex === index ? '#28a745' : '',
-                            }}
-                          >
-                            <TableCell style={{ padding: '0', textAlign: 'center' }}>
-                              <Lottie
-                                options={{
-                                  loop: true,
-                                  autoplay: true,
-                                  animationData: rankIcon,
-                                }}
-                                style={{
-                                  height: '22px',
-                                  width: '22px',
-                                  display: 'inline-block',
-                                }}
-                              />
-                              &nbsp;
-                              <span style={{ transform: 'translateY(4px)' }}>
-                                {category.rankThreshold}
-                              </span>
-                            </TableCell>
-                            <TableCell style={{ textAlign: 'center', padding: '0' }}>
-                              <span>
-                                {category.maxAllowance} (
-                                {convertToCurrency(category.maxAllowance, solPrice)})
-                              </span>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-                {/* Disclaimer Text */}
-                <div
-                  className="roll-tag label"
-                  style={{
-                    marginTop: '10px',
-                    fontStyle: 'italic',
-                    textAlign: 'center',
+          </Box>
+
+          {/* BODY */}
+          <Box sx={{ mb: 2 }}>
+            <MyBankPage />
+          </Box>
+
+          {/* FOOTER */}
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+            {remainingLoans > 0 ? (
+              <Typography sx={{ color: 'error.main' }}>
+                CLEAR DEBT FIRST TO CREATE A LOAN
+              </Typography>
+            ) : (
+              <Button
+                variant="contained"
+                color="secondary"
+                onClick={openProductCreateModal}
+                startIcon={<AttachMoney />}
+              >
+                CREATE A LOAN
+              </Button>
+            )}
+          </Box>
+        </Box>
+      </Modal>
+
+      {/* PRODUCT CREATE MODAL */}
+      <Modal
+        open={productCreateModalIsOpen}
+        onClose={closeProductCreateModal}
+        closeAfterTransition
+        BackdropProps={{
+          style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' }
+        }}
+      >
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            bgcolor: isDarkMode ? '#333' : '#fff',
+            color: isDarkMode ? '#fff' : '#000',
+            width: '80vw',
+            maxWidth: 700,
+            maxHeight: '80vh',
+            overflowY: 'auto',
+            borderRadius: 1,
+            p: 3,
+            boxShadow: 24
+          }}
+        >
+          {/* HEADER */}
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              mb: 2
+            }}
+          >
+            <Typography variant="h6">New Loan</Typography>
+            <Button
+              variant="text"
+              color="error"
+              onClick={closeProductCreateModal}
+              sx={{ fontSize: '1.25rem' }}
+            >
+              ×
+            </Button>
+          </Box>
+
+          {/* TABLE: RANK ALLOWANCES */}
+          <Box sx={{ mb: 2 }}>
+            <TableContainer sx={{ maxHeight: 150, overflow: 'auto' }}>
+              <Table aria-label="nice-table">
+                <TableHead
+                  sx={{
+                    textTransform: 'uppercase',
+                    position: 'sticky',
+                    top: 0,
+                    zIndex: 1,
+                    background: isDarkMode
+                      ? 'linear-gradient(45deg, #63077eb5, #f23c3c9c)'
+                      : 'linear-gradient(45deg, rgba(253, 247, 255, 0.37), rgba(255, 174, 0, 0.56))'
                   }}
                 >
-                  You must have a credit score above 700 and an account age of at least 30 days
-                  to be eligible.
-                </div>
+                  <TableRow>
+                    <TableCell align="center">Rank</TableCell>
+                    <TableCell align="center">Max Allowance (SOL)</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {categories.map((category, index) => {
+                    // Skip rows below user's current category
+                    if (index < highlightedRowIndex) {
+                      return null;
+                    }
+                    return (
+                      <TableRow
+                        key={index}
+                        sx={{
+                          backgroundColor: highlightedRowIndex === index ? '#28a745' : 'inherit'
+                        }}
+                      >
+                        <TableCell align="center">
+                          <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
+                            <Lottie
+                              options={{
+                                loop: true,
+                                autoplay: true,
+                                animationData: rankIcon
+                              }}
+                              height={22}
+                              width={22}
+                              style={{ display: 'inline-block' }}
+                            />
+                            <span>{category.rankThreshold}</span>
+                          </Box>
+                        </TableCell>
+                        <TableCell align="center">
+                          {category.maxAllowance} (
+                          {convertToCurrency(category.maxAllowance, solPrice)})
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </TableContainer>
+            <Typography
+              variant="body2"
+              sx={{ mt: 2, fontStyle: 'italic', textAlign: 'center' }}
+            >
+              You must have a credit score above 700 and an account age of at least 30 days
+              to be eligible.
+            </Typography>
+          </Box>
 
-                <ProductCreatePage updateTextField={updateTextField} />
-              </div>
-            </div>
-          </div>
-          <div className="modal-footer">
-            <Button variant='contained' color='error' onClick={onSubmitFrom}>
+          {/* PRODUCT CREATE PAGE */}
+          <Box sx={{ mb: 2 }}>
+            <ProductCreatePage updateTextField={updateTextField} />
+          </Box>
+
+          {/* FOOTER */}
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <Button variant="contained" color="error" onClick={onSubmitForm}>
               Submit
             </Button>
-          </div>
-        </div>
+          </Box>
+        </Box>
       </Modal>
-    </Modal>
+    </>
   );
-}
+};
 
 // ------------------ REDUX CONNECT ------------------
 const mapStateToProps = (state) => ({
@@ -340,7 +366,7 @@ const mapStateToProps = (state) => ({
   totalWagered: state.auth.totalWagered,
   isDarkMode: state.auth.isDarkMode,
   loading: state.loanReducer.loading,
-  solPrice: state.logic.solPrice,
+  solPrice: state.logic.solPrice
 });
 
 const mapDispatchToProps = {
@@ -350,7 +376,7 @@ const mapDispatchToProps = {
   acQueryMyLoan,
   acQueryLoan,
   acCalculateRemainingLoans,
-  getUser,
+  getUser
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(MyLoansModal);

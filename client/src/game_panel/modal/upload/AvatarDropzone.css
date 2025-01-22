@@ -6,7 +6,7 @@
     text-align-last: center;
 }
 .AvatarPreviewPanel {
-  border-radius: 18px !important;
+  border-radius: 1em !important;
   overflow: unset !important;
 }
 
@@ -47,7 +47,7 @@
   background: transparent;
   color: #747f8d;
   border: 1px solid #d3d7db;
-  border-radius: 0.3em;
+  border-radius: 1em;
   padding: 0 20px;
   font-weight: 600;
 }

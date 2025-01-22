@@ -15,7 +15,7 @@ const showAlert = (onClose, isDarkMode, text, icon) => {
       style: {
         backgroundColor: isDarkMode ? '#333' : '#fff',
         color: isDarkMode ? '#fff' : '#000',
-        borderRadius: '0.5em',
+        borderRadius: 1,
       },
     }}
   >

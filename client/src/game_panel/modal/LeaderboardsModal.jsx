@@ -1,18 +1,19 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import Modal from 'react-modal';
 import { connect } from 'react-redux';
-import Chart from 'react-apexcharts';
 import {
-  Button,
+  Modal,
+  Box,
   Table,
   TableHead,
-  Skeleton,
-  Box,
   TableRow,
   TableCell,
   TableBody,
-  Typography
+  Button,
+  Skeleton,
+  Typography,
+  useMediaQuery
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 
 import { Sort } from '@mui/icons-material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -20,6 +21,7 @@ import { faList } from '@fortawesome/free-solid-svg-icons';
 
 import PlayerModal from '../modal/PlayerModal';
 import Avatar from '../../components/Avatar';
+import Chart from 'react-apexcharts';
 import {
   fetchLeaderboardsData,
   fetchReceiptStatistics,
@@ -27,42 +29,26 @@ import {
 } from '../../redux/Customer/customer.action';
 import { convertToCurrency } from '../../util/conversion';
 
-Modal.setAppElement('#root');
+function LeaderboardsModal({
+  // Modal props
+  modalIsOpen,
+  closeModal,
 
-const customStyles = {
-  overlay: {
-    zIndex: 3,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)'
-  },
-  content: {
-    top: '50%',
-    left: '50%',
-    right: 'auto',
-    bottom: 'auto',
-    transform: 'translate(-50%, -50%)',
-    background: 'transparent',
-    padding: 0,
-    border: 'none'
-  }
-};
+  // Props from Redux
+  isDarkMode,
+  equityChart,
+  receiptChart,
+  leaderboards,
+  loading,
+  solPrice,
+  loadingEquityChart,
+  loadingReceiptChart,
 
-function LeaderboardsModal(props) {
-  const {
-    modalIsOpen,
-    closeModal,
-    isDarkMode,
-    equityChart,
-    receiptChart,
-    leaderboards,
-    loading,
-    solPrice,
-    loadingEquityChart,
-    loadingReceiptChart,
-    fetchLeaderboardsData,
-    fetchEquityDistribution,
-    fetchReceiptStatistics,
-  } = props;
-
+  // Redux actions
+  fetchLeaderboardsData,
+  fetchEquityDistribution,
+  fetchReceiptStatistics
+}) {
   // ---------------------------
   // Local State
   // ---------------------------
@@ -70,42 +56,40 @@ function LeaderboardsModal(props) {
   const [sortOrder, setSortOrder] = useState('desc');
   const [showPlayerModal, setShowPlayerModal] = useState(false);
   const [selectedCreator, setSelectedCreator] = useState('');
+
+  // For charts
   const [equityChartData, setEquityChartData] = useState([]);
   const [receiptChartData, setReceiptChartData] = useState([]);
   const [loadingEquityChartData, setLoadingEquityChartData] = useState(true);
   const [loadingReceiptChartData, setLoadingReceiptChartData] = useState(true);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 480);
+
+  // Responsive: use MUI’s breakpoints
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   // ---------------------------
   // Effects
   // ---------------------------
   useEffect(() => {
-    let isMounted = true; // To replicate _isMounted check
+    if (modalIsOpen) {
+      // Fetch data only when this modal opens
+      (async () => {
+        try {
+          await fetchLeaderboardsData();
+          await fetchEquityDistribution();
+          await fetchReceiptStatistics();
 
-    async function loadData() {
-      try {
-        await fetchLeaderboardsData();
-        await fetchEquityDistribution();
-        await fetchReceiptStatistics();
-
-        if (isMounted) {
           setEquityChartData(equityChart || []);
           setReceiptChartData(receiptChart || []);
           setLoadingEquityChartData(loadingEquityChart || false);
           setLoadingReceiptChartData(loadingReceiptChart || false);
+        } catch (error) {
+          console.error('Error fetching leaderboard data:', error);
         }
-      } catch (error) {
-        console.error('Error fetching leaderboard data:', error);
-      }
+      })();
     }
-
-    loadData();
-
-    // Cleanup
-    return () => {
-      isMounted = false;
-    };
   }, [
+    modalIsOpen,
     fetchLeaderboardsData,
     fetchEquityDistribution,
     fetchReceiptStatistics,
@@ -118,9 +102,9 @@ function LeaderboardsModal(props) {
   // ---------------------------
   // Handlers
   // ---------------------------
-  const handleOpenPlayerModal = useCallback((creator_id) => {
+  const handleOpenPlayerModal = useCallback((creatorId) => {
+    setSelectedCreator(creatorId);
     setShowPlayerModal(true);
-    setSelectedCreator(creator_id);
   }, []);
 
   const handleClosePlayerModal = useCallback(() => {
@@ -131,11 +115,11 @@ function LeaderboardsModal(props) {
     (field) => {
       setSortField((prevField) => {
         if (prevField === field) {
-          // Toggle asc / desc if the same field
+          // Toggle asc/desc if same field
           setSortOrder((prevOrder) => (prevOrder === 'asc' ? 'desc' : 'asc'));
           return prevField;
         } else {
-          // Set a new field and default to 'asc'
+          // Set new field, default to asc
           setSortOrder('asc');
           return field;
         }
@@ -147,52 +131,37 @@ function LeaderboardsModal(props) {
   // ---------------------------
   // Chart Config
   // ---------------------------
-  const baseColor = '#c734ff'; // Base color
+  const baseColor = '#c734ff';
   const chartColors = [
-    `${baseColor}BF`, // 75% opacity
-    `${baseColor}99`, // 60% opacity
-    `${baseColor}80`, // 50% opacity
-    `${baseColor}66`, // 40% opacity
-    `${baseColor}33`, // 20% opacity
-    `${baseColor}1A`  // 10% opacity
+    `${baseColor}BF`,
+    `${baseColor}99`,
+    `${baseColor}80`,
+    `${baseColor}66`,
+    `${baseColor}33`,
+    `${baseColor}1A`
   ];
-  const chartWidth = isMobile ? '320px' : '400px';
+  const chartWidth = isMobile ? '250px' : '350px';
 
-  // Equity Chart
-  const chartSeries = equityChartData?.map((user) => user.equityPercentage) || [];
+  // Equity chart
+  const chartSeries = equityChartData?.map((u) => u.equityPercentage) || [];
   const chartOptions = {
     chart: {
       type: chartSeries.length > 0 ? 'pie' : 'donut',
       background: isDarkMode ? '#121212' : '#ffffff'
     },
     labels:
-      equityChartData && equityChartData.length > 0
-        ? equityChartData.map((user) => user.username.toUpperCase())
-        : [],
+      equityChartData?.map((user) => user.username.toUpperCase()) || [],
     responsive: [
       {
         breakpoint: 480,
-        options: {
-          chart: { width: chartWidth }
-        }
+        options: { chart: { width: chartWidth } }
       }
     ],
     colors: chartColors,
     legend: { show: false },
-    plotOptions: {
-      pie: {
-        donut: {
-          size: '70%',
-          labels: { show: false }
-        }
-      }
-    },
     dataLabels: {
       enabled: true,
-      formatter: (value, { seriesIndex }) => {
-        const user = equityChartData[seriesIndex];
-        return `${value.toFixed(2)}%`;
-      },
+      formatter: (value) => `${value.toFixed(2)}%`,
       style: {
         colors: ['#ffffff'],
         fontSize: '14px',
@@ -200,29 +169,41 @@ function LeaderboardsModal(props) {
       }
     },
     tooltip: {
-      custom: function ({ seriesIndex, w }) {
+      custom: ({ seriesIndex, w }) => {
         const user = equityChartData[seriesIndex];
+        if (!user) return '';
         return `
           <div style="display: flex; align-items: center;">
             <img src="${user.avatar}" alt="${user.username}" style="width: 24px; height: 24px; border-radius: 50%; margin-right: 8px;" />
-            <span style="color: ${baseColor};">${user.username}: ${w.globals.series[seriesIndex].toFixed(2)}%</span>
+            <span style="color: ${baseColor};">
+              ${user.username}: ${w.globals.series[seriesIndex].toFixed(2)}%
+            </span>
           </div>
         `;
       },
       theme: isDarkMode ? 'dark' : 'light',
       useHTML: true
+    },
+    plotOptions: {
+      pie: {
+        donut: {
+          size: '70%',
+          labels: { show: false }
+        }
+      }
     }
   };
 
-  // Receipt Chart
+  // Receipt chart
   const receiptChartSeries = receiptChartData
     ? [
-      receiptChartData.overTenMillion,
-      receiptChartData.betweenOneAndTenMillion,
-      receiptChartData.betweenZeroAndOneMillion,
-      receiptChartData.lessThanZero
-    ]
+        receiptChartData.overTenMillion,
+        receiptChartData.betweenOneAndTenMillion,
+        receiptChartData.betweenZeroAndOneMillion,
+        receiptChartData.lessThanZero
+      ]
     : [];
+
   const receiptChartOptions = {
     chart: {
       type: receiptChartSeries.length > 0 ? 'pie' : 'donut',
@@ -237,14 +218,6 @@ function LeaderboardsModal(props) {
     ],
     colors: chartColors,
     legend: { show: false },
-    plotOptions: {
-      pie: {
-        donut: {
-          size: '70%',
-          labels: { show: false }
-        }
-      }
-    },
     dataLabels: {
       enabled: true,
       formatter: (value) => `${value.toFixed(2)}%`,
@@ -255,7 +228,7 @@ function LeaderboardsModal(props) {
       }
     },
     tooltip: {
-      custom: function ({ seriesIndex, w }) {
+      custom: ({ seriesIndex, w }) => {
         const labels = [
           'Made over 10M',
           'Made over 1M',
@@ -264,231 +237,234 @@ function LeaderboardsModal(props) {
         ];
         return `
           <div style="display: flex; align-items: center;">
-            <span style="color: ${baseColor};">${labels[seriesIndex]}: ${w.globals.series[seriesIndex].toFixed(2)}%</span>
+            <span style="color: ${baseColor};">
+              ${labels[seriesIndex]}: ${w.globals.series[seriesIndex].toFixed(2)}%
+            </span>
           </div>
         `;
       },
       theme: isDarkMode ? 'dark' : 'light',
       useHTML: true
+    },
+    plotOptions: {
+      pie: {
+        donut: {
+          size: '70%',
+          labels: { show: false }
+        }
+      }
     }
   };
 
   // ---------------------------
-  // Sorting
+  // Sorting Leaderboards
   // ---------------------------
   const sortedLeaderboards = leaderboards
     ? [...leaderboards].sort((a, b) => {
-      const aValue = a[sortField];
-      const bValue = b[sortField];
-      return sortOrder === 'asc' ? aValue - bValue : bValue - aValue;
-    })
+        const aValue = a[sortField];
+        const bValue = b[sortField];
+        return sortOrder === 'asc' ? aValue - bValue : bValue - aValue;
+      })
     : [];
 
   // ---------------------------
   // Render
   // ---------------------------
   return (
-    <Modal
-      isOpen={modalIsOpen}
-      onRequestClose={closeModal}
-      style={customStyles}
-      contentLabel="Leaderboards Modal"
-    >
-      <div className={isDarkMode ? 'dark_mode' : ''}>
-        <div className="modal-header">
-          <h2 className="modal-title title">
-            <FontAwesomeIcon icon={faList} className="mr-2" />
-            Leaderboards
-          </h2>
-          <Button className="btn-close" variant='text' color='error'  onClick={closeModal}>
-            ×
-          </Button>
-        </div>
+    <>
+      {/* MAIN MODAL */}
+      <Modal
+        open={modalIsOpen}
+        onClose={closeModal}
+        closeAfterTransition
+        BackdropProps={{ style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' } }}
+      >
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            bgcolor: isDarkMode ? '#400068' : '#fff',
+            color: isDarkMode ? '#fff' : '#000',
+            width: isMobile ? '95vw' : '80vw',
+            height: isMobile ? '95vh' : '80vh',
+            overflowY: 'auto',
+            borderRadius: 1,
+            boxShadow: 24,
+            p: 3
+          }}
+        >
+          {/* HEADER */}
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              mb: 2
+            }}
+          >
+            <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <FontAwesomeIcon icon={faList} />
+              Leaderboards
+            </Typography>
 
-        {showPlayerModal && (
-          <PlayerModal
-            selectedCreator={selectedCreator}
-            modalIsOpen={showPlayerModal}
-            closeModal={handleClosePlayerModal}
-          />
-        )}
+            <Button variant="text" color="error" onClick={closeModal} sx={{ fontSize: '1.25rem' }}>
+              ×
+            </Button>
+          </Box>
 
-        <div className="modal-body leaderboards-modal edit-modal-body">
-          <div className="modal-content-wrapper">
-            <div className="modal-content-panel">
-              {/* Capital Distribution + Profit Distribution */}
-              <div
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  background: 'rgba(170, 170, 170, 0.06)',
-                  borderRadius: '0.3em',
-                  padding: '30px 10px',
-                  marginBottom: '30px'
-                }}
-              >
-                <div
-                  style={{
+          {/* CHARTS SECTION */}
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 4,
+              backgroundColor: isDarkMode ? '#2e2e2e' : '#fafafa',
+              p: 2,
+              borderRadius: 1,
+              mb: 3
+            }}
+          >
+            {/* Equity Chart */}
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography variant="h6">Capital Distribution</Typography>
+              {loadingEquityChartData ? (
+                <Box sx={{ mt: 2 }}>
+                  <Skeleton variant="circular" width={200} height={200} />
+                  <Skeleton variant="text" sx={{ width: '60%', margin: '10px auto' }} />
+                </Box>
+              ) : (
+                chartSeries.length > 0 && (
+                  <Chart
+                    options={chartOptions}
+                    series={chartSeries}
+                    type="pie"
+                    width={isMobile ? 200 : 350}
+                  />
+                )
+              )}
+            </Box>
+
+            {/* Receipt Chart */}
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography variant="h6">Profit Distribution</Typography>
+              {loadingReceiptChartData ? (
+                <Box sx={{ mt: 2 }}>
+                  <Skeleton variant="circular" width={200} height={200} />
+                  <Skeleton variant="text" sx={{ width: '60%', margin: '10px auto' }} />
+                </Box>
+              ) : (
+                receiptChartSeries.length > 0 && (
+                  <Chart
+                    options={receiptChartOptions}
+                    series={receiptChartSeries}
+                    type="pie"
+                    width={isMobile ? 200 : 350}
+                  />
+                )
+              )}
+            </Box>
+          </Box>
+
+          {/* LEADERBOARDS TABLE */}
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            All-time Leaderboards
+          </Typography>
+
+          {!loading ? (
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell onClick={() => handleSort('username')}>
+                    PLAYER {sortField === 'username' && <Sort />}
+                  </TableCell>
+                  <TableCell onClick={() => handleSort('totalWagered')}>
+                    TOTAL WAGERED {sortField === 'totalWagered' && <Sort />}
+                  </TableCell>
+                  <TableCell onClick={() => handleSort('totalProfit')}>
+                    NET PROFIT {sortField === 'totalProfit' && <Sort />}
+                  </TableCell>
+                  <TableCell onClick={() => handleSort('profitAllTimeHigh')}>
+                    ALL-TIME-HIGH {sortField === 'profitAllTimeHigh' && <Sort />}
+                  </TableCell>
+                  <TableCell onClick={() => handleSort('profitAllTimeLow')}>
+                    ALL-TIME-LOW {sortField === 'profitAllTimeLow' && <Sort />}
+                  </TableCell>
+                  <TableCell onClick={() => handleSort('gamePlayed')}>
+                    GAMES PLAYED {sortField === 'gamePlayed' && <Sort />}
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {sortedLeaderboards.map((entry, idx) => (
+                  <TableRow key={idx}>
+                    <TableCell>
+                      <Box
+                        sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
+                        onClick={() => handleOpenPlayerModal(entry._id)}
+                      >
+                        <Avatar
+                          src={entry.avatar}
+                          rank={entry.totalWagered}
+                          accessory={entry.accessory}
+                          username={entry.username}
+                          alt={entry.username}
+                          darkMode={isDarkMode}
+                        />
+                        <Typography sx={{ ml: 1 }}>{entry.username}</Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell>{convertToCurrency(entry.totalWagered, solPrice)}</TableCell>
+                    <TableCell>{convertToCurrency(entry.totalProfit, solPrice)}</TableCell>
+                    <TableCell>{convertToCurrency(entry.profitAllTimeHigh, solPrice)}</TableCell>
+                    <TableCell>{convertToCurrency(entry.profitAllTimeLow, solPrice)}</TableCell>
+                    <TableCell>{entry.gamePlayed}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            // Loading Skeleton for table
+            <Box sx={{ mt: 2 }}>
+              {[...Array(5)].map((_, index) => (
+                <Box
+                  key={index}
+                  sx={{
                     display: 'flex',
-                    flexDirection: window.innerWidth > 768 ? 'row' : 'column',
-                    justifyContent: 'center',
                     alignItems: 'center',
-                    gap: '2rem'
+                    mb: 2
                   }}
                 >
-                  {/* Capital Distribution */}
-                  <Box sx={{ textAlign: 'center', marginBottom: 4 }}>
-                    <Typography variant="h5" className="title">Capital Distribution</Typography>
-                    {loadingEquityChartData ? (
-                      <Box sx={{ marginTop: 2 }}>
-                        <Skeleton variant="circular" sx={{ width: 350, height: 350, margin: '0 auto' }} />
-                        <Skeleton variant="text" sx={{ width: '60%', margin: '10px auto' }} />
-                      </Box>
-                    ) : (
-                      chartSeries.length > 0 && (
-                        <Chart
-                          options={chartOptions}
-                          series={chartSeries}
-                          type="pie"
-                          width="350"
-                        />
-                      )
-                    )}
-                  </Box>
+                  <Skeleton variant="circular" width={40} height={40} sx={{ mr: 2 }} />
+                  <Skeleton variant="text" width="20%" sx={{ mr: 2 }} />
+                  <Skeleton variant="text" width="15%" sx={{ mr: 2 }} />
+                  <Skeleton variant="text" width="15%" sx={{ ml: 'auto' }} />
+                </Box>
+              ))}
+            </Box>
+          )}
+        </Box>
+      </Modal>
 
-                  {/* Profit Distribution */}
-                  <Box sx={{ textAlign: 'center' }}>
-                    <Typography variant="h5" className="title">Profit Distribution</Typography>
-                    {loadingReceiptChartData ? (
-                      <Box sx={{ marginTop: 2 }}>
-                        <Skeleton variant="circular" sx={{ width: 350, height: 350, margin: '0 auto' }} />
-                        <Skeleton variant="text" sx={{ width: '60%', margin: '10px auto' }} />
-                      </Box>
-                    ) : (
-                      receiptChartSeries.length > 0 && (
-                        <Chart
-                          options={receiptChartOptions}
-                          series={receiptChartSeries}
-                          type="pie"
-                          width="350"
-                        />
-                      )
-                    )}
-                  </Box>
-                </div>
-              </div>
-
-              {/* Leaderboards Table */}
-              <div className="table">
-                <h4 className="title">All-time Leaderboards</h4>
-                <br />
-                {!loading ? (
-                  <Table>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell onClick={() => handleSort('username')}>
-                          PLAYER {sortField === 'username' && <Sort />}
-                        </TableCell>
-                        <TableCell onClick={() => handleSort('totalWagered')}>
-                          TOTAL WAGERED {sortField === 'totalWagered' && <Sort />}
-                        </TableCell>
-                        <TableCell onClick={() => handleSort('totalProfit')}>
-                          NET PROFIT {sortField === 'totalProfit' && <Sort />}
-                        </TableCell>
-                        <TableCell onClick={() => handleSort('profitAllTimeHigh')}>
-                          ALL-TIME-HIGH (ATH){' '}
-                          {sortField === 'profitAllTimeHigh' && <Sort />}
-                        </TableCell>
-                        <TableCell onClick={() => handleSort('profitAllTimeLow')}>
-                          ALL-TIME-LOW (ATL){' '}
-                          {sortField === 'profitAllTimeLow' && <Sort />}
-                        </TableCell>
-                        <TableCell onClick={() => handleSort('gamePlayed')}>
-                          GAMES PLAYED {sortField === 'gamePlayed' && <Sort />}
-                        </TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {sortedLeaderboards.map((entry, index) => (
-                        <TableRow key={index}>
-                          <TableCell>
-                            <a
-                              className="player"
-                              onClick={() => handleOpenPlayerModal(entry._id)}
-                            >
-                              <Avatar
-                                className="avatar"
-                                src={entry.avatar}
-                                rank={entry.totalWagered}
-                                accessory={entry.accessory}
-                                username={entry.username}
-                                alt=""
-                                darkMode={isDarkMode}
-                              />
-                            </a>
-                          </TableCell>
-                          <TableCell>
-                            {convertToCurrency(entry.totalWagered, solPrice)}
-                          </TableCell>
-                          <TableCell>
-                            {convertToCurrency(entry.totalProfit, solPrice)}
-                          </TableCell>
-                          <TableCell>
-                            {convertToCurrency(entry.profitAllTimeHigh, solPrice)}
-                          </TableCell>
-                          <TableCell>
-                            {convertToCurrency(entry.profitAllTimeLow, solPrice)}
-                          </TableCell>
-                          <TableCell>{entry.gamePlayed}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                ) : (
-                  <div style={{ margin: '20px 0' }}>
-                    {[...Array(5)].map((_, index) => (
-                      <div
-                        key={index}
-                        style={{ display: 'flex', alignItems: 'center', marginBottom: '15px' }}
-                      >
-                        <Skeleton
-                          variant="circle"
-                          width={40}
-                          height={40}
-                          style={{ marginRight: '15px' }}
-                        />
-                        <Skeleton
-                          variant="text"
-                          width="20%"
-                          style={{ marginRight: '10px' }}
-                        />
-                        <Skeleton variant="text" width="15%" />
-                        <Skeleton
-                          variant="text"
-                          width="15%"
-                          style={{ marginLeft: 'auto', marginRight: '10px' }}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </Modal>
+      {/* PLAYER MODAL */}
+      {showPlayerModal && (
+        <PlayerModal
+          selectedCreator={selectedCreator}
+          modalIsOpen={showPlayerModal}
+          closeModal={handleClosePlayerModal}
+        />
+      )}
+    </>
   );
 }
 
 // ----------------------
-// Redux & HOC Wrapping
+// REDUX & EXPORT
 // ----------------------
 const mapStateToProps = (state) => ({
-  auth: state.auth.isAuthenticated,
-  user_id: state.auth.user._id,
   isDarkMode: state.auth.isDarkMode,
   equityChart: state.customerReducer.equityChart,
   receiptChart: state.customerReducer.receiptChart,

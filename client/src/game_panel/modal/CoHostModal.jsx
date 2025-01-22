@@ -1,15 +1,40 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import Moment from 'moment';
-import { getTransactionCandles, unstake, addNewTransaction, addNewCandle, getMyGames } from '../../redux/Logic/logic.actions';
-import { setBalance } from '../../redux/Auth/user.actions'
-import Chart from "react-apexcharts";
-import { Box, Tooltip, Typography, Button, TextField, TableHead, Table, TableBody, TableCell, TableRow, ButtonGroup } from "@mui/material";
-import { ShowChartOutlined, TrendingUpOutlined, TrendingDownOutlined } from "@mui/icons-material";
+import Chart from 'react-apexcharts';
+import {
+  Box,
+  Tooltip,
+  Typography,
+  Button,
+  TextField,
+  Table,
+  TableHead,
+  TableBody,
+  TableCell,
+  TableRow
+} from '@mui/material';
+import {
+  ShowChartOutlined,
+  TrendingUpOutlined,
+  TrendingDownOutlined
+} from '@mui/icons-material';
+import { debounce } from 'lodash';
+import { ThemeProvider } from '@mui/material/styles';
+
+import { getCustomTheme } from '../../config/theme';
+
+import {
+  getTransactionCandles,
+  unstake,
+  addNewTransaction,
+  addNewCandle,
+  getMyGames
+} from '../../redux/Logic/logic.actions';
+import { setBalance } from '../../redux/Auth/user.actions';
 import { convertToCurrency } from '../../util/conversion';
 import Avatar from '../../components/Avatar';
 import PlayerModal from '../modal/PlayerModal';
-import { debounce } from 'lodash';
 
 function CoHostModal({
   isDarkMode,
@@ -22,236 +47,147 @@ function CoHostModal({
   has_joined,
   solPrice,
   input_only,
-  handleCoHostAmountChange,
+  handleCoHostAmountChange
 }) {
   const dispatch = useDispatch();
-  const [closingRooms, setClosingRooms] = useState({});
-  const [timeFrame, setTimeFrame] = useState('4h');
+  const socket = useSelector((state) => state.auth.socket);
+  const transactionCandles = useSelector((state) => state.logic.candles);
+  const transactions = useSelector((state) => state.auth.transactions);
+
+  // ---- LOCAL STATE ----
   const [showPlayerModal, setShowPlayerModal] = useState(false);
   const [selectedCreator, setSelectedCreator] = useState('');
-  const [selectedTab, setSelectedTab] = useState("PUMP");
-  const [isFocused, setIsFocused] = useState(false);
-  const [isButtonGroupVisible, setIsButtonGroupVisible] = useState(false);
+  const [selectedTab, setSelectedTab] = useState('PUMP');
+  const [timeFrame, setTimeFrame] = useState('4h');
   const [localCoHostAmount, setLocalCoHostAmount] = useState(0.01);
-  const handleTabChange = (tab) => setSelectedTab(tab);
-  const transactionCandles = useSelector(state => state.logic.candles);
-  const transactions = useSelector(state => state.auth.transactions);
-  const socket = useSelector(state => state.auth.socket);
-  const convertToChartCurrency = (input) => {
-    let number = Number(input);
 
-    if (!isNaN(number)) {
-      number = Math.floor(number * 100) / 100;
-
-      let formattedNumber = '';
-      if (number >= 1000000 || number <= -1000000) {
-        formattedNumber = (number / 1000000).toFixed(1) + 'M';
-      } else if (number >= 1000 || number <= -1000) {
-        formattedNumber = (number / 1000).toFixed(1) + 'K';
-      } else {
-        let [whole, decimal] = number.toFixed(2).split('.');
-        whole = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-
-        if (decimal) {
-          decimal = decimal.replace(/0+$/, '');
-        }
-
-        formattedNumber = decimal ? `${whole}.${decimal}` : whole;
-      }
-
-      return formattedNumber;
-    } else {
-      return input.toString();
-    }
-  };
-
+  // ---- EFFECTS ----
   useEffect(() => {
+    // Fetch candlestick data if user has joined and it's not just an input-only view
     if (selectedRow?._id && has_joined && !input_only) {
       dispatch(getTransactionCandles({ roomId: selectedRow._id, timeFrame }));
     }
-  }, [dispatch, selectedRow?._id, timeFrame]);
+  }, [dispatch, selectedRow?._id, timeFrame, has_joined, input_only]);
 
   useEffect(() => {
-    if (selectedRow && selectedRow._id && socket) {
-      const roomId = selectedRow._id;
-      const candleEvent = `NEW_CANDLE_${roomId}`;
-
+    // Listen for real-time candle updates via socket
+    if (selectedRow?._id && socket) {
+      const candleEvent = `NEW_CANDLE_${selectedRow._id}`;
       const handleNewCandle = (data) => {
         dispatch(addNewCandle(data.newCandle));
       };
-
       socket.on(candleEvent, handleNewCandle);
 
       return () => {
         socket.off(candleEvent, handleNewCandle);
       };
     }
-  }, [selectedRow?._id, socket, dispatch]);
+  }, [dispatch, selectedRow?._id, socket]);
 
+  // ---- CHART LOGIC ----
   let chartData = [];
+  const convertToChartCurrency = (input) => {
+    let number = Number(input);
+    if (isNaN(number)) return input.toString();
 
+    // Round to 2 decimals
+    number = Math.floor(number * 100) / 100;
+
+    // Convert large numbers to K, M, etc.
+    if (number >= 1_000_000 || number <= -1_000_000) {
+      return (number / 1_000_000).toFixed(1) + 'M';
+    } else if (number >= 1000 || number <= -1000) {
+      return (number / 1000).toFixed(1) + 'K';
+    } else {
+      let [whole, decimal] = number.toFixed(2).split('.');
+      whole = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      if (decimal) decimal = decimal.replace(/0+$/, '');
+      return decimal ? `${whole}.${decimal}` : whole;
+    }
+  };
+
+  // Build chartData
+  if (transactionCandles && transactionCandles.length > 0) {
+    transactionCandles.forEach((candle, index) => {
+      chartData.push({
+        x: index, // sequential index to remove large time gaps
+        y: [candle.open, candle.high, candle.low, candle.close],
+        startTime: candle.startTime
+      });
+    });
+  }
+
+  // Chart options
   const chartOptions = {
     chart: {
       type: 'candlestick',
       height: 350,
-      zoom: {
-        enabled: true,
-        type: 'x',
-        resetIcon: {
-          size: 30,
-          offsetX: 0,
-          offsetY: 0,
-          fillColor: '#fff',
-          shape: 'circle',
-        },
-      },
-      toolbar: {
-        autoSelected: 'zoom',
-        show: false,
-      },
-      animations: {
-        enabled: false, // Disable animations
-      },
+      zoom: { enabled: true, type: 'x' },
+      toolbar: { show: false },
+      animations: { enabled: false }
     },
     xaxis: {
       type: 'datetime',
       labels: {
         datetimeUTC: false,
         rotate: -45,
-        formatter: (value, timestamp) => {
-          if (value === chartData[0]?.x) {
-            return Moment(chartData[0]?.startTime).format('HH:mm'); // Oldest candle
+        style: { colors: '#fff', fontSize: '12px' },
+        formatter: (value) => {
+          // Show only oldest/newest candle times
+          if (value === 0 && chartData[0]) {
+            return Moment(chartData[0].startTime).format('HH:mm');
           }
-          if (value === chartData[chartData.length - 1]?.x) {
-            return Moment(chartData[chartData.length - 1]?.startTime).format('HH:mm'); // Most recent candle
+          if (value === chartData.length - 1 && chartData.length > 1) {
+            return Moment(chartData[chartData.length - 1].startTime).format('HH:mm');
           }
-          return ''; // Empty labels for other ticks
-        },
-        style: {
-          colors: '#fff',
-          fontSize: '12px',
-          fontFamily: 'Arial, Helvetica, sans-serif',
-          fontWeight: 400,
-        },
+          return '';
+        }
       },
-      tickAmount: 2, // Only two ticks: oldest and most recent candles
-      axisBorder: {
-        show: true,
-        color: '#fff',
-        height: 1,
-      },
-      axisTicks: {
-        show: true,
-        color: '#fff',
-      },
+      tickAmount: 2,
+      axisBorder: { show: true, color: '#fff' },
+      axisTicks: { show: true, color: '#fff' }
     },
     yaxis: {
       labels: {
-        style: {
-          colors: '#fff',
-          fontSize: '12px',
-          fontFamily: 'Arial, Helvetica, sans-serif',
-          fontWeight: 400,
-        },
-        formatter: (value) => convertToChartCurrency(value),
-      },
+        style: { colors: '#fff', fontSize: '12px' },
+        formatter: (value) => convertToChartCurrency(value)
+      }
     },
     tooltip: {
-      custom: function ({ series, seriesIndex, dataPointIndex, w }) {
+      custom: ({ dataPointIndex }) => {
         const candle = chartData[dataPointIndex];
-
-        if (!candle || !candle.y || candle.y.length !== 4) {
-          console.error("Invalid candle data:", candle);
-          return '';
-        }
-
+        if (!candle || !candle.y || candle.y.length !== 4) return '';
         const [open, high, low, close] = candle.y;
         return `
-        <div class="chart-tooltip">
-          <div><strong>Time:</strong> ${Moment(candle.startTime).format('HH:mm')}</div>
-          <div><strong>Open:</strong> ${convertToChartCurrency(open)}</div>
-          <div><strong>High:</strong> ${convertToChartCurrency(high)}</div>
-          <div><strong>Low:</strong> ${convertToChartCurrency(low)}</div>
-          <div><strong>Close:</strong> ${convertToChartCurrency(close)}</div>
-        </div>`;
-      },
+          <div class="chart-tooltip">
+            <div><strong>Time:</strong> ${Moment(candle.startTime).format('HH:mm')}</div>
+            <div><strong>Open:</strong> ${convertToChartCurrency(open)}</div>
+            <div><strong>High:</strong> ${convertToChartCurrency(high)}</div>
+            <div><strong>Low:</strong> ${convertToChartCurrency(low)}</div>
+            <div><strong>Close:</strong> ${convertToChartCurrency(close)}</div>
+          </div>
+        `;
+      }
     },
     plotOptions: {
       candlestick: {
-        wick: {
-          useFillColor: true,
-          width: 1
-        },
-        colors: {
-          upward: '#00b140',
-          downward: '#ff4b4b',
-        },
-        bodyWidth: 1,
-      },
+        wick: { useFillColor: true },
+        colors: { upward: '#00b140', downward: '#ff4b4b' },
+        bodyWidth: 1
+      }
     },
     grid: {
       borderColor: '#444',
-      strokeDashArray: 9,
+      strokeDashArray: 9
     },
     theme: {
-      mode: isDarkMode ? 'dark' : 'light',
-    },
-  };
-
-  // Populate chart data and remove gaps between candles
-  if (transactionCandles && transactionCandles.length > 0) {
-    transactionCandles.forEach((candle, index) => {
-      chartData.push({
-        x: index, // Sequential index to remove gaps
-        y: [candle.open, candle.high, candle.low, candle.close],
-        startTime: candle.startTime, // Keep startTime for tooltip and reference
-      });
-    });
-
-    // Validate the candles for debugging
-    chartData.forEach((candle, index) => {
-      if (!candle.y || candle.y.length !== 4) {
-        console.error(`Invalid candle structure at index ${index}:`, candle);
-      }
-    });
-  } else {
-    console.warn("No candles available to display.");
-  }
-
-  // X-axis labelling logic
-  chartOptions.xaxis.labels.formatter = (value, timestamp) => {
-    if (value === 0) {
-      return Moment(chartData[0]?.startTime).format('HH:mm'); // Oldest candle
+      mode: isDarkMode ? 'dark' : 'light'
     }
-    if (value === chartData.length - 1) {
-      return Moment(chartData[chartData.length - 1]?.startTime).format('HH:mm'); // Most recent candle
-    }
-    return ''; // Empty labels for other ticks
   };
 
-  useEffect(() => {
-    if (isFocused) {
-      setIsButtonGroupVisible(true);
-    } else {
-      const timeoutId = setTimeout(() => {
-        setIsButtonGroupVisible(false);
-      }, 0);
-      return () => clearTimeout(timeoutId);
-    }
-  }, [isFocused]);
-
-
-  const handleOpenPlayerModal = (creator_id) => {
-    setSelectedCreator(creator_id);
-    setShowPlayerModal(true);
-  };
-
-  const handleClosePlayerModal = () => {
-    setShowPlayerModal(false);
-  };
-
+  // ---- LIQUIDITY + SHARE LOGIC ----
   const calculatePercentageChange = (current, original) => {
-    if (original === 0) return 'N/A';
+    if (!original) return 'N/A';
     return (((current - original) / original) * 100).toFixed(2);
   };
 
@@ -260,11 +196,11 @@ function CoHostModal({
     selectedRow.bet_amount
   );
 
-
   const totalShare = Array.isArray(selectedRow.hosts)
     ? selectedRow.hosts.reduce((acc, host) => acc + host.share, 0)
     : 0;
 
+  // ---- RELATIVE TIME HELPER ----
   const formatRelativeTime = (date) => {
     const now = Moment();
     const created = Moment(date);
@@ -275,215 +211,191 @@ function CoHostModal({
     const minutes = diff.minutes();
     const seconds = diff.seconds();
 
-    if (days > 1) {
-      return `${days}d ${hours}h ago`;
-    }
-
-    if (days === 1) {
-      return hours > 0 ? `${days}d ${hours}h ago` : `${days}d ago`;
-    }
-
-    if (hours > 1) {
-      return `${hours}h ${minutes}m ago`;
-    }
-
-    if (hours === 1) {
-      return minutes > 0 ? `${hours}h ${minutes}m ago` : `${hours}h ago`;
-    }
-
-    if (minutes > 1) {
-      return `${minutes}m ago`;
-    }
-
-    if (minutes === 1) {
-      return `${minutes}m ${seconds}s ago`;
-    }
-
+    if (days >= 1) return days > 1 ? `${days}d ${hours}h ago` : `${days}d ${hours > 0 ? hours + 'h' : ''} ago`;
+    if (hours >= 1) return hours > 1 ? `${hours}h ${minutes}m ago` : `${hours}h ${minutes > 0 ? minutes + 'm' : ''} ago`;
+    if (minutes >= 1) return minutes > 1 ? `${minutes}m ago` : `${minutes}m ${seconds}s ago`;
     return `${seconds}s ago`;
   };
 
-
+  // ---- INPUT (coHostAmount) DEBOUNCING ----
   const debouncedHandleChange = useCallback(
     debounce((value) => {
       handleCoHostAmountChange({ target: { value } });
-    }, 300), // Adjust the delay in milliseconds (e.g., 300ms)
+    }, 300),
     []
   );
-
   const handleInputChange = (event) => {
     const value = event.target.value;
-    setLocalCoHostAmount(value); // Update local state immediately for UX
-    debouncedHandleChange(value); // Trigger the debounced handler
+    setLocalCoHostAmount(value);
+    debouncedHandleChange(value);
   };
 
   const debouncedHandleButtonClick = useCallback(
     debounce((value) => {
       handleCoHostAmountChange({ target: { value } });
-    }, 300), // Adjust delay as needed
+    }, 300),
     []
   );
-
   const handleButtonClick = (value) => {
-    setLocalCoHostAmount(value); // Update local state immediately for visual feedback
-    debouncedHandleButtonClick(value); // Trigger the debounced handler
+    setLocalCoHostAmount(value);
+    debouncedHandleButtonClick(value);
   };
 
+  // ---- UNSTAKE HANDLER (JEET) ----
   const handleUnstake = async (winnings, room_id, stakeAmount) => {
-    setClosingRooms(prevState => ({
-      ...prevState,
-      [room_id]: true
-    }));
-
     try {
-
       const parsedWinnings = parseFloat(winnings);
-      if (isNaN(parsedWinnings)) {
-        console.error("Invalid winnings value", winnings);
-        return; // Exit if winnings are invalid
-      }
+      if (isNaN(parsedWinnings)) return console.error("Invalid winnings value");
 
       const parsedBalance = parseFloat(balance);
-      if (isNaN(parsedBalance)) {
-        console.error("Invalid balance value", balance);
-        return; // Exit if balance is invalid
-      }
+      if (isNaN(parsedBalance)) return console.error("Invalid balance value");
 
       await dispatch(unstake(room_id, stakeAmount));
       await dispatch(getMyGames({ game_type: 'All', status: 'open', sort: 'desc' }));
       await dispatch(addNewTransaction({ amount: parsedWinnings, room_id }));
 
-      const jim = parsedBalance + parsedWinnings;
-      await dispatch(setBalance(jim));
-
+      const newBalance = parsedBalance + parsedWinnings;
+      await dispatch(setBalance(newBalance));
     } catch (error) {
       console.error('Error unstaking from room:', error);
-    } finally {
-      setClosingRooms(prevState => ({
-        ...prevState,
-        [room_id]: false
-      }));
     }
   };
 
+  const theme = getCustomTheme(isDarkMode ? 'dark' : 'light');
+
+
+  // ---- PLAYER MODAL HELPERS ----
+  const handleOpenPlayerModal = (creator_id) => {
+    setSelectedCreator(creator_id);
+    setShowPlayerModal(true);
+  };
+  const handleClosePlayerModal = () => {
+    setShowPlayerModal(false);
+  };
+
+  // ---- RENDER ----
   return (
-    <div className={`${isDarkMode && !has_joined ? "dark_mode" : ""} ${(!has_joined && !input_only) ? "big-modal" : "trade-container"}`}>
-      {!input_only && !has_joined && (
-        <div className="modal-header">
-          <h2 className="modal-title title">
-            <ShowChartOutlined className="mr-2" />
-            Trade
-          </h2>
-          <Button
-            className="btn-close" variant='text' color='error'
-            onClick={handleClose}
-          >
-            ×
-          </Button>
-        </div>
-      )}
-      <div className={` ${!has_joined && !input_only ? "modal-body" : ""}`}>
+    <ThemeProvider theme={theme}>
+
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, width: '100%' }}>
+        {/* Header (show only if not joined and not input_only) */}
+        {!input_only && !has_joined && (
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center' }}>
+              <ShowChartOutlined sx={{ mr: 1 }} />
+              Trade
+            </Typography>
+            <Button variant="text" color="error" onClick={handleClose}>
+              ×
+            </Button>
+          </Box>
+        )}
+
+        {/* Player Modal (if open) */}
         {showPlayerModal && (
           <PlayerModal
             selectedCreator={selectedCreator}
             modalIsOpen={showPlayerModal}
             closeModal={handleClosePlayerModal}
-          // {...this.state.selectedRow}
           />
         )}
-        <div className="modal-content-wrapper"
-        >
-          {/* Timeframe Buttons */}
-          {!input_only && !has_joined && (
-            <div className="" style={{ marginBottom: "15px", paddingBottom: "10px" }}>
 
-              <Box
-                sx={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(4, 1fr)', // Default 1x4 on desktop
-                  gap: 3,
-                  marginBottom: '20px',
-                  alignItems: 'center',
-                  '@media (max-width: 600px)': {
-                    gridTemplateColumns: 'repeat(2, 1fr)', // Change to 2x2 on mobile
-                  },
-                }}
-              >
-                {/* Liquidity Column */}
-                <Box sx={{ textAlign: 'center' }}>
-                  <Tooltip title={`Change: ${liquidityPercentageChange}%`} arrow>
-                    <Box>
-                      <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
-                        LIQUIDITY
+        {/* Top Info (if not joined/input_only) */}
+        {!input_only && !has_joined && (
+          <Box sx={{ background: 'rgba(170, 170, 170, 0.06)', p: 2, borderRadius: 1 }}>
+            {/* Liquidity / Holders / Battles / Created-By stats */}
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(4, 1fr)',
+                gap: 3,
+                mb: 2,
+                '@media (max-width: 600px)': {
+                  gridTemplateColumns: 'repeat(2, 1fr)'
+                }
+              }}
+            >
+              {/* LIQUIDITY */}
+              <Box sx={{ textAlign: 'center' }}>
+                <Tooltip title={`Change: ${liquidityPercentageChange}%`} arrow>
+                  <Box>
+                    <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
+                      LIQUIDITY
+                    </Typography>
+                    <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          color:
+                            liquidityPercentageChange > 0
+                              ? '#fff'
+                              : liquidityPercentageChange < 0
+                                ? 'red'
+                                : 'text.primary'
+                        }}
+                      >
+                        {!selectedRow.winnings
+                          ? parseFloat(selectedRow.user_bet)
+                          : convertToCurrency(selectedRow.winnings, solPrice)}
+                        {liquidityPercentageChange > 0 && (
+                          <TrendingUpOutlined sx={{ ml: 1, color: 'green' }} />
+                        )}
+                        {liquidityPercentageChange < 0 && (
+                          <TrendingDownOutlined sx={{ ml: 1, color: 'red' }} />
+                        )}
                       </Typography>
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <Typography
-                          variant="h6"
-                          sx={{
-                            color:
-                              liquidityPercentageChange > 0
-                                ? '#fff'
-                                : liquidityPercentageChange < 0
-                                  ? 'red'
-                                  : 'text.primary',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                          }}
-                        >
-                          {liquidityPercentageChange === 0 && null}
-                          {' '}{!selectedRow.winnings
-                            ? parseFloat(selectedRow.user_bet)
-                            : convertToCurrency(selectedRow.winnings, solPrice)}
-                          {liquidityPercentageChange > 0 && (
-                            <TrendingUpOutlined sx={{ marginRight: 1, color: 'green' }} />
-                          )}
-                          {liquidityPercentageChange < 0 && (
-                            <TrendingDownOutlined sx={{ marginRight: 1, color: 'red' }} />
-                          )}
-                        </Typography>
-                      </Box>
                     </Box>
-                  </Tooltip>
-                </Box>
+                  </Box>
+                </Tooltip>
+              </Box>
 
-                {/* Holders Column */}
-                <Box sx={{ textAlign: 'center' }}>
-                  <Tooltip
-                    title={
-                      <Box>
-                        {selectedRow.hosts.map((host, index) => {
-                          const percentage = totalShare > 0 ? ((host.share / totalShare) * 100).toFixed(2) : 0;
+              {/* HOLDERS */}
+              <Box sx={{ textAlign: 'center' }}>
+                <Tooltip
+                  arrow
+                  title={
+                    <Box>
+                      {Array.isArray(selectedRow.hosts) &&
+                        selectedRow.hosts.map((host, i) => {
+                          const pct = totalShare > 0 ? ((host.share / totalShare) * 100).toFixed(2) : 0;
                           return (
-                            <Typography key={index} variant="body2">
-                              {index === 0 ? 'Dev' : `Co-Host ${index + 1}`}: {percentage}%
+                            <Typography key={i} variant="body2">
+                              {i === 0 ? 'Dev' : `Co-Host ${i + 1}`}: {pct}%
                             </Typography>
                           );
                         })}
-                      </Box>
-                    }
-                    arrow
-                  >
-                    <Box>
-                      <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
-                        HOLDERS
-                      </Typography>
-                      <Typography variant="h6">{selectedRow.hosts.length}</Typography>
                     </Box>
-                  </Tooltip>
-                </Box>
+                  }
+                >
+                  <Box>
+                    <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
+                      HOLDERS
+                    </Typography>
+                    <Typography variant="h6">
+                      {Array.isArray(selectedRow.hosts) ? selectedRow.hosts.length : 0}
+                    </Typography>
+                  </Box>
+                </Tooltip>
+              </Box>
 
-                <Box sx={{ textAlign: 'center' }}>
-                  <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
-                    BATTLES
-                  </Typography>
-                  <Typography variant="h6">
-                    {selectedRow.battles ? selectedRow.battles : (selectedRow.game_log_list?.length || 0)}
-                  </Typography>
-                </Box>
+              {/* BATTLES */}
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
+                  BATTLES
+                </Typography>
+                <Typography variant="h6">
+                  {selectedRow.battles
+                    ? selectedRow.battles
+                    : selectedRow.game_log_list?.length || 0}
+                </Typography>
+              </Box>
 
-                <Box sx={{ textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column' }}>
-                  <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
-                    CREATED BY
-                  </Typography>
+              {/* CREATED BY */}
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
+                  CREATED BY
+                </Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'center' }}>
                   <a className="player" onClick={() => handleOpenPlayerModal(selectedRow.creator_id)}>
                     <Avatar
                       className="avatar desktop-only"
@@ -497,390 +409,309 @@ function CoHostModal({
                   </a>
                 </Box>
               </Box>
-            </div>
-          )}
-          <div className="modal-content-panel" style={{ background: "rgba(170, 170, 170, 0.06)", borderRadius: "0.3em", marginBottom: "15px" }}>
-            {/* Tabs */}
-            {!has_joined && (
-              <>
-                <Box sx={{ display: "flex", justifyContent: "center", marginBottom: "5px" }}>
-      {/* PUMP Button */}
-      <Button
-        onClick={() => handleTabChange("PUMP")}
-        variant={selectedTab === "PUMP" ? "contained" : "outlined"}
-        color={selectedTab === "PUMP" ? "success" : "inherit"} // Use success color when active
-        sx={{
-          marginRight: "10px",
-          flexGrow: 1,
-          textTransform: "none",
-          borderColor: selectedTab !== "PUMP" ? "#4caf50" : "", // Enhance border color when not active
-          color: selectedTab !== "PUMP" ? "#4caf50" : "", // Enhance text color when not active
-        }}
-      >
-        PUMP
-        <TrendingUpOutlined sx={{
-          marginLeft: "8px",
-          color: selectedTab === "PUMP" ? "#fff" : "#4caf50" // Enhance icon color when not active
-        }} />
-      </Button>
+            </Box>
+          </Box>
+        )}
 
-      {/* JEET Button */}
-      <Button
-        onClick={() => handleTabChange("JEET")}
-        variant={selectedTab === "JEET" ? "contained" : "outlined"}
-        color="error" // Always use error color for JEET
-        sx={{
-          flexGrow: 1,
-          textTransform: "none",
-          borderColor: selectedTab !== "JEET" ? "#f44336" : "", // Enhance border color when not active
-          color: selectedTab !== "JEET" ? "#f44336" : "", // Enhance text color when not active
-        }}
-      >
-        JEET
-        <TrendingDownOutlined sx={{
-          marginLeft: "8px",
-          color: selectedTab === "JEET" ? "#fff" : "#f44336" // Keep icon color consistent
-        }} />
-      </Button>
-    </Box>
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    width: "100%",
+        {/* TABs + Betting/PUMP/JEET area (if not joined) */}
+        {!has_joined && (
+          <Box
+            sx={{
+              background: 'rgba(170, 170, 170, 0.06)',
+              p: 2,
+              borderRadius: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 2
+            }}
+          >
+            {/* PUMP / JEET Tabs */}
+            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
+              <Button
+                onClick={() => setSelectedTab('PUMP')}
+                variant={selectedTab === 'PUMP' ? 'contained' : 'outlined'}
+                color={selectedTab === 'PUMP' ? 'success' : 'inherit'}
+                sx={{
+                  flexGrow: 1,
+                  textTransform: 'none',
+                  borderColor: selectedTab !== 'PUMP' ? '#4caf50' : '',
+                  color: selectedTab !== 'PUMP' ? '#4caf50' : ''
+                }}
+              >
+                PUMP
+                <TrendingUpOutlined
+                  sx={{
+                    ml: 1,
+                    color: selectedTab === 'PUMP' ? '#fff' : '#4caf50'
                   }}
-                >
-                  <div className="bet-amount" style={{ width: "100%" }}>
-                    {/* Button Group Positioned Above */}
-                    <Box
-                      sx={{
-                        display: "flex",
-                        marginBottom: "5px",
-                        width: "100%",
-                        gap: "5px", // Add spacing between buttons
-                      }}
-                    >
-                      <Button
-                        variant="outlined"
-                        color="secondary"
-                        onClick={() => handleButtonClick(0.01)} // Set coHostAmount to 0.01
-                        sx={{
-                          flex: 1,
-                          padding: "7.5px",
-                        }}
-                      >
-                        0.01
-                      </Button>
-                      <Button
-                        variant="outlined"
-                        color="secondary"
-                        onClick={() => handleButtonClick(0.1)} // Set coHostAmount to 0.1
-                        sx={{
-                          flex: 1,
-                          padding: "7.5px",
-                        }}
-                      >
-                        0.1
-                      </Button>
-                      <Button
-                        variant="outlined"
-                        color="secondary"
-                        onClick={() => handleButtonClick(1)} // Set coHostAmount to 1
-                        sx={{
-                          flex: 1,
-                          padding: "7.5px",
-                        }}
-                      >
-                        1
-                      </Button>
-                    </Box>
+                />
+              </Button>
 
-                    {/* TextField Positioned Below */}
-                     <TextField color="secondary" 
-                      value={localCoHostAmount}
-                      onChange={handleInputChange}
-                      variant="filled"
-                      pattern="^\\d*\\.?\\d*$"
-                      type="number"
-                      autoComplete="off"
-                      id="betamount"
-                      style={{ width: '100%' }}
-                    />
-                    {/* Pump/Jeet Buttons Positioned Below TextField */}
-                    {input_only && (
-                      <>
-                        {selectedTab === "PUMP" && (
-                          <div
-                            style={{
-                              marginTop: "10px",
-                              width: "100%",
-                              display: "flex",
-                              justifyContent: "center",
-                            }}
-                          >
-                            <Button
-                            variant='contained'
-                            color='secondary'
-                              style={{
-                                width: "100%",
-                                padding: "10px",
-                                fontWeight: "bold", // Optional for emphasis
-                              }}
-                              className="button-submit"
-                              onClick={handleSendCoHost}
-                            >
-                              PUMP
-                            </Button>
-                          </div>
-                        )}
-                        {selectedTab === "JEET" && (
-                          <div
-                            style={{
-                              marginTop: "10px",
-                              width: "100%",
-                              display: "flex",
-                              justifyContent: "center",
-                            }}
-                          >
-                            <Button
-                              style={{
-                                width: "100%",
-                                padding: "10px",
-                              }}
-                              variant='contained' color='secondary'
-                              onClick={() =>
-                                handleUnstake(
-                                  selectedRow?.winnings ??
-                                  parseFloat(selectedRow?.user_bet || 0),
-                                  selectedRow?._id,
-                                  coHostAmount
-                                )
-                              }
-                            >
-                              JEET
-                            </Button>
-                          </div>
-                        )}
-                      </>
-                    )}
-                  </div>
-                </div>
+              <Button
+                onClick={() => setSelectedTab('JEET')}
+                variant={selectedTab === 'JEET' ? 'contained' : 'outlined'}
+                color="error"
+                sx={{
+                  flexGrow: 1,
+                  textTransform: 'none',
+                  borderColor: selectedTab !== 'JEET' ? '#f44336' : '',
+                  color: selectedTab !== 'JEET' ? '#f44336' : ''
+                }}
+              >
+                JEET
+                <TrendingDownOutlined
+                  sx={{ ml: 1, color: selectedTab === 'JEET' ? '#fff' : '#f44336' }}
+                />
+              </Button>
+            </Box>
 
-                {/* Balance Table Section */}
-                <Table>
-                  <TableBody>
-                    {!input_only && (
-                      <>
-                        <TableRow>
-                          <TableCell>BALANCE:</TableCell>
-                          <TableCell style={{ textAlign: 'right' }}>{convertToCurrency(balance, solPrice)}</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell>CURRENT BANKROLL:</TableCell>
-                          <TableCell style={{ color: "#ff8500", textAlign: 'right' }}>
-                            {selectedRow ? convertToCurrency(selectedRow.user_bet, solPrice) : null}
-                          </TableCell>
-                        </TableRow>
-                      </>
+            {/* Co-Host Amount Input */}
+            <Box>
+              <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+                {[0.01, 0.1, 1].map((amt) => (
+                  <Button
+                    key={amt}
+                    variant="outlined"
+                    color="secondary"
+                    onClick={() => handleButtonClick(amt)}
+                    sx={{ flex: 1 }}
+                  >
+                    {amt}
+                  </Button>
+                ))}
+              </Box>
 
-                    )}
-
-                    <TableRow>
-                      <TableCell>BEFORE:</TableCell>
-                      <TableCell style={{ color: "#ff8500", textAlign: 'right' }}>
-                        {Array.isArray(selectedRow.hosts) &&
-                          selectedRow.hosts.length > 0 &&
-                          selectedRow.hosts.some((host) => host.host === user?._id) ? (
-                          <>
-                            {
-                              (() => {
-                                const userHost = selectedRow.hosts.find((host) => host.host === user._id);
-                                if (userHost) {
-                                  return <>{userHost.share.toFixed(2)}% ({convertToCurrency(userHost.share / 100 * parseFloat(selectedRow.user_bet), solPrice)})</>;
-                                } else {
-                                  return convertToCurrency(0, solPrice); // In case the host is not found, fallback to 0
-                                }
-                              })()
-                            }
-                          </>
-                        ) : convertToCurrency(0, solPrice)}
-                      </TableCell>
-                    </TableRow>
-
-                    <TableRow>
-                      <TableCell>AFTER:</TableCell>
-                      <TableCell style={{ color: "#ff8500", textAlign: 'right' }}>
-                        {(() => {
-                          if (!selectedRow || !Array.isArray(selectedRow.hosts)) return "0%";
-
-                          const userHost = user && selectedRow?.hosts?.find((host) => host.host === user._id);
-                          const userStake = userHost ? parseFloat(userHost.stake) : 0;
-                          const coHostAmountFloat = parseFloat(coHostAmount || 0);
-                          const currentBankroll = parseFloat(selectedRow.user_bet || 0);
-                          const fee = coHostAmountFloat * 0.025;
-                          const amountAfterFee = coHostAmountFloat - fee;
-                          const totalBankroll = currentBankroll;
-
-                          if (totalBankroll === 0) return "0%";
-
-                          const totalStakeIncludingUser = selectedRow.hosts.reduce((total, host) => {
-                            return total + parseFloat(host.stake);
-                          }, 0) + amountAfterFee;
-
-                          const newUserStake = userStake + amountAfterFee;
-                          const newUserShareBuy = (newUserStake / totalStakeIncludingUser) * 100;
-                          const userCurrentShareAmount = userHost && !isNaN(userHost.share) && !isNaN(selectedRow.user_bet)
-                            ? (userHost.share / 100) * parseFloat(selectedRow.user_bet)
-                            : 0;
-                          const newUserStakeAfterSell = userCurrentShareAmount - amountAfterFee;
-                          const newUserShareSell = (newUserStakeAfterSell / totalBankroll) * 100;
-                          const buyShare = `${Math.min(newUserShareBuy.toFixed(2), 100).toString()}%`;
-                          const sellShare = newUserStakeAfterSell > 0
-                            ? `${Math.min(newUserShareSell.toFixed(2), 100).toString()}%`
-                            : "0%";
-                          return selectedTab === "PUMP" ? `~${buyShare}` : `~${sellShare}`;
-                        })()}
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </>
-
-            )}
-            {!input_only && (
-
-              <Chart
-                options={chartOptions}
-                series={[{ data: chartData }]}
-                type="candlestick"
-                height={350}
+              <TextField
+                color="secondary"
+                value={localCoHostAmount}
+                onChange={handleInputChange}
+                variant="filled"
+                type="number"
+                fullWidth
               />
-            )}
 
-          </div>
-          {!has_joined && !input_only && (
-            <div style={{ background: "rgba(170, 170, 170, 0.06)", borderRadius: "20px", marginBottom: "30px" }}>
+              {/* If input_only => show PUMP/JEET buttons under the textfield */}
+              {input_only && (
+                <Box sx={{ mt: 2 }}>
+                  {selectedTab === 'PUMP' ? (
+                    <Button
+                      variant="contained"
+                      color="secondary"
+                      onClick={handleSendCoHost}
+                      fullWidth
+                    >
+                      PUMP
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="contained"
+                      color="secondary"
+                      onClick={() =>
+                        handleUnstake(
+                          selectedRow?.winnings ?? parseFloat(selectedRow?.user_bet || 0),
+                          selectedRow?._id,
+                          coHostAmount
+                        )
+                      }
+                      fullWidth
+                    >
+                      JEET
+                    </Button>
+                  )}
+                </Box>
+              )}
+            </Box>
 
-              <Table>
-                <TableHead>
+            {/* BALANCE / AFTER-BEFORE Table */}
+            <Table>
+              <TableBody>
+                {!input_only && (
+                  <>
+                    <TableRow>
+                      <TableCell>BALANCE:</TableCell>
+                      <TableCell align="right">
+                        {convertToCurrency(balance, solPrice)}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>CURRENT BANKROLL:</TableCell>
+                      <TableCell align="right" sx={{ color: '#ff8500' }}>
+                        {selectedRow
+                          ? convertToCurrency(selectedRow.user_bet, solPrice)
+                          : null}
+                      </TableCell>
+                    </TableRow>
+                  </>
+                )}
+
+                {/* BEFORE */}
+                <TableRow>
+                  <TableCell>BEFORE:</TableCell>
+                  <TableCell align="right" sx={{ color: '#ff8500' }}>
+                    {(() => {
+                      if (
+                        Array.isArray(selectedRow.hosts) &&
+                        selectedRow.hosts.some((host) => host.host === user?._id)
+                      ) {
+                        const userHost = selectedRow.hosts.find(
+                          (host) => host.host === user._id
+                        );
+                        if (userHost) {
+                          const sharePct = userHost.share.toFixed(2);
+                          const shareValue = convertToCurrency(
+                            (userHost.share / 100) * parseFloat(selectedRow.user_bet),
+                            solPrice
+                          );
+                          return `${sharePct}% (${shareValue})`;
+                        }
+                      }
+                      return convertToCurrency(0, solPrice);
+                    })()}
+                  </TableCell>
+                </TableRow>
+
+                {/* AFTER */}
+                <TableRow>
+                  <TableCell>AFTER:</TableCell>
+                  <TableCell align="right" sx={{ color: '#ff8500' }}>
+                    {(() => {
+                      // If no hosts or no user
+                      if (!selectedRow || !Array.isArray(selectedRow.hosts)) return '0%';
+
+                      const userHost = selectedRow.hosts.find((host) => host.host === user?._id);
+                      const userStake = userHost ? parseFloat(userHost.stake) : 0;
+                      const coHostAmountFloat = parseFloat(coHostAmount || 0);
+                      const fee = coHostAmountFloat * 0.025;
+                      const amountAfterFee = coHostAmountFloat - fee;
+
+                      const currentBankroll = parseFloat(selectedRow.user_bet || 0);
+                      if (!currentBankroll) return '0%';
+
+                      const totalStake = selectedRow.hosts.reduce(
+                        (acc, host) => acc + parseFloat(host.stake),
+                        0
+                      );
+                      const totalStakeIncludingUser = totalStake + amountAfterFee;
+
+                      // BUY scenario
+                      const newUserStake = userStake + amountAfterFee;
+                      const newUserShareBuy = (newUserStake / totalStakeIncludingUser) * 100;
+
+                      // SELL scenario
+                      const userCurrentShareVal =
+                        userHost && !isNaN(userHost.share)
+                          ? (userHost.share / 100) * currentBankroll
+                          : 0;
+                      const newUserStakeAfterSell = userCurrentShareVal - amountAfterFee;
+                      const newUserShareSell =
+                        (newUserStakeAfterSell / currentBankroll) * 100;
+
+                      const buyShare = `${Math.min(newUserShareBuy, 100).toFixed(2)}%`;
+                      const sellShare =
+                        newUserStakeAfterSell > 0
+                          ? `${Math.min(newUserShareSell, 100).toFixed(2)}%`
+                          : '0%';
+
+                      return selectedTab === 'PUMP' ? `~${buyShare}` : `~${sellShare}`;
+                    })()}
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </Box>
+        )}
+
+        {/* Chart (if not input_only and user joined) */}
+        {!input_only && (
+          <Box sx={{ my: 2 }}>
+            <Chart
+              options={chartOptions}
+              series={[{ data: chartData }]}
+              type="candlestick"
+              height={350}
+            />
+          </Box>
+        )}
+
+        {/* Transaction Table (if not joined + not input_only) */}
+        {!has_joined && !input_only && (
+          <Box sx={{ background: 'rgba(170, 170, 170, 0.06)', p: 2, borderRadius: 1 }}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Description</TableCell>
+                  <TableCell align="center">Amount</TableCell>
+                  <TableCell align="right">Date</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {transactions.length > 0 ? (
+                  transactions.map((tx, i) => {
+                    // Identify relevant keywords
+                    let desc = tx.description?.toLowerCase() || '';
+                    let label = null;
+                    if (desc.includes('joined')) label = 'Bet';
+                    else if (desc.includes('created')) label = 'Created';
+                    else if (desc.includes('pumped')) label = 'Pumped';
+                    else if (desc.includes('jeeted')) label = 'Jeeted';
+                    // Skip if no recognized keyword
+                    if (!label) return null;
+
+                    return (
+                      <TableRow key={i}>
+                        <TableCell>{label}</TableCell>
+                        <TableCell align="center">
+                          {convertToCurrency(tx.amount, solPrice)}
+                        </TableCell>
+                        <TableCell align="right">
+                          {formatRelativeTime(tx.created_at)}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                ) : (
                   <TableRow>
-                    <TableCell
-                      style={{
-                        textAlign: 'left',
-                        paddingLeft: '40px',
-                        textTransform: 'uppercase',
-                        position: 'sticky',
-                        top: 0,
-                        zIndex: 1,
-                        fontSize: '14px',
-                        minWidth: '120px'
-                      }}
-                    >
-                      Description
-                    </TableCell>
-                    <TableCell
-                      style={{
-                        textAlign: 'center',
-                        textTransform: 'uppercase',
-                        position: 'sticky',
-                        top: 0,
-                        zIndex: 1,
-                        fontSize: '14px',
-                        minWidth: '100px'
-                      }}
-                    >
-                      Amount
-                    </TableCell>
-                    <TableCell
-                      style={{
-                        textAlign: 'right',
-                        textTransform: 'uppercase',
-                        paddingRight: '40px',
-                        position: 'sticky',
-                        top: 0,
-                        zIndex: 1,
-                        fontSize: '14px',
-                        minWidth: '120px'
-                      }}
-                    >
-                      Date
+                    <TableCell colSpan={3} align="center">
+                      No transactions available
                     </TableCell>
                   </TableRow>
-                </TableHead>
-                <TableBody>
-                  {transactions.length > 0 ? (
-                    transactions.map((transaction, index) => {
-                      // Check if description contains any of the keywords
-                      let descriptionText = transaction.description || '';
-                      if (descriptionText.toLowerCase().includes('joined')) {
-                        descriptionText = 'Bet';
-                      } else if (descriptionText.toLowerCase().includes('created')) {
-                        descriptionText = 'Created';
-                      } else if (descriptionText.toLowerCase().includes('pumped')) {
-                        descriptionText = 'Pumped';
-                      } else if (descriptionText.toLowerCase().includes('jeeted')) {
-                        descriptionText = 'Jeeted';
-                      } else {
-                        // Skip transaction if no keyword is found
-                        return null; // Skip rendering this row
-                      }
+                )}
+              </TableBody>
+            </Table>
+          </Box>
+        )}
 
-                      return (
-                        <TableRow key={index}>
-                          <TableCell style={{ textAlign: 'left', paddingLeft: '40px' }}>{descriptionText}</TableCell>
-                          <TableCell style={{ textAlign: 'center' }}>{convertToCurrency(transaction.amount, solPrice)}</TableCell>
-                          <TableCell style={{ textAlign: 'right', paddingRight: '40px' }}>
-                            {formatRelativeTime(transaction.created_at)} {/* Format time */}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={3} align="center">No transactions available</TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Footer Actions */}
-      {!input_only && (
-
-        <div className={`modal-footer ${has_joined ? 'mobile-only' : ''}`}>
-          <Button variant='contained' color='error' onClick={handleSendCoHost}>
-            PUMP
-            <TrendingUpOutlined style={{ color: "#fff", marginLeft: "8px" }} />
-          </Button>
-          <Button
-            variant='contained' color='error'
-            onClick={() =>
-              handleUnstake(
-                selectedRow?.winnings ?? parseFloat(selectedRow?.user_bet || 0), // Use winnings if available, otherwise fallback
-                selectedRow?._id,
-                coHostAmount
-              )
-            }
-            style={{ marginLeft: "10px", border: "unset", background: "linear-gradient(357deg, #00ff17, #28a745)", boxShadow: "rgb(37 184 65) 0px -0.5px 0px, rgb(34, 117, 52) 0px -3px inset, rgb(80, 191, 98) 0px 2px inset" }}
-          >
-            JEET
-            <TrendingDownOutlined style={{ color: "#fff", marginLeft: "4px" }} />
-          </Button>
-        </div>
-      )}
-
-    </div >
-
-
+        {/* Footer Buttons (PUMP / JEET) if not input_only */}
+        {!input_only && (
+          <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+            <Button variant="contained" color="error" onClick={handleSendCoHost}>
+              PUMP
+              <TrendingUpOutlined sx={{ ml: 1 }} />
+            </Button>
+            <Button
+              variant="contained"
+              color="error"
+              onClick={() =>
+                handleUnstake(
+                  selectedRow?.winnings ?? parseFloat(selectedRow?.user_bet || 0),
+                  selectedRow?._id,
+                  coHostAmount
+                )
+              }
+              sx={{
+                background: 'linear-gradient(357deg, #00ff17, #28a745)',
+                boxShadow:
+                  'rgb(37 184 65) 0px -0.5px 0px, rgb(34, 117, 52) 0px -3px inset, rgb(80, 191, 98) 0px 2px inset'
+              }}
+            >
+              JEET
+              <TrendingDownOutlined sx={{ ml: 1 }} />
+            </Button>
+          </Box>
+        )}
+      </Box>
+    </ThemeProvider>
   );
-
 }
-
-
 
 export default CoHostModal;

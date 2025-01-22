@@ -1,34 +1,18 @@
 import React, { useState } from 'react';
 import { connect } from 'react-redux';
-import Modal from 'react-modal';
-import MyProductPage from '../../admin_panel/app/ProductPages/ProductSerchPage/MyProductPage';
 import {
-  Button
+  Modal,
+  Box,
+  Button,
+  Typography
 } from '@mui/material';
-import AttachMoney from '@mui/icons-material/AttachMoney';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faBox } from '@fortawesome/free-solid-svg-icons';
+
+import MyProductPage from '../../admin_panel/app/ProductPages/ProductSerchPage/MyProductPage';
 import { warningMsgBar, infoMsgBar } from '../../redux/Notification/notification.actions';
 import MarketplaceModal from './MarketplaceModal';
-import { faBox } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-
-Modal.setAppElement('#root');
-
-const customStyles = {
-  overlay: {
-    zIndex: 3,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-  },
-  content: {
-    top: '50%',
-    left: '50%',
-    right: 'auto',
-    bottom: 'auto',
-    transform: 'translate(-50%, -50%)',
-    background: 'transparent',
-    padding: 0,
-    border: 'none',
-  },
-};
 
 function InventoryModal(props) {
   const { modalIsOpen, closeModal, isDarkMode, solPrice } = props;
@@ -44,38 +28,69 @@ function InventoryModal(props) {
     setShowMarketplaceModal(false);
   };
 
-  return (
-    <Modal
-      isOpen={modalIsOpen}
-      onRequestClose={closeModal}
-      style={customStyles}
-      contentLabel="Inventory Modal"
-    >
-      <div className={isDarkMode ? 'dark_mode' : ''}>
-        <div className="modal-header">
-          <h2 className="modal-title title">
-            <FontAwesomeIcon icon={faBox} className="mr-2" />
-            &nbsp;Inventory
-          </h2>
-          <Button className="btn-close" variant='text' color='error' onClick={closeModal}>
-            ×
-          </Button>
-        </div>
-        <div className="modal-body edit-modal-body inventory-modal-body">
-          <div className="modal-content-wrapper">
-            <div className="modal-content-panel">
-              <MyProductPage solPrice={solPrice} />
-            </div>
-          </div>
-        </div>
-        <div className="modal-footer">
-          <Button variant='contained' color='secondary' onClick={handleOpenMarketplaceModal}>
-            BUY More &nbsp;
-            <AttachMoney />
-          </Button>
-        </div>
-      </div>
+  // ------------------ STYLES ------------------
+  const modalBoxStyle = {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    bgcolor: '#400068', // Purple background
+    color: '#fff',
+    boxShadow: 24,
+    borderRadius: 1,
+    p: 3,
+    width: 600,
+    maxWidth: '90vw',
+    maxHeight: '90vh',
+    overflowY: 'auto'
+  };
 
+  return (
+    <>
+      <Modal
+        open={modalIsOpen}
+        onClose={closeModal}
+        closeAfterTransition
+        sx={{ zIndex: 1300 }}
+        BackdropProps={{
+          style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' }
+        }}
+      >
+        <Box sx={modalBoxStyle}>
+          {/* HEADER */}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+            <Typography
+              variant="h6"
+              sx={{ display: 'flex', alignItems: 'center', fontWeight: 'bold' }}
+            >
+              <FontAwesomeIcon icon={faBox} style={{ marginRight: 8 }} />
+              Inventory
+            </Typography>
+            <Button variant="text" color="error" onClick={closeModal}>
+              X
+            </Button>
+          </Box>
+
+          {/* BODY */}
+          <Box sx={{ mb: 2 }}>
+            <MyProductPage solPrice={solPrice} />
+          </Box>
+
+          {/* FOOTER */}
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+            <Button
+              variant="contained"
+              color="secondary"
+              onClick={handleOpenMarketplaceModal}
+              startIcon={<AttachMoneyIcon />}
+            >
+              BUY More
+            </Button>
+          </Box>
+        </Box>
+      </Modal>
+
+      {/* Marketplace Modal (still uses MUI or React Modal based on its own code) */}
       {showMarketplaceModal && (
         <MarketplaceModal
           modalIsOpen={showMarketplaceModal}
@@ -83,7 +98,7 @@ function InventoryModal(props) {
           isDarkMode={isDarkMode}
         />
       )}
-    </Modal>
+    </>
   );
 }
 

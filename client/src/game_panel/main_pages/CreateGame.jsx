@@ -574,7 +574,7 @@ class CreateGame extends Component {
 
           {this.state.step === 2 && (
             <>
-              <div style={{ position: 'relative', marginLeft: '-37.5%' }}>
+              <div style={{ position: 'relative' }}>
                 <Button id="btn_bet" onClick={this.onCreateRoom}>
                   Place Bet
                 </Button>

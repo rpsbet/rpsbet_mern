@@ -239,7 +239,7 @@ const Comments = ({
               mb: 2, 
               p: 2, 
               bgcolor: isDarkMode ? '#1e1e1e' : '#f5f5f5', 
-              borderRadius: 2 
+              borderRadius: 1 
             }}
           >
             <Box sx={{ mr: 2 }}>

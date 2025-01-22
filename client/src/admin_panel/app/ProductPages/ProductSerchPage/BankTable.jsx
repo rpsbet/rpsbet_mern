@@ -5,7 +5,6 @@ import { alertModal } from '../../../../game_panel/modal/ConfirmAlerts';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import MyLoansModal from '../../../../game_panel/modal/MyLoansModal';
 import RpsPriceChart from '../../../../components/RpsPriceChart';
-import { token } from '../../../../config/index.js';
 import {
   faClock,
   faSort,
@@ -46,6 +45,9 @@ import { updateDigitToPoint2 } from '../../../../util/helper';
 import Avatar from '../../../../components/Avatar';
 import PlayerModal from '../../../../game_panel/modal/PlayerModal';
 
+const token = 'BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump';
+
+
 const MarketplaceContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -71,7 +73,7 @@ const ProductGrid = styled.div`
 const ProductCard = styled.div`
   position: relative;
   background: linear-gradient(156deg, #28a745, #007bff);
-  border-radius: 20px;
+  border-radius: 1em;
   padding: 10px;
   display: flex;
   flex-direction: column;
@@ -96,7 +98,7 @@ const ProductCard = styled.div`
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.5);
-    border-radius: 20px;
+    border-radius: 1em;
     opacity: 0;
     transition: opacity 0.2s;
   }
@@ -152,7 +154,7 @@ const APY = styled.span`
   right: 0;
   height: 30px;
   background: #28a745;
-  border-radius: 10px;
+  border-radius: 1em;
   box-shadow: inset 0px -1px 11px #005b15;
   color: #fff;
   font-weight: 500;
@@ -370,9 +372,9 @@ const BankTable = (props) => {
   return (
     <MarketplaceContainer
       style={{
-        padding: '20px',
+        padding: '16px',
         background: 'rgb(170 170 170 / 6%)',
-        borderRadius: '20px',
+        borderRadius: '0.3em',
       }}
     >
       {/* Filter & Sort UI */}
@@ -513,7 +515,7 @@ const BankTable = (props) => {
                             {row.loaners.length > 2 && (
                               <div
                                 className="avatar-square"
-                                style={{ marginLeft: '20px', zIndex: '0' }}
+                                style={{ marginLeft: '20px' }}
                               >
                                 <div className="avatar-count">
                                   +{row.loaners.length - 2}

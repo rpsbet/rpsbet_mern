@@ -68,7 +68,7 @@ const ProductGrid = styled.div`
 const ProductCard = styled.div`
   position: relative;
   background: linear-gradient(156deg,  #28a745, #007bff);
-  border-radius: 20px;
+  border-radius: 1em;
   padding: 10px;
   display: -ms-flexbox;
   display: flex;
@@ -93,7 +93,7 @@ const ProductCard = styled.div`
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.5);
-    border-radius: 20px;
+    border-radius: 1em;
     opacity: 0;
     transition: opacity 0.2s;
   }
@@ -139,7 +139,7 @@ height: 40px;
 padding: 0 5px;
 line-height: 40px;
 background: #28a745;
-border-radius: 10px;
+border-radius: 1em;
 box-shadow: inset 0px -1px 11px #005b15;
 color: #fff;
 font-weight: 500;
@@ -353,7 +353,7 @@ class MyBankTable extends Component {
                   flexDirection: 'column',
                   alignItems: 'center',
                   border: '1px solid #ddd',
-                  borderRadius: 2,
+                  borderRadius: 1,
                   boxShadow: 1,
                   marginBottom: 2,
                 }}

@@ -591,7 +591,7 @@ const ChartDivEl = styled.div`
   grid-area: Charts;
   justify-self: center;
   width: 100%;
-  border-radius: 5px;
+  border-radius: 1em;
   background-color: #424242;
   padding: 25px;
   align-items: center;

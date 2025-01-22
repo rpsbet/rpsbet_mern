@@ -47,7 +47,7 @@ const WarningContainer = styled.div`
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  border-radius: 5px;
+  border-radius: 1em;
   margin-top: 10px;
 `;
 
