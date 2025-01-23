@@ -71,7 +71,7 @@ const SettingsRef = ({
     const defaultText =
       gamemode === 'Quick Shoot'
         ? 'If the user clicks top corner, go for bottom corner.'
-        : 'Play predictable patterns, try to predict their moves';
+        : 'Play predictable patterns, but if they increase their bet amount, switch to predict their moves';
     setPrompt(defaultText);
     setDebouncedPrompt(defaultText);
   }, [gamemode]);
