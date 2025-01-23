@@ -103,7 +103,9 @@ const predictNextQs = (qs_list, gameType) => {
     currentState2 === undefined ||
     currentState3 === undefined
   ) {
-    throw new Error('Insufficient data in qs_list to determine current states.');
+    throw new Error(
+      'Insufficient data in qs_list to determine current states.',
+    );
   }
 
   const weightedOptions = [];
@@ -242,9 +244,10 @@ function innovate_qs(historicData, qs_game_type) {
   const allSame = firstJoinerQs.every((qs) => qs === firstJoinerQs[0]);
   if (allSame) {
     const lastMove = firstJoinerQs[0];
-    const possibleMoves = Array.from({ length: qs_game_type }, (_, i) => i).filter(
-      (move) => move !== lastMove,
-    );
+    const possibleMoves = Array.from(
+      { length: qs_game_type },
+      (_, i) => i,
+    ).filter((move) => move !== lastMove);
     nextState.move = getRandomItem_qs(qs_game_type, possibleMoves);
     nextState.risk = 3;
   } else {
@@ -386,9 +389,10 @@ function generatePattern_qs(allBetItems, qs_game_type) {
     const maxContinuation = Math.floor(Math.random() * 4) + 2;
 
     if (continuationCount > maxContinuation) {
-      const movesNotInPattern = Array.from({ length: qs_game_type }, (_, i) => i).filter(
-        (move) => !matchedPattern.includes(move),
-      );
+      const movesNotInPattern = Array.from(
+        { length: qs_game_type },
+        (_, i) => i,
+      ).filter((move) => !matchedPattern.includes(move));
       const randomMove =
         movesNotInPattern[Math.floor(Math.random() * movesNotInPattern.length)];
       return randomMove;
@@ -437,9 +441,10 @@ function skillissueold_qs(historicData, qs_game_type) {
   const lastTwoMoves = getLastMoves(historicData, 4);
   const lastThreeMoves = getLastMoves(historicData, 3);
 
-  const availableMoves = Array.from({ length: qs_game_type }, (_, i) => i).filter(
-    (move) => move !== leastPlayedMove,
-  );
+  const availableMoves = Array.from(
+    { length: qs_game_type },
+    (_, i) => i,
+  ).filter((move) => move !== leastPlayedMove);
 
   if (Number.isNaN(leastPlayedMove)) {
     return { counterMove: getRandomItem_qs(qs_game_type), risk: 1 };
@@ -483,12 +488,10 @@ async function openAIPredictionAI_qs(historicData, qs_game_type) {
 
   const userMoves = historicData.map((item) => item.joiner_qs);
   const userMovesString = userMoves.join(', ');
-
   const messages = [
     {
       role: 'system',
-      content:
-        "You are an expert AI that predicts the user's next Quick Shoot move. Respond with a single integer (0 to N-1).",
+      content: `You are an expert AI that predicts the user's next Quick Shoot move. Respond only with a single integer between 0 and ${qs_game_type - 1}).`,
     },
     {
       role: 'user',
@@ -500,7 +503,7 @@ async function openAIPredictionAI_qs(historicData, qs_game_type) {
 
   try {
     // Instead of openai.createChatCompletion, use openai.Chat.Completions.create
-    const response = await openai.Chat.Completions.create({
+    const response = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages,
       max_tokens: 10,
