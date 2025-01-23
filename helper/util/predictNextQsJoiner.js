@@ -1,5 +1,10 @@
 const tf = require('@tensorflow/tfjs-node');
+const { Configuration, OpenAIApi } = require('openai');
 
+const configuration = new Configuration({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+const openai = new OpenAIApi(configuration);
 const calcWinChanceQs = (gameType, rounds) => {
   let probWin = (100 / gameType).toFixed(2);
   let probLose = (100 - probWin).toFixed(2);
@@ -28,19 +33,21 @@ async function predictNextQs(qs_list, gameType) {
   const options = [...Array(gameType).keys()];
   const transitionMatrix = {};
 
-  const filteredQsList = qs_list.filter(item => item.qs !== null && item.qs !== '');
+  const filteredQsList = qs_list.filter(
+    (item) => item.qs !== null && item.qs !== '',
+  );
 
   if (filteredQsList.length < 3) {
     return options[Math.floor(Math.random() * gameType)];
   }
 
-  options.forEach(option1 => {
+  options.forEach((option1) => {
     transitionMatrix[option1] = {};
-    options.forEach(option2 => {
+    options.forEach((option2) => {
       transitionMatrix[option1][option2] = {};
-      options.forEach(option3 => {
+      options.forEach((option3) => {
         transitionMatrix[option1][option2][option3] = {};
-        options.forEach(option4 => {
+        options.forEach((option4) => {
           transitionMatrix[option1][option2][option3][option4] = 0;
         });
       });
@@ -49,20 +56,29 @@ async function predictNextQs(qs_list, gameType) {
 
   // Populate transition matrix
   for (let i = 0; i < filteredQsList.length - 3; i++) {
-    transitionMatrix[filteredQsList[i].qs][filteredQsList[i + 1].qs][filteredQsList[i + 2].qs][filteredQsList[i + 3].qs]++;
+    transitionMatrix[filteredQsList[i].qs][filteredQsList[i + 1].qs][
+      filteredQsList[i + 2].qs
+    ][filteredQsList[i + 3].qs]++;
   }
 
   // Normalize transition matrix
-  Object.keys(transitionMatrix).forEach(fromState1 => {
-    Object.keys(transitionMatrix[fromState1]).forEach(fromState2 => {
-      Object.keys(transitionMatrix[fromState1][fromState2]).forEach(fromState3 => {
-        const totalTransitions = Object.values(transitionMatrix[fromState1][fromState2][fromState3]).reduce((a, b) => a + b, 0);
-        Object.keys(transitionMatrix[fromState1][fromState2][fromState3]).forEach(toState => {
-          if (totalTransitions > 0) {
-            transitionMatrix[fromState1][fromState2][fromState3][toState] /= totalTransitions;
-          }
-        });
-      });
+  Object.keys(transitionMatrix).forEach((fromState1) => {
+    Object.keys(transitionMatrix[fromState1]).forEach((fromState2) => {
+      Object.keys(transitionMatrix[fromState1][fromState2]).forEach(
+        (fromState3) => {
+          const totalTransitions = Object.values(
+            transitionMatrix[fromState1][fromState2][fromState3],
+          ).reduce((a, b) => a + b, 0);
+          Object.keys(
+            transitionMatrix[fromState1][fromState2][fromState3],
+          ).forEach((toState) => {
+            if (totalTransitions > 0) {
+              transitionMatrix[fromState1][fromState2][fromState3][toState] /=
+                totalTransitions;
+            }
+          });
+        },
+      );
     });
   });
 
@@ -79,9 +95,15 @@ async function predictNextQs(qs_list, gameType) {
   let nextState = currentState3;
   let maxProb = 0;
 
-  Object.keys(transitionMatrix[currentState1][currentState2][currentState3]).forEach(state => {
-    if (transitionMatrix[currentState1][currentState2][currentState3][state] > maxProb) {
-      maxProb = transitionMatrix[currentState1][currentState2][currentState3][state];
+  Object.keys(
+    transitionMatrix[currentState1][currentState2][currentState3],
+  ).forEach((state) => {
+    if (
+      transitionMatrix[currentState1][currentState2][currentState3][state] >
+      maxProb
+    ) {
+      maxProb =
+        transitionMatrix[currentState1][currentState2][currentState3][state];
       nextState = state;
     }
   });
@@ -103,7 +125,7 @@ function martingaleStrategy_qs(historicData, qs_game_type) {
     const randomMove = getRandomItem_qs(qs_game_type);
     return {
       move: randomMove,
-      lastResult: null
+      lastResult: null,
     };
   }
 
@@ -115,7 +137,7 @@ function martingaleStrategy_qs(historicData, qs_game_type) {
 
   return {
     move: randomMove,
-    lastResult: lastResult
+    lastResult: lastResult,
   };
 }
 
@@ -136,13 +158,15 @@ async function trainModel_qs(rpsNumeric, joinerRPSNumeric, qs_game_type) {
   const joinerRPSTensor = tf.tensor1d(joinerRPSNumeric);
 
   const model = tf.sequential();
-  model.add(tf.layers.dense({ units: 32, inputShape: [1], activation: 'relu' }));
+  model.add(
+    tf.layers.dense({ units: 32, inputShape: [1], activation: 'relu' }),
+  );
   model.add(tf.layers.dense({ units: qs_game_type, activation: 'softmax' }));
 
   model.compile({
     optimizer: tf.train.adam(0.1),
     loss: 'sparseCategoricalCrossentropy',
-    metrics: ['accuracy']
+    metrics: ['accuracy'],
   });
 
   await model.fit(rpsTensor, joinerRPSTensor, {
@@ -150,9 +174,8 @@ async function trainModel_qs(rpsNumeric, joinerRPSNumeric, qs_game_type) {
     verbose: 0,
     batch_size: Math.max(1, rpsNumeric.length),
     callbacks: {
-      onEpochEnd: async (epoch, logs) => {
-      }
-    }
+      onEpochEnd: async (epoch, logs) => {},
+    },
   });
 
   rpsTensor.dispose();
@@ -176,7 +199,10 @@ async function predictNextMove_qs(model, rpsNumeric, qs_game_type) {
   // Dispose of tensors
   rpsTensor.dispose();
   let risk;
-  if (predictionData[nextJoinerRPSNumeric] > 0.4 && predictionData[nextJoinerRPSNumeric] <= 0.7) {
+  if (
+    predictionData[nextJoinerRPSNumeric] > 0.4 &&
+    predictionData[nextJoinerRPSNumeric] <= 0.7
+  ) {
     risk = 3;
   } else if (predictionData[nextJoinerRPSNumeric] > 0.7) {
     risk = 4;
@@ -189,7 +215,6 @@ async function predictNextMove_qs(model, rpsNumeric, qs_game_type) {
   return { move: nextJoinerRPSNumeric, risk: risk };
 }
 
-
 async function reinforcementAI_qs(data, qs_game_type) {
   if (!qs_game_type || typeof qs_game_type !== 'number' || qs_game_type <= 0) {
     throw new Error(`Invalid qs_game_type: ${qs_game_type}`);
@@ -200,40 +225,53 @@ async function reinforcementAI_qs(data, qs_game_type) {
   }
 
   const historicData = data.reverse().slice(0, 20);
-  const qsNumeric = historicData.map(entry => parseInt(entry.qs, 10));
-  const joinerRPSNumeric = historicData.map(entry => parseInt(entry.joiner_qs, 10));
+  const qsNumeric = historicData.map((entry) => parseInt(entry.qs, 10));
+  const joinerRPSNumeric = historicData.map((entry) =>
+    parseInt(entry.joiner_qs, 10),
+  );
 
   const results = historicData.map((entry, index) => ({
     qs: entry.qs,
     joiner_qs: entry.joiner_qs,
-    win: entry.qs !== entry.joiner_qs
+    win: entry.qs !== entry.joiner_qs,
   }));
 
   const recentGamesAnalysis = results.slice(1).map((current, i) => {
     const previous = results[i];
     return {
       win: previous.win,
-      joinerChanged: current.joiner_qs !== previous.joiner_qs
+      joinerChanged: current.joiner_qs !== previous.joiner_qs,
     };
   });
 
-  const winChangePattern = recentGamesAnalysis.reduce((acc, game) => {
-    if (game.win) {
-      acc.winChanges.push(game.joinerChanged);
-    } else {
-      acc.lossChanges.push(game.joinerChanged);
-    }
-    return acc;
-  }, { winChanges: [], lossChanges: [] });
+  const winChangePattern = recentGamesAnalysis.reduce(
+    (acc, game) => {
+      if (game.win) {
+        acc.winChanges.push(game.joinerChanged);
+      } else {
+        acc.lossChanges.push(game.joinerChanged);
+      }
+      return acc;
+    },
+    { winChanges: [], lossChanges: [] },
+  );
 
-  const winChangesLikely = winChangePattern.winChanges.every(change => change);
-  const lossChangesLikely = winChangePattern.lossChanges.every(change => change);
+  const winChangesLikely = winChangePattern.winChanges.every(
+    (change) => change,
+  );
+  const lossChangesLikely = winChangePattern.lossChanges.every(
+    (change) => change,
+  );
 
   let model;
   try {
     model = await trainModel_qs(joinerRPSNumeric, qsNumeric, qs_game_type);
 
-    let bestCounterMove = await predictNextMove_qs(model, qsNumeric, qs_game_type);
+    let bestCounterMove = await predictNextMove_qs(
+      model,
+      qsNumeric,
+      qs_game_type,
+    );
 
     const randomnessFactor = 0.1;
     if (Math.random() < randomnessFactor) {
@@ -241,7 +279,11 @@ async function reinforcementAI_qs(data, qs_game_type) {
       possibleMoves.splice(bestCounterMove.move, 1);
       bestCounterMove.move = getRandomItem_qs(qs_game_type, possibleMoves);
     } else if (winChangesLikely || lossChangesLikely) {
-      bestCounterMove = await predictNextMove_qs(model, qsNumeric, qs_game_type);
+      bestCounterMove = await predictNextMove_qs(
+        model,
+        qsNumeric,
+        qs_game_type,
+      );
     } else {
       const possibleMoves = Array.from({ length: qs_game_type }, (_, i) => i);
       possibleMoves.splice(bestCounterMove.move, 1);
@@ -260,9 +302,9 @@ function patternBasedAI_qs(historicData, qs_game_type) {
   if (historicData.length === 0) {
     return getRandomItem_qs(qs_game_type);
   }
-  const opponentMoves = historicData.map(item => item.joiner_qs);
+  const opponentMoves = historicData.map((item) => item.joiner_qs);
   const moveCounts = Array(qs_game_type).fill(0);
-  opponentMoves.slice(-10).forEach(move => {
+  opponentMoves.slice(-10).forEach((move) => {
     moveCounts[move]++;
   });
 
@@ -277,7 +319,7 @@ function counterSwitchAI_qs(historicData, qs_game_type) {
     const lastGame = historicData[0];
     const lastGameWasWin = lastGame.joiner_qs !== lastGame.qs;
     const lastGameWasLoss = lastGame.joiner_qs === lastGame.qs;
-    
+
     if (lastGameWasWin) {
       const repeatProbability = 1;
       if (Math.random() < repeatProbability) {
@@ -292,17 +334,25 @@ function counterSwitchAI_qs(historicData, qs_game_type) {
 
 function innovate_qs(historicData, qs_game_type) {
   const firstEntries = historicData.slice(0, 6);
-  const firstJoinerQs = firstEntries.map(entry => parseInt(entry.joiner_qs, 10));
+  const firstJoinerQs = firstEntries.map((entry) =>
+    parseInt(entry.joiner_qs, 10),
+  );
 
   if (firstJoinerQs.length < 6 || firstJoinerQs.some(isNaN)) {
     return { counterMove: getRandomItem_qs(qs_game_type), risk: 1 };
   }
 
-  const allSame = firstJoinerQs.every(qs => qs === firstJoinerQs[0]);
+  const allSame = firstJoinerQs.every((qs) => qs === firstJoinerQs[0]);
   if (allSame) {
     const lastMove = firstJoinerQs[0];
-    const possibleMoves = Array.from({ length: qs_game_type }, (_, i) => i).filter(move => move !== lastMove);
-    return { counterMove: getRandomItem_qs(qs_game_type, possibleMoves), risk: 3 };
+    const possibleMoves = Array.from(
+      { length: qs_game_type },
+      (_, i) => i,
+    ).filter((move) => move !== lastMove);
+    return {
+      counterMove: getRandomItem_qs(qs_game_type, possibleMoves),
+      risk: 3,
+    };
   } else {
     const previousMove = parseInt(historicData[0].joiner_qs, 6);
     return { counterMove: previousMove, risk: 1 };
@@ -316,15 +366,16 @@ function counterRandomness_qs(historicData, qs_game_type) {
   }
 
   const moveCounts = Array(qs_game_type).fill(0);
-  const recentMoves = historicData.slice(0, dataLength)
-    .map(move => parseInt(move.qs, 10))
-    .filter(move => !Number.isNaN(move) && move >= 0 && move < qs_game_type);
+  const recentMoves = historicData
+    .slice(0, dataLength)
+    .map((move) => parseInt(move.qs, 10))
+    .filter((move) => !Number.isNaN(move) && move >= 0 && move < qs_game_type);
 
   if (recentMoves.length < dataLength) {
     return { counterMove: getRandomItem_qs(qs_game_type), risk: 1 };
   }
 
-  recentMoves.forEach(move => {
+  recentMoves.forEach((move) => {
     moveCounts[move]++;
   });
 
@@ -332,15 +383,23 @@ function counterRandomness_qs(historicData, qs_game_type) {
   const lastTwoMoves = getLastMoves(historicData, 4);
   const lastThreeMoves = getLastMoves(historicData, 3);
 
-  const availableMoves = Array.from({ length: qs_game_type }, (_, i) => i).filter(move => move !== leastPlayedMove);
-
+  const availableMoves = Array.from(
+    { length: qs_game_type },
+    (_, i) => i,
+  ).filter((move) => move !== leastPlayedMove);
 
   if (Number.isNaN(leastPlayedMove)) {
     return { counterMove: getRandomItem_qs(qs_game_type), risk: 1 };
   } else if (!lastTwoMoves.includes(leastPlayedMove)) {
-    return { counterMove: getRandomItem_qs(qs_game_type, availableMoves), risk: 3 };
+    return {
+      counterMove: getRandomItem_qs(qs_game_type, availableMoves),
+      risk: 3,
+    };
   } else if (!lastThreeMoves.includes(leastPlayedMove)) {
-    return { counterMove: getRandomItem_qs(qs_game_type, availableMoves), risk: 2 };
+    return {
+      counterMove: getRandomItem_qs(qs_game_type, availableMoves),
+      risk: 2,
+    };
   } else {
     return { counterMove: getRandomItem_qs(qs_game_type), risk: 1 };
   }
@@ -357,9 +416,10 @@ function getLeastPlayedMove(moveCounts) {
 }
 
 function getLastMoves(historicData, n) {
-  return historicData.slice(0, n)
-    .map(move => parseInt(move.qs, 10))
-    .filter(move => !Number.isNaN(move));
+  return historicData
+    .slice(0, n)
+    .map((move) => parseInt(move.qs, 10))
+    .filter((move) => !Number.isNaN(move));
 }
 
 function getRandomItem_qs(qs_game_type, possibleMoves = null) {
@@ -368,7 +428,6 @@ function getRandomItem_qs(qs_game_type, possibleMoves = null) {
   }
   return possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
 }
-
 
 function NPC_qs(historicData) {
   const lastMove = historicData.length > 0 ? historicData[0].joiner_qs : 0;
@@ -385,12 +444,16 @@ function generatePattern_qs(allBetItems, qs_game_type) {
     }
   }
 
-  const lastTwoMoves = allBetItems.slice(0, 2).map(item => parseInt(item.qs, 10));
+  const lastTwoMoves = allBetItems
+    .slice(0, 2)
+    .map((item) => parseInt(item.qs, 10));
 
   let matchedPattern = null;
   for (const pattern of patterns) {
-    if ((pattern[0] === lastTwoMoves[0] && pattern[1] === lastTwoMoves[1]) ||
-      (pattern[1] === lastTwoMoves[0] && pattern[0] === lastTwoMoves[1])) {
+    if (
+      (pattern[0] === lastTwoMoves[0] && pattern[1] === lastTwoMoves[1]) ||
+      (pattern[1] === lastTwoMoves[0] && pattern[0] === lastTwoMoves[1])
+    ) {
       matchedPattern = pattern;
       break;
     }
@@ -400,8 +463,12 @@ function generatePattern_qs(allBetItems, qs_game_type) {
     let continuationCount = 0;
 
     for (let i = 2; i < allBetItems.length; i++) {
-      if ((parseInt(allBetItems[i - 1].joiner_qs, 10) === matchedPattern[0] && parseInt(allBetItems[i].joiner_qs, 10) === matchedPattern[1]) ||
-        (parseInt(allBetItems[i - 1].joiner_qs, 10) === matchedPattern[1] && parseInt(allBetItems[i].joiner_qs, 10) === matchedPattern[0])) {
+      if (
+        (parseInt(allBetItems[i - 1].joiner_qs, 10) === matchedPattern[0] &&
+          parseInt(allBetItems[i].joiner_qs, 10) === matchedPattern[1]) ||
+        (parseInt(allBetItems[i - 1].joiner_qs, 10) === matchedPattern[1] &&
+          parseInt(allBetItems[i].joiner_qs, 10) === matchedPattern[0])
+      ) {
         continuationCount++;
       } else {
         break;
@@ -410,8 +477,12 @@ function generatePattern_qs(allBetItems, qs_game_type) {
 
     const maxContinuation = Math.floor(Math.random() * 4) + 2;
     if (continuationCount > maxContinuation) {
-      const movesNotInPattern = Array.from({ length: qs_game_type }, (_, i) => i).filter(move => !matchedPattern.includes(move));
-      const randomMove = movesNotInPattern[Math.floor(Math.random() * movesNotInPattern.length)];
+      const movesNotInPattern = Array.from(
+        { length: qs_game_type },
+        (_, i) => i,
+      ).filter((move) => !matchedPattern.includes(move));
+      const randomMove =
+        movesNotInPattern[Math.floor(Math.random() * movesNotInPattern.length)];
       return randomMove;
     }
     return parseInt(allBetItems[1].joiner_qs, 10);
@@ -421,8 +492,56 @@ function generatePattern_qs(allBetItems, qs_game_type) {
 }
 
 function getCopyCatItem_qs(allBetItems) {
-  const copyCatBetItem = allBetItems.find(item => item.qs);
+  const copyCatBetItem = allBetItems.find((item) => item.qs);
   return copyCatBetItem ? copyCatBetItem.qs : getRandomItem_qs();
+}
+
+async function openAIPredictionAI_qs(historicData, qs_game_type) {
+  if (!historicData || historicData.length === 0) {
+    return getRandomItem_qs(qs_game_type);
+  }
+
+  const userMoves = historicData.map((item) => item.joiner_qs);
+  const userMovesString = userMoves.join(', ');
+
+  const messages = [
+    {
+      role: 'system',
+      content:
+        "You are an expert AI that predicts the user's next Quick Shoot move. Respond with a single integer (0 to N-1).",
+    },
+    {
+      role: 'user',
+      content: `The user's past moves are: ${userMovesString}. There are ${qs_game_type} possible moves (0 through ${qs_game_type - 1}). Predict the user's next move as an integer.`,
+    },
+  ];
+
+  try {
+    const response = await openai.createChatCompletion({
+      model: 'gpt-3.5-turbo',
+      messages,
+      max_tokens: 10,
+      temperature: 0.5,
+    });
+
+    let predictedMoveStr = response.data.choices[0].message.content.trim();
+    let predictedMove = parseInt(predictedMoveStr, 10);
+
+    if (
+      isNaN(predictedMove) ||
+      predictedMove < 0 ||
+      predictedMove >= qs_game_type
+    ) {
+      predictedMove = getRandomItem_qs(qs_game_type);
+    }
+
+    const nextMove = (predictedMove + 1) % qs_game_type;
+
+    return nextMove;
+  } catch (error) {
+    console.error('Error calling OpenAI API:', error);
+    return getRandomItem_qs(qs_game_type);
+  }
 }
 
 module.exports = {
@@ -438,5 +557,6 @@ module.exports = {
   generatePattern_qs,
   innovate_qs,
   martingaleStrategy_qs,
-  predictNextQs
+  predictNextQs,
+  openAIPredictionAI_qs,
 };

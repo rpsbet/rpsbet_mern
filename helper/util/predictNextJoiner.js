@@ -1,5 +1,10 @@
 const tf = require('@tensorflow/tfjs-node');
+const { Configuration, OpenAIApi } = require('openai');
 
+const configuration = new Configuration({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+const openai = new OpenAIApi(configuration);
 const getBeatingType2 = (currentState) => {
   const random = Math.random();
 
@@ -10,16 +15,19 @@ const getBeatingType2 = (currentState) => {
   } else {
     return 'P';
   }
-}
+};
 
 function innovate(historicData) {
   const firstEntries = historicData.slice(0, 8);
-  const firstJoinerQs = firstEntries.map(entry => entry.joiner_rps);
+  const firstJoinerQs = firstEntries.map((entry) => entry.joiner_rps);
 
-  if (firstJoinerQs.length < 8 || firstJoinerQs.some(entry => !['R', 'P', 'S'].includes(entry))) {
+  if (
+    firstJoinerQs.length < 8 ||
+    firstJoinerQs.some((entry) => !['R', 'P', 'S'].includes(entry))
+  ) {
     return { counterMove: getRandomMove(), risk: 1 };
   }
-  const allSame = firstJoinerQs.every(rps => rps === firstJoinerQs[0]);
+  const allSame = firstJoinerQs.every((rps) => rps === firstJoinerQs[0]);
   if (allSame) {
     const lastMove = firstJoinerQs[0];
     return { counterMove: getBeatingType2(lastMove), risk: 3 };
@@ -54,10 +62,15 @@ const predictNext = (rps_list, markov = false) => {
   }
 
   Object.keys(transitionMatrix).forEach((fromState) => {
-    const totalTransitions = Object.values(transitionMatrix[fromState]).reduce((a, b) => a + b, 0);
+    const totalTransitions = Object.values(transitionMatrix[fromState]).reduce(
+      (a, b) => a + b,
+      0,
+    );
     if (totalTransitions > 0) {
       Object.keys(transitionMatrix[fromState]).forEach((toState) => {
-        transitionMatrix[fromState][toState] = (transitionMatrix[fromState][toState] + smoothingFactor) / (totalTransitions + smoothingFactor * 3);
+        transitionMatrix[fromState][toState] =
+          (transitionMatrix[fromState][toState] + smoothingFactor) /
+          (totalTransitions + smoothingFactor * 3);
       });
     } else {
       Object.keys(transitionMatrix[fromState]).forEach((toState) => {
@@ -91,8 +104,7 @@ const predictNext = (rps_list, markov = false) => {
   }
 
   return nextState;
-}
-
+};
 
 const getBeatingType = (currentState) => {
   const random = Math.random();
@@ -104,14 +116,16 @@ const getBeatingType = (currentState) => {
   } else {
     return random < 0.95 ? 'R' : 'S';
   }
-}
+};
 
 async function trainModel(rpsNumeric, joinerRPSNumeric) {
   const rpsTensor = tf.tensor2d(rpsNumeric, [rpsNumeric.length, 1]);
   const joinerRPSTensor = tf.tensor1d(joinerRPSNumeric);
 
   const model = tf.sequential();
-  model.add(tf.layers.dense({ units: 128, inputShape: [1], activation: 'relu' }));
+  model.add(
+    tf.layers.dense({ units: 128, inputShape: [1], activation: 'relu' }),
+  );
   model.add(tf.layers.dense({ units: 64, activation: 'relu' }));
   model.add(tf.layers.dense({ units: 32, activation: 'relu' }));
   model.add(tf.layers.dense({ units: 3, activation: 'softmax' }));
@@ -123,7 +137,11 @@ async function trainModel(rpsNumeric, joinerRPSNumeric) {
     verbose: 0,
   });
 
-  await model.fit(rpsTensor, joinerRPSTensor, { epochs: 30, verbose: 0, batch_size: 32 });
+  await model.fit(rpsTensor, joinerRPSTensor, {
+    epochs: 30,
+    verbose: 0,
+    batch_size: 32,
+  });
 
   rpsTensor.dispose();
   joinerRPSTensor.dispose();
@@ -146,7 +164,10 @@ async function predictNextMove(model, rpsNumeric) {
 
   let risk;
 
-  if (probabilities[nextJoinerRPSNumeric] > 0.4 && probabilities[nextJoinerRPSNumeric] <= 0.65) {
+  if (
+    probabilities[nextJoinerRPSNumeric] > 0.4 &&
+    probabilities[nextJoinerRPSNumeric] <= 0.65
+  ) {
     risk = 3;
   } else if (probabilities[nextJoinerRPSNumeric] > 0.65) {
     risk = 4;
@@ -159,26 +180,27 @@ async function predictNextMove(model, rpsNumeric) {
 
   if (Math.random() < 0.33) {
     const randomMoveIndex = Math.floor(Math.random() * 3);
-    bestCounterMove = randomMoveIndex === 0 ? 'R' : randomMoveIndex === 1 ? 'P' : 'S';
+    bestCounterMove =
+      randomMoveIndex === 0 ? 'R' : randomMoveIndex === 1 ? 'P' : 'S';
   } else {
-    if (nextJoinerRPS === 'R') bestCounterMove = Math.random() < 0.5 ? 'P' : 'R';
-    else if (nextJoinerRPS === 'P') bestCounterMove = Math.random() < 0.5 ? 'P' : 'S';
+    if (nextJoinerRPS === 'R')
+      bestCounterMove = Math.random() < 0.5 ? 'P' : 'R';
+    else if (nextJoinerRPS === 'P')
+      bestCounterMove = Math.random() < 0.5 ? 'P' : 'S';
     else bestCounterMove = Math.random() < 0.5 ? 'R' : 'S';
   }
 
   return { move: bestCounterMove, risk: risk };
 }
 
-
 function getRandomMoveExcluding(excludeMove) {
   if (excludeMove === 'R') {
-    return 'S'
+    return 'S';
   } else if (excludeMove === 'P') {
-    return 'R'
+    return 'R';
   } else {
-    return 'P'
+    return 'P';
   }
-
 }
 
 async function reinforcementAI(data) {
@@ -187,41 +209,54 @@ async function reinforcementAI(data) {
   }
 
   const historicData = data.slice(0, 20);
-  const rpsNumeric = historicData.map(entry => (entry.rps === 'R' ? 0 : entry.rps === 'P' ? 1 : 2));
-  const joinerRPSNumeric = historicData.map(entry => (entry.joiner_rps === 'R' ? 0 : entry.joiner_rps === 'P' ? 1 : 2));
+  const rpsNumeric = historicData.map((entry) =>
+    entry.rps === 'R' ? 0 : entry.rps === 'P' ? 1 : 2,
+  );
+  const joinerRPSNumeric = historicData.map((entry) =>
+    entry.joiner_rps === 'R' ? 0 : entry.joiner_rps === 'P' ? 1 : 2,
+  );
 
   const results = historicData.map((entry, index) => ({
     rps: entry.rps,
     joiner_rps: entry.joiner_rps,
-    win: (entry.joiner_rps === 'R' && entry.rps === 'P') ||
+    win:
+      (entry.joiner_rps === 'R' && entry.rps === 'P') ||
       (entry.joiner_rps === 'P' && entry.rps === 'S') ||
-      (entry.joiner_rps === 'S' && entry.rps === 'R')
+      (entry.joiner_rps === 'S' && entry.rps === 'R'),
   }));
 
   const recentGamesAnalysis = results.slice(1).map((current, i) => {
     const previous = results[i];
     return {
       win: previous.win,
-      joinerChanged: current.rps !== previous.rps
+      joinerChanged: current.rps !== previous.rps,
     };
   });
 
-  const winChangePattern = recentGamesAnalysis.reduce((acc, game) => {
-    if (game.win) {
-      acc.winChanges.push(game.joinerChanged);
-    } else {
-      acc.lossChanges.push(game.joinerChanged);
-    }
-    return acc;
-  }, { winChanges: [], lossChanges: [] });
+  const winChangePattern = recentGamesAnalysis.reduce(
+    (acc, game) => {
+      if (game.win) {
+        acc.winChanges.push(game.joinerChanged);
+      } else {
+        acc.lossChanges.push(game.joinerChanged);
+      }
+      return acc;
+    },
+    { winChanges: [], lossChanges: [] },
+  );
 
-  const winChangesCount = winChangePattern.winChanges.filter(change => change).length;
-  const lossChangesCount = winChangePattern.lossChanges.filter(change => change).length;
+  const winChangesCount = winChangePattern.winChanges.filter(
+    (change) => change,
+  ).length;
+  const lossChangesCount = winChangePattern.lossChanges.filter(
+    (change) => change,
+  ).length;
   const winCount = winChangePattern.winChanges.length;
   const lossCount = winChangePattern.lossChanges.length;
 
   const winChangeProbability = winCount > 0 ? winChangesCount / winCount : 0;
-  const lossChangeProbability = lossCount > 0 ? lossChangesCount / lossCount : 0;
+  const lossChangeProbability =
+    lossCount > 0 ? lossChangesCount / lossCount : 0;
 
   const winChangesLikely = winChangeProbability > 0.3;
   const lossChangesLikely = lossChangeProbability > 0.3;
@@ -238,8 +273,7 @@ async function reinforcementAI(data) {
     (lastGame.joiner_rps === 'S' && lastGame.rps === 'R') ||
     (lastGame.joiner_rps === 'P' && lastGame.rps === 'S');
 
-  const lastGameWasDraw =
-    (lastGame.joiner_rps === lastGame.rps);
+  const lastGameWasDraw = lastGame.joiner_rps === lastGame.rps;
 
   let model;
   try {
@@ -251,22 +285,21 @@ async function reinforcementAI(data) {
       if (!winChangesLikely) {
         bestCounterMove = {
           move: getBeatingType(lastGame.rps),
-          risk: 3
+          risk: 3,
         };
       }
     } else if (lastGameWasLoss) {
       if (lossChangesLikely) {
         bestCounterMove = {
           move: getRandomMoveExcluding(lastGame.rps),
-          risk: 3
+          risk: 3,
         };
       } else {
         bestCounterMove = {
           move: getBeatingType(lastGame.rps),
-          risk: 3
+          risk: 3,
         };
       }
-
     }
     return bestCounterMove;
   } finally {
@@ -281,18 +314,20 @@ function patternBasedAI(historicData) {
     return ['R', 'P', 'S'][Math.floor(Math.random() * 3)];
   }
 
-  const opponentMoves = historicData.map(item => item.joiner_rps);
+  const opponentMoves = historicData.map((item) => item.joiner_rps);
   const moveCounts = {
-    'R': 0,
-    'P': 0,
-    'S': 0
+    R: 0,
+    P: 0,
+    S: 0,
   };
 
-  opponentMoves.slice(-10).forEach(move => {
+  opponentMoves.slice(-10).forEach((move) => {
     moveCounts[move]++;
   });
 
-  const mostFrequentMove = Object.keys(moveCounts).reduce((a, b) => moveCounts[a] > moveCounts[b] ? a : b);
+  const mostFrequentMove = Object.keys(moveCounts).reduce((a, b) =>
+    moveCounts[a] > moveCounts[b] ? a : b,
+  );
   switch (mostFrequentMove) {
     case 'R':
       return 'P';
@@ -301,10 +336,8 @@ function patternBasedAI(historicData) {
     case 'S':
       return 'R';
     default:
-
       return ['R', 'P', 'S'][Math.floor(Math.random() * 3)];
   }
-
 }
 
 function counterSwitchAI(historicData) {
@@ -350,7 +383,7 @@ function counterRandomness(historicData) {
     return { counterMove: getRandomMove(), risk: 1 };
   }
 
-  const lastFiveMoves = historicData.slice(0, 5).map(move => move.rps);
+  const lastFiveMoves = historicData.slice(0, 5).map((move) => move.rps);
   const movesSetLastFive = new Set(lastFiveMoves);
   let missingValue = null;
 
@@ -379,7 +412,7 @@ function counterRandomness(historicData) {
     }
     risk = 3;
   } else {
-    const lastFourMoves = historicData.slice(0, 4).map(move => move.rps);
+    const lastFourMoves = historicData.slice(0, 4).map((move) => move.rps);
     const movesSetLastFour = new Set(lastFourMoves);
 
     if (!movesSetLastFour.has('R')) {
@@ -421,19 +454,21 @@ function generatePattern(allBetItems) {
   const patterns = [
     ['R', 'P'],
     ['P', 'S'],
-    ['S', 'R']
+    ['S', 'R'],
   ];
 
   if (allBetItems.length < 2) {
     return ['R', 'P', 'S'][Math.floor(Math.random() * 3)];
   }
 
-  const lastTwoMoves = allBetItems.slice(0, 2).map(item => item.joiner_rps);
+  const lastTwoMoves = allBetItems.slice(0, 2).map((item) => item.joiner_rps);
   let matchedPattern = null;
 
   for (const pattern of patterns) {
-    if ((pattern[0] === lastTwoMoves[0] && pattern[1] === lastTwoMoves[1]) ||
-      (pattern[1] === lastTwoMoves[0] && pattern[0] === lastTwoMoves[1])) {
+    if (
+      (pattern[0] === lastTwoMoves[0] && pattern[1] === lastTwoMoves[1]) ||
+      (pattern[1] === lastTwoMoves[0] && pattern[0] === lastTwoMoves[1])
+    ) {
       matchedPattern = pattern;
       break;
     }
@@ -445,8 +480,12 @@ function generatePattern(allBetItems) {
     for (let i = 2; i < allBetItems.length; i++) {
       const previousMove = allBetItems[i - 1].joiner_rps;
       const currentMove = allBetItems[i].joiner_rps;
-      if ((previousMove === matchedPattern[0] && currentMove === matchedPattern[1]) ||
-        (previousMove === matchedPattern[1] && currentMove === matchedPattern[0])) {
+      if (
+        (previousMove === matchedPattern[0] &&
+          currentMove === matchedPattern[1]) ||
+        (previousMove === matchedPattern[1] &&
+          currentMove === matchedPattern[0])
+      ) {
         continuationCount++;
       } else {
         break;
@@ -456,7 +495,9 @@ function generatePattern(allBetItems) {
     const maxContinuation = 8;
 
     if (continuationCount >= maxContinuation) {
-      const movesNotInPattern = ['R', 'P', 'S'].filter(move => !matchedPattern.includes(move));
+      const movesNotInPattern = ['R', 'P', 'S'].filter(
+        (move) => !matchedPattern.includes(move),
+      );
       return movesNotInPattern[0];
     }
 
@@ -472,7 +513,7 @@ function martingaleStrategy(historicData) {
     const randomMove = ['R', 'P', 'S'][Math.floor(Math.random() * 3)];
     return {
       move: randomMove,
-      lastResult: null
+      lastResult: null,
     };
   }
 
@@ -482,19 +523,65 @@ function martingaleStrategy(historicData) {
   const randomMove = ['R', 'P', 'S'][Math.floor(Math.random() * 3)];
   return {
     move: randomMove,
-    lastResult: lastResult
+    lastResult: lastResult,
   };
 }
 
 function getResult(aiMove, opponentMove) {
   if (aiMove === opponentMove) {
     return 'draw';
-  } else if ((aiMove === 'R' && opponentMove === 'P') ||
+  } else if (
+    (aiMove === 'R' && opponentMove === 'P') ||
     (aiMove === 'P' && opponentMove === 'S') ||
-    (aiMove === 'S' && opponentMove === 'R')) {
+    (aiMove === 'S' && opponentMove === 'R')
+  ) {
     return 'win';
   } else {
     return 'loss';
+  }
+}
+
+async function predictNextOpenAI(rps_list) {
+  if (!rps_list || rps_list.length === 0) {
+    const randomChoice = ['R', 'P', 'S'][Math.floor(Math.random() * 3)];
+    return randomChoice;
+  }
+
+  const userMovesString = rps_list.map((item) => item.rps).join(' ');
+
+  const systemMessage = {
+    role: 'system',
+    content:
+      'You are an expert at predicting Rock-Paper-Scissors moves. Respond only with R, P, or S.',
+  };
+
+  const userPrompt = {
+    role: 'user',
+    content: `The user's past moves are: ${userMovesString}. c their next move. Valid answers: R, P, or S.`,
+  };
+
+  try {
+    const response = await openai.createChatCompletion({
+      model: 'gpt-3.5-turbo',
+      messages: [systemMessage, userPrompt],
+      max_tokens: 10,
+      temperature: 0.5,
+    });
+
+    let predictedMove = response.data.choices[0].message.content
+      .trim()
+      .toUpperCase();
+
+    if (!['R', 'P', 'S'].includes(predictedMove)) {
+      predictedMove = ['R', 'P', 'S'][Math.floor(Math.random() * 3)];
+    }
+
+    return predictedMove;
+  } catch (error) {
+    console.error('Error calling OpenAI API:', error);
+
+    const randomChoice = ['R', 'P', 'S'][Math.floor(Math.random() * 3)];
+    return randomChoice;
   }
 }
 
@@ -509,5 +596,6 @@ module.exports = {
   counterSwitchAI,
   patternBasedAI,
   getRandomMove,
-  reinforcementAI
+  reinforcementAI,
+  predictNextOpenAI,
 };
