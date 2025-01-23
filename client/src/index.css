@@ -3293,7 +3293,7 @@ circle {
 
 .game_header {
   width: 100%;
-  z-index: 2;
+  z-index: 9;
   background: linear-gradient(45deg, #f8f9fa, #b1b1b1);
   top: 0;
 }

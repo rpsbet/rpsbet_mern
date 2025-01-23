@@ -51,7 +51,7 @@ const initialState = {
   clickSounds: localStorage.getItem('clickSounds') === 'false' ? true : false,
   gameSounds: localStorage.getItem('gameSounds') === 'true' ? true : false,
   notificationSounds: localStorage.getItem('notificationSounds') === 'true' ? true : false,
-  isDrawerOpen: localStorage.getItem('isDrawerOpen') === 'false' ? false : true,
+  isDrawerOpen: localStorage.getItem('isDrawerOpen') === 'false' ? false : false,
   loading: true,
   user: { _id: null, password: '' },
   unreadMessageCount: 0,

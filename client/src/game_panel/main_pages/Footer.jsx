@@ -109,18 +109,18 @@ const Footer = (props) => {
         )}
         <Box className="social-icons" sx={{ display: 'flex', alignItems: 'center' }}>
           <span>CHECK SOCIALS FOR UPDATES ►</span>
-          <a href="https://x.com/rpsdotgame">
-            <FontAwesomeIcon icon={faXTwitter} />
-          </a>
-          <a href="https://t.me/rpsfinance">
-            <FontAwesomeIcon icon={faTelegram} />
-          </a>
-          <a href="https://www.youtube.com/@rpsdotgame">
-            <FontAwesomeIcon icon={faYoutube} />
-          </a>
-          <a href="https://www.tiktok.com/@rpsdotgame">
-            <FontAwesomeIcon icon={faTiktok} />
-          </a>
+          <a href="https://x.com/RPSDG_SOL">
+              <FontAwesomeIcon icon={faXTwitter} />
+            </a>
+            <a href="https://t.me/RPSDOTGAMESOL">
+              <FontAwesomeIcon icon={faTelegram} />
+            </a>
+            <a href="https://www.youtube.com/@rpsdotgame">
+              <FontAwesomeIcon icon={faYoutube} />
+            </a>
+            <a href="https://www.tiktok.com/@rpsdotgames">
+              <FontAwesomeIcon icon={faTiktok} />
+            </a>
         </Box>
         <Currencies>
           <AvailableCurrency src={sol} alt="SOL" />

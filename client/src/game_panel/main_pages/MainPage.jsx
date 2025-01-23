@@ -365,7 +365,7 @@ function MainPage(props) {
           </div>
         )}
 
-        <DrawerButton open={isDrawerOpen} toggleDrawer={handleToggleDrawer} />
+        {/* <DrawerButton open={isDrawerOpen} toggleDrawer={handleToggleDrawer} /> */}
       </div>
 
       {/* Mobile bottom nav buttons */}
