@@ -147,17 +147,21 @@ class CreateGame extends Component {
       await this.initializeGameType(currentGameTypeName);
     }
   }
-
+  
   async initializeGameType(gameTypeName) {
+    console.log("gameTypeName", gameTypeName)
     const { solPrice } = this.props;
     const selectedGameType = this.props.gameTypeList.find(
       gameType => gameType.game_type_name === gameTypeName
     );
-
+    
     if (selectedGameType && selectedGameType.short_name) {
-      this.setState({ selectedGameType: selectedGameType.short_name });
-    }
+      this.setState({ selectedGameType: selectedGameType.short_name }, () => {
+        console.log("selectedGameType", this.state.selectedGameType)
 
+      });
+    }
+    
     let newState = {
       child_step: 1,
       bet_amount: 0.25,
@@ -167,7 +171,7 @@ class CreateGame extends Component {
       public_bet_amount: convertToCurrency(1, solPrice)
     };
 
-    if (gameTypeName === 'RPS') {
+    if (gameTypeName === 'rps') {
       newState = {
         ...newState,
         game_type: 1,
@@ -176,7 +180,7 @@ class CreateGame extends Component {
         max_return: 0,
         endgame_amount: 0
       };
-    } else if (gameTypeName === 'Quick Shoot') {
+    } else if (gameTypeName === 'quick-shoot') {
       newState = {
         ...newState,
         game_type: 5,
@@ -424,6 +428,7 @@ class CreateGame extends Component {
     this.setState({ creatingRoom: true });
     try {
       const base64Image = await this.saveImage(this.state.image);
+      console.log("shadaba", this.state)
       await this.props.createRoom({ ...this.state, image: base64Image });
     } catch (error) {
       console.error('Error saving image:', error);
@@ -473,7 +478,10 @@ class CreateGame extends Component {
       const urlFriendlyGameName = selectedGameName.toLowerCase().replace(/\s+/g, '-');
       const url = `/create/${urlFriendlyGameName}`;
 
-      this.setState({ selectedGameType: event.target.value, game_mode: event.target.value, step: 1 });
+      this.setState({ selectedGameType: event.target.value, game_mode: event.target.value, step: 1 }, () => {
+        console.log("game_type", this.state.game_type)
+        console.log("game_mode", this.state.game_mode)
+      });
       this.props.setGameMode(selectedGameName);
       history.push(url);
     }

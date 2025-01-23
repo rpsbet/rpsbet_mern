@@ -89,53 +89,6 @@ const QuickShoot = (props) => {
     rank
   } = props;
 
-  const [winChance, setWinChance] = useState(33);
-  const [qsList, setQsList] = useState([]);
-  const [settingsPanelOpened, setSettingsPanelOpened] = useState(false);
-  const settingsRef = useRef(null);
-
-  const handleReset = () => {
-    onChangeState({
-      qs_list: [],
-      winChance: 0,
-    });
-    setQsList([]);
-  };
-
-  const calcWinChance = (gameType, rounds) => {
-    let probWin = (100 / gameType).toFixed(2);
-    let probLose = (100 - probWin).toFixed(2);
-
-    const freq = {};
-    for (let i = 0; i < gameType; i++) {
-      freq[i] = 0;
-    }
-
-    rounds.forEach((round) => {
-      freq[round.qs]++;
-    });
-
-    const freqValues = Object.values(freq);
-    const range = Math.max(...freqValues) - Math.min(...freqValues);
-
-    const sensitivityFactor = (range / 100) * gameType;
-    const adjustmentFactor = (range / gameType) * sensitivityFactor;
-    probWin = (+probWin - adjustmentFactor).toFixed(2);
-    probLose = (+probLose + adjustmentFactor).toFixed(2);
-
-    return `${probWin}% - ${probLose}%`;
-  };
-
-  const calcEV = (gameType, betAmount, winLoseProb) => {
-    const winAmount = betAmount * (gameType - 1);
-    const loseAmount = betAmount;
-
-    const [probWin, probLose] = winLoseProb.split(' - ').map((prob) => parseFloat(prob));
-
-    const ev = (probWin * winAmount - probLose * loseAmount) / 100;
-    return ev.toFixed(2);
-  };
-
   const gameTypeStyleClass = {
     RPS: 'rps',
     QS: 'quick-shoot',

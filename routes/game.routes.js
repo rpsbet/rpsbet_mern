@@ -1341,8 +1341,10 @@ router.post('/rooms', auth, async (req, res) => {
         message: 'Exceeded Daily Withdrawal Limit. Unable to Create a room. Please try again tomorrow! (During Launch Phase only)',
       });
     }
-
+    
+    console.log("game_type", game_type)
     const gameType = await GameType.findOne({ game_type_id: parseInt(game_type) });
+    console.log("gameType", gameType)
 
     let host_pr = 0;
     let user_bet = 0;
