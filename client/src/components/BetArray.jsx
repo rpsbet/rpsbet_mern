@@ -41,7 +41,6 @@ import animationData from '../game_panel/LottieAnimations/spinningIcon.json';
 import BetAmountInput from '../components/BetAmountInput.jsx';
 import SettingsRef from './SettingsRef';
 import { getCustomTheme } from '../config/theme';
-import ReactApexChart from 'react-apexcharts';
 
 const defaultOptions = {
   loop: true,
@@ -1063,7 +1062,7 @@ function BetArray({
                   <Tooltip title="CHANGE AI PLAY STRATEGY">
                     <IconButton
                       id="btn-rps-settings"
-                      sx={{ borderRadius: 1 }}
+                      sx={{ borderRadius: '0.5em' }}
                       onClick={handleSettingsIconClick}
                     >
                       <Typography sx={{ fontSize: '0.5em', marginRight: '2px' }}>EDIT</Typography>
@@ -1102,9 +1101,9 @@ function BetArray({
               {/* Adjust Bet Range */}
               <Box
                 sx={{
-                  pointerEvents: selectedStrategy === 'Martingale' || selectedStrategy === 'Sniper' ? 'none' : 'auto',
-                  filter: selectedStrategy === 'Martingale' ? 'grayscale(100%)' : 'none',
-                  opacity: selectedStrategy === 'Martingale' ? '0.3' : '1',
+                  pointerEvents: selectedStrategy === 'GPT3' ? 'none' : 'auto',
+                  filter: selectedStrategy === 'GPT3' ? 'grayscale(100%)' : 'none',
+                  opacity: selectedStrategy === 'GPT3' ? '0.3' : '1',
                   display: 'flex',
                   alignItems: 'center',
                   width: '100%',
@@ -1122,9 +1121,9 @@ function BetArray({
               {/* Display Min and Max Bet */}
               <Box
                 sx={{
-                  pointerEvents: selectedStrategy === 'Martingale' ? 'none' : 'auto',
-                  filter: selectedStrategy === 'Martingale' ? 'grayscale(100%)' : 'none',
-                  opacity: selectedStrategy === 'Martingale' ? '0.3' : '1',
+                  pointerEvents: selectedStrategy === 'GPT3' ? 'none' : 'auto',
+                  filter: selectedStrategy === 'GPT3' ? 'grayscale(100%)' : 'none',
+                  opacity: selectedStrategy === 'GPT3' ? '0.3' : '1',
                   display: 'flex',
                   padding: '0 10px',
                   flexDirection: 'row',
@@ -1152,12 +1151,12 @@ function BetArray({
                   justifyContent: 'center',
                   width: '100%',
                   marginTop: '10px',
-                  pointerEvents: selectedStrategy === 'Martingale' ? 'none' : 'auto',
-                  filter: selectedStrategy === 'Martingale' ? 'grayscale(100%)' : 'none',
+                  pointerEvents: selectedStrategy === 'GPT3' ? 'none' : 'auto',
+                  filter: selectedStrategy === 'GPT3' ? 'grayscale(100%)' : 'none',
                 }}
               >
                 <Tooltip
-                  title={selectedStrategy === 'Martingale' ? `NO BET RANGE FOR ${selectedStrategy}` : 'MIN & MAX BET VALUES'}
+                  title={selectedStrategy === 'GPT3' ? `NO BET RANGE FOR ${selectedStrategy}` : 'MIN & MAX BET VALUES'}
                   classes={{ tooltip: theme.components.MuiTooltip.styleOverrides.tooltip }}
                 >
                   <Slider
@@ -1189,8 +1188,8 @@ function BetArray({
                       '& .MuiSlider-rail': {
                         height: 8,
                       },
-                      pointerEvents: ai_mode === 'IMartingale' ? 'none' : 'auto',
-                      filter: ai_mode === 'IMartingale' ? 'grayscale(100%)' : 'none',
+                      pointerEvents: ai_mode === 'IGPT3' ? 'none' : 'auto',
+                      filter: ai_mode === 'IGPT3' ? 'grayscale(100%)' : 'none',
                     }}
                     disabled={isSliderDisabled}
                   />
@@ -1205,8 +1204,8 @@ function BetArray({
                     justifyContent: 'center',
                     padding: '5px 10px',
                     overflow: 'hidden',
-                    pointerEvents: ai_mode === 'IMartingale' ? 'none' : 'auto',
-                    filter: ai_mode === 'IMartingale' ? 'grayscale(100%)' : 'none',
+                    pointerEvents: ai_mode === 'IGPT3' ? 'none' : 'auto',
+                    filter: ai_mode === 'IGPT3' ? 'grayscale(100%)' : 'none',
                   }}
                 >
                   <Typography
@@ -1336,7 +1335,7 @@ function BetArray({
                     sx={{
                       backgroundColor: isDarkMode ? '#424242' : '#fff',
                       padding: '20px',
-                      borderRadius: 1,
+                      borderRadius: '5px',
                       boxShadow: 24,
                       width: '300px',
                     }}
@@ -1439,7 +1438,7 @@ function BetArray({
                     sx={{
                       backgroundColor: isDarkMode ? '#424242' : '#fff',
                       padding: '20px',
-                      borderRadius: 1,
+                      borderRadius: '5px',
                       boxShadow: 24,
                       width: '300px',
                     }}

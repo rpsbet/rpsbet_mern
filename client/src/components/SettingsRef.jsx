@@ -1,10 +1,11 @@
-import React, { useState, useRef } from 'react';
-import { Button, Tooltip } from '@mui/material';
+import React, { useState, useEffect, useRef } from 'react';
+import { Paper, Button, Tooltip, CircularProgress, TextField } from '@mui/material';
 import LockIcon from '@mui/icons-material/Lock';
 import { green, yellow } from '@mui/material/colors';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
+import debounce from 'lodash.debounce';
 
 const decodeHtmlEntity = (html) => {
   const txt = document.createElement('textarea');
@@ -21,11 +22,14 @@ const SettingsRef = ({
   settings_panel_opened,
   settingsRef,
   selectedStrategy,
-  updateUserStrategy
+  updateUserStrategy,
+  saving = false,
+  gamemode = 'Standard',
 }) => {
   const [descriptionOpen, setDescriptionOpen] = useState(false);
   const [strengthsOpen, setStrengthsOpen] = useState(false);
-
+  const [prompt, setPrompt] = useState('');
+  const [debouncedPrompt, setDebouncedPrompt] = useState('');
   const isMobile = useMediaQuery('(max-width: 768px)');
 
   const filteredStrategies = strategies.filter(
@@ -52,6 +56,31 @@ const SettingsRef = ({
     return bars;
   };
 
+  const debouncedUpdate = useRef(
+    debounce((newPrompt) => setDebouncedPrompt(newPrompt), 500)
+  ).current;
+
+  const handlePromptChange = (e) => {
+    const newValue = e.target.value;
+    setPrompt(newValue);
+    debouncedUpdate(newValue);
+  };
+
+  useEffect(() => {
+    // Update the prompt default text based on gamemode
+    const defaultText =
+      gamemode === 'Quick Shoot'
+        ? 'If the user clicks top corner, go for bottom corner.'
+        : 'Play predictable patterns, try to predict their moves';
+    setPrompt(defaultText);
+    setDebouncedPrompt(defaultText);
+  }, [gamemode]);
+
+  useEffect(() => {
+    // Example: Perform an action with the debouncedPrompt
+    console.log('Debounced prompt updated:', debouncedPrompt);
+  }, [debouncedPrompt]);
+
   return (
     <div
       ref={settingsRef}
@@ -68,7 +97,7 @@ const SettingsRef = ({
             <div className="desktop-only strategy-label">Description:</div>
             {isMobile ? (
               <>
-                <a className="btn-join" style={{pointer: 'cursor'}} onClick={() => setDescriptionOpen(!descriptionOpen)}>
+                <a className="btn-join" style={{ pointer: 'cursor' }} onClick={() => setDescriptionOpen(!descriptionOpen)}>
                   <FontAwesomeIcon icon={descriptionOpen ? faChevronUp : faChevronDown} />&nbsp;
                   {descriptionOpen ? ' Description' : ' Description'}
                 </a>
@@ -83,7 +112,7 @@ const SettingsRef = ({
             <div className="desktop-only strategy-label">Strengths:</div>
             {isMobile ? (
               <>
-                <a className="btn-join" style={{pointer: 'cursor'}} onClick={() => setStrengthsOpen(!strengthsOpen)}>
+                <a className="btn-join" style={{ pointer: 'cursor' }} onClick={() => setStrengthsOpen(!strengthsOpen)}>
                   <FontAwesomeIcon icon={strengthsOpen ? faChevronUp : faChevronDown} />&nbsp;
                   {strengthsOpen ? ' Strengths' : ' Strengths'}
                 </a>
@@ -196,6 +225,27 @@ const SettingsRef = ({
           ))}
         </div>
       </div>
+
+      {/* Prompt Box at the Bottom */}
+      {selectedStrategy === 'GPT3' && (
+        <Paper style={{ marginTop: '20px' }}>
+          <TextField
+            multiline
+            rows={4}
+            color='secondary'
+            variant="filled"
+            fullWidth
+            label="Custom Prompt"
+            value={prompt}
+            onChange={handlePromptChange}
+          />
+          {saving && (
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '10px' }}>
+              <CircularProgress />
+            </div>
+          )}
+        </Paper>
+      )}
     </div>
   );
 };

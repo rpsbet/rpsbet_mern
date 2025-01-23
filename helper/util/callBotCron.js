@@ -12,28 +12,13 @@ const SystemSetting = require('../../model/SystemSetting.js');
 const {
   predictNext,
   reinforcementAI,
-  innovate,
-  patternBasedAI,
-  counterSwitchAI,
-  NPC,
-  generatePattern,
-  counterRandomness,
   getRandomMove,
-  martingaleStrategy,
   predictNextOpenAI,
 } = require('./predictNextJoiner');
 const {
-  NPC_qs,
-  patternBasedAI_qs,
-  innovate_qs,
   getRandomItem_qs,
-  counterSwitchAI_qs,
-  generatePattern_qs,
-  getCopyCatItem_qs,
   predictNextQs,
   reinforcementAI_qs,
-  counterRandomness_qs,
-  martingaleStrategy_qs,
   openAIPredictionAI_qs,
 } = require('./predictNextQsJoiner');
 const saveDocumentWithRetry = require('./retrySave');
@@ -383,10 +368,10 @@ async function executeCronJob(
     const rooms = room
       ? [room]
       : await Room.find({
-          status: 'open',
-          is_private: false,
-          creator: { $ne: user._id },
-        });
+        status: 'open',
+        is_private: false,
+        creator: { $ne: user._id },
+      });
 
     const randomRoom = room
       ? room
@@ -424,8 +409,8 @@ async function executeCronJob(
         const rpsBetItems = await getRpsBetItems(roomId, user);
 
         if (betArray && betArray.length > 0) {
-          if (ai_mode === 'Random') {
-            nextState = getRandomMove();
+          if (ai_mode === 'Markov') {
+            nextState = await predictNext(rpsBetItems, true);
             predictedBetAmount = await predictNextBetAmount(
               betArray,
               0,
@@ -445,158 +430,7 @@ async function executeCronJob(
               0.2,
               room,
             );
-          } else if (ai_mode === 'Sniper') {
-            const nextMove = await reinforcementAI(rpsBetItems);
-            nextState = nextMove.move;
-            predictedBetAmount =
-              nextMove.risk === 4
-                ? user.balance < parseFloat(room.user_bet)
-                  ? user.balance
-                  : parseFloat(room.user_bet)
-                : Math.min(...betArray);
-          } else if (ai_mode === 'Hertz') {
-            nextState = await patternBasedAI(rpsBetItems);
-            predictedBetAmount = await predictNextBetAmount(
-              betArray,
-              0,
-              0,
-              0.01,
-              0.2,
-              room,
-            );
-          } else if (ai_mode === 'Feedback') {
-            nextState = await counterSwitchAI(rpsBetItems);
-            predictedBetAmount = await predictNextBetAmount(
-              betArray,
-              0,
-              0,
-              0.01,
-              0.2,
-              room,
-            );
-          } else if (
-            ai_mode === 'Skill-issue-old' ||
-            ai_mode === 'Skill-issue'
-          ) {
-            const randomnessResult = await counterRandomness(rpsBetItems);
-            nextState = randomnessResult.counterMove;
-            const penultimateSameAsLast = randomnessResult.risk;
-            if (ai_mode === 'Skill-issue-old') {
-              predictedBetAmount = await predictNextBetAmount(
-                betArray,
-                penultimateSameAsLast,
-                0.01,
-                0.2,
-                room,
-              );
-            } else if (ai_mode === 'Skill-issue') {
-              const outcome = await martingaleStrategy(rpsBetItems);
-              if (penultimateSameAsLast === 3) {
-                predictedBetAmount =
-                  outcome.lastResult === 'loss' || outcome.lastResult === 'draw'
-                    ? betArray[0].bet_amount * 1.4
-                    : Math.min(...betArray);
-              } else {
-                predictedBetAmount = await predictNextBetAmount(
-                  betArray,
-                  penultimateSameAsLast,
-                  0.01,
-                  0.2,
-                  room,
-                );
-              }
-              if (predictedBetAmount > user.balance / 2) {
-                predictedBetAmount = user.balance / 4;
-              }
-            }
-          } else if (ai_mode === 'NPC') {
-            nextState = await NPC(rpsBetItems);
-            predictedBetAmount = await predictNextBetAmount(
-              betArray,
-              0,
-              0,
-              0.01,
-              0.2,
-              room,
-            );
-          } else if (ai_mode === 'Tesla') {
-            nextState = await generatePattern(rpsBetItems);
-            predictedBetAmount = await predictNextBetAmount(
-              betArray,
-              0,
-              0,
-              0.01,
-              0.2,
-              room,
-            );
-          } else if (ai_mode === 'CopyCat') {
-            const copyCatBetItem = rpsBetItems[0];
-            if (copyCatBetItem) {
-              nextState = copyCatBetItem.rps;
-            } else {
-              const randomIndex = Math.floor(Math.random() * 3);
-              const rpsOptions = ['R', 'P', 'S'];
-              nextState = rpsOptions[randomIndex];
-            }
-            predictedBetAmount = await predictNextBetAmount(
-              betArray,
-              0,
-              0,
-              0.01,
-              0.2,
-              room,
-            );
-          } else if (ai_mode === 'Hidden Markov') {
-            if (rpsBetItems.length > 0) {
-              const transformedItems = rpsBetItems.map((item) => ({
-                rps: item.joiner_rps,
-              }));
-              nextState = await predictNext(transformedItems);
-            }
-            predictedBetAmount = await predictNextBetAmount(
-              betArray,
-              0,
-              0,
-              0.01,
-              0.2,
-              room,
-            );
-          } else if (ai_mode === 'Markov') {
-            nextState = await predictNext(rpsBetItems, true);
-            predictedBetAmount = await predictNextBetAmount(
-              betArray,
-              0,
-              0,
-              0.01,
-              0.2,
-              room,
-            );
-          } else if (ai_mode === 'Martingale') {
-            const outcome = await martingaleStrategy(rpsBetItems);
-            nextState = outcome.move;
-            predictedBetAmount =
-              outcome.lastResult === 'loss' || outcome.lastResult === 'draw'
-                ? betArray[0].bet_amount
-                  ? betArray[0].bet_amount * 2
-                  : betArray[0] * 2
-                : Math.min(...betArray);
-          } else if (ai_mode === 'Innovate') {
-            const randomnessResult = await innovate(rpsBetItems, true);
-            nextState = randomnessResult.counterMove;
-            const penultimateSameAsLast = randomnessResult.risk;
-            const predictedBet = await predictNextBetAmount(
-              betArray,
-              penultimateSameAsLast,
-              0,
-              0.01,
-              0.2,
-              room,
-            );
-            predictedBetAmount =
-              penultimateSameAsLast === 1
-                ? Math.max(predictedBet / 5, 0.1)
-                : predictedBet;
-          } else if (ai_mode === 'o1') {
+          } else if (ai_mode === 'GPT3') {
             nextState = await predictNextOpenAI(rpsBetItems, true);
             predictedBetAmount = await predictNextBetAmount(
               betArray,
@@ -670,130 +504,7 @@ async function executeCronJob(
               0.2,
               room,
             );
-          } else if (ai_mode === 'Sniper') {
-            const nextMove = await reinforcementAI_qs(
-              qsBetItems,
-              room.qs_game_type,
-            );
-            nextState = nextMove.move;
-            predictedBetAmount =
-              nextMove.risk === 4
-                ? user.balance < parseFloat(room.user_bet)
-                  ? user.balance
-                  : parseFloat(room.user_bet)
-                : Math.min(...betArray);
-          } else if (ai_mode === 'Hertz') {
-            nextState = await patternBasedAI_qs(qsBetItems, room.qs_game_type);
-            predictedBetAmount = await predictNextBetAmount(
-              betArray,
-              0,
-              0,
-              0.01,
-              0.2,
-              room,
-            );
-          } else if (ai_mode === 'Feedback') {
-            nextState = await counterSwitchAI_qs(qsBetItems, room.qs_game_type);
-            predictedBetAmount = await predictNextBetAmount(
-              betArray,
-              0,
-              0,
-              0.01,
-              0.2,
-              room,
-            );
-          } else if (
-            ai_mode === 'Skill-issue-old' ||
-            ai_mode === 'Skill-issue'
-          ) {
-            const randomnessResult = await counterRandomness_qs(
-              qsBetItems,
-              room.qs_game_type,
-            );
-            nextState = randomnessResult.counterMove;
-            const penultimateSameAsLast = randomnessResult.risk;
-            if (ai_mode === 'Skill-issue-old') {
-              predictedBetAmount = await predictNextBetAmount(
-                betArray,
-                penultimateSameAsLast,
-                0,
-                0.01,
-                0.2,
-                room,
-              );
-            } else if (ai_mode === 'Skill-issue') {
-              if (penultimateSameAsLast !== 3) {
-                const outcome = await martingaleStrategy_qs(
-                  qsBetItems,
-                  room.qs_game_type,
-                );
-                predictedBetAmount =
-                  outcome.lastResult === 'loss' || outcome.lastResult === 'draw'
-                    ? betArray[0].bet_amount * 1.4
-                    : Math.min(...betArray);
-              } else {
-                predictedBetAmount = await predictNextBetAmount(
-                  betArray,
-                  penultimateSameAsLast,
-                  0,
-                  0.01,
-                  0.2,
-                  room,
-                );
-              }
-              if (predictedBetAmount > user.balance / 2) {
-                predictedBetAmount = user.balance / 4;
-              }
-            }
-          } else if (ai_mode === 'NPC') {
-            nextState = await NPC_qs(qsBetItems, room.qs_game_type);
-            predictedBetAmount = await predictNextBetAmount(
-              betArray,
-              0,
-              0,
-              0.01,
-              0.2,
-              room,
-            );
-          } else if (ai_mode === 'Tesla') {
-            nextState = await generatePattern_qs(qsBetItems, room.qs_game_type);
-            predictedBetAmount = await predictNextBetAmount(
-              betArray,
-              0,
-              0,
-              0.01,
-              0.2,
-              room,
-            );
-          } else if (ai_mode === 'CopyCat') {
-            nextState = await getCopyCatItem_qs(qsBetItems, room.qs_game_type);
-            predictedBetAmount = await predictNextBetAmount(
-              betArray,
-              0,
-              0,
-              0.01,
-              0.2,
-              room,
-            );
-          } else if (ai_mode === 'Hidden Markov') {
-            if (qsBetItems.length > 0) {
-              const transformedItems = qsBetItems.map((item) => ({
-                qs: item.joiner_qs,
-              }));
-              nextState = await predictNextQs(
-                transformedItems,
-                room.qs_game_type,
-              );
-            }
-            predictedBetAmount = await predictNextBetAmount(
-              betArray,
-              0,
-              0,
-              0.01,
-              0.2,
-              room,
-            );
-          } else if (ai_mode === 'Markov') {
+          } if (ai_mode === 'Markov') {
             nextState = await predictNextQs(qsBetItems, room.qs_game_type);
             predictedBetAmount = await predictNextBetAmount(
               betArray,
@@ -803,36 +514,7 @@ async function executeCronJob(
               0.2,
               room,
             );
-          } else if (ai_mode === 'Martingale') {
-            const outcome = await martingaleStrategy_qs(
-              qsBetItems,
-              room.qs_game_type,
-            );
-            nextState = outcome.move;
-            predictedBetAmount =
-              outcome.lastResult === 'loss' || outcome.lastResult === 'draw'
-                ? betArray[0].bet_amount * 2
-                : Math.min(...betArray);
-          } else if (ai_mode === 'Innovate') {
-            const randomnessResult = await innovate_qs(
-              qsBetItems,
-              room.qs_game_type,
-            );
-            nextState = randomnessResult.counterMove;
-            const penultimateSameAsLast = randomnessResult.risk;
-            const predictedBet = await predictNextBetAmount(
-              betArray,
-              penultimateSameAsLast,
-              0,
-              0.01,
-              0.2,
-              room,
-            );
-            predictedBetAmount =
-              penultimateSameAsLast === 1
-                ? Math.max(predictedBet / 5, 0.1)
-                : predictedBet;
-          } else if (ai_mode === 'o1') {
+          } else if (ai_mode === 'GPT3') {
             nextState = await openAIPredictionAI_qs(
               qsBetItems,
               room.qs_game_type,
@@ -850,9 +532,9 @@ async function executeCronJob(
 
         if (
           predictedBetAmount / (room.qs_game_type - 1) +
-            predictedBetAmount -
-            (room.qs_game_type - 1) * parseFloat(room.user_bet) >
-            parseFloat(room.user_bet) ||
+          predictedBetAmount -
+          (room.qs_game_type - 1) * parseFloat(room.user_bet) >
+          parseFloat(room.user_bet) ||
           predictedBetAmount > user.balance
         ) {
           try {
@@ -864,9 +546,9 @@ async function executeCronJob(
 
         if (
           predictedBetAmount / (room.qs_game_type - 1) +
-            predictedBetAmount -
-            (room.qs_game_type - 1) * parseFloat(room.user_bet) >
-            parseFloat(room.user_bet) ||
+          predictedBetAmount -
+          (room.qs_game_type - 1) * parseFloat(room.user_bet) >
+          parseFloat(room.user_bet) ||
           predictedBetAmount > parseFloat(room.user_bet)
         ) {
           predictedBetAmount = parseFloat(room.user_bet);

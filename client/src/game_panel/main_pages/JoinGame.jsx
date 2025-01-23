@@ -37,8 +37,8 @@ import {
   getRoomList,
   getSolToUsdPrice
 } from '../../redux/Logic/logic.actions';
-import { predictNext, reinforcementAI, innovate, martingaleStrategy, patternBasedAI, counterSwitchAI, generatePattern, counterRandomness, NPC } from '../../util/predictNext';
-import { predictNextQs, reinforcementAI_qs, innovate_qs, martingaleStrategy_qs, patternBasedAI_qs, counterSwitchAI_qs, generatePattern_qs, counterRandomness_qs, NPC_qs, getCopyCatItem_qs, getRandomItem_qs } from '../../util/predictNextQs';
+import { predictNext, reinforcementAI } from '../../util/predictNext';
+import { predictNextQs, reinforcementAI_qs } from '../../util/predictNextQs';
 import ChatPanel from '../ChatPanel/ChatPanel';
 import { Tabs, Tab } from '@mui/material';
 import MyGamesTable from '../MyGames/MyGamesTable';
@@ -449,72 +449,13 @@ console.log("betInfo", betInfo)
         switch (roomInfo.game_type) {
           case 'Quick Shoot':
             if (this.props.qsbetitems && this.props.qsbetitems.length > 0) {
-              if (this.props.ai_mode === 'Random') {
-                randomItem = await getRandomItem_qs(roomInfo.qs_game_type);
-                predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
-              } else if (this.props.ai_mode === 'Adam') {
+              if (this.props.ai_mode === 'Adam') {
                 const nextMove = await reinforcementAI_qs(this.props.qsbetitems, roomInfo.qs_game_type);
                 randomItem = nextMove.move;
                 predictedBetAmount = await this.predictNextBetAmount(betArray, nextMove.risk, 0, 0.01, 0.2);
-              } else if (this.props.ai_mode === 'Sniper') {
-                const nextMove = await reinforcementAI_qs(this.props.qsbetitems, roomInfo.qs_game_type);
-                randomItem = nextMove.move;
-                predictedBetAmount = nextMove.risk === 4 ? (this.props.user_balance < bankroll ? this.props.user_balance : bankroll) : Math.min(...betArray);
-              } else if (this.props.ai_mode === 'Hertz') {
-                randomItem = await patternBasedAI_qs(this.props.qsbetitems, roomInfo.qs_game_type);
-                predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
-              } else if (this.props.ai_mode === 'Feedback') {
-                randomItem = await counterSwitchAI_qs(this.props.qsbetitems, roomInfo.qs_game_type);
-                predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
-              } else if (this.props.ai_mode === 'Innovate') {
-                const randomnessResult = await innovate_qs(this.props.qsbetitems, roomInfo.qs_game_type);
-                randomItem = randomnessResult.counterMove;
-                const penultimateSameAsLast = randomnessResult.risk;
-                const predictedBet = await this.predictNextBetAmount(betArray, penultimateSameAsLast, 0.01, 0.2);
-                predictedBetAmount = penultimateSameAsLast === 1
-                  ? Math.max(predictedBet / 5, 0.1)
-                  : predictedBet;
-              } else if (this.props.ai_mode === 'Skill-issue-old' || this.props.ai_mode === 'Skill-issue') {
-                const randomnessResult = await counterRandomness_qs(this.props.qsbetitems, roomInfo.qs_game_type);
-                randomItem = randomnessResult.counterMove;
-                const penultimateSameAsLast = randomnessResult.risk;
-                if (this.props.ai_mode === 'Skill-issue-old') {
-                  predictedBetAmount = await this.predictNextBetAmount(betArray, penultimateSameAsLast, 0.01, 0.2);
-                } else if (this.props.ai_mode === 'Skill-issue') {
-
-                  if (penultimateSameAsLast !== 3) {
-                    const outcome = await martingaleStrategy_qs(this.props.qsbetitems, roomInfo.qs_game_type);
-                    predictedBetAmount = outcome.lastResult === 'loss' || outcome.lastResult === 'draw' ? this.props.qsbetitems[0].bet_amount * 1.4 : Math.min(...betArray);
-                  } else {
-                    predictedBetAmount = await this.predictNextBetAmount(betArray, penultimateSameAsLast, 0.01, 0.2);
-                  }
-                  if (predictedBetAmount > this.props.user_balance / 2) {
-                    predictedBetAmount = this.props.user_balance / 4;
-                  }
-                }
-
-              } else if (this.props.ai_mode === 'NPC') {
-                randomItem = await NPC_qs(this.props.qsbetitems, roomInfo.qs_game_type);
-                predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
-              } else if (this.props.ai_mode === 'Tesla') {
-                randomItem = await generatePattern_qs(this.props.qsbetitems, roomInfo.qs_game_type);
-                predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
-              } else if (this.props.ai_mode === 'CopyCat') {
-                randomItem = await getCopyCatItem_qs(this.props.qsbetitems, roomInfo.qs_game_type);
-                predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
-              } else if (this.props.ai_mode === 'Hidden Markov') {
-                if (this.props.qsbetitems.length > 0) {
-                  const transformedItems = this.props.qsbetitems.map(item => ({ qs: item.joiner_qs }));
-                  randomItem = await predictNextQs(transformedItems, roomInfo.qs_game_type);
-                }
-                predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
               } else if (this.props.ai_mode === 'Markov') {
                 randomItem = await predictNextQs(this.props.qsbetitems, roomInfo.qs_game_type);
                 predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
-              } else if (this.props.ai_mode === 'Martingale') {
-                const outcome = await martingaleStrategy_qs(this.props.qsbetitems, roomInfo.qs_game_type);
-                randomItem = outcome.move;
-                predictedBetAmount = outcome.lastResult === 'loss' || outcome.lastResult === 'draw' ? this.props.qsbetitems[0].bet_amount * 2 : Math.min(...betArray);
               }
             }
             break;
@@ -522,79 +463,13 @@ console.log("betInfo", betInfo)
           default:
             // RPS
             if (this.props.rpsbetitems && this.props.rpsbetitems.length > 0) {
-              if (this.props.ai_mode === 'Random') {
-                const randomIndex = Math.floor(Math.random() * 3);
-                const rpsOptions = ['R', 'P', 'S'];
-                randomItem = rpsOptions[randomIndex];
-                predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
-              } else if (this.props.ai_mode === 'Adam') {
+              if (this.props.ai_mode === 'Adam') {
                 const nextMove = await reinforcementAI(this.props.rpsbetitems);
                 randomItem = nextMove.move;
                 predictedBetAmount = await this.predictNextBetAmount(betArray, nextMove.risk, 0, 0.01, 0.2);
-              } else if (this.props.ai_mode === 'Sniper') {
-                const nextMove = await reinforcementAI(this.props.rpsbetitems);
-                randomItem = nextMove.move;
-                predictedBetAmount = nextMove.risk === 4 ? (this.props.user_balance < bankroll ? this.props.user_balance : bankroll) : Math.min(...betArray);
-              } else if (this.props.ai_mode === 'Hertz') {
-                randomItem = await patternBasedAI(this.props.rpsbetitems);
-                predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
-              } else if (this.props.ai_mode === 'Innovate') {
-                const randomnessResult = await innovate(this.props.rpsbetitems);
-                randomItem = randomnessResult.counterMove;
-                const penultimateSameAsLast = randomnessResult.risk;
-                const predictedBet = await this.predictNextBetAmount(betArray, penultimateSameAsLast, 0.01, 0.2);
-                predictedBetAmount = penultimateSameAsLast === 1
-                  ? Math.max(predictedBet / 5, 0.1)
-                  : predictedBet;
-              } else if (this.props.ai_mode === 'Feedback') {
-                randomItem = await counterSwitchAI(this.props.rpsbetitems);
-                predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
-              } else if (this.props.ai_mode === 'Skill-issue-old' || this.props.ai_mode === 'Skill-issue') {
-                const randomnessResult = await counterRandomness(this.props.rpsbetitems);
-                randomItem = randomnessResult.counterMove;
-                const penultimateSameAsLast = randomnessResult.risk;
-                if (this.props.ai_mode === 'Skill-issue-old') {
-                  predictedBetAmount = await this.predictNextBetAmount(betArray, penultimateSameAsLast, 0.01, 0.2);
-                } else if (this.props.ai_mode === 'Skill-issue') {
-                  const outcome = await martingaleStrategy(this.props.rpsbetitems);
-                  if (penultimateSameAsLast === 3) {
-                    predictedBetAmount = outcome.lastResult === 'loss' || outcome.lastResult === 'draw' ? this.props.rpsbetitems[0].bet_amount * 1.4 : Math.min(...betArray);
-                  } else {
-                    predictedBetAmount = await this.predictNextBetAmount(betArray, penultimateSameAsLast, 0.01, 0.2);
-                  }
-                  if (predictedBetAmount > this.props.user_balance / 2) {
-                    predictedBetAmount = this.props.user_balance / 4;
-                  }
-                }
-              } else if (this.props.ai_mode === 'NPC') {
-                randomItem = await NPC(this.props.rpsbetitems);
-                predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
-              } else if (this.props.ai_mode === 'Tesla') {
-                randomItem = await generatePattern(this.props.rpsbetitems);
-                predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
-              } else if (this.props.ai_mode === 'CopyCat') {
-                const copyCatBetItem = this.props.rpsbetitems[0];
-                if (copyCatBetItem) {
-                  randomItem = copyCatBetItem.rps;
-                } else {
-                  const randomIndex = Math.floor(Math.random() * 3);
-                  const rpsOptions = ['R', 'P', 'S'];
-                  randomItem = rpsOptions[randomIndex];
-                }
-                predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
-              } else if (this.props.ai_mode === 'Hidden Markov') {
-                if (this.props.rpsbetitems.length > 0) {
-                  const transformedItems = this.props.rpsbetitems.map(item => ({ rps: item.joiner_rps }));
-                  randomItem = await predictNext(transformedItems);
-                }
-                predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
               } else if (this.props.ai_mode === 'Markov') {
                 randomItem = await predictNext(this.props.rpsbetitems, true);
                 predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
-              } else if (this.props.ai_mode === 'Martingale') {
-                const outcome = await martingaleStrategy(this.props.rpsbetitems);
-                randomItem = outcome.move;
-                predictedBetAmount = outcome.lastResult === 'loss' || outcome.lastResult === 'draw' ? this.props.rpsbetitems[0].bet_amount * 2 : Math.min(...betArray);
               }
             }
             break;

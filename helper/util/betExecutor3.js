@@ -18,23 +18,10 @@ const check_access_time = require('../../helper/util/checkAccessTime');
 const {
   predictNext,
   reinforcementAI,
-  innovate,
-  patternBasedAI,
-  counterSwitchAI,
-  counterRandomness,
-  NPC,
-  generatePattern,
   predictNextOpenAI,
 } = require('./predictNext');
 const {
-  NPC_qs,
-  patternBasedAI_qs,
-  innovate_qs,
   getRandomItem_qs,
-  counterSwitchAI_qs,
-  generatePattern_qs,
-  counterRandomness_qs,
-  getCopyCatItem_qs,
   predictNextQs,
   reinforcementAI_qs,
   openAIPredictionAI_qs,
@@ -247,41 +234,10 @@ const addToQueue = async (req, bot = false) => {
         if (!bet_item && roomInfo['rps_game_type'] === 0) {
           let nextItem;
           switch (roomInfo['selectedStrategy']) {
-            case 'Random':
-              nextItem = await getRandomItem();
-              break;
-            case 'Martingale':
-              nextItem = await getRandomItem();
-              break;
-            case 'Hertz':
-              nextItem = await patternBasedAI(allBetItems);
-              break;
-            case 'Feedback':
-              nextItem = await counterSwitchAI(allBetItems);
-              break;
-            case 'Skill-issue-old':
-              nextItem = await counterRandomness(allBetItems);
-              break;
-            case 'NPC':
-              nextItem = await NPC(allBetItems);
-              break;
-            case 'Tesla':
-              nextItem = await generatePattern(allBetItems);
-              break;
-            case 'CopyCat':
-              nextItem = await getCopyCatItem(allBetItems);
-              break;
             case 'Markov':
               nextItem = await getNextItemUsingMarkov(allBetItems);
               break;
-            case 'Hidden Markov':
-              nextItem = await predictNext(allBetItems);
-              break;
-            case 'Innovate':
-              const nextState = await innovate(allBetItems);
-              nextItem = nextState.counterMove;
-              break;
-            case 'o1':
+            case 'GPT3':
               nextItem = await predictNextOpenAI(allBetItems);
               break;
             default:
@@ -552,9 +508,9 @@ const addToQueue = async (req, bot = false) => {
       } else if (roomInfo['game_type']['game_type_name'] === 'Quick Shoot') {
         if (
           parseFloat(req.body.bet_amount) / (roomInfo['qs_game_type'] - 1) +
-            parseFloat(req.body.bet_amount) -
-            (roomInfo['qs_game_type'] - 1) * parseFloat(roomInfo['user_bet']) >
-            parseFloat(roomInfo['user_bet']) ||
+          parseFloat(req.body.bet_amount) -
+          (roomInfo['qs_game_type'] - 1) * parseFloat(roomInfo['user_bet']) >
+          parseFloat(roomInfo['user_bet']) ||
           parseFloat(req.body.bet_amount) > parseFloat(req.user.balance)
         ) {
           responseData = {
@@ -589,72 +545,13 @@ const addToQueue = async (req, bot = false) => {
           let nextItem;
           console.log('---room method---', roomInfo['selectedStrategy']);
           switch (roomInfo['selectedStrategy']) {
-            case 'Random':
-              nextItem = await getRandomItem_qs(roomInfo['qs_game_type']);
-              break;
-            case 'Martingale':
-              nextItem = await getRandomItem_qs(roomInfo['qs_game_type']);
-              break;
-            case 'Hertz':
-              nextItem = await patternBasedAI_qs(
-                allBetItems,
-                roomInfo['qs_game_type'],
-              );
-              break;
-            case 'Feedback':
-              nextItem = await counterSwitchAI_qs(
-                allBetItems,
-                roomInfo['qs_game_type'],
-              );
-              break;
-            case 'Skill-issue-old':
-              nextItem = await counterRandomness_qs(
-                allBetItems,
-                roomInfo['qs_game_type'],
-              );
-              break;
-            case 'Skill-issue':
-              nextItem = await counterRandomness_qs(
-                allBetItems,
-                roomInfo['qs_game_type'],
-              );
-              break;
-            case 'NPC':
-              nextItem = await NPC_qs(allBetItems, roomInfo['qs_game_type']);
-              break;
-            case 'Tesla':
-              nextItem = await generatePattern_qs(
-                allBetItems,
-                roomInfo['qs_game_type'],
-              );
-              break;
-            case 'CopyCat':
-              nextItem = await getCopyCatItem_qs(
-                allBetItems,
-                roomInfo['qs_game_type'],
-              );
-              break;
             case 'Markov':
               nextItem = await getNextItemUsingMarkov_qs(
                 allBetItems,
                 roomInfo['qs_game_type'],
               );
               break;
-            case 'Hidden Markov':
-              nextItem = await predictNextQs(
-                allBetItems,
-                roomInfo['qs_game_type'],
-              );
-              break;
-            case 'Innovate':
-              let nextState;
-              nextState = await innovate_qs(
-                allBetItems,
-                roomInfo['qs_game_type'],
-              );
-              nextItem = nextState.move;
-              break;
-            case 'o1':
+            case 'GPT3':
               nextItem = await openAIPredictionAI_qs(
                 allBetItems,
                 roomInfo['qs_game_type'],
@@ -740,11 +637,11 @@ const addToQueue = async (req, bot = false) => {
             ((100 - commission) / 100);
           roomInfo['host_pr'] -=
             (betAmount + betAmount / (roomInfo['qs_game_type'] - 1)) *
-              ((100 - commission) / 100) -
+            ((100 - commission) / 100) -
             betAmount;
           roomInfo['user_bet'] -=
             (betAmount + betAmount / (roomInfo['qs_game_type'] - 1)) *
-              ((100 - commission) / 100) -
+            ((100 - commission) / 100) -
             betAmount;
           newGameLog.commission =
             (betAmount + betAmount / (roomInfo['qs_game_type'] - 1)) *
@@ -753,12 +650,12 @@ const addToQueue = async (req, bot = false) => {
           rain.value =
             parseFloat(rain.value) +
             (betAmount + betAmount / (roomInfo['qs_game_type'] - 1)) *
-              (commission / 100);
+            (commission / 100);
           // update platform stat (0.5%)
           platform.value =
             parseFloat(platform.value) +
             (betAmount + betAmount / (roomInfo['qs_game_type'] - 1)) *
-              (tax.value / 100);
+            (tax.value / 100);
           if (req.io.sockets) {
             req.io.sockets.emit('UPDATE_RAIN', {
               rain: rain.value,
