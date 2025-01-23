@@ -18,7 +18,6 @@ import {
   validateBankroll
 } from '../modal/betValidations';
 
-import { alertModal } from '../modal/ConfirmAlerts';
 import { convertToCurrency } from '../../util/conversion';
 
 import {
@@ -63,7 +62,7 @@ function RPS(props) {
    */
   const {
     // Redux
-    socket: propSocket,
+    socket: socket,
     isAuthenticated,
     isPasswordCorrect: propIsPasswordCorrect,
     isDarkMode,
@@ -122,7 +121,6 @@ function RPS(props) {
   const [showImageModal, setShowImageModal] = useState(false);
   const [image, setImage] = useState('');
   const [productName, setProductName] = useState('');
-  const [localSelectedRps, setLocalSelectedRps] = useState(selected_rps);
   const [modalOpen, setModalOpen] = useState(false);
   const [players, setPlayers] = useState([]);
   const [botsCount, setBotsCount] = useState(0);
@@ -135,6 +133,7 @@ function RPS(props) {
   const [rpsHistory, setRpsHistory] = useState([]); // current RPS array
   const [prevRps, setPrevRps] = useState([]);
   const [localIsPasswordCorrect, setLocalIsPasswordCorrect] = useState(propIsPasswordCorrect);
+  const [localSelectedRps, setLocalSelectedRps] = useState(selected_rps);
 
   // For bet amount:
   const [currentBetAmount, setCurrentBetAmount] = useState(propBetAmount);
@@ -183,9 +182,11 @@ function RPS(props) {
     // eslint-disable-next-line
   }, []);
 
-  // Attach socket listeners whenever propSocket / roomInfo._id / isWatching changes
+  // Attach socket listeners whenever socket / roomInfo._id / isWatching changes
   useEffect(() => {
-    if (!propSocket) return;
+    console.log("No socket yet in Redux...", socket);
+
+    if (!socket) return;
 
     // --- LISTENERS ---
     const handleSocketData = (data) => {
@@ -225,34 +226,32 @@ function RPS(props) {
 
     // If you only want to listen while *not* isWatching, or always listen:
     // For example, let's say we always attach, but you can conditionally attach if needed:
-    propSocket.on(channel1, handleSocketData);
-    propSocket.on(channel2, handleSocketData2);
+    socket.on(channel1, handleSocketData);
+    socket.on(channel2, handleSocketData2);
 
     // --- CLEANUP ---
     return () => {
-      propSocket.off(channel1, handleSocketData);
-      propSocket.off(channel2, handleSocketData2);
+      socket.off(channel1, handleSocketData);
+      socket.off(channel2, handleSocketData2);
     };
-  }, [propSocket, roomInfo._id, isWatching, onChangeState, user_id, playSound]);
+  }, [socket, roomInfo._id, isWatching, onChangeState, user_id, playSound]);
 
-  // Watch for is_betting changes (to fetch RPS items if done)
-  useEffect(() => {
-    if (!is_betting) {
-      // Compare the last item IDs as in class-based code
-      const prevLastItemId =
-        rpsbetitems.length > 4
-          ? rpsbetitems.slice(0, 5).reverse()[4]._id
-          : null;
-      const currentLastItemId =
-        rpsHistory.length > 4 ? rpsHistory[4]._id : null;
-      if (prevLastItemId === currentLastItemId) {
-        (async () => {
-          await getRpsBetItems(roomInfo._id);
+  // useEffect(() => {
+  //   if (!is_betting) {
+  //     const prevLastItemId =
+  //       rpsbetitems.length > 4
+  //         ? rpsbetitems.slice(0, 5).reverse()[4]._id
+  //         : null;
+  //     const currentLastItemId =
+  //       rpsHistory.length > 4 ? rpsHistory[4]._id : null;
+  //     if (prevLastItemId === currentLastItemId) {
+  //       (async () => {
+  //         await getRpsBetItems(roomInfo._id);
         
-        })();
-      }
-    }
-  }, [is_betting, rpsHistory, rpsbetitems, getRpsBetItems, roomInfo]);
+  //       })();
+  //     }
+  //   }
+  // }, [is_betting, rpsHistory, rpsbetitems, getRpsBetItems, roomInfo]);
 
   // Watch for host_pr changes
   useEffect(() => {
@@ -338,12 +337,11 @@ function RPS(props) {
     ]
   );
 
-
   // Watch for password correctness
   useEffect(() => {
     if (!localIsPasswordCorrect && propIsPasswordCorrect) {
       // Just turned true
-      joinGame(selected_rps);
+      joinGame(localSelectedRps);
     }
     setLocalIsPasswordCorrect(propIsPasswordCorrect);
   }, [propIsPasswordCorrect, localIsPasswordCorrect, joinGame, selected_rps]);

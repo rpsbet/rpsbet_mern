@@ -214,7 +214,7 @@ class SiteWrapper extends Component {
       showVaultModal: false,
       notifications: [],
       loadMore: 10,
-      isLive: true,
+      isLive: false,
       blurValue: 3,
       isCountdownHovered: false,
       isYoutubeHovered: false,

@@ -41,6 +41,7 @@ import animationData from '../game_panel/LottieAnimations/spinningIcon.json';
 import BetAmountInput from '../components/BetAmountInput.jsx';
 import SettingsRef from './SettingsRef';
 import { getCustomTheme } from '../config/theme';
+import ReactApexChart from 'react-apexcharts';
 
 const defaultOptions = {
   loop: true,

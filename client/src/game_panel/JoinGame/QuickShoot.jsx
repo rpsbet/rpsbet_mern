@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { connect } from 'react-redux';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { Info } from '@mui/icons-material';
@@ -12,7 +12,7 @@ import ViewIcon from '@mui/icons-material/Visibility';
 import SwordsIcon from '@mui/icons-material/VisibilityOff';
 import InfoIcon from '@mui/icons-material/Info';
 import { getQsLottieAnimation } from '../../util/helper';
-import { updateRoomBot, kickBots } from '../../redux/Logic/logic.actions';
+import { updateRoomBot, kickBots, getQsBetItems, getRoomBotCount } from '../../redux/Logic/logic.actions';
 import { setSpectateMode } from '../../redux/Auth/user.actions';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import WarningIcon from '@mui/icons-material/Warning';
@@ -40,13 +40,6 @@ import {
 
 import Lottie from 'react-lottie';
 import ImageResultModal from '../modal/ImageResultModal';
-// REMOVED: confirmModalCreate import
-import {
-  getQsBetItems,
-  getRoomBotCount,
-} from '../../redux/Logic/logic.actions';
-import animationData from '../LottieAnimations/spinningIcon';
-// We keep alertModal if you still use it:
 import {
   alertModal,
   // confirmModalCreate, <== removed
@@ -54,6 +47,7 @@ import {
 import history from '../../redux/history';
 import { convertToCurrency } from '../../util/conversion';
 import football from '../LottieAnimations/football.json';
+import animationData from '../LottieAnimations/spinningIcon';
 
 const defaultOptions = {
   loop: true,
@@ -64,491 +58,465 @@ const defaultOptions = {
   }
 };
 
-class QuickShoot extends Component {
-  constructor(props) {
-    super(props);
-    this.settingsRef = React.createRef();
+function QuickShoot(props) {
+  // Extract props
+  const {
+    socket: socket, //  <-- Directly use this instead of local state
+    isAuthenticated,
+    isPasswordCorrect: propIsPasswordCorrect,
+    balance,
+    bankroll,
+    user_id,
+    creator_id,
+    roomInfo,
+    qs_game_type,
+    isDarkMode,
+    isFocused,
+    isWatching,
+    is_betting,
+    bet_amount,
+    selected_qs_position,
 
-    this.socket = this.props.socket;
-    this.state = {
-      items: [],
-      betting: false,
-      timer: null,
-      timerValue: 2000,
-      intervalId: null,
-      selected_qs_position: this.props.selected_qs_position,
-      advanced_status: '',
-      animation: <div />,
-      qs: [],
-      ballClassApplied: false,
-      qsValueAtLastIndex: '',
-      startedPlaying: false,
-      prev_qs: [],
-      bet_amount: 1,
-      isQbot: false,
-      players: [],
-      botsCount: 0,
-      potential_return: 1.25,
-      bankroll: this.props.bankroll,
-      host_pr: this.props.roomInfo.host_pr,
-      balance: this.props.balance,
-      productName: '',
-      status: this.props.roomInfo.status,
-      image: '',
-      showImageModal: false,
-      isPasswordCorrect: this.props.isPasswordCorrect,
+    // Additional props
+    onChangeState,
+    playSound,
+    changeBgColor,
+    solPrice,
+    openGamePasswordModal,
+    updateRoomBot,
+    kickBots,
+    getRoomBotCount,
+    setSpectateMode,
+    endGame,
+    join,
+    updateSelectedQs,
 
-      // ADDED: For MUI v5 confirmation dialog
-      openConfirmBet: false,
-      confirmBetMessage: '',
-      confirmBetCallback: null,
-      skipConfirm: localStorage.getItem('hideConfirmModal') === 'true'
-    };
-    this.onChangeState = this.onChangeState.bind(this);
-    this.handleKeyPress = this.handleKeyPress.bind(this);
-    this.panelRef = React.createRef();
-    this.isComponentMounted = false;
-  }
+    // UI logic / other props
+    actionList,
+    handleOpenPlayerModal,
+    handleClosePlayerModal,
+    showPlayerModal,
+    selectedCreator,
+    isLowGraphics,
+    borderColor,
+    handleSwitchChange,
+    is_mobile,
+    rank,
+    ai_mode,
+    attached,
+    getAttachedRooms,
+    strategies,
+    betting,
+    predictedBetAmount,
 
-  async componentDidMount() {
-    this.isComponentMounted = true; // Set mounted flag to true
-    document.addEventListener('keydown', this.handleKeyPress);
-    const intervalId = setInterval(this.toggleBlueishHue, this.state.intervalDuration);
-    this.setState({ intervalId });
-    this.setupSocket();
+    // Possibly for RPS-like logic
+    gameResult,
+    betResult,
+    bgColorChanged,
+    result,
+    endgame_type,
+    cp,
+    username,
+    creator_avatar,
+    isMusicEnabled
+  } = props;
 
-    try {
-      const botsCount = await this.props.getRoomBotCount(this.props.roomInfo._id);
-      if (this.isComponentMounted) {
-        this.setState({ botsCount });
+  // Local state
+  const [items, setItems] = useState([]);
+  const [bettingState, setBettingState] = useState(false);
+  const [timer, setTimer] = useState(null);
+  const [timerValue, setTimerValue] = useState(2000);
+  const [intervalId, setIntervalId] = useState(null);
+  const [advanced_status, setAdvancedStatus] = useState('');
+  const [animation, setAnimation] = useState(<div />);
+  const [qsHistory, setQsHistory] = useState([]);
+  const [localSelectedQs, setLocalSelectedQs] = useState(selected_qs_position);
+
+  const [ballClassApplied, setBallClassApplied] = useState(false);
+  const [qsValueAtLastIndex, setQsValueAtLastIndex] = useState('');
+  const [startedPlaying, setStartedPlaying] = useState(false);
+  const [prev_qs, setPrevQs] = useState([]);
+  const [isQbot, setIsQbot] = useState(false);
+  const [players, setPlayers] = useState([]);
+  const [botsCount, setBotsCount] = useState(0);
+  const [potential_return, setPotentialReturn] = useState(1.25);
+  const [host_pr, setHostPr] = useState(roomInfo.host_pr);
+  const [productName, setProductName] = useState('');
+  const [status, setStatus] = useState(roomInfo.status);
+  const [image, setImage] = useState('');
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [isPasswordCorrect, setIsPasswordCorrect] = useState(propIsPasswordCorrect);
+
+  // Confirm dialog state
+  const [openConfirmBet, setOpenConfirmBet] = useState(false);
+  const [confirmBetMessage, setConfirmBetMessage] = useState('');
+  const [confirmBetCallback, setConfirmBetCallback] = useState(null);
+  const [skipConfirm, setSkipConfirm] = useState(
+    localStorage.getItem('hideConfirmModal') === 'true'
+  );
+
+  // Refs
+  const settingsRef = useRef(null);
+  const panelRef = useRef(null);
+
+  // We track mounted status to avoid setting state after unmount
+  const isComponentMountedRef = useRef(false);
+
+  const updateAnimation = useCallback(
+    async (qsHistoryArg, lastIndexVal) => {
+      console.log("Manually passed qsHistory:", qsHistoryArg);
+      console.log("Manually passed lastIndexVal:", lastIndexVal);
+
+      if (!qsHistoryArg?.length) return;
+      if (!lastIndexVal) return;
+
+      let qsIndex = parseInt(lastIndexVal, 10);
+      if (Number.isNaN(qsIndex)) return;
+
+      let position_short_name = ["center", "tl", "tr", "bl", "br"];
+
+      // Example game type checks
+      if (qs_game_type === 2) {
+        position_short_name = ["bl", "br"];
+      } else if (qs_game_type === 3) {
+        position_short_name = ["bl", "center", "br"];
+      } else if (qs_game_type === 4) {
+        position_short_name = ["tl", "tr", "bl", "br"];
       }
-    } catch (error) {
-      console.error('Error in componentDidMount:', error);
-    }
-  }
 
-  setupSocket() {
-    this.isComponentMounted = true;
-    document.addEventListener('keydown', this.handleKeyPress);
-    const intervalId = setInterval(this.toggleBlueishHue, this.state.intervalDuration);
-    this.setState({ intervalId });
-
-    const initializeSocket = async () => {
-      try {
-        if (!this.isComponentMounted) return;
-
-        const { socket, playSound, roomInfo } = this.props;
-        const initializedSocket = socket || null;
-        this.setState({ socket: initializedSocket });
-
-        if (initializedSocket) {
-          initializedSocket.on(
-            `UPDATED_BANKROLL_QS_${roomInfo._id}`,
-            this.handleSocketData
-          );
-          initializedSocket.on(
-            `UPDATED_BANKROLL_QS2_${roomInfo._id}`,
-            this.handleSocketData2
-          );
-        } else {
-          setTimeout(() => {
-            if (this.isComponentMounted) initializeSocket();
-          }, 3000);
-        }
-      } catch (error) {
-        console.error('Socket initialization failed:', error);
-        setTimeout(() => {
-          if (this.isComponentMounted) initializeSocket();
-        }, 3000);
+      if (qsIndex < 0 || qsIndex >= position_short_name.length) {
+        qsIndex = 0;
       }
-    };
 
-    initializeSocket();
-  }
+      const animData = await getQsLottieAnimation(
+        roomInfo.qs_nation,
+        position_short_name[qsIndex]
+      );
 
-  removeSocketListeners() {
-    const { socket, roomInfo } = this.props;
-    if (socket) {
-      socket.off(`UPDATED_BANKROLL_QS_${roomInfo._id}`, this.handleSocketData);
-      socket.off(`UPDATED_BANKROLL_QS2_${roomInfo._id}`, this.handleSocketData2);
-    }
-  }
-
-  handleSocketData = (data) => {
-    this.setState((prevState) => {
-      let updatedPlayers = [...prevState.players, data.user];
-      if (updatedPlayers.length > 5) {
-        updatedPlayers.shift();
-      }
-      this.props.playSound('blip');
-      let filteredQS = data.qs.filter((game) => game.joiner === this.props.user_id);
-      let qsState = filteredQS.length > 0 ? filteredQS : prevState.qs;
-      let qsValueAtLastIndex = data.qs.length > 0
-        ? parseInt(data.qs[data.qs.length - 1].joiner_qs)
-        : null;
-      this.props.onChangeState({ bankroll: data.bankroll });
-
-      return {
-        host_pr: data.host_pr,
-        qs: this.props.isWatching ? qsState : data.qs,
-        prev_qs: data.qs,
-        startedPlaying: true,
-        players: updatedPlayers,
-        qsValueAtLastIndex: qsValueAtLastIndex
-      };
-    }, () => {
-      if (
-        !(this.props.isWatching &&
-          data.qs.every((game) => game.joiner !== this.props.user_id))
-      ) {
-        this.updateAnimation();
-      }
-    });
-  };
-
-  handleSocketData2 = (data) => {
-    this.props.onChangeState({ bankroll: data.bankroll });
-  };
-
-  handleSpectateMode = () => {
-    this.props.setSpectateMode(!this.props.isWatching);
-  };
-
-  componentWillUnmount() {
-    this.isComponentMounted = false;
-    document.removeEventListener('keydown', this.handleKeyPress);
-    document.removeEventListener('mousedown', this.handleClickOutside);
-    clearInterval(this.state.intervalId);
-    this.removeSocketListeners();
-  }
-
-  handleKeyPress(event) {
-    if (!this.props.isFocused) {
-      const ctrlKeyPressed = event.ctrlKey || event.metaKey;
-      const isRKeyPressed = event.key === 'r';
-
-      if (!(ctrlKeyPressed && isRKeyPressed)) {
-        switch (event.key) {
-          case 'p':
-            this.onBtnBetClick(0);
-            break;
-          case 'q':
-            this.onBtnBetClick(1);
-            break;
-          case 'w':
-            this.onBtnBetClick(2);
-            break;
-          case 'e':
-            this.onBtnBetClick(3);
-            break;
-          case 'r':
-            this.onBtnBetClick(4);
-            break;
-          default:
-            break;
-        }
-      }
-    }
-  }
-
-  static getDerivedStateFromProps(props, current_state) {
-    const { isPasswordCorrect, balance } = props;
-
-    if (
-      current_state.isPasswordCorrect !== isPasswordCorrect ||
-      current_state.balance !== balance
-    ) {
-      return {
-        ...current_state,
-        balance,
-        isPasswordCorrect
-      };
-    }
-
-    return null;
-  }
-
-  updateAnimation = async () => {
-    let qsIndex = parseInt(this.state.qs[this.state.qs.length - 1].qs);
-    let position_short_name = ['center', 'tl', 'tr', 'bl', 'br'];
-
-    if (this.props.qs_game_type === 2) {
-      position_short_name = ['bl', 'br'];
-    } else if (this.props.qs_game_type === 3) {
-      position_short_name = ['bl', 'center', 'br'];
-    } else if (this.props.qs_game_type === 4) {
-      position_short_name = ['tl', 'tr', 'bl', 'br'];
-    }
-
-    const animationData = await getQsLottieAnimation(
-      this.props.roomInfo.qs_nation,
-      position_short_name[qsIndex]
-    );
-
-    this.setState({
-      animation: (
-        <div
-          className="qs-image-panel"
-          id="quickShoot_lottie"
-        >
+      setAnimation(
+        <div className="qs-image-panel" id="quickShoot_lottie">
           <Lottie
-            options={{
-              loop: false,
-              autoplay: true,
-              animationData
-            }}
-            style={{ maxWidth: '100%', width: '600px', borderRadius: '10px' }}
+            options={{ loop: false, autoplay: true, animationData: animData }}
+            style={{ maxWidth: "100%", width: "600px", borderRadius: "10px" }}
           />
         </div>
-      )
+      );
+    },
+    [qs_game_type, roomInfo] // dependencies, but note we no longer rely on qsHistory state
+  );
+
+  // =========== Socket Handlers ===========
+
+  const handleSocketData = useCallback((data) => {
+    console.log("data", data);
+
+    // Update players
+    setPlayers((prevPlayers) => {
+      const updated = [...prevPlayers, data.user];
+      if (updated.length > 5) updated.shift();
+      return updated;
     });
-  };
 
-  async componentDidUpdate(prevProps, prevState) {
-    const { roomInfo, actionList, is_betting } = this.props;
-    const { isPasswordCorrect, qs } = this.state;
-
-    if (prevProps.actionList !== actionList) {
-      this.setState({
-        actionList: actionList
-      });
+    // Play sound if defined
+    if (playSound) {
+      playSound('blip');
     }
 
-    if (prevProps.isWatching !== this.props.isWatching) {
-      this.removeSocketListeners();
-      this.setupSocket();
-    }
-    if (
-      prevProps.is_betting !== is_betting &&
-      !is_betting
-    ) {
-      const prevLastItemId =
-        this.props.qsbetitems.length > 4
-          ? this.props.qsbetitems.slice(0, 5).reverse()[4]._id
-          : null;
-      const currentLastItemId =
-        qs.length > 4 ? qs[4]._id : null;
+    // Filter or use entire array
+    const filtered = data.qs.filter((game) => game.joiner === user_id);
+    const newQsHistory = isWatching ? filtered : data.qs;
 
-      if (prevLastItemId === currentLastItemId) {
-        await this.props.getQsBetItems(roomInfo._id);
-        this.setState({
-          qs: this.props.qsbetitems.slice(0, 5).reverse(),
-          prev_qs: this.props.qsbetitems.slice(0, 5).reverse()
-        });
+    // Update your state
+    setQsHistory(newQsHistory);
+
+    // Compute the last shot
+    const newLastShot = newQsHistory?.[newQsHistory.length - 1]?.qs ?? null;
+    setQsValueAtLastIndex(parseFloat(newLastShot));
+
+    // The rest of your updates
+    setPrevQs(data.qs);
+    setStartedPlaying(true);
+    onChangeState({ bankroll: data.bankroll });
+    setHostPr(data.host_pr);
+
+    console.log("Manually calling updateAnimation with new values:", newQsHistory, newLastShot);
+    updateAnimation(newQsHistory, newLastShot);
+
+  }, [playSound, user_id, isWatching, onChangeState, updateAnimation]);
+
+  const handleSocketData2 = useCallback(
+    (data) => {
+      onChangeState({ bankroll: data.bankroll });
+    },
+    [onChangeState]
+  );
+
+  const removeSocketListeners = useCallback(() => {
+    // If you want an explicit cleanup that runs on unmount or socket changes:
+    if (socket) {
+      socket.off(`UPDATED_BANKROLL_QS_${roomInfo._id}`, handleSocketData);
+      socket.off(`UPDATED_BANKROLL_QS2_${roomInfo._id}`, handleSocketData2);
+    }
+  }, [socket, roomInfo._id, handleSocketData, handleSocketData2]);
+
+
+  // =========== Effect Hooks ===========
+
+  // Simulate componentDidMount
+  useEffect(() => {
+    isComponentMountedRef.current = true;
+
+    document.addEventListener('keydown', handleKeyPress);
+
+    const intervalDuration = 3000; // Or any logic to get this from your old code
+    const id = setInterval(() => {
+      toggleBlueishHue();
+    }, intervalDuration);
+    setIntervalId(id);
+
+    // Socket setup is now in a separate effect below
+
+    // Fetch initial bots count
+    (async () => {
+      try {
+        const count = await getRoomBotCount(roomInfo._id);
+        if (isComponentMountedRef.current) {
+          setBotsCount(count);
+        }
+      } catch (error) {
+        console.error('Error fetching botsCount:', error);
       }
-    }
+    })();
 
-    if (prevProps.roomInfo && roomInfo) {
-      if (prevProps.roomInfo.host_pr !== roomInfo.host_pr) {
-        this.setState({
-          host_pr: parseFloat(roomInfo.host_pr)
-        });
-      }
-    }
+    return () => {
+      isComponentMountedRef.current = false;
+      document.removeEventListener('keydown', handleKeyPress);
+      clearInterval(id);
+      removeSocketListeners(); // clean up
+    };
+  }, []);
 
-    // If newly correct password, auto-join the game
-    if (
-      prevState.isPasswordCorrect !== isPasswordCorrect &&
-      isPasswordCorrect === true
-    ) {
-      this.joinGame();
-    }
-  }
+  // Set up and remove socket listeners whenever socket changes
+  useEffect(() => {
+    if (!socket) return;
 
-  // Called once user truly joins the game after password check OR direct join
-  joinGame = async () => {
-    const {
-      onChangeState,
-      playSound,
-      changeBgColor,
-      solPrice,
-      bet_amount
-    } = this.props;
+    // Attach listeners
+    socket.on(`UPDATED_BANKROLL_QS_${roomInfo._id}`, handleSocketData);
+    socket.on(`UPDATED_BANKROLL_QS2_${roomInfo._id}`, handleSocketData2);
 
+    return () => {
+      // Remove listeners on unmount or when socket changes
+      socket.off(`UPDATED_BANKROLL_QS_${roomInfo._id}`, handleSocketData);
+      socket.off(`UPDATED_BANKROLL_QS2_${roomInfo._id}`, handleSocketData2);
+    };
+  }, [socket, roomInfo._id, handleSocketData, handleSocketData2]);
+
+  // =============== Main Methods ===============
+
+  const joinGame = useCallback(async (position) => {
     onChangeState({ result: '' });
 
-    const result = await this.props.join({
+    const resultData = await join({
       bet_amount: parseFloat(bet_amount),
-      selected_qs_position: this.props.selected_qs_position
+      selected_qs_position: position
     });
 
     playSound('ballKick');
 
-    let text;
-    let color;
-
-    if (result.betResult === 1) {
+    let sign;
+    if (resultData.betResult === 1) {
       playSound('win');
-      text = '+';
-      changeBgColor(result.betResult);
+      sign = '+';
+      changeBgColor(resultData.betResult);
     } else {
       playSound('lose');
-      text = '-';
-      changeBgColor(result.betResult);
+      sign = '-';
+      changeBgColor(resultData.betResult);
     }
-
-    const currencyElement = convertToCurrency(Math.abs(result.amount), solPrice);
-    const fragmentStyle = {
-      color: color
-    };
+    const currencyElement = convertToCurrency(
+      Math.abs(resultData.amount),
+      solPrice
+    );
 
     onChangeState({
       result: (
-        <React.Fragment>
-          <span style={fragmentStyle}>
-            {text} {currencyElement}
-          </span>
-        </React.Fragment>
+        <span style={{ color: '' }}>
+          {sign} {currencyElement}
+        </span>
       ),
-      gameResult: result.betResult
+      gameResult: resultData.betResult
     });
-  };
+  }, [
+    bet_amount,
+    join,
+    onChangeState,
+    playSound,
+    changeBgColor,
+    solPrice
+  ]);
 
-  handleHalfXButtonClick = () => {
-    const multipliedBetAmount = this.state.bet_amount * 0.5;
-    const roundedBetAmount = Math.floor(multipliedBetAmount * 100000) / 100000;
-    this.setState({ bet_amount: roundedBetAmount }, () => {
-      document.getElementById('betamount')?.focus();
-    });
-  };
+  useEffect(() => {
+    // Some code if needed, or skip entirely if your logic is handled in the main effect
+  }, [isWatching]);
 
-  handle2xButtonClick = () => {
-    const multipliedBetAmount = this.state.bet_amount * 2;
-    const limitedBetAmount = Math.min(multipliedBetAmount, this.state.balance);
-    const roundedBetAmount = Math.floor(limitedBetAmount * 100000) / 100000;
-    if (
-      (this.state.bet_amount * 2) / (this.props.qs_game_type - 1) >
-      this.state.bankroll
-    ) {
-      alertModal(this.props.isDarkMode, 'EXCEEDED BANKROLL');
-    } else {
-      this.setState({ bet_amount: roundedBetAmount }, () => {
-        document.getElementById('betamount')?.focus();
-      });
+  // Simulate getDerivedStateFromProps for password correctness
+  useEffect(() => {
+    if (isPasswordCorrect !== propIsPasswordCorrect) {
+      setIsPasswordCorrect(propIsPasswordCorrect);
     }
+  }, [propIsPasswordCorrect, isPasswordCorrect]);
+
+  // If newly correct password => auto join
+  useEffect(() => {
+    if (isPasswordCorrect) {
+      joinGame(localSelectedQs);
+    }
+  }, [isPasswordCorrect, joinGame]);
+
+  // Watch for changes to roomInfo (host_pr, status)
+  useEffect(() => {
+    if (roomInfo && roomInfo.host_pr !== undefined) {
+      setHostPr(parseFloat(roomInfo.host_pr));
+    }
+    if (roomInfo && roomInfo.status !== undefined) {
+      setStatus(roomInfo.status);
+    }
+  }, [roomInfo]);
+
+  // Watch changes to is_betting or actionList if needed
+  useEffect(() => {
+    if (props.actionList !== actionList) {
+      // Example: handle changes to the actionList
+    }
+  }, [props.actionList, actionList]);
+
+  // If `is_betting` changes from true -> false, replicate old componentDidUpdate logic
+  // useEffect(() => {
+  //   if (!is_betting) {
+  //     const prevLastItemId =
+  //       props.qsbetitems.length > 4
+  //         ? props.qsbetitems.slice(0, 5).reverse()[4]._id
+  //         : null;
+  //     const currentLastItemId = qs.length > 4 ? qs[4]._id : null;
+
+  //     if (prevLastItemId === currentLastItemId) {
+  //       (async () => {
+  //         await props.getQsBetItems(roomInfo._id);
+  //         const newQs = props.qsbetitems.slice(0, 5).reverse();
+  //         console.log("newQs", newQs)
+  //         setQs(newQs);
+  //         setPrevQs(newQs);
+  //       })();
+  //     }
+  //   }
+  // }, [is_betting, props, qs, roomInfo._id]);
+
+
+  // =============== Event Handlers ===============
+
+  const handleKeyPress = useCallback(
+    (event) => {
+      if (!isFocused) {
+        const ctrlKeyPressed = event.ctrlKey || event.metaKey;
+        const isRKeyPressed = event.key === 'r';
+        if (!(ctrlKeyPressed && isRKeyPressed)) {
+          switch (event.key) {
+            case 'p':
+              onBtnBetClick(0);
+              break;
+            case 'q':
+              onBtnBetClick(1);
+              break;
+            case 'w':
+              onBtnBetClick(2);
+              break;
+            case 'e':
+              onBtnBetClick(3);
+              break;
+            case 'r':
+              onBtnBetClick(4);
+              break;
+            default:
+              break;
+          }
+        }
+      }
+    },
+    [isFocused]
+  );
+
+  const toggleBlueishHue = useCallback(() => {
+    // Placeholder from original snippet
+  }, []);
+
+  const handleSpectateMode = () => {
+    setSpectateMode(!isWatching);
   };
 
-  handleMaxButtonClick = () => {
-    const maxBetAmount = Math.floor(this.state.balance * 100000) / 100000;
 
-    this.setState({
-      bet_amount: Math.floor(
-        Math.min(
-          maxBetAmount,
-          this.state.bankroll * (this.props.qs_game_type - 1)
-        ) * 100000
-      ) / 100000
-    }, () => {
-      document.getElementById('betamount')?.focus();
-    });
+
+
+  // Example: if you had half, double, max bet logic:
+  const handleHalfXButtonClick = () => {
+    // ...
+  };
+  const handle2xButtonClick = () => {
+    // ...
+  };
+  const handleMaxButtonClick = () => {
+    // ...
   };
 
-  updatePotentialReturn = () => {
-    this.setState({
-      potential_return:
-        (this.state.bet_amount / (this.props.qs_game_type - 1) +
-          parseFloat(this.state.bet_amount) -
-          this.state.bet_amount) /* 0.95 */
-    });
-  };
-
-  toggleImageModal = () => {
-    this.setState({ showImageModal: false });
-  };
-
-  onChangeState(e) {
-    this.setState({ bet_amount: e.target.value }, this.updatePotentialReturn);
-  }
-
-  // ADDED: MUI v5 confirm dialog handling
-  openConfirmBetDialog = (message, callback) => {
-    // Check localStorage or this.state.skipConfirm
+  const openConfirmBetDialog = (message, callback) => {
     if (localStorage.getItem('hideConfirmModal') === 'true') {
-      // If user previously checked "Don't show again", 
-      // immediately run the callback instead of opening dialog
       callback();
       return;
     }
-    // Otherwise show the dialog
-    this.setState({
-      openConfirmBet: true,
-      confirmBetMessage: message,
-      confirmBetCallback: callback
-    });
+    setOpenConfirmBet(true);
+    setConfirmBetMessage(message);
+    setConfirmBetCallback(() => callback);
   };
 
-  closeConfirmBetDialog = () => {
-    this.setState({
-      openConfirmBet: false,
-      confirmBetMessage: '',
-      confirmBetCallback: null
-    });
+  const closeConfirmBetDialog = () => {
+    setOpenConfirmBet(false);
+    setConfirmBetMessage('');
+    setConfirmBetCallback(null);
   };
 
-  handleConfirmBet = async () => {
-    const { confirmBetCallback } = this.state;
-
+  const handleConfirmBet = useCallback(async () => {
     if (confirmBetCallback) {
       await confirmBetCallback();
     }
+    closeConfirmBetDialog();
+  }, [confirmBetCallback]);
 
-    this.closeConfirmBetDialog();
-  };
-
-  handleSkipConfirmChange = (event) => {
+  const handleSkipConfirmChange = (event) => {
     const checked = event.target.checked;
-    this.setState({ skipConfirm: checked }, () => {
-      // Save the user preference to localStorage
-      localStorage.setItem('hideConfirmModal', checked ? 'true' : 'false');
-    });
+    setSkipConfirm(checked);
+    localStorage.setItem('hideConfirmModal', checked ? 'true' : 'false');
   };
-  // END of MUI confirm code
 
-  onBtnBetClick = (position) => {
-    const {
-      isAuthenticated,
-      isDarkMode,
-      creator_id,
-      user_id,
-      balance,
-      qs_game_type,
-      is_private,
-      roomInfo,
-      openGamePasswordModal,
-      updateSelectedQs,
-      bet_amount,
-      bankroll
-    } = this.props;
+  const onBtnBetClick = (position) => {
+    setLocalSelectedQs(position);
+    if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) return;
 
-    if (
-      creator_id &&
-      user_id &&
-      creator_id.toString() === user_id.toString()
-    ) {
+    if (creator_id && user_id && creator_id.toString() === user_id.toString()) {
+      // creator calls bot
       callBot(creator_id, roomInfo._id, user_id, isDarkMode, async () => {
         const botAttached = await updateRoomBot(roomInfo._id);
         if (botAttached) {
-          this.setState((prevState) => ({
-            botsCount: prevState.botsCount + 1
-          }));
+          setBotsCount((prev) => prev + 1);
         }
       });
       return;
     }
 
-    if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
-      return;
-    }
+    if (!validateBetAmount(bet_amount, balance, isDarkMode)) return;
 
-    if (!validateBetAmount(bet_amount, balance, isDarkMode)) {
-      return;
-    }
-
+    const costPerSide = bet_amount / (qs_game_type - 1);
     if (
       !validateBankroll(
-        bet_amount / (qs_game_type - 1) +
-        parseFloat(bet_amount) -
-        bankroll * (qs_game_type - 1),
+        costPerSide + parseFloat(bet_amount) - bankroll * (qs_game_type - 1),
         bankroll,
         isDarkMode
       )
@@ -560,71 +528,52 @@ class QuickShoot extends Component {
     const passwordCorrect = rooms[roomInfo._id];
 
     updateSelectedQs(position, () => {
-      // Here we used to call confirmModalCreate, now replaced by MUI v5 dialog:
       if (localStorage.getItem('hideConfirmModal') === 'true') {
-        if (is_private === true && passwordCorrect !== true) {
+        if (roomInfo.is_private && passwordCorrect !== true) {
           openGamePasswordModal();
         } else {
-          this.joinGame();
+          joinGame(position);
         }
       } else {
-        this.openConfirmBetDialog(
-          'ARE YOU SURE YOU WANT TO PLACE THIS BET?',
-          async () => {
-            if (is_private === true && passwordCorrect !== true) {
-              openGamePasswordModal();
-            } else {
-              await this.joinGame();
-            }
+        openConfirmBetDialog('ARE YOU SURE YOU WANT TO PLACE THIS BET?', async () => {
+          if (roomInfo.is_private && passwordCorrect !== true) {
+            openGamePasswordModal();
+          } else {
+            await joinGame(position);
           }
-        );
+        });
       }
     });
   };
 
-  handleBotClick = () => {
-    const { creator_id, user_id, roomInfo, isDarkMode, updateRoomBot } =
-      this.props;
-    if (
-      creator_id &&
-      user_id &&
-      creator_id.toString() === user_id.toString()
-    ) {
+  const handleBotClick = () => {
+    if (creator_id && user_id && creator_id.toString() === user_id.toString()) {
       callBot(creator_id, roomInfo._id, user_id, isDarkMode, async () => {
         const botAttached = await updateRoomBot(roomInfo._id);
         if (botAttached) {
-          this.setState((prevState) => ({
-            botsCount: prevState.botsCount + 1
-          }));
+          setBotsCount((prev) => prev + 1);
         }
       });
     }
   };
 
-  bootBots = async () => {
-    const { creator_id, user_id, roomInfo, kickBots } = this.props;
-    this.setState({ botsCount: 0 }, async () => {
-      if (
-        creator_id &&
-        user_id &&
-        creator_id.toString() === user_id.toString()
-      ) {
-        await kickBots(roomInfo._id);
-      }
-    });
-  };
-
-  handleEndClick = async () => {
-    const { roomInfo } = this.props;
-    if (roomInfo.status !== 'finished') {
-      await this.props.endGame(roomInfo._id);
-      this.setState({ status: 'finished' });
-    } else {
-      alertModal(this.props.isDarkMode, 'THIS GAME HAS ALREADY ENDED.');
+  const bootBots = async () => {
+    setBotsCount(0);
+    if (creator_id && user_id && creator_id.toString() === user_id.toString()) {
+      await kickBots(roomInfo._id);
     }
   };
 
-  getPositionLetter = (position) => {
+  const handleEndClick = async () => {
+    if (roomInfo.status !== 'finished') {
+      await endGame(roomInfo._id);
+      setStatus('finished');
+    } else {
+      alertModal(isDarkMode, 'THIS GAME HAS ALREADY ENDED.');
+    }
+  };
+
+  const getPositionLetter = (position) => {
     switch (position) {
       case 0:
         return 'P';
@@ -641,540 +590,407 @@ class QuickShoot extends Component {
     }
   };
 
-  renderButton(id, position) {
-    const { betResult, bgColorChanged, is_betting } = this.props;
-    const { qsValueAtLastIndex, showBall } = this.state;
+  // Render each shot button
+  const renderButton = (id, position) => {
+    const classes = [];
+    const showBall = false; // your snippet logic
 
-    let classes = [];
-
+    console.log("qsValueAtLastIndex",qsValueAtLastIndex)
+    console.log("position", position)
     if (qsValueAtLastIndex === position) {
       classes.push('active');
     }
-
-    if (
-      bgColorChanged &&
-      qsValueAtLastIndex === position &&
-      !is_betting
-    ) {
-      setTimeout(() => {
-        this.setState({ showBall: true });
-      }, 1000);
+    if (bgColorChanged && qsValueAtLastIndex === position && !is_betting) {
+      if (betResult === -1) {
+        classes.push('lose-bg');
+      } else if (betResult === 0) {
+        classes.push('draw-bg');
+      } else if (betResult === 1) {
+        classes.push('win-bg');
+      }
     }
 
-    if (
-      bgColorChanged &&
-      betResult === -1 &&
-      qsValueAtLastIndex === position
-    ) {
-      classes.push('lose-bg');
-    } else if (
-      betResult === 0 &&
-      qsValueAtLastIndex === position
-    ) {
-      classes.push('draw-bg');
-    } else if (
-      betResult === 1 &&
-      qsValueAtLastIndex === position
-    ) {
-      classes.push('win-bg');
-    }
-
-    if (is_betting) {
-      classes.push('disabled');
-    }
-
-    const className = classes.join(' ');
-
-    const buttonStyle = {
-      opacity: 1,
-      position: 'relative'
-    };
+    if (is_betting) classes.push('disabled');
 
     return (
       <IconButton
         id={id}
         onClick={() => {
-          this.onBtnBetClick(position);
-          this.props.playSound('select');
+          onBtnBetClick(position);
+          playSound('select');
         }}
-        className={className}
-        style={buttonStyle}
+        className={classes.join(' ')}
+        style={{ position: 'relative' }}
         disabled={is_betting}
       >
-        <span className="roll-tag">
-          {this.getPositionLetter(position)}
-        </span>
-        {showBall &&
-          bgColorChanged &&
-          qsValueAtLastIndex === position &&
-          !is_betting && (
-            <img
-              src="/img/football.svg"
-              alt="ball"
-              className="ball-kicked"
-              onAnimationEnd={() => this.setState({ showBall: false })}
-              style={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                width: '30px',
-                height: '30px'
-              }}
-            />
-          )}
+        <span className="roll-tag">{getPositionLetter(position)}</span>
+        {showBall && (
+          <img
+            src="/img/football.svg"
+            alt="ball"
+            className="ball-kicked"
+            style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: '30px',
+              height: '30px'
+            }}
+          />
+        )}
       </IconButton>
     );
-  }
+  };
 
-  renderButtons() {
-    const { qs_game_type } = this.props;
-
+  // Return the set of buttons based on qs_game_type
+  const renderButtons = () => {
     if (qs_game_type === 2) {
       return (
         <div className="qs-buttons">
-          {this.renderButton('l', 0)}
-          {this.renderButton('r', 1)}
+          {renderButton('l', 0)}
+          {renderButton('r', 1)}
         </div>
       );
     } else if (qs_game_type === 3) {
       return (
         <div className="qs-buttons">
-          {this.renderButton('l', 0)}
-          {this.renderButton('cc', 1)}
-          {this.renderButton('r', 2)}
+          {renderButton('l', 0)}
+          {renderButton('cc', 1)}
+          {renderButton('r', 2)}
         </div>
       );
     } else if (qs_game_type === 4) {
       return (
         <div className="qs-buttons">
-          {this.renderButton('tl', 0)}
-          {this.renderButton('tr', 1)}
-          {this.renderButton('bl', 2)}
-          {this.renderButton('br', 3)}
+          {renderButton('tl', 0)}
+          {renderButton('tr', 1)}
+          {renderButton('bl', 2)}
+          {renderButton('br', 3)}
         </div>
       );
     } else if (qs_game_type === 5) {
       return (
         <div className="qs-buttons">
-          {this.renderButton('tl', 1)}
-          {this.renderButton('tr', 2)}
-          {this.renderButton('bl', 3)}
-          {this.renderButton('br', 4)}
-          {this.renderButton('c', 0)}
+          {renderButton('tl', 1)}
+          {renderButton('tr', 2)}
+          {renderButton('bl', 3)}
+          {renderButton('br', 4)}
+          {renderButton('c', 0)}
         </div>
       );
     }
+  };
+
+  // =============== Render ===============
+
+  let position_name = ['Center', 'Top-Left', 'Top-Right', 'Bottom-Left', 'Bottom-Right'];
+  let position_short_name = ['c', 'tl', 'tr', 'bl', 'br'];
+
+  if (qs_game_type === 2) {
+    position_name = ['Left', 'Right'];
+    position_short_name = ['bl', 'br'];
+  } else if (qs_game_type === 3) {
+    position_name = ['Bottom-Left', 'Center', 'Bottom-Right'];
+    position_short_name = ['bl', 'c', 'br'];
+  } else if (qs_game_type === 4) {
+    position_name = ['Top-Left', 'Top-Right', 'Bottom-Left', 'Bottom-Right'];
+    position_short_name = ['tl', 'tr', 'bl', 'br'];
   }
 
-  render() {
-    const {
-      actionList,
-      showImageModal,
-      bet_amount,
-      image,
-      productName,
-      botsCount,
-      status,
-      startedPlaying,
-      host_pr,
-      qs,
-      players,
-      isQbot,
-      prev_qs,
-      openConfirmBet,
-      confirmBetMessage
-    } = this.state;
-
-    const {
-      selectedCreator,
-      showPlayerModal,
-      roomInfo,
-      creator_id,
-      qs_game_type,
-      accessory,
-      bankroll,
-      endgame_type,
-      username,
-      creator_avatar,
-      cp,
-      rank,
-      handleClosePlayerModal,
-      handleOpenPlayerModal,
-      isDarkMode,
-      isLowGraphics,
-      borderColor,
-      isWatching,
-      pr,
-      predictedBetAmount,
-      ai_mode,
-      balance,
-      user_id,
-      attached,
-      betting,
-      handleDetachAttachChange,
-      getAttachedRooms,
-      is_betting,
-      strategies,
-      selected_qs_position
-    } = this.props;
-
-    let position_name = [
-      'Center',
-      'Top-Left',
-      'Top-Right',
-      'Bottom-Left',
-      'Bottom-Right'
-    ];
-    let position_short_name = ['c', 'tl', 'tr', 'bl', 'br'];
-    if (qs_game_type === 2) {
-      position_name = ['Left', 'Right'];
-      position_short_name = ['bl', 'br'];
-    } else if (qs_game_type === 3) {
-      position_name = ['Bottom-Left', 'Center', 'Bottom-Right'];
-      position_short_name = ['bl', 'c', 'br'];
-    } else if (qs_game_type === 4) {
-      position_name = ['Top-Left', 'Top-Right', 'Bottom-Left', 'Bottom-Right'];
-      position_short_name = ['tl', 'tr', 'bl', 'br'];
-    }
-
-    return (
-      <div className="game-page">
-
-        {/* ADDED: MUI confirm dialog for Bet */}
-        <Dialog
-          open={this.state.openConfirmBet}
-          onClose={this.closeConfirmBetDialog}
-          aria-labelledby="confirm-dialog-title"
-          aria-describedby="confirm-dialog-description"
-        >
-          <DialogTitle id="confirm-dialog-title">
-            Confirmation
-          </DialogTitle>
-          <DialogContent>
-            <Typography>{this.state.confirmBetMessage}</Typography>
-
-            {/* “Don’t show again” checkbox */}
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={this.state.skipConfirm}
-                  onChange={this.handleSkipConfirmChange}
-                  color="primary"
-                />
-              }
-              label="Don’t show this again"
-            />
-          </DialogContent>
-          <DialogActions>
-            <Button
-              onClick={this.closeConfirmBetDialog}
-              color="error"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={this.handleConfirmBet}
-              color="primary"
-              autoFocus
-            >
-              Yes
-            </Button>
-          </DialogActions>
-        </Dialog>
-        {/* END of MUI confirm dialog */}
-
-        {showImageModal && (
-          <ImageResultModal
-            modalIsOpen={showImageModal}
-            closeModal={this.toggleImageModal}
-            isDarkMode={isDarkMode}
-            image={image}
-            productName={productName}
+  return (
+    <div className="game-page">
+      {/* Confirm Dialog */}
+      <Dialog
+        open={openConfirmBet}
+        onClose={closeConfirmBetDialog}
+        aria-labelledby="confirm-dialog-title"
+        aria-describedby="confirm-dialog-description"
+      >
+        <DialogTitle id="confirm-dialog-title">Confirmation</DialogTitle>
+        <DialogContent>
+          <Typography>{confirmBetMessage}</Typography>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={skipConfirm}
+                onChange={handleSkipConfirmChange}
+                color="primary"
+              />
+            }
+            label="Don’t show this again"
           />
-        )}
-        {showPlayerModal && (
-          <PlayerModal
-            selectedCreator={selectedCreator}
-            modalIsOpen={showPlayerModal}
-            closeModal={handleClosePlayerModal}
-          />
-        )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeConfirmBetDialog} color="error">
+            Cancel
+          </Button>
+          <Button onClick={handleConfirmBet} color="primary" autoFocus>
+            Yes
+          </Button>
+        </DialogActions>
+      </Dialog>
 
-        <div className="game-contents title">
-          <div className="game-info-panel" style={{ position: 'relative' }}>
-            <div className="guesses">
-              <div>
-                {prev_qs.slice().map((item, index) => (
-                  <p key={index}>{item.qs}</p>
-                ))}
-              </div>
-              <div>
-                {this.state.players.length !== 0 && (
-                  <>
-                    {this.state.players.slice(0, 5).map((player, index) => (
-                      <div
-                        key={index}
-                        style={{ opacity: '0.4', width: '29px', cursor: 'pointer' }}
-                      >
-                        <a
-                          className="avatar"
-                          onClick={() => handleOpenPlayerModal(player._id)}
-                        >
-                          <Avatar
-                            className="avatar"
-                            src={player.avatar}
-                            rank={player.totalWagered}
-                            username={player.username}
-                            accessory={player.accessory}
-                            alt=""
-                            darkMode={this.props.isDarkMode}
-                          />
-                        </a>
-                      </div>
-                    ))}
-                  </>
-                )}
-              </div>
+      {/* Image Result Modal */}
+      {showImageModal && (
+        <ImageResultModal
+          modalIsOpen={showImageModal}
+          closeModal={() => setShowImageModal(false)}
+          isDarkMode={isDarkMode}
+          image={image}
+          productName={productName}
+        />
+      )}
+
+      {/* Player Modal */}
+      {showPlayerModal && (
+        <PlayerModal
+          selectedCreator={selectedCreator}
+          modalIsOpen={showPlayerModal}
+          closeModal={handleClosePlayerModal}
+        />
+      )}
+
+      <div className="game-contents title">
+        <div className="game-info-panel" style={{ position: 'relative' }}>
+          {/* Example guesses panel */}
+          <div className="guesses">
+            <div>
+              {prev_qs.map((item, index) => (
+                <p key={index}>{item.qs}</p>
+              ))}
             </div>
-
-            <div className="guesses">
-              <div>
-                {prev_qs.slice().map((item, index) => (
-                  <p key={index}>{item.qs}</p>
+            <div>
+              {players.length > 0 &&
+                players.slice(0, 5).map((p, i) => (
+                  <div key={i} style={{ opacity: '0.4', width: '29px', cursor: 'pointer' }}>
+                    <a className="avatar" onClick={() => handleOpenPlayerModal(p._id)}>
+                      <Avatar
+                        className="avatar"
+                        src={p.avatar}
+                        rank={p.totalWagered}
+                        username={p.username}
+                        accessory={p.accessory}
+                        alt=""
+                        darkMode={isDarkMode}
+                      />
+                    </a>
+                  </div>
                 ))}
-              </div>
-              <div>
-                {this.state.players.length !== 0 && (
-                  <>
-                    {this.state.players.slice(0, 5).map((player, index) => (
-                      <div
-                        key={index}
-                        style={{ opacity: '0.4', width: '29px', cursor: 'pointer' }}
-                      >
-                        <a
-                          className="avatar"
-                          onClick={() => handleOpenPlayerModal(player._id)}
-                        >
-                          <Avatar
-                            className="avatar"
-                            src={player.avatar}
-                            rank={player.totalWagered}
-                            username={player.username}
-                            accessory={player.accessory}
-                            alt=""
-                            darkMode={this.props.isDarkMode}
-                          />
-                        </a>
-                      </div>
-                    ))}
-                  </>
-                )}
-              </div>
             </div>
+          </div>
 
-            {status === 'open' ? (
-              <>
-                <Tooltip
-                  title={
-                    !isWatching
-                      ? 'CLICK TO STOP WATCHING'
-                      : 'CLICK TO START WATCHING'
-                  }
+          {/* Second row of guesses if needed */}
+          <div className="guesses">
+            <div>
+              {prev_qs.map((item, index) => (
+                <p key={index}>{item.qs}</p>
+              ))}
+            </div>
+            <div>
+              {players.length > 0 &&
+                players.slice(0, 5).map((p, i) => (
+                  <div key={i} style={{ opacity: '0.4', width: '29px', cursor: 'pointer' }}>
+                    <a className="avatar" onClick={() => handleOpenPlayerModal(p._id)}>
+                      <Avatar
+                        className="avatar"
+                        src={p.avatar}
+                        rank={p.totalWagered}
+                        username={p.username}
+                        accessory={p.accessory}
+                        alt=""
+                        darkMode={isDarkMode}
+                      />
+                    </a>
+                  </div>
+                ))}
+            </div>
+          </div>
+
+          {status === 'open' ? (
+            <>
+              <Tooltip
+                title={!isWatching ? 'CLICK TO STOP WATCHING' : 'CLICK TO START WATCHING'}
+              >
+                <IconButton className="spectate title" onClick={handleSpectateMode}>
+                  {isWatching ? (
+                    <>
+                      PLAYING&nbsp;
+                      <SwordsIcon />
+                    </>
+                  ) : (
+                    <>
+                      SPECTATING&nbsp;
+                      <ViewIcon />
+                    </>
+                  )}
+                </IconButton>
+              </Tooltip>
+
+              <div className="game-info-panel">
+                <div
+                  className={`rps-radio-host ${is_betting || betting ? 'blueish-hue' : ''}`}
+                  style={{
+                    top: '25px',
+                    right: '25px',
+                    position: 'absolute',
+                    width: '12.5px',
+                    height: '12.5px',
+                    borderRadius: '50%'
+                  }}
                 >
-                  <IconButton
-                    className="spectate title"
-                    onClick={this.handleSpectateMode}
+                  <span
+                    className="result"
+                    style={{ display: !startedPlaying ? 'none' : 'flex' }}
                   >
-                    {isWatching ? (
+                    {result !== '' ? (
                       <>
-                        PLAYING&nbsp;
-                        <SwordsIcon />
-                      </>
-                    ) : (
-                      <>
-                        SPECTATING&nbsp;
-                        <ViewIcon />
-                      </>
-                    )}
-                  </IconButton>
-                </Tooltip>
-
-                <div className="game-info-panel">
-                  <div
-                    className={`rps-radio-host ${this.props.is_betting || this.props.betting
-                        ? 'blueish-hue'
-                        : ''
-                      }`}
-                    style={{
-                      top: '25px',
-                      right: '25px',
-                      position: 'absolute',
-                      width: '12.5px',
-                      height: '12.5px',
-                      borderRadius: '50%'
-                    }}
-                  >
-                    <span
-                      className="result"
-                      style={{ display: !startedPlaying ? 'none' : 'flex' }}
-                    >
-                      {this.props.result !== '' ? (
-                        <>
-                          {this.props.result}
-                          {this.props.betting && (
-                            <div className="lottie-pressHold">
-                              <Lottie
-                                options={{
-                                  loop: isLowGraphics ? false : true,
-                                  autoplay: isLowGraphics ? false : true,
-                                  animationData: pressHold
-                                }}
-                                style={{
-                                  position: 'relative',
-                                  filter: `hue-rotate(${this.props.gameResult === -1
-                                      ? 0
-                                      : this.props.gameResult === 0
-                                        ? 195
-                                        : this.props.gameResult === 1
-                                          ? 80
-                                          : 20
-                                    }deg)`
-                                }}
-                              />
-                            </div>
-                          )}
-                        </>
-                      ) : (
-                        <>
-                          <span>
-                            <FontAwesomeIcon icon={faBrain} />
-                            &nbsp;<span className="desktop-only">thinking...</span>
-                          </span>
-                          <div className="lottie-progress">
+                        {result}
+                        {betting && (
+                          <div className="lottie-pressHold">
                             <Lottie
                               options={{
                                 loop: isLowGraphics ? false : true,
                                 autoplay: isLowGraphics ? false : true,
-                                animationData: progress
+                                animationData: pressHold
                               }}
-                              style={{ position: 'relative' }}
+                              style={{
+                                position: 'relative',
+                                filter: `hue-rotate(${gameResult === -1
+                                  ? 0
+                                  : gameResult === 0
+                                    ? 195
+                                    : gameResult === 1
+                                      ? 80
+                                      : 20
+                                  }deg)`
+                              }}
                             />
                           </div>
-                        </>
-                      )}
-                    </span>
-                  </div>
-
-                  {!startedPlaying && (
-                    <h3 className="game-sub-title roll-tag">
-                      Choose WHERE TO SHOOT &nbsp;
-                      <Tooltip
-                        style={{ position: 'absolute', right: '20px', marginBottom: '30px' }}
-                        title={'Play against the AI, at the same time, train your AI.'}
-                        placement="top"
-                      >
-                        <Info
-                          style={{
-                            cursor: 'pointer',
-                            float: 'right'
-                          }}
-                        />
-                      </Tooltip>
-                    </h3>
-                  )}
-
-                  <div className="qs-image-panel">
-                    <img
-                      src={`/img/gametype/quick_shoot/gametype${qs_game_type}/type${qs_game_type}-${position_short_name[selected_qs_position]}.png`}
-                      alt=""
-                      style={{
-                        width: '600px',
-                        maxWidth: '100%',
-                        borderRadius: '0.3em',
-                        border: `3px solid ${borderColor}`,
-                        height: '238px'
-                      }}
-                    />
-
-                    {this.props.result !== '' && (
-                      <div id="cat-football">
-                        <Lottie
-                          options={{
-                            loop: true,
-                            autoplay: true,
-                            animationData: football
-                          }}
-                          style={{ transform: 'translate(15px, 60px)', width: '100px' }}
-                        />
-                      </div>
-                    )}
-                    {this.props.result !== '' && <>{this.state.animation}</>}
-
-                    {this.renderButtons()}
-                  </div>
-
-                  {creator_id &&
-                    user_id &&
-                    creator_id.toString() === user_id.toString() ? (
-                    <div className="host-controls">
-                      <Button
-                        variant="outlined"
-                        color="secondary"
-                        onClick={this.handleBotClick}
-                        className="hover-text-button"
-                      >
-                        <FontAwesomeIcon className="button-icon" icon={faRobot} />
-                        <span className="button-text">
-                          &nbsp;CALL BOT? [{botsCount}]
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <span>
+                          <FontAwesomeIcon icon={faBrain} />
+                          &nbsp;<span className="desktop-only">thinking...</span>
                         </span>
-                      </Button>
-                      {botsCount > 0 && (
-                        <Button onClick={this.bootBots} className="hover-text-button">
-                          <FontAwesomeIcon className="button-icon" icon={faBan} />
-                          <span className="button-text">&nbsp;KICK BOTS?</span>
-                        </Button>
-                      )}
-                    </div>
-                  ) : (
-                    <>
-                      {this.props.is_mobile && (
-                        <AiPanel
-                          qsbetitems={this.props.qsbetitems}
-                          updateUserStrategy={this.props.updateUserStrategy}
-                          strategies={strategies}
-                          betting={betting}
-                          is_betting={is_betting}
-                          predictedBetAmount={predictedBetAmount}
-                          roomId={roomInfo._id}
-                          handleSwitchChange={this.props.handleSwitchChange}
-                          game_type={roomInfo.game_type}
-                          rank={this.props.rank}
-                          user_id={user_id}
-                          ai_mode={ai_mode}
-                          user_balance={balance}
-                          handleDetachAttachChange={handleDetachAttachChange}
-                          attached={attached}
-                          creator_id={roomInfo.creator_id}
-                          getAttachedRooms={getAttachedRooms}
-                          rps_game_type={roomInfo.rps_game_type}
-                          isDarkMode={this.props.isDarkMode}
-                        />
-                      )}
-                    </>
-                  )}
+                        <div className="lottie-progress">
+                          <Lottie
+                            options={{
+                              loop: isLowGraphics ? false : true,
+                              autoplay: isLowGraphics ? false : true,
+                              animationData: progress
+                            }}
+                            style={{ position: 'relative' }}
+                          />
+                        </div>
+                      </>
+                    )}
+                  </span>
                 </div>
-              </>
-            ) : (
-              <span style={{ color: '#ff0000' }}>THIS GAME HAS ENDED</span>
-            )}
-          </div>
+
+                {!startedPlaying && (
+                  <h3 className="game-sub-title roll-tag">
+                    Choose WHERE TO SHOOT &nbsp;
+                    <Tooltip
+                      style={{ position: 'absolute', right: '20px', marginBottom: '30px' }}
+                      title="Play against the AI; at the same time, train your AI."
+                      placement="top"
+                    >
+                      <Info style={{ cursor: 'pointer', float: 'right' }} />
+                    </Tooltip>
+                  </h3>
+                )}
+
+                <div className="qs-image-panel">
+                  <img
+                    src={`/img/gametype/quick_shoot/gametype${qs_game_type}/type${qs_game_type}-${position_short_name[selected_qs_position]
+                      }.png`}
+                    alt=""
+                    style={{
+                      width: '600px',
+                      maxWidth: '100%',
+                      borderRadius: '10px',
+                      border: `3px solid ${borderColor}`,
+                      height: '238px'
+                    }}
+                  />
+
+                  {result !== '' && (
+                    <div id="cat-football">
+                      <Lottie
+                        options={{
+                          loop: true,
+                          autoplay: true,
+                          animationData: football
+                        }}
+                        style={{ transform: 'translate(15px, 60px)', width: '100px' }}
+                      />
+                    </div>
+                  )}
+                  {result !== '' && <>{animation}</>}
+
+                  {renderButtons()}
+                </div>
+
+                {creator_id && user_id && creator_id.toString() === user_id.toString() ? (
+                  <div className="host-controls">
+                    <Button
+                      variant="outlined"
+                      color="secondary"
+                      onClick={handleBotClick}
+                      className="hover-text-button"
+                    >
+                      <FontAwesomeIcon className="button-icon" icon={faRobot} />
+                      <span className="button-text">&nbsp;CALL BOT? [{botsCount}]</span>
+                    </Button>
+                    {botsCount > 0 && (
+                      <Button onClick={bootBots} className="hover-text-button">
+                        <FontAwesomeIcon className="button-icon" icon={faBan} />
+                        <span className="button-text">&nbsp;KICK BOTS?</span>
+                      </Button>
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    {is_mobile && (
+                      <AiPanel
+                        qsbetitems={props.qsbetitems}
+                        updateUserStrategy={props.updateUserStrategy}
+                        strategies={strategies}
+                        betting={betting}
+                        is_betting={is_betting}
+                        predictedBetAmount={predictedBetAmount}
+                        roomId={roomInfo._id}
+                        handleSwitchChange={handleSwitchChange}
+                        game_type={roomInfo.game_type}
+                        rank={rank}
+                        user_id={user_id}
+                        ai_mode={ai_mode}
+                        user_balance={balance}
+                        handleDetachAttachChange={props.handleDetachAttachChange}
+                        attached={attached}
+                        creator_id={roomInfo.creator_id}
+                        getAttachedRooms={getAttachedRooms}
+                        rps_game_type={roomInfo.rps_game_type}
+                        isDarkMode={isDarkMode}
+                      />
+                    )}
+                  </>
+                )}
+              </div>
+            </>
+          ) : (
+            <span style={{ color: '#ff0000' }}>THIS GAME HAS ENDED</span>
+          )}
         </div>
       </div>
-    );
-  }
+    </div>
+  );
 }
 
+// Redux connection
 const mapStateToProps = (state) => ({
   socket: state.auth.socket,
   isAuthenticated: state.auth.isAuthenticated,

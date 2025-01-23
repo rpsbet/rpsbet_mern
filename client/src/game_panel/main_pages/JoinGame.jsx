@@ -234,6 +234,8 @@ class JoinGame extends Component {
 
   // manual bet
   join = async betInfo => {
+
+console.log("betInfo", betInfo)
     const result = await this.props.bet3({
       _id: this.props.roomInfo._id,
       user: this.props.user_id,
