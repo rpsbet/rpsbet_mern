@@ -1,6 +1,13 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { Button, Tabs, Tab, Drawer } from '@mui/material';
+import {
+  Button, Tabs, Tab, Drawer, Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Checkbox,
+  FormControlLabel,
+} from '@mui/material';
 import LoadingOverlay from 'react-loading-overlay';
 import Lottie from 'react-lottie';
 import Footer from './Footer';
@@ -87,6 +94,8 @@ class CreateGame extends Component {
       endgame_type: false,
       description: '',
       rps_game_type: 0,
+      openDialog: false,
+      skipConfirm: localStorage.getItem('hideConfirmModal') === 'true',
     };
     this.handleKeyPress = this.handleKeyPress.bind(this);
 
@@ -359,107 +368,99 @@ class CreateGame extends Component {
   };
 
 
-  onCreateRoom = async () => {
-    const saveImage = async (imageSrc) => {
-      return new Promise((resolve, reject) => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        const img = new Image();
-        img.crossOrigin = 'anonymous'; // Handle CORS issues
-        img.src = imageSrc;
+  saveImage = async (imageSrc) => {
+    return new Promise((resolve, reject) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.src = imageSrc;
 
-        img.onload = () => {
-          const maxWidth = 250; // Set the maximum width
-          let width = img.width;
-          let height = img.height;
+      img.onload = () => {
+        const maxWidth = 600;
+        const maxHeight = 600;
 
-          // Scale height proportionally to the maxWidth
+        let width = img.width;
+        let height = img.height;
+
+        // Scale image to maintain aspect ratio
+        if (width > height) {
           if (width > maxWidth) {
             height *= maxWidth / width;
             width = maxWidth;
           }
-
-          // Set canvas dimensions and draw the image
-          canvas.width = width;
-          canvas.height = height;
-          ctx.imageSmoothingEnabled = true; // Enable smoothing for better quality
-          ctx.imageSmoothingQuality = 'high';
-          ctx.drawImage(img, 0, 0, width, height);
-
-          // Return the resized image as a Blob
-          canvas.toBlob(
-            (blob) => {
-              if (blob) {
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                  resolve({
-                    blob, // Blob object
-                    buffer: reader.result, // ArrayBuffer
-                  });
-                };
-                reader.readAsArrayBuffer(blob);
-              } else {
-                reject('Failed to generate image Blob.');
-              }
-            },
-            'image/png' // Use PNG format for lossless quality
-          );
-        };
-
-        img.onerror = (error) => {
-          reject('Error processing image: ' + error);
-        };
-      });
-    };
-
-    const uploadImageToBackend = async (imageBlob) => {
-      const formData = new FormData();
-      formData.append('file', imageBlob.blob, 'uploaded_image.png');
-
-      try {
-        const response = await axios.post('/game/upload-to-pinata', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data', // Ensure correct content type
-          },
-        });
-
-        if (response.status !== 200) {
-          throw new Error('Failed to upload image to backend.');
+        } else {
+          if (height > maxHeight) {
+            width *= maxHeight / height;
+            height = maxHeight;
+          }
         }
 
-        return response.data.imageUrl;
-      } catch (error) {
-        throw error;
-      }
-    };
+        canvas.width = width;
+        canvas.height = height;
+        ctx.drawImage(img, 0, 0, width, height);
 
-    // Main Room Creation Logic
-    const processAndCreateRoom = async () => {
-      this.setState({ creatingRoom: true });
+        canvas.toBlob(
+          (blob) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(blob);
+            reader.onloadend = () => {
+              resolve(reader.result); // Return Base64 string
+            };
+          },
+          'image/webp',
+          0.5
+        );
+      };
 
-      try {
-        const { blob } = await saveImage(this.state.image);
-        const imageUrl = await uploadImageToBackend({ blob });
+      img.onerror = (error) => {
+        reject('Error processing image: ' + error);
+      };
+    });
+  };
 
-        await this.props.createRoom({ ...this.state, image: imageUrl });
-      } catch (error) {
-        alertModal(this.props.isDarkMode, 'Failed to process the image. Please try again.');
-      } finally {
-        this.setState({ creatingRoom: false });
-      }
-    };
-
-    if (localStorage.getItem('hideConfirmModal') === 'true') {
-      await processAndCreateRoom();
-    } else {
-      confirmModalCreate(
+  // Main "Create Room" logic extracted so we can reuse it after confirmation
+  createRoomWithImage = async () => {
+    this.setState({ creatingRoom: true });
+    try {
+      const base64Image = await this.saveImage(this.state.image);
+      await this.props.createRoom({ ...this.state, image: base64Image });
+    } catch (error) {
+      console.error('Error saving image:', error);
+      alertModal(
         this.props.isDarkMode,
-        'CONFIRM GAME SETTINGS?',
-        'LFG',
-        'Cancel',
-        processAndCreateRoom
+        'Failed to process the image. Please try again.'
       );
     }
+    this.setState({ creatingRoom: false });
+  };
+
+  // Show dialog if needed, or create the room right away if skip is set
+  onCreateRoom = async () => {
+    if (localStorage.getItem('hideConfirmModal') === 'true') {
+      // If user previously chose to skip the confirmation
+      this.createRoomWithImage();
+    } else {
+      // Otherwise, open the MUI Dialog
+      this.setState({ openDialog: true });
+    }
+  };
+
+  // Handle user clicking "LFG"/confirm on the Dialog
+  handleConfirm = async () => {
+    // If user wants to skip next time
+    if (this.state.skipConfirm) {
+      localStorage.setItem('hideConfirmModal', 'true');
+    }
+    // Close the dialog and proceed
+    this.setState({ openDialog: false }, () => {
+      this.createRoomWithImage();
+    });
+  };
+
+  // Handle user clicking "Cancel" on the Dialog
+  handleCancel = () => {
+    this.setState({ openDialog: false });
   };
 
   handleChange = (event) => {
@@ -574,7 +575,7 @@ class CreateGame extends Component {
 
           {this.state.step === 2 && (
             <>
-              <div style={{ position: 'relative' }}>
+              <div style={{ position: 'relative', marginLeft: '-37.5%' }}>
                 <Button id="btn_bet" onClick={this.onCreateRoom}>
                   Place Bet
                 </Button>
@@ -607,7 +608,7 @@ class CreateGame extends Component {
 
   render() {
     const { solPrice } = this.props;
-    const { selectedStrategy, showError, alertTitle, alertMessage } = this.state;
+    const { openDialog, skipConfirm, alertTitle, alertMessage } = this.state;
     return (
       <LoadingOverlay
         className="custom-loading-overlay"
@@ -670,6 +671,30 @@ class CreateGame extends Component {
               </Tabs>
             )}
           <div className="main-panel">
+          <Dialog open={openDialog} onClose={this.handleCancel}>
+          <DialogTitle>CONFIRM GAME SETTINGS?</DialogTitle>
+          <DialogContent>
+            {/* 
+              Add any other summary or details about the room being created here 
+            */}
+
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={skipConfirm}
+                  onChange={(e) => this.setState({ skipConfirm: e.target.checked })}
+                />
+              }
+              label="Don't show this confirmation again"
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={this.handleCancel}>Cancel</Button>
+            <Button onClick={this.handleConfirm} variant="contained" color="primary">
+              LFG
+            </Button>
+          </DialogActions>
+        </Dialog>
             <h2 className="main-title desktop-only" style={{ marginBottom: '10px' }}>
               <a onClick={() => history.push('/')} className="label" id="liveStakes">GO BACK</a>
 
@@ -677,7 +702,7 @@ class CreateGame extends Component {
             <div className="create-game-panel">
               <div className="game-page">
                 <div className="game-contents title">
-                  
+
                   {this.state.step === 1 && this.step1()}
                   {(this.state.step === 2) && (
                     <AdvancedSettings

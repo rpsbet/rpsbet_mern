@@ -1,11 +1,15 @@
 const tf = require('@tensorflow/tfjs-node');
+// Model utilities
 const { trainModel, predictNextMove } = require('./modelUtils');
-const { Configuration, OpenAIApi } = require('openai');
 
-const configuration = new Configuration({
+// NOTE: This import matches the structure of the package you have installed (4.8.0).
+//       It exposes a class called OpenAI that extends APIClient, with Chat, etc.
+const { OpenAI } = require('openai');
+
+// Instead of Configuration/OpenAIApi, we create an instance of OpenAI directly:
+const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-const openai = new OpenAIApi(configuration);
 
 const predictNext = (rps_list, markov = false) => {
   const choices = ['R', 'P', 'S'];
@@ -104,18 +108,6 @@ const predictNext = (rps_list, markov = false) => {
   }
 
   return nextState;
-};
-
-const getBeatingType = (currentState) => {
-  const random = Math.random();
-
-  if (currentState === 'R') {
-    return random < 0.95 ? 'P' : 'R';
-  } else if (currentState === 'P') {
-    return random < 0.95 ? 'S' : 'P';
-  } else {
-    return random < 0.95 ? 'R' : 'S';
-  }
 };
 
 const calcWinChance = (rps_list) => {
@@ -257,6 +249,18 @@ async function reinforcementAI(data) {
     if (model) {
       model.dispose();
     }
+  }
+}
+
+function getBeatingType(currentState) {
+  const random = Math.random();
+
+  if (currentState === 'R') {
+    return random < 0.95 ? 'P' : 'R';
+  } else if (currentState === 'P') {
+    return random < 0.95 ? 'S' : 'P';
+  } else {
+    return random < 0.95 ? 'R' : 'S';
   }
 }
 
@@ -560,6 +564,7 @@ function generatePattern(allBetItems) {
   }
 }
 
+// UPDATED: use the .Chat.Completions.create(...) method instead of createChatCompletion(...)
 async function predictNextOpenAI(rps_list) {
   if (!rps_list || rps_list.length === 0) {
     const randomChoice = ['R', 'P', 'S'][Math.floor(Math.random() * 3)];
@@ -570,26 +575,27 @@ async function predictNextOpenAI(rps_list) {
 
   const systemMessage = {
     role: 'system',
-    content:
-      'You are an expert at predicting Rock-Paper-Scissors moves. Respond only with R, P, or S.',
+    content: 'You are an expert at predicting Rock-Paper-Scissors moves. Respond only with R, P, or S.',
   };
 
   const userPrompt = {
     role: 'user',
-    content: `The user's past moves are: ${userMovesString}. c their next move. Valid answers: R, P, or S.`,
+    content: `The user's past moves are: ${userMovesString}. Predict their next move. Valid answers: R, P, or S.`,
   };
 
   try {
-    const response = await openai.createChatCompletion({
+    // Here is the key difference: openai.Chat.Completions.create(...) 
+    // instead of openai.createChatCompletion(...)
+    const response = await openai.Chat.Completions.create({
       model: 'gpt-3.5-turbo',
       messages: [systemMessage, userPrompt],
       max_tokens: 10,
       temperature: 0.5,
     });
 
-    let predictedMove = response.data.choices[0].message.content
-      .trim()
-      .toUpperCase();
+    let predictedMove = response.choices?.[0]?.message?.content
+      ?.trim()
+      ?.toUpperCase();
 
     if (!['R', 'P', 'S'].includes(predictedMove)) {
       predictedMove = ['R', 'P', 'S'][Math.floor(Math.random() * 3)];
@@ -598,7 +604,6 @@ async function predictNextOpenAI(rps_list) {
     return predictedMove;
   } catch (error) {
     console.error('Error calling OpenAI API:', error);
-
     const randomChoice = ['R', 'P', 'S'][Math.floor(Math.random() * 3)];
     return randomChoice;
   }
