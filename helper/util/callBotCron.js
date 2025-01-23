@@ -596,7 +596,7 @@ async function executeCronJob(
               penultimateSameAsLast === 1
                 ? Math.max(predictedBet / 5, 0.1)
                 : predictedBet;
-          } else if (ai_mode === 'GPT_O4') {
+          } else if (ai_mode === 'o1') {
             nextState = await predictNextOpenAI(rpsBetItems, true);
             predictedBetAmount = await predictNextBetAmount(
               betArray,
@@ -832,7 +832,7 @@ async function executeCronJob(
               penultimateSameAsLast === 1
                 ? Math.max(predictedBet / 5, 0.1)
                 : predictedBet;
-          } else if (ai_mode === 'GPT_O4') {
+          } else if (ai_mode === 'o1') {
             nextState = await openAIPredictionAI_qs(
               qsBetItems,
               room.qs_game_type,

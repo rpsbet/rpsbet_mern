@@ -575,7 +575,8 @@ async function predictNextOpenAI(rps_list) {
 
   const systemMessage = {
     role: 'system',
-    content: 'You are an expert at predicting Rock-Paper-Scissors moves. Respond only with R, P, or S.',
+    content:
+      'You are an expert at predicting Rock-Paper-Scissors moves. Respond only with R, P, or S.',
   };
 
   const userPrompt = {
@@ -584,18 +585,19 @@ async function predictNextOpenAI(rps_list) {
   };
 
   try {
-    // Here is the key difference: openai.Chat.Completions.create(...) 
+    // Here is the key difference: openai.Chat.Completions.create(...)
     // instead of openai.createChatCompletion(...)
-    const response = await openai.Chat.Completions.create({
+    const response = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [systemMessage, userPrompt],
       max_tokens: 10,
       temperature: 0.5,
     });
-
     let predictedMove = response.choices?.[0]?.message?.content
       ?.trim()
       ?.toUpperCase();
+
+    console.log('------------openai: ', predictedMove);
 
     if (!['R', 'P', 'S'].includes(predictedMove)) {
       predictedMove = ['R', 'P', 'S'][Math.floor(Math.random() * 3)];

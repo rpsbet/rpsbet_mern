@@ -281,7 +281,7 @@ const addToQueue = async (req, bot = false) => {
               const nextState = await innovate(allBetItems);
               nextItem = nextState.counterMove;
               break;
-            case 'GPT_O4':
+            case 'o1':
               nextItem = await predictNextOpenAI(allBetItems);
               break;
             default:
@@ -587,7 +587,7 @@ const addToQueue = async (req, bot = false) => {
 
         if (!bet_item) {
           let nextItem;
-
+          console.log('---room method---', roomInfo['selectedStrategy']);
           switch (roomInfo['selectedStrategy']) {
             case 'Random':
               nextItem = await getRandomItem_qs(roomInfo['qs_game_type']);
@@ -654,7 +654,7 @@ const addToQueue = async (req, bot = false) => {
               );
               nextItem = nextState.move;
               break;
-            case 'GPT_O4':
+            case 'o1':
               nextItem = await openAIPredictionAI_qs(
                 allBetItems,
                 roomInfo['qs_game_type'],
