@@ -644,6 +644,7 @@ router.get('/room/:id', async (req, res) => {
         _id: room['_id'],
         name: room['name'],
         image: room['image'],
+        ticker: room['ticker'],
         x_link: room['x_link'],
         website_link: room['website_link'],
         telegram_link: room['telegram_link'],

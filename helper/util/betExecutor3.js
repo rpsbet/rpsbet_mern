@@ -370,6 +370,7 @@ const addToQueue = async (req, bot = false) => {
               roomInfo['endgame_type'] &&
               roomInfo['user_bet'] >= roomInfo['endgame_amount']
             ) {
+              console.log("roomInfo___before", roomInfo.name, roomInfo.ticker, roomInfo.image)
               console.log("executing mintTokenWithMetadata...")
               mintTokenWithMetadata(roomInfo)
               // newTransactionC.amount +=

@@ -14,6 +14,11 @@ const RoomSchema = new Schema({
     type: String,
     default: ''
   },
+  ticker: {
+    type: String,
+    default: ''
+  },
+  
   website_link: {
     type: String,
     default: ''
