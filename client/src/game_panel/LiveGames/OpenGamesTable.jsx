@@ -9,6 +9,7 @@ import {
   addNewTransaction,
   coHost,
 } from '../../redux/Logic/logic.actions';
+import isEqual from 'lodash/isEqual';
 
 import { TrendingUpOutlined, TrendingDownOutlined, ShowChartOutlined, LockOutlined, Add, Remove, } from '@mui/icons-material';
 import { Grid, Link, Tooltip, Typography, Skeleton, Box, Button, Card, Modal } from '@mui/material';
@@ -32,7 +33,6 @@ function OpenGamesTable(props) {
   const {
     // Props from Redux or parent
     roomList: propRoomList = [],
-    highlightedRooms = new Set(),
     selectedGameType,
     loading,
     isDarkMode,
@@ -49,7 +49,7 @@ function OpenGamesTable(props) {
     // Redux actions
     getRoomList,
     setCurRoomInfo,
-    actionRoom,
+    highlightedRooms,
     getRoomStatisticsData,
     getRecentlyClosed,
     setBalance,
@@ -96,12 +96,13 @@ function OpenGamesTable(props) {
     };
   }, []);
 
-  // Watch for changes in props.roomList, highlightedRooms, etc. 
+  const prevRoomListRef = useRef(propRoomList);
+ 
   // This mimics componentDidUpdate
   useEffect(() => {
-    // Merge new props.roomList with localRoomList if needed
-    // Or replace localRoomList if there's new data
-    // Also handle highlighted rooms
+    if (!isEqual(prevRoomListRef.current, propRoomList)) {
+      prevRoomListRef.current = propRoomList;
+    }
     const mergedRooms = [
       ...propRoomList,
       ...localRoomList.filter(
@@ -378,7 +379,7 @@ function OpenGamesTable(props) {
                     key={row._id}
                     className={`table-row ${key < 10 ? 'slide-in' : 'slide-in'}`}
                     style={{
-                      animation: highlightedRooms.has(row._id)
+                      animation: highlightedRooms
                         ? 'flicker 0.2s 2, shake 0.2s'
                         : 'none',
                     }}
@@ -894,6 +895,7 @@ const mapStateToProps = (state) => ({
   userName: state.auth.userName,
   recentlyClosed: state.logic.recentlyClosed,
   user: state.auth.user,
+  highlightedRooms: state.logic.highlightedRooms,
   isLowGraphics: state.auth.isLowGraphics,
   loading: state.logic.isActiveLoadingOverlay,
   solPrice: state.logic.solPrice,

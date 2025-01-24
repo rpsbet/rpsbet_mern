@@ -1027,11 +1027,6 @@ class SiteWrapper extends Component {
     }
   };
 
-  setHighlightedRooms = (rooms) => {
-    this.setState({ highlightedRooms: new Set(rooms) });
-  };
-
-
   render() {
     const {
       sortAnchorEl,
@@ -1137,7 +1132,7 @@ class SiteWrapper extends Component {
               </a>
               {!isInvestorsPage ? (
                 <div className='desktop-only' style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginTop: "10px" }}>
-                  <HistoryTable setHighlightedRooms={this.setHighlightedRooms} userId={this.props.user._id} />
+                  <HistoryTable userId={this.props.user._id} />
                 </div>
               ) : (
                 <div style={{ padding: width < 600 ? "0" : "48px" }}>

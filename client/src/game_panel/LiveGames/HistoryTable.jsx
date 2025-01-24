@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { connect } from 'react-redux';
-import { getHistory } from '../../redux/Logic/logic.actions';
+import { connect, useDispatch } from 'react-redux';
+import { getHistory, setHighlightedRooms, clearHighlightedRooms } from '../../redux/Logic/logic.actions';
 import { getSettings } from '../../redux/Setting/setting.action';
 import Moment from 'moment';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -56,17 +56,23 @@ const HistoryTable = ({
   }, [getHistory]);
 
   const handleNewLog = (data) => {
+    const dispatch = useDispatch();
+    
     const newLog = data.newLog?.[0];
     if (!newLog) return;
-
+  
     const { room_id } = newLog;
     if (!room_id) return;
-
-    if (setHighlightedRooms) {
-      setHighlightedRooms(new Set([room_id]));
-      setTimeout(() => setHighlightedRooms(new Set()), 4000);
-    }
-
+  
+    // 1) Dispatch highlight action
+    dispatch(setHighlightedRooms([room_id])); // store ["room_id"] in Redux
+  
+    // 2) Clear highlight after 4 seconds
+    setTimeout(() => {
+      dispatch(clearHighlightedRooms());
+    }, 4000);
+  
+    // 3) ...the rest of your code
     setHistory(updateFromNow([newLog]));
   };
 

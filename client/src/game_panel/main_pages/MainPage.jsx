@@ -67,7 +67,6 @@ function MainPage(props) {
   const [selectedMobileTab, setSelectedMobileTab] = useState('live_games');
   const [showOpenGame, setShowOpenGame] = useState(0);
   const [selectedGameType, setSelectedGameType] = useState('All');
-  const [highlightedRooms, setHighlightedRoomsState] = useState(new Set());
   const [showP2PLending, setShowP2PLending] = useState(false);
   const [showMarketplace, setShowMarketplace] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -186,10 +185,6 @@ function MainPage(props) {
   const handleCreateBtnClicked = () => {
     history.push('/create');
   };
-
-  const setHighlightedRooms = useCallback((rooms) => {
-    setHighlightedRoomsState(new Set(rooms));
-  }, []);
 
   // -------------- UI / RENDER HELPERS -------------
   const getActiveTabText = () => {
@@ -325,7 +320,6 @@ function MainPage(props) {
             <OpenGamesTable
               selectedCreator={selectedCreator}
               refreshing={refreshing}
-              highlightedRooms={highlightedRooms}
               showPlayerModal={showPlayerModal}
               handleRefresh={handleRefresh}
               handleOpenPlayerModal={handleOpenPlayerModal}
@@ -347,7 +341,6 @@ function MainPage(props) {
         {/* If mobile & live_games => show history, or if my_games => show MyHistory */}
         {isMobile && selectedMobileTab === 'live_games' && showOpenGame === 1 && (
           <HistoryTable
-            setHighlightedRooms={setHighlightedRooms}
             userId={user._id}
           />
         )}

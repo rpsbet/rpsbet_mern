@@ -246,7 +246,6 @@ div.table .table-row .table-cell button:last-child,
   margin-left: 15px;
   color: var(--white-color);
   font-size: 0.6em !important;
-  line-height: 0.6em !important;
   overflow: hidden;
   font-weight: 600;
 }
@@ -3855,10 +3854,6 @@ circle {
 
 .game-page .pre-summary-panel>div.host-display-name {
   background-size: 2em;
-}
-
-#btn-login {
-  padding: 0px 18px !important;
 }
 
 .stars {

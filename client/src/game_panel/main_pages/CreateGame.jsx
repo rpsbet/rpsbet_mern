@@ -458,7 +458,7 @@ function CreateGame(props) {
         rps_game_type: rpsGameType,
         skipConfirm
       };
-
+console.log("fullState", fullState)
       await props.createRoom(fullState);
     } catch (error) {
       console.error('Error saving image:', error);

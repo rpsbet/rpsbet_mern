@@ -49,9 +49,12 @@ import {
   COMMENT_DELETION_FAILED,
   TRANSACTION_CANDLES_LOADED,
   TRANSACTION_CANDLES_ERROR,
+  SET_HIGHLIGHTED_ROOMS,
+  CLEAR_HIGHLIGHTED_ROOMS
 } from '../types';
 
 const initialState = {
+  highlightedRooms: [],
   rpsbetitems: [],
   qsbetitems: [],
   isActiveLoadingOverlay: false,
@@ -167,11 +170,6 @@ export default function (state = initialState, action) {
         betResult: payload.betResult,
         roomStatus: payload.roomStatus
       };
-    case SET_QBOT_STATUSES:
-      return {
-        ...state,
-        state: action.payload,
-      };
     case UPDATE_BET_RESULT:
       if (payload && typeof payload === 'object') {
         return {
@@ -180,6 +178,19 @@ export default function (state = initialState, action) {
         };
       }
       return state;
+
+    case SET_HIGHLIGHTED_ROOMS:
+      return {
+        ...state,
+        highlightedRooms: action.payload,
+      };
+
+    case CLEAR_HIGHLIGHTED_ROOMS:
+      return {
+        ...state,
+        highlightedRooms: [],
+      };
+
     case TRANSACTION_CANDLES_LOADED:
       return {
         ...state,

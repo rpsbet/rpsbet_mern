@@ -53,7 +53,8 @@ import {
   NOTIFICATIONS_LOADED,
   GLOBAL_CHAT_RECEIVED,
   SET_GLOBAL_CHAT,
-  TRANSACTION_CANDLES_LOADED,
+  SET_HIGHLIGHTED_ROOMS,
+  CLEAR_HIGHLIGHTED_ROOMS,
   TRANSACTION_CANDLES_ERROR
 } from '../types';
 import axios from '../../util/Api';
@@ -151,6 +152,14 @@ export const getSolToUsdPrice = (solAmount = null) => async (dispatch) => {
   }
 };
 
+export const setHighlightedRooms = (rooms) => ({
+  type: SET_HIGHLIGHTED_ROOMS,
+  payload: rooms, // typically an array of IDs
+});
+
+export const clearHighlightedRooms = () => ({
+  type: CLEAR_HIGHLIGHTED_ROOMS,
+});
 
 export const getTokenPrice = (tokenMintAddress) => async (dispatch) => {
   try {
