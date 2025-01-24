@@ -96,7 +96,7 @@ function MarketplaceModal({
           <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
             <Button
               variant="contained"
-              color="secondary"
+              color='error'
               onClick={handleOpenInventoryModal}
               startIcon={<AttachMoneyIcon />}
             >

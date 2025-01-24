@@ -714,7 +714,7 @@ function QuickShoot(props) {
               <Checkbox
                 checked={skipConfirm}
                 onChange={handleSkipConfirmChange}
-                color="primary"
+                color='error'
               />
             }
             label="Don’t show this again"
@@ -724,7 +724,7 @@ function QuickShoot(props) {
           <Button onClick={closeConfirmBetDialog} color="error">
             Cancel
           </Button>
-          <Button onClick={handleConfirmBet} color="primary" autoFocus>
+          <Button onClick={handleConfirmBet} color='error' autoFocus>
             Yes
           </Button>
         </DialogActions>
@@ -937,7 +937,7 @@ function QuickShoot(props) {
                   <div className="host-controls">
                     <Button
                       variant="outlined"
-                      color="secondary"
+                      color='error'
                       onClick={handleBotClick}
                       className="hover-text-button"
                     >

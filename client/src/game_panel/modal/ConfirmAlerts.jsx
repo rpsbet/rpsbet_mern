@@ -63,7 +63,7 @@ const showConfirm = (
             <FormControlLabel
               control={
                 <Checkbox
-                  color="primary"
+                  color='error'
                   onChange={event =>
                     localStorage.setItem(
                       'hideConfirmModal',
@@ -85,7 +85,7 @@ const showConfirm = (
                 {okayButtonTitle}
               </Button>
               {cancelButtonTitle && (
-                <Button variant='contained' color='secondary' onClick={onClose}>
+                <Button variant='contained' color='error' onClick={onClose}>
                   {cancelButtonTitle}
                 </Button>
               )}
@@ -128,7 +128,7 @@ const showConfirmCall = (
                 {okayButtonTitle}<FontAwesomeIcon icon={faPhone} style={{ marginLeft: '5px', color: '#fff' }} />
               </Button>
               {cancelButtonTitle && (
-                <Button variant='contained' color='secondary' onClick={onClose}>
+                <Button variant='contained' color='error' onClick={onClose}>
                   {cancelButtonTitle}
                 </Button>
               )}

@@ -82,7 +82,7 @@ function CreateProductForm({
                 <TableCell>
                   <TextField
                     autoFocus
-                    color="secondary"
+                    color='error'
                     variant="filled"
                     label="Loan Amount"
                     name="loan_amount"
@@ -134,7 +134,7 @@ function CreateProductForm({
               <TableRow>
                 <TableCell>
                   <TextField
-                    color="secondary"
+                    color='error'
                     variant="filled"
                     label="Loan Period"
                     name="loan_period"
@@ -160,7 +160,7 @@ function CreateProductForm({
               <TableRow>
                 <TableCell sx={{ borderBottom: 'none' }}>
                   <TextField
-                    color="secondary"
+                    color='error'
                     variant="filled"
                     label="Interest Rate"
                     name="apy"

@@ -138,7 +138,7 @@ function ListItemModal(props) {
           {rentOption ? (
             <TextField
               variant="filled"
-              color="secondary"
+              color='error'
               type="text"
               label="Rent price"
               value={price}
@@ -160,7 +160,7 @@ function ListItemModal(props) {
           ) : (
             <TextField
               variant="filled"
-              color="secondary"
+              color='error'
               type="text"
               label="Set price"
               value={price}
@@ -185,7 +185,7 @@ function ListItemModal(props) {
             <Button variant="contained" color="error" onClick={onBtnOkClicked}>
               Confirm
             </Button>
-            <Button variant="contained" color="secondary" onClick={onBtnCancelClicked}>
+            <Button variant="contained" color='error' onClick={onBtnCancelClicked}>
               Cancel
             </Button>
           </Box>

@@ -72,7 +72,7 @@ export default function BetAmountInput(props) {
         >
           <Button
             variant="contained"
-            color='secondary'
+            color='error'
             style={{ flex: 1 }}
             onClick={handle2x}
             disableElevation
@@ -81,7 +81,7 @@ export default function BetAmountInput(props) {
           </Button>
           <Button
             variant="contained"
-            color='secondary'
+            color='error'
             style={{ flex: 1 }}
             onClick={handleHalfX}
             disableElevation
@@ -90,7 +90,7 @@ export default function BetAmountInput(props) {
           </Button>
           <Button
             variant="contained"
-            color='secondary'
+            color='error'
             style={{ flex: 1 }}
             onClick={handleMax}
             disableElevation
@@ -99,7 +99,7 @@ export default function BetAmountInput(props) {
           </Button>
         </div>
 
-          <TextField color="secondary"
+          <TextField color='error'
             type="text"
             name="betamount"
             variant="filled"

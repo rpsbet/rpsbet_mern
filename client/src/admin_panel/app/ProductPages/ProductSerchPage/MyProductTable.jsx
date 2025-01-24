@@ -625,7 +625,7 @@ class MyProductTable extends Component {
                           }
                         >
                           <Button
-                            variant='contained' color='secondary'
+                            variant='contained' color='error'
                             onClick={() => {
                               this.equipItem(row._id);
                             }}
@@ -644,7 +644,7 @@ class MyProductTable extends Component {
                     <DiscontinueButton>
                       <Tooltip title="Discontinue Renting">
                         <Button
-                          variant='contained' color='secondary'
+                          variant='contained' color='error'
                           onClick={() => {
                             setCurrentProductId(row._id);
                             returnItem(row._id)
@@ -661,7 +661,7 @@ class MyProductTable extends Component {
                         {accessory && accessory === row.image || row.onSale === row.total_count ? null : (
                           <Tooltip title="List Item">
                             <Button
-                              variant='contained' color='secondary'
+                              variant='contained' color='error'
                               onClick={() => {
                                 setCurrentProductId(row._id);
                                 setCurrentProductInfo({
@@ -684,7 +684,7 @@ class MyProductTable extends Component {
                         {row.onSale === 0 ? null : (
                           <Tooltip title="De-List Item">
                             <Button
-                              variant='contained' color='secondary'
+                              variant='contained' color='error'
                               onClick={() => {
                                 setCurrentProductId(row._id);
                                 openDeListItemModal();
@@ -703,7 +703,7 @@ class MyProductTable extends Component {
           </ProductGrid>
         ) : (
           <LinearContainer>
-            <LinearProgress color="secondary" />
+            <LinearProgress color='error' />
           </LinearContainer>
         )}
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: 2 }}>

@@ -87,7 +87,7 @@ const DefaultBetAmountPanel = ({
         <div className="bet-amounts">
           {defaultBetAmounts.map((amount, index) => (
             <Button
-              color='secondary'
+              color='error'
               variant='outlined'
               key={index}
               className={!isOther && bet_amount === amount ? ' active' : ''}
@@ -112,7 +112,7 @@ const DefaultBetAmountPanel = ({
             </Button>
           ))}
           <Button
-            color='secondary'
+            color='error'
             variant='outlined'
             className={isOther ? 'other active' : 'other'}
             onClick={() => setIsOther(true)}
@@ -122,7 +122,7 @@ const DefaultBetAmountPanel = ({
         </div>
         <div className={`edit-amount-panel ${isOther ? '' : 'hidden'}`}>
           <div className="bet-amount">
-            <TextField color="secondary"
+            <TextField color='error'
               type="text"
               name="betamount"
               id="betAmount"
@@ -154,13 +154,13 @@ const DefaultBetAmountPanel = ({
                     },
                   }}>
                     <ButtonGroup variant="outlined" aria-label="Adjust bet amount">
-                      <Button onClick={handle2xButtonClick} color="secondary">
+                      <Button onClick={handle2xButtonClick} color='error'>
                         2x
                       </Button>
-                      <Button onClick={handleHalfXButtonClick} color="secondary">
+                      <Button onClick={handleHalfXButtonClick} color='error'>
                         1/2x
                       </Button>
-                      <Button onClick={handleMaxButtonClick} color="secondary">
+                      <Button onClick={handleMaxButtonClick} color='error'>
                         Max
                       </Button>
                     </ButtonGroup>
@@ -196,7 +196,7 @@ const DefaultBetAmountPanel = ({
           </Tooltip>
         </h3>
         <div className="tax-input">
-          <TextField color="secondary"
+          <TextField color='error'
             type="number"
             name="tax"
             id="taxInput"

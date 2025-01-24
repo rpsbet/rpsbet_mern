@@ -215,7 +215,7 @@ const MyLoansModal = (props) => {
             ) : (
               <Button
                 variant="contained"
-                color="secondary"
+                color='error'
                 onClick={openProductCreateModal}
                 startIcon={<AttachMoney />}
               >

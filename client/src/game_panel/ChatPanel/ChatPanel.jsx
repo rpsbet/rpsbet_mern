@@ -305,7 +305,7 @@ function ChatPanel(props) {
         {showSearchPopup && (
           <>
             <div style={{ marginBottom: '10px' }}>
-              <TextField color="secondary"
+              <TextField color='error'
                 type="text"
                 placeholder="SEARCH GIFS..."
                 variant="filled"
@@ -438,7 +438,7 @@ function ChatPanel(props) {
             ))}
           </div>
 
-          <TextField color="secondary"
+          <TextField color='error'
             type="text"
             className="form-control"
             variant="outlined"

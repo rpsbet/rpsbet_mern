@@ -193,7 +193,7 @@ function VaultModal(props) {
             </Typography>
 
             <TextField
-              color="secondary"
+              color='error'
               label="Enter Amount"
               variant="outlined"
               type="number"

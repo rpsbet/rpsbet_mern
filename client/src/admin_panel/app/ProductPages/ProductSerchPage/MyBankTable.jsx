@@ -473,7 +473,7 @@ class MyBankTable extends Component {
                       <Tooltip title="Withdraw Funds">
                         <Button
                           style={{ left: '40%' }}
-                          variant='contained' color='secondary'
+                          variant='contained' color='error'
                           onClick={() => {
                             setCurrentLoanId(row._id);
                             openDeListLoanModal();

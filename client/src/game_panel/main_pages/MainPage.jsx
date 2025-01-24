@@ -209,7 +209,7 @@ function MainPage(props) {
     ) {
       return (
         <div className="create-room-btn-panel">
-          <Button variant="text" className="btn-create-room" onClick={handleCreateBtnClicked}>
+          <Button variant="text" color='error' className="btn-create-room" onClick={handleCreateBtnClicked}>
             START NEW GAME +
           </Button>
         </div>

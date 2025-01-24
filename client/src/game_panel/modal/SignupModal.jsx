@@ -265,7 +265,7 @@ function SignupModal(props) {
           >
             <TextField
               variant="filled"
-              color="secondary"
+              color='error'
               label="Your Username"
               required
               value={userName}
@@ -309,7 +309,7 @@ function SignupModal(props) {
 
             <TextField
               variant="filled"
-              color="secondary"
+              color='error'
               label="Your Password"
               required
               placeholder="●●●●●●"
@@ -337,7 +337,7 @@ function SignupModal(props) {
 
             <TextField
               variant="filled"
-              color="secondary"
+              color='error'
               placeholder="V9FTGY"
               label="Re-furr-al"
               value={referralCode}

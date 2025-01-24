@@ -451,7 +451,7 @@ function TabbedContent(props) {
             key={index}
             label={label}
             onClick={() => handleChipClick(index)}
-            color={activeTabs.includes(index) ? "secondary" : "secondary"}
+            color={activeTabs.includes(index) ? "error" : "error"}
             variant={activeTabs.includes(index) ? "filled" : "outlined"}
             clickable
           />

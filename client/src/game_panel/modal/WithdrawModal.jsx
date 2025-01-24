@@ -440,7 +440,7 @@ function WithdrawModal(props) {
                 <Box sx={{ mb: 2 }}>
                   <Typography>WITHDRAWAL AMOUNT</Typography>
                   <TextField
-                    color="secondary"
+                    color='error'
                     variant="filled"
                     type="number"
                     value={amountToWithdraw}
@@ -463,7 +463,7 @@ function WithdrawModal(props) {
                   <Typography variant="body2">SEND TO ADDRESS</Typography>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
                     <TextField
-                      color="secondary"
+                      color='error'
                       variant="filled"
                       fullWidth
                       value={isConnected ? account : 'Connect Wallet'}
@@ -502,7 +502,7 @@ function WithdrawModal(props) {
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <Typography sx={{ whiteSpace: 'nowrap' }}>CURRENCY TYPE</Typography>
                   <TextField
-                    color="secondary"
+                    color='error'
                     variant="filled"
                     value={currencyTo.toUpperCase()}
                     onChange={setCurrency}
@@ -549,7 +549,7 @@ function WithdrawModal(props) {
                 <Box>
                   <Typography>WITHDRAWAL AMOUNT</Typography>
                   <TextField
-                    color="secondary"
+                    color='error'
                     variant="filled"
                     type="number"
                     value={amountToWithdraw}
@@ -567,7 +567,7 @@ function WithdrawModal(props) {
                 <Box sx={{ mt: 2 }}>
                   <Typography>RECEIVE AMOUNT</Typography>
                   <TextField
-                    color="secondary"
+                    color='error'
                     variant="outlined"
                     value={estimatedAmount}
                     InputProps={{
@@ -591,7 +591,7 @@ function WithdrawModal(props) {
                   <Typography variant="body2">SEND TO ADDRESS</Typography>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
                     <TextField
-                      color="secondary"
+                      color='error'
                       variant="filled"
                       fullWidth
                       value={sendAddress}
@@ -626,7 +626,7 @@ function WithdrawModal(props) {
                     MEMO / DESTINATION TAG ETC. (OPTIONAL)
                   </Typography>
                   <TextField
-                    color="secondary"
+                    color='error'
                     variant="filled"
                     fullWidth
                     value={extraId}
@@ -711,7 +711,7 @@ function WithdrawModal(props) {
             </Button>
             {/* 
               If you want a cancel button, uncomment below:
-              <Button variant="contained" color="secondary" onClick={closeModal} sx={{ ml: 2 }}>
+              <Button variant="contained" color='error' onClick={closeModal} sx={{ ml: 2 }}>
                 CANCEL
               </Button> 
             */}

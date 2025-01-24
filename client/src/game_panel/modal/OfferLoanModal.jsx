@@ -400,7 +400,7 @@ class OfferLoanModal extends Component {
                   <Table style={{ borderCollapse: 'collapse' }}>
                     <TableRow>
                       <TableCell style={inputCellStyle}>
-                         <TextField color="secondary" 
+                         <TextField color='error' 
                           variant="filled"
                           label="Loan Amount"
                           value={responseText}
@@ -436,7 +436,7 @@ class OfferLoanModal extends Component {
                     )}
                     <TableRow>
                       <TableCell style={inputCellStyle}>
-                         <TextField color="secondary" 
+                         <TextField color='error' 
                           variant="filled"
                           label="Loan Period"
                           value={loanPeriodText}
@@ -460,7 +460,7 @@ class OfferLoanModal extends Component {
 
                     <TableRow>
                       <TableCell style={inputCellStyle}>
-                         <TextField color="secondary" 
+                         <TextField color='error' 
                           variant="filled"
                           label="Interest Rate"
                           value={interestRateText}
@@ -729,14 +729,14 @@ class OfferLoanModal extends Component {
 
             {this.props.offerInfo.isLender ? (
               <Button
-                variant='contained' color='secondary'
+                variant='contained' color='error'
                 onClick={this.onBtnCancelClicked}
               >
                 Cancel
               </Button>
             ) : (
               <Button
-                variant='contained' color='secondary'
+                variant='contained' color='error'
                 onClick={this.onBtnCancelClicked}
               >
                 Reject

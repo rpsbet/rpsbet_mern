@@ -70,7 +70,7 @@ const DeListItemModal = () => {
           <Button variant='contained' color='error' onClick={handleConfirm}>
             CONFIRM
           </Button>
-          <Button variant='contained' color='secondary' onClick={handleCancel}>
+          <Button variant='contained' color='error' onClick={handleCancel}>
             CANCEL
           </Button>
         </div>

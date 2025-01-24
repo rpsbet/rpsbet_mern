@@ -179,7 +179,7 @@ function LoginModal(props) {
             <TextField
               fullWidth
               variant="filled"
-              color="secondary"
+              color='error'
               label="Username"
               value={email}
               onChange={onChangeEmail}
@@ -191,7 +191,7 @@ function LoginModal(props) {
             <TextField
               fullWidth
               variant="filled"
-              color="secondary"
+              color='error'
               label="Password"
               type="password"
               value={password}

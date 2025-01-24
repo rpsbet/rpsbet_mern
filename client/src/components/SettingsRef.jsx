@@ -227,7 +227,7 @@ const SettingsRef = ({
           <TextField
             multiline
             rows={4}
-            color='secondary'
+            color='error'
             variant="filled"
             fullWidth
             label="Custom Prompt"

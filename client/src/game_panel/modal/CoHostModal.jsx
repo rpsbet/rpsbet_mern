@@ -473,7 +473,7 @@ function CoHostModal({
                   <Button
                     key={amt}
                     variant="outlined"
-                    color="secondary"
+                    color='error'
                     onClick={() => handleButtonClick(amt)}
                     sx={{ flex: 1 }}
                   >
@@ -483,7 +483,7 @@ function CoHostModal({
               </Box>
 
               <TextField
-                color="secondary"
+                color='error'
                 value={localCoHostAmount}
                 onChange={handleInputChange}
                 variant="filled"
@@ -497,7 +497,7 @@ function CoHostModal({
                   {selectedTab === 'PUMP' ? (
                     <Button
                       variant="contained"
-                      color="secondary"
+                      color='error'
                       onClick={handleSendCoHost}
                       fullWidth
                     >
@@ -506,7 +506,7 @@ function CoHostModal({
                   ) : (
                     <Button
                       variant="contained"
-                      color="secondary"
+                      color='error'
                       onClick={() =>
                         handleUnstake(
                           selectedRow?.winnings ?? parseFloat(selectedRow?.user_bet || 0),

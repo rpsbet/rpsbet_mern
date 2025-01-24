@@ -80,7 +80,7 @@ function InventoryModal(props) {
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
             <Button
               variant="contained"
-              color="secondary"
+              color='error'
               onClick={handleOpenMarketplaceModal}
               startIcon={<AttachMoneyIcon />}
             >

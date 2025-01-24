@@ -220,13 +220,35 @@ function ProductTable({
         }}
       >
         {/* Filter */}
-        <Button onClick={handleFilterClick} variant="outlined" startIcon={<FontAwesomeIcon icon={faFilter} />}>
+        <Button onClick={handleFilterClick} variant="outlined" color='error' startIcon={<FontAwesomeIcon icon={faFilter} />}>
           Filter
         </Button>
         <Menu
           anchorEl={anchorEl}
           open={Boolean(anchorEl)}
           onClose={() => handleFilterClose(null)}
+          transitionDuration={0}
+          PaperProps={{
+            sx: {
+              backgroundColor: '#1f1a25',
+              color: '#fff',
+              border: '1px solid #444',
+
+              // MenuItem styling
+              '& .MuiMenuItem-root': {
+                textTransform: 'none',
+                color: 'inherit',
+                '&:hover': {
+                  backgroundColor: '#ff000',
+                  color: '#fff',
+                },
+                // If you want a distinct style for selected items:
+                '&.Mui-selected': {
+                  backgroundColor: '#333',
+                },
+              },
+            },
+          }}
         >
           <MenuItem
             onClick={() => handleFilterClose('653ee81117c9f5ee2124564b')}
@@ -238,13 +260,35 @@ function ProductTable({
         </Menu>
 
         {/* Sort */}
-        <Button onClick={handleSortClick} variant="outlined" startIcon={<FontAwesomeIcon icon={faSort} />}>
+        <Button onClick={handleSortClick} variant="outlined" color='error' startIcon={<FontAwesomeIcon icon={faSort} />}>
           Sort By
         </Button>
         <Menu
           anchorEl={sortAnchorEl}
           open={Boolean(sortAnchorEl)}
           onClose={() => handleSortClose(null)}
+          transitionDuration={0}
+          PaperProps={{
+            sx: {
+              backgroundColor: '#1f1a25',
+              color: '#fff',
+              border: '1px solid #444',
+
+              // MenuItem styling
+              '& .MuiMenuItem-root': {
+                textTransform: 'none',
+                color: 'inherit',
+                '&:hover': {
+                  backgroundColor: '#ff000',
+                  color: '#fff',
+                },
+                // If you want a distinct style for selected items:
+                '&.Mui-selected': {
+                  backgroundColor: '#333',
+                },
+              },
+            },
+          }}
         >
           <MenuItem
             onClick={() => handleSortClose('updated_at')}
@@ -387,7 +431,7 @@ function ProductTable({
                     <Tooltip title={owner?.rentOption ? 'Rent' : 'Trade'}>
                       <Button
                         variant="contained"
-                        color="secondary"
+                        color='error'
                         fullWidth
                         onClick={(e) => {
                           e.stopPropagation();

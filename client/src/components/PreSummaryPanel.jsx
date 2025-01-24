@@ -73,32 +73,52 @@ const PreSummaryPanel = (props) => {
     <Stack direction="row" spacing={2}>
       <Box className="pre-summary-panel title">
 
+        {/* ROOM NAME */}
         <Box className="data-item">
           <Typography variant="body2" className="label room-name">
             <FontAwesomeIcon icon={faBuilding} style={{ marginRight: 8 }} /> Room Name
           </Typography>
-          <Typography variant="body1" className="value">{roomInfo?.name}</Typography>
+          {/* Tooltip + info icon for the value */}
+          <Tooltip title="This is the name of the room.">
+            <Box sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+              <Typography variant="body1" className="value">
+                {roomInfo?.name}
+              </Typography>
+              <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
+            </Box>
+          </Tooltip>
         </Box>
 
+        {/* STATUS */}
         <Box className="data-item">
           <Typography variant="body2" className="label room-id">
             <FontAwesomeIcon icon={faInfoCircle} style={{ marginRight: 8 }} />STATUS
           </Typography>
-          <Typography variant="body1" className="value">{status}</Typography>
+          <Tooltip title="The current status of this room (e.g., open, finished, etc.)">
+            <Box sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+              <Typography variant="body1" className="value">
+                {status}
+              </Typography>
+              <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
+            </Box>
+          </Tooltip>
         </Box>
 
+        {/* LIQUIDITY (already has a tooltip + icon logic) */}
         <Box className="data-item">
           <Typography variant="body2" className="label">
             <FontAwesomeIcon icon={faWater} style={{ marginRight: 8 }} />LIQUIDITY
           </Typography>
-          <Tooltip title={
-            isLowBankroll
-              ? `${parseFloat((Number(bankroll) || 0).toFixed(4))} SOL — LOW BANKROLL CAN CAUSE A BET TO FAIL`
-              : `${parseFloat((Number(bankroll) || 0).toFixed(3))} SOL`
-          }>
-            <div
+          <Tooltip
+            title={
+              isLowBankroll
+                ? `${parseFloat((Number(bankroll) || 0).toFixed(4))} SOL — LOW BANKROLL CAN CAUSE A BET TO FAIL`
+                : `${parseFloat((Number(bankroll) || 0).toFixed(3))} SOL`
+            }
+          >
+            <Box
               className={`value ${isLowBankroll ? 'red-text' : ''}`}
-              style={{ cursor: "pointer", display: "flex", alignItems: "center" }}
+              sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
             >
               {convertToCurrency(bankroll, solPrice)}
               {!isLowBankroll ? (
@@ -106,85 +126,131 @@ const PreSummaryPanel = (props) => {
               ) : (
                 <WarningIcon fontSize="small" sx={{ ml: 1 }} />
               )}
-            </div>
+            </Box>
           </Tooltip>
         </Box>
 
+        {/* YOUR RETURN (already has a tooltip) */}
         <Box className="data-item">
           <Typography variant="body2" className="label your-max-return">
             <FontAwesomeIcon icon={faDollarSign} style={{ marginRight: 8 }} />Your Return
           </Typography>
           <Tooltip
             title={
-              roomInfo.game_type === 'Quick Shoot' ?
-                (<div>
+              roomInfo.game_type === 'Quick Shoot' ? (
+                <div>
                   <span>EXPLANATION: </span>
-                  <p>Quick Shoot logic: (Bet Amount / (qs_game_type - 1) + Bet Amount), minus commission ({cp}%) and platform tax (2.5%).</p>
+                  <p>
+                    Quick Shoot logic: (Bet Amount / (qs_game_type - 1) + Bet Amount), minus commission ({cp}%) and platform tax (2.5%).
+                  </p>
                   <span>CALCULATION: </span>
-                  <div>{convertToCurrency(bet_amount, solPrice)} / ({qs_game_type - 1}) + {convertToCurrency(bet_amount, solPrice)} =
-                    {convertToCurrency(bet_amount / (qs_game_type - 1) + bet_amount, solPrice)}</div>
+                  <div>
+                    {convertToCurrency(bet_amount, solPrice)} / ({qs_game_type - 1}) + {convertToCurrency(bet_amount, solPrice)} =
+                    {convertToCurrency(bet_amount / (qs_game_type - 1) + bet_amount, solPrice)}
+                  </div>
                   <div>-({cp} + 2.5)% = {convertToCurrency(calculateQuickShootReturn(), solPrice)}</div>
-                </div>) :
-                (<div>
+                </div>
+              ) : (
+                <div>
                   <span>EXPLANATION: </span>
-                  <p>2x your Bet Amount, then deduct Host(s)'s(') commission, if any, (which is Returned to Bankroll or RTB) and finally deduct 2.5% platform tax.</p>
+                  <p>
+                    2x your Bet Amount, then deduct Host(s)'s(') commission (RTB), finally 2.5% platform tax.
+                  </p>
                   <span>CALCULATION: </span>
-                  <div>{convertToCurrency(bet_amount, solPrice)} x 2 = {convertToCurrency(bet_amount * 2, solPrice)}</div>
+                  <div>
+                    {convertToCurrency(bet_amount, solPrice)} x 2 = {convertToCurrency(bet_amount * 2, solPrice)}
+                  </div>
                   <div>-({cp} + 2.5)% = {convertToCurrency(calculateRPSReturn(), solPrice)}</div>
-                </div>)
+                </div>
+              )
             }
           >
-            <div className="value" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', color: (roomInfo.game_type === 'Quick Shoot' ? calculateQuickShootReturn() : calculateRPSReturn()) > 0 ? '#00ff3a' : 'red' }}>
-              {convertToCurrency(roomInfo.game_type === 'Quick Shoot' ? calculateQuickShootReturn() : calculateRPSReturn(), solPrice)}
+            <Box
+              className="value"
+              sx={{
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                color:
+                  (roomInfo.game_type === 'Quick Shoot' ? calculateQuickShootReturn() : calculateRPSReturn()) > 0
+                    ? '#00ff3a'
+                    : 'red',
+              }}
+            >
+              {convertToCurrency(
+                roomInfo.game_type === 'Quick Shoot'
+                  ? calculateQuickShootReturn()
+                  : calculateRPSReturn(),
+                solPrice
+              )}
               <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
-            </div>
+            </Box>
           </Tooltip>
         </Box>
 
+        {/* WIN CHANCE */}
         <Box className="data-item">
           <Typography variant="body2" className="label chance">
             <FontAwesomeIcon icon={faDice} style={{ marginRight: 8 }} />Win Chance
           </Typography>
-          <Typography variant="body1" className="value">{winChance}%</Typography>
+          {/* Add a tooltip + info icon for the value */}
+          <Tooltip title="Probability of winning each battle, based on your strategy or random factors.">
+            <Box sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+              <Typography variant="body1" className="value">
+                {winChance}%
+              </Typography>
+              <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
+            </Box>
+          </Tooltip>
         </Box>
 
+        {/* ROOM PROFIT (already has a tooltip) */}
         <Box className="data-item">
           <Typography variant="body2" className="label net-profit">
             <FontAwesomeIcon icon={faBalanceScale} style={{ marginRight: 8 }} />Room Profit
           </Typography>
           <Tooltip title="Current bankroll + Payouts - Initial bankroll">
-            <div
+            <Box
               className="value"
-              style={{
+              sx={{
                 cursor: 'pointer',
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
               }}
             >
-              <span className={`value ${isLowProfit ? 'green-text' : 'red-text'}`}>
+              <Typography
+                variant="body1"
+                className={`value ${isLowProfit ? 'green-text' : 'red-text'}`}
+                sx={{ mr: 1 }}
+              >
                 {isNaN(hostProfit - totalStakes)
                   ? 'N/A'
                   : convertToCurrency(hostProfit - totalStakes, solPrice)}
-              </span>
+              </Typography>
               {isLowProfit ? (
-                <InfoIcon sx={{ color: '#00ff3a', fontSize: 16, ml: 1 }} />
+                <InfoIcon sx={{ color: '#00ff3a', fontSize: 16 }} />
               ) : (
-                <WarningIcon sx={{ color: 'red', fontSize: 16, ml: 1 }} />
+                <WarningIcon sx={{ color: 'red', fontSize: 16 }} />
               )}
-            </div>
+            </Box>
           </Tooltip>
         </Box>
 
+        {/* TAX (already has a tooltip) */}
         <Box className="data-item">
           <Typography variant="body2" className="label commission">
             <FontAwesomeIcon icon={faPercentage} style={{ marginRight: 8 }} />Tax
           </Typography>
-          <Tooltip title="Host's Accessory's Commission Power (CP) - Player's Accessory's Battle Power (BP) (MINIMUM 2.5% TOWARDS PLATFORM)">
-            <div
-              style={{ cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center" }}
+          <Tooltip title="Host's CP - Player's BP. Minimum 2.5% goes to the platform.">
+            <Box
+              sx={{ cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
             >
-              <Typography variant="body1" className={`value ${isHighCommission ? 'red-text' : ''}`} sx={{ display: 'flex', alignItems: 'center' }}>
+              <Typography
+                variant="body1"
+                className={`value ${isHighCommission ? 'red-text' : ''}`}
+                sx={{ display: 'flex', alignItems: 'center' }}
+              >
                 {cp < 1 ? '1%' : `${cp}%`}
                 {!isHighCommission ? (
                   <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
@@ -192,86 +258,133 @@ const PreSummaryPanel = (props) => {
                   <WarningIcon sx={{ color: 'red', fontSize: 16, ml: 1 }} />
                 )}
               </Typography>
-            </div>
+            </Box>
           </Tooltip>
         </Box>
 
+        {/* AUTO-PAYOUT (already has a tooltip) */}
         {endgame_type && (
           <Box className="data-item">
-          <Typography variant="body2" className="label created">
-            <FontAwesomeIcon icon={faHandHoldingUsd} style={{ marginRight: 8 }} />Auto-Payout
-          </Typography>
-          <Tooltip title="Automatic dividends paid out to Hosts & CoHosts upon meeting the set payout threshold">
-            <div style={{ cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center", marginBottom: '-7.5px', marginRight: '-20px'}}>
-              <Box position="relative" display="inline-flex">
-                <CircularProgress
-                  variant="determinate"
-                  value={payoutPercentage}
-                  color="secondary"
-                  size={35}  // Smaller size
-                  thickness={4}  // Adjust thickness if necessary
-                />
-                <Box
-                  top={0}
-                  left={0}
-                  bottom={0}
-                  right={0}
-                  position="absolute"
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="center"
-                >
-                  <Typography variant="caption" component="div" sx={{ fontSize: '0.6em', fontWeight: 'bold'}}>
-                    {`${payoutPercentage}%`}
-                  </Typography>
+            <Typography variant="body2" className="label created">
+              <FontAwesomeIcon icon={faHandHoldingUsd} style={{ marginRight: 8 }} />Auto-Payout
+            </Typography>
+            <Tooltip title="Automatic dividends paid to Hosts & CoHosts upon reaching the payout threshold.">
+              <Box
+                sx={{
+                  cursor: 'pointer',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  mb: '-7.5px',
+                  mr: '-20px',
+                }}
+              >
+                <Box position="relative" display="inline-flex">
+                  <CircularProgress
+                    variant="determinate"
+                    value={payoutPercentage}
+                    color="error"
+                    size={35}
+                    thickness={4}
+                  />
+                  <Box
+                    top={0}
+                    left={0}
+                    bottom={0}
+                    right={0}
+                    position="absolute"
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="center"
+                  >
+                    <Typography variant="caption" component="div" sx={{ fontSize: '0.6em', fontWeight: 'bold' }}>
+                      {`${payoutPercentage}%`}
+                    </Typography>
+                  </Box>
                 </Box>
+                <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
               </Box>
-              <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
-            </div>
-          </Tooltip>
-        </Box>
+            </Tooltip>
+          </Box>
         )}
 
+        {/* INTEREST RECEIVED (already has a tooltip) */}
         <Box className="data-item">
           <Typography variant="body2" className="label public-interest">
             <FontAwesomeIcon icon={faCoins} style={{ marginRight: 8 }} />Interest Received
           </Typography>
           <Typography variant="body1" className="value">
-            <Tooltip title="Paid every 33 minutes, at a rate of 0.00001% of the bankroll. Room must be public.">
-              <div style={{ cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center" }}>
-                <span style={{ color: "#00fff5" }}>
+            <Tooltip title="Paid every 33 minutes at 0.00001% of the bankroll if the room is public.">
+              <Box sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                <Typography component="span" sx={{ color: '#00fff5' }}>
                   {convertToCurrency(pr, solPrice)}
-                </span>
+                </Typography>
                 <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
-              </div>
+              </Box>
             </Tooltip>
           </Typography>
         </Box>
 
+        {/* CREATOR */}
         <Box className="data-item">
           <Typography variant="body2" className="label host-display-name">
             <FontAwesomeIcon icon={faUser} style={{ marginRight: 8 }} />Creator
           </Typography>
-          <div className="value host">
-            <a className="player" onClick={() => handleOpenPlayerModal(creator_id)}>
-              <Avatar className="avatar" src={creator_avatar} username={username} rank={rank} accessory={accessory} alt="" darkMode={isDarkMode} />
-            </a>
-            {isQbot && (
-              <span style={{ fontSize: "xx-small", position: "absolute", top: "65px", border: "1px solid rgb(255, 208, 0)", background: "linear-gradient(45deg, #7a5958, #a27955)", borderRadius: "4px", color: "rgb(255, 208, 0)", padding: "0px 5px", lineHeight: "20px", marginLeft: "7.5px" }}>
-                Q-BOT
-              </span>
-            )}
-          </div>
+          <Tooltip title="The user who created this room.">
+            <Box sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+              <a
+                className="player"
+                onClick={() => handleOpenPlayerModal(creator_id)}
+                style={{ textDecoration: 'none' }}
+              >
+                <Avatar
+                  className="avatar"
+                  src={creator_avatar}
+                  username={username}
+                  rank={rank}
+                  accessory={accessory}
+                  alt=""
+                  darkMode={isDarkMode}
+                />
+              </a>
+              {isQbot && (
+                <span
+                  style={{
+                    fontSize: 'xx-small',
+                    position: 'absolute',
+                    top: '65px',
+                    border: '1px solid rgb(255, 208, 0)',
+                    background: 'linear-gradient(45deg, #7a5958, #a27955)',
+                    borderRadius: '4px',
+                    color: 'rgb(255, 208, 0)',
+                    padding: '0px 5px',
+                    lineHeight: '20px',
+                    marginLeft: '7.5px',
+                  }}
+                >
+                  Q-BOT
+                </span>
+              )}
+              <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
+            </Box>
+          </Tooltip>
         </Box>
 
+        {/* CREATED */}
         <Box className="data-item">
           <Typography variant="body2" className="label public-max-return">
             <FontAwesomeIcon icon={faCalendarAlt} style={{ marginRight: 8 }} />Created
           </Typography>
-          <Typography variant="body1" className="value">
-            {Moment(roomInfo?.created_at).fromNow()}
-          </Typography>
+          <Tooltip title="When this room was created.">
+            <Box sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+              <Typography variant="body1" className="value">
+                {Moment(roomInfo?.created_at).fromNow()}
+              </Typography>
+              <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
+            </Box>
+          </Tooltip>
         </Box>
+
       </Box>
     </Stack>
   );

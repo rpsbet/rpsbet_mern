@@ -72,7 +72,7 @@ const CoinInfo = ({
       <ThemeProvider theme={theme}>
         {/* Coin Name */}
         <TextField
-          color={inputError ? "error" : "secondary"}
+          color={inputError ? "error" : "error"}
           label="Name"
           variant="filled"
           fullWidth

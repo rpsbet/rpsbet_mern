@@ -1,53 +1,111 @@
-import React, { Component } from "react";
-import "./AvatarDropzone.css";
-import Avatar from "../../../components/Avatar";
-import { alertModal } from "../ConfirmAlerts";
-import { Button, TextField, Grid } from '@mui/material';
-const uniqid = require('uniqid');
+import React, { useState, useRef, useCallback } from 'react';
+import './AvatarDropzone.css';
 
+import { Button, TextField, Grid, Box } from '@mui/material';
+import uniqid from 'uniqid';
 
-class Dropzone extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      hightlight: false,
-      aiText: '',
-      showAIText: false,
-      loading: false,
-    };
-    this.fileInputRef = React.createRef();
-  }
+import Avatar from '../../../components/Avatar';
+import { alertModal } from '../ConfirmAlerts';
 
-  openFileDialog = () => {
-    if (this.props.disabled) return;
-    this.fileInputRef.current.click();
-  }
+/**
+ * @component AvatarDropzone
+ * A drag-and-drop area for uploading a user avatar. Includes an optional
+ * AI-based image generator (DeepAI) for creating cat-themed images.
+ */
+function AvatarDropzone({
+  darkMode,
+  imageUrl,
+  rank,
+  username,
+  accessory,
+  setImageFilename,
+  onFileAdded,
+  disabled,
+}) {
+  // -------------------------------
+  //            STATE
+  // -------------------------------
+  const [highlight, setHighlight] = useState(false);
+  const [aiText, setAiText] = useState('');
+  const [showAIText, setShowAIText] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  previewImage = (file) => {
-    if (!file) return;
-    let reader = new FileReader();
-    reader.onloadend = () => {
-      this.props.setImageFilename(reader.result);
+  // -------------------------------
+  //       REFS & CALLBACKS
+  // -------------------------------
+  const fileInputRef = useRef(null);
+
+  /**
+   * Opens the native file dialog.
+   */
+  const openFileDialog = useCallback(() => {
+    if (!disabled && fileInputRef.current) {
+      fileInputRef.current.click();
     }
-    reader.readAsDataURL(file);
-  }
+  }, [disabled]);
 
-  onFileAdded = (evt) => {
-    if (this.props.disabled) return;
-    const file = evt.target.files[0];
+  /**
+   * Displays the selected or dropped image in the UI by converting
+   * it to a base64 data URL and passing it to `setImageFilename`.
+   */
+  const previewImage = (file) => {
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImageFilename(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // -------------------------------
+  //       DRAG & DROP HANDLERS
+  // -------------------------------
+  const onDragOverHandler = (event) => {
+    event.preventDefault();
+    if (!disabled) {
+      setHighlight(true);
+    }
+  };
+
+  const onDragLeaveHandler = () => {
+    setHighlight(false);
+  };
+
+  const onDropHandler = (event) => {
+    event.preventDefault();
+    if (disabled) return;
+
+    const file = event.dataTransfer.files?.[0];
+    if (file) {
+      previewImage(file);
+      if (onFileAdded) onFileAdded(file);
+    }
+    setHighlight(false);
+  };
+
+  // -------------------------------
+  //     IMAGE FILE ADDED HANDLER
+  // -------------------------------
+  const onFileAddedHandler = (evt) => {
+    if (disabled) return;
+
+    const file = evt.target.files?.[0];
+    if (!file) return;
+
     const image = new Image();
     const reader = new FileReader();
+
     reader.onload = (e) => {
       image.src = e.target.result;
       image.onload = () => {
+        // Scale down if needed
         const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d');
-
+        const ctx = canvas.getContext('2d');
         const maxWidth = 800;
         const maxHeight = 800;
 
-        let width = image.width;
-        let height = image.height;
+        let { width, height } = image;
         if (width > height) {
           if (width > maxWidth) {
             height *= maxWidth / width;
@@ -59,68 +117,51 @@ class Dropzone extends Component {
             height = maxHeight;
           }
         }
+
         canvas.width = width;
         canvas.height = height;
+        ctx.drawImage(image, 0, 0, width, height);
 
-        context.drawImage(image, 0, 0, width, height);
-
+        // Convert to blob and check size
         canvas.toBlob((blob) => {
-          if (blob.size > 4194304) {
-            alertModal(this.props.darkMode, "THIS ONE IS TOO LARGE, TRY ANOTHER");
+          if (!blob) return;
+
+          if (blob.size > 4_194_304) {
+            alertModal(darkMode, 'THIS ONE IS TOO LARGE, TRY ANOTHER');
             return;
           }
-        
+
           // Dynamically generate a name for the blob
           const originalName = file.name || 'image';
-          const fileExt = originalName.split('.').pop(); // Get the original file extension
+          const fileExt = originalName.split('.').pop();
           const uniqueName = `${uniqid('IMG_')}.${fileExt}`;
-        
-          blob.name = uniqueName; // Assign the dynamically generated name
-        
-          this.previewImage(blob);
-          if (this.props.onFileAdded) {
-            this.props.onFileAdded(blob);
-          }
+
+          // Assign the new name, then preview & pass back
+          blob.name = uniqueName;
+          previewImage(blob);
+          if (onFileAdded) onFileAdded(blob);
         }, file.type);
       };
     };
     reader.readAsDataURL(file);
-  }
+  };
 
-  onDragOver = (event) => {
-    event.preventDefault();
-    if (this.props.disabled) return;
-    this.setState({ hightlight: true });
-  }
+  // -------------------------------
+  //         AI IMAGE LOGIC
+  // -------------------------------
+  const handleAITextChange = (e) => {
+    setAiText(e.target.value);
+  };
 
-  onDragLeave = (event) => {
-    this.setState({ hightlight: false });
-  }
-
-  onDrop = (event) => {
-    event.preventDefault();
-    if (this.props.disabled) return;
-    const file = event.dataTransfer.files[0];
-    if (this.props.onFileAdded) {
-      this.props.onFileAdded(file);
-    }
-    this.previewImage(file);
-    this.setState({ hightlight: false });
-  }
-
-  handleAITextChange = (e) => {
-    this.setState({ aiText: e.target.value });
-  }
-
-  handleGenerateAIImage = async () => {
+  const handleGenerateAIImage = async () => {
     try {
+      setLoading(true);
       const apiKey = '42c3b8b2-0fb5-4890-a78d-5f684ead8a3a';
       const apiUrl = 'https://api.deepai.org/api/origami-3d-generator';
 
-      this.setState({ loading: true });
-
       const formData = new FormData();
-      const aiTextWithCat = `${this.state.aiText} cat`;
+      const aiTextWithCat = `${aiText} cat`;
+
       formData.append('text', aiTextWithCat);
       formData.append('grid_size', '1');
 
@@ -133,81 +174,126 @@ class Dropzone extends Component {
       });
 
       const data = await resp.json();
-
       if (data.output_url) {
-        this.props.setImageFilename(data.output_url);
+        setImageFilename(data.output_url);
       } else {
-        alertModal(this.props.darkMode, 'Failed to generate 3D Origami image. Please try again.');
+        alertModal(darkMode, 'Failed to generate 3D Origami image. Please try again.');
       }
     } catch (error) {
       console.error('Error generating 3D Origami image:', error);
-      alertModal(this.props.darkMode, 'An error occurred while generating 3D Origami image. Please try again.');
+      alertModal(darkMode, 'An error occurred while generating 3D Origami image. Please try again.');
     } finally {
-      this.setState({ loading: false });
+      setLoading(false);
     }
-  }
+  };
 
-  showTextfield = () => {
-    this.setState({ showAIText: true });
-  }
+  // -------------------------------
+  //             RENDER
+  // -------------------------------
+  return (
+    <div
+      className={`AvatarDropzone ${highlight ? 'AvatarHighlight' : ''}`}
+      onDragOver={onDragOverHandler}
+      onDragLeave={onDragLeaveHandler}
+      onDrop={onDropHandler}
+    >
+      <input
+        ref={fileInputRef}
+        className="AvatarFileInput"
+        type="file"
+        accept="image/x-png,image/gif,image/jpeg,image/jpg,image/heic"
+        onChange={onFileAddedHandler}
+      />
 
-  hideTextfield = () => {
-    this.setState({ showAIText: false });
-  }
+      {/* Avatar Preview */}
+      <Avatar
+        className="AvatarPreviewPanel"
+        alt=""
+        rank={rank}
+        username={username}
+        accessory={accessory}
+        src={imageUrl}
+        darkMode={darkMode}
+      />
 
-  render() {
-    return (
-      <div
-        className={`AvatarDropzone ${this.state.hightlight ? "AvatarHighlight" : ""}`}
-        onDragOver={this.onDragOver}
-        onDragLeave={this.onDragLeave}
-        onDrop={this.onDrop}
-      >
-        <input ref={this.fileInputRef} className="AvatarFileInput" type="file" accept="image/x-png,image/gif,image/jpeg, image/jpg, image/heic" onChange={this.onFileAdded} />
-
-        <Avatar
-          className="AvatarPreviewPanel"
-          alt=""
-          rank={this.props.rank}
-          username={this.props.username}
-          accessory={this.props.accessory}
-          src={this.props.imageUrl}
-          darkMode={this.props.darkMode}
-        />
-        <div className="AvatarControlPanel">
-          <Grid container spacing={2} direction="column" alignItems="center">
-            <Grid item>
-              <Button onClick={this.openFileDialog} fullWidth>CHANGE IMAGE</Button>
-            </Grid>
-            <Grid item>
-              {this.state.showAIText ? (
-                <>
-                   <TextField color="secondary" 
-                    label="ENTER PROMPT"
-                    variant="filled"
-                    fullWidth
-                    value={this.state.aiText}
-                    onChange={this.handleAITextChange}
-                  />
-                  <Grid container spacing={2} direction="row" justifyContent="space-between" alignItems="center">
-                    <Grid item>
-                      <Button onClick={this.hideTextfield} fullWidth>Hide</Button>
-                    </Grid>
-                    <Grid item>
-                      <Button onClick={this.handleGenerateAIImage} fullWidth>Generate</Button>
-                    </Grid>
-                  </Grid>
-                </>
-              ) : (
-                <Button onClick={this.showTextfield} fullWidth>AI GENERATE</Button>
-              )}
-            </Grid>
+      {/* Controls Panel */}
+      <Box className="AvatarControlPanel" sx={{mt: '-50%', background: '#ff000011', borderRadius: '0.3em', p: '20px'}}>
+        <Grid container spacing={2} direction="column" alignItems="center">
+          {/* Change Image Button */}
+          <Grid item>
+            <Button
+              color="error"
+              variant="outlined"
+              onClick={openFileDialog}
+              fullWidth
+            >
+              CHANGE IMAGE
+            </Button>
           </Grid>
-        </div>
-        <div className="loading-spinner" style={{ display: this.state.loading ? 'block' : 'none' }}></div>
-      </div>
-    );
-  }
+
+          {/* AI Generate Buttons & Text Fields */}
+          <Grid item>
+            {showAIText ? (
+              <>
+                <TextField
+                  color="error"
+                  label="ENTER PROMPT"
+                  variant="filled"
+                  fullWidth
+                  value={aiText}
+                  onChange={handleAITextChange}
+                  sx={{ mb: 1 }}
+                />
+                <Grid
+                  container
+                  spacing={2}
+                  direction="row"
+                  justifyContent="space-between"
+                  alignItems="center"
+                >
+                  <Grid item xs={6}>
+                    <Button
+                      color="error"
+                      variant="outlined"
+                      onClick={() => setShowAIText(false)}
+                      fullWidth
+                    >
+                      Hide
+                    </Button>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Button
+                      color="error"
+                      variant="contained"
+                      onClick={handleGenerateAIImage}
+                      fullWidth
+                    >
+                      Generate
+                    </Button>
+                  </Grid>
+                </Grid>
+              </>
+            ) : (
+              <Button
+                color="error"
+                variant="outlined"
+                onClick={() => setShowAIText(true)}
+                fullWidth
+              >
+                AI GENERATE
+              </Button>
+            )}
+          </Grid>
+        </Grid>
+      </Box>
+
+      {/* Loading Spinner */}
+      <div
+        className="loading-spinner"
+        style={{ display: loading ? 'block' : 'none' }}
+      />
+    </div>
+  );
 }
 
-export default Dropzone;
+export default AvatarDropzone;

@@ -284,8 +284,6 @@ div.table .table-row .table-cell button.active,
 #balance button:active,
 .game_header .main_header .header_action_panel button#btn-login:active,
 div.table .table-row .table-cell button:last-child:active,
-.btn-create-room:focus,
-
 #rps-radio div.active {
   background-color: var(--secondary-color);
   box-shadow: none !important;
@@ -409,14 +407,9 @@ div.table .table-cell button.btn_join img {
 
 .create-room-btn-panel button.btn-create-room {
   margin: 15px auto;
-  color: var(--white-color);
-  padding: 10px 20px !important;
   overflow: hidden;
   font-size: 1.4em;
-  border-radius: 1em;
   font-weight: 600;
-  background: unset;
-  box-shadow: unset !important;
 }
 
 .roll-tag {
@@ -3692,59 +3685,8 @@ circle {
   align-items: center;
 }
 
-
-.notification-element {
-  height: 300px;
-  padding: 10px;
-  overflow-y: scroll;
-}
-
-.notification-container a:first-child {
-  width: 30%;
-  display: inline-block !important;
-}
-
-.notification-container .notification {
-  width: 70%;
-  display: inline-block;
-}
-
-.notification-container {
-  display: flex;
-  justify-content: start;
-  margin-bottom: 10px;
-  position: relative;
-  opacity: 1;
-}
-
 .notification-container.read {
   opacity: 0.5;
-}
-
-.notification {
-  display: flex;
-  align-content: normal;
-
-}
-
-.notification p {
-  font-weight: 600;
-  margin-bottom: 10px;
-  font-size: 0.6em !important;
-}
-
-.notification p:first-child {
-  color: #444;
-  font-size: 0.8em !important;
-  margin-bottom: 0;
-}
-
-.notification-container:last-child {
-  border-bottom: unset;
-}
-
-.notification .fromNow {
-  font-size: 0.8em;
 }
 
 #game_logs td {
@@ -4289,8 +4231,6 @@ div.table .table-row .table-cell img.avatar,
   font-size: 1.1rem !important;
   text-transform: uppercase;
   margin: 15px auto 10px 15px;
-  color: #060607;
-  ;
 }
 
 /*****************/
@@ -4403,12 +4343,6 @@ div.table .table-row .table-cell img.avatar,
 /***********************/
 /**** PROFILE MODAL ****/
 /***********************/
-
-.align-center img,
-.AvatarDropzone img {
-  width: 130px;
-  height: 130px;
-}
 
 @keyframes fadeInOut {
 

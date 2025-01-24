@@ -1,20 +1,8 @@
-.AvatarDropzone {
-  display: flex;
-  align-items: center;
-  font-size: 16px;
-  flex-direction: row;
-    text-align-last: center;
-}
-.AvatarPreviewPanel {
-  border-radius: 1em !important;
-  overflow: unset !important;
-}
 
 .AvatarControlPanel {
   display: flex;
   flex-direction: row;
   align-items: center;
-  /* Other existing styles */
 }
 
 .AvatarHighlight {
@@ -31,13 +19,7 @@
   display: none;
 }
 
-.AvatarControlPanel {
-  margin: 90px -90px !important;
-  display: flex;
-  flex-direction: column;
-    align-items: center;
- 
-}
+
 .AvatarButtonPanel {
   display: flex;
   gap: 5px;

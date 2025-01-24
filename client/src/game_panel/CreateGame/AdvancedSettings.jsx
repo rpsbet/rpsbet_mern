@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { connect } from 'react-redux';
+import { connect, useDispatch } from 'react-redux';
 import { acQueryMyItem } from '../../redux/Item/item.action';
 import { setFocused } from '../../redux/Auth/user.actions';
-import { useDispatch } from 'react-redux';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import {
   Button,
@@ -18,7 +17,6 @@ import { getCustomTheme } from '../../config/theme';
 const AdvancedSettings = (props) => {
 
   const dispatch = useDispatch();
-
   const theme = getCustomTheme(props.isDarkMode);
 
   const [showOptions, setShowOptions] = useState(false);
@@ -29,21 +27,35 @@ const AdvancedSettings = (props) => {
 
   return (
     <ThemeProvider theme={theme}>
-
       <div id="advanced_panel">
         {/* Step 1: Privacy */}
-        <div className="game-privacy-panel game-info-panel  ">
-          <h3 className="game-sub-title roll-tag">Advanced Settings&nbsp;<Tooltip
-            style={{ position: "absolute", right: "20px" }}
-            title={'Optional - Skip if needed.'}
-            placement="top"
+        <div className="game-privacy-panel game-info-panel">
+          <h3 className="game-sub-title roll-tag">
+            Advanced Settings
+            <Tooltip
+              style={{ position: "absolute", right: "20px" }}
+              title={'Optional - Skip if needed.'}
+              placement="top"
+            >
+              <Info style={{ cursor: "pointer", float: "right" }} />
+            </Tooltip>
+          </h3>
+
+          <div
+            style={{
+              padding: "15px",
+              gridTemplateColumns: "1fr",
+              display: "grid",
+              gap: "20px",
+              width: "80%",
+            }}
           >
-            <Info style={{ cursor: "pointer", float: "right" }} />
-          </Tooltip></h3>
-          <div style={{ padding: "15px 15px 15px 15px", gridTemplateColumns: "1fr", display: "grid", gap: "20px", width: "80%" }}>
             {/* Privacy Section */}
-            <div className="grid-item label roll-tag" style={{ display: 'flex', alignItems: 'center', justifyContent: "center", width: '100%' }}>
-              <span >Privacy</span>&nbsp;
+            <div
+              className="grid-item label roll-tag"
+              style={{ display: 'flex', alignItems: 'center', justifyContent: "center", width: '100%' }}
+            >
+              <span>Privacy</span>&nbsp;
               <Tooltip
                 style={{ marginLeft: '8px' }}
                 title="Set private to require players enter a password to play"
@@ -51,19 +63,21 @@ const AdvancedSettings = (props) => {
               >
                 <Info style={{ cursor: 'pointer' }} />
               </Tooltip>
-
-
             </div>
+
             <div className="grid-item content">
               <div className="radio-button-group">
                 <Button
+                  color='error'
                   className={!props.is_private ? 'active' : ''}
                   onClick={() => handleInputChange('is_private', false)}
                 >
                   <img src="/img/icons/public.svg" alt="Public Game" width="20px" />
                   Public
                 </Button>
+
                 <Button
+                  color='error'
                   className={props.is_private ? 'active' : ''}
                   onClick={() => handleInputChange('is_private', true)}
                 >
@@ -71,8 +85,10 @@ const AdvancedSettings = (props) => {
                   Private
                 </Button>
               </div>
+
               {props.is_private && (
-                <TextField color="secondary"
+                <TextField
+                  color='error'
                   id="room_password"
                   variant="filled"
                   value={props.room_password}
@@ -82,7 +98,10 @@ const AdvancedSettings = (props) => {
             </div>
 
             {/* Payout Section */}
-            <div className="grid-item label roll-tag" style={{ display: 'flex', alignItems: 'center', justifyContent: "center", width: '100%', marginTop: "20px" }}>
+            <div
+              className="grid-item label roll-tag"
+              style={{ display: 'flex', alignItems: 'center', justifyContent: "center", width: '100%', marginTop: "20px" }}
+            >
               <span style={{ textAlign: "center" }}>Payout</span>&nbsp;
               <Tooltip
                 style={{ marginLeft: '8px' }}
@@ -92,16 +111,20 @@ const AdvancedSettings = (props) => {
                 <Info style={{ cursor: 'pointer' }} />
               </Tooltip>
             </div>
+
             <div className="grid-item content">
               <div className="radio-button-group">
                 <Button
+                  color='error'
                   className={!props.endgame_type ? 'active' : ''}
                   onClick={() => handleInputChange('endgame_type', false)}
                 >
                   <img src="/img/icons/manual.svg" alt="Manual Game" width="20px" />
                   Manual
                 </Button>
+
                 <Button
+                  color='error'
                   className={props.endgame_type ? 'active' : ''}
                   onClick={() => handleInputChange('endgame_type', true)}
                 >
@@ -109,8 +132,10 @@ const AdvancedSettings = (props) => {
                   Automatic
                 </Button>
               </div>
+
               {props.endgame_type && (
-                <TextField color="secondary"
+                <TextField
+                  color='error'
                   id="endgame_amount"
                   variant="filled"
                   value={props.endgame_amount}
@@ -123,8 +148,10 @@ const AdvancedSettings = (props) => {
               )}
             </div>
 
-
-            <div className="grid-item label roll-tag" style={{ display: 'flex', alignItems: 'center', justifyContent: "center", width: '100%', marginTop: "20px" }}>
+            <div
+              className="grid-item label roll-tag"
+              style={{ display: 'flex', alignItems: 'center', justifyContent: "center", width: '100%', marginTop: "20px" }}
+            >
               <span>Other Information</span>&nbsp;
               <Tooltip
                 style={{ marginLeft: '8px' }}
@@ -135,9 +162,20 @@ const AdvancedSettings = (props) => {
               </Tooltip>
             </div>
 
-            <div className="grid-item content" style={{ justifyItems: "center", }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: "center", width: '100%' }}>
-                <TextField color="secondary"
+            <div
+              className="grid-item content"
+              style={{ justifyItems: "center" }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: "center",
+                  width: '100%'
+                }}
+              >
+                <TextField
+                  color='error'
                   label="Add Description"
                   value={props.description}
                   placeholder="e.g. This gonna go crazy"
@@ -145,36 +183,33 @@ const AdvancedSettings = (props) => {
                   onFocus={() => props.setFocused(true)}
                   onBlur={() => props.setFocused(false)}
                   fullWidth
-                  // multiline
-                  // minRows={2}
                   variant="filled"
                 />
                 <FontAwesomeIcon icon={faPenSquare} style={{ marginLeft: '10px' }} />
               </div>
             </div>
+
             <div style={{ textAlign: 'left', margin: '10px 0' }}>
               <a
                 href="#"
-                style={{ fontSize: '12px', padding: '0 10px', color: props.isDarkMode ? 'white' : '#666' }}
+                style={{
+                  fontSize: '12px',
+                  padding: '0 10px',
+                  color: props.isDarkMode ? 'white' : '#666'
+                }}
                 onClick={(e) => {
                   e.preventDefault();
                   setShowOptions(!showOptions);
                 }}
               >
-                {showOptions ? (
-                  <>
-                    Hide options &uarr; {/* Up Arrow */}
-                  </>
-                ) : (
-                  <>
-                    Show more options &darr; {/* Down Arrow */}
-                  </>
-                )}
+                {showOptions ? <>Hide options &uarr;</> : <>Show more options &darr;</>}
               </a>
             </div>
+
             {showOptions && (
               <div>
-                <TextField color="secondary"
+                <TextField
+                  color='error'
                   label="X Link"
                   variant="filled"
                   fullWidth
@@ -185,7 +220,8 @@ const AdvancedSettings = (props) => {
                   onFocus={() => dispatch(setFocused(true))}
                   onBlur={() => dispatch(setFocused(false))}
                 />
-                <TextField color="secondary"
+                <TextField
+                  color='error'
                   label="Website Link"
                   variant="filled"
                   fullWidth
@@ -196,7 +232,8 @@ const AdvancedSettings = (props) => {
                   onFocus={() => dispatch(setFocused(true))}
                   onBlur={() => dispatch(setFocused(false))}
                 />
-                <TextField color="secondary"
+                <TextField
+                  color='error'
                   label="Telegram Link"
                   variant="filled"
                   fullWidth
@@ -213,7 +250,6 @@ const AdvancedSettings = (props) => {
         </div>
       </div>
     </ThemeProvider>
-
   );
 };
 

@@ -6,7 +6,7 @@ import {
   MenuItem,
   ListItemIcon,
   Box,
-  Grid,
+  Chip,
   IconButton,
   Skeleton,
   ListItemText,
@@ -1045,7 +1045,7 @@ class SiteWrapper extends Component {
       filterType,
       isHovered,
       web3,
-      oldBalance,
+      vaultBal,
       tokenBalance,
       account,
       walletAddress, solanaBalance,
@@ -1066,7 +1066,7 @@ class SiteWrapper extends Component {
       showLoginModal,
       showSignupModal,
       showDebtsModal,
-      anchorEl,
+      remainingLoans,
       anchorElProfile,
       anchorElNotifications,
       anchorElGameLog,
@@ -1108,13 +1108,13 @@ class SiteWrapper extends Component {
 
         {(isLive && tokenModalOpen) && (
           <CatsinoModalOverlay
-          currentGif={currentGif}
-          blurValue={blurValue}
-          halloween={halloween}
-          handleCountdownButtonClick={this.handleCountdownButtonClick}
-          handleYoutubeButtonClick={this.handleYoutubeButtonClick}
-        />
-        
+            currentGif={currentGif}
+            blurValue={blurValue}
+            halloween={halloween}
+            handleCountdownButtonClick={this.handleCountdownButtonClick}
+            handleYoutubeButtonClick={this.handleYoutubeButtonClick}
+          />
+
         )}
         <div className={`site_wrapper ${isDarkMode ? 'dark_mode' : ''}`}>
 
@@ -1407,19 +1407,46 @@ class SiteWrapper extends Component {
 
                       <Menu
                         anchorEl={anchorElProfile}
-                        getContentAnchorEl={null}
                         open={Boolean(anchorElProfile)}
                         onClose={this.handleCloseProfileMenu}
+                        // Remove open/close animations
                         transitionDuration={0}
                         anchorOrigin={{
-                          vertical: "bottom",
-                          horizontal: "center",
+                          vertical: 'bottom',
+                          horizontal: 'center',
                         }}
                         transformOrigin={{
-                          vertical: "top",
-                          horizontal: "center",
+                          vertical: 'top',
+                          horizontal: 'center',
                         }}
+                        // Dark background & white text
+                        PaperProps={{
+                          sx: {
+                            backgroundColor: '#1f1a25',
+                            color: '#fff',
 
+                            // Style all MenuItems
+                            '& .MuiMenuItem-root': {
+                              // White text on items, no uppercase transform
+                              textTransform: 'none',
+                              color: 'inherit',
+                              // Hover effect
+                              '&:hover': {
+                                backgroundColor: '#ff0000',
+                                color: '#fff'
+                              },
+                            },
+                            // Ensure icons are also white
+                            '& .MuiListItemIcon-root': {
+                              color: 'inherit',
+                            },
+                            // Style the divider color
+                            '& .MuiDivider-root': {
+                              borderColor: 'rgba(255,255,255,0.2)',
+                            },
+                          },
+                        }}
+                        // Optionally remove the semi-transparent backdrop
                         BackdropProps={{
                           invisible: true,
                         }}
@@ -1432,6 +1459,7 @@ class SiteWrapper extends Component {
                         </MenuItem>
 
                         <Divider />
+
                         <MenuItem className="desktop-only" onClick={this.handleDashboard}>
                           <ListItemIcon>
                             <Dashboard />
@@ -1454,11 +1482,12 @@ class SiteWrapper extends Component {
                           <ListItemIcon>
                             <img
                               style={{
-                                transform: "translate(-93px, 4px)",
-                                width: "20px",
+                                transform: 'translate(-93px, 4px)',
+                                width: '20px',
                                 zIndex: 0,
                               }}
                               src="../img/icons/corn.svg"
+                              alt="corn"
                             />
                           </ListItemIcon>
                         </MenuItem>
@@ -1471,24 +1500,25 @@ class SiteWrapper extends Component {
                         </MenuItem>
 
                         <Divider />
+
                         <MenuItem
                           onClick={() => {
-                            history.push("/investors");
+                            history.push('/investors');
                           }}
                         >
                           <ListItemIcon>
-                            <MonetizationOn size="small" />
+                            <MonetizationOn fontSize="small" />
                           </ListItemIcon>
                           <ListItemText>$RPS 🚀</ListItemText>
                         </MenuItem>
 
                         <MenuItem
-                          onClick={(e) => {
+                          onClick={() => {
                             this.handleLogout(true);
                           }}
                         >
                           <ListItemIcon>
-                            <ExitToApp size="small" />
+                            <ExitToApp fontSize="small" />
                           </ListItemIcon>
                           <ListItemText>LOG OUT</ListItemText>
                         </MenuItem>
@@ -1512,9 +1542,10 @@ class SiteWrapper extends Component {
             {this.state.loaded ? (
               <>
                 <Popover
-                  open={anchorElNotifications}
+                  open={Boolean(anchorElNotifications)}
                   anchorEl={anchorElNotifications}
                   onClose={this.handleCloseNotifications}
+                  // Disable animations
                   transitionDuration={0}
                   anchorOrigin={{
                     vertical: 'bottom',
@@ -1524,52 +1555,140 @@ class SiteWrapper extends Component {
                     vertical: 'top',
                     horizontal: 'center',
                   }}
+                  PaperProps={{
+                    sx: {
+                      // Dark background & white text
+                      backgroundColor: '#1f1a25',
+                      color: '#fff',
+                      width: 320,              // fixed width if desired
+                      maxWidth: '90vw',       // fallback for mobile
+                      display: 'flex',
+                      flexDirection: 'column',
+                    },
+                  }}
                 >
-                  <Typography sx={{ p: 2 }}>NOTIFICATIONS</Typography>
-                  <div>
-                    {
-                      <div className="notification-element">
-                        {notificationsArray.length > 0 ? (
-                          notificationsArray.map((notification, index) => (
+                  {/* STICKY HEADER */}
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      position: 'sticky',
+                      top: 0,
+                      backgroundColor: '#1f1a25',
+                      color: '#fff',
+                      p: 2,
+                      zIndex: 2, // ensures it stays above scrollable content
+                    }}
+                  >
+                    NOTIFICATIONS
+                  </Typography>
 
-                            <div className={`notification-container ${notification.is_read ? 'read' : ''}`} key={index}>
-                              <a
-                                className="player"
-                                onClick={() =>
-                                  this.handleOpenPlayerModal(notification._id)
-                                }
-                                style={{ display: 'flex', flexDirection: 'row' }}
-                              >
-                                <Avatar
-                                  src={notification.avatar}
-                                  rank={notification.rank}
-                                  accessory={notification.accessory}
-                                  username={notification.username}
-                                  className="avatar"
+                  {/* SCROLLABLE CONTENT AREA */}
+                  <Box
+                    sx={{
+                      maxHeight: 300,    // scrollable height
+                      overflowY: 'auto',
+                      // Add some side padding
+                      px: 2,
+                      pb: 2,
+                    }}
+                  >
+                    {notificationsArray.length > 0 ? (
+                      notificationsArray.map((notification, index) => (
+                        <Box key={index}>
+                          {/* ONE NOTIFICATION */}
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              flexDirection: 'row',
+                              alignItems: 'flex-start',
+                              py: 1.5,       // vertical padding
+                            }}
+                            className={`notification-container ${notification.is_read ? 'read' : ''
+                              }`}
+                          >
+                            {/* KEEP AVATAR STYLING EXACTLY THE SAME */}
+                            <a
+                              className="player"
+                              onClick={() =>
+                                this.handleOpenPlayerModal(notification._id)
+                              }
+                              style={{ display: 'flex', flexDirection: 'row' }}
+                            >
+                              <Avatar
+                                src={notification.avatar}
+                                rank={notification.rank}
+                                accessory={notification.accessory}
+                                username={notification.username}
+                                className="avatar"
+                              />
+                            </a>
+
+                            {/* TEXT LINK */}
+                            <a
+                              href={`/join/${notification.room}/`}
+                              style={{
+                                width: '100%',
+                                textDecoration: 'none',
+                                color: 'inherit',
+                                marginLeft: '0.75rem',
+                                position: 'relative'
+                              }}
+                            >
+                              {/* Unread Red Dot */}
+                              {!notification.is_read && (
+                                <Box
+                                  sx={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                    width: 8,
+                                    height: 8,
+                                    borderRadius: '50%',
+                                    backgroundColor: 'red',
+                                    transform: 'translate(-120%, 40%)'
+                                  }}
+                                  className="red-dot"
                                 />
-                              </a>
-                              <a href={`/join/${notification.room}/`} style={{ width: "100%" }}>
+                              )}
 
-                                {!notification.is_read && <div className="red-dot" />}
-                                <div className="notification" style={{ width: "70%", display: 'inline-block' }}>
-                                  <p
-                                    dangerouslySetInnerHTML={{
-                                      __html: notification.message
-                                    }}
-                                  />
-                                  <p className="fromNow">{notification.from_now}</p>
-                                </div>
-                              </a>
-                            </div>
-                          ))
-                        ) : (
-                          <p className='label'>No notifications available.</p>
-                        )}
+                              {/* Notification message */}
+                              <Typography
+                                variant="body2"
+                                component="div"
+                                sx={{ mb: 0.5 }}
+                                dangerouslySetInnerHTML={{
+                                  __html: notification.message,
+                                }}
+                              />
 
+                              {/* Time from now */}
+                              <Typography
+                                variant="caption"
+                                sx={{ color: '#ccc' }}
+                              >
+                                {notification.from_now}
+                              </Typography>
+                            </a>
+                          </Box>
 
-                      </div>
-                    }
-                  </div>
+                          {/* Divider between notifications (except after the last one) */}
+                          {index < notificationsArray.length - 1 && (
+                            <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
+                          )}
+                        </Box>
+                      ))
+                    ) : (
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          fontStyle: 'italic',
+                          mt: 1,
+                        }}
+                      >
+                        No notifications available.
+                      </Typography>
+                    )}
+                  </Box>
                 </Popover>
 
                 {showAllGameLogs && (
@@ -1602,7 +1721,7 @@ class SiteWrapper extends Component {
                 )}
 
                 <Popover
-                  open={anchorElGameLog}
+                  open={Boolean(anchorElGameLog)}
                   anchorEl={anchorElGameLog}
                   onClose={this.handleCloseGameLog}
                   transitionDuration={0}
@@ -1614,173 +1733,312 @@ class SiteWrapper extends Component {
                     vertical: 'top',
                     horizontal: 'center',
                   }}
+                  // Dark popover background & white text
+                  PaperProps={{
+                    sx: {
+                      backgroundColor: '#1f1a25',
+                      color: '#fff',
+                      p: 2,
+
+                      // Ensure nested MUI Paper elements (TableContainer, etc.) match
+                      '& .MuiPaper-root': {
+                        backgroundColor: 'inherit',
+                        color: 'inherit',
+                      },
+                      '& .MuiTableContainer-root': {
+                        backgroundColor: 'inherit',
+                        color: 'inherit',
+                      },
+                      '& .MuiTableCell-root': {
+                        color: '#fff',
+                        borderColor: '#444',
+                      },
+                      // Style the plain <input> for wallet address
+                      '& #wallet-address': {
+                        backgroundColor: '#1f1a25',
+                        color: '#fff',
+                        border: '1px solid #444',
+                        borderRadius: '4px',
+                        width: '100%',
+                        padding: '0.5rem',
+                        marginTop: '0.5rem',
+                        marginBottom: '0.5rem',
+                        fontSize: '0.9rem',
+                      },
+                    },
+                  }}
                 >
-                  <>
-                    {
-                      <Tooltip
-                        style={{ position: "absolute", right: "20px" }}
-                        title={
-                          <>
-                            <h6 style={{ marginBottom: "0.5rem" }}>WHY DO MY WINNINGS APPEAR LESS?</h6>
-                            <p style={{ marginBottom: "0.5rem" }}>
-                              You see less as this is net profit (
-                              <span style={{ fontWeight: "bold", color: "#28a745" }}>winning amount</span> -
-                              <span style={{ fontWeight: "bold", color: "#ff0000" }}> bet amount</span>)
-                              and receive less due to:
-                            </p>
-                            <ul style={{ paddingLeft: "1rem", marginBottom: "0.5rem" }}>
-                              <li>RTB fees awarded to the Host (0% - 15% returned to bankroll dependent on their accessory)</li>
-                              <li>1% towards platform fees</li>
-                            </ul>
-                            <p style={{ marginBottom: "0.5rem" }}>
-                              For example, if you win <strong>{convertToCurrency(0.2, solPrice)}</strong> but bet <strong>{convertToCurrency(0.1, solPrice)}</strong>,
-                              then you might see:
-                            </p>
-                            <p style={{ marginBottom: "0.5rem" }}>
-                              <strong>{convertToCurrency(0.2, solPrice)} * 0.88 </strong>
-                              (12% RTB) - <strong>{convertToCurrency(0.1, solPrice)}</strong> (net profit)
-                              = <strong>{convertToCurrency(0.076, solPrice)}</strong> (final calculation).
-                            </p>
-                          </>
-                        }
-                        placement="top"
-                      >
-                        <Info
-                          style={{
-                            cursor: "pointer",
-                            float: "right",
-                            color: isDarkMode ? "#f9f9f9" : "#333"
-                          }}
-                        />
-                      </Tooltip>
-                    }
+                  {/* CONTENT */}
+                  <Box sx={{ position: 'relative' }}>
+                    <Tooltip
+                      style={{ position: 'absolute', right: '20px' }}
+                      title={
+                        <>
+                          <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                            WHY DO MY WINNINGS APPEAR LESS?
+                          </Typography>
+                          <Typography variant="body2" sx={{ mb: 1 }}>
+                            You see less as this is net profit (
+                            <Box component="span" sx={{ fontWeight: 'bold', color: '#28a745' }}>
+                              winning amount
+                            </Box>
+                            {' - '}
+                            <Box component="span" sx={{ fontWeight: 'bold', color: '#ff0000' }}>
+                              bet amount
+                            </Box>
+                            ) and receive less due to:
+                          </Typography>
+                          <ul style={{ paddingLeft: '1rem', marginBottom: '0.5rem' }}>
+                            <li>RTB fees awarded to the Host (0% - 15% returned to bankroll)</li>
+                            <li>1% towards platform fees</li>
+                          </ul>
+                          <Typography variant="body2" sx={{ mb: 1 }}>
+                            For example, if you win{' '}
+                            <Box component="span" sx={{ fontWeight: 'bold' }}>
+                              {convertToCurrency(0.2, solPrice)}
+                            </Box>
+                            {' '}but bet{' '}
+                            <Box component="span" sx={{ fontWeight: 'bold' }}>
+                              {convertToCurrency(0.1, solPrice)}
+                            </Box>
+                            , then you might see:
+                          </Typography>
+                          <Typography variant="body2" sx={{ mb: 1 }}>
+                            <Box component="span" sx={{ fontWeight: 'bold' }}>
+                              {convertToCurrency(0.2, solPrice)} * 0.88
+                            </Box>{' '}
+                            (12% RTB) -{' '}
+                            <Box component="span" sx={{ fontWeight: 'bold' }}>
+                              {convertToCurrency(0.1, solPrice)}
+                            </Box>{' '}
+                            ={' '}
+                            <Box component="span" sx={{ fontWeight: 'bold' }}>
+                              {convertToCurrency(0.076, solPrice)}
+                            </Box>{' '}final calculation.
+                          </Typography>
+                        </>
+                      }
+                      placement="top"
+                    >
+                      <Info
+                        style={{
+                          cursor: 'pointer',
+                          float: 'right',
+                          color: isDarkMode ? '#f9f9f9' : '#333',
+                        }}
+                      />
+                    </Tooltip>
+                  </Box>
 
+                  <Typography sx={{ mt: 1, mb: 2 }} variant="h6">
+                    BALANCE HISTORY
+                  </Typography>
 
-                    <Typography sx={{ p: 2 }}>BALANCE HISTORY</Typography>
-
-                    <TableContainer component={Paper}>
-                      <Table aria-label="a dense table" size="small">
-                        <TableBody>
-                          {transactions.length === 0 ? (
-                            <TableRow>
-                              <TableCell>...</TableCell>
-                            </TableRow>
-                          ) : (
-                            transactions.slice(0, 5).map((row, key) => (
+                  <TableContainer component={Paper}>
+                    <Table aria-label="a dense table" size="small">
+                      <TableBody>
+                        {transactions.length === 0 ? (
+                          <TableRow>
+                            <TableCell>...</TableCell>
+                          </TableRow>
+                        ) : (
+                          transactions.slice(0, 5).map((row, key) => {
+                            const clickable =
+                              row.hash && row.hash.length !== 10 && row.status !== 'processing';
+                            return (
                               <TableRow
                                 key={key}
                                 onClick={() => {
-                                  if (row.hash && row.hash.length !== 10 && row.status !== "processing") {
-                                    window.open(`https://explorer.solana.com/tx/${row.hash}?cluster=mainnet`, '_blank');
+                                  if (clickable) {
+                                    window.open(
+                                      `https://explorer.solana.com/tx/${row.hash}?cluster=mainnet`,
+                                      '_blank'
+                                    );
                                   }
                                 }}
                                 sx={{
-                                  cursor: row.hash && row.hash.length !== 10 && row.status !== "processing" ? 'pointer' : 'default',
+                                  cursor: clickable ? 'pointer' : 'default',
                                   '&:hover': {
-                                    backgroundColor: row.hash && row.hash.length !== 10 && row.status !== "processing" ? 'rgba(0, 0, 0, 0.04)' : 'inherit'
+                                    backgroundColor: clickable
+                                      ? 'rgba(255,255,255,0.05)'
+                                      : 'inherit',
                                   },
                                 }}
                               >
-                                <TableCell sx={{
-                                  color: (row.status === "waiting" || row.status === "pending" || row.status === "processing" || row.status === "in_process") ? 'grey' :
-                                    (row.amount > 0 ? 'green' : 'red')
-                                }}>
-                                  {row.amount > 0 ? `+ ${convertToCurrency(row.amount, solPrice)}` : `- ${convertToCurrency(Math.abs(row.amount), solPrice)}`}
+                                <TableCell
+                                  sx={{
+                                    // negative = red(error), positive = green(success)
+                                    color: row.amount > 0 ? 'success.main' : 'error.main',
+                                  }}
+                                >
+                                  {row.amount > 0
+                                    ? `+ ${convertToCurrency(row.amount, solPrice)}`
+                                    : `- ${convertToCurrency(Math.abs(row.amount), solPrice)}`}
                                 </TableCell>
-                                <TableCell>
+                                <TableCell sx={{ color: '#fff' }}>
                                   {row.from_now}
                                 </TableCell>
                               </TableRow>
-                            ))
-                          )}
-                        </TableBody>
-                      </Table>
-                      <Button onClick={this.toggleAllTransactions}>ALL TRANSACTIONS</Button>
-                    </TableContainer>
+                            );
+                          })
+                        )}
+                      </TableBody>
+                    </Table>
 
-                    <div className="transaction-panel">
-                      {/* Inventory Button */}
+                    {/* ALL TRANSACTIONS Button */}
+                    <Button
+                      color="error"
+                      variant="outlined"
+                      onClick={this.toggleAllTransactions}
+                      sx={{
+                        // On hover, become contained
+                        '&:hover': {
+                          backgroundColor: 'error.main',
+                          color: '#fff',
+                        },
+                        width: '100%',
+                        mt: 1,
+                      }}
+                    >
+                      ALL TRANSACTIONS
+                    </Button>
+                  </TableContainer>
+
+                  {/* First transaction panel */}
+                  <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
+                    {/* Inventory Button */}
+                    <Button
+                      color="error"
+                      variant="outlined"
+                      onClick={this.handleOpenInventoryModal}
+                      startIcon={<Inventory2Outlined />}
+                      sx={{
+                        '&:hover': {
+                          backgroundColor: 'error.main',
+                          color: '#fff',
+                        },
+                      }}
+                    >
+                      Inventory
+                    </Button>
+
+                    {/* Vault Button */}
+                    <Button
+                      color="error"
+                      variant="outlined"
+                      onClick={this.handleOpenVaultModal}
+                      startIcon={<SavingsOutlined />}
+                      sx={{
+                        '&:hover': {
+                          backgroundColor: 'error.main',
+                          color: '#fff',
+                        },
+                      }}
+                    >
+                      Vault&nbsp;{vaultBal
+                        ? convertToCurrency(vaultBal, solPrice)
+                        : 0}
+                    </Button>
+                  </Box>
+
+                  {/* Second transaction panel */}
+                  <Box sx={{ mt: 2, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                    {/* Debt or Withdraw */}
+                    {remainingLoans > 0 ? (
                       <Button
-                        className="btn-inventory title"
-                        onClick={this.handleOpenInventoryModal}
-                        startIcon={<Inventory2Outlined />}
+                        color="error"
+                        variant="outlined"
+                        onClick={this.handleOpenDebtsModal}
+                        startIcon={<MoneyOffCsredOutlined />}
+                        sx={{
+                          '&:hover': {
+                            backgroundColor: 'error.main',
+                            color: '#fff',
+                          },
+                        }}
                       >
-                        Inventory
+                        {convertToCurrency(remainingLoans, solPrice)} IN DEBT
                       </Button>
-
-                      {/* Vault Button */}
+                    ) : (
                       <Button
-                        className="btn-vault title"
-                        onClick={this.handleOpenVaultModal}
-                        startIcon={<SavingsOutlined />}
+                        color="error"
+                        variant="outlined"
+                        onClick={this.handleOpenWithdrawModal}
+                        startIcon={<AttachMoneyOutlined />}
+                        sx={{
+                          '&:hover': {
+                            backgroundColor: 'error.main',
+                            color: '#fff',
+                          },
+                        }}
                       >
-                        Vault&nbsp;
-                        <span
-                          style={{
-                            border: '2px solid',
-                            background: '#1284cc11',
-                            color: '#1284ff',
-                            padding: '2px 5px',
-                            marginLeft: '10px',
-                            borderRadius: '0.4em',
-                          }}
-                        >
-                          {this.state.vaultBal
-                            ? convertToCurrency(this.state.vaultBal, solPrice)
-                            : 0}
-                        </span>
+                        Withdraw
                       </Button>
-                    </div>
+                    )}
 
-                    <div className="transaction-panel">
-                      {/* Withdraw or Debt Button */}
-                      {this.state.remainingLoans > 0 ? (
-                        <Button
-                          className="btn-withdraw debt title"
-                          onClick={this.handleOpenDebtsModal}
-                          startIcon={<MoneyOffCsredOutlined />}
-                        >
-                          {convertToCurrency(this.state.remainingLoans, solPrice)} IN DEBT
-                        </Button>
-                      ) : (
-                        <Button
-                          className="btn-withdraw title"
-                          onClick={this.handleOpenWithdrawModal}
-                          startIcon={<AttachMoneyOutlined />}
-                        >
-                          Withdraw
-                        </Button>
-                      )}
+                    {/* Deposit Button */}
+                    <Button
+                      color="error"
+                      variant="outlined"
+                      onClick={this.handleOpenDepositModal}
+                      startIcon={<AccountBalanceWalletOutlined />}
+                      sx={{
+                        '&:hover': {
+                          backgroundColor: 'error.main',
+                          color: '#fff',
+                        },
+                      }}
+                    >
+                      Deposit
+                    </Button>
+                  </Box>
 
-                      {/* Deposit Button */}
+                  <Box sx={{ mt: 2 }}>
+                    <hr style={{ borderColor: '#444' }} />
+                  </Box>
+
+                  {/* Wallet address and connect/disconnect */}
+                  {walletAddress ? (
+                    <Box sx={{ mt: 2 }}>
+                      <input
+                        id="wallet-address"
+                        type="text"
+                        value={walletAddress}
+                        readOnly
+                      />
                       <Button
-                        className="btn-deposit title"
-                        onClick={this.handleOpenDepositModal}
-                        startIcon={<AccountBalanceWalletOutlined />}
+                        color="error"
+                        variant="outlined"
+                        onClick={this.disconnectWeb3}
+                        fullWidth
+                        sx={{
+                          '&:hover': {
+                            backgroundColor: 'error.main',
+                            color: '#fff',
+                          },
+                          mt: 1,
+                        }}
                       >
-                        Deposit
+                        Disconnect
                       </Button>
-
-                      <hr />
-                      {walletAddress ? (
-                        <>
-                          <input
-                            id="wallet-address"
-                            type="text"
-                            value={walletAddress}
-                            readOnly
-                          />
-                          <Button className="connect title" onClick={this.disconnectWeb3}>
-                            Disconnect
-                          </Button>
-                        </>
-                      ) : (
-                        <Button className="connect title" onClick={this.loadSolanaWallet}>
-                          CONNECT WALLET
-                        </Button>
-                      )}
-                    </div>
-                  </>
+                    </Box>
+                  ) : (
+                    <Button
+                      color="error"
+                      variant="outlined"
+                      fullWidth
+                      onClick={this.loadSolanaWallet}
+                      sx={{
+                        '&:hover': {
+                          backgroundColor: 'error.main',
+                          color: '#fff',
+                        },
+                        mt: 2,
+                      }}
+                    >
+                      CONNECT WALLET
+                    </Button>
+                  )}
                 </Popover>
               </>
             ) : (

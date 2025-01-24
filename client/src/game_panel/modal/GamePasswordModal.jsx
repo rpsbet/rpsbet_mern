@@ -64,7 +64,7 @@ function GamePasswordModal(props) {
         <div className="modal-body alert-body password-modal-body">
           <div className={`modal-icon result-icon-password`} />
           <h5>PASSWORD REQUIRED</h5>
-           <TextField color="secondary" 
+           <TextField color='error' 
             id="game_password"
             variant="filled"
             value={password}
@@ -75,7 +75,7 @@ function GamePasswordModal(props) {
           <Button variant='contained' color='error' onClick={handleOkClick}>
             Continue Bet
           </Button>
-          <Button variant='contained' color='secondary' onClick={handleCancelClick}>
+          <Button variant='contained' color='error' onClick={handleCancelClick}>
             Cancel
           </Button>
         </div>

@@ -161,7 +161,7 @@ const Comments = ({
       )}
 
       {loading ? (
-        <LinearProgress color="secondary" />
+        <LinearProgress color='error' />
       ) : (
         <Box 
           sx={{ 
@@ -171,7 +171,7 @@ const Comments = ({
             mb: 2 
           }}
         >
-           <TextField color="secondary" 
+           <TextField color='error' 
             label="Reply"
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}

@@ -452,7 +452,7 @@ function OpenGamesTable(props) {
                       <div className="cell-coHost">
                         <Button
                           variant='outlined'
-                          color='secondary'
+                          color='error'
                           onClick={(event) => {
                             event.preventDefault();
                             event.stopPropagation();

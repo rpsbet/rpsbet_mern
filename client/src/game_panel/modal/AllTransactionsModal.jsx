@@ -250,7 +250,7 @@ function AllTransactionsModal({
                 >
                   <MenuItem>
                     <TextField
-                      color="secondary"
+                      color='error'
                       name="search"
                       margin="normal"
                       value={searchQuery}
@@ -340,7 +340,7 @@ function AllTransactionsModal({
                     {tnxComplete && (
                       <TableRow>
                         <TableCell colSpan={6} align="center">
-                          <CircularProgress color="secondary" />
+                          <CircularProgress color='error' />
                         </TableCell>
                       </TableRow>
                     )}
@@ -350,7 +350,7 @@ function AllTransactionsModal({
             </>
           ) : (
             <Box sx={{ mt: 2 }}>
-              <LinearProgress color="secondary" />
+              <LinearProgress color='error' />
             </Box>
           )}
         </Box>

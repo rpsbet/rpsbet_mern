@@ -573,7 +573,7 @@ function DepositModal(props) {
                     CONNECT ACCOUNT
                   </Typography>
                   <TextField
-                    color="secondary"
+                    color='error'
                     variant="filled"
                     fullWidth
                     value={
@@ -607,7 +607,7 @@ function DepositModal(props) {
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Typography>DEPOSIT AMOUNT</Typography>
                     <TextField
-                      color="secondary"
+                      color='error'
                       variant="outlined"
                       type="number"
                       value={amount}
@@ -677,7 +677,7 @@ function DepositModal(props) {
                     CURRENCY TYPE
                   </Typography>
                   <TextField
-                    color="secondary"
+                    color='error'
                     variant="filled"
                     value={currencyTo.toUpperCase()}
                     onChange={handleCurrencyChange}
@@ -720,7 +720,7 @@ function DepositModal(props) {
                         DEPOSIT AMOUNT
                       </Typography>
                       <TextField
-                        color="secondary"
+                        color='error'
                         variant="outlined"
                         value={sendAmount}
                         InputProps={{
@@ -748,7 +748,7 @@ function DepositModal(props) {
                     </Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <TextField
-                        color="secondary"
+                        color='error'
                         variant="outlined"
                         fullWidth
                         value={sendAddress}
@@ -776,7 +776,7 @@ function DepositModal(props) {
                         </Typography>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                           <TextField
-                            color="secondary"
+                            color='error'
                             variant="outlined"
                             fullWidth
                             value={payinExtraId}
@@ -825,7 +825,7 @@ function DepositModal(props) {
                       </Typography>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <TextField
-                          color="secondary"
+                          color='error'
                           variant="outlined"
                           fullWidth
                           value={paymentId}
@@ -853,7 +853,7 @@ function DepositModal(props) {
                   </>
                 ) : (
                   <Box sx={{ display: 'flex', justifyContent: 'center', my: 2 }}>
-                    <CircularProgress color="secondary" />
+                    <CircularProgress color='error' />
                   </Box>
                 )}
               </>
@@ -882,7 +882,7 @@ function DepositModal(props) {
               </Button>
               {/* 
                 If you want a cancel button, uncomment below:
-                <Button variant="contained" color="secondary" onClick={closeModal} sx={{ ml: 2 }}>
+                <Button variant="contained" color='error' onClick={closeModal} sx={{ ml: 2 }}>
                   CANCEL
                 </Button> 
               */}

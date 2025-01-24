@@ -116,157 +116,165 @@ const SettingsModal = ({
         </Box>
 
         {/* BODY */}
-        <Table>
-          <TableBody>
-            {/* Mute / Unmute */}
-            <TableRow>
-              <TableCell>
-                {isMuted ? (
-                  <Button onClick={handleMuteToggle} sx={{ textTransform: 'none' }}>
-                    <VolumeOff /> &nbsp; UNMUTE
-                  </Button>
-                ) : (
-                  <Button onClick={handleMuteToggle} sx={{ textTransform: 'none' }}>
-                    <VolumeUp /> &nbsp; MUTE
-                  </Button>
-                )}
-              </TableCell>
-              <TableCell sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <IconButton onClick={toggleSubSettingsVisibility}>
-                  {showSubSettings ? <Remove /> : <Add />}
-                </IconButton>
-                <Checkbox checked={isMuted} onChange={handleMuteToggle} />
-              </TableCell>
-            </TableRow>
+        <Box sx={{
+          background: 'rgba(170, 170, 170, 0.06)',
+          borderRadius: '0.3em',
+          p: '20px'
+          }}>
 
-            {/* Sub-settings for sounds */}
-            {showSubSettings && (
-              <>
-                <TableRow>
-                  <TableCell>
-                    <Button
-                      onClick={() => toggleClickounds(!clickSounds)}
+          <Table>
+            <TableBody>
+              {/* Mute / Unmute */}
+              <TableRow>
+                <TableCell>
+                  {isMuted ? (
+                    <Button color='error' onClick={handleMuteToggle} sx={{ textTransform: 'none' }}>
+                      <VolumeOff /> &nbsp; UNMUTE
+                    </Button>
+                  ) : (
+                    <Button color='error' onClick={handleMuteToggle} sx={{ textTransform: 'none' }}>
+                      <VolumeUp /> &nbsp; MUTE
+                    </Button>
+                  )}
+                </TableCell>
+                <TableCell sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <IconButton color='error' onClick={toggleSubSettingsVisibility}>
+                    {showSubSettings ? <Remove /> : <Add />}
+                  </IconButton>
+                  <Checkbox color='error' checked={isMuted} onChange={handleMuteToggle} />
+                </TableCell>
+              </TableRow>
+
+              {/* Sub-settings for sounds */}
+              {showSubSettings && (
+                <>
+                  <TableRow>
+                    <TableCell>
+                      <Button color='error'
+                        onClick={() => toggleClickounds(!clickSounds)}
+                        sx={{ textTransform: 'none' }}
+                      >
+                        {clickSounds ? <VolumeMute /> : <VolumeDown />} &nbsp; Typing &amp; Clicks
+                      </Button>
+                    </TableCell>
+                    <TableCell>
+                      <Checkbox color='error'
+                        checked={clickSounds}
+                        onChange={() => toggleClickounds(!clickSounds)}
+                      />
+                    </TableCell>
+                  </TableRow>
+
+                  <TableRow>
+                    <TableCell>
+                      <Button color='error'
+                        onClick={() => toggleGameSounds(!gameSounds)}
+                        sx={{ textTransform: 'none' }}
+                      >
+                        {gameSounds ? <VolumeMute /> : <VolumeDown />} &nbsp; Game Sounds
+                      </Button>
+                    </TableCell>
+                    <TableCell>
+                      <Checkbox color='error'
+                        checked={gameSounds}
+                        onChange={() => toggleGameSounds(!gameSounds)}
+                      />
+                    </TableCell>
+                  </TableRow>
+
+                  <TableRow>
+                    <TableCell>
+                      <Button color='error'
+                        onClick={() => toggleNotificationSounds(!notificationSounds)}
+                        sx={{ textTransform: 'none' }}
+                      >
+                        {notificationSounds ? <VolumeMute /> : <VolumeDown />}&nbsp; Notifications
+                      </Button>
+                    </TableCell>
+                    <TableCell>
+                      <Checkbox color='error'
+                        checked={notificationSounds}
+                        onChange={() => toggleNotificationSounds(!notificationSounds)}
+                      />
+                    </TableCell>
+                  </TableRow>
+                </>
+              )}
+
+              {/* Graphics */}
+              <TableRow>
+                <TableCell>
+                  {isLowGraphics ? (
+                    <Button color='error'
+                      onClick={() => toggleLowGraphics(!isLowGraphics)}
                       sx={{ textTransform: 'none' }}
                     >
-                      {clickSounds ? <VolumeMute /> : <VolumeDown />} &nbsp; Typing &amp; Clicks
+                      <EnergySavingsLeaf /> &nbsp; LOW GRAPHICS
                     </Button>
-                  </TableCell>
-                  <TableCell>
-                    <Checkbox
-                      checked={clickSounds}
-                      onChange={() => toggleClickounds(!clickSounds)}
-                    />
-                  </TableCell>
-                </TableRow>
-
-                <TableRow>
-                  <TableCell>
-                    <Button
-                      onClick={() => toggleGameSounds(!gameSounds)}
+                  ) : (
+                    <Button color='error'
+                      onClick={() => toggleLowGraphics(!isLowGraphics)}
                       sx={{ textTransform: 'none' }}
                     >
-                      {gameSounds ? <VolumeMute /> : <VolumeDown />} &nbsp; Game Sounds
+                      <EnergySavingsLeafOutlined /> &nbsp; HIGH GRAPHICS
                     </Button>
-                  </TableCell>
-                  <TableCell>
-                    <Checkbox
-                      checked={gameSounds}
-                      onChange={() => toggleGameSounds(!gameSounds)}
-                    />
-                  </TableCell>
-                </TableRow>
+                  )}
+                </TableCell>
+                <TableCell>
+                  <Checkbox color='error'
+                    checked={isLowGraphics}
+                    onChange={() => toggleLowGraphics(!isLowGraphics)}
+                  />
+                </TableCell>
+              </TableRow>
 
-                <TableRow>
-                  <TableCell>
-                    <Button
-                      onClick={() => toggleNotificationSounds(!notificationSounds)}
-                      sx={{ textTransform: 'none' }}
-                    >
-                      {notificationSounds ? <VolumeMute /> : <VolumeDown />}&nbsp; Notifications
-                    </Button>
-                  </TableCell>
-                  <TableCell>
-                    <Checkbox
-                      checked={notificationSounds}
-                      onChange={() => toggleNotificationSounds(!notificationSounds)}
-                    />
-                  </TableCell>
-                </TableRow>
-              </>
-            )}
-
-            {/* Graphics */}
-            <TableRow>
-              <TableCell>
-                {isLowGraphics ? (
-                  <Button
-                    onClick={() => toggleLowGraphics(!isLowGraphics)}
-                    sx={{ textTransform: 'none' }}
-                  >
-                    <EnergySavingsLeaf /> &nbsp; LOW GRAPHICS
-                  </Button>
-                ) : (
-                  <Button
-                    onClick={() => toggleLowGraphics(!isLowGraphics)}
-                    sx={{ textTransform: 'none' }}
-                  >
-                    <EnergySavingsLeafOutlined /> &nbsp; HIGH GRAPHICS
-                  </Button>
-                )}
-              </TableCell>
-              <TableCell>
-                <Checkbox
-                  checked={isLowGraphics}
-                  onChange={() => toggleLowGraphics(!isLowGraphics)}
-                />
-              </TableCell>
-            </TableRow>
-
-            {/* <TableRow>
+              {/* <TableRow>
               <TableCell>
                 {isDarkMode ? (
-                  <Button onClick={() => setDarkMode(!isDarkMode)} sx={{ textTransform: 'none' }}>
+                  <Button color='error' onClick={() => setDarkMode(!isDarkMode)} sx={{ textTransform: 'none' }}>
                     <Brightness4 /> &nbsp; DARK MODE
                   </Button>
                 ) : (
-                  <Button onClick={() => setDarkMode(!isDarkMode)} sx={{ textTransform: 'none' }}>
+                  <Button color='error' onClick={() => setDarkMode(!isDarkMode)} sx={{ textTransform: 'none' }}>
                     <Brightness7 /> &nbsp; LIGHT MODE
                   </Button>
                 )}
               </TableCell>
               <TableCell>
-                <Checkbox checked={isDarkMode} onChange={() => setDarkMode(!isDarkMode)} />
+                <Checkbox color='error' checked={isDarkMode} onChange={() => setDarkMode(!isDarkMode)} />
               </TableCell>
             </TableRow> */}
 
-            {/* Notifications */}
-            <TableRow>
-              <TableCell>
-                {isNotificationsAllowed ? (
-                  <Button
-                    onClick={() => setNotificationsAllowed(!isNotificationsAllowed)}
-                    sx={{ textTransform: 'none' }}
-                  >
-                    <NotificationsActive /> &nbsp; NOTIFICATIONS ON
-                  </Button>
-                ) : (
-                  <Button
-                    onClick={() => setNotificationsAllowed(!isNotificationsAllowed)}
-                    sx={{ textTransform: 'none' }}
-                  >
-                    <NotificationsOff /> &nbsp; NOTIFICATIONS OFF
-                  </Button>
-                )}
-              </TableCell>
-              <TableCell>
-                <Checkbox
-                  checked={isNotificationsAllowed}
-                  onChange={() => setNotificationsAllowed(!isNotificationsAllowed)}
-                />
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
+              {/* Notifications */}
+              <TableRow>
+                <TableCell>
+                  {isNotificationsAllowed ? (
+                    <Button color='error'
+                      onClick={() => setNotificationsAllowed(!isNotificationsAllowed)}
+                      sx={{ textTransform: 'none' }}
+                    >
+                      <NotificationsActive /> &nbsp; NOTIFICATIONS ON
+                    </Button>
+                  ) : (
+                    <Button color='error'
+                      onClick={() => setNotificationsAllowed(!isNotificationsAllowed)}
+                      sx={{ textTransform: 'none' }}
+                    >
+                      <NotificationsOff /> &nbsp; NOTIFICATIONS OFF
+                    </Button>
+                  )}
+                </TableCell>
+                <TableCell>
+                  <Checkbox color='error'
+                    checked={isNotificationsAllowed}
+                    onChange={() => setNotificationsAllowed(!isNotificationsAllowed)}
+                  />
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </Box>
+
       </Box>
     </Modal>
   );

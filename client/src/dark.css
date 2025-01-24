@@ -29,11 +29,7 @@
 .dark_mode .edit-icon {
 	color: #333 !important;
 }
-.dark_mode .notification p:first-child {
-	color: #e9ecef;
-	font-size: 0.8em !important;
-	margin-bottom: 0;
-}
+
 
 .dark_mode .popup {
 	background: linear-gradient(45deg, #430088, #c000f2);
@@ -221,7 +217,7 @@
 }
 
 .dark_mode div.table .table-row {
-	background: linear-gradient(180deg, #372e3b, #2a202f);
+	background: #3a2d41 !important;
 	color: #8e9297;
 }
 

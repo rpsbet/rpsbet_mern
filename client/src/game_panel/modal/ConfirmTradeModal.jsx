@@ -124,7 +124,7 @@ function ConfirmTradeModal(props) {
             <Button variant='contained' color='error' onClick={onBtnOkClicked}>
               {rentOption ? 'RENT' : 'TRADE'}
             </Button>
-            <Button variant='contained' color='secondary' onClick={onBtnCancelClicked}>
+            <Button variant='contained' color='error' onClick={onBtnCancelClicked}>
               Cancel
             </Button>
           </div>

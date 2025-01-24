@@ -92,7 +92,7 @@ function BankModal({ modalIsOpen, closeModal, isDarkMode, remainingLoans }) {
           <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
             <Button
               variant="contained"
-              color="secondary"
+              color='error'
               onClick={() => setShowMyLoansModal(true)}
               startIcon={<AttachMoney />}
             >
@@ -186,7 +186,7 @@ function BankModal({ modalIsOpen, closeModal, isDarkMode, remainingLoans }) {
           </Typography>
 
           <Box sx={{ textAlign: 'center' }}>
-            <Button variant="contained" color="secondary" onClick={handleToggleHelp}>
+            <Button variant="contained" color='error' onClick={handleToggleHelp}>
               OK, GOT IT!
             </Button>
           </Box>

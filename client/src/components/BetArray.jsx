@@ -1165,7 +1165,7 @@ function BetArray({
                 >
                   <Slider
                     value={range}
-                    color='secondary'
+                    color='error'
                     onChange={handleSliderChange}
                     onChangeCommitted={handleSliderChangeCommitted}
                     onMouseUp={handleMouseUp}
@@ -1448,7 +1448,7 @@ function BetArray({
                     <Typography id="edit-modal-title" variant="h6" component="h2" gutterBottom>
                       {modalTitle}
                     </Typography>
-                    <TextField color="secondary"
+                    <TextField color='error'
                       label="EDIT VALUE"
                       value={editedValue}
                       onChange={(e) => setEditedValue(e.target.value)}

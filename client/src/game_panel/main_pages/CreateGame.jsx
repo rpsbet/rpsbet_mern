@@ -7,6 +7,7 @@ import {
   DialogActions,
   Checkbox,
   FormControlLabel,
+  Box
 } from '@mui/material';
 import LoadingOverlay from 'react-loading-overlay';
 import Lottie from 'react-lottie';
@@ -588,25 +589,25 @@ function CreateGame(props) {
 
   const actionPanel = () => {
     return (
-      <div
+      <Box
         className="action-panel"
-        style={{ display: 'flex', justifyContent: 'space-between', width: '100%', bottom: '20%' }}
+        sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', bottom: '20%', mt: '15px', mb: '30px' }}
       >
         {step === 1 ? (
           <span></span>
         ) : (
-          <Button id="btn_prev" onClick={onPrevButtonClicked}>
+          <Button id="btn_prev" color='error' onClick={onPrevButtonClicked}>
             Previous&nbsp;<span className="roll-tag">[Esc]</span>
           </Button>
         )}
         {step === 2 && (
-          <Button id="btn_skip" onClick={onSkipButtonClicked}>
+          <Button id="btn_skip" color='error' onClick={onSkipButtonClicked}>
             Skip&nbsp;<span className="roll-tag">[Shift]</span>
           </Button>
         )}
         {step === 2 && (
           <div style={{ position: 'relative' }}>
-            <Button id="btn_bet" onClick={onCreateRoom}>
+            <Button id="btn_bet" color='error' onClick={onCreateRoom}>
               Place Bet
             </Button>
             <div className="lottie-container-btn_bet">
@@ -627,10 +628,10 @@ function CreateGame(props) {
         )}
         {step < 2 && (
           <Button id="btn_next" color="error" onClick={onNextButtonClicked}>
-            Next
+            Next&nbsp;<span className='roll-tag'>[ENTER]</span>
           </Button>
         )}
-      </div>
+      </Box>
     );
   };
 
@@ -696,7 +697,7 @@ function CreateGame(props) {
             </DialogContent>
             <DialogActions>
               <Button onClick={handleCancel}>Cancel</Button>
-              <Button onClick={handleConfirm} variant="contained" color="primary">
+              <Button onClick={handleConfirm} variant="contained" color='error'>
                 LFG
               </Button>
             </DialogActions>

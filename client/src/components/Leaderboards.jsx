@@ -193,7 +193,7 @@ const Leaderboards = ({
             </>
           ) : (
             <Box sx={{ width: '100%', mt: 4 }}>
-              <LinearProgress color="secondary" />
+              <LinearProgress color='error' />
             </Box>
           )}
         </Box>

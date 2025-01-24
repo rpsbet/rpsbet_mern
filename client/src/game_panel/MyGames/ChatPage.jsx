@@ -228,7 +228,7 @@ class ChatPage extends Component {
             }}
           >
             <Button
-              variant='contained' color='secondary'
+              variant='contained' color='error'
               onClick={() => {
                 history.push('/');
               }}

@@ -982,7 +982,7 @@ class MyGamesTable extends Component {
                     </RadioGroup>
 
                     <div className="input-amount">
-                       <TextField color="secondary" 
+                       <TextField color='error' 
                         label="Amount"
                         value={this.state.payoutAmount || 0}
                         type="number"
@@ -1010,7 +1010,7 @@ class MyGamesTable extends Component {
                 Update
               </Button>
               <Button
-                variant='contained' color='secondary'
+                variant='contained' color='error'
                 onClick={this.handleClosePayoutModal}
               >
                 Cancel

@@ -535,7 +535,7 @@ const BankTable = (props) => {
               <LoanButton>
                 <Tooltip title="Loan">
                   <IconButton
-                    variant='contained' color='secondary'
+                    variant='contained' color='error'
                     onClick={(e) => {
                       e.stopPropagation(); // prevent triggering ProductCard onClick
                       setCurrentLoanId(row._id);

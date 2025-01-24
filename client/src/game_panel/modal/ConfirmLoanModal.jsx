@@ -266,7 +266,7 @@ class ConfirmLoanModal extends Component {
                   {/* TextField on its own line */}
                   <TableRow>
                     <TableCell colSpan={2} style={{ textAlign: "center", borderBottom: "none" }}>
-                       <TextField color="secondary" 
+                       <TextField color='error' 
                         label="Loan"
                         variant="filled"
                         className="label"
@@ -400,7 +400,7 @@ class ConfirmLoanModal extends Component {
               ACCEPT
             </Button>
             <Button
-              variant='contained' color='secondary'
+              variant='contained' color='error'
               onClick={this.props.closeConfirmLoanModal}
             >
               Cancel

@@ -158,7 +158,7 @@ const QuickShoot = (props) => {
               {[2, 3, 4, 5].map((i) => (
                 <Button
                   variant='outlined'
-                  color='secondary'
+                  color='error'
                   key={i}
                   className={qs_game_type === i ? 'active' : ''}
                   onClick={() => {
