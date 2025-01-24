@@ -106,14 +106,21 @@ async function createAssociatedTokenAccount(payer, mint, owner) {
 }
 
 async function mintTokenWithMetadata(roomInfo) {
-    console.log("roomInfo", roomInfo.name, roomInfo.ticker, roomInfo.image)
     try {
         if (!roomInfo.name || !roomInfo.ticker || !roomInfo.image) {
             throw new Error("Invalid room information. Ensure name, ticker, and image are provided.");
         }
 
+        // Get the rent exemption cost in lamports
         const rentExemption = await connection.getMinimumBalanceForRentExemption(1024);
-        await logAndFundAccount(keypair.publicKey, "Central Wallet", rentExemption * 3);
+
+        // Convert lamports to SOL before passing to logAndFundAccount
+        const rentExemptionInSol = rentExemption / LAMPORTS_PER_SOL;
+        await logAndFundAccount(
+            keypair.publicKey,
+            "Central Wallet",
+            rentExemptionInSol * 3 // in SOL, not lamports
+        );
 
         // Generate new mint keypair
         const mint = Keypair.generate();
