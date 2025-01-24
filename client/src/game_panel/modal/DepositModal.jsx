@@ -77,7 +77,7 @@ const modalBoxStyle = {
   top: '50%',
   left: '50%',
   transform: 'translate(-50%, -50%)',
-  bgcolor: '#400068', // Purple background
+  bgcolor: '#1f1a25', // Purple background
   color: '#fff',
   boxShadow: 24,
   borderRadius: 1,

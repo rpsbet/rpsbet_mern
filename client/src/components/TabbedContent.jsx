@@ -445,7 +445,7 @@ function TabbedContent(props) {
   // Desktop view with checkboxes
   return (
     <div>
-      <Box component={Paper} elevation={0} square variant='filled' sx={{ background: '#501272', padding: '20px 10px', marginTop: '5px', display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+      <Box component={Paper} elevation={0} square variant='filled' sx={{ background: 'linear-gradient(45deg, #322a37, #2b212f)', padding: '20px 10px', marginTop: '5px', display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
         {['Play', 'Chart', 'History', 'Thread', 'Insights'].map((label, index) => (
           <Chip
             key={index}

@@ -124,7 +124,8 @@ function CoHostModal({
       height: 350,
       zoom: { enabled: true, type: 'x' },
       toolbar: { show: false },
-      animations: { enabled: false }
+      animations: { enabled: false },
+      background: '#2d2331', // Set the chart background color to purple
     },
     xaxis: {
       type: 'datetime',
@@ -133,7 +134,6 @@ function CoHostModal({
         rotate: -45,
         style: { colors: '#fff', fontSize: '12px' },
         formatter: (value) => {
-          // Show only oldest/newest candle times
           if (value === 0 && chartData[0]) {
             return Moment(chartData[0].startTime).format('HH:mm');
           }
@@ -141,17 +141,17 @@ function CoHostModal({
             return Moment(chartData[chartData.length - 1].startTime).format('HH:mm');
           }
           return '';
-        }
+        },
       },
       tickAmount: 2,
       axisBorder: { show: true, color: '#fff' },
-      axisTicks: { show: true, color: '#fff' }
+      axisTicks: { show: true, color: '#fff' },
     },
     yaxis: {
       labels: {
         style: { colors: '#fff', fontSize: '12px' },
-        formatter: (value) => convertToChartCurrency(value)
-      }
+        formatter: (value) => convertToChartCurrency(value),
+      },
     },
     tooltip: {
       custom: ({ dataPointIndex }) => {
@@ -167,24 +167,24 @@ function CoHostModal({
             <div><strong>Close:</strong> ${convertToChartCurrency(close)}</div>
           </div>
         `;
-      }
+      },
     },
     plotOptions: {
       candlestick: {
         wick: { useFillColor: true },
         colors: { upward: '#00b140', downward: '#ff4b4b' },
-        bodyWidth: 1
-      }
+        bodyWidth: 1,
+      },
     },
     grid: {
-      borderColor: '#444',
-      strokeDashArray: 9
+      borderColor: '#fff6',
+      strokeDashArray: 9,
+      
     },
     theme: {
-      mode: isDarkMode ? 'dark' : 'light'
-    }
+      mode: isDarkMode ? 'dark' : 'light',
+    },
   };
-
   // ---- LIQUIDITY + SHARE LOGIC ----
   const calculatePercentageChange = (current, original) => {
     if (!original) return 'N/A';
@@ -426,6 +426,7 @@ function CoHostModal({
             }}
           >
             {/* PUMP / JEET Tabs */}
+            {input_only && (
             <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
               <Button
                 onClick={() => setSelectedTab('PUMP')}
@@ -464,7 +465,7 @@ function CoHostModal({
                 />
               </Button>
             </Box>
-
+            )}
             {/* Co-Host Amount Input */}
             <Box>
               <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
@@ -623,7 +624,7 @@ function CoHostModal({
 
         {/* Chart (if not input_only and user joined) */}
         {!input_only && (
-          <Box sx={{ my: 2 }}>
+          <Box sx={{ my: 2, borderRadius: '0.3em', overflow:'hidden' }}>
             <Chart
               options={chartOptions}
               series={[{ data: chartData }]}
@@ -682,7 +683,7 @@ function CoHostModal({
         )}
 
         {/* Footer Buttons (PUMP / JEET) if not input_only */}
-        {!input_only && (
+        {!input_only && !has_joined && (
           <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
             <Button variant="contained" color="error" onClick={handleSendCoHost}>
               PUMP

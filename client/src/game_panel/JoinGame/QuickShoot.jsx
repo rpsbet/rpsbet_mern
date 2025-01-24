@@ -165,8 +165,6 @@ function QuickShoot(props) {
 
   const updateAnimation = useCallback(
     async (qsHistoryArg, lastIndexVal) => {
-      console.log("Manually passed qsHistory:", qsHistoryArg);
-      console.log("Manually passed lastIndexVal:", lastIndexVal);
 
       if (!qsHistoryArg?.length) return;
       if (!lastIndexVal) return;
@@ -209,7 +207,6 @@ function QuickShoot(props) {
   // =========== Socket Handlers ===========
 
   const handleSocketData = useCallback((data) => {
-    console.log("data", data);
 
     // Update players
     setPlayers((prevPlayers) => {
@@ -242,7 +239,6 @@ function QuickShoot(props) {
     onChangeState({ bankroll: data.bankroll });
     setHostPr(data.host_pr);
 
-    console.log("Manually calling updateAnimation with new values:", newQsHistory, newLastShot);
     updateAnimation(newQsHistory, newLastShot);
 
   }, [playSound, user_id, isWatching, onChangeState, updateAnimation]);

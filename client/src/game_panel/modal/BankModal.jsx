@@ -40,13 +40,13 @@ function BankModal({ modalIsOpen, closeModal, isDarkMode, remainingLoans }) {
             top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
-            bgcolor: isDarkMode ? '#400068' : '#fff',
+            bgcolor: isDarkMode ? '#1f1a25' : '#fff',
             color: isDarkMode ? '#fff' : '#000',
             width: '80vw',
             maxWidth: 600,
             maxHeight: '80vh',
             overflowY: 'auto',
-            borderRadius: '0.3em',
+            borderRadius: 1,
             p: 3,
             boxShadow: 24
           }}
@@ -132,7 +132,7 @@ function BankModal({ modalIsOpen, closeModal, isDarkMode, remainingLoans }) {
             maxWidth: 600,
             maxHeight: '80vh',
             overflowY: 'auto',
-            borderRadius: '0.3em',
+            borderRadius: 1,
             p: 3,
             boxShadow: 24
           }}

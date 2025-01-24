@@ -858,7 +858,7 @@ function OpenGamesTable(props) {
             maxWidth: 1000,
             maxHeight: '90vh',
             overflowY: 'auto',
-            bgcolor: '#400068',
+            bgcolor: '#1f1a25',
             borderRadius: 1,
             p: 3,
             color: '#fff'  // for readable text

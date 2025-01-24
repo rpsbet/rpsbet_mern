@@ -422,7 +422,7 @@ div.table .table-cell button.btn_join img {
 .roll-tag {
   position: relative;
   top: 0px;
-  background-color: #333a;
+  background-color: #891e1eaa;
   color: var(--white-color);
   padding: 4px 8px;
   border-radius: 0.3em;
@@ -1094,12 +1094,23 @@ button.win-bg {
 
 .gamified-container {
   border: 2px solid #b9bbbe;
-  border-radius: 0.em;
-  padding: 20px;
-  margin: 0px 0 15px 30px;
-  display: flex;
+  border-radius: 0.3em;
+  padding: 20px 20px 20px 30px;
+  margin-bottom: 20px;
+  display: block !important;
   justify-content: center;
 }
+
+#betamount {
+  background: #cfcfcf;
+  color: #303030 !important;
+  font-weight: 500;
+  }
+
+#betamount:hover {
+  background: #d4d3d3;
+  color: #303030 !important;
+  }
 
 .gamified-heading {
   font-size: 1em;
@@ -1306,12 +1317,6 @@ input[type="number"] {
 #my-products .value,
 #all-loans .value {
   color: #ff8500 !important;
-}
-
-.contents_wrapper .main-game .main-panel,
-.contents_wrapper .main-game .sub-panel {
-  background-position: top right;
-  background-size: cover !important;
 }
 
 div.table.my-open-game-table {
@@ -1818,8 +1823,8 @@ input {
 
 .guesses {
   position: absolute;
-  left: 10px;
-  top: 5px;
+  left: 12.5px;
+  top: 15px;
 }
 
 .blueish-hue {
@@ -2170,6 +2175,7 @@ input {
 
 .history-background {
   background: linear-gradient(#c9c9c9, #e1e1e1) !important;
+  padding: 10px;
 }
 
 .result .lottie-progress,

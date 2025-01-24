@@ -20,7 +20,7 @@ const getTheme = (mode) => createTheme({
     secondary: { main: '#f50057' },  // Example secondary color
     error: { main: '#f44336' },  // Example error color
     background: {
-      default: mode === 'dark' ? '#400068' : '#f4f6f8',  // Conditional background color
+      default: mode === 'dark' ? '#29202f' : '#f4f6f8',  // Conditional background color
     },
   },
 });

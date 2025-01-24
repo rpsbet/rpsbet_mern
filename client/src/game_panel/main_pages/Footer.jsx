@@ -21,7 +21,6 @@ const FooterContainer = styled(Box)(({ theme, open }) => ({
   color: '#747f8d',
   fontSize: '0.7rem',
   fontWeight: '500',
-  padding: '40px 20px 10px',
   bottom: 0,
   left: 0,
   width: open ? 'calc(100vw - 275px)' : 'calc(100vw - 5px)',

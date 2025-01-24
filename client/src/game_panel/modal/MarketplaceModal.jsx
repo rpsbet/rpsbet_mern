@@ -40,7 +40,7 @@ function MarketplaceModal({
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    bgcolor: isDarkMode ? '#400068' : '#fff',
+    bgcolor: isDarkMode ? '#1f1a25' : '#fff',
     color: isDarkMode ? '#fff' : '#000',
     boxShadow: 24,
     p: 3,

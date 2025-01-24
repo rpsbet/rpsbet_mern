@@ -323,7 +323,7 @@ function ProductTable({
                     display: 'flex',       // 3) Vertical layout within the Card
                     flexDirection: 'column',
                     background: isDarkMode
-                      ? 'linear-gradient(156deg, #df00ff, #ff8500)'
+                      ? 'linear-gradient(156deg, #333, #444)'
                       : '#fff'
                   }}
                 >

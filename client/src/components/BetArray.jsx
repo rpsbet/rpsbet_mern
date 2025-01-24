@@ -11,6 +11,7 @@ import ApexChart from "react-apexcharts";
 import InfoIcon from '@mui/icons-material/Info';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import TableChartOutlinedIcon from '@mui/icons-material/TableChartOutlined';
+import ReactApexChart from 'react-apexcharts';
 import TuneOutlinedIcon from '@mui/icons-material/TuneOutlined';
 import MeetingRoomOutlinedIcon from '@mui/icons-material/MeetingRoomOutlined';
 import EditIcon from '@mui/icons-material/Edit';
@@ -35,7 +36,6 @@ import {
   TableCell,
   Box
 } from '@mui/material';
-import { styled } from '@mui/material/styles';
 import Lottie from 'react-lottie';
 import animationData from '../game_panel/LottieAnimations/spinningIcon.json';
 import BetAmountInput from '../components/BetAmountInput.jsx';
@@ -54,6 +54,12 @@ const defaultOptions = {
 const SideTabs = ({ selectedTab, handleTabChange }) => (
   <Tabs
     orientation="vertical"
+    sx={{
+      '& .MuiTabs-indicator': {
+        display: 'none',
+        marginRight: '10px'
+      },
+    }}
     value={selectedTab}
     onChange={handleTabChange}
     className={`side-tab-switcher`}
@@ -363,7 +369,7 @@ const PlaceholderComponent = ({ selectedTab, myGames, solPrice, updateQbot, hand
                   <InfoIcon sx={{ width: '18px', marginTop: '-3px', cursor: 'pointer' }} />
                 </Tooltip>
               </Typography>
-              <Box className="gamified-content" sx={{ mt: 2 }}>
+              <Box className="gamified-content" sx={{ mt: 0 }}>
                 <Table aria-label="rooms table">
                   <TableHead>
                     <TableRow>
@@ -867,7 +873,6 @@ function BetArray({
     );
   }
   return (
-    <ThemeProvider theme={theme}>
       <Box sx={{ position: 'relative', width: '100%' }}>
         <SettingsRef
           strategies={strategies}
@@ -1066,7 +1071,7 @@ function BetArray({
                       onClick={handleSettingsIconClick}
                     >
                       <Typography sx={{ fontSize: '0.5em', marginRight: '2px' }}>EDIT</Typography>
-                      <SettingsOutlinedIcon />
+                      <SettingsOutlinedIcon  className="edit-icon"/>
                     </IconButton>
                   </Tooltip>
                 </Box>
@@ -1157,10 +1162,10 @@ function BetArray({
               >
                 <Tooltip
                   title={selectedStrategy === 'GPT3' ? `NO BET RANGE FOR ${selectedStrategy}` : 'MIN & MAX BET VALUES'}
-                  classes={{ tooltip: theme.components.MuiTooltip.styleOverrides.tooltip }}
                 >
                   <Slider
                     value={range}
+                    color='secondary'
                     onChange={handleSliderChange}
                     onChangeCommitted={handleSliderChangeCommitted}
                     onMouseUp={handleMouseUp}
@@ -1171,16 +1176,11 @@ function BetArray({
                     max={user_balance}
                     aria-labelledby="range-slider"
                     sx={{
-                      color: 'red',
                       height: 8,
                       '& .MuiSlider-thumb': {
-                        backgroundColor: 'red',
-                        border: '2px solid red',
                         height: 24,
                         width: 24,
-                        '&:focus, &:hover, &:active': {
-                          boxShadow: '0 0 0 8px rgba(255, 0, 0, 0.16)',
-                        },
+                     
                       },
                       '& .MuiSlider-track': {
                         height: 8,
@@ -1209,7 +1209,7 @@ function BetArray({
                   }}
                 >
                   <Typography
-                    sx={{ fontSize: 'x-small', color: '#ff0000' }}
+                    sx={{ fontSize: 'x-small' }}
                   >
                     {text}
                   </Typography>
@@ -1222,7 +1222,7 @@ function BetArray({
         {selectedTab === 1 && (
           <Box className="gamified-container" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
             <Grid item>
-              <Typography variant="h2" sx={{ marginBottom: '20px' }}>
+              <Typography variant="h6" sx={{ marginBottom: '0' }}>
                 Training Data&nbsp;
                 <Tooltip title="This data may not represent your recent transactions and is for the AI purposes only.">
                   <InfoIcon sx={{ width: '18px', marginTop: '-3px', cursor: 'pointer' }} />
@@ -1242,15 +1242,15 @@ function BetArray({
                 height={180}
               />
 
-              <Box className="gamified-content" sx={{ width: '100%', marginTop: '20px' }}>
+              <Box className="gamified-content" sx={{ width: '100%' }}>
                 {filteredArray.length > 0 ? (
                   <>
                     <Table>
-                      <TableHead>
-                        <TableRow>
-                          <TableCell sx={{ fontWeight: '800', color: '#FFFFFF', margin: '20px' }}>BET</TableCell>
-                          <TableCell sx={{ fontWeight: '800', color: '#FFFFFF', margin: '20px' }}>{'HOST'}</TableCell>
-                          <TableCell sx={{ fontWeight: '800', color: '#FFFFFF', margin: '20px' }}>{'YOU'}</TableCell>
+                      <TableHead >
+                        <TableRow >
+                          <TableCell sx={{ fontWeight: '800', color: '#333', margin: '20px' }}>{'BET'}</TableCell>
+                          <TableCell sx={{ fontWeight: '800', color: '#333', margin: '20px' }}>{'HOST'}</TableCell>
+                          <TableCell sx={{ fontWeight: '800', color: '#333', margin: '20px' }}>{'YOU'}</TableCell>
                         </TableRow>
                       </TableHead>
                     </Table>
@@ -1275,8 +1275,8 @@ function BetArray({
                                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                   {convertToCurrency(item.bet_amount, solPrice)}
                                   {hoveredIndex === index && (
-                                    <IconButton size="small" sx={{ marginLeft: '5px' }}>
-                                      <EditIcon />
+                                    <IconButton variant="outlined" size="small" sx={{ marginLeft: '5px' }}>
+                                      <EditIcon className="edit-icon"  />
                                     </IconButton>
                                   )}
                                 </Box>
@@ -1289,7 +1289,7 @@ function BetArray({
                                   {game_type === 'Quick Shoot' ? item.qs : item.rps}
                                   {hoveredIndex === index && (
                                     <IconButton size="small" sx={{ marginLeft: '5px' }}>
-                                      <EditIcon />
+                                      <EditIcon className="edit-icon"  />
                                     </IconButton>
                                   )}
                                 </Box>
@@ -1302,7 +1302,7 @@ function BetArray({
                                   {game_type === 'Quick Shoot' ? item.joiner_qs : item.joiner_rps}
                                   {hoveredIndex === index && (
                                     <IconButton size="small" sx={{ marginLeft: '5px' }}>
-                                      <EditIcon />
+                                      <EditIcon className="edit-icon" />
                                     </IconButton>
                                   )}
                                 </Box>
@@ -1340,10 +1340,10 @@ function BetArray({
                       width: '300px',
                     }}
                   >
-                    <Typography id="edit-modal-title" variant="h6" component="h2" gutterBottom>
+                    <Typography id="edit-modal-title" variant="h6" gutterBottom>
                       {modalTitle}
                     </Typography>
-                    <TextField color="secondary"
+                    <TextField
                       label="EDIT VALUE"
                       value={editedValue}
                       onChange={(e) => setEditedValue(e.target.value)}
@@ -1364,7 +1364,7 @@ function BetArray({
         {selectedTab === 2 && (
           <Box className="gamified-container" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
             <Grid item>
-              <Typography variant="h2" sx={{ marginBottom: '20px' }}>
+              <Typography variant="h6" sx={{ marginBottom: '20px' }}>
                 Attached Rooms&nbsp;
                 <Tooltip title="This data may not represent your recent transactions and is for the AI purposes only.">
                   <InfoIcon sx={{ width: '18px', marginTop: '-3px', cursor: 'pointer' }} />
@@ -1375,6 +1375,7 @@ function BetArray({
               </Box>
 
               <Box className="gamified-content" sx={{ width: '100%', marginTop: '20px' }}>
+                <Box>
                 <Table aria-label="rooms table">
                   <TableHead>
                     <TableRow>
@@ -1421,6 +1422,7 @@ function BetArray({
                     )}
                   </TableBody>
                 </Table>
+                </Box>
 
                 {/* Modal for Editing */}
                 <Modal
@@ -1464,7 +1466,6 @@ function BetArray({
           </Box>
         )}
       </Box>
-    </ThemeProvider>
   );
 }
 

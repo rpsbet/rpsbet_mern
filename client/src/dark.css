@@ -26,7 +26,9 @@
 	color: #ff0000 !important;
 }
 
-
+.dark_mode .edit-icon {
+	color: #333 !important;
+}
 .dark_mode .notification p:first-child {
 	color: #e9ecef;
 	font-size: 0.8em !important;
@@ -67,11 +69,17 @@
 	background: linear-gradient(45deg, #8864be96, #9f04b799, #8a35dc45);
 }
 
-
 .dark_mode .gamified-container {
 	border: 2px solid #333;
-	background: radial-gradient(#d4d4d4, #dee2e6);
+	color: #333;
+	background: radial-gradient(#cecece, #e3e3e3);
 }
+
+.dark_mode .gamified-container p,
+.dark_mode .gamified-container td{
+	color: #333;
+}
+
 
 .dark_mode .transaction-settings {
 	background: radial-gradient(#d4d4d4, #dee2e6);
@@ -101,7 +109,7 @@
 }
 
 .dark_mode .history-background {
-	background: linear-gradient(#ff818100, #7e00c617) !important
+	background: linear-gradient(#515151, #2a202f) !important
 }
 
 .dark_mode .chat-wrapper .chat-panel .chat-line .sender-name {
@@ -180,7 +188,7 @@
 
 
 .dark_mode .game_header {
-	background: #420068;
+	background: #2a202f;
 }
 
 
@@ -193,7 +201,7 @@
 }
 
 .dark_mode .game-page .game-contents {
-	background: linear-gradient(#6406aa, #410068);
+	background: linear-gradient(52deg, #372e3b, #2a202f);
 }
 
 .dark_mode .avatar-square {
@@ -213,7 +221,7 @@
 }
 
 .dark_mode div.table .table-row {
-	background: linear-gradient(52deg, #441e70, #400068);
+	background: linear-gradient(180deg, #372e3b, #2a202f);
 	color: #8e9297;
 }
 
@@ -272,7 +280,7 @@
 .dark_mode .modal-body,
 .dark_mode .modal-header {
 	color: #fff;
-	background: linear-gradient(45deg, #3f51b5, #9d00bd, #dc35d2);
+	background: linear-gradient(52deg, #372e3b, #2a202f);
 }
 
 /* .dark_mode .modal-body p button,

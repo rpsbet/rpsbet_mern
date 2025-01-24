@@ -138,7 +138,7 @@ function VaultModal(props) {
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    bgcolor: '#400068',  // same background color as your login modal
+    bgcolor: '#1f1a25',  // same background color as your login modal
     color: '#fff',
     boxShadow: 24,
     borderRadius: 1,

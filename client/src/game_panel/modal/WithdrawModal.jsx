@@ -302,7 +302,7 @@ function WithdrawModal(props) {
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    bgcolor: '#400068', // Same purple background
+    bgcolor: '#1f1a25', // Same purple background
     color: '#fff',
     boxShadow: 24,
     borderRadius: 1,

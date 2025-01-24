@@ -235,7 +235,6 @@ class JoinGame extends Component {
   // manual bet
   join = async betInfo => {
 
-console.log("betInfo", betInfo)
     const result = await this.props.bet3({
       _id: this.props.roomInfo._id,
       user: this.props.user_id,
@@ -878,7 +877,7 @@ console.log("betInfo", betInfo)
         className="main-game join"
         style={{
           display: 'grid',               // Enables Grid layout
-          gridTemplateColumns: 'calc(100% - 320px) 320px', // Allocates 70% width to the first column and 30% to the second
+          gridTemplateColumns: 'calc(100% - 360px) 350px', // Allocates 70% width to the first column and 30% to the second
           gap: '8px',                    // Adds space between columns
           width: '100%',                 // Ensures the div takes up 100% of its container's width
           boxSizing: 'border-box',       // Ensures the padding, border are included within the element’s width

@@ -865,9 +865,7 @@ class SiteWrapper extends Component {
   };
 
   handleBalanceClick = (event) => {
-    this.setState({ anchorElGameLog: event.currentTarget }, () => {
-      console.log("Cwd", this.state.anchorElGameLog);
-    });
+    this.setState({ anchorElGameLog: event.currentTarget });
   };
 
   handleNotificationsClick = (event) => {
@@ -1139,7 +1137,7 @@ class SiteWrapper extends Component {
               </a>
               {!isInvestorsPage ? (
                 <div className='desktop-only' style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginTop: "10px" }}>
-                  {/* <HistoryTable setHighlightedRooms={this.setHighlightedRooms} userId={this.props.user._id} /> */}
+                  <HistoryTable setHighlightedRooms={this.setHighlightedRooms} userId={this.props.user._id} />
                 </div>
               ) : (
                 <div style={{ padding: width < 600 ? "0" : "48px" }}>

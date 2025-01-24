@@ -1,6 +1,5 @@
 import React, { useEffect, useCallback, useState } from 'react';
-import TextField from '@mui/material/TextField';
-import Button from '@mui/material/Button';
+import {Button, Box, TextField} from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { debounce } from 'lodash';
 import { getCustomTheme } from '../config/theme';
@@ -76,6 +75,7 @@ export default function BetAmountInput(props) {
             color='secondary'
             style={{ flex: 1 }}
             onClick={handle2x}
+            disableElevation
           >
             2x
           </Button>
@@ -84,6 +84,7 @@ export default function BetAmountInput(props) {
             color='secondary'
             style={{ flex: 1 }}
             onClick={handleHalfX}
+            disableElevation
           >
             1/2x
           </Button>
@@ -92,31 +93,33 @@ export default function BetAmountInput(props) {
             color='secondary'
             style={{ flex: 1 }}
             onClick={handleMax}
+            disableElevation
           >
             Max
           </Button>
         </div>
 
-         <TextField color="secondary" 
-          type="text"
-          name="betamount"
-          variant="filled"
-          id="betamount"
-          ref={betAmountRef}
-          disabled={disabledButtons || false}
-          label=""
-          value={localBetAmount}
-          onChange={handleTextFieldChange}
-          placeholder="BET AMOUNT"
-          fullWidth
-          inputProps={{
-            pattern: '^\\d*\\.?\\d*$',
-          }}
-          InputLabelProps={{
-            shrink: true,
-          }}
-          style={{ marginBottom: '10px' }}
-        />
+          <TextField color="secondary"
+            type="text"
+            name="betamount"
+            variant="filled"
+            id="betamount"
+            ref={betAmountRef}
+            disabled={disabledButtons || false}
+            label=""
+            value={localBetAmount}
+            onChange={handleTextFieldChange}
+            placeholder="BET AMOUNT"
+            fullWidth
+            inputProps={{
+              pattern: '^\\d*\\.?\\d*$',
+            }}
+            InputLabelProps={{
+              shrink: true,
+            }}
+            sx={{ marginBottom: '10px', borderTopLeftRadius: '0.3em', borderTopRightRadius: '0.3em', overflow: 'hidden' }}
+          />
+
       </ThemeProvider>
     </div>
   );

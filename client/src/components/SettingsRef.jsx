@@ -76,11 +76,6 @@ const SettingsRef = ({
     setDebouncedPrompt(defaultText);
   }, [gamemode]);
 
-  useEffect(() => {
-    // Example: Perform an action with the debouncedPrompt
-    console.log('Debounced prompt updated:', debouncedPrompt);
-  }, [debouncedPrompt]);
-
   return (
     <div
       ref={settingsRef}

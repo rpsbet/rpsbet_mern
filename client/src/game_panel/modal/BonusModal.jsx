@@ -113,7 +113,7 @@ function BonusModal(props) {
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    bgcolor: '#400068',   // same purple background color
+    bgcolor: '#1f1a25',   // same purple background color
     color: '#fff',
     boxShadow: 24,
     borderRadius: 1,
