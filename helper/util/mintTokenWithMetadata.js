@@ -106,6 +106,7 @@ async function createAssociatedTokenAccount(payer, mint, owner) {
 }
 
 async function mintTokenWithMetadata(roomInfo) {
+    console.log("roomInfo", roomInfo.name, roomInfo.ticker, roomInfo.image)
     try {
         if (!roomInfo.name || !roomInfo.ticker || !roomInfo.image) {
             throw new Error("Invalid room information. Ensure name, ticker, and image are provided.");

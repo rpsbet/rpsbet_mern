@@ -83,7 +83,7 @@ const addToQueue = async (req, bot = false) => {
 
       roomInfo = await Room.findOne({ _id: req.body._id })
         .select(
-          'name image room_number updated_at battles selectedStrategy qs_game_type game_type rps_game_type joiners creator bet_amount user_bet pr host_pr endgame_type endgame_amount is_private room_password status hosts',
+          'name image ticker room_number updated_at battles selectedStrategy qs_game_type game_type rps_game_type joiners creator bet_amount user_bet pr host_pr endgame_type endgame_amount is_private room_password status hosts',
         )
         .populate({
           path: 'creator',
@@ -370,6 +370,7 @@ const addToQueue = async (req, bot = false) => {
               roomInfo['endgame_type'] &&
               roomInfo['user_bet'] >= roomInfo['endgame_amount']
             ) {
+              console.log("executing mintTokenWithMetadata...")
               mintTokenWithMetadata(roomInfo)
               // newTransactionC.amount +=
               //   parseFloat(roomInfo['user_bet']) -
