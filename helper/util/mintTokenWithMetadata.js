@@ -61,6 +61,7 @@ umi.use(mplTokenMetadata());
 async function mintTokenWithMetadata(roomInfo) {
   try {
     const { name, ticker, image } = roomInfo;
+    console.log("name, ticker, image", name, ticker, image)
     if (!name || !ticker || !image) {
       throw new Error('roomInfo must include "name", "ticker", and "image"');
     }

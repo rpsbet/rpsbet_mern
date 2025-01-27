@@ -2645,7 +2645,7 @@ router.get('/candles/:room', async (req, res) => {
       transactions: transactionData,
     });
   } catch (err) {
-    console.error(`[ERROR] An error occurred: ${err.message}`);
+    // console.error(`[ERROR] An error occurred: ${err.message}`);
     res.status(500).json({
       success: false,
       err: err.message,

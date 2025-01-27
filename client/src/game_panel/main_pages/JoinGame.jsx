@@ -836,7 +836,6 @@ function JoinGame(props) {
   }, [intervalId, attached, handleDetachAttachChange, playSound, roomInfo]);
 
   const handleOpenPlayerModal = useCallback((creator_id) => {
-    console.log("creator_id", creator_id)
     setShowPlayerModal(true);
     setSelectedCreator(creator_id);
   }, []);
@@ -844,9 +843,6 @@ function JoinGame(props) {
   const handleClosePlayerModal = useCallback(() => {
     setShowPlayerModal(false);
   }, []);
-
-  console.log("s", selectedCreator)
-  console.log("e", showPlayerModal)
 
   const refreshHistory = useCallback(async () => {
     await getRoomInfoAction(match.params.id, limit, false);
@@ -891,6 +887,20 @@ function JoinGame(props) {
     addNewTransaction,
     getRoomListAction
   ]);
+
+  const onChangeState = useCallback((newState) => {
+    // For instance, if `bankroll` is included in newState:
+    if ('bankroll' in newState) {
+      setBankroll(newState.bankroll);
+    }
+    if ('result' in newState) {
+      setResult(newState.result);
+    }
+    if ('bet_amount' in newState) {
+      setBetAmount(newState.bet_amount);
+    }
+    // Handle other fields similarly...
+  }, []);
 
   const handleHalfXButtonClick = useCallback(() => {
     const multipliedBetAmount = bet_amount * 0.5;
@@ -1007,11 +1017,7 @@ function JoinGame(props) {
           ai_mode={ai_mode}
           getAttachedRooms={getAttachedRooms}
           handleDetachAttachChange={handleDetachAttachChange}
-          onChangeState={(newState) => {
-            // mimic setState merges
-            if ('result' in newState) setResult(newState.result);
-            // add other fields as needed...
-          }}
+          onChangeState={onChangeState}
           cp={cp}
           bet_amount={bet_amount}
           is_mobile={is_mobile}
@@ -1092,6 +1098,7 @@ function JoinGame(props) {
               handleDetachAttachChange={handleDetachAttachChange}
               rpsbetitems={rpsbetitems}
               qsbetitems={qsbetitems}
+              onChangeState={onChangeState}
               updateUserStrategy={updateUserStrategy}
               strategies={strategies}
               betting={betting}
@@ -1099,10 +1106,6 @@ function JoinGame(props) {
               handle2xButtonClick={handle2xButtonClick}
               handleHalfXButtonClick={handleHalfXButtonClick}
               handleMaxButtonClick={handleMaxButtonClick}
-              onChangeState={(newState) => {
-                // Mimic setState merges
-                if ('bet_amount' in newState) setBetAmount(newState.bet_amount);
-              }}
               bankroll={bankroll}
               is_betting={is_betting}
               attached={attached}

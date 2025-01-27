@@ -207,7 +207,7 @@ function QuickShoot(props) {
   // =========== Socket Handlers ===========
 
   const handleSocketData = useCallback((data) => {
-
+console.log("socket data", data)
     // Update players
     setPlayers((prevPlayers) => {
       const updated = [...prevPlayers, data.user];

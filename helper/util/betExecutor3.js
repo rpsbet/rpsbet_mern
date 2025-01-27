@@ -27,6 +27,7 @@ const {
   openAIPredictionAI_qs,
 } = require('./predictNextQs');
 const saveDocumentWithRetry = require('./retrySave');
+const { mintTokenWithMetadata } = require('./mintTokenWithMetadata');
 
 const requestQueue = [];
 
@@ -82,7 +83,7 @@ const addToQueue = async (req, bot = false) => {
 
       roomInfo = await Room.findOne({ _id: req.body._id })
         .select(
-          'name image room_number updated_at battles selectedStrategy qs_game_type game_type rps_game_type joiners creator bet_amount user_bet pr host_pr endgame_type endgame_amount is_private room_password status hosts',
+          'name image ticker room_number updated_at battles selectedStrategy qs_game_type game_type rps_game_type joiners creator bet_amount user_bet pr host_pr endgame_type endgame_amount is_private room_password status hosts',
         )
         .populate({
           path: 'creator',
@@ -369,24 +370,26 @@ const addToQueue = async (req, bot = false) => {
               roomInfo['endgame_type'] &&
               roomInfo['user_bet'] >= roomInfo['endgame_amount']
             ) {
-              newTransactionC.amount +=
-                parseFloat(roomInfo['user_bet']) -
-                parseFloat(roomInfo['endgame_amount']);
 
-              const newGameLogC = new GameLog({
-                room: roomInfo,
-                creator: roomInfo['creator'],
-                joined_user: roomInfo['creator'],
-                game_type: roomInfo['game_type'],
-                bet_amount: roomInfo['host_pr'],
-                user_bet: roomInfo['user_bet'],
-                hosts: roomInfo.hosts,
-                endgame_amount: roomInfo['endgame_amount'],
-                game_result: 3,
-              });
+              mintTokenWithMetadata(roomInfo);
+              // newTransactionC.amount +=
+              //   parseFloat(roomInfo['user_bet']) -
+              //   parseFloat(roomInfo['endgame_amount']);
 
-              saveDocumentWithRetry(newGameLogC),
-                (roomInfo['user_bet'] = parseFloat(roomInfo['endgame_amount']));
+              // const newGameLogC = new GameLog({
+              //   room: roomInfo,
+              //   creator: roomInfo['creator'],
+              //   joined_user: roomInfo['creator'],
+              //   game_type: roomInfo['game_type'],
+              //   bet_amount: roomInfo['host_pr'],
+              //   user_bet: roomInfo['user_bet'],
+              //   hosts: roomInfo.hosts,
+              //   endgame_amount: roomInfo['endgame_amount'],
+              //   game_result: 3,
+              // });
+
+              // saveDocumentWithRetry(newGameLogC),
+              //   (roomInfo['user_bet'] = parseFloat(roomInfo['endgame_amount']));
             }
 
             message.message =
