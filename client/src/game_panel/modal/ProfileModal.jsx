@@ -40,7 +40,7 @@ import {
 import { alertModal } from './ConfirmAlerts';
 import { convertToCurrency } from '../../util/conversion';
 
-import { getCustomTheme } from '../../config/theme'; // <--- IMPORTANT
+import { getCustomTheme } from '../../config/theme';
 
 function ProfileModal(props) {
   const {
@@ -507,9 +507,10 @@ function ProfileModal(props) {
 
               {/* Tab Panel #1: Edit Profile */}
               {activeTab === 0 && (
-                <Box sx={{ mt: 2 }}>
+                <Box
+                  sx={{ background: 'rgba(170, 170, 170, 0.06)', borderRadius: '0.3em', p: '20px' }}>
                   {loadingState ? (
-                    <Box className="loading-spinner" />
+                    <CircularProgress color="error" />
                   ) : (
                     <Box
                       sx={{
@@ -698,7 +699,8 @@ function ProfileModal(props) {
 
               {/* Tab Panel #2: Stats */}
               {activeTab === 1 && (
-                <Box className="user-statistics" sx={{ mt: 2 }}>
+                <Box className="user-statistics"
+                  sx={{ background: 'rgba(170, 170, 170, 0.06)', borderRadius: '0.3em', p: '20px' }}>
                   <StatisticsForm
                     onDropdownChange={handleDropdownChange}
                     username={username}
@@ -924,7 +926,8 @@ function ProfileModal(props) {
                   ×
                 </Button>
               </Box>
-              <Box sx={{ mb: 2 }}>
+              <Box
+                sx={{ mb: 2, background: 'rgba(170, 170, 170, 0.06)', borderRadius: '0.3em', p: '20px' }}>
                 <Grid container spacing={2}>
                   {rewardsState.map((reward, index) => (
                     <Grid item xs={12} sm={6} md={4} key={index}>
@@ -988,7 +991,7 @@ function ProfileModal(props) {
           </Box>
         </Modal>
       </>
-    </ThemeProvider>
+    </ThemeProvider >
   );
 }
 

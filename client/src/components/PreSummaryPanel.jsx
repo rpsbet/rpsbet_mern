@@ -71,6 +71,7 @@ const PreSummaryPanel = (props) => {
 
   return (
     <Stack direction="row" spacing={2}>
+    
       <Box className="pre-summary-panel title">
 
         {/* ROOM NAME */}

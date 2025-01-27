@@ -50,7 +50,7 @@ function PrivacyModal({ modalIsOpen, closeModal }) {
             </Typography>
           </Typography>
           <Button variant="text" color="error" onClick={closeModal}>
-            X
+          ×
           </Button>
         </Box>
 

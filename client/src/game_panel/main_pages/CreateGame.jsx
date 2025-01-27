@@ -25,8 +25,6 @@ import { toggleDrawer, showError } from '../../redux/Auth/user.actions';
 import {
   createRoom,
   setGameMode,
-  getMyHistory,
-  getMyChat,
   getGameTypeList,
   getStrategies
 } from '../../redux/Logic/logic.actions';
@@ -57,8 +55,7 @@ function CreateGame(props) {
     isAuthenticated,
     getGameTypeList,
     setGameMode: _setGameMode,
-    getMyHistory,
-    getMyChat,
+
     getStrategies,
     match,
     solPrice,
@@ -94,7 +91,6 @@ function CreateGame(props) {
   const [telegramLink, setTelegramLink] = useState('');
 
   const [selectedStrategy, setSelectedStrategy] = useState('Markov');
-  const [qsGameType, setQsGameType] = useState(2);
   const [qsNation, setQsNation] = useState(0);
   const [selectedQsPosition, setSelectedQsPosition] = useState(0);
 
@@ -116,6 +112,7 @@ function CreateGame(props) {
   const [endgameType, setEndgameType] = useState(false);
   const [description, setDescription] = useState('');
   const [rpsGameType, setRpsGameType] = useState(0);
+  const [qsGameType, setQsGameType] = useState(2);
 
   // Local duplication of balance if needed
   const [localBalance, setLocalBalance] = useState(propBalance);
@@ -136,8 +133,8 @@ function CreateGame(props) {
       setSelectedGameType('RPS');
       setGameModeLocal('RPS');
     } else if (path === '/create/quick-shoot') {
-      setSelectedGameType('Quick Shoot');
-      setGameModeLocal('Quick Shoot');
+      setSelectedGameType('QS');
+      setGameModeLocal('QS');
     }
 
     const gameTypeName = match.params.game_type_name || 'RPS';
@@ -145,10 +142,7 @@ function CreateGame(props) {
     _setGameMode(gameTypeName);
     initializeGameType(gameTypeName);
 
-    if (isAuthenticated) {
-      getMyHistory();
-      getMyChat();
-    }
+
     getStrategies();
 
     // Add a keypress listener (if needed)
@@ -233,6 +227,7 @@ function CreateGame(props) {
   };
 
   const onChangeState = async (newState) => {
+
     // Imitate this.setState(newState) by individually setting
     // For brevity, you can expand or adjust as needed
     if ('bet_amount' in newState) setBetAmount(newState.bet_amount);
@@ -246,6 +241,7 @@ function CreateGame(props) {
     if ('selectedStrategy' in newState) setSelectedStrategy(newState.selectedStrategy);
     if ('winChance' in newState) setWinChance(newState.winChance);
     if ('rps_game_type' in newState) setRpsGameType(newState.rps_game_type);
+    if ('qs_game_type' in newState) setQsGameType(newState.qs_game_type);
     if ('qs_nation' in newState) setQsNation(newState.qs_nation);
     if ('selected_qs_position' in newState) setSelectedQsPosition(newState.selected_qs_position);
     // ...and so on for other fields in your component’s state
@@ -306,6 +302,10 @@ function CreateGame(props) {
 
   const onNextButtonClicked = () => {
     if (step === 1) {
+      if (!gameMode) {
+        showError("No Gamemode", "YOU DIDN'T PICK A GAMEMODE");
+        return;
+      }
       if (parseFloat(betAmount) <= 0 || isNaN(parseFloat(betAmount))) {
         showError("Invalid Bet", "YOU DIDN'T BET (CAT) SHIT!!!");
         return;
@@ -430,7 +430,7 @@ function CreateGame(props) {
         qs_list: qsList,
         tax,
         name,
-        image: base64Image,  // Replaced with the processed image
+        image: base64Image, 
         x_link: xLink,
         website_link: websiteLink,
         telegram_link: telegramLink,
@@ -458,7 +458,6 @@ function CreateGame(props) {
         rps_game_type: rpsGameType,
         skipConfirm
       };
-console.log("fullState", fullState)
       await props.createRoom(fullState);
     } catch (error) {
       console.error('Error saving image:', error);
@@ -734,8 +733,8 @@ console.log("fullState", fullState)
                     step={step}
                     child_step={childStep}
                     isPlaying={isPlaying}
-                    handleUrlChange={() => {}}
-                    handleSubmit={() => {}}
+                    handleUrlChange={() => { }}
+                    handleSubmit={() => { }}
                     handleDescriptionChange={handleDescriptionChange}
                   />
                 )}
@@ -765,9 +764,8 @@ console.log("fullState", fullState)
               {selectedMobileTab === 'my_games' && 'YOUR GAMES'}
             </Button>
             <Button
-              className={`mobile-tab-marketplace ${
-                selectedMobileTab === 'marketplace' ? 'active' : ''
-              }`}
+              className={`mobile-tab-marketplace ${selectedMobileTab === 'marketplace' ? 'active' : ''
+                }`}
               onClick={() => setSelectedMobileTab('marketplace')}
             >
               {/* SVG ICON */}
@@ -816,9 +814,7 @@ const mapDispatchToProps = {
   createRoom,
   setGameMode,
   getStrategies,
-  getMyHistory,
   getGameTypeList,
-  getMyChat,
   showError,
   toggleDrawer
 };

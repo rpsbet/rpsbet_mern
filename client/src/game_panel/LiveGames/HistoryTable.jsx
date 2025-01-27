@@ -33,6 +33,7 @@ const HistoryTable = ({
   isLowGraphics,
   setHighlightedRooms,
 }) => {
+  const dispatch = useDispatch();
   const [history, setHistory] = useState(initialHistory);
   const [showPlayerModal, setShowPlayerModal] = useState(false);
   const [selectedCreator, setSelectedCreator] = useState(null);
@@ -41,7 +42,7 @@ const HistoryTable = ({
   const fetchSettings = useCallback(async () => {
     try {
       const settings = await getSettings();
-      // You can use settings here if needed
+      // handle settings if needed
     } catch (error) {
       console.error("Error fetching settings:", error);
     }
@@ -56,23 +57,21 @@ const HistoryTable = ({
   }, [getHistory]);
 
   const handleNewLog = (data) => {
-    const dispatch = useDispatch();
-    
-    const newLog = data.newLog?.[0];
+    const newLog = data?.newLog?.[0];
     if (!newLog) return;
-  
+
     const { room_id } = newLog;
     if (!room_id) return;
-  
-    // 1) Dispatch highlight action
-    dispatch(setHighlightedRooms([room_id])); // store ["room_id"] in Redux
-  
-    // 2) Clear highlight after 4 seconds
+
+    // 1) highlight the new room
+    dispatch(setHighlightedRooms([room_id]));
+
+    // 2) Clear highlight after 200ms
     setTimeout(() => {
       dispatch(clearHighlightedRooms());
-    }, 4000);
-  
-    // 3) ...the rest of your code
+    }, 200);
+
+    // 3) Replace history with just this new log
     setHistory(updateFromNow([newLog]));
   };
 
@@ -122,54 +121,78 @@ const HistoryTable = ({
   );
 
   return (
-    <div className="overflowX">
-      <div className="table main-history-table">
+    <Box className="overflowX">
+      <Box className="table main-history-table">
         {history?.length === 0 && (
           <Box className="dont-have-game-msg" sx={{ width: '100%' }}>
             <Skeleton variant="rectangular" sx={{ width: '100%', height: 10 }} />
           </Box>
         )}
-        {uniqueHistory.map((row, key) => (
-          <div
-            key={row._id}
-            className={`table-row ${(row.creator?._id === userId || row.joined_user === userId) ? 'history-background' : ''} ${key < 50 ? 'slide-in' : ''}`}
-            style={{
-              animationDelay: `${key * 0.1}s`,
-              filter: row.status !== 'open' ? 'opacity(60%)' : 'none',
-            }}
-          >
-            <div>
-              <div className="table-cell">
-                <div
-                  className="desktop-only"
-                  dangerouslySetInnerHTML={{ __html: row.history }}
-                ></div>
-              </div>
-              <div className="table-cell row-copy">
-                <Tooltip title={copiedRowId === row._id ? "COPIED ID!" : "COPY BET ID"} placement="top">
-                  <a
-                    style={{ padding: "5px", cursor: "pointer" }}
-                    onClick={() => copyToClipboard(row._id)}
+
+        {uniqueHistory.map((row, key) => {
+          const isUserInvolved = (row.creator?._id === userId || row.joined_user === userId);
+          return (
+            <Box
+              key={row._id}
+              className={`table-row ${isUserInvolved ? 'history-background' : ''} ${key < 50 ? 'slide-in' : ''
+                }`}
+              sx={{
+                animationDelay: `${key * 0.1}s`,
+                filter: row.status !== 'open' ? 'opacity(60%)' : 'none',
+              }}
+            >
+              <Box>
+                <Box className="table-cell">
+                  <Box
+                    className="desktop-only"
+                    sx={{ p: '10px', display: 'flex', alignItems: 'center', justifyItems: 'center' }}
+                    dangerouslySetInnerHTML={{ __html: row.history }}
+                  />
+                </Box>
+
+                <Box
+                  className="table-cell row-copy"
+                  sx={{ p: '10px' }}
+                >
+                  <Tooltip
+                    title={copiedRowId === row._id ? 'COPIED ID!' : 'COPY BET ID'}
+                    placement="top"
                   >
-                    <FileCopyIcon style={{ width: "12px" }} />
-                  </a>
-                </Tooltip>
-                &nbsp;
-                {row.from_now && row.from_now.split('').map((char, index) => (
-                  <span key={index} style={{ fontSize: isNaN(char) ? '0.5em' : '0.8em' }}>{char}</span>
-                ))}
-                &nbsp;<FontAwesomeIcon icon={faStopwatch} />
-              </div>
-            </div>
-            <div>
-              <div
-                className="table-cell mobile-only"
-                dangerouslySetInnerHTML={{ __html: row.history }}
-              ></div>
-            </div>
-          </div>
-        ))}
-      </div>
+                    <Box
+                      component="a"
+                      sx={{ padding: '5px', cursor: 'pointer' }}
+                      onClick={() => copyToClipboard(row._id)}
+                    >
+                      <FileCopyIcon sx={{ width: 12 }} />
+                    </Box>
+                  </Tooltip>
+                  &nbsp;
+                  {row.from_now &&
+                    row.from_now.split('').map((char, index) => (
+                      <Box
+                        component="span"
+                        key={index}
+                        sx={{ fontSize: isNaN(char) ? '0.5em' : '0.8em' }}
+                      >
+                        {char}
+                      </Box>
+                    ))}
+                  &nbsp;
+                  <FontAwesomeIcon icon={faStopwatch} />
+                </Box>
+              </Box>
+
+              <Box>
+                <Box
+                  className="table-cell mobile-only"
+                  dangerouslySetInnerHTML={{ __html: row.history }}
+                />
+              </Box>
+            </Box>
+          );
+        })}
+      </Box>
+
       {showPlayerModal && (
         <PlayerModal
           modalIsOpen={showPlayerModal}
@@ -177,7 +200,7 @@ const HistoryTable = ({
           selectedCreator={selectedCreator}
         />
       )}
-    </div>
+    </Box>
   );
 };
 
@@ -191,6 +214,7 @@ const mapStateToProps = (state) => ({
 const mapDispatchToProps = {
   getHistory,
   getSettings,
+  setHighlightedRooms
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(HistoryTable);

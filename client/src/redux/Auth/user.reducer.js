@@ -13,12 +13,14 @@ import {
   SET_AVATAR,
   SHOW_COOKIES,
   TRANSACTION_LOADED,
+  TRANSACTIONS_LOADING,
+  ALL_TRANSACTIONS,
   FETCH_RECENT_TRANSACTIONS_SUCCESS,
   SET_SEVEN_DAY_PROFIT,
   SET_ONE_DAY_PROFIT,
   SET_ALL_TIME_PROFIT,
   NEW_TRANSACTION,
-  LOAD_MORE_TRANSACTIONS,
+  LOADING_USER,
   SET_USERNAME_PASSWORD,
   SET_DARK_MODE,
   SET_SPECTATE_MODE,
@@ -51,8 +53,9 @@ const initialState = {
   clickSounds: localStorage.getItem('clickSounds') === 'false' ? true : false,
   gameSounds: localStorage.getItem('gameSounds') === 'true' ? true : false,
   notificationSounds: localStorage.getItem('notificationSounds') === 'true' ? true : false,
-  isDrawerOpen: localStorage.getItem('isDrawerOpen') === 'false' ? false : false,
+  isDrawerOpen: localStorage.getItem('isDrawerOpen') === 'false' ? false : true,
   loading: true,
+  loading_user: false,
   user: { _id: null, password: '' },
   unreadMessageCount: 0,
   balance: 0,
@@ -64,6 +67,11 @@ const initialState = {
   userName: '',
   liveUrl: null,
   transactions: [],
+  all_transactions: null,
+  page: 0,
+  totalCount: 0,
+  hasMore: false,
+  transactions_loading: false,
   vaultTransactions: [],
   sevenDayProfit: null,
   oneDayProfit: null,
@@ -159,8 +167,33 @@ export default function (state = initialState, action) {
     case TRANSACTION_LOADED:
       return {
         ...state,
-        transactions: payload
+        transactions: payload,
       };
+    case LOADING_USER:
+      return {
+        ...state,
+        loading_user: payload,
+      };
+    case TRANSACTIONS_LOADING:
+      return {
+        ...state,
+        transactions_loading: true,
+        transactions_error: null
+      };
+    case ALL_TRANSACTIONS: {
+      const { all_transactions, page, totalCount, hasMore } = action.payload;
+      return {
+        ...state,
+        transactions_loading: false,
+        all_transactions: 
+          page === 1
+            ? all_transactions
+            : [...(state.all_transactions || []), ...all_transactions],
+        page,
+        totalCount,
+        hasMore,
+      };
+    }
     case NEW_TRANSACTION:
       const newTransactions = [payload]
         .concat(JSON.parse(JSON.stringify(state.transactions)))
@@ -238,7 +271,8 @@ export default function (state = initialState, action) {
         ...state,
         token: null,
         isAdmin: false,
-        userName: '',
+        userName: null,
+        user: '',
         isAuthenticated: false,
         loading: false
       };

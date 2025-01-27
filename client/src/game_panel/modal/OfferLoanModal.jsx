@@ -145,7 +145,7 @@ class OfferLoanModal extends Component {
       this.setupSocketListener();
     }
     if (prevState.isComplete !== this.state.isComplete && this.state.isComplete) {
-      await this.props.getUser(true, 5);
+      await this.props.getUser();
       // await this.props.acCalculateRemainingLoans();
       this.props.closeOfferLoanModal();
     }
@@ -192,7 +192,7 @@ class OfferLoanModal extends Component {
     });
     this.onBtnCancelClicked();
     if (result.success) {
-      await getUser(true, 5);
+      await getUser();
       alertModal(isDarkMode, result.message, '-cat');
       closeOfferLoanModal();
       offerLoan({

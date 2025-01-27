@@ -7,6 +7,7 @@ const DrawerButton = ({ open, toggleDrawer }) => (
     id="drawer-btn"
     style={{ color: 'white' }}
     onClick={toggleDrawer}
+    className='desktop-only'
   >
     {open ? <Close /> : <Chat />}
   </IconButton>

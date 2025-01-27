@@ -303,7 +303,7 @@ class MyBankTable extends Component {
       <MarketplaceContainer>
         <FilterSortContainer>
           <div className="filters">
-            <Button onClick={this.handleFilterClick}>
+            <Button  color='error' variant="outlined" onClick={this.handleFilterClick}>
               Filter&nbsp;
               <FontAwesomeIcon icon={faFilter} />
             </Button>

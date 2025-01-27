@@ -1,12 +1,13 @@
 import React, { Component } from 'react';
 import Modal from 'react-modal';
 import { connect } from 'react-redux';
-import { Table, TableBody, Button, TextField, TableCell, TableContainer, TableHead, TableRow, Tooltip, InputAdornment } from '@mui/material';
+import { Table, Box, Typography, TableBody, Button, TextField, TableCell, TableContainer, TableHead, TableRow, Tooltip, InputAdornment } from '@mui/material';
 import { acQueryLoan, acCalculateRemainingLoans } from '../../redux/Loan/loan.action';
 import Lottie from 'react-lottie';
 import { convertToCurrency } from '../../util/conversion';
 import { getRank } from '../../util/getRank';
-import rankIcon from '../LottieAnimations/rankIcon.json';
+import LottieRankIcon from '../LottieAnimations/rankIcon.json';
+
 import {
   closeConfirmLoanModal
 } from '../../redux/Notification/notification.actions';
@@ -35,35 +36,14 @@ const customStyles = {
 };
 
 const categories = [
-  { creditScoreThreshold: 700, rankThreshold: 1, accountAgeThresholdInDays: 30, maxAllowance: 0.005 },
-  { creditScoreThreshold: 700, rankThreshold: 2, accountAgeThresholdInDays: 30, maxAllowance: 0.01 },
-  { creditScoreThreshold: 700, rankThreshold: 3, accountAgeThresholdInDays: 30, maxAllowance: 0.02 },
-  { creditScoreThreshold: 700, rankThreshold: 6, accountAgeThresholdInDays: 30, maxAllowance: 0.03 },
-  { creditScoreThreshold: 700, rankThreshold: 9, accountAgeThresholdInDays: 30, maxAllowance: 0.04 },
-  { creditScoreThreshold: 700, rankThreshold: 10, accountAgeThresholdInDays: 30, maxAllowance: 0.05 },
-  { creditScoreThreshold: 700, rankThreshold: 11, accountAgeThresholdInDays: 30, maxAllowance: 0.075 },
-  { creditScoreThreshold: 700, rankThreshold: 12, accountAgeThresholdInDays: 30, maxAllowance: 0.1 },
-  { creditScoreThreshold: 700, rankThreshold: 13, accountAgeThresholdInDays: 30, maxAllowance: 0.2 },
-  { creditScoreThreshold: 700, rankThreshold: 14, accountAgeThresholdInDays: 30, maxAllowance: 0.4 },
-  { creditScoreThreshold: 700, rankThreshold: 15, accountAgeThresholdInDays: 30, maxAllowance: 0.8 },
-  { creditScoreThreshold: 700, rankThreshold: 16, accountAgeThresholdInDays: 30, maxAllowance: 1.5 },
-  { creditScoreThreshold: 700, rankThreshold: 17, accountAgeThresholdInDays: 30, maxAllowance: 1.75 },
-  { creditScoreThreshold: 700, rankThreshold: 18, accountAgeThresholdInDays: 30, maxAllowance: 2 },
-  { creditScoreThreshold: 700, rankThreshold: 19, accountAgeThresholdInDays: 30, maxAllowance: 2.25 },
-  { creditScoreThreshold: 700, rankThreshold: 20, accountAgeThresholdInDays: 30, maxAllowance: 2.5 },
-  { creditScoreThreshold: 700, rankThreshold: 21, accountAgeThresholdInDays: 30, maxAllowance: 3 },
-  { creditScoreThreshold: 700, rankThreshold: 22, accountAgeThresholdInDays: 30, maxAllowance: 3.3 },
-  { creditScoreThreshold: 700, rankThreshold: 23, accountAgeThresholdInDays: 30, maxAllowance: 3.6 },
-  { creditScoreThreshold: 700, rankThreshold: 24, accountAgeThresholdInDays: 30, maxAllowance: 3.9 },
-  { creditScoreThreshold: 700, rankThreshold: 25, accountAgeThresholdInDays: 30, maxAllowance: 4.2 },
-  { creditScoreThreshold: 700, rankThreshold: 26, accountAgeThresholdInDays: 30, maxAllowance: 4.4 },
-  { creditScoreThreshold: 700, rankThreshold: 27, accountAgeThresholdInDays: 30, maxAllowance: 4.6 },
-  { creditScoreThreshold: 700, rankThreshold: 28, accountAgeThresholdInDays: 30, maxAllowance: 4.8 },
-  { creditScoreThreshold: 700, rankThreshold: 29, accountAgeThresholdInDays: 30, maxAllowance: 5 },
-  { creditScoreThreshold: 700, rankThreshold: 30, accountAgeThresholdInDays: 30, maxAllowance: 6 },
-  { creditScoreThreshold: 700, rankThreshold: 31, accountAgeThresholdInDays: 30, maxAllowance: 7 },
-  { creditScoreThreshold: 700, rankThreshold: 32, accountAgeThresholdInDays: 30, maxAllowance: 8 },
-  { creditScoreThreshold: 700, rankThreshold: 33, accountAgeThresholdInDays: 30, maxAllowance: 10 },
+  { creditScoreThreshold: 700, rankThreshold: 0, accountAgeThresholdInDays: 30, maxAllowance: 0 },
+  { creditScoreThreshold: 700, rankThreshold: 1, accountAgeThresholdInDays: 30, maxAllowance: 0.25 },
+  { creditScoreThreshold: 700, rankThreshold: 2, accountAgeThresholdInDays: 30, maxAllowance: 0.5 },
+  { creditScoreThreshold: 700, rankThreshold: 3, accountAgeThresholdInDays: 30, maxAllowance: 1 },
+  { creditScoreThreshold: 700, rankThreshold: 4, accountAgeThresholdInDays: 30, maxAllowance: 2 },
+  { creditScoreThreshold: 700, rankThreshold: 5, accountAgeThresholdInDays: 30, maxAllowance: 4 },
+  { creditScoreThreshold: 700, rankThreshold: 6, accountAgeThresholdInDays: 30, maxAllowance: 8 },
+  { creditScoreThreshold: 700, rankThreshold: 7, accountAgeThresholdInDays: 30, maxAllowance: 10 },
 ];
 
 class ConfirmLoanModal extends Component {
@@ -134,7 +114,7 @@ class ConfirmLoanModal extends Component {
       closeConfirmLoanModal();
       alertModal(isDarkMode, message, '-cat');
       addNewTransaction(newTransaction);
-      getUser(true, 5);
+      getUser();
       acQueryLoan();
       // acCalculateRemainingLoans();
     } else {
@@ -177,57 +157,78 @@ class ConfirmLoanModal extends Component {
           <div className="modal-body alert-body password-modal-body">
             <div className={`modal-icon result-icon-trade`}></div>
             <h5>ACCEPT DEBT</h5>
-            <div className='thresholds' style={{ overflow: 'auto', margin: "30px 0" }}>
-              <TableContainer style={{ maxHeight: 150, overflow: 'auto' }}>
-                <Table aria-label="nice-table">
-                  <TableHead
-                    style={{
-                      textTransform: "uppercase",
-                      position: "sticky",
-                      top: 0,
-                      zIndex: 1,
-                      background: isDarkMode
-                        ? "linear-gradient(45deg, #63077eb5, #f23c3c9c)"
-                        : "linear-gradient(45deg, rgba(253, 247, 255, 0.37), rgba(255, 174, 0, 0.56))",
-                    }}
-                  >
+            {/* TABLE: RANK ALLOWANCES */}
+            <Box sx={{ mb: 3 }}>
+              <TableContainer
+                sx={{
+                  maxHeight: 150,
+                  overflow: 'auto',
+                  borderRadius: 2
+                }}
+              >
+                <Table
+                  stickyHeader
+                  size="small"
+                  sx={{
+                    // Optional: make the text a bit smaller and reduce cell padding
+                    'td, th': {
+                      fontSize: '0.85rem',
+                      padding: '4px 8px'
+                    }
+                  }}
+                >
+                  <TableHead>
                     <TableRow>
-                      <TableCell style={{ textAlign: "center" }}>Rank</TableCell>
-                      <TableCell style={{ textAlign: "center" }}>Max Allowance (SOL)</TableCell>
+                      <TableCell
+                        align="center"
+                        sx={{
+                          color: '#fff',
+                          fontWeight: 600,
+                          backgroundColor: '#333'
+                        }}
+                      >
+                        RANK
+                      </TableCell>
+                      <TableCell
+                        align="center"
+                        sx={{
+                          color: '#fff',
+                          fontWeight: 600,
+                          backgroundColor: '#333'
+                        }}
+                      >
+                        MAX ALLOWANCE (SOL)
+                      </TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
                     {categories.map((category, index) => {
-                      if (index < highlightedRowIndex) {
-                        return null; // Skip rendering rows before the highlighted one
-                      }
-
+                      // Skip rows below user's current category
+                      if (index < highlightedRowIndex) return null;
                       return (
                         <TableRow
                           key={index}
-                          style={{
-                            background: highlightedRowIndex === index ? '#28a745' : '',
+                          sx={{
+                            backgroundColor: highlightedRowIndex === index ? '#28a745' : '#333',
                           }}
                         >
-                          <TableCell style={{ padding: '0', textAlign: 'center' }}>
-                            <Lottie
-                              options={{
-                                loop: true,
-                                autoplay: true,
-                                animationData: rankIcon,
-                              }}
-                              style={{
-                                height: '22px',
-                                width: '22px',
-                                display: 'inline-block',
-                              }}
-                            />
-                            &nbsp;<span style={{ transform: 'translateY(4px)' }}>{category.rankThreshold}</span>
+                          <TableCell sx={{ color: '#fff' }} align="center">
+                            <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
+                              <Lottie
+                                options={{
+                                  loop: true,
+                                  autoplay: true,
+                                  animationData: LottieRankIcon
+                                }}
+                                height={22}
+                                width={22}
+                                style={{ display: 'inline-block' }}
+                              />
+                              <span>{category.rankThreshold}</span>
+                            </Box>
                           </TableCell>
-                          <TableCell style={{ textAlign: 'center', padding: '0' }}>
-                            <span>
-                              {category.maxAllowance} ({convertToCurrency(category.maxAllowance, solPrice)})
-                            </span>
+                          <TableCell sx={{ color: '#fff' }} align="center">
+                            {category.maxAllowance} ({convertToCurrency(category.maxAllowance, solPrice)})
                           </TableCell>
                         </TableRow>
                       );
@@ -235,18 +236,15 @@ class ConfirmLoanModal extends Component {
                   </TableBody>
                 </Table>
               </TableContainer>
-              {/* Disclaimer Text */}
-              <div
-                className='roll-tag label'
-                style={{
-                  marginTop: '10px',
-                  fontStyle: 'italic',
-                  textAlign: 'center',
-                }}
+
+              <Typography
+                variant="body2"
+                sx={{ mt: 2, fontStyle: 'italic', textAlign: 'center', opacity: 0.8 }}
               >
-                You must have a credit score above 700 and an account age of at least 30 days to be eligible.
-              </div>
-            </div>
+                You must have a credit score above 700 and an account age of at least 30 days
+                to be eligible.
+              </Typography>
+            </Box>
             <TableContainer>
               <Table>
                 <TableBody>
@@ -266,7 +264,7 @@ class ConfirmLoanModal extends Component {
                   {/* TextField on its own line */}
                   <TableRow>
                     <TableCell colSpan={2} style={{ textAlign: "center", borderBottom: "none" }}>
-                       <TextField color='error' 
+                      <TextField color='error'
                         label="Loan"
                         variant="filled"
                         className="label"

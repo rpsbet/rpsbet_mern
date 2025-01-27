@@ -17,6 +17,8 @@ import {
   Box,
   Typography
 } from '@mui/material';
+import { ThemeProvider } from '@mui/material/styles';
+import { getCustomTheme } from '../../config/theme';
 
 import { alertModal } from './ConfirmAlerts';
 
@@ -37,6 +39,7 @@ function ListItemModal(props) {
   const [price, setPrice] = useState(0);
   const [rentOption, setRentOption] = useState(false);
   const [showOverrideConfirmation, setShowOverrideConfirmation] = useState(false);
+  const theme = getCustomTheme(isDarkMode ? 'dark' : 'light');
 
   // ------------------------------
   // MUI Modal Styles
@@ -102,8 +105,8 @@ function ListItemModal(props) {
   };
 
   return (
-    <>
-      {/* Main "List Item" Modal */}
+    <ThemeProvider theme={theme}>
+
       <Modal
         open={isOpen}
         onClose={closeListItemModal}
@@ -130,8 +133,16 @@ function ListItemModal(props) {
               row
               sx={{ justifyContent: 'center', mb: 2 }}
             >
-              <FormControlLabel value="sell" control={<Radio />} label="SELL" />
-              <FormControlLabel value="rent" control={<Radio />} label="RENT OUT" />
+              <FormControlLabel
+                value="sell"
+                control={<Radio color="error" />}
+                label="SELL"
+              />
+              <FormControlLabel
+                value="rent"
+                control={<Radio color="error" />}
+                label="RENT OUT"
+              />
             </RadioGroup>
           )}
 
@@ -151,7 +162,7 @@ function ListItemModal(props) {
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
-                    &nbsp;RPS / MONTH
+                    &nbsp;SOL / MONTH
                   </InputAdornment>
                 )
               }}
@@ -173,7 +184,7 @@ function ListItemModal(props) {
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
-                    &nbsp;RPS
+                    &nbsp;SOL
                   </InputAdornment>
                 )
               }}
@@ -226,7 +237,7 @@ function ListItemModal(props) {
           </Box>
         </Box>
       </Modal>
-    </>
+    </ThemeProvider>
   );
 }
 

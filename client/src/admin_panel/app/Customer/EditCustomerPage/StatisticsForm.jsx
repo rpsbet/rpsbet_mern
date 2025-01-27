@@ -102,60 +102,47 @@ class StatisticsForm extends React.Component {
   };
 
   getRank(totalWagered) {
-    const level = Math.floor(Math.log2(totalWagered + 1) / 1.2) + 1;
-    const nextLevelWager = Math.pow(2, 1.2 * (level)) - 1;
-    const progress = totalWagered / nextLevelWager;
-    const progressBarWidth = 100;
-    const roundedProgress = (progress * progressBarWidth).toFixed(2);
-    const remainingProgress = progressBarWidth - roundedProgress;
-    const rank = Math.floor(Math.log2(totalWagered + 1) / 1.2) + 1;
-    const rankPlusOne = rank + 1;
-
+    // 1) Calculate raw rank (0-based)
+    const raw = Math.log2(totalWagered + 1) / 1.2;
+    const userRank = Math.floor(raw);
+    const nextRank = userRank + 1;
+  
+    // 2) Thresholds for linear progress
+    const thresholdForThisRank = userRank > 0 ? Math.pow(2, 1.2 * userRank) - 1 : 0;
+    const thresholdForNextRank = Math.pow(2, 1.2 * nextRank) - 1;
+  
+    // 3) fraction => portion between [thisRank .. nextRank]
+    let fraction =
+      (totalWagered - thresholdForThisRank) /
+      (thresholdForNextRank - thresholdForThisRank);
+    fraction = Math.max(0, Math.min(1, fraction));
+  
+    // 4) Convert fraction => percentage
+    const percent = (fraction * 100).toFixed(2);
+  
     return (
-      <Box>
-        <Box
-          sx={{
-            width: progressBarWidth + 'px', // Dynamic width based on progress
-            position: 'relative'
-          }}
-        >
-          <Box
-            sx={{
-              width: roundedProgress + '%', // Dynamic width based on progress
-              display: 'flex',
-              alignItems: 'center',
-              backgroundColor: 'primary.main', // Example of using theme colors
-            }}
-          >
-            <Box component="span" sx={{ flexGrow: 1, textAlign: 'center' }}>
-              {`${roundedProgress}%`}
-            </Box>
-          </Box>
-          <Box
-            sx={{
-              width: remainingProgress + '%', // Dynamic width for the remaining part
-              backgroundColor: 'grey.300', // Example of using theme colors
-            }}
-          >
-            <Box component="span" sx={{ flexGrow: 1, textAlign: 'center' }}>
-              {`${remainingProgress}%`}
-            </Box>
-          </Box>
-        </Box>
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            mt: 1 // Margin top for spacing
-          }}
-        >
-          <Box>{`${rank}`}</Box>
-          <Box>{`${rankPlusOne}`}</Box>
-        </Box>
-      </Box>
+      <div style={{ margin: '10px 0' }}>
+        {/* Progress bar outer container */}
+        <div className="custom-progress-bar-outer">
+          {/* Filled portion */}
+          <div
+            className="custom-progress-bar-filled"
+            style={{ width: `${percent}%` }}
+          />
+          {/* Single centered label */}
+          <div className="custom-progress-bar-label">
+            {percent}% 
+          </div>
+        </div>
+  
+        {/* Ranks below the bar */}
+        <div className="custom-rank-row">
+          <span className="custom-rank-left">{userRank}</span>
+          <span className="custom-rank-right">{nextRank}</span>
+        </div>
+      </div>
     );
   }
-
 
   getRoomLink(dataPointIndex) {
     const gameLog = this.props.gameLogList[dataPointIndex];
@@ -591,11 +578,7 @@ const ChartDivEl = styled.div`
   grid-area: Charts;
   justify-self: center;
   width: 100%;
-  border-radius: 1em;
-  background-color: #424242;
-  padding: 25px;
   align-items: center;
-  ${Elevation[2]}
 `;
 
 const H2 = styled.h2`

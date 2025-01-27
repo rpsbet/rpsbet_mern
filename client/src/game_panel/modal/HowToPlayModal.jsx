@@ -9,6 +9,7 @@ import {
   Button
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import QuestionMark from '@mui/icons-material/QuestionMark';
 
 function HowToPlayModal({ modalIsOpen, closeModal }) {
   // ------------------ STYLES ------------------
@@ -42,17 +43,19 @@ function HowToPlayModal({ modalIsOpen, closeModal }) {
         {/* HEADER */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
           <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-            Info
+          <QuestionMark sx={{ mr: 1 }} />
+
+            HOW IT WORKS
           </Typography>
           <Button variant="text" color="error" onClick={closeModal}>
-            X
+          ×
           </Button>
         </Box>
 
         {/* ACCORDIONS */}
         <Accordion>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography variant="h6">About Us</Typography>
+            <Typography variant="h6">HOW IT WORKS</Typography>
           </AccordionSummary>
           <AccordionDetails>
             <Typography variant="body2" paragraph>

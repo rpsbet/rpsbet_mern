@@ -32,24 +32,53 @@
     align-items: center;
 
 }
-
-.progress-bar-outer {
-  border-radius: 2px;
-  overflow: hidden;
-  height: 10px;
-  width: 100%;
-  margin: 5px auto -10px !important;
+/* Outer container */
+.custom-progress-bar-outer {
+  width: 300px;              /* Make the bar wider */
+  height: 20px;              /* Taller for easier readability */
+  background: #3f3f3f;       /* A dark grey background for unfilled portion */
+  border-radius: 10px;       /* Smooth corners */
   position: relative;
-
+  margin: 0 auto;            /* Center horizontally (optional) */
+  overflow: hidden;          /* Hide overflow of the filled portion's corners */
 }
 
-.progress-label {
+/* Filled portion */
+.custom-progress-bar-filled {
+  height: 100%;
+  background: linear-gradient(90deg, #cc00ff, #ff00cc); 
+  /* or any gradient you like */
+  transition: width 0.4s ease;
+}
+
+/* Single label, absolutely centered */
+.custom-progress-bar-label {
   position: absolute;
   top: 50%;
-  transform: translateY(-50%);
-  color: white;
-  font-size: 0.3em;
-  display: none;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: bold;
+  pointer-events: none; /* So clicks pass through */
+  z-index: 2;
+}
+
+/* Ranks below the bar, spaced out */
+.custom-rank-row {
+  display: flex;
+  justify-content: space-between;
+  width: 300px; /* match bar width */
+  margin: 4px auto 0; /* small top margin, auto to center horizontally */
+  font-weight: bold;
+  color: #ff8500; /* or your chosen color */
+  font-size: 0.9rem;
+}
+
+/* Example left vs. right styling (optional) */
+.custom-rank-left, .custom-rank-right {
+  min-width: 20px;
+  text-align: center;
 }
 
 .rank-indicators {

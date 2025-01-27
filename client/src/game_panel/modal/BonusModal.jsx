@@ -95,7 +95,7 @@ function BonusModal(props) {
     setShowFlash(true);
 
     // Refresh user data
-    await getUser(true, 5);
+    await getUser();
 
     // Remove flash effect after a short delay
     setTimeout(() => setShowFlash(false), 1500);
@@ -161,8 +161,9 @@ function BonusModal(props) {
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            mb: 2
+            mb: 2,
           }}
+
         >
           <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center' }}>
             <FontAwesomeIcon icon={faStar} />
@@ -179,95 +180,103 @@ function BonusModal(props) {
             }}
           />
           <Button variant="text" color="error" onClick={closeModal}>
-            X
+          ×
           </Button>
         </Box>
 
-        {/* NEXT CORN ARRIVES INFO */}
-        <Box
-          sx={{
-            textAlign: 'center',
-            border: '3px solid #f9f9f9',
-            borderRadius: 1,
-            backgroundColor: 'rgba(202, 185, 141, 0.45)',
-            p: 1,
-            mb: 2
-          }}
-        >
-          <Typography variant="body2" sx={{ color: 'rgb(222, 226, 230)' }}>
-            <FontAwesomeIcon icon={faClock} /> &nbsp;Next Corn Arrives...
-          </Typography>
-          <Typography variant="h6" sx={{ color: '#ff8500', m: 0 }}>
-            {remainingTime}
-          </Typography>
-        </Box>
+        <Box sx={{
+          p: '20px',
+          background: 'rgb(170 170 170 / 6%)',
+          borderRadius: '0.3em'
+        }}>
 
-        {/* THE WHEEL */}
-        <div
-          className="wheel"
-          style={{
-            transform: `rotate(${rotation}deg)`,
-            overflow: 'hidden',
-          }}
-        >
-          {numbers.map((number, index) => {
-            const rotationDeg = (index / numbers.length) * 360;
-            return (
-              <div
-                key={index}
-                className="number"
-                style={{
-                  transform: `rotate(${rotationDeg}deg) translate(${translateDistance}) rotate(-${rotationDeg}deg)`,
-                }}
-              >
-                {formatNumber(number)}
-              </div>
-            );
-          })}
-          <img width="200px" src="../img/bonus.svg" alt="Bonus" />
-        </div>
-
-        {/* SPIN RESULT or SPIN BUTTON */}
-        {landedNumber !== null ? (
           <Box
             sx={{
               textAlign: 'center',
-              p: 2,
+              border: '3px solid #f9f9f9',
               borderRadius: 1,
-              backgroundColor: showFlash ? 'success.light' : 'transparent',
-              transition: 'background-color 0.3s ease'
+              backgroundColor: '#5dabf02b',
+              p: 1,
+              mb: 2
             }}
           >
-            {landedNumber} SOL (
-            {convertToCurrency(landedNumber, solPrice)})
+            <Typography variant="body2" sx={{ color: 'rgb(222, 226, 230)' }}>
+              <FontAwesomeIcon icon={faClock} /> &nbsp;NEXT CORN...
+            </Typography>
+            <Typography variant="h6" sx={{ color: '#5dabf0', m: 0 }}>
+              {remainingTime}
+            </Typography>
           </Box>
-        ) : (
-          <Button
-            variant="contained"
-            onClick={spinWheel}
-            disabled={spinning || totalWagered < 9410}
-            sx={{ display: 'block', margin: '0 auto' }}
+
+          {/* THE WHEEL */}
+          <div
+            className="wheel"
+            style={{
+              transform: `rotate(${rotation}deg)`,
+              overflow: 'hidden',
+            }}
           >
-            {totalWagered < 9410 ? (
-              'UNLOCK AT RANK 12'
-            ) : (
-              <>
-                SPIN FOR 0.01 SOL! ({convertToCurrency(0.01, solPrice)}) &nbsp;
-                <FontAwesomeIcon icon={faSyncAlt} />
-                <img
-                  src="../img/icons/corn.svg"
-                  alt="corn"
+            {numbers.map((number, index) => {
+              const rotationDeg = (index / numbers.length) * 360;
+              return (
+                <div
+                  key={index}
+                  className="number"
                   style={{
-                    transform: 'rotate(167deg) scaleY(-1) translate(10px, 7px) rotate(5deg)',
-                    width: '40px',
-                    zIndex: 0
+                    transform: `rotate(${rotationDeg}deg) translate(${translateDistance}) rotate(-${rotationDeg}deg)`,
                   }}
-                />
-              </>
-            )}
-          </Button>
-        )}
+                >
+                  {formatNumber(number)}
+                </div>
+              );
+            })}
+            <img width="200px" src="../img/bonus.svg" alt="Bonus" />
+          </div>
+
+          {/* SPIN RESULT or SPIN BUTTON */}
+          {landedNumber !== null ? (
+            <Box
+              sx={{
+                textAlign: 'center',
+                p: 2,
+                borderRadius: 1,
+                backgroundColor: showFlash ? 'success.light' : 'transparent',
+                transition: 'background-color 0.3s ease'
+              }}
+            >
+              {landedNumber} SOL (
+              {convertToCurrency(landedNumber, solPrice)})
+            </Box>
+          ) : (
+            <Button
+              variant="contained"
+              onClick={spinWheel}
+              color='error'
+              disabled={spinning || totalWagered < 1.2973967}
+              sx={{ display: 'block', margin: '0 auto' }}
+            >
+              {totalWagered < 1.2973967 ? (
+                'UNLOCK AT RANK 1'
+              ) : (
+                <>
+                  SPIN FOR 0.01 SOL! ({convertToCurrency(0.01, solPrice)}) &nbsp;
+                  <FontAwesomeIcon icon={faSyncAlt} />
+                  <img
+                    src="../img/icons/corn.svg"
+                    alt="corn"
+                    style={{
+                      transform: 'rotate(167deg) scaleY(-1) translate(10px, 7px) rotate(5deg)',
+                      width: '40px',
+                      zIndex: 0
+                    }}
+                  />
+                </>
+              )}
+            </Button>
+          )}
+        </Box>
       </Box>
+
     </Modal>
   );
 }

@@ -176,7 +176,7 @@ const DebtsModal = ({ modalIsOpen, closeModal }) => {
           </Grid>
         </div>
         <div className="modal-footer">
-          <Button variant='contained' color='error' onClick={closeModal}>
+          <Button variant='contained' color='secondary' onClick={closeModal}>
             Close
           </Button>
         </div>
@@ -205,7 +205,7 @@ const DebtsModal = ({ modalIsOpen, closeModal }) => {
                 <span style={{ marginTop: '10px', color: '#fff' }}>{`Repaying loan...`}</span>
               </div>
             ) : (
-               <TextField color='error' 
+               <TextField color="secondary" 
                 label="Pay Back"
                 variant="filled"
                 fullWidth
@@ -221,7 +221,7 @@ const DebtsModal = ({ modalIsOpen, closeModal }) => {
                     <ButtonGroup className={isFocused ? 'fade-in' : 'fade-out'}>
                       <Button
                         variant="contained"
-                        color='error'
+                        color="secondary"
                         onClick={handleMaxButtonClick}
                         style={{ marginRight: '-10px' }}
                       >
@@ -234,7 +234,7 @@ const DebtsModal = ({ modalIsOpen, closeModal }) => {
             )}
           </div>
           <div className="modal-footer">
-            <Button variant='contained' color='error' onClick={handlePaybackLoan}>
+            <Button variant='contained' color='secondary' onClick={handlePaybackLoan}>
               Pay Back
             </Button>
           </div>

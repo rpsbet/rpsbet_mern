@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { connect } from 'react-redux';
-import { 
-  TextField, 
-  Button, 
-  LinearProgress, 
-  Skeleton, 
-  Box, 
-  Typography, 
-  IconButton, 
-  Tooltip 
+import {
+  TextField,
+  Button,
+  LinearProgress,
+  Skeleton,
+  Box,
+  Typography,
+  IconButton,
+  Tooltip
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { getCommentsForRoom, createComment, deleteComment } from '../redux/Logic/logic.actions';
@@ -18,6 +18,9 @@ import Moment from 'moment';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPenSquare } from '@fortawesome/free-solid-svg-icons';
 import { setFocused } from '../redux/Auth/user.actions.js';
+import { ThemeProvider } from '@mui/material/styles';
+import { getCustomTheme } from '../config/theme.js';
+
 
 const Comments = ({
   comments: initialComments,
@@ -150,142 +153,144 @@ const Comments = ({
     setShowPlayerModal(false);
   };
 
+  const theme = getCustomTheme(isDarkMode ? 'dark' : 'light');
+
   return (
-    <Box>
-      {showPlayerModal && (
-        <PlayerModal
-          selectedCreator={selectedCreator}
-          modalIsOpen={showPlayerModal}
-          closeModal={handleClosePlayerModal}
-        />
-      )}
+    <ThemeProvider theme={theme}>
 
-      {loading ? (
-        <LinearProgress color='error' />
-      ) : (
-        <Box 
-          sx={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'flex-start',
-            mb: 2 
-          }}
-        >
-           <TextField color='error' 
-            label="Reply"
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            fullWidth
-            onFocus={() => setFocused(true)}
-            onBlur={() => setFocused(false)}
-            variant="filled"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                handleCommentSubmit();
-              }
-            }}
-            sx={{ mr: 2 }}
+      <Box sx={{ background: 'rgba(170, 170, 170, 0.06)', borderRadius: '0.3em', p: '20px' }}>
+
+        {showPlayerModal && (
+          <PlayerModal
+            selectedCreator={selectedCreator}
+            modalIsOpen={showPlayerModal}
+            closeModal={handleClosePlayerModal}
           />
-          <Button
-            onClick={handleCommentSubmit}
-            variant="contained"
-            startIcon={<FontAwesomeIcon icon={faPenSquare} />}
-            sx={{
-              minWidth: 'auto',
-              padding: '8px',
-              backgroundColor: '#1976d2',
-              '&:hover': {
-                backgroundColor: '#115293',
-              },
-            }}
-          >
-            <Typography variant="button">[&#x23CE;]</Typography>
-          </Button>
-        </Box>
-      )}
+        )}
 
-      {loading ? (
-        <Box>
-          {[...Array(3)].map((_, index) => (
-            <Skeleton 
-              key={index} 
-              variant="rectangular" 
-              width="100%" 
-              height={50} 
-              sx={{ mb: 1 }} 
-            />
-          ))}
-        </Box>
-      ) : comments.length === 0 ? (
-        <Typography 
-          variant="body1" 
-          sx={{ 
-            textAlign: 'center', 
-            mt: 2, 
-            fontSize: '16px', 
-            color: '#999' 
-          }}
-        >
-          NO REPLIES
-        </Typography>
-      ) : (
-        comments.map((comment) => (
-          <Box 
-            key={comment._id} 
-            sx={{ 
-              display: 'flex', 
-              alignItems: 'flex-start', 
-              mb: 2, 
-              p: 2, 
-              bgcolor: isDarkMode ? '#1e1e1e' : '#f5f5f5', 
-              borderRadius: 1 
+        {loading ? (
+          <LinearProgress color='error' />
+        ) : (
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'flex-start',
+              mb: 2
             }}
           >
-            <Box sx={{ mr: 2 }}>
-              <Tooltip title={comment.user.username}>
-                <Box 
-                  component="a" 
-                  onClick={() => handleOpenPlayerModal(comment.user._id)} 
-                  sx={{ cursor: 'pointer' }}
-                >
-                  <Avatar
-                    src={comment.user.avatar}
-                    username={comment.user.username}
-                    rank={comment.user.totalWagered}
-                    accessory={comment.user.accessory}
-                    alt=""
-                    darkMode={isDarkMode}
-                  />
+            <TextField color='error'
+              label="Reply"
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              fullWidth
+              onFocus={() => setFocused(true)}
+              onBlur={() => setFocused(false)}
+              variant="filled"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleCommentSubmit();
+                }
+              }}
+              sx={{ mr: 2 }}
+            />
+            <Button
+              onClick={handleCommentSubmit}
+              variant="contained"
+              startIcon={<FontAwesomeIcon icon={faPenSquare} />}
+              color='error'
+            >
+              <Typography variant="button">[&#x23CE;]</Typography>
+            </Button>
+          </Box>
+        )}
+
+        {loading ? (
+          <Box>
+            {[...Array(3)].map((_, index) => (
+              <Skeleton
+                key={index}
+                variant="rectangular"
+                width="100%"
+                height={50}
+                sx={{ mb: 1 }}
+              />
+            ))}
+          </Box>
+        ) : comments.length === 0 ? (
+          <Typography
+            variant="body1"
+            sx={{
+              textAlign: 'center',
+              mt: 2,
+              fontSize: '16px',
+              color: '#999'
+            }}
+          >
+            NO REPLIES
+          </Typography>
+        ) : (
+          comments.map((comment) => (
+            <Box
+              key={comment._id}
+              sx={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                mb: 2,
+                p: 2,
+                bgcolor: isDarkMode ? '#1e1e1e' : '#f5f5f5',
+                borderRadius: 1
+              }}
+            >
+              <Box sx={{ mr: 2 }}>
+                <Tooltip title={comment.user.username}>
+                  <Box
+                    component="a"
+                    onClick={() => handleOpenPlayerModal(comment.user._id)}
+                    sx={{ cursor: 'pointer' }}
+                    className='player'
+                  >
+                    <Avatar
+                      src={comment.user.avatar}
+                      username={comment.user.username}
+                      rank={comment.user.totalWagered}
+                      accessory={comment.user.accessory}
+                      alt=""
+                      darkMode={isDarkMode}
+                      className='avatar'
+                    />
+                  </Box>
+                </Tooltip>
+              </Box>
+              <Box sx={{ flexGrow: 1 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                    {comment.user.username}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {Moment(comment.created_at).fromNow()}
+                  </Typography>
                 </Box>
-              </Tooltip>
-            </Box>
-            <Box sx={{ flexGrow: 1 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-                  {comment.user.username}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {Moment(comment.created_at).fromNow()}
+                <Typography variant="body1" sx={{ mt: 1 }}>
+                  {comment.content}
                 </Typography>
               </Box>
-              <Typography variant="body1" sx={{ mt: 1 }}>
-                {comment.content}
-              </Typography>
+              {comment.user._id === currentUserId && (
+                <IconButton
+                  onClick={() => handleDeleteComment(comment._id)}
+                  aria-label="delete"
+                  sx={{ ml: 1 }}
+                >
+                  <DeleteIcon />
+                </IconButton>
+              )}
             </Box>
-            {comment.user._id === currentUserId && (
-              <IconButton 
-                onClick={() => handleDeleteComment(comment._id)} 
-                aria-label="delete" 
-                sx={{ ml: 1 }}
-              >
-                <DeleteIcon />
-              </IconButton>
-            )}
-          </Box>
-        ))
-      )}
-    </Box>
+          ))
+        )}
+      </Box>
+    </ThemeProvider>
+
   );
 };
 

@@ -4,8 +4,7 @@ import {
   USER_LOADED,
   AUTH_ERROR,
   LOGIN_SUCCESS,
-  TNX_COMPLETE,
-  TNX_INCOMPLETE,
+  LOADING_USER,
   LOGIN_FAIL,
   LOGOUT,
   MSG_ERROR,
@@ -17,6 +16,8 @@ import {
   SET_GASFEE,
   SET_URL,
   TRANSACTION_LOADED,
+  TRANSACTIONS_LOADING,
+  ALL_TRANSACTIONS,
   FETCH_RECENT_TRANSACTIONS_SUCCESS,
   SET_SEVEN_DAY_PROFIT,
   SET_ONE_DAY_PROFIT,
@@ -41,27 +42,71 @@ import {
 import axios from '../../util/Api';
 import setAuthToken from '../../util/setAuthToken';
 import history from '../history';
-// Load User
 
-export const getUser = (is_reload, loadMore, filterType, sortType, search) => async dispatch => {
+export const getTransactions = (
+  page = 1,
+  filterType = '',
+  sortBy = '',
+  search = ''
+) => async dispatch => {
   try {
+    dispatch({ type: TRANSACTIONS_LOADING });
+
+    const res = await axios.get('/auth/transactions', {
+      params: { page, filterType, sortBy, search }
+    });
+
+    if (res.data.success) {
+      dispatch({
+        type: ALL_TRANSACTIONS,
+        payload: {
+          all_transactions: res.data.all_transactions,
+          page: res.data.page,
+          totalCount: res.data.totalCount,
+          hasMore: res.data.hasMore
+        }
+      });
+    } else {
+      dispatch({
+        type: TRANSACTIONS_ERROR,
+        payload: res.data.error || 'Failed to load transactions'
+      });
+    }
+  } catch (err) {
+    dispatch({ type: MSG_WARNING, payload: err.message });
+    return { status: 'failed' };
+  }
+};
+
+export const getUser = () => async dispatch => {
+  try {
+    // If we have a token in localStorage, set it in headers
     if (localStorage.token) {
       localStorage.removeItem('isAdminAuthenticated');
       setAuthToken(localStorage.token);
     }
-    dispatch({ type: TNX_COMPLETE });
-    const res = await axios.get(`/auth/user?loadMore=${loadMore}&filterType=${filterType}&sortBy=${sortType}&search=${search}`);
+
+    // Indicate we’re about to fetch user data
+    dispatch({ type: LOADING_USER, payload: true });
+
+    // Call the simplified /auth/user route
+    const res = await axios.get('/auth/user');
 
     if (res.data.success) {
       const { user, unread_message_count, transactions, message } = res.data;
+
+      // Dispatch user info, unread count, and last 5 transactions
       dispatch({ type: USER_LOADED, payload: user });
       dispatch({ type: SET_UNREAD_MESSAGE_COUNT, payload: unread_message_count });
       dispatch({ type: TRANSACTION_LOADED, payload: transactions });
-      if (!is_reload && message) {
+
+      // If the server returned a message, display it
+      if (message) {
         dispatch({ type: MSG_INFO, payload: message });
       }
 
-      dispatch({ type: TNX_INCOMPLETE });
+      // Indicate we’ve finished fetching user data
+      dispatch({ type: LOADING_USER, payload: false });
 
       return {
         status: 'success',
@@ -262,7 +307,7 @@ export const userSignOut = clear_token => async dispatch => {
     if (data.success) {
       if (clear_token) setAuthToken();
       history.push('/');
-      dispatch({ type: MSG_INFO, payload: data.message });
+      dispatch({ type: MSG_SUCCESS, payload: data.message });
     } else {
       dispatch({ type: MSG_ERROR, payload: data.error });
     }

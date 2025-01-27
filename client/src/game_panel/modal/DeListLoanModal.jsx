@@ -55,7 +55,7 @@ const DeListLoanModal = () => {
       await dispatch(acQueryMyLoan(30, 1, 'loan_amount', ''));
       await dispatch(acQueryLoan(30, 1, 'loan_amount', ''));
       // await dispatch(acCalculateRemainingLoans());
-      await dispatch(getUser(true, 5));
+      await dispatch(getUser());
 
       dispatch(closeDeListLoanModal());
     } else {

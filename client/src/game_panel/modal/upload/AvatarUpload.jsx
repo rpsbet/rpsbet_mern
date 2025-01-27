@@ -1,7 +1,6 @@
 import React, { Component } from "react";
 import Dropzone from "./AvatarDropzone";
 import { connect } from 'react-redux';
-import "./AvatarUpload.css";
 
 const uniqid = require('uniqid');
 

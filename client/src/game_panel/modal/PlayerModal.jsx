@@ -8,23 +8,16 @@ import {
   Button,
   Tabs,
   Tab,
-  Tooltip,
-  IconButton,
   TextField,
   Table,
   TableBody,
   TableRow,
   TableCell,
   Typography,
-  LinearProgress,
-  CircularProgress as MuiCircularProgress,
+  ThemeProvider,
 } from '@mui/material';
-
 import { Warning as WarningIcon } from '@mui/icons-material';
-import {
-  FileCopy as FileCopyIcon,
-  Info as InfoIcon
-} from '@mui/icons-material';
+import { FileCopy as FileCopyIcon, Info as InfoIcon } from '@mui/icons-material';
 
 import LoadingOverlay from 'react-loading-overlay';
 import styled from 'styled-components';
@@ -36,40 +29,31 @@ import {
   faCog,
   faEnvelope,
   faCoins,
-  faRobot
+  faRobot,
 } from '@fortawesome/free-solid-svg-icons';
+
+import TipModal from './TipModal'; // <--- IMPORT THE NEW TipModal COMPONENT
 
 import axios from '../../util/Api';
 import history from '../../redux/history';
 
-import {
-  setBalance,
-  setUserInfo,
-} from '../../redux/Auth/user.actions';
-import {
-  setCurrentOfferTargetInfo,
-} from '../../redux/Loan/loan.action';
-import {
-  openOfferLoanModal,
-} from '../../redux/Notification/notification.actions';
-import {
-  setChatRoomInfo,
-  addNewTransaction,
-} from '../../redux/Logic/logic.actions';
+import { setBalance, setUserInfo } from '../../redux/Auth/user.actions';
+import { setCurrentOfferTargetInfo } from '../../redux/Loan/loan.action';
+import { openOfferLoanModal } from '../../redux/Notification/notification.actions';
+import { setChatRoomInfo, addNewTransaction } from '../../redux/Logic/logic.actions';
 import {
   acGetCustomerInfo,
   getCustomerStatisticsData,
-  getSpendingHabit
+  getSpendingHabit,
 } from '../../redux/Customer/customer.action';
-import {
-  queryProducts
-} from '../../redux/Item/item.action';
+import { queryProducts } from '../../redux/Item/item.action';
 import { alertModal } from '../modal/ConfirmAlerts';
 import { convertToCurrency } from '../../util/conversion';
 import { renderLottieAnimation } from '../../util/LottieAnimations';
 
 import Avatar from '../../components/Avatar';
 import StatisticsForm from '../../admin_panel/app/Customer/EditCustomerPage/StatisticsForm';
+import { getCustomTheme } from '../../config/theme';
 
 // Styled components for Inventory
 const MarketplaceContainer = styled.div`
@@ -85,33 +69,17 @@ const ProductGrid = styled.div`
   margin: 20px 0;
 `;
 const ProductCard = styled.div`
-  position: relative;
-  background: linear-gradient(156deg, #5d28a7, #ff8500);
-  border-radius: 20px;
-  padding: 10px;
+  background-color: #2e2e2e;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  height: 175px;
+  padding: 30px;
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
   align-items: center;
-  cursor: pointer;
   transition: transform 0.2s;
-  position: relative;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    border-radius: 20px;
-    opacity: 0;
-    transition: opacity 0.2s;
-  }
-
-  &:hover::before {
-    opacity: 1;
-  }
 
   &:hover {
     transform: scale(1.03);
@@ -127,22 +95,6 @@ const ProductImage = styled.img`
 `;
 const ProductInfo = styled.div`
   text-align: center;
-`;
-const ProductName = styled.h6`
-  padding: 4px;
-  font-size: 1rem;
-  margin-bottom: -5px;
-  font-weight: 400;
-  line-height: 1.75;
-  letter-spacing: 0.00938em;
-  background: linear-gradient(354deg, #ffdd0775, #494e54);
-  width: 100%;
-  text-shadow: 2px -2px 4px #f3b01b;
-  text-transform: uppercase;
-  color: #fff;
-  margin-top: 10px;
-  border-bottom-right-radius: 21px;
-  border-top-left-radius: 30px;
 `;
 
 // Main functional component
@@ -169,6 +121,9 @@ function PlayerModal(props) {
     openOfferLoanModal: _openOfferLoanModal,
     setCurrentOfferTargetInfo: _setCurrentOfferTargetInfo,
   } = props;
+
+  // Move the theme creation inside the component
+  const theme = getCustomTheme(isDarkMode ? 'dark' : 'light');
 
   // -----------------------------
   // Local State
@@ -216,7 +171,7 @@ function PlayerModal(props) {
   const [isLoading, setIsLoading] = useState(false);
 
   // -----------------------------
-  // Effects (replaces componentDidMount)
+  // Effects
   // -----------------------------
   useEffect(() => {
     setCreatorId(selectedCreator);
@@ -224,14 +179,12 @@ function PlayerModal(props) {
     fetchUserData(selectedCreator);
   }, [selectedCreator]);
 
-  // On mount or when any actorType/gameType/timeType changes, refetch stats
   useEffect(() => {
     if (creatorId) {
       fetchStatisticsData();
     }
   }, [creatorId, actorType, gameType, timeType]);
 
-  // Fetch products (inventory)
   useEffect(() => {
     if (creatorId) {
       _queryProducts(127, 1, creatorId); // e.g. categoryId=127, page=1
@@ -243,16 +196,12 @@ function PlayerModal(props) {
   // -----------------------------
   const fetchUserData = async (userId) => {
     if (!userId) return;
-
-    // Spending Habit
     const data = await _getSpendingHabit(userId);
     if (data) {
       setStatus(data.status);
     }
 
-    // Full user stats
     try {
-      // Load user base info
       const userData = await acGetCustomerInfo(userId);
       if (userData) {
         setUsername(userData.username);
@@ -264,7 +213,6 @@ function PlayerModal(props) {
         setCreditScore(userData.credit_score);
         setLastSeen(userData.last_seen);
 
-        // Pass user info to setCurrentOfferTargetInfo
         _setCurrentOfferTargetInfo({
           avatar: userData.avatar,
           _id: userId,
@@ -305,7 +253,7 @@ function PlayerModal(props) {
   };
 
   // -----------------------------
-  // Misc Helpers
+  // Helpers
   // -----------------------------
   const getStatusDetails = (st) => {
     switch (st) {
@@ -360,17 +308,14 @@ function PlayerModal(props) {
     backgroundColor: progress <= 50 ? 'yellow' : 'red',
   };
 
-  const handleDropdownChange = async (dropdownName, selectedValue) => {
-    // For the <StatisticsForm> usage
+  const handleDropdownChange = (dropdownName, selectedValue) => {
     if (dropdownName === 'actorType') setActorType(selectedValue);
     if (dropdownName === 'gameType') setGameType(selectedValue);
     if (dropdownName === 'timeType') setTimeType(selectedValue);
   };
 
-  // Online check for the selected user
   const isOnline = onlineUserList.includes(selectedCreator);
 
-  // If user name suggests a bot or system admin
   const isBot = username.toUpperCase().includes('BOT');
   const systemUsernames = [
     'pimpedpistols',
@@ -389,7 +334,7 @@ function PlayerModal(props) {
   const isBioUrl = /^https?:\/\//.test(bio);
 
   // -----------------------------
-  //   Tip Modal Logic
+  // Tip Modal Logic
   // -----------------------------
   const handleTip = () => setIsTipModalOpen(true);
   const handleCloseTipModal = () => setIsTipModalOpen(false);
@@ -432,7 +377,7 @@ function PlayerModal(props) {
   };
 
   // -----------------------------
-  //   Lend Logic
+  // Lend Logic
   // -----------------------------
   const handleOpenOfferModal = () => {
     _openOfferLoanModal();
@@ -440,10 +385,9 @@ function PlayerModal(props) {
   };
 
   // -----------------------------
-  //   Chat Logic
+  // Chat Logic
   // -----------------------------
   const handleOpenChat = () => {
-    // Build a minimal chat room object
     const chatRoom = {
       _id: creatorId,
       username,
@@ -457,18 +401,17 @@ function PlayerModal(props) {
   };
 
   // -----------------------------
-  //   MUI Tab Switch
+  // Tabs
   // -----------------------------
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
   };
 
   // -----------------------------
-  //   Render
+  // Render
   // -----------------------------
   return (
     <>
-      {/* Loading Overlay for the tip submission */}
       {isLoading && (
         <LoadingOverlay
           active={isLoading}
@@ -487,264 +430,26 @@ function PlayerModal(props) {
         />
       )}
 
-      {/* Main Player Modal (MUI) */}
-      <Modal open={modalIsOpen} onClose={closeModal}>
-        <Box
-          sx={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            bgcolor: isDarkMode ? '#1f1a25' : '#fff',
-            color: isDarkMode ? '#fff' : '#000',
-            width: '90vw',
-            maxWidth: '700px',
-            maxHeight: '85vh',
-            overflowY: 'auto',
-            borderRadius: 1,
-            p: 3,
-            boxShadow: 24,
-          }}
-        >
-          {/* Modal Header */}
+      <ThemeProvider theme={theme}>
+        <Modal open={modalIsOpen} onClose={closeModal}>
           <Box
             sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              mb: 2,
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              bgcolor: isDarkMode ? '#1f1a25' : '#fff',
+              color: isDarkMode ? '#fff' : '#000',
+              width: '90vw',
+              maxWidth: '700px',
+              maxHeight: '85vh',
+              overflowY: 'auto',
+              borderRadius: 1,
+              p: 3,
+              boxShadow: 24,
             }}
           >
-            <Typography variant="h6" component="h2" className="modal-title title">
-              {isBot ? (
-                <>
-                  <FontAwesomeIcon icon={faRobot} style={{ color: 'red', marginRight: 8 }} />
-                  Bot Card
-                </>
-              ) : isSystem ? (
-                <>
-                  <FontAwesomeIcon icon={faCog} style={{ color: 'grey', marginRight: 8 }} />
-                  ADMIN
-                </>
-              ) : (
-                <>
-                  <FontAwesomeIcon icon={faUser} style={{ marginRight: 8 }} />
-                  Player Card
-                </>
-              )}
-            </Typography>
-            <Button color="error" onClick={closeModal}>
-              ×
-            </Button>
-          </Box>
-
-          {/* If no data loaded yet, you could show skeleton or loading spinner here */}
-          {/* TABS: 0 => Profile & Inventory; 1 => Stats */}
-          <Tabs value={activeTab} onChange={handleTabChange} textColor="error" indicatorColor="error">
-            <Tab label="Profile & Inventory" />
-            <Tab label="Stats" />
-          </Tabs>
-
-          {/* Tab Panel #1: Profile & Inventory */}
-          {activeTab === 0 && (
-            <Box sx={{ mt: 2 }}>
-              {/* Online/Offline indicator */}
-              <Box
-                sx={{
-                  mb: 2,
-                  p: 1,
-                  borderRadius: 1,
-                  backgroundColor: '#6c757d26',
-                  maxWidth: '150px',
-                }}
-              >
-                <Typography variant="body2">
-                  {isOnline ? 'online' : 'offline'}&nbsp;
-                  <i className={`online-status${isOnline ? ' online' : ''}`} />
-                </Typography>
-              </Box>
-
-              {/* Avatar + Bio */}
-              <Box sx={{ textAlign: 'center' }}>
-                <Box className="avatar-border" sx={{ display: 'inline-block' }}>
-                  <Avatar
-                    src={avatar || '/img/profile-thumbnail.svg'}
-                    accessory={accessory}
-                    username={username}
-                    rank={rank}
-                    alt=""
-                  />
-                </Box>
-                <Typography variant="h5" sx={{ mt: 3 }}>
-                  {username}
-                </Typography>
-
-                {/* Bio link or text */}
-                <Box
-                  id="user-bio"
-                  sx={{
-                    position: 'relative',
-                    mt: 2,
-                    borderBottom: '2px solid',
-                    borderTop: '2px solid',
-                  }}
-                >
-                  {isBioUrl ? (
-                    <a
-                      href={bio}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{
-                        fontSize: '1.1em',
-                        color: isDarkMode ? '#e5e5e5' : '#333',
-                        textDecoration: 'none',
-                      }}
-                    >
-                      {bio}
-                    </a>
-                  ) : (
-                    <Typography
-                      variant="body1"
-                      sx={{
-                        fontSize: '1.1em',
-                        color: isDarkMode ? '#e5e5e5' : '#333',
-                      }}
-                    >
-                      {bio}
-                    </Typography>
-                  )}
-                </Box>
-              </Box>
-
-              {/* INVENTORY */}
-              <MarketplaceContainer>
-                <Typography variant="h6" sx={{ mt: 2 }}>
-                  INVENTORY
-                </Typography>
-
-                {productArray && productArray.length > 0 ? (
-                  <ProductGrid>
-                    {productArray.map((row) => (
-                      <ProductCard key={row._id}>
-                        {row.image && renderLottieAnimation(row.image, isLowGraphics) ? (
-                          renderLottieAnimation(row.image, isLowGraphics)
-                        ) : (
-                          <ProductImage src={row.image} alt={row.productName} />
-                        )}
-                        <ProductInfo>
-                          <ProductName>{row.productName}</ProductName>
-                        </ProductInfo>
-                      </ProductCard>
-                    ))}
-                  </ProductGrid>
-                ) : (
-                  <ProductGrid>
-                    {/* No items => maybe show placeholders or skeletons */}
-                    <Typography variant="body2">No items found.</Typography>
-                  </ProductGrid>
-                )}
-              </MarketplaceContainer>
-            </Box>
-          )}
-
-          {/* Tab Panel #2: Stats */}
-          {activeTab === 1 && (
-            <Box sx={{ mt: 2 }}>
-              <StatisticsForm
-                onDropdownChange={handleDropdownChange}
-                username={username}
-                title={title}
-                barStyle={barStyle}
-                color={color}
-                message={spendingMessage}
-                actorType={actorType}
-                gameType={gameType}
-                timeType={timeType}
-                dateJoined={dateJoined}
-                last_seen={lastSeen}
-                creditScore={creditScore}
-                gameLogList={gameLogList}
-                deposit={deposit}
-                withdraw={withdraw}
-                gameProfit={gameProfit}
-                balance={playerBalance}
-                gamePlayed={gamePlayed}
-                gameHosted={gameHosted}
-                gameJoined={gameJoined}
-                totalWagered={totalWagered}
-                rank={rank}
-                netProfit={netProfit}
-                profitAllTimeHigh={profitAllTimeHigh}
-                profitAllTimeLow={profitAllTimeLow}
-                averageWager={averageWager}
-                averageGamesPlayedPerRoom={averageGamesPlayedPerRoom}
-                averageProfit={averageProfit}
-              />
-            </Box>
-          )}
-
-          {/* Footer: show Lend, Tip, DM if not your own card */}
-          {userInfo._id !== creatorId && (
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'flex-end',
-                gap: 1,
-                mt: 3,
-              }}
-            >
-              {/* If user is online, show Lend */}
-              {isOnline && (
-                <Button
-                  color="error"
-                  variant="contained"
-                  onClick={handleOpenOfferModal}
-                >
-                  Lend&nbsp;
-                  <FontAwesomeIcon icon={faCoins} />
-                </Button>
-              )}
-              <Button
-                color="error"
-                variant="contained"
-                onClick={handleTip}
-              >
-                Tip&nbsp;
-                <FontAwesomeIcon icon={faMoneyBill} />
-              </Button>
-              <Button
-                color="error"
-                variant="outlined"
-                onClick={handleOpenChat}
-              >
-                DM&nbsp;
-                <FontAwesomeIcon icon={faEnvelope} />
-              </Button>
-            </Box>
-          )}
-        </Box>
-      </Modal>
-
-      {/* TIP MODAL (MUI) */}
-      <Modal open={isTipModalOpen} onClose={handleCloseTipModal}>
-        <Box
-          sx={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            bgcolor: isDarkMode ? '#1f1a25' : '#fff',
-            color: isDarkMode ? '#fff' : '#000',
-            width: '80vw',
-            maxWidth: 600,
-            maxHeight: '80vh',
-            overflowY: 'auto',
-            borderRadius: 1,
-            p: 3,
-            boxShadow: 24,
-          }}
-        >
-          <Box>
+            {/* Modal Header */}
             <Box
               sx={{
                 display: 'flex',
@@ -753,92 +458,231 @@ function PlayerModal(props) {
                 mb: 2,
               }}
             >
-              <Typography variant="h6" component="h2">
-                <FontAwesomeIcon icon={faMoneyBill} style={{ marginRight: 8 }} />
-                ENTER TIP AMOUNT
+              <Typography variant="h6" component="h2" className="modal-title title">
+                {isBot ? (
+                  <>
+                    <FontAwesomeIcon icon={faRobot} style={{ color: 'red', marginRight: 8 }} />
+                    Bot Card
+                  </>
+                ) : isSystem ? (
+                  <>
+                    <FontAwesomeIcon icon={faCog} style={{ color: 'grey', marginRight: 8 }} />
+                    ADMIN
+                  </>
+                ) : (
+                  <>
+                    <FontAwesomeIcon icon={faUser} style={{ marginRight: 8 }} />
+                    Player Card
+                  </>
+                )}
               </Typography>
               <Button color="error" onClick={closeModal}>
                 ×
               </Button>
             </Box>
 
-            <Box sx={{ mb: 2 }}>
-              <TextField
-                color="error"
-                label="Amount"
-                value={tipAmount || 0}
-                type="number"
-                onChange={handleTipAmountChange}
-                variant="filled"
-                autoComplete="off"
-                inputProps={{ pattern: '^\\d*\\.?\\d*$' }}
-                sx={{ width: '100%', mb: 2 }}
-                InputProps={{
-                  endAdornment: <Box component="span" sx={{ ml: 1 }}>RPS</Box>,
-                }}
-              />
+            {/* Tabs */}
+            <Tabs value={activeTab} onChange={handleTabChange} textColor="error" indicatorColor="error">
+              <Tab label="Profile & Inventory" />
+              <Tab label="Stats" />
+            </Tabs>
 
-              {/* Balance Table */}
-              <Table>
-                <TableBody>
-                  <TableRow>
-                    <TableCell>IN-GAME BALANCE:</TableCell>
-                    <TableCell>
-                      {convertToCurrency(balance, solPrice)}
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>TIP AMOUNT:</TableCell>
-                    <TableCell style={{ color: 'red' }}>
-                      {convertToCurrency((+tipAmount || 0) * -1, solPrice)}
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>NEW BALANCE:</TableCell>
-                    <TableCell>
-                      {convertToCurrency(balance - (parseFloat(tipAmount) || 0), solPrice)}
-                      &nbsp;
-                      {balance - (parseFloat(tipAmount) || 0) < 0 && (
-                        <WarningIcon sx={{ fontSize: 16 }} />
+            {/* Tab 0: Profile & Inventory */}
+            <Box sx={{ background: 'rgba(170, 170, 170, 0.06)', borderRadius: '0.3em', p: '20px' }}>
+
+              {activeTab === 0 && (
+                <Box>
+                  {/* Online/Offline */}
+                  <Box
+                    sx={{
+                      mb: 2,
+                      p: 1,
+                      borderRadius: 1,
+                      maxWidth: '90px',
+                      backgroundColor: '#6c757d26',
+                    }}
+                    className='player'
+                  >
+                    <Typography variant="body2" sx={{
+                       display: 'flex',
+                       justifyContent: 'space-evenly',
+                       alignItems: 'center'
+                    }}>
+                      {isOnline ? 'online' : 'offline'}&nbsp;
+                      <i className={`online-status${isOnline ? ' online' : ''}`} />
+                    </Typography>
+                  </Box>
+
+                  {/* Avatar & Bio */}
+                  <Box sx={{ textAlign: 'center' }}>
+                    <Box className="avatar-border" sx={{ display: 'inline-block' }}>
+                      <Avatar
+                        src={avatar || '/img/profile-thumbnail.svg'}
+                        accessory={accessory}
+                        username={username}
+                        rank={rank}
+                        alt=""
+                      />
+                    </Box>
+                    <Typography variant="h5" sx={{ mt: 3 }}>
+                      {username}
+                    </Typography>
+                    <Box
+                      id="user-bio"
+                      sx={{
+                        position: 'relative',
+                        mt: 2,
+                        borderBottom: '2px solid',
+                        borderTop: '2px solid',
+                      }}
+                    >
+                      {isBioUrl ? (
+                        <a
+                          href={bio}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            fontSize: '1.1em',
+                            color: isDarkMode ? '#e5e5e5' : '#333',
+                            textDecoration: 'none',
+                          }}
+                        >
+                          {bio}
+                        </a>
+                      ) : (
+                        <Typography
+                          variant="body1"
+                          sx={{
+                            fontSize: '1.1em',
+                            color: isDarkMode ? '#e5e5e5' : '#333',
+                          }}
+                        >
+                          {bio}
+                        </Typography>
                       )}
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
+                    </Box>
+                  </Box>
 
-              {/* Optional message */}
-              <Box sx={{ mt: 2 }}>
-                <Typography variant="body1" sx={{ mb: 1 }}>
-                  Add Message?
-                </Typography>
-                <TextField
-                  color="error"
-                  label="Message"
-                  value={message}
-                  onChange={handleMessageChange}
-                  variant="filled"
-                  autoComplete="off"
-                  inputProps={{ maxLength: 8 }}
-                  sx={{ width: '100%' }}
-                />
-              </Box>
+                  {/* Inventory */}
+                  <MarketplaceContainer>
+                    <Typography variant="h6" sx={{ mt: 2 }}>
+                      INVENTORY
+                    </Typography>
+                    {productArray && productArray.length > 0 ? (
+                      <ProductGrid>
+                        {productArray.map((row) => (
+                          <ProductCard key={row._id}>
+                            {row.image && renderLottieAnimation(row.image, isLowGraphics) ? (
+                              <Box sx={{  width: 80, height: 80 }}>
+
+                                {renderLottieAnimation(row.image, isLowGraphics)}
+                              </Box>
+                            ) : (
+                              <ProductImage src={row.image} alt={row.productName} />
+                            )}
+                            <ProductInfo>
+                              <Typography
+                                variant="h6"
+                                sx={{ fontSize: '1rem', color: '#fff', textAlign: 'center' }}
+                              >
+                                {row.productName}
+                              </Typography>
+                            </ProductInfo>
+                          </ProductCard>
+                        ))}
+                      </ProductGrid>
+                    ) : (
+                      <ProductGrid>
+                        <Typography variant="body2">No items found.</Typography>
+                      </ProductGrid>
+                    )}
+                  </MarketplaceContainer>
+                </Box>
+              )}
+
+              {/* Tab 1: Stats */}
+              {activeTab === 1 && (
+                <Box sx={{ mt: 2 }}>
+
+                  <StatisticsForm
+                    onDropdownChange={handleDropdownChange}
+                    username={username}
+                    title={title}
+                    barStyle={barStyle}
+                    color={color}
+                    message={spendingMessage}
+                    actorType={actorType}
+                    gameType={gameType}
+                    timeType={timeType}
+                    dateJoined={dateJoined}
+                    last_seen={lastSeen}
+                    creditScore={creditScore}
+                    gameLogList={gameLogList}
+                    deposit={deposit}
+                    withdraw={withdraw}
+                    gameProfit={gameProfit}
+                    balance={playerBalance}
+                    gamePlayed={gamePlayed}
+                    gameHosted={gameHosted}
+                    gameJoined={gameJoined}
+                    totalWagered={totalWagered}
+                    rank={rank}
+                    netProfit={netProfit}
+                    profitAllTimeHigh={profitAllTimeHigh}
+                    profitAllTimeLow={profitAllTimeLow}
+                    averageWager={averageWager}
+                    averageGamesPlayedPerRoom={averageGamesPlayedPerRoom}
+                    averageProfit={averageProfit}
+                  />
+                </Box>
+              )}
             </Box>
 
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-              <Button color="error" variant="contained" onClick={handleSendTip}>
-                Send Tip
-              </Button>
-              <Button
-                color="error"
-                variant="outlined"
-                onClick={handleCloseTipModal}
+            {/* Footer */}
+            {userInfo._id !== creatorId && (
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  gap: 1,
+                  mt: 3,
+                }}
               >
-                Cancel
-              </Button>
-            </Box>
+                {isOnline && (
+                  <Button color="error" variant="contained" onClick={handleOpenOfferModal}>
+                    Lend&nbsp;
+                    <FontAwesomeIcon icon={faCoins} />
+                  </Button>
+                )}
+                <Button color="error" variant="contained" onClick={handleTip}>
+                  Tip&nbsp;
+                  <FontAwesomeIcon icon={faMoneyBill} />
+                </Button>
+                <Button color="error" variant="outlined" onClick={handleOpenChat}>
+                  DM&nbsp;
+                  <FontAwesomeIcon icon={faEnvelope} />
+                </Button>
+              </Box>
+            )}
           </Box>
-        </Box>
-      </Modal>
+        </Modal>
+      </ThemeProvider>
+
+      {/* TIP MODAL in separate file */}
+      <TipModal
+        isTipModalOpen={isTipModalOpen}
+        handleCloseTipModal={handleCloseTipModal}
+        isDarkMode={isDarkMode}
+        theme={theme}
+        closeModal={closeModal}
+        handleTipAmountChange={handleTipAmountChange}
+        tipAmount={tipAmount}
+        handleMessageChange={handleMessageChange}
+        message={message}
+        balance={balance}
+        solPrice={solPrice}
+        handleSendTip={handleSendTip}
+      />
     </>
   );
 }

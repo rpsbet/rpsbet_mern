@@ -2,29 +2,55 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { connect } from 'react-redux';
 import history from '../../redux/history';
 import { setChatRoomInfo, getMyChat } from '../../redux/Logic/logic.actions';
-import Avatar from '../../components/Avatar';
-import Moment from 'moment';
-import { Button, Skeleton, Box } from '@mui/material';
 import { toggleDrawer } from '../../redux/Auth/user.actions';
 
+import Avatar from '../../components/Avatar';
+import moment from 'moment';
+
+import {
+	Skeleton,
+	Box,
+	Typography,
+	Paper
+} from '@mui/material';
+
+// Import your custom theme generator
+import { ThemeProvider } from '@mui/material/styles';
+import { getCustomTheme } from '../../config/theme';
+
 function MyChat(props) {
-	const { isDarkMode, myChat: myChatFromProps, loading, toggleDrawer } = props;
+	const {
+		isDarkMode,
+		myChat: myChatFromProps,
+		loading,
+		toggleDrawer,
+		getMyChat,
+		setChatRoomInfo,
+		highlightChatId,
+	} = props;
 
 	// ------------------ LOCAL STATE ------------------
 	const [myChat, setMyChat] = useState(myChatFromProps);
 	const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+	const [activeChatId, setActiveChatId] = useState(highlightChatId);
 
 	// ------------------ EFFECTS ------------------
-
-	// Equivalent to componentDidMount: fetch chat data once
 	useEffect(() => {
-		props.getMyChat();
+		getMyChat();
+		// eslint-disable-next-line
 	}, []);
 
-	// Equivalent to getDerivedStateFromProps: whenever props.myChat changes, update local myChat state
 	useEffect(() => {
 		setMyChat(myChatFromProps);
 	}, [myChatFromProps]);
+
+	useEffect(() => {
+		const handleResize = () => {
+			setIsMobile(window.innerWidth < 1024);
+		};
+		window.addEventListener('resize', handleResize);
+		return () => window.removeEventListener('resize', handleResize);
+	}, []);
 
 	// ------------------ HANDLERS ------------------
 	const openChat = useCallback(
@@ -36,127 +62,214 @@ function MyChat(props) {
 				toggleDrawer();
 			}
 
-			// Provide chat info to Redux
-			props.setChatRoomInfo({
-				avatar,
-				rank,
-				username,
-				chatLogs: []
-			});
+			setActiveChatId(id);
 
 			// Navigate to /chat/:id
 			history.push('/chat/' + id);
 		},
-		[isMobile, toggleDrawer, props]
+		[isMobile, toggleDrawer, setChatRoomInfo]
 	);
 
-	// ------------------ RENDER ------------------
-	// Sort the myChat keys in descending order by updated_at
-	// Note: myChat is an object keyed by room ID or something similar
+	// Sort keys in descending order by updated_at
 	const historyKeys = Object.keys(myChat).sort((a, b) => {
 		return myChat[a].updated_at < myChat[b].updated_at ? 1 : -1;
 	});
 
+	// Theme
+	const theme = getCustomTheme(isDarkMode ? 'dark' : 'light');
+	function formatDateShort(dateString) {
+		const now = moment();
+		const date = moment(dateString);
+		const diffSeconds = now.diff(date, 'seconds');
+	  
+		// Less than 1 minute => seconds
+		if (diffSeconds < 60) {
+		  return `${diffSeconds}s`;
+		}
+	  
+		const diffMinutes = Math.floor(diffSeconds / 60);
+		// Less than 1 hour => minutes
+		if (diffMinutes < 60) {
+		  return `${diffMinutes}m`;
+		}
+	  
+		const diffHours = Math.floor(diffMinutes / 60);
+		// Less than 24 hours => hours
+		if (diffHours < 24) {
+		  return `${diffHours}h`;
+		}
+	  
+		// 24+ hours => either "D MMM" (same year) or "D MMM YYYY" (past year)
+		if (date.year() === now.year()) {
+		  // e.g. "23 Jan"
+		  return date.format('D MMM');
+		} else {
+		  // e.g. "23 Jan 2022"
+		  return date.format('D MMM YYYY');
+		}
+	  }
+
 	return (
-		<div className="chat">
-			<div className="table my-chat-table">
+		<ThemeProvider theme={theme}>
+			<Box sx={{ background: 'rgba(170, 170, 170, 0.06)', borderRadius: '0.3em' }}>
+
 				{Object.keys(myChat).length === 0 && loading ? (
-					// If no chats yet and still loading, show Skeleton placeholders
-					<div>
+					// Skeleton placeholders
+					<Box>
 						{[...Array(5)].map((_, index) => (
 							<Box
 								key={index}
-								className="table-row"
 								sx={{
 									display: 'flex',
 									alignItems: 'center',
-									padding: '10px 0',
-									borderBottom: '1px solid #ccc',
+									py: 1.25,
+									borderBottom: '1px solid',
+									borderColor: 'divider',
 								}}
 							>
-								{/* Skeleton for Avatar */}
-								<Box sx={{ marginRight: 2 }}>
-									<Skeleton variant="circular" sx={{ width: 40, height: 40 }} />
+								<Box sx={{ mr: 2 }}>
+									<Skeleton variant="circular" width={40} height={40} />
 								</Box>
-
-								{/* Skeleton for Message Content */}
-								<Box sx={{ flex: 1, marginRight: 2 }}>
-									<Skeleton variant="text" sx={{ width: '60%', height: 20, marginBottom: 1 }} />
-									<Skeleton variant="text" sx={{ width: '40%', height: 15, marginBottom: 0.5 }} />
+								<Box sx={{ flex: 1, mr: 2 }}>
+									<Skeleton
+										variant="text"
+										sx={{ width: '60%', height: 20, mb: 1 }}
+									/>
+									<Skeleton
+										variant="text"
+										sx={{ width: '40%', height: 15, mb: 0.5 }}
+									/>
 								</Box>
-
-								{/* Skeleton for Unread Badge */}
-								<Box sx={{ marginRight: 2 }}>
-									<Skeleton variant="circular" sx={{ width: 30, height: 20, borderRadius: '10px' }} />
-								</Box>
-
-								{/* Skeleton for Button */}
-								<Box>
-									<Skeleton variant="rectangular" sx={{ width: 60, height: 30, borderRadius: 1 }} />
+								<Box sx={{ mr: 2 }}>
+									<Skeleton
+										variant="circular"
+										sx={{
+											width: 30,
+											height: 20,
+											borderRadius: '10px',
+										}}
+									/>
 								</Box>
 							</Box>
 						))}
-					</div>
+					</Box>
 				) : (
-					// Otherwise, render the list of chat items
-					historyKeys.map((rowKey, index) => (
-						<div className="table-row" key={index}>
-							<div>
-								<div className="table-cell">
-									<Avatar
-										accessory={myChat[rowKey].accessory}
-										rank={myChat[rowKey].rank}
-										src={myChat[rowKey].avatar}
-										username={myChat[rowKey].username}
-										alt=""
-										className="avatar"
-										darkMode={isDarkMode}
-									/>
-								</div>
-							</div>
-							<div className="message-panel title">
-								<div className="table-cell">
-									{myChat[rowKey].message}
-								</div>
-								<div className="table-cell message-date">
-									{Moment(myChat[rowKey].created_at_str).format('DD / MM')}
-								</div>
-								<div>
-									<div className="table-cell" title="Unread message">
-										{myChat[rowKey].unread_message_count === 0 ? (
-											<></>
-										) : (
-											<span className="unread_message_badge">
-												{myChat[rowKey].unread_message_count}
-											</span>
-										)}
-									</div>
-								</div>
-							</div>
-							<div>
-								<div className="table-cell"></div>
-								<div className="table-cell">
-									<Button
-										className="btn btn_join"
+					<Box>
+						{historyKeys.length === 0 && !loading ? (
+							<Typography variant="body2" color="text.secondary">
+								You have no chat conversations.
+							</Typography>
+						) : (
+							historyKeys.map((rowKey, index) => {
+								const rowData = myChat[rowKey];
+								const isActive = rowData._id === activeChatId;
+
+								return (
+									// Entire row is clickable
+									<Box
+										key={index}
+										data-id={rowData._id}
+										data-avatar={rowData.avatar}
+										data-rank={rowData.totalWagered}
+										data-username={rowData.username}
 										onClick={openChat}
-										data-id={myChat[rowKey]._id}
-										data-avatar={myChat[rowKey].avatar}
-										data-rank={myChat[rowKey].totalWagered}
-										data-username={myChat[rowKey].username}
+										sx={{
+											display: 'flex',
+											alignItems: 'center',
+											py: 1.25,
+											px: 1,
+											p: '15px',
+											backgroundColor: isActive ? 'rgba(255, 0, 0, 0.1)' : 'inherit',
+											borderRight: isActive ? '4px solid red' : 'none',
+											borderBottom: '1px solid',
+											borderColor: 'divider',
+											transition: 'background-color 0.2s',
+											cursor: 'pointer',
+											'&:hover': {
+												backgroundColor: 'action.hover',
+											},
+										}}
 									>
-										Open
-									</Button>
-								</div>
-							</div>
-						</div>
-					))
+										{/* Avatar */}
+										<Box className='player' sx={{ mr: 2 }}>
+											<Avatar
+												accessory={rowData.accessory}
+												rank={rowData.rank}
+												src={rowData.avatar}
+												username={rowData.username}
+												alt=""
+												className="avatar"
+												darkMode={isDarkMode}
+												style={{ width: 40, height: 40 }}
+											/>
+										</Box>
+
+										{/* Message + Date */}
+										<Box
+											sx={{
+												flex: 1,
+												display: 'flex',
+												flexDirection: 'column',
+												justifyContent: 'center',
+												mr: 2,
+											}}
+										>
+											<Typography
+												variant="subtitle2"
+												sx={{ fontWeight: 'bold', color: 'text.primary' }}
+											>
+												{rowData.username}
+											</Typography>
+											<Typography
+												variant="body2"
+												sx={{ color: 'text.secondary', mb: 0.5 }}
+											>
+												{rowData.message}
+											</Typography>
+											<Typography
+												variant="caption"
+												sx={{ textTransform: 'uppercase', color: 'text.disabled' }}
+											>
+												{formatDateShort(rowData.created_at_str)}
+
+											</Typography>
+										</Box>
+
+										{/* Unread Badge */}
+										{rowData.unread_message_count > 0 && (
+											<Box
+												component="span"
+												sx={{
+													display: 'inline-flex',
+													alignItems: 'center',
+													justifyContent: 'center',
+													backgroundColor: 'error.main',
+													color: '#fff',
+													borderRadius: '12px',
+													px: 1,
+													py: 0.25,
+													fontSize: '0.75em',
+													fontWeight: 'bold',
+													minWidth: 24,
+													textAlign: 'center',
+												}}
+											>
+												{rowData.unread_message_count}
+											</Box>
+										)}
+									</Box>
+								);
+							})
+						)}
+					</Box>
 				)}
-			</div>
-		</div>
+			</Box>
+
+		</ThemeProvider>
 	);
 }
 
-// ------------------ REDUX CONNECT ------------------
+// Redux connect
 const mapStateToProps = (state) => ({
 	isDarkMode: state.auth.isDarkMode,
 	myChat: state.logic.myChat,

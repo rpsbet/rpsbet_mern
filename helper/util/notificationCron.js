@@ -118,7 +118,6 @@ async function deleteNotifications() {
 
 // Schedule the cron job to run every day at midnight (00:00)
 cron.schedule('0 0 * * *', async () => {
-  await deleteNotifications();
   await deleteChat();
   await deleteBetItems();
 });

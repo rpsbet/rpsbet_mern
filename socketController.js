@@ -126,7 +126,6 @@ module.exports.socketio = server => {
     socket.on('connect_error', (error) => {
       console.error('Socket connection error:', error);
     });
-    socket.emit('CONNECTED', {});
     socket.on('STORE_CLIENT_USER_ID', async data => {
       try {
         // Update last_seen for the user
@@ -144,69 +143,6 @@ module.exports.socketio = server => {
 
     socket.on('GLOBAL_CHAT_SEND', data => {
       globalChatSend(io, data);
-    });
-
-    socket.on('FETCH_GLOBAL_CHAT', () => {
-
-      Chat.find({})
-        .sort({ created_at: -1 })
-        .limit(15)
-        .populate({ path: 'sender', model: User, select: 'username avatar accessory totalWagered' })
-        .populate({
-          path: 'replyTo',
-          model: 'Chat',
-          populate: { path: 'sender', model: User, select: 'username avatar accessory totalWagered' }
-        })
-        .lean()
-        .then(results => {
-          const transformedResults = results.map(
-            ({
-              created_at,
-              message,
-              messageType,
-              messageContent,
-              sender,
-              replyTo
-            }) => {
-              const extractedReplyTo =
-                replyTo && replyTo.length > 0 ? replyTo[0] : null;
-              const transformedReplyTo = extractedReplyTo
-                ? {
-                  sender: extractedReplyTo.sender?.username ?? '',
-                  senderId: extractedReplyTo.sender?._id ?? '',
-                  avatar: extractedReplyTo.sender?.avatar ?? '',
-                  rank: extractedReplyTo.sender?.totalWagered ?? '',
-                  accessory: extractedReplyTo.sender?.accessory ?? '',
-                  message: extractedReplyTo.message,
-                  messageType: extractedReplyTo.messageType,
-                  time: Moment(extractedReplyTo.created_at).format('hh:mm')
-                }
-                : null;
-
-              return {
-                sender: sender?.username ?? '',
-                senderId: sender?._id ?? '',
-                message: message,
-                messageType: messageType,
-                messageContent: messageContent,
-                avatar: sender?.avatar ?? '',
-                accessory: sender?.accessory ?? '',
-                replyTo: transformedReplyTo,
-                rank: sender?.totalWagered ?? '',
-                time: Moment(created_at).format('hh:mm')
-              };
-            }
-          );
-
-          const sortedResults = transformedResults.sort((a, b) =>
-            a.created_at > b.created_at ? 1 : -1
-          );
-
-          io.sockets.emit('SET_GLOBAL_CHAT', sortedResults);
-        })
-        .catch(error => {
-          console.error('Error fetching GLOBAL_CHAT:', error);
-        });
     });
 
     socket.on('disconnect', reason => {
@@ -233,17 +169,16 @@ module.exports.socketio = server => {
       console.log(err.stack);
     });
 
-    socket.on('READ_MESSAGE', async data => {
+    socket.on('READ_MESSAGE', async (data) => {
+      // data: { to, from }
+      // mark any from->to messages as read
       await Message.updateMany(
         {
           is_read: false,
           from: new ObjectId(data.from),
           to: new ObjectId(data.to)
         },
-        { $set: { is_read: true } },
-        (err, writeResult) => {
-          console.log('set messages as read via socket', err);
-        }
+        { $set: { is_read: true } }
       );
     });
 
@@ -257,6 +192,7 @@ module.exports.socketio = server => {
 
     socket.on('SEND_CHAT', async data => {
       send('SEND_CHAT', data.to, data);
+      console.log(`Forward the message to ${data.to} user`, data)
       const message = new Message(data);
       await message.save();
     });

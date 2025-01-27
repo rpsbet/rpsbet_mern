@@ -461,85 +461,141 @@ router.get('/get-total-statistics', auth, async (req, res) => {
     });
   }
 });
+
 router.post('/get-spending-habit', async (req, res) => {
   try {
     const { _id } = req.body;
 
     if (!_id) {
-      return res.status(400).json({ success: false, message: 'User ID is required' });
+      return res.status(400).json({
+        success: false,
+        message: 'User ID is required.'
+      });
     }
 
+    // Fetch user
     const user = await User.findById(_id).select(
-      '_id totalWagered profitAllTimeHigh totalProfit gamePlayed'
+      '_id totalWagered profitAllTimeHigh totalProfit profitAllTimeLow gamePlayed'
     );
 
     if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
+      return res
+        .status(404)
+        .json({ success: false, message: 'User not found.' });
     }
 
-    const averageWager = user.gamePlayed > 0 ? user.totalWagered / user.gamePlayed : 0;
-    const profitAllTimeHigh = parseFloat(user.profitAllTimeHigh);
+    const { totalWagered, profitAllTimeHigh, totalProfit, profitAllTimeLow, gamePlayed } = user;
 
-    // Calculate percentage thresholds
-    const tenPercent = profitAllTimeHigh * 0.1;
-    const twentyPercent = profitAllTimeHigh * 0.2;
-    const thirtyPercent = profitAllTimeHigh * 0.3;
-    const fortyPercent = profitAllTimeHigh * 0.4;
+    // 1) Negative totalProfit => "very bad"
+    if (totalProfit < 0) {
+      return res.json({
+        success: true,
+        status: 'very bad',
+        reason: 'User is overall in negative profit.'
+      });
+    }
 
-    const postProfit = user.totalProfit > 0;
-    const profitValue = Number(postProfit);
+    // 2) If no games or no positive allTimeHigh => "very bad"
+    if (gamePlayed === 0 || profitAllTimeHigh <= 0) {
+      return res.json({
+        success: true,
+        status: 'very bad',
+        reason: 'Insufficient data to analyze spending habit.'
+      });
+    }
 
-    const determineStatus = (averageWager, profitAllTimeHigh, profitValue) => {
-      let status;
+    // 3) averageWager
+    const averageWager = totalWagered / gamePlayed;
+    // 4) Custom thresholds
+    const threePercent = profitAllTimeHigh * 0.03;
+    const tenPercent = profitAllTimeHigh * 0.10;
+    const twentyPercent = profitAllTimeHigh * 0.20;
+    const thirtyFivePct = profitAllTimeHigh * 0.35;
+    const fiftyPercent = profitAllTimeHigh * 0.50;
 
-      // If either averageWager or profitAllTimeHigh is 0, return 'very bad'
-      if (averageWager === 0 || profitAllTimeHigh === 0) {
-        return 'very bad';
-      }
+    let baseStatus;
+    switch (true) {
+      case averageWager <= threePercent:
+        baseStatus = 'very good';
+        break;
+      case averageWager <= tenPercent:
+        baseStatus = 'good';
+        break;
+      case averageWager <= twentyPercent:
+        baseStatus = 'average';
+        break;
+      case averageWager <= thirtyFivePct:
+        baseStatus = 'bad';
+        break;
+      case averageWager <= fiftyPercent:
+        baseStatus = 'very bad';
+        break;
+      default:
+        baseStatus = 'very bad';
+        break;
+    }
 
-      switch (true) {
-        // Very good: 10% or less
-        case averageWager <= tenPercent && profitValue === 1:
-          status = 'very good';
-          break;
+    // 5) degrade if profitAllTimeLow is severely negative
+    const finalStatus = degradeByAllTimeLow(baseStatus, profitAllTimeHigh, profitAllTimeLow);
 
-        // Good: Between 10% and 20%
-        case averageWager <= twentyPercent:
-          status = 'good';
-          break;
-
-        // Average: Between 20% and 30%
-        case averageWager <= thirtyPercent:
-          status = 'average';
-          break;
-
-        // Bad: Between 30% and 40%
-        case averageWager <= fortyPercent:
-          status = 'bad';
-          break;
-
-        // Very bad: More than 40%
-        default:
-          status = 'very bad';
-      }
-
-      return status;
-    };
-
-    const status = determineStatus(averageWager, profitAllTimeHigh, profitValue);
-
+    // 6) Return final
     return res.json({
       success: true,
-      status: status,
+      status: finalStatus,
+      baseStatus,
+      averageWager,
+      profitAllTimeLow,
+      profitAllTimeHigh,
+      totalProfit,
+      gamePlayed,
     });
   } catch (error) {
     console.error('Error in /get-spending-habit route:', error);
-    res.status(500).json({ success: false, message: 'Internal server error' });
+    return res
+      .status(500)
+      .json({ success: false, message: 'Internal server error.' });
   }
 });
 
+/**
+ * degradeByAllTimeLow:
+ *  degrade the status by 1 or 2 steps if user had a big negative dip
+ */
+function degradeByAllTimeLow(currentStatus, profitAllTimeHigh, profitAllTimeLow) {
+  if (profitAllTimeLow >= 0 || profitAllTimeHigh <= 0) {
+    return currentStatus;
+  }
+
+  const absLow = Math.abs(profitAllTimeLow);
+  if (absLow >= profitAllTimeHigh) {
+    return degradeStatus(degradeStatus(currentStatus));
+  } else if (absLow >= 0.5 * profitAllTimeHigh) {
+    return degradeStatus(currentStatus);
+  } else {
+    return currentStatus;
+  }
+}
+
+function degradeStatus(original) {
+  switch (original) {
+    case 'very good': return 'very good';
+    case 'good': return 'good';
+    case 'average': return 'average';
+    case 'bad': return 'bad';
+    case 'very bad': return 'very bad';
+    default: return 'very bad';
+  }
+}
+
 router.get('/get-receipt-statistics', async (req, res) => {
   try {
+    // Example array of user IDs to ignore
+    const ignoredUsers = [
+      '638f9033d5d0760d7b956eb1',
+      '6302a5207195346428fa9d9b',
+      // etc.
+    ];
+
     const receipts = await Receipt.find();
 
     // Group receipts by user_id and calculate the withdraws and deposits
@@ -547,11 +603,17 @@ router.get('/get-receipt-statistics', async (req, res) => {
 
     receipts.forEach((receipt) => {
       const userId = receipt.user_id;
+
+      // If the user is in the ignore list, skip
+      if (ignoredUsers.includes(userId.toString())) {
+        return; 
+      }
+
       if (!userTransactions[userId]) {
         userTransactions[userId] = { withdraws: 0, deposits: 0 };
       }
 
-      const amount = Math.abs(receipt.amount); // Make the amount positive before processing
+      const amount = Math.abs(receipt.amount); // Make the amount positive
 
       if (receipt.payment_type.includes('Withdraw')) {
         userTransactions[userId].withdraws += amount;
@@ -807,7 +869,6 @@ router.get('/get-leaderboards', auth, async (req, res) => {
   try {
     const sortField = req.query.sortField || 'totalProfit';
     const sortOrder = req.query.sortOrder === 'asc' ? 1 : -1;
-
     const ignoredUsernames = [
       'WHALE WATCHERS',
       'OFFICIALRPSGAME',

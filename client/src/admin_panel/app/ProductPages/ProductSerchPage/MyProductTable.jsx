@@ -1,15 +1,30 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import { connect } from 'react-redux';
+
+// MUI v5
+import { 
+  ThemeProvider,
+  Box,
+  Button,
+  Menu,
+  MenuItem,
+  IconButton,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableRow,
+  Tooltip,
+  Skeleton,
+  Pagination,
+  Typography
+} from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faTag,
-  faCubes,
-  faGem,
-  faDollarSign,
-  faSort,
-  faFilter
-} from '@fortawesome/free-solid-svg-icons';
+import { faTag, faCubes, faGem, faFilter } from '@fortawesome/free-solid-svg-icons';
+import { SwapHoriz, Cancel } from '@mui/icons-material';
+
+// Redux + Actions
 import {
   acQueryMyItem,
   setCurrentProductId,
@@ -25,34 +40,23 @@ import {
   openListItemModal,
   openDeListItemModal
 } from '../../../../redux/Notification/notification.actions';
-import history from '../../../../redux/history';
-import {
-  LinearProgress,
-  Button,
-  Menu,
-  MenuItem,
-  IconButton,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableRow,
-  Box,
-  Tooltip,
-  Select,
-  Pagination,
-  Card
-} from '@mui/material';
 import { acGetCustomerInfo } from '../../../../redux/Customer/customer.action';
-import { SwapHoriz, Cancel } from '@mui/icons-material';
-import { convertToCurrency } from '../../../../util/conversion';
+
+// Local
 import { alertModal } from '../../../../game_panel/modal/ConfirmAlerts';
 import PlayerModal from '../../../../game_panel/modal/PlayerModal';
+import history from '../../../../redux/history';
+import Avatar from '../../../../components/Avatar';
+import { convertToCurrency } from '../../../../util/conversion';
 import { renderLottieAnimation } from '../../../../util/LottieAnimations';
+import { getCustomTheme } from '../../../../config/theme';
+
+// -------------- Styled Containers ----------------
 const MarketplaceContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+  width: 100%;
 `;
 
 const FilterSortContainer = styled.div`
@@ -65,666 +69,502 @@ const FilterSortContainer = styled.div`
 
 const ProductGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
-  gap: 20px;
-  max-width: 100%;
+  /* Default to 1 column (or however many you want) */
+  grid-template-columns: repeat(1, 1fr);
+  gap: 16px;
+  width: 100%;
   margin: 20px 0;
+
+  /* On large screens (≥900px), force 2 columns max */
+  @media (min-width: 900px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
 `;
-const ProductCard = styled.div`
-  position: relative;
-  padding: 10px;
-  display: -ms-flexbox;
+
+const PaginationContainer = styled.div`
   display: flex;
-  -webkit-flex-direction: column;
-  -ms-flex-direction: column;
-  flex-direction: column;
-  -webkit-align-items: center;
-  -webkit-box-align: center;
-  -ms-flex-align: center;
+  justify-content: center;
   align-items: center;
+  margin-top: 20px;
+`;
+
+// Each card 320px high, split top/bottom
+const ProductCard = styled.div`
+  background-color: #2e2e2e;
+  border-radius: 8px;
+  height: 320px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   cursor: pointer;
-  -webkit-transition: -webkit-transform 0.2s;
-  -webkit-transition: transform 0.2s;
   transition: transform 0.2s;
-  position: relative;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    border-radius: 1em;
-    opacity: 0;
-    transition: opacity 0.2s;
-  }
-
-  &:hover::before {
-    opacity: 1;
-  }
 
   &:hover {
     transform: scale(1.03);
   }
 `;
 
-const EquipItemButton = styled.div`
-opacity: 0;
-  position: absolute;
-  margin-top: auto;
-  bottom: 0;
-  
-  margin
-  right: 0; 
-    cursor: pointer;
-    -webkit-transition: -webkit-transform 0.2s;
-    -webkit-transition: transform 0.2s;
-    transition: transform 0.2s,  bottom 0.2s;
+// -------------- Utility to compare owners --------------
+function areOwnersEqual(prevOwners, currentOwners) {
+  return JSON.stringify(prevOwners) === JSON.stringify(currentOwners);
+}
 
-    ${ProductCard}:hover & {
-      opacity: 1;
-        bottom: calc(50% + 90px);;
-`;
+// -------------- Functional Component --------------
+function MyProductTable(props) {
+  const {
+    data,
+    pages,
+    page,
+    loading,
+    acQueryMyItem,
+    setCurrentProductId,
+    setCurrentProductInfo,
+    openListItemModal,
+    openDeListItemModal,
+    equipItem,
+    userInfo,
+    returnItem,
+    isDarkMode,
+    isLowGraphics
+  } = props;
 
-const ListItemButton = styled.div`
-opacity: 0;
-  position: absolute;
-  margin-top: auto;
-  bottom: 0;
-  
-  margin
-  right: 0; 
-    cursor: pointer;
-    -webkit-transition: -webkit-transform 0.2s;
-    -webkit-transition: transform 0.2s;
-    transition: transform 0.2s,  bottom 0.2s;
+  // Local state
+  const [customerInfo, setCustomerInfo] = useState({});
+  const [showPlayerModal, setShowPlayerModal] = useState(false);
+  const [selectedCreator, setSelectedCreator] = useState('');
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [sortCriteria, setSortCriteria] = useState('updated_at');
+  const [itemType, setItemType] = useState('653ee81117c9f5ee2124564b');
 
-    ${ProductCard}:hover & {
-      opacity: 1;
-        bottom: calc(50% + 30px);;
-`;
+  // Compare owners from previous
+  const prevOwnersRef = useRef(JSON.stringify(data?.owners || []));
 
-const DiscontinueButton = styled.div`
-opacity: 0;
-  position: absolute;
-  margin-top: auto;
-  bottom: 0;
-  
-  margin
-  right: 0; 
-    cursor: pointer;
-    -webkit-transition: -webkit-transform 0.2s;
-    -webkit-transition: transform 0.2s;
-    transition: transform 0.2s,  bottom 0.2s;
+  // MUI theme
+  const theme = getCustomTheme(isDarkMode ? 'dark' : 'light');
+console.log("data in actual product table", data)
+  // -------------- Effects --------------
+  // On mount
+  useEffect(() => {
+    fetchAccessory(userInfo._id);
+    fetchItems();
+    fetchRoomLists();
+    // no dependencies => no hooking
+  }, []);
 
-    ${ProductCard}:hover & {
-      opacity: 1;
-        bottom: calc(50% + 30px);;
-`;
-
-const DeListItemButton = styled.div`
-opacity: 0;
-  position: absolute;
-  margin-top: auto;
-  bottom: 0;
-  
-  margin
-  right: 0; 
-    cursor: pointer;
-    -webkit-transition: -webkit-transform 0.2s;
-    -webkit-transition: transform 0.2s;
-    transition: transform 0.2s,  bottom 0.2s;
-
-    ${ProductCard}:hover & {
-      opacity: 1;
-        bottom: calc(50% - 30px);
-  
-`;
-
-const ProductImage = styled.img`
-  max-width: 100%;
-  height: auto;
-  background: #fff;
-  border: 1px solid #f9f9;
-  box-shadow: 0 1px 17px #333;
-  border-radius: 1em;
-`;
-
-const RentingLabel = styled.span`
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  width: 80px; /* Adjust width as needed */
-  height: 30px;
-  background: ${({ isOwner }) => (isOwner ? 'linear-gradient(155deg, #cd81ff, #1976D2)' : 'linear-gradient(155deg, #f50057, #8a17d8)')};
-  border-radius: 1em;
-  box-shadow: inset 0px -1px 11px ${({ isOwner }) => (isOwner ? '#1565C0' : '#9f3fb5')};
-  color: #fff;
-  font-weight: 500;
-  text-align: center;
-`;
-const PowerContainer = styled.div`
-  display: grid;
-  grid-template-columns: 40px 40px; /* Adjust column widths as needed */
-  gap: 10px;
-  position: absolute;
-  top: 10px;
-  right: 10px;
-`;
-
-const PowerItem = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-`;
-
-const PowerLabel = styled.span`
-  width: 40px;
-  height: 20px;
-  border-radius: 1em;
-  color: #fff;
-  font-weight: 500;
-  padding-top: 2.5px;
-  font-size: xx-small;
-  text-align: center;
-  box-shadow: inset 0px -1px 11px rgba(0, 0, 0, 0.5);
-  margin-top: 5px;
-  margin-bottom: -5px;
-`;
-
-const CommissionPower = styled(PowerLabel)`
-  background: #28a745;
-  box-shadow: inset 0px -1px 11px #005b15;
-`;
-
-const DefensePower = styled(PowerLabel)`
-  background: #dc3545;
-  box-shadow: inset 0px -1px 11px #8b0000;
-`;
-
-const PercentageBar = styled.div`
-  width: 100px;
-  height: 10px;
-  background: #e0e0e0;
-  border-radius: 1em;
-  overflow: hidden;
-margin-top: 10px;
-  &::before {
-    content: '';
-    display: block;
-    height: 100%;
-    background: ${props => props.color || '#ffc107'};
-    width: ${props => (props.percentage / 25) * 100}%;
-  }
-`;
-
-const ProductInfo = styled.div`
-  text-align: center;
-`;
-
-const ProductName = styled.h6`
-  padding: 4px;
-  font-size: 1rem;
-  margin-bottom: -5p;
-  font-weight: 400;
-  line-height: 1.75;
-  letter-spacing: 0.00938em;
-  background: linear-gradient(354deg, #ea292975, #494e54);
-  width: 100%;
-  border: 1px soli#9c0c0c;
-  border-radius: 23%;
-  text-shadow: 2px -2px 4px #98090b;
-  text-transform: uppercase;
-  box-shadow: inset 0px 1px 14px #28a74524, -1px 2px #9d0d0e;
-  color: #fff;
-  margin-top: 10px;
-  border-bottom-right-radius: 21px;
-  border-top-left-radius: 30px;
-`;
-
-const LinearContainer = styled.div`
-  width: 100%;
-  max-width: 1200px;
-  margin: 20px 0;
-`;
-
-class MyProductTable extends Component {
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      customerInfo: {},
-      showPlayerModal: false,
-      selectedCreator: '',
-      accessory: null,
-      anchorEl: null,
-      sortAnchorEl: null,
-      sortCriteria: 'updated_at',
-      _id: this.props.userInfo._id,
-      itemType: '653ee81117c9f5ee2124564b'
-    };
-  }
-
-  async componentDidMount() {
-    await this.fetchAccessory(this.state._id);
-    await this.fetchItems();
-  }
-
-  componentDidUpdate(prevProps) {
-    const { showListItemModal, showDeListItemModal } = this.props;
-    if (
-      prevProps.showListItemModal !== showListItemModal && !showListItemModal ||
-      prevProps.showDeListItemModal !== showDeListItemModal && !showDeListItemModal
-    ) {
-      this.handleModalClose();
+  // If data changes => re-check owners
+  useEffect(() => {
+    const prevOwners = prevOwnersRef.current;
+    const currentOwners = JSON.stringify(data?.owners || []);
+    if (prevOwners !== currentOwners) {
+      fetchItems();
+      prevOwnersRef.current = currentOwners;
     }
-  }
+    // no dependencies
+  });
 
-  handleModalClose() {
-    const { _id } = this.state;
+  // Each time data changes => fetch user info for owners
+  useEffect(() => {
+    fetchCustomerData();
+    // no dependencies
+  });
 
-    this.fetchAccessory(_id);
-    this.fetchItems();
-    this.fetchRoomLists();
-  }
+  // -------------- Functions --------------
+  const fetchItems = async () => {
+    const { page } = props;
+    await acQueryMyItem(100, page, sortCriteria, itemType);
+  };
 
-  fetchRoomLists() {
-    const { getRoomList } = this.props;
+  const fetchRoomLists = () => {
+    const { getRoomList } = props;
     getRoomList({ game_type: 'RPS' });
     getRoomList({ game_type: 'All' });
-  }
+  };
 
-
-  async fetchAccessory(_id) {
+  const fetchAccessory = async (_id) => {
     try {
-      const accessory = await this.props.fetchAccessory({ _id });
-      this.setState({ accessory: accessory.accessory.name });
+      await props.fetchAccessory({ _id });
     } catch (error) {
-      // Handle the error, e.g., show an error message or log the error
       console.error('Error fetching accessory:', error);
     }
-  }
-
-  // handleSortChange = event => {
-  //   this.setState({ sortCriteria: event.target.value });
-  //   this.fetchItems();
-  // }
-
-  async fetchItems() {
-    const { acQueryMyItem, page } = this.props;
-    const { sortCriteria, itemType } = this.state;
-    await acQueryMyItem(100, page, sortCriteria, itemType);
-  }
-
-  handleFilterClick = event => {
-    this.setState({ anchorEl: event.currentTarget });
   };
 
-  handleFilterClose = filter => {
-    this.setState({ anchorEl: null, itemType: filter }, () => {
-      this.fetchItems();
-    });
-  };
-
-  handleSortClick = event => {
-    this.setState({ sortAnchorEl: event.currentTarget });
-  };
-
-  handleSortClose = sortCriteria => {
-    this.setState({ sortAnchorEl: null, sortCriteria });
-  };
-
-  handleOpenPlayerModal = creator_id => {
-    this.setState({ showPlayerModal: true, selectedCreator: creator_id });
-  };
-
-  handleClosePlayerModal = () => {
-    this.setState({ showPlayerModal: false });
-  };
-
-  equipItem = async itemId => {
-    this.setState({ item_id: itemId }, async () => {
-      const { isDarkMode, equipItem } = this.props;
-      const response = await equipItem({ item_id: this.state.item_id });
-
-      if (response.success) {
-        this.handleModalClose();
-        const { message } = response;
-        alertModal(isDarkMode, message, '-cat');
-      } else {
-        alertModal(isDarkMode, 'Unable to Equip item. De-List item first.');
-      }
-    });
-  };
-
-  async fetchCustomerInfo() {
-    const { data, acGetCustomerInfo } = this.props;
+  const fetchCustomerData = async () => {
+    if (!data) return;
     for (const product of data) {
       if (product.owners && product.owners.length > 0) {
         for (const owner of product.owners) {
-          if (!this.state.customerInfo[owner.user]) {
+          if (!customerInfo[owner.user]) {
             try {
-              const info = await acGetCustomerInfo(owner.user);
-              if (info) {
-                this.setState(prevState => ({
-                  customerInfo: {
-                    ...prevState.customerInfo,
-                    [owner.user]: info
-                  }
-                }));
-              } else {
-                this.setState(prevState => ({
-                  customerInfo: {
-                    ...prevState.customerInfo,
-                    [owner.user]: {
-                      username: 'Anon',
-                      avatar: 'default-avatar-url'
-                    }
-                  }
-                }));
-              }
+              const info = await props.acGetCustomerInfo(owner.user);
+              setCustomerInfo(prev => ({
+                ...prev,
+                [owner.user]: info || { username: 'Anon', avatar: 'default-avatar-url' }
+              }));
             } catch (error) {
-              console.error(
-                `Error fetching customer info for ${owner.user}:`,
-                error
-              );
+              console.error(`Error fetching customer info for ${owner.user}:`, error);
             }
           }
         }
       }
     }
-  }
+  };
 
-  render() {
-    const {
-      data,
-      pages,
-      page,
-      loading,
-      solPrice,
-      acQueryMyItem,
-      setCurrentProductId,
-      setCurrentProductInfo,
-      openListItemModal,
-      openDeListItemModal,
-      isLowGraphics,
-      returnItem
-    } = this.props;
+  const handleModalClose = () => {
+    fetchAccessory(userInfo._id);
+    fetchItems();
+    fetchRoomLists();
+  };
 
-    const {
-      customerInfo,
-      showPlayerModal,
-      selectedCreator,
-      sortCriteria,
-      sortOrder,
-      anchorEl,
-      sortAnchorEl,
-      itemType,
-      accessory
-    } = this.state;
-    const itemTypeMap = {
-      '653ee7ac17c9f5ee21245649': 'RRPS Card',
-      '653ee7df17c9f5ee2124564a': 'Game Background',
-      '653ee81117c9f5ee2124564b': 'Accessory',
-      '654231df29446bc96d689d0f': 'Tools',
-      '6542321929446bc96d689d10': 'Games'
-    };
-    this.fetchCustomerInfo();
-    return (
-      <MarketplaceContainer>
-        <FilterSortContainer>
-          <div className="filters">
-            <Button onClick={this.handleFilterClick}>
-              Filter&nbsp;
-              <FontAwesomeIcon icon={faFilter} />
-            </Button>
-            <Menu
-              anchorEl={anchorEl}
-              open={Boolean(anchorEl)}
-              onClose={() => this.handleFilterClose(null)}
-            >
+  // -------------- Filter logic --------------
+  const handleFilterClick = (e) => setAnchorEl(e.currentTarget);
+  const handleFilterClose = (filter) => {
+    setAnchorEl(null);
+    if (filter) {
+      setItemType(filter);
+      fetchItems();
+    }
+  };
 
-              <MenuItem
-                onClick={() =>
-                  this.handleFilterClose('653ee81117c9f5ee2124564b')
-                }
-                selected={itemType === '653ee81117c9f5ee2124564b'}
+  // -------------- Action Handlers --------------
+  const handleOpenPlayerModal = (creator_id) => {
+    setSelectedCreator(creator_id);
+    setShowPlayerModal(true);
+  };
+  const handleClosePlayerModal = () => setShowPlayerModal(false);
+
+  const handleEquip = async (itemId, itemImage) => {
+    const response = await equipItem({ item_id: itemId });
+    if (response.success) {
+      handleModalClose();
+      alertModal(isDarkMode, response.message, '-cat');
+    } else {
+      alertModal(isDarkMode, 'Unable to Equip item. De-List item first.');
+    }
+  };
+
+  const handleReturnItem = (rowId) => {
+    setCurrentProductId(rowId);
+    returnItem(rowId);
+  };
+
+  const handleListItem = (row) => {
+    setCurrentProductId(row._id);
+    setCurrentProductInfo({
+      item_type: row.item_type,
+      productName: row.productName,
+      rentOption: row.rentOption,
+      price: row.price,
+      onSale: row.onSale
+    });
+    openListItemModal();
+  };
+
+  const handleDeListItem = (row) => {
+    setCurrentProductId(row._id);
+    openDeListItemModal();
+  };
+
+  // -------------- Render --------------
+  return (
+    <ThemeProvider theme={theme}>
+      <Box sx={{ background: 'rgba(170, 170, 170, 0.06)', borderRadius: '0.3em', p: '20px' }}>
+        <MarketplaceContainer>
+          <FilterSortContainer>
+            <div className="filters">
+              <Button color="error" variant="outlined" onClick={handleFilterClick}>
+                Filter&nbsp;
+                <FontAwesomeIcon icon={faFilter} />
+              </Button>
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={() => handleFilterClose(null)}
               >
-                Accessory
-              </MenuItem>
-
-            </Menu>
-          </div>
-          <div className="filters">
-
-            <Menu
-              sortAnchorEl={sortAnchorEl}
-              open={Boolean(sortAnchorEl)}
-              onClose={() => this.handleSortClose(null)}
-            >
-              <Select
-                value={this.state.sortType}
-                onChange={this.handleSortChange}
-              >
-                <MenuItem value="updated_at">Sort by CP</MenuItem>
-                <MenuItem value="price">Sort by Price</MenuItem>
-              </Select>
-            </Menu>
-          </div>
-        </FilterSortContainer>
-        {!loading ? (
-          <ProductGrid>
-            {showPlayerModal && (
-              <PlayerModal
-                selectedCreator={selectedCreator}
-                modalIsOpen={showPlayerModal}
-                closeModal={this.handleClosePlayerModal}
-              />
-            )}
-
-            {data.map(row => (
-              <Card sx={{ maxWidth: 345, position: 'relative', m: 1, background: 'linear-gradient(156deg, #8a0290, #cf0c0e)' }}>
-
-                <ProductCard
-                  key={row._id}
-                  onClick={() => {
-                    setCurrentProductId(row._id);
-                    setCurrentProductInfo({
-                      item_type: row.item_type,
-                      productName: row.productName,
-                      rentOption: row.rentOption,
-                      price: row.price,
-                      onSale: row.onSale,
-                    });
-                    history.push(`/product/${row._id}`);
-                  }}
+                <MenuItem
+                  onClick={() => handleFilterClose('653ee81117c9f5ee2124564b')}
+                  selected={itemType === '653ee81117c9f5ee2124564b'}
                 >
-                  {row.image && renderLottieAnimation(row.image, isLowGraphics) ? (
-                    renderLottieAnimation(row.image, isLowGraphics)
-                  ) : (
-                    <ProductImage src={row.image} alt={row.productName} />
-                  )}
+                  Accessory
+                </MenuItem>
+              </Menu>
+            </div>
+          </FilterSortContainer>
 
-                  {row.onSale === 0 && row.rentOption ? (
-                    <RentingLabel>RENTING</RentingLabel>
-                  ) : (
-                    <RentingLabel isOwner={true}>OWNER</RentingLabel>
-                  )}
-                  <ProductInfo>
-                    <ProductName>{row.productName}</ProductName>
-                    <TableContainer>
-                      <Table id="my-products" className="product-detail">
-                        <TableBody>
-                          {row.rentOption && row.onSale === 0 ? (
-                            // Display Cost per Month when rentOption is true and onSale is 0
-                            <TableRow>
-                              <TableCell>
-                                <FontAwesomeIcon icon={faTag} /> Cost Per Month:
-                              </TableCell>
-                              <TableCell className="value">
-                                {convertToCurrency(row.price, solPrice)}
-                              </TableCell>
-                            </TableRow>
-                          ) : (
-                            // Display Price Per Month or Price Per Unit based on rentOption
-                            <TableRow>
-                              <TableCell>
-                                <FontAwesomeIcon icon={faTag} />
-                                {row.rentOption ? ' Price Per Month:' : ' Price Per Unit:'}
-                              </TableCell>
-                              <TableCell className="value">
-                                {convertToCurrency(row.price, solPrice)}
-                              </TableCell>
-                            </TableRow>
-                          )}
+          {props.loading ? (
+            // SKELETONS
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, justifyContent: 'center', mt: 2 }}>
+              {Array.from(new Array(6)).map((_, i) => (
+                <Box key={i}>
+                  <Skeleton variant="rectangular" width={165} height={160} sx={{ mb: 1 }} />
+                  <Skeleton variant="text" width={120} />
+                  <Skeleton variant="text" width={100} />
+                </Box>
+              ))}
+            </Box>
+          ) : (
+            <ProductGrid>
+              {showPlayerModal && (
+                <PlayerModal
+                  selectedCreator={selectedCreator}
+                  modalIsOpen={showPlayerModal}
+                  closeModal={handleClosePlayerModal}
+                />
+              )}
 
+              {data.map((row) => {
 
-                          {row.rentOption && row.onSale === 0 ? null : (
-                            <TableRow>
-                              <TableCell>
-                                <FontAwesomeIcon icon={faDollarSign} />
-                                {row.rentOption ? ' Renting Out:' : ' On Sale:'}
-                              </TableCell>
-                              <TableCell className="value">{row.onSale}</TableCell>
-                            </TableRow>
-                          )}
+                return (
+                  <Box
+                    key={row._id}
+                    sx={{
+                      backgroundColor: '#2e2e2e',
+                      borderRadius: 2,
+                      height: 320,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      overflow: 'hidden',
+                      cursor: 'pointer',
+                      transition: 'transform 0.2s',
+                      '&:hover': { transform: 'scale(1.03)' }
+                    }}
+                    onClick={() => {
+                      setCurrentProductId(row._id);
+                      setCurrentProductInfo({
+                        item_type: row.item_type,
+                        productName: row.productName,
+                        rentOption: row.rentOption,
+                        price: row.price,
+                        onSale: row.onSale
+                      });
+                      history.push(`/product/${row._id}`);
+                    }}
+                  >
+                    {/* Top half => avatar + lottie */}
+                    <Box
+                      sx={{
+                        flex: 1,
+                        position: 'relative',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                    >
 
-
-                          <TableRow>
-                            <TableCell>
-                              <FontAwesomeIcon icon={faCubes} /> Total:
-                            </TableCell>
-                            <TableCell className="value">
-                              {row.total_count}
-                            </TableCell>
-                          </TableRow>
-                          {row.rentOption}
-                          <TableRow>
-                            <TableCell>
-                              <FontAwesomeIcon icon={faGem} /> Type:
-                            </TableCell>
-                            <TableCell>
-                              {itemTypeMap[row.item_type] || 'Unknown'}
-                            </TableCell>
-                          </TableRow>
-                        </TableBody>
-                      </Table>
-                    </TableContainer>
-                  </ProductInfo>
-                  {row.onSale !== 0 ? null : (
-                    <EquipItemButton>
-                      {row.item_type !== '653ee81117c9f5ee2124564b' ? null : (
-                        <Tooltip
-                          title={
-                            accessory && accessory === row.image
-                              ? 'Unequip Item'
-                              : 'Equip Item'
-                          }
-                        >
-                          <Button
-                            variant='contained' color='error'
-                            onClick={() => {
-                              this.equipItem(row._id);
-                            }}
-                          >
-                            {accessory && accessory === row.image
-                              ? 'UNEQUIP'
-                              : 'EQUIP'}{' '}
-                            <SwapHoriz />
-                          </Button>
-                        </Tooltip>
-                      )}
-                    </EquipItemButton>
-                  )}
-                  {row.onSale === 0 && row.rentOption ? (
-                    // Show "Discontinue" button
-                    <DiscontinueButton>
-                      <Tooltip title="Discontinue Renting">
-                        <Button
-                          variant='contained' color='error'
-                          onClick={() => {
-                            setCurrentProductId(row._id);
-                            returnItem(row._id)
+                      {/* Lottie or image => center */}
+                      {row.image && renderLottieAnimation(row.image, isLowGraphics) ? (
+                        <Box sx={{ width: 80, height: 80 }}>
+                          {renderLottieAnimation(row.image, isLowGraphics)}
+                        </Box>
+                      ) : (
+                        <Box
+                          component="img"
+                          src={row.image}
+                          alt={row.productName}
+                          sx={{
+                            maxWidth: 80,
+                            maxHeight: 80,
+                            borderRadius: 2
                           }}
-                        >
-                          RETURN <Cancel />
-                        </Button>
-                      </Tooltip>
-                    </DiscontinueButton>
-                  ) : (
-                    // Show List and De-List buttons
-                    <>
-                      <ListItemButton>
-                        {accessory && accessory === row.image || row.onSale === row.total_count ? null : (
-                          <Tooltip title="List Item">
-                            <Button
-                              variant='contained' color='error'
-                              onClick={() => {
-                                setCurrentProductId(row._id);
-                                setCurrentProductInfo({
-                                  item_type: row.item_type,
-                                  productName: row.productName,
-                                  rentOption: row.rentOption,
-                                  price: row.price,
-                                  onSale: row.onSale,
-                                });
-                                openListItemModal();
-                              }}
-                            >
-                              List <SwapHoriz />
-                            </Button>
-                          </Tooltip>
-                        )}
-                      </ListItemButton>
+                        />
+                      )}
+                    </Box>
 
-                      <DeListItemButton>
-                        {row.onSale === 0 ? null : (
-                          <Tooltip title="De-List Item">
+                    {/* Bottom => details + action buttons */}
+                    <Box
+                      sx={{
+                        flex: 1,
+                        p: 1,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between'
+                      }}
+                    >
+                      {/* Info */}
+                      <Box>
+                        <Typography
+                          variant="h6"
+                          sx={{ fontSize: '1rem', color: '#fff', textAlign: 'center' }}
+                        >
+                          {row.productName}
+                        </Typography>
+                        <TableContainer>
+                          <Table className="product-detail">
+                            <TableBody>
+                              {row.rentOption && row.onSale === 0 ? (
+                                <TableRow>
+                                  <TableCell sx={{ color: '#bbb' }}>
+                                    <FontAwesomeIcon icon={faTag} /> Cost Per Month:
+                                  </TableCell>
+                                  <TableCell sx={{ color: '#ff8500' }}>
+                                    {convertToCurrency(row.price)}
+                                  </TableCell>
+                                </TableRow>
+                              ) : (
+                                <TableRow>
+                                  <TableCell sx={{ color: '#bbb' }}>
+                                    <FontAwesomeIcon icon={faTag} />{' '}
+                                    {row.rentOption ? 'Price Per Month:' : 'Price Per Unit:'}
+                                  </TableCell>
+                                  <TableCell sx={{ color: '#ff8500' }}>
+                                    {convertToCurrency(row.price)}
+                                  </TableCell>
+                                </TableRow>
+                              )}
+
+                              {/* OnSale row */}
+                              {row.rentOption && row.onSale === 0 ? null : (
+                                <TableRow>
+                                  <TableCell sx={{ color: '#bbb' }}>
+                                    {row.rentOption ? 'Renting Out:' : 'On Sale:'}
+                                  </TableCell>
+                                  <TableCell sx={{ color: '#ff8500' }}>
+                                    {row.onSale}
+                                  </TableCell>
+                                </TableRow>
+                              )}
+
+                              {/* Total count */}
+                              <TableRow>
+                                <TableCell sx={{ color: '#bbb' }}>
+                                  <FontAwesomeIcon icon={faCubes} /> Total:
+                                </TableCell>
+                                <TableCell sx={{ color: '#ff8500' }}>
+                                  {row.total_count}
+                                </TableCell>
+                              </TableRow>
+                              {/* item_type */}
+                              <TableRow>
+                                <TableCell sx={{ color: '#bbb' }}>
+                                  <FontAwesomeIcon icon={faGem} /> Type:
+                                </TableCell>
+                                <TableCell sx={{ color: '#ff8500' }}>
+                                  Accessory
+                                </TableCell>
+                              </TableRow>
+                            </TableBody>
+                          </Table>
+                        </TableContainer>
+                      </Box>
+
+                      {/* Action Buttons at bottom row */}
+                      <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', mt: 1 }}>
+                        {/* If onSale=0 + rentOption => discontinue */}
+                        {row.onSale === 0 && row.rentOption ? (
+                          <Tooltip title="Discontinue Renting">
                             <Button
-                              variant='contained' color='error'
-                              onClick={() => {
-                                setCurrentProductId(row._id);
-                                openDeListItemModal();
+                              variant="contained"
+                              color="error"
+                              startIcon={<Cancel />}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleReturnItem(row._id);
                               }}
                             >
-                              De-List <SwapHoriz />
+                              RETURN
+                            </Button>
+                          </Tooltip>
+                        ) : (
+                          // Otherwise show "List" & "De-List" if needed
+                          <>
+                            {row.onSale !== row.total_count && (
+                              <Tooltip title="List Item">
+                                <Button
+                                  variant="contained"
+                                  color="error"
+                                  startIcon={<SwapHoriz />}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleListItem(row);
+                                  }}
+                                >
+                                  LIST
+                                </Button>
+                              </Tooltip>
+                            )}
+                            {row.onSale > 0 && (
+                              <Tooltip title="De-List Item">
+                                <Button
+                                  variant="contained"
+                                  color="error"
+                                  startIcon={<SwapHoriz />}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeListItem(row);
+                                  }}
+                                >
+                                  DE-LIST
+                                </Button>
+                              </Tooltip>
+                            )}
+                          </>
+                        )}
+
+                        {/* If item is accessory => Equip / Unequip */}
+                        {row.item_type === '653ee81117c9f5ee2124564b' && row.onSale === 0 && (
+                          <Tooltip
+                            title={
+                              props.accessory && props.accessory === row.image
+                                ? 'Unequip Item'
+                                : 'Equip Item'
+                            }
+                          >
+                            <Button
+                              variant="contained"
+                              color="error"
+                              startIcon={<SwapHoriz />}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEquip(row._id, row.image);
+                              }}
+                            >
+                              {props.accessory && props.accessory === row.image
+                                ? 'UNEQUIP'
+                                : 'EQUIP'}
                             </Button>
                           </Tooltip>
                         )}
-                      </DeListItemButton>
-                    </>
-                  )}
-                </ProductCard>
-              </Card>
-            ))}
-          </ProductGrid>
-        ) : (
-          <LinearContainer>
-            <LinearProgress color='error' />
-          </LinearContainer>
-        )}
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: 2 }}>
-          <Pagination
-            count={pages} // Total number of pages
-            page={page} // Current page (1-based index)
-            onChange={(event, value) => {
-              acQueryMyItem(100, value, this.state.sortCriteria, this.state.itemType);
-            }}
-            siblingCount={1}
-            boundaryCount={1}
-            shape="rounded"
-            color='error'
-          />
-        </Box>
-      </MarketplaceContainer>
-    );
-  }
+                      </Box>
+                    </Box>
+                  </Box>
+                );
+              })}
+            </ProductGrid>
+          )}
+
+          {/* Pagination => if not loading */}
+          {!loading && (
+            <PaginationContainer>
+              <Pagination
+                page={page}
+                count={pages}
+                color="error"
+                sx={{
+                  '& .MuiPaginationItem-root': {
+                    borderRadius: '4px'
+                  }
+                }}
+                onChange={(event, newPage) => {
+                  acQueryMyItem(100, newPage, sortCriteria, itemType);
+                }}
+              />
+            </PaginationContainer>
+          )}
+
+          {showPlayerModal && (
+            <PlayerModal
+              selectedCreator={selectedCreator}
+              modalIsOpen={showPlayerModal}
+              closeModal={handleClosePlayerModal}
+            />
+          )}
+        </MarketplaceContainer>
+      </Box>
+    </ThemeProvider>
+  );
 }
 
-const mapStateToProps = state => ({
+// ----------- Redux Connections -----------
+const mapStateToProps = (state) => ({
   data: state.itemReducer.myItemArray,
   pages: state.itemReducer.pages,
   page: state.itemReducer.page,

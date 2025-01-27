@@ -142,7 +142,7 @@ const AdvancedSettings = (props) => {
                   placeholder="PAYOUT"
                   onChange={(e) => handleInputChange('endgame_amount', e.target.value)}
                   InputProps={{
-                    endAdornment: <InputAdornment position="end">RPS</InputAdornment>,
+                    endAdornment: <InputAdornment position="end">SOL</InputAdornment>,
                   }}
                 />
               )}

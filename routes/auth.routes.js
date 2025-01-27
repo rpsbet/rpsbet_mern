@@ -64,14 +64,14 @@ router.post('/google', async (req, res) => {
     });
 
     const payload = ticket.getPayload();
-    
+
     // Extract user data from payload
     const { name, email, picture } = payload;
     const username = email.split('@')[0];
 
 
     let user = await User.findOne({ email: email });
-    
+
     if (!user) {
       user = new User({
         username,
@@ -116,6 +116,7 @@ router.post('/', (req, res) => {
   const { email, password } = req.body;
   // Simple validation
   if (!email || !password) {
+    console.log(!email, !password)
     return res.json({
       success: false,
       error: 'PLEASE ENTER ALL FIELDS'
@@ -228,34 +229,17 @@ router.get('/profit', auth, async (req, res) => {
 // @route   GET api/auth/user
 // @desc    Get user data
 // @access  Private
-// Calculate profits without including transactions with 'withdraw' or 'deposit' in the description
+// routes/auth.js (or wherever you define /user route)
 router.get('/user', auth, async (req, res) => {
   try {
-    const { loadMore, filterType, search, sortBy } = req.query;
-    const queryLimit = parseInt(loadMore) ? 10 + parseInt(loadMore) : 5;
-    const user = req.user._id;
+    const userId = req.user._id;
 
-    const filterTypes = {
-      showWithdrawals: 'withdraw',
-      showDeposits: 'deposit',
-      showTrades: 'trade',
-      showLoans: 'loan',
-      showTips: 'tip',
-    };
+    const transactions = await Transaction.find({ user: userId })
+      .sort({ created_at: -1 })
+      .limit(5);
 
-    let query = { user: user };
-
-    if (filterType && filterTypes[filterType]) {
-      query.description = { $regex: filterTypes[filterType], $options: 'i' };
-    } else if (search) {
-      query.description = { $regex: search, $options: 'i' };
-    }
-
-    const transactions = await Transaction.find({ user: user })
-      .sort(sortBy === 'amount' ? { amount: -1 } : { created_at: -1 })
-      .limit(queryLimit);
-    let unread_message_count = await Message.countDocuments({
-      to: req.user._id,
+    const unread_message_count = await Message.countDocuments({
+      to: userId,
       is_read: false,
     });
 
@@ -271,12 +255,78 @@ router.get('/user', auth, async (req, res) => {
 });
 
 
+// routes/auth.js (or wherever you have your transactions endpoint)
+router.get('/transactions', auth, async (req, res) => {
+  try {
+    const { page = 1, filterType, search, sortBy } = req.query;
+
+    const limit = 25;
+    const skip = (parseInt(page) - 1) * limit;
+
+    // Build base query (only for the logged-in user)
+    let query = { user: req.user._id };
+
+    // For quick mapping from filter type to a substring we want in `description`
+    const filterMap = {
+      showWithdrawals: 'withdraw', // e.g. 'withdraw' in description
+      showDeposits: 'deposit',
+      showTrades: 'trade',
+      showTips: 'tip',
+      showLoans: 'loan',
+    };
+
+    // 1) If user selected a filter
+    if (filterType && filterMap[filterType]) {
+      query.description = {
+        $regex: filterMap[filterType],
+        $options: 'i', // case-insensitive
+      };
+    }
+
+    // 2) If user is searching, override or combine with filter
+    //    Typically you might do an OR/AND. For simplicity, we’ll do either filter or search
+    //    If you want them to stack, you'd combine the conditions instead of overriding them.
+    if (search) {
+      query.description = {
+        $regex: search,
+        $options: 'i',
+      };
+    }
+
+    // 3) Sorting
+    let sortOptions = { created_at: -1 }; // default: newest first
+    if (sortBy === 'amount') {
+      sortOptions = { amount: -1 }; // largest amounts first
+    } else if (sortBy === 'date') {
+      sortOptions = { created_at: -1 }; // already the default
+    }
+
+    // 4) Fetch transactions
+    const transactions = await Transaction.find(query)
+      .sort(sortOptions)
+      .skip(skip)
+      .limit(limit);
+
+    const totalCount = await Transaction.countDocuments(query);
+
+    return res.json({
+      success: true,
+      all_transactions: transactions,
+      totalCount,
+      page: parseInt(page),
+      hasMore: skip + transactions.length < totalCount,
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 const getProfitData = (transactions) => ({
   sevenDayProfit: calculate7dayProfit(transactions),
   oneDayProfit: calculate1dayProfit(transactions),
   allTimeProfit: calculateAllTimeProfit(transactions),
 });
-
 
 
 // Change Password in EditAccountModal

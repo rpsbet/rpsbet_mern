@@ -64,17 +64,16 @@ function InventoryModal(props) {
               sx={{ display: 'flex', alignItems: 'center', fontWeight: 'bold' }}
             >
               <FontAwesomeIcon icon={faBox} style={{ marginRight: 8 }} />
-              Inventory
+              INVENTORY
             </Typography>
             <Button variant="text" color="error" onClick={closeModal}>
-              X
+              ×
             </Button>
           </Box>
 
           {/* BODY */}
-          <Box sx={{ mb: 2 }}>
-            <MyProductPage solPrice={solPrice} />
-          </Box>
+
+          <MyProductPage solPrice={solPrice} />
 
           {/* FOOTER */}
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>

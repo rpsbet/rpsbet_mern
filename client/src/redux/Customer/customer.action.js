@@ -226,7 +226,6 @@ export const fetchEquityDistribution = () => async (dispatch) => {
   try {
     const response = await api.get('/statistics/get-equity-distribution');
     const data = response?.data;
-console.log("data", data)
     if (data?.success) {
       dispatch({
         type: LOAD_EQUITY_CHART,

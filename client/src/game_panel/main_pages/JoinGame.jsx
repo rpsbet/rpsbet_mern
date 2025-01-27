@@ -1,10 +1,29 @@
-import React, { Component } from 'react';
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useMemo
+} from 'react';
 import { connect } from 'react-redux';
-import TabbedContent from '../../components/TabbedContent';
 import Moment from 'moment';
+
+import TabbedContent from '../../components/TabbedContent';
 import { getRoomStatisticsData } from '../../redux/Customer/customer.action';
-import { Button, Drawer, Box } from '@mui/material';
-import { toggleDrawer, updateTutorialCompleted, setBalance } from '../../redux/Auth/user.actions';
+import {
+  Button,
+  Drawer,
+  Box,
+  Tabs,
+  Tab
+} from '@mui/material';
+
+import {
+  toggleDrawer,
+  updateTutorialCompleted,
+  setBalance
+} from '../../redux/Auth/user.actions';
+
 import PreSummaryPanel from '../../components/PreSummaryPanel';
 import CoHostModal from '../modal/CoHostModal';
 import AiPanel from '../../components/AiPanel';
@@ -37,22 +56,24 @@ import {
   getRoomList,
   getSolToUsdPrice
 } from '../../redux/Logic/logic.actions';
+
 import { predictNext, reinforcementAI } from '../../util/predictNext';
 import { predictNextQs, reinforcementAI_qs } from '../../util/predictNextQs';
+
 import ChatPanel from '../ChatPanel/ChatPanel';
-import { Tabs, Tab } from '@mui/material';
 import MyGamesTable from '../MyGames/MyGamesTable';
 import MyHistoryTable from '../MyGames/MyHistoryTable';
 import HistoryTable from '../LiveGames/HistoryTable';
 import DrawerButton from './DrawerButton';
 import SupportButton from './SupportButton';
 import Footer from './Footer';
+import PlayerModal from '../modal/PlayerModal';
 
 import {
   validateIsAuthenticated,
-  validateCreatorId,
+  validateCreatorId
 } from '../modal/betValidations';
-import { alertModal } from '../modal/ConfirmAlerts'
+import { alertModal } from '../modal/ConfirmAlerts';
 
 function updateFromNow(history) {
   const result = JSON.parse(JSON.stringify(history));
@@ -62,226 +83,357 @@ function updateFromNow(history) {
   return result;
 }
 
-const customStyles = {
-  tabRoot: {
-    textTransform: 'none',
-    width: '50%'
-  }
-};
+function JoinGame(props) {
+  const {
+    // props from mapStateToProps
+    auth,
+    history: propsHistory,
+    strategies,
+    roomInfo,
+    rpsbetitems,
+    qsbetitems,
+    user_id,
+    total_wagered,
+    rank: roomRank,
+    user,
+    creator_avatar,
+    creator_accessory,
+    username,
+    accessory,
+    user_balance,
+    ai_mode,
+    isMuted,
+    gameSounds,
+    selectedMainTabIndex,
+    isDrawerOpen,
+    loading: propsLoading,
+    isDarkMode,
+    isLowGraphics,
+    is_betting,
+    attached,
+    solPrice,
+    // props from mapDispatchToProps
+    toggleDrawer,
+    updateTutorialCompleted,
+    setBalance,
+    getRoomInfo: getRoomInfoAction,
+    getStrategies,
+    bet: betAction,
+    bet2: bet2Action,
+    bet3: bet3Action,
+    setCurRoomInfo,
+    loadRoomInfo: loadRoomInfoAction,
+    detachPlayerFromRoom,
+    attachPlayerToRoom,
+    checkPlayerAttachment,
+    updateUserStrategy,
+    addNewTransaction,
+    coHost: coHostAction,
+    getQbot,
+    getRoomList: getRoomListAction,
+    getRoomStatisticsData: getRoomStatisticsDataAction,
+    getAttachedRooms,
+    getGameTypeList,
+    getRpsBetItems: getRpsBetItemsAction,
+    getQsBetItems: getQsBetItemsAction,
+    openGamePasswordModal,
+    getCustomerStatisticsData: getCustomerStatisticsDataAction,
+    fetchAccessory: fetchAccessoryAction,
+    getSolToUsdPrice,
+    match
+  } = props;
 
-class JoinGame extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      actionList: null,
-      showPlayerModal: false,
-      betting: false,
-      selectedCreator: '',
-      is_mobile: window.innerWidth < 1024 ? true : false,
-      selectedMobileTab: 'live_games',
-      roomInfo: this.props.roomInfo,
-      bankroll: this.props.roomInfo.bankroll,
-      limit: 10,
-      cp: 0,
-      selected_rps: '',
-      selected_qs_position: 0,
-      index: 0,
-      qs_game_type: 2,
-      run: false,
-      currentTutorial: 2,
-      selected_id: '',
-      image: '',
-      loading: this.props.loading,
-      bgColorChanged: false,
-      borderColor: '',
-      gameResult: -100,
-      betResult: null,
-      result: 0,
-      productName: '',
-      coHostAmount: 0.1,
-      intervalId: null,
-      isMax: false,
-      bet_amount: 0.0005,
-      predictedBetAmount: 0,
-      history: this.props.history,
-      showAnimation: false,
-      sounds: {
-        win: new Audio('/sounds/win-sound.mp3'),
-        split: new Audio('/sounds/split-sound.mp3'),
-        lose: new Audio('/sounds/lose-sound.mp3'),
-        start: new Audio('/sounds/start.mp3'),
-        stop: new Audio('/sounds/stop.mp3'),
-        select: new Audio('/sounds/select.mp3'),
-        wrong: new Audio('/sounds/wrong.mp3'),
-        correct: new Audio('/sounds/correct.mp3'),
-        shine: new Audio('/sounds/shine.mp3'),
-        ballKick: new Audio('/sounds/ball_kick.mp3'),
-        grunt2: new Audio('/sounds/grunt2.mp3'),
-        grunt: new Audio('/sounds/grunt.mp3'),
-      },
-      currentSound: null
-    };
-    this.isComponentMounted = false;
-    this.toggleDrawer = this.toggleDrawer.bind(this);
-  }
+  // Check if on mobile
+  const [is_mobile, setIsMobile] = useState(window.innerWidth < 1024);
 
-  static getDerivedStateFromProps(props, current_state) {
-    if (
-      current_state.history?.length === 0 ||
-      (props.history &&
-        current_state.history[0]['created_at'] !==
-        props.history[0]['created_at'])
-    ) {
-      return {
-        ...current_state,
-        history: updateFromNow(props.history)
-      };
-    }
-    if (current_state.roomInfo._id !== props.roomInfo._id) {
-      return {
-        roomInfo: props.roomInfo,
-        bankroll: props.roomInfo.user_bet
-      };
-    }
-    return null;
-  }
+  // State from original constructor
+  const [actionList, setActionList] = useState(null);
+  const [showPlayerModal, setShowPlayerModal] = useState(false);
+  const [betting, setBetting] = useState(false);
+  const [selectedCreator, setSelectedCreator] = useState('');
+  const [selectedMobileTab, setSelectedMobileTab] = useState('live_games');
 
-  async componentDidMount() {
-    this.isComponentMounted = true;
-    const { id } = this.props.match.params;
-    await this.initializeRoomData(id);
-    await this.fetchAccessory();
-    await this.props.checkPlayerAttachment(id);
-    if (!this.props.solPrice) {
-      await this.props.getSolToUsdPrice();
-    }
-    window.addEventListener('unload', this.handleUnload);
-  }
+  const [localRoomInfo, setLocalRoomInfo] = useState(roomInfo);
+  const [bankroll, setBankroll] = useState(roomInfo.bankroll);
+  const [limit, setLimit] = useState(10);
 
-  componentDidUpdate(prevProps, prevState) {
-    if (this.props.user !== prevProps.user && !this.state.qBotFetched) {
+  const [cp, setCp] = useState(0);
+  const [selected_rps, setSelected_rps] = useState('');
+  const [selected_qs_position, setSelected_qs_position] = useState(0);
+  const [index, setIndex] = useState(0); // used in markov logic
+  const [qs_game_type, setQsGameType] = useState(2);
+  const [run, setRun] = useState(false);
+  const [selected_id, setSelectedId] = useState('');
+  const [image, setImage] = useState('');
+  const [bgColorChanged, setBgColorChanged] = useState(false);
+  const [borderColor, setBorderColor] = useState('');
+  const [gameResult, setGameResult] = useState(-100);
+  const [betResult, setBetResult] = useState(null);
+  const [result, setResult] = useState(0);
+  const [productName, setProductName] = useState('');
+  const [coHostAmount, setCoHostAmount] = useState(0.1);
+  const [intervalId, setIntervalId] = useState(null);
+  const [isMax, setIsMax] = useState(false);
+  const [bet_amount, setBetAmount] = useState(0.0005);
+  const [predictedBetAmount, setPredictedBetAmount] = useState(0);
+  const [componentHistory, setComponentHistory] = useState(
+    updateFromNow(propsHistory)
+  );
+  const [showAnimation, setShowAnimation] = useState(false);
+  const [loading, setLoading] = useState(propsLoading);
 
-      this.setState({ run: !this.props.user.completedTutorials.includes(2) });
-    }
+  // Audio references
+  const soundsRef = useRef({
+    win: new Audio('/sounds/win-sound.mp3'),
+    split: new Audio('/sounds/split-sound.mp3'),
+    lose: new Audio('/sounds/lose-sound.mp3'),
+    start: new Audio('/sounds/start.mp3'),
+    stop: new Audio('/sounds/stop.mp3'),
+    select: new Audio('/sounds/select.mp3'),
+    wrong: new Audio('/sounds/wrong.mp3'),
+    correct: new Audio('/sounds/correct.mp3'),
+    shine: new Audio('/sounds/shine.mp3'),
+    ballKick: new Audio('/sounds/ball_kick.mp3'),
+    grunt2: new Audio('/sounds/grunt2.mp3'),
+    grunt: new Audio('/sounds/grunt.mp3')
+  });
+  const [currentSound, setCurrentSound] = useState(null);
 
-    if (prevProps.roomInfo !== this.props.roomInfo) {
+  const isMountedRef = useRef(true);
 
-      this.state.bankroll = this.props.roomInfo.user_bet;
-      const qBotStatus = this.props.getQbot(this.props.roomInfo.creator_id);
-      if (this.isComponentMounted && this.props.attached) {
-        this.setState({ betting: true, isQbot: qBotStatus });
+  // Replaces: componentDidMount
+  useEffect(() => {
+    isMountedRef.current = true;
+
+    const init = async () => {
+      try {
+        const { id } = match.params;
+
+        // 1) load room data
+        await initializeRoomData(id);
+        // 2) fetch accessory
+        await fetchAccessory();
+        // 3) check player attachment
+        await checkPlayerAttachment(id);
+        // 4) get SOL price if not loaded
+        if (!solPrice) {
+          await getSolToUsdPrice();
+        }
+      } catch (error) {
+        console.error('Error in init useEffect:', error);
       }
+    };
+
+    init();
+
+    // event listener for unload => handleUnload
+    window.addEventListener('unload', handleUnload);
+
+    return () => {
+      // cleanup
+      isMountedRef.current = false;
+      window.removeEventListener('unload', handleUnload);
+      stopAllSounds();
+      clearInterval(intervalId);
+    };
+  }, []);
+
+  // Replaces some logic from componentDidUpdate
+  // 1) If user changes & we haven't fetched qBot yet => set run
+  useEffect(() => {
+    if (user && !run) {
+      // if user not done tutorial #2 => set run
+      setRun(!user.completedTutorials?.includes(2));
     }
-    // if (prevState.bankroll !== this.state.bankroll && this.state.bankroll <= 0.0005) {
+  }, [user, run]);
 
-    //   this.state.status = 'finished';
-    // }
-
-    if (prevProps.user_balance !== this.props.user_balance && this.state.gameResult !== -1 && this.state.isMax) {
-
-      this.handleMaxButtonClick();
+  // 2) If roomInfo changes => update bankroll, qBot status, etc.
+  useEffect(() => {
+    setLocalRoomInfo(roomInfo);
+    setBankroll(roomInfo.user_bet);
+    const qBotStatus = getQbot(roomInfo.creator_id);
+    if (isMountedRef.current && attached) {
+      setBetting(true);
+      // isQbot => not explicitly stored in original state? 
+      // We'll store it if we want to replicate that logic.
     }
-  }
+  }, [roomInfo]);
 
-  async initializeRoomData(id) {
+  // 3) If user_balance changes & gameResult != -1 & isMax => handleMaxButtonClick
+  useEffect(() => {
+    if (gameResult !== -1 && isMax) {
+      handleMaxButtonClick();
+    }
+  }, [user_balance]);
+
+  // Replaces: getDerivedStateFromProps
+  // If `propsHistory` changes or is empty => update our local state `componentHistory`
+  useEffect(() => {
+    if (
+      componentHistory?.length === 0 ||
+      (propsHistory &&
+        componentHistory[0] &&
+        propsHistory[0] &&
+        componentHistory[0]['created_at'] !== propsHistory[0]['created_at'])
+    ) {
+      setComponentHistory(updateFromNow(propsHistory));
+    }
+    // Also if localRoomInfo changes
+    if (localRoomInfo._id !== roomInfo._id) {
+      setLocalRoomInfo(roomInfo);
+      setBankroll(roomInfo.user_bet);
+    }
+  }, [propsHistory, roomInfo]);
+
+  // keep local loading in sync with propsLoading
+  useEffect(() => {
+    setLoading(propsLoading);
+  }, [propsLoading]);
+
+  // ---------- LIFECYCLE METHODS (Converted) ----------
+  const initializeRoomData = async (id) => {
     try {
       await Promise.all([
-        this.props.getRpsBetItems(id),
-        this.props.getQsBetItems(id),
-        this.loadSounds(),
-        this.props.getStrategies(),
-        this.props.getRoomInfo(this.props.match.params.id, this.state.limit, true)
+        getRpsBetItemsAction(id),
+        getQsBetItemsAction(id),
+        loadSounds(),
+        getStrategies(),
+        getRoomInfoAction(match.params.id, limit, true)
       ]);
     } catch (error) {
       console.error('Error initializing room data:', error);
     }
-  }
-
-  async loadSounds() {
-    await Promise.all(
-      Object.values(this.state.sounds).map(async sound => {
-        await sound.load();
-      })
-    );
-  }
-
-  handleUnload = () => {
-    this.stopAllSounds();
   };
 
-  componentWillUnmount() {
-    window.removeEventListener('unload', this.handleUnload);
-    this.isComponentMounted = false;
-    clearInterval(this.interval);
-  }
+  const handleUnload = useCallback(() => {
+    stopAllSounds();
+  }, []);
 
-  stopAllSounds = () => {
-    const { currentSound } = this.state;
+  const loadSounds = useCallback(async () => {
+    const soundObjects = soundsRef.current;
+    // Just ensure .load() is called; many browsers do lazy loading anyway
+    await Promise.all(
+      Object.values(soundObjects).map((snd) => snd.load())
+    );
+  }, []);
+
+  const stopAllSounds = useCallback(() => {
     if (currentSound) {
       currentSound.pause();
       currentSound.currentTime = 0;
-      this.setState({ currentSound: null });
+      setCurrentSound(null);
     }
-  };
+  }, [currentSound]);
 
-  toggleDrawer = () => {
-    this.props.toggleDrawer(!this.props.isDrawerOpen);
-  };
+  // ---------- EVENT HANDLERS / HELPER FUNCTIONS ----------
+  const toggleDrawerHandler = useCallback(() => {
+    toggleDrawer(!isDrawerOpen);
+  }, [toggleDrawer, isDrawerOpen]);
 
-  updateReminderTime = () => {
-    this.setState({ history: updateFromNow(this.state.history) });
-  };
-
-  // manual bet
-  join = async betInfo => {
-
-    const result = await this.props.bet3({
-      _id: this.props.roomInfo._id,
-      user: this.props.user_id,
-      game_type: this.props.roomInfo.game_type,
-      ...betInfo
-    });
-    return result;
-  };
-
-  async fetchAccessory() {
+  const fetchAccessory = useCallback(async () => {
     try {
-      const creatorId = this.props.roomInfo.creator_id;
-
-      if (!creatorId) {
-        return;
-      }
+      const creatorId = roomInfo.creator_id;
+      if (!creatorId) return;
 
       const _id = creatorId.toString();
-      const accessory = await this.props.fetchAccessory({ _id });
-      const dp = await this.props.fetchAccessory({ _id: this.props.user_id });
+      const accessoryData = await fetchAccessoryAction({ _id });
+      const dp = await fetchAccessoryAction({ _id: user_id });
 
-      if (this.isComponentMounted && accessory.accessory.CP !== undefined) {
-        this.setState({ cp: accessory.accessory.CP - dp.accessory.DP });
+      if (isMountedRef.current && accessoryData.accessory?.CP !== undefined) {
+        setCp(accessoryData.accessory.CP - dp.accessory.DP);
       }
     } catch (error) {
-      console.error("Error fetching accessory:", error);
+      console.error('Error fetching accessory:', error);
     }
-  }
-  // auto bet
-  join2 = async betInfo => {
-    const result = await this.props.bet2({
-      _id: this.state.roomInfo._id,
-      user: this.props.user_id,
-      game_type: this.props.roomInfo.game_type,
+  }, [roomInfo.creator_id, user_id, fetchAccessoryAction]);
+
+  // Replacing "join" => manual bet
+  const join = useCallback(async (betInfo) => {
+    return await bet3Action({
+      _id: roomInfo._id,
+      user: user_id,
+      game_type: roomInfo.game_type,
       ...betInfo
     });
-    return result;
-  };
+  }, [bet3Action, roomInfo, user_id]);
 
-  updateSelectedRps = (selection, callback) => {
-    this.setState({ selected_rps: selection }, callback);
-  }
-  updateSelectedQs = (position, callback) => {
-    this.setState({ selected_qs_position: position }, callback);
-  }
+  // Replacing "join2" => auto bet
+  const join2 = useCallback(async (betInfo) => {
+    return await bet2Action({
+      _id: localRoomInfo._id,
+      user: user_id,
+      game_type: localRoomInfo.game_type,
+      ...betInfo
+    });
+  }, [bet2Action, localRoomInfo, user_id]);
 
-  createTransitionMatrix(betArray, smoothingFactor = 0.01, decayFactor = 0.9) {
+  const playSound = useCallback(
+    (soundKey) => {
+      // Only play if user not muted
+      if (!isMuted || !gameSounds) {
+        const audio = soundsRef.current[soundKey];
+        if (audio && audio.paused !== undefined) {
+          if (!audio.paused) {
+            return;
+          }
+          audio.currentTime = 0;
+          const playPromise = audio.play();
+          if (playPromise !== undefined) {
+            playPromise.catch((error) => {
+              console.log(`Error playing sound "${soundKey}":`, error);
+            });
+          }
+          setCurrentSound(audio);
+        }
+      }
+    },
+    [isMuted, gameSounds]
+  );
+
+  const handleDetachAttachChange = useCallback(() => {
+    const gameType = roomInfo.game_type;
+    const items = gameType === 'Quick Shoot' ? qsbetitems : rpsbetitems;
+
+    if (!Array.isArray(items)) {
+      console.error('Items is not an array:', items);
+      return;
+    }
+
+    const uniqueBetAmounts = [...new Set(items.map((item) => item.bet_amount))];
+
+    if (attached) {
+      // Detach
+      detachPlayerFromRoom(roomInfo._id)
+        .then((result) => {
+          if (result) {
+            // If successfully detached, restart betting
+            startBetting(uniqueBetAmounts);
+            checkPlayerAttachment(roomInfo._id);
+          }
+        })
+        .catch((error) => console.error('Error detaching player:', error));
+    } else {
+      // Attach
+      attachPlayerToRoom(roomInfo._id, uniqueBetAmounts)
+        .then(() => {
+          clearInterval(intervalId);
+          setIntervalId(null);
+        })
+        .catch((error) => console.error('Error attaching player:', error));
+    }
+  }, [
+    attached,
+    roomInfo,
+    qsbetitems,
+    rpsbetitems,
+    detachPlayerFromRoom,
+    attachPlayerToRoom,
+    intervalId,
+    checkPlayerAttachment
+  ]);
+
+  // ---------- AI-Related Predict Logic ----------
+  const createTransitionMatrix = useCallback((betArray, smoothingFactor = 0.01, decayFactor = 0.9) => {
     const transitionMatrix = {};
     const betArrayLength = betArray.length;
 
@@ -295,9 +447,11 @@ class JoinGame extends Component {
       }
 
       if (!transitionMatrix[currentBet][nextBet]) {
-        transitionMatrix[currentBet][nextBet] = smoothingFactor * Math.pow(decayFactor, distance);
+        transitionMatrix[currentBet][nextBet] =
+          smoothingFactor * Math.pow(decayFactor, distance);
       } else {
-        transitionMatrix[currentBet][nextBet] += smoothingFactor * Math.pow(decayFactor, distance);
+        transitionMatrix[currentBet][nextBet] +=
+          smoothingFactor * Math.pow(decayFactor, distance);
       }
     }
 
@@ -307,7 +461,6 @@ class JoinGame extends Component {
       if (!transitionMatrix[currentState]) {
         transitionMatrix[currentState] = {};
       }
-
       allStates.forEach((nextState) => {
         if (!transitionMatrix[currentState][nextState]) {
           transitionMatrix[currentState][nextState] = smoothingFactor;
@@ -317,17 +470,15 @@ class JoinGame extends Component {
 
     Object.keys(transitionMatrix).forEach((currentState) => {
       const possibleNextStates = Object.keys(transitionMatrix[currentState]);
-
       possibleNextStates.forEach((nextState) => {
         transitionMatrix[currentState][nextState] += smoothingFactor;
       });
     });
 
     return transitionMatrix;
-  }
+  }, []);
 
-
-  chooseRandomIndex(probabilities) {
+  const chooseRandomIndex = useCallback((probabilities) => {
     const totalProbability = probabilities.reduce((sum, prob) => sum + prob, 0);
     const randomValue = Math.random() * totalProbability;
 
@@ -338,78 +489,86 @@ class JoinGame extends Component {
         return i;
       }
     }
-
     return probabilities.length - 1;
-  }
+  }, []);
 
-  async predictNextBetAmount(betArray, penultimateSameAsLast, smoothingFactor = 0.01, randomnessFactor = 0.2, threshold = 0.0005) {
-    if (betArray.length < 2) {
-      return null;
-    }
-
-    const allStates = Array.from(new Set(betArray));
-
-    if (penultimateSameAsLast !== 0) {
-      if (penultimateSameAsLast >= 3) {
-        // Return the highest value from allStates without 50%
-        const maxState = Math.max(...allStates);
-        return Math.min(Math.max(maxState, 0.05), this.state.bankroll);
-      } else if (penultimateSameAsLast === 2) {
-        // Return the second highest value from allStates
-        const sortedStates = allStates.sort((a, b) => b - a);
-
-        if (sortedStates.length >= 2) {
-          const secondHighestState = sortedStates[this.state.index] || sortedStates[0];
-          this.setState({ index: this.state.index + 1 });
-          return Math.min(Math.max(secondHighestState, 0.05), this.props.roomInfo.bet_amount);
-        } else {
-          // If there is no second state, return the first state from allStates
-          const firstState = sortedStates[0];
-          return Math.min(Math.max(firstState, 0.05), this.props.roomInfo.bet_amount);
-        }
-      } else if (penultimateSameAsLast === 1) {
-        this.setState({ index: 0 });
-
-        // Return the lowest value from allStates
-        const minState = Math.min(...allStates);
-        return Math.min(Math.max(minState, 0.05), this.props.roomInfo.bet_amount);
+  const predictNextBetAmount = useCallback(
+    async (betArray, penultimateSameAsLast, smoothingFactor = 0.01, randomnessFactor = 0.2, threshold = 0.0005) => {
+      if (betArray.length < 2) {
+        return null;
       }
-    }
 
-    const transitionMatrix = await this.createTransitionMatrix(betArray, smoothingFactor);
-    const lastBet = betArray[betArray.length - 1];
-    const possibleNextStates = transitionMatrix[lastBet] ? Object.keys(transitionMatrix[lastBet]) : [];
+      const allStates = Array.from(new Set(betArray));
 
-    if (possibleNextStates.length === 0) {
-      const fallbackState = allStates[Math.floor(Math.random() * betArray.length)];
-      const returnValue = Math.min(Math.max(fallbackState, threshold), this.props.roomInfo.bet_amount);
+      // Some custom logic for penultimateSameAsLast
+      if (penultimateSameAsLast !== 0) {
+        if (penultimateSameAsLast >= 3) {
+          // highest value from allStates
+          const maxState = Math.max(...allStates);
+          return Math.min(Math.max(maxState, 0.05), bankroll);
+        } else if (penultimateSameAsLast === 2) {
+          // second-highest value
+          const sortedStates = allStates.sort((a, b) => b - a);
+          if (sortedStates.length >= 2) {
+            const secondHighestState = sortedStates[index] || sortedStates[0];
+            setIndex((prev) => prev + 1);
+            return Math.min(Math.max(secondHighestState, 0.05), roomInfo.bet_amount);
+          } else {
+            // fallback to first
+            const firstState = sortedStates[0];
+            return Math.min(Math.max(firstState, 0.05), roomInfo.bet_amount);
+          }
+        } else if (penultimateSameAsLast === 1) {
+          setIndex(0);
+          // lowest value
+          const minState = Math.min(...allStates);
+          return Math.min(Math.max(minState, 0.05), roomInfo.bet_amount);
+        }
+      }
+
+      // Markov-like logic
+      const transitionMatrix = createTransitionMatrix(betArray, smoothingFactor);
+      const lastBet = betArray[betArray.length - 1];
+      const possibleNextStates = transitionMatrix[lastBet]
+        ? Object.keys(transitionMatrix[lastBet])
+        : [];
+
+      if (possibleNextStates.length === 0) {
+        const fallbackState = allStates[Math.floor(Math.random() * betArray.length)];
+        const returnValue = Math.min(
+          Math.max(fallbackState, threshold),
+          roomInfo.bet_amount
+        );
+        return Math.max(returnValue, 0.05);
+      }
+
+      const adjustedProbabilities = possibleNextStates.map(
+        (nextState) =>
+          transitionMatrix[lastBet][nextState] + Math.random() * randomnessFactor
+      );
+
+      const nextStateIndex = chooseRandomIndex(adjustedProbabilities);
+      const nextState = possibleNextStates[nextStateIndex];
+
+      const returnValue = Math.min(
+        Math.max(nextState, threshold),
+        roomInfo.bet_amount
+      );
       return Math.max(returnValue, 0.05);
-    }
+    },
+    [
+      bankroll,
+      roomInfo.bet_amount,
+      index,
+      chooseRandomIndex,
+      createTransitionMatrix,
+      setIndex
+    ]
+  );
 
-    const adjustedProbabilities = possibleNextStates.map(
-      (nextState) => transitionMatrix[lastBet][nextState] + Math.random() * randomnessFactor
-    );
-
-    const nextStateIndex = this.chooseRandomIndex(adjustedProbabilities);
-    const nextState = possibleNextStates[nextStateIndex];
-
-    // Ensure the return value is at least 0.05
-    const returnValue = Math.min(Math.max(nextState, threshold), this.props.roomInfo.bet_amount);
-    return Math.max(returnValue, 0.05);
-  }
-
-  handleSwitchChange = async () => {
-    const {
-      auth,
-      isDarkMode,
-      user_id,
-      roomInfo,
-    } = this.props;
-    const { betting } = this.state;
-
-    let betArray = [];
-
-
+  // ---------- Betting Loop ----------
+  const handleSwitchChange = useCallback(async () => {
+    // Validate user
     if (!validateIsAuthenticated(auth, isDarkMode)) {
       return;
     }
@@ -418,808 +577,614 @@ class JoinGame extends Component {
     }
 
     if (betting) {
-      this.stopBetting();
+      // stop
+      stopBetting();
     } else {
-      this.playSound('start');
-      this.setState({ betting: true });
+      playSound('start');
+      setBetting(true);
 
-      if (!this.props.attached) {
-
-        this.startBetting(betArray);
+      if (!attached) {
+        // pass empty bet array for now
+        startBetting([]);
       }
-
     }
-  };
+  }, [auth, isDarkMode, roomInfo, user_id, betting, attached, playSound]);
 
-  startBetting = async betArray => {
-    const { bankroll } = this.state;
-    const { isDarkMode, openGamePasswordModal, roomInfo, user_balance, getRpsBetItems, getQsBetItems } = this.props;
-    const interval = this.props.ai_mode === 'Adam' || this.props.ai_mode === 'Sniper' ? 6200 :
-      this.props.ai_mode === 'Skill-issue' || this.props.ai_mode === 'Innovate' ? 3000 :
-        5000;
 
-    const intervalId = setInterval(async () => {
-      try {
-        let randomItem;
-        let predictedBetAmount;
+  const changeBgColor = useCallback(async (resultVal) => {
+    setBetResult(resultVal);
+    const flickerCount = 3;
+    const delay = 50;
 
-        await getRpsBetItems(roomInfo._id);
-        await getQsBetItems(roomInfo._id);
-        switch (roomInfo.game_type) {
-          case 'Quick Shoot':
-            if (this.props.qsbetitems && this.props.qsbetitems.length > 0) {
-              if (this.props.ai_mode === 'Adam') {
-                const nextMove = await reinforcementAI_qs(this.props.qsbetitems, roomInfo.qs_game_type);
-                randomItem = nextMove.move;
-                predictedBetAmount = await this.predictNextBetAmount(betArray, nextMove.risk, 0, 0.01, 0.2);
-              } else if (this.props.ai_mode === 'Markov') {
-                randomItem = await predictNextQs(this.props.qsbetitems, roomInfo.qs_game_type);
-                predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
-              }
-            }
-            break;
-
-          default:
-            // RPS
-            if (this.props.rpsbetitems && this.props.rpsbetitems.length > 0) {
-              if (this.props.ai_mode === 'Adam') {
-                const nextMove = await reinforcementAI(this.props.rpsbetitems);
-                randomItem = nextMove.move;
-                predictedBetAmount = await this.predictNextBetAmount(betArray, nextMove.risk, 0, 0.01, 0.2);
-              } else if (this.props.ai_mode === 'Markov') {
-                randomItem = await predictNext(this.props.rpsbetitems, true);
-                predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
-              }
-            }
-            break;
-        }
-        const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
-        const passwordCorrect = rooms[roomInfo._id];
-        if (roomInfo.is_private === true && passwordCorrect !== true) {
-          openGamePasswordModal();
-        } else {
-          await this.joinGame2(randomItem, predictedBetAmount);
-        }
-      } catch (error) {
-        console.error('Error in interval function:', error);
-      }
-    }, interval);
-    this.setState({ intervalId });
-  };
-
-  stopBetting = async () => {
-    try {
-      this.playSound('stop');
-      clearInterval(this.state.intervalId);
-      this.setState({ intervalId: null, betting: false, timerValue: 2000 });
-      if (this.props.attached) {
-        this.handleDetachAttachChange(this.props.roomInfo._id);
-      }
-
-    } catch (error) {
-      console.error("Error detaching player:", error);
+    for (let i = 0; i < flickerCount; i++) {
+      setBgColorChanged(i % 2 === 0);
+      await new Promise((resolve) => setTimeout(resolve, delay));
     }
-  };
+    setBgColorChanged(false);
+    setBetResult(null);
+  }, []);
 
-  changeBgColor = async result => {
-    this.setState({ betResult: result }, async () => {
-      const flickerCount = 3;
-      const delay = 50;
+  const changeBgColorQs = useCallback(
+    async (resultVal) => {
+      setBetResult(resultVal);
+      setBgColorChanged(true);
 
-      for (let i = 0; i < flickerCount; i++) {
-        this.setState({ bgColorChanged: i % 2 === 0 });
-        await new Promise(resolve => setTimeout(resolve, delay));
-      }
+      let newBorderColor = '';
+      let defaultColor = roomInfo.game_type === 'Mystery Box' ? '#ffd000' : 'grey';
 
-      this.setState({ bgColorChanged: false, betResult: null });
-    });
-  };
-
-  changeBgColorQs = async result => {
-    this.setState({ betResult: result, bgColorChanged: true }, async () => {
-      let borderColor = '';
-      let defaultColor = '';
-      if (this.props.roomInfo.game_type === 'Mystery Box') {
-        defaultColor = '#ffd000';
-      } else {
-        defaultColor = 'grey';
-      }
-
-      switch (result) {
+      switch (resultVal) {
         case 1:
-          borderColor = '#49ff08';
+          newBorderColor = '#49ff08';
           break;
         case -1:
-          borderColor = '#ffd000';
+          newBorderColor = '#ffd000';
           break;
         default:
-          borderColor = defaultColor;
+          newBorderColor = defaultColor;
           break;
       }
+      setBorderColor(newBorderColor);
 
-      this.setState({ borderColor });
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      this.setState({ borderColor: '', bgColorChanged: false, betResult: null });
-    });
-  };
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      setBorderColor('');
+      setBgColorChanged(false);
+      setBetResult(null);
+    },
+    [roomInfo]
+  );
 
-  joinGame2 = async (randomItem, predictedBetAmount) => {
-    const { balance, solPrice, isMuted, roomInfo, getRpsBetItems, getQsBetItems } = this.props;
-    let { betting, selected_qs_position, selected_rps, selected_id, bankroll } = this.state;
-    const gameType = roomInfo.game_type;
-    if (!betting) {
-      return;
-    }
 
-    if (roomInfo.status !== 'open') {
-      return;
-    }
+  // joinGame2
+  const joinGame2 = useCallback(
+    async (randomItem, nextBetAmount, betArray) => {
+      if (!betting) return;
+      if (roomInfo.status !== 'open') return;
 
-    if (gameType === 'RPS') {
-      selected_rps = randomItem;
-    } else if (gameType === 'Quick Shoot') {
-      selected_qs_position = parseInt(randomItem);
-    }
+      let newSelectedRps = selected_rps;
+      let newSelectedQs = selected_qs_position;
 
-    this.setState({ selected_rps, result: '', predictedBetAmount, selected_qs_position, selected_id }, async () => {
+      if (roomInfo.game_type === 'RPS') {
+        newSelectedRps = randomItem;
+      } else if (roomInfo.game_type === 'Quick Shoot') {
+        newSelectedQs = parseInt(randomItem);
+      }
 
-      let result;
+      // local states before the async call
+      setSelected_rps(newSelectedRps);
+      setSelected_qs_position(newSelectedQs);
+      setPredictedBetAmount(nextBetAmount || 0);
+
       try {
-        if (gameType === 'RPS') {
-          result = await this.join2({
-            bet_amount: parseFloat(predictedBetAmount),
-            selected_rps: selected_rps,
+        let joinResult;
+        if (roomInfo.game_type === 'RPS') {
+          joinResult = await join2({
+            bet_amount: parseFloat(nextBetAmount),
+            selected_rps: newSelectedRps
           });
-
-        }
-        else if (gameType === 'Quick Shoot') {
-
-
-          result = await this.join2({
-            bet_amount: parseFloat(predictedBetAmount),
-            selected_qs_position: selected_qs_position,
+        } else if (roomInfo.game_type === 'Quick Shoot') {
+          joinResult = await join2({
+            bet_amount: parseFloat(nextBetAmount),
+            selected_qs_position: newSelectedQs
           });
-          if (result.status === 'success' && !isMuted) {
-            this.playSound('ballKick');
+          if (joinResult.status === 'success' && !isMuted) {
+            playSound('ballKick');
           }
         }
 
-        if (result && result.status === 'success') {
-          let text;
-          let color;
+        if (joinResult && joinResult.status === 'success') {
+          // update local bet array
+          betArray.push(parseFloat(nextBetAmount));
 
-          if (result.betResult === 1) {
-            this.playSound('win');
-            text = '+';
-            color = '#7ed321';
-            if (gameType === 'Quick Shoot') {
-              this.changeBgColorQs(result.betResult);
-            } else {
-              this.changeBgColor(result.betResult);
-            }
-          } else if (result.betResult === 0) {
-            this.playSound('split');
-            text = '-';
-            color = 'grey';
-            if (gameType === 'Quick Shoot') {
-              this.changeBgColorQs(result.betResult);
-            } else {
-              this.changeBgColor(result.betResult);
-            }
+          if (joinResult.betResult === 1) {
+            playSound('win');
+            if (roomInfo.game_type === 'Quick Shoot') changeBgColorQs(1);
+            else changeBgColor(1);
+            const currencyElement = convertToCurrency(Math.abs(joinResult.amount), solPrice);
+            setResult(
+              <span style={{ color: '#7ed321' }}>
+                + {currencyElement}
+              </span>
+            );
+            setGameResult(1);
+          } else if (joinResult.betResult === 0) {
+            playSound('split');
+            if (roomInfo.game_type === 'Quick Shoot') changeBgColorQs(0);
+            else changeBgColor(0);
+            const currencyElement = convertToCurrency(Math.abs(joinResult.amount), solPrice);
+            setResult(
+              <span style={{ color: 'grey' }}>
+                - {currencyElement}
+              </span>
+            );
+            setGameResult(0);
           } else {
-            if (gameType === 'Quick Shoot') {
-              this.changeBgColorQs(result.betResult);
-            } else {
-              this.changeBgColor(result.betResult);
-            }
-            text = '-';
-            color = '#f50000';
-            this.playSound('lose');
+            if (roomInfo.game_type === 'Quick Shoot') changeBgColorQs(-1);
+            else changeBgColor(-1);
+            setResult(
+              <span style={{ color: '#f50000' }}>
+                - {convertToCurrency(Math.abs(joinResult.amount), solPrice)}
+              </span>
+            );
+            setGameResult(-1);
+            playSound('lose');
           }
-          const currencyElement = convertToCurrency(Math.abs(result.amount), solPrice);
-          const fragmentStyle = {
-            color: color,
-          };
-          this.onChangeState({
-            result: (
-              <React.Fragment>
-                <span style={fragmentStyle}> {text} {currencyElement}</span>
-              </React.Fragment>
-            ), gameResult: result.betResult
-          });
-          await getRpsBetItems(roomInfo._id)
-          await getQsBetItems(roomInfo._id)
+
+          await getRpsBetItemsAction(roomInfo._id);
+          await getQsBetItemsAction(roomInfo._id);
         }
       } catch (error) {
         console.error('Error in joinGame2:', error);
       }
-    });
-  };
+    },
+    [
+      betting,
+      roomInfo,
+      join2,
+      selected_rps,
+      selected_qs_position,
+      playSound,
+      isMuted,
+      getRpsBetItemsAction,
+      getQsBetItemsAction,
+      changeBgColorQs,
+      changeBgColor,
+      solPrice
+    ]
+  );
 
-  playSound = sound => {
-    if (!this.props.isMuted || !this.props.gameSounds) {
-      const audio = this.state.sounds[sound];
-
-      if (audio && audio.paused !== undefined) {
-        if (!audio.paused) {
-          return;
-        }
-        audio.currentTime = 0;
-        const playPromise = audio.play();
-        if (playPromise !== undefined) {
-          playPromise.catch(error => {
-            console.log(`Error playing sound "${sound}":`, error);
-          });
-        }
-        this.setState({ currentSound: audio });
+  const startBetting = useCallback(
+    (betArray) => {
+      const gameType = roomInfo.game_type;
+      let interval = 5000;
+      if (ai_mode === 'Adam' || ai_mode === 'Sniper') {
+        interval = 6200;
+      } else if (ai_mode === 'Skill-issue' || ai_mode === 'Innovate') {
+        interval = 3000;
       }
+
+      const newIntervalId = setInterval(async () => {
+        try {
+          let randomItem;
+          let nextBetAmount;
+
+          // refetch bet items
+          await getRpsBetItemsAction(roomInfo._id);
+          await getQsBetItemsAction(roomInfo._id);
+
+          switch (gameType) {
+            case 'Quick Shoot':
+              if (qsbetitems && qsbetitems.length > 0) {
+                if (ai_mode === 'Adam') {
+                  const nextMove = await reinforcementAI_qs(qsbetitems, roomInfo.qs_game_type);
+                  randomItem = nextMove.move;
+                  nextBetAmount = await predictNextBetAmount(
+                    betArray,
+                    nextMove.risk,
+                    0,
+                    0.01,
+                    0.2
+                  );
+                } else if (ai_mode === 'Markov') {
+                  randomItem = await predictNextQs(qsbetitems, roomInfo.qs_game_type);
+                  nextBetAmount = await predictNextBetAmount(betArray, 0, 0.01, 0.2);
+                }
+              }
+              break;
+            default:
+              // RPS
+              if (rpsbetitems && rpsbetitems.length > 0) {
+                if (ai_mode === 'Adam') {
+                  const nextMove = await reinforcementAI(rpsbetitems);
+                  randomItem = nextMove.move;
+                  nextBetAmount = await predictNextBetAmount(
+                    betArray,
+                    nextMove.risk,
+                    0,
+                    0.01,
+                    0.2
+                  );
+                } else if (ai_mode === 'Markov') {
+                  randomItem = await predictNext(rpsbetitems, true);
+                  nextBetAmount = await predictNextBetAmount(betArray, 0, 0.01, 0.2);
+                }
+              }
+              break;
+          }
+
+          // check if private game
+          const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
+          const passwordCorrect = rooms[roomInfo._id];
+
+          if (roomInfo.is_private === true && passwordCorrect !== true) {
+            openGamePasswordModal();
+          } else {
+            await joinGame2(randomItem, nextBetAmount, betArray);
+          }
+        } catch (error) {
+          console.error('Error in interval function:', error);
+        }
+      }, interval);
+
+      setIntervalId(newIntervalId);
+    },
+    [
+      qsbetitems,
+      rpsbetitems,
+      ai_mode,
+      roomInfo,
+      getRpsBetItemsAction,
+      getQsBetItemsAction,
+      openGamePasswordModal,
+      joinGame2,
+      predictNextBetAmount
+    ]
+  );
+
+  const stopBetting = useCallback(() => {
+    try {
+      playSound('stop');
+      clearInterval(intervalId);
+      setIntervalId(null);
+      setBetting(false);
+      // if attached => detach
+      if (attached) {
+        handleDetachAttachChange(roomInfo._id);
+      }
+    } catch (error) {
+      console.error('Error stopping betting:', error);
     }
-  };
+  }, [intervalId, attached, handleDetachAttachChange, playSound, roomInfo]);
 
-  handleCoHostAmountChange = event => {
-    this.setState({ coHostAmount: event.target.value });
-  };
+  const handleOpenPlayerModal = useCallback((creator_id) => {
+    console.log("creator_id", creator_id)
+    setShowPlayerModal(true);
+    setSelectedCreator(creator_id);
+  }, []);
 
-  onChangeState = async newState => {
-    await this.setState(newState);
-  };
+  const handleClosePlayerModal = useCallback(() => {
+    setShowPlayerModal(false);
+  }, []);
 
-  stopSound = sound => {
-    const { currentSound } = this.state;
-    if (currentSound && currentSound.src.includes(sound)) {
-      currentSound.pause();
-      currentSound.currentTime = 0;
-      this.setState({ currentSound: null });
+  console.log("s", selectedCreator)
+  console.log("e", showPlayerModal)
+
+  const refreshHistory = useCallback(async () => {
+    await getRoomInfoAction(match.params.id, limit, false);
+  }, [getRoomInfoAction, match, limit]);
+
+  const handleCoHostAmountChange = useCallback((event) => {
+    setCoHostAmount(event.target.value);
+  }, []);
+
+  const handleSendCoHost = useCallback(async () => {
+    if (coHostAmount <= 0) {
+      alertModal(isDarkMode, 'R U FURR-REAL? AMOUNT MUST BE MORE THAN 0!');
+      return;
     }
-  };
-
-  handleDetachAttachChange = () => {
-    const { rpsbetitems, qsbetitems, roomInfo, attachPlayerToRoom, detachPlayerFromRoom, attached } = this.props;
-    const gameType = roomInfo.game_type;
-    const items = gameType === "RPS" ? rpsbetitems : qsbetitems;
-
-    if (!Array.isArray(items)) {
-      console.error("Items is not an array:", items);
+    if (coHostAmount > user_balance) {
+      alertModal(isDarkMode, 'NOT ENUFF FUNDS AT THIS MEOWMENT');
       return;
     }
 
-    const uniqueBetAmounts = [...new Set(items.map(item => item.bet_amount))];
-
-    if (attached) {
-      detachPlayerFromRoom(roomInfo._id)
-        .then((result) => {
-          if (result) {
-            this.startBetting(uniqueBetAmounts);
-            this.props.checkPlayerAttachment(roomInfo._id);
-          }
-        })
-        .catch((error) => console.error("Error detaching player:", error));
-    } else {
-      attachPlayerToRoom(roomInfo._id, uniqueBetAmounts)
-        .then(() => {
-          clearInterval(this.state.intervalId);
-          this.setState({ intervalId: null, timerValue: 2000 });
-        })
-        .catch((error) => console.error("Error attaching player:", error));
-    }
-  };
-
-  handleJoyrideCallback = (data) => {
-    const { status, type } = data;
-
-    if (status === 'finished' || status === 'skipped') {
-      const { currentTutorial } = this.state;
-      this.props.updateTutorialCompleted(currentTutorial);
-      this.setState({ run: false });
-    }
-  };
-
-  handleSendCoHost = async () => {
-    const { coHostAmount } = this.state;
-    const { user_balance, roomInfo, isDarkMode, setBalance, addNewTransaction, getRoomList } = this.props;
-
     try {
-      if (coHostAmount <= 0) {
-        alertModal(isDarkMode, 'R U FURR-REAL? AMOUNT MUST BE MORE THAN 0!');
-        return;
-      }
-
-      if (coHostAmount > user_balance) {
-        alertModal(isDarkMode, 'NOT ENUFF FUNDS AT THIS MEOWMENT');
-        return;
-      }
-
-      const result = await this.props.coHost(coHostAmount, roomInfo._id);
-
+      const result = await coHostAction(coHostAmount, roomInfo._id);
       if (result.success) {
         setBalance(result.balance);
         addNewTransaction(result.newTransaction);
-        await getRoomList({
-          pageSize: this.state.roomList.length,
-          game_type: roomInfo.game_type,
+        await getRoomListAction({
+          pageSize: 10, // or dynamic
+          game_type: roomInfo.game_type
         });
       } else {
         alertModal(isDarkMode, result.message);
       }
-    } catch (e) {
+    } catch (error) {
       alertModal(isDarkMode, 'ROOM TOO BUSY, TRY AGAIN LATER');
     }
-  };
+  }, [
+    coHostAmount,
+    user_balance,
+    isDarkMode,
+    roomInfo,
+    coHostAction,
+    setBalance,
+    addNewTransaction,
+    getRoomListAction
+  ]);
 
-  handleOpenPlayerModal = creator_id => {
-    this.setState({ showPlayerModal: true, selectedCreator: creator_id });
-  };
+  const handleHalfXButtonClick = useCallback(() => {
+    const multipliedBetAmount = bet_amount * 0.5;
+    setBetAmount(multipliedBetAmount);
+    setIsMax(false);
+  }, [bet_amount]);
 
-  handleClosePlayerModal = () => {
-    this.setState({ showPlayerModal: false });
-  };
-
-  refreshHistory = async () => {
-    await this.props.getRoomInfo(
-      this.props.match.params.id,
-      this.state.limit,
-      false
-    );
-  };
-
-  showOpenGameOrHistory = (e, newValue) => {
-    e.preventDefault();
-    this.setState({
-      show_open_game: newValue
-    });
-  };
-
-  getActiveTabText = () =>
-    (this.state.is_mobile && this.state.selectedMobileTab === 'live_games') ||
-      (!this.state.is_mobile && this.props.selectedMainTabIndex === 0) ? (
-      <div id="liveStakes">
-        {this.props.roomCount} LIVE GAMES
-      </div>
-    ) : (
-      'Your Games'
-    );
-
-  handleHalfXButtonClick = () => {
-    const multipliedBetAmount = this.state.bet_amount * 0.5;
-    this.setState({ bet_amount: multipliedBetAmount, isMax: false }, () => {
-      document.getElementById('betamount').focus();
-    });
-  };
-
-  handle2xButtonClick = () => {
-    const maxBetAmount = this.props.user_balance;
-    const multipliedBetAmount = this.state.bet_amount * 2;
+  const handle2xButtonClick = useCallback(() => {
+    const maxBetAmount = user_balance;
+    const multipliedBetAmount = bet_amount * 2;
     const limitedBetAmount = Math.min(multipliedBetAmount, maxBetAmount);
 
-    this.setState({ bet_amount: limitedBetAmount, isMax: false }, () => {
-      document.getElementById('betamount').focus();
-    });
-  };
+    setBetAmount(limitedBetAmount);
+    setIsMax(false);
+  }, [bet_amount, user_balance]);
 
-  handleMaxButtonClick = () => {
-    const maxBetAmount = Math.min(this.props.user_balance, this.state.bankroll);
-    this.setState({ bet_amount: maxBetAmount, isMax: true }, () => {
-      document.getElementById('betamount').focus();
-    });
-  };
+  const handleMaxButtonClick = useCallback(() => {
+    const maxBetAmount = Math.min(user_balance, bankroll);
+    setBetAmount(maxBetAmount);
+    setIsMax(true);
+  }, [user_balance, bankroll]);
 
-  render() {
-    const {
-      showPlayerModal,
-      is_mobile,
-      selectedCreator,
-      actionList,
-      show_open_game,
-      predictedBetAmount,
-      selectedMobileTab,
-      betting,
-      betResult,
-      borderColor,
-      bankroll,
-      bgColorChanged,
-      selected_rps,
-      selected_qs_position,
-      result,
-      isQbot,
-      cp,
-      run
-    } = this.state;
-    const {
-      roomInfo,
-      gameTypeList,
-      isDrawerOpen,
-      is_betting,
-      user_id,
-      user_balance,
-      creator_accessory,
-      strategies,
-      ai_mode,
-      user,
-      selectedMainTabIndex,
-      rpsbetitems,
-      qsbetitems,
-      total_wagered,
-      isDarkMode,
-      attached,
-      getAttachedRooms,
-      creator_avatar,
-      username,
-      solPrice,
-      rank
-    } = this.props;
+  // ---------- RENDER ----------
+  const gameTypeList = []; // not explicitly in state, but you can fetch it
+  const payoutPercentage = useMemo(() => {
+    if (isNaN((bankroll / roomInfo.endgame_amount) * 100)) return 0;
+    return Math.ceil((bankroll / roomInfo.endgame_amount) * 100);
+  }, [bankroll, roomInfo]);
 
-    const payoutPercentage = isNaN((bankroll / roomInfo.endgame_amount) * 100)
-      ? 0
-      : Math.ceil((bankroll / roomInfo.endgame_amount) * 100);
+  const isLowBankroll = bankroll <= 0.01;
+  const isHighCommission = cp > 16;
+  const isLowProfit = (roomInfo.host_pr - roomInfo.total_stakes) > 0;
+  const hostProfit = parseFloat(roomInfo.host_pr) || 0;
+  const totalStakes = parseFloat(roomInfo?.total_stakes) || 0;
+  const winChance =
+    roomInfo.game_type === 'Quick Shoot'
+      ? (((roomInfo.qs_game_type - 1) / roomInfo.qs_game_type) * 100).toFixed(2)
+      : 33;
 
-    // const barStyle = {
-    //   width: `${payoutPercentage}%`,
-    //   backgroundColor: payoutPercentage <= 50 ? 'yellow' : 'red'
-    // };
+  const maxBankroll = 80;
+  const progressPercentage = Math.min((bankroll / maxBankroll) * 100, 100).toFixed(2);
 
-    const isLowBankroll = bankroll <= 0.01;
-    const isHighCommission = cp > 16;
-    const isLowProfit = (roomInfo.host_pr - roomInfo.total_stakes) > 0;
-    const hostProfit = parseFloat(roomInfo.host_pr) || 0;
-    const totalStakes = parseFloat(roomInfo?.total_stakes) || 0;
-    const winChance =
-      roomInfo.game_type === 'Quick Shoot'
-        ? (((roomInfo.qs_game_type - 1) / roomInfo.qs_game_type) * 100).toFixed(2)
-        : 33;
+  return (
+    <Box
+      className="main-game join"
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: is_mobile ? '100%' : 'calc(100% - 360px) 350px',
+        gap: '8px',
+        width: '100%',
+        boxSizing: 'border-box'
+      }}
+    >
+      {(is_mobile && selectedMobileTab === 'chat') && (
+        <Drawer
+          className="mat-chat"
+          style={{ display: isDrawerOpen ? 'flex' : 'none' }}
+          variant="persistent"
+          anchor="left"
+          open={isDrawerOpen}
+        >
+          <ChatPanel />
+        </Drawer>
+      )}
 
-    const maxBankroll = 80;
-    const progressPercentage = Math.min((bankroll / maxBankroll) * 100, 100).toFixed(2);
+      {showPlayerModal && (
+        <PlayerModal
+          modalIsOpen={showPlayerModal}
+          closeModal={handleClosePlayerModal}
+          selectedCreator={selectedCreator}
+        />
+      )}
+      {/* MAIN PANEL */}
+      <Box className="main-panel" sx={{ margin: '8px' }}>
+        {/* PreSummaryPanel */}
+        <PreSummaryPanel
+          status={roomInfo.status}
+          bankroll={bankroll}
+          isDarkMode={isDarkMode}
+          solPrice={solPrice}
+          cp={cp}
+          // isQbot => if you still want to track that, you can pass a boolean
+          isQbot={false}
+          winChance={winChance}
+          payoutPercentage={payoutPercentage}
+          roomInfo={roomInfo}
+          handleOpenPlayerModal={handleOpenPlayerModal}
+          creator_id={roomInfo.creator_id}
+          creator_avatar={creator_avatar}
+          username={username}
+          rank={roomRank}
+          accessory={creator_accessory}
+          rps_game_type={roomInfo.rps_game_type}
+          qs_game_type={roomInfo.qs_game_type}
+          endgame_type={roomInfo.endgame_type}
+          pr={roomInfo.pr}
+          isLowBankroll={isLowBankroll}
+          isHighCommission={isHighCommission}
+          isLowProfit={isLowProfit}
+          hostProfit={hostProfit}
+          totalStakes={totalStakes}
+          bet_amount={bet_amount}
+        />
 
+        {/* TabbedContent */}
+        <TabbedContent
+          changeBgColor={changeBgColor}
+          changeBgColorQs={changeBgColorQs}
+          bgColorChanged={bgColorChanged}
+          betting={betting}
+          strategies={strategies}
+          result={result}
+          solPrice={solPrice}
+          ai_mode={ai_mode}
+          getAttachedRooms={getAttachedRooms}
+          handleDetachAttachChange={handleDetachAttachChange}
+          onChangeState={(newState) => {
+            // mimic setState merges
+            if ('result' in newState) setResult(newState.result);
+            // add other fields as needed...
+          }}
+          cp={cp}
+          bet_amount={bet_amount}
+          is_mobile={is_mobile}
+          gameResult={gameResult}
+          rpsbetitems={rpsbetitems}
+          attached={attached}
+          run={run}
+          updateSelectedRps={(selection, callback) => {
+            setSelected_rps(selection);
+            if (callback) callback();
+          }}
+          selected_rps={selected_rps}
+          handleJoyrideCallback={(data) => {
+            const { status, type } = data;
+            if (status === 'finished' || status === 'skipped') {
+              updateTutorialCompleted(2);
+              setRun(false);
+            }
+          }}
+          refreshHistory={refreshHistory}
+          playSound={playSound}
+          join={join}
+          handleSwitchChange={handleSwitchChange}
+          betResult={betResult}
+          roomInfo={roomInfo}
+          rps_game_type={roomInfo.rps_game_type}
+          user_id={user_id}
+          rank={getRank(total_wagered)}
+          handleOpenPlayerModal={handleOpenPlayerModal}
+          handleClosePlayerModal={handleClosePlayerModal}
+          selectedCreator={selectedCreator}
+          showPlayerModal={showPlayerModal}
+          creator_id={roomInfo.creator_id}
+          pr={roomInfo.pr}
+          updateUserStrategy={updateUserStrategy}
+          bankroll={bankroll}
+          predictedBetAmount={predictedBetAmount}
+          is_private={roomInfo.is_private}
+          isDarkMode={isDarkMode}
+          endgame_type={roomInfo.endgame_type}
+          actionList={actionList}
+          getRoomData={() => { }} // or remove if not needed
+          user={user}
+          coHostAmount={coHostAmount}
+          getRoomInfo={getRoomInfoAction}
+          balance={user_balance}
+          isLowGraphics={isLowGraphics}
+          handleCoHostAmountChange={handleCoHostAmountChange}
+          handleSendCoHost={handleSendCoHost}
+          has_joined={true}
+          borderColor={borderColor}
+          updateSelectedQs={(position, callback) => {
+            setSelected_qs_position(position);
+            if (callback) callback();
+          }}
+          qsbetitems={qsbetitems}
+          qs_game_type={roomInfo.qs_game_type}
+          selected_qs_position={selected_qs_position}
+        />
 
-    return (
+        <div>
+          {/* MyGamesTable / HistoryTable / MyHistoryTable based on your conditions */}
+          {/* Example logic: */}
+          {(!is_mobile && selectedMainTabIndex === 1) && (
+            <MyGamesTable gameTypeList={gameTypeList} />
+          )}
+          {is_mobile && selectedMobileTab === 'live_games' && <HistoryTable userId={user_id} />}
+          {is_mobile && selectedMobileTab === 'my_games' && <MyHistoryTable />}
+        </div>
+      </Box>
 
-      <Box
-        className="main-game join"
-        style={{
-          display: 'grid',               // Enables Grid layout
-          gridTemplateColumns: 'calc(100% - 360px) 350px', // Allocates 70% width to the first column and 30% to the second
-          gap: '8px',                    // Adds space between columns
-          width: '100%',                 // Ensures the div takes up 100% of its container's width
-          boxSizing: 'border-box',       // Ensures the padding, border are included within the element’s width
-        }}
-      >
-        {((is_mobile && selectedMobileTab === 'chat')) && (
-          <Drawer
-            className="mat-chat"
-            style={{ display: isDrawerOpen ? 'flex' : 'none' }}
-            variant="persistent"
-            anchor="left"
-            open={isDrawerOpen}
-          >
-            <ChatPanel />
-          </Drawer>
-        )}
-        {!is_mobile &&
-          (!selectedMobileTab === 'live_games' ||
-            !selectedMobileTab === 'my_games') && (
-            <Tabs
-              value={show_open_game}
-              onChange={this.showOpenGameOrHistory}
-              TabIndicatorProps={{ style: { background: '#ff0000' } }}
-              className="main-game-page-tabs"
+      {/* SUB PANEL */}
+      <Box className="sub-panel">
+        {/* AiPanel & CoHostModal & RoomTokenDetails, etc. */}
+        {!is_mobile && selectedMainTabIndex === 0 && (
+          <Box>
+            <AiPanel
+              handleDetachAttachChange={handleDetachAttachChange}
+              rpsbetitems={rpsbetitems}
+              qsbetitems={qsbetitems}
+              updateUserStrategy={updateUserStrategy}
+              strategies={strategies}
+              betting={betting}
+              bet_amount={bet_amount}
+              handle2xButtonClick={handle2xButtonClick}
+              handleHalfXButtonClick={handleHalfXButtonClick}
+              handleMaxButtonClick={handleMaxButtonClick}
+              onChangeState={(newState) => {
+                // Mimic setState merges
+                if ('bet_amount' in newState) setBetAmount(newState.bet_amount);
+              }}
+              bankroll={bankroll}
+              is_betting={is_betting}
+              attached={attached}
+              creator_id={roomInfo.creator_id}
+              getAttachedRooms={getAttachedRooms}
+              predictedBetAmount={predictedBetAmount}
+              roomId={roomInfo._id}
+              handleSwitchChange={handleSwitchChange}
+              game_type={roomInfo.game_type}
+              rank={getRank(total_wagered)}
+              qs_game_type={roomInfo.qs_game_type}
+              user_id={user_id}
+              ai_mode={ai_mode}
+              user_balance={user_balance}
               isDarkMode={isDarkMode}
+            />
+            <CoHostModal
+              isDarkMode={isDarkMode}
+              coHostAmount={coHostAmount}
               selectedRow={roomInfo}
               balance={user_balance}
+              solPrice={solPrice}
               user={user}
-            >
-              <Tab
-                label={
-                  selectedMobileTab === 'live_games'
-                    ? 'Live Battles'
-                    : 'Your Games'
-                }
-                style={customStyles.tabRoot}
-              />
-              <Tab label="History" style={customStyles.tabRoot} />
-            </Tabs>
-          )}
+              togglePopup={() => { }}
+              handleClose={() => { }}
+              handleSendCoHost={handleSendCoHost}
+              handleCoHostAmountChange={handleCoHostAmountChange}
+              has_joined={true}
+              input_only={true}
+            />
 
-        <Box className="main-panel" style={{ margin: '8px' }}>
-          <PreSummaryPanel
-            status={roomInfo.status}
-            bankroll={bankroll}
-            isDarkMode={isDarkMode}
-            solPrice={solPrice}
-            cp={cp}
-            isQbot={isQbot}
-            winChance={winChance}
-            payoutPercentage={payoutPercentage}
-            roomInfo={roomInfo}
-            handleOpenPlayerModal={this.handleOpenPlayerModal}
-            creator_id={roomInfo.creator_id}
-            creator_avatar={creator_avatar}
-            username={username}
-            rank={rank}
-            accessory={creator_accessory}
-            rps_game_type={roomInfo.rps_game_type}
-            qs_game_type={roomInfo.qs_game_type}
-            endgame_type={roomInfo.endgame_type}
-            pr={roomInfo.pr}
-            isLowBankroll={isLowBankroll}
-            isHighCommission={isHighCommission}
-            isLowProfit={isLowProfit}
-            hostProfit={hostProfit}
-            totalStakes={totalStakes}
-            bet_amount={this.state.bet_amount}
-          />
-          <TabbedContent
-            changeBgColor={this.changeBgColor}
-            changeBgColorQs={this.changeBgColorQs}
-            bgColorChanged={bgColorChanged}
-            betting={betting}
-            strategies={strategies}
-            result={result}
-            solPrice={solPrice}
-            ai_mode={ai_mode}
-            getAttachedRooms={getAttachedRooms}
-            handleDetachAttachChange={this.handleDetachAttachChange}
-            onChangeState={this.onChangeState}
-            cp={cp}
-            bet_amount={this.state.bet_amount}
-            is_mobile={this.state.is_mobile}
-            gameResult={this.state.gameResult}
-            rpsbetitems={rpsbetitems}
-            attached={attached}
-            run={run}
-            updateSelectedRps={this.updateSelectedRps}
-            selected_rps={selected_rps}
-            handleJoyrideCallback={this.handleJoyrideCallback}
-            refreshHistory={this.refreshHistory}
-            playSound={this.playSound}
-            join={this.join}
-            handleSwitchChange={this.handleSwitchChange}
-            betResult={betResult}
-            roomInfo={roomInfo}
-            rps_game_type={roomInfo.rps_game_type}
-            user_id={user_id}
-            rank={getRank(total_wagered)}
-            handleOpenPlayerModal={this.handleOpenPlayerModal}
-            handleClosePlayerModal={this.handleClosePlayerModal}
-            selectedCreator={selectedCreator}
-            showPlayerModal={showPlayerModal}
-            creator_id={roomInfo.creator_id}
-            pr={roomInfo.pr}
-            updateUserStrategy={this.props.updateUserStrategy}
-            bankroll={bankroll}
-            predictedBetAmount={predictedBetAmount}
-            is_private={roomInfo.is_private}
-            isDarkMode={this.props.isDarkMode}
-            endgame_type={roomInfo.endgame_type}
-            actionList={actionList}
-            getRoomData={this.getRoomData}
-            user={this.props.user}
-            coHostAmount={this.state.coHostAmount}
-            getRoomInfo={this.props.getRoomInfo}
-            balance={this.props.user_balance}
-            isLowGraphics={this.props.isLowGraphics}
-            handleCoHostAmountChange={this.handleCoHostAmountChange}
-            handleSendCoHost={this.handleSendCoHost}
-            has_joined={true}
-            borderColor={borderColor}
-            updateSelectedQs={this.updateSelectedQs}
-            qsbetitems={qsbetitems}
-            qs_game_type={roomInfo.qs_game_type}
-            selected_qs_position={selected_qs_position}
-          />
-          <div>
-            {((!is_mobile && selectedMainTabIndex === 1) ||
-              (is_mobile &&
-                selectedMobileTab === 'my_games' &&
-                show_open_game === 0)) && (
-                <MyGamesTable gameTypeList={gameTypeList} />
-              )}
-            {is_mobile &&
-              selectedMobileTab === 'live_games' &&
-              show_open_game === 1 && <HistoryTable userId={user_id} />}
-            {is_mobile &&
-              selectedMobileTab === 'my_games' &&
-              show_open_game === 1 && <MyHistoryTable />}
-          </div>
-        </Box>
-        <Box className="sub-panel">
-
-          {!this.state.is_mobile &&
-            this.props.selectedMainTabIndex === 0 && (
-              <Box>
-                <AiPanel
-                  handleDetachAttachChange={this.handleDetachAttachChange}
-                  rpsbetitems={this.props.rpsbetitems}
-                  qsbetitems={this.props.qsbetitems}
-                  updateUserStrategy={this.props.updateUserStrategy}
-                  strategies={strategies}
-                  betting={betting}
-                  bet_amount={this.state.bet_amount}
-                  handle2xButtonClick={this.handle2xButtonClick}
-                  handleHalfXButtonClick={this.handleHalfXButtonClick}
-                  handleMaxButtonClick={this.handleMaxButtonClick}
-                  onChangeState={this.onChangeState}
-                  bankroll={this.state.bankroll}
-                  is_betting={is_betting}
-                  attached={attached}
-                  creator_id={roomInfo.creator_id}
-                  getAttachedRooms={getAttachedRooms}
-                  predictedBetAmount={predictedBetAmount}
-                  roomId={roomInfo._id}
-                  handleSwitchChange={this.handleSwitchChange}
-                  game_type={roomInfo.game_type}
-                  rank={getRank(total_wagered)}
-                  qs_game_type={roomInfo.qs_game_type}
-                  user_id={user_id}
-                  ai_mode={ai_mode}
-                  user_balance={user_balance}
-                  isDarkMode={isDarkMode}
-                />
-                <CoHostModal
-                  isDarkMode={this.props.isDarkMode}
-                  coHostAmount={this.state.coHostAmount}
-                  selectedRow={roomInfo}
-                  balance={this.props.balance}
-                  solPrice={solPrice}
-                  user={this.props.user}
-                  togglePopup={this.togglePopup}
-                  handleClose={this.handleCloseCoHostModal}
-                  handleSendCoHost={this.props.handleSendCoHost}
-                  handleCoHostAmountChange={this.handleCoHostAmountChange}
-                  has_joined={this.props.has_joined}
-                  input_only={true}
-                />
-
-                <RoomTokenDetails solPrice={solPrice} progressPercentage={progressPercentage} handleOpenPlayerModal={this.handleOpenPlayerModal} roomInfo={roomInfo} />
-
-              </Box>
-
-            )}
-
-          <DrawerButton
-            open={isDrawerOpen}
-            toggleDrawer={this.toggleDrawer}
-          />
-          {/* <SupportButton
-              open={this.props.isSupportOpen}
-            // toggleDrawer={this.toggleDrawer}
-            /> */}
-          {!is_mobile && selectedMainTabIndex === 1 && <MyHistoryTable />}
-        </Box>
-        {!is_mobile && (
-          <div className="mobile-only main-page-nav-button-group">
-            <Button
-              className={`mobile-tab-live ${selectedMobileTab === 'live_games' ? 'active' : ''
-                }`}
-              onClick={e => {
-                this.setState({ selectedMobileTab: 'live_games' });
-              }}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="32"
-                height="32"
-                fill="none"
-                viewBox="0 0 32 32"
-              >
-                <path
-                  stroke={
-                    selectedMobileTab === 'live_games' ? '#fff' : '#8E9297'
-                  }
-                  strokeWidth="1.5"
-                  d="M24.9 25.945c2.625-2.578 4.1-6.076 4.1-9.722 0-3.647-1.475-7.144-4.1-9.723M7.1 25.945C4.476 23.367 3 19.87 3 16.223 3 12.576 4.475 9.079 7.1 6.5M21 22.5c1.92-1.658 3-3.906 3-6.25s-1.08-4.592-3-6.25M14 17.678v-3.356c0-.79.871-1.268 1.537-.844l2.637 1.678c.618.393.618 1.295 0 1.688l-2.637 1.678c-.666.424-1.537-.055-1.537-.844zM11 22.5c-1.92-1.658-3-3.906-3-6.25s1.08-4.592 3-6.25"
-                />
-              </svg>
-              {selectedMobileTab === 'live_games' && 'LIVE GAMES'}
-            </Button>
-            <Button
-              className={`mobile-tab-my ${selectedMobileTab === 'my_games' ? 'active' : ''
-                }`}
-              onClick={e => {
-                this.setState({ selectedMobileTab: 'my_games' });
-              }}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="33"
-                height="32"
-                fill="none"
-                viewBox="0 0 33 32"
-              >
-                <path
-                  stroke={
-                    selectedMobileTab === 'my_games' ? '#fff' : '#8E9297'
-                  }
-                  strokeWidth="1.5"
-                  d="M27.5 27.5c0-2.917-1.159-5.715-3.222-7.778-2.063-2.063-4.86-3.222-7.778-3.222-2.917 0-5.715 1.159-7.778 3.222C6.659 21.785 5.5 24.582 5.5 27.5"
-                />
-                <path
-                  fill={
-                    selectedMobileTab === 'my_games' ? '#fff' : '#8E9297'
-                  }
-                  d="M18.651 12.702l-.674.33.674-.33zm-.294-.602l.674-.33c-.126-.257-.387-.42-.674-.42v.75zm-3.714 0v-.75c-.287 0-.548.163-.674.42l.674.33zm7.607-4.75v4.302h1.5V7.35h-1.5zm-2.925 5.022l-.294-.601-1.348.658.294.602 1.348-.659zm-.968-1.022h-3.714v1.5h3.714v-1.5zm-4.388.42l-.294.602 1.348.66.294-.603-1.348-.658zm-3.219-.118V7.35h-1.5v4.302h1.5zm2.036-6.402h7.428v-1.5h-7.428v1.5zm-.49 8c-.838 0-1.546-.7-1.546-1.598h-1.5c0 1.695 1.348 3.098 3.046 3.098v-1.5zm8.408 0c-.576 0-1.113-.333-1.379-.878l-1.348.66c.512 1.046 1.565 1.718 2.727 1.718v-1.5zm1.546-1.598c0 .899-.708 1.598-1.546 1.598v1.5c1.698 0 3.046-1.403 3.046-3.098h-1.5zm-8.575.72c-.266.545-.803.878-1.38.878v1.5c1.163 0 2.216-.672 2.728-1.719l-1.348-.659zM23.75 7.35c0-1.972-1.567-3.6-3.536-3.6v1.5c1.109 0 2.036.924 2.036 2.1h1.5zm-13 0c0-1.176.928-2.1 2.036-2.1v-1.5c-1.969 0-3.536 1.628-3.536 3.6h1.5zm1.571 1.7h2.786v-1.5h-2.786v1.5zm.643-2.175v2.85h1.5v-2.85h-1.5zM19.75 8.1h.929V6.6h-.929v1.5zM17.893 10h.928V8.5h-.928V10z"
-                />
-              </svg>
-              {selectedMobileTab === 'my_games' && 'YOUR GAMES'}
-            </Button>
-            <button
-              className={`mobile-tab-marketplace ${selectedMobileTab === 'marketplace' ? 'active' : ''
-                }`}
-              onClick={e => {
-                this.setState({ selectedMobileTab: 'marketplace' });
-              }}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="32"
-                height="32"
-                fill="none"
-                viewBox="0 0 32 32"
-              >
-                <path
-                  stroke={
-                    selectedMobileTab === 'marketplace' ? '#fff' : '#8E9297'
-                  }
-                  strokeWidth="1.5"
-                  d="M10.083 6.083h11.833v8.584c0 3.268-2.649 5.917-5.916 5.917-3.268 0-5.917-2.65-5.917-5.917V6.083zM9.333 26.666h13.333M22.223 14.597c3.528-.571 4.444-4.538 4.444-6.597H22M9.777 14.597C6.25 14.026 5.333 10.06 5.333 8H10M16 21.334v5.333"
-                />
-              </svg>
-              {selectedMobileTab === 'marketplace' && 'MARKETPLACE'}
-            </button>
-            <Button
-              className={`mobile-tab-chat ${selectedMobileTab === 'chat' ? 'active' : ''
-                }`}
-              onClick={e => {
-                this.setState({ selectedMobileTab: 'chat' });
-              }}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="33"
-                height="32"
-                fill="none"
-                viewBox="0 0 33 32"
-              >
-                <path
-                  stroke={selectedMobileTab === 'chat' ? '#fff' : '#8E9297'}
-                  strokeWidth="1.5"
-                  d="M28 16c0 6.351-5.149 11.5-11.5 11.5-1.407 0-2.754-.253-4-.715-2.75-1.02-4.091 1.378-4.75.965-.685-.43 1.328-2.929.75-3.489C6.342 22.171 5 19.242 5 16 5 9.649 10.149 4.5 16.5 4.5S28 9.649 28 16z"
-                />
-                <circle
-                  cx="10.5"
-                  cy="16"
-                  r="2"
-                  stroke={selectedMobileTab === 'chat' ? '#fff' : '#8E9297'}
-                  strokeWidth="1.5"
-                />
-                <circle
-                  cx="16.5"
-                  cy="16"
-                  r="2"
-                  stroke={selectedMobileTab === 'chat' ? '#fff' : '#8E9297'}
-                  strokeWidth="1.5"
-                />
-                <circle
-                  cx="22.5"
-                  cy="16"
-                  r="2"
-                  stroke={selectedMobileTab === 'chat' ? '#fff' : '#8E9297'}
-                  strokeWidth="1.5"
-                />
-              </svg>
-              {selectedMobileTab === 'chat' && 'CHAT'}
-            </Button>
-          </div>
+            <RoomTokenDetails
+              solPrice={solPrice}
+              progressPercentage={progressPercentage}
+              handleOpenPlayerModal={handleOpenPlayerModal}
+              roomInfo={roomInfo}
+            />
+          </Box>
         )}
-        <Footer
-          className="footer"
-          open={isDrawerOpen}
-        />
+
+        <DrawerButton open={isDrawerOpen} toggleDrawer={toggleDrawerHandler} />
+        {/* <SupportButton open={props.isSupportOpen} /> */}
+
+        {!is_mobile && selectedMainTabIndex === 1 && <MyHistoryTable />}
       </Box>
-    );
-  }
+
+      {!is_mobile && (
+        <div className="mobile-only main-page-nav-button-group">
+          <Button
+            className={`mobile-tab-live ${selectedMobileTab === 'live_games' ? 'active' : ''}`}
+            onClick={() => setSelectedMobileTab('live_games')}
+          >
+            LIVE GAMES
+          </Button>
+          <Button
+            className={`mobile-tab-my ${selectedMobileTab === 'my_games' ? 'active' : ''}`}
+            onClick={() => setSelectedMobileTab('my_games')}
+          >
+            YOUR GAMES
+          </Button>
+          <Button
+            className={`mobile-tab-marketplace ${selectedMobileTab === 'marketplace' ? 'active' : ''}`}
+            onClick={() => setSelectedMobileTab('marketplace')}
+          >
+            MARKETPLACE
+          </Button>
+          <Button
+            className={`mobile-tab-chat ${selectedMobileTab === 'chat' ? 'active' : ''}`}
+            onClick={() => setSelectedMobileTab('chat')}
+          >
+            CHAT
+          </Button>
+        </div>
+      )}
+
+      <Footer className="footer" open={isDrawerOpen} />
+    </Box>
+  );
 }
 
-const mapStateToProps = state => ({
+// ------------------ REDUX CONNECT ------------------
+const mapStateToProps = (state) => ({
   auth: state.auth.isAuthenticated,
   history: state.logic.history,
   strategies: state.logic.strategies,

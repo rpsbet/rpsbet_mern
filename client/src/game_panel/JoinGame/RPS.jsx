@@ -184,8 +184,6 @@ function RPS(props) {
 
   // Attach socket listeners whenever socket / roomInfo._id / isWatching changes
   useEffect(() => {
-    console.log("No socket yet in Redux...", socket);
-
     if (!socket) return;
 
     // --- LISTENERS ---

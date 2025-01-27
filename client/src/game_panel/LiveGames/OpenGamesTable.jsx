@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { connect } from 'react-redux';
+import { connect, useDispatch } from 'react-redux';
 import {
   actionRoom,
   getRoomList,
   setCurRoomInfo,
+  setRoomList,
   fetchMoreRooms,
   getRecentlyClosed,
   addNewTransaction,
@@ -16,7 +17,6 @@ import { Grid, Link, Tooltip, Typography, Skeleton, Box, Button, Card, Modal } f
 import FilterListIcon from '@mui/icons-material/FilterList';
 import Moment from 'moment';
 import { faHeart, faHeartBroken, faStopwatch } from '@fortawesome/free-solid-svg-icons';
-import animationData from '../LottieAnimations/live';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { setBalance } from '../../redux/Auth/user.actions';
 import CoHostModal from '../modal/CoHostModal';
@@ -27,12 +27,12 @@ import Battle from '../icons/Battle';
 import { alertModal } from '../modal/ConfirmAlerts';
 import PlayerModal from '../modal/PlayerModal';
 import history from '../../redux/history';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { getCustomTheme } from '../../config/theme';
 
 
 function OpenGamesTable(props) {
   const {
-    // Props from Redux or parent
-    roomList: propRoomList = [],
     selectedGameType,
     loading,
     isDarkMode,
@@ -48,6 +48,7 @@ function OpenGamesTable(props) {
     pageNumber,
     // Redux actions
     getRoomList,
+    roomList,
     setCurRoomInfo,
     highlightedRooms,
     getRoomStatisticsData,
@@ -57,16 +58,15 @@ function OpenGamesTable(props) {
     addNewTransaction,
     coHost,
   } = props;
-
+  const dispatch = useDispatch();
   // ------------------ LOCAL STATE ------------------
-  const [localRoomList, setLocalRoomList] = useState(propRoomList);
+  const [localRoomList, setLocalRoomList] = useState(roomList);
   const [filter, setFilter] = useState('Live Games');
   const [isCoHostModalOpen, setIsCoHostModalOpen] = useState(false);
   const [coHostAmount, setCoHostAmount] = useState('');
   const [selectedRow, setSelectedRow] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  // If you had more original state (e.g. invertFilter, isFocused, actionList, etc.), you could add them here as well.
+  const theme = getCustomTheme(isDarkMode);
 
   // For debouncing scroll
   const scrollTimeout = useRef(null);
@@ -96,26 +96,26 @@ function OpenGamesTable(props) {
     };
   }, []);
 
-  const prevRoomListRef = useRef(propRoomList);
- 
+  const prevRoomListRef = useRef(roomList);
+
   // This mimics componentDidUpdate
   useEffect(() => {
-    if (!isEqual(prevRoomListRef.current, propRoomList)) {
-      prevRoomListRef.current = propRoomList;
+    if (!isEqual(prevRoomListRef.current, roomList)) {
+      prevRoomListRef.current = roomList;
     }
     const mergedRooms = [
-      ...propRoomList,
+      ...roomList,
       ...localRoomList.filter(
-        (room) => !propRoomList.some((newRoom) => newRoom._id === room._id)
+        (room) => !roomList.some((newRoom) => newRoom._id === room._id)
       ),
     ];
 
-    // If localRoomList has extra rooms not in propRoomList, override
+    // If localRoomList has extra rooms not in roomList, override
     const extraRoomsInState = localRoomList.some(
-      (stateRoom) => !propRoomList.some((propRoom) => propRoom._id === stateRoom._id)
+      (stateRoom) => !roomList.some((propRoom) => propRoom._id === stateRoom._id)
     );
     if (extraRoomsInState) {
-      setLocalRoomList([...propRoomList]);
+      setLocalRoomList([...roomList]);
       return;
     }
 
@@ -126,10 +126,12 @@ function OpenGamesTable(props) {
       if (index !== -1 && index !== 0) {
         const [highlighted] = mergedRooms.splice(index, 1);
         mergedRooms.unshift(highlighted);
+
+        dispatch(setRoomList(mergedRooms));
       }
     }
     setLocalRoomList(mergedRooms);
-  }, [propRoomList, highlightedRooms]);
+  }, [roomList, highlightedRooms]);
 
   // If selectedGameType changes, we might want to refetch or mark isLoading
   useEffect(() => {
@@ -305,38 +307,20 @@ function OpenGamesTable(props) {
 
   // -------------- UI HELPERS --------------
   const getColorClass = (value) => {
-    if (value > 0) return 'green';
+    if (value > 0) return '#03ff3b';
     if (value === 0) return 'grey';
-    return 'red';
-  };
-  const renderArrow = (value) => {
-    return value >= 0 ? (
-      <Add style={{ color: '#57ca22' }} />
-    ) : (
-      <Remove style={{ color: 'red' }} />
-    );
-  };
-  const calculateColor = (value) => {
-    return value >= 0 ? '#57ca22' : 'red';
+    return '#ff0000';
   };
 
   // Filter state
   const isLiveGames = filter === 'Live Games';
 
-  // If we have recentlyClosed data from Redux
-  // (the original code references `recentlyClosed`, updated by getRecentlyClosed)
   const recent = props.recentlyClosed ? updateFromNow(props.recentlyClosed) : [];
 
-  // Lottie animation defaults
-  const defaultOptions = {
-    loop: isLowGraphics ? false : true,
-    autoplay: isLowGraphics ? false : true,
-    animationData: animationData,
-    rendererSettings: { preserveAspectRatio: 'xMidYMid slice' },
-  };
+
 
   return (
-    <>
+    <ThemeProvider theme={theme}>
       {showPlayerModal && (
         <PlayerModal
           selectedCreator={selectedCreator}
@@ -345,7 +329,7 @@ function OpenGamesTable(props) {
         />
       )}
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+      <div style={{ marginLeft: '10px', display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
         <div
           className="filter-container"
           style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
@@ -363,7 +347,7 @@ function OpenGamesTable(props) {
               <div>NO LIVE GAMES, GO TO 'MANAGE' TO CREATE ONE</div>
             </div>
           ) : (
-            <Grid container className="grid-container" spacing={1} style={{ padding: '20px', width: '100%' }}>
+            <Grid container className="grid-container" spacing={1} style={{ padding: '20px' }}>
               {localRoomList.length === 0 ? (
                 // Skeleton
                 Array.from({ length: 5 }).map((_, index) => (
@@ -377,12 +361,8 @@ function OpenGamesTable(props) {
                 localRoomList.map((row, key) => (
                   <div
                     key={row._id}
-                    className={`table-row ${key < 10 ? 'slide-in' : 'slide-in'}`}
-                    style={{
-                      animation: highlightedRooms
-                        ? 'flicker 0.2s 2, shake 0.2s'
-                        : 'none',
-                    }}
+                    className={`table-row ${key < 10 ? '' : ''} ${highlightedRooms.includes(row._id) ? 'highlighted-row' : ''
+                      }`}
                     onClick={(event) => {
                       if (!event.defaultPrevented) {
                         joinRoom({
@@ -428,8 +408,8 @@ function OpenGamesTable(props) {
                         </div>
                         <div className="cell-game-id ">
                           <img
-                            src={`/img/gametype/icons/${row.game_type.short_name}.svg`}
-                            alt={row.game_type.short_name}
+                            src={`/img/gametype/icons/${row.game_type?.short_name}.svg`}
+                            alt={row.game_type?.short_name}
                             className="game-type-icon"
                           />
                           {row.selectedStrategy && (
@@ -493,8 +473,7 @@ function OpenGamesTable(props) {
                           </Tooltip>
                         )}
                       </div>
-                      {/* Desktop-only info */}
-                      <div className="table-cell desktop-only cell-user-name">
+                      <div className="table-cell cell-user-name">
                         <a
                           className="player"
                           onClick={(event) => {
@@ -504,7 +483,7 @@ function OpenGamesTable(props) {
                           }}
                         >
                           <Avatar
-                            className="avatar desktop-only"
+                            className="avatar"
                             src={row.creator_avatar}
                             accessory={row.accessory}
                             username={row.username}
@@ -530,7 +509,7 @@ function OpenGamesTable(props) {
                               }}
                             >
                               <Avatar
-                                className="avatar desktop-only"
+                                className="avatar"
                                 src={host.avatar}
                                 accessory={host.accessory}
                                 username={host.username}
@@ -547,7 +526,7 @@ function OpenGamesTable(props) {
                           </div>
                         )}
                         {row.joiners && row.joiners.length > 0 && (
-                          <div className="table-cell avatar desktop-only cell-joiners">
+                          <div className="table-cell avatar cell-joiners">
                             <Battle />
                             {row.joiner_avatars.slice(0, 1).map((joiner, index) => (
                               <a
@@ -560,7 +539,7 @@ function OpenGamesTable(props) {
                                 }}
                               >
                                 <Avatar
-                                  className="avatar desktop-only"
+                                  className="avatar"
                                   key={index}
                                   accessory={joiner.accessory}
                                   src={joiner.avatar}
@@ -677,71 +656,6 @@ function OpenGamesTable(props) {
                         </div>
                       </div>
                     </div>
-                    {/* Mobile-only user info */}
-                    <div
-                      className="mobile-only"
-                      style={{ marginTop: '7.5px', marginBottom: '-5px' }}
-                    >
-                      <div className="table-cell cell-user-name">
-                        <a
-                          className="player"
-                          onClick={(event) => {
-                            event.preventDefault();
-                            event.stopPropagation();
-                            handleOpenPlayerModal(row.creator_id);
-                          }}
-                        >
-                          <Avatar
-                            className="avatar"
-                            src={row.creator_avatar}
-                            accessory={row.accessory}
-                            username={row.username}
-                            rank={row.rank}
-                            alt=""
-                            darkMode={isDarkMode}
-                          />
-                          <i
-                            className={`online-status${onlineUserList.filter((u) => u === row.creator_id).length > 0
-                              ? ' online'
-                              : ''
-                              }`}
-                          ></i>
-                        </a>
-                        {row.joiners && row.joiners.length > 0 && (
-                          <div className="table-cell mobile-only cell-joiners">
-                            <Battle />
-                            {row.joiner_avatars.slice(0, 3).map((joinerAvatar, index) => (
-                              <a
-                                key={index}
-                                className="player"
-                                onClick={(event) => {
-                                  event.preventDefault();
-                                  event.stopPropagation();
-                                  handleOpenPlayerModal(row.joiners[index]);
-                                }}
-                              >
-                                <Avatar
-                                  className="avatar mobile-only"
-                                  src={joinerAvatar.avatar}
-                                  rank={joinerAvatar.rank}
-                                  username={joinerAvatar.username}
-                                  alt=""
-                                  accessory={joinerAvatar.accessory}
-                                  darkMode={isDarkMode}
-                                />
-                              </a>
-                            ))}
-                            {row.joiner_avatars.length > 3 && (
-                              <div className="avatar-square">
-                                <div className="avatar-count">
-                                  +{row.joiner_avatars.length - 3}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
                   </div>
                 ))
               )}
@@ -776,16 +690,23 @@ function OpenGamesTable(props) {
                   key={row._id}
                 >
                   <Card
+                    onClick={() => window.location.href = `/join/${row._id}`} // or use Next.js router.push
                     sx={{
                       p: 3,
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
+                      cursor: 'pointer',
+                      transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                      '&:hover': {
+                        transform: 'translateY(-4px)',
+                        boxShadow: 4,
+                      },
                     }}
                     className="carousel-content table-row slide-in"
                   >
-                    <Link
-                      href={`/join/${row._id}`}
+                    <Box
+
                       sx={{ mb: 1, display: 'flex', alignItems: 'center' }}
                     >
                       {row.image && (
@@ -819,16 +740,34 @@ function OpenGamesTable(props) {
                           {`${row.game_type.short_name}-${row.room_number}`}
                         </Typography>
                       </Box>
-                    </Link>
-                    <Box sx={{ display: 'flex', alignItems: 'center', typography: 'body2' }}>
-                      {customFromNow(Moment(row.created_at))}{' '}
-                      <FontAwesomeIcon icon={faStopwatch} /> &nbsp;
+                    </Box>
+                    {/* Middle Section: Time/Icons */}
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                        mb: 1,
+                        typography: 'body2',
+                        color: 'text.secondary',
+                      }}
+                    >
+                      {/* Example layout: Icon + "fromNow" text */}
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <FontAwesomeIcon icon={faStopwatch} />
+                        {/* e.g. "2 minutes ago" */}
+                        {customFromNow(Moment(row.created_at))}
+                      </Box>
+                      {/* Another icon */}
                       <FontAwesomeIcon icon={faHeartBroken} />
                     </Box>
+
+                    {/* Bottom Section: Currency Info */}
                     <Typography
+                      variant="body2"
                       sx={{
-                        fontSize: '0.8em',
-                        color: getColorClass(hostPrizeMinusBetAmount),  // Assuming this returns a valid CSS color
+                        fontWeight: 'bold',
+                        color: getColorClass(hostPrizeMinusBetAmount), // or a direct color
                       }}
                     >
                       {convertToCurrency(hostPrizeMinusBetAmount, solPrice)}
@@ -883,7 +822,7 @@ function OpenGamesTable(props) {
         </Box>
 
       </Modal>
-    </>
+    </ThemeProvider>
   );
 }
 
@@ -899,6 +838,7 @@ const mapStateToProps = (state) => ({
   isLowGraphics: state.auth.isLowGraphics,
   loading: state.logic.isActiveLoadingOverlay,
   solPrice: state.logic.solPrice,
+  roomList: state.logic.roomList
 });
 
 const mapDispatchToProps = {
@@ -908,6 +848,7 @@ const mapDispatchToProps = {
   getRoomStatisticsData,
   getRecentlyClosed,
   setBalance,
+  setRoomList,
   fetchMoreRooms,
   addNewTransaction,
   coHost,

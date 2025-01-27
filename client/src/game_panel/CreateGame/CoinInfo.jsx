@@ -1,31 +1,55 @@
 import React, { useState } from 'react';
-import { TextField, Button, Tooltip, Box, Typography } from '@mui/material';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
+import {
+  TextField,
+  Button,
+  Tooltip,
+  Box,
+  Typography,
+  InputAdornment
+} from '@mui/material';
 import { CloudUpload as UploadIcon, Info } from '@mui/icons-material';
 import { useDispatch } from 'react-redux';
 import { setFocused } from '../../redux/Auth/user.actions';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { getCustomTheme } from '../../config/theme';
 
 const CoinInfo = ({
   onChangeState,
   name,
+  ticker,
   image,
   isDarkMode,
 }) => {
-  const [inputError, setInputError] = useState('');
+  // Separate error states for each field
+  const [nameError, setNameError] = useState('');
+  const [tickerError, setTickerError] = useState('');
+
+  // MUI theme
   const theme = getCustomTheme(isDarkMode);
 
   const dispatch = useDispatch();
 
-  const handleInputChange = (field, value) => {
+  // NAME field logic
+  const handleNameChange = (value) => {
     if (value.length > 10) {
-      setInputError('10 character limit');
+      setNameError('10 character limit');
     } else {
-      setInputError('');
+      setNameError('');
     }
-    onChangeState({ [field]: value });
+    onChangeState({ name: value });
   };
 
+  // TICKER field logic (with '$' prefix)
+  const handleTickerChange = (value) => {
+    if (value.length > 10) {
+      setTickerError('10 character limit');
+    } else {
+      setTickerError('');
+    }
+    onChangeState({ ticker: value });
+  };
+
+  // Image processing (drag/drop & file upload)
   const handleImageDrop = (event) => {
     event.preventDefault();
     const file = event.dataTransfer.files[0];
@@ -44,53 +68,83 @@ const CoinInfo = ({
   const processFile = (file) => {
     const reader = new FileReader();
     reader.onloadend = () => {
-      onChangeState({
-        image: reader.result, // Base64 string
-      });
+      onChangeState({ image: reader.result }); // base64 string
     };
     reader.readAsDataURL(file);
   };
 
   return (
-    <div
-      className="coin-info-panel"
-      style={{
-        marginBottom: '10px',
-        color: isDarkMode ? 'white' : 'black',
-      }}
-    >
-      <h3 className="game-sub-title roll-tag" style={{ marginBottom: '5px' }}>
-        Room Information
-        &nbsp;
-        <Tooltip
-          title={'For when room hits 69K, liquidity will be moved to a pool.'}
-          placement="top"
-        >
-          <Info style={{ cursor: 'pointer', color: isDarkMode ? 'white' : '#666' }} />
-        </Tooltip>
-      </h3>
-      <ThemeProvider theme={theme}>
-        {/* Coin Name */}
+    <ThemeProvider theme={theme}>
+      <div
+        className="coin-info-panel"
+        style={{
+          marginBottom: '10px',
+          color: isDarkMode ? 'white' : 'black',
+        }}
+      >
+        {/* Title + Tooltip */}
+        <h3 className="game-sub-title roll-tag" style={{ marginBottom: '5px' }}>
+          Room Information
+          &nbsp;
+          <Tooltip
+            title="For when room hits 69K, liquidity will be moved to a pool."
+            placement="top"
+          >
+            <Info style={{ cursor: 'pointer', color: isDarkMode ? 'white' : '#666' }} />
+          </Tooltip>
+        </h3>
+
+        {/* NAME Field */}
         <TextField
-          color={inputError ? "error" : "error"}
+          color={nameError ? 'error' : 'error'}
           label="Name"
           variant="filled"
           fullWidth
           margin="normal"
-          value={name}
-          onChange={(e) => handleInputChange('name', e.target.value)}
+          value={name || ''}
+          onChange={(e) => handleNameChange(e.target.value)}
           onFocus={() => {
             dispatch(setFocused(true));
-            setInputError(''); // Optionally clear error on focus
+            setNameError(''); // Optionally clear error on focus
           }}
           onBlur={() => {
             dispatch(setFocused(false));
-            if (name.length > 10) {
-              setInputError('10 character limit'); // Ensure error remains if still over limit on blur
+            if ((name || '').length > 10) {
+              setNameError('10 character limit'); 
             }
           }}
-          error={!!inputError}
-          helperText={inputError}
+          error={!!nameError}
+          helperText={nameError}
+        />
+
+        {/* TICKER Field (with '$' prefix) */}
+        <TextField
+          color={tickerError ? 'error' : 'error'}
+          label="Ticker"
+          variant="filled"
+          fullWidth
+          margin="normal"
+          value={ticker || ''}
+          onChange={(e) => handleTickerChange(e.target.value)}
+          onFocus={() => {
+            dispatch(setFocused(true));
+            setTickerError('');
+          }}
+          onBlur={() => {
+            dispatch(setFocused(false));
+            if ((ticker || '').length > 10) {
+              setTickerError('10 character limit');
+            }
+          }}
+          error={!!tickerError}
+          helperText={tickerError}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                $
+              </InputAdornment>
+            ),
+          }}
         />
 
         {/* Dropzone for Image Upload */}
@@ -109,15 +163,16 @@ const CoinInfo = ({
         >
           {!image ? (
             <Box>
-              <Typography variant="subtitle3" style={{ width: '100%', display: 'block' }}>Drag or drop an image</Typography>
-
+              <Typography variant="subtitle2" sx={{ display: 'block' }}>
+                Drag or drop an image
+              </Typography>
               <Tooltip title="Upload an image for the coin" placement="top">
                 <Button
-                  variant="contained"
-                  color="default"
+                  variant="outlined"
+                  color="error"
                   startIcon={<UploadIcon />}
                   component="label"
-                  style={{ marginTop: '10px' }}
+                  sx={{ mt: 1 }}
                 >
                   Upload Image
                   <input
@@ -131,7 +186,7 @@ const CoinInfo = ({
             </Box>
           ) : (
             <a
-              href="#"
+              href="#!"
               onClick={(e) => {
                 e.preventDefault();
                 document.getElementById('image-input').click();
@@ -157,7 +212,7 @@ const CoinInfo = ({
           />
 
           {image && (
-            <Box style={{ marginTop: '10px' }}>
+            <Box sx={{ mt: 1 }}>
               <img
                 src={image}
                 alt="Uploaded"
@@ -170,10 +225,8 @@ const CoinInfo = ({
             </Box>
           )}
         </Box>
-
-
-      </ThemeProvider>
-    </div>
+      </div>
+    </ThemeProvider>
   );
 };
 

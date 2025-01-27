@@ -53,7 +53,6 @@ function CoHostModal({
   const socket = useSelector((state) => state.auth.socket);
   const transactionCandles = useSelector((state) => state.logic.candles);
   const transactions = useSelector((state) => state.auth.transactions);
-
   // ---- LOCAL STATE ----
   const [showPlayerModal, setShowPlayerModal] = useState(false);
   const [selectedCreator, setSelectedCreator] = useState('');
@@ -64,9 +63,9 @@ function CoHostModal({
   // ---- EFFECTS ----
   useEffect(() => {
     // Fetch candlestick data if user has joined and it's not just an input-only view
-    if (selectedRow?._id && has_joined && !input_only) {
+    // if (selectedRow?._id && has_joined && !input_only) {
       dispatch(getTransactionCandles({ roomId: selectedRow._id, timeFrame }));
-    }
+    // }
   }, [dispatch, selectedRow?._id, timeFrame, has_joined, input_only]);
 
   useEffect(() => {
@@ -283,7 +282,7 @@ function CoHostModal({
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center' }}>
               <ShowChartOutlined sx={{ mr: 1 }} />
-              Trade
+              TRADE
             </Typography>
             <Button variant="text" color="error" onClick={handleClose}>
               ×

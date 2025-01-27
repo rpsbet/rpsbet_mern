@@ -188,7 +188,7 @@ function GlobalChat(props) {
 
 
   return (
-    <Box className="chat-panel global-chat" ref={chatBoxRef} onScroll={handleScroll} sx={{ maxHeight: 'calc(100vh - 140px)', overflowY: 'auto' }}>
+    <Box className="chat-panel global-chat" ref={chatBoxRef} onScroll={handleScroll} sx={{ maxHeight: 'calc(100vh - 175px)', overflowY: 'auto' }}>
       {/* Tooltip for new messages */}
       {showTooltip && (
         <ButtonBase
@@ -285,7 +285,7 @@ function GlobalChat(props) {
               >
                 {/* If replying to another message */}
                 {chat.replyTo && chat.replyTo.message && (
-                  <div className="reply-to">
+                  <Box className="reply-to">
                     <a
                       className="chat-player"
                       onClick={() => handleOpenPlayerModal(chat.replyTo.senderId)}
@@ -320,7 +320,7 @@ function GlobalChat(props) {
                         wrappedReplyMessage
                       )}
                     </span>
-                  </div>
+                  </Box>
                 )}
 
                 {/* Main chat content */}

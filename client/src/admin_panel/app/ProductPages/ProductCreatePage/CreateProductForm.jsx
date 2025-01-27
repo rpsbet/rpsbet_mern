@@ -279,8 +279,7 @@ function CreateProductForm({
                       }}
                     >
                       Charging an interest rate above 6% may be considered usury and could increase
-                      the risk of borrower default. We recommend setting a rate below 6% to mitigate
-                      this risk.
+                      the risk of borrower default.
                     </Typography>
                   </TableCell>
                 </TableRow>
@@ -291,7 +290,7 @@ function CreateProductForm({
 
         {/* Terms and Conditions */}
         <Typography variant="h6" sx={{ mt: 3, mb: 2 }}>
-          By clicking 'ACCEPT', you agree to the following{' '}
+          By clicking 'SUBMIT', you agree to the following{' '}
           <Box
             component="span"
             onClick={toggleExpand}

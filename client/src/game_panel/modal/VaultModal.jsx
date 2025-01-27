@@ -9,14 +9,16 @@ import {
   TableRow,
   TableCell,
   Button,
-  TextField
+  TextField,
+  Paper
 } from '@mui/material';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import MoneyOffIcon from '@mui/icons-material/MoneyOff';
 import { faLock } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import CountUp from 'react-countup';
-
+import { ThemeProvider } from '@mui/material/styles';
+import { getCustomTheme } from '../../config/theme';
 import {
   vaultDeposit,
   vaultWithdraw,
@@ -42,6 +44,7 @@ function VaultModal(props) {
     vaultWithdraw,
     user,
     solPrice,
+    isDarkMode,
     setBalance,
     addNewTransaction
   } = props;
@@ -148,117 +151,127 @@ function VaultModal(props) {
     maxHeight: '90vh',
     overflowY: 'auto'
   };
+  const theme = getCustomTheme(isDarkMode ? 'dark' : 'light');
 
   // ------------------ RENDER ------------------
   return (
-    <Modal
-      open={modalIsOpen}
-      onClose={closeModal}
-      closeAfterTransition
-      sx={{ zIndex: 1300 }}
-      BackdropProps={{
-        style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' }
-      }}
-    >
-      <Box sx={modalBoxStyle}>
-        {/* HEADER */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-          <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center' }}>
-            <FontAwesomeIcon icon={faLock} style={{ marginRight: 8 }} />
-            Vault
-          </Typography>
-          <Button variant="text" color="error" onClick={closeModal}>
-            X
-          </Button>
-        </Box>
+    <ThemeProvider theme={theme}>
 
-        {/* BODY */}
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {/* Balance Section */}
-          <Box>
-            <Typography variant="h5" textAlign="center">
-              Your Vault Balance
+      <Modal
+        open={modalIsOpen}
+        onClose={closeModal}
+        closeAfterTransition
+        sx={{ zIndex: 1300 }}
+        BackdropProps={{
+          style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' }
+        }}
+      >
+        <Box sx={modalBoxStyle}>
+          {/* HEADER */}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+            <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center' }}>
+              <FontAwesomeIcon icon={faLock} style={{ marginRight: 8 }} />
+              VAULT
             </Typography>
-            <Typography variant="h4" textAlign="center">
-              <CountUp
-                start={0}
-                end={vaultBal}
-                duration={1.5}
-                separator=","
-                decimals={2}
-                useEasing={true}
-                useGrouping={true}
-              />{' '}
-              SOL (${(vaultBal * solPrice).toFixed(2)})
-            </Typography>
-
-            <TextField
-              color='error'
-              label="Enter Amount"
-              variant="outlined"
-              type="number"
-              value={amount}
-              onChange={handleChange}
-              fullWidth
-              sx={{ mt: 2 }}
-            />
+            <Button variant="text" color="error" onClick={closeModal}>
+            ×
+            </Button>
           </Box>
 
-          {/* Recent Transactions */}
-          <Box>
-            <Typography variant="h5" textAlign="center">
-              Recent Transactions
-            </Typography>
-            <Table size="small" sx={{ mt: 1 }}>
-              <TableBody>
-                {vaultTransactions.map((transaction, index) => {
-                  const isWithdrawal =
-                    transaction.description.includes('withdrawal');
-                  return (
-                    <TableRow
-                      key={index}
-                      sx={{
-                        backgroundColor: isWithdrawal ? '#ffebee' : '#e8f5e9'
-                      }}
-                    >
-                      <TableCell>{isWithdrawal ? '-' : '+'}</TableCell>
-                      <TableCell>
-                        {convertToCurrency(transaction.amount, solPrice)}
-                      </TableCell>
-                      <TableCell>
-                        {new Date(transaction.created_at).toLocaleString()}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+          {/* BODY */}
+          <Box sx={{ background: 'rgba(170, 170, 170, 0.06)', borderRadius: '0.3em', p: '20px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+
+            {/* Balance Section */}
+            <Box>
+              <Typography variant="h5" textAlign="center">
+                Your Vault Balance
+              </Typography>
+              <Typography variant="h4" textAlign="center">
+                <CountUp
+                  start={0}
+                  end={vaultBal}
+                  duration={1.5}
+                  separator=","
+                  decimals={2}
+                  useEasing={true}
+                  useGrouping={true}
+                />{' '}
+                SOL (${(vaultBal * solPrice).toFixed(2)})
+              </Typography>
+
+              <TextField
+                color='error'
+                label="Enter Amount"
+                variant="filled"
+                type="number"
+                value={amount}
+                onChange={handleChange}
+                fullWidth
+                sx={{ mt: 2 }}
+              />
+            </Box>
+
+            {/* Recent Transactions */}
+            <Box>
+              <Typography variant="h5" textAlign="center">
+                Recent Transactions
+              </Typography>
+              <Table component={Paper} size="small" sx={{ mt: 1 }}>
+                <TableBody>
+                  {vaultTransactions.map((transaction, index) => {
+                    const isWithdrawal =
+                      transaction.description.includes('withdrawal');
+                    return (
+                      <TableRow
+                        key={index}
+                       
+                      >
+                        <TableCell  sx={{
+                          color: isWithdrawal ? '#00ff3a' : '#ff0000'
+                        }}>{isWithdrawal ? '-' : '+'}</TableCell>
+                        <TableCell  sx={{
+                          color: isWithdrawal ? '#00ff3a' : '#ff0000'
+                        }}>
+                          {convertToCurrency(transaction.amount, solPrice)}
+                        </TableCell>
+                        <TableCell  sx={{
+                          color: isWithdrawal ? '#00ff3a' : '#ff0000'
+                        }}>
+                          {new Date(transaction.created_at).toLocaleString()}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </Box>
+          </Box>
+
+          {/* FOOTER (Deposit / Withdraw Buttons) */}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
+            <Button
+              variant="contained"
+              color="success"
+              onClick={handleDeposit}
+              startIcon={<AttachMoneyIcon />}
+              sx={{ minWidth: 120 }}
+            >
+              Deposit
+            </Button>
+            <Button
+              variant="contained"
+              color="error"
+              onClick={handleWithdraw}
+              startIcon={<MoneyOffIcon />}
+              sx={{ minWidth: 120 }}
+            >
+              Withdraw
+            </Button>
           </Box>
         </Box>
+      </Modal>
+    </ThemeProvider>
 
-        {/* FOOTER (Deposit / Withdraw Buttons) */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
-          <Button
-            variant="contained"
-            color="success"
-            onClick={handleDeposit}
-            startIcon={<AttachMoneyIcon />}
-            sx={{ minWidth: 120 }}
-          >
-            Deposit
-          </Button>
-          <Button
-            variant="contained"
-            color="error"
-            onClick={handleWithdraw}
-            startIcon={<MoneyOffIcon />}
-            sx={{ minWidth: 120 }}
-          >
-            Withdraw
-          </Button>
-        </Box>
-      </Box>
-    </Modal>
   );
 }
 

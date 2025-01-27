@@ -873,242 +873,329 @@ function BetArray({
     );
   }
   return (
-      <Box sx={{ position: 'relative', width: '100%' }}>
-        <SettingsRef
-          strategies={strategies}
-          ai_mode={ai_mode}
-          user_id={user_id}
-          updateUserStrategy={updateUserStrategy}
-          settings_panel_opened={settings_panel_opened}
-          setSelectedStrategy={setSelectedStrategy}
-          settingsRef={settingsRef}
-          rank={rank}
-          selectedStrategy={selectedStrategy}
-        />
+    <Box sx={{ position: 'relative', width: '100%' }}>
+      <SettingsRef
+        strategies={strategies}
+        ai_mode={ai_mode}
+        user_id={user_id}
+        updateUserStrategy={updateUserStrategy}
+        settings_panel_opened={settings_panel_opened}
+        setSelectedStrategy={setSelectedStrategy}
+        settingsRef={settingsRef}
+        rank={rank}
+        selectedStrategy={selectedStrategy}
+      />
 
-        <SideTabs selectedTab={selectedTab} handleTabChange={handleTabChange} />
+      <SideTabs selectedTab={selectedTab} handleTabChange={handleTabChange} />
 
-        {selectedTab === 0 && (
-          <Box className="gamified-container" sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
-            {/* Rank-Badge */}
+      {selectedTab === 0 && (
+        <Box className="gamified-container" sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
+          {/* Rank-Badge */}
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+              width: '100%',
+            }}
+          >
             <Box
               sx={{
                 display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
                 alignItems: 'center',
+                color: betting ? (is_betting ? '#28a745' : '#007bff') : '#ff0000',
+                marginBottom: '5px',
+                background: betting
+                  ? is_betting
+                    ? '#0ef34233'
+                    : '#007bff33'
+                  : '#ff000033',
                 width: '100%',
+                boxShadow: betting
+                  ? is_betting
+                    ? 'inset #28a745 0px 0px 6px 0px'
+                    : 'inset #007bff 0px 0px 6px 0px'
+                  : 'inset #ff0000 0px 0px 6px 0px',
+                borderRadius: 1,
+                justifyContent: 'center',
+                padding: '5px 10px',
+                overflow: 'hidden',
               }}
             >
+              {betting ? (
+                is_betting ? (
+                  <>
+                    <FontAwesomeIcon icon={faBrain} style={{ marginRight: '5px' }} />
+                    THINKING...
+                  </>
+                ) : predictedBetAmount > 0 ? (
+                  <>
+                    <FontAwesomeIcon icon={faCoins} style={{ marginRight: '5px' }} />
+                    TRIED&nbsp;{convertToCurrency(predictedBetAmount, solPrice)}
+                  </>
+                ) : (
+                  <>
+                    <FontAwesomeIcon icon={faClock} style={{ marginRight: '5px' }} />
+                    ANALYSING LAST BETS
+                  </>
+                )
+              ) : (
+                <>
+                  <FontAwesomeIcon icon={faBan} style={{ marginRight: '5px' }} />
+                  OFF
+                </>
+              )}
+            </Box>
+
+            {/* BetAmountInput Component */}
+            <BetAmountInput
+              bet_amount={bet_amount}
+              handle2xButtonClick={handle2xButtonClick}
+              handleHalfXButtonClick={handleHalfXButtonClick}
+              handleMaxButtonClick={handleMaxButtonClick}
+              onChangeState={onChangeState}
+              isDarkMode={isDarkMode}
+              bankroll={bankroll}
+            />
+
+            {/* Switches and Toggles */}
+            <Box sx={{ display: 'flex', width: '100%', justifyContent: 'center' }}>
+              {/* AI Betting Toggle */}
+              <Box
+                sx={{
+                  display: 'inline-flex',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '50%',
+                  padding: '10px',
+                }}
+              >
+                <Tooltip title="TOGGLE AI BETTING">
+                  <Switch
+                    id="aiplay-switch"
+                    checked={betting}
+                    onChange={handleSwitchChange}
+                  />
+                </Tooltip>
+                <Tooltip title="Betting will be slow, whilst active. Best used whilst AFK">
+                  <InfoIcon sx={{ width: '18px', marginTop: '-3px', cursor: 'pointer' }} />
+                </Tooltip>
+                {betting ? (
+                  <Box id="stop">
+                    <Lottie options={defaultOptions} width={32} />
+                  </Box>
+                ) : (
+                  <Box>
+                    {timerValue !== 2000 ? <Typography>{(timerValue / 2000).toFixed(2)}s</Typography> : null}
+                  </Box>
+                )}
+              </Box>
+
+              {/* AI ON/OFF Indicator */}
               <Box
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
-                  color: betting ? (is_betting ? '#28a745' : '#007bff') : '#ff0000',
-                  marginBottom: '5px',
-                  background: betting
-                    ? is_betting
-                      ? '#0ef34233'
-                      : '#007bff33'
-                    : '#ff000033',
-                  width: '100%',
-                  boxShadow: betting
-                    ? is_betting
-                      ? 'inset #28a745 0px 0px 6px 0px'
-                      : 'inset #007bff 0px 0px 6px 0px'
-                    : 'inset #ff0000 0px 0px 6px 0px',
+                  width: '50%',
+                  boxShadow: 'inset 0px 0px 6px 0px #b4b4b4a8',
                   borderRadius: 1,
                   justifyContent: 'center',
                   padding: '5px 10px',
                   overflow: 'hidden',
                 }}
               >
-                {betting ? (
-                  is_betting ? (
-                    <>
-                      <FontAwesomeIcon icon={faBrain} style={{ marginRight: '5px' }} />
-                      THINKING...
-                    </>
-                  ) : predictedBetAmount > 0 ? (
-                    <>
-                      <FontAwesomeIcon icon={faCoins} style={{ marginRight: '5px' }} />
-                      TRIED&nbsp;{convertToCurrency(predictedBetAmount, solPrice)}
-                    </>
-                  ) : (
-                    <>
-                      <FontAwesomeIcon icon={faClock} style={{ marginRight: '5px' }} />
-                      ANALYSING LAST BETS
-                    </>
-                  )
-                ) : (
-                  <>
-                    <FontAwesomeIcon icon={faBan} style={{ marginRight: '5px' }} />
-                    OFF
-                  </>
-                )}
+                <FontAwesomeIcon icon={betting ? faToggleOn : faToggleOff} style={{ marginRight: '5px' }} />
+                <Typography>{betting ? 'AI ON' : 'AI OFF'}</Typography>
               </Box>
+            </Box>
 
-              {/* BetAmountInput Component */}
-              <BetAmountInput
-                bet_amount={bet_amount}
-                handle2xButtonClick={handle2xButtonClick}
-                handleHalfXButtonClick={handleHalfXButtonClick}
-                handleMaxButtonClick={handleMaxButtonClick}
-                onChangeState={onChangeState}
-                isDarkMode={isDarkMode}
-                bankroll={bankroll}
-              />
-
-              {/* Switches and Toggles */}
-              <Box sx={{ display: 'flex', width: '100%', justifyContent: 'center' }}>
-                {/* AI Betting Toggle */}
-                <Box
-                  sx={{
-                    display: 'inline-flex',
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: '50%',
-                    padding: '10px',
-                  }}
-                >
-                  <Tooltip title="TOGGLE AI BETTING">
-                    <Switch
-                      id="aiplay-switch"
-                      checked={betting}
-                      onChange={handleSwitchChange}
-                    />
-                  </Tooltip>
-                  <Tooltip title="Betting will be slow, whilst active. Best used whilst AFK">
-                    <InfoIcon sx={{ width: '18px', marginTop: '-3px', cursor: 'pointer' }} />
-                  </Tooltip>
-                  {betting ? (
-                    <Box id="stop">
-                      <Lottie options={defaultOptions} width={32} />
-                    </Box>
-                  ) : (
-                    <Box>
-                      {timerValue !== 2000 ? <Typography>{(timerValue / 2000).toFixed(2)}s</Typography> : null}
-                    </Box>
-                  )}
-                </Box>
-
-                {/* AI ON/OFF Indicator */}
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    width: '50%',
-                    boxShadow: 'inset 0px 0px 6px 0px #b4b4b4a8',
-                    borderRadius: 1,
-                    justifyContent: 'center',
-                    padding: '5px 10px',
-                    overflow: 'hidden',
-                  }}
-                >
-                  <FontAwesomeIcon icon={betting ? faToggleOn : faToggleOff} style={{ marginRight: '5px' }} />
-                  <Typography>{betting ? 'AI ON' : 'AI OFF'}</Typography>
-                </Box>
-              </Box>
-
-              {/* Detach/Attach Toggle */}
-              <Box sx={{ display: 'flex', width: '100%', justifyContent: 'center', marginTop: '10px' }}>
-                <Box
-                  sx={{
-                    display: 'inline-flex',
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: '50%',
-                    padding: '10px',
-                  }}
-                >
-                  <Tooltip title="TOGGLE DETACH/ATTACH">
-                    <Switch
-                      id="detach-attach-switch"
-                      checked={!!attached}
-                      onChange={handleSwitchChangeWithFetch}
-                      disabled={!betting}
-                    />
-                  </Tooltip>
-                  <Tooltip title="Betting will be slow, whilst active. Best used whilst AFK">
-                    <InfoIcon sx={{ width: '18px', marginTop: '-3px', cursor: 'pointer' }} />
-                  </Tooltip>
-                </Box>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    width: '50%',
-                    boxShadow: 'inset 0px 0px 6px 0px #b4b4b4a8',
-                    borderRadius: 1,
-                    justifyContent: 'center',
-                    padding: '5px 10px',
-                    overflow: 'hidden',
-                  }}
-                >
-                  <FontAwesomeIcon icon={attached ? faLink : faUnlink} style={{ marginLeft: '10px', marginRight: '5px' }} />
-                  <Typography>{attached ? 'DETACH' : 'ATTACH'}</Typography>
-                </Box>
-              </Box>
-
-              {/* Edit Strategy and Current Strategy */}
-              <Box sx={{ display: 'flex', width: '100%', justifyContent: 'center', marginTop: '10px' }}>
-                <Box
-                  sx={{
-                    display: 'inline-flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    width: '50%',
-                    padding: '10px',
-                  }}
-                >
-                  <Tooltip title="CHANGE AI PLAY STRATEGY">
-                    <IconButton
-                      id="btn-rps-settings"
-                      sx={{ borderRadius: '0.5em' }}
-                      onClick={handleSettingsIconClick}
-                    >
-                      <Typography sx={{ fontSize: '0.5em', marginRight: '2px' }}>EDIT</Typography>
-                      <SettingsOutlinedIcon  className="edit-icon"/>
-                    </IconButton>
-                  </Tooltip>
-                </Box>
-
-                <Box
-                  sx={{
-                    display: 'inline-flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    width: '50%',
-                    padding: '10px 0',
-                  }}
-                >
-                  <Box sx={{ width: '100%' }}>
-                    <Typography
-                      sx={{
-                        width: '100%',
-                        textAlign: 'center',
-                        boxShadow: 'inset 0px 0px 6px 0px #b4b4b4a8',
-                        borderRadius: 1,
-                        padding: '5px 10px',
-                        overflow: 'hidden',
-                      }}
-                    >
-                      <FontAwesomeIcon icon={faRobot} />&nbsp;{selectedStrategy || ai_mode}
-                    </Typography>
-                  </Box>
-                </Box>
-              </Box>
-
-              {/* Adjust Bet Range */}
+            {/* Detach/Attach Toggle */}
+            <Box sx={{ display: 'flex', width: '100%', justifyContent: 'center', marginTop: '10px' }}>
               <Box
                 sx={{
-                  pointerEvents: selectedStrategy === 'GPT3' ? 'none' : 'auto',
-                  filter: selectedStrategy === 'GPT3' ? 'grayscale(100%)' : 'none',
-                  opacity: selectedStrategy === 'GPT3' ? '0.3' : '1',
+                  display: 'inline-flex',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '50%',
+                  padding: '10px',
+                }}
+              >
+                <Tooltip title="TOGGLE DETACH/ATTACH">
+                  <Switch
+                    id="detach-attach-switch"
+                    checked={!!attached}
+                    onChange={handleSwitchChangeWithFetch}
+                    disabled={!betting}
+                  />
+                </Tooltip>
+                <Tooltip title="Betting will be slow, whilst active. Best used whilst AFK">
+                  <InfoIcon sx={{ width: '18px', marginTop: '-3px', cursor: 'pointer' }} />
+                </Tooltip>
+              </Box>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  width: '50%',
+                  boxShadow: 'inset 0px 0px 6px 0px #b4b4b4a8',
+                  borderRadius: 1,
+                  justifyContent: 'center',
+                  padding: '5px 10px',
+                  overflow: 'hidden',
+                }}
+              >
+                <FontAwesomeIcon icon={attached ? faLink : faUnlink} style={{ marginLeft: '10px', marginRight: '5px' }} />
+                <Typography>{attached ? 'DETACH' : 'ATTACH'}</Typography>
+              </Box>
+            </Box>
+
+            {/* Edit Strategy and Current Strategy */}
+            <Box sx={{ display: 'flex', width: '100%', justifyContent: 'center', marginTop: '10px' }}>
+              <Box
+                sx={{
+                  display: 'inline-flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  width: '50%',
+                  padding: '10px',
+                }}
+              >
+                <Tooltip title="CHANGE AI PLAY STRATEGY">
+                  <IconButton
+                    id="btn-rps-settings"
+                    sx={{ borderRadius: '0.5em' }}
+                    onClick={handleSettingsIconClick}
+                  >
+                    <Typography sx={{ fontSize: '0.5em', marginRight: '2px' }}>EDIT</Typography>
+                    <SettingsOutlinedIcon className="edit-icon" />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+
+              <Box
+                sx={{
+                  display: 'inline-flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  width: '50%',
+                  padding: '10px 0',
+                }}
+              >
+                <Box sx={{ width: '100%' }}>
+                  <Typography
+                    sx={{
+                      width: '100%',
+                      textAlign: 'center',
+                      boxShadow: 'inset 0px 0px 6px 0px #b4b4b4a8',
+                      borderRadius: 1,
+                      padding: '5px 10px',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faRobot} />&nbsp;{selectedStrategy || ai_mode}
+                  </Typography>
+                </Box>
+              </Box>
+            </Box>
+
+            {/* Adjust Bet Range */}
+            <Box
+              sx={{
+                pointerEvents: selectedStrategy === 'GPT3' ? 'none' : 'auto',
+                filter: selectedStrategy === 'GPT3' ? 'grayscale(100%)' : 'none',
+                opacity: selectedStrategy === 'GPT3' ? '0.3' : '1',
+                display: 'flex',
+                alignItems: 'center',
+                width: '100%',
+                boxShadow: 'inset 0px 0px 6px 0px #b4b4b4a8',
+                borderRadius: 1,
+                justifyContent: 'center',
+                padding: '5px 10px',
+                overflow: 'hidden',
+              }}
+            >
+              <FontAwesomeIcon icon={faBalanceScale} style={{ marginRight: '5px' }} />
+              <Typography>ADJUST BET RANGE</Typography>
+            </Box>
+
+            {/* Display Min and Max Bet */}
+            <Box
+              sx={{
+                pointerEvents: selectedStrategy === 'GPT3' ? 'none' : 'auto',
+                filter: selectedStrategy === 'GPT3' ? 'grayscale(100%)' : 'none',
+                opacity: selectedStrategy === 'GPT3' ? '0.3' : '1',
+                display: 'flex',
+                padding: '0 10px',
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                width: '100%',
+                marginTop: '10px',
+              }}
+            >
+              <Typography>
+                <Box component="span" sx={{ fontSize: 'xx-small' }}>Min:</Box> {convertToCurrency(range[0])}
+              </Typography>
+              <Typography>
+                <Box component="span" sx={{ fontSize: 'xx-small' }}>Max:</Box> {convertToCurrency(range[1])}
+              </Typography>
+            </Box>
+
+            {/* Slider for Bet Range */}
+            <Box
+              sx={{
+                display: 'flex',
+                padding: '0 10px',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '100%',
+                marginTop: '10px',
+                pointerEvents: selectedStrategy === 'GPT3' ? 'none' : 'auto',
+                filter: selectedStrategy === 'GPT3' ? 'grayscale(100%)' : 'none',
+              }}
+            >
+              <Tooltip
+                title={selectedStrategy === 'GPT3' ? `NO BET RANGE FOR ${selectedStrategy}` : 'MIN & MAX BET VALUES'}
+              >
+                <Slider
+                  value={range}
+                  color='error'
+                  onChange={handleSliderChange}
+                  onChangeCommitted={handleSliderChangeCommitted}
+                  onMouseUp={handleMouseUp}
+                  onTouchEnd={handleTouchEnd}
+                  valueLabelDisplay="auto"
+                  step={0.1}
+                  min={1}
+                  max={user_balance}
+                  aria-labelledby="range-slider"
+                  sx={{
+                    height: 8,
+                    '& .MuiSlider-thumb': {
+                      height: 24,
+                      width: 24,
+
+                    },
+                    '& .MuiSlider-track': {
+                      height: 8,
+                    },
+                    '& .MuiSlider-rail': {
+                      height: 8,
+                    },
+                    pointerEvents: ai_mode === 'IGPT3' ? 'none' : 'auto',
+                    filter: ai_mode === 'IGPT3' ? 'grayscale(100%)' : 'none',
+                  }}
+                  disabled={isSliderDisabled}
+                />
+              </Tooltip>
+              <Box
+                sx={{
                   display: 'flex',
                   alignItems: 'center',
                   width: '100%',
@@ -1117,279 +1204,193 @@ function BetArray({
                   justifyContent: 'center',
                   padding: '5px 10px',
                   overflow: 'hidden',
+                  pointerEvents: ai_mode === 'IGPT3' ? 'none' : 'auto',
+                  filter: ai_mode === 'IGPT3' ? 'grayscale(100%)' : 'none',
                 }}
               >
-                <FontAwesomeIcon icon={faBalanceScale} style={{ marginRight: '5px' }} />
-                <Typography>ADJUST BET RANGE</Typography>
-              </Box>
-
-              {/* Display Min and Max Bet */}
-              <Box
-                sx={{
-                  pointerEvents: selectedStrategy === 'GPT3' ? 'none' : 'auto',
-                  filter: selectedStrategy === 'GPT3' ? 'grayscale(100%)' : 'none',
-                  opacity: selectedStrategy === 'GPT3' ? '0.3' : '1',
-                  display: 'flex',
-                  padding: '0 10px',
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  width: '100%',
-                  marginTop: '10px',
-                }}
-              >
-                <Typography>
-                  <Box component="span" sx={{ fontSize: 'xx-small' }}>Min:</Box> {convertToCurrency(range[0])}
-                </Typography>
-                <Typography>
-                  <Box component="span" sx={{ fontSize: 'xx-small' }}>Max:</Box> {convertToCurrency(range[1])}
-                </Typography>
-              </Box>
-
-              {/* Slider for Bet Range */}
-              <Box
-                sx={{
-                  display: 'flex',
-                  padding: '0 10px',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '100%',
-                  marginTop: '10px',
-                  pointerEvents: selectedStrategy === 'GPT3' ? 'none' : 'auto',
-                  filter: selectedStrategy === 'GPT3' ? 'grayscale(100%)' : 'none',
-                }}
-              >
-                <Tooltip
-                  title={selectedStrategy === 'GPT3' ? `NO BET RANGE FOR ${selectedStrategy}` : 'MIN & MAX BET VALUES'}
+                <Typography
+                  sx={{ fontSize: 'x-small' }}
                 >
-                  <Slider
-                    value={range}
-                    color='error'
-                    onChange={handleSliderChange}
-                    onChangeCommitted={handleSliderChangeCommitted}
-                    onMouseUp={handleMouseUp}
-                    onTouchEnd={handleTouchEnd}
-                    valueLabelDisplay="auto"
-                    step={0.1}
-                    min={1}
-                    max={user_balance}
-                    aria-labelledby="range-slider"
-                    sx={{
-                      height: 8,
-                      '& .MuiSlider-thumb': {
-                        height: 24,
-                        width: 24,
-                     
-                      },
-                      '& .MuiSlider-track': {
-                        height: 8,
-                      },
-                      '& .MuiSlider-rail': {
-                        height: 8,
-                      },
-                      pointerEvents: ai_mode === 'IGPT3' ? 'none' : 'auto',
-                      filter: ai_mode === 'IGPT3' ? 'grayscale(100%)' : 'none',
-                    }}
-                    disabled={isSliderDisabled}
-                  />
-                </Tooltip>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    width: '100%',
-                    boxShadow: 'inset 0px 0px 6px 0px #b4b4b4a8',
-                    borderRadius: 1,
-                    justifyContent: 'center',
-                    padding: '5px 10px',
-                    overflow: 'hidden',
-                    pointerEvents: ai_mode === 'IGPT3' ? 'none' : 'auto',
-                    filter: ai_mode === 'IGPT3' ? 'grayscale(100%)' : 'none',
-                  }}
-                >
-                  <Typography
-                    sx={{ fontSize: 'x-small' }}
-                  >
-                    {text}
-                  </Typography>
-                </Box>
+                  {text}
+                </Typography>
               </Box>
             </Box>
           </Box>
-        )}
+        </Box>
+      )}
 
-        {selectedTab === 1 && (
-          <Box className="gamified-container" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-            <Grid item>
-              <Typography variant="h6" sx={{ marginBottom: '0' }}>
-                Training Data&nbsp;
-                <Tooltip title="This data may not represent your recent transactions and is for the AI purposes only.">
-                  <InfoIcon sx={{ width: '18px', marginTop: '-3px', cursor: 'pointer' }} />
-                </Tooltip>
-              </Typography>
-              <Box sx={{ position: 'absolute', zIndex: 2, top: '180px', right: '30px' }}>
-                {formatTag('Last 50 Games')} &nbsp;
-                <Tooltip title={`${accumulativeProfit[accumulativeProfit.length - 1]} RPS`}>
-                  {formatProfit(accumulativeProfit[accumulativeProfit.length - 1])}
-                </Tooltip>
-              </Box>
+      {selectedTab === 1 && (
+        <Box className="gamified-container" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+          <Grid item>
+            <Typography variant="h6" sx={{ marginBottom: '0' }}>
+              Training Data&nbsp;
+              <Tooltip title="This data may not represent your recent transactions and is for the AI purposes only.">
+                <InfoIcon sx={{ width: '18px', marginTop: '-3px', cursor: 'pointer' }} />
+              </Tooltip>
+            </Typography>
+            <Box sx={{ position: 'absolute', zIndex: 2, top: '180px', right: '30px' }}>
+              {formatTag('Last 50 Games')} &nbsp;
+              <Tooltip title={`${accumulativeProfit[accumulativeProfit.length - 1]} RPS`}>
+                {formatProfit(accumulativeProfit[accumulativeProfit.length - 1])}
+              </Tooltip>
+            </Box>
 
-              <ReactApexChart
-                options={chartData.options}
-                series={chartData.series}
-                type="line"
-                height={180}
-              />
+            <ReactApexChart
+              options={chartData.options}
+              series={chartData.series}
+              type="line"
+              height={180}
+            />
 
-              <Box className="gamified-content" sx={{ width: '100%' }}>
-                {filteredArray.length > 0 ? (
-                  <>
-                    <Table>
-                      <TableHead >
-                        <TableRow >
-                          <TableCell sx={{ fontWeight: '800', color: '#333', margin: '20px' }}>{'BET'}</TableCell>
-                          <TableCell sx={{ fontWeight: '800', color: '#333', margin: '20px' }}>{'HOST'}</TableCell>
-                          <TableCell sx={{ fontWeight: '800', color: '#333', margin: '20px' }}>{'YOU'}</TableCell>
-                        </TableRow>
-                      </TableHead>
-                    </Table>
-                    <Box sx={{ maxHeight: 200, overflowY: 'auto' }}>
-                      <Table sx={{ width: '100%', tableLayout: 'fixed' }}>
-                        <TableBody>
-                          {filteredArray.map((item, index) => (
-                            <TableRow
-                              key={index}
-                              sx={{
-                                '&:nth-of-type(odd)': { backgroundColor: '#e5e5e5' },
-                                '&:hover': { backgroundColor: '#f9f9f9' },
-                                cursor: 'pointer',
-                              }}
-                              onMouseEnter={() => setHoveredIndex(index)}
-                              onMouseLeave={() => setHoveredIndex(null)}
+            <Box className="gamified-content" sx={{ width: '100%' }}>
+              {filteredArray.length > 0 ? (
+                <>
+                  <Table>
+                    <TableHead >
+                      <TableRow >
+                        <TableCell sx={{ fontWeight: '800', color: '#333', margin: '20px' }}>{'BET'}</TableCell>
+                        <TableCell sx={{ fontWeight: '800', color: '#333', margin: '20px' }}>{'HOST'}</TableCell>
+                        <TableCell sx={{ fontWeight: '800', color: '#333', margin: '20px' }}>{'YOU'}</TableCell>
+                      </TableRow>
+                    </TableHead>
+                  </Table>
+                  <Box sx={{ maxHeight: 200, overflowY: 'auto' }}>
+                    <Table sx={{ width: '100%', tableLayout: 'fixed' }}>
+                      <TableBody>
+                        {filteredArray.map((item, index) => (
+                          <TableRow
+                            key={index}
+                            sx={{
+                              '&:nth-of-type(odd)': { backgroundColor: '#e5e5e5' },
+                              '&:hover': { backgroundColor: '#f9f9f9' },
+                              cursor: 'pointer',
+                            }}
+                            onMouseEnter={() => setHoveredIndex(index)}
+                            onMouseLeave={() => setHoveredIndex(null)}
+                          >
+                            <TableCell
+                              onClick={() => handleCellClick(item, index, 'bet_amount')}
+                              sx={{ position: 'relative', cursor: 'pointer' }}
                             >
-                              <TableCell
-                                onClick={() => handleCellClick(item, index, 'bet_amount')}
-                                sx={{ position: 'relative', cursor: 'pointer' }}
-                              >
-                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                  {convertToCurrency(item.bet_amount, solPrice)}
-                                  {hoveredIndex === index && (
-                                    <IconButton variant="outlined" size="small" sx={{ marginLeft: '5px' }}>
-                                      <EditIcon className="edit-icon"  />
-                                    </IconButton>
-                                  )}
-                                </Box>
-                              </TableCell>
-                              <TableCell
-                                onClick={() => handleCellClick(item, index, game_type === 'Quick Shoot' ? 'qs' : 'rps')}
-                                sx={{ position: 'relative', cursor: 'pointer' }}
-                              >
-                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                  {game_type === 'Quick Shoot' ? item.qs : item.rps}
-                                  {hoveredIndex === index && (
-                                    <IconButton size="small" sx={{ marginLeft: '5px' }}>
-                                      <EditIcon className="edit-icon"  />
-                                    </IconButton>
-                                  )}
-                                </Box>
-                              </TableCell>
-                              <TableCell
-                                onClick={() => handleCellClick(item, index, game_type === 'Quick Shoot' ? 'joiner_qs' : 'joiner_rps')}
-                                sx={{ position: 'relative', cursor: 'pointer' }}
-                              >
-                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                  {game_type === 'Quick Shoot' ? item.joiner_qs : item.joiner_rps}
-                                  {hoveredIndex === index && (
-                                    <IconButton size="small" sx={{ marginLeft: '5px' }}>
-                                      <EditIcon className="edit-icon" />
-                                    </IconButton>
-                                  )}
-                                </Box>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </Box>
-                  </>
-                ) : (
-                  <Typography variant="body1" sx={{ textAlign: 'center', padding: '16px', color: '#777' }}>
-                    Play normally to train the AP
-                  </Typography>
-                )}
+                              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                {convertToCurrency(item.bet_amount, solPrice)}
+                                {hoveredIndex === index && (
+                                  <IconButton variant="outlined" size="small" sx={{ marginLeft: '5px' }}>
+                                    <EditIcon className="edit-icon" />
+                                  </IconButton>
+                                )}
+                              </Box>
+                            </TableCell>
+                            <TableCell
+                              onClick={() => handleCellClick(item, index, game_type === 'Quick Shoot' ? 'qs' : 'rps')}
+                              sx={{ position: 'relative', cursor: 'pointer' }}
+                            >
+                              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                {game_type === 'Quick Shoot' ? item.qs : item.rps}
+                                {hoveredIndex === index && (
+                                  <IconButton size="small" sx={{ marginLeft: '5px' }}>
+                                    <EditIcon className="edit-icon" />
+                                  </IconButton>
+                                )}
+                              </Box>
+                            </TableCell>
+                            <TableCell
+                              onClick={() => handleCellClick(item, index, game_type === 'Quick Shoot' ? 'joiner_qs' : 'joiner_rps')}
+                              sx={{ position: 'relative', cursor: 'pointer' }}
+                            >
+                              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                {game_type === 'Quick Shoot' ? item.joiner_qs : item.joiner_rps}
+                                {hoveredIndex === index && (
+                                  <IconButton size="small" sx={{ marginLeft: '5px' }}>
+                                    <EditIcon className="edit-icon" />
+                                  </IconButton>
+                                )}
+                              </Box>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </Box>
+                </>
+              ) : (
+                <Typography variant="body1" sx={{ textAlign: 'center', padding: '16px', color: '#777' }}>
+                  Play normally to train the AP
+                </Typography>
+              )}
 
-                {/* Modal for Editing */}
-                <Modal
-                  open={openModal}
-                  onClose={handleCloseModal}
-                  aria-labelledby="edit-modal-title"
-                  aria-describedby="edit-modal-description"
+              {/* Modal for Editing */}
+              <Modal
+                open={openModal}
+                onClose={handleCloseModal}
+                aria-labelledby="edit-modal-title"
+                aria-describedby="edit-modal-description"
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Box
                   sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                    backgroundColor: isDarkMode ? '#424242' : '#fff',
+                    padding: '20px',
+                    borderRadius: '5px',
+                    boxShadow: 24,
+                    width: '300px',
                   }}
                 >
-                  <Box
-                    sx={{
-                      backgroundColor: isDarkMode ? '#424242' : '#fff',
-                      padding: '20px',
-                      borderRadius: '5px',
-                      boxShadow: 24,
-                      width: '300px',
-                    }}
-                  >
-                    <Typography id="edit-modal-title" variant="h6" gutterBottom>
-                      {modalTitle}
-                    </Typography>
-                    <TextField
-                      label="EDIT VALUE"
-                      value={editedValue}
-                      onChange={(e) => setEditedValue(e.target.value)}
-                      fullWidth
-                      variant="outlined"
-                      sx={{ marginBottom: '20px' }}
-                    />
-                    <Button variant="contained" color='error' onClick={() => handleUpdateCellData(isDarkMode)} fullWidth>
-                      Update
-                    </Button>
-                  </Box>
-                </Modal>
-              </Box>
-            </Grid>
-          </Box>
-        )}
+                  <Typography id="edit-modal-title" variant="h6" gutterBottom>
+                    {modalTitle}
+                  </Typography>
+                  <TextField
+                    label="EDIT VALUE"
+                    value={editedValue}
+                    onChange={(e) => setEditedValue(e.target.value)}
+                    fullWidth
+                    variant="outlined"
+                    sx={{ marginBottom: '20px' }}
+                  />
+                  <Button variant="contained" color='error' onClick={() => handleUpdateCellData(isDarkMode)} fullWidth>
+                    Update
+                  </Button>
+                </Box>
+              </Modal>
+            </Box>
+          </Grid>
+        </Box>
+      )}
 
-        {selectedTab === 2 && (
-          <Box className="gamified-container" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-            <Grid item>
-              <Typography variant="h6" sx={{ marginBottom: '20px' }}>
-                Attached Rooms&nbsp;
-                <Tooltip title="This data may not represent your recent transactions and is for the AI purposes only.">
-                  <InfoIcon sx={{ width: '18px', marginTop: '-3px', cursor: 'pointer' }} />
-                </Tooltip>
-              </Typography>
-              <Box sx={{ position: 'absolute', zIndex: 2, top: '180px', right: '30px' }}>
-                {/* Additional Content if any */}
-              </Box>
+      {selectedTab === 2 && (
+        <Box className="gamified-container" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+          <Grid item>
+            <Typography variant="h6" sx={{ marginBottom: '20px' }}>
+              Attached Rooms&nbsp;
+              <Tooltip title="This data may not represent your recent transactions and is for the AI purposes only.">
+                <InfoIcon sx={{ width: '18px', marginTop: '-3px', cursor: 'pointer' }} />
+              </Tooltip>
+            </Typography>
+            <Box sx={{ position: 'absolute', zIndex: 2, top: '180px', right: '30px' }}>
+              {/* Additional Content if any */}
+            </Box>
 
-              <Box className="gamified-content" sx={{ width: '100%', marginTop: '20px' }}>
-                <Box>
-                <Table aria-label="rooms table">
+            <Box className="gamified-content" sx={{ width: '100%', marginTop: '20px' }}>
+              <Box>
+                <Table sx={{ width: '100%', tableLayout: 'fixed' }} aria-label="rooms table">
                   <TableHead>
                     <TableRow>
-                      <TableCell align="center">
-                        <Typography sx={{ fontWeight: '800', color: '#FFFFFF', margin: '20px' }}>Room</Typography>
+                      <TableCell sx={{ fontWeight: '800', color: '#333', margin: '20px' }} align="center">
+                        Room
                       </TableCell>
-                      <TableCell align="center">
-                        <Typography sx={{ fontWeight: '800', color: '#FFFFFF', margin: '20px' }}>Range</Typography>
+                      <TableCell sx={{ fontWeight: '800', color: '#333', margin: '20px' }} align="center">
+                        Range
                       </TableCell>
-                      <TableCell align="center">
-                        <Typography sx={{ fontWeight: '800', color: '#FFFFFF', margin: '20px' }}>Strategy</Typography>
+                      <TableCell sx={{ fontWeight: '800', color: '#333', margin: '20px' }} align="center">
+                        Strategy
                       </TableCell>
                     </TableRow>
                   </TableHead>
+
                   <TableBody>
                     {attachedRooms && attachedRooms.length > 0 ? (
                       attachedRooms.map((room) => {
@@ -1398,23 +1399,44 @@ function BetArray({
                         const maxBet = Math.max(...betAmounts);
 
                         return (
-                          <TableRow key={room._id}>
-                            <TableCell align="center">
-                              <Typography>
+                          <TableRow
+                            key={room._id}
+                            sx={{
+                              '&:nth-of-type(odd)': { backgroundColor: '#e5e5e5' },
+                              '&:hover': { backgroundColor: '#f9f9f9' },
+                              cursor: 'pointer',
+                            }}
+                          // e.g. onClick={() => handleRoomClick(room)} if you like
+                          >
+                            <TableCell align="center" sx={{ position: 'relative' }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <a href={`/join/${room._id}`} style={{ color: '#333', textDecoration: 'none' }}>
                                   {room.room_name}
                                 </a>
-                              </Typography>
+                              </Box>
                             </TableCell>
-                            <TableCell align="center">
-                              {`${convertToCurrency(minBet, solPrice)} - ${convertToCurrency(maxBet, solPrice)}`}
+
+                            <TableCell align="center" sx={{ position: 'relative' }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                {`${convertToCurrency(minBet, solPrice)} - ${convertToCurrency(maxBet, solPrice)}`}
+                              </Box>
                             </TableCell>
-                            <TableCell align="center">{room.selected_strategy}</TableCell>
+
+                            <TableCell align="center" sx={{ position: 'relative' }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                {room.selected_strategy}
+                              </Box>
+                            </TableCell>
                           </TableRow>
                         );
                       })
                     ) : (
-                      <TableRow>
+                      <TableRow
+                        sx={{
+                          '&:nth-of-type(odd)': { backgroundColor: '#e5e5e5' },
+                          '&:hover': { backgroundColor: '#f9f9f9' },
+                        }}
+                      >
                         <TableCell colSpan={3} align="center">
                           No attached rooms available
                         </TableCell>
@@ -1422,50 +1444,50 @@ function BetArray({
                     )}
                   </TableBody>
                 </Table>
-                </Box>
+              </Box>
 
-                {/* Modal for Editing */}
-                <Modal
-                  open={openModal}
-                  onClose={handleCloseModal}
-                  aria-labelledby="edit-modal-title"
-                  aria-describedby="edit-modal-description"
+              {/* Modal for Editing */}
+              <Modal
+                open={openModal}
+                onClose={handleCloseModal}
+                aria-labelledby="edit-modal-title"
+                aria-describedby="edit-modal-description"
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Box
                   sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                    backgroundColor: isDarkMode ? '#424242' : '#fff',
+                    padding: '20px',
+                    borderRadius: '5px',
+                    boxShadow: 24,
+                    width: '300px',
                   }}
                 >
-                  <Box
-                    sx={{
-                      backgroundColor: isDarkMode ? '#424242' : '#fff',
-                      padding: '20px',
-                      borderRadius: '5px',
-                      boxShadow: 24,
-                      width: '300px',
-                    }}
-                  >
-                    <Typography id="edit-modal-title" variant="h6" component="h2" gutterBottom>
-                      {modalTitle}
-                    </Typography>
-                    <TextField color='error'
-                      label="EDIT VALUE"
-                      value={editedValue}
-                      onChange={(e) => setEditedValue(e.target.value)}
-                      fullWidth
-                      variant="outlined"
-                      sx={{ marginBottom: '20px' }}
-                    />
-                    <Button variant="contained" color='error' onClick={() => handleUpdateCellData(isDarkMode)} fullWidth>
-                      Update
-                    </Button>
-                  </Box>
-                </Modal>
-              </Box>
-            </Grid>
-          </Box>
-        )}
-      </Box>
+                  <Typography id="edit-modal-title" variant="h6" component="h2" gutterBottom>
+                    {modalTitle}
+                  </Typography>
+                  <TextField color='error'
+                    label="EDIT VALUE"
+                    value={editedValue}
+                    onChange={(e) => setEditedValue(e.target.value)}
+                    fullWidth
+                    variant="outlined"
+                    sx={{ marginBottom: '20px' }}
+                  />
+                  <Button variant="contained" color='error' onClick={() => handleUpdateCellData(isDarkMode)} fullWidth>
+                    Update
+                  </Button>
+                </Box>
+              </Modal>
+            </Box>
+          </Grid>
+        </Box>
+      )}
+    </Box>
   );
 }
 

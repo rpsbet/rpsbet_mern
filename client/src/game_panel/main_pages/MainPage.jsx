@@ -1,9 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { connect } from 'react-redux';
-import moment from 'moment';
-import ProductPage from '../../admin_panel/app/ProductPages/ProductSerchPage/ProductPage';
-import BankPage from '../../admin_panel/app/ProductPages/ProductSerchPage/BankPage';
-import axios from '../../util/Api';
 import {
   getRoomList,
   setCurRoomInfo,
@@ -15,24 +11,18 @@ import history from '../../redux/history.js';
 import { toggleDrawer } from '../../redux/Auth/user.actions';
 import MyGamesTable from '../MyGames/MyGamesTable';
 import MyHistoryTable from '../MyGames/MyHistoryTable';
-import ShowHistory from '../icons/ShowHistory.js';
-import ShowHistoryHover from '../icons/ShowHistoryHover';
-import Battle from '../icons/Battle.js';
-import BattleHover from '../icons/BattleHover';
-import Manage from '../icons/Manage.js';
-import ManageHover from '../icons/ManageHover';
-import animationData from '../LottieAnimations/live';
-import { Button, Tabs, Tab, Drawer, Box, Tooltip } from '@mui/material';
+import { Add, Remove } from '@mui/icons-material';
+import { Button, Tabs, Tab, Drawer, Box, Tooltip, Typography } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCoins, faStore, faLink } from '@fortawesome/free-solid-svg-icons';
-import Avatar from '../../components/Avatar';
-import PlayerModal from '../modal/PlayerModal';
 import DrawerButton from './DrawerButton';
 import SupportButton from './SupportButton';
 import ChatPanel from '../ChatPanel/ChatPanel';
 import OpenGamesTable from '../LiveGames/OpenGamesTable';
 import HistoryTable from '../LiveGames/HistoryTable';
 import Footer from './Footer';
+import ProductPage from '../../admin_panel/app/ProductPages/ProductSerchPage/ProductPage.jsx';
+import BankPage from '../../admin_panel/app/ProductPages/ProductSerchPage/BankPage.jsx';
 
 const customStyles = {
   tabRoot: {
@@ -80,7 +70,6 @@ function MainPage(props) {
   const pollingIntervalRef = useRef(null);
   // We'll track the previous location to replicate componentDidUpdate location checks
   const prevLocationRef = useRef(location.pathname);
-
   // ------------------- LIFECYCLE (componentDidMount) -------------------
   useEffect(() => {
     isMountedRef.current = true;
@@ -218,12 +207,7 @@ function MainPage(props) {
   return (
     <Box
       className="main-game"
-      sx={{
-        display: 'grid',
-        gridTemplateColumns: isDrawerOpen && !isMobile
-          ? '260px calc(100% - 260px)' // Two columns for desktop
-          : '100%', // Full width for mobile or when the drawer is closed
-      }}
+   
     >
       {/* If mobile & in chat tab, or if not mobile -> show Chat Drawer */}
       {(isMobile && selectedMobileTab === 'chat') ? (
@@ -240,77 +224,52 @@ function MainPage(props) {
 
       {/* If mobile and in marketplace tab -> show p2p & marketplace toggles */}
       {isMobile && selectedMobileTab === 'marketplace' && (
-        <div style={{ padding: '30px' }}>
-          <div style={{ textAlign: 'center' }}>
-            <Button style={{ width: '100%', padding: '60px' }} onClick={toggleP2PLending}>
-              {showP2PLending ? '-' : '+'}
-              <h2 className="modal-title title">
+        <Box sx={{ p: '30px' }}>
+          {/* CENTRAL BANK */}
+          <Box sx={{ textAlign: 'center', mb: 2 }}>
+            <Button
+              color="error"
+              sx={{ width: '100%', py: '60px', display: 'flex', flexDirection: 'column' }}
+              onClick={toggleP2PLending}
+            >
+              {showP2PLending ? <Remove /> : <Add />}
+              <Typography variant="h6" className="title" sx={{ mt: 1 }}>
                 <FontAwesomeIcon icon={faCoins} className="mr-2" />
                 CENTRAL BANK
-              </h2>
+              </Typography>
             </Button>
-            {showP2PLending && <BankPage />}
-          </div>
+            {showP2PLending && (
+              <Box sx={{ mt: 2 }}>
+                {/* Render your <BankPage /> content here */}
+                {showP2PLending && <BankPage />}
+              </Box>
+            )}
+          </Box>
 
-          <div style={{ textAlign: 'center' }}>
-            <Button style={{ width: '100%', padding: '60px' }} onClick={toggleMarketplace}>
-              {showMarketplace ? '-' : '+'}
-              <h2 className="modal-title title">
+          {/* MARKETPLACE */}
+          <Box sx={{ textAlign: 'center' }}>
+            <Button
+              color="error"
+              sx={{ width: '100%', py: '60px', display: 'flex', flexDirection: 'column' }}
+              onClick={toggleMarketplace}
+            >
+              {showMarketplace ? <Remove /> : <Add />}
+              <Typography variant="h6" className="title" sx={{ mt: 1 }}>
                 <FontAwesomeIcon icon={faStore} className="mr-2" />
                 Marketplace
-              </h2>
+              </Typography>
             </Button>
-            {showMarketplace && <ProductPage />}
-          </div>
-        </div>
+            {showMarketplace && (
+              <Box sx={{ mt: 2 }}>
+                {/* Render your <ProductPage /> content here */}
+                {showMarketplace && <ProductPage />}
+              </Box>
+            )}
+          </Box>
+        </Box>
       )}
 
-      {/* If mobile & in "live_games" or "my_games", show the top tab row */}
-      {isMobile && (selectedMobileTab === 'live_games' || selectedMobileTab === 'my_games') && (
-        <Tabs
-          value={showOpenGame}
-          onChange={showOpenGameOrHistory}
-          TabIndicatorProps={{ style: { background: '#ff0000' } }}
-          className="main-game-page-tabs"
-        >
-          <Tab
-            label={
-              showOpenGame === 0 && selectedMobileTab === 'live_games'
-                ? 'PVP'
-                : showOpenGame === 0 && selectedMobileTab === 'my_games'
-                  ? 'MANAGE'
-                  : selectedMobileTab === 'live_games'
-                    ? 'PVP'
-                    : 'MANAGE'
-            }
-            icon={
-              showOpenGame === 0 && selectedMobileTab === 'live_games' ? (
-                <BattleHover />
-              ) : showOpenGame === 0 && selectedMobileTab === 'my_games' ? (
-                <ManageHover />
-              ) : selectedMobileTab === 'live_games' ? (
-                <Battle />
-              ) : (
-                <Manage />
-              )
-            }
-            style={customStyles.tabRoot}
-          />
-          <Tab
-            label={
-              showOpenGame === 1
-                ? selectedMobileTab === 'live_games'
-                  ? 'History'
-                  : 'Your History'
-                : 'History'
-            }
-            icon={showOpenGame === 1 ? <ShowHistoryHover /> : <ShowHistory />}
-            style={customStyles.tabRoot}
-          />
-        </Tabs>
-      )}
-
-      <div className="main-panel" style={{ overflowX: 'hidden' }}>
+      <Box className="main-panel" style={{ overflowX: 'hidden' }}>
         <h2 className="main-title">{getActiveTabText()}</h2>
 
         {/* If not mobile & tab index = 0 OR if mobile & live_games tab & showOpenGame=0 => show open games */}
@@ -358,8 +317,8 @@ function MainPage(props) {
           </div>
         )}
 
-        {/* <DrawerButton open={isDrawerOpen} toggleDrawer={handleToggleDrawer} /> */}
-      </div>
+        <DrawerButton open={isDrawerOpen} toggleDrawer={handleToggleDrawer} />
+      </Box>
 
       {/* Mobile bottom nav buttons */}
       {isMobile && (
@@ -396,7 +355,7 @@ function MainPage(props) {
             {selectedMobileTab === 'my_games' && 'YOUR GAMES'}
           </Button>
 
-          <button
+          <Button
             className={`mobile-tab-marketplace ${selectedMobileTab === 'marketplace' ? 'active' : ''}`}
             onClick={() => setSelectedMobileTab('marketplace')}
           >
@@ -450,7 +409,7 @@ function MainPage(props) {
               />
             </svg>
             {selectedMobileTab === 'marketplace' && 'ASSETS'}
-          </button>
+          </Button>
 
           <Button
             className={`mobile-tab-chat ${selectedMobileTab === 'chat' ? 'active' : ''}`}

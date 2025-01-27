@@ -56,39 +56,13 @@ function Avatar(props) {
 
   // Predefined rank colors
   const rankColors = {
-    1: '#1E90FF',
-    2: '#00C851',
-    3: '#2F4F4F',
-    4: '#8A2BE2',
-    5: '#FF8C00',
-    6: '#D2691E',
-    7: '#00CED1',
-    8: '#B22222',
-    9: '#4169E1',
-    10: '#FF4500',
-    11: '#DC143C',
-    12: '#FFD700',
-    13: '#66CDAA',
-    14: '#483D8B',
-    15: '#00BFFF',
-    16: '#FF1493',
-    17: '#20B2AA',
-    18: '#FF6347',
-    19: '#00FF7F',
-    20: '#DAA520',
-    21: '#1E90FF',
-    22: '#32CD32',
-    23: '#9932CC',
-    24: '#D2691E',
-    25: '#8B0000',
-    26: '#A0522D',
-    27: '#7FFFD4',
-    28: '#6A5ACD',
-    29: '#CD853F',
-    30: '#2F4F4F',
-    31: '#FF69B4',
-    32: '#708090',
-    33: '#4B0082',
+    1: '#1E90FF',  // Dodger Blue
+    2: '#00C851',  // Bright Green
+    3: '#FF1493',  // Deep Pink
+    4: '#FF4500',  // Orange Red
+    5: '#8A2BE2',  // Blue Violet
+    6: '#DC143C',  // Crimson
+    7: '#FFD700',  // Gold
   };
 
   let adjustedRank = rank;

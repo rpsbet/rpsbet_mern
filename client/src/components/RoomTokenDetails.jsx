@@ -62,7 +62,7 @@ const RoomTokenDetails = ({ roomInfo, solPrice, isDarkMode, handleOpenPlayerModa
 
             <div className="bonding-curve" style={{ marginBottom: "30px" }}>
                 <h4 className='game_header label' style={{ display: 'block', fontWeight: 'bold', marginBottom: '8px' }}>
-                    AUTO-PAYOUT PROGRESS: {progressPercentage}%
+                    BONDING-CURVE PROGRESS: {progressPercentage}%
                 </h4>
                 <div
                     className='payout-bar'

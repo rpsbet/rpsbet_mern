@@ -44,13 +44,6 @@ function LoginModal(props) {
   const onChangeEmail = (e) => setEmail(e.target.value);
   const onChangePassword = (e) => setPassword(e.target.value);
 
-  const onKeyDownDocument = (event) => {
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      onSubmitForm(event);
-    }
-  };
-
   const initializeGoogleSignIn = () => {
     setTimeout(() => {
       const buttonElement = document.getElementById('googleSignInButton');
@@ -117,7 +110,6 @@ function LoginModal(props) {
 
   // ------------------ EFFECTS ------------------
   useEffect(() => {
-    document.addEventListener('keydown', onKeyDownDocument);
     initializeGoogleSignIn();
 
     setTimeout(() => {
@@ -126,9 +118,6 @@ function LoginModal(props) {
 
     setIsInvestorsPage(window.location.pathname.startsWith('/investors'));
 
-    return () => {
-      document.removeEventListener('keydown', onKeyDownDocument);
-    };
   }, []);
 
   // ------------------ STYLES ------------------
@@ -170,7 +159,7 @@ function LoginModal(props) {
               LOGIN
             </Typography>
             <Button variant="text" color="error" onClick={props.closeModal}>
-              X
+            ×
             </Button>
           </Box>
 

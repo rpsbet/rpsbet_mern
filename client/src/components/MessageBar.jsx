@@ -6,7 +6,6 @@ import { closeMsgBar } from '../redux/Notification/notification.actions';
 
 function CustomizedSnackbar({ openSk, closeMsgBar, message, status }) {
   const { enqueueSnackbar } = useSnackbar();
-
   React.useEffect(() => {
     if (openSk) {
       enqueueSnackbar(

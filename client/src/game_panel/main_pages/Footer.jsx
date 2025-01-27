@@ -152,7 +152,7 @@ const Footer = (props) => {
           </StyledLink>
         </LinksContainer>
         <Address>
-          <Typography>
+          <Typography sx={{p: '30px'}}>
             RPS.Game has absolutely no involvement with any third-party gambling
             provider software or 'provably-fair' algorithms.
           </Typography>

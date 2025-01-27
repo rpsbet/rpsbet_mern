@@ -383,6 +383,7 @@ export default function (state = initialState, action) {
         myChat: payload
       };
     case NOTIFICATIONS_LOADED:
+      console.log(payload)
       return {
         ...state,
         notifications: payload

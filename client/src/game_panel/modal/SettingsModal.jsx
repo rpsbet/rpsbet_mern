@@ -10,7 +10,8 @@ import {
   Checkbox,
   IconButton,
   Modal,
-  Box
+  Box,
+  Typography
 } from '@mui/material';
 
 import {
@@ -27,7 +28,8 @@ import {
   VolumeMute,
   VolumeDown,
   Add,
-  Remove
+  Remove,
+  Settings
 } from '@mui/icons-material';
 
 import {
@@ -107,11 +109,12 @@ const SettingsModal = ({
             mb: 2
           }}
         >
-          <Box component="h2" sx={{ m: 0, fontWeight: 'bold' }}>
-            Settings
-          </Box>
+          <Typography variant="h6" sx={{ m: 0, fontWeight: 'bold' }}>
+            <Settings sx={{ mr: 1 }} />
+            SETTINGS
+          </Typography>
           <Button variant="text" color="error" onClick={closeModal}>
-            X
+            ×
           </Button>
         </Box>
 
@@ -120,7 +123,7 @@ const SettingsModal = ({
           background: 'rgba(170, 170, 170, 0.06)',
           borderRadius: '0.3em',
           p: '20px'
-          }}>
+        }}>
 
           <Table>
             <TableBody>

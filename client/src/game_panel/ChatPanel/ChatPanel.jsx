@@ -1,24 +1,39 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { connect } from 'react-redux';
 import axios from 'axios';
 import Moment from 'moment';
 import { alertModal } from '../modal/ConfirmAlerts';
 import { getRank } from '../../util/getRank';
 import Avatar from '../../components/Avatar';
+
 import {
   Tabs,
   Tab,
   Button,
   InputAdornment,
-  TextField
+  TextField,
+  Box,
+  CircularProgress,
+  Popover,
+  Typography,
+  Skeleton
 } from '@mui/material';
-import { InsertEmoticon, Gif, Clear } from '@mui/icons-material';
+
+import {
+  InsertEmoticon,
+  Gif,
+  Clear,
+  ChatOutlined,
+  ChatBubbleOutlineOutlined
+} from '@mui/icons-material';
+
 import GlobalChat from './GlobalChat';
 import MyChat from './MyChat';
-import ChatOutlined from '@mui/icons-material/ChatOutlined';
-import ChatBubbleOutlineOutlined from '@mui/icons-material/ChatBubbleOutlineOutlined';
 import { setFocused } from '../../redux/Auth/user.actions.js';
 
+// Import your custom theme generator
+import { ThemeProvider } from '@mui/material/styles';
+import { getCustomTheme } from '../../config/theme';
 
 const emojis = [
   { command: ':bot:', url: '/img/emotes/brokenbot.webp', alt: 'broken bot' },
@@ -109,18 +124,8 @@ const emojis = [
   }
 ];
 
-const initialGifState = {
-  loaded: false,
-  url: '',
-  title: '',
-};
-
-const customStyles = {
-  tabRoot: {
-    minWidth: '50%',
-    textTransform: 'none'
-  }
-};
+// Instead of filling with the same reference, create individual objects:
+const initialGifState = { loaded: false, url: '', title: '' };
 
 function ChatPanel(props) {
   const {
@@ -132,16 +137,29 @@ function ChatPanel(props) {
     onlineUserList,
     is_mobile,
     toggleDrawer,
-    setFocused
+    setFocused,
+    highlightChatId
   } = props;
 
+    // ------------------ LOCAL STORAGE ------------------
+  // 1) Retrieve a previously stored tab index OR default to 1
+  const storedTabIndex = localStorage.getItem('selectedTabIndex');
+  const initialTabIndex = storedTabIndex !== null ? parseInt(storedTabIndex, 10) : 1;
+
   // ------------------ LOCAL STATE ------------------
-  const [selectedTabIndex, setSelectedTabIndex] = useState(1);
+  const [selectedTabIndex, setSelectedTabIndex] = useState(initialTabIndex);
   const [text, setText] = useState('');
-  const [showEmojiPanel, setShowEmojiPanel] = useState(false);
-  const [showSearchPopup, setShowSearchPopup] = useState(false);
-  const [gifs, setGifs] = useState(Array(10).fill(initialGifState));
+
+  // Popover anchor states
+  const [emojiAnchorEl, setEmojiAnchorEl] = useState(null);
+  const [gifAnchorEl, setGifAnchorEl] = useState(null);
+
+  // Initialize with a new array of 10 distinct objects (not just .fill() of the same object)
+  const [gifs, setGifs] = useState(
+    []
+  );
   const [loading, setLoading] = useState(false);
+
   const [selectedMessage, setSelectedMessage] = useState({
     sender: null,
     avatar: null,
@@ -156,11 +174,16 @@ function ChatPanel(props) {
   // Reference to the TextField for focusing after inserting emoji
   const textareaRef = useRef(null);
 
+  useEffect(() => {
+    localStorage.setItem('selectedTabIndex', selectedTabIndex);
+  }, [selectedTabIndex]);
+
   // ------------------ EVENT HANDLERS ------------------
 
   const onTextAreaKeyDown = (e) => {
     e.stopPropagation();
     if (!socket) return;
+
     if (user && user._id) {
       if (e.keyCode === 13) {
         e.preventDefault();
@@ -173,13 +196,11 @@ function ChatPanel(props) {
             avatar: user.avatar,
             accessory: user.accessory,
             replyTo: selectedMessage,
-            rank: user.totalWagered,
-            showEmojiPanel: false,
-            showSearchPopup: false
+            rank: user.totalWagered
           });
           handleClearTooltip();
-          setShowEmojiPanel(false);
-          setShowSearchPopup(false);
+          handleCloseEmojiPopover();
+          handleCloseGifPopover();
         }
       }
     } else {
@@ -209,6 +230,49 @@ function ChatPanel(props) {
     setHoverTabIndex(-1);
   };
 
+  // ------------------ EMOJI POPOVER ------------------
+  const handleEmojiClick = (event) => {
+    // If popover is already open, close it
+    if (emojiAnchorEl) {
+      handleCloseEmojiPopover();
+    } else {
+      setEmojiAnchorEl(event.currentTarget);
+    }
+  };
+
+  const handleCloseEmojiPopover = () => {
+    setEmojiAnchorEl(null);
+  };
+
+  const openEmojiPopover = Boolean(emojiAnchorEl);
+
+  const insertEmoji = (emojiCommand) => {
+    const foundEmoji = emojis.find((emoji) => emoji.command === emojiCommand);
+    if (foundEmoji) {
+      const updatedText = text + foundEmoji.command;
+      setText(updatedText);
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+      }
+    }
+  };
+
+  // ------------------ GIF POPOVER ------------------
+  const handleGifButtonClick = (event) => {
+    // If popover is already open, close it
+    if (gifAnchorEl) {
+      handleCloseGifPopover();
+    } else {
+      setGifAnchorEl(event.currentTarget);
+    }
+  };
+
+  const handleCloseGifPopover = () => {
+    setGifAnchorEl(null);
+  };
+
+  const openGifPopover = Boolean(gifAnchorEl);
+
   const handleGifClick = (gifUrl) => {
     if (user && user._id) {
       if (socket) {
@@ -225,8 +289,8 @@ function ChatPanel(props) {
           accessory: user.accessory,
           messageType: 'gif'
         });
-        setShowSearchPopup(false);
-        setShowEmojiPanel(false);
+        handleCloseGifPopover();
+        handleCloseEmojiPopover();
       }
     } else {
       alertModal(isDarkMode, 'FURR-SST LOG IN!');
@@ -234,28 +298,54 @@ function ChatPanel(props) {
     }
   };
 
-  const insertEmoji = (emojiCommand) => {
-    const foundEmoji = emojis.find((emoji) => emoji.command === emojiCommand);
-    if (foundEmoji) {
-      const updatedText = text + foundEmoji.command;
-      setText(updatedText);
-      if (textareaRef.current) {
-        textareaRef.current.focus();
+  /**
+   * Called once an <img> finishes loading.
+   */
+  const handleGifLoad = (index) => {
+    setGifs((prevGifs) => {
+      const updated = [...prevGifs];
+      updated[index] = {
+        ...updated[index],
+        loaded: true,
+      };
+      return updated;
+    });
+  };
+
+  const handleSearchInputChange = async (event) => {
+    const searchTerm = event.target.value.trim();
+    const apiKey = 'EoYYQ1kbX7mRfqwJ6xC4M6wgQmds4Dq1'; // Replace with your Giphy API key
+    const url = `https://api.giphy.com/v1/gifs/search?api_key=${apiKey}&q=${searchTerm}`;
+
+    try {
+      setLoading(true);
+
+      // If user clears input, you could handle that separately, e.g. set empty array
+      if (!searchTerm) {
+        setGifs([]);
+        setLoading(false);
+        return;
       }
+
+      const response = await axios.get(url);
+      const fetchedGifs = response.data.data.map((gif) => ({
+        ...initialGifState,
+        url: gif.images.fixed_height.url,
+        title: gif.title
+      }));
+
+      setGifs(fetchedGifs);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching GIFs:', error);
+      setLoading(false);
     }
   };
 
+  // ------------------ COMMON HANDLERS ------------------
+
   const onChangeText = (e) => {
     setText(e.target.value);
-  };
-
-  const handleTabChange = (event, newValue) => {
-    setSelectedTabIndex(newValue);
-  };
-
-  const toggleEmojiPanel = () => {
-    setShowEmojiPanel((prev) => !prev);
-    setShowSearchPopup(false);
   };
 
   const onFocusHandler = () => {
@@ -266,217 +356,346 @@ function ChatPanel(props) {
     setFocused(false);
   };
 
-  const toggleSearchPopup = () => {
-    setShowSearchPopup((prev) => !prev);
-    setShowEmojiPanel(false);
-  };
-
-  const handleGifLoad = (index) => {
-    const updatedGifs = [...gifs];
-    updatedGifs[index].loaded = true;
-    setGifs(updatedGifs);
-  };
-
-  const handleSearchInputChange = async (event) => {
-    const searchTerm = event.target.value;
-    const apiKey = 'EoYYQ1kbX7mRfqwJ6xC4M6wgQmds4Dq1'; // Replace with your Giphy API key
-    const url = `https://api.giphy.com/v1/gifs/search?api_key=${apiKey}&q=${searchTerm}`;
-
-    try {
-      setLoading(true);
-      const response = await axios.get(url);
-      const fetchedGifs = response.data.data.map((gif) => ({
-        ...initialGifState,
-        url: gif.images.fixed_height.url,
-        title: gif.title
-      }));
-      setGifs(fetchedGifs);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching GIFs:', error);
-      setLoading(false);
-    }
-  };
-
-  // ------------------ RENDER UTILITIES ------------------
-  const renderSearchPopup = () => {
-    return (
-      <div className={`search-popup ${showSearchPopup ? 'active' : ''}`}>
-        {showSearchPopup && (
-          <>
-            <div style={{ marginBottom: '10px' }}>
-              <TextField color='error'
-                type="text"
-                placeholder="SEARCH GIFS..."
-                variant="filled"
-                onKeyDown={onTextAreaKeyDown}
-                onChange={handleSearchInputChange}
-              />
-            </div>
-
-            {loading ? (
-              <div>Loading...</div>
-            ) : (
-              <div className="gif-results">
-                {gifs.map((gif, index) => (
-                  <img
-                    key={index}
-                    src={gif.url}
-                    alt={gif.title}
-                    onLoad={() => handleGifLoad(index)}
-                    onClick={() => handleGifClick(gif.url)}
-                  />
-                ))}
-              </div>
-            )}
-          </>
-        )}
-      </div>
-    );
+  const handleTabChange = (event, newValue) => {
+    setSelectedTabIndex(newValue);
   };
 
   // ------------------ RENDER ------------------
-  const isChatEnabled = isAuthenticated && getRank(user.totalWagered) > 10;
+
+  const isChatEnabled = isAuthenticated && getRank(user?.totalWagered) >= 1;
+  const theme = getCustomTheme(isDarkMode ? 'dark' : 'light');
 
   return (
-    <div className="chat-wrapper">
-      <Tabs
-        value={selectedTabIndex}
-        onChange={handleTabChange}
-        TabIndicatorProps={{ style: { background: '#ff0000' } }}
-        className="main-game-page-tabs"
+    <ThemeProvider theme={theme}>
+      <Box
+        className="chat-wrapper"
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: '100%',
+          p: 1,
+          bgcolor: '#29202f', // override background
+          color: 'white',    // default text color
+          border: '0'
+        }}
       >
-        {/* Inbox Tab */}
-        <Tab
-          className={`custom-tab ${hoverTabIndex === 0 ? 'fade-animation fade-in' : 'fade-animation fade-out'
-            }`}
-          label="Inbox"
-          icon={
-            <ChatOutlined
-              sx={{
-                color: hoverTabIndex === 0 || selectedTabIndex === 0 ? 'red' : 'inherit',
-                transition: 'color 0.3s ease',
-              }}
-            />
-          }
-          sx={{
-            '&:hover .MuiTab-iconWrapper': {
-              color: 'red', // Set icon color to red on hover
+        {/* Tabs Section */}
+        <Tabs
+          value={selectedTabIndex}
+          onChange={handleTabChange}
+          TabIndicatorProps={{
+            style: {
+              backgroundColor: 'red',
             },
           }}
-          onMouseEnter={() => handleMouseEnter(0)}
-          onMouseLeave={handleMouseLeave}
-        />
-
-        {/* Chat Tab */}
-        <Tab
-          className={`custom-tab ${hoverTabIndex === 1 ? 'fade-animation fade-in' : 'fade-animation fade-out'
-            }`}
-          label="Chat"
-          icon={
-            <ChatBubbleOutlineOutlined
-              sx={{
-                color: hoverTabIndex === 1 || selectedTabIndex === 1 ? 'red' : 'inherit',
-                transition: 'color 0.3s ease',
-              }}
-            />
-          }
           sx={{
-            '&:hover .MuiTab-iconWrapper': {
-              color: 'red', // Set icon color to red on hover
+            '& .MuiTab-root': {
+              textTransform: 'none',
+              color: 'white',
+              '& .MuiTab-iconWrapper': {
+                color: 'grey',
+                transition: 'color 0.3s ease',
+              },
+              '&:hover .MuiTab-iconWrapper': {
+                color: 'white',
+              },
+              '&.Mui-selected': {
+                color: 'white',
+                '& .MuiTab-iconWrapper': {
+                  color: 'red',
+                },
+              },
             },
           }}
-          onMouseEnter={() => handleMouseEnter(1)}
-          onMouseLeave={handleMouseLeave}
-        />
-      </Tabs>
-
-      {selectedTabIndex === 0 ? (
-        <MyChat is_mobile={is_mobile} toggleDrawer={toggleDrawer} />
-      ) : (
-        <GlobalChat
-          emojis={emojis}
-          setSelectedMessage={setSelectedMessage}
-          selectedMessage={selectedMessage}
-          onlineUserList={onlineUserList}
-        />
-      )}
-
-      {selectedTabIndex === 1 && (
-        <div className="chat-input-panel">
-          {selectedMessage && selectedMessage.sender && (
-            <div className="tooltip reply">
-              <div className="tooltip-content">
-                Replying to:
-                <div className="tooltip-avatar">
-                  <Avatar
-                    rank={selectedMessage.rank}
-                    accessory={selectedMessage.accessory}
-                    src={selectedMessage.avatar}
-                    username={selectedMessage.sender}
-                    alt="Avatar"
-                  />
-                </div>
-                {selectedMessage.sender}
-                <Button className="tooltip-cross">
-                  <Clear onClick={handleClearTooltip} />
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {renderSearchPopup()}
-
-          <div className={`emoticon-panel ${showEmojiPanel ? 'active' : ''}`}>
-            {emojis.map((emojiItem) => (
-              <img
-                key={emojiItem.command}
-                src={emojiItem.url}
-                alt={emojiItem.alt}
-                onClick={() => insertEmoji(emojiItem.command)}
+        >
+          {/* Inbox Tab */}
+          <Tab
+            className="custom-tab"
+            label="Inbox"
+            icon={
+              <ChatOutlined
+                sx={{
+                  color:
+                    hoverTabIndex === 0 || selectedTabIndex === 0
+                      ? 'white'
+                      : 'grey',
+                  transition: 'color 0.3s ease',
+                }}
               />
-            ))}
-          </div>
-
-          <TextField color='error'
-            type="text"
-            className="form-control"
-            variant="outlined"
-            onFocus={onFocusHandler}
-            onBlur={onBlurHandler}
-            onKeyDown={onTextAreaKeyDown}
-            placeholder={isChatEnabled ? 'CHAT HERE...' : 'RANK MUST BE 10+'}
-            onChange={onChangeText}
-            value={text}
-            inputRef={textareaRef}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment
-                  position="end"
-                  style={{ minWidth: '60px', background: 'transparent' }}
-                >
-                  <Button
-                    className="btn-show-emoticon"
-                    onClick={toggleEmojiPanel}
-                    style={{ minWidth: '32px' }}
-                  >
-                    <InsertEmoticon style={{ fontSize: '16px' }} />
-                  </Button>
-                  <Button
-                    className="btn-search-gifs"
-                    onClick={toggleSearchPopup}
-                    style={{ minWidth: '32px', marginLeft: '2px' }}
-                  >
-                    <Gif style={{ fontSize: '32px' }} />
-                  </Button>
-                </InputAdornment>
-              )
+            }
+            sx={{
+              '&:hover .MuiTab-iconWrapper': {
+                color: 'white',
+              },
             }}
-            disabled={!isChatEnabled}
+            onMouseEnter={() => handleMouseEnter(0)}
+            onMouseLeave={handleMouseLeave}
           />
-        </div>
-      )}
-    </div>
+
+          {/* Chat Tab */}
+          <Tab
+            className="custom-tab"
+            label="Chat"
+            icon={
+              <ChatBubbleOutlineOutlined
+                sx={{
+                  color:
+                    hoverTabIndex === 1 || selectedTabIndex === 1
+                      ? 'white'
+                      : 'grey',
+                  transition: 'color 0.3s ease',
+                }}
+              />
+            }
+            sx={{
+              '&:hover .MuiTab-iconWrapper': {
+                color: 'white',
+              },
+            }}
+            onMouseEnter={() => handleMouseEnter(1)}
+            onMouseLeave={handleMouseLeave}
+          />
+        </Tabs>
+
+        {/* Tab Content */}
+        {selectedTabIndex === 0 ? (
+          <MyChat highlightChatId={highlightChatId} is_mobile={is_mobile} toggleDrawer={toggleDrawer} />
+        ) : (
+          <GlobalChat
+            emojis={emojis}
+            setSelectedMessage={setSelectedMessage}
+            selectedMessage={selectedMessage}
+            onlineUserList={onlineUserList}
+          />
+        )}
+
+        {/* Chat Input Section (only for Chat tab) */}
+        {selectedTabIndex === 1 && (
+          <Box className="chat-input-panel" sx={{ mt: 2 }}>
+            {selectedMessage && selectedMessage.sender && (
+              <Box
+                sx={{
+                  bottom: '60px',
+                  p: 1,
+                  zIndex: 1,
+                  borderRadius: 1,
+                  bgcolor: 'background.default',
+                  position: 'absolute',
+                }}
+              >
+                <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Box sx={{ mr: 1, fontSize: 'small' }}>Reply to:</Box>
+                  <Box className='player' sx={{ display: 'flex', alignItems: 'center', mr: 1 }}>
+                    <Avatar
+                      rank={selectedMessage.rank}
+                      accessory={selectedMessage.accessory}
+                      src={selectedMessage.avatar}
+                      username={selectedMessage.sender}
+                      alt="Avatar"
+                    />
+                  </Box>
+                  <Box sx={{ flex: 1, fontSize: 'small', mr: '10px' }}>{selectedMessage.sender}</Box>
+                  <Button
+                    onClick={handleClearTooltip}
+                    color="error"
+                    variant="outlined"
+                    size="small"
+                    sx={{ minWidth: '32px' }}
+                  >
+                    <Clear />
+                  </Button>
+                </Box>
+              </Box>
+            )}
+
+            <TextField
+              color="error"
+              type="text"
+              className="form-control"
+              variant="filled"
+              onFocus={onFocusHandler}
+              onBlur={onBlurHandler}
+              onKeyDown={onTextAreaKeyDown}
+              placeholder={isChatEnabled ? 'CHAT HERE...' : 'RANK MUST BE 1+'}
+              onChange={onChangeText}
+              value={text}
+              inputRef={textareaRef}
+              disabled={!isChatEnabled}
+              fullWidth
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end" sx={{ minWidth: '80px' }}>
+                    <Button
+                      onClick={handleEmojiClick}
+                      color="error"
+                      variant="outlined"
+                      sx={{ minWidth: '32px', height: '32px', mr: 1 }}
+                    >
+                      <InsertEmoticon style={{ fontSize: '18px' }} />
+                    </Button>
+                    <Button
+                      onClick={handleGifButtonClick}
+                      color="error"
+                      variant="outlined"
+                      sx={{ minWidth: '32px', height: '32px' }}
+                    >
+                      <Gif style={{ fontSize: '24px' }} />
+                    </Button>
+                  </InputAdornment>
+                ),
+              }}
+            />
+
+            {/* Emoji Popover */}
+            <Popover
+              open={openEmojiPopover}
+              elevation={0}
+              anchorEl={emojiAnchorEl}
+              onClose={handleCloseEmojiPopover}
+              anchorOrigin={{
+                vertical: 'top',
+                horizontal: 'left',
+              }}
+              transformOrigin={{
+                vertical: 'bottom',
+                horizontal: 'left',
+              }}
+              transitionDuration={0}
+              PaperProps={{
+                sx: {
+                  p: 1,
+                  borderRadius: 1,
+                  maxWidth: '200px',
+                  overflowY: 'auto',
+                  bgcolor: 'background.default'
+
+                },
+              }}
+            >
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: 1,
+                }}
+              >
+                {emojis.map((emojiItem) => (
+                  <Box
+                    key={emojiItem.command}
+                    component="img"
+                    src={emojiItem.url}
+                    alt={emojiItem.alt}
+                    onClick={() => insertEmoji(emojiItem.command)}
+                    sx={{
+                      width: '30px',
+                      height: '30px',
+                      objectFit: 'cover',
+                      cursor: 'pointer',
+                      borderRadius: 1,
+                      '&:hover': { opacity: 0.8 },
+                    }}
+                  />
+                ))}
+              </Box>
+            </Popover>
+
+            {/* GIF Popover */}
+            <Popover
+              open={openGifPopover}
+              anchorEl={gifAnchorEl}
+              onClose={handleCloseGifPopover}
+              elevation={0}
+
+              anchorOrigin={{
+                vertical: 'top',
+                horizontal: 'left',
+              }}
+              transformOrigin={{
+                vertical: 'bottom',
+                horizontal: 'left',
+              }}
+              transitionDuration={0}
+              PaperProps={{
+                sx: {
+                  p: 2,
+                  borderRadius: 1,
+                  bgcolor: 'background.default',
+                  // Adjust the maxWidth here
+                  minWidth: '300px',
+                  maxWidth: '378px',
+                },
+              }}
+            >
+              <Box sx={{ mb: 1 }}>
+                <TextField
+                  color="error"
+                  type="text"
+                  placeholder="SEARCH GIFS..."
+                  variant="filled"
+                  onKeyDown={onTextAreaKeyDown}
+                  onChange={handleSearchInputChange}
+                  fullWidth
+                />
+              </Box>
+
+              {loading ? (
+                // 1) STILL LOADING
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <CircularProgress color="error" size={20} />
+                  <Typography variant="body2">Loading GIFs...</Typography>
+                </Box>
+              ) : gifs.length === 0 ? (
+                // 2) NO GIFS & NOT LOADING => SHOW NOTHING
+                null
+              ) : (
+                // 3) SHOW GIF GRID
+                <Box
+                  sx={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: 1,
+                    maxHeight: '200px',
+                    overflowY: 'auto',
+                  }}
+                >
+                  {gifs.map((gif, index) => (
+                    <Box
+                      key={index}
+                      sx={{ position: 'relative', width: 80, height: 80 }}
+                    >
+                      {!gif.loaded && (
+                        <Skeleton
+                          variant="rectangular"
+                          width={80}
+                          height={80}
+                          sx={{ borderRadius: '4px' }}
+                        />
+                      )}
+                      {gif.url && (
+                        <img
+                          src={gif.url}
+                          alt={gif.title}
+                          style={{
+                            width: '80px',
+                            height: '80px',
+                            objectFit: 'cover',
+                            cursor: 'pointer',
+                            borderRadius: '4px',
+                            display: gif.loaded ? 'block' : 'none',
+                          }}
+                          onLoad={() => handleGifLoad(index)}
+                          onClick={() => handleGifClick(gif.url)}
+                        />
+                      )}
+                    </Box>
+                  ))}
+                </Box>
+              )}
+            </Popover>
+          </Box>
+        )}
+      </Box>
+    </ThemeProvider>
   );
 }
 

@@ -1,483 +1,510 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import styled from 'styled-components';
 import { connect } from 'react-redux';
-
-// MUI Imports
 import {
   Box,
   Button,
-  Card,
-  CardMedia,
-  CardContent,
-  CardActions,
-  Typography,
+  IconButton,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableRow,
   Tooltip,
   Menu,
   MenuItem,
-  Grid,
   Skeleton,
   Pagination,
-  IconButton
+  Typography
 } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
-import { useMediaQuery } from '@mui/material';
-
+import SwapHoriz from '@mui/icons-material/SwapHoriz';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faTag,
-  faCubes,
-  faGem,
-  faFilter,
-  faSort
-} from '@fortawesome/free-solid-svg-icons';
+import { faTag, faCubes, faGem, faSort, faFilter } from '@fortawesome/free-solid-svg-icons';
 
-import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
-
-import PlayerModal from '../../../../game_panel/modal/PlayerModal';
-import Avatar from '../../../../components/Avatar';
-import { alertModal } from '../../../../game_panel/modal/ConfirmAlerts';
-import history from '../../../../redux/history';
-import { renderLottieAnimation } from '../../../../util/LottieAnimations';
-import { convertToCurrency } from '../../../../util/conversion';
-
-// Redux Actions
+// Redux + Others
 import {
   acQueryItem,
   setCurrentProductId,
   setCurrentProductInfo
 } from '../../../../redux/Item/item.action';
-import {
-  openConfirmTradeModal,
-  // possibly other notification actions
-} from '../../../../redux/Notification/notification.actions';
 import { acGetCustomerInfo } from '../../../../redux/Customer/customer.action';
+import { openConfirmTradeModal } from '../../../../redux/Notification/notification.actions';
+import { alertModal } from '../../../../game_panel/modal/ConfirmAlerts';
 
-// Hardcoded item-type name mapping
-const itemTypeMap = {
-  '653ee7ac17c9f5ee21245649': 'RRPS Card',
-  '653ee7df17c9f5ee2124564a': 'Game Background',
-  '653ee81117c9f5ee2124564b': 'Accessories',
-  '654231df29446bc96d689d0f': 'Tools',
-  '6542321929446bc96d689d10': 'Games'
-};
+import Avatar from '../../../../components/Avatar';
+import PlayerModal from '../../../../game_panel/modal/PlayerModal';
+import history from '../../../../redux/history';
 
-function ProductTable({
-  data,
-  pages,
-  page,
-  loading,
-  acQueryItem,
-  setCurrentProductId,
-  setCurrentProductInfo,
-  openConfirmTradeModal,
-  acGetCustomerInfo,
-  user,
-  solPrice,
-  isDarkMode,
-  isLowGraphics
-}) {
-  // ------------------ STATE ------------------
+import { convertToCurrency } from '../../../../util/conversion';
+import { renderLottieAnimation } from '../../../../util/LottieAnimations';
+import { ThemeProvider } from '@mui/material/styles';
+import { getCustomTheme } from '../../../../config/theme';
+
+// ---------- Styled Containers ----------
+const MarketplaceContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+  width: 100%;
+`;
+
+const FilterSortContainer = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 20px;
+`;
+
+// Force 3 items max per row
+const ProductGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 3 columns max */
+  gap: 16px;
+  width: 100%;
+  margin: 20px 0;
+`;
+
+const PaginationContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+`;
+
+// The card container (top half + bottom half)
+const ProductCard = styled.div`
+  background-color: #2e2e2e;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  height: 320px;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s;
+
+  &:hover {
+    transform: scale(1.03);
+  }
+`;
+
+// ---------- Utility: compare owners ----------
+function areOwnersEqual(prevOwners, currentOwners) {
+  return JSON.stringify(prevOwners) === JSON.stringify(currentOwners);
+}
+
+// ---------- Main Functional Component ----------
+const ProductTable = (props) => {
+  const {
+    data,
+    pages,
+    page,
+    loading,
+    acQueryItem,
+    setCurrentProductId,
+    setCurrentProductInfo,
+    openConfirmTradeModal,
+    acGetCustomerInfo,
+    user,
+    isDarkMode,
+    isLowGraphics
+  } = props;
+
+  // Local state
   const [customerInfo, setCustomerInfo] = useState({});
   const [showPlayerModal, setShowPlayerModal] = useState(false);
   const [selectedCreator, setSelectedCreator] = useState('');
-
-  // Filter / Sort
   const [anchorEl, setAnchorEl] = useState(null);
   const [sortAnchorEl, setSortAnchorEl] = useState(null);
-  const [itemType, setItemType] = useState('653ee81117c9f5ee2124564b');
   const [sortCriteria, setSortCriteria] = useState('updated_at');
+  const [itemType, setItemType] = useState('653ee81117c9f5ee2124564b');
 
-  // ------------------ MUI RESPONSIVE HELPERS ------------------
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  // Compare owners from previous render
+  const prevOwnersRef = useRef(JSON.stringify(data?.owners || []));
 
-  // ------------------ DATA FETCHING ------------------
-  /**
-   * Fetch items whenever page, sortCriteria, or itemType changes.
-   * Show only 10 items per page here.
-   */
-  const fetchItems = useCallback(() => {
-    acQueryItem(10, page, sortCriteria, itemType);
-  }, [acQueryItem, page, sortCriteria, itemType]);
+  // itemType map
+  const itemTypeMap = {
+    '653ee7ac17c9f5ee21245649': 'RRPS Card',
+    '653ee7df17c9f5ee2124564a': 'Game Background',
+    '653ee81117c9f5ee2124564b': 'Accessories',
+    '654231df29446bc96d689d0f': 'Tools',
+    '6542321929446bc96d689d10': 'Games'
+  };
 
+  // MUI theme
+  const theme = getCustomTheme(isDarkMode ? 'dark' : 'light');
+
+  // ----- Effects -----
+
+  // Check if owners changed => fetch items
   useEffect(() => {
+    const prevOwners = prevOwnersRef.current;
+    const currentOwners = JSON.stringify(data?.owners || []);
+    if (prevOwners !== currentOwners) {
+      fetchItems();
+      prevOwnersRef.current = currentOwners;
+    }
+    // no deps to avoid react-hooks/exhaustive-deps
+  });
+
+  // If data changes => fetch user info
+  useEffect(() => {
+    fetchCustomerInfo();
     fetchItems();
-  }, [fetchItems]);
+    
+    // no deps
+  }, []);
 
-  /**
-   * Fetches customer info for each product's owners
-   * whenever `data` changes.
-   */
-  useEffect(() => {
-    const fetchCustomerInfoForOwners = async () => {
-      const updatedInfo = { ...customerInfo };
-      for (const product of data || []) {
-        if (product.owners && product.owners.length > 0) {
-          for (const owner of product.owners) {
-            // If not already fetched
-            if (!updatedInfo[owner.user]) {
-              try {
-                const info = await acGetCustomerInfo(owner.user);
-                updatedInfo[owner.user] = info || {
+  // ----- Functions -----
+  const fetchItems = (criteria = sortCriteria, type = itemType) => {
+    acQueryItem(100, page, criteria, type);
+  };
+
+  const fetchCustomerInfo = async () => {
+    if (!data) return;
+    for (const product of data) {
+      if (product.owners && product.owners.length > 0) {
+        for (const owner of product.owners) {
+          if (!customerInfo[owner.user]) {
+            try {
+              const info = await acGetCustomerInfo(owner.user);
+              setCustomerInfo((prev) => ({
+                ...prev,
+                [owner.user]: info || {
                   username: 'Anon',
                   avatar: 'default-avatar-url'
-                };
-              } catch (error) {
-                console.error(`Error fetching customer info for ${owner.user}:`, error);
-              }
+                }
+              }));
+            } catch (error) {
+              console.error(`Error fetching customer info for ${owner.user}:`, error);
             }
           }
         }
       }
-      setCustomerInfo(updatedInfo);
-    };
-
-    if (!loading && data?.length) {
-      fetchCustomerInfoForOwners();
     }
-  }, [data, loading]);
+  };
 
-  // ------------------ FILTER & SORT HANDLERS ------------------
-  const handleFilterClick = (event) => setAnchorEl(event.currentTarget);
+  // Player Modal
+  const handleOpenPlayerModal = (creatorId) => {
+    setSelectedCreator(creatorId);
+    setShowPlayerModal(true);
+  };
+  const handleClosePlayerModal = () => setShowPlayerModal(false);
+
+  // Filter
+  const handleFilterClick = (e) => setAnchorEl(e.currentTarget);
   const handleFilterClose = (newItemType) => {
     setAnchorEl(null);
     if (newItemType) {
       setItemType(newItemType);
+      fetchItems(sortCriteria, newItemType);
     }
   };
 
-  const handleSortClick = (event) => setSortAnchorEl(event.currentTarget);
+  // Sort
+  const handleSortClick = (e) => setSortAnchorEl(e.currentTarget);
   const handleSortClose = (newSortCriteria) => {
     setSortAnchorEl(null);
     if (newSortCriteria) {
       setSortCriteria(newSortCriteria);
+      fetchItems(newSortCriteria, itemType);
     }
   };
 
-  // ------------------ TRADE / RENT / PRODUCT HANDLERS ------------------
-  const handleTradeOrRent = (row) => {
-    const { user: ownerUser, price, rentOption } = row.owners[0];
-
+  // Rent / Trade logic
+  const handleTradeOrRent = (row, owner) => {
     setCurrentProductId(row._id);
     setCurrentProductInfo({
-      owner: ownerUser,
+      owner: owner.user,
       productName: row.productName,
-      rentOption,
-      price
+      rentOption: owner.rentOption,
+      price: owner.price
     });
 
-    if (ownerUser !== user) {
-      // If there's a "confirmation" property
+    if (owner.user !== user) {
       if (row.showConfirmationModal) {
         const userConfirmed = window.confirm(row.message);
         if (userConfirmed) {
-          openConfirmTradeModal(rentOption ? 'rent' : 'trade');
+          openConfirmTradeModal(owner.rentOption ? 'rent' : 'trade');
         } else {
-          alertModal(isDarkMode, 'TRADE ACTION CANCELLED, PUSSY-ED OUT');
+          alertModal(isDarkMode, 'TRADE ACTION CANCELLED,PUSSY-ED OUT');
         }
       } else {
-        openConfirmTradeModal(rentOption ? 'rent' : 'trade');
+        openConfirmTradeModal(owner.rentOption ? 'rent' : 'trade');
       }
     } else {
-      alertModal(isDarkMode, 'THIS IS LITTER-ALLY YOURS ALREADY!');
+      alertModal(isDarkMode, 'THIS IS LITERALLY YOURS ALREADY!');
     }
   };
 
-  // ------------------ PLAYER MODAL ------------------
-  const handleOpenPlayerModal = (creatorId) => {
-    setShowPlayerModal(true);
-    setSelectedCreator(creatorId);
-  };
-  const handleClosePlayerModal = () => setShowPlayerModal(false);
+  // ----- Render -----
 
-  // ------------------ RENDER ------------------
   return (
-    <Box
-      sx={{
-        p: 2,
-        backgroundColor: isDarkMode ? 'rgba(170, 170, 170, 0.06)' : '#f7f7f7',
-        borderRadius: 1,
-      }}
-    >
-      {/* Optional Banner if itemType is '653ee81117c9f5ee2124564b' */}
-      {itemType === '653ee81117c9f5ee2124564b' && (
-        <Box sx={{ mb: 2 }}>
-          <img
-            id="marketplace-banner"
-            src="/img/accessory-banner.svg"
-            alt="Accessory Banner"
-            style={{ width: '100%', display: 'block', borderRadius: 4 }}
-          />
-        </Box>
-      )}
-
-      {/* FILTER & SORT */}
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          mb: 2
-        }}
-      >
-        {/* Filter */}
-        <Button onClick={handleFilterClick} variant="outlined" color='error' startIcon={<FontAwesomeIcon icon={faFilter} />}>
-          Filter
-        </Button>
-        <Menu
-          anchorEl={anchorEl}
-          open={Boolean(anchorEl)}
-          onClose={() => handleFilterClose(null)}
-          transitionDuration={0}
-          PaperProps={{
-            sx: {
-              backgroundColor: '#1f1a25',
-              color: '#fff',
-              border: '1px solid #444',
-
-              // MenuItem styling
-              '& .MuiMenuItem-root': {
-                textTransform: 'none',
-                color: 'inherit',
-                '&:hover': {
-                  backgroundColor: '#ff000',
-                  color: '#fff',
-                },
-                // If you want a distinct style for selected items:
-                '&.Mui-selected': {
-                  backgroundColor: '#333',
-                },
-              },
-            },
-          }}
-        >
-          <MenuItem
-            onClick={() => handleFilterClose('653ee81117c9f5ee2124564b')}
-            selected={itemType === '653ee81117c9f5ee2124564b'}
-          >
-            Accessories
-          </MenuItem>
-          {/* Add more filters as needed */}
-        </Menu>
-
-        {/* Sort */}
-        <Button onClick={handleSortClick} variant="outlined" color='error' startIcon={<FontAwesomeIcon icon={faSort} />}>
-          Sort By
-        </Button>
-        <Menu
-          anchorEl={sortAnchorEl}
-          open={Boolean(sortAnchorEl)}
-          onClose={() => handleSortClose(null)}
-          transitionDuration={0}
-          PaperProps={{
-            sx: {
-              backgroundColor: '#1f1a25',
-              color: '#fff',
-              border: '1px solid #444',
-
-              // MenuItem styling
-              '& .MuiMenuItem-root': {
-                textTransform: 'none',
-                color: 'inherit',
-                '&:hover': {
-                  backgroundColor: '#ff000',
-                  color: '#fff',
-                },
-                // If you want a distinct style for selected items:
-                '&.Mui-selected': {
-                  backgroundColor: '#333',
-                },
-              },
-            },
-          }}
-        >
-          <MenuItem
-            onClick={() => handleSortClose('updated_at')}
-            selected={sortCriteria === 'updated_at'}
-          >
-            Sort by CP
-          </MenuItem>
-          <MenuItem
-            onClick={() => handleSortClose('price')}
-            selected={sortCriteria === 'price'}
-          >
-            Sort by Price
-          </MenuItem>
-          {/* Add more sorts as needed */}
-        </Menu>
-      </Box>
-
-      {/* PLAYER MODAL */}
-      {showPlayerModal && (
-        <PlayerModal
-          selectedCreator={selectedCreator}
-          modalIsOpen={showPlayerModal}
-          closeModal={handleClosePlayerModal}
-        />
-      )}
-
-      {/* CONTENT */}
-      {loading ? (
-        // ------------------ LOADING SKELETONS ------------------
-        <Grid container spacing={2}>
-          {[...Array(4)].map((_, index) => (
-            <Grid item xs={12} sm={6} md={4} lg={3} key={`skeleton-${index}`}>
-              <Box
-                sx={{
-                  border: '1px solid #ddd',
-                  borderRadius: 1,
-                  p: 2
-                }}
+    <ThemeProvider theme={theme}>
+      <Box sx={{ background: 'rgba(170, 170, 170, 0.06)', borderRadius: '0.3em', p: '20px' }}>
+        <MarketplaceContainer>
+          {/* Filter/Sort */}
+          <FilterSortContainer>
+            <div className="filters">
+              <Button color="error" variant="outlined" onClick={handleFilterClick}>
+                Filter&nbsp;
+                <FontAwesomeIcon icon={faFilter} />
+              </Button>
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={() => handleFilterClose(null)}
               >
-                <Skeleton variant="rectangular" width="100%" height={150} sx={{ mb: 1 }} />
-                <Skeleton variant="text" />
-                <Skeleton variant="text" width="60%" />
-                <Skeleton variant="circular" width={40} height={40} sx={{ mt: 2 }} />
-              </Box>
-            </Grid>
-          ))}
-        </Grid>
-      ) : (
-        // ------------------ DATA LISTING ------------------
-        <Grid
-          container
-          spacing={2}
-          sx={{
-            maxHeight: '50vh',
-            overflowY: 'auto'
-          }}
-          alignItems="stretch"   // 1) Ensure all Grid items stretch to equal height
-        >
-          {data.map((row) => {
-            const owner = row.owners?.[0];
-            const creatorInfo = owner ? customerInfo[owner.user] : null;
-
-            return (
-              <Grid
-                item
-                xs={12}  // 1 item/row on xs
-                sm={6}   // 2 items/row on sm
-                md={4}   // 3 items/row on md
-                lg={4}
-                key={row._id}
-                sx={{ display: 'flex' }} // 2) Let the Card fill this item
-              >
-                <Card
-                  sx={{
-                    width: '100%',
-                    display: 'flex',       // 3) Vertical layout within the Card
-                    flexDirection: 'column',
-                    background: isDarkMode
-                      ? 'linear-gradient(156deg, #333, #444)'
-                      : '#fff'
-                  }}
+                <MenuItem
+                  onClick={() => handleFilterClose('653ee81117c9f5ee2124564b')}
+                  selected={itemType === '653ee81117c9f5ee2124564b'}
                 >
-                  {/* IMAGE or LOTTIE */}
-                  {row.image && renderLottieAnimation(row.image, isLowGraphics) ? (
-                    <Box sx={{ maxHeight: 200, overflow: 'hidden' }}>
-                      {renderLottieAnimation(row.image, isLowGraphics)}
-                    </Box>
-                  ) : (
-                    <CardMedia
-                      component="img"
-                      height="200"
-                      image={row.image || '/img/no-image.png'}
-                      alt={row.productName}
-                    />
-                  )}
+                  Accessories
+                </MenuItem>
+              </Menu>
+            </div>
 
-                  {/* CONTENT (stretch in the middle) */}
-                  <CardContent
-                    sx={{
-                      textAlign: 'center',
-                      color: isDarkMode ? '#fff' : 'inherit'
+            <div className="filters">
+              <Button color="error" variant="outlined" onClick={handleSortClick}>
+                Sort By&nbsp;
+                <FontAwesomeIcon icon={faSort} />
+              </Button>
+              <Menu
+                anchorEl={sortAnchorEl}
+                open={Boolean(sortAnchorEl)}
+                onClose={() => handleSortClose(null)}
+              >
+                <MenuItem
+                  onClick={() => handleSortClose('updated_at')}
+                  selected={sortCriteria === 'updated_at'}
+                >
+                  Sort by CP
+                </MenuItem>
+                <MenuItem
+                  onClick={() => handleSortClose('price')}
+                  selected={sortCriteria === 'price'}
+                >
+                  Sort by Price
+                </MenuItem>
+              </Menu>
+            </div>
+          </FilterSortContainer>
+
+          {/* If loading => skeletons */}
+          {loading ? (
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, justifyContent: 'center', mt: 2 }}>
+              {Array.from(new Array(6)).map((_, i) => (
+                <Box key={i}>
+                  <Skeleton variant="rectangular" width={165} height={160} sx={{ mb: 1 }} />
+                  <Skeleton variant="text" width={120} />
+                  <Skeleton variant="text" width={100} />
+                </Box>
+              ))}
+            </Box>
+          ) : (
+            <ProductGrid>
+              {showPlayerModal && (
+                <PlayerModal
+                  selectedCreator={selectedCreator}
+                  modalIsOpen={showPlayerModal}
+                  closeModal={handleClosePlayerModal}
+                />
+              )}
+
+              {data.map((row) => {
+                if (!row.owners?.length) return null;
+                const firstOwner = row.owners[0];
+
+                return (
+                  <ProductCard
+                    key={`${row._id}-${firstOwner.user}`}
+                    onClick={() => {
+                      setCurrentProductId(row._id);
+                      setCurrentProductInfo({
+                        owner: firstOwner.user,
+                        productName: row.productName,
+                        rentOption: firstOwner.rentOption,
+                        price: firstOwner.price
+                      });
+                      history.push(`/product/${row._id}`);
                     }}
                   >
-                    <Typography
-                      variant="h6"
-                      sx={{ fontWeight: 'bold', mb: 1, textTransform: 'uppercase' }}
+                    {/* TOP HALF => avatar + lottie */}
+                    <Box
+                      sx={{
+                        position: 'relative',
+                        flex: 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
                     >
-                      {row.productName}
-                    </Typography>
-
-                    <Box sx={{ textAlign: 'left', mb: 1 }}>
-                      <Typography variant="body2" sx={{ display: 'flex', gap: 1 }}>
-                        <FontAwesomeIcon icon={faTag} />&nbsp;
-                        {owner?.rentOption ? 'Price per month' : 'Price per unit'}:
-                        <Box sx={{ ml: 'auto' }}>
-                          {convertToCurrency(owner?.price, solPrice)}
+                      {/* Avatars => top-left */}
+                      {row.owners.map((owner) => (
+                        <Box
+                          key={owner.user}
+                          sx={{
+                            position: 'absolute',
+                            top: 8,
+                            left: 8
+                          }}
+                        >
+                          {customerInfo[owner.user] ? (
+                            <Box
+                              component="a"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                handleOpenPlayerModal(owner.user);
+                              }}
+                              className='player'
+                            >
+                              <Avatar
+                                className="avatar"
+                                src={customerInfo[owner.user].avatar}
+                                rank={customerInfo[owner.user].totalWagered}
+                                accessory={customerInfo[owner.user].accessory}
+                                alt=""
+                                username={customerInfo[owner.user].username}
+                                darkMode={isDarkMode}
+                              />
+                            </Box>
+                          ) : (
+                            <Skeleton variant="circular" width={40} height={40} />
+                          )}
                         </Box>
-                      </Typography>
+                      ))}
 
-                      <Typography variant="body2" sx={{ display: 'flex', gap: 1 }}>
-                        <FontAwesomeIcon icon={faCubes} />
-                        Quantity:
-                        <Box sx={{ ml: 'auto' }}>
-                          {owner?.onSale} / {row.total_count}
+                      {/* Lottie or Image => center */}
+                      {row.image && renderLottieAnimation(row.image, isLowGraphics) ? (
+                        <Box sx={{ width: 80, height: 80 }}>
+                          {renderLottieAnimation(row.image, isLowGraphics)}
                         </Box>
-                      </Typography>
-
-                      <Typography variant="body2" sx={{ display: 'flex', gap: 1 }}>
-                        <FontAwesomeIcon icon={faGem} />
-                        Type:
-                        <Box sx={{ ml: 'auto' }}>
-                          {itemTypeMap[row.item_type] || 'Unknown'}
-                        </Box>
-                      </Typography>
+                      ) : (
+                        <Box
+                          component="img"
+                          src={row.image}
+                          alt={row.productName}
+                          sx={{
+                            maxWidth: 80,
+                            maxHeight: 80,
+                            borderRadius: 2
+                          }}
+                        />
+                      )}
                     </Box>
-                  </CardContent>
 
-                  {/* ACTIONS (pinned to the bottom) */}
-                  <CardActions>
-                    <Tooltip title={owner?.rentOption ? 'Rent' : 'Trade'}>
-                      <Button
-                        variant="contained"
-                        color='error'
-                        fullWidth
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleTradeOrRent(row);
-                        }}
-                        startIcon={<SwapHorizIcon />}
-                      >
-                        {owner?.rentOption ? 'Rent' : 'Trade'}
-                      </Button>
-                    </Tooltip>
-                  </CardActions>
-                </Card>
-              </Grid>
-            );
-          })}
-        </Grid>
-      )}
+                    {/* BOTTOM HALF => details + trade button */}
+                    <Box
+                      sx={{
+                        flex: 1,
+                        p: 1,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between'
+                      }}
+                    >
+                      {/* Details */}
+                      <Box>
+                        <Typography
+                          variant="h6"
+                          sx={{ fontSize: '1rem', color: '#fff', textAlign: 'center' }}
+                        >
+                          {row.productName}
+                        </Typography>
+                        <TableContainer>
+                          <Table id="all-trades" className="product-detail">
+                            <TableBody>
+                              <TableRow>
+                                <TableCell sx={{ color: '#bbb' }}>
+                                  <FontAwesomeIcon icon={faTag} />{' '}
+                                  {firstOwner.rentOption ? 'Price / month' : 'Price / unit'}:
+                                </TableCell>
+                                <TableCell sx={{ color: '#ff8500' }}>
+                                  {convertToCurrency(firstOwner.price)}
+                                </TableCell>
+                              </TableRow>
+                              <TableRow>
+                                <TableCell sx={{ color: '#bbb' }}>
+                                  <FontAwesomeIcon icon={faCubes} /> Quantity:
+                                </TableCell>
+                                <TableCell sx={{ color: '#ff8500' }}>
+                                  {firstOwner.onSale} / {row.total_count}
+                                </TableCell>
+                              </TableRow>
+                            </TableBody>
+                          </Table>
+                        </TableContainer>
+                      </Box>
 
-      {/* PAGINATION */}
-      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
-        <Pagination
-          count={pages}     // total pages from props
-          page={page}       // current page from props
-          onChange={(event, value) => {
-            // Re-fetch items for selected page with 10 items each
-            acQueryItem(10, value, sortCriteria, itemType);
-          }}
-          siblingCount={1}
-          boundaryCount={1}
-          color="error"
-          shape="rounded"
-        />
+                      {/* Trade/Rent button => always visible bottom-right */}
+                      <Box sx={{ textAlign: 'right', mt: 1 }}>
+                        <Tooltip title={firstOwner.rentOption ? 'Rent' : 'Trade'}>
+                          <Button
+                            variant="contained"
+                            color="error"
+                            startIcon={<SwapHoriz />}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleTradeOrRent(row, firstOwner);
+                            }}
+                          >
+                            {firstOwner.rentOption ? 'Rent' : 'Trade'}
+                          </Button>
+                        </Tooltip>
+                      </Box>
+                    </Box>
+                  </ProductCard>
+                );
+              })}
+            </ProductGrid>
+          )}
+
+          {/* Pagination => only if not loading */}
+          {!loading && (
+            <PaginationContainer>
+              <Pagination
+                page={page}
+                count={pages}
+                color="error"
+                sx={{
+                  '& .MuiPaginationItem-root': {
+                    borderRadius: '4px' // "rounded square" corners
+                  }
+                }}
+                onChange={(event, newPage) => {
+                  acQueryItem(100, newPage, sortCriteria, itemType);
+                }}
+              />
+            </PaginationContainer>
+          )}
+
+          {/* If there's a PlayerModal open */}
+          {showPlayerModal && (
+            <PlayerModal
+              selectedCreator={selectedCreator}
+              modalIsOpen={showPlayerModal}
+              closeModal={handleClosePlayerModal}
+            />
+          )}
+        </MarketplaceContainer>
       </Box>
-    </Box>
+    </ThemeProvider>
   );
-}
+};
 
+// ---------- Redux Connections ----------
 const mapStateToProps = (state) => ({
   data: state.itemReducer.itemArray,
   pages: state.itemReducer.pages,
   page: state.itemReducer.page,
   loading: state.itemReducer.loading,
-  solPrice: state.logic.solPrice,
+  total: state.itemReducer.totalResults,
+  showConfirmTradeModal: state.snackbar.showConfirmTradeModal,
   isDarkMode: state.auth.isDarkMode,
-  user: state.auth.user?._id,
-  isLowGraphics: state.auth.isLowGraphics
+  user: state.auth.user._id,
+  isLowGraphics: state.auth.isLowGraphics,
 });
 
 const mapDispatchToProps = {
@@ -485,7 +512,7 @@ const mapDispatchToProps = {
   setCurrentProductId,
   setCurrentProductInfo,
   openConfirmTradeModal,
-  acGetCustomerInfo
+  acGetCustomerInfo,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(ProductTable);

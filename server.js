@@ -79,7 +79,6 @@ const connectWithRetry = async () => {
 connectWithRetry();
 
 // -------------------- Routes --------------------
-const adminAuthRoutes = require('./routes/admin_auth.routes');
 const authRoutes = require('./routes/auth.routes');
 const userRoutes = require('./routes/user.routes');
 const landingRoutes = require('./routes/landing.routes');
@@ -91,7 +90,6 @@ const statisticsRoutes = require('./routes/statistics.routes');
 const systemSettingRoutes = require('./routes/settings.routes');
 
 // API routes
-app.use('/api/admin/auth', adminAuthRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/landing', landingRoutes);

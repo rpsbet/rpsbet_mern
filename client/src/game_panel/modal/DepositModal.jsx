@@ -6,7 +6,6 @@ import { alertModal } from '../modal/ConfirmAlerts';
 import { setBalance, setGasfee } from '../../redux/Auth/user.actions';
 import { addNewTransaction } from '../../redux/Logic/logic.actions';
 import { ThemeProvider } from '@mui/material/styles';
-
 import { getCustomTheme } from '../../config/theme';
 
 import {
@@ -429,7 +428,7 @@ function DepositModal(props) {
               DEPOSIT
             </Typography>
             <Button variant="text" color="error" onClick={closeModal}>
-              X
+            ×
             </Button>
           </Box>
 
@@ -877,15 +876,15 @@ function DepositModal(props) {
                 color="error"
                 onClick={paymentMethod === 'web3' ? send : createPaymentAndClose}
               >
-                {/* {paymentMethod === 'web3' ? 'Deposit' : 'I HAVE PAID'} */}
-                COMING SOON! (INVITE ONLY)
+                {paymentMethod === 'web3' ? 'Deposit' : 'I HAVE PAID'}
+
               </Button>
-              {/* 
+              
                 If you want a cancel button, uncomment below:
                 <Button variant="contained" color='error' onClick={closeModal} sx={{ ml: 2 }}>
                   CANCEL
                 </Button> 
-              */}
+             
             </Box>
           )}
         </Box>

@@ -101,6 +101,24 @@ export const reCreateRoom = room_id => async dispatch => {
   }
 };
 
+export const getGlobalChatLogs = () => async dispatch => {
+  try {
+    ;
+    const res = await axios.post('/game/getGlobalChatLogs');
+
+    if (res.data.success) {
+      dispatch({
+        type: SET_GLOBAL_CHAT,
+        payload: res.data.chatLogs
+      });
+    } else {
+      dispatch({ type: MSG_ERROR, payload: res.data.message });
+    }
+  } catch (err) {
+    dispatch({ type: MSG_ERROR, payload: err.message });
+  }
+};
+
 export const getSolToUsdPrice = (solAmount = null) => async (dispatch) => {
   try {
     const solPriceKey = 'solPrice';
@@ -198,10 +216,10 @@ export const bet = bet_info => async dispatch => {
         amount: res.data.newTransaction.amount
       };
     } else {
-      
+
       if (res.data.betResult === -100) {
         history.push('/');
-      dispatch({ type: MSG_WARNING, payload: 'THIS GAME HAS NOW ENDED' });
+        dispatch({ type: MSG_WARNING, payload: 'THIS GAME HAS NOW ENDED' });
 
         return {
           status: 'failed',
@@ -251,7 +269,7 @@ export const bet2 = bet_info => async dispatch => {
     } else {
       if (res.data.betResult === -100) {
         history.push('/');
-      dispatch({ type: MSG_WARNING, payload: 'THIS GAME HAS NOW ENDED' });
+        dispatch({ type: MSG_WARNING, payload: 'THIS GAME HAS NOW ENDED' });
 
         return {
           status: 'failed',
@@ -299,7 +317,7 @@ export const bet3 = bet_info => async dispatch => {
     } else {
       if (res.data.betResult === -100) {
         history.push('/');
-      dispatch({ type: MSG_WARNING, payload: 'THIS GAME HAS NOW ENDED' });
+        dispatch({ type: MSG_WARNING, payload: 'THIS GAME HAS NOW ENDED' });
 
         return {
           status: 'failed',
@@ -567,7 +585,7 @@ export const confirmTrade = data => async dispatch => {
     if (res.data.success) {
       dispatch({ type: MSG_SUCCESS, payload: "GREAAT SUCCESS!!" });
       dispatch({ type: TNX_COMPLETE });
-      
+
       return res.data;
     } else {
       return res.data;
@@ -666,7 +684,7 @@ export const getRoomList = search_condition => async dispatch => {
         console.error('Error parsing cached room list:', parseError);
         localStorage.removeItem('roomList'); // Clear invalid data
       }
-    } 
+    }
 
     if (roomList.length === 0) {
       const res = await axios.get('/game/rooms', { params: search_condition });
@@ -690,7 +708,7 @@ export const fetchMoreRooms = (search_condition) => async (dispatch) => {
     const res = await axios.get('/game/rooms', { params: search_condition });
     if (res.data.success) {
       const newRoomList = res.data.roomList;
-  
+
       localStorage.removeItem('roomList');
       localStorage.setItem('roomList', JSON.stringify(newRoomList));
 
@@ -930,8 +948,6 @@ export const checkPlayerAttachment = (room_id) => async dispatch => {
       } else {
         dispatch({ type: ATTACHED, payload: false });
       }
-    } else {
-      dispatch({ type: MSG_ERROR, payload: 'Failed to check attachment' });
     }
   } catch (err) {
     console.error("API Error:", err);
@@ -1063,10 +1079,7 @@ export const getMyGames = (search_condition, callback) => async dispatch => {
 export const endGame = (room_id, callback) => async dispatch => {
   try {
     dispatch({ type: START_LOADING });
-    console.log("called");
-
     const res = await axios.post('/game/end_game', { room_id });
-    console.log("res", res.data);
 
     if (res.data.success) {
       const storedData = localStorage.getItem('myGamesData');
@@ -1158,7 +1171,7 @@ export const addNewCandle = (newCandle) => {
   };
 };
 
-export const getTransactionCandles = ({ roomId, timeFrame }) => async (dispatch) => { 
+export const getTransactionCandles = ({ roomId, timeFrame }) => async (dispatch) => {
   try {
     const res = await axios.get(`/game/candles/${roomId}`, {
       params: { timeFrame }
@@ -1291,20 +1304,7 @@ export const getChatRoomInfo = user_id => async dispatch => {
   }
 };
 
-const handleGameStart = async (dispatch, data, endpoint) => {
-  dispatch({ type: START_LOADING });
-  try {
-    const res = await axios.post(endpoint, data);
-    dispatch({ type: END_LOADING });
-    if (res.data.success) {
-      dispatch({ type: SET_BALANCE, payload: res.data.balance });
-      return true;
-    }
-    return false;
-  } catch (err) {
-    return false;
-  }
-};
+
 
 export const updateBankroll = bankroll => {
   return {
@@ -1327,12 +1327,23 @@ export const updateBankrollQs = bankroll => {
   };
 };
 
-
-export const setRoomList = newRoom => dispatch => {
+export const setRoomList = (newRoom) => (dispatch) => {
   try {
+    // Get existing list (if any) from localStorage
     let roomList = JSON.parse(localStorage.getItem('roomList')) || [];
-    roomList = [newRoom, ...roomList];
+
+    if (Array.isArray(newRoom)) {
+      // If newRoom is an array, just replace the entire list
+      roomList = newRoom;
+    } else {
+      // Otherwise, newRoom is a single item — prepend it to the existing list
+      roomList = [newRoom, ...roomList];
+    }
+
+    // Update localStorage
     localStorage.setItem('roomList', JSON.stringify(roomList));
+
+    // Dispatch the updated list to the store
     dispatch({
       type: ROOMS_LOADED,
       payload: { roomList, page: 1 },
@@ -1390,27 +1401,53 @@ const getNow = () => {
   )}:${minutes.substr(-2)}:${seconds.substr(-2)}.000Z`;
 };
 
-export const addChatLog = chatLog => (dispatch, getState) => {
+export const addChatLog = (chatLog) => (dispatch, getState) => {
   const myId = getState().auth.user._id;
-  const myHistory = getState().logic.myHistory || [];
+  const myHistory = getState().logic.myHistory || {};
+
+  // "otherId" is the other person's user ID in this chat
+  const otherId = myId === chatLog.from ? chatLog.to : chatLog.from;
+
+  // The ID of the chat the user currently has open
+  const currentChat = getState().logic.chatRoomInfo?.user_id;
+
+  // Are we receiving a message (not sending)
+  const isReceivingUser = (myId === chatLog.to);
+  // Is that chat currently open
+  const isChatOpen = (currentChat === otherId);
 
   let newHistory = JSON.parse(JSON.stringify(myHistory));
 
-  const otherId = myId === chatLog.from ? chatLog.to : chatLog.from;
+  if (isReceivingUser && !isChatOpen) {
+    // if I'm receiving this and I do NOT have that chat open => increment unread
+    newHistory[otherId] = {
+      ...newHistory[otherId],
+      unread_message_count:
+        1 + (newHistory[otherId]?.unread_message_count || 0),
+      _id: otherId,
+      message: chatLog.message,
+      is_read: chatLog.is_read,
+      created_at_str: chatLog.created_at,
+      updated_at: getNow(),
+    };
+  } else {
+    // either I'm sending it, or I'm receiving it but the chat is open => mark as read
+    chatLog.is_read = true;
+    newHistory[otherId] = {
+      ...newHistory[otherId],
+      unread_message_count: newHistory[otherId]?.unread_message_count || 0,
+      _id: otherId,
+      message: chatLog.message,
+      is_read: true,
+      created_at_str: chatLog.created_at,
+      updated_at: getNow(),
+    };
+  }
 
-  newHistory[otherId] = {
-    ...newHistory[otherId],
-    unread_message_count:
-      (newHistory[otherId] ? newHistory[otherId].unread_message_count : 0) + 1,
-    _id: otherId,
-    message: chatLog.message,
-    is_read: chatLog.is_read,
-    created_at_str: chatLog.created_at,
-    updated_at: getNow()
-  };
-
+  // Update "myHistory"
   dispatch({ type: MY_HISTORY_LOADED, payload: newHistory });
 
+  // If I'm currently in that chat, append to chat logs
   let chatRoomInfo = getState().logic.chatRoomInfo;
   if (chatRoomInfo && chatRoomInfo.user_id === otherId) {
     chatRoomInfo.chatLogs = chatRoomInfo.chatLogs
@@ -1418,9 +1455,10 @@ export const addChatLog = chatLog => (dispatch, getState) => {
       : [chatLog];
     dispatch({ type: SET_CHAT_ROOM_INFO, payload: chatRoomInfo });
   } else {
-    console.error('Chat room info not found or user ID does not match');
+    console.error('Chat room not open or user ID mismatch:', otherId);
   }
 };
+
 export function updateBetResult(betResult) {
   return {
     type: 'UPDATE_BET_RESULT',

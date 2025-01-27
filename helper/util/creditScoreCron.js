@@ -76,28 +76,28 @@ async function checkOutstandingLoans(io) {
           }
         }
 
-        const message = 'Daily debt check complete, credit scores have updated.';
-        const messageType = 'text';
+        // const message = 'Daily debt check complete, credit scores have updated.';
+        // const messageType = 'text';
 
-        const avatar = system.avatar || '';
-        const accessory = system.accessory || '';
-        const rank = system.totalWagered || 0;
+        // const avatar = system.avatar || '';
+        // const accessory = system.accessory || '';
+        // const rank = system.totalWagered || 0;
 
-        const replyTo = null;
+        // const replyTo = null;
 
-        const data = {
-          sender: system.username,
-          senderId: senderId,
-          message: message,
-          messageType: messageType,
-          avatar: avatar,
-          accessory: accessory,
-          rank: rank,
-          replyTo: replyTo,
-        };
-        if (io) {
-          socketController.globalChatSend(socketio, data);
-        }
+        // const data = {
+        //   sender: system.username,
+        //   senderId: senderId,
+        //   message: message,
+        //   messageType: messageType,
+        //   avatar: avatar,
+        //   accessory: accessory,
+        //   rank: rank,
+        //   replyTo: replyTo,
+        // };
+        // if (io) {
+        //   socketController.globalChatSend(socketio, data);
+        // }
         systemSetting.updated_at = new Date();
         await systemSetting.save();
       }

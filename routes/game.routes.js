@@ -1342,7 +1342,7 @@ router.post('/rooms', auth, async (req, res) => {
         message: 'Exceeded Daily Withdrawal Limit. Unable to Create a room. Please try again tomorrow! (During Launch Phase only)',
       });
     }
-    
+
     console.log("game_type", game_type)
     const gameType = await GameType.findOne({ game_type_id: parseInt(game_type) });
     console.log("gameType", gameType)
@@ -2451,37 +2451,22 @@ router.post('/get_chat_room_info', auth, async (req, res) => {
   try {
     const user = await User.findOne({ _id: new ObjectId(req.body.user_id) });
 
-    await Message.updateMany(
-      {
-        is_read: false,
-        from: new ObjectId(req.body.user_id),
-        to: new ObjectId(req.user._id)
-      },
-      { $set: { is_read: true } },
-      (err, writeResult) => {
-        console.log('set messages as read (open chat room)', err);
-      }
-    );
-
+    // Fetch chat logs
     const chatLogs = await Message.find({
       $or: [
-        {
-          from: new ObjectId(req.body.user_id),
-          to: new ObjectId(req.user._id)
-        },
+        { from: new ObjectId(req.body.user_id), to: new ObjectId(req.user._id) },
         { from: new ObjectId(req.user._id), to: new ObjectId(req.body.user_id) }
       ]
     }).sort({ created_at: 'asc' });
 
     let messages = [];
     for (const chatLog of chatLogs) {
-      const message = {
+      messages.push({
         from: chatLog.from,
         to: chatLog.to,
         message: chatLog.message,
-        created_at: moment(chatLog.created_at).format('LLL')
-      };
-      messages.push(message);
+        created_at: moment().format('MM-DD-YYYY HH:mm:ss')
+      });
     }
 
     res.json({
@@ -2496,6 +2481,7 @@ router.post('/get_chat_room_info', auth, async (req, res) => {
       }
     });
   } catch (err) {
+    console.error(err);
     res.json({
       success: false,
       message: err
@@ -2517,6 +2503,76 @@ const getTimeBucket = (timeRange) => {
       return 1;
   }
 };
+
+router.post('/getGlobalChatLogs', auth, async (req, res) => {
+  try {
+    // 1) Fetch last 15 messages from Chat, sorted descending
+    const results = await Chat.find({})
+      .sort({ created_at: -1 })
+      .limit(15)
+      .populate({
+        path: 'sender',
+        model: User,
+        select: 'username avatar accessory totalWagered'
+      })
+      .populate({
+        path: 'replyTo',
+        model: 'Chat',
+        populate: {
+          path: 'sender',
+          model: User,
+          select: 'username avatar accessory totalWagered'
+        }
+      })
+      .lean();
+
+    // 2) Transform the results (like in your socket code)
+    const transformedResults = results.map(({ created_at, message, messageType, messageContent, sender, replyTo }) => {
+      const extractedReplyTo = replyTo && replyTo.length > 0 ? replyTo[0] : null;
+      const transformedReplyTo = extractedReplyTo
+        ? {
+          sender: extractedReplyTo.sender?.username ?? '',
+          senderId: extractedReplyTo.sender?._id ?? '',
+          avatar: extractedReplyTo.sender?.avatar ?? '',
+          rank: extractedReplyTo.sender?.totalWagered ?? '',
+          accessory: extractedReplyTo.sender?.accessory ?? '',
+          message: extractedReplyTo.message,
+          messageType: extractedReplyTo.messageType,
+          time: moment(extractedReplyTo.created_at).format('hh:mm')
+        }
+        : null;
+
+      return {
+        sender: sender?.username ?? '',
+        senderId: sender?._id ?? '',
+        message,
+        messageType,
+        messageContent,
+        avatar: sender?.avatar ?? '',
+        accessory: sender?.accessory ?? '',
+        replyTo: transformedReplyTo,
+        rank: sender?.totalWagered ?? '',
+        time: moment(created_at).format('hh:mm')
+      };
+    });
+
+    // 3) Sort so oldest -> newest if needed
+    const sortedResults = transformedResults.sort((a, b) =>
+      a.created_at > b.created_at ? 1 : -1
+    );
+    // 4) Return to client
+    return res.json({
+      success: true,
+      chatLogs: sortedResults
+    });
+  } catch (error) {
+    console.error('Error fetching global chat:', error);
+    return res.json({
+      success: false,
+      message: 'Error fetching global chat'
+    });
+  }
+});
 
 router.get('/candles/:room', async (req, res) => {
   try {

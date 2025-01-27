@@ -370,7 +370,7 @@ function WithdrawModal(props) {
               WITHDRAW
             </Typography>
             <Button variant="text" color="error" onClick={closeModal}>
-              X
+            ×
             </Button>
           </Box>
 
