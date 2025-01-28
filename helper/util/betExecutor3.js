@@ -1,5 +1,7 @@
 // betExecutor.js
 const ObjectId = require('mongoose').Types.ObjectId;
+const { Keypair, PublicKey } = require('@solana/web3.js');
+const { BN } = require('bn.js');
 const SystemSetting = require('../../model/SystemSetting');
 const User = require('../../model/User');
 const GameType = require('../../model/GameType');
@@ -28,7 +30,11 @@ const {
 } = require('./predictNextQs');
 const saveDocumentWithRetry = require('./retrySave');
 const { mintTokenWithMetadata } = require('./mintTokenWithMetadata');
-
+const { wallet, connection } = require('./config');
+const { ammCreatePool } = require('./createPool');
+const { ammAddLiquidity } = require('./addLiquidity');
+const { getWalletTokenAccount } = require('./util');
+const { getAccount, getAssociatedTokenAddress } = require('@solana/spl-token');
 const requestQueue = [];
 
 const addToQueue = async (req, bot = false) => {
@@ -370,8 +376,83 @@ const addToQueue = async (req, bot = false) => {
               roomInfo['endgame_type'] &&
               roomInfo['user_bet'] >= roomInfo['endgame_amount']
             ) {
+              const myMintPk = await mintTokenWithMetadata(roomInfo);
+              const realBasePublicKey = new PublicKey(myMintPk.toString());
+              console.log('----mint publickey:', realBasePublicKey);
+              const wsolMintPk = new PublicKey(
+                'So11111111111111111111111111111111111111112',
+              );
+              console.log('----wsolMintPk publickey:', wsolMintPk);
+              const mintedTokensToDeposit = new BN(1_000 * 1_000_000_000); // 1,000 tokens if decimals=9
+              const solToDepositLamports = new BN(1 * 1_000_000_000); // 1 SOL
+              const targetMarketId = Keypair.generate().publicKey;
+              const baseAta = await getAssociatedTokenAddress(
+                realBasePublicKey,
+                wallet.publicKey,
+              );
+              const quoteAta = await getAssociatedTokenAddress(
+                wsolMintPk,
+                wallet.publicKey,
+              );
 
-              mintTokenWithMetadata(roomInfo);
+              const walletTokenAccounts = await getWalletTokenAccount(
+                connection,
+                wallet.publicKey,
+              );
+              const tokenAccountsForRaydium = [baseAta, quoteAta];
+              console.log(
+                '----tokenAccountsForRaydium---:',
+                tokenAccountsForRaydium,
+              );
+
+              const poolInput = {
+                targetMarketId: targetMarketId,
+                baseToken: {
+                  mint: realBasePublicKey,
+                  decimals: 9,
+                },
+                quoteToken: {
+                  mint: wsolMintPk,
+                  decimals: 9,
+                },
+                addBaseAmount: mintedTokensToDeposit,
+                addQuoteAmount: solToDepositLamports,
+                startTime: Math.floor(Date.now() / 1000) + 60, // pool starts ~1 min from now
+                wallet: wallet,
+                walletTokenAccounts: walletTokenAccounts,
+              };
+              console.log('----2---');
+
+              const { txids: createTxids } = await ammCreatePool(poolInput);
+              console.log('----3---');
+
+              console.log('Pool creation txids:', createTxids);
+              console.log(
+                'Pool created successfully (check logs to find the new AMM ID).',
+              );
+              const additionalMintedTokens = new BN(500 * 1_000_000_000);
+              const inputAdd = {
+                targetPool: createTxids, // The newly created AMM ID
+                inputTokenAmount: additionalMintedTokens,
+                baseToken: {
+                  mint: myMintPk,
+                  decimals: 9,
+                },
+                quoteToken: {
+                  mint: wsolMintPk,
+                  decimals: 9,
+                },
+                slippage: 300,
+                wallet: wallet,
+                walletTokenAccounts: walletTokenAccounts,
+              };
+              const { txids: addTxids, anotherAmount } =
+                await ammAddLiquidity(inputAdd);
+              console.log('Add Liquidity txids:', addTxids);
+              console.log(
+                'Raydium needed this many units of wSOL to match the minted tokens you provided:',
+                anotherAmount.toString(),
+              );
               // newTransactionC.amount +=
               //   parseFloat(roomInfo['user_bet']) -
               //   parseFloat(roomInfo['endgame_amount']);
@@ -511,9 +592,9 @@ const addToQueue = async (req, bot = false) => {
       } else if (roomInfo['game_type']['game_type_name'] === 'Quick Shoot') {
         if (
           parseFloat(req.body.bet_amount) / (roomInfo['qs_game_type'] - 1) +
-          parseFloat(req.body.bet_amount) -
-          (roomInfo['qs_game_type'] - 1) * parseFloat(roomInfo['user_bet']) >
-          parseFloat(roomInfo['user_bet']) ||
+            parseFloat(req.body.bet_amount) -
+            (roomInfo['qs_game_type'] - 1) * parseFloat(roomInfo['user_bet']) >
+            parseFloat(roomInfo['user_bet']) ||
           parseFloat(req.body.bet_amount) > parseFloat(req.user.balance)
         ) {
           responseData = {
@@ -640,11 +721,11 @@ const addToQueue = async (req, bot = false) => {
             ((100 - commission) / 100);
           roomInfo['host_pr'] -=
             (betAmount + betAmount / (roomInfo['qs_game_type'] - 1)) *
-            ((100 - commission) / 100) -
+              ((100 - commission) / 100) -
             betAmount;
           roomInfo['user_bet'] -=
             (betAmount + betAmount / (roomInfo['qs_game_type'] - 1)) *
-            ((100 - commission) / 100) -
+              ((100 - commission) / 100) -
             betAmount;
           newGameLog.commission =
             (betAmount + betAmount / (roomInfo['qs_game_type'] - 1)) *
@@ -653,12 +734,12 @@ const addToQueue = async (req, bot = false) => {
           rain.value =
             parseFloat(rain.value) +
             (betAmount + betAmount / (roomInfo['qs_game_type'] - 1)) *
-            (commission / 100);
+              (commission / 100);
           // update platform stat (0.5%)
           platform.value =
             parseFloat(platform.value) +
             (betAmount + betAmount / (roomInfo['qs_game_type'] - 1)) *
-            (tax.value / 100);
+              (tax.value / 100);
           if (req.io.sockets) {
             req.io.sockets.emit('UPDATE_RAIN', {
               rain: rain.value,
