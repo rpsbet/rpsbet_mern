@@ -124,27 +124,6 @@ function BonusModal(props) {
     overflowY: 'auto'
   };
 
-  const wheelStyle = {
-    transform: `rotate(${rotation}deg)`,
-    transition: spinning ? 'transform 2s ease-out' : 'none',
-    overflow: 'hidden',
-    position: 'relative',
-    margin: '0 auto',
-    width: '200px',
-    height: '200px'
-  };
-
-  const numberStyle = (index) => {
-    const rotationDeg = (index / numbers.length) * 360;
-    return {
-      position: 'absolute',
-      left: '50%',
-      top: '50%',
-      transform: `rotate(${rotationDeg}deg) translate(${translateDistance}) rotate(-${rotationDeg}deg)`,
-      transformOrigin: 'center center'
-    };
-  };
-
   // ------------------ RENDER ------------------
   return (
     <Modal

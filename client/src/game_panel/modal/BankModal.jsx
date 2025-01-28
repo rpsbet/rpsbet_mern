@@ -17,6 +17,10 @@ import BankPage from '../../admin_panel/app/ProductPages/ProductSerchPage/BankPa
 import MyLoansModal from '../modal/MyLoansModal';
 import { warningMsgBar, infoMsgBar } from '../../redux/Notification/notification.actions';
 import { Diag } from '@tensorflow/tfjs';
+import { ThemeProvider } from '@mui/material/styles';
+import { getCustomTheme } from '../../config/theme';
+
+
 
 function BankModal({ modalIsOpen, closeModal, isDarkMode, remainingLoans }) {
   const [showMyLoansModal, setShowMyLoansModal] = useState(false);
@@ -25,9 +29,10 @@ function BankModal({ modalIsOpen, closeModal, isDarkMode, remainingLoans }) {
 
   const handleToggleHelp = () => setShowHelp((prev) => !prev);
   const handleToggleInvert = () => setInvertFilter((prev) => !prev);
+  const theme = getCustomTheme(isDarkMode ? 'dark' : 'light');
 
   return (
-    <>
+    <ThemeProvider theme={theme}>
       {/* MAIN BANK MODAL */}
       <Modal
         open={modalIsOpen}
@@ -97,6 +102,7 @@ function BankModal({ modalIsOpen, closeModal, isDarkMode, remainingLoans }) {
               variant="contained"
               color='error'
               onClick={() => setShowMyLoansModal(true)}
+              fullWidth
               startIcon={<AttachMoney />}
             >
               Manage Your Loans
@@ -298,7 +304,7 @@ function BankModal({ modalIsOpen, closeModal, isDarkMode, remainingLoans }) {
           </Box>
         </DialogContent>
       </Dialog>
-    </>
+    </ThemeProvider>
   );
 }
 

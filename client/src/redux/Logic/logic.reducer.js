@@ -14,6 +14,8 @@ import {
   ADD_NEW_CANDLE,
   ROOMS_LOADED,
   SET_QBOT_STATUSES,
+  PREPEND_OLDER_CHAT_MESSAGES,
+  SET_FETCHING_OLDER_MESSAGES,
   BET_SUCCESS,
   SET_TOKEN_PRICE,
   SET_SOL_TO_USD_PRICE,
@@ -136,8 +138,10 @@ const initialState = {
     rank: 0,
     accessory: '',
     username: '',
-    chatLogs: []
+    chatLogs: [],
+    hasMore: true,
   },
+  fetchingOlder: false,
   notificationsRoomInfo: {
     user_id: '',
     avatar: '',
@@ -178,6 +182,24 @@ export default function (state = initialState, action) {
         };
       }
       return state;
+    case SET_FETCHING_OLDER_MESSAGES:
+      return {
+        ...state,
+        fetchingOlder: action.payload
+      };
+
+    case PREPEND_OLDER_CHAT_MESSAGES: {
+      const { olderBatch, hasMore } = action.payload;
+      return {
+        ...state,
+        chatRoomInfo: {
+          ...state.chatRoomInfo,
+          // Prepend older messages
+          chatLogs: [...olderBatch, ...state.chatRoomInfo.chatLogs],
+          hasMore: hasMore
+        }
+      };
+    }
 
     case SET_HIGHLIGHTED_ROOMS:
       return {
@@ -383,7 +405,6 @@ export default function (state = initialState, action) {
         myChat: payload
       };
     case NOTIFICATIONS_LOADED:
-      console.log(payload)
       return {
         ...state,
         notifications: payload

@@ -62,12 +62,13 @@ function CoHostModal({
 
   // ---- EFFECTS ----
   useEffect(() => {
-    // Fetch candlestick data if user has joined and it's not just an input-only view
-    // if (selectedRow?._id && has_joined && !input_only) {
+    if (selectedRow?._id && has_joined && !input_only) {
+      // Only dispatch when there’s a valid _id, the user joined,
+      // and you are not in input-only mode.
       dispatch(getTransactionCandles({ roomId: selectedRow._id, timeFrame }));
-    // }
+    }
   }, [dispatch, selectedRow?._id, timeFrame, has_joined, input_only]);
-
+  
   useEffect(() => {
     // Listen for real-time candle updates via socket
     if (selectedRow?._id && socket) {

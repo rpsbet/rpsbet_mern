@@ -25,6 +25,7 @@ export const acQueryMyLoan = (pagination, page, sortCriteria, loanType) => async
   dispatch,
   getState
 ) => {
+  console.log("calkledede")
   dispatch({ type: MY_LOAN_QUERY, payload: [] });
   dispatch({ type: LOADING_LOAN_TABLE, payload: true });
   let payload = {
@@ -39,6 +40,7 @@ export const acQueryMyLoan = (pagination, page, sortCriteria, loanType) => async
   body.page = getState().loanReducer.page;
   try {
     const { data } = await api.get('/loan/my-loans', { params: payload });
+    console.log("my loans", data)
     if (data.success) {
       dispatch({ type: MY_LOAN_QUERY, payload: data.loans });
       dispatch({ type: MY_ADD_TOTAL, payload: data });
@@ -89,6 +91,7 @@ export const previousLoans = () => async (dispatch, getState) => {
     const { data } = await api.get('/loan/previous-loans');
 
     if (data.success) {
+      console.log("previousLoans", data)
       dispatch({ type: 'PREVIOUS_LOAN_QUERY', payload: data.data });
     } else {
       dispatch({ type: 'MSG_ERROR', payload: "Failed to fetch previous loans." });
@@ -163,6 +166,7 @@ export const createLoan = body => async (dispatch, getState) => {
     dispatch({ type: MSG_WARNING, payload: error });
   }
 };
+
 export const createAndLend = body => async (dispatch) => {
   try {
     const { data } = await api.post('loan/create-and-lend', body);

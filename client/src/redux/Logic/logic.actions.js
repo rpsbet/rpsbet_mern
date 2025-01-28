@@ -15,6 +15,8 @@ import {
   SET_TOKEN_PRICE,
   SET_SOL_TO_USD_PRICE,
   COMMENT_CREATED,
+  PREPEND_OLDER_CHAT_MESSAGES,
+  SET_FETCHING_OLDER_MESSAGES,
   TOP_WINS,
   ADD_NEW_CANDLE,
   SET_QBOT_STATUSES,
@@ -1172,11 +1174,13 @@ export const addNewCandle = (newCandle) => {
 };
 
 export const getTransactionCandles = ({ roomId, timeFrame }) => async (dispatch) => {
+  console.log("roomId, timeFrame", roomId, timeFrame)
   try {
     const res = await axios.get(`/game/candles/${roomId}`, {
       params: { timeFrame }
     });
     if (res.data.success) {
+      console.log("res.data", res.data)
       dispatch({
         type: 'TRANSACTION_CANDLES_LOADED',
         payload: res.data || [],
@@ -1247,6 +1251,22 @@ export const updateQbot = (userId, isActive) => async dispatch => {
   }
 };
 
+// logic.actions.js
+export const markChatAsRead = (fromId) => async dispatch => {
+  try {
+    // Call the backend route
+    await axios.post('/game/mark_chat_as_read', { fromId });
+
+    // Option A: Just re-fetch all chats so the unread counts update
+    dispatch(getMyChat());
+    
+    // Option B: Or manually adjust store to set that user's unread_message_count = 0
+    // (If you prefer not to re-fetch.)
+  } catch (err) {
+    console.error('Error in markChatAsRead:', err);
+  }
+};
+
 export const getMyChat = () => async dispatch => {
   try {
     dispatch({ type: START_LOADING });
@@ -1288,12 +1308,64 @@ export const readNotifications = () => async dispatch => {
   }
 };
 
-export const getChatRoomInfo = user_id => async dispatch => {
+export const loadOlderChatMessages = (userId) => async (dispatch, getState) => {
+  try {
+    // Read how many messages are currently in the Redux store
+    const { chatLogs, hasMore } = getState().logic.chatRoomInfo || {};
+    if (!hasMore) return; // If there's no more data, bail early
+
+    const currentCount = (chatLogs || []).length;
+
+    // Indicate we’re loading older messages
+    dispatch({ type: SET_FETCHING_OLDER_MESSAGES, payload: true });
+
+    // Call server with the offset = current number of messages
+    const res = await axios.post('/game/get_chat_room_info', {
+      user_id: userId,
+      offset: currentCount,
+      limit: 20
+    });
+
+    if (res.data.success) {
+      const olderBatch = res.data.chatRoomInfo.chatLogs; 
+      const olderHasMore = res.data.chatRoomInfo.hasMore;
+
+      // Dispatch the older messages to prepend them
+      dispatch({
+        type: PREPEND_OLDER_CHAT_MESSAGES,
+        payload: {
+          olderBatch,
+          hasMore: olderHasMore,
+        },
+      });
+    }
+  } catch (err) {
+    console.error('Error loading older messages:', err);
+  } finally {
+    // Stop the spinner
+    dispatch({ type: SET_FETCHING_OLDER_MESSAGES, payload: false });
+  }
+};
+
+export const getChatRoomInfo = (user_id, offset = 0, limit = 20) => async dispatch => {
   try {
     dispatch({ type: START_LOADING });
-    const res = await axios.post('/game/get_chat_room_info', { user_id });
+
+    const res = await axios.post('/game/get_chat_room_info', {
+      user_id,
+      offset,
+      limit
+    });
+
     if (res.data.success) {
-      dispatch({ type: SET_CHAT_ROOM_INFO, payload: res.data.chatRoomInfo });
+      dispatch({
+        type: SET_CHAT_ROOM_INFO,
+        payload: {
+          ...res.data.chatRoomInfo,
+          offset,
+          limit,
+        }
+      });
       dispatch({ type: END_LOADING });
     } else {
       dispatch({ type: MSG_GAMETYPE_LOAD_FAILED });
@@ -1303,8 +1375,6 @@ export const getChatRoomInfo = user_id => async dispatch => {
     dispatch({ type: MSG_GAMETYPE_LOAD_FAILED, payload: err });
   }
 };
-
-
 
 export const updateBankroll = bankroll => {
   return {
@@ -1403,59 +1473,13 @@ const getNow = () => {
 
 export const addChatLog = (chatLog) => (dispatch, getState) => {
   const myId = getState().auth.user._id;
-  const myHistory = getState().logic.myHistory || {};
-
-  // "otherId" is the other person's user ID in this chat
   const otherId = myId === chatLog.from ? chatLog.to : chatLog.from;
-
-  // The ID of the chat the user currently has open
-  const currentChat = getState().logic.chatRoomInfo?.user_id;
-
-  // Are we receiving a message (not sending)
-  const isReceivingUser = (myId === chatLog.to);
-  // Is that chat currently open
-  const isChatOpen = (currentChat === otherId);
-
-  let newHistory = JSON.parse(JSON.stringify(myHistory));
-
-  if (isReceivingUser && !isChatOpen) {
-    // if I'm receiving this and I do NOT have that chat open => increment unread
-    newHistory[otherId] = {
-      ...newHistory[otherId],
-      unread_message_count:
-        1 + (newHistory[otherId]?.unread_message_count || 0),
-      _id: otherId,
-      message: chatLog.message,
-      is_read: chatLog.is_read,
-      created_at_str: chatLog.created_at,
-      updated_at: getNow(),
-    };
-  } else {
-    // either I'm sending it, or I'm receiving it but the chat is open => mark as read
-    chatLog.is_read = true;
-    newHistory[otherId] = {
-      ...newHistory[otherId],
-      unread_message_count: newHistory[otherId]?.unread_message_count || 0,
-      _id: otherId,
-      message: chatLog.message,
-      is_read: true,
-      created_at_str: chatLog.created_at,
-      updated_at: getNow(),
-    };
-  }
-
-  // Update "myHistory"
-  dispatch({ type: MY_HISTORY_LOADED, payload: newHistory });
-
-  // If I'm currently in that chat, append to chat logs
   let chatRoomInfo = getState().logic.chatRoomInfo;
   if (chatRoomInfo && chatRoomInfo.user_id === otherId) {
     chatRoomInfo.chatLogs = chatRoomInfo.chatLogs
       ? [...chatRoomInfo.chatLogs, chatLog]
       : [chatLog];
     dispatch({ type: SET_CHAT_ROOM_INFO, payload: chatRoomInfo });
-  } else {
-    console.error('Chat room not open or user ID mismatch:', otherId);
   }
 };
 

@@ -2293,6 +2293,31 @@ router.get('/my_chat', auth, async (req, res) => {
   }
 });
 
+// routes/game.js
+
+router.post('/mark_chat_as_read', auth, async (req, res) => {
+  try {
+    // Mark all messages from "req.body.fromId" to the current user (req.user._id) as read
+    await Message.updateMany(
+      {
+        from: new ObjectId(req.body.fromId),
+        to: req.user._id,
+        is_read: false
+      },
+      { $set: { is_read: true } }
+    );
+
+    // Return success
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.json({
+      success: false,
+      message: err.toString()
+    });
+  }
+});
+
 router.patch('/qbotStatus', auth, async (req, res) => {
   try {
     const { userId, isActive } = req.body;
@@ -2449,25 +2474,43 @@ router.patch('/read_notifications', auth, async (req, res) => {
 
 router.post('/get_chat_room_info', auth, async (req, res) => {
   try {
-    const user = await User.findOne({ _id: new ObjectId(req.body.user_id) });
+    const { user_id, offset = 0, limit = 20 } = req.body;
 
-    // Fetch chat logs
-    const chatLogs = await Message.find({
+    const user = await User.findOne({ _id: new ObjectId(user_id) });
+
+    // 1) Query messages sorted by newest first:
+    let chatLogs = await Message.find({
       $or: [
-        { from: new ObjectId(req.body.user_id), to: new ObjectId(req.user._id) },
-        { from: new ObjectId(req.user._id), to: new ObjectId(req.body.user_id) }
+        { from: new ObjectId(user_id), to: new ObjectId(req.user._id) },
+        { from: new ObjectId(req.user._id), to: new ObjectId(user_id) }
       ]
-    }).sort({ created_at: 'asc' });
+    })
+      .sort({ created_at: -1 })    // newest -> oldest
+      .skip(Number(offset))        // how many to skip
+      .limit(Number(limit));       // how many to retrieve
 
-    let messages = [];
-    for (const chatLog of chatLogs) {
-      messages.push({
-        from: chatLog.from,
-        to: chatLog.to,
-        message: chatLog.message,
-        created_at: moment().format('MM-DD-YYYY HH:mm:ss')
-      });
-    }
+    // 2) Reverse so we end up with oldest -> newest in the final array
+    //    (because we sorted descending above)
+    chatLogs = chatLogs.reverse();
+
+    // 3) Transform them for the response
+    const messages = chatLogs.map(chatLog => ({
+      from: chatLog.from,
+      to: chatLog.to,
+      message: chatLog.message,
+      created_at: moment(chatLog.created_at).format('MM-DD-YYYY HH:mm:ss')
+    }));
+
+    // Check if there are more older messages
+    // We do that by counting total docs (or using .countDocuments())
+    const totalCount = await Message.countDocuments({
+      $or: [
+        { from: new ObjectId(user_id), to: new ObjectId(req.user._id) },
+        { from: new ObjectId(req.user._id), to: new ObjectId(user_id) }
+      ]
+    });
+    // If offset+limit >= totalCount, there are no more older messages
+    const hasMore = offset + limit < totalCount;
 
     res.json({
       success: true,
@@ -2477,8 +2520,9 @@ router.post('/get_chat_room_info', auth, async (req, res) => {
         avatar: user.avatar,
         rank: user.totalWagered,
         username: user.username,
-        chatLogs: messages
-      }
+        chatLogs: messages,
+        hasMore,
+      },
     });
   } catch (err) {
     console.error(err);

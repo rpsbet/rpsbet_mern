@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { connect } from 'react-redux';
 import history from '../../redux/history';
-import { setChatRoomInfo, getMyChat } from '../../redux/Logic/logic.actions';
+import { setChatRoomInfo, getMyChat, markChatAsRead } from '../../redux/Logic/logic.actions';
 import { toggleDrawer } from '../../redux/Auth/user.actions';
 
 import Avatar from '../../components/Avatar';
@@ -27,6 +27,8 @@ function MyChat(props) {
 		getMyChat,
 		setChatRoomInfo,
 		highlightChatId,
+		markChatAsRead,
+		unreadMessageCount
 	} = props;
 
 	// ------------------ LOCAL STATE ------------------
@@ -39,6 +41,12 @@ function MyChat(props) {
 		getMyChat();
 		// eslint-disable-next-line
 	}, []);
+
+	useEffect(() => {
+		if (unreadMessageCount !== undefined && unreadMessageCount !== null) {
+		  getMyChat();
+		}
+	  }, [unreadMessageCount, getMyChat]);
 
 	useEffect(() => {
 		setMyChat(myChatFromProps);
@@ -63,7 +71,7 @@ function MyChat(props) {
 			}
 
 			setActiveChatId(id);
-
+			markChatAsRead(id);
 			// Navigate to /chat/:id
 			history.push('/chat/' + id);
 		},
@@ -273,13 +281,16 @@ function MyChat(props) {
 const mapStateToProps = (state) => ({
 	isDarkMode: state.auth.isDarkMode,
 	myChat: state.logic.myChat,
-	loading: state.logic.isActiveLoadingOverlay
+	loading: state.logic.isActiveLoadingOverlay,
+	unreadMessageCount: state.auth.unreadMessageCount,
+
 });
 
 const mapDispatchToProps = {
 	setChatRoomInfo,
 	getMyChat,
-	toggleDrawer
+	toggleDrawer,
+	markChatAsRead
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(MyChat);

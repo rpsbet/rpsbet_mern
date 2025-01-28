@@ -141,7 +141,6 @@ function MyProductTable(props) {
 
   // MUI theme
   const theme = getCustomTheme(isDarkMode ? 'dark' : 'light');
-console.log("data in actual product table", data)
   // -------------- Effects --------------
   // On mount
   useEffect(() => {

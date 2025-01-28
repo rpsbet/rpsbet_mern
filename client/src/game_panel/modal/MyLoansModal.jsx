@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { connect } from 'react-redux';
 import Lottie from 'react-lottie';
 import {
@@ -103,6 +103,13 @@ const MyLoansModal = (props) => {
   const [loanPeriod, setLoanPeriod] = useState('');
   const [apy, setApy] = useState('');
   const [productCreateModalIsOpen, setProductCreateModalIsOpen] = useState(false);
+
+  useEffect(() => {
+    if (modalIsOpen) {
+      console.log('[MyLoansModal] Modal opened -> calling acQueryMyLoan...');
+      acQueryMyLoan(30, 1, 'loan_amount', '');
+    }
+  }, [modalIsOpen, acQueryMyLoan]);
 
   // ------------------ HANDLERS ------------------
   const openProductCreateModal = useCallback(() => {

@@ -44,7 +44,6 @@ import {
   getGameTypeList,
   updateUserStrategy,
   getRpsBetItems,
-  getQbot,
   getQsBetItems,
   getStrategies,
   attachPlayerToRoom,
@@ -129,7 +128,6 @@ function JoinGame(props) {
     updateUserStrategy,
     addNewTransaction,
     coHost: coHostAction,
-    getQbot,
     getRoomList: getRoomListAction,
     getRoomStatisticsData: getRoomStatisticsDataAction,
     getAttachedRooms,
@@ -251,7 +249,6 @@ function JoinGame(props) {
   useEffect(() => {
     setLocalRoomInfo(roomInfo);
     setBankroll(roomInfo.user_bet);
-    const qBotStatus = getQbot(roomInfo.creator_id);
     if (isMountedRef.current && attached) {
       setBetting(true);
       // isQbot => not explicitly stored in original state? 
@@ -1231,7 +1228,6 @@ const mapDispatchToProps = {
   addNewTransaction,
   setBalance,
   coHost,
-  getQbot,
   getRoomList,
   getRoomStatisticsData,
   getAttachedRooms,

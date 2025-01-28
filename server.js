@@ -36,7 +36,7 @@ app.use((req, res, next) => {
 // -------------------- CORS Configuration --------------------
 const corsOptions = {
   origin: 'http://localhost:1337', // Frontend URL
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Allowed HTTP methods
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], // Allowed HTTP methods
   credentials: true, // Allow cookies and credentials
 };
 

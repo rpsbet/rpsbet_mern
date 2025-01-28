@@ -146,15 +146,17 @@ const BankTable = (props) => {
   const [loanType, setLoanType] = useState('');
   const [loansWithProfit, setLoansWithProfit] = useState([]);
   const [error, setError] = useState(null);
+  const [previousLoansLoading, setLoadingPreviousLoans] = useState(false);
 
   // ------------------- EFFECTS -------------------
   useEffect(() => {
     (async () => {
-      // By default, fetch previousLoans(30, 1, 'loan_amount', '')
+      setLoadingPreviousLoans(true);
       await props.previousLoans(30, 1, 'loan_amount', '');
       try {
         const result = await attachLoansWithProfit(props.prevLoans);
         setLoansWithProfit(result);
+        setLoadingPreviousLoans(false);
       } catch (err) {
         console.error('Error fetching customer info:', err);
         setError(err);
@@ -360,6 +362,7 @@ const BankTable = (props) => {
               style={{ marginBottom: '30px' }}
               variant='contained'
               color='error'
+              fullWidth
               onClick={handleOpenMyLoansModal}
               startIcon={<AttachMoney />}
             >
@@ -371,164 +374,194 @@ const BankTable = (props) => {
 
         {/* Main Product Grid */}
         {!loading ? (
-          <ProductGrid>
-            {showPlayerModal && (
-              <PlayerModal
-                selectedCreator={selectedCreator}
-                modalIsOpen={showPlayerModal}
-                closeModal={handleClosePlayerModal}
-              />
-            )}
+          data && data.length > 0 ? (
+            <ProductGrid>
+              {showPlayerModal && (
+                <PlayerModal
+                  selectedCreator={selectedCreator}
+                  modalIsOpen={showPlayerModal}
+                  closeModal={handleClosePlayerModal}
+                />
+              )}
 
-            {data.map((row) => (
-              <Card
-                key={row._id}
-                sx={{
-                  position: 'relative',
-                  borderRadius: 2,
-                  cursor: 'pointer',
-                  transition: 'transform 0.2s',
-                  '&:hover': {
-                    transform: 'scale(1.02)',
-                  },
-                }}
-                onClick={() => {
-                  setCurrentLoanId(row._id);
-                  setCurrentLoanInfo({
-                    lender: row.lender,
-                    loan_amount: row.loan_amount,
-                    loan_period: row.loan_period,
-                    apy: row.apy
-                  });
-                  history.push(`/loan/${row._id}`);
-                }}
-              >
-                {/* APY badge in top-right corner */}
-                <LoanAPY>{(row.apy * 100).toFixed(2)}%</LoanAPY>
+              {data.map((row) => (
+                <Card
+                  key={row._id}
+                  sx={{
+                    position: 'relative',
+                    // ...
+                  }}
+                  onClick={() => {
+                    setCurrentLoanId(row._id);
+                    setCurrentLoanInfo({
+                      lender: row.lender,
+                      loan_amount: row.loan_amount,
+                      loan_period: row.loan_period,
+                      apy: row.apy,
+                    });
+                    history.push(`/loan/${row._id}`);
+                  }}
+                >
+                  {/* APY badge in top-right corner */}
+                  <LoanAPY>{(row.apy * 100).toFixed(2)}%</LoanAPY>
 
-                <CardContent>
-                  {/* Lender/Creator Avatar */}
-                  {customerInfo[row.lender] ? (
-                    <div style={{ marginBottom: '8px' }}>
-                      <a
-                        className="player"
+                  <Card variant="outlined" sx={{ mb: 0.5 }}>
+                    <CardContent sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      {/* Lender/Creator Avatar */}
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        {customerInfo[row.lender] ? (
+                          <a
+                            className="player"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenPlayerModal(row.lender);
+                            }}
+                            style={{ textDecoration: 'none', cursor: 'pointer' }}
+                          >
+                            <Avatar
+                              src={customerInfo[row.lender].avatar}
+                              rank={customerInfo[row.lender].totalWagered}
+                              accessory={customerInfo[row.lender].accessory}
+                              username={customerInfo[row.lender].username}
+                              alt=""
+                              darkMode={isDarkMode}
+                              style={{ width: 48, height: 48 }}
+                            />
+                          </a>
+                        ) : (
+                          <Skeleton variant="circular" width={48} height={48} />
+                        )}
+                        <Box>
+                          <Typography variant="subtitle2" color="text.secondary">
+                            Lender
+                          </Typography>
+                          <Typography variant="body2">
+                            {customerInfo[row.lender]?.username || 'Unknown'}
+                          </Typography>
+                        </Box>
+                      </Box>
+
+                      {/* Loan Amount (with label) */}
+                      <Box>
+                        <Typography variant="h6" sx={{ fontWeight: 600, textAlign: 'center' }}>
+                          {convertToCurrency(row.loan_amount, solPrice)}{' '}
+                          <span style={{ fontSize: 'small' }}>/ {row.loan_amount} SOL</span>
+                        </Typography>
+                      </Box>
+
+                      {/* Table of Details */}
+                      <TableContainer>
+                        <Table size="small" aria-label="loan-details-table">
+                          <TableBody>
+                            {/* Loan Period */}
+                            <TableRow>
+                              <TableCell sx={{ borderBottom: 'none', width: '40%' }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                  <FontAwesomeIcon icon={faClock} />
+                                  <Typography variant="body2">Days</Typography>
+                                </Box>
+                              </TableCell>
+                              <TableCell sx={{ borderBottom: 'none' }}>
+                                {row.loan_period} Days
+                              </TableCell>
+                            </TableRow>
+
+                            {/* Loaners */}
+                            <TableRow>
+                              <TableCell sx={{ borderBottom: 'none' }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                  <FontAwesomeIcon icon={faUsers} />
+                                  <Typography variant="body2">Loaners</Typography>
+                                </Box>
+                              </TableCell>
+                              <TableCell sx={{ borderBottom: 'none' }}>
+                                {row.loaners && row.loaners.length > 0 ? (
+                                  <Box className="cell-joiners" sx={{ display: 'flex', alignItems: 'center' }}>
+                                    {row.loaners.slice(0, 2).map((loaner, index) =>
+                                      loaner && loaner.avatar ? (
+                                        <a
+                                          key={`${loaner._id}-${index}`}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleOpenPlayerModal(loaner._id);
+                                          }}
+                                          style={{ cursor: 'pointer' }}
+                                          className="player"
+                                        >
+                                          <Avatar
+                                            src={loaner.avatar}
+                                            rank={loaner.totalWagered || 0}
+                                            accessory={loaner.accessory || ''}
+                                            username={loaner.username || ''}
+                                            darkMode={isDarkMode}
+                                            alt={loaner.username || 'Unknown'}
+                                            style={{ width: 32, height: 32 }}
+                                          />
+                                        </a>
+                                      ) : null
+                                    )}
+                                    {row.loaners.length > 2 && (
+                                      <Typography
+                                        variant="body2"
+                                        sx={{ ml: 1, fontSize: '0.8rem', fontWeight: 600 }}
+                                      >
+                                        +{row.loaners.length - 2}
+                                      </Typography>
+                                    )}
+                                  </Box>
+                                ) : (
+                                  <Typography variant="body2" sx={{ fontStyle: 'italic' }}>
+                                    No Loaners
+                                  </Typography>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    </CardContent>
+                  </Card>
+
+                  {/* Loan Button */}
+                  <ProductCardActions>
+                    <Tooltip title="Participate in loan">
+                      <Button
+                        variant="outlined"
+                        color="error"
+                        fullWidth
                         onClick={(e) => {
-                          e.stopPropagation();
-                          handleOpenPlayerModal(row.lender);
+                          e.stopPropagation(); // prevent triggering Card onClick
+                          setCurrentLoanId(row._id);
+                          setCurrentLoanInfo({
+                            lender: row.lender,
+                            loan_amount: row.loan_amount,
+                            loan_period: row.loan_period,
+                            apy: row.apy,
+                          });
+                          if (row.lender !== user) {
+                            openConfirmLoanModal();
+                          } else {
+                            alertModal(isDarkMode, 'This is already your loan!');
+                          }
                         }}
-                        style={{ textDecoration: 'none', cursor: 'pointer' }}
+                        sx={{ mb: 1 }}
                       >
-                        <Avatar
-                          src={customerInfo[row.lender].avatar}
-                          rank={customerInfo[row.lender].totalWagered}
-                          accessory={customerInfo[row.lender].accessory}
-                          username={customerInfo[row.lender].username}
-                          alt=""
-                          darkMode={isDarkMode}
-                        />
-                      </a>
-                    </div>
-                  ) : (
-                    <Skeleton variant="circular" width={40} height={40} />
-                  )}
-
-                  {/* Loan Amount */}
-                  <Typography
-                    variant="h6"
-                    sx={{ fontWeight: 600, marginBottom: 1 }}
-                  >
-                    {convertToCurrency(row.loan_amount, solPrice)}
-                  </Typography>
-
-                  {/* Table of details */}
-                  <TableContainer>
-                    <Table size="small" aria-label="loan details">
-                      <TableBody>
-                        <TableRow>
-                          <TableCell sx={{ borderBottom: 'none' }}>
-                            <FontAwesomeIcon icon={faClock} />&nbsp;Days:
-                          </TableCell>
-                          <TableCell sx={{ borderBottom: 'none' }}>
-                            {row.loan_period} Days
-                          </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell sx={{ borderBottom: 'none' }}>
-                            <FontAwesomeIcon icon={faUsers} />&nbsp;Loaners:
-                          </TableCell>
-                          <TableCell sx={{ borderBottom: 'none' }}>
-                            {row.loaners && row.loaners.length > 0 ? (
-                              <>
-                                {row.loaners.slice(0, 2).map((loaner, index) =>
-                                  loaner && loaner.avatar ? (
-                                    <a
-                                      key={`${loaner._id}-${index}`}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleOpenPlayerModal(loaner._id);
-                                      }}
-                                      style={{ cursor: 'pointer' }}
-                                      className='player'
-                                    >
-                                      <Avatar
-                                        src={loaner.avatar}
-                                        rank={loaner.totalWagered || 0}
-                                        accessory={loaner.accessory || ''}
-                                        username={loaner.username || ''}
-                                        darkMode={isDarkMode}
-                                        alt={loaner.username || 'Unknown'}
-                                      />
-                                    </a>
-                                  ) : null
-                                )}
-                                {row.loaners.length > 2 && (
-                                  <span
-                                    style={{
-                                      marginLeft: '6px',
-                                      fontSize: '0.8rem',
-                                      fontWeight: 600,
-                                    }}
-                                  >
-                                    +{row.loaners.length - 2}
-                                  </span>
-                                )}
-                              </>
-                            ) : (
-                              <span>No Loaners</span>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-                </CardContent>
-
-                {/* Loan Button */}
-                <ProductCardActions>
-                  <Tooltip title="Participate in loan">
-                    <IconButton
-                      variant='contained'
-                      color='error'
-                      onClick={(e) => {
-                        e.stopPropagation(); // prevent triggering Card onClick
-                        setCurrentLoanId(row._id);
-                        setCurrentLoanInfo(row.lender);
-                        if (row.lender !== user) {
-                          openConfirmLoanModal();
-                        } else {
-                          alertModal(isDarkMode, 'This is already your loan!');
-                        }
-                      }}
-                    >
-                      <SwapHoriz />
-                    </IconButton>
-                  </Tooltip>
-                </ProductCardActions>
-              </Card>
-            ))}
-          </ProductGrid>
+                        LOAN
+                        <SwapHoriz sx={{ ml: 1 }} />
+                      </Button>
+                    </Tooltip>
+                  </ProductCardActions>
+                </Card>
+              ))}
+            </ProductGrid>
+          ) : (
+            // CHANGED HERE: if data is empty (and we're not loading), show "No Loans Available"
+            <Typography variant="body2" sx={{ textAlign:'center', fontStyle: 'italic', color: 'text.secondary' }}>
+              No Loans Available
+            </Typography>
+          )
         ) : (
-          // Skeleton for loading
+          // Skeleton if still loading
           <ProductGrid>
             {[...Array(6)].map((_, index) => (
               <Box
@@ -537,7 +570,7 @@ const BankTable = (props) => {
                   padding: 2,
                   display: 'flex',
                   flexDirection: 'column',
-                  alignItems: 'center'
+                  alignItems: 'center',
                 }}
               >
                 <Skeleton variant="text" sx={{ width: '80%', height: 30 }} />
@@ -549,6 +582,7 @@ const BankTable = (props) => {
           </ProductGrid>
         )}
 
+
         {/* Carousel of previous loans */}
         <PreviousLoansContainer>
           <Typography variant="h6" className="title">
@@ -556,7 +590,29 @@ const BankTable = (props) => {
           </Typography>
 
           <div className="carousel">
-            {loansWithProfit && loansWithProfit.length > 0 ? (
+            {previousLoansLoading ? (
+              /* 1) If still loading => skeletons */
+              [...Array(5)].map((_, index) => (
+                <Card
+                  key={`skeleton-carousel-item-${index}`}
+                  sx={{
+                    borderRadius: 2,
+                    padding: '8px',
+                    overflow: 'hidden',
+                  }}
+                >
+                  <CardContent>
+                    <Skeleton variant="text" width="50%" height={30} sx={{ mb: 1 }} />
+                    <Skeleton variant="circular" width={40} height={40} sx={{ mb: 1 }} />
+                    <Skeleton variant="text" width="100%" height={20} sx={{ mb: 1 }} />
+                    <Skeleton variant="text" width="80%" height={20} sx={{ mb: 1 }} />
+                    <Skeleton variant="text" width="60%" height={20} sx={{ mb: 1 }} />
+                    <Skeleton variant="rectangular" width="100%" height={50} />
+                  </CardContent>
+                </Card>
+              ))
+            ) : loansWithProfit.length > 0 ? (
+              /* 2) If NOT loading and have loans => map */
               loansWithProfit.map((loan) => (
                 <Card
                   key={loan._id}
@@ -564,7 +620,7 @@ const BankTable = (props) => {
                     position: 'relative',
                     borderRadius: 2,
                     padding: '8px',
-                    overflow: 'hidden'
+                    overflow: 'hidden',
                   }}
                 >
                   <CardContent>
@@ -572,12 +628,13 @@ const BankTable = (props) => {
                       <TableBody>
                         <TableRow>
                           <TableCell sx={{ borderBottom: 'none' }}>
-                            <FontAwesomeIcon icon={faUser} />&nbsp;Lender:
+                            <FontAwesomeIcon icon={faUser} /> Lender:
                           </TableCell>
                           <TableCell sx={{ borderBottom: 'none' }}>
                             <a
                               onClick={() => handleOpenPlayerModal(loan.lender)}
                               style={{ cursor: 'pointer' }}
+                              className='player'
                             >
                               <Avatar
                                 src={loan.customerInfo?.avatar}
@@ -585,6 +642,7 @@ const BankTable = (props) => {
                                 accessory={loan.customerInfo?.accessory}
                                 username={loan.customerInfo?.username}
                                 alt=""
+                                className="avatar"
                                 darkMode={isDarkMode}
                               />
                             </a>
@@ -592,7 +650,7 @@ const BankTable = (props) => {
                         </TableRow>
                         <TableRow>
                           <TableCell sx={{ borderBottom: 'none' }}>
-                            <FontAwesomeIcon icon={faClock} />&nbsp;Status:
+                            <FontAwesomeIcon icon={faClock} /> Status:
                           </TableCell>
                           <TableCell sx={{ borderBottom: 'none' }}>
                             {loan.outstanding === true
@@ -604,7 +662,7 @@ const BankTable = (props) => {
                         </TableRow>
                         <TableRow>
                           <TableCell sx={{ borderBottom: 'none' }}>
-                            <FontAwesomeIcon icon={faMoneyBillAlt} />&nbsp;Unpaid:
+                            <FontAwesomeIcon icon={faMoneyBillAlt} /> Unpaid:
                           </TableCell>
                           <TableCell sx={{ borderBottom: 'none' }}>
                             {convertToCurrency(loan.totalLoanerAmount, solPrice)}
@@ -612,16 +670,18 @@ const BankTable = (props) => {
                         </TableRow>
                         <TableRow>
                           <TableCell sx={{ borderBottom: 'none' }}>
-                            <FontAwesomeIcon icon={faUsers} />&nbsp;Loaners:
+                            <FontAwesomeIcon icon={faUsers} /> Loaners:
                           </TableCell>
-                          <TableCell sx={{ borderBottom: 'none' }}>
+                          <TableCell className="cell-joiners" sx={{ borderBottom: 'none' }}>
                             {loan.loaners.map((loaner, index) => (
                               <a
                                 key={`${loaner.user}-${index}`}
                                 onClick={() => handleOpenPlayerModal(loaner.user)}
                                 style={{ marginRight: '4px', cursor: 'pointer' }}
+                                className='player'
                               >
                                 <Avatar
+                                  className='avatar'
                                   src={loaner.customerInfo?.avatar}
                                   rank={loaner.customerInfo?.totalWagered}
                                   accessory={loaner.customerInfo?.accessory}
@@ -635,7 +695,7 @@ const BankTable = (props) => {
                         </TableRow>
                         <TableRow>
                           <TableCell sx={{ borderBottom: 'none' }}>
-                            <FontAwesomeIcon icon={faMoneyCheckAlt} />&nbsp;Total Paid Back:
+                            <FontAwesomeIcon icon={faMoneyCheckAlt} /> Total Paid Back:
                           </TableCell>
                           <TableCell sx={{ borderBottom: 'none' }}>
                             {convertToCurrency(loan.totalPaidBack, solPrice)}
@@ -643,7 +703,7 @@ const BankTable = (props) => {
                         </TableRow>
                         <TableRow>
                           <TableCell sx={{ borderBottom: 'none' }}>
-                            <FontAwesomeIcon icon={faChartLine} />&nbsp;Profit:
+                            <FontAwesomeIcon icon={faChartLine} /> Profit:
                           </TableCell>
                           <TableCell sx={{ borderBottom: 'none' }}>
                             <ProfitSpan negative={loan.profit <= 0}>
@@ -657,25 +717,10 @@ const BankTable = (props) => {
                 </Card>
               ))
             ) : (
-              // Skeleton Loader for Carousel
-              [...Array(5)].map((_, index) => (
-                <Card
-                  key={`skeleton-carousel-item-${index}`}
-                  sx={{
-                    borderRadius: 2,
-                    padding: '8px'
-                  }}
-                >
-                  <CardContent>
-                    <Skeleton variant="text" width="50%" height={30} style={{ marginBottom: '10px' }} />
-                    <Skeleton variant="circular" width={40} height={40} style={{ marginBottom: '10px' }} />
-                    <Skeleton variant="text" width="100%" height={20} style={{ marginBottom: '5px' }} />
-                    <Skeleton variant="text" width="80%" height={20} style={{ marginBottom: '5px' }} />
-                    <Skeleton variant="text" width="60%" height={20} style={{ marginBottom: '5px' }} />
-                    <Skeleton variant="rectangular" width="100%" height={50} />
-                  </CardContent>
-                </Card>
-              ))
+              /* 3) If NOT loading, but empty => "No previous loans" */
+              <Typography variant="body2" sx={{ textAlign: 'center', fontStyle: 'italic', color: 'text.secondary' }}>
+                No previous loans
+              </Typography>
             )}
           </div>
 

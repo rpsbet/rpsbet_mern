@@ -6,10 +6,10 @@ import {
   getChatRoomInfo,
   addChatLog,
   getMyChat,
-  getMyHistory,
   getGameTypeList,
   loadRoomInfo,
-  setCurRoomInfo
+  setCurRoomInfo,
+  loadOlderChatMessages
 } from '../../redux/Logic/logic.actions';
 import { toggleDrawer } from '../../redux/Auth/user.actions';
 
@@ -24,9 +24,7 @@ import PlayerModal from '../modal/PlayerModal';
 import DrawerButton from '../main_pages/DrawerButton';
 import Footer from '../main_pages/Footer';
 import ChatPanel from '../ChatPanel/ChatPanel';
-import {
-  InsertEmoticon,
-} from '@mui/icons-material';
+import { InsertEmoticon } from '@mui/icons-material';
 import {
   Button,
   InputAdornment,
@@ -35,7 +33,8 @@ import {
   Drawer,
   Box,
   Skeleton,
-  TextField
+  TextField,
+  CircularProgress
 } from '@mui/material';
 
 const moment = require('moment');
@@ -45,7 +44,7 @@ function ChatPage(props) {
     // Redux props
     match,
     user_id,
-    chatLogs,
+    chatLogs = [],
     my_info,
     socket,
     is_mobile,
@@ -60,8 +59,11 @@ function ChatPage(props) {
     loading,
     gameTypeList,
     isDarkMode,
+    hasMore,
+    fetchingOlder,
 
     // Redux actions
+    loadOlderChatMessages,
     getChatRoomInfo,
     addChatLog,
     getMyChat,
@@ -75,96 +77,86 @@ function ChatPage(props) {
   const [showPlayerModal, setShowPlayerModal] = useState(false);
   const [showEmojiPanel, setShowEmojiPanel] = useState(false);
   const [selectedCreator, setSelectedCreator] = useState(null);
-  const [show_open_game, setShowOpenGame] = useState(0);
+
+  // Track if the user is near the bottom, so we only auto-scroll
+  // to the bottom if they were already there.
+  const [userScrollAtBottom, setUserScrollAtBottom] = useState(true);
+
   const { id: routeId } = match.params;
 
   // ---------- REFS ----------
   const chatLogPanelRef = useRef(null);
-  const textareaRef = useRef(null);
-  console.log("chatLogs", chatLogs)
-  // componentDidMount equivalent
-  useEffect(() => {
-    const { id } = match.params;
-    initializeRoomData(id);
 
-    // When socket connects, request unread count
-    if (socket) {
-      socket.on('connect', () => {
-        socket.emit('REQUEST_UNREAD_MESSAGE_COUNT', {
-          to: my_info?._id,
-        });
-      });
+  // We'll store the scrollHeight before loading older messages
+  // so we can preserve the scroll position after prepending them.
+  const oldScrollHeightRef = useRef(0);
+
+  // ---------- EFFECTS ----------
+
+  // Initial room load
+  useEffect(() => {
+    if (routeId) {
+      getChatRoomInfo(routeId, 0, 20);
+      if (isAuthenticated) {
+        getMyChat();
+      }
     }
-    // eslint-disable-next-line
-  }, []);
+  }, [routeId, getChatRoomInfo, getMyChat, isAuthenticated]);
 
-
-  // ...
+  /**
+   * ADVANCED SCROLL BEHAVIOR
+   *
+   * We do two things here:
+   * 1) If we just fetched older messages (fetchingOlder just went from true -> false),
+   *    we restore the scroll so the chat doesn’t visually jump.
+   * 2) If new messages arrived (chatLogs changed) AND the user was at the bottom,
+   *    we scroll to bottom so they see the latest message.
+   */
   useEffect(() => {
-    const { id } = match.params;
-    if (id) {
-      // Re-fetch chat data for this new "id"
-      getChatRoomInfo(id);
+    const container = chatLogPanelRef.current;
+    if (!container) return;
+
+    // 1) If we *were* fetching older messages, but now are not,
+    //    restore scroll position so the user doesn't jump up/down.
+    if (!fetchingOlder && oldScrollHeightRef.current > 0) {
+      const newScrollHeight = container.scrollHeight;
+      const oldScrollHeight = oldScrollHeightRef.current;
+      // Preserve the user's vertical offset in the chat
+      container.scrollTop = newScrollHeight - oldScrollHeight;
+      // Reset so we don't do this again accidentally
+      oldScrollHeightRef.current = 0;
     }
-    scrollChatToBottom();
-
-  }, [match.params.id, getChatRoomInfo]);
-
-  // Scroll to bottom whenever chatLogs change
-  useEffect(() => {
-    scrollChatToBottom();
-  }, [chatLogs]);
+    // 2) If user was near bottom (userScrollAtBottom === true), scroll all the way down
+    else if (userScrollAtBottom && chatLogs.length > 0 && !loading) {
+      // A tiny delay so the UI can render before we measure scrollHeight
+      setTimeout(() => {
+        container.scrollTop = container.scrollHeight;
+      }, 0);
+    }
+  }, [chatLogs, fetchingOlder, userScrollAtBottom, loading]);
 
   // ---------- METHODS ----------
 
-  const initializeRoomData = async (id) => {
-    try {
-      await getChatRoomInfo(id);
-      if (isAuthenticated) {
-        await getMyChat();
-      }
-    } catch (error) {
-      console.error('Error initializing room data:', error);
+  // Called by the scroll container on scroll
+  const handleScroll = (e) => {
+    const container = e.currentTarget;
+    const scrollTop = container.scrollTop;
+    const scrollHeight = container.scrollHeight;
+    const clientHeight = container.clientHeight;
+
+    // Figure out if user is near the bottom.
+    // If they are within 50px of the bottom, we consider them "at bottom."
+    const isNearBottom = scrollHeight - (scrollTop + clientHeight) < 50;
+    setUserScrollAtBottom(isNearBottom);
+
+    // If close to the top AND we have more older messages AND not already fetching
+    if (scrollTop < 20 && hasMore && !fetchingOlder) {
+      // Save the old scroll height. We'll use it to maintain position
+      // once we prepend older messages.
+      oldScrollHeightRef.current = container.scrollHeight;
+      // Dispatch Redux action to load older messages
+      loadOlderChatMessages(routeId);
     }
-  };
-
-  const scrollChatToBottom = () => {
-    if (chatLogPanelRef.current) {
-      chatLogPanelRef.current.scrollTop = chatLogPanelRef.current.scrollHeight;
-    }
-  };
-
-  const openPopover = Boolean(anchorEl);
-
-  // Called when user clicks the emoji icon (end adornment)
-  const handleEmojiClick = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  // Close the popover
-  const handleEmojiClose = () => {
-    setAnchorEl(null);
-  };
-
-  const insertEmoji = (emoji) => {
-    setText((prev) => prev + emoji);
-    if (textareaRef.current) {
-      textareaRef.current.focus();
-    }
-  };
-  const onChangeText = (e) => {
-    setText(e.target.value);
-  };
-
-  const onTextAreaKeyDown = (e) => {
-    if (e.keyCode === 13) {
-      e.preventDefault();
-      sendMessage();
-    }
-  };
-
-  const toggleDrawerAction = () => {
-    toggleDrawer(!isDrawerOpen);
   };
 
   const sendMessage = () => {
@@ -187,18 +179,37 @@ function ChatPage(props) {
     }
   };
 
+  const onTextAreaKeyDown = (e) => {
+    if (e.keyCode === 13) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+
+  const handleEmojiClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleEmojiClose = () => {
+    setAnchorEl(null);
+  };
+  const insertEmoji = (emoji) => {
+    setText((prev) => prev + emoji);
+  };
+
+  const toggleDrawerAction = () => {
+    toggleDrawer(!isDrawerOpen);
+  };
+
   const handleOpenPlayerModal = (creator_id) => {
     setShowPlayerModal(true);
     setSelectedCreator(creator_id);
   };
-
   const handleClosePlayerModal = () => {
     setShowPlayerModal(false);
   };
 
   function formatCustomDate(dateString) {
     const date = moment(dateString, 'MM-DD-YYYY HH:mm:ss');
-
     if (date.isSame(moment(), 'day')) {
       return `Today, ${date.format('h:mm a')}`;
     } else if (date.isSame(moment().subtract(1, 'day'), 'day')) {
@@ -211,12 +222,11 @@ function ChatPage(props) {
   // ---------- STYLING ----------
   const theme = getCustomTheme(isDarkMode ? 'dark' : 'light');
 
+  const openPopover = Boolean(anchorEl);
+
   return (
     <ThemeProvider theme={theme}>
-      <Box
-        className="main-game"
-
-      >
+      <Box className="main-game">
         {/* Player Modal */}
         {showPlayerModal && (
           <PlayerModal
@@ -260,15 +270,15 @@ function ChatPage(props) {
               }}
             >
               <Button
-                variant='text' color='error'
+                variant="text"
+                color="error"
                 onClick={() => {
                   history.push('/');
                 }}
-
                 sx={{ position: 'absolute', left: '15px' }}
               >
-                <FontAwesomeIcon icon={faArrowLeft} />&nbsp;
-                Go Back
+                <FontAwesomeIcon icon={faArrowLeft} />
+                &nbsp; Go Back
               </Button>
               <Box
                 component="a"
@@ -282,7 +292,7 @@ function ChatPage(props) {
                   textDecoration: 'none',
                   color: 'inherit',
                 }}
-                className='player'
+                className="player"
               >
                 <Avatar
                   src={avatar}
@@ -291,7 +301,10 @@ function ChatPage(props) {
                   accessory={accessory}
                   className="avatar"
                 />
-                <Box component="span" sx={{ ml: 1, display: 'flex', alignItems: 'center' }}>
+                <Box
+                  component="span"
+                  sx={{ ml: 1, display: 'flex', alignItems: 'center' }}
+                >
                   {username}
                 </Box>
               </Box>
@@ -302,47 +315,66 @@ function ChatPage(props) {
               className="chat-log-panel"
               ref={chatLogPanelRef}
               sx={{
-                flex: 1,
+                position: 'relative',
                 overflowY: 'auto',
+                flex: 1,
                 p: 2,
                 minHeight: 300,
-                maxHeight: '60vh',
+                maxHeight: '60vh'
               }}
+              onScroll={handleScroll}
             >
+              {/* Top loading spinner if fetching older messages */}
+              {fetchingOlder && (
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    display: 'flex',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <CircularProgress color='error' size={48} />
+                </Box>
+              )}
+
+              {/* Main chat content */}
               {!loading ? (
-                <>
-                  {chatLogs.map((row, idx) => (
+                chatLogs.map((row, idx) => (
+                  <Box
+                    key={idx}
+                    className={
+                      row.from === my_info?._id ? 'my-message' : 'other-message'
+                    }
+                    sx={{ mb: 2 }}
+                  >
+                    <Box className="message-content">{row.message}</Box>
                     <Box
-                      key={idx}
-                      className={
-                        row.from === my_info?._id ? 'my-message' : 'other-message'
-                      }
-                      sx={{ mb: 2 }}
+                      className="message-header"
+                      sx={{ display: 'flex', alignItems: 'center', fontSize: '0.8em' }}
                     >
-                      <Box className="message-content" sx={{ mb: 1 }}>
-                        {row.message}
-                      </Box>
-                      <Box className="message-header" sx={{ display: 'flex', alignItems: 'center', fontSize: '0.8em' }}>
-                        {row.from !== my_info?._id && (
-                          <Box
-                            onClick={() => handleOpenPlayerModal(user_id)}
-                            sx={{ cursor: 'pointer', position: 'relative' }}
-                          />
-                        )}
-                        <Box>
-                          <Box className="message-time">{formatCustomDate(row.created_at)}
-                          </Box>
+                      {row.from !== my_info?._id && (
+                        <Box
+                          onClick={() => handleOpenPlayerModal(user_id)}
+                          sx={{ cursor: 'pointer', position: 'relative' }}
+                        />
+                      )}
+                      <Box>
+                        <Box className="message-time">
+                          {formatCustomDate(row.created_at)}
                         </Box>
-                        {row.from === my_info?._id && (
-                          <Box
-                            onClick={() => handleOpenPlayerModal(my_info?._id)}
-                            sx={{ cursor: 'pointer', position: 'relative' }}
-                          />
-                        )}
                       </Box>
+                      {row.from === my_info?._id && (
+                        <Box
+                          onClick={() => handleOpenPlayerModal(my_info?._id)}
+                          sx={{ cursor: 'pointer', position: 'relative' }}
+                        />
+                      )}
                     </Box>
-                  ))}
-                </>
+                  </Box>
+                ))
               ) : (
                 // Skeleton placeholders while loading
                 <Box>
@@ -354,7 +386,7 @@ function ChatPage(props) {
                         flexDirection: 'column',
                         mb: 2,
                         gap: 1,
-                        alignItems: index % 2 === 0 ? 'flex-end' : 'flex-start',
+                        alignItems: index % 2 === 0 ? 'flex-end' : 'flex-start'
                       }}
                     >
                       <Skeleton
@@ -381,48 +413,31 @@ function ChatPage(props) {
                 display: 'flex',
                 alignItems: 'center',
                 p: 1,
-                borderTop: '1px solid rgba(255,255,255,0.1)',
+                borderTop: '1px solid rgba(255,255,255,0.1)'
               }}
             >
-
               <TextField
                 type="text"
-                variant='filled'
+                variant="filled"
                 color="error"
                 placeholder="CHAT HERE..."
                 onKeyDown={onTextAreaKeyDown}
-                onChange={onChangeText}
+                onChange={(e) => setText(e.target.value)}
                 value={text}
-                inputRef={textareaRef}
                 sx={{ flex: 1, mr: 1 }}
-
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
-                      {/* Emoji Icon */}
                       <Button variant="outlined" color="error" onClick={handleEmojiClick}>
-                        <InsertEmoticon sx={{ fontSize: "18px" }} />
+                        <InsertEmoticon sx={{ fontSize: '18px' }} />
                       </Button>
-                      {/* Popover-based emoji panel */}
                       <Popover
                         open={openPopover}
                         anchorEl={anchorEl}
                         onClose={handleEmojiClose}
-                        elevation='0'
-                        anchorOrigin={{
-                          vertical: 'top',
-                          horizontal: 'left',
-                        }}
-                        TransitionProps={{
-                          timeout: 0
-                        }}
-                        transformOrigin={{
-                          vertical: 'bottom',
-                          horizontal: 'left',
-                        }}
-                        sx={{
-                          // optional styling
-                        }}
+                        elevation={0}
+                        anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
+                        transformOrigin={{ vertical: 'bottom', horizontal: 'left' }}
                       >
                         <PopoverEmojiGrid onSelect={insertEmoji} />
                       </Popover>
@@ -431,35 +446,71 @@ function ChatPage(props) {
                 }}
               />
 
-
               <Button
                 onClick={sendMessage}
                 variant="outlined"
                 startIcon={<FontAwesomeIcon icon={faPenSquare} />}
-                color='error'
+                color="error"
               >
                 <Typography variant="button">[&#x23CE;]</Typography>
               </Button>
             </Box>
-
-
           </Box>
-
-
         </Box>
       </Box>
 
-      {/* Footer */}
       <Footer className="footer" open={isDrawerOpen} />
     </ThemeProvider>
   );
 }
 
+// Simple emoji grid for demonstration
 function PopoverEmojiGrid({ onSelect }) {
-  // A small set of emojis for demonstration
-  const emojis = ['🤬', '🖕', '🖕🏿', '🖕🏽', '🖕🏻', '😀', '😂', '🤣', '😀', '😃', '😄', '😁', '😆', '🤣', '😂', '🙂', '🙃', '😉',
-    '😊', '😇', '😍', '😘', '😜', '😎', '🤩', '😤', '😡', '🤯', '🤬', '🥶', '😱', '🥵', '🤔', '🤓', '🤑', '🤠', '🥳', '💩',
-    '💵', '💸', '💰', '🍀', '🏦',];
+  const emojis = [
+    '🤬',
+    '🖕',
+    '🖕🏿',
+    '🖕🏽',
+    '🖕🏻',
+    '😀',
+    '😂',
+    '🤣',
+    '😀',
+    '😃',
+    '😄',
+    '😁',
+    '😆',
+    '🤣',
+    '😂',
+    '🙂',
+    '🙃',
+    '😉',
+    '😊',
+    '😇',
+    '😍',
+    '😘',
+    '😜',
+    '😎',
+    '🤩',
+    '😤',
+    '😡',
+    '🤯',
+    '🤬',
+    '🥶',
+    '😱',
+    '🥵',
+    '🤔',
+    '🤓',
+    '🤑',
+    '🤠',
+    '🥳',
+    '💩',
+    '💵',
+    '💸',
+    '💰',
+    '🍀',
+    '🏦'
+  ];
 
   return (
     <Box sx={{ p: 2, maxWidth: 200, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
@@ -469,7 +520,7 @@ function PopoverEmojiGrid({ onSelect }) {
           sx={{
             cursor: 'pointer',
             fontSize: '1.5rem',
-            '&:hover': { opacity: 0.7 },
+            '&:hover': { opacity: 0.7 }
           }}
           onClick={() => onSelect(emoji)}
         >
@@ -480,8 +531,7 @@ function PopoverEmojiGrid({ onSelect }) {
   );
 }
 
-
-// mapStateToProps remains the same
+// Redux
 const mapStateToProps = (state) => ({
   auth: state.auth.isAuthenticated,
   my_info: state.auth.user,
@@ -499,19 +549,21 @@ const mapStateToProps = (state) => ({
   history: state.logic.history,
   loading: state.logic.isActiveLoadingOverlay,
   pageNumber: state.logic.pageNumber,
-  is_mobile: state.logic.is_mobile, // Or however you track mobile
+  is_mobile: state.logic.is_mobile,
   selectedMobileTab: state.logic.selectedMobileTab,
+  hasMore: state.logic.chatRoomInfo.hasMore,
+  fetchingOlder: state.logic.fetchingOlder
 });
 
 const mapDispatchToProps = {
   getChatRoomInfo,
   addChatLog,
-  getMyHistory,
   getGameTypeList,
   setCurRoomInfo,
   loadRoomInfo,
   getMyChat,
   toggleDrawer,
+  loadOlderChatMessages
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(ChatPage);

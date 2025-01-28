@@ -45,7 +45,7 @@ const CustomizedInputBase = () => {
       <InputBase
         sx={{ ml: 1, flex: 1 }}
         placeholder="Search..."
-        inputProps={{ 'aria-label': 'search' }}
+        aria-label="search"
       />
       <IconButton
         sx={{ p: '10px' }}
@@ -60,7 +60,7 @@ const CustomizedInputBase = () => {
 const Error404Page = () => {
   const [openPage, setOpenPage] = useState(false);
   const one = '';
-  
+
   useEffect(() => {
     setOpenPage(true);
   }, [one]);
@@ -71,7 +71,7 @@ const Error404Page = () => {
         <title>404 - Page Not Found</title>
         <meta name="description" content="Oops, an error has occurred. Page not found!" />
       </Helmet>
-      
+
       <Grow in={openPage}>
         <ErrorTextEL>404</ErrorTextEL>
       </Grow>

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { connect } from 'react-redux';
-import { getRpsBetItems, getQsBetItems, updateRpsBetItems, updateQsBetItems, getQbot, updateQbot, getMyGames } from '../redux/Logic/logic.actions';
+import { getRpsBetItems, getQsBetItems, updateRpsBetItems, updateQsBetItems, updateQbot, getMyGames } from '../redux/Logic/logic.actions';
 import { setFocused } from '../redux/Auth/user.actions';
 import { useDispatch } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -71,7 +71,7 @@ const SideTabs = ({ selectedTab, handleTabChange }) => (
 );
 
 
-const PlaceholderComponent = ({ selectedTab, myGames, solPrice, updateQbot, handleTabChange, getMyGames, getQbot, ownRoom, user_id, totalWagered, isDarkMode }) => {
+const PlaceholderComponent = ({ selectedTab, myGames, solPrice, updateQbot, handleTabChange, getMyGames, ownRoom, user_id, totalWagered, isDarkMode }) => {
 
   const [betting, setBetting] = useState(false);
   const [rank, setRank] = useState(null);
@@ -128,32 +128,32 @@ const PlaceholderComponent = ({ selectedTab, myGames, solPrice, updateQbot, hand
     fetchRank();
   }, [totalWagered]);
 
-  useEffect(() => {
-    let isMounted = true;
+  // useEffect(() => {
+  //   let isMounted = true;
 
-    const fetchQbotStatus = async () => {
-      try {
-        if (user_id) {
-          const qbotStatus = await getQbot(user_id);
+  //   const fetchQbotStatus = async () => {
+  //     try {
+  //       if (user_id) {
+  //         const qbotStatus = await getQbot(user_id);
 
-          if (isMounted) {
-            setIsActive(qbotStatus);
-            setBetting(qbotStatus);
-          }
-        }
-      } catch (err) {
-        console.error('Error fetching Q-bot status', err);
-      }
-    };
+  //         if (isMounted) {
+  //           setIsActive(qbotStatus);
+  //           setBetting(qbotStatus);
+  //         }
+  //       }
+  //     } catch (err) {
+  //       console.error('Error fetching Q-bot status', err);
+  //     }
+  //   };
 
-    if (user_id) {
-      fetchQbotStatus();
-    }
+  //   if (user_id) {
+  //     fetchQbotStatus();
+  //   }
 
-    return () => {
-      isMounted = false;
-    };
-  }, [user_id]);
+  //   return () => {
+  //     isMounted = false;
+  //   };
+  // }, [user_id]);
 
   const handleSwitchChange = async (event) => {
     const newBettingStatus = event.target.checked;
@@ -444,7 +444,7 @@ function BetArray({
   onChangeState,
   strategies,
   game_type,
-  getQbot,
+  // getQbot,
   totalWagered,
 }) {
   const dispatch = useDispatch();
@@ -853,7 +853,7 @@ function BetArray({
         updateQbot={updateQbot}
         totalWagered={totalWagered}
         settingsRef={settingsRef}
-        getQbot={getQbot}
+        // getQbot={getQbot}
         settings_panel_opened={settings_panel_opened}
       />
     );
@@ -866,7 +866,7 @@ function BetArray({
         ownRoom={true}
         settingsRef={settingsRef}
         totalWagered={totalWagered}
-        getQbot={getQbot}
+        // getQbot={getQbot}
         user_id={user_id}
         settings_panel_opened={settings_panel_opened}
       />
@@ -1165,7 +1165,7 @@ function BetArray({
               >
                 <Slider
                   value={range}
-                  color='error'
+                  color="error"
                   onChange={handleSliderChange}
                   onChangeCommitted={handleSliderChangeCommitted}
                   onMouseUp={handleMouseUp}
@@ -1174,13 +1174,13 @@ function BetArray({
                   step={0.1}
                   min={1}
                   max={user_balance}
-                  aria-labelledby="range-slider"
+                  // Replace aria-labelledby with a getAriaLabel prop:
+                  getAriaLabel={(index) => (index === 0 ? 'Minimum value' : 'Maximum value')}
                   sx={{
                     height: 8,
                     '& .MuiSlider-thumb': {
                       height: 24,
                       width: 24,
-
                     },
                     '& .MuiSlider-track': {
                       height: 8,
@@ -1188,8 +1188,8 @@ function BetArray({
                     '& .MuiSlider-rail': {
                       height: 8,
                     },
-                    pointerEvents: ai_mode === 'IGPT3' ? 'none' : 'auto',
-                    filter: ai_mode === 'IGPT3' ? 'grayscale(100%)' : 'none',
+                    pointerEvents: ai_mode === 'GPT3' ? 'none' : 'auto',
+                    filter: ai_mode === 'GPT3' ? 'grayscale(100%)' : 'none',
                   }}
                   disabled={isSliderDisabled}
                 />
@@ -1508,7 +1508,7 @@ const mapDispatchToProps = {
   getQsBetItems,
   updateQsBetItems,
   updateQbot,
-  getQbot,
+  // getQbot,
   getMyGames,
   setFocused,
 };

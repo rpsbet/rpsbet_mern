@@ -119,23 +119,29 @@ module.exports.newTransaction = transaction => {
   send('NEW_TRANSACTION', transaction['user']['_id'], transaction);
 };
 
-module.exports.socketio = server => {
+module.exports.socketio = (server) => {
   const io = socket_io(server);
 
   io.on('connection', (socket) => {
     socket.on('connect_error', (error) => {
       console.error('Socket connection error:', error);
     });
-    socket.on('STORE_CLIENT_USER_ID', async data => {
+
+    socket.on('STORE_CLIENT_USER_ID', async (data) => {
       try {
         // Update last_seen for the user
         await User.updateOne({ _id: data.user_id }, { last_seen: new Date() });
 
         sockets[data.user_id] = socket;
+
+        // Get the list of currently "online" users
         const onlineUsers = Object.keys(sockets);
+
+        // Emit the event to everyone
         io.sockets.emit('ONLINE_STATUS_UPDATED', {
           user_list: onlineUsers
         });
+
       } catch (error) {
         console.error('Error updating user last_seen:', error);
       }
@@ -170,8 +176,6 @@ module.exports.socketio = server => {
     });
 
     socket.on('READ_MESSAGE', async (data) => {
-      // data: { to, from }
-      // mark any from->to messages as read
       await Message.updateMany(
         {
           is_read: false,

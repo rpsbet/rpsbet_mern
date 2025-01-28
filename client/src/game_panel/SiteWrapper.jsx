@@ -338,54 +338,56 @@ function SiteWrapper(props) {
    */
   useEffect(() => {
     isUnmountedRef.current = false;
-
+  
     const doMount = async () => {
       getGlobalChatLogs();
       setWebsiteLoading(true);
       setIsInvestorsPage(location.pathname.startsWith('/investors'));
       setIsPlayer(location.pathname.startsWith('/play'));
-
+  
       // Add event listeners
       window.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mousedown', handleClickOutside);
-
+  
       try {
         // 1) fetch initial vaultBalance
         const initialBalance = await fetchVaultBalance();
         setVaultBal(initialBalance);
-
-        // 2) get notifications, user, and init socket
+  
+        // 2) get notifications, user, and audio in parallel
         await Promise.all([
           getNotifications(),
-          getUser(),
-          initSocket(),
-          initializeAudio()
+          getUser(),              // this populates user in state (or Redux) 
+          initializeAudio(),
+          acCalculateRemainingLoans()
         ]);
+  
+        // By here, user should be stored in your state/Redux,
+        // but we do NOT init the socket here anymore.
         setWebsiteLoading(false);
-
+  
       } catch (error) {
         console.error('Mount error:', error);
       }
-
+  
       // Setup interval for updating "from now" fields
       intervalRef.current = setInterval(() => {
         updateReminderTime();
       }, 3000);
-
+  
       // Attempt to load Phantom wallet if present
       loadSolanaWallet();
-
+  
       // If in `/play`, close the token modal automatically
       if (location.pathname.startsWith('/play')) {
         closeTokenModal();
       }
     };
-
+  
     doMount();
-
+  
     return () => {
       isUnmountedRef.current = true;
-      // Replaces componentWillUnmount
       if (socket) {
         socket.disconnect();
       }
@@ -395,6 +397,7 @@ function SiteWrapper(props) {
     };
   }, [getGlobalChatLogs]);
 
+  
   /**
    * Watch for user changes => set runTutorial if tutorial #1 not completed
    */
@@ -490,20 +493,18 @@ function SiteWrapper(props) {
       setIsCoinsAnimation(false);
     }, 1500);
   }, []);
+  
 
   const initSocket = useCallback(async () => {
     try {
-      // Wait a bit before connecting (optional)
-  
+
       // Create the socket
       const newSocket = socketIOClient(endpoint, {
         transports: ['websocket']
       });
-  
       // 1) Wait for "connect" or "connect_error" to guarantee connection
       await new Promise((resolve, reject) => {
         newSocket.once('connect', () => {
-          console.log('Socket connected!', newSocket.id);
           resolve();
         });
         newSocket.once('connect_error', (err) => {
@@ -511,21 +512,16 @@ function SiteWrapper(props) {
           reject(err);
         });
       });
-  
-      // 2) Now safe to do post-connection logic
-      if (user && user._id) {
-        newSocket.emit('STORE_CLIENT_USER_ID', { user_id: user._id });
-      }
-  
+      
       // ROOM LIST
       newSocket.on('UPDATED_ROOM_LIST', (data) => {
         setRoomList(data);
       });
-  
+
       newSocket.on('ROOM_ENDED', (data) => {
         removeRoomFromList(data.roomId);
       });
-  
+
       // LOAN OFFER
       newSocket.on(`RECEIVED_LOAN_OFFER_${user?._id}`, (payload) => {
         openOfferLoanModal();
@@ -541,15 +537,21 @@ function SiteWrapper(props) {
           totalWagered: payload.totalWagered
         });
       });
-  
+
       // CHAT
       newSocket.on('SEND_CHAT', (data) => {
+       if (!isMuted || !notificationSounds) {
+          notificationSoundRef.current?.play();
+        }
         addChatLog(data);
-        // if we're on /chat => mark as read
-        if (history.location.pathname.substr(0, 5) === '/chat') {
+
+        const pathName = history.location.pathname;       // "/chat/6302a5207195346428fa9d9b"
+        const segments = pathName.split('/');             // ["", "chat", "6302a5207195346428fa9d9b"]
+        const chatUserId = segments[2];                  // "6302a5207195346428fa9d9b" (or undefined if missing)
+        if (pathName.startsWith('/chat/') && chatUserId === data.from) {
           newSocket.emit('READ_MESSAGE', {
             to: user?._id,
-            from: data.from
+            from: data.from,
           });
         } else {
           newSocket.emit('REQUEST_UNREAD_MESSAGE_COUNT', {
@@ -557,33 +559,30 @@ function SiteWrapper(props) {
           });
         }
       });
-  
-      console.log('initSocket => fully connected.', newSocket);
-  
+
       // BET RESULT
       newSocket.on('UPDATE_BET_RESULT', (data) => {
         updateBetResult(data);
       });
-  
+
       // NEW TRANSACTION
       newSocket.on('NEW_TRANSACTION', (data) => {
         addNewTransaction(data);
       });
-  
+
       // NOTIFICATIONS
       newSocket.on('SEND_NOTIFICATION', (data) => {
-        console.log('new notification', data);
         if (data.amount && data.amount !== 0) {
           setBalance(propsBalance + data.amount);
         }
         if (!isMuted || !notificationSounds) {
           notificationSoundRef.current?.play();
         }
-  
+
         if (data.message.includes('Deposit')) {
           getUser();
         }
-  
+
         if (isNotificationsAllowed && window.Notification) {
           const options = { body: data.message, silent: false };
           if (Notification.permission === 'granted') {
@@ -598,28 +597,31 @@ function SiteWrapper(props) {
           }
         }
       });
-  
+
       // UNREAD MESSAGE COUNT
       newSocket.on('SET_UNREAD_MESSAGE_COUNT', (data) => {
         setUnreadMessageCount(data);
       });
-  
+
       // ONLINE STATUS
       newSocket.on('ONLINE_STATUS_UPDATED', (data) => {
         updateOnlineUserList(data.user_list);
       });
-  
+
       // GLOBAL CHAT
       newSocket.on('GLOBAL_CHAT_RECEIVED', (data) => {
         globalChatReceived(data);
       });
-  
-      // REPLACE ENTIRE GLOBAL CHAT
-      newSocket.on('SET_GLOBAL_CHAT', setGlobalChat);
-  
+
       // Finally store your newSocket in Redux or state
       setSocket(newSocket);
-  
+
+      // 2) Now safe to do post-connection logic
+      if (user && user._id) {
+        newSocket.emit('STORE_CLIENT_USER_ID', { user_id: user._id });
+      }
+
+
     } catch (error) {
       console.error('Socket initialization failed:', error);
       // Optionally retry here
@@ -688,6 +690,13 @@ function SiteWrapper(props) {
       console.error('Failed to connect Phantom or fetch token balance:', error);
     }
   }, []);
+
+  useEffect(() => {
+    // Only call initSocket if we have a valid user object.
+    if (user && user._id) {
+      initSocket(); 
+    }
+  }, [user, initSocket]);
 
   const disconnectWeb3 = useCallback(() => {
     setWalletAddress(null);
@@ -2035,7 +2044,6 @@ const mapStateToProps = (state) => ({
   notificationSounds: state.auth.notificationSounds,
   isNotificationsAllowed: state.auth.isNotificationsAllowed,
   user: state.auth.user,
-  unreadMessageCount: state.auth.unreadMessageCount,
   selectedMainTabIndex: state.logic.selectedMainTabIndex,
   isDarkMode: state.auth.isDarkMode,
   betResult: state.logic.betResult,

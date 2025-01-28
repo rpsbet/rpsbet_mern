@@ -6,6 +6,7 @@ import MyBankTable from './MyBankTable';
 
 const MyBankPage = ({ acQueryMyLoan }) => {
   useEffect(() => {
+    console.log("cecc")
     acQueryMyLoan(30, 1, 'loan_amount', '');
   }, [acQueryMyLoan]);
 
