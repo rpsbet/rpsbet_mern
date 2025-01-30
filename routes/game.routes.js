@@ -24,7 +24,6 @@ const RpsBetItem = require('../model/RpsBetItem');
 const QsBetItem = require('../model/QsBetItem');
 const { convertGameLogToHistoryStyle } = require('../helper/util/convertGameLogToHistoryStyle');
 const avatarUtils = require('../helper/util/getRank');
-const executeBet2 = require('../helper/util/betExecutor2');
 const executeBet3 = require('../helper/util/betExecutor3');
 const saveDocumentWithRetry = require('../helper/util/retrySave');
 const check_access_time = require('../helper/util/checkAccessTime');
@@ -38,7 +37,7 @@ const upload = multer({ storage });
 const axios = require('axios');
 
 // Environment variables
-const JWT = process.env.PINATA_JWT;
+const PINATA_JWT = process.env.PINATA_JWT;
 
 
 let user_access_log = {};
@@ -108,44 +107,85 @@ router.get('/recently-closed', async (req, res) => {
 });
 
 router.post('/upload-to-pinata', upload.single('file'), async (req, res) => {
+  console.log('=== POST /api/upload-to-pinata called ===');
+  console.log("Request Headers:", req.headers);
+  console.log("req.file:", req.file);
+
   try {
-
-    const file = req.file;
-
-    if (!file) {
-      console.error("No file uploaded.");
-      return res.status(400).json({ success: false, message: 'No file uploaded.' });
+    // 1) Ensure a file is present
+    if (!req.file) {
+      console.error('No file uploaded.');
+      return res.status(400).json({
+        success: false,
+        message: 'No file was provided in the "file" field.'
+      });
     }
-    const formData = new FormData();
-    formData.append('file', file.buffer, file.originalname);
 
-    const response = await axios.post('https://api.pinata.cloud/pinning/pinFileToIPFS', formData, {
+    // 2) Build form data for Pinata
+    //    - req.file.buffer is the raw binary from Multer memoryStorage
+    const formData = new FormData();
+    formData.append('file', req.file.buffer, req.file.originalname || 'upload.png');
+
+    // 3) Send POST request to Pinata
+    //    - Use your JWT for the `Authorization: Bearer ...` header
+    //    - `formData.getHeaders()` merges the correct Content-Type/boundary
+    const pinataRes = await axios.post('https://api.pinata.cloud/pinning/pinFileToIPFS', formData, {
       headers: {
-        Authorization: `Bearer ${JWT}`, // Pass your JWT here
-        ...formData.getHeaders(),
-      },
+        Authorization: `Bearer ${PINATA_JWT}`,
+        ...formData.getHeaders()
+      }
     });
 
-    if (response.status !== 200) {
-      console.error("Failed to upload image to Pinata");
-      throw new Error('Failed to upload image to Pinata');
+    // 4) Check Pinata response
+    if (pinataRes.status !== 200) {
+      console.error('Pinata upload failed:', pinataRes.data);
+      throw new Error('Pinata upload failed. Check logs.');
     }
 
-    const { IpfsHash } = response.data;
+    // 5) Extract IPFS hash and form an IPFS gateway URL
+    const { IpfsHash } = pinataRes.data;
+    const imageUrl = `https://gateway.pinata.cloud/ipfs/${IpfsHash}`;
 
-    res.json({
+    console.log('Pinata IPFS upload success:', IpfsHash);
+
+    // 6) Send the URL back to the client
+    return res.json({
       success: true,
-      imageUrl: `https://gateway.pinata.cloud/ipfs/${IpfsHash}`, // Return IPFS URL
+      imageUrl
     });
   } catch (error) {
-    res.status(500).json({
+    console.error('Error uploading to Pinata:', error);
+    return res.status(500).json({
       success: false,
       message: 'Error uploading to Pinata',
-      error: error.message,
+      error: error.message
     });
   }
 });
 
+
+router.patch('/range/:user_id', async (req, res) => {
+  const { user_id } = req.params;
+  const { newValue } = req.body;
+
+  try {
+    console.log("newValue", newValue)
+    const user = await User.findByIdAndUpdate(user_id, { range: newValue }, { new: true });
+    console.log("user", user)
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'user not found' });
+    }
+    res.json({
+      success: true,
+      message: 'Successful!'
+    });
+  } catch (err) {
+    res.json({
+      success: false,
+      err: err.message
+    });
+  }
+});
 
 router.patch('/strategies/:user_id', async (req, res) => {
   const { user_id } = req.params;
@@ -728,9 +768,9 @@ router.get('/qsbetitems/:roomId', auth, async (req, res) => {
       joiner: req.user._id,
       joiner_qs: { $ne: null }
     })
+
       .sort({ created_at: -1 })
       .limit(50);
-
     res.json({
       success: true,
       data: qsBetItems
@@ -740,124 +780,6 @@ router.get('/qsbetitems/:roomId', auth, async (req, res) => {
     res.json({
       success: false,
       err: err
-    });
-  }
-});
-
-router.put('/rpsbetitems/:itemId', auth, async (req, res) => {
-  const { itemId } = req.params;
-  const { updatedItem, cellindex } = req.body;
-
-  try {
-    // Find the RpsBetItem by ID
-    const rpsBetItem = await RpsBetItem.findById(itemId);
-
-    if (!rpsBetItem) {
-      console.log("RpsBetItem not found");
-      return res.status(404).json({
-        success: false,
-        message: 'RpsBetItem not found'
-      });
-    }
-
-    if (cellindex === 'bet_amount') {
-      if (!isNaN(updatedItem)) {
-        rpsBetItem[cellindex] = parseFloat(updatedItem);
-      } else {
-        throw new Error('Invalid bet amount. Please provide a valid number.');
-      }
-    } else if (cellindex === 'rps' || cellindex === 'joiner_rps') {
-      const validRPSValues = ['r', 'p', 's', 'R', 'P', 'S'];
-      if (validRPSValues.includes(updatedItem.toLowerCase())) {
-        rpsBetItem[cellindex] = updatedItem.toUpperCase();
-      } else {
-        throw new Error('Invalid value for RPS. Please provide either "r", "p", or "s".');
-      }
-    } else {
-      throw new Error('Invalid cell index.');
-    }
-
-    await rpsBetItem.save();
-
-    const updatedRpsBetItems = await RpsBetItem.find({
-      room: rpsBetItem.room,
-      joiner: req.user._id,
-      joiner_rps: { $ne: null }
-    })
-      .sort({ created_at: -1 })
-      .limit(50);
-
-
-    res.json({
-      success: true,
-      message: 'RpsBetItem updated successfully',
-      data: updatedRpsBetItems
-    });
-  } catch (err) {
-    console.error("Error updating RpsBetItem:", err.message);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to update RpsBetItem',
-      error: err.message
-    });
-  }
-});
-router.put('/qsbetitems/:itemId', auth, async (req, res) => {
-  const { itemId } = req.params;
-  const { updatedItem, cellindex } = req.body;
-
-  try {
-    // Find the QsBetItem by ID
-    const qsBetItem = await QsBetItem.findById(itemId);
-
-    // Ensure the item exists
-    if (!qsBetItem) {
-      console.log("QsBetItem not found");
-      return res.status(404).json({
-        success: false,
-        message: 'QsBetItem not found'
-      });
-    }
-
-    if (cellindex === 'bet_amount') {
-      if (!isNaN(updatedItem)) {
-        qsBetItem[cellindex] = parseFloat(updatedItem);
-      } else {
-        throw new Error('Invalid bet amount. Please provide a valid number.');
-      }
-    } else if (cellindex === 'qs' || cellindex === 'joiner_qs') {
-      const validQSValues = [0, 1, 2, 3, 4, 5];
-      if (validQSValues.includes(updatedItem.toLowerCase())) {
-        qsBetItem[cellindex] = updatedItem.toUpperCase();
-      } else {
-        throw new Error('Invalid value for QS. Please provide either "1", "2", "3", "4", or "5".');
-      }
-    } else {
-      throw new Error('Invalid cell index.');
-    }
-
-    await qsBetItem.save();
-
-    const updatedQsBetItems = await QsBetItem.find({
-      room: qsBetItem.room,
-      joiner: req.user._id,
-      joiner_qs: { $ne: null }
-    })
-      .sort({ created_at: -1 })
-      .limit(50);
-
-
-    res.json({
-      success: true,
-      message: 'QsBetItem updated successfully',
-      data: updatedQsBetItems
-    });
-  } catch (err) {
-    console.error("Error updating QsBetItem:", err.message);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to update QsBetItem',
-      error: err.message
     });
   }
 });
@@ -1306,6 +1228,7 @@ router.post('/rooms', auth, async (req, res) => {
       bet_amount,
       name,
       image,
+      ticker,
       telegram_link,
       x_link,
       website_link,
@@ -1343,9 +1266,7 @@ router.post('/rooms', auth, async (req, res) => {
       });
     }
 
-    console.log("game_type", game_type)
     const gameType = await GameType.findOne({ game_type_id: parseInt(game_type) });
-    console.log("gameType", gameType)
 
     let host_pr = 0;
     let user_bet = 0;
@@ -1363,7 +1284,9 @@ router.post('/rooms', auth, async (req, res) => {
     const roomCount = await Room.countDocuments({});
     const newRoom = new Room({
       ...req.body,
-      creator: req.user,
+      creator_id: req.user._id,
+      creator_avatar: req.user.avatar,
+      creator_status: "on",
       joiners: [],
       hosts: [
         {
@@ -1376,10 +1299,11 @@ router.post('/rooms', auth, async (req, res) => {
           stake: parseFloat(bet_amount),
         },
       ],
-      game_type: gameType,
+      game_type: gameType ? gameType.toObject() : {},
       user_bet,
       name,
       image,
+      ticker,
       x_link,
       telegram_link,
       website_link,
@@ -1388,10 +1312,10 @@ router.post('/rooms', auth, async (req, res) => {
       endgame_type,
       host_pr,
       room_number: roomCount + 1,
+      index: roomCount + 1,
       status: 'open',
       description,
     });
-
 
     try {
       await saveDocumentWithRetry(newRoom);
@@ -2548,7 +2472,7 @@ const getTimeBucket = (timeRange) => {
   }
 };
 
-router.post('/getGlobalChatLogs', auth, async (req, res) => {
+router.post('/getGlobalChatLogs', async (req, res) => {
   try {
     // 1) Fetch last 15 messages from Chat, sorted descending
     const results = await Chat.find({})
@@ -2575,7 +2499,7 @@ router.post('/getGlobalChatLogs', auth, async (req, res) => {
       const extractedReplyTo = replyTo && replyTo.length > 0 ? replyTo[0] : null;
       const transformedReplyTo = extractedReplyTo
         ? {
-          sender: extractedReplyTo.sender?.username ?? '',
+          username: extractedReplyTo.sender?.username ?? '',
           senderId: extractedReplyTo.sender?._id ?? '',
           avatar: extractedReplyTo.sender?.avatar ?? '',
           rank: extractedReplyTo.sender?.totalWagered ?? '',
@@ -3112,49 +3036,6 @@ router.post('/reCreate', auth, async (req, res) => {
       success: false,
       message: 'Failed to re-create room'
     });
-  }
-});
-
-
-router.post('/bet2', auth, async (req, res) => {
-  try {
-    const requestId = uuidv4();
-    // Acquire the semaphore
-    if (semaphore2 === 0) {
-      // If semaphore is already acquired, return a busy response
-      return res.status(503).json({ success: false, message: 'Service Unavailable' });
-    }
-    semaphore2 = 0; // Set semaphore to indicate it's acquired
-
-    const [accessAllowed, betResult] = await Promise.all([
-      check_access_time(req.user._id),
-      executeBet2(req)
-    ]);
-
-    // Release the semaphore
-    semaphore2 = 1;
-
-    if (!accessAllowed) {
-      const responseData = {
-        success: false,
-        message: 'irregular action',
-        betResult: -1000,
-        requestId: requestId
-      };
-
-      return res.json(responseData);
-    }
-    res.json({
-      success: betResult.success,
-      message: betResult.message,
-      betResult: betResult.betResult,
-      newTransaction: betResult.newTransaction,
-      roomStatus: betResult.roomStatus,
-      requestId: requestId
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 });
 

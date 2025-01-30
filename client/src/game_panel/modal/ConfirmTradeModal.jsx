@@ -7,7 +7,6 @@ import {
 import { confirmTrade, addNewTransaction } from '../../redux/Logic/logic.actions';
 import { Button } from '@mui/material';
 import { alertModal } from '../modal/ConfirmAlerts';
-import { setBalance } from '../../redux/Auth/user.actions';
 import { acQueryItem } from '../../redux/Item/item.action';
 import { convertToCurrency } from '../../util/conversion';
 import Lottie from 'react-lottie';
@@ -44,7 +43,6 @@ function ConfirmTradeModal(props) {
     owner,
     closeConfirmTradeModal,
     confirmTrade,
-    setBalance,
     addNewTransaction,
     acQueryItem
   } = props;
@@ -68,8 +66,7 @@ function ConfirmTradeModal(props) {
     const response = await confirmTrade({ item_id: item, owner });
 
     if (response.success) {
-      const { balance, newTransaction, message } = response;
-      setBalance(balance);
+      const { newTransaction, message } = response;
       addNewTransaction(newTransaction);
       acQueryItem(40, 1, 'price', '653ee81117c9f5ee2124564b');
       alertModal(isDarkMode, message, '-cat');
@@ -151,7 +148,6 @@ const mapStateToProps = (state) => ({
 const mapDispatchToProps = {
   closeConfirmTradeModal,
   confirmTrade,
-  setBalance,
   addNewTransaction,
   acQueryItem
 };

@@ -22,9 +22,7 @@ import { getCustomTheme } from '../../config/theme';
 import {
   vaultDeposit,
   vaultWithdraw,
-  fetchVaultBalance,
   fetchRecentVaultTransactions,
-  setBalance,
 } from '../../redux/Auth/user.actions';
 import { addNewTransaction } from '../../redux/Logic/logic.actions';
 import { convertToCurrency } from '../../util/conversion';
@@ -35,22 +33,21 @@ import history from '../../redux/history';
 // MUI handles that internally.
 function VaultModal(props) {
   const {
-    vaultBal: initialVaultBal,
+    vaultBal,
     modalIsOpen,
     closeModal,
     fetchRecentVaultTransactions,
+    onVaultBalChange,
     vaultTransactions: propVaultTransactions,
     vaultDeposit,
     vaultWithdraw,
     user,
     solPrice,
     isDarkMode,
-    setBalance,
     addNewTransaction
   } = props;
 
   // ------------------ LOCAL STATE ------------------
-  const [vaultBal, setVaultBal] = useState(initialVaultBal);
   const [amount, setAmount] = useState('');
   const [animate, setAnimate] = useState(false);
   const [lastUpdatedBalance, setLastUpdatedBalance] = useState(0);
@@ -98,14 +95,16 @@ function VaultModal(props) {
 
     // Update local state
     setVaultTransactions([newTransaction, ...vaultTransactions]);
-    setVaultBal(result.vaultBalance);
     setLastUpdatedBalance(vaultBal);
     setAmount('');
     setIsWithdraw(false);
     setLoaded(true);
 
+    if (onVaultBalChange) {
+      onVaultBalChange(result.vaultBalance);
+    }
+
     // Redux updates
-    setBalance(result.newBalance);
     addNewTransaction(result.newTransaction);
   };
 
@@ -124,14 +123,16 @@ function VaultModal(props) {
 
     // Update local state
     setVaultTransactions([newTransaction, ...vaultTransactions]);
-    setVaultBal(result.vaultBalance);
     setLastUpdatedBalance(vaultBal);
     setAmount('');
     setIsWithdraw(true);
     setLoaded(true);
 
+    if (onVaultBalChange) {
+        onVaultBalChange(result.vaultBalance);
+      }
+
     // Redux updates
-    setBalance(result.newBalance);
     addNewTransaction(result.newTransaction);
   };
 
@@ -285,8 +286,6 @@ const mapStateToProps = (state) => ({
 const mapDispatchToProps = {
   vaultDeposit,
   vaultWithdraw,
-  fetchVaultBalance,
-  setBalance,
   addNewTransaction,
   fetchRecentVaultTransactions,
 };

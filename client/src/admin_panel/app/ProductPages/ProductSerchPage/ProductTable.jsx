@@ -150,11 +150,17 @@ const ProductTable = (props) => {
 
   // If data changes => fetch user info
   useEffect(() => {
-    fetchCustomerInfo();
-    fetchItems();
-    
+      fetchItems();
     // no deps
   }, []);
+
+  useEffect(() => {
+    if (data && data.length > 0) {
+      fetchCustomerInfo();
+    }
+    
+    // no deps
+  }, [data]);
 
   // ----- Functions -----
   const fetchItems = (criteria = sortCriteria, type = itemType) => {

@@ -14,8 +14,8 @@ const { convertGameLogToHistoryStyle } = require('./convertGameLogToHistoryStyle
 const check_access_time = require('../../helper/util/checkAccessTime');
 
 const moment = require('moment');
-const { predictNext, reinforcementAI, innovate, patternBasedAI, counterSwitchAI, counterRandomness, NPC, generatePattern } = require('./predictNext');
-const { NPC_qs, patternBasedAI_qs, innovate_qs, getRandomItem_qs, counterSwitchAI_qs, generatePattern_qs, counterRandomness_qs, getCopyCatItem_qs, predictNextQs, reinforcementAI_qs } = require('./predictNextQs');
+const { predictNext, reinforcementAI, } = require('./predictNext');
+const { getRandomItem_qs, predictNextQs, reinforcementAI_qs } = require('./predictNextQs');
 
 const saveDocumentWithRetry = require('./retrySave');
 const requestQueue = [];

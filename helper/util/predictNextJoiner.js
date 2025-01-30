@@ -1,10 +1,10 @@
 const tf = require('@tensorflow/tfjs-node');
-const { Configuration, OpenAIApi } = require('openai');
+const { OpenAI } = require('openai');
 
-const configuration = new Configuration({
+// Create an instance of OpenAI directly
+const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-const openai = new OpenAIApi(configuration);
 
 const predictNext = (rps_list, markov = false) => {
   const choices = ['R', 'P', 'S'];
@@ -33,7 +33,7 @@ const predictNext = (rps_list, markov = false) => {
   Object.keys(transitionMatrix).forEach((fromState) => {
     const totalTransitions = Object.values(transitionMatrix[fromState]).reduce(
       (a, b) => a + b,
-      0,
+      0
     );
     if (totalTransitions > 0) {
       Object.keys(transitionMatrix[fromState]).forEach((toState) => {
@@ -93,7 +93,7 @@ async function trainModel(rpsNumeric, joinerRPSNumeric) {
 
   const model = tf.sequential();
   model.add(
-    tf.layers.dense({ units: 128, inputShape: [1], activation: 'relu' }),
+    tf.layers.dense({ units: 128, inputShape: [1], activation: 'relu' })
   );
   model.add(tf.layers.dense({ units: 64, activation: 'relu' }));
   model.add(tf.layers.dense({ units: 32, activation: 'relu' }));
@@ -132,7 +132,6 @@ async function predictNextMove(model, rpsNumeric) {
   else nextJoinerRPS = 'S';
 
   let risk;
-
   if (
     probabilities[nextJoinerRPSNumeric] > 0.4 &&
     probabilities[nextJoinerRPSNumeric] <= 0.65
@@ -145,13 +144,15 @@ async function predictNextMove(model, rpsNumeric) {
   } else {
     risk = 1;
   }
-  let bestCounterMove;
 
+  let bestCounterMove;
   if (Math.random() < 0.33) {
+    // 33% chance to pick a random move
     const randomMoveIndex = Math.floor(Math.random() * 3);
     bestCounterMove =
       randomMoveIndex === 0 ? 'R' : randomMoveIndex === 1 ? 'P' : 'S';
   } else {
+    // Otherwise, choose a counter move with a 50/50 chance to deviate
     if (nextJoinerRPS === 'R')
       bestCounterMove = Math.random() < 0.5 ? 'P' : 'R';
     else if (nextJoinerRPS === 'P')
@@ -179,13 +180,13 @@ async function reinforcementAI(data) {
 
   const historicData = data.slice(0, 20);
   const rpsNumeric = historicData.map((entry) =>
-    entry.rps === 'R' ? 0 : entry.rps === 'P' ? 1 : 2,
+    entry.rps === 'R' ? 0 : entry.rps === 'P' ? 1 : 2
   );
   const joinerRPSNumeric = historicData.map((entry) =>
-    entry.joiner_rps === 'R' ? 0 : entry.joiner_rps === 'P' ? 1 : 2,
+    entry.joiner_rps === 'R' ? 0 : entry.joiner_rps === 'P' ? 1 : 2
   );
 
-  const results = historicData.map((entry, index) => ({
+  const results = historicData.map((entry) => ({
     rps: entry.rps,
     joiner_rps: entry.joiner_rps,
     win:
@@ -211,14 +212,14 @@ async function reinforcementAI(data) {
       }
       return acc;
     },
-    { winChanges: [], lossChanges: [] },
+    { winChanges: [], lossChanges: [] }
   );
 
   const winChangesCount = winChangePattern.winChanges.filter(
-    (change) => change,
+    (change) => change
   ).length;
   const lossChangesCount = winChangePattern.lossChanges.filter(
-    (change) => change,
+    (change) => change
   ).length;
   const winCount = winChangePattern.winChanges.length;
   const lossCount = winChangePattern.lossChanges.length;
@@ -278,7 +279,6 @@ async function reinforcementAI(data) {
   }
 }
 
-
 function getRandomMove() {
   const moves = ['R', 'P', 'S'];
   return moves[Math.floor(Math.random() * moves.length)];
@@ -300,20 +300,18 @@ async function predictNextOpenAI(rps_list) {
 
   const userPrompt = {
     role: 'user',
-    content: `The user's past moves are: ${userMovesString}. c their next move. Valid answers: R, P, or S.`,
+    content: `The user's past moves are: ${userMovesString}. Predict their next move. Valid answers: R, P, or S.`,
   };
 
   try {
-    const response = await openai.createChatCompletion({
+    const response = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [systemMessage, userPrompt],
       max_tokens: 10,
       temperature: 0.5,
     });
 
-    let predictedMove = response.data.choices[0].message.content
-      .trim()
-      .toUpperCase();
+    let predictedMove = response.choices[0].message.content.trim().toUpperCase();
 
     if (!['R', 'P', 'S'].includes(predictedMove)) {
       predictedMove = ['R', 'P', 'S'][Math.floor(Math.random() * 3)];
@@ -322,9 +320,8 @@ async function predictNextOpenAI(rps_list) {
     return predictedMove;
   } catch (error) {
     console.error('Error calling OpenAI API:', error);
-
-    const randomChoice = ['R', 'P', 'S'][Math.floor(Math.random() * 3)];
-    return randomChoice;
+    // Fallback to random
+    return ['R', 'P', 'S'][Math.floor(Math.random() * 3)];
   }
 }
 

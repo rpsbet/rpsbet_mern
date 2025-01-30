@@ -1,4 +1,4 @@
-import { alertModal, callBotModal } from '../modal/ConfirmAlerts';
+import { alertModal } from '../modal/ConfirmAlerts';
 
 export const validateIsAuthenticated = (isAuthenticated, isDarkMode) => {
     if (!isAuthenticated) {
@@ -19,21 +19,6 @@ export const validateIsAuthenticated = (isAuthenticated, isDarkMode) => {
     return true;
   }
 
-  export const callBot = async (creator_id, room_id, user_id, isDarkMode, updateRoomBot) => {
-    if (creator_id === user_id) {
-      callBotModal(
-        isDarkMode,
-        'CALL BOT ON YOUR GAME?',
-        'Call',
-        'Cancel',
-        async () => {
-          await updateRoomBot(room_id)
-        }
-      );
-      return false;
-    }
-    return true;
-  }
   
   export const validateBankroll = (bet_amount, bankroll, isDarkMode) => {
     if (bet_amount > bankroll) {

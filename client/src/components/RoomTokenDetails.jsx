@@ -20,7 +20,7 @@ const RoomTokenDetails = ({ roomInfo, solPrice, isDarkMode, handleOpenPlayerModa
                 />
                 <div className="room-info">
                     <h6 className="room-name">
-                        {roomInfo.name}<br/><span className="room-ticker">({roomInfo.room_name})</span>
+                        {roomInfo.name}<br/><span className="room-ticker">({roomInfo.ticker})</span>
                     </h6>
                     <p className="room-description">{roomInfo.description}</p>
                 </div>

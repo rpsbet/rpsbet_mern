@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import LoadingOverlay from 'react-loading-overlay';
 import axios from '../../util/Api';
 import { alertModal } from '../modal/ConfirmAlerts';
-import { setBalance, setGasfee } from '../../redux/Auth/user.actions';
+import { setGasfee } from '../../redux/Auth/user.actions';
 import { addNewTransaction } from '../../redux/Logic/logic.actions';
 import { ThemeProvider } from '@mui/material/styles';
 import { getCustomTheme } from '../../config/theme';
@@ -128,7 +128,6 @@ function DepositModal(props) {
     tokenBalance,
     account,
     setGasfee,
-    setBalance,
     addNewTransaction,
     loadSolanaWallet
   } = props;
@@ -347,7 +346,6 @@ function DepositModal(props) {
 
       if (result.data.success) {
         alertModal(isDarkMode, result.data.message, '-cat');
-        setBalance(result.data.balance);
         addNewTransaction(result.data.newTransaction);
         setIsLoading(false);
         closeModal();
@@ -902,7 +900,6 @@ const mapStateToProps = (state) => ({
 });
 
 const mapDispatchToProps = {
-  setBalance,
   setGasfee,
   addNewTransaction
 };

@@ -24,11 +24,6 @@
 	color: #ff0000 !important;
 }
 
-.dark_mode .edit-icon {
-	color: #333 !important;
-}
-
-
 .dark_mode .popup {
 	background: linear-gradient(45deg, #430088, #c000f2);
 }

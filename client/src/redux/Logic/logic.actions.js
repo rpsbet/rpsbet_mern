@@ -18,8 +18,7 @@ import {
   PREPEND_OLDER_CHAT_MESSAGES,
   SET_FETCHING_OLDER_MESSAGES,
   TOP_WINS,
-  ADD_NEW_CANDLE,
-  SET_QBOT_STATUSES,
+  APPEND_NEW_CANDLE,
   COMMENT_CREATION_FAILED,
   COMMENTS_LOADED,
   COMMENTS_LOAD_FAILED,
@@ -100,6 +99,33 @@ export const reCreateRoom = room_id => async dispatch => {
     history.push('/');
   } catch (err) {
     dispatch({ type: MSG_WARNING, payload: err });
+  }
+};
+
+// logic.actions.js
+export const uploadImageToPinata = (formData) => async (dispatch) => {
+  try {
+    // dispatch({ type: UPLOAD_IMAGE_REQUEST });
+    const response = await axios.post('/game/upload-to-pinata', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+
+    console.log("response", response)
+    
+    if (response.status !== 200) {
+      throw new Error('Failed to upload image to Pinata.');
+    }
+    const { imageUrl } = response.data;
+    console.log("imageUrl", )
+
+    // dispatch({ type: UPLOAD_IMAGE_SUCCESS, payload: imageUrl });
+    return imageUrl;
+  } catch (error) {
+    console.log("eerrrr", error)
+    // dispatch({ type: UPLOAD_IMAGE_FAILURE, payload: error.message });
+    throw error;
   }
 };
 
@@ -251,57 +277,7 @@ export const bet = bet_info => async dispatch => {
   };
 };
 
-
-// auto join game
-export const bet2 = bet_info => async dispatch => {
-  try {
-    dispatch({ type: START_BET });
-    const res = await axios.post('/game/bet2', bet_info);
-    dispatch({ type: END_BET });
-
-    if (res.data.success) {
-      dispatch({ type: NEW_TRANSACTION, payload: res.data.newTransaction });
-
-      return {
-        status: 'success',
-        betResult: res.data.betResult,
-        roomStatus: res.data.roomStatus,
-        amount: res.data.newTransaction.amount
-      };
-    } else {
-      if (res.data.betResult === -100) {
-        history.push('/');
-        dispatch({ type: MSG_WARNING, payload: 'THIS GAME HAS NOW ENDED' });
-
-        return {
-          status: 'failed',
-          message: 'THIS GAME HAS NOW ENDED'
-        };
-      } else if (res.data.betResult === -102) {
-        dispatch({ type: MSG_WARNING, payload: 'THIS ROOM IS BUSY' });
-
-        return {
-          status: 'failed',
-          message: res.data.message
-        };
-      } else {
-        dispatch({ type: MSG_WARNING, payload: 'THIS ROOM IS BUSY' });
-        return {
-          status: 'failed',
-          message: 'SLOW DOWN BLUD!'
-        };
-      }
-    }
-  } catch (err) {
-    console.log(err);
-  }
-
-  return {
-    status: 'failed'
-  };
-};
-
-// manual
+// player
 export const bet3 = bet_info => async dispatch => {
   try {
     dispatch({ type: START_BET });
@@ -779,32 +755,6 @@ export const getQsBetItems = (room_id) => async dispatch => {
   }
 };
 
-export const updateRpsBetItems = (itemId, cellindex, updatedItem) => async dispatch => {
-  try {
-    const res = await axios.put(`/game/rpsbetitems/${itemId}`, { cellindex, updatedItem });
-    if (res.data.success) {
-      dispatch({ type: RPSBETITEMS_LOADED, payload: res.data });
-      dispatch({ type: MSG_SUCCESS, payload: "TRAINING DATA HAS BEEN UPDATED" });
-    }
-    return res.data;
-  } catch (err) {
-    dispatch({ type: MSG_ERROR, payload: 'TRAINING DATA FAILED TO UPDATE, CHECK VALUE IS CORRECT' });
-
-  }
-};
-export const updateQsBetItems = (itemId, cellindex, updatedItem) => async dispatch => {
-  try {
-    const res = await axios.put(`/game/qsbetitems/${itemId}`, { cellindex, updatedItem });
-    if (res.data.success) {
-      dispatch({ type: QSBETITEMS_LOADED, payload: res.data });
-      dispatch({ type: MSG_SUCCESS, payload: "TRAINING DATA HAS BEEN UPDATED" });
-    }
-    return res.data;
-  } catch (err) {
-    dispatch({ type: MSG_ERROR, payload: 'TRAINING DATA FAILED TO UPDATE, CHECK VALUE IS CORRECT' });
-  }
-};
-
 export const editPayout = (amount, rowId) => async dispatch => {
   try {
     const result = await axios.post('/game/editPayout/', { amount, rowId });
@@ -872,15 +822,27 @@ export const updateUserStrategy = (user_id, strategy) => async dispatch => {
   }
 };
 
+export const updateBetRangeFunction = (user_id, newValue) => async dispatch => {
+  try {
+    const res = await axios.patch(`/game/range/${user_id}`, { newValue });
+    if (res.data.success) {
+
+      dispatch({ type: MSG_SUCCESS, payload: "BETTING RANGE UPDATED" });
+    }
+  } catch (err) {
+    // Handle errors
+  }
+};
+
 export const updateRoomStrategy = (room_id, strategy) => async dispatch => {
   try {
     const res = await axios.patch(`/game/room/strategies/${room_id}`, { strategy });
     if (res.data.success) {
 
-      dispatch({ type: MSG_SUCCESS, payload: "ROOM STRATEGY UPDATED" });
+      dispatch({ type: MSG_SUCCESS, payload: "ROOM MODEL UPDATED" });
     }
   } catch (err) {
-    dispatch({ type: MSG_ERROR, payload: 'UNABLE TO UPDATE ROOM STRATEGY' });
+    dispatch({ type: MSG_ERROR, payload: 'UNABLE TO UPDATE ROOM MODEL' });
 
   }
 };
@@ -1166,21 +1128,17 @@ export const getMyHistory = search_condition => async dispatch => {
   }
 };
 
-export const addNewCandle = (newCandle) => {
-  return {
-    type: 'ADD_NEW_CANDLE',
-    payload: newCandle,
-  };
+export const someActionToAppendCandle = (newCandle) => (dispatch) => {
+  dispatch({ type: APPEND_NEW_CANDLE, payload: newCandle });
 };
 
 export const getTransactionCandles = ({ roomId, timeFrame }) => async (dispatch) => {
-  console.log("roomId, timeFrame", roomId, timeFrame)
   try {
     const res = await axios.get(`/game/candles/${roomId}`, {
       params: { timeFrame }
     });
     if (res.data.success) {
-      console.log("res.data", res.data)
+
       dispatch({
         type: 'TRANSACTION_CANDLES_LOADED',
         payload: res.data || [],
@@ -1398,6 +1356,7 @@ export const updateBankrollQs = bankroll => {
 };
 
 export const setRoomList = (newRoom) => (dispatch) => {
+  console.log("newRoom", newRoom)
   try {
     // Get existing list (if any) from localStorage
     let roomList = JSON.parse(localStorage.getItem('roomList')) || [];

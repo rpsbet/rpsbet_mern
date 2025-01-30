@@ -288,14 +288,6 @@ div.table .table-row .table-cell button:last-child:active,
   box-shadow: none !important;
 }
 
-
-div.table .table-row .table-cell button span,
-.create-room-btn-panel button.btn-create-room span,
-.game_header .main_header .header_action_panel button#btn-login span {
-  z-index: 2px !important;
-  position: inherit;
-}
-
 div.table .table-row .table-cell button:last-child:hover,
 #balance button:hover,
 .game_header .main_header .header_action_panel button#btn-login:hover,
@@ -710,21 +702,13 @@ td {
 }
 
 
-
-.table-cell #ai_mode {
-  position: relative;
-  /* top:-2px;
-  left: 90px; */
-}
-
-span.room-id.ai_mode {
+#ai_mode {
   border: 1px solid #f13bfe;
-  border-radius: 1em;
+  border-radius: 0.3em;
   color: #f68aff;
   font-size: 0.5em !important;
   padding: 2px 4px;
   background: linear-gradient(45deg, #a341a28c, #6a18ff87);
-  margin-left: 10px;
 }
 
 span.room-id.qbot {
@@ -1152,6 +1136,7 @@ div.table.main-game-table .cell-game-description span {
   align-items: flex-start;
   display: flex;
 }
+
 
 div.table.main-game-table .table-row .table-cell.cell-user-name {
   display: flex;
@@ -1744,10 +1729,6 @@ h6.score {
   animation-fill-mode: both;
 }
 
-input {
-  border: none;
-}
-
 .game-page .game-contents h3.game-sub-title {
   font-size: 16px;
   color: #343a40;
@@ -1837,8 +1818,8 @@ input {
 
 .guesses div {
   display: flex;
-  margin-right: 5px;
-  margin-left: 2.5px;
+  margin-right: 6px;
+  margin-left: 3px;
 }
 
 .guesses div:last-child,
@@ -1964,8 +1945,8 @@ svg#delete:hover {
 }
 
 .tiers .active {
-  transform: translateY(-8px);
-  filter: brightness(1.5);
+  transform: translateY(-2px);
+  filter: brightness(1.1);
 }
 
 .tiers button:hover {
@@ -2017,31 +1998,17 @@ svg#delete:hover {
 .side-tab-switcher {
   width: 24px;
   position: absolute;
-  left: 0;
-  top: 10px;
+  left: 3px;
+  top: 30px;
 }
 
 .side-tab-switcher button {
-  min-width: 22px !important;
+  min-width: 24px !important;
   padding: 6px 10px !important;
-  border-top-left-radius: 0.3em;
-  border-bottom-left-radius: 0.3em;
 }
 
 .side-tab-switcher button svg {
-  font-size: 1em !important;
-}
-
-.side-tab-switcher button svg {
-  color: #7c7c7c !important;
-}
-
-#btn-rps-settings {
-  position: relative;
-  margin-top: -15px;
-  cursor: pointer;
-  z-index: 2;
-  float: right;
+  font-size: 0.7em !important;
 }
 
 .settings tr td:last-child {
@@ -2084,7 +2051,6 @@ svg#delete:hover {
 
 #ap-btn {
   background: #e0e0e0;
-  box-shadow: 0px 3px 1px -2px rgba(0, 0, 0, 0.2), 0px 2px 2px 0px rgba(0, 0, 0, 0.14), 0px 1px 5px 0px rgba(0, 0, 0, 0.12);
   color: #333;
   cursor: pointer;
   border: none;
@@ -2118,14 +2084,6 @@ svg#delete:hover {
   align-items: center;
 }
 
-
-input {
-  border-radius: 1em !important;
-  outline: 0;
-  padding-left: 8px;
-  border-width: 1px;
-}
-
 .join-game-panel .game-page .game-contents p {
   font-weight: 600;
 }
@@ -2138,12 +2096,19 @@ input {
   background-color: var(--secondary-color) !important;
   z-index: 2;
   text-align: center;
-  top: calc(100% - 22px);
+  top: calc(100% - 28px);
   left: 0;
-  padding: 5px 10px 80px;
+  font-size: small;
+  font-weight: 600;
+  padding: 15px !important;
   position: sticky !important;
   box-shadow: inset 0px 2px 0px var(--secondary-color);
 }
+
+.msgtooltip:hover {
+  background-color: rgba(0, 0, 0, 0.1); 
+}
+
 
 .result {
   white-space: nowrap;
@@ -2783,11 +2748,6 @@ svg {
   margin: 0;
 }
 
-input,
-textarea {
-  border-radius: 0 !important;
-}
-
 /** INFO **/
 
 .marginBottom {
@@ -3087,15 +3047,7 @@ h3.game-sub-title {
 #liveStakes {
   padding: 2.5px 5px;
   cursor: pointer;
-  margin-left: -10px;
-}
-
-#liveStakes div {
-  position: absolute;
-  height: auto !important;
-
-  margin-top: -13px !important;
-  display: inline-block !important;
+  margin-left: 18px;
 }
 
 .game-page .game-contents .game-info-panel button.other {
@@ -3435,17 +3387,6 @@ circle {
   transition: all 0.1s;
   height: 52px !important;
 }
-
-.red-dot {
-  width: 10px;
-  height: 10px;
-  background-color: #ff0000;
-  border-radius: 50%;
-  position: absolute;
-  top: 5px;
-  right: 5px;
-}
-
 
 .selected {
   border: 2px solid #ffd000 !important;

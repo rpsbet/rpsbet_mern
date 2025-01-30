@@ -1,20 +1,24 @@
 import * as tf from '@tensorflow/tfjs';
 
 export const predictNext = (rps_list, markov = false) => {
+  console.log('calllllled');
+  console.log('rps_list', rps_list);
+
   const choices = ['R', 'P', 'S'];
   const smoothingFactor = 0.1; // Smoothing factor to avoid zero probabilities
 
   if (rps_list.length <= 1) {
-    // Not enough data, return a random choice
-    return choices[Math.floor(Math.random() * 3)];
+    // Not enough data, return random
+    const randomMove = choices[Math.floor(Math.random() * 3)];
+    return { move: randomMove, risk: 1 };
   }
 
-  // Randomly select a subset of the data for the transition matrix
-  const subsetSize = Math.min(rps_list.length - 1, 10); // Adjust subset size if needed
+  // Randomly select a subset for the transition matrix
+  const subsetSize = Math.min(rps_list.length - 1, 10);
   const startIndex = Math.floor(Math.random() * (rps_list.length - subsetSize));
   const subset = rps_list.slice(startIndex, startIndex + subsetSize);
 
-  // Create a simplified 1st-order Markov model transition matrix
+  // Markov model transition matrix
   const transitionMatrix = {
     R: { R: 0, P: 0, S: 0 },
     P: { R: 0, P: 0, S: 0 },
@@ -32,57 +36,84 @@ export const predictNext = (rps_list, markov = false) => {
     const totalTransitions = Object.values(transitionMatrix[fromState]).reduce((a, b) => a + b, 0);
     if (totalTransitions > 0) {
       Object.keys(transitionMatrix[fromState]).forEach((toState) => {
-        transitionMatrix[fromState][toState] = (transitionMatrix[fromState][toState] + smoothingFactor) / (totalTransitions + smoothingFactor * 3);
+        transitionMatrix[fromState][toState] =
+          (transitionMatrix[fromState][toState] + smoothingFactor) /
+          (totalTransitions + smoothingFactor * 3);
       });
     } else {
-      // If no transitions, initialize with equal probability
+      // If no transitions, default to uniform
       Object.keys(transitionMatrix[fromState]).forEach((toState) => {
         transitionMatrix[fromState][toState] = 1 / 3;
       });
     }
   });
 
-  // Predict next state based on the last observed state
+  // Predict next state from the last observed state
   const currentState = rps_list[rps_list.length - 1].rps;
   let nextState = currentState;
   let maxProb = 0;
 
-  Object.keys(transitionMatrix[currentState]).forEach((state) => {
-    if (transitionMatrix[currentState][state] > maxProb) {
-      maxProb = transitionMatrix[currentState][state];
-      nextState = state;
+  // find the state with highest probability
+  Object.keys(transitionMatrix[currentState]).forEach((possible) => {
+    const prob = transitionMatrix[currentState][possible];
+    if (prob > maxProb) {
+      maxProb = prob;
+      nextState = possible;
     }
   });
 
+  // If we passed markov=true => we pick the "beating" move
   if (markov) {
     nextState = getBeatingType(nextState);
   }
 
-  const deviationThreshold = 0.05; // Adjusted to make randomness more impactful
+  // Introduce random deviation
+  const deviationThreshold = 0.05;
   if (Math.random() < deviationThreshold) {
     let randomState;
     do {
       randomState = choices[Math.floor(Math.random() * 3)];
     } while (randomState === currentState);
     nextState = randomState;
+    // If we randomize, we should also lower our confidence
+    // because we intentionally deviated from the Markov guess
+    maxProb = 0.25; // or something low
   }
 
-  return nextState;
+  // Map maxProb => risk (1..4)
+  const risk = mapProbabilityToRisk(maxProb);
+
+  console.log('predictNext =>', { move: nextState, risk });
+  return { move: nextState, risk };
+};
+
+// function that maps the Markov's best probability => risk 1..4
+function mapProbabilityToRisk(prob) {
+  /*
+    Example mapping:
+    prob <= 0.25 => risk = 1
+    0.25 < prob <= 0.50 => risk = 2
+    0.50 < prob <= 0.75 => risk = 3
+    0.75 < prob <= 1.0 => risk = 4
+  */
+    if (prob <= 0.6) return 1;
+    else if (prob <= 0.7) return 2;
+    else if (prob <= 0.8) return 3;
+    else return 4;
 }
 
-
-// Function to get the beating type
+// If Markov mode is on => we choose a "beating" move for the nextState
 const getBeatingType = (currentState) => {
   const random = Math.random();
-
   if (currentState === 'R') {
+    // 'P' beats 'R' but let's add small chance to pick same
     return random < 0.95 ? 'P' : 'R';
   } else if (currentState === 'P') {
     return random < 0.95 ? 'S' : 'P';
   } else {
     return random < 0.95 ? 'R' : 'S';
   }
-}
+};
 
 async function trainModel(rpsNumeric, joinerRPSNumeric) {
   const rpsTensor = tf.tensor2d(rpsNumeric, [rpsNumeric.length, 1]);
@@ -129,15 +160,8 @@ async function predictNextMove(model, rpsNumeric) {
 
   let risk;
 
-  if (probabilities[nextJoinerRPSNumeric] > 0.4 && probabilities[nextJoinerRPSNumeric] <= 0.65) {
-    risk = 3;
-  } else if (probabilities[nextJoinerRPSNumeric] > 0.65) {
-    risk = 4;
-  } else if (probabilities[nextJoinerRPSNumeric] > 0.2) {
-    risk = 2;
-  } else {
-    risk = 1;
-  }
+  risk = mapProbabilityToRisk(probabilities[nextJoinerRPSNumeric]);
+
   let bestCounterMove;
 
   // Introduce 33% chance of returning a random move
@@ -162,7 +186,7 @@ function getRandomMoveExcluding(excludeMove) {
   } else {
     return 'P'
   }
- 
+
 }
 
 // Main function to handle reinforcement learning with dynamic adaptation mechanism
@@ -222,25 +246,25 @@ export async function reinforcementAI(data) {
     (lastGame.joiner_rps === 'R' && lastGame.rps === 'P') ||
     (lastGame.joiner_rps === 'S' && lastGame.rps === 'R') ||
     (lastGame.joiner_rps === 'P' && lastGame.rps === 'S');
-    
-    const lastGameWasDraw =
+
+  const lastGameWasDraw =
     (lastGame.joiner_rps === lastGame.rps);
-    
+
   let model;
   try {
     model = await trainModel(rpsNumeric, joinerRPSNumeric);
 
     let bestCounterMove = await predictNextMove(model, rpsNumeric);
 
-   if (lastGameWasWin || lastGameWasDraw) {
+    if (lastGameWasWin || lastGameWasDraw) {
       if (!winChangesLikely) {
         bestCounterMove = {
           move: getBeatingType(lastGame.rps),
           risk: 3
         };
-      } 
-    } else if (lastGameWasLoss){
-      if(lossChangesLikely){
+      }
+    } else if (lastGameWasLoss) {
+      if (lossChangesLikely) {
         bestCounterMove = {
           move: getRandomMoveExcluding(lastGame.rps),
           risk: 3

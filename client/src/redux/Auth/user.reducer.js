@@ -21,6 +21,8 @@ import {
   SET_ALL_TIME_PROFIT,
   NEW_TRANSACTION,
   LOADING_USER,
+  UPDATE_USER_ASSOCIATED_ACCOUNTS,
+  CHECK_AND_ADD_WALLET_ADDRESS,
   SET_USERNAME_PASSWORD,
   SET_DARK_MODE,
   SET_SPECTATE_MODE,
@@ -60,6 +62,7 @@ const initialState = {
   unreadMessageCount: 0,
   balance: 0,
   gasfee: 0,
+  connectedAccount: '',
   ai_mode: '',
   isActivated: true,
   completedTutorials: [],
@@ -100,6 +103,16 @@ export default function (state = initialState, action) {
       return {
         ...state,
         isMuted: payload
+      };
+    case UPDATE_USER_ASSOCIATED_ACCOUNTS:
+      return {
+        ...state,
+        user: action.payload,
+      };
+    case CHECK_AND_ADD_WALLET_ADDRESS:
+      return {
+        ...state,
+        connectedAccount: action.payload,
       };
     case TOGGLE_CLICK_SOUNDS:
       localStorage.setItem('clickSounds', payload);
@@ -185,7 +198,7 @@ export default function (state = initialState, action) {
       return {
         ...state,
         transactions_loading: false,
-        all_transactions: 
+        all_transactions:
           page === 1
             ? all_transactions
             : [...(state.all_transactions || []), ...all_transactions],
@@ -198,9 +211,12 @@ export default function (state = initialState, action) {
       const newTransactions = [payload]
         .concat(JSON.parse(JSON.stringify(state.transactions)))
         .slice(0, 4);
+      const updatedBalance = state.user.balance + payload.amount;
       return {
         ...state,
-        transactions: newTransactions
+        transactions: newTransactions,
+
+        balance: updatedBalance,
       };
     case SET_SEVEN_DAY_PROFIT:
       return {

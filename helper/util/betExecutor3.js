@@ -265,11 +265,6 @@ const addToQueue = async (req, bot = false) => {
             return rpsOptions[Math.floor(Math.random() * 3)];
           }
 
-          function getCopyCatItem(allBetItems) {
-            const copyCatBetItem = allBetItems[allBetItems.length - 1];
-            return copyCatBetItem ? copyCatBetItem.joiner_rps : getRandomItem();
-          }
-
           async function getNextItemUsingMarkov(allBetItems) {
             if (allBetItems.length <= 3) {
               return getRandomItem();
@@ -288,7 +283,6 @@ const addToQueue = async (req, bot = false) => {
         if (roomInfo['rps_game_type'] === 0) {
           // deduct the joiner's bet
           newTransactionAmount -= betAmount;
-
           // if win
           if (
             (bet_item.rps === 'R' && req.body.selected_rps === 'Pp') ||

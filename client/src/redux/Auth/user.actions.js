@@ -17,6 +17,8 @@ import {
   SET_URL,
   TRANSACTION_LOADED,
   TRANSACTIONS_LOADING,
+  UPDATE_USER_ASSOCIATED_ACCOUNTS,
+  CHECK_AND_ADD_WALLET_ADDRESS,
   ALL_TRANSACTIONS,
   FETCH_RECENT_TRANSACTIONS_SUCCESS,
   SET_SEVEN_DAY_PROFIT,
@@ -76,6 +78,43 @@ export const getTransactions = (
     dispatch({ type: MSG_WARNING, payload: err.message });
     return { status: 'failed' };
   }
+};
+
+export const checkAndAddWalletAddress = (walletAddress) => async (dispatch, getState) => {
+  try {
+    // Optionally, you can get the current user from Redux if needed:
+    // const { auth: { user } } = getState();
+
+    const { data } = await axios.post('/auth/users/add-wallet', { walletAddress });
+    // The response should be something like:
+    // { success: true, updatedUser: {...} } OR { success: false, message: '...' }
+    if (data.success) {
+      dispatch({
+        type: CHECK_AND_ADD_WALLET_ADDRESS,
+        payload: walletAddress,
+      });
+      dispatch({
+        type: UPDATE_USER_ASSOCIATED_ACCOUNTS,
+        payload: data.updatedUser,
+      });
+      return { success: true };
+    } else {
+      // The wallet address belongs to another user, or something else failed.
+      return { success: false, message: data.message };
+    }
+  } catch (error) {
+    console.error('Error adding wallet address:', error);
+    return {
+      success: false,
+      message: error?.response?.data?.message || 'Something went wrong',
+    };
+  }
+};
+export const disconnectWalletAddress = () => async (dispatch) => {
+  dispatch({
+    type: CHECK_AND_ADD_WALLET_ADDRESS,
+    payload: '',
+  });
 };
 
 export const getUser = () => async dispatch => {
@@ -226,6 +265,46 @@ export const setReferralCode = (referralCode) => {
   }
 }
 
+// Just like authenticateWithGoogle, but for Phantom
+export const authenticateWithPhantom = ({ walletAddress }) => async (dispatch) => {
+  try {
+    // Show loading spinner
+    dispatch({ type: START_LOADING });
+
+    // Call your backend route with the wallet address
+    const res = await axios.post('/auth/phantom', { walletAddress });
+
+    // Stop loading
+    dispatch({ type: END_LOADING });
+
+    // Check success status
+    if (res.data.success) {
+      // Save token in local storage
+      setAuthToken(res.data.token); // sets default axios header
+      localStorage.setItem('token', res.data.token);
+      localStorage.setItem('isAuthenticated', 1);
+
+      // Dispatch login success
+      dispatch({ type: LOGIN_SUCCESS, payload: res.data });
+      dispatch({ type: MSG_SUCCESS, payload: res.data.message });
+      dispatch({ type: CHECK_AND_ADD_WALLET_ADDRESS, payload: walletAddress });
+
+      // Return consistent object for the component
+      return { status: 'success', user: res.data.user };
+    } else {
+      // If not success, dispatch login fail
+      dispatch({ type: LOGIN_FAIL });
+      dispatch({ type: MSG_ERROR, payload: res.data.error });
+      return { status: 'failed' };
+    }
+  } catch (err) {
+    // Handle any unexpected errors
+    console.error('Error during Phantom auth:', err);
+    dispatch({ type: END_LOADING });
+    dispatch({ type: MSG_WARNING, payload: err.message || 'Server error' });
+    return { status: 'failed' };
+  }
+};
 
 // Login User
 export const userSignIn = body => async dispatch => {
@@ -508,7 +587,7 @@ export const fetchVaultBalance = () => async (dispatch) => {
     if (data.success) {
       return data.vaultBalance;
     } else {
-      // dispatch({ type: MSG_ERROR, payload: data.error });
+      dispatch({ type: MSG_ERROR, payload: data.error });
       return null;
     }
   } catch (error) {

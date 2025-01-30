@@ -148,8 +148,8 @@ const RoomHistory = (props) => {
               <div className="table-cell">
                 <div className="room-id">{row.status}</div>
                 {row.ai_mode && (
-                  <div id="ai_mode">
-                    <span className="room-id ai_mode">{row.ai_mode}</span>
+                  <div>
+                    <span className="room-id" id="ai_mode">{row.ai_mode}</span>
                     {row.qbot && <span className="room-id qbot">Q-BOT</span>}
                   </div>
                 )}

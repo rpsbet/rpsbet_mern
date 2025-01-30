@@ -157,22 +157,6 @@ export const confirmModalCreate = (
   );
 };
 
-export const callBotModal = (
-  isDarkMode,
-  text,
-  okayButtonTitle,
-  cancelButtonTitle,
-  callback
-) => {
-  showConfirmCall(
-    isDarkMode,
-    text,
-    '-create',
-    okayButtonTitle,
-    cancelButtonTitle,
-    callback
-  );
-};
 export const confirmModalClosed = (
   isDarkMode,
   text,

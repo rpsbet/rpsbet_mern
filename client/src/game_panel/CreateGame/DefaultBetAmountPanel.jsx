@@ -8,9 +8,9 @@ import {
   TextField
 } from '@mui/material';
 import { Info } from '@mui/icons-material';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
 
 import { convertToCurrency } from '../../util/conversion';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { getCustomTheme } from '../../config/theme';
 
 /**

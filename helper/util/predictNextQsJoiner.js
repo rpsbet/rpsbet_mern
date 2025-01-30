@@ -1,10 +1,10 @@
 const tf = require('@tensorflow/tfjs-node');
-const { Configuration, OpenAIApi } = require('openai');
+const { OpenAI } = require('openai');
 
-const configuration = new Configuration({
+const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-const openai = new OpenAIApi(configuration);
+
 const calcWinChanceQs = (gameType, rounds) => {
   let probWin = (100 / gameType).toFixed(2);
   let probLose = (100 - probWin).toFixed(2);
@@ -164,11 +164,11 @@ async function predictNextMove_qs(model, rpsNumeric, qs_game_type) {
   const prediction = model.predict(rpsTensor);
 
   const predictionData = prediction.dataSync();
-
   const nextJoinerRPSNumeric = tf.argMax(prediction, 1).dataSync()[0];
 
   // Dispose of tensors
   rpsTensor.dispose();
+
   let risk;
   if (
     predictionData[nextJoinerRPSNumeric] > 0.4 &&
@@ -183,7 +183,7 @@ async function predictNextMove_qs(model, rpsNumeric, qs_game_type) {
     risk = 1;
   }
 
-  return { move: nextJoinerRPSNumeric, risk: risk };
+  return { move: nextJoinerRPSNumeric, risk };
 }
 
 async function reinforcementAI_qs(data, qs_game_type) {
@@ -201,7 +201,7 @@ async function reinforcementAI_qs(data, qs_game_type) {
     parseInt(entry.joiner_qs, 10),
   );
 
-  const results = historicData.map((entry, index) => ({
+  const results = historicData.map((entry) => ({
     qs: entry.qs,
     joiner_qs: entry.joiner_qs,
     win: entry.qs !== entry.joiner_qs,
@@ -227,34 +227,25 @@ async function reinforcementAI_qs(data, qs_game_type) {
     { winChanges: [], lossChanges: [] },
   );
 
-  const winChangesLikely = winChangePattern.winChanges.every(
-    (change) => change,
-  );
+  const winChangesLikely = winChangePattern.winChanges.every((change) => change);
   const lossChangesLikely = winChangePattern.lossChanges.every(
-    (change) => change,
+    (change) => change
   );
 
   let model;
   try {
     model = await trainModel_qs(joinerRPSNumeric, qsNumeric, qs_game_type);
 
-    let bestCounterMove = await predictNextMove_qs(
-      model,
-      qsNumeric,
-      qs_game_type,
-    );
+    let bestCounterMove = await predictNextMove_qs(model, qsNumeric, qs_game_type);
 
+    // Introduce some randomness
     const randomnessFactor = 0.1;
     if (Math.random() < randomnessFactor) {
       const possibleMoves = Array.from({ length: qs_game_type }, (_, i) => i);
       possibleMoves.splice(bestCounterMove.move, 1);
       bestCounterMove.move = getRandomItem_qs(qs_game_type, possibleMoves);
     } else if (winChangesLikely || lossChangesLikely) {
-      bestCounterMove = await predictNextMove_qs(
-        model,
-        qsNumeric,
-        qs_game_type,
-      );
+      bestCounterMove = await predictNextMove_qs(model, qsNumeric, qs_game_type);
     } else {
       const possibleMoves = Array.from({ length: qs_game_type }, (_, i) => i);
       possibleMoves.splice(bestCounterMove.move, 1);
@@ -292,31 +283,29 @@ async function openAIPredictionAI_qs(historicData, qs_game_type) {
     },
     {
       role: 'user',
-      content: `The user's past moves are: ${userMovesString}. There are ${qs_game_type} possible moves (0 through ${qs_game_type - 1}). Predict the user's next move as an integer.`,
+      content: `The user's past moves are: ${userMovesString}. There are ${qs_game_type} possible moves (0 through ${
+        qs_game_type - 1
+      }). Predict the user's next move as an integer.`,
     },
   ];
 
   try {
-    const response = await openai.createChatCompletion({
+    // Updated call for the new openai usage
+    const response = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages,
       max_tokens: 10,
       temperature: 0.5,
     });
 
-    let predictedMoveStr = response.data.choices[0].message.content.trim();
+    let predictedMoveStr = response.choices[0].message.content.trim();
     let predictedMove = parseInt(predictedMoveStr, 10);
 
-    if (
-      isNaN(predictedMove) ||
-      predictedMove < 0 ||
-      predictedMove >= qs_game_type
-    ) {
+    if (isNaN(predictedMove) || predictedMove < 0 || predictedMove >= qs_game_type) {
       predictedMove = getRandomItem_qs(qs_game_type);
     }
 
     const nextMove = (predictedMove + 1) % qs_game_type;
-
     return nextMove;
   } catch (error) {
     console.error('Error calling OpenAI API:', error);

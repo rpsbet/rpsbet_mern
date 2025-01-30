@@ -1,30 +1,28 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { connect } from 'react-redux';
-import { getRpsBetItems, getQsBetItems, updateRpsBetItems, updateQsBetItems, updateQbot, getMyGames } from '../redux/Logic/logic.actions';
-import { setFocused } from '../redux/Auth/user.actions';
-import { useDispatch } from 'react-redux';
+import { connect, useDispatch } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faToggleOn, faBrain, faChartLine, faInfoCircle, faCrown, faBan, faClock, faRobot, faCoins, faToggleOff, faBalanceScale, faLink, faUnlink } from '@fortawesome/free-solid-svg-icons';
-import { convertToCurrency } from '../util/conversion';
-import { getRank } from '../util/getRank.js';
-import ApexChart from "react-apexcharts";
-import InfoIcon from '@mui/icons-material/Info';
-import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
-import TableChartOutlinedIcon from '@mui/icons-material/TableChartOutlined';
-import ReactApexChart from 'react-apexcharts';
-import TuneOutlinedIcon from '@mui/icons-material/TuneOutlined';
-import MeetingRoomOutlinedIcon from '@mui/icons-material/MeetingRoomOutlined';
-import EditIcon from '@mui/icons-material/Edit';
 import {
+  faToggleOn,
+  faToggleOff,
+  faBrain,
+  faCoins,
+  faBan,
+  faClock,
+  faRobot,
+  faInfoCircle,
+  faCrown,
+  faBalanceScale,
+  faLink,
+  faUnlink,
+  faEdit,
+} from '@fortawesome/free-solid-svg-icons';
+import {
+  Switch,
   Button,
   Tabs,
   Tab,
   Grid,
-  createTheme,
-  ThemeProvider,
-  Tooltip,
-  Switch,
-  Typography,
+  Box,
   IconButton,
   Modal,
   TextField,
@@ -34,407 +32,89 @@ import {
   TableBody,
   TableRow,
   TableCell,
-  Box
+  Typography,
+  Tooltip,
+  CircularProgress,
+  Collapse,
+  ToggleButtonGroup,
+  ToggleButton
 } from '@mui/material';
-import Lottie from 'react-lottie';
-import animationData from '../game_panel/LottieAnimations/spinningIcon.json';
+import EditIcon from '@mui/icons-material/Edit';
+import InfoIcon from '@mui/icons-material/Info';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import ReactApexChart from 'react-apexcharts';
+import {
+  getRpsBetItems,
+  getQsBetItems,
+  updateQbot,
+  getMyGames,
+  getQbot,
+  updateBetRangeFunction
+} from '../redux/Logic/logic.actions';
+import { setFocused, getUser } from '../redux/Auth/user.actions';
+
 import BetAmountInput from '../components/BetAmountInput.jsx';
 import SettingsRef from './SettingsRef';
-import { getCustomTheme } from '../config/theme';
-
-const defaultOptions = {
-  loop: true,
-  autoplay: true,
-  animationData: animationData,
-  rendererSettings: {
-    preserveAspectRatio: 'xMidYMid slice'
-  }
-};
+import { convertToCurrency } from '../util/conversion';
+import { getRank } from '../util/getRank.js';
 
 const SideTabs = ({ selectedTab, handleTabChange }) => (
   <Tabs
     orientation="vertical"
-    sx={{
-      '& .MuiTabs-indicator': {
-        display: 'none',
-        marginRight: '10px'
-      },
-    }}
+    className={`side-tab-switcher`}
     value={selectedTab}
     onChange={handleTabChange}
-    className={`side-tab-switcher`}
+    sx={{
+      // Make the indicator (the highlight bar) red
+      '& .MuiTabs-indicator': {
+        backgroundColor: 'red',
+        marginRight: '0px',
+      },
+      // Make the text of the tabs themselves red when not selected
+      '& .MuiTab-root': {
+        color: '#7c7c7c',
+      },
+      // Make the text red when the tab is selected
+      '& .Mui-selected': {
+        color: '#ff0000 !important',
+      },
+    }}
   >
-    <Tab icon={<TuneOutlinedIcon />} />
-    <Tab icon={<TableChartOutlinedIcon />} />
-    <Tab icon={<MeetingRoomOutlinedIcon />} />
+    <Tab icon={<FontAwesomeIcon icon={faCoins} />} />
+    <Tab icon={<FontAwesomeIcon icon={faBrain} />} />
+    <Tab icon={<FontAwesomeIcon icon={faLink} />} />
   </Tabs>
 );
 
-
-const PlaceholderComponent = ({ selectedTab, myGames, solPrice, updateQbot, handleTabChange, getMyGames, ownRoom, user_id, totalWagered, isDarkMode }) => {
-
-  const [betting, setBetting] = useState(false);
-  const [rank, setRank] = useState(null);
-  const [isActive, setIsActive] = useState(false);
-  const [timerValue, setTimerValue] = useState(2000);
-  const theme = getCustomTheme(isDarkMode);
-
-  const chartOptions = {
-    chart: {
-      type: 'line',
-      zoom: {
-        enabled: false
-      }
-    },
-    title: {
-      text: 'Q-BOT Net Profit Over Time',
-      align: 'left'
-    },
-    xaxis: {
-      categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul']
-    },
-    stroke: {
-      curve: 'smooth'
-    },
-    colors: ['#00ff6b']
-  };
-
-  const chartSeries = [
-    {
-      name: 'Net Profit',
-      data: [1000, 2000, 1500, 3000, 2500, 4000, 3500]
-    }
-  ];
-
-  useEffect(() => {
-    const fetchMyGames = async () => {
-      try {
-        await getMyGames({ game_type: 'All', status: 'open', sort: 'desc' });
-      } catch (error) {
-        console.error('Error fetching games:', error);
-      }
-    };
-
-    if (selectedTab === 2) {
-      fetchMyGames();
-    }
-  }, [selectedTab]);
-
-  useEffect(() => {
-    const fetchRank = async () => {
-      const userRank = await getRank(totalWagered);
-      setRank(userRank);
-    };
-    fetchRank();
-  }, [totalWagered]);
-
-  // useEffect(() => {
-  //   let isMounted = true;
-
-  //   const fetchQbotStatus = async () => {
-  //     try {
-  //       if (user_id) {
-  //         const qbotStatus = await getQbot(user_id);
-
-  //         if (isMounted) {
-  //           setIsActive(qbotStatus);
-  //           setBetting(qbotStatus);
-  //         }
-  //       }
-  //     } catch (err) {
-  //       console.error('Error fetching Q-bot status', err);
-  //     }
-  //   };
-
-  //   if (user_id) {
-  //     fetchQbotStatus();
-  //   }
-
-  //   return () => {
-  //     isMounted = false;
-  //   };
-  // }, [user_id]);
-
-  const handleSwitchChange = async (event) => {
-    const newBettingStatus = event.target.checked;
-    setBetting(newBettingStatus);
-    try {
-      await updateQbot(user_id, newBettingStatus);
-      setIsActive(newBettingStatus);
-    } catch (err) {
-      console.error('Error updating Q-bot status', err);
-      setBetting(isActive);
-    }
-  };
-
-  const getTextForTab = () => {
-    if (ownRoom) {
-      return "No AI available for your own room.";
-    }
-
-    return (
-      <div>
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', borderRadius: '0.4em', boxShadow: 'inset 0 0 6px #c0c0c0', padding: '10px 20px' }}>
-          <h6 style={{ margin: '0px 8px 0px 0px', color: '#060607' }}>
-            <FontAwesomeIcon icon={faRobot} style={{ color: '#060607' }} />&nbsp;
-            Q-BOT <span style={{ background: "linear-gradient(45deg, #fc00ff, #ff0000)", padding: "0px 10px", color: "#fff", borderRadius: "0.3em" }}>BETA</span>
-          </h6>
-          <Tooltip title="Utilize leveraging with Q-Bot which plays autonomously for you (manages games for you, including game creation, changing strategies and joining) based on your wins and behaviour." arrow>
-            <IconButton size="small" style={{ borderRadius: "4px", }}>
-              <FontAwesomeIcon icon={faInfoCircle} style={{ color: '#060607' }} />
-            </IconButton>
-          </Tooltip>
-        </div>
-
-        {rank >= 19 ? (
-          <>
-            <div style={{ display: "inline-flex", flexDirection: "row", alignItems: "center", justifyContent: "center", width: "100%", marginBottom: "10px" }}>
-              <Tooltip title="TOGGLE AI HOSTING">
-                <Switch
-                  id="aiplay-switch"
-                  checked={betting}
-                  onChange={handleSwitchChange}
-                />
-              </Tooltip>
-
-              {betting ? (
-                <div id="stop" style={{ marginRight: "15px" }}>
-                  <Lottie options={defaultOptions} width={32} />
-                </div>
-              ) : (
-                <div>{timerValue !== 2000 ? <span>{(timerValue / 2000).toFixed(2)}s</span> : null}</div>
-              )}
-
-              <div style={{ fontSize: "small", display: 'flex', alignItems: 'center', width: "100%", boxShadow: "inset 0px 0px 6px 0px #b4b4b4a8", borderRadius: "0.3em", justifyContent: "center", padding: "5px 10px", overflow: "hidden" }}>
-                <FontAwesomeIcon icon={betting ? faToggleOn : faToggleOff} style={{ marginRight: '5px' }} />
-                {betting ? 'HOSTING ON' : 'Q-BOT OFF'}
-              </div>
-            </div>
-            <div style={{ display: "inline-flex", flexDirection: "row", alignItems: "center", justifyContent: "center", width: "100%", marginBottom: "10px" }}>
-              <Tooltip title="COMING SOON">
-                <Switch
-                  id="aiplay-switch"
-                  checked={betting}
-                  onChange={handleSwitchChange}
-                  disabled
-                />
-              </Tooltip>
-
-              {betting ? (
-                <div id="stop" style={{ marginRight: "15px", width: "60px" }}>
-                  <Lottie options={defaultOptions} width={32} />
-                </div>
-              ) : (
-                <div>{timerValue !== 2000 ? <span>{(timerValue / 2000).toFixed(2)}s</span> : null}</div>
-              )}
-
-              <div style={{ fontSize: "small", display: 'flex', alignItems: 'center', width: "100%", boxShadow: "inset 0px 0px 6px 0px #b4b4b4a8", borderRadius: "0.3em", justifyContent: "center", padding: "5px 10px", overflow: "hidden" }}>
-                <FontAwesomeIcon icon={betting ? faToggleOn : faToggleOff} style={{ marginRight: '5px' }} />
-                {betting ? 'BETTING ON' : 'BETTING OFF'}
-              </div>
-            </div>
-          </>
-
-        ) : (
-          <Button
-            variant="contained"
-            color='error'
-            startIcon={<FontAwesomeIcon icon={faCrown} />}
-            style={{ background: 'linear-gradient(340deg, #ff8500, #ff5100c7)', color: '#fff', textTransform: 'none', fontSize: '16px' }}
-          >
-            UNLOCK AT LEVEL 19
-          </Button>
-        )}
-
-      </div>
-    );
-  };
-
-  return (
-    <ThemeProvider theme={theme}>
-      <Box sx={{ position: 'relative' }}>
-        <SideTabs selectedTab={selectedTab} handleTabChange={handleTabChange} />
-
-        {selectedTab === 0 && (
-          <Box
-            className="gamified-container"
-            sx={{
-              minHeight: '150px',
-              p: 3,
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              flexDirection: 'column',
-            }}
-          >
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                color: betting ? (!betting ? '#28a745' : '#007bff') : '#ff0000',
-                mb: 2,
-                backgroundColor: betting ? (!betting ? '#0ef34233' : '#007bff33') : '#ff000033',
-                width: '100%',
-                boxShadow: betting ? (!betting ? '#28a745 0px 0px 6px 0px inset' : '#007bff 0px 0px 6px 0px inset') : '#ff0000 0px 0px 6px 0px inset',
-                borderRadius: 1,
-                justifyContent: 'center',
-                py: 1,
-                px: 2,
-                overflow: 'hidden',
-              }}
-            >
-              {betting ? (!betting ? (
-                <>
-                  <FontAwesomeIcon icon={faBrain} style={{ marginRight: '5px' }} />
-                  THINKING...
-                </>
-              ) : (
-                <>
-                  {33 > 0 ? (
-                    <>
-                      <FontAwesomeIcon icon={faCoins} style={{ marginRight: '5px' }} />
-                      COMING SOON&nbsp;
-                    </>
-                  ) : (
-                    <>
-                      <FontAwesomeIcon icon={faClock} style={{ marginRight: '5px' }} />
-                      ANALYSING LAST BETS
-                    </>
-                  )}
-                </>
-              )) : (
-                <>
-                  <FontAwesomeIcon icon={faBan} style={{ marginRight: '5px' }} />
-                  OFF
-                </>
-              )}
-            </Box>
-            {getTextForTab()}
-          </Box>
-        )}
-
-        {selectedTab === 1 && (
-          <Box className="gamified-container" sx={{ position: 'relative', width: '100%' }}>
-            <Box
-              sx={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                backgroundColor: 'rgba(0, 0, 0, 0.6)',
-                color: '#fff',
-                fontSize: '2em',
-                zIndex: 2,
-              }}
-            >
-              Coming Soon
-            </Box>
-            <Grid item sx={{ filter: 'blur(3px)' }}>
-              <Typography variant="h5" className="gamified-heading">
-                Q-BOT Net Profit&nbsp;
-                <Tooltip title="TOTAL Q-BOT NET PROFIT (AFTER TAX)">
-                  <InfoIcon sx={{ width: '18px', marginTop: '-3px', cursor: 'pointer' }} />
-                </Tooltip>
-              </Typography>
-              <Box
-                sx={{
-                  textAlign: 'center',
-                  color: '#f9f9f9',
-                  background: 'linear-gradient(45deg, #00ff6b, #84bd00)',
-                  p: 1,
-                  fontSize: '1.1em',
-                  mt: 2,
-                  borderRadius: 1,
-                }}
-              >
-                <span>+ {convertToCurrency(44343.02, solPrice)}</span>
-              </Box>
-              <Box className="gamified-content" sx={{ mt: 3 }}>
-                <ApexChart options={chartOptions} series={chartSeries} type="line" height={350} />
-              </Box>
-            </Grid>
-          </Box>
-        )}
-
-        {selectedTab === 2 && (
-          <Box className="gamified-container">
-            <Grid item>
-              <Typography variant="h5" className="gamified-heading">
-                Q-BOT Rooms&nbsp;
-                <Tooltip title="This data may not represent your recent transactions and is for the AI purposes only.">
-                  <InfoIcon sx={{ width: '18px', marginTop: '-3px', cursor: 'pointer' }} />
-                </Tooltip>
-              </Typography>
-              <Box className="gamified-content" sx={{ mt: 0 }}>
-                <Table aria-label="rooms table">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell align="center">Room</TableCell>
-                      <TableCell align="center">Net Profit</TableCell>
-                      <TableCell align="center">Strategy</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {isActive && myGames.length > 0 ? (
-                      myGames.map((room) => (
-                        <TableRow key={room._id}>
-                          <TableCell align="center">
-                            <a href={`/join/${room._id}`} style={{ color: '#333', textDecoration: 'none' }}>
-                              {room.game_type.short_name + '-' + room.index}
-                            </a>
-                          </TableCell>
-                          <TableCell align="center">{convertToCurrency(room.pr - room.bet_amount, solPrice)}</TableCell>
-                          <TableCell align="center">{room.selectedStrategy}</TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={3} align="center">
-                          No rooms available, add balance and turn on Q-Bot
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </Box>
-            </Grid>
-          </Box>
-        )}
-      </Box>
-    </ThemeProvider>
-  );
-};
-
 function BetArray({
+  // Redux state
   rpsbetitems,
   getRpsBetItems,
-  updateRpsBetItems,
   qsbetitems,
   getQsBetItems,
-  updateQsBetItems,
+  updateQbot,
+  getQbot,
+  getMyGames,
+  myGames,
+  solPrice,
+  totalWagered,
+  user_balance,
+  user_id,
+  updateBetRangeFunction,
   predictedBetAmount,
   updateUserStrategy,
+  getUser,
   betting,
   handleSwitchChange,
   handleDetachAttachChange,
   isDarkMode,
-  solPrice,
   attached,
   qs_game_type,
   ai_mode,
-  user_balance,
-  rank,
-  myGames,
-  updateQbot,
-  creator_id,
+  rank: externalRank,
+  user_range,
   getAttachedRooms,
   is_betting,
-  getMyGames,
-  user_id,
   room_id,
   bet_amount,
   handle2xButtonClick,
@@ -443,30 +123,336 @@ function BetArray({
   bankroll,
   onChangeState,
   strategies,
-  game_type,
-  // getQbot,
-  totalWagered,
+  game_type
 }) {
-  const dispatch = useDispatch();
-
-  const [settings_panel_opened, setSettingsPanelOpened] = useState(false);
+  // Tabs
   const [selectedTab, setSelectedTab] = useState(0);
+
+  // Local states
+  const [settings_panel_opened, setSettingsPanelOpened] = useState(false);
   const [timerValue, setTimerValue] = useState(2000);
-  const [selectedCell, setSelectedCell] = useState(null);
-  const [openModal, setOpenModal] = useState(false);
-  const [editedValue, setEditedValue] = useState('');
-  const [selectedIndex, setSelectedIndex] = useState(null);
-  const [hoveredIndex, setHoveredIndex] = useState(null);
-  const [selectedRow, setSelectedRow] = useState(null);
-  const [selectedStrategy, setSelectedStrategy] = useState(ai_mode);
-  const [modalTitle, setModalTitle] = useState('');
   const [range, setRange] = useState([1, 100]);
   const [isDragging, setIsDragging] = useState(false);
   const [debounceTimeoutId, setDebounceTimeoutId] = useState(null);
   const [isSliderDisabled, setIsSliderDisabled] = useState(false);
   const [text, setText] = useState('');
+  const [accumulativeProfit, setAccumulativeProfit] = useState([]);
+  const [selectedStrategy, setSelectedStrategy] = useState(ai_mode);
+  const [bettingQbot, setBettingQbot] = useState(false);
   const [attachedRooms, setAttachedRooms] = useState([]);
+  const [isActiveQbot, setIsActiveQbot] = useState(false); // Q-BOT status
+  const [aiOn, setAiOn] = useState(false);
+  const [alignment, setAlignment] = useState('IS');
 
+  // If the user has a rank from outside, else we compute
+  const [rank, setRank] = useState(null);
+
+  // Show/hide advanced panel
+  const [showMore, setShowMore] = useState(false);
+
+  // For references
+  const settingsRef = useRef(null);
+  const isMounted = useRef(true);
+  // Chart data for the “Training Data” tab
+  const chartData = {
+    options: {
+      chart: {
+        animations: { enabled: false },
+        toolbar: { show: false },
+        zoom: { enabled: false },
+      },
+      grid: { show: false },
+      tooltip: { enabled: false },
+      fill: {
+        type: 'gradient',
+        gradient: {
+          shade: 'light',
+          gradientToColors: ['#8F7CC3'],
+          shadeIntensity: 1,
+          type: 'vertical',
+          opacityFrom: 0.7,
+          opacityTo: 0.9,
+          stops: [0, 100, 100]
+        }
+      },
+      stroke: { curve: 'smooth' },
+      xaxis: {
+        labels: { show: false },
+        axisTicks: { show: false },
+        axisBorder: { show: false }
+      },
+      yaxis: {
+        labels: { show: false },
+        axisTicks: { show: false },
+        axisBorder: { show: false }
+      }
+    },
+    series: [
+      {
+        name: 'Accumulative Profit',
+        data: accumulativeProfit || [],
+      },
+    ],
+  };
+
+  // LIFECYCLE
+  // ----------------------------------------------------------------------------------
+  const fetchAttachedRooms = useCallback(async () => {
+    try {
+      if (getAttachedRooms) {
+        const rooms = await getAttachedRooms();
+        if (isMounted.current) {
+          setAttachedRooms(rooms);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching attached rooms:', error);
+    }
+  }, [getAttachedRooms]);
+
+  // 1) On mount, fetch rank, fetch Q-BOT status
+  useEffect(() => {
+    isMounted.current = true;
+    (async () => {
+      try {
+        // If user has a rank externally, use that, else compute it
+        if (!externalRank) {
+          const computedRank = await getRank(totalWagered);
+          setRank(computedRank);
+        } else {
+          setRank(externalRank);
+        }
+        // Q-Bot status
+        if (user_id) {
+          const qbotStatus = await getQbot(user_id);
+          if (isMounted.current) {
+            setIsActiveQbot(qbotStatus);
+            setBettingQbot(qbotStatus);
+          }
+        }
+        if (attached) {
+          setAiOn(true);
+          setAlignment('RA');
+        } else if (qbotStatus) {
+          setAiOn(true);
+          setAlignment('EL');
+        } else {
+          // default
+          setAiOn(false);
+          setAlignment('IS');
+        }
+        // fetch attached rooms
+        await fetchAttachedRooms();
+      } catch (err) {
+        console.error('Error in BetArray mount:', err);
+      }
+    })();
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      isMounted.current = false;
+      document.removeEventListener('mousedown', handleClickOutside);
+
+    };
+  }, [externalRank, user_id, totalWagered, getQbot, fetchAttachedRooms]);
+
+  // 3) Build accumulativeProfit
+  useEffect(() => {
+    let profit = 0;
+    const arr = game_type === 'Quick Shoot' ? qsbetitems : rpsbetitems;
+    if (!arr || !Array.isArray(arr)) {
+      // skip if not loaded yet
+      return;
+    }
+    const reversedItems = [...arr].reverse();
+
+    const calculatedProfit = reversedItems.map(item => {
+      let profitChange = 0;
+      if (game_type === 'RPS') {
+        // Simple RPS logic
+        if (
+          (item.rps === 'R' && item.joiner_rps === 'P') ||
+          (item.rps === 'P' && item.joiner_rps === 'S') ||
+          (item.rps === 'S' && item.joiner_rps === 'R')
+        ) {
+          profitChange = item.bet_amount * 2;
+        } else if (
+          (item.rps === 'R' && item.joiner_rps === 'S') ||
+          (item.rps === 'P' && item.joiner_rps === 'R') ||
+          (item.rps === 'S' && item.joiner_rps === 'P')
+        ) {
+          profitChange = -item.bet_amount;
+        }
+      } else if (game_type === 'Quick Shoot') {
+
+        const betAmount = Number(item.bet_amount);
+        const qs = Number(item.qs);
+        const joinerQs = Number(item.joiner_qs);
+        const qsGameType = Number(qs_game_type);
+        if (!isNaN(betAmount) && !isNaN(qs) && !isNaN(joinerQs) && !isNaN(qsGameType) && qsGameType > 1) {
+          if (qs !== joinerQs) {
+            // e.g. betAmount / (qsGameType - 1)
+            profitChange = betAmount / (qsGameType - 1);
+          } else {
+            profitChange = -betAmount;
+          }
+        }
+      }
+      profit += profitChange;
+      return profit;
+    });
+
+    setAccumulativeProfit(calculatedProfit);
+  }, [rpsbetitems, qsbetitems, game_type, qs_game_type]);
+
+  // 4) If min/max bet changes, store them in [range]
+  useEffect(() => {
+    if (user_range && user_range.length === 2) {
+      const [min, max] = user_range;
+      setRange([min, max]);
+    }
+  }, [user_range]);
+
+  const formatProfit = (profit) => {
+    if (profit > 0) {
+      return (
+        <span style={{
+          padding: '0 5px',
+          fontSize: '0.75em',
+          background: '#28a74522',
+          borderRadius: '30px',
+          border: '2px solid #28a745',
+          color: '#28a745'
+        }}>
+          +{convertToCurrency(profit, solPrice)}
+        </span>
+      );
+    } else if (profit < 0) {
+      return (
+        <span style={{
+          padding: '0 5px',
+          fontSize: '0.75em',
+          background: '#ff000022',
+          borderRadius: '30px',
+          border: '2px solid #ff0000',
+          color: '#ff0000'
+        }}>
+          -{convertToCurrency(Math.abs(profit), solPrice)}
+        </span>
+      );
+    } else {
+      return <span>{convertToCurrency(profit)}</span>;
+    }
+  };
+
+
+  const formatTag = (tag) => {
+    return (
+      <span style={{
+        padding: '0 5px',
+        fontSize: '0.75em',
+        background: '#007bff22',
+        borderRadius: '30px',
+        border: '2px solid #007bff45',
+        color: '#007bff'
+      }}>
+        {tag}
+      </span>
+    );
+  };
+
+  // EVENT HANDLERS
+  // ----------------------------------------------------------------------------------
+  const handleTabChange = (event, newValue) => {
+    setSelectedTab(newValue);
+  };
+
+  // (B) DETACH/ATTACH SWITCH with a small fetch
+  const handleSwitchChangeWithFetch = async (event) => {
+    await handleDetachAttachChange(event);
+    setTimeout(async () => {
+      await fetchAttachedRooms();
+    }, 1500);
+  };
+
+
+  // (A) Q-BOT MASTER SWITCH
+  const handleQbotSwitchChange = useCallback(async (event) => {
+    const newVal = event.target.checked;
+    setBettingQbot(newVal);
+    try {
+      await updateQbot(user_id, newVal);
+      setIsActiveQbot(newVal);
+    } catch (err) {
+      console.error('Error updating Q-bot status', err);
+      setBettingQbot(isActiveQbot); // revert if fail
+    }
+  }, [user_id, updateQbot, isActiveQbot]);
+
+
+  // AI on/off main switch
+  const handleAiSwitch = useCallback((event) => {
+    const newChecked = event.target.checked;
+    setAiOn(newChecked);
+
+    if (newChecked) {
+      // AI is turned ON => interpret alignment
+      if (alignment === 'RA') {
+        handleSwitchChangeWithFetch(); // attach logic
+      } else if (alignment === 'EL') {
+        handleQbotSwitchChange(); // Q-bot logic
+      } else {
+        // "IS" => no special logic => maybe just call handleSwitchChange to start AI
+        handleSwitchChange();
+      }
+    } else {
+      // AI turned OFF => call handleSwitchChange to stop
+      handleSwitchChange();
+
+      // If we were attached => forcibly detach
+      // If we were Q-bot => forcibly turn off Q-bot
+      if (alignment === 'RA' && attached) {
+        // e.g. do some detach logic if needed
+      }
+      if (alignment === 'EL' && bettingQbot) {
+        // forcibly turn off Q-bot
+        setBettingQbot(false);
+        updateQbot(user_id, false);
+      }
+    }
+  }, [
+    alignment,
+    attached,
+    bettingQbot,
+    handleSwitchChangeWithFetch,
+    handleQbotSwitchChange,
+    handleSwitchChange,
+    user_id,
+    updateQbot
+  ]);
+
+  // The 3-state toggle
+  const handleAlignmentChange = useCallback((event, newVal) => {
+    if (!newVal) return; // ignore if user tries to unselect
+    setAlignment(newVal);
+
+    // If AI is ON, we do the relevant action
+    if (aiOn) {
+      if (newVal === 'RA') {
+        handleSwitchChangeWithFetch();
+      } else if (newVal === 'EL') {
+        handleQbotSwitchChange();
+      } else {
+        // "IS" => do nothing special or forcibly detach/Q-bot off
+        // depends on your logic
+      }
+    }
+  }, [aiOn, handleSwitchChangeWithFetch, handleQbotSwitchChange]);
+
+
+
+
+  // (D) RANGE SLIDER
   function debounce(fn, delay) {
     return function (...args) {
       if (debounceTimeoutId) {
@@ -480,89 +466,28 @@ function BetArray({
   }
 
   const handleSliderChange = (event, newValue) => {
-    setText(<>New range detected: {convertToCurrency(newValue, solPrice)}</>);
     setRange(newValue);
     setIsDragging(true);
-
     if (debounceTimeoutId) {
       clearTimeout(debounceTimeoutId);
     }
   };
 
+  const debouncedHandleRangeChange = debounce(async (event, newValue) => {
+    setIsSliderDisabled(true);
+    await handleRangeChange(event, newValue);
+    setIsSliderDisabled(false);
+  }, 1000);
+
   const handleSliderChangeCommitted = (event, newValue) => {
-    setText(<>Attempting to update range...</>);
     setIsDragging(false);
     debouncedHandleRangeChange(event, newValue);
   };
 
-  const debouncedHandleRangeChange = debounce(async (event, newValue) => {
-    if (!isDragging) {
-      setIsSliderDisabled(true);
-      await handleRangeChange(event, newValue);
-      setIsSliderDisabled(false);
-    }
-  }, 3000);
-
-
   const handleRangeChange = async (event, newValue) => {
-    let [newMin, newMax] = newValue;
-    newMin = Math.max(1, newMin);
-    newMax = Math.min(user_balance, newMax);
-
-    const itemsToUpdate = game_type === 'Quick Shoot' ? qsbetitems : rpsbetitems;
-    const updateFunction = game_type === 'Quick Shoot' ? updateQsBetItems : updateRpsBetItems;
-    const uniqueBetAmounts = [...new Set(itemsToUpdate.map(item => item.bet_amount))];
-
-    if (uniqueBetAmounts.length === 1) {
-      const uniqueValue = uniqueBetAmounts[0];
-      if (uniqueValue !== newMin) {
-        const itemToUpdate = itemsToUpdate.find(item => item.bet_amount === uniqueValue);
-        setText(<>Updating item(s) with new min: {convertToCurrency(newMin, solPrice)}, please wait...</>);
-        await updateFunction(itemToUpdate._id, 'bet_amount', newMin);
-      }
-      if (uniqueValue !== newMax) {
-        const itemToUpdate = itemsToUpdate.find(item => item.bet_amount === uniqueValue);
-        setText(<>Updating item(s) with new max: {convertToCurrency(newMax, solPrice)}, please wait...</>);
-        await updateFunction(itemToUpdate._id, 'bet_amount', newMax);
-      }
-    } else {
-      const currentMin = Math.min(...uniqueBetAmounts);
-      if (newMin < currentMin) {
-        const itemToUpdate = itemsToUpdate.find(item => item.bet_amount === currentMin);
-        setText(<>Updating item(s) with new min: {convertToCurrency(newMin, solPrice)}, please wait...</>);
-        await updateFunction(itemToUpdate._id, 'bet_amount', newMin);
-      } else {
-        for (const item of itemsToUpdate) {
-          if (item.bet_amount < newMin) {
-            setText(<>Updating item(s) with new min: {convertToCurrency(newMin, solPrice)}, please wait...</>);
-            await updateFunction(item._id, 'bet_amount', newMin);
-          }
-        }
-      }
-
-      const currentMax = Math.max(...uniqueBetAmounts);
-      if (newMax > currentMax) {
-        const itemToUpdate = itemsToUpdate.find(item => item.bet_amount === currentMax);
-        setText(<>Updating item(s) with new max: {convertToCurrency(newMax, solPrice)}, please wait...</>);
-        await updateFunction(itemToUpdate._id, 'bet_amount', newMax);
-      } else {
-        for (const item of itemsToUpdate) {
-          if (item.bet_amount > newMax) {
-            setText(<>Updating item(s) with new max: {convertToCurrency(newMax, solPrice)}, please wait...</>);
-            await updateFunction(item._id, 'bet_amount', newMax);
-          }
-        }
-      }
-    }
-
-    if (game_type === 'Quick Shoot') {
-      await getQsBetItems(room_id);
-    } else {
-      await getRpsBetItems(room_id);
-    }
-    setText('');
+    await updateBetRangeFunction(user_id, newValue);
+    await getUser();
   };
-
 
   const handleMouseUp = () => {
     setIsDragging(false);
@@ -582,298 +507,32 @@ function BetArray({
     debouncedHandleRangeChange();
   };
 
-  const prevIsBettingRef = useRef(is_betting);
-  useEffect(() => {
-    if (prevIsBettingRef.current && !is_betting) {
-      getQsBetItems(room_id);
-      getRpsBetItems(room_id);
-    }
-    prevIsBettingRef.current = is_betting;
-  }, [is_betting, getRpsBetItems, getQsBetItems, room_id]);
-
-  const [accumulativeProfit, setAccumulativeProfit] = useState([]);
-  const getMinMaxValues = (items) => {
-    if (items.length === 0) return [1, 100];
-    const amounts = items.map(item => item.bet_amount);
-    const min = Math.min(...amounts);
-    const max = Math.max(...amounts);
-    return [min, max];
-  };
-
-  const isMounted = useRef(true);
-
-  const fetchAttachedRooms = useCallback(async () => {
-    try {
-      if (getAttachedRooms) {
-        const rooms = await getAttachedRooms();
-        if (isMounted.current) {
-          setAttachedRooms(rooms);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching attached rooms:', error);
-    }
-  }, [getAttachedRooms]);
-
-  useEffect(() => {
-    isMounted.current = true;
-    fetchAttachedRooms();
-    return () => {
-      isMounted.current = false;
-    };
-  }, [fetchAttachedRooms]);
-
-
-  const handleSwitchChangeWithFetch = async (event) => {
-    await handleDetachAttachChange(event);
-    setTimeout(async () => {
-      await fetchAttachedRooms();
-    }, 1500);
-  };
-
-
-  useEffect(() => {
-    if (game_type === 'Quick Shoot') {
-      const [min, max] = getMinMaxValues(qsbetitems);
-      setRange([min, max]);
-    } else if (game_type === 'RPS') {
-      const [min, max] = getMinMaxValues(rpsbetitems);
-      setRange([min, max]);
-    }
-  }, [room_id, game_type, qsbetitems, rpsbetitems]);
-
-  useEffect(() => {
-    let profit = 0;
-    const reversedItems = [...(game_type === 'Quick Shoot' ? qsbetitems : rpsbetitems)].reverse();
-
-    const calculatedProfit = reversedItems.map(item => {
-      let profitChange = 0;
-
-      if (game_type === 'RPS') {
-        if (
-          (item.rps === 'R' && item.joiner_rps === 'P') ||
-          (item.rps === 'P' && item.joiner_rps === 'S') ||
-          (item.rps === 'S' && item.joiner_rps === 'R')
-        ) {
-          profitChange = item.bet_amount * 2;
-        } else if (
-          (item.rps === 'R' && item.joiner_rps === 'S') ||
-          (item.rps === 'P' && item.joiner_rps === 'R') ||
-          (item.rps === 'S' && item.joiner_rps === 'P')
-        ) {
-          profitChange = -item.bet_amount;
-        }
-      } else if (game_type === 'Quick Shoot') {
-        const betAmount = Number(item.bet_amount);
-        const qs = Number(item.qs);
-        const joinerQs = Number(item.joiner_qs);
-        const qsGameType = Number(qs_game_type);
-
-        if (!isNaN(betAmount) && !isNaN(qs) && !isNaN(joinerQs) && !isNaN(qsGameType) && qsGameType > 1) {
-          if (qs !== joinerQs) {
-            profitChange = betAmount / (qsGameType - 1);
-          } else {
-            profitChange = -betAmount;
-          }
-        }
-      }
-
-      profit += profitChange;
-      return profit;
-    });
-
-    setAccumulativeProfit(calculatedProfit);
-  }, [rpsbetitems, qsbetitems, game_type, qs_game_type]);
-
-  const theme = getCustomTheme(isDarkMode);
-
-  const chartData = {
-    options: {
-      chart: {
-        animations: {
-          enabled: false
-        },
-        toolbar: {
-          show: false
-        },
-        events: {},
-        zoom: {
-          enabled: false
-        }
-      },
-      grid: {
-        show: false
-      },
-      tooltip: {
-        enabled: false
-      },
-      fill: {
-        type: 'gradient',
-        gradient: {
-          shade: 'light',
-          gradientToColors: ['#8F7CC3'],
-          shadeIntensity: 1,
-          type: 'vertical',
-          opacityFrom: 0.7,
-          opacityTo: 0.9,
-          stops: [0, 100, 100]
-        }
-      },
-      stroke: {
-        curve: 'smooth'
-      },
-      xaxis: {
-        labels: {
-          show: false
-        },
-        axisTicks: {
-          show: false
-        },
-        axisBorder: {
-          show: false
-        }
-      },
-      yaxis: {
-        labels: {
-          show: false
-        },
-        axisTicks: {
-          show: false
-        },
-        axisBorder: {
-          show: false
-        }
-      }
-    },
-    series: [{
-      name: 'Accumulative Profit',
-      data: accumulativeProfit,
-    }],
-  };
-
-  const filteredArray = game_type === 'Quick Shoot' ? qsbetitems : rpsbetitems;
-  const settingsRef = useRef(null);
-
-  const handleTabChange = (event, newValue) => {
-    setSelectedTab(newValue);
-  };
-
-  const handleCellClick = (item, index, cell) => {
-    setSelectedCell(cell);
-    setEditedValue(item[cell]);
-    setSelectedIndex(index);
-    setSelectedRow(item);
-    setOpenModal(true);
-    dispatch(setFocused(true));
-    switch (cell) {
-      case 'bet_amount':
-        setModalTitle('EDIT BET AMOUNT');
-        break;
-      case 'qs':
-        setModalTitle('EDIT HOST\'S CHOICE');
-        break;
-      case 'rps':
-        setModalTitle('EDIT HOST\'S CHOICE');
-        break;
-      default:
-        setModalTitle('EDIT YOUR CHOICE');
-        break;
+  const handleClickOutside = (e) => {
+    if (settingsRef.current && !settingsRef.current.contains(e.target)) {
+      setSettingsPanelOpened(false);
     }
   };
 
-
-  const handleCloseModal = () => {
-    setOpenModal(false);
-    dispatch(setFocused(false));
-  };
-
-  const handleUpdateCellData = async (isDarkMode) => {
-
-    try {
-      if (game_type === 'RPS') {
-        await updateRpsBetItems(selectedRow._id, selectedCell, editedValue);
-      } else if (game_type === 'Quick Shoot') {
-        await updateQsBetItems(selectedRow._id, selectedCell, editedValue);
-
-      }
-    } catch (err) {
-      console.error('Failed to update RpsBetItems:', err.message);
-    }
-
-    setOpenModal(false);
-  };
-
-  const formatProfit = (profit) => {
-    if (profit > 0) {
-      return <span style={{ padding: "0 5px", fontSize: "0.75em", background: "#28a74522", borderRadius: "30px", border: "2px solid #28a745", color: '#28a745' }}>+{convertToCurrency(profit, solPrice)}</span>;
-    } else if (profit < 0) {
-      return <span style={{ padding: "0 5px", fontSize: "0.75em", background: "#ff000022", borderRadius: "30px", border: "2px solid #ff0000", color: '#ff0000' }}>-{convertToCurrency(Math.abs(profit), solPrice)}</span>;
-    } else {
-      return <span>{convertToCurrency(profit)}</span>;
-    }
-  };
-  const formatTag = (tag) => {
-    return <span style={{ padding: "0 5px", fontSize: "0.75em", background: "#007bff22", borderRadius: "30px", border: "2px solid #007bff45", color: '#007bff' }}>{tag}</span>;
-  }
-
+  // (E) Settings Panel
   const handleSettingsIconClick = () => {
     setSettingsPanelOpened(!settings_panel_opened);
   };
 
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (settingsRef.current && !settingsRef.current.contains(event.target)) {
-        setSettingsPanelOpened(false);
-      }
-    }
+  // (F) Toggle the Show More panel
+  const handleShowMoreToggle = () => {
+    setShowMore((prev) => !prev);
+  };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [settingsRef]);
-
-  if (
-    typeof betting === 'undefined' ||
-    typeof handleSwitchChange === 'undefined' ||
-    typeof room_id === 'undefined'
-  ) {
-
-    return (
-      <PlaceholderComponent
-        handleSettingsIconClick={handleSettingsIconClick}
-        handleTabChange={handleTabChange}
-        getMyGames={getMyGames}
-        selectedTab={selectedTab}
-        myGames={myGames}
-        ownRoom={false}
-        user_id={user_id}
-        solPrice={solPrice}
-        isDarkMode={isDarkMode}
-        updateQbot={updateQbot}
-        totalWagered={totalWagered}
-        settingsRef={settingsRef}
-        // getQbot={getQbot}
-        settings_panel_opened={settings_panel_opened}
-      />
-    );
-  } else if (creator_id === user_id && typeof room_id !== 'undefined') {
-    return (
-      <PlaceholderComponent
-        handleSettingsIconClick={handleSettingsIconClick}
-        handleTabChange={handleTabChange}
-        selectedTab={selectedTab}
-        ownRoom={true}
-        settingsRef={settingsRef}
-        totalWagered={totalWagered}
-        // getQbot={getQbot}
-        user_id={user_id}
-        settings_panel_opened={settings_panel_opened}
-      />
-    );
-  }
+  // RENDER
+  // ----------------------------------------------------------------------------------
+  const filteredArray = game_type === 'Quick Shoot' ? qsbetitems : rpsbetitems;
+  const [newMin, newMax] = range;
   return (
     <Box sx={{ position: 'relative', width: '100%' }}>
+      {/* Our vertical side tabs */}
+      <SideTabs selectedTab={selectedTab} handleTabChange={handleTabChange} />
+
+      {/* The hidden "SettingsRef" panel on the side */}
       <SettingsRef
         strategies={strategies}
         ai_mode={ai_mode}
@@ -886,174 +545,139 @@ function BetArray({
         selectedStrategy={selectedStrategy}
       />
 
-      <SideTabs selectedTab={selectedTab} handleTabChange={handleTabChange} />
-
+      {/* TAB 0: AI BETTING PANEL */}
       {selectedTab === 0 && (
-        <Box className="gamified-container" sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
-          {/* Rank-Badge */}
+        <Box
+          className="gamified-container"
+          sx={{
+            display: 'flex', flexDirection: 'column',
+            justifyContent: 'flex-start', alignItems: 'center',
+            width: '100%'
+          }}
+        >
+          {/* AI Status Row */}
           <Box
             sx={{
               display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
               alignItems: 'center',
+              color: betting ? (is_betting ? '#28a745' : '#007bff') : '#ff0000',
+              background: betting
+                ? is_betting
+                  ? '#0ef34233'
+                  : '#007bff33'
+                : '#ff000033',
               width: '100%',
+              boxShadow: betting
+                ? is_betting
+                  ? 'inset #28a745 0px 0px 6px 0px'
+                  : 'inset #007bff 0px 0px 6px 0px'
+                : 'inset #ff0000 0px 0px 6px 0px',
+              borderRadius: 1,
+              justifyContent: 'center',
+              padding: '5px 10px',
+              overflow: 'hidden',
             }}
           >
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                color: betting ? (is_betting ? '#28a745' : '#007bff') : '#ff0000',
-                marginBottom: '5px',
-                background: betting
-                  ? is_betting
-                    ? '#0ef34233'
-                    : '#007bff33'
-                  : '#ff000033',
-                width: '100%',
-                boxShadow: betting
-                  ? is_betting
-                    ? 'inset #28a745 0px 0px 6px 0px'
-                    : 'inset #007bff 0px 0px 6px 0px'
-                  : 'inset #ff0000 0px 0px 6px 0px',
-                borderRadius: 1,
-                justifyContent: 'center',
-                padding: '5px 10px',
-                overflow: 'hidden',
-              }}
-            >
-              {betting ? (
-                is_betting ? (
-                  <>
-                    <FontAwesomeIcon icon={faBrain} style={{ marginRight: '5px' }} />
-                    THINKING...
-                  </>
-                ) : predictedBetAmount > 0 ? (
-                  <>
-                    <FontAwesomeIcon icon={faCoins} style={{ marginRight: '5px' }} />
-                    TRIED&nbsp;{convertToCurrency(predictedBetAmount, solPrice)}
-                  </>
-                ) : (
-                  <>
-                    <FontAwesomeIcon icon={faClock} style={{ marginRight: '5px' }} />
-                    ANALYSING LAST BETS
-                  </>
-                )
+            {betting ? (
+              is_betting ? (
+                <>
+                  <FontAwesomeIcon icon={faBrain} style={{ marginRight: '5px' }} />
+                  THINKING...
+                </>
+              ) : predictedBetAmount > 0 ? (
+                <>
+                  <FontAwesomeIcon icon={faCoins} style={{ marginRight: '5px' }} />
+                  TRIED&nbsp;{convertToCurrency(predictedBetAmount, solPrice)}
+                </>
               ) : (
                 <>
-                  <FontAwesomeIcon icon={faBan} style={{ marginRight: '5px' }} />
-                  OFF
+                  <FontAwesomeIcon icon={faClock} style={{ marginRight: '5px' }} />
+                  ANALYSING LAST BETS
                 </>
-              )}
+              )
+            ) : (
+              <>
+                <FontAwesomeIcon icon={faBan} style={{ marginRight: '5px' }} />
+                OFF
+              </>
+            )}
+          </Box>
+          {/* 1) BetAmountInput */}
+          <BetAmountInput
+            bet_amount={bet_amount}
+            handle2xButtonClick={handle2xButtonClick}
+            handleHalfXButtonClick={handleHalfXButtonClick}
+            handleMaxButtonClick={handleMaxButtonClick}
+            onChangeState={onChangeState}
+            isDarkMode={isDarkMode}
+            bankroll={bankroll}
+          />
+
+          {/* Show more button */}
+          <Button
+            variant="contained"
+            disableElevation
+            color="error"
+            size="small"
+            fullWidth
+            onClick={handleShowMoreToggle}
+            sx={{ mt: 1 }}
+            endIcon={<AutoAwesomeIcon />} // Add the magic/AI icon here
+          >
+            {showMore ? 'Hide AI Options' : 'Show AI Options'}
+          </Button>
+
+          {/* 2) Collapsible advanced panel */}
+          <Collapse in={showMore} timeout="auto" unmountOnExit sx={{ width: '100%' }}>
+
+
+            <Box sx={{ display: 'flex', width: '100%', alignItems: 'center', justifyContent: 'space-between', mt: 1 }}>
+              {/* AI Switch */}
+              <Box sx={{ display: 'flex', alignItems: 'center', width: '50%', justifyContent: 'center' }}>
+                <Switch
+                  checked={aiOn}
+                  onChange={handleAiSwitch}
+                  color="error"
+                />
+                {aiOn && <CircularProgress size={16} color="error" />}
+
+              </Box>
+
+
+              <Box
+                sx={{
+                  display: 'inline-flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  width: '50%',
+                  padding: '10px 0',
+                }}
+              >
+                <Box sx={{ width: '100%' }}>
+                  <Typography
+                    sx={{
+                      width: '100%',
+                      textAlign: 'center',
+                      boxShadow: 'inset 0px 0px 6px 0px #b4b4b4a8',
+                      borderRadius: 1,
+                      padding: '5px 10px',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    AI Play
+                    <Tooltip title="Betting will be slow, while active. Best used AFK">
+                      <InfoIcon sx={{ width: '18px', cursor: 'pointer', mt: -0.2, ml: 1 }} />
+                    </Tooltip>
+
+                  </Typography>
+                </Box>
+              </Box>
             </Box>
 
-            {/* BetAmountInput Component */}
-            <BetAmountInput
-              bet_amount={bet_amount}
-              handle2xButtonClick={handle2xButtonClick}
-              handleHalfXButtonClick={handleHalfXButtonClick}
-              handleMaxButtonClick={handleMaxButtonClick}
-              onChangeState={onChangeState}
-              isDarkMode={isDarkMode}
-              bankroll={bankroll}
-            />
 
-            {/* Switches and Toggles */}
+            {/* Strategy Edit & Current Strategy */}
             <Box sx={{ display: 'flex', width: '100%', justifyContent: 'center' }}>
-              {/* AI Betting Toggle */}
-              <Box
-                sx={{
-                  display: 'inline-flex',
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '50%',
-                  padding: '10px',
-                }}
-              >
-                <Tooltip title="TOGGLE AI BETTING">
-                  <Switch
-                    id="aiplay-switch"
-                    checked={betting}
-                    onChange={handleSwitchChange}
-                  />
-                </Tooltip>
-                <Tooltip title="Betting will be slow, whilst active. Best used whilst AFK">
-                  <InfoIcon sx={{ width: '18px', marginTop: '-3px', cursor: 'pointer' }} />
-                </Tooltip>
-                {betting ? (
-                  <Box id="stop">
-                    <Lottie options={defaultOptions} width={32} />
-                  </Box>
-                ) : (
-                  <Box>
-                    {timerValue !== 2000 ? <Typography>{(timerValue / 2000).toFixed(2)}s</Typography> : null}
-                  </Box>
-                )}
-              </Box>
-
-              {/* AI ON/OFF Indicator */}
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  width: '50%',
-                  boxShadow: 'inset 0px 0px 6px 0px #b4b4b4a8',
-                  borderRadius: 1,
-                  justifyContent: 'center',
-                  padding: '5px 10px',
-                  overflow: 'hidden',
-                }}
-              >
-                <FontAwesomeIcon icon={betting ? faToggleOn : faToggleOff} style={{ marginRight: '5px' }} />
-                <Typography>{betting ? 'AI ON' : 'AI OFF'}</Typography>
-              </Box>
-            </Box>
-
-            {/* Detach/Attach Toggle */}
-            <Box sx={{ display: 'flex', width: '100%', justifyContent: 'center', marginTop: '10px' }}>
-              <Box
-                sx={{
-                  display: 'inline-flex',
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '50%',
-                  padding: '10px',
-                }}
-              >
-                <Tooltip title="TOGGLE DETACH/ATTACH">
-                  <Switch
-                    id="detach-attach-switch"
-                    checked={!!attached}
-                    onChange={handleSwitchChangeWithFetch}
-                    disabled={!betting}
-                  />
-                </Tooltip>
-                <Tooltip title="Betting will be slow, whilst active. Best used whilst AFK">
-                  <InfoIcon sx={{ width: '18px', marginTop: '-3px', cursor: 'pointer' }} />
-                </Tooltip>
-              </Box>
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  width: '50%',
-                  boxShadow: 'inset 0px 0px 6px 0px #b4b4b4a8',
-                  borderRadius: 1,
-                  justifyContent: 'center',
-                  padding: '5px 10px',
-                  overflow: 'hidden',
-                }}
-              >
-                <FontAwesomeIcon icon={attached ? faLink : faUnlink} style={{ marginLeft: '10px', marginRight: '5px' }} />
-                <Typography>{attached ? 'DETACH' : 'ATTACH'}</Typography>
-              </Box>
-            </Box>
-
-            {/* Edit Strategy and Current Strategy */}
-            <Box sx={{ display: 'flex', width: '100%', justifyContent: 'center', marginTop: '10px' }}>
               <Box
                 sx={{
                   display: 'inline-flex',
@@ -1064,14 +688,14 @@ function BetArray({
                   padding: '10px',
                 }}
               >
-                <Tooltip title="CHANGE AI PLAY STRATEGY">
+                <Tooltip title="CHANGE AI MODEL">
                   <IconButton
                     id="btn-rps-settings"
                     sx={{ borderRadius: '0.5em' }}
                     onClick={handleSettingsIconClick}
                   >
-                    <Typography sx={{ fontSize: '0.5em', marginRight: '2px' }}>EDIT</Typography>
-                    <SettingsOutlinedIcon className="edit-icon" />
+                    <Typography sx={{ fontSize: '0.5em', marginRight: '2px' }}>CHANGE</Typography>
+                    <AutoAwesomeIcon sx={{ p: 0.4 }} />
                   </IconButton>
                 </Tooltip>
               </Box>
@@ -1097,12 +721,78 @@ function BetArray({
                       overflow: 'hidden',
                     }}
                   >
-                    <FontAwesomeIcon icon={faRobot} />&nbsp;{selectedStrategy || ai_mode}
+                    {selectedStrategy || ai_mode}<Tooltip title="Betting will be slow, while active. Best used AFK">
+                      <InfoIcon sx={{ width: '18px', cursor: 'pointer', mt: -0.2, ml: 1 }} />
+                    </Tooltip>
                   </Typography>
                 </Box>
               </Box>
             </Box>
+            {/* AI Betting Toggle */}
+            <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between' }}>
+              {/* Switch + Label + Possibly a spinner */}
+              <Box
+                sx={{
+                  display: 'inline-flex',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  width: '100%',
+                }}
+              >
+                {/* AI Switch */}
+                {/* 3-state ToggleButtonGroup */}
 
+                <Box
+                  sx={{
+                    display: 'inline-flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    width: '50%',
+                  }}
+                >
+
+                  <ToggleButtonGroup
+                    value={alignment}
+                    exclusive
+                    onChange={handleAlignmentChange}
+                    aria-label="Platform"
+                  >
+                    <ToggleButton value="IS" aria-label="IS">IS</ToggleButton>
+                    <ToggleButton value="RA" aria-label="RA">RA</ToggleButton>
+                    <ToggleButton value="EL" aria-label="EL">EL</ToggleButton>
+                  </ToggleButtonGroup>
+                </Box>
+
+                <Box
+                  sx={{
+                    display: 'inline-flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    width: '50%',
+                    padding: '10px 0',
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      width: '100%',
+                      textAlign: 'center',
+                      boxShadow: 'inset 0px 0px 6px 0px #b4b4b4a8',
+                      borderRadius: 1,
+                      padding: '5px 10px',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    MODE<Tooltip title="Betting will be slow, while active. Best used AFK">
+                      <InfoIcon sx={{ width: '18px', cursor: 'pointer', mt: -0.2, ml: 1 }} />
+                    </Tooltip>
+                  </Typography>
+                </Box>
+              </Box>
+
+
+            </Box>
             {/* Adjust Bet Range */}
             <Box
               sx={{
@@ -1117,13 +807,14 @@ function BetArray({
                 justifyContent: 'center',
                 padding: '5px 10px',
                 overflow: 'hidden',
+                mt: 2
               }}
             >
               <FontAwesomeIcon icon={faBalanceScale} style={{ marginRight: '5px' }} />
               <Typography>ADJUST BET RANGE</Typography>
             </Box>
 
-            {/* Display Min and Max Bet */}
+            {/* Min/Max Bet Display */}
             <Box
               sx={{
                 pointerEvents: selectedStrategy === 'GPT3' ? 'none' : 'auto',
@@ -1135,7 +826,7 @@ function BetArray({
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 width: '100%',
-                marginTop: '10px',
+                mt: 1,
               }}
             >
               <Typography>
@@ -1146,7 +837,7 @@ function BetArray({
               </Typography>
             </Box>
 
-            {/* Slider for Bet Range */}
+            {/* Slider */}
             <Box
               sx={{
                 display: 'flex',
@@ -1155,7 +846,7 @@ function BetArray({
                 alignItems: 'center',
                 justifyContent: 'center',
                 width: '100%',
-                marginTop: '10px',
+                mt: 1,
                 pointerEvents: selectedStrategy === 'GPT3' ? 'none' : 'auto',
                 filter: selectedStrategy === 'GPT3' ? 'grayscale(100%)' : 'none',
               }}
@@ -1171,25 +862,15 @@ function BetArray({
                   onMouseUp={handleMouseUp}
                   onTouchEnd={handleTouchEnd}
                   valueLabelDisplay="auto"
-                  step={0.1}
-                  min={1}
+                  step={0.0005}
+                  min={0.0005}
                   max={user_balance}
-                  // Replace aria-labelledby with a getAriaLabel prop:
                   getAriaLabel={(index) => (index === 0 ? 'Minimum value' : 'Maximum value')}
                   sx={{
                     height: 8,
-                    '& .MuiSlider-thumb': {
-                      height: 24,
-                      width: 24,
-                    },
-                    '& .MuiSlider-track': {
-                      height: 8,
-                    },
-                    '& .MuiSlider-rail': {
-                      height: 8,
-                    },
-                    pointerEvents: ai_mode === 'GPT3' ? 'none' : 'auto',
-                    filter: ai_mode === 'GPT3' ? 'grayscale(100%)' : 'none',
+                    '& .MuiSlider-thumb': { height: 24, width: 24 },
+                    '& .MuiSlider-track': { height: 8 },
+                    '& .MuiSlider-rail': { height: 8 },
                   }}
                   disabled={isSliderDisabled}
                 />
@@ -1204,56 +885,76 @@ function BetArray({
                   justifyContent: 'center',
                   padding: '5px 10px',
                   overflow: 'hidden',
-                  pointerEvents: ai_mode === 'IGPT3' ? 'none' : 'auto',
-                  filter: ai_mode === 'IGPT3' ? 'grayscale(100%)' : 'none',
                 }}
               >
-                <Typography
-                  sx={{ fontSize: 'x-small' }}
-                >
-                  {text}
-                </Typography>
+                <Typography sx={{ fontSize: 'x-small' }}>{text}</Typography>
               </Box>
             </Box>
-          </Box>
+          </Collapse>
         </Box>
       )}
 
+      {/* TAB 1: Training Data (RPS / QS items + chart) */}
       {selectedTab === 1 && (
-        <Box className="gamified-container" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-          <Grid item>
+        <Box
+          className="gamified-container"
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            width: '100%'
+          }}
+        >
+          <Grid item sx={{ width: '100%' }}>
             <Typography variant="h6" sx={{ marginBottom: '0' }}>
               Training Data&nbsp;
-              <Tooltip title="This data may not represent your recent transactions and is for the AI purposes only.">
+              <Tooltip title="This data may not represent your recent transactions and is for AI use only.">
                 <InfoIcon sx={{ width: '18px', marginTop: '-3px', cursor: 'pointer' }} />
               </Tooltip>
             </Typography>
+            {/* Tag + Accumulative Profit */}
             <Box sx={{ position: 'absolute', zIndex: 2, top: '180px', right: '30px' }}>
-              {formatTag('Last 50 Games')} &nbsp;
-              <Tooltip title={`${accumulativeProfit[accumulativeProfit.length - 1]} RPS`}>
-                {formatProfit(accumulativeProfit[accumulativeProfit.length - 1])}
-              </Tooltip>
+              {formatTag('Last 50 Games')}&nbsp;
+              {accumulativeProfit && accumulativeProfit.length > 0 ? (
+                <Tooltip title={`${accumulativeProfit[accumulativeProfit.length - 1]} SOL`}>
+                  {formatProfit(accumulativeProfit[accumulativeProfit.length - 1])}
+                </Tooltip>
+              ) : (
+                <Tooltip title="0 SOL">
+                  {formatProfit(0)}
+                </Tooltip>
+              )}
+
             </Box>
 
-            <ReactApexChart
-              options={chartData.options}
-              series={chartData.series}
-              type="line"
-              height={180}
-            />
+            {/* Chart #1: Accumulative Profit */}
+            {accumulativeProfit && accumulativeProfit.length > 0 ? (
+              <ReactApexChart
+                options={chartData.options}
+                series={chartData.series}
+                type="line"
+                height={180}
+              />
+            ) : (
+              <Typography variant="body1" sx={{ textAlign: 'center', padding: '16px', color: '#777' }}>
+                No chart data available yet
+              </Typography>
+            )}
 
-            <Box className="gamified-content" sx={{ width: '100%' }}>
+            {/* Table of items */}
+            <Box className="gamified-content" sx={{ width: '100%', mt: 1 }}>
               {filteredArray.length > 0 ? (
                 <>
                   <Table>
-                    <TableHead >
-                      <TableRow >
-                        <TableCell sx={{ fontWeight: '800', color: '#333', margin: '20px' }}>{'BET'}</TableCell>
-                        <TableCell sx={{ fontWeight: '800', color: '#333', margin: '20px' }}>{'HOST'}</TableCell>
-                        <TableCell sx={{ fontWeight: '800', color: '#333', margin: '20px' }}>{'YOU'}</TableCell>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell sx={{ fontWeight: '800', color: '#333' }}>{'BET (SOL)'}</TableCell>
+                        <TableCell sx={{ fontWeight: '800', color: '#333' }}>{'HOST'}</TableCell>
+                        <TableCell sx={{ fontWeight: '800', color: '#333' }}>{'YOU'}</TableCell>
                       </TableRow>
                     </TableHead>
                   </Table>
+
                   <Box sx={{ maxHeight: 200, overflowY: 'auto' }}>
                     <Table sx={{ width: '100%', tableLayout: 'fixed' }}>
                       <TableBody>
@@ -1263,48 +964,32 @@ function BetArray({
                             sx={{
                               '&:nth-of-type(odd)': { backgroundColor: '#e5e5e5' },
                               '&:hover': { backgroundColor: '#f9f9f9' },
-                              cursor: 'pointer',
                             }}
-                            onMouseEnter={() => setHoveredIndex(index)}
-                            onMouseLeave={() => setHoveredIndex(null)}
                           >
+                            {/* BET */}
                             <TableCell
-                              onClick={() => handleCellClick(item, index, 'bet_amount')}
                               sx={{ position: 'relative', cursor: 'pointer' }}
                             >
                               <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                {convertToCurrency(item.bet_amount, solPrice)}
-                                {hoveredIndex === index && (
-                                  <IconButton variant="outlined" size="small" sx={{ marginLeft: '5px' }}>
-                                    <EditIcon className="edit-icon" />
-                                  </IconButton>
-                                )}
+                                {item.bet_amount}<span style={{ marginLeft: '5px', fontSize: 'small' }}> ({convertToCurrency(item.bet_amount, solPrice)})</span>
                               </Box>
                             </TableCell>
+
+                            {/* HOST */}
                             <TableCell
-                              onClick={() => handleCellClick(item, index, game_type === 'Quick Shoot' ? 'qs' : 'rps')}
                               sx={{ position: 'relative', cursor: 'pointer' }}
                             >
-                              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                              <Box sx={{ display: 'flex', justifyContent: 'end', alignItems: 'center', textAlign: 'center' }}>
                                 {game_type === 'Quick Shoot' ? item.qs : item.rps}
-                                {hoveredIndex === index && (
-                                  <IconButton size="small" sx={{ marginLeft: '5px' }}>
-                                    <EditIcon className="edit-icon" />
-                                  </IconButton>
-                                )}
                               </Box>
                             </TableCell>
+
+                            {/* YOU */}
                             <TableCell
-                              onClick={() => handleCellClick(item, index, game_type === 'Quick Shoot' ? 'joiner_qs' : 'joiner_rps')}
                               sx={{ position: 'relative', cursor: 'pointer' }}
                             >
-                              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                              <Box sx={{ display: 'flex', justifyContent: 'end', alignItems: 'center', textAlign: 'center' }}>
                                 {game_type === 'Quick Shoot' ? item.joiner_qs : item.joiner_rps}
-                                {hoveredIndex === index && (
-                                  <IconButton size="small" sx={{ marginLeft: '5px' }}>
-                                    <EditIcon className="edit-icon" />
-                                  </IconButton>
-                                )}
                               </Box>
                             </TableCell>
                           </TableRow>
@@ -1315,175 +1000,105 @@ function BetArray({
                 </>
               ) : (
                 <Typography variant="body1" sx={{ textAlign: 'center', padding: '16px', color: '#777' }}>
-                  Play normally to train the AP
+                  Play normally to train the AI
                 </Typography>
               )}
-
-              {/* Modal for Editing */}
-              <Modal
-                open={openModal}
-                onClose={handleCloseModal}
-                aria-labelledby="edit-modal-title"
-                aria-describedby="edit-modal-description"
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Box
-                  sx={{
-                    backgroundColor: isDarkMode ? '#424242' : '#fff',
-                    padding: '20px',
-                    borderRadius: '5px',
-                    boxShadow: 24,
-                    width: '300px',
-                  }}
-                >
-                  <Typography id="edit-modal-title" variant="h6" gutterBottom>
-                    {modalTitle}
-                  </Typography>
-                  <TextField
-                    label="EDIT VALUE"
-                    value={editedValue}
-                    onChange={(e) => setEditedValue(e.target.value)}
-                    fullWidth
-                    variant="outlined"
-                    sx={{ marginBottom: '20px' }}
-                  />
-                  <Button variant="contained" color='error' onClick={() => handleUpdateCellData(isDarkMode)} fullWidth>
-                    Update
-                  </Button>
-                </Box>
-              </Modal>
             </Box>
           </Grid>
+
         </Box>
       )}
 
+      {/* TAB 2: “Active Rooms” + Q-BOT Rooms */}
       {selectedTab === 2 && (
-        <Box className="gamified-container" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-          <Grid item>
+        <Box
+          className="gamified-container"
+          sx={{
+            display: 'flex', flexDirection: 'column',
+            alignItems: 'center', width: '100%'
+          }}
+        >
+          <Grid item sx={{ width: '100%' }}>
             <Typography variant="h6" sx={{ marginBottom: '20px' }}>
-              Attached Rooms&nbsp;
-              <Tooltip title="This data may not represent your recent transactions and is for the AI purposes only.">
+              Active Rooms&nbsp;
+              <Tooltip title="This data may not represent your recent transactions and is for AI usage only.">
                 <InfoIcon sx={{ width: '18px', marginTop: '-3px', cursor: 'pointer' }} />
               </Tooltip>
             </Typography>
-            <Box sx={{ position: 'absolute', zIndex: 2, top: '180px', right: '30px' }}>
-              {/* Additional Content if any */}
-            </Box>
 
-            <Box className="gamified-content" sx={{ width: '100%', marginTop: '20px' }}>
-              <Box>
-                <Table sx={{ width: '100%', tableLayout: 'fixed' }} aria-label="rooms table">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell sx={{ fontWeight: '800', color: '#333', margin: '20px' }} align="center">
-                        Room
-                      </TableCell>
-                      <TableCell sx={{ fontWeight: '800', color: '#333', margin: '20px' }} align="center">
-                        Range
-                      </TableCell>
-                      <TableCell sx={{ fontWeight: '800', color: '#333', margin: '20px' }} align="center">
-                        Strategy
+            <Box sx={{ width: '100%', marginTop: '20px' }}>
+              <Table sx={{ width: '100%', tableLayout: 'fixed' }} aria-label="rooms table">
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ fontWeight: '800', color: '#333' }} align="center">
+                      Room
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: '800', color: '#333' }} align="center">
+                      Range
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: '800', color: '#333' }} align="center">
+                      Model
+                    </TableCell>
+                  </TableRow>
+                </TableHead>
+
+                <TableBody>
+                  {attachedRooms && attachedRooms.length > 0 ? (
+                    attachedRooms.map((room) => {
+                      const betAmounts = room.bet_amounts || [];
+                      const minBet = Math.min(...betAmounts);
+                      const maxBet = Math.max(...betAmounts);
+
+                      return (
+                        <TableRow
+                          key={room._id}
+                          sx={{
+                            '&:nth-of-type(odd)': { backgroundColor: '#e5e5e5' },
+                            '&:hover': { backgroundColor: '#f9f9f9' },
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <TableCell align="center" sx={{ position: 'relative' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <a href={`/join/${room._id}`} style={{ color: '#333', textDecoration: 'none' }}>
+                                {room.room_name}
+                              </a>
+                            </Box>
+                          </TableCell>
+
+                          <TableCell align="center" sx={{ position: 'relative' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              {betAmounts.length
+                                ? `${convertToCurrency(minBet, solPrice)} - ${convertToCurrency(maxBet, solPrice)}`
+                                : 'N/A'}
+                            </Box>
+                          </TableCell>
+
+                          <TableCell align="center" sx={{ position: 'relative' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              {room.selected_strategy || 'N/A'}
+                            </Box>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  ) : (
+                    <TableRow
+                      sx={{
+                        '&:nth-of-type(odd)': { backgroundColor: '#e5e5e5' },
+                        '&:hover': { backgroundColor: '#f9f9f9' },
+                      }}
+                    >
+                      <TableCell colSpan={3} align="center">
+                        No active rooms available
                       </TableCell>
                     </TableRow>
-                  </TableHead>
-
-                  <TableBody>
-                    {attachedRooms && attachedRooms.length > 0 ? (
-                      attachedRooms.map((room) => {
-                        const betAmounts = room.bet_amounts;
-                        const minBet = Math.min(...betAmounts);
-                        const maxBet = Math.max(...betAmounts);
-
-                        return (
-                          <TableRow
-                            key={room._id}
-                            sx={{
-                              '&:nth-of-type(odd)': { backgroundColor: '#e5e5e5' },
-                              '&:hover': { backgroundColor: '#f9f9f9' },
-                              cursor: 'pointer',
-                            }}
-                          // e.g. onClick={() => handleRoomClick(room)} if you like
-                          >
-                            <TableCell align="center" sx={{ position: 'relative' }}>
-                              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <a href={`/join/${room._id}`} style={{ color: '#333', textDecoration: 'none' }}>
-                                  {room.room_name}
-                                </a>
-                              </Box>
-                            </TableCell>
-
-                            <TableCell align="center" sx={{ position: 'relative' }}>
-                              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                {`${convertToCurrency(minBet, solPrice)} - ${convertToCurrency(maxBet, solPrice)}`}
-                              </Box>
-                            </TableCell>
-
-                            <TableCell align="center" sx={{ position: 'relative' }}>
-                              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                {room.selected_strategy}
-                              </Box>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })
-                    ) : (
-                      <TableRow
-                        sx={{
-                          '&:nth-of-type(odd)': { backgroundColor: '#e5e5e5' },
-                          '&:hover': { backgroundColor: '#f9f9f9' },
-                        }}
-                      >
-                        <TableCell colSpan={3} align="center">
-                          No attached rooms available
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </Box>
-
-              {/* Modal for Editing */}
-              <Modal
-                open={openModal}
-                onClose={handleCloseModal}
-                aria-labelledby="edit-modal-title"
-                aria-describedby="edit-modal-description"
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Box
-                  sx={{
-                    backgroundColor: isDarkMode ? '#424242' : '#fff',
-                    padding: '20px',
-                    borderRadius: '5px',
-                    boxShadow: 24,
-                    width: '300px',
-                  }}
-                >
-                  <Typography id="edit-modal-title" variant="h6" component="h2" gutterBottom>
-                    {modalTitle}
-                  </Typography>
-                  <TextField color='error'
-                    label="EDIT VALUE"
-                    value={editedValue}
-                    onChange={(e) => setEditedValue(e.target.value)}
-                    fullWidth
-                    variant="outlined"
-                    sx={{ marginBottom: '20px' }}
-                  />
-                  <Button variant="contained" color='error' onClick={() => handleUpdateCellData(isDarkMode)} fullWidth>
-                    Update
-                  </Button>
-                </Box>
-              </Modal>
+                  )}
+                </TableBody>
+              </Table>
             </Box>
+
+            {/* "Q-BOT Rooms" or "myGames" can go here if you like */}
           </Grid>
         </Box>
       )}
@@ -1491,12 +1106,12 @@ function BetArray({
   );
 }
 
-
 const mapStateToProps = (state) => ({
   rpsbetitems: state.logic.rpsbetitems,
   qsbetitems: state.logic.qsbetitems,
   user_balance: state.auth.user.balance,
   user_id: state.auth.user._id,
+  user_range: state.auth.user.range,
   myGames: state.logic.myGames,
   solPrice: state.logic.solPrice,
   totalWagered: state.auth.user.totalWagered,
@@ -1504,13 +1119,13 @@ const mapStateToProps = (state) => ({
 
 const mapDispatchToProps = {
   getRpsBetItems,
-  updateRpsBetItems,
   getQsBetItems,
-  updateQsBetItems,
   updateQbot,
-  // getQbot,
+  getQbot,
+  getUser,
   getMyGames,
   setFocused,
+  updateBetRangeFunction
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(BetArray);

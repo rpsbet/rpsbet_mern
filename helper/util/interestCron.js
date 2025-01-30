@@ -6,7 +6,6 @@ const Notification = require('../../model/Notification.js');
 const SystemSetting = require('../../model/SystemSetting');
 const saveDocumentWithRetry = require('./retrySave');
 const socketController = require('../../socketController.js');
-const convertToCurrency = require('../../helper/util/conversion');
 const senderId = '629685058f368a1838372754';
 
 let socketio = null;
@@ -55,7 +54,7 @@ async function updateRoomInterests(io) {
             to: bonusRoom.creator,
             room: bonusRoom._id,
             amount: userBet * 0.0000001,
-            message: `Interest earned (${convertToCurrency(userBet * 0.0000001)})`,
+            message: `Interest earned (${(userBet * 0.0000001)})`,
             is_read: false
           });
 

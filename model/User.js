@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const UserSchema = new Schema({
+  
   username: {
     type: String,
     required: true,
@@ -37,6 +38,10 @@ const UserSchema = new Schema({
   ai_mode: {
     type: String,
     default: 'Markov'
+  },
+  range: {
+    type: [Number],
+    default: [0.0005, 0.001],
   },
   referralCode: {
     type: String,

@@ -24,7 +24,6 @@ import { faMoneyBillWave, faMoneyBillWaveAlt } from '@fortawesome/free-solid-svg
 import { warningMsgBar, infoMsgBar } from '../../redux/Notification/notification.actions';
 import { paybackLoan, acCalculateRemainingLoans } from '../../redux/Loan/loan.action';
 import { alertModal } from '../modal/ConfirmAlerts';
-import { setBalance } from '../../redux/Auth/user.actions';
 import { addNewTransaction } from '../../redux/Logic/logic.actions';
 import { convertToCurrency } from '../../util/conversion';
 import { getCustomTheme } from '../../config/theme';
@@ -111,7 +110,6 @@ const DebtsModal = ({ modalIsOpen, closeModal }) => {
       const { balance, newTransaction, message } = response;
       closePaybackModal();
       alertModal(isDarkMode, message, '-cat');
-      dispatch(setBalance(balance));
       dispatch(addNewTransaction(newTransaction));
       dispatch(acCalculateRemainingLoans());
     } else {

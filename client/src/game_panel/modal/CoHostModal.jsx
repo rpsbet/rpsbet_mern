@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import Moment from 'moment';
-import Chart from 'react-apexcharts';
 import {
   Box,
   Tooltip,
@@ -22,16 +21,16 @@ import {
 import { debounce } from 'lodash';
 import { ThemeProvider } from '@mui/material/styles';
 
-import { getCustomTheme } from '../../config/theme';
+import { createChart } from 'lightweight-charts';
 
+import { getCustomTheme } from '../../config/theme';
 import {
   getTransactionCandles,
   unstake,
   addNewTransaction,
-  addNewCandle,
+  someActionToAppendCandle,
   getMyGames
 } from '../../redux/Logic/logic.actions';
-import { setBalance } from '../../redux/Auth/user.actions';
 import { convertToCurrency } from '../../util/conversion';
 import Avatar from '../../components/Avatar';
 import PlayerModal from '../modal/PlayerModal';
@@ -47,150 +46,129 @@ function CoHostModal({
   has_joined,
   solPrice,
   input_only,
-  handleCoHostAmountChange
+  handleCoHostAmountChange,
 }) {
   const dispatch = useDispatch();
   const socket = useSelector((state) => state.auth.socket);
-  const transactionCandles = useSelector((state) => state.logic.candles);
-  const transactions = useSelector((state) => state.auth.transactions);
-  // ---- LOCAL STATE ----
+
+  // 1) We read the candles & transactions from Redux:
+  const storeCandles = useSelector((state) => state.logic.candles);
+  const transactions = useSelector((state) => state.logic.transactions);
+
+  // 2) Local states & references
   const [showPlayerModal, setShowPlayerModal] = useState(false);
   const [selectedCreator, setSelectedCreator] = useState('');
   const [selectedTab, setSelectedTab] = useState('PUMP');
-  const [timeFrame, setTimeFrame] = useState('4h');
+  const [timeFrame, setTimeFrame] = useState('1m');
   const [localCoHostAmount, setLocalCoHostAmount] = useState(0.01);
 
-  // ---- EFFECTS ----
+  // For the chart
+  const [localChartData, setLocalChartData] = useState([]);
+  const chartContainerRef = useRef(null);
+  const chartInstanceRef = useRef(null);
+  const candlestickSeriesRef = useRef(null);
+
+  // ------------------ FETCH CANDLES FROM REDUX (via an action) ------------------
   useEffect(() => {
-    if (selectedRow?._id && has_joined && !input_only) {
-      // Only dispatch when there’s a valid _id, the user joined,
-      // and you are not in input-only mode.
-      dispatch(getTransactionCandles({ roomId: selectedRow._id, timeFrame }));
-    }
-  }, [dispatch, selectedRow?._id, timeFrame, has_joined, input_only]);
-  
+    if (!selectedRow?._id) return;
+    // We dispatch the action, but do NOT rely on its return value for data
+    dispatch(getTransactionCandles({ roomId: selectedRow._id, timeFrame }));
+  }, [dispatch, selectedRow?._id, timeFrame]);
+
+  // ------------------ WATCH storeCandles from Redux ------------------
   useEffect(() => {
-    // Listen for real-time candle updates via socket
-    if (selectedRow?._id && socket) {
-      const candleEvent = `NEW_CANDLE_${selectedRow._id}`;
-      const handleNewCandle = (data) => {
-        dispatch(addNewCandle(data.newCandle));
-      };
-      socket.on(candleEvent, handleNewCandle);
-
-      return () => {
-        socket.off(candleEvent, handleNewCandle);
-      };
+    if (storeCandles?.length) {
+      const sorted = sortAndDeduplicate(storeCandles);
+      setLocalChartData(sorted);
     }
-  }, [dispatch, selectedRow?._id, socket]);
+  }, [storeCandles]);
 
-  // ---- CHART LOGIC ----
-  let chartData = [];
-  const convertToChartCurrency = (input) => {
-    let number = Number(input);
-    if (isNaN(number)) return input.toString();
-
-    // Round to 2 decimals
-    number = Math.floor(number * 100) / 100;
-
-    // Convert large numbers to K, M, etc.
-    if (number >= 1_000_000 || number <= -1_000_000) {
-      return (number / 1_000_000).toFixed(1) + 'M';
-    } else if (number >= 1000 || number <= -1000) {
-      return (number / 1000).toFixed(1) + 'K';
-    } else {
-      let [whole, decimal] = number.toFixed(2).split('.');
-      whole = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-      if (decimal) decimal = decimal.replace(/0+$/, '');
-      return decimal ? `${whole}.${decimal}` : whole;
+  // Helper: sort & deduplicate
+  const sortAndDeduplicate = (candles) => {
+    const sorted = [...candles].sort(
+      (a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
+    );
+    const deduped = [];
+    let prevTimeSec = null;
+    for (let i = 0; i < sorted.length; i++) {
+      const cur = sorted[i];
+      const curTimeSec = Math.floor(new Date(cur.startTime).getTime() / 1000);
+      if (prevTimeSec === null || curTimeSec > prevTimeSec) {
+        deduped.push(cur);
+        prevTimeSec = curTimeSec;
+      } else {
+        console.warn('Skipping duplicate/out-of-order candle at', cur.startTime);
+      }
     }
+    return deduped;
   };
 
-  // Build chartData
-  if (transactionCandles && transactionCandles.length > 0) {
-    transactionCandles.forEach((candle, index) => {
-      chartData.push({
-        x: index, // sequential index to remove large time gaps
-        y: [candle.open, candle.high, candle.low, candle.close],
-        startTime: candle.startTime
-      });
-    });
-  }
+  // ------------------ CREATE CHART ONCE ------------------
+  useEffect(() => {
+    if (chartContainerRef.current && !chartInstanceRef.current) {
+      // Dynamically set width to container's clientWidth
+      const container = chartContainerRef.current;
 
-  // Chart options
-  const chartOptions = {
-    chart: {
-      type: 'candlestick',
-      height: 350,
-      zoom: { enabled: true, type: 'x' },
-      toolbar: { show: false },
-      animations: { enabled: false },
-      background: '#2d2331', // Set the chart background color to purple
-    },
-    xaxis: {
-      type: 'datetime',
-      labels: {
-        datetimeUTC: false,
-        rotate: -45,
-        style: { colors: '#fff', fontSize: '12px' },
-        formatter: (value) => {
-          if (value === 0 && chartData[0]) {
-            return Moment(chartData[0].startTime).format('HH:mm');
-          }
-          if (value === chartData.length - 1 && chartData.length > 1) {
-            return Moment(chartData[chartData.length - 1].startTime).format('HH:mm');
-          }
-          return '';
+      chartInstanceRef.current = createChart(container, {
+        width: container.clientWidth, // <-- Use container's width
+        height: 350,
+        layout: {
+          background: { type: 'solid', color: isDarkMode ? '#2d2331' : '#ffffff' },
+          textColor: isDarkMode ? '#ffffff' : '#000000',
         },
-      },
-      tickAmount: 2,
-      axisBorder: { show: true, color: '#fff' },
-      axisTicks: { show: true, color: '#fff' },
-    },
-    yaxis: {
-      labels: {
-        style: { colors: '#fff', fontSize: '12px' },
-        formatter: (value) => convertToChartCurrency(value),
-      },
-    },
-    tooltip: {
-      custom: ({ dataPointIndex }) => {
-        const candle = chartData[dataPointIndex];
-        if (!candle || !candle.y || candle.y.length !== 4) return '';
-        const [open, high, low, close] = candle.y;
-        return `
-          <div class="chart-tooltip">
-            <div><strong>Time:</strong> ${Moment(candle.startTime).format('HH:mm')}</div>
-            <div><strong>Open:</strong> ${convertToChartCurrency(open)}</div>
-            <div><strong>High:</strong> ${convertToChartCurrency(high)}</div>
-            <div><strong>Low:</strong> ${convertToChartCurrency(low)}</div>
-            <div><strong>Close:</strong> ${convertToChartCurrency(close)}</div>
-          </div>
-        `;
-      },
-    },
-    plotOptions: {
-      candlestick: {
-        wick: { useFillColor: true },
-        colors: { upward: '#00b140', downward: '#ff4b4b' },
-        bodyWidth: 1,
-      },
-    },
-    grid: {
-      borderColor: '#fff6',
-      strokeDashArray: 9,
-      
-    },
-    theme: {
-      mode: isDarkMode ? 'dark' : 'light',
-    },
-  };
-  // ---- LIQUIDITY + SHARE LOGIC ----
+        grid: {
+          vertLines: { color: 'rgba(197, 203, 206, 0.3)' },
+          horzLines: { color: 'rgba(197, 203, 206, 0.3)' },
+        },
+        timeScale: { timeVisible: true, secondsVisible: true },
+      });
+
+      candlestickSeriesRef.current = chartInstanceRef.current.addCandlestickSeries({
+        upColor: '#00b140',
+        downColor: '#ff4b4b',
+        borderDownColor: '#ff4b4b',
+        borderUpColor: '#00b140',
+        wickDownColor: '#ff4b4b',
+        wickUpColor: '#00b140',
+      });
+    }
+  }, [isDarkMode]);
+
+  // ------------------ APPLY localChartData TO CHART ------------------
+  useEffect(() => {
+    if (!candlestickSeriesRef.current) return;
+    const sorted = sortAndDeduplicate(localChartData);
+    const chartData = sorted.map((c) => ({
+      time: Math.floor(new Date(c.startTime).getTime() / 1000),
+      open: c.open,
+      high: c.high,
+      low: c.low,
+      close: c.close,
+    }));
+    candlestickSeriesRef.current.setData(chartData);
+  }, [localChartData]);
+
+  // ------------------ SOCKET FOR REAL-TIME CANDLE? (Optional) ------------------
+  // If your socket also emits new candles, you'd merge them here
+  // For brevity, omitted or you can do something like:
+  useEffect(() => {
+    if (!selectedRow?._id || !socket) return;
+    const candleEvent = `NEW_CANDLE_${selectedRow._id}`;
+    const handleNewCandle = (data) => {
+      // data = { newCandle: { ... } }
+      dispatch(someActionToAppendCandle(data.newCandle));
+    };
+    socket.on(candleEvent, handleNewCandle);
+    return () => {
+      socket.off(candleEvent, handleNewCandle);
+    };
+  }, [selectedRow?._id, socket]);
+
+  // ------------------ REMAINING LOGIC (Pump/Jeet, Table, etc.) ------------------
   const calculatePercentageChange = (current, original) => {
     if (!original) return 'N/A';
     return (((current - original) / original) * 100).toFixed(2);
   };
-
   const liquidityPercentageChange = calculatePercentageChange(
     selectedRow.winnings ? selectedRow.winnings : parseFloat(selectedRow.user_bet),
     selectedRow.bet_amount
@@ -200,7 +178,6 @@ function CoHostModal({
     ? selectedRow.hosts.reduce((acc, host) => acc + host.share, 0)
     : 0;
 
-  // ---- RELATIVE TIME HELPER ----
   const formatRelativeTime = (date) => {
     const now = Moment();
     const created = Moment(date);
@@ -211,13 +188,20 @@ function CoHostModal({
     const minutes = diff.minutes();
     const seconds = diff.seconds();
 
-    if (days >= 1) return days > 1 ? `${days}d ${hours}h ago` : `${days}d ${hours > 0 ? hours + 'h' : ''} ago`;
-    if (hours >= 1) return hours > 1 ? `${hours}h ${minutes}m ago` : `${hours}h ${minutes > 0 ? minutes + 'm' : ''} ago`;
-    if (minutes >= 1) return minutes > 1 ? `${minutes}m ago` : `${minutes}m ${seconds}s ago`;
+    if (days >= 1) {
+      return days > 1 ? `${days}d ${hours}h ago` : `${days}d ${hours > 0 ? hours + 'h' : ''} ago`;
+    }
+    if (hours >= 1) {
+      return hours > 1
+        ? `${hours}h ${minutes}m ago`
+        : `${hours}h ${minutes > 0 ? minutes + 'm' : ''} ago`;
+    }
+    if (minutes >= 1) {
+      return minutes > 1 ? `${minutes}m ago` : `${minutes}m ${seconds}s ago`;
+    }
     return `${seconds}s ago`;
   };
 
-  // ---- INPUT (coHostAmount) DEBOUNCING ----
   const debouncedHandleChange = useCallback(
     debounce((value) => {
       handleCoHostAmountChange({ target: { value } });
@@ -241,21 +225,17 @@ function CoHostModal({
     debouncedHandleButtonClick(value);
   };
 
-  // ---- UNSTAKE HANDLER (JEET) ----
   const handleUnstake = async (winnings, room_id, stakeAmount) => {
     try {
       const parsedWinnings = parseFloat(winnings);
-      if (isNaN(parsedWinnings)) return console.error("Invalid winnings value");
+      if (isNaN(parsedWinnings)) return console.error('Invalid winnings value');
 
       const parsedBalance = parseFloat(balance);
-      if (isNaN(parsedBalance)) return console.error("Invalid balance value");
+      if (isNaN(parsedBalance)) return console.error('Invalid balance value');
 
       await dispatch(unstake(room_id, stakeAmount));
       await dispatch(getMyGames({ game_type: 'All', status: 'open', sort: 'desc' }));
       await dispatch(addNewTransaction({ amount: parsedWinnings, room_id }));
-
-      const newBalance = parsedBalance + parsedWinnings;
-      await dispatch(setBalance(newBalance));
     } catch (error) {
       console.error('Error unstaking from room:', error);
     }
@@ -263,8 +243,6 @@ function CoHostModal({
 
   const theme = getCustomTheme(isDarkMode ? 'dark' : 'light');
 
-
-  // ---- PLAYER MODAL HELPERS ----
   const handleOpenPlayerModal = (creator_id) => {
     setSelectedCreator(creator_id);
     setShowPlayerModal(true);
@@ -273,12 +251,11 @@ function CoHostModal({
     setShowPlayerModal(false);
   };
 
-  // ---- RENDER ----
+  // ------------------ Render ------------------
   return (
     <ThemeProvider theme={theme}>
-
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, width: '100%' }}>
-        {/* Header (show only if not joined and not input_only) */}
+        {/* Header */}
         {!input_only && !has_joined && (
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center' }}>
@@ -291,7 +268,7 @@ function CoHostModal({
           </Box>
         )}
 
-        {/* Player Modal (if open) */}
+        {/* Player Modal */}
         {showPlayerModal && (
           <PlayerModal
             selectedCreator={selectedCreator}
@@ -300,17 +277,16 @@ function CoHostModal({
           />
         )}
 
-        {/* Top Info (if not joined/input_only) */}
+        {/* Info Box */}
         {!input_only && !has_joined && (
           <Box sx={{ background: 'rgba(170, 170, 170, 0.06)', p: 2, borderRadius: 1 }}>
-            {/* Liquidity / Holders / Battles / Created-By stats */}
             <Box
               sx={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(4, 1fr)',
                 gap: 3,
                 mb: 2,
-                '@media (max-width: 600px)': {
+                '@media (max-width: 100%)': {
                   gridTemplateColumns: 'repeat(2, 1fr)'
                 }
               }}
@@ -330,8 +306,8 @@ function CoHostModal({
                             liquidityPercentageChange > 0
                               ? '#fff'
                               : liquidityPercentageChange < 0
-                                ? 'red'
-                                : 'text.primary'
+                              ? 'red'
+                              : 'text.primary'
                         }}
                       >
                         {!selectedRow.winnings
@@ -357,7 +333,8 @@ function CoHostModal({
                     <Box>
                       {Array.isArray(selectedRow.hosts) &&
                         selectedRow.hosts.map((host, i) => {
-                          const pct = totalShare > 0 ? ((host.share / totalShare) * 100).toFixed(2) : 0;
+                          const pct =
+                            totalShare > 0 ? ((host.share / totalShare) * 100).toFixed(2) : 0;
                           return (
                             <Typography key={i} variant="body2">
                               {i === 0 ? 'Dev' : `Co-Host ${i + 1}`}: {pct}%
@@ -413,8 +390,8 @@ function CoHostModal({
           </Box>
         )}
 
-        {/* TABs + Betting/PUMP/JEET area (if not joined) */}
-        {!has_joined && (
+        {/* PUMP / JEET inputs */}
+        {((!input_only && !has_joined) || input_only) && (
           <Box
             sx={{
               background: 'rgba(170, 170, 170, 0.06)',
@@ -425,8 +402,6 @@ function CoHostModal({
               gap: 2
             }}
           >
-            {/* PUMP / JEET Tabs */}
-            {input_only && (
             <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
               <Button
                 onClick={() => setSelectedTab('PUMP')}
@@ -447,7 +422,6 @@ function CoHostModal({
                   }}
                 />
               </Button>
-
               <Button
                 onClick={() => setSelectedTab('JEET')}
                 variant={selectedTab === 'JEET' ? 'contained' : 'outlined'}
@@ -460,20 +434,17 @@ function CoHostModal({
                 }}
               >
                 JEET
-                <TrendingDownOutlined
-                  sx={{ ml: 1, color: selectedTab === 'JEET' ? '#fff' : '#f44336' }}
-                />
+                <TrendingDownOutlined sx={{ ml: 1, color: selectedTab === 'JEET' ? '#fff' : '#f44336' }} />
               </Button>
             </Box>
-            )}
-            {/* Co-Host Amount Input */}
+
             <Box>
               <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
                 {[0.01, 0.1, 1].map((amt) => (
                   <Button
                     key={amt}
                     variant="outlined"
-                    color='error'
+                    color="error"
                     onClick={() => handleButtonClick(amt)}
                     sx={{ flex: 1 }}
                   >
@@ -483,7 +454,7 @@ function CoHostModal({
               </Box>
 
               <TextField
-                color='error'
+                color="error"
                 value={localCoHostAmount}
                 onChange={handleInputChange}
                 variant="filled"
@@ -491,22 +462,16 @@ function CoHostModal({
                 fullWidth
               />
 
-              {/* If input_only => show PUMP/JEET buttons under the textfield */}
               {input_only && (
                 <Box sx={{ mt: 2 }}>
                   {selectedTab === 'PUMP' ? (
-                    <Button
-                      variant="contained"
-                      color='error'
-                      onClick={handleSendCoHost}
-                      fullWidth
-                    >
+                    <Button variant="contained" color="error" onClick={handleSendCoHost} fullWidth>
                       PUMP
                     </Button>
                   ) : (
                     <Button
                       variant="contained"
-                      color='error'
+                      color="error"
                       onClick={() =>
                         handleUnstake(
                           selectedRow?.winnings ?? parseFloat(selectedRow?.user_bet || 0),
@@ -523,29 +488,23 @@ function CoHostModal({
               )}
             </Box>
 
-            {/* BALANCE / AFTER-BEFORE Table */}
+            {/* Balance / Before / After Table */}
             <Table>
               <TableBody>
                 {!input_only && (
                   <>
                     <TableRow>
                       <TableCell>BALANCE:</TableCell>
-                      <TableCell align="right">
-                        {convertToCurrency(balance, solPrice)}
-                      </TableCell>
+                      <TableCell align="right">{convertToCurrency(balance, solPrice)}</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell>CURRENT BANKROLL:</TableCell>
                       <TableCell align="right" sx={{ color: '#ff8500' }}>
-                        {selectedRow
-                          ? convertToCurrency(selectedRow.user_bet, solPrice)
-                          : null}
+                        {selectedRow ? convertToCurrency(selectedRow.user_bet, solPrice) : null}
                       </TableCell>
                     </TableRow>
                   </>
                 )}
-
-                {/* BEFORE */}
                 <TableRow>
                   <TableCell>BEFORE:</TableCell>
                   <TableCell align="right" sx={{ color: '#ff8500' }}>
@@ -554,9 +513,7 @@ function CoHostModal({
                         Array.isArray(selectedRow.hosts) &&
                         selectedRow.hosts.some((host) => host.host === user?._id)
                       ) {
-                        const userHost = selectedRow.hosts.find(
-                          (host) => host.host === user._id
-                        );
+                        const userHost = selectedRow.hosts.find((host) => host.host === user._id);
                         if (userHost) {
                           const sharePct = userHost.share.toFixed(2);
                           const shareValue = convertToCurrency(
@@ -570,13 +527,10 @@ function CoHostModal({
                     })()}
                   </TableCell>
                 </TableRow>
-
-                {/* AFTER */}
                 <TableRow>
                   <TableCell>AFTER:</TableCell>
                   <TableCell align="right" sx={{ color: '#ff8500' }}>
                     {(() => {
-                      // If no hosts or no user
                       if (!selectedRow || !Array.isArray(selectedRow.hosts)) return '0%';
 
                       const userHost = selectedRow.hosts.find((host) => host.host === user?._id);
@@ -594,18 +548,15 @@ function CoHostModal({
                       );
                       const totalStakeIncludingUser = totalStake + amountAfterFee;
 
-                      // BUY scenario
                       const newUserStake = userStake + amountAfterFee;
                       const newUserShareBuy = (newUserStake / totalStakeIncludingUser) * 100;
 
-                      // SELL scenario
                       const userCurrentShareVal =
                         userHost && !isNaN(userHost.share)
                           ? (userHost.share / 100) * currentBankroll
                           : 0;
                       const newUserStakeAfterSell = userCurrentShareVal - amountAfterFee;
-                      const newUserShareSell =
-                        (newUserStakeAfterSell / currentBankroll) * 100;
+                      const newUserShareSell = (newUserStakeAfterSell / currentBankroll) * 100;
 
                       const buyShare = `${Math.min(newUserShareBuy, 100).toFixed(2)}%`;
                       const sellShare =
@@ -622,19 +573,22 @@ function CoHostModal({
           </Box>
         )}
 
-        {/* Chart (if not input_only and user joined) */}
+        {/* Chart Container */}
         {!input_only && (
-          <Box sx={{ my: 2, borderRadius: '0.3em', overflow:'hidden' }}>
-            <Chart
-              options={chartOptions}
-              series={[{ data: chartData }]}
-              type="candlestick"
-              height={350}
+          <Box sx={{ my: 2, borderRadius: '0.3em', overflow: 'hidden', width: '100%' }}>
+            <div
+              ref={chartContainerRef}
+              style={{
+                width: '100%',
+                height: 'auto',
+                borderRadius: '0.3em',
+                overflow: 'hidden',
+              }}
             />
           </Box>
         )}
 
-        {/* Transaction Table (if not joined + not input_only) */}
+        {/* Transactions Table */}
         {!has_joined && !input_only && (
           <Box sx={{ background: 'rgba(170, 170, 170, 0.06)', p: 2, borderRadius: 1 }}>
             <Table>
@@ -648,25 +602,19 @@ function CoHostModal({
               <TableBody>
                 {transactions.length > 0 ? (
                   transactions.map((tx, i) => {
-                    // Identify relevant keywords
                     let desc = tx.description?.toLowerCase() || '';
                     let label = null;
                     if (desc.includes('joined')) label = 'Bet';
                     else if (desc.includes('created')) label = 'Created';
                     else if (desc.includes('pumped')) label = 'Pumped';
                     else if (desc.includes('jeeted')) label = 'Jeeted';
-                    // Skip if no recognized keyword
                     if (!label) return null;
 
                     return (
                       <TableRow key={i}>
                         <TableCell>{label}</TableCell>
-                        <TableCell align="center">
-                          {convertToCurrency(tx.amount, solPrice)}
-                        </TableCell>
-                        <TableCell align="right">
-                          {formatRelativeTime(tx.created_at)}
-                        </TableCell>
+                        <TableCell align="center">{convertToCurrency(tx.amount, solPrice)}</TableCell>
+                        <TableCell align="right">{formatRelativeTime(tx.created_at)}</TableCell>
                       </TableRow>
                     );
                   })
@@ -682,7 +630,7 @@ function CoHostModal({
           </Box>
         )}
 
-        {/* Footer Buttons (PUMP / JEET) if not input_only */}
+        {/* Footer Buttons */}
         {!input_only && !has_joined && (
           <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
             <Button variant="contained" color="error" onClick={handleSendCoHost}>

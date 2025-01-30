@@ -1,5 +1,6 @@
 import * as tf from '@tensorflow/tfjs';
 
+// 1) CALCULATE WIN CHANCE (unchanged)
 export const calcWinChanceQs = (gameType, rounds) => {
   let probWin = (100 / gameType).toFixed(2);
   let probLose = (100 - probWin).toFixed(2);
@@ -24,79 +25,125 @@ export const calcWinChanceQs = (gameType, rounds) => {
   return `${probWin}% - ${probLose}%`;
 };
 
+// 2) PREDICT NEXT QS (Markov approach)
 export async function predictNextQs(qs_list, gameType) {
-  const options = [...Array(gameType).keys()];
-  const transitionMatrix = {};
+  // This function now returns an object { move, risk }
 
+  // Our possible QS states = [0, 1, 2, ..., gameType-1]
+  const options = [...Array(gameType).keys()];
+
+  // Filter out invalid data
   const filteredQsList = qs_list.filter(item => item.qs !== null && item.qs !== '');
 
+  // If not enough data, return random
   if (filteredQsList.length < 3) {
-    return options[Math.floor(Math.random() * gameType)];
+    return { move: randomIntExcluding(options), risk: 1 };
   }
 
-  options.forEach(option1 => {
-    transitionMatrix[option1] = {};
-    options.forEach(option2 => {
-      transitionMatrix[option1][option2] = {};
-      options.forEach(option3 => {
-        transitionMatrix[option1][option2][option3] = {};
-        options.forEach(option4 => {
-          transitionMatrix[option1][option2][option3][option4] = 0;
+  // Build a 4-dimensional Markov transition matrix
+  const transitionMatrix = {};
+  options.forEach(o1 => {
+    transitionMatrix[o1] = {};
+    options.forEach(o2 => {
+      transitionMatrix[o1][o2] = {};
+      options.forEach(o3 => {
+        transitionMatrix[o1][o2][o3] = {};
+        options.forEach(o4 => {
+          transitionMatrix[o1][o2][o3][o4] = 0;
         });
       });
     });
   });
 
-  // Populate transition matrix
+  // Populate from the last 3 states => the next state
   for (let i = 0; i < filteredQsList.length - 3; i++) {
-    transitionMatrix[filteredQsList[i].qs][filteredQsList[i + 1].qs][filteredQsList[i + 2].qs][filteredQsList[i + 3].qs]++;
+    const s1 = parseInt(filteredQsList[i].qs, 10);
+    const s2 = parseInt(filteredQsList[i+1].qs, 10);
+    const s3 = parseInt(filteredQsList[i+2].qs, 10);
+    const s4 = parseInt(filteredQsList[i+3].qs, 10);
+
+    transitionMatrix[s1][s2][s3][s4]++;
   }
 
-  // Normalize transition matrix
-  Object.keys(transitionMatrix).forEach(fromState1 => {
-    Object.keys(transitionMatrix[fromState1]).forEach(fromState2 => {
-      Object.keys(transitionMatrix[fromState1][fromState2]).forEach(fromState3 => {
-        const totalTransitions = Object.values(transitionMatrix[fromState1][fromState2][fromState3]).reduce((a, b) => a + b, 0);
-        Object.keys(transitionMatrix[fromState1][fromState2][fromState3]).forEach(toState => {
-          if (totalTransitions > 0) {
-            transitionMatrix[fromState1][fromState2][fromState3][toState] /= totalTransitions;
-          }
-        });
+  // Normalize
+  options.forEach(o1 => {
+    options.forEach(o2 => {
+      options.forEach(o3 => {
+        const row = transitionMatrix[o1][o2][o3];
+        const total = Object.values(row).reduce((a, b) => a + b, 0);
+        if (total > 0) {
+          Object.keys(row).forEach(o4 => {
+            row[o4] = row[o4] / total;
+          });
+        }
       });
     });
   });
 
-  // Calculate win chance
+  // Calculate the "win chance" just for minor deviation
   const winChance = calcWinChanceQs(gameType, filteredQsList);
   let deviation = 0;
   if (winChance !== '33.33%') {
-    deviation = (1 - 1 / gameType) / 10; // Reduced deviation factor
+    deviation = (1 - 1 / gameType) / 10; 
   }
 
-  let currentState1 = filteredQsList[filteredQsList.length - 3].qs;
-  let currentState2 = filteredQsList[filteredQsList.length - 2].qs;
-  let currentState3 = filteredQsList[filteredQsList.length - 1].qs;
-  let nextState = currentState3;
-  let maxProb = 0;
+  // We look at the last 3 QS states
+  let currentState1 = parseInt(filteredQsList[filteredQsList.length - 3].qs, 10);
+  let currentState2 = parseInt(filteredQsList[filteredQsList.length - 2].qs, 10);
+  let currentState3 = parseInt(filteredQsList[filteredQsList.length - 1].qs, 10);
 
-  Object.keys(transitionMatrix[currentState1][currentState2][currentState3]).forEach(state => {
-    if (transitionMatrix[currentState1][currentState2][currentState3][state] > maxProb) {
-      maxProb = transitionMatrix[currentState1][currentState2][currentState3][state];
-      nextState = state;
+  let maxProb = 0;
+  let nextState = currentState3;
+
+  // find the best nextState
+  Object.keys(transitionMatrix[currentState1][currentState2][currentState3]).forEach(s4 => {
+    const p = transitionMatrix[currentState1][currentState2][currentState3][s4];
+    if (p > maxProb) {
+      maxProb = p;
+      nextState = parseInt(s4, 10);
     }
   });
 
-  let randomNum = Math.random();
-  if (randomNum < deviation) {
-    let randomState = '';
-    do {
-      randomState = options[Math.floor(Math.random() * gameType)];
-    } while (randomState === nextState);
-    nextState = randomState;
+  // Possibly deviate randomly
+  if (Math.random() < deviation) {
+    const possibleMoves = [...options];
+    // Exclude the predicted move from random?
+    const idx = possibleMoves.indexOf(nextState);
+    if (idx !== -1) {
+      possibleMoves.splice(idx, 1);
+    }
+    nextState = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+
+    // If we forced a random override, reduce confidence
+    maxProb = 0.25; 
   }
 
-  return nextState;
+  // Map maxProb => risk 1..4
+  const risk = mapProbabilityToRisk(maxProb);
+
+  return { move: nextState, risk };
 }
+
+// Helper function to map probability => risk
+function mapProbabilityToRisk(prob) {
+  /*
+   Example mapping:
+   prob <= 0.25 => risk = 1
+   0.25 < prob <= 0.5 => risk = 2
+   0.5 < prob <= 0.75 => risk = 3
+   0.75 < prob <= 1.0 => risk = 4
+  */
+   if (prob <= 0.6) return 1;
+   else if (prob <= 0.7) return 2;
+   else if (prob <= 0.8) return 3;
+   else return 4;
+}
+
+// Return a random integer from an array
+function randomIntExcluding(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
 
 async function trainModel_qs(rpsNumeric, joinerRPSNumeric, qs_game_type) {
   if (!qs_game_type || typeof qs_game_type !== 'number' || qs_game_type <= 0) {
@@ -120,10 +167,6 @@ async function trainModel_qs(rpsNumeric, joinerRPSNumeric, qs_game_type) {
     epochs: 10,
     verbose: 0,
     batch_size: Math.max(1, rpsNumeric.length),
-    callbacks: {
-      onEpochEnd: async (epoch, logs) => {
-      }
-    }
   });
 
   rpsTensor.dispose();
@@ -141,82 +184,63 @@ async function predictNextMove_qs(model, rpsNumeric, qs_game_type) {
   const prediction = model.predict(rpsTensor);
 
   const predictionData = prediction.dataSync();
-
   const nextJoinerRPSNumeric = tf.argMax(prediction, 1).dataSync()[0];
 
-  // Dispose of tensors
+  // Dispose
   rpsTensor.dispose();
-  let risk;
-  if (predictionData[nextJoinerRPSNumeric] > 0.4 && predictionData[nextJoinerRPSNumeric] <= 0.7) {
-    risk = 3;
-  } else if (predictionData[nextJoinerRPSNumeric] > 0.7) {
-    risk = 4;
-  } else if (predictionData[nextJoinerRPSNumeric] > 0.2) {
-    risk = 2;
-  } else {
-    risk = 1;
-  }
+  prediction.dispose();
 
-  return { move: nextJoinerRPSNumeric, risk: risk };
+  // Map probability => risk
+  const prob = predictionData[nextJoinerRPSNumeric];
+  let risk = mapProbabilityToRisk(prob);
+
+  return { move: nextJoinerRPSNumeric, risk };
 }
 
-
+// 3) REINFORCEMENT AI QS
 export async function reinforcementAI_qs(data, qs_game_type) {
   if (!qs_game_type || typeof qs_game_type !== 'number' || qs_game_type <= 0) {
     throw new Error(`Invalid qs_game_type: ${qs_game_type}`);
   }
 
+  // if no data => random
   if (data.length === 0) {
-    return { move: getRandomItem_qs(qs_game_type), risk: 0 };
+    return { move: getRandomItem_qs(qs_game_type), risk: 1 };
   }
 
-  const historicData = data.reverse().slice(0, 20);
+  // Take the last 20 items
+  const historicData = [...data].reverse().slice(0, 20);
+
   const qsNumeric = historicData.map(entry => parseInt(entry.qs, 10));
   const joinerRPSNumeric = historicData.map(entry => parseInt(entry.joiner_qs, 10));
 
-  const results = historicData.map((entry, index) => ({
+  // Some simple analysis
+  const results = historicData.map((entry) => ({
     qs: entry.qs,
     joiner_qs: entry.joiner_qs,
-    win: entry.qs !== entry.joiner_qs
+    win: entry.qs !== entry.joiner_qs // Qs => if they differ, "win"
   }));
 
-  const recentGamesAnalysis = results.slice(1).map((current, i) => {
-    const previous = results[i];
-    return {
-      win: previous.win,
-      joinerChanged: current.joiner_qs !== previous.joiner_qs
-    };
-  });
-
-  const winChangePattern = recentGamesAnalysis.reduce((acc, game) => {
-    if (game.win) {
-      acc.winChanges.push(game.joinerChanged);
-    } else {
-      acc.lossChanges.push(game.joinerChanged);
-    }
-    return acc;
-  }, { winChanges: [], lossChanges: [] });
-
-  const winChangesLikely = winChangePattern.winChanges.every(change => change);
-  const lossChangesLikely = winChangePattern.lossChanges.every(change => change);
-
+  // We'll train a small model
   let model;
   try {
     model = await trainModel_qs(joinerRPSNumeric, qsNumeric, qs_game_type);
-
+    // Predict next move
     let bestCounterMove = await predictNextMove_qs(model, qsNumeric, qs_game_type);
 
+    // small chance to randomize anyway
     const randomnessFactor = 0.1;
     if (Math.random() < randomnessFactor) {
       const possibleMoves = Array.from({ length: qs_game_type }, (_, i) => i);
-      possibleMoves.splice(bestCounterMove.move, 1);
+      // remove predicted
+      const idx = possibleMoves.indexOf(bestCounterMove.move);
+      if (idx > -1) {
+        possibleMoves.splice(idx, 1);
+      }
       bestCounterMove.move = getRandomItem_qs(qs_game_type, possibleMoves);
-    } else if (winChangesLikely || lossChangesLikely) {
-      bestCounterMove = await predictNextMove_qs(model, qsNumeric, qs_game_type);
-    } else {
-      const possibleMoves = Array.from({ length: qs_game_type }, (_, i) => i);
-      possibleMoves.splice(bestCounterMove.move, 1);
-      bestCounterMove.move = getRandomItem_qs(qs_game_type, possibleMoves);
+
+      // If random override => risk is lower
+      bestCounterMove.risk = 1;
     }
 
     return bestCounterMove;

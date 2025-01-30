@@ -15,7 +15,8 @@ import {
   setFocused,
   userSignIn,
   getUser,
-  authenticateWithGoogle
+  authenticateWithGoogle,
+  authenticateWithPhantom
 } from '../../redux/Auth/user.actions';
 import {
   getMyHistory,
@@ -65,6 +66,30 @@ function LoginModal(props) {
     }, 100);
   };
 
+  const handlePhantomConnect = async () => {
+    try {
+      if (!window.solana || !window.solana.isPhantom) {
+        console.error('Phantom wallet not found');
+        return;
+      }
+
+      // Attempt to connect with Phantom
+      await window.solana.connect();
+      const walletAddress = window.solana.publicKey.toString();
+
+      // Dispatch a Redux action to authenticate with Phantom
+      const result = await props.authenticateWithPhantom({ walletAddress });
+      if (result.status === 'success') {
+        // If success, it returns {status:'success', user, token} etc.
+        onSuccessfulLogin(result.user);
+      } else {
+        console.error('Phantom login failed:', result.error);
+      }
+    } catch (error) {
+      console.error('Error connecting Phantom wallet:', error);
+    }
+  };
+
   const handleGoogleCredentialResponse = (response) => {
     if (!response || !response.credential) {
       console.error('No Google credential found');
@@ -100,7 +125,7 @@ function LoginModal(props) {
     props.getNotifications();
     props.getMyHistory();
     props.getMyChat();
-
+    props.getUser();
     const currentPath = window.location.pathname;
     currentPath.startsWith('/investors')
       ? history.push('/investors')
@@ -159,7 +184,7 @@ function LoginModal(props) {
               LOGIN
             </Typography>
             <Button variant="text" color="error" onClick={props.closeModal}>
-            ×
+              ×
             </Button>
           </Box>
 
@@ -234,7 +259,26 @@ function LoginModal(props) {
               <Box sx={{ flex: 1, borderBottom: 1, borderColor: 'divider' }} />
             </Box>
 
-            {/* Google Sign-In (centered) */}
+            {/* New Connect Wallet Button */}
+            <Button
+              variant="contained"
+              color="error"
+              onClick={handlePhantomConnect}
+              fullWidth
+            >
+              Connect Wallet
+            </Button>
+
+            {/* Another OR Separator */}
+            <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+              <Box sx={{ flex: 1, borderBottom: 1, borderColor: 'divider' }} />
+              <Typography variant="body2" sx={{ mx: 2 }}>
+                OR
+              </Typography>
+              <Box sx={{ flex: 1, borderBottom: 1, borderColor: 'divider' }} />
+            </Box>
+
+            {/* Google Sign-In */}
             <Box sx={{ display: 'flex', justifyContent: 'center' }}>
               <Box
                 id="googleSignInButton"
@@ -246,6 +290,7 @@ function LoginModal(props) {
                 }}
               />
             </Box>
+
 
             {/* Conditional Links */}
             {!isInvestorsPage ? (
@@ -306,7 +351,8 @@ const mapDispatchToProps = {
   getMyChat,
   getNotifications,
   setFocused,
-  authenticateWithGoogle
+  authenticateWithGoogle,
+  authenticateWithPhantom
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(LoginModal);

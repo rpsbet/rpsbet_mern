@@ -12,8 +12,9 @@ import {
   MenuItem,
   ListItemIcon,
   Box,
-  Chip,
-  IconButton,
+  Dialog,
+  DialogActions,
+  DialogContent,
   Skeleton,
   ListItemText,
   Divider,
@@ -26,7 +27,8 @@ import {
   TableCell,
   TableContainer,
   TableRow,
-  Badge
+  Badge,
+  DialogTitle
 } from '@mui/material';
 
 import CatsinoModalOverlay from '../game_panel/main_pages/CatsinoModalOverlay.jsx';
@@ -41,7 +43,6 @@ import LoadingOverlay from 'react-loading-overlay';
 import CountUp from 'react-countup';
 import Lottie from 'react-lottie';
 import coins from './LottieAnimations/coins.json';
-import { setBalance } from '../redux/Auth/user.actions.js';
 import AllTransactionsModal from './modal/AllTransactionsModal.jsx';
 import { debounce } from 'lodash';
 
@@ -111,7 +112,10 @@ import {
   setDarkMode,
   setNotificationsAllowed,
   fetchVaultBalance,
-  updateTutorialCompleted
+  updateTutorialCompleted,
+  checkAndAddWalletAddress,
+  disconnectWalletAddress,
+  authenticateWithPhantom
 } from '../redux/Auth/user.actions';
 
 import {
@@ -244,11 +248,11 @@ function SiteWrapper(props) {
     globalChatReceived,
     setGlobalChat,
     updateBetResult,
-    setBalance,
     openOfferLoanModal,
     setCurrentOfferTargetInfo,
     fetchVaultBalance,
-    children
+    children,
+    connectedAccount
   } = props;
 
   const currentPath = window.location.pathname;
@@ -293,7 +297,9 @@ function SiteWrapper(props) {
   const [showInventoryModal, setShowInventoryModal] = useState(false);
   const [showVaultModal, setShowVaultModal] = useState(false);
 
-  const [loadMore, setLoadMore] = useState(10);
+  const [walletConflictOpen, setWalletConflictOpen] = useState(false);
+  const handleCloseConflictDialog = () => setWalletConflictOpen(false);
+
 
   const [isLive, setIsLive] = useState(false);
   const [blurValue, setBlurValue] = useState(3);
@@ -313,7 +319,7 @@ function SiteWrapper(props) {
   const [highlightedRooms, setHighlightedRooms] = useState(new Set());
 
   // For web3/wallet
-  const [walletAddress, setWalletAddress] = useState(null);
+  const [walletAddress, setWalletAddress] = useState(connectedAccount);
   const [tokenBalance, setTokenBalance] = useState(0);
   const [solanaBalance, setSolanaBalance] = useState(0);
   const [account, setAccount] = useState(null);
@@ -338,22 +344,22 @@ function SiteWrapper(props) {
    */
   useEffect(() => {
     isUnmountedRef.current = false;
-  
+
     const doMount = async () => {
       getGlobalChatLogs();
       setWebsiteLoading(true);
       setIsInvestorsPage(location.pathname.startsWith('/investors'));
       setIsPlayer(location.pathname.startsWith('/play'));
-  
+
       // Add event listeners
       window.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mousedown', handleClickOutside);
-  
+
       try {
         // 1) fetch initial vaultBalance
         const initialBalance = await fetchVaultBalance();
         setVaultBal(initialBalance);
-  
+
         // 2) get notifications, user, and audio in parallel
         await Promise.all([
           getNotifications(),
@@ -361,31 +367,31 @@ function SiteWrapper(props) {
           initializeAudio(),
           acCalculateRemainingLoans()
         ]);
-  
+
         // By here, user should be stored in your state/Redux,
         // but we do NOT init the socket here anymore.
         setWebsiteLoading(false);
-  
+
       } catch (error) {
         console.error('Mount error:', error);
       }
-  
+
       // Setup interval for updating "from now" fields
       intervalRef.current = setInterval(() => {
         updateReminderTime();
       }, 3000);
-  
+
       // Attempt to load Phantom wallet if present
       loadSolanaWallet();
-  
+
       // If in `/play`, close the token modal automatically
       if (location.pathname.startsWith('/play')) {
         closeTokenModal();
       }
     };
-  
+
     doMount();
-  
+
     return () => {
       isUnmountedRef.current = true;
       if (socket) {
@@ -397,7 +403,7 @@ function SiteWrapper(props) {
     };
   }, [getGlobalChatLogs]);
 
-  
+
   /**
    * Watch for user changes => set runTutorial if tutorial #1 not completed
    */
@@ -493,7 +499,7 @@ function SiteWrapper(props) {
       setIsCoinsAnimation(false);
     }, 1500);
   }, []);
-  
+
 
   const initSocket = useCallback(async () => {
     try {
@@ -512,9 +518,10 @@ function SiteWrapper(props) {
           reject(err);
         });
       });
-      
+
       // ROOM LIST
       newSocket.on('UPDATED_ROOM_LIST', (data) => {
+        console.log("____room", data);
         setRoomList(data);
       });
 
@@ -540,7 +547,7 @@ function SiteWrapper(props) {
 
       // CHAT
       newSocket.on('SEND_CHAT', (data) => {
-       if (!isMuted || !notificationSounds) {
+        if (!isMuted || !notificationSounds) {
           notificationSoundRef.current?.play();
         }
         addChatLog(data);
@@ -565,16 +572,9 @@ function SiteWrapper(props) {
         updateBetResult(data);
       });
 
-      // NEW TRANSACTION
-      newSocket.on('NEW_TRANSACTION', (data) => {
-        addNewTransaction(data);
-      });
-
       // NOTIFICATIONS
       newSocket.on('SEND_NOTIFICATION', (data) => {
-        if (data.amount && data.amount !== 0) {
-          setBalance(propsBalance + data.amount);
-        }
+
         if (!isMuted || !notificationSounds) {
           notificationSoundRef.current?.play();
         }
@@ -609,7 +609,21 @@ function SiteWrapper(props) {
       });
 
       // GLOBAL CHAT
+      let lastGlobalChat = null;
+
       newSocket.on('GLOBAL_CHAT_RECEIVED', (data) => {
+        // If new message is the same as last => skip
+        if (
+          lastGlobalChat &&
+          lastGlobalChat.senderId === data.senderId &&
+          lastGlobalChat.time === data.time &&
+          lastGlobalChat.message === data.message
+        ) {
+          console.log('[Socket] Duplicate global chat => skip');
+          return;
+        }
+
+        lastGlobalChat = data;
         globalChatReceived(data);
       });
 
@@ -633,12 +647,8 @@ function SiteWrapper(props) {
     setRoomList,
     removeRoomFromList,
     openOfferLoanModal,
-    isMuted,
     needALoanRef,
-    addChatLog,
     updateBetResult,
-    addNewTransaction,
-    setBalance,
     getUser,
     isNotificationsAllowed,
     notificationSounds,
@@ -653,15 +663,27 @@ function SiteWrapper(props) {
   const loadSolanaWallet = useCallback(async () => {
     try {
       if (window.solana && window.solana.isPhantom) {
+        // 1) Connect Phantom
         await window.solana.connect();
         const wAddress = window.solana.publicKey.toString();
+        // props.authenticateWithPhantom();
+        // 2) Attempt to register/add this wallet to the user
+        const { success, message } = await props.checkAndAddWalletAddress(wAddress);
+        if (!success) {
+          // That means the wallet is already in use by another user
+          console.warn('Wallet conflict:', message);
+          // Show our MUI dialog to alert user
+          setWalletConflictOpen(true);
+          return; // Stop execution so we don't store the address for the current user
+        }
+
+        // 3) If success, continue with your existing logic:
         const response = await axios.get('/stripe/get_provider_url');
         const providerUrl = response.data.providerUrl;
-
         const solanaConnection = new Connection(providerUrl, 'confirmed');
-        const solBalLamports = await solanaConnection.getBalance(
-          new PublicKey(wAddress)
-        );
+
+        // fetch SOL balance
+        const solBalLamports = await solanaConnection.getBalance(new PublicKey(wAddress));
 
         // fetch token accounts
         const tokenAccounts = await solanaConnection.getParsedTokenAccountsByOwner(
@@ -671,8 +693,7 @@ function SiteWrapper(props) {
 
         // find specific token mint
         const specificTokenAccount = tokenAccounts.value.find(
-          (acc) =>
-            acc.account.data.parsed.info.mint === tokenMintAddress.toString()
+          (acc) => acc.account.data.parsed.info.mint === tokenMintAddress.toString()
         );
 
         let tokBalance = 0;
@@ -681,6 +702,7 @@ function SiteWrapper(props) {
             specificTokenAccount.account.data.parsed.info.tokenAmount.uiAmount;
         }
 
+        // 4) Update your local state
         setWalletAddress(wAddress);
         setAccount({ publicKey: new PublicKey(wAddress) });
         setSolanaBalance(solBalLamports / LAMPORTS_PER_SOL);
@@ -694,13 +716,14 @@ function SiteWrapper(props) {
   useEffect(() => {
     // Only call initSocket if we have a valid user object.
     if (user && user._id) {
-      initSocket(); 
+      initSocket();
     }
   }, [user, initSocket]);
 
   const disconnectWeb3 = useCallback(() => {
     setWalletAddress(null);
     setSolanaBalance(0);
+    props.disconnectWalletAddress();
   }, []);
 
   // -------------- MAIN TAB / MISC --------------
@@ -735,6 +758,10 @@ function SiteWrapper(props) {
   const handleBalanceClick = (e) => {
     setAnchorElGameLog(e.currentTarget);
   };
+
+  const handleVaultBalChange = useCallback((newBalance) => {
+    setVaultBal(newBalance);
+  }, []);
 
   const handleCloseGameLog = () => {
     setAnchorElGameLog(null);
@@ -1456,14 +1483,12 @@ function SiteWrapper(props) {
                             sx={{
                               position: 'absolute',
                               top: 0,
-                              left: 0,
+                              right: 10,
                               width: 8,
                               height: 8,
                               borderRadius: '50%',
                               backgroundColor: 'red',
-                              transform: 'translate(-120%, 40%)'
                             }}
-                            className="red-dot"
                           />
                         )}
 
@@ -1775,9 +1800,9 @@ function SiteWrapper(props) {
             </Box>
 
             {/* Phantom Wallet connect or address display */}
-            {walletAddress ? (
+            {walletAddress || connectedAccount ? (
               <Box sx={{ mt: 2 }}>
-                <input id="wallet-address" type="text" value={walletAddress} readOnly />
+                <input id="wallet-address" type="text" value={walletAddress || connectedAccount} readOnly />
                 <Button
                   color="error"
                   variant="outlined"
@@ -1813,7 +1838,20 @@ function SiteWrapper(props) {
             )}
           </Popover>
         </div>
-
+        {/* Conflict Dialog */}
+        <Dialog open={walletConflictOpen} onClose={handleCloseConflictDialog}>
+          <DialogTitle>EXISTING ACCOUNT CONNECTED</DialogTitle>
+          <DialogContent>
+            <Typography>
+              We detected a wallet address that's already connected with us. You should login with this account.
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseConflictDialog} color="error" variant="contained">
+              Close
+            </Button>
+          </DialogActions>
+        </Dialog>
         {/* ========== MAIN CONTENT ========== */}
         <div className="game_wrapper">
           <div className="contents_wrapper">{children}</div>
@@ -1964,6 +2002,7 @@ function SiteWrapper(props) {
             closeModal={handleCloseVaultModal}
             conversionRate={solPrice}
             isDarkMode={isDarkMode}
+            onVaultBalChange={handleVaultBalChange}
           />
         )}
 
@@ -2039,6 +2078,7 @@ const mapStateToProps = (state) => ({
   showGamePasswordModal: state.snackbar.showGamePasswordModal,
   socket: state.auth.socket,
   balance: state.auth.balance,
+  connectedAccount: state.auth.connectedAccount,
   userName: state.auth.userName,
   isMuted: state.auth.isMuted,
   notificationSounds: state.auth.notificationSounds,
@@ -2074,17 +2114,19 @@ const mapDispatchToProps = {
   readNotifications,
   updateOnlineUserList,
   setDarkMode,
+  checkAndAddWalletAddress,
+  disconnectWalletAddress,
   setNotificationsAllowed,
   selectMainTab,
   acCalculateRemainingLoans,
   globalChatReceived,
   setGlobalChat,
   updateBetResult,
-  setBalance,
   openOfferLoanModal,
   setCurrentOfferTargetInfo,
   fetchVaultBalance,
-  getGlobalChatLogs
+  getGlobalChatLogs,
+  authenticateWithPhantom
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(SiteWrapper);

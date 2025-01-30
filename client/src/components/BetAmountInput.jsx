@@ -1,5 +1,5 @@
 import React, { useEffect, useCallback, useState } from 'react';
-import {Button, Box, TextField} from '@mui/material';
+import { Button, InputAdornment, TextField } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { debounce } from 'lodash';
 import { getCustomTheme } from '../config/theme';
@@ -99,26 +99,39 @@ export default function BetAmountInput(props) {
           </Button>
         </div>
 
-          <TextField color='error'
-            type="text"
-            name="betamount"
-            variant="filled"
-            id="betamount"
-            ref={betAmountRef}
-            disabled={disabledButtons || false}
-            label=""
-            value={localBetAmount}
-            onChange={handleTextFieldChange}
-            placeholder="BET AMOUNT"
-            fullWidth
-            inputProps={{
-              pattern: '^\\d*\\.?\\d*$',
-            }}
-            InputLabelProps={{
-              shrink: true,
-            }}
-            sx={{ marginBottom: '10px', borderTopLeftRadius: '0.3em', borderTopRightRadius: '0.3em', overflow: 'hidden' }}
-          />
+        <TextField
+          color="error"
+          type="text"
+          name="betamount"
+          variant="filled"
+          id="betamount"
+          ref={betAmountRef}
+          disabled={disabledButtons || false}
+          value={localBetAmount}
+          onChange={handleTextFieldChange}
+          placeholder="BET AMOUNT"
+          fullWidth
+          inputProps={{
+            pattern: '^\\d*\\.?\\d*$',
+          }}
+          InputLabelProps={{
+            shrink: true,
+          }}
+          sx={{
+            marginBottom: '10px',
+            borderTopLeftRadius: '0.3em',
+            borderTopRightRadius: '0.3em',
+            overflow: 'hidden'
+          }}
+          // Add this section to put "SOL" at the end
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                SOL
+              </InputAdornment>
+            ),
+          }}
+        />
 
       </ThemeProvider>
     </div>

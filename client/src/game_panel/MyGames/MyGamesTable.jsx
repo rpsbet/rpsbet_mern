@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { setBalance, updateTutorialCompleted } from '../../redux/Auth/user.actions';
+import { updateTutorialCompleted } from '../../redux/Auth/user.actions';
 import Modal from 'react-modal';
 import { Info } from '@mui/icons-material';
 import SettingsRef from '../../components/SettingsRef';
@@ -23,7 +23,7 @@ import { faMoneyCheckAlt } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Battle from '../icons/Battle';
 import { alertModal, confirmModalClosed, confirmModalCreate } from '../modal/ConfirmAlerts';
-import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import AddCircleOutline from '@mui/icons-material/AddCircleOutline';
 import EditOutline from '@mui/icons-material/EditOutlined';
 import history from '../../redux/history';
@@ -124,7 +124,7 @@ class MyGamesTable extends Component {
 
   handleSendCoHost = async () => {
     const { coHostAmount, selectedRow } = this.state;
-    const { balance, isDarkMode, setBalance, addNewTransaction, getRoomList, selectedGameType } = this.props;
+    const { balance, isDarkMode, addNewTransaction, getRoomList, selectedGameType } = this.props;
 
     try {
       if (coHostAmount <= 0) {
@@ -140,7 +140,6 @@ class MyGamesTable extends Component {
       const result = await this.props.coHost(coHostAmount, selectedRow._id);
       if (result.success) {
         // alertModal(isDarkMode, result.message, '-cat');
-        setBalance(result.balance);
         addNewTransaction(result.newTransaction);
         await getRoomList({
           game_type: 'All',
@@ -159,7 +158,7 @@ class MyGamesTable extends Component {
     if (row.coHost) {
       this.setState({ settings_panel_opened: !this.state.settings_panel_opened, selectedRow: row });
     } else {
-      alertModal(this.props.isDarkMode, "YOU MUST OWN 100% TO CHANGE STRATEGY.");
+      alertModal(this.props.isDarkMode, "YOU MUST OWN 100% TO CHANGE MODEL.");
     }
   };
 
@@ -352,7 +351,6 @@ class MyGamesTable extends Component {
       try {
         await this.props.endGame(room_id);
         await this.props.addNewTransaction({ amount: winnings, room_id });
-        this.props.setBalance(this.state.balance + parseFloat(winnings));
       } catch (error) {
         console.error('Error ending room:', error);
       } finally {
@@ -381,7 +379,6 @@ class MyGamesTable extends Component {
           sort: this.state.selectedSort
         });
         await this.props.addNewTransaction({ amount: winnings, room_id });
-        this.props.setBalance(this.state.balance + parseFloat(winnings));
         this.fetchData();
       } catch (error) {
         console.error('Error unstaking from room:', error);
@@ -680,7 +677,7 @@ class MyGamesTable extends Component {
 
                       <div className="table-cell winnings desktop-only">
 
-                        <Tooltip title="CHANGE AI PLAY STRATEGY">
+                        <Tooltip title="CHANGE AI MODEL">
                           <a
                             style={{
                               borderRadius: "200px",
@@ -696,7 +693,7 @@ class MyGamesTable extends Component {
                               this.handleSettingsIconClick(event, row);
                             }}
                           >
-                            <SettingsOutlinedIcon />
+                            <AutoAwesomeIcon />
                           </a>
                         </Tooltip>
                       </div>
@@ -793,7 +790,7 @@ class MyGamesTable extends Component {
                     <div className="mobile-only" style={{ display: "table" }}>
                       <div className="table-cell action" style={{ width: "auto", float: "right", display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
 
-                        <Tooltip title="CHANGE AI PLAY STRATEGY">
+                        <Tooltip title="CHANGE AI MODEL">
                           <a
                             style={{
                               borderRadius: "200px",
@@ -809,7 +806,7 @@ class MyGamesTable extends Component {
                               this.handleSettingsIconClick(row);
                             }}
                           >
-                            <SettingsOutlinedIcon />
+                            <AutoAwesomeIcon />
                           </a>
                         </Tooltip>
                         {row.status === 'finished' ? (
@@ -1045,7 +1042,6 @@ const mapDispatchToProps = {
   addNewTransaction,
   setGameMode,
   updateRoomStrategy,
-  setBalance,
   reCreateRoom,
   editPayout,
   endGame,

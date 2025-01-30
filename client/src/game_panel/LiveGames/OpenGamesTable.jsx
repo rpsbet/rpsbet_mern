@@ -18,7 +18,6 @@ import FilterListIcon from '@mui/icons-material/FilterList';
 import Moment from 'moment';
 import { faHeart, faHeartBroken, faStopwatch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { setBalance } from '../../redux/Auth/user.actions';
 import CoHostModal from '../modal/CoHostModal';
 import Avatar from '../../components/Avatar';
 import { convertToCurrency } from '../../util/conversion';
@@ -53,7 +52,6 @@ function OpenGamesTable(props) {
     highlightedRooms,
     getRoomStatisticsData,
     getRecentlyClosed,
-    setBalance,
     fetchMoreRooms,
     addNewTransaction,
     coHost,
@@ -132,6 +130,7 @@ function OpenGamesTable(props) {
     }
     setLocalRoomList(mergedRooms);
   }, [roomList, highlightedRooms]);
+  console.log("roomList", roomList)
 
   // If selectedGameType changes, we might want to refetch or mark isLoading
   useEffect(() => {
@@ -194,7 +193,6 @@ function OpenGamesTable(props) {
     try {
       const result = await coHost(coHostAmount, selectedRow._id);
       if (result.success) {
-        setBalance(result.balance);
         addNewTransaction(result.newTransaction);
         await getRoomList({
           pageSize: localRoomList.length,
@@ -414,15 +412,7 @@ function OpenGamesTable(props) {
                           />
                           {row.selectedStrategy && (
                             <span
-                              style={{
-                                fontSize: 'xx-small',
-                                border: '1px solid rgb(255, 208, 0)',
-                                background: 'linear-gradient(45deg, #7a5958, #a27955)',
-                                borderRadius: '0.3em',
-                                color: 'rgb(255, 208, 0)',
-                                padding: '0px 5px',
-                                lineHeight: '20px',
-                              }}
+                              id='ai_mode'
                             >
                               {row.selectedStrategy}
                             </span>
@@ -847,7 +837,6 @@ const mapDispatchToProps = {
   actionRoom,
   getRoomStatisticsData,
   getRecentlyClosed,
-  setBalance,
   setRoomList,
   fetchMoreRooms,
   addNewTransaction,

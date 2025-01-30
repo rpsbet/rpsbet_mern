@@ -12,8 +12,6 @@ import {
 
 import {
   validateIsAuthenticated,
-  validateCreatorId,
-  callBot,
   validateBetAmount,
   validateBankroll
 } from '../modal/betValidations';
@@ -245,7 +243,7 @@ function RPS(props) {
   //     if (prevLastItemId === currentLastItemId) {
   //       (async () => {
   //         await getRpsBetItems(roomInfo._id);
-        
+
   //       })();
   //     }
   //   }
@@ -344,7 +342,7 @@ function RPS(props) {
     setLocalIsPasswordCorrect(propIsPasswordCorrect);
   }, [propIsPasswordCorrect, localIsPasswordCorrect, joinGame, selected_rps]);
 
-  
+
   /**
    * UI helpers
    */
@@ -410,16 +408,15 @@ function RPS(props) {
   };
 
   /**
-   * BOT / end game
+   * BOT
    */
-  const handleBotClick = () => {
+  const handleBotClick = async () => {
     if (creator_id && user_id && creator_id.toString() === user_id.toString()) {
-      callBot(creator_id, roomInfo._id, user_id, isDarkMode, async () => {
-        const botAttached = await updateRoomBot(roomInfo._id);
-        if (botAttached) {
-          setBotsCount((prev) => prev + 1);
-        }
-      });
+      // Dispatch the action directly
+      const botAttached = await updateRoomBot(roomInfo._id);
+      if (botAttached) {
+        setBotsCount((prev) => prev + 1);
+      }
     }
   };
 
@@ -452,12 +449,11 @@ function RPS(props) {
 
       // 2) If host is the same user => call BOT
       if (creator_id && user_id && creator_id.toString() === user_id.toString()) {
-        callBot(creator_id, roomInfo._id, user_id, isDarkMode, async () => {
-          const botAttached = await updateRoomBot(roomInfo._id);
-          if (botAttached) {
-            setBotsCount((prev) => prev + 1);
-          }
-        });
+        // Dispatch the action directly
+        const botAttached = await updateRoomBot(roomInfo._id);
+        if (botAttached) {
+          setBotsCount((prev) => prev + 1);
+        }
         return;
       }
 
@@ -649,9 +645,8 @@ function RPS(props) {
 
               <div className="game-info-panel">
                 <div
-                  className={`rps-radio-host ${
-                    is_betting || betting ? 'blueish-hue' : ''
-                  }`}
+                  className={`rps-radio-host ${is_betting || betting ? 'blueish-hue' : ''
+                    }`}
                   style={{
                     top: '25px',
                     right: '25px',
@@ -680,15 +675,14 @@ function RPS(props) {
                               }}
                               style={{
                                 position: 'relative',
-                                filter: `hue-rotate(${
-                                  gameResult === -1
-                                    ? 0
-                                    : gameResult === 0
+                                filter: `hue-rotate(${gameResult === -1
+                                  ? 0
+                                  : gameResult === 0
                                     ? 195
                                     : gameResult === 1
-                                    ? 80
-                                    : 20
-                                }deg)`
+                                      ? 80
+                                      : 20
+                                  }deg)`
                               }}
                             />
                           </div>
@@ -722,69 +716,57 @@ function RPS(props) {
                     className={ai_mode !== 'Skill-issue' ? '' : ''}
                   >
                     <div
-                      className={`rps-option ${
-                        rpsHistory[rpsHistory.length - 1]?.rps === 'R'
-                          ? 'rock'
-                          : ''
-                      }${rpsValueAtLastIndex === 'R' ? ' active' : ''}${
-                        props.bgColorChanged &&
-                        betResult === -1 &&
-                        rpsValueAtLastIndex === 'R'
+                      className={`rps-option ${rpsHistory[rpsHistory.length - 1]?.rps === 'R'
+                        ? 'rock'
+                        : ''
+                        }${rpsValueAtLastIndex === 'R' ? ' active' : ''}${props.bgColorChanged &&
+                          betResult === -1 &&
+                          rpsValueAtLastIndex === 'R'
                           ? ' win-bg'
                           : ''
-                      }${
-                        betResult === 0 && rpsValueAtLastIndex === 'R'
+                        }${betResult === 0 && rpsValueAtLastIndex === 'R'
                           ? ' draw-bg'
                           : ''
-                      }${
-                        betResult === 1 && rpsValueAtLastIndex === 'R'
+                        }${betResult === 1 && rpsValueAtLastIndex === 'R'
                           ? ' lose-bg'
                           : ''
-                      }`}
+                        }`}
                     ></div>
 
                     <div
-                      className={`rps-option ${
-                        rpsHistory[rpsHistory.length - 1]?.rps === 'P'
-                          ? 'paper'
-                          : ''
-                      }${rpsValueAtLastIndex === 'P' ? ' active' : ''}${
-                        props.bgColorChanged &&
-                        betResult === -1 &&
-                        rpsValueAtLastIndex === 'P'
+                      className={`rps-option ${rpsHistory[rpsHistory.length - 1]?.rps === 'P'
+                        ? 'paper'
+                        : ''
+                        }${rpsValueAtLastIndex === 'P' ? ' active' : ''}${props.bgColorChanged &&
+                          betResult === -1 &&
+                          rpsValueAtLastIndex === 'P'
                           ? ' win-bg'
                           : ''
-                      }${
-                        betResult === 0 && rpsValueAtLastIndex === 'P'
+                        }${betResult === 0 && rpsValueAtLastIndex === 'P'
                           ? ' draw-bg'
                           : ''
-                      }${
-                        betResult === 1 && rpsValueAtLastIndex === 'P'
+                        }${betResult === 1 && rpsValueAtLastIndex === 'P'
                           ? ' lose-bg'
                           : ''
-                      }`}
+                        }`}
                     ></div>
 
                     <div
-                      className={`rps-option ${
-                        rpsHistory[rpsHistory.length - 1]?.rps === 'S'
-                          ? 'scissors'
-                          : ''
-                      }${rpsValueAtLastIndex === 'S' ? ' active' : ''}${
-                        props.bgColorChanged &&
-                        betResult === -1 &&
-                        rpsValueAtLastIndex === 'S'
+                      className={`rps-option ${rpsHistory[rpsHistory.length - 1]?.rps === 'S'
+                        ? 'scissors'
+                        : ''
+                        }${rpsValueAtLastIndex === 'S' ? ' active' : ''}${props.bgColorChanged &&
+                          betResult === -1 &&
+                          rpsValueAtLastIndex === 'S'
                           ? ' win-bg'
                           : ''
-                      }${
-                        betResult === 0 && rpsValueAtLastIndex === 'S'
+                        }${betResult === 0 && rpsValueAtLastIndex === 'S'
                           ? ' draw-bg'
                           : ''
-                      }${
-                        betResult === 1 && rpsValueAtLastIndex === 'S'
+                        }${betResult === 1 && rpsValueAtLastIndex === 'S'
                           ? ' lose-bg'
                           : ''
-                      }`}
+                        }`}
                     ></div>
                   </div>
                 )}
@@ -828,23 +810,19 @@ function RPS(props) {
                       variant="contained"
                       color='error'
                       id={`rps-${classname}`}
-                      className={`rps-option ${classname}${
-                        joinerRpsValueAtLastIndex === selection ? ' active' : ''
-                      }${
-                        props.bgColorChanged &&
-                        betResult === -1 &&
-                        joinerRpsValueAtLastIndex === selection
+                      className={`rps-option ${classname}${joinerRpsValueAtLastIndex === selection ? ' active' : ''
+                        }${props.bgColorChanged &&
+                          betResult === -1 &&
+                          joinerRpsValueAtLastIndex === selection
                           ? ' lose-bg'
                           : ''
-                      }${
-                        betResult === 0 && joinerRpsValueAtLastIndex === selection
+                        }${betResult === 0 && joinerRpsValueAtLastIndex === selection
                           ? ' draw-bg'
                           : ''
-                      }${
-                        betResult === 1 && joinerRpsValueAtLastIndex === selection
+                        }${betResult === 1 && joinerRpsValueAtLastIndex === selection
                           ? ' win-bg'
                           : ''
-                      }${is_betting ? ' disabled' : ''}`}
+                        }${is_betting ? ' disabled' : ''}`}
                       onClick={() => {
                         if (!is_betting) {
                           onBtnBetClick(selection);
@@ -859,8 +837,8 @@ function RPS(props) {
                 </div>
 
                 {creator_id &&
-                user_id &&
-                creator_id.toString() === user_id.toString() ? (
+                  user_id &&
+                  creator_id.toString() === user_id.toString() ? (
                   <div className="host-controls">
                     <Button
                       variant="outlined"
@@ -872,7 +850,8 @@ function RPS(props) {
                       <span className="button-text">&nbsp;CALL BOT? [{botsCount}]</span>
                     </Button>
                     {botsCount > 0 && (
-                      <Button onClick={bootBots} className="hover-text-button">
+                      <Button variant="outlined"
+                        color='warning' onClick={bootBots} className="hover-text-button">
                         <FontAwesomeIcon className="button-icon" icon={faBan} />
                         <span className="button-text">&nbsp;KICK BOTS?</span>
                       </Button>

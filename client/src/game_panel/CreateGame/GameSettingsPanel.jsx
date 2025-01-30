@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Tooltip, ButtonBase } from '@mui/material';
 import { Info } from '@mui/icons-material';
-import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import SettingsRef from '../../components/SettingsRef';
 
 const GameSettingsPanel = ({
@@ -48,7 +48,7 @@ const GameSettingsPanel = ({
   return (
     <div style={{ marginTop: '20px', marginBottom: '30px' }}>
       <h3 className="game-sub-title roll-tag">
-        Choose Strategy&nbsp;
+        Choose AI Model&nbsp;
         <Tooltip
           title="Select the strategy your game will use. AI offers patterns and reasoning, while RNG is randomized."
           placement="top"
@@ -83,7 +83,7 @@ const GameSettingsPanel = ({
             boxShadow: 'unset',
             color: isDarkMode ? 'white' : 'inherit', // Conditional color
             borderRadius: 1,
-            padding: '0 20px', // Added padding
+            padding: '10px 20px', // Added padding
             background: 'transparent',
             display: 'flex',
             borderRadius: '0.3em',
@@ -93,7 +93,7 @@ const GameSettingsPanel = ({
           }}
         >
           <span style={{ textTransform: 'uppercase', marginRight: '5px' }}>{selectedStrategy}</span>
-          <SettingsOutlinedIcon style={{ color: isDarkMode ? 'white' : 'inherit' }} />
+          <AutoAwesomeIcon sx={{ p: 0.4, color: isDarkMode ? 'white' : 'inherit' }} />
         </ButtonBase>
       </div>
     </div>

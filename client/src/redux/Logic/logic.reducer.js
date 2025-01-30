@@ -11,7 +11,6 @@ import {
   END_LOADING,
   START_BET,
   END_BET,
-  ADD_NEW_CANDLE,
   ROOMS_LOADED,
   SET_QBOT_STATUSES,
   PREPEND_OLDER_CHAT_MESSAGES,
@@ -50,6 +49,7 @@ import {
   COMMENT_DELETED,
   COMMENT_DELETION_FAILED,
   TRANSACTION_CANDLES_LOADED,
+  APPEND_NEW_CANDLE,
   TRANSACTION_CANDLES_ERROR,
   SET_HIGHLIGHTED_ROOMS,
   CLEAR_HIGHLIGHTED_ROOMS
@@ -225,6 +225,30 @@ export default function (state = initialState, action) {
         ...state,
         transactionCandlesError: payload,
       };
+
+    case APPEND_NEW_CANDLE: {
+      let newArr = [...state.candles, action.payload];
+      newArr.sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
+
+      const deduped = [];
+      let prevTimeSec = null;
+      for (let i = 0; i < newArr.length; i++) {
+        const cur = newArr[i];
+        const curTimeSec = Math.floor(new Date(cur.startTime).getTime() / 1000);
+        if (prevTimeSec === null || curTimeSec > prevTimeSec) {
+          deduped.push(cur);
+          prevTimeSec = curTimeSec;
+        } else {
+          console.warn('Skipping duplicate candle at', cur.startTime);
+        }
+      }
+
+      return {
+        ...state,
+        candles: deduped
+      };
+    }
+
     case UPDATE_BANKROLL:
     case UPDATE_BANKROLL_QS:
       return {
@@ -432,12 +456,6 @@ export default function (state = initialState, action) {
       return {
         ...state,
         globalChatList: [...state.globalChatList, payload]
-      };
-
-    case ADD_NEW_CANDLE:
-      return {
-        ...state,
-        candles: [...state.candles, payload], // Add the new candle to the list
       };
     case SET_GLOBAL_CHAT:
       return {

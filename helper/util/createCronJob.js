@@ -80,16 +80,16 @@ async function checkConfirmations(io) {
                 if (referralOwner) {
                   const index = referralOwner.rewards.findIndex(reward => reward.user.equals(user._id));
                   if (index !== -1) {
-                    referralOwner.rewards[index].amount += amountRaw * 0.05;
+                    referralOwner.rewards[index].amount += amountRaw * 0.01;
                   } else {
-                    referralOwner.rewards.push({ user: user._id, amount: amountRaw * 0.05 });
+                    referralOwner.rewards.push({ user: user._id, amount: amountRaw * 0.01 });
                   }
 
-                  referralOwner.balance += amountRaw * 0.05;
+                  referralOwner.balance += amountRaw * 0.01;
 
                   const newTransaction = new Transaction({
                     user: referralOwner._id,
-                    amount: amountRaw * 0.05,
+                    amount: amountRaw * 0.01,
                     description: `Referral rewards from ${user.username}.`,
                     room: ''
                   });
@@ -98,16 +98,16 @@ async function checkConfirmations(io) {
                   const notificationJ = new Notification({
                     from: user._id,
                     to: referralOwner._id,
-                    amount: amountRaw * 0.05,
+                    amount: amountRaw * 0.01,
                     room: '',
-                    message: `Received ${(amountRaw * 0.05)} in referral rewards.`
+                    message: `Received ${(amountRaw * 0.01)} in referral rewards.`
                   });
 
                   const notificationDataJ = {
                     message: notificationJ.message,
                     username: user.username,
                     avatar: user.avatar,
-                    amount: amountRaw * 0.05,
+                    amount: amountRaw * 0.01,
                     accessory: user.accessory,
                     rank: user.totalWagered,
                     created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
@@ -244,15 +244,15 @@ async function checkConfirmations(io) {
               if (referralOwner) {
                 const index = referralOwner.rewards.findIndex(reward => reward.user.equals(user._id));
                 if (index !== -1) {
-                  referralOwner.rewards[index].amount += tokenAmount * 0.05;
+                  referralOwner.rewards[index].amount += tokenAmount * 0.01;
                 } else {
-                  referralOwner.rewards.push({ user: user._id, amount: tokenAmount * 0.05 });
+                  referralOwner.rewards.push({ user: user._id, amount: tokenAmount * 0.01 });
                 }
     
-                referralOwner.balance += tokenAmount * 0.05;
+                referralOwner.balance += tokenAmount * 0.01;
                 const newTransaction = new Transaction({
                   user: referralOwner._id,
-                  amount: transaction.amount * 0.05,
+                  amount: transaction.amount * 0.01,
                   description: `Referral rewards from ${user.username}.`,
                   room: ''
                 });
@@ -260,9 +260,9 @@ async function checkConfirmations(io) {
                 let notificationJ = new Notification({
                   from: user._id,
                   to: referralOwner._id,
-                  amount: transaction.amount * 0.05,
+                  amount: transaction.amount * 0.01,
                   room: '',
-                  message: `Received ${(transaction.amount * 0.05)} in referral rewards.`
+                  message: `Received ${(transaction.amount * 0.01)} in referral rewards.`
                 });
     
                 const notificationDataJ = {

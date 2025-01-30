@@ -5,10 +5,15 @@ const mongoose = require('mongoose');
 const path = require('path');
 const cors = require('cors');
 const session = require('express-session');
-const fileUpload = require('express-fileupload');
 const socketController = require('./socketController.js');
 const helmet = require('helmet'); // Security headers middleware
 const bodyParser = require('body-parser');
+const cronJob = require('./helper/util/createCronJob.js');
+const creditScoreCron = require('./helper/util/creditScoreCron.js');
+const rentCron = require('./helper/util/rentCron.js');
+const callCronJob = require('./helper/util/callBotCron.js');
+const withdrawalCron = require('./helper/util/withdrawalCron.js');
+const interestCron = require('./helper/util/interestCron.js');
 
 const app = express();
 
@@ -27,6 +32,13 @@ const io = socketController.socketio(server, {
   },
 });
 
+creditScoreCron.checkOutstandingLoans(io);
+rentCron.checkRentalPayments(io);
+// cronJob.checkConfirmations();
+callCronJob.callCronJobs(io);
+withdrawalCron.resetWithdrawalLimits();
+interestCron.updateRoomInterests(io);
+
 // Attach io instance to each request for easy access
 app.use((req, res, next) => {
   req.io = io;
@@ -43,10 +55,10 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // -------------------- Middleware --------------------
-app.use(helmet()); // Add security headers
+app.use(helmet());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-app.use(fileUpload());
+// app.use(fileUpload());
 
 // Session configuration
 app.use(

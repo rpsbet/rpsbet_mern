@@ -122,7 +122,7 @@ function TabbedContent(props) {
   const [roomHistory, setRoomHistory] = useState(
     updateFromNow(roomInfo.room_history || [])
   );
-  const [activeTabs, setActiveTabs] = useState([0]); // By default, tab "Play" (0) & "Chart" (1)
+  const [activeTabs, setActiveTabs] = useState([0, 1]); // By default, tab "Play" (0) & "Chart" (1)
   const [isMobile, setIsMobile] = useState(window.innerWidth < 767);
 
   // In the class version, we had getDerivedStateFromProps. 
@@ -138,7 +138,6 @@ function TabbedContent(props) {
     }
   }, [roomInfo.room_history]);
 
-  // componentDidMount logic → attachUserLinkListeners & attachAccessories, add event listener
   useEffect(() => {
     attachUserLinkListeners();
     // attachAccessories();
@@ -150,10 +149,8 @@ function TabbedContent(props) {
     };
   }, []);
 
-  // componentDidUpdate logic for roomInfo.room_history → re-run attach logic if it changes
   useEffect(() => {
     attachUserLinkListeners();
-    // attachAccessories();
   }, [roomInfo.room_history]);
 
   // ------------------ HANDLERS ------------------
@@ -321,6 +318,7 @@ function TabbedContent(props) {
             ) : roomInfo.game_type === 'Quick Shoot' ? (
               <QuickShoot
               changeBgColor={changeBgColorQs}
+              onChangeState={onChangeState}
 
                 handleOpenPlayerModal={handleOpenPlayerModal}
                 handleClosePlayerModal={handleClosePlayerModal}
@@ -354,7 +352,6 @@ function TabbedContent(props) {
                 strategies={strategies}
                 handleSwitchChange={handleSwitchChange}
                 pr={roomInfo.pr}
-                onChangeState={onChangeState}
                 cp={cp}
                 actionList={actionList}
                 getRoomData={getRoomData}

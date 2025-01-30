@@ -481,6 +481,7 @@ function ChatPanel(props) {
                   borderRadius: 1,
                   bgcolor: 'background.default',
                   position: 'absolute',
+                  width: '100%'
                 }}
               >
                 <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -516,7 +517,7 @@ function ChatPanel(props) {
               onFocus={onFocusHandler}
               onBlur={onBlurHandler}
               onKeyDown={onTextAreaKeyDown}
-              placeholder={isChatEnabled ? 'CHAT HERE...' : 'RANK MUST BE 1+'}
+              placeholder={isChatEnabled ? 'CHAT HERE...' : 'VETS ONLY'}
               onChange={onChangeText}
               value={text}
               inputRef={textareaRef}

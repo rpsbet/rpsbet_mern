@@ -4,7 +4,6 @@ import { connect } from 'react-redux';
 import { Typography, Table, TableBody, Button, TextField, TableCell, TableContainer, TableHead, TableRow, Tooltip, InputAdornment } from '@mui/material';
 import { acQueryLoan, acCalculateRemainingLoans, emitLoanOffer, cancelledOffer, reconsiderOffer, offerLoan, createAndLend } from '../../redux/Loan/loan.action';
 import { getUser } from '../../redux/Auth/user.actions';
-import { setBalance } from '../../redux/Auth/user.actions';
 import { addNewTransaction } from '../../redux/Logic/logic.actions';
 import Lottie from 'react-lottie';
 import spinningIcon from '../LottieAnimations/spinningIcon';
@@ -237,7 +236,7 @@ class OfferLoanModal extends Component {
   };
 
   onBtnOkClicked = async e => {
-    const { userInfo, closeOfferLoanModal, acQueryLoan, setBalance, addNewTransaction, isDarkMode, offerLoan, offerInfo } = this.props;
+    const { userInfo, closeOfferLoanModal, acQueryLoan, addNewTransaction, isDarkMode, offerLoan, offerInfo } = this.props;
     const { responseText, loanPeriodText, interestRateText } = this.state;
 
     if (parseFloat(responseText) > 10 * userInfo.balance) {
@@ -771,7 +770,6 @@ const mapStateToProps = state => ({
 const mapDispatchToProps = {
   closeOfferLoanModal,
   offerLoan,
-  setBalance,
   acCalculateRemainingLoans,
   addNewTransaction,
   acQueryLoan,

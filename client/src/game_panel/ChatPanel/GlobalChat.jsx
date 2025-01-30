@@ -4,8 +4,7 @@ import PlayerModal from '../modal/PlayerModal';
 import Avatar from '../../components/Avatar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHandPointDown } from '@fortawesome/free-solid-svg-icons';
-import { Skeleton, Box, ButtonBase, Stack, Typography } from '@mui/material';
-
+import { Skeleton, Box, ButtonBase } from '@mui/material';
 
 import { fetchId } from '../../redux/Customer/customer.action';
 
@@ -23,113 +22,113 @@ function GlobalChat(props) {
 
   // ------------------- State -------------------
   const [chatList, setChatList] = useState(globalChatList || []);
-  const [fetchedGlobal, setFetchedGlobal] = useState(false); // not used in original code, but preserved
   const [newMessages, setNewMessages] = useState(0);
   const [showTooltip, setShowTooltip] = useState(false);
   const [showPlayerModal, setShowPlayerModal] = useState(false);
   const [selectedCreator, setSelectedCreator] = useState('');
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [mentionedUsers, setMentionedUsers] = useState({});
-
+  const [hasScrolledOnce, setHasScrolledOnce] = useState(false);
+  const [userIsAtBottom, setUserIsAtBottom] = useState(false);
+  
   // ------------------- Refs -------------------
   const chatBoxRef = useRef(null);
 
-  // We’ll use these to compare current vs. previous values in "componentDidUpdate"-like logic
+  // We compare old vs new length to detect new messages
   const prevGlobalChatListLength = useRef(globalChatList.length);
-  const prevIsDrawerOpen = useRef(isDrawerOpen);
 
-  // ------------------- Lifecycle: componentDidMount / componentWillUnmount -------------------
+  // ------------------- Effects -------------------
+
+  // Keep local chatList in sync with globalChatList
   useEffect(() => {
-    // Add scroll listener on mount
-    const chatBox = chatBoxRef.current;
-    if (chatBox) {
-      chatBox.addEventListener('scroll', handleScroll);
-    }
-
-    // Remove scroll listener on unmount
-    return () => {
-      if (chatBox) {
-        chatBox.removeEventListener('scroll', handleScroll);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    // If we initially have some chat messages, scroll to bottom once
-    if (chatList.length > 0) {
-      handleInitialScroll();
-    }
-    // eslint-disable-next-line
-  }, []);
-
-  // ------------------- Lifecycle: componentDidUpdate logic -------------------
-  useEffect(() => {
-    if (
-      prevGlobalChatListLength.current > 0 &&
-      prevGlobalChatListLength.current < globalChatList.length
-    ) {
-      const difference = globalChatList.length - prevGlobalChatListLength.current;
-      setNewMessages(difference);
-      setShowTooltip(true);
-
-      if (globalChatList[globalChatList.length - 1].senderId === user._id) {
-        handleInitialScroll();
-      }
-    }
-
-    if (
-      (!isLoaded &&
-        (prevIsDrawerOpen.current !== isDrawerOpen ||
-          prevGlobalChatListLength.current < globalChatList.length))
-    ) {
-      handleInitialScroll();
-    }
-
-    // Update refs for next cycle
-    prevGlobalChatListLength.current = globalChatList.length;
-    prevIsDrawerOpen.current = isDrawerOpen;
-  }, [globalChatList, isDrawerOpen, user._id, isLoaded]);
-
-  // ------------------- Sync local chatList with prop globalChatList (getDerivedStateFromProps) -------------------
-  useEffect(() => {
-    // If globalChatList changes length, update local chatList
-    if (globalChatList && globalChatList.length !== chatList.length) {
+    if (globalChatList.length !== chatList.length) {
       setChatList(globalChatList);
     }
   }, [globalChatList, chatList.length]);
 
+  /**
+   * Whenever globalChatList changes, check:
+   * 1) If it's our first load, do an initial scroll if there's content
+   * 2) If new messages arrived ( newLen > oldLen ), check if user is at bottom or if self-sent => auto-scroll, else show tooltip
+   */
+  useEffect(() => {
+    const oldLen = prevGlobalChatListLength.current;
+    const newLen = globalChatList.length;
+
+    if (!hasScrolledOnce && newLen > 0) {
+      // first load => scroll once
+      scrollToBottom();
+      setHasScrolledOnce(true);
+    } else if (newLen > oldLen) {
+      // new messages arrived
+      const diff = newLen - oldLen;
+      const newestMsg = globalChatList[newLen - 1];
+
+      // If user is near bottom OR if the newest msg is from this user => auto-scroll
+      if (userIsAtBottom || (newestMsg && newestMsg.senderId === user._id)) {
+        scrollToBottom();
+        setShowTooltip(false);
+        setNewMessages(0);
+      } else {
+        // we are away from bottom => accumulate new messages
+        setNewMessages((prev) => prev + diff);
+        setShowTooltip(true);
+      }
+    }
+
+    prevGlobalChatListLength.current = newLen;
+  }, [globalChatList, hasScrolledOnce, userIsAtBottom, user._id]);
+
+  // On mount, add scroll listener + evaluate if at bottom initially
+  useEffect(() => {
+    if (chatBoxRef.current) {
+      chatBoxRef.current.addEventListener('scroll', handleScroll);
+      evaluateUserPosition();
+    }
+    return () => {
+      if (chatBoxRef.current) {
+        chatBoxRef.current.removeEventListener('scroll', handleScroll);
+      }
+    };
+    // eslint-disable-next-line
+  }, []);
+
   // ------------------- Handlers -------------------
-  const handleInitialScroll = () => {
+  const scrollToBottom = () => {
     if (!chatBoxRef.current) return;
-    const offset = 50;
-    chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight + offset;
-    setIsLoaded(true);
+    setTimeout(() => {
+      chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
+    }, 0);
+  };
+
+  const evaluateUserPosition = () => {
+    if (!chatBoxRef.current) return;
+    const box = chatBoxRef.current;
+    const scrollDiff = box.scrollHeight - (box.scrollTop + box.clientHeight);
+
+    // If within ~30px => near bottom
+    setUserIsAtBottom(scrollDiff < 30);
   };
 
   const handleScroll = () => {
-    if (!chatBoxRef.current) return;
-
-    const chatBox = chatBoxRef.current;
-    // difference between the total scroll height and (current scroll position + element's height)
-    const scrollDifference = chatBox.scrollHeight - (chatBox.scrollTop + chatBox.clientHeight);
-
-    // If near the bottom, hide the tooltip
-    if (scrollDifference < 30) {
+    evaluateUserPosition();
+    // If user just scrolled to bottom => hide tooltip, reset newMessages
+    if (userIsAtBottom) {
       setShowTooltip(false);
+      setNewMessages(0);
     }
   };
 
+  // Opening the player modal
   const handleOpenPlayerModal = (senderId) => {
-    setShowPlayerModal(true);
     setSelectedCreator(senderId);
+    setShowPlayerModal(true);
   };
 
   const handleClosePlayerModal = () => {
     setShowPlayerModal(false);
   };
 
+  // If user clicks a message => toggling selected
   const handleMessageClick = (message) => {
-    // If the clicked message is the same as the selected message, deselect
     if (selectedMessage.sender === message.sender) {
       setSelectedMessage({
         sender: null,
@@ -140,66 +139,58 @@ function GlobalChat(props) {
         message: null,
         messageType: null,
         replyTo: null,
-        time: null,
+        time: null
       });
     } else {
-      // Otherwise, select it
       setSelectedMessage({
         sender: message.sender,
         rank: message.rank,
+        username: message.sender,
         accessory: message.accessory,
         senderId: message.senderId,
         avatar: message.avatar,
         message: message.message,
         messageType: message.messageType,
         replyTo: message.replyTo,
-        time: message.time,
+        time: message.time
       });
     }
   };
 
-  // This replicates your fetchAndUpdateId method for mentions
-  const fetchAndUpdateId = async (username) => {
-    // Check if we already have the user in state
-    const mentionedUser = mentionedUsers[username];
-    if (mentionedUser && mentionedUser._id) {
-      return mentionedUser;
-    } else {
-      // If not found, fetch from the server
-      try {
-        const userData = await fetchId(username);
-        if (userData && userData._id) {
-          setMentionedUsers((prevState) => ({
-            ...prevState,
-            [username]: userData,
-          }));
+  // A helper to replace emoji commands like ":smile:" with images
+  const wrapEmojis = (text) => {
+    return text.split(/(:\w+:)/g).map((part, i) => {
+      if (part.startsWith(':') && part.endsWith(':')) {
+        const emojiObj = emojis.find((e) => e.command === part);
+        if (emojiObj) {
+          const { url, alt } = emojiObj;
+          return <img key={i} src={url} alt={alt} className="emoji" />;
         }
-        return userData;
-      } catch (error) {
-        // handle error as needed
-        return null;
       }
-    }
+      return part;
+    });
   };
 
   // ------------------- Rendering -------------------
-  const offset = 50;
   const uniqueMessages = new Set();
 
-
   return (
-    <Box className="chat-panel global-chat" ref={chatBoxRef} onScroll={handleScroll} sx={{ maxHeight: 'calc(100vh - 175px)', overflowY: 'auto' }}>
-      {/* Tooltip for new messages */}
-      {showTooltip && (
+    <Box
+      className="chat-panel global-chat"
+      ref={chatBoxRef}
+      sx={{ maxHeight: 'calc(100vh - 175px)', overflowY: 'auto' }}
+    >
+      {/* If we have new messages and user is not at bottom => show tooltip */}
+      {showTooltip && newMessages > 0 && (
         <ButtonBase
           onClick={() => {
-            if (!chatBoxRef.current) return;
-            chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight + offset;
+            scrollToBottom();
             setShowTooltip(false);
+            setNewMessages(0);
           }}
           className="msgtooltip"
         >
-          {newMessages} new chat(s) &nbsp;
+          {newMessages} new chat(s)&nbsp;
           <FontAwesomeIcon icon={faHandPointDown} />
         </ButtonBase>
       )}
@@ -217,70 +208,38 @@ function GlobalChat(props) {
       {chatList && chatList.length > 0 ? (
         <>
           {chatList.map((chat, index) => {
-            const message = chat.message;
-            // Combine message + time to identify unique messages
-            const messageTimeKey = message + chat.time;
-
-            if (uniqueMessages.has(messageTimeKey)) {
+            // Avoid duplicates if (message + time) is the same
+            const messageKey = chat.message + chat.time;
+            if (uniqueMessages.has(messageKey)) {
               return null;
             }
-            uniqueMessages.add(messageTimeKey);
+            uniqueMessages.add(messageKey);
 
-            // Split & replace emojis for main message
-            const wrappedMessage = message
-              .split(/(:\w+:)/g)
-              .map((part, i) => {
-                if (part.startsWith(':') && part.endsWith(':')) {
-                  const emojiObj = emojis.find((e) => e.command === part);
-                  if (emojiObj) {
-                    const { url, alt } = emojiObj;
-                    return (
-                      <img
-                        key={i}
-                        src={url}
-                        alt={alt}
-                        className="emoji"
-                      />
-                    );
-                  }
-                }
-                return part;
-              });
+            // Wrap main message
+            const wrappedMessage =
+              chat.messageType === 'gif'
+                ? null
+                : wrapEmojis(chat.message);
 
-            // Split & replace emojis for reply message
+            // If there's a reply to some older message, do the same
             let wrappedReplyMessage = null;
             if (chat.replyTo && chat.replyTo.message) {
-              const replyMessage = chat.replyTo.message;
-              wrappedReplyMessage = replyMessage
-                .split(/(:\w+:)/g)
-                .map((part, i) => {
-                  if (part.startsWith(':') && part.endsWith(':')) {
-                    const emojiObj = emojis.find((e) => e.command === part);
-                    if (emojiObj) {
-                      const { url, alt } = emojiObj;
-                      return (
-                        <img
-                          key={i}
-                          src={url}
-                          alt={alt}
-                          className="emoji"
-                        />
-                      );
-                    }
-                  }
-                  return part;
-                });
+              wrappedReplyMessage =
+                chat.replyTo.messageType === 'gif'
+                  ? null
+                  : wrapEmojis(chat.replyTo.message);
             }
 
             return (
               <div
                 key={index}
-                className={`chat-line ${selectedMessage === chat ? 'selected' : ''
-                  } ${chat.sender === 'SYSTEM' ? 'special-message' : ''
-                  } ${chat.sender === 'SYSTEM' && chat.message.includes('rent')
+                className={`chat-line ${
+                  chat.sender === 'SYSTEM' ? 'special-message' : ''
+                } ${
+                  chat.sender === 'SYSTEM' && chat.message.includes('rent')
                     ? 'special-message-rent'
                     : ''
-                  }`}
+                }`}
                 onClick={() => handleMessageClick(chat)}
               >
                 {/* If replying to another message */}
@@ -295,16 +254,17 @@ function GlobalChat(props) {
                         className="avatar"
                         src={chat.replyTo.avatar}
                         alt=""
-                        username={chat.replyTo.sender}
+                        username={chat.replyTo.username}
                         rank={chat.replyTo.rank}
                         accessory={chat.replyTo.accessory}
                         darkMode={isDarkMode}
                       />
                       <i
-                        className={`online-status${onlineUserList.includes(chat.replyTo.senderId)
+                        className={`online-status${
+                          onlineUserList.includes(chat.replyTo.senderId)
                             ? ' online'
                             : ''
-                          }`}
+                        }`}
                       />
                     </a>
                     <span className="reply-sender sender-name">
@@ -339,10 +299,11 @@ function GlobalChat(props) {
                       darkMode={isDarkMode}
                     />
                     <i
-                      className={`online-status${onlineUserList.includes(chat.senderId)
+                      className={`online-status${
+                        onlineUserList.includes(chat.senderId)
                           ? ' online'
                           : ''
-                        }`}
+                      }`}
                     />
                   </a>
                   <div className="chat-msg">
@@ -379,7 +340,7 @@ function GlobalChat(props) {
                 gap: '10px'
               }}
             >
-              <Skeleton variant="circle" width={40} height={40} />
+              <Skeleton variant="circular" width={40} height={40} />
               <div style={{ flex: 1 }}>
                 <Skeleton variant="text" width="100%" />
                 <Skeleton variant="text" width="80%" />
@@ -392,14 +353,10 @@ function GlobalChat(props) {
   );
 }
 
-// ------------------- Redux -------------------
 const mapStateToProps = (state) => ({
-  userName: state.auth.userName,
   user: state.auth.user,
   isDarkMode: state.auth.isDarkMode,
-  socket: state.auth.socket,
   globalChatList: state.logic.globalChatList,
-  isDrawerOpen: state.auth.isDrawerOpen,
 });
 
 const mapDispatchToProps = {

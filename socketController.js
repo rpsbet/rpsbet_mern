@@ -27,7 +27,6 @@ const globalChatSend = (io, data) => {
     rank,
     replyTo
   } = data;
-
   const chat = new Chat({
     sender: senderId,
     message: message,
@@ -50,7 +49,6 @@ const globalChatSend = (io, data) => {
       }
       : null
   });
-
   chat
     .save()
     .then(savedChat => {
@@ -65,7 +63,6 @@ const globalChatSend = (io, data) => {
       const fetchReplyToUsername = replyTo
         ? fetchUsername(replyTo.senderId)
         : null;
-
       Promise.all([fetchReplyToUsername])
         .then(([replyToUsername]) => {
           io.sockets.emit('GLOBAL_CHAT_RECEIVED', {

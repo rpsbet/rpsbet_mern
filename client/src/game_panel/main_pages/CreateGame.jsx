@@ -9,6 +9,7 @@ import {
   FormControlLabel,
   Box
 } from '@mui/material';
+import axios from '../../util/Api';
 import LoadingOverlay from 'react-loading-overlay';
 import Lottie from 'react-lottie';
 import Footer from './Footer';
@@ -26,10 +27,13 @@ import {
   createRoom,
   setGameMode,
   getGameTypeList,
-  getStrategies
+  getStrategies,
+  uploadImageToPinata
 } from '../../redux/Logic/logic.actions';
 import { alertModal } from '../modal/ConfirmAlerts';
 import { convertToCurrency } from '../../util/conversion';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faArrowLeft, faPenSquare } from '@fortawesome/free-solid-svg-icons';
 
 const customStyles = {
   tabRoot: {
@@ -67,6 +71,7 @@ function CreateGame(props) {
     isDarkMode,
     isLowGraphics,
     showError,
+    uploadImageToPinata,
     toggleDrawer: _toggleDrawer
   } = props;
 
@@ -89,7 +94,8 @@ function CreateGame(props) {
   const [xLink, setXLink] = useState('');
   const [websiteLink, setWebsiteLink] = useState('');
   const [telegramLink, setTelegramLink] = useState('');
-
+  
+  const [ticker, setTicker] = useState('');
   const [selectedStrategy, setSelectedStrategy] = useState('Markov');
   const [qsNation, setQsNation] = useState(0);
   const [selectedQsPosition, setSelectedQsPosition] = useState(0);
@@ -102,8 +108,6 @@ function CreateGame(props) {
   const [publicBetAmount, setPublicBetAmount] = useState(convertToCurrency(0, solPrice));
   const [isPrivate, setIsPrivate] = useState(false);
   const [roomPassword, setRoomPassword] = useState('');
-  const [aveMultiplier, setAveMultiplier] = useState(0);
-  const [score, setScore] = useState(0);
   const [lowerLimit, setLowerLimit] = useState(0);
   const [upperLimit, setUpperLimit] = useState(0);
   const [stopLossValue, setStopLossValue] = useState(0);
@@ -233,6 +237,7 @@ function CreateGame(props) {
     if ('bet_amount' in newState) setBetAmount(newState.bet_amount);
     if ('name' in newState) setName(newState.name);
     if ('image' in newState) setImage(newState.image);
+    if ('ticker' in newState) setImage(newState.ticker);
     if ('description' in newState) setDescription(newState.description);
     if ('is_private' in newState) setIsPrivate(newState.is_private);
     if ('room_password' in newState) setRoomPassword(newState.room_password);
@@ -359,70 +364,90 @@ function CreateGame(props) {
     }
   };
 
-  const saveImage = async (imageSrc) => {
-    return new Promise((resolve, reject) => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.src = imageSrc;
-
-      img.onload = () => {
-        const maxWidth = 600;
-        const maxHeight = 600;
-
-        let width = img.width;
-        let height = img.height;
-
-        // Scale image to maintain aspect ratio
-        if (width > height) {
+  const createRoomWithImage = async () => {
+    setCreatingRoom(true);
+  
+    // We can keep saveImage the same, or have it outside, but for brevity:
+    const saveImage = (imageSrc) => {
+      return new Promise((resolve, reject) => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        img.crossOrigin = 'anonymous'; // Handle CORS issues
+        img.src = imageSrc;
+  
+        img.onload = () => {
+          const maxWidth = 250; // Adjust as needed
+          let width = img.width;
+          let height = img.height;
+  
+          // Scale height proportionally to the maxWidth
           if (width > maxWidth) {
             height *= maxWidth / width;
             width = maxWidth;
           }
-        } else {
-          if (height > maxHeight) {
-            width *= maxHeight / height;
-            height = maxHeight;
-          }
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-        ctx.drawImage(img, 0, 0, width, height);
-
-        canvas.toBlob(
-          (blob) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(blob);
-            reader.onloadend = () => {
-              resolve(reader.result); // Return Base64 string
-            };
-          },
-          'image/webp',
-          0.5
-        );
-      };
-
-      img.onerror = (error) => {
-        reject('Error processing image: ' + error);
-      };
-    });
-  };
-
-  const createRoomWithImage = async () => {
-    setCreatingRoom(true);
+  
+          canvas.width = width;
+          canvas.height = height;
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          ctx.drawImage(img, 0, 0, width, height);
+  
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                // We'll just resolve with the Blob
+                resolve(blob);
+              } else {
+                reject('Failed to generate image Blob.');
+              }
+            },
+            'image/png'
+          );
+        };
+  
+        img.onerror = (error) => {
+          reject('Error processing image: ' + error);
+        };
+      });
+    };
+  
     try {
-      const base64Image = await saveImage(image);
-
-      // Gather the "combined" state data you want to send
+      // 1) Resize the original 'image' (URL) into a Blob
+      const resizedBlob = await saveImage(image);
+      console.log('[Front-end] Resized blob:', resizedBlob);
+  
+      // 2) Build FormData to send to *our own server* at /api/upload-to-pinata
+      const formData = new FormData();
+      formData.append('file', resizedBlob, 'resized-image.png');
+  
+      console.log('[Front-end] FormData entries before upload:');
+      for (let [key, value] of formData.entries()) {
+        console.log('   ', key, value);
+      }
+  
+      // 3) POST to our backend's route (which proxies to Pinata)
+      const response = await axios.post('/game/upload-to-pinata', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+  
+      // 4) Check if we got a successful response
+      if (response.status !== 200) {
+        throw new Error('Server responded with non-200 status.');
+      }
+  
+      // Our backend route returns: { success: boolean, imageUrl: string, ... }
+      const { success, imageUrl, message } = response.data;
+      if (!success || !imageUrl) {
+        throw new Error(message || 'Upload failed, no imageUrl received.');
+      }
+  
+      console.log('[Front-end] Received Pinata URL from server:', imageUrl);
+  
+      // 5) Build your fullState with the returned IPFS link
       const fullState = {
-        is_mobile: isMobile,
-        selectedMobileTab,
-        step,
-        alertTitle: "",
-        alertMessage: "",
-        child_step: childStep,
         game_type: gameType,
         game_mode: gameMode,
         selectedGameType,
@@ -430,7 +455,8 @@ function CreateGame(props) {
         qs_list: qsList,
         tax,
         name,
-        image: base64Image, 
+        ticker,
+        image: imageUrl, 
         x_link: xLink,
         website_link: websiteLink,
         telegram_link: telegramLink,
@@ -441,40 +467,31 @@ function CreateGame(props) {
         bet_amount: betAmount,
         endgame_amount: endgameAmount,
         max_return: maxReturn,
-        creatingRoom,
         winChance,
         public_bet_amount: publicBetAmount,
         is_private: isPrivate,
         room_password: roomPassword,
-        aveMultiplier,
-        score,
-        lowerLimit,
-        upperLimit,
-        stopLossValue,
         ai_mode: aiMode,
-        isPlaying,
         endgame_type: endgameType,
         description,
         rps_game_type: rpsGameType,
-        skipConfirm
       };
+  
+      // 6) Then call your existing createRoom logic
       await props.createRoom(fullState);
+  
     } catch (error) {
-      console.error('Error saving image:', error);
-      alertModal(
-        isDarkMode,
-        'Failed to process the image. Please try again.'
-      );
+      console.error('[Front-end] Error uploading/resizing image:', error);
+      alertModal(isDarkMode, 'Failed to process image. Please try again.');
+    } finally {
+      setCreatingRoom(false);
     }
-    setCreatingRoom(false);
   };
-
-  const onCreateRoom = async () => {
+  
+  const onCreateRoom = () => {
     if (localStorage.getItem('hideConfirmModal') === 'true') {
-      // If user previously chose to skip the confirmation
       createRoomWithImage();
     } else {
-      // Otherwise, show the MUI Dialog
       setOpenDialog(true);
     }
   };
@@ -522,6 +539,7 @@ function CreateGame(props) {
             name={name}
             image={image}
             x_link={xLink}
+            ticker={ticker}
             website_link={websiteLink}
             tax={tax}
             telegram_link={telegramLink}
@@ -553,6 +571,7 @@ function CreateGame(props) {
             name={name}
             image={image}
             tax={tax}
+            ticker={ticker}
             x_link={xLink}
             website_link={websiteLink}
             telegram_link={telegramLink}
@@ -702,11 +721,19 @@ function CreateGame(props) {
             </DialogActions>
           </Dialog>
 
-          <h2 className="main-title desktop-only" style={{ marginBottom: '10px' }}>
-            <a onClick={() => history.push('/')} className="label" id="liveStakes">
-              GO BACK
-            </a>
-          </h2>
+          <Box className="main-title desktop-only" style={{ marginBottom: '10px' }}>
+            <Button
+              variant="text"
+              color="error"
+              onClick={() => {
+                history.push('/');
+              }}
+              className="label" id="liveStakes"
+            >
+              <FontAwesomeIcon icon={faArrowLeft} />
+              &nbsp; Go Back
+            </Button>
+          </Box>
           <div className="create-game-panel">
             <div className="game-page">
               <div className="game-contents title">
@@ -816,6 +843,7 @@ const mapDispatchToProps = {
   getStrategies,
   getGameTypeList,
   showError,
+  uploadImageToPinata,
   toggleDrawer
 };
 

@@ -15,14 +15,16 @@ import {
   faPercentage,
   faHandHoldingUsd,
   faCoins, faUser,
-  faCalendarAlt
+  faCalendarAlt,
+  faSortNumericUp,
+  faRobot
 } from '@fortawesome/free-solid-svg-icons';
 import {
   Stack,
   Tooltip,
   Box,
   Typography,
-  CircularProgress
+  CircularProgress,
 } from '@mui/material';
 
 const PreSummaryPanel = (props) => {
@@ -71,34 +73,34 @@ const PreSummaryPanel = (props) => {
 
   return (
     <Stack direction="row" spacing={2}>
-    
+
       <Box className="pre-summary-panel title">
 
         {/* ROOM NAME */}
         <Box className="data-item">
           <Typography variant="body2" className="label room-name">
-            <FontAwesomeIcon icon={faBuilding} style={{ marginRight: 8 }} /> Room Name
+            <FontAwesomeIcon icon={faBuilding} style={{ marginRight: 8 }} /> Name / Ticker
           </Typography>
           {/* Tooltip + info icon for the value */}
           <Tooltip title="This is the name of the room.">
             <Box sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
               <Typography variant="body1" className="value">
-                {roomInfo?.name}
+                {roomInfo?.name}{' '}<span style={{ fontSize: "x-small" }}>/ {roomInfo?.ticker}</span>
               </Typography>
               <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
             </Box>
           </Tooltip>
         </Box>
-
-        {/* STATUS */}
+        {/* STRATEGY */}
         <Box className="data-item">
-          <Typography variant="body2" className="label room-id">
-            <FontAwesomeIcon icon={faInfoCircle} style={{ marginRight: 8 }} />STATUS
+          <Typography variant="body2" className="label room-name">
+            <FontAwesomeIcon icon={faRobot} style={{ marginRight: 8 }} /> MODEL
           </Typography>
-          <Tooltip title="The current status of this room (e.g., open, finished, etc.)">
+          {/* Tooltip + info icon for the value */}
+          <Tooltip title="This is the AI Model of the room.">
             <Box sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-              <Typography variant="body1" className="value">
-                {status}
+              <Typography id="ai_mode" variant="body1" className="value">
+                {roomInfo?.selectedStrategy}
               </Typography>
               <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
             </Box>
@@ -371,6 +373,23 @@ const PreSummaryPanel = (props) => {
           </Tooltip>
         </Box>
 
+
+        {/* STATUS */}
+        <Box className="data-item">
+          <Typography variant="body2" className="label room-id">
+            <FontAwesomeIcon icon={faInfoCircle} style={{ marginRight: 8 }} />STATUS
+          </Typography>
+          <Tooltip title="The current status of this room (e.g., open, finished, etc.)">
+            <Box sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+              <Typography variant="body1" className="value">
+                {status}
+              </Typography>
+              <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
+            </Box>
+          </Tooltip>
+        </Box>
+
+
         {/* CREATED */}
         <Box className="data-item">
           <Typography variant="body2" className="label public-max-return">
@@ -386,6 +405,22 @@ const PreSummaryPanel = (props) => {
           </Tooltip>
         </Box>
 
+        {/* ROOM ID */}
+        <Box className="data-item">
+          <Typography variant="body2" className="label room-name">
+            <FontAwesomeIcon icon={faSortNumericUp} style={{ marginRight: 8 }} /> ID
+          </Typography>
+          {/* Tooltip + info icon for the value */}
+          <Tooltip title="This is the ID of the room.">
+            <Box sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+              <Typography variant="body1" className="value">
+                {roomInfo?.room_name}
+              </Typography>
+              <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
+            </Box>
+          </Tooltip>
+        </Box>
+        
       </Box>
     </Stack>
   );

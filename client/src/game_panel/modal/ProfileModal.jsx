@@ -10,11 +10,15 @@ import {
   TextField,
   Grid,
   Typography,
+  Chip,
   CircularProgress,
-  // ThemeProvider is from @mui/material/styles
   ThemeProvider,
+  useMediaQuery, // <-- Add this
 } from '@mui/material';
 import { FileCopy as FileCopyIcon, Info as InfoIcon } from '@mui/icons-material';
+import CircleIcon from '@mui/icons-material/Circle';
+import LinkIcon from '@mui/icons-material/Link';
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faEdit, faChartBar } from '@fortawesome/free-solid-svg-icons';
 import moment from 'moment';
@@ -58,10 +62,12 @@ function ProfileModal(props) {
     getSpendingHabit: _getSpendingHabit,
     getCustomerStatisticsData: _getCustomerStatisticsData,
     acGetCustomerInfo: _acGetCustomerInfo,
+    connectedAccount
   } = props;
 
   // Prepare the theme
   const theme = getCustomTheme(isDarkMode ? 'dark' : 'light');
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm')); // <-- Use MUI breakpoint for mobile check
 
   // Destructure user info
   const {
@@ -77,6 +83,7 @@ function ProfileModal(props) {
     credit_score: initialCreditScore,
     profitAllTimeHigh,
     profitAllTimeLow,
+    accounts = [], // <-- This is our new array from the backend
   } = userInfo;
 
   // State
@@ -157,7 +164,6 @@ function ProfileModal(props) {
       setStatus(data.status);
     }
   };
-
   const fetchCustomerInfoForRewards = async (rewardsArr) => {
     for (const reward of rewardsArr) {
       const info = await _acGetCustomerInfo(reward.user);
@@ -365,7 +371,7 @@ function ProfileModal(props) {
       return;
     }
     if (newUsername.trim() === '') {
-      alertModal(isDarkMode, 'Username cannot be thin air. Please enter some text.');
+      alertModal(isDarkMode, 'Username cannot be empty. Please enter some text.');
       return;
     }
     setLoadingState(true);
@@ -382,7 +388,7 @@ function ProfileModal(props) {
       }
     } catch (e) {
       setLoadingState(false);
-      alertModal(isDarkMode, `Username might be taken. Try something else more original, you common cat.`);
+      alertModal(isDarkMode, `Username might be taken. Try something else more original.`);
     }
   };
 
@@ -433,6 +439,12 @@ function ProfileModal(props) {
   // Link check
   const isLinkRegex = /^https?:\/\//.test(link);
 
+  // Helper to shorten addresses on mobile
+  const shortenAddress = (address) => {
+    if (!address) return '';
+    return address.slice(0, 6) + '...' + address.slice(-6);
+  };
+
   return (
     <ThemeProvider theme={theme}>
       <>
@@ -480,7 +492,7 @@ function ProfileModal(props) {
                 </Button>
               </Box>
 
-              {/* Tabs with color='error' */}
+              {/* Tabs */}
               <Tabs
                 value={activeTab}
                 onChange={handleTabChange}
@@ -508,7 +520,12 @@ function ProfileModal(props) {
               {/* Tab Panel #1: Edit Profile */}
               {activeTab === 0 && (
                 <Box
-                  sx={{ background: 'rgba(170, 170, 170, 0.06)', borderRadius: '0.3em', p: '20px' }}>
+                  sx={{
+                    background: 'rgba(170, 170, 170, 0.06)',
+                    borderRadius: '0.3em',
+                    p: '20px',
+                  }}
+                >
                   {loadingState ? (
                     <CircularProgress color="error" />
                   ) : (
@@ -537,7 +554,7 @@ function ProfileModal(props) {
                           width: '100%',
                         }}
                       >
-                        <Typography variant="h5" sx={{ mb: 1 }}>
+                        <Typography variant="h5" sx={{ mt: 1, mb: 1 }}>
                           {username}
                         </Typography>
                         {isLinkRegex ? (
@@ -563,6 +580,66 @@ function ProfileModal(props) {
                   )}
 
                   <Box className="modal-edit-panel" sx={{ mt: 2 }}>
+                    {/* Associated Accounts ABOVE referrals */}
+                    <Box
+                      sx={{
+                        mb: 2,
+                        background: 'rgba(170, 170, 170, 0.06)',
+                        borderRadius: '0.3em',
+                        p: '20px',
+                      }}
+                    >
+                      <Typography variant="h6" gutterBottom>
+                        A.K.A
+                      </Typography>
+                      {accounts.length === 0 ? (
+                        <p>No associated accounts found.</p>
+                      ) : (
+                        <Grid container spacing={1}>
+                          {accounts.map((acc, index) => {
+                            // On mobile, show shortened version
+                            const displayed = isMobile ? shortenAddress(acc) : acc;
+                            // Check if current account is the connected account
+                            const isConnected =
+                              connectedAccount?.toLowerCase() === acc.toLowerCase();
+
+                            return (
+                              <Grid item xs={12} key={index}>
+                                <Box display="flex" alignItems="center">
+                                  {/* Chip to display the address */}
+                                  <Chip
+                                    label={displayed}
+                                    variant="outlined"
+                                    // If you want a different color for the connected account:
+                                    // color={isConnected ? 'success' : 'default'}
+                                    sx={{ mr: 1 }}
+                                  />
+
+                                  {/* Show green dot if this is the connected account */}
+                                  {isConnected && (
+                                    <CircleIcon
+                                      sx={{ color: 'green', mr: 1 }}
+                                      fontSize="small"
+                                    />
+                                  )}
+
+                                  {/* Link icon to Solscan.io/acc */}
+                                  <IconButton
+                                    component="a"
+                                    href={`https://solscan.io/account/${acc}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    size="small"
+                                  >
+                                    <LinkIcon fontSize="small" />
+                                  </IconButton>
+                                </Box>
+                              </Grid>
+                            );
+                          })}
+                        </Grid>
+                      )}
+                    </Box>
                     {/* REFERRAL CODE */}
                     <TextField
                       color="error"
@@ -612,7 +689,10 @@ function ProfileModal(props) {
                             <Typography variant="body2" sx={{ mb: 1 }}>
                               Referral earnings depend on your referrals' deposit activity
                               and are calculated based on
-                              <Box component="span" sx={{ fontWeight: 'bold', color: '#28a745' }}>
+                              <Box
+                                component="span"
+                                sx={{ fontWeight: 'bold', color: '#28a745' }}
+                              >
                                 &nbsp;5%&nbsp;
                               </Box>
                               of the deposit amount of your referred users.
@@ -699,8 +779,14 @@ function ProfileModal(props) {
 
               {/* Tab Panel #2: Stats */}
               {activeTab === 1 && (
-                <Box className="user-statistics"
-                  sx={{ background: 'rgba(170, 170, 170, 0.06)', borderRadius: '0.3em', p: '20px' }}>
+                <Box
+                  className="user-statistics"
+                  sx={{
+                    background: 'rgba(170, 170, 170, 0.06)',
+                    borderRadius: '0.3em',
+                    p: '20px',
+                  }}
+                >
                   <StatisticsForm
                     onDropdownChange={handleDropdownChange}
                     username={username}
@@ -783,7 +869,7 @@ function ProfileModal(props) {
                 }}
               >
                 <Typography variant="h6">ENTER NEW USERNAME</Typography>
-                <Button color="error" onClick={handleClose}>
+                <Button color="error" onClick={() => setIsNewUsernameModalOpen(false)}>
                   ×
                 </Button>
               </Box>
@@ -816,10 +902,7 @@ function ProfileModal(props) {
         </Modal>
 
         {/* LINK / BIO MODAL */}
-        <Modal
-          open={isLinkModalOpen}
-          onClose={() => setIsLinkModalOpen(false)}
-        >
+        <Modal open={isLinkModalOpen} onClose={() => setIsLinkModalOpen(false)}>
           <Box
             sx={{
               position: 'absolute',
@@ -847,7 +930,7 @@ function ProfileModal(props) {
                 }}
               >
                 <Typography variant="h6">ENTER NEW BIO</Typography>
-                <Button color="error" onClick={handleClose}>
+                <Button color="error" onClick={() => setIsLinkModalOpen(false)}>
                   ×
                 </Button>
               </Box>
@@ -919,15 +1002,21 @@ function ProfileModal(props) {
                   mb: 2,
                 }}
               >
-                <Typography variant="h6" className="modal-title">
-                  ALL REFERRALS
-                </Typography>
-                <Button color="error" onClick={handleClose}>
+                <Typography variant="h6">ALL REFERRALS</Typography>
+                <Button color="error" onClick={() => setIsReferralsModalOpen(false)}>
                   ×
                 </Button>
               </Box>
+
+              {/* Referrals */}
               <Box
-                sx={{ mb: 2, background: 'rgba(170, 170, 170, 0.06)', borderRadius: '0.3em', p: '20px' }}>
+                sx={{
+                  mb: 2,
+                  background: 'rgba(170, 170, 170, 0.06)',
+                  borderRadius: '0.3em',
+                  p: '20px',
+                }}
+              >
                 <Grid container spacing={2}>
                   {rewardsState.map((reward, index) => (
                     <Grid item xs={12} sm={6} md={4} key={index}>
@@ -991,13 +1080,14 @@ function ProfileModal(props) {
           </Box>
         </Modal>
       </>
-    </ThemeProvider >
+    </ThemeProvider>
   );
 }
 
 const mapStateToProps = (state) => ({
   isDarkMode: state.auth.isDarkMode,
   userInfo: state.auth.user,
+  connectedAccount: state.auth.connectedAccount,
   solPrice: state.logic.solPrice,
   loading: state.logic.isActiveLoadingOverlay,
 });

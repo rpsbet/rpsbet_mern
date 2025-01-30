@@ -32,7 +32,7 @@ import {
   addNewTransaction
 } from '../../redux/Logic/logic.actions';
 import { alertModal } from '../modal/ConfirmAlerts';
-import { setBalance, getUser } from '../../redux/Auth/user.actions';
+import { getUser } from '../../redux/Auth/user.actions';
 import { getCustomTheme } from '../../config/theme';
 import { ThemeProvider } from '@mui/material/styles';
 
@@ -56,7 +56,6 @@ function ConfirmLoanModal(props) {
     acQueryLoan,
     confirmLoan,
     addNewTransaction,
-    setBalance,
     getUser,
     item,
     lender,
@@ -143,7 +142,6 @@ function ConfirmLoanModal(props) {
       closeConfirmLoanModal();
       alertModal(isDarkMode, message, '-cat');
       addNewTransaction(newTransaction);
-      getUser();
       acQueryLoan();
       acCalculateRemainingLoans();
     } else {
@@ -159,7 +157,6 @@ function ConfirmLoanModal(props) {
     confirmLoan,
     closeConfirmLoanModal,
     addNewTransaction,
-    getUser,
     acQueryLoan,
   ]);
 
@@ -558,7 +555,6 @@ const mapDispatchToProps = {
   closeConfirmLoanModal,
   confirmLoan,
   getUser,
-  setBalance,
   addNewTransaction,
   acCalculateRemainingLoans,
   acQueryLoan,

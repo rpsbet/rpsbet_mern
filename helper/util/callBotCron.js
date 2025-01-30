@@ -1,7 +1,6 @@
 const cron = require('node-cron');
 const Room = require('../../model/Room.js');
 const User = require('../../model/User.js');
-const GameType = require('../../model/GameType.js');
 const RpsBetItem = require('../../model/RpsBetItem.js');
 const QsBetItem = require('../../model/QsBetItem.js');
 const AttachedPlayer = require('../../model/AttachedPlayer.js');
@@ -12,7 +11,6 @@ const SystemSetting = require('../../model/SystemSetting.js');
 const {
   predictNext,
   reinforcementAI,
-  getRandomMove,
   predictNextOpenAI,
 } = require('./predictNextJoiner');
 const {
@@ -21,7 +19,6 @@ const {
   reinforcementAI_qs,
   openAIPredictionAI_qs,
 } = require('./predictNextQsJoiner');
-const saveDocumentWithRetry = require('./retrySave');
 
 const os = require('os');
 let socketio = null;
@@ -62,9 +59,6 @@ async function getQsBetItems(roomId, user) {
 async function predictNextBetAmount(
   betArray,
   penultimateSameAsLast,
-  smoothingFactor = 0.01,
-  randomnessFactor = 0.2,
-  threshold = 0.0005,
   room,
 ) {
   const allStates = Array.from(new Set(betArray));
@@ -98,18 +92,9 @@ async function predictNextBetAmount(
 
 // List of valid strategy names in JoiningStrategySchema
 const validJoiningStrategies = [
-  'copycat',
-  'hiddenmarkov',
   'markov',
-  'feedback',
-  'innovate',
-  'hertz',
   'adam',
-  'tesla',
-  'npc',
-  'sniper',
-  'skillissueold',
-  'skillissue',
+  'gpt3'
 ];
 
 // Function to pick a sub-strategy based on probabilities
@@ -156,20 +141,7 @@ const pickSubStrategy = (joiningObj) => {
 };
 
 const formatStrategyName = (strategy) => {
-  switch (strategy) {
-    case 'skillissueold':
-      return 'Skill-issue-old';
-    case 'skillissue':
-      return 'Skill-issue';
-    case 'copycat':
-      return 'CopyCat';
-    case 'hiddenmarkov':
-      return 'Hidden Markov';
-    case 'npc':
-      return 'NPC';
-    default:
-      return strategy.charAt(0).toUpperCase() + strategy.slice(1);
-  }
+  return strategy.charAt(0).toUpperCase() + strategy.slice(1);
 };
 
 async function callCronJobs(io) {
@@ -177,8 +149,8 @@ async function callCronJobs(io) {
     {
       userId: '65eafc72aea25957ac8ea60d',
       betArray: [
-        0.0422, 0.0818, 0.0998, 0.0879, 0.0001, 0.0362, 0.0001, 0.0526, 0.0368,
-        0.0001, 0.0839, 0.0725, 0.0001, 0.0001, 0.0002, 0.0058, 0.0239, 0.0269,
+        0.04022, 0.000818, 0.000998, 0.0879, 0.0001, 0.0362, 0.0001, 0.00526, 0.0368,
+        0.0001, 0.0839, 0.000725, 0.0001, 0.0001, 0.0002, 0.0058, 0.0239, 0.0269,
         0.012, 0.0813, 0.0985, 0.0664, 0.0149, 0.0022, 0.0216,
       ],
       delay: 0,
@@ -186,25 +158,25 @@ async function callCronJobs(io) {
     {
       userId: '65eafa5caea25957ac8ea60b',
       betArray: [
-        0.0593, 0.075, 0.0118, 0.0494, 0.0092, 0.0465, 0.087, 0.0742, 0.0694,
-        0.0492, 0.009, 0.0765, 0.0382,
+        0.000593, 0.075, 0.0118, 0.0494, 0.0092, 0.00465, 0.00087, 0.0742, 0.0694,
+        0.0492, 0.009, 0.0765, 0.00382,
       ],
       delay: 4000,
     },
     {
       userId: '62b9ef88a5409449f63f7ccb',
       betArray: [
-        0.061, 0.0866, 0.0388, 0.0543, 0.0001, 0.0906, 0.0665, 0.0223, 0.0177,
-        0.093, 0.0688, 0.0406, 0.0336, 0.0021, 0.0617, 0.0021,
+        0.061, 0.0866, 0.00388, 0.00543, 0.0001, 0.000906, 0.0665, 0.0223, 0.0177,
+        0.093, 0.0688, 0.0004, 0.0336, 0.0021, 0.00617, 0.0021,
       ],
       delay: 8000,
     },
     {
       userId: '65eafb7daea25957ac8ea60c',
       betArray: [
-        0.0614, 0.0126, 0.0739, 0.0798, 0.0383, 0.0338, 0.0401, 0.0473, 0.0005,
-        0.0878, 0.0492, 0.0763, 0.061, 0.054, 0.0456, 0.0852, 0.0906, 0.043,
-        0.0025, 0.0989, 0.0532,
+        0.00614, 0.00126, 0.00739, 0.0798, 0.0383, 0.00338, 0.00401, 0.0473, 0.0005,
+        0.00878, 0.00492, 0.00763, 0.00061, 0.054, 0.00456, 0.00852, 0.0906, 0.043,
+        0.00025, 0.00989, 0.00532,
       ],
       delay: null,
     },
@@ -217,132 +189,111 @@ async function callCronJobs(io) {
   }
 
   try {
-    let systemSetting = await SystemSetting.findOne({
-      name: 'last_updated_bot',
-    });
-    const sevenSecondsAgo = new Date(Date.now() - 7 * 1000); // Calculate timestamp for 7 seconds ago
+    for (const cronJob of cronJobs) {
+      // call bot
+      const user = await User.findOne({ _id: cronJob.userId });
+      const room = await Room.findOne({
+        joiners: cronJob.userId,
+        status: 'open',
+        is_private: false,
+      });
+      if (user && room) {
+        const result = await executeCronJob(
+          user,
+          cronJob.betArray,
+          cronJobUserIds,
+          true,
+          room,
+          'Markov',
+        );
+        if (result && result.success) {
+          await delay(cronJob.delay);
+        }
+      }
+    }
 
-    const aiRooms = await Room.find({
-      selectedStrategy: { $ne: 'Random' },
-      status: 'open',
-      last_updated_strat: { $gte: sevenSecondsAgo },
-    });
+    // attached players
+    const attachedPlayers = await AttachedPlayer.find({});
+    for (const player of attachedPlayers) {
+      const user = await User.findOne({ _id: player.user });
+      const room = await Room.findOne({
+        _id: player.room,
+        status: 'open',
+        is_private: false,
+      });
+      if (user && room) {
+        const result = await executeCronJob(
+          user,
+          player.bet_amounts,
+          [player.user.toString()],
+          false,
+          room,
+          player.selected_strategy,
+        );
+        if (result && result.success) {
+          await delay(4000);
+        }
+      }
+    }
 
-    if (systemSetting) {
-      const lastUpdated = new Date(systemSetting.updated_at);
-      const nineSecondsAgo = new Date();
-      nineSecondsAgo.setSeconds(nineSecondsAgo.getSeconds() - 8);
+    // qbot joining
+    const qBots = await QBot.find({ active: true });
+    for (const bot of qBots) {
+      const chosenSubStrategy = pickSubStrategy(bot.joining);
+      if (chosenSubStrategy) {
+        const formattedStrategyName = formatStrategyName(
+          chosenSubStrategy.parentStrategy,
+        );
+        const formattedSubStrategyName = formatStrategyName(
+          chosenSubStrategy.name,
+        );
+        const user = await User.findOne({ _id: bot.user });
+        const room = await Room.findOne({
+          status: 'open',
+          selectedStrategy: formattedStrategyName,
+          creator: { $ne: bot.user },
+          is_private: false,
+        });
 
-      if (lastUpdated < nineSecondsAgo) {
-        for (const cronJob of cronJobs) {
-          // call bot
-          const user = await User.findOne({ _id: cronJob.userId });
-          const room = await Room.findOne({
-            joiners: cronJob.userId,
-            status: 'open',
-            is_private: false,
-          });
-          if (user && room) {
-            const result = await executeCronJob(
-              user,
-              cronJob.betArray,
-              cronJobUserIds,
-              true,
-              room,
-              'Random',
-            );
-            if (result && result.success) {
-              await delay(cronJob.delay);
+        const numElements = 6;
+        let remainingBalance = user.balance;
+        const qbot_bet_amounts = [];
+
+        for (let i = 0; i < numElements; i++) {
+          const maxBet = remainingBalance - (numElements - i - 1);
+          const bet = Math.floor(Math.random() * maxBet) + 1;
+
+          qbot_bet_amounts.push(bet);
+          remainingBalance -= bet;
+
+          if (remainingBalance <= numElements - i - 1) {
+            while (qbot_bet_amounts.length < numElements) {
+              qbot_bet_amounts.push(1);
+              remainingBalance--;
             }
+            break;
           }
         }
 
-        // attached players
-        const attachedPlayers = await AttachedPlayer.find({});
-        for (const player of attachedPlayers) {
-          const user = await User.findOne({ _id: player.user });
-          const room = await Room.findOne({
-            _id: player.room,
-            status: 'open',
-            is_private: false,
-          });
-          if (user && room) {
-            const result = await executeCronJob(
-              user,
-              player.bet_amounts,
-              [player.user.toString()],
-              false,
-              room,
-              player.selected_strategy,
-            );
-            if (result && result.success) {
-              await delay(4000);
-            }
-          }
-        }
+        qbot_bet_amounts.sort((a, b) => a - b);
+        if (user && room) {
+          const result = await executeCronJob(
+            user,
+            qbot_bet_amounts,
+            [bot.user.toString()],
+            false,
+            room,
+            formattedSubStrategyName,
+            true,
+          );
 
-        // qbot joining
-        const qBots = await QBot.find({ active: true });
-        for (const bot of qBots) {
-          const chosenSubStrategy = pickSubStrategy(bot.joining);
-          if (chosenSubStrategy) {
-            const formattedStrategyName = formatStrategyName(
-              chosenSubStrategy.parentStrategy,
-            );
-            const formattedSubStrategyName = formatStrategyName(
-              chosenSubStrategy.name,
-            );
-            const user = await User.findOne({ _id: bot.user });
-            const room = await Room.findOne({
-              status: 'open',
-              selectedStrategy: formattedStrategyName,
-              creator: { $ne: bot.user },
-              is_private: false,
-            });
-
-            const numElements = 6;
-            let remainingBalance = user.balance;
-            const qbot_bet_amounts = [];
-
-            for (let i = 0; i < numElements; i++) {
-              const maxBet = remainingBalance - (numElements - i - 1);
-              const bet = Math.floor(Math.random() * maxBet) + 1;
-
-              qbot_bet_amounts.push(bet);
-              remainingBalance -= bet;
-
-              if (remainingBalance <= numElements - i - 1) {
-                while (qbot_bet_amounts.length < numElements) {
-                  qbot_bet_amounts.push(1);
-                  remainingBalance--;
-                }
-                break;
-              }
-            }
-
-            qbot_bet_amounts.sort((a, b) => a - b);
-            if (user && room) {
-              const result = await executeCronJob(
-                user,
-                qbot_bet_amounts,
-                [bot.user.toString()],
-                false,
-                room,
-                formattedSubStrategyName,
-                true,
-              );
-
-              if (result && result.success) {
-                await delay(4000);
-              }
-            }
+          if (result && result.success) {
+            await delay(4000);
           }
         }
       }
     }
 
-    if (aiRooms && aiRooms.length > 0) {
-    }
   } catch (error) {
     console.error('Error executing cron jobs:', error);
   }
@@ -399,9 +350,6 @@ async function executeCronJob(
         predictedBetAmount = await predictNextBetAmount(
           betArray,
           penultimateSameAsLast,
-          0,
-          0.01,
-          0.2,
           room,
         );
       } else {
@@ -414,9 +362,6 @@ async function executeCronJob(
             predictedBetAmount = await predictNextBetAmount(
               betArray,
               0,
-              0,
-              0.01,
-              0.2,
               room,
             );
           } else if (ai_mode === 'Adam') {
@@ -425,9 +370,6 @@ async function executeCronJob(
             predictedBetAmount = await predictNextBetAmount(
               betArray,
               nextMove.risk,
-              0,
-              0.01,
-              0.2,
               room,
             );
           } else if (ai_mode === 'GPT3') {
@@ -435,9 +377,6 @@ async function executeCronJob(
             predictedBetAmount = await predictNextBetAmount(
               betArray,
               0,
-              0,
-              0.01,
-              0.2,
               room,
             );
           }
@@ -469,9 +408,6 @@ async function executeCronJob(
         predictedBetAmount = await predictNextBetAmount(
           betArray,
           penultimateSameAsLast,
-          0,
-          0.01,
-          0.2,
           room,
         );
       } else {
@@ -480,17 +416,7 @@ async function executeCronJob(
         const qsBetItems = await getQsBetItems(roomId, user);
 
         if (betArray && betArray.length > 0) {
-          if (ai_mode === 'Random') {
-            nextState = await getRandomItem_qs(room.qs_game_type);
-            predictedBetAmount = await predictNextBetAmount(
-              betArray,
-              0,
-              0,
-              0.01,
-              0.2,
-              room,
-            );
-          } else if (ai_mode === 'Adam') {
+          if (ai_mode === 'Adam') {
             const nextMove = await reinforcementAI_qs(
               qsBetItems,
               room.qs_game_type,
@@ -499,9 +425,6 @@ async function executeCronJob(
             predictedBetAmount = await predictNextBetAmount(
               betArray,
               nextMove.risk,
-              0,
-              0.01,
-              0.2,
               room,
             );
           } if (ai_mode === 'Markov') {
@@ -509,9 +432,6 @@ async function executeCronJob(
             predictedBetAmount = await predictNextBetAmount(
               betArray,
               0,
-              0,
-              0.01,
-              0.2,
               room,
             );
           } else if (ai_mode === 'GPT3') {
@@ -522,9 +442,6 @@ async function executeCronJob(
             predictedBetAmount = await predictNextBetAmount(
               betArray,
               0,
-              0,
-              0.01,
-              0.2,
               room,
             );
           }
@@ -608,7 +525,7 @@ async function executeCronJob(
   }
 }
 
-cron.schedule('*/7 * * * * *', async () => {
+cron.schedule('*/9 * * * * *', async () => {
   await callCronJobs(socketio);
 });
 module.exports = {

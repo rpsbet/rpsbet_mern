@@ -46,6 +46,77 @@ const generateReferralCode = () => {
   }
   return referralCode;
 };
+
+// routes/auth.js (or wherever your auth routes live)
+router.post('/phantom', async (req, res) => {
+  const { walletAddress } = req.body;
+  if (!walletAddress) {
+    return res.json({ success: false, error: 'Missing wallet address' });
+  }
+
+  try {
+    // 1) Check if there's any user who has this address in accounts
+    let user = await User.findOne({ accounts: walletAddress });
+
+    if (user) {
+      // Existing user found. We "log them in" by returning a JWT.
+      const token = jwt.sign(
+        { id: user._id, is_admin: user.is_admin },
+        process.env.SECRET_OR_KEY,
+        { expiresIn: '7d' }
+      );
+      return res.json({
+        success: true,
+        message: "WELCOME BACK DEGEN!",
+        token,
+        user
+      });
+    }
+
+    // 2) If not found, create a new user
+    // e.g. let's default username to the last 6 chars of the wallet
+    const lastSix = walletAddress.slice(-6);
+    const username = `SOL_${lastSix}`;
+
+    const newUser = new User({
+      username,
+      password: generateRandomPassword(),
+      bio: '',
+      totalWagered: 0,
+      balance: 0,
+      rewards: [],
+      credit_score: 1000,
+      ai_mode: 'Random',
+      status: 'off',
+      accounts: [walletAddress],
+      avatar: '',
+      referralCode: generateReferralCode(),
+      referralId: null
+    });
+    await newUser.save();
+
+    // 3) Return the JWT for the new user
+    const token = jwt.sign(
+      { id: newUser._id, is_admin: newUser.is_admin },
+      process.env.SECRET_OR_KEY,
+      { expiresIn: '7d' }
+    );
+
+    return res.json({
+      success: true,
+      message: "Degen registration detected...",
+      token,
+      user: newUser
+    });
+  } catch (error) {
+    console.error('Error in /auth/phantom route:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Server error connecting Phantom wallet.'
+    });
+  }
+});
+
 // Google OAuth 2.0 login route
 router.post('/google', async (req, res) => {
   const { token } = req.body;
@@ -164,6 +235,40 @@ router.post('/', (req, res) => {
     console.error('Error finding user:', error);
     return res.status(500).json({ success: false, error: 'Internal server error' });
   });
+});
+
+router.post('/users/add-wallet', auth, async (req, res) => {
+  try {
+    const { walletAddress } = req.body;
+    const userId = req.user._id; // from token, for example
+
+    // Check if any user has this wallet (besides the current user).
+    const foundUser = await User.findOne({
+      _id: { $ne: userId },
+      accounts: walletAddress,
+    });
+    if (foundUser) {
+      return res.json({
+        success: false,
+        message: 'Wallet address already associated with another user.',
+      });
+    }
+
+    // Otherwise, add to the current user if not already in array
+    const currentUser = await User.findById(userId);
+    if (!currentUser.accounts.includes(walletAddress)) {
+      currentUser.accounts.push(walletAddress);
+      await currentUser.save();
+    }
+
+    return res.json({ success: true, updatedUser: currentUser });
+  } catch (err) {
+    console.error('Error adding wallet address:', err);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error adding wallet address.',
+    });
+  }
 });
 
 

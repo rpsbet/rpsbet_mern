@@ -33,7 +33,6 @@ import { YouTubeVideo } from '../../components/YoutubeVideo';
 import BetAmountInput from '../../components/BetAmountInput';
 import {
   validateIsAuthenticated,
-  callBot,
   validateBetAmount,
   validateBankroll
 } from '../modal/betValidations';
@@ -494,21 +493,20 @@ function QuickShoot(props) {
     localStorage.setItem('hideConfirmModal', checked ? 'true' : 'false');
   };
 
-  const onBtnBetClick = (position) => {
+  const onBtnBetClick = async (position) => {
     setLocalSelectedQs(position);
     if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) return;
 
+    // If the room creator is the same as the current user, try attaching a bot
     if (creator_id && user_id && creator_id.toString() === user_id.toString()) {
-      // creator calls bot
-      callBot(creator_id, roomInfo._id, user_id, isDarkMode, async () => {
-        const botAttached = await updateRoomBot(roomInfo._id);
-        if (botAttached) {
-          setBotsCount((prev) => prev + 1);
-        }
-      });
-      return;
+      const botAttached = await updateRoomBot(roomInfo._id);
+      if (botAttached) {
+        setBotsCount((prev) => prev + 1);
+      }
+      return; 
     }
 
+    // Otherwise, proceed with normal bet validations
     if (!validateBetAmount(bet_amount, balance, isDarkMode)) return;
 
     const costPerSide = bet_amount / (qs_game_type - 1);
@@ -527,6 +525,7 @@ function QuickShoot(props) {
 
     updateSelectedQs(position, () => {
       if (localStorage.getItem('hideConfirmModal') === 'true') {
+        // If private room but password not verified yet, ask for password
         if (roomInfo.is_private && passwordCorrect !== true) {
           openGamePasswordModal();
         } else {
@@ -544,14 +543,13 @@ function QuickShoot(props) {
     });
   };
 
-  const handleBotClick = () => {
+  const handleBotClick = async () => {
     if (creator_id && user_id && creator_id.toString() === user_id.toString()) {
-      callBot(creator_id, roomInfo._id, user_id, isDarkMode, async () => {
-        const botAttached = await updateRoomBot(roomInfo._id);
-        if (botAttached) {
-          setBotsCount((prev) => prev + 1);
-        }
-      });
+      // Dispatch the action directly
+      const botAttached = await updateRoomBot(roomInfo._id);
+      if (botAttached) {
+        setBotsCount((prev) => prev + 1);
+      }
     }
   };
 
@@ -944,7 +942,8 @@ function QuickShoot(props) {
                       <span className="button-text">&nbsp;CALL BOT? [{botsCount}]</span>
                     </Button>
                     {botsCount > 0 && (
-                      <Button onClick={bootBots} className="hover-text-button">
+                      <Button variant="outlined"
+                      color='warning' onClick={bootBots} className="hover-text-button">
                         <FontAwesomeIcon className="button-icon" icon={faBan} />
                         <span className="button-text">&nbsp;KICK BOTS?</span>
                       </Button>

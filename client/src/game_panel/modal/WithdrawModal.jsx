@@ -276,7 +276,6 @@ function WithdrawModal(props) {
 
       if (result.data.success) {
         alertModal(isDarkMode, result.data.message, '-cat');
-        setBalance(result.data.balance);
         addNewTransaction(result.data.newTransaction);
         setIsLoading(false);
         // closeModal(); // Optional if you want to close after success

@@ -11,9 +11,13 @@ const Transaction = require('../../model/Transaction');
 const GameLog = require('../../model/GameLog');
 const socket = require('../../socketController')
 const moment = require('moment');
-const { predictNext, reinforcementAI, innovate, patternBasedAI, counterSwitchAI, counterRandomness, counterRandomness2, NPC, generatePattern } = require('./predictNext');
-const { NPC_qs, patternBasedAI_qs, innovate_qs, getRandomItem_qs, counterSwitchAI_qs, generatePattern_qs, counterRandomness_qs, getCopyCatItem_qs, predictNextQs, reinforcementAI_qs } = require('./predictNextQs');
-
+const { predictNext, reinforcementAI, predictNextOpenAI } = require('./predictNext');
+const {
+    getRandomItem_qs,
+    predictNextQs,
+    reinforcementAI_qs,
+    openAIPredictionAI_qs,
+} = require('./predictNextQs');
 const saveDocumentWithRetry = require('./retrySave');
 const check_access_time = require('../../helper/util/checkAccessTime');
 const { convertGameLogToHistoryStyle } = require('./convertGameLogToHistoryStyle');
@@ -31,7 +35,7 @@ const addToQueue = async (req, bot = false) => {
             rain,
             platform
         ] = await Promise.all([taxPromise, rainPromise, platformPromise]);
-
+        console.log("res", req.body)
         let responseData = {};
         let gameLogArray = [];
         let user;
@@ -148,17 +152,17 @@ const addToQueue = async (req, bot = false) => {
             if (accessory) {
                 const item = await Item.findOne({ image: accessory }).select('CP');
                 const itemJ = await Item.findOne({ image: accessoryJ }).select('DP');
-            
+
                 // Default CP or DP to 0 if they are null or undefined
                 const cp = item ? item.CP || 0 : 0;
                 const dp = itemJ ? itemJ.DP || 0 : 0;
-            
+
                 // Calculate commission
                 commission = cp - dp + parseFloat(tax.value);
             } else {
                 commission = parseFloat(tax.value); // If no accessory, use tax.value directly
             }
-            
+
             // Ensure commission is at least 1
             if (commission < 1) {
                 commission = 1;
@@ -244,43 +248,12 @@ const addToQueue = async (req, bot = false) => {
                     let nextItem;
 
                     switch (roomInfo['selectedStrategy']) {
-                        case 'Random':
-                            nextItem = await getRandomItem();
-                            break;
-                        case 'Martingale':
-                            nextItem = await getRandomItem();
-                            break;
-                        case 'Hertz':
-                            nextItem = await patternBasedAI(allBetItems);
-                            break;
-                        case 'Feedback':
-                            nextItem = await counterSwitchAI(allBetItems);
-                            break;
-                        case 'Skill-issue-old':
-                            nextItem = await counterRandomness(allBetItems);
-                            break;
-                        case 'Skill-issue':
-                            nextItem = await counterRandomness(allBetItems);
-                            break;
-                        case 'NPC':
-                            nextItem = await NPC(allBetItems);
-                            break;
-                        case 'Tesla':
 
-                            nextItem = await generatePattern(allBetItems);
-                            break;
-                        case 'CopyCat':
-                            nextItem = await getCopyCatItem(allBetItems);
-                            break;
                         case 'Markov':
                             nextItem = await getNextItemUsingMarkov(allBetItems);
                             break;
-                        case 'Hidden Markov':
-                            nextItem = await predictNext(allBetItems);
-                            break;
-                        case 'Innovate':
-                            const counterMove = await innovate(allBetItems);
-                            nextItem = counterMove.move;
+                        case 'GPT3':
+                            nextItem = await predictNextOpenAI(allBetItems);
                             break;
 
                         default:
@@ -592,50 +565,24 @@ const addToQueue = async (req, bot = false) => {
 
                     let nextItem;
                     switch (roomInfo['selectedStrategy']) {
-                        case 'Random':
-                            nextItem = await getRandomItem_qs(roomInfo['qs_game_type']);
-                            break;
-                        case 'Martingale':
-                            nextItem = await getRandomItem_qs(roomInfo['qs_game_type']);
-                            break;
-                        case 'Hertz':
-                            nextItem = await patternBasedAI_qs(allBetItems, roomInfo['qs_game_type']);
-                            break;
-                        case 'Feedback':
-                            nextItem = await counterSwitchAI_qs(allBetItems, roomInfo['qs_game_type']);
-                            break;
-                        case 'Skill-issue-old':
-                            nextItem = await counterRandomness_qs(allBetItems, roomInfo['qs_game_type']);
-                            break;
-                        case 'Skill-issue':
-                            nextItem = await counterRandomness_qs(allBetItems, roomInfo['qs_game_type']);
-                            break;
-                        case 'NPC':
-                            nextItem = await NPC_qs(allBetItems, roomInfo['qs_game_type']);
-                            break;
-                        case 'Tesla':
-                            nextItem = await generatePattern_qs(allBetItems, roomInfo['qs_game_type']);
-                            break;
-                        case 'CopyCat':
-                            nextItem = await getCopyCatItem_qs(allBetItems, roomInfo['qs_game_type']);
-                            break;
                         case 'Markov':
-                            nextItem = await getNextItemUsingMarkov_qs(allBetItems, roomInfo['qs_game_type']);
+                            nextItem = await getNextItemUsingMarkov_qs(
+                                allBetItems,
+                                roomInfo['qs_game_type'],
+                            );
                             break;
-                        case 'Hidden Markov':
-                            nextItem = await predictNextQs(allBetItems, roomInfo['qs_game_type']);
-                            break;
-                        case 'Innovate':
-                            let nextState;
-                            nextState = await innovate_qs(allBetItems, roomInfo['qs_game_type']);
-                            nextItem = nextState.move;
+                        case 'GPT3':
+                            nextItem = await openAIPredictionAI_qs(
+                                allBetItems,
+                                roomInfo['qs_game_type'],
+                            );
                             break;
                         default:
-                            const move = await reinforcementAI_qs(allBetItems, roomInfo['qs_game_type']);
-                            nextItem = {
-                                move: move.move,
-                                risk: move.risk
-                            }
+                            const move = await reinforcementAI_qs(
+                                allBetItems,
+                                roomInfo['qs_game_type'],
+                            );
+                            nextItem = move.move;
                             break;
                     }
                     bet_item = new QsBetItem({
@@ -661,14 +608,14 @@ const addToQueue = async (req, bot = false) => {
                 const randomNumber = Math.random();
                 if (randomNumber <= 0.63 && betAmount > 4) {
                     if (bot) {
-                      // Generate possible moves, excluding the current `bet_item.qs`
-                      const possibleMoves = Array.from({ length: roomInfo['qs_game_type'] }, (_, i) => i)
-                        .filter(move => move !== Number(bet_item.qs));
-                  
-                      // Randomly select a move from the filtered options
-                      req.body.selected_qs_position = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+                        // Generate possible moves, excluding the current `bet_item.qs`
+                        const possibleMoves = Array.from({ length: roomInfo['qs_game_type'] }, (_, i) => i)
+                            .filter(move => move !== Number(bet_item.qs));
+
+                        // Randomly select a move from the filtered options
+                        req.body.selected_qs_position = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
                     }
-                  }
+                }
                 // deduct the joiner's bet
                 newTransactionAmount -= betAmount;
                 roomInfo['user_bet'] = parseFloat(roomInfo['user_bet']);

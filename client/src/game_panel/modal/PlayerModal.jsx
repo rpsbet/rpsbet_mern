@@ -8,16 +8,15 @@ import {
   Button,
   Tabs,
   Tab,
-  TextField,
-  Table,
-  TableBody,
-  TableRow,
-  TableCell,
+  IconButton,
+  useMediaQuery,
+  Grid,
+  Chip,
   Typography,
   ThemeProvider,
 } from '@mui/material';
 import { Warning as WarningIcon } from '@mui/icons-material';
-import { FileCopy as FileCopyIcon, Info as InfoIcon } from '@mui/icons-material';
+import { FileCopy as FileCopyIcon, Info as InfoIcon, Link as LinkIcon } from '@mui/icons-material';
 
 import LoadingOverlay from 'react-loading-overlay';
 import styled from 'styled-components';
@@ -32,12 +31,12 @@ import {
   faRobot,
 } from '@fortawesome/free-solid-svg-icons';
 
-import TipModal from './TipModal'; // <--- IMPORT THE NEW TipModal COMPONENT
+import TipModal from './TipModal';
 
 import axios from '../../util/Api';
 import history from '../../redux/history';
 
-import { setBalance, setUserInfo } from '../../redux/Auth/user.actions';
+import { setUserInfo } from '../../redux/Auth/user.actions';
 import { setCurrentOfferTargetInfo } from '../../redux/Loan/loan.action';
 import { openOfferLoanModal } from '../../redux/Notification/notification.actions';
 import { setChatRoomInfo, addNewTransaction } from '../../redux/Logic/logic.actions';
@@ -114,16 +113,12 @@ function PlayerModal(props) {
     getCustomerStatisticsData,
     acGetCustomerInfo,
     setChatRoomInfo,
-    setBalance: _setBalance,
     queryProducts: _queryProducts,
     getSpendingHabit: _getSpendingHabit,
     addNewTransaction: _addNewTransaction,
     openOfferLoanModal: _openOfferLoanModal,
     setCurrentOfferTargetInfo: _setCurrentOfferTargetInfo,
   } = props;
-
-  // Move the theme creation inside the component
-  const theme = getCustomTheme(isDarkMode ? 'dark' : 'light');
 
   // -----------------------------
   // Local State
@@ -133,6 +128,7 @@ function PlayerModal(props) {
   const [avatar, setAvatar] = useState('');
   const [accessory, setAccessory] = useState('');
   const [bio, setBio] = useState('');
+  const [accounts, setAccounts] = useState([]);
   const [rank, setRank] = useState('');
   const [dateJoined, setDateJoined] = useState('');
   const [creditScore, setCreditScore] = useState(0);
@@ -206,6 +202,7 @@ function PlayerModal(props) {
       if (userData) {
         setUsername(userData.username);
         setAvatar(userData.avatar);
+        setAccounts(userData.accounts);
         setAccessory(userData.accessory);
         setBio(userData.bio || '');
         setRank(userData.totalWagered);
@@ -301,6 +298,8 @@ function PlayerModal(props) {
         };
     }
   };
+  const theme = getCustomTheme(isDarkMode ? 'dark' : 'light');
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm')); 
 
   const { color, title, message: spendingMessage, progress } = getStatusDetails(status);
   const barStyle = {
@@ -332,6 +331,11 @@ function PlayerModal(props) {
   const isSystem = systemUsernames.includes(username);
 
   const isBioUrl = /^https?:\/\//.test(bio);
+  const shortenAddress = (address) => {
+    if (!address) return '';
+    return address.slice(0, 12) + '...' + address.slice(-12);
+  };
+
 
   // -----------------------------
   // Tip Modal Logic
@@ -362,7 +366,6 @@ function PlayerModal(props) {
 
       if (result.data.success) {
         alertModal(isDarkMode, result.data.message, '-cat');
-        _setBalance(result.data.balance);
         _addNewTransaction(result.data.newTransaction);
         setIsLoading(false);
         closeModal();
@@ -562,7 +565,54 @@ function PlayerModal(props) {
                       )}
                     </Box>
                   </Box>
+                  <Box
+                      sx={{
+                        mb: 2,
+                        background: 'rgba(170, 170, 170, 0.06)',
+                        borderRadius: '0.3em',
+                        p: '20px',
+                      }}
+                    >
+                      <Typography variant="h6" gutterBottom>
+                        A.K.A
+                      </Typography>
+                      {accounts.length === 0 ? (
+                        <p>No associated accounts found.</p>
+                      ) : (
+                        <Grid container spacing={1}>
+                          {accounts.map((acc, index) => {
+                            // On mobile, show shortened version
+                            const displayed = isMobile ? shortenAddress(acc) : acc;
 
+                            return (
+                              <Grid item xs={12} key={index}>
+                                <Box display="flex" alignItems="center">
+                                  {/* Chip to display the address */}
+                                  <Chip
+                                    label={displayed}
+                                    variant="outlined"
+                                    // If you want a different color for the connected account:
+                                    // color={isConnected ? 'success' : 'default'}
+                                    sx={{ mr: 1 }}
+                                  />
+
+                                  {/* Link icon to Solscan.io/acc */}
+                                  <IconButton
+                                    component="a"
+                                    href={`https://solscan.io/account/${acc}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    size="small"
+                                  >
+                                    <LinkIcon fontSize="small" />
+                                  </IconButton>
+                                </Box>
+                              </Grid>
+                            );
+                          })}
+                        </Grid>
+                      )}
+                    </Box>
                   {/* Inventory */}
                   <MarketplaceContainer>
                     <Typography variant="h6" sx={{ mt: 2 }}>
@@ -699,7 +749,6 @@ const mapStateToProps = (state) => ({
 });
 
 const mapDispatchToProps = {
-  setBalance,
   setUserInfo,
   setChatRoomInfo,
   addNewTransaction,
