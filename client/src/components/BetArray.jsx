@@ -100,9 +100,11 @@ function BetArray({
   totalWagered,
   user_balance,
   user_id,
+  prompt,
   updateBetRangeFunction,
   predictedBetAmount,
   updateUserStrategy,
+  updateUserPrompt,
   getUser,
   betting,
   handleSwitchChange,
@@ -537,7 +539,9 @@ function BetArray({
         strategies={strategies}
         ai_mode={ai_mode}
         user_id={user_id}
+        prompt={prompt}
         updateUserStrategy={updateUserStrategy}
+        updateUserPrompt={updateUserPrompt}
         settings_panel_opened={settings_panel_opened}
         setSelectedStrategy={setSelectedStrategy}
         settingsRef={settingsRef}
@@ -1111,6 +1115,7 @@ const mapStateToProps = (state) => ({
   qsbetitems: state.logic.qsbetitems,
   user_balance: state.auth.user.balance,
   user_id: state.auth.user._id,
+  prompt: state.auth.user.prompt,
   user_range: state.auth.user.range,
   myGames: state.logic.myGames,
   solPrice: state.logic.solPrice,

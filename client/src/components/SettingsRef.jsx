@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useDispatch } from 'react-redux';
+import { setFocused } from '../redux/Auth/user.actions';
 import {
   Paper,
   Button,
@@ -7,8 +9,7 @@ import {
   TextField,
   useMediaQuery,
   Typography,
-  Box,
-  IconButton
+  Box
 } from '@mui/material';
 import LockIcon from '@mui/icons-material/Lock';
 import { green, yellow } from '@mui/material/colors';
@@ -28,18 +29,25 @@ const SettingsRef = ({
   rank,
   user_id,
   ai_mode,
+  prompt,
   setSelectedStrategy,
   settings_panel_opened,
   settingsRef,
   selectedStrategy,
-  updateUserStrategy,
+  updateUserStrategy,    // from props
+  updateUserPrompt,      // from props
   saving = false,
   gamemode = 'Standard',
 }) => {
+
+  const dispatch = useDispatch();
+
   const [descriptionOpen, setDescriptionOpen] = useState(false);
   const [strengthsOpen, setStrengthsOpen] = useState(false);
-  const [prompt, setPrompt] = useState('');
-  const [debouncedPrompt, setDebouncedPrompt] = useState('');
+
+  // Local prompt state (rename to avoid overshadowing the prop "prompt")
+  const [localPrompt, setLocalPrompt] = useState(prompt || '');
+
   const isMobile = useMediaQuery('(max-width: 768px)');
 
   const filteredStrategies = strategies.filter(
@@ -64,25 +72,42 @@ const SettingsRef = ({
     return bars;
   };
 
+  // Debounced function to update user’s prompt in the backend
   const debouncedUpdate = useRef(
-    debounce((newPrompt) => setDebouncedPrompt(newPrompt), 500)
+    debounce((newPrompt) => {
+      // Actual call to your Redux action or API
+      updateUserPrompt(user_id, newPrompt);
+    }, 3000)
   ).current;
 
+  // Whenever the parent `prompt` changes, update local state
+  // so the TextField always shows the latest from props.
+  useEffect(() => {
+    setLocalPrompt(prompt || '');
+  }, [prompt]);
+
+  // Handle text changes in the "Custom Prompt" field
   const handlePromptChange = (e) => {
+    console.log("e.target.value")
     const newValue = e.target.value;
-    setPrompt(newValue);
+    setLocalPrompt(newValue);
+
+    // Debounce the actual update call
     debouncedUpdate(newValue);
   };
 
+  // Example of removing the forced default from gamemode
+  // If you do want a default prompt for new game modes, you can keep an effect like:
+  /*
   useEffect(() => {
-    // Update the prompt default text based on gamemode
     const defaultText =
       gamemode === 'Quick Shoot'
         ? 'If the user clicks top corner, go for bottom corner.'
         : 'Play predictable patterns, but if they increase their bet amount, switch to predict their moves.';
-    setPrompt(defaultText);
-    setDebouncedPrompt(defaultText);
-  }, [gamemode]);
+    setLocalPrompt(defaultText);
+    debouncedUpdate(defaultText);
+  }, [gamemode, debouncedUpdate]);
+  */
 
   return (
     <Box
@@ -93,7 +118,9 @@ const SettingsRef = ({
         backgroundColor: (theme) =>
           theme.palette.mode === 'dark' ? '#2a2a2a' : '#f9f9f9',
         boxShadow: (theme) =>
-          theme.palette.mode === 'dark' ? '0 0 8px rgba(0,0,0,0.8)' : '0 0 10px rgba(0,0,0,0.2)',
+          theme.palette.mode === 'dark'
+            ? '0 0 8px rgba(0,0,0,0.8)'
+            : '0 0 10px rgba(0,0,0,0.2)',
         overflowY: 'auto',
         transition: 'transform 0.3s ease-in-out',
         padding: 2,
@@ -127,13 +154,6 @@ const SettingsRef = ({
             {selectedStrategy || ai_mode}
           </Typography>
 
-          <Box
-            sx={{
-              height: '1px',
-              backgroundColor: (theme) => theme.palette.divider,
-              mb: 1
-            }}
-          />
           {/* Description */}
           {!isMobile && (
             <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
@@ -228,6 +248,7 @@ const SettingsRef = ({
               my: 1
             }}
           />
+
         </Box>
       ))}
 
@@ -235,7 +256,10 @@ const SettingsRef = ({
         <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
           Model Selection
         </Typography>
-        <Box className="slippage-select-panel" sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+        <Box
+          className="slippage-select-panel"
+          sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}
+        >
           {sortedStrategies.map((strategy, index) => {
             const isUnlocked = rank >= strategy.levelToUnlock;
             const isActive = (selectedStrategy || ai_mode) === strategy.name;
@@ -301,10 +325,7 @@ const SettingsRef = ({
 
       {/* Prompt Box at the Bottom */}
       {selectedStrategy === 'GPT3' && (
-        <Paper
-          variant="outlined"
-
-        >
+        <Paper variant="outlined">
           <TextField
             multiline
             rows={4}
@@ -312,9 +333,12 @@ const SettingsRef = ({
             variant="filled"
             fullWidth
             label="Custom Prompt"
-            value={prompt}
+            value={localPrompt}
             onChange={handlePromptChange}
+            onFocus={() => dispatch(setFocused(true))}
+            onBlur={() => dispatch(setFocused(false))}
           />
+          {/* Show spinner if saving is true */}
           {saving && (
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 1 }}>
               <CircularProgress color="error" />
@@ -331,6 +355,7 @@ function StrengthsTable({ strategy, calculateBarWidths }) {
   return (
     <Box component="table" sx={{ width: '100%', mt: 1 }}>
       <Box component="tbody">
+        {/* SPEED */}
         <Box component="tr">
           <Box component="th" scope="row" sx={{ textAlign: 'left' }}>
             Speed
@@ -339,11 +364,7 @@ function StrengthsTable({ strategy, calculateBarWidths }) {
             ({strategy.speed}%)
           </Box>
           {calculateBarWidths(strategy.speed).map((width, idx) => (
-            <Box
-              component="td"
-              key={idx}
-              sx={{ width: '50px', p: 0 }}
-            >
+            <Box component="td" key={idx} sx={{ width: '50px', p: 0 }}>
               <Box
                 sx={{
                   height: 6,
@@ -361,7 +382,7 @@ function StrengthsTable({ strategy, calculateBarWidths }) {
             </Box>
           ))}
         </Box>
-
+        {/* REASONING */}
         <Box component="tr">
           <Box component="th" scope="row" sx={{ textAlign: 'left' }}>
             Reasoning
@@ -370,11 +391,7 @@ function StrengthsTable({ strategy, calculateBarWidths }) {
             ({strategy.reasoning}%)
           </Box>
           {calculateBarWidths(strategy.reasoning).map((width, idx) => (
-            <Box
-              component="td"
-              key={idx}
-              sx={{ width: '50px', p: 0 }}
-            >
+            <Box component="td" key={idx} sx={{ width: '50px', p: 0 }}>
               <Box
                 sx={{
                   height: 6,
@@ -392,7 +409,7 @@ function StrengthsTable({ strategy, calculateBarWidths }) {
             </Box>
           ))}
         </Box>
-
+        {/* PREDICTABILITY */}
         <Box component="tr">
           <Box component="th" scope="row" sx={{ textAlign: 'left' }}>
             Predictability
@@ -401,11 +418,7 @@ function StrengthsTable({ strategy, calculateBarWidths }) {
             ({strategy.predictability}%)
           </Box>
           {calculateBarWidths(strategy.predictability).map((width, idx) => (
-            <Box
-              component="td"
-              key={idx}
-              sx={{ width: '50px', p: 0 }}
-            >
+            <Box component="td" key={idx} sx={{ width: '50px', p: 0 }}>
               <Box
                 sx={{
                   height: 6,

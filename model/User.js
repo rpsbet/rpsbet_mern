@@ -39,6 +39,14 @@ const UserSchema = new Schema({
     type: String,
     default: 'Markov'
   },
+  prompt: {
+    type: String,
+    default: 'You are an expert in Rock Paper Scissors.'
+  },
+  ai_mode: {
+    type: String,
+    default: 'Markov'
+  },
   range: {
     type: [Number],
     default: [0.0005, 0.001],

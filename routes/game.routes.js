@@ -209,6 +209,28 @@ router.patch('/strategies/:user_id', async (req, res) => {
     });
   }
 });
+router.patch('/prompt/:user_id', async (req, res) => {
+  const { user_id } = req.params;
+  const { prompt } = req.body;
+
+  try {
+    const user = await User.findByIdAndUpdate(user_id, { prompt: prompt }, { new: true });
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'user not found' });
+    }
+
+    res.json({
+      success: true,
+      message: 'Successful!'
+    });
+  } catch (err) {
+    res.json({
+      success: false,
+      err: err.message
+    });
+  }
+});
 
 router.post('/detachPlayer/:room_id', auth, async (req, res) => {
   const { room_id } = req.params;

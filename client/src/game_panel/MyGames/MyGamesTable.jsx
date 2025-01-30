@@ -16,7 +16,8 @@ import {
   reCreateRoom,
   getRoomList,
   endGame,
-  coHost
+  coHost,
+  updateUserPrompt
 } from '../../redux/Logic/logic.actions';
 import { getRank } from '../../util/getRank';
 import { faMoneyCheckAlt } from '@fortawesome/free-solid-svg-icons';
@@ -472,7 +473,7 @@ class MyGamesTable extends Component {
   }
 
   render() {
-    const { loading, strategies, solPrice, updateRoomStrategy, isLowGraphics, isDarkMode } = this.props;
+    const { loading, strategies, updateUserPrompt, solPrice, updateRoomStrategy, isLowGraphics, isDarkMode } = this.props;
     const { isLoading, anchorEl, coHostAmount, selectedRow, selectedStrategy, settings_panel_opened, isFocused, selectedFilter, sortAnchorEl, selectedSort } = this.state;
     const defaultOptions = {
       loop: this.props.isLowGraphics ? false : true,
@@ -529,12 +530,14 @@ class MyGamesTable extends Component {
               strategies={strategies}
               ai_mode={selectedRow.selectedStrategy}
               user_id={selectedRow._id}
+              prompt={this.props.user.prompt}
               rank={getRank(this.props.user.totalWagered)}
               settings_panel_opened={settings_panel_opened}
               setSelectedStrategy={this.setSelectedStrategy}
               settingsRef={this.settingsRef}
               selectedStrategy={selectedStrategy}
               updateUserStrategy={updateRoomStrategy}
+              updateUserPrompt={updateUserPrompt}
             />
           )}
 
@@ -1044,6 +1047,7 @@ const mapDispatchToProps = {
   updateRoomStrategy,
   reCreateRoom,
   editPayout,
+  updateUserPrompt,
   endGame,
   updateTutorialCompleted
 };

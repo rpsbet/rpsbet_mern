@@ -106,6 +106,7 @@ function TabbedContent(props) {
     selected_rps,
     total_wagered,
     updateUserStrategy,
+    updateUserPrompt,
     actionList,
     getRoomData,
     qsbetitems,
@@ -308,6 +309,7 @@ function TabbedContent(props) {
                 bet_amount={bet_amount}
                 pr={roomInfo.pr}
                 updateUserStrategy={updateUserStrategy}
+                updateUserPrompt={updateUserPrompt}
                 bankroll={bankroll}
                 predictedBetAmount={predictedBetAmount}
                 is_private={roomInfo.is_private}
@@ -332,6 +334,7 @@ function TabbedContent(props) {
                 endgame_type={roomInfo.endgame_type}
                 attached={attached}
                 updateUserStrategy={updateUserStrategy}
+                updateUserPrompt={updateUserPrompt}
                 borderColor={borderColor}
                 bgColorChanged={bgColorChanged}
                 updateSelectedQs={updateSelectedQs}
