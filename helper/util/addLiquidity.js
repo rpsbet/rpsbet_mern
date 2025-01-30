@@ -1,68 +1,72 @@
-const assert = require('assert');
 const {
-  CurrencyAmount,
-  jsonInfo2PoolKeys,
-  Liquidity,
-  Percent,
-  Token,
+  ApiV3PoolInfoStandardItem,
   TokenAmount,
-} = require('@raydium-io/raydium-sdk');
-const { Keypair } = require('@solana/web3.js');
+  toToken,
+  Percent,
+  AmmV4Keys,
+  AmmV5Keys,
+} = require('@raydium-io/raydium-sdk-v2');
+const { initSdk, txVersion } = require('./config');
+const { isValidAmm } = require('./utils');
 const Decimal = require('decimal.js');
-const {
-  connection,
-  DEFAULT_TOKEN,
-  makeTxVersion,
-  wallet,
-} = require('./config');
-const { formatAmmKeysById } = require('./formatAmmKeysById');
-const { buildAndSendTx, getWalletTokenAccount } = require('./util');
+const BN = require('bn.js');
+const { PublicKey } = require('@solana/web3.js');
 
-async function ammAddLiquidity(input) {
-  const targetPoolInfo = await formatAmmKeysById(input.targetPool);
-  assert(targetPoolInfo, 'cannot find the target pool');
+const addLiquidity = async () => {
+  const raydium = await initSdk();
 
-  // -------- step 1: compute another amount --------
-  const poolKeys = jsonInfo2PoolKeys(targetPoolInfo);
-  const extraPoolInfo = await Liquidity.fetchInfo({ connection, poolKeys });
-  const { maxAnotherAmount, anotherAmount, liquidity } =
-    Liquidity.computeAnotherAmount({
-      poolKeys,
-      poolInfo: { ...targetPoolInfo, ...extraPoolInfo },
-      amount: input.inputTokenAmount,
-      anotherCurrency: input.quoteToken,
-      slippage: input.slippage,
-    });
+  // RAY-USDC pool
+  const poolId = '6UmmUiYoBjSrhakAobJw8BvkmJtDVxaeBtbt7rxWo1mg';
+  let poolKeys;
+  let poolInfo;
 
-  console.log('will add liquidity info', {
-    liquidity: liquidity.toString(),
-    liquidityD: new Decimal(liquidity.toString()).div(
-      10 ** extraPoolInfo.lpDecimals,
-    ),
+  if (raydium.cluster === 'mainnet') {
+    // Fetch pool info from API
+    const data = await raydium.api.fetchPoolById({ ids: poolId });
+    poolInfo = data[0];
+  } else {
+    // Fetch pool info from RPC method for devnet
+    const data = await raydium.liquidity.getPoolInfoFromRpc({ poolId });
+    poolInfo = data.poolInfo;
+    poolKeys = data.poolKeys;
+  }
+
+  if (!isValidAmm(poolInfo.programId))
+    throw new Error('Target pool is not an AMM pool');
+
+  const inputAmount = '1';
+  const r = raydium.liquidity.computePairAmount({
+    poolInfo,
+    amount: inputAmount,
+    baseIn: true,
+    slippage: new Percent(1, 100), // 1%
   });
 
-  // -------- step 2: make instructions --------
-  const addLiquidityInstructionResponse =
-    await Liquidity.makeAddLiquidityInstructionSimple({
-      connection,
-      poolKeys,
-      userKeys: {
-        owner: input.wallet.publicKey,
-        payer: input.wallet.publicKey,
-        tokenAccounts: input.walletTokenAccounts,
-      },
-      amountInA: input.inputTokenAmount,
-      amountInB: maxAnotherAmount,
-      fixedSide: 'a',
-      makeTxVersion,
-    });
-
-  return {
-    txids: await buildAndSendTx(
-      addLiquidityInstructionResponse.innerTransactions,
+  const { execute } = await raydium.liquidity.addLiquidity({
+    poolInfo,
+    poolKeys,
+    amountInA: new TokenAmount(
+      toToken(poolInfo.mintA),
+      new Decimal(inputAmount).mul(10 ** poolInfo.mintA.decimals).toFixed(0),
     ),
-    anotherAmount,
-  };
-}
+    amountInB: new TokenAmount(
+      toToken(poolInfo.mintB),
+      new Decimal(r.maxAnotherAmount.toExact())
+        .mul(10 ** poolInfo.mintB.decimals)
+        .toFixed(0),
+    ),
+    otherAmountMin: r.minAnotherAmount,
+    fixedSide: 'a',
+    txVersion,
+  });
 
-module.exports = { ammAddLiquidity };
+  const { txId } = await execute({ sendAndConfirm: true });
+  console.log('Liquidity added:', {
+    txId: `https://explorer.solana.com/tx/${txId}`,
+  });
+};
+
+// Uncomment the line below to execute
+// addLiquidity();
+
+module.exports = { addLiquidity };

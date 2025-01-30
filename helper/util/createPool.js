@@ -1,66 +1,93 @@
-const { BN } = require('bn.js');
 const {
-  Liquidity,
-  MAINNET_PROGRAM_ID,
-  Token,
-} = require('@raydium-io/raydium-sdk');
-const { Keypair, PublicKey } = require('@solana/web3.js');
-const Decimal = require('decimal.js');
+  MARKET_STATE_LAYOUT_V3,
+  AMM_V4,
+  OPEN_BOOK_PROGRAM,
+  FEE_DESTINATION_ID,
+  DEVNET_PROGRAM_ID,
+} = require('@raydium-io/raydium-sdk-v2');
+const { initSdk, txVersion } = require('./config');
+const { PublicKey } = require('@solana/web3.js');
+const { TOKEN_PROGRAM_ID } = require('@solana/spl-token');
+const BN = require('bn.js');
 
-const {
-  connection,
-  DEFAULT_TOKEN,
-  makeTxVersion,
-  PROGRAMIDS,
-} = require('./config');
+const createAmmPool = async ({ id }) => {
+  const raydium = await initSdk();
+  const marketId = new PublicKey(id);
 
-const { buildAndSendTx } = require('./util');
-
-const ZERO = new BN(0);
-
-async function ammCreatePool(input) {
-  // -------- step 1: make instructions --------
-  const balance = await connection.getBalance(input.wallet.publicKey);
-  console.log('Wallet SOL balance:', balance / 1e9);
-  if (balance < 2e9) {
-    // e.g. at least 2 SOL just to be safe
-    console.warn('Low SOL balance - might fail to create ATAs or wrap SOL');
+  // Get market info
+  const marketBufferInfo = await raydium.connection.getAccountInfo(marketId);
+  if (!marketBufferInfo) {
+    throw new Error('Market info not found');
   }
 
-  console.log('-----programid: ', PROGRAMIDS.OPENBOOK_MARKET);
-  try {
-    const initPoolInstructionResponse =
-      await Liquidity.makeCreatePoolV4InstructionV2Simple({
-        connection,
-        programId: PROGRAMIDS.AmmV4,
-        marketInfo: {
-          marketId: input.targetMarketId,
-          programId: PROGRAMIDS.OPENBOOK_MARKET,
-        },
-        baseMintInfo: input.baseToken,
-        quoteMintInfo: input.quoteToken,
-        baseAmount: input.addBaseAmount,
-        quoteAmount: input.addQuoteAmount,
-        startTime: new BN(Math.floor(input.startTime)),
-        ownerInfo: {
-          feePayer: input.wallet.publicKey,
-          wallet: input.wallet.publicKey,
-          tokenAccounts: input.walletTokenAccounts,
-          useSOLBalance: true,
-        },
-        associatedOnly: false,
-        checkCreateATAOwner: true,
-        makeTxVersion,
-        feeDestinationId: input.wallet.publicKey, // only mainnet use this
-      });
-    console.log('----create pool---');
-    const txids = await buildAndSendTx(
-      initPoolInstructionResponse.innerTransactions,
+  const { baseMint, quoteMint } = MARKET_STATE_LAYOUT_V3.decode(
+    marketBufferInfo.data,
+  );
+
+  // Fetch mint info
+  const baseMintInfo = await raydium.token.getTokenInfo(baseMint);
+  const quoteMintInfo = await raydium.token.getTokenInfo(quoteMint);
+  const baseAmount = new BN(1000);
+  const quoteAmount = new BN(1000);
+
+  if (
+    baseMintInfo.programId !== TOKEN_PROGRAM_ID.toBase58() ||
+    quoteMintInfo.programId !== TOKEN_PROGRAM_ID.toBase58()
+  ) {
+    throw new Error(
+      'AMM pools with OpenBook market only support TOKEN_PROGRAM_ID mints. Use CPMM pool for token-2022.',
     );
-    return { txids };
-  } catch (e) {
-    console.log('Error during create pool:', e);
   }
-}
 
-module.exports = { ammCreatePool };
+  if (
+    baseAmount
+      .mul(quoteAmount)
+      .lte(new BN(1).mul(new BN(10 ** baseMintInfo.decimals)).pow(new BN(2)))
+  ) {
+    throw new Error(
+      'Initial liquidity too low. Try adding more baseAmount/quoteAmount.',
+    );
+  }
+
+  const { execute, extInfo } = await raydium.liquidity.createPoolV4({
+    programId: AMM_V4,
+    marketInfo: {
+      marketId,
+      programId: OPEN_BOOK_PROGRAM,
+    },
+    baseMintInfo: {
+      mint: baseMint,
+      decimals: baseMintInfo.decimals,
+    },
+    quoteMintInfo: {
+      mint: quoteMint,
+      decimals: quoteMintInfo.decimals,
+    },
+    baseAmount,
+    quoteAmount,
+    startTime: new BN(0),
+    ownerInfo: {
+      useSOLBalance: true,
+    },
+    associatedOnly: false,
+    txVersion,
+    feeDestinationId: FEE_DESTINATION_ID,
+  });
+
+  // Execute transaction
+  const { txId } = await execute({ sendAndConfirm: true });
+  console.log(
+    'AMM pool created! txId:',
+    txId,
+    ', poolKeys:',
+    Object.keys(extInfo.address).reduce(
+      (acc, cur) => ({
+        ...acc,
+        [cur]: extInfo.address[cur].toBase58(),
+      }),
+      {},
+    ),
+  );
+};
+
+module.exports = { createAmmPool };

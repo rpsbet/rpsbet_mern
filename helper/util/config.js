@@ -1,73 +1,113 @@
-const bs58 = require('bs58');
 const {
-  ENDPOINT: _ENDPOINT,
-  Currency,
-  LOOKUP_TABLE_CACHE,
-  MAINNET_PROGRAM_ID,
-  RAYDIUM_MAINNET,
-  Token,
-  TOKEN_PROGRAM_ID,
+  Raydium,
   TxVersion,
-} = require('@raydium-io/raydium-sdk');
-const { Connection, Keypair, PublicKey } = require('@solana/web3.js');
+  parseTokenAccountResp,
+} = require('@raydium-io/raydium-sdk-v2');
+const { Connection, Keypair, clusterApiUrl } = require('@solana/web3.js');
+const {
+  TOKEN_PROGRAM_ID,
+  TOKEN_2022_PROGRAM_ID,
+} = require('@solana/spl-token');
+const bs58 = require('bs58');
 const dotenv = require('dotenv');
 
 // Load environment variables from .env file
 dotenv.config();
-
 const privateKeyBase58 = process.env.wk?.trim();
 if (!privateKeyBase58 || !/^[A-Za-z1-9]+$/.test(privateKeyBase58)) {
   throw new Error('Invalid private key in .env');
 }
+
 const secretKey = bs58.decode(privateKeyBase58);
-const wallet = Keypair.fromSecretKey(secretKey);
-const connection = new Connection('https://api.devnet.solana.com');
 
-const PROGRAMIDS = MAINNET_PROGRAM_ID;
-const ENDPOINT = _ENDPOINT;
-const RAYDIUM_MAINNET_API = RAYDIUM_MAINNET;
-const makeTxVersion = TxVersion.V0; // LEGACY
-const addLookupTableInfo = LOOKUP_TABLE_CACHE; // only mainnet. other = undefined
+const owner = Keypair.fromSecretKey(secretKey);
+const connection = new Connection('https://api.devnet.solana.com'); // Replace <YOUR_RPC_URL> with your RPC URL
+// const connection = new Connection(clusterApiUrl('devnet')); // Alternative for devnet
+const txVersion = TxVersion.V0; // or TxVersion.LEGACY
+const cluster = 'devnet'; // 'mainnet' | 'devnet'
 
-const DEFAULT_TOKEN = {
-  SOL: new Currency(9, 'USDC', 'USDC'),
-  WSOL: new Token(
-    TOKEN_PROGRAM_ID,
-    new PublicKey('So11111111111111111111111111111111111111112'),
-    9,
-    'WSOL',
-    'WSOL',
-  ),
-  USDC: new Token(
-    TOKEN_PROGRAM_ID,
-    new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'),
-    6,
-    'USDC',
-    'USDC',
-  ),
-  RAY: new Token(
-    TOKEN_PROGRAM_ID,
-    new PublicKey('4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R'),
-    6,
-    'RAY',
-    'RAY',
-  ),
-  'RAY_USDC-LP': new Token(
-    TOKEN_PROGRAM_ID,
-    new PublicKey('FGYXP4vBkMEtKhxrmEBcWN8VNmXX8qNgEJpENKDETZ4Y'),
-    6,
-    'RAY-USDC',
-    'RAY-USDC',
-  ),
+let raydium;
+
+const initSdk = async (params = { loadToken: false }) => {
+  if (raydium) return raydium;
+
+  if (connection.rpcEndpoint === clusterApiUrl('mainnet-beta')) {
+    console.warn(
+      'Using free RPC node might cause unexpected errors. Strongly suggest using a paid RPC node.',
+    );
+  }
+
+  console.log(`Connecting to RPC ${connection.rpcEndpoint} in ${cluster}`);
+
+  raydium = await Raydium.load({
+    owner,
+    connection,
+    cluster,
+    disableFeatureCheck: true,
+    disableLoadToken: !params.loadToken,
+    blockhashCommitment: 'finalized',
+    // urlConfigs: {
+    //   BASE_HOST: '<API_HOST>', // API URL configs, currently API doesn't support devnet
+    // },
+  });
+
+  /**
+   * By default: SDK will automatically fetch token account data when needed or any SOL balance changes.
+   * If you want to handle token accounts by yourself, set token account data after initializing the SDK.
+   * Code below shows how to do it.
+   * Note: After calling raydium.account.updateTokenAccount, Raydium will not automatically fetch token accounts.
+   */
+
+  /*  
+  raydium.account.updateTokenAccount(await fetchTokenAccountData());
+  connection.onAccountChange(owner.publicKey, async () => {
+    raydium.account.updateTokenAccount(await fetchTokenAccountData());
+  });
+  */
+
+  return raydium;
 };
 
+const fetchTokenAccountData = async () => {
+  const solAccountResp = await connection.getAccountInfo(owner.publicKey);
+  const tokenAccountResp = await connection.getTokenAccountsByOwner(
+    owner.publicKey,
+    { programId: TOKEN_PROGRAM_ID },
+  );
+  const token2022Req = await connection.getTokenAccountsByOwner(
+    owner.publicKey,
+    { programId: TOKEN_2022_PROGRAM_ID },
+  );
+
+  const tokenAccountData = parseTokenAccountResp({
+    owner: owner.publicKey,
+    solAccountResp,
+    tokenAccountResp: {
+      context: tokenAccountResp.context,
+      value: [...tokenAccountResp.value, ...token2022Req.value],
+    },
+  });
+
+  return tokenAccountData;
+};
+
+async function checkSolBalance() {
+  const lamports = await connection.getBalance(owner.publicKey);
+  const solBalance = lamports / 1_000_000_000;
+  console.log(`SOL Balance: ${solBalance} SOL`);
+}
+
+const grpcUrl = '<YOUR_GRPC_URL>'; // Replace <YOUR_GRPC_URL> with your gRPC URL
+const grpcToken = '<YOUR_GRPC_TOKEN>'; // Replace <YOUR_GRPC_TOKEN> with your gRPC token
+
 module.exports = {
-  wallet,
+  owner,
   connection,
-  PROGRAMIDS,
-  ENDPOINT,
-  RAYDIUM_MAINNET_API,
-  makeTxVersion,
-  addLookupTableInfo,
-  DEFAULT_TOKEN,
+  txVersion,
+  initSdk,
+  fetchTokenAccountData,
+  grpcUrl,
+  grpcToken,
+  cluster,
+  checkSolBalance,
 };

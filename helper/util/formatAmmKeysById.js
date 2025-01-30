@@ -11,10 +11,13 @@ const { PublicKey } = require('@solana/web3.js');
 const { connection } = require('./config');
 
 async function formatAmmKeysById(id) {
+  console.log('--formatAmmKeysById---', new PublicKey(id));
+  const balance = await connection.getBalance(id);
+  console.log(`AMM Account Balance: ${balance}`);
   const account = await connection.getAccountInfo(new PublicKey(id));
   if (account === null) throw new Error('Get id info error');
   const info = LIQUIDITY_STATE_LAYOUT_V4.decode(account.data);
-
+  console.log('----account---');
   const marketId = info.marketId;
   const marketAccount = await connection.getAccountInfo(marketId);
   if (marketAccount === null) throw new Error('Get market info error');
@@ -24,7 +27,7 @@ async function formatAmmKeysById(id) {
   const lpMintAccount = await connection.getAccountInfo(lpMint);
   if (lpMintAccount === null) throw new Error('Get LP mint info error');
   const lpMintInfo = SPL_MINT_LAYOUT.decode(lpMintAccount.data);
-
+  console.log('----formatAmmKeysById---');
   return {
     id,
     baseMint: info.baseMint.toString(),

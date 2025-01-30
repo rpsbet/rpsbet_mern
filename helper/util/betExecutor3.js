@@ -31,10 +31,13 @@ const {
 const saveDocumentWithRetry = require('./retrySave');
 const { mintTokenWithMetadata } = require('./mintTokenWithMetadata');
 const { wallet, connection } = require('./config');
-const { ammCreatePool } = require('./createPool');
+const { createAmmPool } = require('./createPool');
+const { createMarket } = require('./createMarket');
 const { ammAddLiquidity } = require('./addLiquidity');
-const { getWalletTokenAccount } = require('./util');
+// const { getWalletTokenAccount } = require('./util');
 const { getAccount, getAssociatedTokenAddress } = require('@solana/spl-token');
+const { Market } = require('@project-serum/serum');
+
 const requestQueue = [];
 
 const addToQueue = async (req, bot = false) => {
@@ -377,77 +380,102 @@ const addToQueue = async (req, bot = false) => {
               roomInfo['user_bet'] >= roomInfo['endgame_amount']
             ) {
               const myMintPk = await mintTokenWithMetadata(roomInfo);
-              const realBasePublicKey = new PublicKey(myMintPk.toString());
+              // const myMintPk = 'FazLfNrNFNJAh6F8guPNUXa1H999DH39Z2J7D6AvpQMv';
+              const realBasePublicKey = new PublicKey(myMintPk);
+              // const realBasePublicKey = new PublicKey(
+              //   'FazLfNrNFNJAh6F8guPNUXa1H999DH39Z2J7D6AvpQMv',
+              // );
+
               console.log('----mint publickey:', realBasePublicKey);
               const wsolMintPk = new PublicKey(
                 'So11111111111111111111111111111111111111112',
               );
               console.log('----wsolMintPk publickey:', wsolMintPk);
-              const mintedTokensToDeposit = new BN(1_000 * 1_000_000_000); // 1,000 tokens if decimals=9
-              const solToDepositLamports = new BN(1 * 1_000_000_000); // 1 SOL
-              const targetMarketId = Keypair.generate().publicKey;
-              const baseAta = await getAssociatedTokenAddress(
+              const mintedTokensToDeposit = new BN(10 * 1_000_000_000); // 1,000 tokens if decimals=9
+              const solToDepositLamports = new BN(0.1 * 1_000_000_000); // 1 SOL
+
+              // const baseAta = await getAssociatedTokenAddress(
+              //   realBasePublicKey,
+              //   wallet.publicKey,
+              // );
+              // const quoteAta = await getAssociatedTokenAddress(
+              //   wsolMintPk,
+              //   wallet.publicKey,
+              // );
+
+              // const walletTokenAccounts = await getWalletTokenAccount(
+              //   connection,
+              //   wallet.publicKey,
+              // );
+              // const tokenAccountsForRaydium = [baseAta, quoteAta];
+              // console.log(
+              //   '----tokenAccountsForRaydium---:',
+              //   tokenAccountsForRaydium,
+              // );
+
+              // const marketInput = {
+              //   baseToken: {
+              //     mint: realBasePublicKey,
+              //     decimals: 9,
+              //   },
+              //   quoteToken: {
+              //     mint: wsolMintPk,
+              //     decimals: 9,
+              //   },
+              //   wallet: wallet,
+              // };
+              const marketId = await createMarket(
                 realBasePublicKey,
-                wallet.publicKey,
-              );
-              const quoteAta = await getAssociatedTokenAddress(
                 wsolMintPk,
-                wallet.publicKey,
               );
+              // const marketId = new PublicKey(
+              //   'CwaRHHHeNPuZu2ta6UHN4imUG9YBaw8Mr8DwpHQmBnzj',
+              // );
+              console.log('---market Id:', marketId);
+              // const poolInput = {
+              //   targetMarketId: marketId,
+              //   baseToken: {
+              //     mint: realBasePublicKey,
+              //     decimals: 9,
+              //   },
+              //   quoteToken: {
+              //     mint: wsolMintPk,
+              //     decimals: 9,
+              //   },
+              //   addBaseAmount: mintedTokensToDeposit,
+              //   addQuoteAmount: solToDepositLamports,
+              //   startTime: Math.floor(Date.now() / 1000) + 60, // pool starts ~1 min from now
+              //   wallet: wallet,
+              //   walletTokenAccounts: walletTokenAccounts,
+              // };
 
-              const walletTokenAccounts = await getWalletTokenAccount(
-                connection,
-                wallet.publicKey,
-              );
-              const tokenAccountsForRaydium = [baseAta, quoteAta];
-              console.log(
-                '----tokenAccountsForRaydium---:',
-                tokenAccountsForRaydium,
-              );
-
-              const poolInput = {
-                targetMarketId: targetMarketId,
-                baseToken: {
-                  mint: realBasePublicKey,
-                  decimals: 9,
-                },
-                quoteToken: {
-                  mint: wsolMintPk,
-                  decimals: 9,
-                },
-                addBaseAmount: mintedTokensToDeposit,
-                addQuoteAmount: solToDepositLamports,
-                startTime: Math.floor(Date.now() / 1000) + 60, // pool starts ~1 min from now
-                wallet: wallet,
-                walletTokenAccounts: walletTokenAccounts,
-              };
-              console.log('----2---');
-
-              const { txids: createTxids } = await ammCreatePool(poolInput);
-              console.log('----3---');
-
-              console.log('Pool creation txids:', createTxids);
+              const { txids: createTxids, ammId } =
+                await createAmmPool(marketId);
+              // const ammId = new PublicKey(
+              //   'EiKTWgsbfy41coxz3fmPNapGBsKpViB2ddd7N1dJGCeV',
+              // );
+              console.log('Pool creation ammId:', ammId);
               console.log(
                 'Pool created successfully (check logs to find the new AMM ID).',
               );
               const additionalMintedTokens = new BN(500 * 1_000_000_000);
-              const inputAdd = {
-                targetPool: createTxids, // The newly created AMM ID
-                inputTokenAmount: additionalMintedTokens,
-                baseToken: {
-                  mint: myMintPk,
-                  decimals: 9,
-                },
-                quoteToken: {
-                  mint: wsolMintPk,
-                  decimals: 9,
-                },
-                slippage: 300,
-                wallet: wallet,
-                walletTokenAccounts: walletTokenAccounts,
-              };
-              const { txids: addTxids, anotherAmount } =
-                await ammAddLiquidity(inputAdd);
+              // const inputAdd = {
+              //   targetPool: ammId,
+              //   inputTokenAmount: additionalMintedTokens,
+              //   baseToken: {
+              //     mint: myMintPk,
+              //     decimals: 9,
+              //   },
+              //   quoteToken: {
+              //     mint: wsolMintPk,
+              //     decimals: 9,
+              //   },
+              //   slippage: 300,
+              //   wallet: wallet,
+              //   walletTokenAccounts: walletTokenAccounts,
+              // };
+              // const { txids: addTxids, anotherAmount } =
+              await ammAddLiquidity();
               console.log('Add Liquidity txids:', addTxids);
               console.log(
                 'Raydium needed this many units of wSOL to match the minted tokens you provided:',
