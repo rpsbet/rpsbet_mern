@@ -1368,9 +1368,7 @@ export const updateBankrollQs = bankroll => {
 };
 
 export const setRoomList = (newRoom) => (dispatch) => {
-  console.log("newRoom", newRoom)
   try {
-    // Get existing list (if any) from localStorage
     let roomList = JSON.parse(localStorage.getItem('roomList')) || [];
 
     if (Array.isArray(newRoom)) {

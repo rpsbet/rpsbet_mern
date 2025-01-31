@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   Tabs,
   Tab,
-  Checkbox,
   Skeleton,
   Box,
   Chip,
@@ -40,10 +39,6 @@ const StyledTab = styled(Tab)(({ theme, isDarkMode, active }) => ({
   '& .MuiTab-wrapper': {
     color: active ? '#ff0000' : isDarkMode ? '#aaa' : '#ccc',
   },
-}));
-
-const StyledCheckbox = styled(Checkbox)(({ theme, isDarkMode }) => ({
-  color: isDarkMode ? '#f9f9f9' : '#ff0000',
 }));
 
 const FlexContainer = styled('div')({
@@ -313,15 +308,13 @@ function TabbedContent(props) {
                 bankroll={bankroll}
                 predictedBetAmount={predictedBetAmount}
                 is_private={roomInfo.is_private}
-                endgame_type={roomInfo.endgame_type}
                 actionList={actionList}
                 getRoomData={getRoomData}
               />
             ) : roomInfo.game_type === 'Quick Shoot' ? (
               <QuickShoot
-              changeBgColor={changeBgColorQs}
-              onChangeState={onChangeState}
-
+                changeBgColor={changeBgColorQs}
+                onChangeState={onChangeState}
                 handleOpenPlayerModal={handleOpenPlayerModal}
                 handleClosePlayerModal={handleClosePlayerModal}
                 showPlayerModal={showPlayerModal}
@@ -331,7 +324,6 @@ function TabbedContent(props) {
                 result={result}
                 gameResult={gameResult}
                 getAttachedRooms={getAttachedRooms}
-                endgame_type={roomInfo.endgame_type}
                 attached={attached}
                 updateUserStrategy={updateUserStrategy}
                 updateUserPrompt={updateUserPrompt}

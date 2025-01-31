@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 const ChangePasswordRequestSchema = new Schema({
   user: {
     type: Schema.Types.ObjectId,
-    ref: 'User'
+    ref: 'rps_users'
   },
   created_at: {
     type: Date,

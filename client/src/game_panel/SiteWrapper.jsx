@@ -219,12 +219,6 @@ function SiteWrapper(props) {
     notificationSounds,
     isLowGraphics,
     showCookieConsent,
-    loading_user,
-    showListItemModal,
-    showDeListItemModal,
-    showConfirmTradeModal,
-    showGamePasswordModal,
-    selectedMainTabIndex,
     remainingLoans: propsRemainingLoans,
     getGlobalChatLogs,
     // dispatch actions
@@ -521,7 +515,7 @@ function SiteWrapper(props) {
 
       // ROOM LIST
       newSocket.on('UPDATED_ROOM_LIST', (data) => {
-        console.log("____room", data);
+        console.log("UPDATED_ROOM_LIST data", data)
         setRoomList(data);
       });
 
@@ -619,7 +613,6 @@ function SiteWrapper(props) {
           lastGlobalChat.time === data.time &&
           lastGlobalChat.message === data.message
         ) {
-          console.log('[Socket] Duplicate global chat => skip');
           return;
         }
 

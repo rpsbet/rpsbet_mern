@@ -800,9 +800,6 @@ function BetArray({
             {/* Adjust Bet Range */}
             <Box
               sx={{
-                pointerEvents: selectedStrategy === 'GPT3' ? 'none' : 'auto',
-                filter: selectedStrategy === 'GPT3' ? 'grayscale(100%)' : 'none',
-                opacity: selectedStrategy === 'GPT3' ? '0.3' : '1',
                 display: 'flex',
                 alignItems: 'center',
                 width: '100%',
@@ -821,9 +818,6 @@ function BetArray({
             {/* Min/Max Bet Display */}
             <Box
               sx={{
-                pointerEvents: selectedStrategy === 'GPT3' ? 'none' : 'auto',
-                filter: selectedStrategy === 'GPT3' ? 'grayscale(100%)' : 'none',
-                opacity: selectedStrategy === 'GPT3' ? '0.3' : '1',
                 display: 'flex',
                 padding: '0 10px',
                 flexDirection: 'row',
@@ -851,12 +845,10 @@ function BetArray({
                 justifyContent: 'center',
                 width: '100%',
                 mt: 1,
-                pointerEvents: selectedStrategy === 'GPT3' ? 'none' : 'auto',
-                filter: selectedStrategy === 'GPT3' ? 'grayscale(100%)' : 'none',
               }}
             >
               <Tooltip
-                title={selectedStrategy === 'GPT3' ? `NO BET RANGE FOR ${selectedStrategy}` : 'MIN & MAX BET VALUES'}
+                title={'MIN & MAX BET VALUES'}
               >
                 <Slider
                   value={range}

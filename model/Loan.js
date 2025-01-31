@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 const LoanerSchema = new Schema({
     user: {
         type: Schema.Types.ObjectId,
-        ref: 'User'
+        ref: 'rps_users'
     },
     amount: {
         type: Number,
@@ -35,7 +35,7 @@ const LoanerSchema = new Schema({
 const LoanSchema = new Schema({
     lender: {
         type: Schema.Types.ObjectId,
-        ref: 'User',
+        ref: 'rps_users',
         default: null
     },
     loaners: [LoanerSchema],

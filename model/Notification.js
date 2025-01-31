@@ -4,12 +4,12 @@ const Schema = mongoose.Schema;
 const NotificationSchema = new Schema({
   from: {
     type: Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'rps_users',
     index: true // Indexing the 'from' field
   },
   to: {
     type: Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'rps_users',
     index: true // Indexing the 'to' field
   },
   message: {

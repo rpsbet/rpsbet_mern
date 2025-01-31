@@ -34,21 +34,22 @@ const SettingsRef = ({
   settings_panel_opened,
   settingsRef,
   selectedStrategy,
-  updateUserStrategy,    // from props
-  updateUserPrompt,      // from props
-  saving = false,
-  gamemode = 'Standard',
+  updateUserStrategy,
+  updateUserPrompt,
 }) => {
 
   const dispatch = useDispatch();
 
   const [descriptionOpen, setDescriptionOpen] = useState(false);
   const [strengthsOpen, setStrengthsOpen] = useState(false);
-
-  // Local prompt state (rename to avoid overshadowing the prop "prompt")
+  const [saving, setSaving] = useState(false);
   const [localPrompt, setLocalPrompt] = useState(prompt || '');
 
+  const debouncedUpdateRef = useRef(null);
+  const timeoutRef = useRef(null);
+
   const isMobile = useMediaQuery('(max-width: 768px)');
+  const isGPT3Selected = selectedStrategy === 'GPT3' || ai_mode === 'GPT3' && !selectedStrategy;
 
   const filteredStrategies = strategies.filter(
     (strategy) => strategy.name === (selectedStrategy || ai_mode)
@@ -72,42 +73,44 @@ const SettingsRef = ({
     return bars;
   };
 
-  // Debounced function to update user’s prompt in the backend
-  const debouncedUpdate = useRef(
-    debounce((newPrompt) => {
-      // Actual call to your Redux action or API
-      updateUserPrompt(user_id, newPrompt);
-    }, 3000)
-  ).current;
+  useEffect(() => {
+    if (debouncedUpdateRef.current) {
+      debouncedUpdateRef.current.cancel();
+    }
 
-  // Whenever the parent `prompt` changes, update local state
-  // so the TextField always shows the latest from props.
+    debouncedUpdateRef.current = debounce(async (newPrompt) => {
+      setSaving(true);
+      await updateUserPrompt(user_id, newPrompt);
+
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+
+      timeoutRef.current = setTimeout(() => {
+        setSaving(false);
+        timeoutRef.current = null;
+      }, 1000);
+    }, 1000);
+
+    return () => {
+      if (debouncedUpdateRef.current) {
+        debouncedUpdateRef.current.cancel();
+      }
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [user_id, updateUserPrompt]);
+  
   useEffect(() => {
     setLocalPrompt(prompt || '');
   }, [prompt]);
 
-  // Handle text changes in the "Custom Prompt" field
   const handlePromptChange = (e) => {
-    console.log("e.target.value")
     const newValue = e.target.value;
     setLocalPrompt(newValue);
-
-    // Debounce the actual update call
-    debouncedUpdate(newValue);
+    debouncedUpdateRef.current(newValue);
   };
-
-  // Example of removing the forced default from gamemode
-  // If you do want a default prompt for new game modes, you can keep an effect like:
-  /*
-  useEffect(() => {
-    const defaultText =
-      gamemode === 'Quick Shoot'
-        ? 'If the user clicks top corner, go for bottom corner.'
-        : 'Play predictable patterns, but if they increase their bet amount, switch to predict their moves.';
-    setLocalPrompt(defaultText);
-    debouncedUpdate(defaultText);
-  }, [gamemode, debouncedUpdate]);
-  */
 
   return (
     <Box
@@ -320,11 +323,28 @@ const SettingsRef = ({
               </Tooltip>
             );
           })}
+
+          {saving && (
+            <Box
+              sx={{
+                position: 'absolute',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                right: '20px',
+                fontSize: 'x-small',
+                fontStyle: 'italic',
+              }}
+            >
+              SAVING
+              <CircularProgress color="error" size={10} sx={{ ml: 1 }} />
+            </Box>
+          )}
         </Box>
       </Box>
 
       {/* Prompt Box at the Bottom */}
-      {selectedStrategy === 'GPT3' && (
+      {isGPT3Selected && (
         <Paper variant="outlined">
           <TextField
             multiline
@@ -338,12 +358,7 @@ const SettingsRef = ({
             onFocus={() => dispatch(setFocused(true))}
             onBlur={() => dispatch(setFocused(false))}
           />
-          {/* Show spinner if saving is true */}
-          {saving && (
-            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 1 }}>
-              <CircularProgress color="error" />
-            </Box>
-          )}
+
         </Paper>
       )}
     </Box>

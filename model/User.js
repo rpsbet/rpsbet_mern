@@ -32,7 +32,7 @@ const UserSchema = new Schema({
   lenders: [
     {
       type: Schema.Types.ObjectId,
-      ref: 'User'
+      ref: 'rps_users'
     }
   ],
   ai_mode: {
@@ -58,13 +58,13 @@ const UserSchema = new Schema({
   },
   referralId: {
     type: Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'rps_users',
     default: null
   },
   rewards: [{
     user: {
       type: Schema.Types.ObjectId,
-      ref: 'User'
+      ref: 'rps_users'
     },
     amount: {
       type: Number,

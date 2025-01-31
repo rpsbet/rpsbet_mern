@@ -33,17 +33,17 @@ const RoomSchema = new Schema({
   },
   creator: {
     type: Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'rps_users',
     index: true
   },
   joiners: [{
     type: Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'rps_users',
     default: []
   }],
   game_type: {
     type: Schema.Types.ObjectId,
-    ref: 'GameType',
+    ref: 'rps_game_types',
     index: true
   },
   selectedStrategy: {
@@ -84,7 +84,7 @@ const RoomSchema = new Schema({
   },
   endgame_type: {
     type: Boolean,
-    default: false
+    default: true
   },
   endgame_amount: {
     type: Number,
@@ -104,17 +104,17 @@ const RoomSchema = new Schema({
   },
   likes: [{
     type: Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'rps_users',
     default: []
   }],
   dislikes: [{
     type: Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'rps_users',
     default: []
   }],
   views: [{
     type: Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'rps_users',
     default: []
   }],
   battles: {
@@ -135,7 +135,7 @@ const RoomSchema = new Schema({
   hosts: [{
     host: {
       type: Schema.Types.ObjectId,
-      ref: 'User'
+      ref: 'rps_users'
     },
     rank: {
       type: Number,

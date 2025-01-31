@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 const OwnerSchema = new Schema({
     user: {
         type: Schema.Types.ObjectId,
-        ref: 'User',
+        ref: 'rps_users',
         index: true
     },
     avatar: {
@@ -41,7 +41,7 @@ const OwnerSchema = new Schema({
     },
     originalOwner: {
         type: Schema.Types.ObjectId,
-        ref: 'User'
+        ref: 'rps_users'
     }
 });
 

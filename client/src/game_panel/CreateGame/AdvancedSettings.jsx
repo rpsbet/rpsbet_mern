@@ -98,7 +98,7 @@ const AdvancedSettings = (props) => {
             </div>
 
             {/* Payout Section */}
-            <div
+            {/* <div
               className="grid-item label roll-tag"
               style={{ display: 'flex', alignItems: 'center', justifyContent: "center", width: '100%', marginTop: "20px" }}
             >
@@ -146,7 +146,7 @@ const AdvancedSettings = (props) => {
                   }}
                 />
               )}
-            </div>
+            </div> */}
 
             <div
               className="grid-item label roll-tag"

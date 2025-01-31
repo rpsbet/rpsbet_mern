@@ -101,19 +101,16 @@ function CreateGame(props) {
   const [selectedQsPosition, setSelectedQsPosition] = useState(0);
 
   const [betAmount, setBetAmount] = useState(0.25);
-  const [endgameAmount, setEndgameAmount] = useState(0);
+  const [endgameAmount, setEndgameAmount] = useState(0.5);
   const [maxReturn, setMaxReturn] = useState(0);
   const [creatingRoom, setCreatingRoom] = useState(false);
   const [winChance, setWinChance] = useState(0);
   const [publicBetAmount, setPublicBetAmount] = useState(convertToCurrency(0, solPrice));
   const [isPrivate, setIsPrivate] = useState(false);
   const [roomPassword, setRoomPassword] = useState('');
-  const [lowerLimit, setLowerLimit] = useState(0);
-  const [upperLimit, setUpperLimit] = useState(0);
-  const [stopLossValue, setStopLossValue] = useState(0);
   const [aiMode, setAiMode] = useState(user.ai_mode);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [endgameType, setEndgameType] = useState(false);
+  const [endgameType, setEndgameType] = useState(true);
   const [description, setDescription] = useState('');
   const [rpsGameType, setRpsGameType] = useState(0);
   const [qsGameType, setQsGameType] = useState(2);
@@ -182,29 +179,15 @@ function CreateGame(props) {
       setSelectedGameType(selectedGameTypeObj.short_name);
     }
 
-    let newBetAmount = 0.25;
-    let newMaxReturn = 0;
-    let newEndgameAmount = 0;
-
     if (gameTypeName === 'rps') {
       setGameType(1);
-      newBetAmount = 0.25;
-      newMaxReturn = 0;
-      newEndgameAmount = 0;
     } else if (gameTypeName === 'quick-shoot') {
       setGameType(5);
-      setPublicBetAmount(convertToCurrency(1, solPrice));
-      newMaxReturn = 2;
-      newBetAmount = 0.25;
       setQsNation(Math.floor(Math.random() * 4));
-      newEndgameAmount = 0;
     }
 
     setStep(1);
     setChildStep(1);
-    setBetAmount(newBetAmount);
-    setMaxReturn(newMaxReturn);
-    setEndgameAmount(newEndgameAmount);
   }, [gameTypeList, solPrice]);
 
   // -------------------------------
@@ -237,8 +220,12 @@ function CreateGame(props) {
     if ('bet_amount' in newState) setBetAmount(newState.bet_amount);
     if ('name' in newState) setName(newState.name);
     if ('image' in newState) setImage(newState.image);
-    if ('ticker' in newState) setImage(newState.ticker);
+    if ('ticker' in newState) setTicker(newState.ticker);
     if ('description' in newState) setDescription(newState.description);
+    if ('website_link' in newState) setWebsiteLink(newState.website_link);
+    if ('x_link' in newState) setXLink(newState.x_link);
+    if ('telegram_link' in newState) setTelegramLink(newState.telegram_link);
+    if ('tax' in newState) setTax(newState.tax);
     if ('is_private' in newState) setIsPrivate(newState.is_private);
     if ('room_password' in newState) setRoomPassword(newState.room_password);
     if ('endgame_amount' in newState) setEndgameAmount(newState.endgame_amount);
@@ -249,7 +236,6 @@ function CreateGame(props) {
     if ('qs_game_type' in newState) setQsGameType(newState.qs_game_type);
     if ('qs_nation' in newState) setQsNation(newState.qs_nation);
     if ('selected_qs_position' in newState) setSelectedQsPosition(newState.selected_qs_position);
-    // ...and so on for other fields in your component’s state
   };
 
   const toggleDrawer = () => {
@@ -315,8 +301,16 @@ function CreateGame(props) {
         showError("Invalid Bet", "YOU DIDN'T BET (CAT) SHIT!!!");
         return;
       }
-      if (parseFloat(betAmount) < 0.01) {
-        showError("Minimum Buy-in", "MEOWNIMUM BUY-IN IS 0.01 SOL!");
+      if (parseFloat(betAmount) < 0.0005) {
+        showError("Minimum Buy-in", "MEOWNIMUM BUY-IN IS 0.0005 SOL!");
+        return;
+      }
+      if (parseFloat(tax) > 33) {
+        showError("Minimum Buy-in", "MAX TAX IS 33%!");
+        return;
+      }
+      if (parseFloat(betAmount) >= parseFloat(endgameAmount)) {
+        showError("Minimum Hard Cap", "HARD-CAP MUST BE MORE THAN YOUR BUY-IN AMOUNT!");
         return;
       }
       if (!name.trim()) {
@@ -367,7 +361,6 @@ function CreateGame(props) {
   const createRoomWithImage = async () => {
     setCreatingRoom(true);
   
-    // We can keep saveImage the same, or have it outside, but for brevity:
     const saveImage = (imageSrc) => {
       return new Promise((resolve, reject) => {
         const canvas = document.createElement('canvas');
@@ -381,7 +374,6 @@ function CreateGame(props) {
           let width = img.width;
           let height = img.height;
   
-          // Scale height proportionally to the maxWidth
           if (width > maxWidth) {
             height *= maxWidth / width;
             width = maxWidth;
@@ -415,38 +407,24 @@ function CreateGame(props) {
     try {
       // 1) Resize the original 'image' (URL) into a Blob
       const resizedBlob = await saveImage(image);
-      console.log('[Front-end] Resized blob:', resizedBlob);
-  
-      // 2) Build FormData to send to *our own server* at /api/upload-to-pinata
       const formData = new FormData();
       formData.append('file', resizedBlob, 'resized-image.png');
   
-      console.log('[Front-end] FormData entries before upload:');
-      for (let [key, value] of formData.entries()) {
-        console.log('   ', key, value);
-      }
-  
-      // 3) POST to our backend's route (which proxies to Pinata)
       const response = await axios.post('/game/upload-to-pinata', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       });
   
-      // 4) Check if we got a successful response
       if (response.status !== 200) {
         throw new Error('Server responded with non-200 status.');
       }
-  
-      // Our backend route returns: { success: boolean, imageUrl: string, ... }
+
       const { success, imageUrl, message } = response.data;
       if (!success || !imageUrl) {
         throw new Error(message || 'Upload failed, no imageUrl received.');
       }
   
-      console.log('[Front-end] Received Pinata URL from server:', imageUrl);
-  
-      // 5) Build your fullState with the returned IPFS link
       const fullState = {
         game_type: gameType,
         game_mode: gameMode,
@@ -477,7 +455,6 @@ function CreateGame(props) {
         rps_game_type: rpsGameType,
       };
   
-      // 6) Then call your existing createRoom logic
       await props.createRoom(fullState);
   
     } catch (error) {
@@ -742,11 +719,9 @@ function CreateGame(props) {
                   <AdvancedSettings
                     max_return={maxReturn}
                     onChangeState={onChangeState}
-                    lowerLimit={lowerLimit}
-                    upperLimit={upperLimit}
-                    stopLossValue={stopLossValue}
                     isDarkMode={isDarkMode}
                     winChance={winChance}
+                    tax={tax}
                     x_link={xLink}
                     telegram_link={telegramLink}
                     website_link={websiteLink}

@@ -16,12 +16,12 @@ import { getCustomTheme } from '../../config/theme';
 /**
  * Props we expect:
  * - bet_amount: numeric “Initial Buy-In” value
- * - hc_amount: numeric “Hard Cap” value
+ * - endgame_amount: numeric “Hard Cap” value
  * - game_type, balance, defaultBetAmounts, isDarkMode, qs_game_type, solPrice, onChangeState, tax
  */
 const DefaultBetAmountPanel = ({
   bet_amount,
-  hc_amount,             // NEW: for Hard Cap
+  endgame_amount,             // NEW: for Hard Cap
   game_type,
   balance,
   defaultBetAmounts = [0.25, 0.5, 1, 2.5, 10],
@@ -85,22 +85,22 @@ const DefaultBetAmountPanel = ({
 
   // --------------- HARD CAP Logic ---------------
   const handleHCHalfXButtonClick = () => {
-    const halfVal = hc_amount * 0.5;
+    const halfVal = endgame_amount * 0.5;
     const rounded = Math.floor(halfVal * 100000) / 100000;
-    onChangeState({ hc_amount: rounded });
+    onChangeState({ endgame_amount: rounded });
     document.getElementById('hcAmount').focus();
   };
 
   const handleHC2xButtonClick = () => {
-    const twoVal = hc_amount * 2;
+    const twoVal = endgame_amount * 2;
     const updated = Math.min(twoVal, balance);
-    onChangeState({ hc_amount: updated });
+    onChangeState({ endgame_amount: updated });
     document.getElementById('hcAmount').focus();
   };
 
   const handleHCMaxButtonClick = () => {
     const maxVal = Math.floor(balance * 100000) / 100000;
-    onChangeState({ hc_amount: maxVal });
+    onChangeState({ endgame_amount: maxVal });
     document.getElementById('hcAmount').focus();
   };
 
@@ -235,17 +235,22 @@ const DefaultBetAmountPanel = ({
           </Tooltip>
         </h3>
         <div className="bet-amounts">
-          {defaultBetAmounts.map((amount, index) => {
-            const hcVal = amount * 2; // 2x each defaultBuyAmount
+          {defaultHardCapAmounts.map((amount, index) => {
+            const hcVal = amount; // 2x each defaultBuyAmount
+            console.log(
+              `endgame_amount: ${endgame_amount}, hcVal: ${hcVal}, equality:`,
+              endgame_amount === hcVal
+            );
+            
             return (
               <Button
                 color="error"
                 variant="outlined"
                 key={`hardcap-${index}`}
-                className={!hc_isOther && hc_amount === hcVal ? ' active' : ''}
+                className={!hc_isOther && endgame_amount === amount ? ' active' : ''}
                 onClick={() => {
                   setHcIsOther(false);
-                  onChangeState({ hc_amount: hcVal });
+                  onChangeState({ endgame_amount: hcVal });
                 }}
               >
                 {hcVal}
@@ -269,7 +274,7 @@ const DefaultBetAmountPanel = ({
               name="hcamount"
               id="hcAmount"
               variant="filled"
-              value={hc_amount}
+              value={endgame_amount}
               inputProps={{
                 pattern: '^\\d*\\.?\\d*$',
                 maxLength: 9,
@@ -296,9 +301,9 @@ const DefaultBetAmountPanel = ({
                     <ButtonGroup variant="outlined" aria-label="Adjust Hard Cap">
                       <Button
                         onClick={() => {
-                          const twoVal = hc_amount * 2;
+                          const twoVal = endgame_amount * 2;
                           const updated = Math.min(twoVal, balance);
-                          onChangeState({ hc_amount: updated });
+                          onChangeState({ endgame_amount: updated });
                           document.getElementById('hcAmount').focus();
                         }}
                         color="error"
@@ -307,9 +312,9 @@ const DefaultBetAmountPanel = ({
                       </Button>
                       <Button
                         onClick={() => {
-                          const halfVal = hc_amount * 0.5;
+                          const halfVal = endgame_amount * 0.5;
                           const rounded = Math.floor(halfVal * 100000) / 100000;
-                          onChangeState({ hc_amount: rounded });
+                          onChangeState({ endgame_amount: rounded });
                           document.getElementById('hcAmount').focus();
                         }}
                         color="error"
@@ -319,7 +324,7 @@ const DefaultBetAmountPanel = ({
                       <Button
                         onClick={() => {
                           const maxVal = Math.floor(balance * 100000) / 100000;
-                          onChangeState({ hc_amount: maxVal });
+                          onChangeState({ endgame_amount: maxVal });
                           document.getElementById('hcAmount').focus();
                         }}
                         color="error"
@@ -332,7 +337,7 @@ const DefaultBetAmountPanel = ({
               }}
               onChange={(e) => {
                 const value = parseFloat(e.target.value) || 0;
-                onChangeState({ hc_amount: value });
+                onChangeState({ endgame_amount: value });
               }}
             />
           </div>

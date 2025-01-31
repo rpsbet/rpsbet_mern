@@ -4,19 +4,19 @@ const Schema = mongoose.Schema;
 const GameLogSchema = new Schema({
     room: {
         type: Schema.Types.ObjectId,
-        ref: 'Room'
+        ref: 'rps_rooms'
     },
     creator: {
         type: Schema.Types.ObjectId,
-        ref: 'User'
+        ref: 'rps_users'
     },
     joined_user: {
         type: Schema.Types.ObjectId,
-        ref: 'User'
+        ref: 'rps_users'
     },
     game_type: {
         type: Schema.Types.ObjectId,
-        ref: 'GameType'
+        ref: 'rps_game_types'
     },
     bet_amount: {
         type: Number,
@@ -81,7 +81,7 @@ const GameLogSchema = new Schema({
     hosts: [{
         host: {
             type: Schema.Types.ObjectId,
-            ref: 'User'
+            ref: 'rps_users'
         },
         rank: {
             type: Number,

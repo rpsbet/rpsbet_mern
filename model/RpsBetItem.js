@@ -4,11 +4,11 @@ const Schema = mongoose.Schema;
 const RpsBetItemSchema = new Schema({
     room: {
         type: Schema.Types.ObjectId,
-        ref: 'Room'
+        ref: 'rps_rooms'
     },
     joiner: {
         type: Schema.Types.ObjectId,
-        ref: 'User',
+        ref: 'rps_users',
         default: null
     },
     rps: {

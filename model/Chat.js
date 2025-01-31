@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 const ChatSchema = new Schema({
   sender: {
     type: Schema.Types.ObjectId,
-    ref: 'User'
+    ref: 'rps_users'
   },
   message: {
     type: String
@@ -23,36 +23,36 @@ const ChatSchema = new Schema({
   },
   avatar: {
     type: String,
-    ref: 'User.avatar'
+    ref: 'rps_users.avatar'
   },
   accessory: {
     type: String,
-    ref: 'User.accessory'
+    ref: 'rps_users.accessory'
   },
   rank: {
     type: Number,
-    ref: 'User.totalWagered'
+    ref: 'rps_users.totalWagered'
   },
   replyTo: [
     {
       sender: {
         type: Schema.Types.ObjectId,
-        ref: 'User'
+        ref: 'rps_users'
       },
       username: {
         type: String,
-        ref: 'User.username'
+        ref: 'rps_users.username'
       },
       avatar: {
         type: String
       },
       rank: {
         type: Number,
-        ref: 'User.totalWagered'
+        ref: 'rps_users.totalWagered'
       },
       accessory: {
         type: String,
-        ref: 'User.accessory'
+        ref: 'rps_users.accessory'
       },
       message: {
         type: String

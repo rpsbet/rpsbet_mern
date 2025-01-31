@@ -113,7 +113,6 @@ function QuickShoot(props) {
     betResult,
     bgColorChanged,
     result,
-    endgame_type,
     cp,
     username,
     creator_avatar,
@@ -450,19 +449,6 @@ function QuickShoot(props) {
     setSpectateMode(!isWatching);
   };
 
-
-
-
-  // Example: if you had half, double, max bet logic:
-  const handleHalfXButtonClick = () => {
-    // ...
-  };
-  const handle2xButtonClick = () => {
-    // ...
-  };
-  const handleMaxButtonClick = () => {
-    // ...
-  };
 
   const openConfirmBetDialog = (message, callback) => {
     if (localStorage.getItem('hideConfirmModal') === 'true') {

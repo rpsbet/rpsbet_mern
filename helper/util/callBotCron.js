@@ -296,7 +296,35 @@ async function callCronJobs(io) {
 
   } catch (error) {
     console.error('Error executing cron jobs:', error);
-  }
+  } 
+//   finally {
+//     try {
+//       let updatedRooms = await Room.find({ status: 'open' })
+//         .sort({ updated_at: -1 })
+//         .populate('joiners', 'avatar totalWagered username accessory') // only these fields
+//         .lean();
+//       updatedRooms = updatedRooms.map((room) => {
+//         const joiner_avatars = (room.joiners || []).map((joiner) => ({
+//           avatar: joiner.avatar,
+//           rank: joiner.totalWagered,
+//           username: joiner.username,
+//           accessory: joiner.accessory,
+//         }));
+//         return {
+//           ...room,
+//           joiner_avatars,
+//         };
+//       });
+
+// console.log(updatedRooms.length)
+//       if (socketio) {
+//         socketio.emit('UPDATED_ROOM_LIST', updatedRooms);
+//       }
+
+//     } catch (err) {
+//       console.error('Error fetching or emitting updated room list:', err);
+//     }
+//   }
 }
 
 async function delay(ms) {
@@ -525,7 +553,7 @@ async function executeCronJob(
   }
 }
 
-cron.schedule('*/9 * * * * *', async () => {
+cron.schedule('*/10 * * * * *', async () => {
   await callCronJobs(socketio);
 });
 module.exports = {

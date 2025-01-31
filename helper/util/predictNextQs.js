@@ -137,6 +137,7 @@ const predictNextQs = (qs_list, gameType) => {
   return nextState;
 };
 
+
 async function reinforcementAI_qs(data, qs_game_type) {
   if (!qs_game_type || typeof qs_game_type !== 'number' || qs_game_type <= 0) {
     throw new Error(`Invalid qs_game_type: ${qs_game_type}`);
@@ -532,17 +533,7 @@ async function openAIPredictionAI_qs(historicData, qs_game_type) {
 
 module.exports = {
   predictNextQs,
-  calcWinChanceQs,
   reinforcementAI_qs,
-  patternBasedAI_qs,
-  counterSwitchAI_qs,
-  NPC_qs,
   getRandomItem_qs,
-  getCopyCatItem_qs,
-  martingaleStrategy_qs,
-  innovate_qs,
-  skillissueold_qs,
-  counterRandomness_qs,
-  generatePattern_qs,
   openAIPredictionAI_qs,
 };

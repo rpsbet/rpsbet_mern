@@ -74,6 +74,7 @@ const RPS = (props) => {
     step,
     tax,
     gameTypeList,
+    endgame_amount,
     selectedGameType,
     handleChange,
     isDarkMode,
@@ -88,7 +89,8 @@ const RPS = (props) => {
     strategies,
     ai_mode,
     user,
-    rank
+    rank,
+    ticker
   } = props;
 
   const gameTypeStyleClass = {
@@ -148,10 +150,11 @@ const RPS = (props) => {
               rank={rank}
               ai_mode={ai_mode}
             />
-            <CoinInfo onChangeState={onChangeState} name={name} image={image} isDarkMode={isDarkMode} />
+            <CoinInfo onChangeState={onChangeState} name={name} image={image} ticker={ticker} isDarkMode={isDarkMode} />
             <DefaultBetAmountPanel
               tax={tax}
               bet_amount={bet_amount}
+              endgame_amount={endgame_amount}
               onChangeState={onChangeState}
               game_type={game_type}
               defaultBetAmounts={defaultBetAmounts}

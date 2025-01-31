@@ -50,7 +50,6 @@ function OpenGamesTable(props) {
     roomList,
     setCurRoomInfo,
     highlightedRooms,
-    getRoomStatisticsData,
     getRecentlyClosed,
     fetchMoreRooms,
     addNewTransaction,
@@ -96,7 +95,6 @@ function OpenGamesTable(props) {
 
   const prevRoomListRef = useRef(roomList);
 
-  // This mimics componentDidUpdate
   useEffect(() => {
     if (!isEqual(prevRoomListRef.current, roomList)) {
       prevRoomListRef.current = roomList;
@@ -130,12 +128,6 @@ function OpenGamesTable(props) {
     }
     setLocalRoomList(mergedRooms);
   }, [roomList, highlightedRooms]);
-  console.log("roomList", roomList)
-
-  // If selectedGameType changes, we might want to refetch or mark isLoading
-  useEffect(() => {
-    setIsLoading(true);
-  }, [selectedGameType]);
 
   // ------------------ SCROLL HANDLING (debounce) ------------------
   const debouncedHandleScroll = useCallback(() => {
@@ -280,6 +272,8 @@ function OpenGamesTable(props) {
         rank: roomDetails.rank,
         image: roomDetails.image,
         name: roomDetails.name,
+        ticker: roomDetails.ticker,
+        tax: roomDetails.tax,
         x_link: roomDetails.x_link,
         telegram_link: roomDetails.telegram_link,
         website_link: roomDetails.website_link,
@@ -371,6 +365,7 @@ function OpenGamesTable(props) {
                           website_link: row.website_link,
                           selectedStrategy: row.selectedStrategy,
                           image: row.image,
+                          ticker: row.ticker,
                           telegram_link: row.telegram_link,
                           creatorId: row.creator_id,
                           creatorAvatar: row.creator_avatar,

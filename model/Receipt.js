@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 const ReceiptSchema = new Schema({
   user_id: {
     type: Schema.Types.ObjectId,
-    ref: 'User'
+    ref: 'rps_users'
   },
   payment_method: {
     type: String,

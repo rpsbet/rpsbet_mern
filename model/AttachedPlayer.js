@@ -5,7 +5,7 @@ const Schema = mongoose.Schema;
 const AttachedPlayerSchema = new Schema({
   room: {
     type: Schema.Types.ObjectId,
-    ref: 'Room',
+    ref: 'rps_rooms',
     required: true
   },
   room_name: {
@@ -14,7 +14,7 @@ const AttachedPlayerSchema = new Schema({
   },
   user: {
     type: Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'rps_users',
     required: true
   },
   bet_amounts: {

@@ -4,23 +4,23 @@ const Schema = mongoose.Schema;
 const CommentSchema = new Schema({
     user: {
         type: Schema.Types.ObjectId,
-        ref: 'User'
+        ref: 'rps_users'
     },
     avatar: {
         type: String,
-        ref: 'User.avatar'
+        ref: 'rps_users.avatar'
     },
     accessory: {
         type: String,
-        ref: 'User.accessory'
+        ref: 'rps_users.accessory'
     },
     totalWagered: {
         type: Number,
-        ref: 'User.totalWagered'
+        ref: 'rps_users.totalWagered'
     },
     room: {
         type: Schema.Types.ObjectId,
-        ref: 'Room'
+        ref: 'rps_rooms'
     },
     content: {
         type: String,

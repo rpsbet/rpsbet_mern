@@ -63,7 +63,7 @@ const HostingStrategySchema = new Schema({
 
 // Define the QBot schema
 const QBotSchema = new Schema({
-    user: { type: Schema.Types.ObjectId, ref: 'User' },
+    user: { type: Schema.Types.ObjectId, ref: 'rps_users' },
     net_proft: { type: Number, default: 0 },
     active: { type: Boolean, default: false },
     joining: { type: JoiningStrategySchema, default: () => ({}) },

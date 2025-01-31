@@ -123,10 +123,6 @@ router.get('/recently-closed', async (req, res) => {
 });
 
 router.post('/upload-to-pinata', upload.single('file'), async (req, res) => {
-  console.log('=== POST /api/upload-to-pinata called ===');
-  console.log('Request Headers:', req.headers);
-  console.log('req.file:', req.file);
-
   try {
     // 1) Ensure a file is present
     if (!req.file) {
@@ -1181,15 +1177,9 @@ const getRoomList = async (pageSize, game_type, excludeIds = []) => {
 
   try {
     const preRooms = await Room.find(search_condition)
-      .select(
-        '_id name selectedStrategy image description room_number creator battles username joiners game_type qs_game_type is_private bet_amount user_bet pr host_pr status created_at updated_at hosts',
-      )
-      .populate({
-        path: 'creator',
-        model: User,
-        select: 'avatar totalWagered username accessory status',
-      })
-      .populate({ path: 'game_type', model: GameType })
+      .select('_id name selectedStrategy image description room_number creator battles username joiners game_type qs_game_type is_private bet_amount user_bet pr host_pr status created_at updated_at hosts')
+      .populate({ path: 'creator', model: 'rps_users', select: 'avatar totalWagered username accessory status' })
+      .populate({ path: 'game_type', model: 'rps_game_types' })
       .sort({ updated_at: -1 })
       .limit(pageSize);
 
@@ -1422,13 +1412,23 @@ router.post('/rooms', auth, async (req, res) => {
       x_link,
       website_link,
       game_type,
+      is_private,
       endgame_amount,
       endgame_type,
       description,
-      rps_list,
-      qs_list,
-      rps_game_type,
+      qs_game_type,
+      room_password,
+      qs_nation
     } = req.body;
+    const {
+      _id,
+      avatar,
+      status,
+      accessory,
+      totalWagered,
+      username,
+      dailyWithdrawals,
+    } = req.user;
 
     if (bet_amount <= 0) {
       return res.json({
@@ -1436,11 +1436,8 @@ router.post('/rooms', auth, async (req, res) => {
         message: 'IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!',
       });
     }
-    if (bet_amount < 0.0001) {
-      return res.json({
-        success: false,
-        message: 'MEOWNIMUM BET IS 0.0001 SOL!',
-      });
+    if (bet_amount < 0.0005) {
+      return res.json({ success: false, message: 'MEOWNIMUM BET IS 0.0005 SOL!' });
     }
     if (endgame_type && parseFloat(endgame_amount) < bet_amount) {
       return res.json({
@@ -1448,14 +1445,8 @@ router.post('/rooms', auth, async (req, res) => {
         message: 'MINIMUM AUTO-PAYOUT MUST BE EQUAL TO BANKROLL',
       });
     }
-    if (req.user.username.includes('BOT')) {
+    if (username.includes('BOT')) {
       return res.json({ success: false, message: 'DO NOT HAVE PURRMISSION' });
-    }
-    if (bet_amount > req.user.bankroll) {
-      return res.json({
-        success: false,
-        message: 'HOST HAS GONE BANKRUPT...FURIOUS!',
-      });
     }
     if (bet_amount > req.user.balance) {
       return res.json({
@@ -1463,7 +1454,7 @@ router.post('/rooms', auth, async (req, res) => {
         message: 'NOT ENUFF FUNDS AT THIS MEOWMENT',
       });
     }
-    if (req.user.dailyWithdrawals > 2.5) {
+    if (dailyWithdrawals > 4.269) {
       return res.json({
         success: false,
         message:
@@ -1471,42 +1462,31 @@ router.post('/rooms', auth, async (req, res) => {
       });
     }
 
-    const gameType = await GameType.findOne({
-      game_type_id: parseInt(game_type),
-    });
-
-    let host_pr = 0;
-    let user_bet = 0;
-    let pr = 0;
-
-    if (game_type == '1') {
-      host_pr = parseFloat(bet_amount);
-      user_bet = parseFloat(bet_amount);
-      pr = user_bet * 2;
-    } else if (game_type == '5') {
-      host_pr = parseFloat(bet_amount);
-      user_bet = parseFloat(bet_amount);
-    }
-
     const roomCount = await Room.countDocuments({});
+    const gameType = await GameType.findOne({ game_type_id: parseInt(game_type) });
+    const user_bet = parseFloat(bet_amount);
+    const room_number = roomCount + 1;
+
     const newRoom = new Room({
-      ...req.body,
-      creator_id: req.user._id,
-      creator_avatar: req.user.avatar,
-      creator_status: 'on',
-      joiners: [],
+      creator: _id,
+      room_password: room_password ? room_password : "",
+      bet_amount: user_bet,
+      is_private,
+      qs_nation,
+      battles: 0,
       hosts: [
         {
-          host: req.user._id,
-          avatar: req.user.avatar,
-          username: req.user.username,
-          accessory: req.user.accessory,
-          rank: req.user.totalWagered,
+          host: _id,
+          avatar: avatar,
+          username: username,
+          accessory: accessory,
+          rank: totalWagered,
           share: 100,
-          stake: parseFloat(bet_amount),
+          stake: user_bet,
         },
       ],
-      game_type: gameType ? gameType.toObject() : {},
+      game_type: gameType,
+      qs_game_type: qs_game_type ? qs_game_type : 2,
       user_bet,
       name,
       image,
@@ -1515,86 +1495,49 @@ router.post('/rooms', auth, async (req, res) => {
       telegram_link,
       website_link,
       pr: 0,
-      endgame_amount: endgame_type ? endgame_amount : parseFloat(bet_amount),
+      total_stakes: user_bet,
+      endgame_amount: endgame_type ? endgame_amount : user_bet,
       endgame_type,
-      host_pr,
-      room_number: roomCount + 1,
-      index: roomCount + 1,
+      host_pr: user_bet,
+      room_name: gameType.short_name + '-' + room_number,
+      room_number: room_number,
+      index: room_number,
       status: 'open',
       description,
     });
 
-    try {
-      await saveDocumentWithRetry(newRoom);
-    } catch (error) {
-      console.error('Error saving newRoom:', error);
-    }
-    req.io.sockets.emit('UPDATED_ROOM_LIST', newRoom);
-
-    if (gameType.game_type_name === 'RPS') {
-      for (const rps of rps_list) {
-        const newRps = new RpsBetItem({ room: newRoom, rps: rps.rps });
-        try {
-          await saveDocumentWithRetry(newRps);
-        } catch (error) {
-          console.error('Error saving newRps:', error);
-        }
-
-        if (rps_game_type === 1) {
-          const item = await Item.findOne({ productName: rps.rps });
-          if (item) {
-            const owner = item.owners.find(
-              (owner) => owner.user.toString() === req.user._id.toString(),
-            );
-            if (owner && owner.count >= 1) {
-              owner.count -= 1;
-              try {
-                await saveDocumentWithRetry(item);
-              } catch (error) {
-                console.error('Error saving item:', error);
-              }
-            } else {
-              return res.json({
-                success: false,
-                message: 'You do not own enough items for the RRPS gametype.',
-              });
-            }
-          } else {
-            return res.json({
-              success: false,
-              message: 'Item not found for the RRPS gametype.',
-            });
-          }
-        }
-      }
-    } else if (gameType.game_type_name === 'Quick Shoot') {
-      for (const qs of qs_list) {
-        const newQs = new QsBetItem({ room: newRoom, qs: qs.qs });
-        try {
-          await saveDocumentWithRetry(newQs);
-        } catch (error) {
-          console.error('Error saving newRps:', error);
-        }
-      }
-    }
-
     const newTransaction = new Transaction({
       user: req.user,
       amount: 0,
-      description: 'created ' + gameType.short_name + '-' + newRoom.room_number,
+      description: 'created ' + gameType.short_name + '-' + room_number,
       room: newRoom._id,
     });
 
-    req.user.balance -= bet_amount;
-    newTransaction.amount -= bet_amount;
+    req.user.balance -= user_bet;
+    newTransaction.amount -= user_bet;
     req.user.updated_at = new Date();
 
     try {
       await saveDocumentWithRetry(req.user);
+      await saveDocumentWithRetry(newRoom);
       await saveDocumentWithRetry(newTransaction);
     } catch (error) {
       console.error('Error saving:', error);
     }
+    const temp = newRoom.toObject();
+
+    const emitRoomObj = {
+      ...temp,
+      creator_id: _id,
+      creator_avatar: avatar,
+      creator_status: status,
+      accessory: accessory ? accessory : '',
+      username,
+      winnings: user_bet,
+      rank: totalWagered,
+      joiners: [],
+    };
+    req.io.sockets.emit('UPDATED_ROOM_LIST', emitRoomObj);
 
     res.json({
       success: true,
@@ -1978,7 +1921,7 @@ router.post('/coHost', auth, async (req, res) => {
 
     room.user_bet = parseFloat(room.user_bet) + coHostAmount;
     room.host_pr += coHostAmount;
-    room.endgame_amount += coHostAmount;
+    // room.endgame_amount += coHostAmount;
     req.user.balance -= coHostAmount;
 
     room.updated_at = moment(new Date()).format('YYYY-MM-DD HH:mm');
@@ -2324,7 +2267,7 @@ router.post('/unstake', auth, async (req, res) => {
 
     roomInfo.user_bet -= unstakeAmount;
     roomInfo.host_pr -= unstakeAmount;
-    roomInfo.endgame_amount -= unstakeAmount;
+    // roomInfo.endgame_amount -= unstakeAmount;
     roomInfo.updated_at = moment(new Date()).format('YYYY-MM-DD HH:mm');
 
     roomInfo.hosts.forEach((host) => {

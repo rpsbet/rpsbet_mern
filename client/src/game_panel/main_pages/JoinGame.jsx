@@ -968,7 +968,6 @@ function JoinGame(props) {
           accessory={creator_accessory}
           rps_game_type={roomInfo.rps_game_type}
           qs_game_type={roomInfo.qs_game_type}
-          endgame_type={roomInfo.endgame_type}
           pr={roomInfo.pr}
           isLowBankroll={isLowBankroll}
           isHighCommission={isHighCommission}
@@ -1031,7 +1030,6 @@ function JoinGame(props) {
           predictedBetAmount={predictedBetAmount}
           is_private={roomInfo.is_private}
           isDarkMode={isDarkMode}
-          endgame_type={roomInfo.endgame_type}
           actionList={actionList}
           getRoomData={() => {}} // or remove if not needed
           user={user}

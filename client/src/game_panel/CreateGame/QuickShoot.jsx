@@ -71,6 +71,7 @@ const QuickShoot = (props) => {
     qs_game_type,
     bet_amount,
     qs_list,
+    endgame_amount,
     onChangeState,
     selectedGameType,
     gameTypeList,
@@ -86,7 +87,8 @@ const QuickShoot = (props) => {
     defaultBetAmounts,
     ai_mode,
     user,
-    rank
+    rank,
+    ticker
   } = props;
 
   const gameTypeStyleClass = {
@@ -185,10 +187,11 @@ const QuickShoot = (props) => {
               strategies={strategies}
             />
 
-            <CoinInfo onChangeState={onChangeState} name={name} image={image} isDarkMode={isDarkMode} />
+            <CoinInfo onChangeState={onChangeState} name={name} image={image} ticker={ticker} isDarkMode={isDarkMode} />
 
             <DefaultBetAmountPanel
               tax={tax}
+              endgame_amount={endgame_amount}
               bet_amount={bet_amount}
               onChangeState={onChangeState}
               game_type={game_type}

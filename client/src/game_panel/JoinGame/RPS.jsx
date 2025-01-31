@@ -105,7 +105,6 @@ function RPS(props) {
     creator_avatar,
     rps_game_type,
     strategies,
-    endgame_type,
     pr,
     cp,
     result, // from parent state

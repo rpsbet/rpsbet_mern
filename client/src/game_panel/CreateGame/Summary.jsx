@@ -56,6 +56,7 @@ const Summary = (props) => {
       public_bet_amount,
       game_mode,
       is_private,
+      ticker,
       endgame_amount,
       endgame_type,
       selectedStrategy,

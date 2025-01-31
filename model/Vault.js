@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 const VaultSchema = new Schema({
     user: {
         type: Schema.Types.ObjectId,
-        ref: 'User',
+        ref: 'rps_users',
         index: true
     },
     balance: {
