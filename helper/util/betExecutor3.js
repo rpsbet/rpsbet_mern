@@ -92,7 +92,7 @@ const addToQueue = async (req, bot = false) => {
 
       roomInfo = await Room.findOne({ _id: req.body._id })
         .select(
-          'name image ticker room_number updated_at battles selectedStrategy qs_game_type game_type rps_game_type joiners creator bet_amount user_bet pr host_pr endgame_type endgame_amount is_private room_password status hosts',
+          'name image prompt ticker room_number updated_at battles selectedStrategy qs_game_type game_type rps_game_type joiners creator bet_amount user_bet pr host_pr endgame_type endgame_amount is_private room_password status hosts',
         )
         .populate({
           path: 'creator',
@@ -248,7 +248,11 @@ const addToQueue = async (req, bot = false) => {
               nextItem = await getNextItemUsingMarkov(allBetItems);
               break;
             case 'GPT3':
-              nextItem = await predictNextOpenAI(allBetItems);
+              nextItem = await predictNextOpenAI(
+                allBetItems,
+                roomInfo['prompt'] ??
+                  'You are an expert in Rock Paper Scissors.',
+              );
               break;
             default:
               const move = await reinforcementAI(allBetItems);
@@ -557,9 +561,9 @@ const addToQueue = async (req, bot = false) => {
       } else if (roomInfo['game_type']['game_type_name'] === 'Quick Shoot') {
         if (
           parseFloat(req.body.bet_amount) / (roomInfo['qs_game_type'] - 1) +
-          parseFloat(req.body.bet_amount) -
-          (roomInfo['qs_game_type'] - 1) * parseFloat(roomInfo['user_bet']) >
-          parseFloat(roomInfo['user_bet']) ||
+            parseFloat(req.body.bet_amount) -
+            (roomInfo['qs_game_type'] - 1) * parseFloat(roomInfo['user_bet']) >
+            parseFloat(roomInfo['user_bet']) ||
           parseFloat(req.body.bet_amount) > parseFloat(req.user.balance)
         ) {
           responseData = {
@@ -686,11 +690,11 @@ const addToQueue = async (req, bot = false) => {
             ((100 - commission) / 100);
           roomInfo['host_pr'] -=
             (betAmount + betAmount / (roomInfo['qs_game_type'] - 1)) *
-            ((100 - commission) / 100) -
+              ((100 - commission) / 100) -
             betAmount;
           roomInfo['user_bet'] -=
             (betAmount + betAmount / (roomInfo['qs_game_type'] - 1)) *
-            ((100 - commission) / 100) -
+              ((100 - commission) / 100) -
             betAmount;
           newGameLog.commission =
             (betAmount + betAmount / (roomInfo['qs_game_type'] - 1)) *
@@ -699,12 +703,12 @@ const addToQueue = async (req, bot = false) => {
           rain.value =
             parseFloat(rain.value) +
             (betAmount + betAmount / (roomInfo['qs_game_type'] - 1)) *
-            (commission / 100);
+              (commission / 100);
           // update platform stat (0.5%)
           platform.value =
             parseFloat(platform.value) +
             (betAmount + betAmount / (roomInfo['qs_game_type'] - 1)) *
-            (tax.value / 100);
+              (tax.value / 100);
           if (req.io.sockets) {
             req.io.sockets.emit('UPDATE_RAIN', {
               rain: rain.value,
