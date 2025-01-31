@@ -244,11 +244,11 @@ function OpenGamesTable(props) {
     return result;
   };
 
-  // Handling filter toggle: "Live Games" <-> "Recently Ended"
+  // Handling filter toggle: "Live Games" <-> "Recently Bonded"
   const handleFilterChange = useCallback(
     async (option) => {
       setFilter(option);
-      if (option === 'Recently Ended') {
+      if (option === 'Recently Bonded') {
         await getRecentlyClosed();
       }
     },
@@ -325,7 +325,7 @@ function OpenGamesTable(props) {
         <div
           className="filter-container"
           style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
-          onClick={() => handleFilterChange(isLiveGames ? 'Recently Ended' : 'Live Games')}
+          onClick={() => handleFilterChange(isLiveGames ? 'Recently Bonded' : 'Live Games')}
         >
           <FilterListIcon style={{ marginRight: '5px' }} />
           <span>{filter}</span>
@@ -648,7 +648,7 @@ function OpenGamesTable(props) {
           )}
         </div>
       ) : (
-        // If filter === "Recently Ended"
+        // If filter === "Recently Bonded"
         <Grid container spacing={2}>
           {recent.length === 0 ? (
             Array.from({ length: 4 }).map((_, index) => (

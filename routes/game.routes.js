@@ -166,9 +166,6 @@ router.post('/upload-to-pinata', upload.single('file'), async (req, res) => {
     const { IpfsHash } = pinataRes.data;
     const imageUrl = `https://gateway.pinata.cloud/ipfs/${IpfsHash}`;
 
-    console.log('Pinata IPFS upload success:', IpfsHash);
-
-    // 6) Send the URL back to the client
     return res.json({
       success: true,
       imageUrl,
@@ -745,7 +742,7 @@ router.get('/room/:id', async (req, res) => {
         path: 'room',
         model: Room,
         select:
-          '_id winnings selectedStrategy commission username creator status hosts room_number game_type bet_amount user_bet host_pr created_at',
+          '_id winnings ticker tax website_link x_link telegram_link selectedStrategy commission username creator status hosts room_number game_type bet_amount user_bet host_pr created_at',
       })
       .populate({
         path: 'game_type',
@@ -782,6 +779,7 @@ router.get('/room/:id', async (req, res) => {
         image: room['image'],
         ticker: room['ticker'],
         x_link: room['x_link'],
+        tax: room['tax'],
         website_link: room['website_link'],
         telegram_link: room['telegram_link'],
         created_at: room['created_at'],
@@ -1408,6 +1406,7 @@ router.post('/rooms', auth, async (req, res) => {
       name,
       image,
       ticker,
+      tax,
       telegram_link,
       x_link,
       website_link,
@@ -1415,6 +1414,7 @@ router.post('/rooms', auth, async (req, res) => {
       is_private,
       endgame_amount,
       endgame_type,
+      selectedStrategy,
       description,
       qs_game_type,
       room_password,
@@ -1488,12 +1488,14 @@ router.post('/rooms', auth, async (req, res) => {
       game_type: gameType,
       qs_game_type: qs_game_type ? qs_game_type : 2,
       user_bet,
+      tax,
       name,
       image,
       ticker,
       x_link,
       telegram_link,
       website_link,
+      selectedStrategy,
       pr: 0,
       total_stakes: user_bet,
       endgame_amount: endgame_type ? endgame_amount : user_bet,

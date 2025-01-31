@@ -515,7 +515,6 @@ function SiteWrapper(props) {
 
       // ROOM LIST
       newSocket.on('UPDATED_ROOM_LIST', (data) => {
-        console.log("UPDATED_ROOM_LIST data", data)
         setRoomList(data);
       });
 
