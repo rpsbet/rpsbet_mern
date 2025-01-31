@@ -515,6 +515,7 @@ function SiteWrapper(props) {
 
       // ROOM LIST
       newSocket.on('UPDATED_ROOM_LIST', (data) => {
+        console.log("data", data)
         setRoomList(data);
       });
 
@@ -706,11 +707,9 @@ function SiteWrapper(props) {
   }, []);
 
   useEffect(() => {
-    // Only call initSocket if we have a valid user object.
-    if (user && user._id) {
-      initSocket();
-    }
-  }, [user, initSocket]);
+    initSocket();
+  }, []);
+  
 
   const disconnectWeb3 = useCallback(() => {
     setWalletAddress(null);

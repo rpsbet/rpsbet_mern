@@ -1192,14 +1192,8 @@ const getRoomList = async (pageSize, game_type, excludeIds = []) => {
 
   try {
     const preRooms = await Room.find(search_condition)
-      .select(
-        '_id name selectedStrategy image description room_number creator battles username joiners game_type qs_game_type is_private bet_amount user_bet pr host_pr status created_at updated_at hosts',
-      )
-      .populate({
-        path: 'creator',
-        model: 'rps_users',
-        select: 'avatar totalWagered username accessory status',
-      })
+      .select('_id name ticker selectedStrategy image description room_number creator battles username joiners game_type qs_game_type is_private bet_amount user_bet pr host_pr status created_at updated_at hosts')
+      .populate({ path: 'creator', model: 'rps_users', select: 'avatar totalWagered username accessory status' })
       .populate({ path: 'game_type', model: 'rps_game_types' })
       .sort({ updated_at: -1 })
       .limit(pageSize);
@@ -1225,6 +1219,7 @@ const getRoomList = async (pageSize, game_type, excludeIds = []) => {
             _id: room._id,
             creator_id: room.creator ? room.creator._id : '',
             joiners: room.joiners,
+            ticker: room.ticker ? room.ticker : room.room_number,
             joiner_avatars: joinerData.map((joiner) => ({
               avatar: joiner.avatar,
               rank: joiner.totalWagered,

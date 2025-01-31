@@ -394,7 +394,7 @@ function OpenGamesTable(props) {
                         <div className="cell-game-description">
                           {row.name}{' '}
                           <span style={{ color: '#ff8500', fontWeight: 'bold' }}>
-                            ({row.room_name})
+                            ({row.ticker})
                           </span>
                           <br />
                           <span>{row.description}</span>

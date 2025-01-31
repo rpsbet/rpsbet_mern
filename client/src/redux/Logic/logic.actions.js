@@ -112,8 +112,6 @@ export const uploadImageToPinata = (formData) => async (dispatch) => {
       }
     });
 
-    console.log("response", response)
-    
     if (response.status !== 200) {
       throw new Error('Failed to upload image to Pinata.');
     }
@@ -653,22 +651,22 @@ export const getRoomList = search_condition => async dispatch => {
   try {
     let roomList = [];
 
-    const cachedRooms = localStorage.getItem('roomList');
-    if (cachedRooms) {
-      try {
-        roomList = JSON.parse(cachedRooms);
-        dispatch({ type: ROOMS_LOADED, payload: { roomList } });
-      } catch (parseError) {
-        console.error('Error parsing cached room list:', parseError);
-        localStorage.removeItem('roomList'); // Clear invalid data
-      }
-    }
+    // const cachedRooms = localStorage.getItem('roomList');
+    // if (cachedRooms) {
+    //   try {
+    //     roomList = JSON.parse(cachedRooms);
+    //     dispatch({ type: ROOMS_LOADED, payload: { roomList } });
+    //   } catch (parseError) {
+    //     console.error('Error parsing cached room list:', parseError);
+    //     localStorage.removeItem('roomList'); // Clear invalid data
+    //   }
+    // }
 
     if (roomList.length === 0) {
       const res = await axios.get('/game/rooms', { params: search_condition });
       if (res.data.success) {
         roomList = res.data.roomList;
-        localStorage.setItem('roomList', JSON.stringify(roomList));
+        // localStorage.setItem('roomList', JSON.stringify(roomList));
         dispatch({ type: ROOMS_LOADED, payload: { roomList } });
       }
     }
@@ -1372,30 +1370,14 @@ export const setRoomList = (newRoom) => (dispatch) => {
     let roomList = JSON.parse(localStorage.getItem('roomList')) || [];
 
     if (Array.isArray(newRoom)) {
-      // If newRoom is an array, check if it’s exactly the same as current
-      const isExactMatch = arraysHaveSameRooms(roomList, newRoom);
-      if (isExactMatch) {
-        // Return early if it's a duplicate
-        return;
-      }
-
-      // Otherwise, replace the entire list
       roomList = newRoom;
     } else {
-      // If it's a single item, check if it already exists
       const isDuplicate = roomList.some((room) => room._id === newRoom._id);
       if (isDuplicate) {
-        return; // Return early if it’s a duplicate
+        return;
       }
-
-      // Prepend the new room
       roomList = [newRoom, ...roomList];
     }
-
-    // Update localStorage
-    localStorage.setItem('roomList', JSON.stringify(roomList));
-
-    // Dispatch the updated list to the store
     dispatch({
       type: ROOMS_LOADED,
       payload: { roomList, page: 1 },
