@@ -1437,6 +1437,7 @@ router.post('/rooms', auth, async (req, res) => {
       qs_game_type,
       room_password,
       qs_nation,
+      prompt
     } = req.body;
     const {
       _id,
@@ -1519,6 +1520,7 @@ router.post('/rooms', auth, async (req, res) => {
       telegram_link,
       website_link,
       selectedStrategy,
+      prompt,
       pr: 0,
       total_stakes: user_bet,
       endgame_amount: endgame_type ? endgame_amount : user_bet,

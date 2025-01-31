@@ -75,7 +75,7 @@ function OpenGamesTable(props) {
       setIsLoading(true);
       // Fetch initial room list
       try {
-        await getRoomList({ pageSize: 7 });
+        await getRoomList({ pageSize: 9 });
       } catch (error) {
         console.error('Error fetching Room List', error);
       }

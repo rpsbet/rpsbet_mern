@@ -102,6 +102,10 @@ const RoomSchema = new Schema({
     type: String,
     default: ''
   },
+  prompt: {
+    type: String,
+    default: 'You are an expert at Rock Paper Scissors'
+  },
   likes: [{
     type: Schema.Types.ObjectId,
     ref: 'rps_users',

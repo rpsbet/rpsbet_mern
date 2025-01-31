@@ -71,6 +71,8 @@ const QuickShoot = (props) => {
     qs_game_type,
     bet_amount,
     qs_list,
+    prompt,
+    setPrompt,
     endgame_amount,
     onChangeState,
     selectedGameType,
@@ -179,10 +181,12 @@ const QuickShoot = (props) => {
 
             <GameSettingsPanel
               selectedStrategy={selectedStrategy}
+              setSelectedStrategy={setSelectedStrategy}
+              prompt={prompt}
+              onChangeState={onChangeState}
               user={user}
               rank={rank}
               ai_mode={ai_mode}
-              setSelectedStrategy={setSelectedStrategy}
               isDarkMode={isDarkMode}
               strategies={strategies}
             />

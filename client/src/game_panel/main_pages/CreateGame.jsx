@@ -94,9 +94,10 @@ function CreateGame(props) {
   const [xLink, setXLink] = useState('');
   const [websiteLink, setWebsiteLink] = useState('');
   const [telegramLink, setTelegramLink] = useState('');
-  
+
   const [ticker, setTicker] = useState('');
   const [selectedStrategy, setSelectedStrategy] = useState('Markov');
+  const [prompt, setPrompt] = useState('You are the pro rps player');
   const [qsNation, setQsNation] = useState(0);
   const [selectedQsPosition, setSelectedQsPosition] = useState(0);
 
@@ -143,9 +144,7 @@ function CreateGame(props) {
     _setGameMode(gameTypeName);
     initializeGameType(gameTypeName);
 
-
     getStrategies();
-
     // Add a keypress listener (if needed)
     document.addEventListener('keydown', handleKeyPress);
 
@@ -231,6 +230,7 @@ function CreateGame(props) {
     if ('endgame_amount' in newState) setEndgameAmount(newState.endgame_amount);
     if ('endgame_type' in newState) setEndgameType(newState.endgame_type);
     if ('selectedStrategy' in newState) setSelectedStrategy(newState.selectedStrategy);
+    if ('prompt' in newState) setPrompt(newState.prompt);
     if ('winChance' in newState) setWinChance(newState.winChance);
     if ('rps_game_type' in newState) setRpsGameType(newState.rps_game_type);
     if ('qs_game_type' in newState) setQsGameType(newState.qs_game_type);
@@ -292,7 +292,7 @@ function CreateGame(props) {
   };
 
   const onNextButtonClicked = () => {
-    console.log("selectedStrategy", selectedStrategy)
+    console.log("prompt", prompt)
     if (step === 1) {
       if (!gameMode) {
         showError("No Gamemode", "YOU DIDN'T PICK A GAMEMODE");
@@ -361,7 +361,7 @@ function CreateGame(props) {
 
   const createRoomWithImage = async () => {
     setCreatingRoom(true);
-  
+
     const saveImage = (imageSrc) => {
       return new Promise((resolve, reject) => {
         const canvas = document.createElement('canvas');
@@ -369,23 +369,23 @@ function CreateGame(props) {
         const img = new Image();
         img.crossOrigin = 'anonymous'; // Handle CORS issues
         img.src = imageSrc;
-  
+
         img.onload = () => {
           const maxWidth = 250; // Adjust as needed
           let width = img.width;
           let height = img.height;
-  
+
           if (width > maxWidth) {
             height *= maxWidth / width;
             width = maxWidth;
           }
-  
+
           canvas.width = width;
           canvas.height = height;
           ctx.imageSmoothingEnabled = true;
           ctx.imageSmoothingQuality = 'high';
           ctx.drawImage(img, 0, 0, width, height);
-  
+
           canvas.toBlob(
             (blob) => {
               if (blob) {
@@ -398,25 +398,25 @@ function CreateGame(props) {
             'image/png'
           );
         };
-  
+
         img.onerror = (error) => {
           reject('Error processing image: ' + error);
         };
       });
     };
-  
+
     try {
       // 1) Resize the original 'image' (URL) into a Blob
       const resizedBlob = await saveImage(image);
       const formData = new FormData();
       formData.append('file', resizedBlob, 'resized-image.png');
-  
+
       const response = await axios.post('/game/upload-to-pinata', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       });
-  
+
       if (response.status !== 200) {
         throw new Error('Server responded with non-200 status.');
       }
@@ -425,7 +425,7 @@ function CreateGame(props) {
       if (!success || !imageUrl) {
         throw new Error(message || 'Upload failed, no imageUrl received.');
       }
-  
+
       const fullState = {
         game_type: gameType,
         game_mode: gameMode,
@@ -435,8 +435,9 @@ function CreateGame(props) {
         tax,
         name,
         ticker,
-        image: imageUrl, 
+        image: imageUrl,
         x_link: xLink,
+        prompt: prompt,
         website_link: websiteLink,
         telegram_link: telegramLink,
         selectedStrategy,
@@ -455,9 +456,9 @@ function CreateGame(props) {
         description,
         rps_game_type: rpsGameType,
       };
-  
+
       await props.createRoom(fullState);
-  
+
     } catch (error) {
       console.error('[Front-end] Error uploading/resizing image:', error);
       alertModal(isDarkMode, 'Failed to process image. Please try again.');
@@ -465,7 +466,7 @@ function CreateGame(props) {
       setCreatingRoom(false);
     }
   };
-  
+
   const onCreateRoom = () => {
     if (localStorage.getItem('hideConfirmModal') === 'true') {
       createRoomWithImage();
@@ -523,6 +524,7 @@ function CreateGame(props) {
             telegram_link={telegramLink}
             setSelectedStrategy={setSelectedStrategy}
             selectedStrategy={selectedStrategy}
+            prompt={prompt}
             selectedGameType={selectedGameType}
             ai_mode={user.ai_mode}
             user_id={user._id}
@@ -555,6 +557,7 @@ function CreateGame(props) {
             telegram_link={telegramLink}
             setSelectedStrategy={setSelectedStrategy}
             selectedStrategy={selectedStrategy}
+            prompt={prompt}
             ai_mode={user.ai_mode}
             selectedGameType={selectedGameType}
             onChangeState={onChangeState}

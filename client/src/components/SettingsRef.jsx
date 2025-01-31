@@ -30,6 +30,8 @@ const SettingsRef = ({
   user_id,
   ai_mode,
   prompt,
+  onChangeState,
+  creator_prompt,
   setSelectedStrategy,
   settings_panel_opened,
   settingsRef,
@@ -43,7 +45,7 @@ const SettingsRef = ({
   const [descriptionOpen, setDescriptionOpen] = useState(false);
   const [strengthsOpen, setStrengthsOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [localPrompt, setLocalPrompt] = useState(prompt || '');
+  const [localPrompt, setLocalPrompt] = useState(prompt || creator_prompt);
 
   const debouncedUpdateRef = useRef(null);
   const timeoutRef = useRef(null);
@@ -80,7 +82,13 @@ const SettingsRef = ({
 
     debouncedUpdateRef.current = debounce(async (newPrompt) => {
       setSaving(true);
-      await updateUserPrompt(user_id, newPrompt);
+      if (typeof (updateUserPrompt) === 'function') {
+        await updateUserPrompt(user_id, newPrompt);
+      } else {
+        onChangeState({
+          prompt: newPrompt
+        });
+      }
 
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
@@ -101,10 +109,10 @@ const SettingsRef = ({
       }
     };
   }, [user_id, updateUserPrompt]);
-  
+
   useEffect(() => {
-    setLocalPrompt(prompt || '');
-  }, [prompt]);
+    setLocalPrompt(prompt || creator_prompt);
+  }, [prompt, creator_prompt]);
 
   const handlePromptChange = (e) => {
     const newValue = e.target.value;

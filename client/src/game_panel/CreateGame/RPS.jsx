@@ -84,6 +84,8 @@ const RPS = (props) => {
     onChangeState,
     name,
     image,
+    setPrompt,
+    prompt,
     game_type,
     defaultBetAmounts,
     strategies,
@@ -144,6 +146,8 @@ const RPS = (props) => {
             <GameSettingsPanel
               selectedStrategy={selectedStrategy}
               setSelectedStrategy={setSelectedStrategy}
+              prompt={prompt}
+              onChangeState={onChangeState}
               isDarkMode={isDarkMode}
               strategies={strategies}
               user={user}

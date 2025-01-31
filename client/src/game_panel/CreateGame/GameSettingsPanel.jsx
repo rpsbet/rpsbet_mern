@@ -9,13 +9,14 @@ const GameSettingsPanel = ({
   user,
   rank,
   strategies,
+  prompt,
+  onChangeState,
   selectedStrategy,
   setSelectedStrategy,
   isDarkMode,
 }) => {
   // State to manage the visibility of the settings panel
   const [settingsPanelOpened, setSettingsPanelOpened] = useState(false);
-
   // Ref to detect clicks outside the settings panel
   const settingsRef = useRef(null);
 
@@ -72,7 +73,8 @@ const GameSettingsPanel = ({
           setSelectedStrategy={setSelectedStrategy}
           settings_panel_opened={settingsPanelOpened} // Pass the internal state
           ai_mode={ai_mode}
-          prompt={user.prompt}
+          creator_prompt={prompt}
+          onChangeState={onChangeState}
           user_id={user._id}
           rank={rank}
           settingsRef={settingsRef}
