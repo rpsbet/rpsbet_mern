@@ -35,7 +35,6 @@ const addToQueue = async (req, bot = false) => {
             rain,
             platform
         ] = await Promise.all([taxPromise, rainPromise, platformPromise]);
-        console.log("res", req.body)
         let responseData = {};
         let gameLogArray = [];
         let user;

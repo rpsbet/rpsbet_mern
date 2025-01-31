@@ -296,35 +296,66 @@ async function callCronJobs(io) {
 
   } catch (error) {
     console.error('Error executing cron jobs:', error);
-  } 
-//   finally {
-//     try {
-//       let updatedRooms = await Room.find({ status: 'open' })
-//         .sort({ updated_at: -1 })
-//         .populate('joiners', 'avatar totalWagered username accessory') // only these fields
-//         .lean();
-//       updatedRooms = updatedRooms.map((room) => {
-//         const joiner_avatars = (room.joiners || []).map((joiner) => ({
-//           avatar: joiner.avatar,
-//           rank: joiner.totalWagered,
-//           username: joiner.username,
-//           accessory: joiner.accessory,
-//         }));
-//         return {
-//           ...room,
-//           joiner_avatars,
-//         };
-//       });
+  }
+  finally {
+    try {
+      let updatedRooms = await Room.find({ status: 'open' })
+        .sort({ updated_at: -1 })
+        .populate('creator', 'avatar username accessory status totalWagered')
+        .populate('joiners', 'avatar totalWagered username accessory') // only these fields
+        .populate('game_type', 'short_name description')
+        .lean();
+      updatedRooms = updatedRooms.map((room) => {
+        const joiner_avatars = (room.joiners || []).map((joiner) => ({
+          avatar: joiner.avatar,
+          rank: joiner.totalWagered,
+          username: joiner.username,
+          accessory: joiner.accessory,
+        }));
 
-// console.log(updatedRooms.length)
-//       if (socketio) {
-//         socketio.emit('UPDATED_ROOM_LIST', updatedRooms);
-//       }
+        const creator = room.creator?._id || '';
+        const creator_avatar = room.creator?.avatar || '';
+        const creator_username = room.creator?.username || '';
+        const creator_rank = room.creator?.totalWagered || 0;
+        const creator_accessory = room.creator?.accessory || '';
+        const creator_status = room.creator?.status || '';
 
-//     } catch (err) {
-//       console.error('Error fetching or emitting updated room list:', err);
-//     }
-//   }
+        let gameTypeData = null;
+        if (Array.isArray(room.game_type)) {
+          // If game_type is an array of references:
+          gameTypeData = room.game_type.map((gt) => ({
+            _id: gt._id,
+            short_name: gt.short_name,
+            description: gt.description,
+          }));
+        } else if (room.game_type) {
+          // If it's a single reference:
+          gameTypeData = {
+            _id: room.game_type._id,
+            short_name: room.game_type.short_name,
+            description: room.game_type.description,
+          };
+        }
+        return {
+          ...room,
+          creator,
+          creator_avatar,
+          creator_status,
+          username: creator_username,
+          rank: creator_rank,
+          accessory: creator_accessory,
+          joiner_avatars,
+          game_type: gameTypeData,
+        };
+      });
+      if (socketio) {
+        socketio.emit('UPDATED_ROOM_LIST', updatedRooms);
+      }
+
+    } catch (err) {
+      console.error('Error fetching or emitting updated room list:', err);
+    }
+  }
 }
 
 async function delay(ms) {
