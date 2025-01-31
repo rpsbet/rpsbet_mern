@@ -56,10 +56,10 @@ const createMarket = async (realBasePublicKey, wsolMintPk) => {
       'Note: Create market does not support token 2022. If you need more detailed error info, set txVersion to TxVersion.LEGACY',
     );
     console.log('Create market txIds:', txIds);
+    console.log('Created Market Id:', extInfo.address['marketId']);
+    return extInfo.address['marketId'];
   } catch (error) {
     console.error('Error creating market:', error);
-  } finally {
-    process.exit();
   }
 };
 

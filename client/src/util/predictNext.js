@@ -1,5 +1,5 @@
 import * as tf from '@tensorflow/tfjs';
-
+import axios from '../util/Api';
 export const predictNext = (rps_list, markov = false) => {
   console.log('calllllled');
   console.log('rps_list', rps_list);
@@ -33,7 +33,10 @@ export const predictNext = (rps_list, markov = false) => {
 
   // Convert counts to probabilities with smoothing
   Object.keys(transitionMatrix).forEach((fromState) => {
-    const totalTransitions = Object.values(transitionMatrix[fromState]).reduce((a, b) => a + b, 0);
+    const totalTransitions = Object.values(transitionMatrix[fromState]).reduce(
+      (a, b) => a + b,
+      0,
+    );
     if (totalTransitions > 0) {
       Object.keys(transitionMatrix[fromState]).forEach((toState) => {
         transitionMatrix[fromState][toState] =
@@ -96,10 +99,10 @@ function mapProbabilityToRisk(prob) {
     0.50 < prob <= 0.75 => risk = 3
     0.75 < prob <= 1.0 => risk = 4
   */
-    if (prob <= 0.6) return 1;
-    else if (prob <= 0.7) return 2;
-    else if (prob <= 0.8) return 3;
-    else return 4;
+  if (prob <= 0.6) return 1;
+  else if (prob <= 0.7) return 2;
+  else if (prob <= 0.8) return 3;
+  else return 4;
 }
 
 // If Markov mode is on => we choose a "beating" move for the nextState
@@ -121,7 +124,9 @@ async function trainModel(rpsNumeric, joinerRPSNumeric) {
 
   // Define the neural network model
   const model = tf.sequential();
-  model.add(tf.layers.dense({ units: 128, inputShape: [1], activation: 'relu' }));
+  model.add(
+    tf.layers.dense({ units: 128, inputShape: [1], activation: 'relu' }),
+  );
   model.add(tf.layers.dense({ units: 64, activation: 'relu' }));
   model.add(tf.layers.dense({ units: 32, activation: 'relu' }));
   model.add(tf.layers.dense({ units: 3, activation: 'softmax' }));
@@ -135,7 +140,11 @@ async function trainModel(rpsNumeric, joinerRPSNumeric) {
   });
 
   // Train the model
-  await model.fit(rpsTensor, joinerRPSTensor, { epochs: 30, verbose: 0, batch_size: 32 });
+  await model.fit(rpsTensor, joinerRPSTensor, {
+    epochs: 30,
+    verbose: 0,
+    batch_size: 32,
+  });
 
   // Dispose of tensors
   rpsTensor.dispose();
@@ -167,26 +176,27 @@ async function predictNextMove(model, rpsNumeric) {
   // Introduce 33% chance of returning a random move
   if (Math.random() < 0.33) {
     const randomMoveIndex = Math.floor(Math.random() * 3);
-    bestCounterMove = randomMoveIndex === 0 ? 'R' : randomMoveIndex === 1 ? 'P' : 'S';
+    bestCounterMove =
+      randomMoveIndex === 0 ? 'R' : randomMoveIndex === 1 ? 'P' : 'S';
   } else {
-    if (nextJoinerRPS === 'R') bestCounterMove = Math.random() < 0.5 ? 'P' : 'R';
-    else if (nextJoinerRPS === 'P') bestCounterMove = Math.random() < 0.5 ? 'P' : 'S';
+    if (nextJoinerRPS === 'R')
+      bestCounterMove = Math.random() < 0.5 ? 'P' : 'R';
+    else if (nextJoinerRPS === 'P')
+      bestCounterMove = Math.random() < 0.5 ? 'P' : 'S';
     else bestCounterMove = Math.random() < 0.5 ? 'R' : 'S';
   }
 
   return { move: bestCounterMove, risk: risk };
 }
 
-
 function getRandomMoveExcluding(excludeMove) {
   if (excludeMove === 'R') {
-    return 'S'
+    return 'S';
   } else if (excludeMove === 'P') {
-    return 'R'
+    return 'R';
   } else {
-    return 'P'
+    return 'P';
   }
-
 }
 
 // Main function to handle reinforcement learning with dynamic adaptation mechanism
@@ -196,41 +206,54 @@ export async function reinforcementAI(data) {
   }
 
   const historicData = data.slice(0, 20);
-  const rpsNumeric = historicData.map(entry => (entry.rps === 'R' ? 0 : entry.rps === 'P' ? 1 : 2));
-  const joinerRPSNumeric = historicData.map(entry => (entry.joiner_rps === 'R' ? 0 : entry.joiner_rps === 'P' ? 1 : 2));
+  const rpsNumeric = historicData.map((entry) =>
+    entry.rps === 'R' ? 0 : entry.rps === 'P' ? 1 : 2,
+  );
+  const joinerRPSNumeric = historicData.map((entry) =>
+    entry.joiner_rps === 'R' ? 0 : entry.joiner_rps === 'P' ? 1 : 2,
+  );
 
   const results = historicData.map((entry, index) => ({
     rps: entry.rps,
     joiner_rps: entry.joiner_rps,
-    win: (entry.joiner_rps === 'R' && entry.rps === 'P') ||
+    win:
+      (entry.joiner_rps === 'R' && entry.rps === 'P') ||
       (entry.joiner_rps === 'P' && entry.rps === 'S') ||
-      (entry.joiner_rps === 'S' && entry.rps === 'R')
+      (entry.joiner_rps === 'S' && entry.rps === 'R'),
   }));
 
   const recentGamesAnalysis = results.slice(1).map((current, i) => {
     const previous = results[i];
     return {
       win: previous.win,
-      joinerChanged: current.rps !== previous.rps
+      joinerChanged: current.rps !== previous.rps,
     };
   });
 
-  const winChangePattern = recentGamesAnalysis.reduce((acc, game) => {
-    if (game.win) {
-      acc.winChanges.push(game.joinerChanged);
-    } else {
-      acc.lossChanges.push(game.joinerChanged);
-    }
-    return acc;
-  }, { winChanges: [], lossChanges: [] });
+  const winChangePattern = recentGamesAnalysis.reduce(
+    (acc, game) => {
+      if (game.win) {
+        acc.winChanges.push(game.joinerChanged);
+      } else {
+        acc.lossChanges.push(game.joinerChanged);
+      }
+      return acc;
+    },
+    { winChanges: [], lossChanges: [] },
+  );
 
-  const winChangesCount = winChangePattern.winChanges.filter(change => change).length;
-  const lossChangesCount = winChangePattern.lossChanges.filter(change => change).length;
+  const winChangesCount = winChangePattern.winChanges.filter(
+    (change) => change,
+  ).length;
+  const lossChangesCount = winChangePattern.lossChanges.filter(
+    (change) => change,
+  ).length;
   const winCount = winChangePattern.winChanges.length;
   const lossCount = winChangePattern.lossChanges.length;
 
   const winChangeProbability = winCount > 0 ? winChangesCount / winCount : 0;
-  const lossChangeProbability = lossCount > 0 ? lossChangesCount / lossCount : 0;
+  const lossChangeProbability =
+    lossCount > 0 ? lossChangesCount / lossCount : 0;
 
   const winChangesLikely = winChangeProbability > 0.3;
   const lossChangesLikely = lossChangeProbability > 0.3;
@@ -247,8 +270,7 @@ export async function reinforcementAI(data) {
     (lastGame.joiner_rps === 'S' && lastGame.rps === 'R') ||
     (lastGame.joiner_rps === 'P' && lastGame.rps === 'S');
 
-  const lastGameWasDraw =
-    (lastGame.joiner_rps === lastGame.rps);
+  const lastGameWasDraw = lastGame.joiner_rps === lastGame.rps;
 
   let model;
   try {
@@ -260,22 +282,21 @@ export async function reinforcementAI(data) {
       if (!winChangesLikely) {
         bestCounterMove = {
           move: getBeatingType(lastGame.rps),
-          risk: 3
+          risk: 3,
         };
       }
     } else if (lastGameWasLoss) {
       if (lossChangesLikely) {
         bestCounterMove = {
           move: getRandomMoveExcluding(lastGame.rps),
-          risk: 3
+          risk: 3,
         };
       } else {
         bestCounterMove = {
           move: getBeatingType(lastGame.rps),
-          risk: 3
+          risk: 3,
         };
       }
-
     }
     return bestCounterMove;
   } finally {
@@ -284,3 +305,17 @@ export async function reinforcementAI(data) {
     }
   }
 }
+
+export const predictNextByGPT = async (roomId) => {
+  try {
+    const res = await axios.get(`/predictRPSNextByGPT/${roomId}`);
+    if (res.data.success) {
+      return { move: res.data.data, risk: 3 };
+    } else {
+      return { move: 'R', risk: 3 };
+    }
+  } catch (e) {
+    consol.log(e);
+    return { move: 'R', risk: 3 };
+  }
+};

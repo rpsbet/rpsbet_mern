@@ -3,20 +3,14 @@ import React, {
   useRef,
   useEffect,
   useCallback,
-  useMemo
+  useMemo,
 } from 'react';
 import { connect } from 'react-redux';
 import Moment from 'moment';
 
 import TabbedContent from '../../components/TabbedContent';
 import { getRoomStatisticsData } from '../../redux/Customer/customer.action';
-import {
-  Button,
-  Drawer,
-  Box,
-  Tabs,
-  Tab
-} from '@mui/material';
+import { Button, Drawer, Box, Tabs, Tab } from '@mui/material';
 
 import {
   toggleDrawer,
@@ -51,11 +45,19 @@ import {
   addNewTransaction,
   coHost,
   getRoomList,
-  getSolToUsdPrice
+  getSolToUsdPrice,
 } from '../../redux/Logic/logic.actions';
 
-import { predictNext, reinforcementAI } from '../../util/predictNext';
-import { predictNextQs, reinforcementAI_qs } from '../../util/predictNextQs';
+import {
+  predictNext,
+  reinforcementAI,
+  predictNextByGPT,
+} from '../../util/predictNext';
+import {
+  predictNextQs,
+  reinforcementAI_qs,
+  predictQuickNextByGPT,
+} from '../../util/predictNextQs';
 
 import ChatPanel from '../ChatPanel/ChatPanel';
 import MyGamesTable from '../MyGames/MyGamesTable';
@@ -68,7 +70,7 @@ import PlayerModal from '../modal/PlayerModal';
 
 import {
   validateIsAuthenticated,
-  validateCreatorId
+  validateCreatorId,
 } from '../modal/betValidations';
 import { alertModal } from '../modal/ConfirmAlerts';
 
@@ -135,7 +137,7 @@ function JoinGame(props) {
     getCustomerStatisticsData: getCustomerStatisticsDataAction,
     fetchAccessory: fetchAccessoryAction,
     getSolToUsdPrice,
-    match
+    match,
   } = props;
 
   // Check if on mobile
@@ -172,7 +174,7 @@ function JoinGame(props) {
   const [bet_amount, setBetAmount] = useState(0.0005);
   const [predictedBetAmount, setPredictedBetAmount] = useState(0);
   const [componentHistory, setComponentHistory] = useState(
-    updateFromNow(propsHistory)
+    updateFromNow(propsHistory),
   );
   const [showAnimation, setShowAnimation] = useState(false);
   const [loading, setLoading] = useState(propsLoading);
@@ -190,7 +192,7 @@ function JoinGame(props) {
     shine: new Audio('/sounds/shine.mp3'),
     ballKick: new Audio('/sounds/ball_kick.mp3'),
     grunt2: new Audio('/sounds/grunt2.mp3'),
-    grunt: new Audio('/sounds/grunt.mp3')
+    grunt: new Audio('/sounds/grunt.mp3'),
   });
   const [currentSound, setCurrentSound] = useState(null);
 
@@ -232,7 +234,6 @@ function JoinGame(props) {
     };
   }, []);
 
-
   useEffect(() => {
     rpsbetitemsRef.current = rpsbetitems;
   }, [rpsbetitems]);
@@ -254,15 +255,15 @@ function JoinGame(props) {
     setBankroll(roomInfo.user_bet);
     const gameType = roomInfo.game_type;
     if (gameType === 'Quick Shoot') {
-      console.log("Quick")
+      console.log('Quick');
       getQsBetItems(roomInfo._id);
     } else {
-      console.log("hihiihh")
+      console.log('hihiihh');
       getRpsBetItems(roomInfo._id);
     }
     if (isMountedRef.current && attached) {
       setBetting(true);
-      // isQbot => not explicitly stored in original state? 
+      // isQbot => not explicitly stored in original state?
       // We'll store it if we want to replicate that logic.
     }
   }, [roomInfo]);
@@ -304,7 +305,7 @@ function JoinGame(props) {
       await Promise.all([
         loadSounds(),
         getStrategies(),
-        getRoomInfoAction(match.params.id, limit, true)
+        getRoomInfoAction(match.params.id, limit, true),
       ]);
       // Done: The room data, bet items, sounds, and strategies are all loaded
     } catch (error) {
@@ -335,27 +336,31 @@ function JoinGame(props) {
   }, [roomInfo.creator_id, user_id, fetchAccessoryAction]);
 
   // Replacing "join" => manual bet
-  const join = useCallback(async (betInfo) => {
-
-    return await bet3Action({
-      _id: roomInfo._id,
-      user: user_id,
-      game_type: roomInfo.game_type,
-      ...betInfo
-    });
-
-  }, [bet3Action, roomInfo, user_id]);
+  const join = useCallback(
+    async (betInfo) => {
+      return await bet3Action({
+        _id: roomInfo._id,
+        user: user_id,
+        game_type: roomInfo.game_type,
+        ...betInfo,
+      });
+    },
+    [bet3Action, roomInfo, user_id],
+  );
 
   // Replacing "join2" => auto bet
-  const join2 = useCallback(async (betInfo) => {
-    console.log("betInfo", betInfo)
-    return await bet3Action({
-      _id: localRoomInfo._id,
-      user: user_id,
-      game_type: localRoomInfo.game_type,
-      ...betInfo
-    });
-  }, [bet3Action, localRoomInfo, user_id]);
+  const join2 = useCallback(
+    async (betInfo) => {
+      console.log('betInfo', betInfo);
+      return await bet3Action({
+        _id: localRoomInfo._id,
+        user: user_id,
+        game_type: localRoomInfo.game_type,
+        ...betInfo,
+      });
+    },
+    [bet3Action, localRoomInfo, user_id],
+  );
 
   const playSound = useCallback(
     (soundKey) => {
@@ -377,7 +382,7 @@ function JoinGame(props) {
         }
       }
     },
-    [isMuted, gameSounds]
+    [isMuted, gameSounds],
   );
 
   const handleDetachAttachChange = useCallback(() => {
@@ -419,7 +424,7 @@ function JoinGame(props) {
     detachPlayerFromRoom,
     attachPlayerToRoom,
     intervalId,
-    checkPlayerAttachment
+    checkPlayerAttachment,
   ]);
 
   // ---------- AI-Related Predict Logic ----------
@@ -428,7 +433,7 @@ function JoinGame(props) {
     if (risk === 1) {
       const minFixed = 0.0005;
       const maxFixed = 0.001;
-      const randomBet = minFixed + (Math.random() * (maxFixed - minFixed));
+      const randomBet = minFixed + Math.random() * (maxFixed - minFixed);
       return parseFloat(randomBet.toFixed(6));
     }
 
@@ -447,15 +452,15 @@ function JoinGame(props) {
     switch (risk) {
       case 2:
         lowerFrac = 0.025;
-        upperFrac = 0.20;
+        upperFrac = 0.2;
         break;
       case 3:
-        lowerFrac = 0.20;
-        upperFrac = 0.40;
+        lowerFrac = 0.2;
+        upperFrac = 0.4;
         break;
       case 4:
         lowerFrac = 0.4;
-        upperFrac = 1.00;
+        upperFrac = 1.0;
         break;
       default:
         // If risk is out of range or 0, just use the full range
@@ -466,16 +471,15 @@ function JoinGame(props) {
 
     // 3) Calculate the actual numeric bounds
     const range = maxVal - minVal;
-    const chosenMin = minVal + (range * lowerFrac);
-    const chosenMax = minVal + (range * upperFrac);
+    const chosenMin = minVal + range * lowerFrac;
+    const chosenMax = minVal + range * upperFrac;
 
     // 4) Pick a random value in [chosenMin..chosenMax]
-    const randomBet = chosenMin + (Math.random() * (chosenMax - chosenMin));
+    const randomBet = chosenMin + Math.random() * (chosenMax - chosenMin);
 
     // 5) Round/truncate if desired
     return parseFloat(randomBet.toFixed(6));
   };
-
 
   const changeBgColor = useCallback(async (resultVal) => {
     setBetResult(resultVal);
@@ -496,7 +500,8 @@ function JoinGame(props) {
       setBgColorChanged(true);
 
       let newBorderColor = '';
-      let defaultColor = roomInfo.game_type === 'Mystery Box' ? '#ffd000' : 'grey';
+      let defaultColor =
+        roomInfo.game_type === 'Mystery Box' ? '#ffd000' : 'grey';
 
       switch (resultVal) {
         case 1:
@@ -516,14 +521,13 @@ function JoinGame(props) {
       setBgColorChanged(false);
       setBetResult(null);
     },
-    [roomInfo]
+    [roomInfo],
   );
-
 
   // Example Refactored joinGame2
   const joinGame2 = useCallback(
     async (randomItem, bet_amount) => {
-      console.log("joingame2", randomItem, bet_amount)
+      console.log('joingame2', randomItem, bet_amount);
 
       const { game_type: gameType, _id: roomId, status: status } = roomInfo;
       // 1) Early exits for basic conditions
@@ -537,15 +541,15 @@ function JoinGame(props) {
       setSelected_qs_position(randomItem);
       setPredictedBetAmount(bet_amount || 0);
 
-      console.log("isQuickShoot", isQuickShoot)
+      console.log('isQuickShoot', isQuickShoot);
       try {
         // 4) Build payload & call `join2`
         let joinResult = null;
-        const payload = { bet_amount }
-        console.log("payload——————before", payload)
+        const payload = { bet_amount };
+        console.log('payload——————before', payload);
         if (isRps) {
           payload.selected_rps = randomItem;
-          console.log("payload————after", payload)
+          console.log('payload————after', payload);
           joinResult = await join2(payload);
         } else if (isQuickShoot) {
           payload.selected_qs_position = randomItem;
@@ -559,7 +563,6 @@ function JoinGame(props) {
 
         // 5) If join was not successful, stop
         if (!joinResult || joinResult.status !== 'success') return;
-
 
         // 7) Handle bet result
         const { betResult, amount } = joinResult;
@@ -580,9 +583,7 @@ function JoinGame(props) {
             playSound('win');
             handleBetResult(1);
             setResult(
-              <span style={{ color: '#7ed321' }}>
-                + {currencyElement}
-              </span>
+              <span style={{ color: '#7ed321' }}>+ {currencyElement}</span>,
             );
             setGameResult(1);
             break;
@@ -591,9 +592,7 @@ function JoinGame(props) {
             playSound('split');
             handleBetResult(0);
             setResult(
-              <span style={{ color: 'grey' }}>
-                - {currencyElement}
-              </span>
+              <span style={{ color: 'grey' }}>- {currencyElement}</span>,
             );
             setGameResult(0);
             break;
@@ -602,9 +601,7 @@ function JoinGame(props) {
             playSound('lose');
             handleBetResult(-1);
             setResult(
-              <span style={{ color: '#f50000' }}>
-                - {currencyElement}
-              </span>
+              <span style={{ color: '#f50000' }}>- {currencyElement}</span>,
             );
             setGameResult(-1);
 
@@ -640,11 +637,11 @@ function JoinGame(props) {
       setResult,
       setGameResult,
       getRpsBetItems,
-      getQsBetItems
-    ]
+      getQsBetItems,
+    ],
   );
 
-  async function getNextAIMove(aiMode, gameType, dataRef, qsGameType) {
+  async function getNextAIMove(aiMode, gameType, dataRef, qsGameType, roomId) {
     const isQuickShoot = gameType === 'Quick Shoot';
 
     if (!dataRef.current || dataRef.current.length === 0) {
@@ -656,6 +653,8 @@ function JoinGame(props) {
         return await reinforcementAI_qs(dataRef.current, qsGameType);
       } else if (aiMode === 'Markov') {
         return await predictNextQs(dataRef.current, qsGameType);
+      } else if (aiMode === 'GPT3') {
+        return await predictQuickNextByGPT(roomId, qsGameType);
       }
     } else {
       // RPS logic
@@ -663,6 +662,8 @@ function JoinGame(props) {
         return await reinforcementAI(dataRef.current);
       } else if (aiMode === 'Markov') {
         return await predictNext(dataRef.current, true);
+      } else if (aiMode === 'GPT3') {
+        return await predictNextByGPT(roomId);
       }
     }
 
@@ -671,7 +672,12 @@ function JoinGame(props) {
   }
 
   const startBetting = useCallback(() => {
-    const { game_type: gameType, _id: roomId, qs_game_type, is_private, } = roomInfo;
+    const {
+      game_type: gameType,
+      _id: roomId,
+      qs_game_type,
+      is_private,
+    } = roomInfo;
     // Adjust interval based on AI mode
     let interval = 3300;
     if (ai_mode === 'Adam' || ai_mode === 'GPT3') {
@@ -679,17 +685,22 @@ function JoinGame(props) {
     }
     const newIntervalId = setInterval(async () => {
       try {
-
         let randomItem;
         let nextBetAmount;
 
         // Check if Quick Shoot or RPS
-        const isQuickShoot = (gameType === 'Quick Shoot');
+        const isQuickShoot = gameType === 'Quick Shoot';
         const dataRef = isQuickShoot ? qsbetitemsRef : rpsbetitemsRef;
 
         // Now get the next AI move + risk
-        const nextMove = await getNextAIMove(ai_mode, gameType, dataRef, qs_game_type);
-        console.log("nextMove", nextMove)
+        const nextMove = await getNextAIMove(
+          ai_mode,
+          gameType,
+          dataRef,
+          qs_game_type,
+          roomId,
+        );
+        console.log('nextMove', nextMove);
         if (nextMove.move !== null) {
           randomItem = nextMove.move;
           nextBetAmount = await predictNextBetAmount(nextMove.risk);
@@ -702,7 +713,6 @@ function JoinGame(props) {
         } else {
           await joinGame2(randomItem, nextBetAmount);
         }
-
       } catch (error) {
         console.error('Error in interval function:', error);
       }
@@ -720,7 +730,7 @@ function JoinGame(props) {
     reinforcementAI_qs,
     reinforcementAI,
     predictNextQs,
-    predictNext
+    predictNext,
   ]);
 
   const stopBetting = useCallback(() => {
@@ -746,13 +756,10 @@ function JoinGame(props) {
     };
   }, []);
 
-
   const loadSounds = useCallback(async () => {
     const soundObjects = soundsRef.current;
     // Just ensure .load() is called; many browsers do lazy loading anyway
-    await Promise.all(
-      Object.values(soundObjects).map((snd) => snd.load())
-    );
+    await Promise.all(Object.values(soundObjects).map((snd) => snd.load()));
   }, []);
 
   const stopAllSounds = useCallback(() => {
@@ -781,7 +788,7 @@ function JoinGame(props) {
       setBetting(true);
       startBetting();
     } else {
-      console.log("caled to stop")
+      console.log('caled to stop');
       setBetting(false);
       stopBetting();
     }
@@ -795,10 +802,8 @@ function JoinGame(props) {
     validateIsAuthenticated,
     validateCreatorId,
     startBetting,
-    stopBetting
+    stopBetting,
   ]);
-
-
 
   const handleOpenPlayerModal = useCallback((creator_id) => {
     setShowPlayerModal(true);
@@ -833,7 +838,7 @@ function JoinGame(props) {
         addNewTransaction(result.newTransaction);
         await getRoomListAction({
           pageSize: 10, // or dynamic
-          game_type: roomInfo.game_type
+          game_type: roomInfo.game_type,
         });
       } else {
         alertModal(isDarkMode, result.message);
@@ -848,7 +853,7 @@ function JoinGame(props) {
     roomInfo,
     coHostAction,
     addNewTransaction,
-    getRoomListAction
+    getRoomListAction,
   ]);
 
   const onChangeState = useCallback((newState) => {
@@ -895,7 +900,7 @@ function JoinGame(props) {
 
   const isLowBankroll = bankroll <= 0.01;
   const isHighCommission = cp > 16;
-  const isLowProfit = (roomInfo.host_pr - roomInfo.total_stakes) > 0;
+  const isLowProfit = roomInfo.host_pr - roomInfo.total_stakes > 0;
   const hostProfit = parseFloat(roomInfo.host_pr) || 0;
   const totalStakes = parseFloat(roomInfo?.total_stakes) || 0;
   const winChance =
@@ -904,7 +909,10 @@ function JoinGame(props) {
       : 33;
 
   const maxBankroll = 80;
-  const progressPercentage = Math.min((bankroll / maxBankroll) * 100, 100).toFixed(2);
+  const progressPercentage = Math.min(
+    (bankroll / maxBankroll) * 100,
+    100,
+  ).toFixed(2);
 
   return (
     <Box
@@ -914,10 +922,10 @@ function JoinGame(props) {
         gridTemplateColumns: is_mobile ? '100%' : 'calc(100% - 360px) 350px',
         gap: '8px',
         width: '100%',
-        boxSizing: 'border-box'
+        boxSizing: 'border-box',
       }}
     >
-      {(is_mobile && selectedMobileTab === 'chat') && (
+      {is_mobile && selectedMobileTab === 'chat' && (
         <Drawer
           className="mat-chat"
           style={{ display: isDrawerOpen ? 'flex' : 'none' }}
@@ -1022,7 +1030,7 @@ function JoinGame(props) {
           isDarkMode={isDarkMode}
           endgame_type={roomInfo.endgame_type}
           actionList={actionList}
-          getRoomData={() => { }} // or remove if not needed
+          getRoomData={() => {}} // or remove if not needed
           user={user}
           coHostAmount={coHostAmount}
           getRoomInfo={getRoomInfoAction}
@@ -1044,10 +1052,12 @@ function JoinGame(props) {
         <div>
           {/* MyGamesTable / HistoryTable / MyHistoryTable based on your conditions */}
           {/* Example logic: */}
-          {(!is_mobile && selectedMainTabIndex === 1) && (
+          {!is_mobile && selectedMainTabIndex === 1 && (
             <MyGamesTable gameTypeList={gameTypeList} />
           )}
-          {is_mobile && selectedMobileTab === 'live_games' && <HistoryTable userId={user_id} />}
+          {is_mobile && selectedMobileTab === 'live_games' && (
+            <HistoryTable userId={user_id} />
+          )}
           {is_mobile && selectedMobileTab === 'my_games' && <MyHistoryTable />}
         </div>
       </Box>
@@ -1092,8 +1102,8 @@ function JoinGame(props) {
               balance={user_balance}
               solPrice={solPrice}
               user={user}
-              togglePopup={() => { }}
-              handleClose={() => { }}
+              togglePopup={() => {}}
+              handleClose={() => {}}
               handleSendCoHost={handleSendCoHost}
               handleCoHostAmountChange={handleCoHostAmountChange}
               has_joined={true}
@@ -1177,7 +1187,7 @@ const mapStateToProps = (state) => ({
   isLowGraphics: state.auth.isLowGraphics,
   is_betting: state.logic.is_betting,
   attached: state.logic.attached,
-  solPrice: state.logic.solPrice
+  solPrice: state.logic.solPrice,
 });
 
 const mapDispatchToProps = {
@@ -1204,7 +1214,7 @@ const mapDispatchToProps = {
   getCustomerStatisticsData,
   fetchAccessory,
   updateTutorialCompleted,
-  getSolToUsdPrice
+  getSolToUsdPrice,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(JoinGame);
