@@ -306,16 +306,18 @@ export async function reinforcementAI(data) {
   }
 }
 
-export const predictNextByGPT = async (roomId) => {
+export const predictNextByGPT = async (roomId, user_id) => {
   try {
-    const res = await axios.get(`/predictRPSNextByGPT/${roomId}`);
+    const res = await axios.get(
+      `/game/predictRPSNextByGPT/${roomId}/${user_id}`,
+    );
     if (res.data.success) {
-      return { move: res.data.data, risk: 3 };
+      return { move: res.data.data, risk: 2 };
     } else {
-      return { move: 'R', risk: 3 };
+      return { move: 'R', risk: 2 };
     }
   } catch (e) {
     consol.log(e);
-    return { move: 'R', risk: 3 };
+    return { move: 'R', risk: 2 };
   }
 };

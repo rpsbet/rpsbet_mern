@@ -137,7 +137,6 @@ const predictNextQs = (qs_list, gameType) => {
   return nextState;
 };
 
-
 async function reinforcementAI_qs(data, qs_game_type) {
   if (!qs_game_type || typeof qs_game_type !== 'number' || qs_game_type <= 0) {
     throw new Error(`Invalid qs_game_type: ${qs_game_type}`);
@@ -482,10 +481,15 @@ function getLastMoves(historicData, n) {
 }
 
 // UPDATED: use the .Chat.Completions.create(...) method
-async function openAIPredictionAI_qs(historicData, qs_game_type) {
+async function openAIPredictionAI_qs(
+  historicData,
+  qs_game_type,
+  user_prompt = '',
+) {
   if (!historicData || historicData.length === 0) {
     return getRandomItem_qs(qs_game_type);
   }
+  console.log('----userprompt----', user_prompt);
 
   const userMoves = historicData.map((item) => item.joiner_qs);
   const userMovesString = userMoves.join(', ');

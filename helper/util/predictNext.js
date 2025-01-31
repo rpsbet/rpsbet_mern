@@ -314,12 +314,13 @@ function counterRandomness(historicData) {
 }
 
 // UPDATED: use the .Chat.Completions.create(...) method instead of createChatCompletion(...)
-async function predictNextOpenAI(rps_list) {
+async function predictNextOpenAI(rps_list, user_prompt = '') {
   if (!rps_list || rps_list.length === 0) {
     const randomChoice = ['R', 'P', 'S'][Math.floor(Math.random() * 3)];
     return randomChoice;
   }
 
+  console.log('----userprompt----', user_prompt);
   const userMovesString = rps_list.map((item) => item.rps).join(' ');
 
   const systemMessage = {

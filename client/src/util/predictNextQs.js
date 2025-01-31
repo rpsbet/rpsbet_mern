@@ -277,16 +277,16 @@ export function getRandomItem_qs(qs_game_type, possibleMoves = null) {
   }
   return possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
 }
-export const predictQuickNextByGPT = async (roomId, qs_game_type) => {
+export const predictQuickNextByGPT = async (roomId, qs_game_type, user_id) => {
   try {
-    const res = await axios.get(`/predictQuickNextByGPT/${roomId}`);
+    const res = await axios.get(`/predictQuickNextByGPT/${roomId}/${user_id}`);
     if (res.data.success) {
-      return { move: res.data.data, risk: 3 };
+      return { move: res.data.data, risk: 2 };
     } else {
-      return { move: getRandomItem_qs(qs_game_type), risk: 3 };
+      return { move: getRandomItem_qs(qs_game_type), risk: 2 };
     }
   } catch (e) {
     consol.log(e);
-    return { move: getRandomItem_qs(qs_game_type), risk: 3 };
+    return { move: getRandomItem_qs(qs_game_type), risk: 2 };
   }
 };

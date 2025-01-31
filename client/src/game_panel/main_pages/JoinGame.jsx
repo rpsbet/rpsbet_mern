@@ -656,7 +656,7 @@ function JoinGame(props) {
       } else if (aiMode === 'Markov') {
         return await predictNextQs(dataRef.current, qsGameType);
       } else if (aiMode === 'GPT3') {
-        return await predictQuickNextByGPT(roomId, qsGameType);
+        return await predictQuickNextByGPT(roomId, qsGameType, user_id);
       }
     } else {
       // RPS logic
@@ -665,7 +665,7 @@ function JoinGame(props) {
       } else if (aiMode === 'Markov') {
         return await predictNext(dataRef.current, true);
       } else if (aiMode === 'GPT3') {
-        return await predictNextByGPT(roomId);
+        return await predictNextByGPT(roomId, user_id);
       }
     }
 
@@ -681,6 +681,7 @@ function JoinGame(props) {
       is_private,
     } = roomInfo;
     // Adjust interval based on AI mode
+
     let interval = 3300;
     if (ai_mode === 'Adam' || ai_mode === 'GPT3') {
       interval = 4200;

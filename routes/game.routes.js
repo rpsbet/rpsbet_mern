@@ -38,7 +38,7 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage });
 const axios = require('axios');
 const { predictNextOpenAI } = require('../helper/util/predictNext.js');
-
+const { openAIPredictionAI_qs } = require('../helper/util/predictNextQs.js');
 // Environment variables
 const PINATA_JWT = process.env.PINATA_JWT;
 
@@ -245,20 +245,26 @@ router.patch('/prompt/:user_id', async (req, res) => {
   const { prompt } = req.body;
 
   try {
-    const user = await User.findByIdAndUpdate(user_id, { prompt: prompt }, { new: true });
+    const user = await User.findByIdAndUpdate(
+      user_id,
+      { prompt: prompt },
+      { new: true },
+    );
 
     if (!user) {
-      return res.status(404).json({ success: false, message: 'user not found' });
+      return res
+        .status(404)
+        .json({ success: false, message: 'user not found' });
     }
 
     res.json({
       success: true,
-      message: 'Successful!'
+      message: 'Successful!',
     });
   } catch (err) {
     res.json({
       success: false,
-      err: err.message
+      err: err.message,
     });
   }
 });
@@ -855,42 +861,20 @@ router.get('/rpsbetitems/:roomId', auth, async (req, res) => {
   }
 });
 
-router.get('/predictRPSNextByGPT/:roomId', auth, async (req, res) => {
-  const { roomId } = req.params;
+router.get('/predictRPSNextByGPT/:roomId/:user_id', auth, async (req, res) => {
+  const { roomId, user_id } = req.params;
   try {
     const rpsBetItems = await RpsBetItem.find({
       room: roomId,
       joiner: req.user._id,
       joiner_rps: { $ne: null },
     }).sort({ created_at: -1 });
-    const predictedMove = await predictNextOpenAI(rpsBetItems);
-    res.json({
-      success: true,
-      data: predictedMove,
-    });
-  } catch (err) {
-    res.json({
-      success: false,
-      err: err,
-    });
-  }
-});
 
-router.get('/predictQuickNextByGPT/:roomId', auth, async (req, res) => {
-  const { roomId } = req.params;
-  try {
-    const rpsBetItems = await QsBetItem.find({
-      room: roomId,
-      joiner: req.user._id,
-      joiner_rps: { $ne: null },
-    }).sort({ created_at: -1 });
-    const roomInfo = await Room.findOne({ _id: req.body._id }).select(
-      'name image ticker room_number updated_at battles selectedStrategy qs_game_type game_type rps_game_type joiners creator bet_amount user_bet pr host_pr endgame_type endgame_amount is_private room_password status hosts',
-    );
+    const user = await User.findOne({ _id: new ObjectId(user_id) });
 
     const predictedMove = await predictNextOpenAI(
       rpsBetItems,
-      roomInfo['qs_game_type'],
+      user.prompt ?? 'You are an expert in Rock Paper Scissors.',
     );
     res.json({
       success: true,
@@ -903,6 +887,39 @@ router.get('/predictQuickNextByGPT/:roomId', auth, async (req, res) => {
     });
   }
 });
+
+router.get(
+  '/predictQuickNextByGPT/:roomId/:user_id',
+  auth,
+  async (req, res) => {
+    const { roomId, user_id } = req.params;
+    try {
+      const rpsBetItems = await QsBetItem.find({
+        room: roomId,
+        joiner: req.user._id,
+        joiner_rps: { $ne: null },
+      }).sort({ created_at: -1 });
+      const roomInfo = await Room.findOne({ _id: roomId }).select(
+        'name image ticker room_number updated_at battles selectedStrategy qs_game_type game_type rps_game_type joiners creator bet_amount user_bet pr host_pr endgame_type endgame_amount is_private room_password status hosts',
+      );
+      const user = await User.findOne({ _id: user_id });
+      const predictedMove = await openAIPredictionAI_qs(
+        rpsBetItems,
+        roomInfo['qs_game_type'],
+        user.prompt ?? 'You are an expert in Rock Paper Scissors.',
+      );
+      res.json({
+        success: true,
+        data: predictedMove,
+      });
+    } catch (err) {
+      res.json({
+        success: false,
+        err: err,
+      });
+    }
+  },
+);
 router.get('/qsbetitems/:roomId', auth, async (req, res) => {
   const { roomId } = req.params;
   try {
@@ -1177,8 +1194,14 @@ const getRoomList = async (pageSize, game_type, excludeIds = []) => {
 
   try {
     const preRooms = await Room.find(search_condition)
-      .select('_id name selectedStrategy image description room_number creator battles username joiners game_type qs_game_type is_private bet_amount user_bet pr host_pr status created_at updated_at hosts')
-      .populate({ path: 'creator', model: 'rps_users', select: 'avatar totalWagered username accessory status' })
+      .select(
+        '_id name selectedStrategy image description room_number creator battles username joiners game_type qs_game_type is_private bet_amount user_bet pr host_pr status created_at updated_at hosts',
+      )
+      .populate({
+        path: 'creator',
+        model: 'rps_users',
+        select: 'avatar totalWagered username accessory status',
+      })
       .populate({ path: 'game_type', model: 'rps_game_types' })
       .sort({ updated_at: -1 })
       .limit(pageSize);
@@ -1418,7 +1441,7 @@ router.post('/rooms', auth, async (req, res) => {
       description,
       qs_game_type,
       room_password,
-      qs_nation
+      qs_nation,
     } = req.body;
     const {
       _id,
@@ -1437,7 +1460,10 @@ router.post('/rooms', auth, async (req, res) => {
       });
     }
     if (bet_amount < 0.0005) {
-      return res.json({ success: false, message: 'MEOWNIMUM BET IS 0.0005 SOL!' });
+      return res.json({
+        success: false,
+        message: 'MEOWNIMUM BET IS 0.0005 SOL!',
+      });
     }
     if (endgame_type && parseFloat(endgame_amount) < bet_amount) {
       return res.json({
@@ -1463,13 +1489,15 @@ router.post('/rooms', auth, async (req, res) => {
     }
 
     const roomCount = await Room.countDocuments({});
-    const gameType = await GameType.findOne({ game_type_id: parseInt(game_type) });
+    const gameType = await GameType.findOne({
+      game_type_id: parseInt(game_type),
+    });
     const user_bet = parseFloat(bet_amount);
     const room_number = roomCount + 1;
 
     const newRoom = new Room({
       creator: _id,
-      room_password: room_password ? room_password : "",
+      room_password: room_password ? room_password : '',
       bet_amount: user_bet,
       is_private,
       qs_nation,
