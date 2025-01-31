@@ -821,6 +821,18 @@ export const updateUserStrategy = (user_id, strategy) => async dispatch => {
     // Handle errors
   }
 };
+export const updateUserPrompt = (user_id, prompt) => async dispatch => {
+  console.log("user_id, prompt", user_id, prompt)
+  try {
+    const res = await axios.patch(`/game/prompt/${user_id}`, { prompt });
+    if (res.data.success) {
+      dispatch({ type: MSG_SUCCESS, payload: "AI PLAY PROMPT UPDATED" });
+
+    }
+  } catch (err) {
+    // Handle errors
+  }
+};
 
 export const updateBetRangeFunction = (user_id, newValue) => async dispatch => {
   try {

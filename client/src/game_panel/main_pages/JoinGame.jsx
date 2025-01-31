@@ -35,6 +35,7 @@ import {
   fetchAccessory,
   getGameTypeList,
   updateUserStrategy,
+  updateUserPrompt,
   getRpsBetItems,
   getQsBetItems,
   getStrategies,
@@ -125,6 +126,7 @@ function JoinGame(props) {
     attachPlayerToRoom,
     checkPlayerAttachment,
     updateUserStrategy,
+    updateUserPrompt,
     addNewTransaction,
     coHost: coHostAction,
     getRoomList: getRoomListAction,
@@ -1024,6 +1026,7 @@ function JoinGame(props) {
           creator_id={roomInfo.creator_id}
           pr={roomInfo.pr}
           updateUserStrategy={updateUserStrategy}
+          updateUserPrompt={updateUserPrompt}
           bankroll={bankroll}
           predictedBetAmount={predictedBetAmount}
           is_private={roomInfo.is_private}
@@ -1073,6 +1076,7 @@ function JoinGame(props) {
               qsbetitems={qsbetitems}
               onChangeState={onChangeState}
               updateUserStrategy={updateUserStrategy}
+              updateUserPrompt={updateUserPrompt}
               strategies={strategies}
               betting={betting}
               bet_amount={bet_amount}
@@ -1201,6 +1205,7 @@ const mapDispatchToProps = {
   attachPlayerToRoom,
   checkPlayerAttachment,
   updateUserStrategy,
+  updateUserPrompt,
   addNewTransaction,
   coHost,
   getRoomList,

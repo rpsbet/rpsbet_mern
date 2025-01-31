@@ -955,6 +955,7 @@ function QuickShoot(props) {
                       <AiPanel
                         qsbetitems={props.qsbetitems}
                         updateUserStrategy={props.updateUserStrategy}
+                        updateUserPrompt={props.updateUserPrompt}
                         strategies={strategies}
                         betting={betting}
                         is_betting={is_betting}

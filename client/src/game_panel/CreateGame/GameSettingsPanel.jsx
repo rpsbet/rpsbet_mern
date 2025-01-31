@@ -72,6 +72,7 @@ const GameSettingsPanel = ({
           setSelectedStrategy={setSelectedStrategy}
           settings_panel_opened={settingsPanelOpened} // Pass the internal state
           ai_mode={ai_mode}
+          prompt={user.prompt}
           user_id={user._id}
           rank={rank}
           settingsRef={settingsRef}
