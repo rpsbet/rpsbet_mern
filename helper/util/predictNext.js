@@ -331,7 +331,7 @@ async function predictNextOpenAI(rps_list, user_prompt = '') {
 
   const userPrompt = {
     role: 'user',
-    content: `The user's past moves are: ${userMovesString}. Predict their next move. Valid answers: R, P, or S.`,
+    content: `${user_prompt}. The user's past moves are: ${userMovesString}. Predict their next move. Valid answers: R, P, or S.`,
   };
 
   try {

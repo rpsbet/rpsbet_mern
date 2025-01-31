@@ -646,9 +646,9 @@ function JoinGame(props) {
   async function getNextAIMove(aiMode, gameType, dataRef, qsGameType, roomId) {
     const isQuickShoot = gameType === 'Quick Shoot';
 
-    if (!dataRef.current || dataRef.current.length === 0) {
-      return { move: null, risk: 1 };
-    }
+    // if (!dataRef.current || dataRef.current.length === 0) {
+    //   return { move: null, risk: 1 };
+    // }
 
     if (isQuickShoot) {
       if (aiMode === 'Adam') {
@@ -694,7 +694,6 @@ function JoinGame(props) {
         // Check if Quick Shoot or RPS
         const isQuickShoot = gameType === 'Quick Shoot';
         const dataRef = isQuickShoot ? qsbetitemsRef : rpsbetitemsRef;
-
         // Now get the next AI move + risk
         const nextMove = await getNextAIMove(
           ai_mode,
