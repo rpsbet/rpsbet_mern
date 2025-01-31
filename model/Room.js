@@ -48,7 +48,7 @@ const RoomSchema = new Schema({
   },
   selectedStrategy: {
     type: String,
-    default: 'Random'
+    default: 'Markov'
   },
   last_updated_strat: {
     type: Date,

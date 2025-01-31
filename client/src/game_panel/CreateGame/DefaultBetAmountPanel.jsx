@@ -237,11 +237,7 @@ const DefaultBetAmountPanel = ({
         <div className="bet-amounts">
           {defaultHardCapAmounts.map((amount, index) => {
             const hcVal = amount; // 2x each defaultBuyAmount
-            console.log(
-              `endgame_amount: ${endgame_amount}, hcVal: ${hcVal}, equality:`,
-              endgame_amount === hcVal
-            );
-            
+    
             return (
               <Button
                 color="error"

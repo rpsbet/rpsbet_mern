@@ -1372,10 +1372,23 @@ export const setRoomList = (newRoom) => (dispatch) => {
     let roomList = JSON.parse(localStorage.getItem('roomList')) || [];
 
     if (Array.isArray(newRoom)) {
-      // If newRoom is an array, just replace the entire list
+      // If newRoom is an array, check if it’s exactly the same as current
+      const isExactMatch = arraysHaveSameRooms(roomList, newRoom);
+      if (isExactMatch) {
+        // Return early if it's a duplicate
+        return;
+      }
+
+      // Otherwise, replace the entire list
       roomList = newRoom;
     } else {
-      // Otherwise, newRoom is a single item — prepend it to the existing list
+      // If it's a single item, check if it already exists
+      const isDuplicate = roomList.some((room) => room._id === newRoom._id);
+      if (isDuplicate) {
+        return; // Return early if it’s a duplicate
+      }
+
+      // Prepend the new room
       roomList = [newRoom, ...roomList];
     }
 
@@ -1391,6 +1404,16 @@ export const setRoomList = (newRoom) => (dispatch) => {
     console.error('Error updating room list in local storage:', err);
   }
 };
+
+function arraysHaveSameRooms(oldRooms, newRooms) {
+  if (oldRooms.length !== newRooms.length) return false;
+
+  const oldIds = oldRooms.map(r => r._id).sort();
+  const newIds = newRooms.map(r => r._id).sort();
+
+  return JSON.stringify(oldIds) === JSON.stringify(newIds);
+}
+
 
 export const removeRoomFromList = roomId => dispatch => {
   try {
