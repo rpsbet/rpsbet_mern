@@ -5,7 +5,6 @@ import {
   getRoomList,
   setCurRoomInfo,
   setRoomList,
-  fetchMoreRooms,
   getRecentlyClosed,
   addNewTransaction,
   coHost,
@@ -13,7 +12,7 @@ import {
 import isEqual from 'lodash/isEqual';
 
 import { TrendingUpOutlined, TrendingDownOutlined, ShowChartOutlined, LockOutlined, Add, Remove, } from '@mui/icons-material';
-import { Grid, Link, Tooltip, Typography, Skeleton, Box, Button, Card, Modal } from '@mui/material';
+import { Grid, Pagination, Tooltip, Typography, Skeleton, Box, Button, Card, Modal } from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import Moment from 'moment';
 import { faHeart, faHeartBroken, faStopwatch } from '@fortawesome/free-solid-svg-icons';
@@ -51,7 +50,6 @@ function OpenGamesTable(props) {
     setCurRoomInfo,
     highlightedRooms,
     getRecentlyClosed,
-    fetchMoreRooms,
     addNewTransaction,
     coHost,
   } = props;
@@ -64,36 +62,17 @@ function OpenGamesTable(props) {
   const [selectedRow, setSelectedRow] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const theme = getCustomTheme(isDarkMode);
-
-  // For debouncing scroll
-  const scrollTimeout = useRef(null);
-
-  // Equivalent to componentDidMount:
-  useEffect(() => {
-    let isMounted = true;
-    const doMountThings = async () => {
-      setIsLoading(true);
-      // Fetch initial room list
-      try {
-        await getRoomList({ pageSize: 9 });
-      } catch (error) {
-        console.error('Error fetching Room List', error);
-      }
-      // Mark as done
-      if (isMounted) setIsLoading(false);
-    };
-    doMountThings();
-
-    // Setup scroll listener
-    window.addEventListener('scroll', debouncedHandleScroll);
-    // Cleanup on unmount
-    return () => {
-      isMounted = false;
-      window.removeEventListener('scroll', debouncedHandleScroll);
-    };
-  }, []);
-
+  const [page, setPage] = useState(1);
+  const pageSize = 30;
+  // total rooms from server, so we can calculate how many pages
+  const startIndex = (page - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const displayedRooms = roomList.slice(startIndex, endIndex);
   const prevRoomListRef = useRef(roomList);
+
+  useEffect(() => {
+    (getRoomList({ game_type: 'All' }));
+  }, [getRoomList]);
 
   useEffect(() => {
     if (!isEqual(prevRoomListRef.current, roomList)) {
@@ -129,34 +108,8 @@ function OpenGamesTable(props) {
     setLocalRoomList(mergedRooms);
   }, [roomList, highlightedRooms]);
 
-  // ------------------ SCROLL HANDLING (debounce) ------------------
-  const debouncedHandleScroll = useCallback(() => {
-    // Cancel previous
-    if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
-    // Set new
-    scrollTimeout.current = setTimeout(() => handleScroll(), 300);
-  }, []);
-
-  // The actual handleScroll logic
-  const handleScroll = async () => {
-    if (loading) return;
-    const tableElement = document.querySelector('.table.main-game-table');
-    if (!tableElement) return;
-
-    const { bottom } = tableElement.getBoundingClientRect();
-    const viewportHeight = window.innerHeight;
-    const offset = 100;
-    const isTableNearBottom = bottom <= viewportHeight + offset;
-    const isAtBottom =
-      window.innerHeight + window.scrollY >= document.body.offsetHeight;
-
-    if (isTableNearBottom || isAtBottom) {
-      // fetch more
-      await fetchMoreRooms({
-        pageSize: localRoomList.length + 3,
-        game_type: selectedGameType,
-      });
-    }
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
   };
 
   // ------------------ CO-HOST LOGIC ------------------
@@ -187,7 +140,6 @@ function OpenGamesTable(props) {
       if (result.success) {
         addNewTransaction(result.newTransaction);
         await getRoomList({
-          pageSize: localRoomList.length,
           game_type: selectedGameType,
         });
       } else {
@@ -334,13 +286,13 @@ function OpenGamesTable(props) {
 
       {isLiveGames ? (
         <div className="table main-game-table open-games">
-          {localRoomList.length === 0 && !isLoading && !loading ? (
+          {displayedRooms.length === 0 && !isLoading && !loading ? (
             <div className="dont-have-game-msg">
               <div>NO LIVE GAMES, GO TO 'MANAGE' TO CREATE ONE</div>
             </div>
           ) : (
             <Grid container className="grid-container" spacing={1} style={{ padding: '20px' }}>
-              {localRoomList.length === 0 ? (
+              {displayedRooms.length === 0 ? (
                 // Skeleton
                 Array.from({ length: 5 }).map((_, index) => (
                   <Grid item xs={12} sm={6} md={4} key={index}>
@@ -350,7 +302,7 @@ function OpenGamesTable(props) {
                   </Grid>
                 ))
               ) : (
-                localRoomList.map((row, key) => (
+                displayedRooms.map((row, key) => (
                   <div
                     key={row._id}
                     className={`table-row ${key < 10 ? '' : ''} ${highlightedRooms.includes(row._id) ? 'highlighted-row' : ''
@@ -478,9 +430,9 @@ function OpenGamesTable(props) {
                           />
                         </a>
                         <i
-                          className={`online-status${onlineUserList.filter((u) => u === row.creator_id).length > 0
-                            ? ' online'
-                            : ''
+                          className={`online-status${(onlineUserList.some((u) => u === row.creator_id) || row.creator_status === 'on')
+                              ? ' online'
+                              : ''
                             }`}
                         ></i>
                         {row.hosts && row.hosts.slice(1, 1).map((host, index) => (
@@ -646,6 +598,19 @@ function OpenGamesTable(props) {
               )}
             </Grid>
           )}
+          <Pagination
+            color="error"
+            sx={{
+              display: 'flex',
+              justifyContent: 'center',
+              '& .MuiPaginationItem-root': {
+                borderRadius: '4px',
+              },
+            }}
+            count={Math.ceil(roomList.length / pageSize)}
+            page={page}
+            onChange={handleChangePage}
+          />
         </div>
       ) : (
         // If filter === "Recently Bonded"
@@ -833,7 +798,6 @@ const mapDispatchToProps = {
   getRoomStatisticsData,
   getRecentlyClosed,
   setRoomList,
-  fetchMoreRooms,
   addNewTransaction,
   coHost,
 };

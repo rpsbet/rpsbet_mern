@@ -19,7 +19,6 @@ import {
   setCurrentLoanId,
   setCurrentLoanInfo
 } from '../../../../redux/Loan/loan.action';
-import { getRoomList } from '../../../../redux/Logic/logic.actions';
 import { openDeListLoanModal } from '../../../../redux/Notification/notification.actions';
 import history from '../../../../redux/history';
 import {
@@ -523,7 +522,6 @@ const mapDispatchToProps = {
   setCurrentLoanInfo,
   openDeListLoanModal,
   acGetCustomerInfo,
-  getRoomList,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(MyBankTable);

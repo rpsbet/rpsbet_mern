@@ -292,7 +292,6 @@ function CreateGame(props) {
   };
 
   const onNextButtonClicked = () => {
-    console.log("prompt", prompt)
     if (step === 1) {
       if (!gameMode) {
         showError("No Gamemode", "YOU DIDN'T PICK A GAMEMODE");

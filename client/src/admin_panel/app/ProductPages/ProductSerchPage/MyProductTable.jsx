@@ -34,7 +34,6 @@ import {
 import {
   equipItem,
   fetchAccessory,
-  getRoomList
 } from '../../../../redux/Logic/logic.actions';
 import {
   openListItemModal,
@@ -146,7 +145,6 @@ function MyProductTable(props) {
   useEffect(() => {
     fetchAccessory(userInfo._id);
     fetchItems();
-    fetchRoomLists();
     // no dependencies => no hooking
   }, []);
 
@@ -171,12 +169,6 @@ function MyProductTable(props) {
   const fetchItems = async () => {
     const { page } = props;
     await acQueryMyItem(100, page, sortCriteria, itemType);
-  };
-
-  const fetchRoomLists = () => {
-    const { getRoomList } = props;
-    getRoomList({ game_type: 'RPS' });
-    getRoomList({ game_type: 'All' });
   };
 
   const fetchAccessory = async (_id) => {
@@ -211,7 +203,6 @@ function MyProductTable(props) {
   const handleModalClose = () => {
     fetchAccessory(userInfo._id);
     fetchItems();
-    fetchRoomLists();
   };
 
   // -------------- Filter logic --------------
@@ -585,7 +576,6 @@ const mapDispatchToProps = {
   openDeListItemModal,
   acGetCustomerInfo,
   equipItem,
-  getRoomList,
   fetchAccessory,
   returnItem
 };

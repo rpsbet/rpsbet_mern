@@ -494,164 +494,177 @@ function SiteWrapper(props) {
     }, 1500);
   }, []);
 
-
-  const initSocket = useCallback(async () => {
-    try {
-
-      // Create the socket
-      const newSocket = socketIOClient(endpoint, {
-        transports: ['websocket']
-      });
-      // 1) Wait for "connect" or "connect_error" to guarantee connection
-      await new Promise((resolve, reject) => {
-        newSocket.once('connect', () => {
-          resolve();
-        });
-        newSocket.once('connect_error', (err) => {
-          console.error('Socket connect error:', err);
-          reject(err);
-        });
-      });
-
-      // ROOM LIST
-      newSocket.on('UPDATED_ROOM_LIST', (data) => {
-        console.log("data", data)
-        setRoomList(data);
-      });
-
-      newSocket.on('ROOM_ENDED', (data) => {
-        removeRoomFromList(data.roomId);
-      });
-
-      // LOAN OFFER
-      newSocket.on(`RECEIVED_LOAN_OFFER_${user?._id}`, (payload) => {
-        openOfferLoanModal();
-        if (!isMuted) {
-          needALoanRef.current?.play();
-        }
-        setCurrentOfferTargetInfo({
-          _id: user?._id,
-          lender: payload.lender,
-          avatar: payload.avatar,
-          accessory: payload.accessory,
-          username: payload.username,
-          totalWagered: payload.totalWagered
-        });
-      });
-
-      // CHAT
-      newSocket.on('SEND_CHAT', (data) => {
-        if (!isMuted || !notificationSounds) {
-          notificationSoundRef.current?.play();
-        }
-        addChatLog(data);
-
-        const pathName = history.location.pathname;       // "/chat/6302a5207195346428fa9d9b"
-        const segments = pathName.split('/');             // ["", "chat", "6302a5207195346428fa9d9b"]
-        const chatUserId = segments[2];                  // "6302a5207195346428fa9d9b" (or undefined if missing)
-        if (pathName.startsWith('/chat/') && chatUserId === data.from) {
-          newSocket.emit('READ_MESSAGE', {
-            to: user?._id,
-            from: data.from,
-          });
-        } else {
-          newSocket.emit('REQUEST_UNREAD_MESSAGE_COUNT', {
-            to: user?._id
-          });
-        }
-      });
-
-      // BET RESULT
-      newSocket.on('UPDATE_BET_RESULT', (data) => {
-        updateBetResult(data);
-      });
-
-      // NOTIFICATIONS
-      newSocket.on('SEND_NOTIFICATION', (data) => {
-
-        if (!isMuted || !notificationSounds) {
-          notificationSoundRef.current?.play();
-        }
-
-        if (data.message.includes('Deposit')) {
-          getUser();
-        }
-
-        if (isNotificationsAllowed && window.Notification) {
-          const options = { body: data.message, silent: false };
-          if (Notification.permission === 'granted') {
-            new Notification('New Notification', options);
-          } else if (Notification.permission !== 'denied') {
-            Notification.requestPermission().then((permission) => {
-              if (permission === 'granted') {
-                setNotificationsAllowed(true);
-                new Notification('New Notification', options);
-              }
-            });
-          }
-        }
-      });
-
-      // UNREAD MESSAGE COUNT
-      newSocket.on('SET_UNREAD_MESSAGE_COUNT', (data) => {
-        setUnreadMessageCount(data);
-      });
-
-      // ONLINE STATUS
-      newSocket.on('ONLINE_STATUS_UPDATED', (data) => {
-        updateOnlineUserList(data.user_list);
-      });
-
-      // GLOBAL CHAT
-      let lastGlobalChat = null;
-
-      newSocket.on('GLOBAL_CHAT_RECEIVED', (data) => {
-        // If new message is the same as last => skip
-        if (
-          lastGlobalChat &&
-          lastGlobalChat.senderId === data.senderId &&
-          lastGlobalChat.time === data.time &&
-          lastGlobalChat.message === data.message
-        ) {
-          return;
-        }
-
-        lastGlobalChat = data;
-        globalChatReceived(data);
-      });
-
-      // Finally store your newSocket in Redux or state
-      setSocket(newSocket);
-
-      // 2) Now safe to do post-connection logic
-      if (user && user._id) {
-        newSocket.emit('STORE_CLIENT_USER_ID', { user_id: user._id });
+  useEffect(() => {
+    // 1) Create the socket client
+    const newSocket = socketIOClient(endpoint, { transports: ['websocket'] });
+  
+    // 2) “Public” events that don't depend on a logged-in user:
+    newSocket.on('connect', () => {
+      console.log('[Socket] connected');
+    });
+  
+    let lastGlobalChat = null;
+    const handleGlobalChat = (data) => {
+      // If new message is the same as last => skip
+      if (
+        lastGlobalChat &&
+        lastGlobalChat.senderId === data.senderId &&
+        lastGlobalChat.time === data.time &&
+        lastGlobalChat.message === data.message
+      ) {
+        return;
       }
-
-
-    } catch (error) {
-      console.error('Socket initialization failed:', error);
-      // Optionally retry here
-    }
+      lastGlobalChat = data;
+      globalChatReceived(data);
+    };
+    newSocket.on('GLOBAL_CHAT_RECEIVED', handleGlobalChat);
+  
+    // Room list updates:
+    const handleUpdatedRoomList = (data) => {
+      setRoomList(data);
+    };
+    newSocket.on('UPDATED_ROOM_LIST', handleUpdatedRoomList);
+  
+    const handleRoomEnded = (data) => {
+      removeRoomFromList(data.roomId);
+    };
+    newSocket.on('ROOM_ENDED', handleRoomEnded);
+  
+    // 3) Store the socket reference
+    setSocket(newSocket);
+  
+    // 4) Cleanup on unmount
+    return () => {
+      newSocket.off('GLOBAL_CHAT_RECEIVED', handleGlobalChat);
+      newSocket.off('UPDATED_ROOM_LIST', handleUpdatedRoomList);
+      newSocket.off('ROOM_ENDED', handleRoomEnded);
+      newSocket.disconnect();
+    };
   }, [
     endpoint,
-    user,
-    setSocket,
+    globalChatReceived,
     setRoomList,
     removeRoomFromList,
-    openOfferLoanModal,
-    needALoanRef,
-    updateBetResult,
-    getUser,
-    isNotificationsAllowed,
-    notificationSounds,
-    globalChatReceived,
-    setGlobalChat,
-    setNotificationsAllowed,
-    setUnreadMessageCount,
-    updateOnlineUserList,
-    propsBalance
+    setSocket
   ]);
+
+  useEffect(() => {
+  // If no socket yet, or user not logged in => do nothing
+  if (!socket) return;
+  if (!user || !user._id) return;
+
+  // Identify user to the server
+  socket.emit('STORE_CLIENT_USER_ID', { user_id: user._id });
+
+  // ----- User-specific listeners -----
+
+  // 1) Private chat
+  const handleSendChat = (data) => {
+    if (!isMuted || !notificationSounds) {
+      notificationSoundRef.current?.play();
+    }
+    addChatLog(data);
+
+    const pathName = history.location.pathname;
+    const segments = pathName.split('/');
+    const chatUserId = segments[2];
+
+    if (pathName.startsWith('/chat/') && chatUserId === data.from) {
+      socket.emit('READ_MESSAGE', { to: user._id, from: data.from });
+    } else {
+      socket.emit('REQUEST_UNREAD_MESSAGE_COUNT', { to: user._id });
+    }
+  };
+  socket.on('SEND_CHAT', handleSendChat);
+
+  // 2) Loan offers
+  const handleLoanOffer = (payload) => {
+    openOfferLoanModal();
+    if (!isMuted) {
+      needALoanRef.current?.play();
+    }
+    setCurrentOfferTargetInfo({
+      _id: user._id,
+      lender: payload.lender,
+      avatar: payload.avatar,
+      accessory: payload.accessory,
+      username: payload.username,
+      totalWagered: payload.totalWagered
+    });
+  };
+  socket.on(`RECEIVED_LOAN_OFFER_${user._id}`, handleLoanOffer);
+
+  // 3) Bet result
+  const handleBetResult = (data) => {
+    updateBetResult(data);
+  };
+  socket.on('UPDATE_BET_RESULT', handleBetResult);
+
+  // 4) Notifications
+  const handleSendNotification = (data) => {
+    if (!isMuted || !notificationSounds) {
+      notificationSoundRef.current?.play();
+    }
+
+    if (data.message.includes('Deposit')) {
+      getUser();
+    }
+
+    if (isNotificationsAllowed && window.Notification) {
+      const options = { body: data.message, silent: false };
+      if (Notification.permission === 'granted') {
+        new Notification('New Notification', options);
+      } else if (Notification.permission !== 'denied') {
+        Notification.requestPermission().then((permission) => {
+          if (permission === 'granted') {
+            setNotificationsAllowed(true);
+            new Notification('New Notification', options);
+          }
+        });
+      }
+    }
+  };
+  socket.on('SEND_NOTIFICATION', handleSendNotification);
+
+  // 5) Unread message count
+  const handleUnreadCount = (countData) => {
+    setUnreadMessageCount(countData);
+  };
+  socket.on('SET_UNREAD_MESSAGE_COUNT', handleUnreadCount);
+
+  // 6) Online status
+  const handleOnlineStatusUpdated = (data) => {
+    updateOnlineUserList(data.user_list);
+  };
+  socket.on('ONLINE_STATUS_UPDATED', handleOnlineStatusUpdated);
+
+  // ----- Cleanup: remove these user-specific listeners when user changes or unmount
+  return () => {
+    socket.off('SEND_CHAT', handleSendChat);
+    socket.off(`RECEIVED_LOAN_OFFER_${user._id}`, handleLoanOffer);
+    socket.off('UPDATE_BET_RESULT', handleBetResult);
+    socket.off('SEND_NOTIFICATION', handleSendNotification);
+    socket.off('SET_UNREAD_MESSAGE_COUNT', handleUnreadCount);
+    socket.off('ONLINE_STATUS_UPDATED', handleOnlineStatusUpdated);
+  };
+}, [
+  socket,
+  user,
+  isMuted,
+  notificationSounds,
+  openOfferLoanModal,
+  needALoanRef,
+  setCurrentOfferTargetInfo,
+  updateBetResult,
+  getUser,
+  isNotificationsAllowed,
+  setNotificationsAllowed,
+  setUnreadMessageCount,
+  updateOnlineUserList,
+  addChatLog
+]);
+
+
   // -------------- WALLET / WEB3 --------------
   const loadSolanaWallet = useCallback(async () => {
     try {
@@ -705,11 +718,6 @@ function SiteWrapper(props) {
       console.error('Failed to connect Phantom or fetch token balance:', error);
     }
   }, []);
-
-  useEffect(() => {
-    initSocket();
-  }, []);
-  
 
   const disconnectWeb3 = useCallback(() => {
     setWalletAddress(null);
@@ -2061,6 +2069,7 @@ function SiteWrapper(props) {
 const mapStateToProps = (state) => ({
   transactions: state.auth.transactions,
   loading_user: state.auth.loading_user,
+  roomList: state.logic.roomList,
   isAuthenticated: state.auth.isAuthenticated,
   showDeListLoanModal: state.snackbar.showDeListLoanModal,
   showListItemModal: state.snackbar.showListItemModal,

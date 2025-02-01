@@ -116,7 +116,6 @@ export const uploadImageToPinata = (formData) => async (dispatch) => {
       throw new Error('Failed to upload image to Pinata.');
     }
     const { imageUrl } = response.data;
-    console.log("imageUrl", )
 
     // dispatch({ type: UPLOAD_IMAGE_SUCCESS, payload: imageUrl });
     return imageUrl;
@@ -644,31 +643,21 @@ export const equipItem = data => async dispatch => {
   return false;
 };
 
-
-export const getRoomList = search_condition => async dispatch => {
+// logic.actions.js
+export const getRoomList = (params) => async (dispatch) => {
   dispatch({ type: START_LOADING });
-
   try {
-    let roomList = [];
-
-    // const cachedRooms = localStorage.getItem('roomList');
-    // if (cachedRooms) {
-    //   try {
-    //     roomList = JSON.parse(cachedRooms);
-    //     dispatch({ type: ROOMS_LOADED, payload: { roomList } });
-    //   } catch (parseError) {
-    //     console.error('Error parsing cached room list:', parseError);
-    //     localStorage.removeItem('roomList'); // Clear invalid data
-    //   }
-    // }
-
-    if (roomList.length === 0) {
-      const res = await axios.get('/game/rooms', { params: search_condition });
-      if (res.data.success) {
-        roomList = res.data.roomList;
-        // localStorage.setItem('roomList', JSON.stringify(roomList));
-        dispatch({ type: ROOMS_LOADED, payload: { roomList } });
-      }
+    // This fetch returns ALL rooms from server in one shot
+    // (Your server should not be doing .skip/.limit for this method.)
+    const res = await axios.get('/game/rooms', { params });
+    if (res.data.success) {
+      dispatch({
+        type: ROOMS_LOADED,
+        payload: {
+          // The entire array of rooms
+          roomList: res.data.roomList
+        }
+      });
     }
   } catch (err) {
     console.error('Error fetching room list:', err);
@@ -677,25 +666,6 @@ export const getRoomList = search_condition => async dispatch => {
   }
 };
 
-// actions
-export const fetchMoreRooms = (search_condition) => async (dispatch) => {
-  dispatch({ type: START_LOADING });
-  try {
-    const res = await axios.get('/game/rooms', { params: search_condition });
-    if (res.data.success) {
-      const newRoomList = res.data.roomList;
-
-      localStorage.removeItem('roomList');
-      localStorage.setItem('roomList', JSON.stringify(newRoomList));
-
-      dispatch({ type: ROOMS_LOADED, payload: { roomList: newRoomList } });
-    }
-  } catch (err) {
-    console.error('Error fetching more rooms:', err);
-  } finally {
-    dispatch({ type: END_LOADING });
-  }
-};
 
 // actions
 export const getHistory = search_condition => async dispatch => {
@@ -820,7 +790,6 @@ export const updateUserStrategy = (user_id, strategy) => async dispatch => {
   }
 };
 export const updateUserPrompt = (user_id, prompt) => async dispatch => {
-  console.log("user_id, prompt", user_id, prompt)
   try {
     const res = await axios.patch(`/game/prompt/${user_id}`, { prompt });
     if (res.data.success) {
@@ -1365,37 +1334,31 @@ export const updateBankrollQs = bankroll => {
   };
 };
 
-export const setRoomList = (newRoom) => (dispatch) => {
+// actions/logic.actions.js
+export const setRoomList = (newRoom) => (dispatch, getState) => {
   try {
-    let roomList = JSON.parse(localStorage.getItem('roomList')) || [];
+    const oldList = getState().logic.roomList || [];
+    let updatedList;
 
     if (Array.isArray(newRoom)) {
-      roomList = newRoom;
+      // Replace entire list
+      updatedList = newRoom;
     } else {
-      const isDuplicate = roomList.some((room) => room._id === newRoom._id);
-      if (isDuplicate) {
-        return;
-      }
-      roomList = [newRoom, ...roomList];
+      // Prepend single item
+      const isDuplicate = oldList.some((room) => room._id === newRoom._id);
+      if (isDuplicate) return;
+      updatedList = [newRoom, ...oldList];
     }
+
     dispatch({
       type: ROOMS_LOADED,
-      payload: { roomList, page: 1 },
+      // Don't force page=1 here
+      payload: { roomList: updatedList },
     });
   } catch (err) {
-    console.error('Error updating room list in local storage:', err);
+    console.error('Error updating room list:', err);
   }
 };
-
-function arraysHaveSameRooms(oldRooms, newRooms) {
-  if (oldRooms.length !== newRooms.length) return false;
-
-  const oldIds = oldRooms.map(r => r._id).sort();
-  const newIds = newRooms.map(r => r._id).sort();
-
-  return JSON.stringify(oldIds) === JSON.stringify(newIds);
-}
-
 
 export const removeRoomFromList = roomId => dispatch => {
   try {

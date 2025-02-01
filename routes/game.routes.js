@@ -185,13 +185,11 @@ router.patch('/range/:user_id', async (req, res) => {
   const { newValue } = req.body;
 
   try {
-    console.log('newValue', newValue);
     const user = await User.findByIdAndUpdate(
       user_id,
       { range: newValue },
       { new: true },
     );
-    console.log('user', user);
     if (!user) {
       return res
         .status(404)
@@ -1176,157 +1174,6 @@ const getHistory = async (pageSize, my_id, game_type) => {
   }
 };
 
-const getRoomList = async (pageSize, game_type, excludeIds = []) => {
-  const search_condition = {
-    status: 'open',
-    game_type: { $ne: null },
-    _id: { $nin: excludeIds },
-  };
-
-  if (game_type !== 'All') {
-    const gameType = await GameType.findOne({ short_name: game_type }).select(
-      '_id',
-    );
-    search_condition.game_type = gameType._id;
-  }
-
-  try {
-    const preRooms = await Room.find(search_condition)
-      .select('_id name ticker selectedStrategy image description room_number creator battles username joiners game_type qs_game_type is_private bet_amount user_bet pr host_pr status created_at updated_at hosts')
-      .populate({ path: 'creator', model: 'rps_users', select: 'avatar totalWagered username accessory status' })
-      .populate({ path: 'game_type', model: 'rps_game_types' })
-      .sort({ updated_at: -1 })
-      .limit(pageSize);
-
-    const result = await Promise.all(
-      preRooms.map(async (room) => {
-        try {
-          const joinerData = await Promise.all(
-            room.joiners.map(async (joinedUser) => {
-              const user = await User.findOne({ _id: joinedUser }).select(
-                'avatar totalWagered username accessory status',
-              );
-              return {
-                avatar: user.avatar,
-                totalWagered: user.totalWagered,
-                accessory: user.accessory,
-                username: user.username,
-                rank: user.totalWagered,
-              };
-            }),
-          );
-          const temp = {
-            _id: room._id,
-            creator_id: room.creator ? room.creator._id : '',
-            joiners: room.joiners,
-            ticker: room.ticker ? room.ticker : room.room_number,
-            joiner_avatars: joinerData.map((joiner) => ({
-              avatar: joiner.avatar,
-              rank: joiner.totalWagered,
-              username: joiner.username,
-              accessory: joiner.accessory,
-            })),
-            rank: room.creator?.totalWagered || 0,
-            creator_avatar: room.creator?.avatar || '',
-            accessory: room.creator?.accessory || '',
-            username: room.creator?.username || '',
-            creator_status: room.creator?.status || '',
-            game_type: room.game_type,
-            name: room.name,
-            description: room.description,
-            image: room.image,
-            qs_game_type: room.qs_game_type,
-            bet_amount: room.bet_amount,
-            pr: room.pr,
-            host_pr: room.host_pr,
-            room_name: room.game_type.short_name + '-' + room.room_number,
-            total_stakes: room.hosts.reduce((acc, host) => acc + host.stake, 0),
-            user_bet: parseFloat(room.user_bet),
-            winnings: '',
-            is_private: room.is_private,
-            status: room.status,
-            index: room.room_number,
-            created_at: moment(room.created_at).format('YYYY-MM-DD HH:mm'),
-            updated_at: room.updated_at,
-            likes: room.likes,
-            views: room.views,
-            battles: room.battles,
-            hosts: room.hosts,
-            selectedStrategy: room.selectedStrategy,
-          };
-
-          switch (temp.game_type.game_type_id) {
-            case 1:
-              temp.winnings = room.user_bet;
-              break;
-            case 2:
-              const gameLogList = await GameLog.find({ room }).sort({
-                bet_amount: 'desc',
-              });
-              if (!gameLogList || gameLogList.length === 0) {
-                temp.winnings = temp.spleesh_bet_unit + room.user_bet;
-              } else {
-                const winningBet = [temp.spleesh_bet_unit + room.user_bet];
-                const possibleWinnings = Array.from(
-                  { length: 9 },
-                  (_, i) => i + 1,
-                )
-                  .reverse()
-                  .map(async (i) => {
-                    const is_exist = await Promise.all(
-                      gameLogList.map(
-                        async (log) =>
-                          log.bet_amount === i * temp.spleesh_bet_unit,
-                      ),
-                    );
-                    return !is_exist.includes(true)
-                      ? i * temp.spleesh_bet_unit + room.user_bet
-                      : null;
-                  });
-
-                temp.winnings =
-                  (await Promise.all(possibleWinnings)).find(
-                    (value) => value !== null,
-                  ) || winningBet[0];
-              }
-              break;
-            case 3:
-              temp.winnings = room.pr;
-              break;
-            case 4:
-              temp.winnings =
-                parseFloat(room.host_pr) + parseFloat(room.user_bet);
-              break;
-            case 5:
-            case 6:
-            case 7:
-            case 8:
-              temp.winnings = room.user_bet;
-              break;
-          }
-
-          return temp;
-        } catch (error) {
-          console.error({ error: error.toString() });
-          return null;
-        }
-      }),
-    );
-
-    const filteredResults = result.filter((temp) => temp !== null);
-    const limitedResults = filteredResults.slice(0, pageSize);
-
-    return {
-      rooms: limitedResults,
-    };
-  } catch (error) {
-    console.error('Error in getRoomList:', error);
-    return {
-      rooms: [],
-    };
-  }
-};
-
 router.get('/history', async (req, res) => {
   try {
     const { pageSize = 1, game_type = 'All' } = req.query;
@@ -1395,16 +1242,17 @@ router.get('/count', async (req, res) => {
   }
 });
 
-// /api/rooms call
+// GET /api/rooms
 router.get('/rooms', async (req, res) => {
-  const pageSize = req.query.pageSize ? parseInt(req.query.pageSize) : 10;
-  const game_type = req.query.game_type ? req.query.game_type : 'All';
-  const excludeIds = req.query.excludeIds;
+  // game_type can still be used as a filter, default to 'All'
+  const game_type = req.query.game_type || 'All';
+
 
   try {
-    const rooms = await getRoomList(pageSize, game_type, excludeIds);
+    // We no longer pass "page" or do skip/limit
+    const rooms = await getRoomList(game_type);
+
     res.json({
-      pageSize: pageSize,
       success: true,
       query: req.query,
       roomList: rooms.rooms,
@@ -1416,6 +1264,109 @@ router.get('/rooms', async (req, res) => {
     });
   }
 });
+
+const getRoomList = async (game_type) => {
+  const search_condition = {
+    status: 'open',
+    game_type: { $ne: null },
+  };
+
+  // If a specific short_name is requested (not "All"), filter by that
+  if (game_type !== 'All') {
+    const gameType = await GameType.findOne({ short_name: game_type }).select('_id');
+    if (gameType) {
+      search_condition.game_type = gameType._id;
+    }
+  }
+
+  try {
+    // Return all matching rooms with no skip/limit
+    const preRooms = await Room.find(search_condition)
+      .select(
+        '_id name ticker selectedStrategy image description room_number ' +
+          'creator battles username joiners game_type qs_game_type is_private ' +
+          'bet_amount user_bet pr host_pr status created_at updated_at hosts'
+      )
+      .populate({
+        path: 'creator',
+        model: 'rps_users',
+        select: 'avatar totalWagered username accessory status',
+      })
+      .populate({ path: 'game_type', model: 'rps_game_types' })
+      .sort({ updated_at: -1 })
+      .limit(50);
+    // Build final list of rooms with joiner info
+    const result = await Promise.all(
+      preRooms.map(async (room) => {
+        try {
+          const joinerData = await Promise.all(
+            room.joiners.map(async (joinedUserId) => {
+              const user = await User.findOne({ _id: joinedUserId }).select(
+                'avatar totalWagered username accessory status'
+              );
+              return {
+                avatar: user.avatar,
+                totalWagered: user.totalWagered,
+                accessory: user.accessory,
+                username: user.username,
+                rank: user.totalWagered,
+              };
+            })
+          );
+
+          const temp = {
+            _id: room._id,
+            creator_id: room.creator ? room.creator._id : '',
+            joiners: room.joiners,
+            ticker: room.ticker || room.room_number,
+            joiner_avatars: joinerData.map((joiner) => ({
+              avatar: joiner.avatar,
+              rank: joiner.totalWagered,
+              username: joiner.username,
+              accessory: joiner.accessory,
+            })),
+            rank: room.creator?.totalWagered || 0,
+            creator_avatar: room.creator?.avatar || '',
+            accessory: room.creator?.accessory || '',
+            username: room.creator?.username || '',
+            creator_status: room.creator?.status || '',
+            game_type: room.game_type,
+            name: room.name,
+            description: room.description,
+            image: room.image,
+            qs_game_type: room.qs_game_type,
+            bet_amount: room.bet_amount,
+            pr: room.pr,
+            host_pr: room.host_pr,
+            room_name: room.game_type.short_name + '-' + room.room_number,
+            total_stakes: room.hosts.reduce((acc, host) => acc + host.stake, 0),
+            user_bet: parseFloat(room.user_bet),
+            is_private: room.is_private,
+            status: room.status,
+            index: room.room_number,
+            created_at: moment(room.created_at).format('YYYY-MM-DD HH:mm'),
+            updated_at: room.updated_at,
+            battles: room.battles,
+            hosts: room.hosts,
+            selectedStrategy: room.selectedStrategy,
+            winnings: parseFloat(room.user_bet),
+          };
+
+          return temp;
+        } catch (error) {
+          console.error('Error building room object:', error.toString());
+          return null;
+        }
+      })
+    );
+
+    const filteredResults = result.filter((r) => r !== null);
+    return { rooms: filteredResults };
+  } catch (error) {
+    console.error('Error in getRoomList:', error);
+    return { rooms: [] };
+  }
+};
 
 router.post('/rooms', auth, async (req, res) => {
   try {
@@ -1437,7 +1388,6 @@ router.post('/rooms', auth, async (req, res) => {
       qs_game_type,
       room_password,
       qs_nation,
-      prompt
     } = req.body;
     const {
       _id,
@@ -1520,7 +1470,6 @@ router.post('/rooms', auth, async (req, res) => {
       telegram_link,
       website_link,
       selectedStrategy,
-      prompt,
       pr: 0,
       total_stakes: user_bet,
       endgame_amount: endgame_type ? endgame_amount : user_bet,
@@ -1908,7 +1857,6 @@ router.post('/coHost', auth, async (req, res) => {
     }
 
     const accessAllowed = await check_access_time(req.user._id);
-    console.log('accessAllowed', accessAllowed);
     if (!accessAllowed) {
       return res.json({
         success: false,

@@ -3535,7 +3535,6 @@ circle {
 }
 
 .table.main-game-table .table-row:hover {
-  z-index: 999;
   cursor: pointer;
 }
 
@@ -3986,7 +3985,6 @@ div.table .table-row .table-cell img.avatar,
   font-size: 22px;
   background: #ff0000;
   border-radius: 1em;
-  z-index: 999;
   padding: 10px 20px;
 }
 
@@ -4649,7 +4647,7 @@ div.table .table-row .table-cell img.avatar,
     width: 100%;
     bottom: 0;
     display: flex;
-    z-index: 99999;
+    z-index: 9;
     align-items: center;
     padding: 12px 16px;
     justify-content: space-between;

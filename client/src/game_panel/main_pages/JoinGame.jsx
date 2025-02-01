@@ -839,7 +839,6 @@ function JoinGame(props) {
       if (result.success) {
         addNewTransaction(result.newTransaction);
         await getRoomListAction({
-          pageSize: 10, // or dynamic
           game_type: roomInfo.game_type,
         });
       } else {

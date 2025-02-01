@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { connect } from 'react-redux';
 import {
-  getRoomList,
   setCurRoomInfo,
   getMyChat,
   getGameTypeList,
@@ -45,7 +44,6 @@ function MainPage(props) {
     user,
     toggleDrawer,
     location,
-    getRoomList,
     isDarkMode,
     onlineUserList,
     gameTypeList,
@@ -66,8 +64,6 @@ function MainPage(props) {
 
   // For controlling whether the component is mounted
   const isMountedRef = useRef(false);
-  // We'll store the polling interval in a ref to clear it properly
-  const pollingIntervalRef = useRef(null);
   // We'll track the previous location to replicate componentDidUpdate location checks
   const prevLocationRef = useRef(location.pathname);
   // ------------------- LIFECYCLE (componentDidMount) -------------------
@@ -91,14 +87,8 @@ function MainPage(props) {
       handleToggleDrawer();
     }
 
-    // Add visibilitychange listener
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
     return () => {
-      // componentWillUnmount
       isMountedRef.current = false;
-      clearInterval(pollingIntervalRef.current);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
 
@@ -119,16 +109,6 @@ function MainPage(props) {
     prevLocationRef.current = location.pathname;
   }, [location.pathname]);
 
-  // Polling logic: if document is visible, set polling interval; if hidden, clear
-  const handleVisibilityChange = useCallback(() => {
-    if (document.visibilityState === 'visible' && !pollingIntervalRef.current) {
-      // Start polling
-      pollingIntervalRef.current = setInterval(() => handleRefresh(), 2000);
-    } else if (document.visibilityState === 'hidden' && pollingIntervalRef.current) {
-      clearInterval(pollingIntervalRef.current);
-      pollingIntervalRef.current = null;
-    }
-  }, []);
 
   // ------------------- HANDLERS -------------------
   const toggleP2PLending = () => {
@@ -153,18 +133,6 @@ function MainPage(props) {
 
   const handleClosePlayerModal = () => {
     setShowPlayerModal(false);
-  };
-
-  const handleRefresh = async () => {
-    if (isMountedRef.current) {
-      setRefreshing(true);
-      const updatedRoomList = await getRoomList({ pageSize: 7 });
-
-      // Compare new list vs old in props
-      if (isMountedRef.current && JSON.stringify(roomList) !== JSON.stringify(updatedRoomList)) {
-        setRefreshing(false);
-      }
-    }
   };
 
   const handleToggleDrawer = useCallback(() => {
@@ -280,7 +248,6 @@ function MainPage(props) {
               selectedCreator={selectedCreator}
               refreshing={refreshing}
               showPlayerModal={showPlayerModal}
-              handleRefresh={handleRefresh}
               handleOpenPlayerModal={handleOpenPlayerModal}
               handleClosePlayerModal={handleClosePlayerModal}
               roomList={roomList}
@@ -476,7 +443,6 @@ const mapStateToProps = (state) => ({
 });
 
 const mapDispatchToProps = {
-  getRoomList,
   getSolToUsdPrice,
   setCurRoomInfo,
   getGameTypeList,

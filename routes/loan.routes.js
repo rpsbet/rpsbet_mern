@@ -210,7 +210,6 @@ router.post('/create', auth, async (req, res) => {
     }
 
     const accessAllowed = await check_access_time(currentUser._id);
-    console.log("accessAllowed", accessAllowed)
     if (!accessAllowed) {
       return res.json({
         success: false,
@@ -219,7 +218,6 @@ router.post('/create', auth, async (req, res) => {
       });
     }
     const isEligible = await checkLoanEligibility(currentUser, loan_amount);
-    console.log("isEligible", isEligible)
     
     if (!isEligible) {
       return res.json({
@@ -245,7 +243,6 @@ router.post('/create', auth, async (req, res) => {
         message: 'Loan period and APY must be valid positive numbers',
       });
     }
-    console.log("currentUser.balance", parsedLoanAmount)
     
     if (currentUser.balance * 10 < parsedLoanAmount) {
       return res.json({
@@ -305,7 +302,6 @@ router.post('/create', auth, async (req, res) => {
       loan_type: loanType,
       fractional_amount: loanType === 'FRACTIONAL' ? parsedLoanAmount / oldBalance : 0
     });
-    console.log("loanObj", loanObj)
 
     if (loanType === 'FRACTIONAL') {
       loanObj.loaners.push({
