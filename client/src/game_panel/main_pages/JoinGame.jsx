@@ -307,7 +307,7 @@ function JoinGame(props) {
       await Promise.all([
         loadSounds(),
         getStrategies(),
-        getRoomInfoAction(match.params.id, limit, true),
+        getRoomInfoAction(match.params.id, 10),
       ]);
       // Done: The room data, bet items, sounds, and strategies are all loaded
     } catch (error) {
@@ -816,10 +816,6 @@ function JoinGame(props) {
     setShowPlayerModal(false);
   }, []);
 
-  const refreshHistory = useCallback(async () => {
-    await getRoomInfoAction(match.params.id, limit, false);
-  }, [getRoomInfoAction, match, limit]);
-
   const handleCoHostAmountChange = useCallback((event) => {
     setCoHostAmount(event.target.value);
   }, []);
@@ -1008,7 +1004,6 @@ function JoinGame(props) {
               setRun(false);
             }
           }}
-          refreshHistory={refreshHistory}
           playSound={playSound}
           join={join}
           handleSwitchChange={handleSwitchChange}

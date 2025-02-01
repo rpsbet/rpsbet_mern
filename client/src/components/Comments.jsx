@@ -179,14 +179,13 @@ const Comments = ({
               mb: 2
             }}
           >
-            <TextField color='error'
+            <TextField
+              color="error"
               label="Reply"
+              variant="filled"
+              fullWidth
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
-              fullWidth
-              onFocus={() => setFocused(true)}
-              onBlur={() => setFocused(false)}
-              variant="filled"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   e.preventDefault();

@@ -146,8 +146,6 @@ function RPS(props) {
   const [skipConfirm, setSkipConfirm] = useState(localStorage.getItem('hideConfirmModal') === 'true');
 
   // Refs
-  const settingsRef = useRef(null);
-  const panelRef = useRef(null);
   const intervalIdRef = useRef(null);
 
   /**
@@ -156,9 +154,6 @@ function RPS(props) {
 
   // On mount
   useEffect(() => {
-    // "componentDidMount" - attach keydown
-    document.addEventListener('keydown', handleKeyPress);
-
     // Fetch botsCount initially
     (async () => {
       try {
@@ -172,8 +167,6 @@ function RPS(props) {
     // Cleanup
     return () => {
       // "componentWillUnmount"
-      document.removeEventListener('keydown', handleKeyPress);
-      document.removeEventListener('mousedown', handleClickOutside);
       clearInterval(intervalIdRef.current);
     };
     // eslint-disable-next-line
@@ -341,38 +334,6 @@ function RPS(props) {
     setLocalIsPasswordCorrect(propIsPasswordCorrect);
   }, [propIsPasswordCorrect, localIsPasswordCorrect, joinGame, selected_rps]);
 
-
-  /**
-   * UI helpers
-   */
-  const handleKeyPress = (event) => {
-    if (!isFocused) {
-      const ctrlKeyPressed = event.ctrlKey || event.metaKey;
-      const isRKeyPressed = event.key === 'r';
-
-      if (!(ctrlKeyPressed && isRKeyPressed)) {
-        switch (event.key) {
-          case 'r':
-            onBtnBetClick('R');
-            break;
-          case 'p':
-            onBtnBetClick('P');
-            break;
-          case 's':
-            onBtnBetClick('S');
-            break;
-          default:
-            break;
-        }
-      }
-    }
-  };
-
-  const handleClickOutside = (e) => {
-    if (settingsRef.current && !settingsRef.current.contains(e.target)) {
-      // close a panel or do something if needed
-    }
-  };
 
   /**
    * MUI confirm dialog logic

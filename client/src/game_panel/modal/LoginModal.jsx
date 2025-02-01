@@ -121,7 +121,6 @@ function LoginModal(props) {
   };
 
   const onSuccessfulLogin = (user) => {
-    props.initSocket();
     props.getNotifications();
     props.getMyHistory();
     props.getMyChat();

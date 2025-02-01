@@ -762,11 +762,13 @@ router.get('/room/:id', async (req, res) => {
         path: 'joined_user',
         model: User,
         select: '_id avatar username accessory totalWagered',
-      });
+      })
+      .limit(req.query.limit ? req.query.limit : 10);
 
-    const limit = 3000;
-    gameLogQuery = gameLogQuery.limit(limit);
-    const totalGameLogsCount = 0;
+     
+ 
+     const totalGameLogsCount = await GameLog.countDocuments({ room });
+ 
 
     const gameLogList = await gameLogQuery;
 
@@ -774,6 +776,7 @@ router.get('/room/:id', async (req, res) => {
     const joiners = await User.find({ _id: { $in: room.joiners } });
 
     const roomHistory = await convertGameLogToHistoryStyle(gameLogList);
+    console.log("roomHistory", roomHistory.length)
     res.json({
       success: true,
       query: req.query,

@@ -1955,7 +1955,6 @@ function SiteWrapper(props) {
             modalIsOpen={showLoginModal}
             closeModal={handleCloseLoginModal}
             openSignupModal={handleOpenSignupModal}
-            initSocket={initSocket}
           />
         )}
 

@@ -146,11 +146,9 @@ function CreateGame(props) {
 
     getStrategies();
     // Add a keypress listener (if needed)
-    document.addEventListener('keydown', handleKeyPress);
 
     return () => {
       // Mimic componentWillUnmount
-      document.removeEventListener('keydown', handleKeyPress);
     };
   }, []);
 
@@ -189,28 +187,6 @@ function CreateGame(props) {
     setChildStep(1);
   }, [gameTypeList, solPrice]);
 
-  // -------------------------------
-  //    Handlers
-  // -------------------------------
-
-  const handleKeyPress = (event) => {
-    const { isFocused } = props;
-    if (!isFocused) {
-      switch (event.key) {
-        case 'Escape':
-          onPrevButtonClicked();
-          break;
-        case 'Enter':
-          onNextButtonClicked();
-          break;
-        case 'Shift':
-          onSkipButtonClicked();
-          break;
-        default:
-          break;
-      }
-    }
-  };
 
   const onChangeState = async (newState) => {
 
@@ -595,12 +571,12 @@ function CreateGame(props) {
           <span></span>
         ) : (
           <Button id="btn_prev" color='error' onClick={onPrevButtonClicked}>
-            Previous&nbsp;<span className="roll-tag">[Esc]</span>
+            Previous
           </Button>
         )}
         {step === 2 && (
           <Button id="btn_skip" color='error' onClick={onSkipButtonClicked}>
-            Skip&nbsp;<span className="roll-tag">[Shift]</span>
+            Skip
           </Button>
         )}
         {step === 2 && (
@@ -626,7 +602,7 @@ function CreateGame(props) {
         )}
         {step < 2 && (
           <Button id="btn_next" color="error" onClick={onNextButtonClicked}>
-            Next&nbsp;<span className='roll-tag'>[ENTER]</span>
+            Next
           </Button>
         )}
       </Box>

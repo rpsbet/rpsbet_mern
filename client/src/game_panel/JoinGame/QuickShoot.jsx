@@ -261,9 +261,6 @@ function QuickShoot(props) {
   // Simulate componentDidMount
   useEffect(() => {
     isComponentMountedRef.current = true;
-
-    document.addEventListener('keydown', handleKeyPress);
-
     const intervalDuration = 3000; // Or any logic to get this from your old code
     const id = setInterval(() => {
       toggleBlueishHue();
@@ -286,7 +283,6 @@ function QuickShoot(props) {
 
     return () => {
       isComponentMountedRef.current = false;
-      document.removeEventListener('keydown', handleKeyPress);
       clearInterval(id);
       removeSocketListeners(); // clean up
     };
@@ -410,36 +406,6 @@ function QuickShoot(props) {
 
   // =============== Event Handlers ===============
 
-  const handleKeyPress = useCallback(
-    (event) => {
-      if (!isFocused) {
-        const ctrlKeyPressed = event.ctrlKey || event.metaKey;
-        const isRKeyPressed = event.key === 'r';
-        if (!(ctrlKeyPressed && isRKeyPressed)) {
-          switch (event.key) {
-            case 'p':
-              onBtnBetClick(0);
-              break;
-            case 'q':
-              onBtnBetClick(1);
-              break;
-            case 'w':
-              onBtnBetClick(2);
-              break;
-            case 'e':
-              onBtnBetClick(3);
-              break;
-            case 'r':
-              onBtnBetClick(4);
-              break;
-            default:
-              break;
-          }
-        }
-      }
-    },
-    [isFocused]
-  );
 
   const toggleBlueishHue = useCallback(() => {
     // Placeholder from original snippet

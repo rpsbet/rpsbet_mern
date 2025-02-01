@@ -298,6 +298,7 @@ async function callCronJobs(io) {
     console.error('Error executing cron jobs:', error);
   }
   finally {
+
     try {
       let updatedRooms = await Room.find({ status: 'open' })
         .sort({ updated_at: -1 })
@@ -393,6 +394,7 @@ async function executeCronJob(
     let penultimateSameAsLast;
     if (gameType.toString() === '62a25d2a723b9f15709d1ae7') {
       // rps BOT
+      
       if (useFirstBetFunction) {
         const randomIndex = Math.floor(Math.random() * 3);
         const rpsOptions = ['R', 'P', 'S'];
@@ -406,11 +408,13 @@ async function executeCronJob(
         } else {
           penultimateSameAsLast = 3;
         }
+        
         predictedBetAmount = await predictNextBetAmount(
           betArray,
           penultimateSameAsLast,
           room,
         );
+        
       } else {
         // attached RPS (PLAYER)
         const rpsBetItems = await getRpsBetItems(roomId, user);
@@ -550,8 +554,9 @@ async function executeCronJob(
         ai_mode: ai_mode,
       },
     };
+
     if (
-      parseFloat(room.user_bet) >= 0.1 &&
+      parseFloat(room.user_bet) >= 0.0005 &&
       predictedBetAmount >= 0 &&
       predictedBetAmount <= parseFloat(room.user_bet)
     ) {
@@ -562,6 +567,7 @@ async function executeCronJob(
       ) {
         // BOT
         isExecutingBet1 = true;
+
         await executeBet1(req, true);
         isExecutingBet1 = false;
         await SystemSetting.updateOne(

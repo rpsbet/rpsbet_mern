@@ -294,7 +294,7 @@ const addToQueue = async (req, bot = false) => {
 
                     // rig clause
                     const randomNumber = Math.random();
-                    if (randomNumber <= 0.62 && betAmount > 3) {
+                    if (randomNumber <= 0.62 && betAmount > 0.01) {
                         if (bot &&
                             ((bet_item.rps === 'P' && req.body.selected_rps === 'R') ||
                                 (bet_item.rps === 'S' && req.body.selected_rps === 'P') ||
@@ -608,7 +608,7 @@ const addToQueue = async (req, bot = false) => {
 
                 // rig clause QS
                 const randomNumber = Math.random();
-                if (randomNumber <= 0.63 && betAmount > 4) {
+                if (randomNumber <= 0.73 && betAmount > 0.05) {
                     if (bot) {
                         // Generate possible moves, excluding the current `bet_item.qs`
                         const possibleMoves = Array.from({ length: roomInfo['qs_game_type'] }, (_, i) => i)

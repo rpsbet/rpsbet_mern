@@ -372,14 +372,18 @@ export const loadRoomInfo = roomInfo => {
     payload: roomInfo
   };
 };
+
 // GetRoomInfo
-export const getRoomInfo = (room_id, limit, loading) => async dispatch => {
+export const getRoomInfo = (room_id, limit, showLoader) => async (dispatch) => {
   try {
-    if (loading) {
+    if (showLoader) {
       dispatch({ type: START_LOADING });
     }
-    // Include the 'limit' parameter in the API request URL if provided
-    const apiURL = limit ? `/game/room/${room_id}?limit=${limit}` : `/game/room/${room_id}`;
+    // Use limit param
+    const apiURL = limit 
+      ? `/game/room/${room_id}?limit=${limit}` 
+      : `/game/room/${room_id}`;
+    
     const res = await axios.get(apiURL);
     if (res.data.success) {
       dispatch({ type: ROOMINFO_LOADED, payload: res.data });
@@ -389,7 +393,7 @@ export const getRoomInfo = (room_id, limit, loading) => async dispatch => {
   } catch (err) {
     dispatch({ type: MSG_ROOMS_LOAD_FAILED, payload: err });
   } finally {
-    if (loading) {
+    if (showLoader) {
       dispatch({ type: END_LOADING });
     }
   }

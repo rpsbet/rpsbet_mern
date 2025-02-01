@@ -5,7 +5,8 @@ import {
   Skeleton,
   Box,
   Chip,
-  Paper
+  Paper,
+  Typography
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import Leaderboards from './Leaderboards';
@@ -34,8 +35,8 @@ const StyledTab = styled(Tab)(({ theme, isDarkMode, active }) => ({
       ? '#f9f9f9'
       : '#ff0000'
     : isDarkMode
-      ? '#aaa'
-      : '#ccc',
+    ? '#aaa'
+    : '#ccc',
   '& .MuiTab-wrapper': {
     color: active ? '#ff0000' : isDarkMode ? '#aaa' : '#ccc',
   },
@@ -52,10 +53,8 @@ const Column = styled('div')({
   minWidth: '100%',
 });
 
-
 function TabbedContent(props) {
   const {
-    classes,
     roomInfo,
     isLowGraphics,
     isDarkMode,
@@ -90,7 +89,6 @@ function TabbedContent(props) {
     gameResult,
     updateSelectedRps,
     rpsbetitems,
-    refreshHistory,
     handleOpenPlayerModal,
     predictedBetAmount,
     handleClosePlayerModal,
@@ -116,13 +114,13 @@ function TabbedContent(props) {
   const [numToShow, setNumToShow] = useState(10);
   const [showPlayerModal, setShowPlayerModal] = useState(false);
   const [roomHistory, setRoomHistory] = useState(
-    updateFromNow(roomInfo.room_history || [])
+    updateFromNow(roomInfo?.room_history || [])
   );
-  const [activeTabs, setActiveTabs] = useState([0, 1]); // By default, tab "Play" (0) & "Chart" (1)
+  // activeTabs for desktop view
+  const [activeTabs, setActiveTabs] = useState([0, 1]); // e.g. 0="Play", 1="Chart"
   const [isMobile, setIsMobile] = useState(window.innerWidth < 767);
 
-  // In the class version, we had getDerivedStateFromProps. 
-  // Here, we replicate that logic with a useEffect that listens to changes in `roomInfo`
+  // Replicate getDerivedStateFromProps
   useEffect(() => {
     if (
       !roomHistory ||
@@ -132,22 +130,18 @@ function TabbedContent(props) {
     ) {
       setRoomHistory(updateFromNow(roomInfo?.room_history || []));
     }
-  }, [roomInfo.room_history]);
+  }, [roomInfo?.room_history]);
 
   useEffect(() => {
     attachUserLinkListeners();
-    // attachAccessories();
     window.addEventListener('resize', handleResize);
-
-    return () => {
-      // componentWillUnmount logic
-      window.removeEventListener('resize', handleResize);
-    };
+    return () => window.removeEventListener('resize', handleResize);
+    // eslint-disable-next-line
   }, []);
 
   useEffect(() => {
     attachUserLinkListeners();
-  }, [roomInfo.room_history]);
+  }, [roomInfo?.room_history]);
 
   // ------------------ HANDLERS ------------------
   const handleResize = useCallback(() => {
@@ -164,17 +158,6 @@ function TabbedContent(props) {
     });
   }, []);
 
-  // const attachAccessories = useCallback(() => {
-  //   const userLinks = document.querySelectorAll('.user-link');
-  //   userLinks.forEach((element) => {
-  //     const accessory = element.getAttribute('accessory');
-  //     const lottieAnimation = renderLottieAvatarAnimation(accessory, isLowGraphics);
-  //     const portalContainer = document.createElement('div');
-  //     ReactDOM.render(lottieAnimation, portalContainer);
-  //     element.parentNode.insertBefore(portalContainer, element);
-  //   });
-  // }, [isLowGraphics]);
-
   const handleOpenPlayerModalLocal = useCallback((creator_id) => {
     setShowPlayerModal(true);
   }, []);
@@ -183,15 +166,13 @@ function TabbedContent(props) {
     setShowPlayerModal(false);
   }, []);
 
-  const handleLoadMore = useCallback(() => {
-    setNumToShow((prev) => prev + 10);
-  }, []);
-
   const handleTabChange = useCallback((event, newValue) => {
     setSelectedTab(newValue);
   }, []);
 
   const handleChipClick = useCallback((index) => {
+    // If it's Insights => skip or show "coming soon"
+    if (index === 4) return; // skip
     setActiveTabs((prevActiveTabs) => {
       const isActive = prevActiveTabs.includes(index);
       if (isActive) {
@@ -211,6 +192,7 @@ function TabbedContent(props) {
           return (
             <Box square component={Paper} className="join-game-panel">
               <Box className="game-page loading-skeleton" sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                {/* Skeleton placeholders */}
                 <Box className="game-contents" sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                   <Skeleton variant="rectangular" sx={{ width: '100%', height: 60 }} />
                   <Box
@@ -231,9 +213,12 @@ function TabbedContent(props) {
         }
 
         return (
-          <Paper square variant='inherit' sx={{
-            backgroundColor: 'transparent',
-          }} className="join-game-panel">
+          <Paper
+            square
+            variant="inherit"
+            sx={{ backgroundColor: 'transparent' }}
+            className="join-game-panel"
+          >
             <Joyride
               steps={tutorialStepsGame}
               run={run}
@@ -288,7 +273,6 @@ function TabbedContent(props) {
                 attached={attached}
                 updateSelectedRps={updateSelectedRps}
                 selected_rps={selected_rps}
-                refreshHistory={refreshHistory}
                 playSound={playSound}
                 join={join}
                 handleSwitchChange={handleSwitchChange}
@@ -318,7 +302,6 @@ function TabbedContent(props) {
                 handleOpenPlayerModal={handleOpenPlayerModal}
                 handleClosePlayerModal={handleClosePlayerModal}
                 showPlayerModal={showPlayerModal}
-                refreshHistory={refreshHistory}
                 handleDetachAttachChange={handleDetachAttachChange}
                 join={join}
                 result={result}
@@ -359,7 +342,7 @@ function TabbedContent(props) {
       }
 
       case 1: {
-        // "Chart" Tab (in your original code, it's labeled "CoHostModal" or something)
+        // "Chart" / CoHost
         return (
           <CoHostModal
             isDarkMode={isDarkMode}
@@ -379,7 +362,7 @@ function TabbedContent(props) {
       }
 
       case 2: {
-        // "History" Tab
+        // "History"
         return (
           <RoomHistory
             roomId={roomInfo._id}
@@ -391,17 +374,23 @@ function TabbedContent(props) {
       }
 
       case 3: {
-        // "Thread" Tab
+        // "Thread"
         return (
-          <div>
+          <Box>
             <Comments roomId={roomInfo._id} />
-          </div>
+          </Box>
         );
       }
 
       case 4: {
-        // "Insights" Tab
-        return <Leaderboards roomId={roomInfo._id} />;
+        // "Insights" -> COMING SOON
+        return (
+          <Box textAlign="center" p={2}>
+            <Typography variant="h6" color="error">
+              Insights Coming Soon
+            </Typography>
+          </Box>
+        );
       }
 
       default:
@@ -409,9 +398,8 @@ function TabbedContent(props) {
     }
   };
 
-  // ------------------ RENDER ------------------
+  // ------------------ MOBILE LAYOUT ------------------
   if (isMobile) {
-    // Mobile layout
     return (
       <div className="tabs-container">
         <Tabs
@@ -419,35 +407,76 @@ function TabbedContent(props) {
           value={selectedTab}
           onChange={handleTabChange}
         >
-          <StyledTab label="Chart" active={selectedTab === 0} isDarkMode={isDarkMode} />
-          <StyledTab label="History" active={selectedTab === 1} isDarkMode={isDarkMode} />
-          <StyledTab label="Thread" active={selectedTab === 2} isDarkMode={isDarkMode} />
-          <StyledTab label="Insights" active={selectedTab === 3} isDarkMode={isDarkMode} />
+          {/* 0: "Play" */}
+          <StyledTab label="Play" active={selectedTab === 0} isDarkMode={isDarkMode} />
+          {/* 1: "Chart" */}
+          <StyledTab label="Chart" active={selectedTab === 1} isDarkMode={isDarkMode} />
+          {/* 2: "History" */}
+          <StyledTab label="History" active={selectedTab === 2} isDarkMode={isDarkMode} />
+          {/* 3: "Thread" */}
+          <StyledTab label="Comments" active={selectedTab === 3} isDarkMode={isDarkMode} />
+          {/* 4: "Insights" => disabled */}
+          <StyledTab
+            label="Insights (Coming Soon)"
+            active={selectedTab === 4}
+            isDarkMode={isDarkMode}
+            disabled
+          />
         </Tabs>
+
         <div>
           {selectedTab === 0 && renderTabContent(0)}
           {selectedTab === 1 && renderTabContent(1)}
           {selectedTab === 2 && renderTabContent(2)}
           {selectedTab === 3 && renderTabContent(3)}
+          {selectedTab === 4 && (
+            <Box textAlign="center" p={2}>
+              <Typography variant="h6" color="error">
+                Insights Coming Soon
+              </Typography>
+            </Box>
+          )}
         </div>
       </div>
     );
   }
 
-  // Desktop view with checkboxes
+  // ------------------ DESKTOP LAYOUT ------------------
   return (
     <div>
-      <Box component={Paper} elevation={0} square variant='filled' sx={{ background: 'linear-gradient(45deg, #322a37, #2b212f)', padding: '20px 10px', marginTop: '5px', display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-        {['Play', 'Chart', 'History', 'Thread', 'Insights'].map((label, index) => (
-          <Chip
-            key={index}
-            label={label}
-            onClick={() => handleChipClick(index)}
-            color={activeTabs.includes(index) ? "error" : "error"}
-            variant={activeTabs.includes(index) ? "filled" : "outlined"}
-            clickable
-          />
-        ))}
+      <Box
+        component={Paper}
+        elevation={0}
+        square
+        variant="filled"
+        sx={{
+          background: 'linear-gradient(45deg, #322a37, #2b212f)',
+          padding: '20px 10px',
+          marginTop: '5px',
+          display: 'flex',
+          gap: '16px',
+          flexWrap: 'wrap',
+        }}
+      >
+        {['Play', 'Chart', 'History', 'Comments', 'Insights'].map((label, index) => {
+          const isInsights = index === 4;
+          return (
+            <Chip
+              key={index}
+              label={isInsights ? `${label} (Coming Soon)` : label}
+              // disable the onClick if it's Insights
+              onClick={isInsights ? undefined : () => handleChipClick(index)}
+              clickable={!isInsights}
+              color={
+                // if it's active, highlight; else default
+                activeTabs.includes(index) ? 'error' : 'error'
+              }
+              variant={
+                activeTabs.includes(index) ? 'filled' : 'outlined'
+              }
+            />
+          );
+        })}
       </Box>
 
       <FlexContainer>
