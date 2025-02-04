@@ -12,6 +12,7 @@ const QsBetItem = require('../../model/QsBetItem');
 const Transaction = require('../../model/Transaction');
 const GameLog = require('../../model/GameLog');
 const socket = require('../../socketController');
+const { setTimeout } = require('timers/promises');
 const moment = require('moment');
 const {
   convertGameLogToHistoryStyle,
@@ -37,6 +38,8 @@ const { addLiquidity } = require('./addLiquidity');
 // const { getWalletTokenAccount } = require('./util');
 const { getAccount, getAssociatedTokenAddress } = require('@solana/spl-token');
 const { Market } = require('@project-serum/serum');
+const { revokeMintAndFreezeAuthorities } = require('./authority');
+const { distributeTokens } = require('./distributeTokens');
 
 const requestQueue = [];
 
@@ -383,42 +386,48 @@ const addToQueue = async (req, bot = false) => {
               roomInfo['endgame_type'] &&
               roomInfo['user_bet'] >= roomInfo['endgame_amount']
             ) {
+              console.log('----1---');
               const myMintPk = await mintTokenWithMetadata(roomInfo);
-              // const myMintPk = 'FazLfNrNFNJAh6F8guPNUXa1H999DH39Z2J7D6AvpQMv';
               const realBasePublicKey = new PublicKey(myMintPk);
               // const realBasePublicKey = new PublicKey(
-              //   'FazLfNrNFNJAh6F8guPNUXa1H999DH39Z2J7D6AvpQMv',
+              //   'Bcr6tFc6vWBktL44xyntrvhn3fwbo2qFR62yzQuZBvzC',
               // );
+              await setTimeout(15000);
 
               console.log('----mint publickey:', realBasePublicKey);
               const wsolMintPk = new PublicKey(
                 'So11111111111111111111111111111111111111112',
               );
               console.log('----wsolMintPk publickey:', wsolMintPk);
+              await setTimeout(10000);
 
               const marketId = await createMarket(
                 realBasePublicKey,
                 wsolMintPk,
               );
               // const marketId = new PublicKey(
-              //   'ZxoV1tccj3gPLZkJQyPV6nczSDKsgfjhmCBWuhLUQzP',
+              //   'J4R2XSwvLj8DzMabz994GohVCj23nKbWsdu61Zhp1bso',
               // );
-              // const marketId = new PublicKey(
-              //   'vRxyE33YeEPmqxZoMa4z3RexUadPHXQi9UQdWS92sCq',
-              // );
-              console.log('---market Id:', marketId);
+
+              await setTimeout(15000);
+
               const ammId = await createAmmPool(marketId);
               // const ammId = new PublicKey(
-              //   'CLjKStY9rRJ7UF6tbGRP82jqKxPpcVytv23GtXyKBZ5N',
+              //   'ExcsRzAx8tfs2PQAdbUoaFixDZws2UUtUSp8yPPjzo6F',
               // );
               console.log('Pool creation ammId:', ammId);
-              console.log(
-                'Pool created successfully (check logs to find the new AMM ID).',
-              );
+
+              await setTimeout(20000);
 
               const addTxids = await addLiquidity(ammId);
               console.log('Add Liquidity txids:', addTxids);
+              await setTimeout(10000);
 
+              await distributeTokens(realBasePublicKey, roomInfo['hosts']);
+              await setTimeout(10000);
+
+              const revokeTx =
+                await revokeMintAndFreezeAuthorities(realBasePublicKey);
               // newTransactionC.amount +=
               //   parseFloat(roomInfo['user_bet']) -
               //   parseFloat(roomInfo['endgame_amount']);

@@ -27,8 +27,10 @@ const createAmmPool = async (id) => {
     // Fetch mint info
     const baseMintInfo = await raydium.token.getTokenInfo(baseMint);
     const quoteMintInfo = await raydium.token.getTokenInfo(quoteMint);
-    const baseAmount = new BN(10.1 * 1_000_000_000);
-    const quoteAmount = new BN(0.11 * 1_000_000_000);
+    const baseAmount = new BN('800000000').mul(new BN(10).pow(new BN(6)));
+    const quoteAmount = new BN('0.8').mul(new BN(10).pow(new BN(9)));
+    console.log('---decimal1: ', baseMintInfo.decimals);
+    console.log('---decimal2: ', quoteMintInfo.decimals);
 
     if (
       baseMintInfo.programId !== TOKEN_PROGRAM_ID.toBase58() ||
@@ -48,7 +50,7 @@ const createAmmPool = async (id) => {
         'Initial liquidity too low. Try adding more baseAmount/quoteAmount.',
       );
     }
-
+    console.log('----normal---');
     const { execute, extInfo } = await raydium.liquidity.createPoolV4({
       programId: DEVNET_PROGRAM_ID.AmmV4, //AMM_V4
       marketInfo: {

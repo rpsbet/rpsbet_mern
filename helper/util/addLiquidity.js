@@ -35,8 +35,9 @@ const addLiquidity = async (id) => {
 
     if (!isValidAmm(poolInfo.programId))
       throw new Error('Target pool is not an AMM pool');
-    console.log('---pool info---;', poolInfo);
-    const inputAmount = '1';
+    const inputAmount = '800000000';
+    console.log('----mintA:', poolInfo.mintA);
+    console.log('----mintB:', poolInfo.mintB);
     const r = raydium.liquidity.computePairAmount({
       poolInfo,
       amount: inputAmount,
@@ -71,8 +72,5 @@ const addLiquidity = async (id) => {
     console.error('Error during add liquidity:', error);
   }
 };
-
-// Uncomment the line below to execute
-// addLiquidity();
 
 module.exports = { addLiquidity };

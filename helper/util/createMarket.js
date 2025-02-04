@@ -19,7 +19,7 @@ const createMarket = async (realBasePublicKey, wsolMintPk) => {
       baseInfo: {
         // create market doesn't support token 2022
         mint: realBasePublicKey,
-        decimals: 9,
+        decimals: 6,
       },
       quoteInfo: {
         // create market doesn't support token 2022
