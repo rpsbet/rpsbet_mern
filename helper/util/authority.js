@@ -14,9 +14,9 @@ async function revokeMintAndFreezeAuthorities(mintPk) {
     tx.add(
       createSetAuthorityInstruction(
         mintPk,
-        owner.publicKey, 
+        owner.publicKey,
         AuthorityType.MintTokens,
-        null, 
+        null,
       ),
     );
     tx.add(
@@ -24,7 +24,7 @@ async function revokeMintAndFreezeAuthorities(mintPk) {
         mintPk,
         owner.publicKey,
         AuthorityType.FreezeAccount,
-        null, 
+        null,
       ),
     );
 

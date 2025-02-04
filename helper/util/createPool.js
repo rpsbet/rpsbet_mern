@@ -28,7 +28,7 @@ const createAmmPool = async (id) => {
     const baseMintInfo = await raydium.token.getTokenInfo(baseMint);
     const quoteMintInfo = await raydium.token.getTokenInfo(quoteMint);
     const baseAmount = new BN('800000000').mul(new BN(10).pow(new BN(6)));
-    const quoteAmount = new BN('0.8').mul(new BN(10).pow(new BN(9)));
+    const quoteAmount = new BN('8').mul(new BN(10).pow(new BN(8)));
     console.log('---decimal1: ', baseMintInfo.decimals);
     console.log('---decimal2: ', quoteMintInfo.decimals);
 

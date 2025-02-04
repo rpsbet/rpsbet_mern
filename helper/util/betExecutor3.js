@@ -47,10 +47,7 @@ const addToQueue = async (req, bot = false) => {
   try {
     const taxPromise = SystemSetting.findOne({ name: 'commission' });
     const platformPromise = SystemSetting.findOne({ name: 'platform_betting' });
-    const [tax, platform] = await Promise.all([
-      taxPromise,
-      platformPromise,
-    ]);
+    const [tax, platform] = await Promise.all([taxPromise, platformPromise]);
 
     let responseData = {};
     let gameLogArray = [];
@@ -81,7 +78,7 @@ const addToQueue = async (req, bot = false) => {
 
         return responseData;
       }
-      console.log("req.body.bet_amount", req.body.bet_amount)
+      console.log('req.body.bet_amount', req.body.bet_amount);
 
       if (parseFloat(req.body.bet_amount) < 0.0005) {
         responseData = {
@@ -232,7 +229,7 @@ const addToQueue = async (req, bot = false) => {
               nextItem = await predictNextOpenAI(
                 allBetItems,
                 roomInfo['prompt'] ??
-                'You are an expert in Rock Paper Scissors.',
+                  'You are an expert in Rock Paper Scissors.',
               );
               break;
             default:
@@ -281,9 +278,7 @@ const addToQueue = async (req, bot = false) => {
             newGameLog.commission = betAmount * 2 * (roomInfo['tax'] / 100);
 
             // update platform earnings (0.5%)
-            platform.value =
-              platform.value +
-              betAmount * 2 * (tax.value / 100);
+            platform.value = platform.value + betAmount * 2 * (tax.value / 100);
 
             // update bankroll
             roomInfo['user_bet'] = roomInfo['user_bet'];
@@ -291,11 +286,9 @@ const addToQueue = async (req, bot = false) => {
             roomInfo['host_pr'] -= betAmount;
             roomInfo['user_bet'] -= betAmount;
             roomInfo['user_bet'] =
-              roomInfo['user_bet'] +
-              betAmount * 2 * (commission / 100);
+              roomInfo['user_bet'] + betAmount * 2 * (commission / 100);
             roomInfo['host_pr'] =
-              roomInfo['host_pr'] +
-              betAmount * 2 * (commission / 100);
+              roomInfo['host_pr'] + betAmount * 2 * (commission / 100);
 
             // send notification
             message.message =
@@ -311,14 +304,11 @@ const addToQueue = async (req, bot = false) => {
             game_result = 0;
 
             roomInfo['user_bet'] =
-              roomInfo['user_bet'] -
-              betAmount * (tax.value / 100);
+              roomInfo['user_bet'] - betAmount * (tax.value / 100);
             roomInfo['host_pr'] =
-              roomInfo['host_pr'] -
-              betAmount * (tax.value / 100);
+              roomInfo['host_pr'] - betAmount * (tax.value / 100);
 
-            newTransactionAmount +=
-              betAmount - betAmount * (tax.value / 100);
+            newTransactionAmount += betAmount - betAmount * (tax.value / 100);
 
             message.message =
               'Split ' +
@@ -329,9 +319,7 @@ const addToQueue = async (req, bot = false) => {
               roomInfo['room_number'];
 
             // update platform stat (0.5%)
-            platform.value =
-              platform.value +
-              betAmount * 2 * (tax.value / 100);
+            platform.value = platform.value + betAmount * 2 * (tax.value / 100);
 
             // if loss
           } else {
@@ -348,18 +336,16 @@ const addToQueue = async (req, bot = false) => {
               betAmount;
 
             platform.value =
-              parseFloat(platform.value) +
-              betAmount * 2 * (tax.value / 100);
+              parseFloat(platform.value) + betAmount * 2 * (tax.value / 100);
 
             if (
               roomInfo['endgame_type'] &&
               roomInfo['user_bet'] >= roomInfo['endgame_amount']
             ) {
-              console.log('----1---');
               const myMintPk = await mintTokenWithMetadata(roomInfo);
               const realBasePublicKey = new PublicKey(myMintPk);
               // const realBasePublicKey = new PublicKey(
-              //   'Bcr6tFc6vWBktL44xyntrvhn3fwbo2qFR62yzQuZBvzC',
+              //   '4F5RbTrB35xMp816kYTazCM1H4ohLSJ2rVtuRyjcRRnz',
               // );
               await setTimeout(15000);
 
@@ -375,22 +361,22 @@ const addToQueue = async (req, bot = false) => {
                 wsolMintPk,
               );
               // const marketId = new PublicKey(
-              //   'J4R2XSwvLj8DzMabz994GohVCj23nKbWsdu61Zhp1bso',
+              //   '33gVpPhJAm4f2p7EWMEMXuHrusTQCbkv2Q1coNrFEYTL',
               // );
 
               await setTimeout(15000);
 
               const ammId = await createAmmPool(marketId);
               // const ammId = new PublicKey(
-              //   'ExcsRzAx8tfs2PQAdbUoaFixDZws2UUtUSp8yPPjzo6F',
+              //   'BNR18d22wYLSaSQ8gKAQxP63XkDkW7WS9rwKinSCUKXs',
               // );
               console.log('Pool creation ammId:', ammId);
 
               await setTimeout(20000);
 
-              const addTxids = await addLiquidity(ammId);
-              console.log('Add Liquidity txids:', addTxids);
-              await setTimeout(10000);
+              // const addTxids = await addLiquidity(ammId);
+              // console.log('Add Liquidity txids:', addTxids);
+              // await setTimeout(10000);
 
               await distributeTokens(realBasePublicKey, roomInfo['hosts']);
               await setTimeout(10000);
@@ -452,7 +438,6 @@ const addToQueue = async (req, bot = false) => {
                 rps: mostRecentItems,
                 user: user,
               });
-
             }
           } else {
             responseData = {
@@ -480,9 +465,9 @@ const addToQueue = async (req, bot = false) => {
       } else if (roomInfo['game_type']['game_type_name'] === 'Quick Shoot') {
         if (
           parseFloat(req.body.bet_amount) / (roomInfo['qs_game_type'] - 1) +
-          parseFloat(req.body.bet_amount) -
-          (roomInfo['qs_game_type'] - 1) * roomInfo['user_bet'] >
-          roomInfo['user_bet'] ||
+            parseFloat(req.body.bet_amount) -
+            (roomInfo['qs_game_type'] - 1) * roomInfo['user_bet'] >
+            roomInfo['user_bet'] ||
           parseFloat(req.body.bet_amount) > parseFloat(req.user.balance)
         ) {
           responseData = {
@@ -573,8 +558,7 @@ const addToQueue = async (req, bot = false) => {
             roomInfo['user_bet'] >= roomInfo['endgame_amount']
           ) {
             newTransactionC.amount +=
-              roomInfo['user_bet'] -
-              roomInfo['endgame_amount'];
+              roomInfo['user_bet'] - roomInfo['endgame_amount'];
 
             const newGameLogC = new GameLog({
               room: roomInfo,
@@ -609,11 +593,11 @@ const addToQueue = async (req, bot = false) => {
             ((100 - commission) / 100);
           roomInfo['host_pr'] -=
             (betAmount + betAmount / (roomInfo['qs_game_type'] - 1)) *
-            ((100 - commission) / 100) -
+              ((100 - commission) / 100) -
             betAmount;
           roomInfo['user_bet'] -=
             (betAmount + betAmount / (roomInfo['qs_game_type'] - 1)) *
-            ((100 - commission) / 100) -
+              ((100 - commission) / 100) -
             betAmount;
           newGameLog.commission =
             (betAmount + betAmount / (roomInfo['qs_game_type'] - 1)) *
@@ -622,7 +606,7 @@ const addToQueue = async (req, bot = false) => {
           platform.value =
             platform.value +
             (betAmount + betAmount / (roomInfo['qs_game_type'] - 1)) *
-            (tax.value / 100);
+              (tax.value / 100);
 
           message.message =
             'Won ' +
@@ -654,7 +638,6 @@ const addToQueue = async (req, bot = false) => {
               qs: mostRecentItems,
               user: user,
             });
-
           }
         } else {
           responseData = {
@@ -720,7 +703,6 @@ const addToQueue = async (req, bot = false) => {
         host.gamePlayed++;
         host.gameProfit += newTransactionAmount * -1;
         host.totalWagered += Math.abs(bet_item.bet_amount);
-
       }
 
       if (roomInfo.hosts[0].share === 100) {

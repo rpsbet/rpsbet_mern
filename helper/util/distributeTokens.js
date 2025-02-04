@@ -31,20 +31,24 @@ async function distributeTokens(mintPk, distributions) {
       const hostPk = new PublicKey(dist.walletAddress);
       const amount = totalDistRaw.mul(new BN(dist.share)).div(new BN(100));
 
-      // Derive the associated token account for the host
-      const hostTokenAccount = await getOrCreateAssociatedTokenAccount(
-        connection,
-        owner,
-        mintPk,
-        hostPk,
-      );
+      const hostATA = await getAssociatedTokenAddress(mintPk, hostPk);
 
-      // If that ATA does not exist yet, create it
-      // (We can also conditionally check getAccountInfo; if it doesn't exist, create)
+      const hostAccountInfo = await connection.getAccountInfo(hostATA);
+      if (!hostAccountInfo) {
+        tx.add(
+          createAssociatedTokenAccountInstruction(
+            owner.publicKey, // payer
+            hostATA, // ATA to be created
+            hostPk, // owner of the ATA
+            mintPk, // token mint
+          ),
+        );
+      }
+
       tx.add(
         createTransferInstruction(
           centralTokenAccount.address,
-          hostTokenAccount.address,
+          hostATA,
           owner.publicKey,
           amount,
         ),
