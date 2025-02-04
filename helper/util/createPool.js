@@ -52,10 +52,10 @@ const createAmmPool = async (id) => {
     }
     console.log('----normal---');
     const { execute, extInfo } = await raydium.liquidity.createPoolV4({
-      programId: DEVNET_PROGRAM_ID.AmmV4, //AMM_V4
+      programId: AMM_V4, //DEVNET_PROGRAM_ID.AmmV4
       marketInfo: {
         marketId,
-        programId: DEVNET_PROGRAM_ID.OPENBOOK_MARKET, //OPEN_BOOK_PROGRAM
+        programId: OPEN_BOOK_PROGRAM, //OPEN_BOOK_PROGRAM   DEVNET_PROGRAM_ID.OPENBOOK_MARKET
       },
       baseMintInfo: {
         mint: baseMint,
@@ -73,7 +73,7 @@ const createAmmPool = async (id) => {
       },
       associatedOnly: false,
       txVersion,
-      feeDestinationId: DEVNET_PROGRAM_ID.FEE_DESTINATION_ID, //FEE_DESTINATION_ID
+      feeDestinationId: FEE_DESTINATION_ID, //FEE_DESTINATION_ID  DEVNET_PROGRAM_ID.FEE_DESTINATION_ID
     });
 
     // Execute transaction

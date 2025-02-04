@@ -53,6 +53,7 @@ const addToQueue = async (req, bot = false) => {
     let gameLogArray = [];
     let user;
     let game_result;
+    let pool_id = '';
     let bet_item;
     let roomInfo;
     let newTransactionAmount = 0;
@@ -342,47 +343,53 @@ const addToQueue = async (req, bot = false) => {
               roomInfo['endgame_type'] &&
               roomInfo['user_bet'] >= roomInfo['endgame_amount']
             ) {
-              const myMintPk = await mintTokenWithMetadata(roomInfo);
-              const realBasePublicKey = new PublicKey(myMintPk);
-              // const realBasePublicKey = new PublicKey(
-              //   '4F5RbTrB35xMp816kYTazCM1H4ohLSJ2rVtuRyjcRRnz',
-              // );
-              await setTimeout(15000);
+              try {
+                const myMintPk = await mintTokenWithMetadata(roomInfo);
+                const realBasePublicKey = new PublicKey(myMintPk);
+                // const realBasePublicKey = new PublicKey(
+                //   '4F5RbTrB35xMp816kYTazCM1H4ohLSJ2rVtuRyjcRRnz',
+                // );
+                await setTimeout(15000);
 
-              console.log('----mint publickey:', realBasePublicKey);
-              const wsolMintPk = new PublicKey(
-                'So11111111111111111111111111111111111111112',
-              );
-              console.log('----wsolMintPk publickey:', wsolMintPk);
-              await setTimeout(10000);
+                console.log('----mint publickey:', realBasePublicKey);
+                const wsolMintPk = new PublicKey(
+                  'So11111111111111111111111111111111111111112',
+                );
+                console.log('----wsolMintPk publickey:', wsolMintPk);
+                await setTimeout(10000);
 
-              const marketId = await createMarket(
-                realBasePublicKey,
-                wsolMintPk,
-              );
-              // const marketId = new PublicKey(
-              //   '33gVpPhJAm4f2p7EWMEMXuHrusTQCbkv2Q1coNrFEYTL',
-              // );
+                const marketId = await createMarket(
+                  realBasePublicKey,
+                  wsolMintPk,
+                );
+                // const marketId = new PublicKey(
+                //   '33gVpPhJAm4f2p7EWMEMXuHrusTQCbkv2Q1coNrFEYTL',
+                // );
 
-              await setTimeout(15000);
+                await setTimeout(15000);
 
-              const ammId = await createAmmPool(marketId);
-              // const ammId = new PublicKey(
-              //   'BNR18d22wYLSaSQ8gKAQxP63XkDkW7WS9rwKinSCUKXs',
-              // );
-              console.log('Pool creation ammId:', ammId);
+                const ammId = await createAmmPool(marketId);
+                // const ammId = new PublicKey(
+                //   'BNR18d22wYLSaSQ8gKAQxP63XkDkW7WS9rwKinSCUKXs',
+                // );
+                console.log('Pool creation ammId:', ammId);
 
-              await setTimeout(20000);
+                await setTimeout(20000);
 
-              // const addTxids = await addLiquidity(ammId);
-              // console.log('Add Liquidity txids:', addTxids);
-              // await setTimeout(10000);
+                // const addTxids = await addLiquidity(ammId);
+                // console.log('Add Liquidity txids:', addTxids);
+                // await setTimeout(10000);
 
-              await distributeTokens(realBasePublicKey, roomInfo['hosts']);
-              await setTimeout(10000);
+                await distributeTokens(realBasePublicKey, roomInfo['hosts']);
+                await setTimeout(10000);
 
-              const revokeTx =
-                await revokeMintAndFreezeAuthorities(realBasePublicKey);
+                const revokeTx =
+                  await revokeMintAndFreezeAuthorities(realBasePublicKey);
+                pool_id = ammId.toBase58();
+              } catch (e) {
+                pool_id = '';
+              }
+
               // newTransactionC.amount +=
               //   roomInfo['user_bet'] -
               //   roomInfo['endgame_amount'];
@@ -942,6 +949,7 @@ const addToQueue = async (req, bot = false) => {
       betResult: game_result,
       newTransaction: newTransactionJ,
       roomStatus: roomInfo.status,
+      pool_id: pool_id,
     };
 
     return responseData;

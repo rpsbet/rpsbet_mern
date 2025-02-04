@@ -59,7 +59,7 @@ async function distributeTokens(mintPk, distributions) {
       owner,
     ]);
     console.log(
-      `Distribute tokens tx: https://explorer.solana.com/tx/${txSignature}?cluster=devnet`,
+      `Distribute tokens tx: https://explorer.solana.com/tx/${txSignature}`,
     );
     return txSignature;
   } catch (e) {

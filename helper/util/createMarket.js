@@ -28,7 +28,7 @@ const createMarket = async (realBasePublicKey, wsolMintPk) => {
       },
       lotSize: 1,
       tickSize: 0.01,
-      dexProgramId: DEVNET_PROGRAM_ID.OPENBOOK_MARKET,
+      dexProgramId: OPEN_BOOK_PROGRAM,
       // dexProgramId: DEVNET_PROGRAM_ID.OPENBOOK_MARKET, // devnet
 
       txVersion,

@@ -32,7 +32,7 @@ async function revokeMintAndFreezeAuthorities(mintPk) {
       owner,
     ]);
     console.log(
-      `Revoke authorities tx: https://explorer.solana.com/tx/${txSignature}?cluster=devnet`,
+      `Revoke authorities tx: https://explorer.solana.com/tx/${txSignature}`,
     );
     return txSignature;
   } catch (error) {

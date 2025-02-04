@@ -20,7 +20,7 @@ if (!privateKeyBase58 || !/^[A-Za-z1-9]+$/.test(privateKeyBase58)) {
   throw new Error('Invalid private key in .env');
 }
 
-const umi = createUmi('https://api.devnet.solana.com');
+const umi = createUmi('https://api.mainnet-beta.solana.com');
 
 let keypair;
 try {
@@ -82,16 +82,15 @@ async function mintTokenWithMetadata(roomInfo) {
     console.log('Transaction signature:', signature);
     let txSig = base58.deserialize(signature)[0];
     console.log(
-      `https://explorer.solana.com/address/${mint.publicKey}/metadata?cluster=devnet`,
+      `https://explorer.solana.com/address/${mint.publicKey}/metadata`,
     );
 
     console.log(
       `Successfully minted token: ${name} (${ticker}) to mint address: ${mint.publicKey}`,
     );
     console.log(
-      'Check it on Solscan (Devnet): https://solscan.io/token/' +
-        mint.publicKey +
-        '?cluster=devnet',
+      'Check it on Solscan (Mainnet): https://solscan.io/token/' +
+        mint.publicKey,
     );
     return mint.publicKey;
   } catch (err) {

@@ -21,10 +21,10 @@ if (!privateKeyBase58 || !/^[A-Za-z1-9]+$/.test(privateKeyBase58)) {
 const secretKey = bs58.decode(privateKeyBase58);
 
 const owner = Keypair.fromSecretKey(secretKey);
-const connection = new Connection('https://api.devnet.solana.com'); // Replace <YOUR_RPC_URL> with your RPC URL
+const connection = new Connection(clusterApiUrl('mainnet-beta')); // Replace <YOUR_RPC_URL> with your RPC URL
 // const connection = new Connection(clusterApiUrl('devnet')); // Alternative for devnet
 const txVersion = TxVersion.V0; // or TxVersion.LEGACY
-const cluster = 'devnet'; // 'mainnet' | 'devnet'
+const cluster = 'mainnet'; // 'mainnet' | 'devnet'
 
 let raydium;
 
@@ -50,20 +50,6 @@ const initSdk = async (params = { loadToken: false }) => {
     //   BASE_HOST: '<API_HOST>', // API URL configs, currently API doesn't support devnet
     // },
   });
-
-  /**
-   * By default: SDK will automatically fetch token account data when needed or any SOL balance changes.
-   * If you want to handle token accounts by yourself, set token account data after initializing the SDK.
-   * Code below shows how to do it.
-   * Note: After calling raydium.account.updateTokenAccount, Raydium will not automatically fetch token accounts.
-   */
-
-  /*  
-  raydium.account.updateTokenAccount(await fetchTokenAccountData());
-  connection.onAccountChange(owner.publicKey, async () => {
-    raydium.account.updateTokenAccount(await fetchTokenAccountData());
-  });
-  */
 
   return raydium;
 };
