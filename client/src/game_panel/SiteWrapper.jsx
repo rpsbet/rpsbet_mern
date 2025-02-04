@@ -128,6 +128,7 @@ import {
   addChatLog,
   getMyHistory,
   addNewTransaction,
+  addNewNotification,
   updateOnlineUserList,
   selectMainTab,
   globalChatReceived,
@@ -234,6 +235,7 @@ function SiteWrapper(props) {
     updateTutorialCompleted,
     setUnreadMessageCount,
     addNewTransaction,
+    addNewNotification,
     getNotifications,
     readNotifications,
     updateOnlineUserList,
@@ -267,7 +269,6 @@ function SiteWrapper(props) {
   const [anchorElNotifications, setAnchorElNotifications] = useState(null);
   const [anchorElGameLog, setAnchorElGameLog] = useState(null);
 
-  const [betResult, setBetResultLocal] = useState(propsBetResult);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showPlayerModal, setShowPlayerModal] = useState(false);
   const [runTutorial, setRunTutorial] = useState(false);
@@ -313,10 +314,10 @@ function SiteWrapper(props) {
   const [bonusCheck, setBonusCheck] = useState(false);
   const [remainingLoans, setRemainingLoans] = useState(propsRemainingLoans);
   const [highlightedRooms, setHighlightedRooms] = useState(new Set());
+  const [unreadCount, setUnreadCount] = useState(0);
 
   // For web3/wallet
   const [walletAddress, setWalletAddress] = useState(connectedAccount);
-  const [tokenBalance, setTokenBalance] = useState(0);
   const [solanaBalance, setSolanaBalance] = useState(0);
   const [account, setAccount] = useState(null);
 
@@ -608,10 +609,6 @@ function SiteWrapper(props) {
         notificationSoundRef.current?.play();
       }
 
-      if (data.message.includes('Deposit')) {
-        getUser();
-      }
-
       if (isNotificationsAllowed && window.Notification) {
         const options = { body: data.message, silent: false };
         if (Notification.permission === 'granted') {
@@ -625,13 +622,13 @@ function SiteWrapper(props) {
           });
         }
       }
+      addNewNotification(data);
     };
 
     socket.on('SEND_NOTIFICATION', handleSendNotification);
 
     const handleAddTransaction = (data) => {
       addNewTransaction(data)
-
     };
 
     socket.on('NEW_TRANSACTION', handleAddTransaction);
@@ -679,55 +676,47 @@ function SiteWrapper(props) {
   const loadSolanaWallet = useCallback(async () => {
     try {
       if (window.solana && window.solana.isPhantom) {
-        // 1) Connect Phantom
+        // 1) Connect to Phantom
         await window.solana.connect();
         const wAddress = window.solana.publicKey.toString();
-        // props.authenticateWithPhantom();
+        console.log("Wallet Address:", wAddress);
+        
         // 2) Attempt to register/add this wallet to the user
         const { success, message } = await props.checkAndAddWalletAddress(wAddress);
         if (!success) {
-          // That means the wallet is already in use by another user
           console.warn('Wallet conflict:', message);
-          // Show our MUI dialog to alert user
+          // Show our MUI dialog to alert the user
           setWalletConflictOpen(true);
-          return; // Stop execution so we don't store the address for the current user
+          return; // Stop execution if the wallet is already in use
         }
-
-        // 3) If success, continue with your existing logic:
+    
+        // 3) Get provider URL from your backend and initialize a connection
         const response = await axios.get('/stripe/get_provider_url');
         const providerUrl = response.data.providerUrl;
+        console.log("Provider URL:", providerUrl);
+        
         const solanaConnection = new Connection(providerUrl, 'confirmed');
-
-        // fetch SOL balance
+    
+        // 4) Fetch the SOL balance (in lamports)
         const solBalLamports = await solanaConnection.getBalance(new PublicKey(wAddress));
-
-        // fetch token accounts
-        const tokenAccounts = await solanaConnection.getParsedTokenAccountsByOwner(
-          new PublicKey(wAddress),
-          { programId: TOKEN_PROGRAM_ID }
-        );
-
-        // find specific token mint
-        const specificTokenAccount = tokenAccounts.value.find(
-          (acc) => acc.account.data.parsed.info.mint === tokenMintAddress.toString()
-        );
-
-        let tokBalance = 0;
-        if (specificTokenAccount) {
-          tokBalance =
-            specificTokenAccount.account.data.parsed.info.tokenAmount.uiAmount;
-        }
-
-        // 4) Update your local state
+        console.log("SOL Balance (lamports):", solBalLamports);
+    
+        // Convert lamports to SOL
+        const solBalance = solBalLamports / LAMPORTS_PER_SOL;
+        console.log("SOL Balance (SOL):", solBalance);
+    
+        // 5) Update your local state with the wallet address and SOL balance
         setWalletAddress(wAddress);
         setAccount({ publicKey: new PublicKey(wAddress) });
-        setSolanaBalance(solBalLamports / LAMPORTS_PER_SOL);
-        setTokenBalance(tokBalance || 0);
+        setSolanaBalance(solBalance);
+        
+        // If you need to see the updated balance later, consider using a useEffect:
+        // useEffect(() => { console.log("Updated solanaBalance:", solanaBalance); }, [solanaBalance]);
       }
     } catch (error) {
-      console.error('Failed to connect Phantom or fetch token balance:', error);
+      console.error('Failed to connect Phantom or fetch SOL balance:', error);
     }
-  }, []);
+  }, [props, setWalletAddress, setAccount, setSolanaBalance, setWalletConflictOpen]);
 
   const disconnectWeb3 = useCallback(() => {
     setWalletAddress(null);
@@ -1756,6 +1745,20 @@ function SiteWrapper(props) {
 
             {/* Withdraw or Debts / Deposit */}
             <Box sx={{ mt: 2, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+              <Button
+                color="error"
+                variant="outlined"
+                onClick={handleOpenDepositModal}
+                startIcon={<AccountBalanceWalletOutlined />}
+                sx={{
+                  '&:hover': {
+                    backgroundColor: 'error.main',
+                    color: '#fff'
+                  }
+                }}
+              >
+                Deposit
+              </Button>
               {remainingLoans > 0 ? (
                 <Button
                   color="error"
@@ -1787,21 +1790,6 @@ function SiteWrapper(props) {
                   Withdraw
                 </Button>
               )}
-
-              <Button
-                color="error"
-                variant="outlined"
-                onClick={handleOpenDepositModal}
-                startIcon={<AccountBalanceWalletOutlined />}
-                sx={{
-                  '&:hover': {
-                    backgroundColor: 'error.main',
-                    color: '#fff'
-                  }
-                }}
-              >
-                Deposit
-              </Button>
             </Box>
 
             <Box sx={{ mt: 2 }}>
@@ -1978,7 +1966,6 @@ function SiteWrapper(props) {
             closeModal={handleCloseDepositModal}
             web3={null} // pass if needed
             loadSolanaWallet={loadSolanaWallet}
-            tokenBalance={tokenBalance}
             balance={solanaBalance}
             account={account}
           />
@@ -2022,51 +2009,51 @@ function SiteWrapper(props) {
         <GamePasswordModal />
 
         <Joyride
-  steps={tutorialStepsMain}
-  run={runTutorial}
-  callback={handleJoyrideCallback}
-  continuous
-  showProgress
-  showSkipButton
-  styles={{
-    options: {
-      zIndex: 1500,
-      backgroundColor: isDarkMode
-        ? 'rgba(33, 33, 33, 0.95)'   // Dark gray background for dark mode
-        : 'rgba(255, 255, 255, 0.95)', // White background for light mode
-      primaryColor: isDarkMode ? '#ff0000' : '#6200ea', // Vibrant green for dark, deep purple for light
-      arrowColor: isDarkMode
-        ? 'rgba(33, 33, 33, 0.95)'
-        : 'rgba(255, 255, 255, 0.95)',
-      textColor: isDarkMode ? '#eeeeee' : '#212121', // Light text for dark mode, dark text for light mode
-      width: 320,
-      padding: 24,
-      borderRadius: 8,
-      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-    },
-    buttonClose: {
-      borderRadius: 4,
-      color: isDarkMode ? '#eeeeee' : '#212121',
-    },
-    buttonBack: {
-      borderRadius: 4,
-      backgroundColor: isDarkMode
-        ? 'rgba(255, 255, 255, 0.1)'
-        : 'rgba(0, 0, 0, 0.05)',
-      color: isDarkMode ? '#eeeeee' : '#212121',
-      marginRight: 8,
-    },
-    buttonNext: {
-      borderRadius: 4,
-      backgroundColor: isDarkMode ? '#ff0000' : '#6200ea',
-      color: '#fff',
-    },
-    buttonSkip: {
-      borderRadius: 4,
-      color: isDarkMode ? '#eeeeee' : '#212121',
-    },
-  }}
-/>
+          steps={tutorialStepsMain}
+          run={runTutorial}
+          callback={handleJoyrideCallback}
+          continuous
+          showProgress
+          showSkipButton
+          styles={{
+            options: {
+              zIndex: 1500,
+              backgroundColor: isDarkMode
+                ? 'rgba(33, 33, 33, 0.95)'   // Dark gray background for dark mode
+                : 'rgba(255, 255, 255, 0.95)', // White background for light mode
+              primaryColor: isDarkMode ? '#ff0000' : '#6200ea', // Vibrant green for dark, deep purple for light
+              arrowColor: isDarkMode
+                ? 'rgba(33, 33, 33, 0.95)'
+                : 'rgba(255, 255, 255, 0.95)',
+              textColor: isDarkMode ? '#eeeeee' : '#212121', // Light text for dark mode, dark text for light mode
+              width: 320,
+              padding: 24,
+              borderRadius: 8,
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+            },
+            buttonClose: {
+              borderRadius: 4,
+              color: isDarkMode ? '#eeeeee' : '#212121',
+            },
+            buttonBack: {
+              borderRadius: 4,
+              backgroundColor: isDarkMode
+                ? 'rgba(255, 255, 255, 0.1)'
+                : 'rgba(0, 0, 0, 0.05)',
+              color: isDarkMode ? '#eeeeee' : '#212121',
+              marginRight: 8,
+            },
+            buttonNext: {
+              borderRadius: 4,
+              backgroundColor: isDarkMode ? '#ff0000' : '#6200ea',
+              color: '#fff',
+            },
+            buttonSkip: {
+              borderRadius: 4,
+              color: isDarkMode ? '#eeeeee' : '#212121',
+            },
+          }}
+        />
       </div>
     </ThemeProvider>
   );
@@ -2117,6 +2104,7 @@ const mapDispatchToProps = {
   updateTutorialCompleted,
   setUnreadMessageCount,
   addNewTransaction,
+  addNewNotification,
   getNotifications,
   readNotifications,
   updateOnlineUserList,

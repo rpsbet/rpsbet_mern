@@ -207,22 +207,65 @@ export default function (state = initialState, action) {
       };
     }
     case NEW_TRANSACTION: {
-      // Check if the transaction already exists in the state
-      if (state.transactions.some(tx => tx._id === payload._id)) {
-        // If found, do not modify state further
-        return state;
+      // See if this transaction already exists
+      const existingIndex = state.transactions.findIndex(tx => tx._id === payload._id);
+    
+      if (existingIndex !== -1) {
+        // 1) It's an existing transaction; replace it
+        const newTransactions = [...state.transactions];
+        const oldTx = newTransactions[existingIndex];
+    
+        // Replace old transaction with new payload
+        newTransactions[existingIndex] = payload;
+    
+        // 2) Skip balance update if new tx is 'pending'
+        if (payload.status === 'pending') {
+          return {
+            ...state,
+            transactions: newTransactions,
+            // balance remains unchanged
+          };
+        } else {
+          // If new status is *not* pending, find how much we need to add/subtract
+          // oldTx might have been pending or not
+          const oldAmount = oldTx.status === 'pending' ? 0 : oldTx.amount;
+          const newAmount = payload.amount;
+    
+          const updatedBalance = state.user.balance + (newAmount - oldAmount);
+    
+          return {
+            ...state,
+            transactions: newTransactions,
+            balance: updatedBalance,
+          };
+        }
+    
+      } else {
+        // 2) It's a brand new transaction
+        const newTransactions = [payload]
+          .concat(JSON.parse(JSON.stringify(state.transactions)))
+          .slice(0, 4);
+    
+        // If the new transaction is 'pending', skip balance update
+        if (payload.status === 'pending') {
+          return {
+            ...state,
+            transactions: newTransactions
+            // balance unchanged
+          };
+        } else {
+          // Otherwise, add the full amount
+          const updatedBalance = state.user.balance + payload.amount;
+    
+          return {
+            ...state,
+            transactions: newTransactions,
+            balance: updatedBalance,
+          };
+        }
       }
-
-      const newTransactions = [payload]
-        .concat(JSON.parse(JSON.stringify(state.transactions)))
-        .slice(0, 4);
-      const updatedBalance = state.user.balance + payload.amount;
-      return {
-        ...state,
-        transactions: newTransactions,
-        balance: updatedBalance,
-      };
     }
+    
 
     case SET_SEVEN_DAY_PROFIT:
       return {

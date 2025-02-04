@@ -1,363 +1,213 @@
 const cron = require('node-cron');
-const { Connection, clusterApiUrl, PublicKey } = require('@solana/web3.js');
+const {
+  Connection,
+  PublicKey,
+  LAMPORTS_PER_SOL
+} = require('@solana/web3.js');
+
 const User = require('../../model/User');
 const Transaction = require('../../model/Transaction');
+const Notification = require('../../model/Notification'); // If needed for your notifications
 const axios = require('axios');
 const moment = require('moment');
 
 const saveDocumentWithRetry = require('./retrySave');
 const socketController = require('../../socketController');
 
+// Replace with your actual environment variables
 const provider = new Connection(process.env.PROVIDER_URL, 'confirmed');
-const API_KEY = process.env.API_KEY;
-const tokenMintAddress = process.env.token;
 
-const depositConfirmationThreshold = 6; // Number of confirmations required
+const depositConfirmationThreshold = 6; // e.g. 6 confirmations
 let isProcessing = false;
 
+/**
+ * The function that checks confirmations for pending or in-process transactions.
+ */
 async function checkConfirmations(io) {
   try {
-    const pendingTransactions = await Transaction.find({ status: 'pending' });
-    const processingTransactions = await Transaction.find({
-      status: { $in: ['processing', 'in_process'] }
-    });
+    if (isProcessing) return; // Prevent overlap
+    isProcessing = true;
 
-    let referralOwner = null;
+    const pendingTransactions = await Transaction.find({ status: 'pending' });
+
+    // If you need socket.io, store it
     if (io) {
       socketio = io;
     }
 
-    if (isProcessing) {
-      return;
-    }
-
-    isProcessing = true;
-
-    // Token mint address to check
-    const epsilon = 0.00001; // Define a small threshold for floating-point comparison
-
-    // Process pending transactions
+    // -------------- PROCESS PENDING (NATIVE SOL) --------------
     for (const transaction of pendingTransactions) {
       const txSignature = transaction.hash;
-
-      // Fetch transaction details from Solana
+      // 1) Fetch transaction details from Solana
       const txInfo = await provider.getTransaction(txSignature, { commitment: 'confirmed' });
+      if (!txInfo || !txInfo.slot || !txInfo.meta) {
+        // Not found or incomplete; skip this iteration
+        continue;
+      }
 
-      if (txInfo && txInfo.slot) {
-        const confirmations = await provider.getSlot('confirmed');
-        const confirmationCount = confirmations - txInfo.slot;
+      // 2) Check confirmations
+      const currentSlot = await provider.getSlot('confirmed'); 
+      const confirmationCount = currentSlot - txInfo.slot;
 
-        // Process only if we have enough confirmations
-        if (confirmationCount >= depositConfirmationThreshold) {
-          const user = await User.findById(transaction.user);
-          if (user) {
-            // Find the relevant token account index for the specific token mint
-            const preTokenBalances = txInfo.meta.preTokenBalances;
-            const postTokenBalances = txInfo.meta.postTokenBalances;
+      if (confirmationCount < depositConfirmationThreshold) {
+        // Not enough confirmations yet
+        continue;
+      }
 
-            // Find the index of the user's token account for the specific mint address
-            const userTokenAccountIndex = preTokenBalances.findIndex(balance => balance.mint === tokenMintAddress);
+      console.log('ADMIN_WALLET from env ->', process.env.adminWallet);
 
-            if (userTokenAccountIndex !== -1) {
-              const preBalance = preTokenBalances[userTokenAccountIndex].uiTokenAmount.uiAmount || 0;
-              const postBalance = postTokenBalances[userTokenAccountIndex].uiTokenAmount.uiAmount || 0;
-              const amountRaw = postBalance - preBalance; // Calculate the amount sent
+      const adminWallet = process.env.adminWallet; // e.g. "A4cwo8Q7rm..."
+      const adminPubkey = new PublicKey(adminWallet);
 
+      const adminIndex = txInfo.transaction.message.accountKeys.findIndex((acc) =>
+        acc.equals(adminPubkey)
+      );
+      if (adminIndex === -1) {
+        console.error('Admin wallet not found in transaction:', txSignature);
+        continue;
+      }
 
-              // Check if the extracted amount matches the pending transaction amount within an epsilon
-              if (Math.abs(amountRaw - transaction.amount) < epsilon) {
-                // Update transaction with the new amount
-                transaction.amount = amountRaw; // Store this amount in your transaction document
-                transaction.status = 'completed';
-                user.balance += amountRaw;
+      // 4) Get preBalance & postBalance for the admin wallet
+      const preBalLamports = txInfo.meta.preBalances[adminIndex];
+      const postBalLamports = txInfo.meta.postBalances[adminIndex];
 
+      // 5) The lamports difference => deposit
+      const depositLamports = postBalLamports - preBalLamports;
+      const depositSOL = depositLamports / LAMPORTS_PER_SOL;
 
-                if (user.referralId && user.referralId !== "") {
-                  referralOwner = await User.findOne({ _id: user.referralId });
-                }
+      // 6) Compare depositSOL with transaction.amount (within epsilon)
+      const epsilon = 0.00001;
+      const amountDiff = Math.abs(depositSOL - transaction.amount);
 
-                // If there is a referral owner, update their balance and rewards
-                if (referralOwner) {
-                  const index = referralOwner.rewards.findIndex(reward => reward.user.equals(user._id));
-                  if (index !== -1) {
-                    referralOwner.rewards[index].amount += amountRaw * 0.01;
-                  } else {
-                    referralOwner.rewards.push({ user: user._id, amount: amountRaw * 0.01 });
-                  }
-
-                  referralOwner.balance += amountRaw * 0.01;
-
-                  const newTransaction = new Transaction({
-                    user: referralOwner._id,
-                    amount: amountRaw * 0.01,
-                    description: `Referral rewards from ${user.username}.`,
-                    room: ''
-                  });
-
-                  // Prepare notification for referral owner
-                  const notificationJ = new Notification({
-                    from: user._id,
-                    to: referralOwner._id,
-                    amount: amountRaw * 0.01,
-                    room: '',
-                    message: `Received ${(amountRaw * 0.01)} in referral rewards.`
-                  });
-
-                  const notificationDataJ = {
-                    message: notificationJ.message,
-                    username: user.username,
-                    avatar: user.avatar,
-                    amount: amountRaw * 0.01,
-                    accessory: user.accessory,
-                    rank: user.totalWagered,
-                    created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
-                    created_at_str: moment(new Date()).format('LLL'),
-                    updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
-                    is_read: false
-                  };
-
-                  try {
-                    await saveDocumentWithRetry(referralOwner);
-                    await saveDocumentWithRetry(newTransaction);
-                    await saveDocumentWithRetry(notificationJ);
-                    socketController.sendNotification(referralOwner._id, notificationDataJ);
-                  } catch (error) {
-                    console.error("Error saving:", error);
-                  }
-                }
-
-                // Prepare notification for user
-                const notification = new Notification({
-                  from: user._id,
-                  to: user._id,
-                  amount: amountRaw,
-                  room: '',
-                  message: `Deposit successful, received ${(amountRaw)}`
-                });
-
-                const notificationData = {
-                  message: notification.message,
-                  username: user.username,
-                  avatar: user.avatar,
-                  accessory: user.accessory,
-                  rank: user.totalWagered,
-                  created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
-                  amount: amountRaw,
-                  created_at_str: moment(new Date()).format('LLL'),
-                  updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
-                  is_read: false
-                };
-
-                try {
-                  await saveDocumentWithRetry(transaction);
-                  await saveDocumentWithRetry(user);
-                  await saveDocumentWithRetry(notification);
-                  socketController.sendNotification(user._id, notificationData);
-                } catch (error) {
-                  console.error("Error saving notification:", error);
-                }
-
-                console.log('Deposit transaction processed successfully for user:', user.username, 'with amount:', amountRaw);
-              }
-            } else {
-              console.error('User token account not found for the mint address:', tokenMintAddress);
-            }
-          }
+      if (amountDiff <= epsilon) {
+        // The deposit matches => finalize
+        const user = await User.findById(transaction.user);
+        if (!user) {
+          console.error('User not found for transaction:', transaction._id);
+          continue;
         }
-      }
-    }
-    const response = await axios.get('https://api.coingecko.com/api/v3/simple/price', {
-      params: {
-        ids: 'solana',
-        vs_currencies: 'usd',
-      },
-    });
 
-    const solPrice = response.data.solana?.usd;
+        // Mark transaction completed
+        transaction.status = 'completed';
+        // If you want to store the actual deposit amount found on-chain:
+        transaction.amount = depositSOL;
 
-    
-    const margin = 1000000; // Define the threshold for acceptable price variation (in USD)
-    
-    // Process web2 transactions (deposits)
-    for (const transaction of processingTransactions) {
-      const FIVE_SECONDS = 5 * 1000; // 5 seconds in milliseconds
-      const now = new Date();
-      const updatedAt = new Date(transaction.updated_at);
-    
-      if (now - updatedAt <= FIVE_SECONDS) {
-        console.log(`Transaction ${transaction._id} was updated recently. Skipping...`);
-        continue;
-      }
-    
-      if (transaction.status === 'completed') {
-        console.log(`Transaction ${transaction._id} is already completed. Skipping...`);
-        continue;
-      }
-    
-      const currentTime = new Date();
-      const twoHoursAgo = new Date(currentTime.getTime() - (10 * 60 * 60 * 1000)); // 10 hours ago
-      let isDeposit = transaction.description === 'deposit';
-      let isWithdraw = transaction.description === 'withdraw';
-      const paymentId = transaction.hash;
-    
-      // Ensure the transaction is a deposit with a valid paymentId and created within the last 10 hours
-      if (isDeposit && paymentId && new Date(transaction.created_at) >= twoHoursAgo) {
-        try {
-          transaction.status = 'in_process';
-          await saveDocumentWithRetry(transaction);
-          const response = await axios.get(`https://api.nowpayments.io/v1/payment/${paymentId}`, {
-            headers: {
-              'x-api-key': API_KEY,
-              'Content-Type': 'application/json',
-            },
+        // Update user’s balance
+        user.balance += depositSOL;
+
+        // ------------- REFERRAL LOGIC -------------
+        let referralOwner = null;
+        if (user.referralId) {
+          referralOwner = await User.findById(user.referralId);
+        }
+
+        if (referralOwner) {
+          // e.g. 1% referral
+          const referralReward = depositSOL * 0.01;
+
+          // Upsert the reward record
+          const idx = referralOwner.rewards.findIndex((r) => r.user.equals(user._id));
+          if (idx !== -1) {
+            referralOwner.rewards[idx].amount += referralReward;
+          } else {
+            referralOwner.rewards.push({ user: user._id, amount: referralReward });
+          }
+          referralOwner.balance += referralReward;
+
+          // Create a new transaction for the referral owner’s reward
+          const referralTx = new Transaction({
+            user: referralOwner._id,
+            amount: referralReward,
+            description: `Referral rewards from ${user.username}.`,
+            room: ''
           });
-    
-          const paymentStatus = response.data.payment_status;
-          if (paymentStatus === 'finished') {
-            const user = await User.findById(transaction.user);
-            const referralId = user.referralId;
-    
-            const solResponse = await axios.get('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd');
-            const solPrice = parseFloat(solResponse.data.solana?.usd);
-        
-            if (solPrice == null || isNaN(solPrice)) {
-              return {
-                success: false,
-                message: 'Solana price not found or invalid.',
-              };
-            }
-        
-            // Check if transaction amount is within an acceptable range of the token price
-            const expectedAmountInUSD = transaction.amount; // Calculate expected amount based on token price
-            const tokenAmount = response.data.pay_amount * solPrice; // This should be the amount received in USD
 
-            // Check if the amount is within the defined epsilon range
-            if (Math.abs(tokenAmount - expectedAmountInUSD) < margin) {
-              transaction.status = 'completed';
-              user.balance +=  transaction.amount - (transaction.amount * 0.008); // Update user balance
-    
-              let referralOwner = null;
-              if (referralId) {
-                referralOwner = await User.findOne({ referralId });
-              }
-    
-              if (referralOwner) {
-                const index = referralOwner.rewards.findIndex(reward => reward.user.equals(user._id));
-                if (index !== -1) {
-                  referralOwner.rewards[index].amount += tokenAmount * 0.01;
-                } else {
-                  referralOwner.rewards.push({ user: user._id, amount: tokenAmount * 0.01 });
-                }
-    
-                referralOwner.balance += tokenAmount * 0.01;
-                const newTransaction = new Transaction({
-                  user: referralOwner._id,
-                  amount: transaction.amount * 0.01,
-                  description: `Referral rewards from ${user.username}.`,
-                  room: ''
-                });
-    
-                let notificationJ = new Notification({
-                  from: user._id,
-                  to: referralOwner._id,
-                  amount: transaction.amount * 0.01,
-                  room: '',
-                  message: `Received ${(transaction.amount * 0.01)} in referral rewards.`
-                });
-    
-                const notificationDataJ = {
-                  message: notificationJ.message,
-                  amount: transaction.amount,
-                  username: user.username,
-                  avatar: user.avatar,
-                  accessory: user.accessory,
-                  rank: user.totalWagered,
-                  created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
-                  created_at_str: moment(new Date()).format('LLL'),
-                  updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
-                  is_read: false
-                };
-    
-                try {
-                  await saveDocumentWithRetry(referralOwner);
-                  await saveDocumentWithRetry(newTransaction);
-                  await saveDocumentWithRetry(notificationJ);
-                  socketController.sendNotification(referralOwner._id, notificationDataJ);
-                } catch (error) {
-                  console.error("Error saving referral related documents:", error);
-                }
-              }
-    
-              let notification = new Notification({
-                from: user._id,
-                to: user._id,
-                amount: transaction.amount,
-                room: '',
-                message: `Deposit successful, received ${(transaction.amount)}`
-              });
-    
-              const notificationData = {
-                message: notification.message,
-                username: user.username,
-                avatar: user.avatar,
-                accessory: user.accessory,
-                amount: transaction.amount,
-                rank: user.totalWagered,
-                created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
-                created_at_str: moment(new Date()).format('LLL'),
-                updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
-                is_read: false
-              };
-    
-              try {
-                await saveDocumentWithRetry(transaction);
-                await saveDocumentWithRetry(user);
-                await saveDocumentWithRetry(notification);
-                socketController.sendNotification(user._id, notificationData);
-              } catch (error) {
-                console.error("Error saving notification:", error);
-              }
-    
-              console.log('Deposit transaction processed successfully.', transaction.amount);
-            } else {
-              console.log(`Transaction amount does not match price expectation. Expected around: ${expectedAmountInUSD}, but received: ${tokenAmount}`);
-            }
-          }
-        } catch (error) {
-          console.error("Error processing transaction:", error);
-        }
-      
-      } else if (isWithdraw && paymentId) {
-        const response = await axios.get(`https://api.nowpayments.io/v1/payout/${paymentId}`, {
-          headers: {
-            'x-api-key': API_KEY,
-            'Content-Type': 'application/json',
-          },
-        });
-        const paymentStatus = response.data.withdrawals[0].status;
-        if (paymentStatus === 'FINISHED') {
-          transaction.status = 'complete';
+          // Prepare referral notification
+          const notificationRef = new Notification({
+            from: user._id,
+            to: referralOwner._id,
+            amount: referralReward,
+            room: '',
+            message: `Received ${referralReward} SOL in referral rewards.`
+          });
+
+          const notificationDataRef = {
+            message: notificationRef.message,
+            username: user.username,
+            avatar: user.avatar,
+            accessory: user.accessory,
+            rank: user.totalWagered,
+            amount: referralReward,
+            created_at: moment().format('YYYY-MM-DD HH:mm'),
+            created_at_str: moment().format('LLL'),
+            updated_at: moment().format('YYYY-MM-DD HH:mm'),
+            is_read: false
+          };
+
           try {
-            await saveDocumentWithRetry(transaction);
+            await saveDocumentWithRetry(referralOwner);
+            await saveDocumentWithRetry(referralTx);
+            await saveDocumentWithRetry(notificationRef);
+            socketController.sendNotification(referralOwner._id, notificationDataRef);
+            socketController.newTransaction(referralOwner._id, referralTx);
           } catch (error) {
-            console.error("Error saving notification:", error);
+            console.error('Error saving referral data:', error);
           }
         }
+
+        // ------------- USER NOTIFICATION -------------
+        const notification = new Notification({
+          from: user._id,
+          to: user._id,
+          amount: depositSOL,
+          room: '',
+          message: `Deposit successful, received ${depositSOL} SOL`
+        });
+
+        const notificationData = {
+          message: notification.message,
+          username: user.username,
+          avatar: user.avatar,
+          accessory: user.accessory,
+          rank: user.totalWagered,
+          amount: depositSOL,
+          created_at: moment().format('YYYY-MM-DD HH:mm'),
+          created_at_str: moment().format('LLL'),
+          updated_at: moment().format('YYYY-MM-DD HH:mm'),
+          is_read: false
+        };
+
+        try {
+          await saveDocumentWithRetry(transaction);
+          await saveDocumentWithRetry(user);
+          await saveDocumentWithRetry(notification);
+          socketController.sendNotification(user._id, notificationData);
+          socketController.newTransaction(transaction);
+        } catch (error) {
+          console.log("transaction", transaction)
+          console.log("user", user._id)
+          console.log("notification", notification)
+          console.error('Error saving deposit data:', error);
+        }
+
+        
+      } else {
+        console.log(
+          `Deposit mismatch. On-chain deposit: ${depositSOL}, expected: ${transaction.amount}`
+        );
       }
     }
 
   } catch (error) {
-    isProcessing = false;
     console.error('Error checking confirmations:', error);
   } finally {
     isProcessing = false;
   }
 }
 
-
+// Run every 15 seconds
 cron.schedule('*/15 * * * * *', checkConfirmations);
 
-// Export any necessary functions or variables for use in your application
 module.exports = {
   checkConfirmations
 };

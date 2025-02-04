@@ -36,6 +36,7 @@ import {
   SELECT_MAIN_TAB,
   MY_CHAT_LOADED,
   NOTIFICATIONS_LOADED,
+  NEW_NOTIFICATION,
   TNX_COMPLETE,
   TNX_INCOMPLETE,
   SET_NOTIFICATIONS_ROOM_INFO,
@@ -427,6 +428,11 @@ export default function (state = initialState, action) {
       return {
         ...state,
         notifications: payload
+      };
+    case NEW_NOTIFICATION:
+      return {
+        ...state,
+        notifications: [payload, ...state.notifications]
       };
     case SET_NOTIFICATIONS_ROOM_INFO:
       return {

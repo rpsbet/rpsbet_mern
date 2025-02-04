@@ -158,6 +158,7 @@ router.get('/get_admin_wallet', async (req, res) => {
     });
   }
 });
+
 router.get('/get_provider_url', async (req, res) => {
   try {
     const providerUrl = process.env.PROVIDER_URL;
@@ -592,71 +593,74 @@ const getJWTToken = async (email, password) => {
 // **************************************** //
 router.post('/deposit_successed', auth, async (req, res) => {
   try {
-    let { amount, price_amount, txtHash, account, tokenMintAddress } = req.body;
+    let { amount, txtHash, account } = req.body;
 
+    // If txtHash is an object with .signature, extract that
     if (typeof txtHash === 'object' && txtHash.signature) {
       txtHash = txtHash.signature;
     }
 
+    // Validate the essential fields
     if (!amount || !txtHash || !account) {
       console.error('Invalid input:', { amount, txtHash, account });
-      return res.status(400).send('Invalid input');
+      return res.status(400).json({ success: false, message: 'Invalid input' });
     }
 
+    // Make sure this transaction hash hasn't been used before
     const usedTransactions = await gameTransaction.find({ hash: txtHash });
     if (usedTransactions.length > 0) {
       console.error('Transaction has already been used:', txtHash);
-      return res.status(400).send('Transaction has already been used');
+      return res.status(400).json({ success: false, message: 'Transaction has already been used' });
     }
 
-    const response = await axios.get(`https://api.dexscreener.com/latest/dex/tokens/${tokenMintAddress}`);
-    const tokenPrice = parseFloat(response.data.pairs[0]?.priceUsd);
-
-    if (tokenPrice == null || isNaN(tokenPrice)) {
-      console.error('Token price not found or invalid');
-      return res.status(404).json({ success: false, message: 'Token price not found or invalid.' });
+    // Convert amount if needed (if user sent as string)
+    const numericAmount = parseFloat(amount);
+    if (isNaN(numericAmount) || numericAmount <= 0) {
+      return res.status(400).json({ success: false, message: 'Deposit amount is invalid.' });
     }
 
-    const rpsAmount = calculateAmountSol(price_amount, tokenPrice);
+    // Create a new transaction record
     const newTransaction = new gameTransaction({
       user: req.user._id,
-      amount: rpsAmount,
-      description: 'deposit',
+      amount: numericAmount,
+      description: 'SOL deposit',
       hash: txtHash,
       status: 'pending'
     });
-
     await newTransaction.save();
 
+    // Create a receipt
     const receipt = new Receipt({
       user_id: req.user._id,
       payment_method: 'Web3',
       payment_type: 'Deposit',
-      amount: rpsAmount,
+      amount: numericAmount
     });
-
     await receipt.save();
 
+    // If user has not used this wallet address, add it
     if (!req.user.accounts.includes(account.publicKey)) {
       req.user.accounts.push(account.publicKey);
       await req.user.save();
       console.log("Added new wallet address to user:", account);
     }
 
-    res.json({
+    // Return success
+    return res.json({
       success: true,
-      balance: req.user.balance + rpsAmount,
+      balance: req.user.balance,
       newTransaction,
-      message: `Deposit received! Confirmation is pending. <br />View transaction details <a href="https://explorer.solana.com/tx/${txtHash}" target="_blank">here</a>.`,
+      message: `Deposit received! Confirmation is pending.`
     });
   } catch (err) {
     console.log('Error in deposit_successed:', err);
-    res.json({
+    return res.json({
       success: false,
       message: err.message || 'An unexpected error occurred',
     });
   }
 });
+
 
 router.post('/withdraw_request', auth, async (req, res) => {
   try {
@@ -877,31 +881,38 @@ async function estimateAmount(web2Amount, currencyTo) {
 router.post('/get_gasfee', auth, async (req, res) => {
   try {
     const { amount, addressTo } = req.body;
-
     if (!amount || !addressTo) {
       return res.status(400).json({ success: false, message: 'Amount and recipient address are required' });
     }
 
     const connection = new Connection(process.env.PROVIDER_URL);
     const { blockhash } = await connection.getLatestBlockhash();
-    const feePayer = Keypair.generate();
-    const lamports = typeof amount === 'number' ? amount * 1e9 : 0;  // Convert SOL to lamports if the amount is in SOL
-    const transaction = new Transaction({ recentBlockhash: blockhash, feePayer: feePayer.publicKey });
+    // Use the provided wallet address as fee payer.
+    const feePayer = new PublicKey(addressTo);
+    // The amount (in SOL) is irrelevant for fee calculation, but we still use it to construct an instruction.
+    const lamports = typeof amount === 'number' ? amount * 1e9 : 0;  // Convert SOL to lamports
 
+    // Create a transaction that transfers lamports from the fee payer to itself.
+    const transaction = new Transaction({ recentBlockhash: blockhash, feePayer });
     transaction.add(
       SystemProgram.transfer({
-        fromPubkey: Keypair.generate().publicKey,
-        toPubkey: new PublicKey(addressTo),
+        fromPubkey: feePayer,
+        toPubkey: feePayer,
         lamports: lamports,
       })
     );
 
-    const fee = await connection.getFeeForMessage(transaction.compileMessage());
-    if (fee === null) {
+    // Get the fee for this transaction message.
+    const feeResponse = await connection.getFeeForMessage(transaction.compileMessage());
+    if (feeResponse === null) {
       throw new Error("Unable to fetch fee. The blockhash might be expired or invalid.");
     }
     
-    const gasFeeSol = fee / 1e9; // 1 SOL = 1 billion lamports
+    // feeResponse can be a number or an object with a `value` property.
+    const feeLamports = (typeof feeResponse === 'object' && feeResponse !== null && feeResponse.value !== undefined)
+      ? feeResponse.value
+      : feeResponse;
+    const gasFeeSol = feeLamports / 1e9; // Convert lamports to SOL
 
     return res.json({ success: true, data: gasFeeSol });
   } catch (error) {

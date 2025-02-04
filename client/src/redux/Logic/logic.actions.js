@@ -30,7 +30,6 @@ import {
   UPDATE_BET_RESULT,
   UPDATE_BANKROLL,
   UPDATE_BANKROLL_QS,
-  BET_SUCCESS,
   MSG_SUCCESS,
   MSG_ERROR,
   MSG_CREATE_ROOM_SUCCESS,
@@ -51,6 +50,7 @@ import {
   SELECT_MAIN_TAB,
   MY_CHAT_LOADED,
   NOTIFICATIONS_LOADED,
+  NEW_NOTIFICATION,
   GLOBAL_CHAT_RECEIVED,
   SET_GLOBAL_CHAT,
   SET_HIGHLIGHTED_ROOMS,
@@ -1120,6 +1120,10 @@ export const readNotifications = () => async dispatch => {
   } catch (err) {
     console.log(err);
   }
+};
+
+export const addNewNotification = data => dispatch => {
+  dispatch({ type: NEW_NOTIFICATION, payload: data });
 };
 
 export const loadOlderChatMessages = (userId) => async (dispatch, getState) => {

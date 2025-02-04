@@ -271,9 +271,9 @@ const addToQueue = async (req, bot = false) => {
 
           // if win
           if (
-            (bet_item.rps === 'R' && req.body.selected_rps === 'P') ||
-            (bet_item.rps === 'P' && req.body.selected_rps === 'S') ||
-            (bet_item.rps === 'S' && req.body.selected_rps === 'R')
+            (bet_item.rps === 'R' && req.body.selected_rps === 'Pa') ||
+            (bet_item.rps === 'P' && req.body.selected_rps === 'Sa') ||
+            (bet_item.rps === 'S' && req.body.selected_rps === 'Ra')
           ) {
             game_result = 1;
             newTransactionAmount += betAmount * 2 * ((100 - commission) / 100);
@@ -307,7 +307,7 @@ const addToQueue = async (req, bot = false) => {
               roomInfo['room_number'];
 
             // if draw
-          } else if (bet_item.rps === req.body.selected_rps) {
+          } else if (bet_item.rps === 'req.body.selected_rps') {
             game_result = 0;
 
             roomInfo['user_bet'] =
