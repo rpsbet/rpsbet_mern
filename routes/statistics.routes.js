@@ -27,7 +27,7 @@ router.get('/get-customer-statistics', async (req, res) => {
       ]
     };
 
-    if (actorType === 'As Host') {
+    if (actorType === 'As Dev') {
       transactionConditions.$and = [{ description: { $not: /joined/i } }];
     } else if (actorType === 'As Player') {
       transactionConditions.$and = [{ description: /joined/i }];
@@ -38,7 +38,7 @@ router.get('/get-customer-statistics', async (req, res) => {
     if (gameType === '62a25d2a723b9f15709d1ae7') {
       transactionConditions.$and.push({ description: /RPS/i });
     }
-    if (actorType === 'As Host') {
+    if (actorType === 'As Dev') {
       gameLogsQuery.$and.push({ joined_user: { $ne: _id } });
     } else if (actorType === 'As Player') {
       gameLogsQuery.$and.push({ creator: { $ne: _id } });
@@ -97,10 +97,6 @@ router.get('/get-customer-statistics', async (req, res) => {
       withdraw: 0,
       gameProfit: 0,
       averageProfit: 0,
-      averageWager: 0,
-      averageGamesPlayedPerRoom: 0,
-      profitAllTimeHigh: 0,
-      profitAllTimeLow: 0,
       gamePlayed: 0,
       gameHosted: 0,
       gameJoined: 0,
@@ -295,13 +291,6 @@ router.get('/get-customer-statistics', async (req, res) => {
         statistics.averageGamesPlayedPerRoom = totalRoomCount / roomIds.length;
       }
 
-      if (statistics.profitAllTimeHigh < profit) {
-        statistics.profitAllTimeHigh = profit;
-      }
-
-      if (statistics.profitAllTimeLow > profit) {
-        statistics.profitAllTimeLow = profit;
-      }
 
       statistics.totalWagered += bet_amount;
       const averageWager =
@@ -465,7 +454,6 @@ router.get('/get-total-statistics', auth, async (req, res) => {
 router.post('/get-spending-habit', async (req, res) => {
   try {
     const { _id } = req.body;
-
     if (!_id) {
       return res.status(400).json({
         success: false,
@@ -473,9 +461,9 @@ router.post('/get-spending-habit', async (req, res) => {
       });
     }
 
-    // Fetch user
+    // Fetch user from DB with relevant fields
     const user = await User.findById(_id).select(
-      '_id totalWagered profitAllTimeHigh totalProfit profitAllTimeLow gamePlayed'
+      '_id totalWagered totalTraded gameProfit gamePlayed'
     );
 
     if (!user) {
@@ -484,10 +472,16 @@ router.post('/get-spending-habit', async (req, res) => {
         .json({ success: false, message: 'User not found.' });
     }
 
-    const { totalWagered, profitAllTimeHigh, totalProfit, profitAllTimeLow, gamePlayed } = user;
+    let { totalWagered, totalTraded, gameProfit, gamePlayed } = user;
 
-    // 1) Negative totalProfit => "very bad"
-    if (totalProfit < 0) {
+    // Fallback handling: if any of these are null/undefined, set them to 0
+    totalWagered = totalWagered || 0;
+    totalTraded = totalTraded || 0;
+    gameProfit = gameProfit || 0;
+    gamePlayed = gamePlayed || 0;
+
+    // 1) If overall profit is negative => "very bad"
+    if (gameProfit < 0) {
       return res.json({
         success: true,
         status: 'very bad',
@@ -495,8 +489,8 @@ router.post('/get-spending-habit', async (req, res) => {
       });
     }
 
-    // 2) If no games or no positive allTimeHigh => "very bad"
-    if (gamePlayed === 0 || profitAllTimeHigh <= 0) {
+    // 2) If no games => "very bad"
+    if (gamePlayed === 0) {
       return res.json({
         success: true,
         status: 'very bad',
@@ -504,14 +498,45 @@ router.post('/get-spending-habit', async (req, res) => {
       });
     }
 
-    // 3) averageWager
+    // 3) Calculate average wager
     const averageWager = totalWagered / gamePlayed;
-    // 4) Custom thresholds
-    const threePercent = profitAllTimeHigh * 0.03;
-    const tenPercent = profitAllTimeHigh * 0.10;
-    const twentyPercent = profitAllTimeHigh * 0.20;
-    const thirtyFivePct = profitAllTimeHigh * 0.35;
-    const fiftyPercent = profitAllTimeHigh * 0.50;
+
+    /**
+     * 4) Determine "base" value to use for threshold checks:
+     *    - If totalWagered is empty (0) => use totalTraded.
+     *    - If totalTraded is empty (0) => use totalWagered.
+     *    - If both are non-zero => use the sum of both.
+     */
+    let thresholdBasis = 0;
+    const hasWagered = totalWagered > 0;
+    const hasTraded = totalTraded > 0;
+
+    if (hasWagered && hasTraded) {
+      // both valid => combine
+      thresholdBasis = totalWagered + totalTraded;
+    } else if (hasWagered && !hasTraded) {
+      // only totalWagered
+      thresholdBasis = totalWagered;
+    } else if (!hasWagered && hasTraded) {
+      // only totalTraded
+      thresholdBasis = totalTraded;
+    } else {
+      // neither => insufficient data
+      return res.json({
+        success: true,
+        status: 'very bad',
+        reason: 'No wagering or trading data available.'
+      });
+    }
+
+    /**
+     * 5) Define thresholds based on thresholdBasis
+     */
+    const threePercent = thresholdBasis * 0.03;
+    const tenPercent = thresholdBasis * 0.10;
+    const twentyPercent = thresholdBasis * 0.20;
+    const thirtyFivePct = thresholdBasis * 0.35;
+    const fiftyPercent = thresholdBasis * 0.50;
 
     let baseStatus;
     switch (true) {
@@ -535,19 +560,16 @@ router.post('/get-spending-habit', async (req, res) => {
         break;
     }
 
-    // 5) degrade if profitAllTimeLow is severely negative
-    const finalStatus = degradeByAllTimeLow(baseStatus, profitAllTimeHigh, profitAllTimeLow);
-
     // 6) Return final
     return res.json({
       success: true,
-      status: finalStatus,
+      status: baseStatus,
       baseStatus,
       averageWager,
-      profitAllTimeLow,
-      profitAllTimeHigh,
-      totalProfit,
-      gamePlayed,
+      totalWagered,
+      totalTraded,
+      gameProfit,
+      gamePlayed
     });
   } catch (error) {
     console.error('Error in /get-spending-habit route:', error);
@@ -557,24 +579,7 @@ router.post('/get-spending-habit', async (req, res) => {
   }
 });
 
-/**
- * degradeByAllTimeLow:
- *  degrade the status by 1 or 2 steps if user had a big negative dip
- */
-function degradeByAllTimeLow(currentStatus, profitAllTimeHigh, profitAllTimeLow) {
-  if (profitAllTimeLow >= 0 || profitAllTimeHigh <= 0) {
-    return currentStatus;
-  }
 
-  const absLow = Math.abs(profitAllTimeLow);
-  if (absLow >= profitAllTimeHigh) {
-    return degradeStatus(degradeStatus(currentStatus));
-  } else if (absLow >= 0.5 * profitAllTimeHigh) {
-    return degradeStatus(currentStatus);
-  } else {
-    return currentStatus;
-  }
-}
 
 function degradeStatus(original) {
   switch (original) {
@@ -867,7 +872,7 @@ router.get('/get-marketing-stat', async (req, res) => {
 
 router.get('/get-leaderboards', auth, async (req, res) => {
   try {
-    const sortField = req.query.sortField || 'totalProfit';
+    const sortField = req.query.sortField || 'gameProfit';
     const sortOrder = req.query.sortOrder === 'asc' ? 1 : -1;
     const ignoredUsernames = [
       'WHALE WATCHERS',
@@ -895,7 +900,7 @@ router.get('/get-leaderboards', auth, async (req, res) => {
     })
       .sort({ [sortField]: sortOrder })
       .select(
-        '_id username avatar accessory totalWagered totalProfit profitAllTimeHigh profitAllTimeLow gamePlayed'
+        '_id username avatar accessory totalWagered gameProfit totalTraded tradingProfit gamePlayed'
       )
       .limit(100);
 

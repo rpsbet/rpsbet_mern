@@ -11,7 +11,9 @@ import {
   TableHead,
   TableBody,
   TableCell,
-  TableRow
+  TableRow,
+  TableContainer,
+  Paper
 } from '@mui/material';
 import {
   ShowChartOutlined,
@@ -22,7 +24,7 @@ import { debounce } from 'lodash';
 import { ThemeProvider } from '@mui/material/styles';
 
 import { createChart } from 'lightweight-charts';
-
+import Summary from '../CreateGame/Summary';
 import { getCustomTheme } from '../../config/theme';
 import {
   getTransactionCandles,
@@ -34,6 +36,7 @@ import {
 import { convertToCurrency } from '../../util/conversion';
 import Avatar from '../../components/Avatar';
 import PlayerModal from '../modal/PlayerModal';
+import { Sum } from '@tensorflow/tfjs';
 
 function CoHostModal({
   isDarkMode,
@@ -71,7 +74,6 @@ function CoHostModal({
   // ------------------ FETCH CANDLES FROM REDUX (via an action) ------------------
   useEffect(() => {
     if (!selectedRow?._id) return;
-    // We dispatch the action, but do NOT rely on its return value for data
     dispatch(getTransactionCandles({ roomId: selectedRow._id, timeFrame }));
   }, [dispatch, selectedRow?._id, timeFrame]);
 
@@ -80,6 +82,7 @@ function CoHostModal({
     if (storeCandles?.length) {
       const sorted = sortAndDeduplicate(storeCandles);
       setLocalChartData(sorted);
+
     }
   }, [storeCandles]);
 
@@ -155,6 +158,7 @@ function CoHostModal({
     if (!selectedRow?._id || !socket) return;
     const candleEvent = `NEW_CANDLE_${selectedRow._id}`;
     const handleNewCandle = (data) => {
+      // console.log("NEW CANDLE——————data", data)
       // data = { newCandle: { ... } }
       dispatch(someActionToAppendCandle(data.newCandle));
     };
@@ -201,7 +205,6 @@ function CoHostModal({
     }
     return `${seconds}s ago`;
   };
-
   const debouncedHandleChange = useCallback(
     debounce((value) => {
       handleCoHostAmountChange({ target: { value } });
@@ -285,7 +288,6 @@ function CoHostModal({
                 display: 'grid',
                 gridTemplateColumns: 'repeat(4, 1fr)',
                 gap: 3,
-                mb: 2,
                 '@media (max-width: 100%)': {
                   gridTemplateColumns: 'repeat(2, 1fr)'
                 }
@@ -306,12 +308,12 @@ function CoHostModal({
                             liquidityPercentageChange > 0
                               ? '#fff'
                               : liquidityPercentageChange < 0
-                              ? 'red'
-                              : 'text.primary'
+                                ? 'red'
+                                : 'text.primary'
                         }}
                       >
                         {!selectedRow.winnings
-                          ? parseFloat(selectedRow.user_bet)
+                          ? convertToCurrency(selectedRow.user_bet, solPrice)
                           : convertToCurrency(selectedRow.winnings, solPrice)}
                         {liquidityPercentageChange > 0 && (
                           <TrendingUpOutlined sx={{ ml: 1, color: 'green' }} />
@@ -402,6 +404,7 @@ function CoHostModal({
               gap: 2
             }}
           >
+            <Summary shortVersion={!has_joined ? false : true} />
             <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
               <Button
                 onClick={() => setSelectedTab('PUMP')}
@@ -591,73 +594,51 @@ function CoHostModal({
         {/* Transactions Table */}
         {!has_joined && !input_only && (
           <Box sx={{ background: 'rgba(170, 170, 170, 0.06)', p: 2, borderRadius: 1 }}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Description</TableCell>
-                  <TableCell align="center">Amount</TableCell>
-                  <TableCell align="right">Date</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {transactions.length > 0 ? (
-                  transactions.map((tx, i) => {
-                    let desc = tx.description?.toLowerCase() || '';
-                    let label = null;
-                    if (desc.includes('joined')) label = 'Bet';
-                    else if (desc.includes('created')) label = 'Created';
-                    else if (desc.includes('pumped')) label = 'Pumped';
-                    else if (desc.includes('jeeted')) label = 'Jeeted';
-                    if (!label) return null;
-
-                    return (
-                      <TableRow key={i}>
-                        <TableCell>{label}</TableCell>
-                        <TableCell align="center">{convertToCurrency(tx.amount, solPrice)}</TableCell>
-                        <TableCell align="right">{formatRelativeTime(tx.created_at)}</TableCell>
-                      </TableRow>
-                    );
-                  })
-                ) : (
+            <TableContainer component={Paper} sx={{ maxHeight: 300, mt: 1 }}>
+              <Table stickyHeader>
+                <TableHead>
                   <TableRow>
-                    <TableCell colSpan={3} align="center">
-                      No transactions available
-                    </TableCell>
+                    <TableCell>Description</TableCell>
+                    <TableCell align="center">Amount</TableCell>
+                    <TableCell align="right">Date</TableCell>
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                </TableHead>
+                <TableBody>
+                  {transactions.length > 0 ? (
+                    transactions.map((tx, i) => {
+                      let desc = tx.description?.toLowerCase() || '';
+                      let label = null;
+                      if (desc.includes('joined')) label = 'Bet';
+                      else if (desc.includes('created')) label = 'Created';
+                      else if (desc.includes('pumped')) label = 'Pumped';
+                      else if (desc.includes('jeeted')) label = 'Jeeted';
+                      if (!label) return null;
+
+                      return (
+                        <TableRow key={i}>
+                          <TableCell>{label}</TableCell>
+                          <TableCell align="center">
+                            {convertToCurrency(tx.amount, solPrice)}
+                          </TableCell>
+                          <TableCell align="right">
+                            {formatRelativeTime(tx.created_at)}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={3} align="center">
+                        No transactions available
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
           </Box>
         )}
 
-        {/* Footer Buttons */}
-        {!input_only && !has_joined && (
-          <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
-            <Button variant="contained" color="error" onClick={handleSendCoHost}>
-              PUMP
-              <TrendingUpOutlined sx={{ ml: 1 }} />
-            </Button>
-            <Button
-              variant="contained"
-              color="error"
-              onClick={() =>
-                handleUnstake(
-                  selectedRow?.winnings ?? parseFloat(selectedRow?.user_bet || 0),
-                  selectedRow?._id,
-                  coHostAmount
-                )
-              }
-              sx={{
-                background: 'linear-gradient(357deg, #00ff17, #28a745)',
-                boxShadow:
-                  'rgb(37 184 65) 0px -0.5px 0px, rgb(34, 117, 52) 0px -3px inset, rgb(80, 191, 98) 0px 2px inset'
-              }}
-            >
-              JEET
-              <TrendingDownOutlined sx={{ ml: 1 }} />
-            </Button>
-          </Box>
-        )}
       </Box>
     </ThemeProvider>
   );

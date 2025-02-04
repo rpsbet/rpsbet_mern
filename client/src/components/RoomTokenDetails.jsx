@@ -6,65 +6,87 @@ import { faGlobe } from '@fortawesome/free-solid-svg-icons';
 import { convertToCurrency } from '../util/conversion';
 import {
     Box,
-  } from '@mui/material';
-  
+    Typography,
+    Link
+} from '@mui/material';
+import LinkIcon from '@mui/icons-material/Link';
+
 const RoomTokenDetails = ({ roomInfo, solPrice, isDarkMode, handleOpenPlayerModal, progressPercentage }) => {
+
+    function formatAddress(address) {
+        return address.slice(0, 4) + '...' + address.slice(-4);
+    }
     return (
-        <Box  className="room-details">
+        <Box className="room-details">
             {/* Room Header: Image on the Left, Name/Ticker and Description on the Right */}
-            <div className="room-header">
+            <Box className="room-header">
                 <img
                     className="room-image"
                     src={roomInfo.image}
                     alt={roomInfo.name}
                 />
-                <div className="room-info">
+                <Box className="room-info">
                     <h6 className="room-name">
-                        {roomInfo.name}<br/><span className="room-ticker">({roomInfo.ticker})</span>
+                        {roomInfo.name}<br /><span className="room-ticker">({roomInfo.ticker})</span>
                     </h6>
-                    <p className="room-description">{roomInfo.description}</p>
-                </div>
-            </div>
+                    <Typography variant="body2" sx={{ fontSize: '0.6rem' }} className="room-description">{roomInfo.description}</Typography>
+                </Box>
+            </Box>
 
             {/* Room Links */}
-            <div className="room-links" style={{marginBottom: "30px"}}>
+            <Box className="room-links" style={{ marginBottom: "30px" }}>
                 {roomInfo.x_link && (
-                    <a
+                    <Link
                         href={roomInfo.x_link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="room-link-icon"
+                        sx={{
+                            color: 'white',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            mr: 1, // optional spacing
+                        }}
                     >
                         <FontAwesomeIcon icon={faXTwitter} />
-                    </a>
+                    </Link>
                 )}
                 {roomInfo.website_link && (
-                    <a
+                    <Link
                         href={roomInfo.website_link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="room-link-icon"
+                        sx={{
+                            color: 'white',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            mr: 1,
+                        }}
                     >
                         <FontAwesomeIcon icon={faGlobe} />
-                    </a>
+                    </Link>
                 )}
                 {roomInfo.telegram_link && (
-                    <a
+                    <Link
                         href={roomInfo.telegram_link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="room-link-icon"
+                        sx={{
+                            color: 'white',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            mr: 1,
+                        }}
                     >
                         <FontAwesomeIcon icon={faTelegram} />
-                    </a>
+                    </Link>
                 )}
-            </div>
+            </Box>
 
-            <div className="bonding-curve" style={{ marginBottom: "30px" }}>
-                <h4 className='game_header label' style={{ display: 'block', fontWeight: 'bold', marginBottom: '8px' }}>
-                    BONDING-CURVE PROGRESS: {progressPercentage}%
+            <Box className="bonding-curve" style={{ marginBottom: "30px" }}>
+                <h4 className='roll-tag label' style={{ display: 'block', fontWeight: 'bold', marginBottom: '8px' }}>
+                    HARD CAP (BONDING-CURVE): {progressPercentage}%
                 </h4>
-                <div
+                <Box
                     className='payout-bar'
                     style={{
                         width: '100%',
@@ -74,24 +96,24 @@ const RoomTokenDetails = ({ roomInfo, solPrice, isDarkMode, handleOpenPlayerModa
                         overflow: 'hidden',
                     }}
                 >
-                    <div
+                    <Box
                         className='value'
                         style={{
                             width: `${progressPercentage}%`,
                             height: '100%',
                             backgroundColor: '#4caf50',
                         }}
-                    ></div>
-                </div>
-            </div>
+                    ></Box>
+                </Box>
+            </Box>
             {roomInfo.hosts && roomInfo.hosts.length > 0 && (
-                <div style={{ marginBottom: "30px" }}>
-                    <h4 className="game_header label">Holder Distribution</h4>
+                <Box style={{ marginBottom: "30px" }}>
+                    <h4 className="roll-tag label">Holder Distribution</h4>
                     {roomInfo.hosts
                         .sort((a, b) => b.share - a.share) // Sort hosts by share in descending order
                         .slice(0, 10) // Take the top 10 hosts
                         .map((host, index) => (
-                            <div
+                            <Box
                                 key={`host-${index}`}
                                 style={{
                                     display: 'flex',
@@ -125,13 +147,24 @@ const RoomTokenDetails = ({ roomInfo, solPrice, isDarkMode, handleOpenPlayerModa
                                         darkMode={isDarkMode}
                                     />
                                 </a>
-                                
-                                <span className='label'><span className='room-ticker'>{(host.share).toFixed(2)}%</span><br />{convertToCurrency(host.stake, solPrice)}</span>
-                            </div>
+
+                                <Link
+                                    href={`https://solscan.io/${host.walletAddress}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    variant="body2"
+                                    sx={{ display: 'flex', alignItems: 'center', color: '#f9f9f9' }}
+                                >
+                                    {formatAddress(host.walletAddress)}
+                                    <LinkIcon sx={{ ml: 0.5, fontSize: 'inherit' }} />
+                                </Link>
+                                <Typography variant='body2' sx={{ fontSize: '0.75em' }} className='label'><span className='room-ticker'>{(host.share).toFixed(2)}%</span><br />
+                                    {convertToCurrency((host.share / 100 * roomInfo.user_bet), solPrice)}</Typography>
+                            </Box>
                         ))}
-                </div>
+                </Box>
             )}
-          
+
         </Box>
     );
 };

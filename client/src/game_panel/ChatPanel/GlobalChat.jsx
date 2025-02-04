@@ -28,7 +28,7 @@ function GlobalChat(props) {
   const [selectedCreator, setSelectedCreator] = useState('');
   const [hasScrolledOnce, setHasScrolledOnce] = useState(false);
   const [userIsAtBottom, setUserIsAtBottom] = useState(false);
-  
+
   // ------------------- Refs -------------------
   const chatBoxRef = useRef(null);
 
@@ -178,7 +178,13 @@ function GlobalChat(props) {
     <Box
       className="chat-panel global-chat"
       ref={chatBoxRef}
-      sx={{ maxHeight: 'calc(100vh - 175px)', overflowY: 'auto' }}
+      sx={{
+        maxHeight: 'calc(100vh - 175px)', overflowY: 'auto', '&::-webkit-scrollbar': {
+          display: 'none'
+        },
+        scrollbarWidth: 'none', // For Firefox
+        msOverflowStyle: 'none'
+      }}
     >
       {/* If we have new messages and user is not at bottom => show tooltip */}
       {showTooltip && newMessages > 0 && (
@@ -233,13 +239,11 @@ function GlobalChat(props) {
             return (
               <div
                 key={index}
-                className={`chat-line ${
-                  chat.sender === 'SYSTEM' ? 'special-message' : ''
-                } ${
-                  chat.sender === 'SYSTEM' && chat.message.includes('rent')
+                className={`chat-line ${chat.sender === 'SYSTEM' ? 'special-message' : ''
+                  } ${chat.sender === 'SYSTEM' && chat.message.includes('rent')
                     ? 'special-message-rent'
                     : ''
-                }`}
+                  }`}
                 onClick={() => handleMessageClick(chat)}
               >
                 {/* If replying to another message */}
@@ -260,11 +264,10 @@ function GlobalChat(props) {
                         darkMode={isDarkMode}
                       />
                       <i
-                        className={`online-status${
-                          onlineUserList.includes(chat.replyTo.senderId)
+                        className={`online-status${onlineUserList.includes(chat.replyTo.senderId)
                             ? ' online'
                             : ''
-                        }`}
+                          }`}
                       />
                     </a>
                     <span className="reply-sender sender-name">
@@ -299,11 +302,10 @@ function GlobalChat(props) {
                       darkMode={isDarkMode}
                     />
                     <i
-                      className={`online-status${
-                        onlineUserList.includes(chat.senderId)
+                      className={`online-status${onlineUserList.includes(chat.senderId)
                           ? ' online'
                           : ''
-                      }`}
+                        }`}
                     />
                   </a>
                   <div className="chat-msg">

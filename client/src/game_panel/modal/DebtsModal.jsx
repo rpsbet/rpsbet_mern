@@ -21,9 +21,8 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMoneyBillWave, faMoneyBillWaveAlt } from '@fortawesome/free-solid-svg-icons';
 
-import { warningMsgBar, infoMsgBar } from '../../redux/Notification/notification.actions';
+import { errorMsgBar } from '../../redux/Notification/notification.actions';
 import { paybackLoan, acCalculateRemainingLoans } from '../../redux/Loan/loan.action';
-import { alertModal } from '../modal/ConfirmAlerts';
 import { addNewTransaction } from '../../redux/Logic/logic.actions';
 import { convertToCurrency } from '../../util/conversion';
 import { getCustomTheme } from '../../config/theme';
@@ -89,17 +88,17 @@ const DebtsModal = ({ modalIsOpen, closeModal }) => {
     }
 
     if (parseFloat(paybackAmount) < 0) {
-      alertModal(isDarkMode, 'PAYBACK AMOUNT CANNOT BE NEGATIVE!');
+      dispatch(errorMsgBar('PAYBACK AMOUNT CANNOT BE NEGATIVE!'));
       return;
     }
 
     if (isNaN(parseFloat(paybackAmount))) {
-      alertModal(isDarkMode, 'ENTER A VALID NUMBER!');
+      dispatch(errorMsgBar('ENTER A VALID NUMBER!'));
       return;
     }
 
     if (parseFloat(paybackAmount) > selectedLoan.amount) {
-      alertModal(isDarkMode, 'PAYBACK AMOUNT CANNOT EXCEED THE LOAN AMOUNT!');
+      dispatch(errorMsgBar('PAYBACK AMOUNT CANNOT EXCEED THE LOAN AMOUNT!'));
       return;
     }
 
@@ -107,14 +106,14 @@ const DebtsModal = ({ modalIsOpen, closeModal }) => {
     const response = await dispatch(paybackLoan(loanId, paybackAmount));
 
     if (response.success) {
-      const { balance, newTransaction, message } = response;
+      const { newTransaction, message } = response;
       closePaybackModal();
-      alertModal(isDarkMode, message, '-cat');
+      dispatch(errorMsgBar(message));
       dispatch(addNewTransaction(newTransaction));
       dispatch(acCalculateRemainingLoans());
     } else {
       closePaybackModal();
-      alertModal(isDarkMode, response.message);
+      dispatch(errorMsgBar(response.message));
     }
   };
 

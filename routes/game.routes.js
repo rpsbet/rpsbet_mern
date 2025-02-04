@@ -267,7 +267,8 @@ router.patch('/prompt/:user_id', async (req, res) => {
 router.post('/detachPlayer/:room_id', auth, async (req, res) => {
   const { room_id } = req.params;
   const user_id = req.user._id;
-
+  console.log("room_id", room_id)
+  console.log("user_id", user_id)
   try {
     const room = await Room.findById(room_id);
     if (!room) {
@@ -304,30 +305,49 @@ router.post('/detachPlayer/:room_id', auth, async (req, res) => {
   }
 });
 
-router.put('/updateAttachment/:room_id', auth, async (req, res) => {
+router.patch('/updateAttachment/:room_id', auth, async (req, res) => {
   const { room_id } = req.params;
-  const user_id = req.user._id;
-  const { bet_amounts, selected_strategy } = req.body;
+  const { _id, range, ai_mode } = req.user;
+  const selected_strategy = ai_mode;
+  const bet_amounts = range;
 
   try {
+    // Retrieve the room and populate its game_type field
+    const room = await Room.findById(room_id).populate({
+      path: 'game_type',
+      model: 'rps_game_types',
+    });
+
+    // Build the room_name string using the populated data
+    let room_name = '';
+    if (room && room.game_type && room.room_number) {
+      room_name = `${room.game_type.short_name}-${room.room_number}`;
+    }
+
+    // Update (or create if none exists) the AttachedPlayer document.
     const updatedAttachment = await AttachedPlayer.findOneAndUpdate(
-      { user: user_id, room: room_id },
-      { $set: { bet_amounts, selected_strategy, updated_at: Date.now() } },
-      { new: true, runValidators: true },
+      { user: _id, room: room_id }, // Filter using user_id and room_id
+      {
+        $set: {
+          bet_amounts,
+          selected_strategy,
+          updated_at: Date.now(),
+          room_name, // Add the newly built room_name field
+        },
+      },
+      {
+        new: true,
+        runValidators: true,
+        upsert: true,
+        setDefaultsOnInsert: true, // Applies default values on insert if defined in the schema
+      }
     );
 
-    if (updatedAttachment) {
-      return res.json({
-        success: true,
-        message: 'Attachment updated successfully',
-        updatedAttachment,
-      });
-    } else {
-      return res.status(404).json({
-        success: false,
-        message: 'No attachment found for this user and room',
-      });
-    }
+    return res.json({
+      success: true,
+      message: 'Attachment updated successfully',
+      updatedAttachment,
+    });
   } catch (err) {
     console.error('Error updating attachment:', err.message);
     res.status(500).json({
@@ -337,6 +357,8 @@ router.put('/updateAttachment/:room_id', auth, async (req, res) => {
     });
   }
 });
+
+
 
 router.get('/getattachedrooms', auth, async (req, res) => {
   const user_id = req.user._id;
@@ -390,54 +412,6 @@ router.get('/checkAttachment/:room_id', auth, async (req, res) => {
   }
 });
 
-router.patch('/attachPlayer/:room_id', auth, async (req, res) => {
-  const { room_id } = req.params;
-  const user_id = req.user._id;
-  const ai_mode = req.user.ai_mode;
-  const bet_amounts = req.body.bet_amounts;
-  try {
-    const room = await Room.findById(room_id).populate({
-      path: 'game_type',
-      model: GameType,
-    });
-    if (!room) {
-      console.log('Room not found');
-      return res
-        .status(404)
-        .json({ success: false, message: 'Room not found' });
-    }
-
-    if (room.status === 'finished') {
-      return res.json({
-        success: false,
-        already_finished: true,
-        message: 'THIS GAME HAS ENDED ALREADY',
-      });
-    }
-
-    const newAttachedPlayer = new AttachedPlayer({
-      user: user_id,
-      room: room_id,
-      room_name: room['game_type']['short_name'] + '-' + room['room_number'],
-      selected_strategy: ai_mode,
-      bet_amounts: bet_amounts,
-    });
-
-    await newAttachedPlayer.save();
-
-    res.json({
-      success: true,
-      message: 'Successfully attached to the room!',
-    });
-  } catch (err) {
-    console.error('Error updating room:', err.message);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error',
-      error: err.message,
-    });
-  }
-});
 
 router.patch('/rooms/:room_id', async (req, res) => {
   const { room_id } = req.params;
@@ -705,21 +679,21 @@ router.patch('/room/:id/:type', auth, async (req, res) => {
   const updateQuery =
     type === 'view'
       ? {
-          $set: {
-            views: { $concatArrays: ['$views', [req.user._id]] },
-          },
-        }
+        $set: {
+          views: { $concatArrays: ['$views', [req.user._id]] },
+        },
+      }
       : {
-          $set: {
-            [`${type}s`]: {
-              $cond: [
-                { $in: [req.user._id, `$${type}s`] },
-                { $setDifference: [`$${type}s`, [req.user._id]] },
-                { $concatArrays: [`$${type}s`, [req.user._id]] },
-              ],
-            },
+        $set: {
+          [`${type}s`]: {
+            $cond: [
+              { $in: [req.user._id, `$${type}s`] },
+              { $setDifference: [`$${type}s`, [req.user._id]] },
+              { $concatArrays: [`$${type}s`, [req.user._id]] },
+            ],
           },
-        };
+        },
+      };
   try {
     const room = await Room.findOneAndUpdate({ _id: id }, [updateQuery], {
       new: true,
@@ -746,7 +720,7 @@ router.get('/room/:id', async (req, res) => {
         path: 'room',
         model: Room,
         select:
-          '_id winnings ticker tax website_link x_link telegram_link selectedStrategy commission username creator status hosts room_number game_type bet_amount user_bet host_pr created_at',
+          '_id winnings ticker battles image tax website_link x_link telegram_link selectedStrategy commission username creator status hosts room_number game_type bet_amount user_bet host_pr created_at',
       })
       .populate({
         path: 'game_type',
@@ -765,10 +739,10 @@ router.get('/room/:id', async (req, res) => {
       })
       .limit(req.query.limit ? req.query.limit : 10);
 
-     
- 
-     const totalGameLogsCount = await GameLog.countDocuments({ room });
- 
+
+
+    const totalGameLogsCount = await GameLog.countDocuments({ room });
+
 
     const gameLogList = await gameLogQuery;
 
@@ -776,7 +750,6 @@ router.get('/room/:id', async (req, res) => {
     const joiners = await User.find({ _id: { $in: room.joiners } });
 
     const roomHistory = await convertGameLogToHistoryStyle(gameLogList);
-    console.log("roomHistory", roomHistory.length)
     res.json({
       success: true,
       query: req.query,
@@ -803,6 +776,7 @@ router.get('/room/:id', async (req, res) => {
           accessory: host['accessory'],
           stake: host['stake'],
           share: host['share'],
+          walletAddress: host['walletAddress']
         })),
         endgame_amount: room['endgame_amount'],
         endgame_type: room['endgame_type'],
@@ -818,6 +792,7 @@ router.get('/room/:id', async (req, res) => {
         total_stakes: room.hosts.reduce((acc, host) => acc + host.stake, 0),
         qs_game_type: room['qs_game_type'],
         selectedStrategy: room['selectedStrategy'],
+        battles: room['battles'],
         qs_nation: room['qs_nation'],
         rps_game_type: room['rps_game_type'],
         qs_game_type: room['qs_game_type'],
@@ -1144,7 +1119,7 @@ const getHistory = async (pageSize, my_id, game_type) => {
         path: 'room',
         model: Room,
         select:
-          '_id winnings commission creator status ai_mode hosts room_number game_type bet_amount user_bet host_pr created_at',
+          '_id winnings ticker image commission creator status ai_mode hosts room_number game_type bet_amount user_bet host_pr created_at',
       })
       .populate({
         path: 'game_type',
@@ -1245,7 +1220,6 @@ router.get('/count', async (req, res) => {
   }
 });
 
-// GET /api/rooms
 router.get('/rooms', async (req, res) => {
   // game_type can still be used as a filter, default to 'All'
   const game_type = req.query.game_type || 'All';
@@ -1287,8 +1261,8 @@ const getRoomList = async (game_type) => {
     const preRooms = await Room.find(search_condition)
       .select(
         '_id name ticker selectedStrategy image description room_number ' +
-          'creator battles username joiners game_type qs_game_type is_private ' +
-          'bet_amount user_bet pr host_pr status created_at updated_at hosts'
+        'creator battles username joiners game_type qs_game_type is_private ' +
+        'bet_amount user_bet pr host_pr status created_at updated_at hosts'
       )
       .populate({
         path: 'creator',
@@ -1392,6 +1366,7 @@ router.post('/rooms', auth, async (req, res) => {
       room_password,
       qs_nation,
     } = req.body;
+
     const {
       _id,
       avatar,
@@ -1402,6 +1377,7 @@ router.post('/rooms', auth, async (req, res) => {
       dailyWithdrawals,
     } = req.user;
 
+    // validations:
     if (bet_amount <= 0) {
       return res.json({
         success: false,
@@ -1437,17 +1413,31 @@ router.post('/rooms', auth, async (req, res) => {
       });
     }
 
+    // get gameType doc & compute room_number
     const roomCount = await Room.countDocuments({});
-    const gameType = await GameType.findOne({
+    const gameTypeDoc = await GameType.findOne({
       game_type_id: parseInt(game_type),
     });
     const user_bet = parseFloat(bet_amount);
+
+    const commissionDoc = await System.findOne({ name: 'commission' });
+    const commissionPercentage = commissionDoc.value;
+
+    const fee = user_bet * (commissionPercentage / 100);
+    const amountAfterFee = user_bet - fee;
+
+    await System.findOneAndUpdate(
+      { name: 'platform_trading' },
+      { $inc: { value: fee } }
+    );
+
     const room_number = roomCount + 1;
 
+    // create new Room
     const newRoom = new Room({
       creator: _id,
-      room_password: room_password ? room_password : '',
-      bet_amount: user_bet,
+      room_password: room_password || '',
+      bet_amount: amountAfterFee,
       is_private,
       qs_nation,
       battles: 0,
@@ -1459,12 +1449,12 @@ router.post('/rooms', auth, async (req, res) => {
           accessory: accessory,
           rank: totalWagered,
           share: 100,
-          stake: user_bet,
+          stake: amountAfterFee,
         },
       ],
-      game_type: gameType,
+      game_type: gameTypeDoc,
       qs_game_type: qs_game_type ? qs_game_type : 2,
-      user_bet,
+      user_bet: amountAfterFee,
       tax,
       name,
       image,
@@ -1473,46 +1463,95 @@ router.post('/rooms', auth, async (req, res) => {
       telegram_link,
       website_link,
       selectedStrategy,
+      battles: 0,
       pr: 0,
-      total_stakes: user_bet,
-      endgame_amount: endgame_type ? endgame_amount : user_bet,
+      total_stakes: amountAfterFee,
+      endgame_amount: endgame_type ? endgame_amount : amountAfterFee,
       endgame_type,
-      host_pr: user_bet,
-      room_name: gameType.short_name + '-' + room_number,
+      host_pr: amountAfterFee,
+      room_name: gameTypeDoc.short_name + '-' + room_number,
       room_number: room_number,
       index: room_number,
       status: 'open',
       description,
     });
 
+    // create new Transaction
     const newTransaction = new Transaction({
       user: req.user,
       amount: 0,
-      description: 'created ' + gameType.short_name + '-' + room_number,
+      description: 'created ' + gameTypeDoc.short_name + '-' + room_number,
       room: newRoom._id,
     });
 
-    req.user.balance -= user_bet;
-    newTransaction.amount -= user_bet;
+    // adjust user’s balance
+    req.user.balance -= amountAfterFee;
+    newTransaction.amount -= amountAfterFee;
     req.user.updated_at = new Date();
+    req.user.totalTraded += Math.abs(user_bet);
+    req.user.tradingProfit -= amountAfterFee;
+    // create a new GameLog referencing this room
+    const newGameLog = new GameLog({
+      room: newRoom._id,
+      creator: newRoom.creator,       // same as `_id`
+      joined_user: newRoom.creator,   // same as `_id`
+      game_type: gameTypeDoc._id,     // the doc's _id
+      bet_amount: newRoom.host_pr,
+      hosts: newRoom.hosts,
+      game_result: -3000,
+    });
 
-    try {
-      await saveDocumentWithRetry(req.user);
-      await saveDocumentWithRetry(newRoom);
-      await saveDocumentWithRetry(newTransaction);
-    } catch (error) {
-      console.error('Error saving:', error);
-    }
+    // Save everything in parallel
+    await Promise.all([
+      saveDocumentWithRetry(newGameLog),
+      saveDocumentWithRetry(req.user),
+      saveDocumentWithRetry(newRoom),
+      saveDocumentWithRetry(newTransaction),
+    ]);
+
+    // Now query the newly saved log for a final “history style” array
+    let gameLogQuery = GameLog.find({ room: newRoom._id })
+      .sort({ created_at: 'desc' })
+      .limit(1)
+      .populate({
+        path: 'room',
+        model: Room,
+        select:
+          '_id winnings ticker image commission username creator status hosts room_number game_type bet_amount user_bet host_pr created_at',
+      })
+      .populate({
+        path: 'game_type',
+        model: GameType,
+        select: 'short_name game_type_name',
+      })
+      .populate({
+        path: 'creator',
+        model: User,
+        select: '_id avatar username accessory totalWagered',
+      })
+      .populate({
+        path: 'joined_user',
+        model: User,
+        select: '_id avatar username accessory totalWagered',
+      });
+
+    const gameLogList = await gameLogQuery;
+    const newLog = await convertGameLogToHistoryStyle(gameLogList);
+
+    // Emit the new log to clients
+    req.io.sockets.emit('NEW_LOG', { newLog });
+    // ---------------------------------------------
+
+    // The “ROOM LIST” emit
     const temp = newRoom.toObject();
-
     const emitRoomObj = {
       ...temp,
       creator_id: _id,
       creator_avatar: avatar,
       creator_status: status,
-      accessory: accessory ? accessory : '',
+      accessory: accessory || '',
       username,
-      winnings: user_bet,
+      winnings: amountAfterFee,
       rank: totalWagered,
       joiners: [],
     };
@@ -1525,7 +1564,6 @@ router.post('/rooms', auth, async (req, res) => {
     });
   } catch (err) {
     console.error('Error saving room:', err);
-
     res.json({
       success: false,
       message: 'something went wrong',
@@ -1608,6 +1646,9 @@ const getMyRooms = async (
       let temp = {
         _id: room._id,
         creator_id: room.creator,
+        name: room.name,
+        image: room.image,
+        ticker: room.ticker,
         creator_avatar: creatorAvatar,
         rank: creatorTotalWagered,
         accessory: creatorAccessory,
@@ -1828,7 +1869,37 @@ router.post('/end_game', auth, async (req, res) => {
       saveDocumentWithRetry(newTransactionC),
     ]);
 
+    let gameLogQuery = GameLog.find({ room: roomInfo._id })
+      .sort({ created_at: 'desc' })
+      .limit(1)
+      .populate({
+        path: 'room',
+        model: Room,
+        select:
+          '_id winnings ticker image commission username creator status hosts room_number game_type bet_amount user_bet host_pr created_at',
+      })
+      .populate({
+        path: 'game_type',
+        model: GameType,
+        select: 'short_name game_type_name',
+      })
+      .populate({
+        path: 'creator',
+        model: User,
+        select: '_id avatar username accessory totalWagered',
+      })
+      .populate({
+        path: 'joined_user',
+        model: User,
+        select: '_id avatar username accessory totalWagered',
+      });
+
+    const gameLogList = await gameLogQuery;
+
+    const newLog = await convertGameLogToHistoryStyle(gameLogList);
+    req.io.sockets.emit('NEW_LOG', { newLog });
     req.io.sockets.emit('ROOM_ENDED', { roomId });
+
 
     res.json({
       success: true,
@@ -1846,8 +1917,20 @@ router.post('/end_game', auth, async (req, res) => {
 });
 
 // buy route
-router.post('/coHost', auth, async (req, res) => {
+router.post('/pump', auth, async (req, res) => {
   try {
+
+    if (
+      !req.body.connectedAccount ||
+      !req.user.accounts ||
+      !req.user.accounts.includes(req.body.connectedAccount)
+    ) {
+      return res.json({
+        success: false,
+        message: 'Connected account is missing or not authorized.',
+      });
+    }
+
     const rowId = req.body.rowId;
     const room = await Room.findOne({ _id: rowId });
     const gameType = await GameType.findOne({ _id: room.game_type });
@@ -1894,31 +1977,40 @@ router.post('/coHost', auth, async (req, res) => {
       });
     }
 
-    const fee = coHostAmount * 0.025;
+    const commissionDoc = await System.findOne({ name: 'commission' });
+    const commissionPercentage = commissionDoc.value;
+
+    const fee = coHostAmount * (commissionPercentage / 100);
     const amountAfterFee = coHostAmount - fee;
 
-    room.user_bet = parseFloat(room.user_bet) + coHostAmount;
-    room.host_pr += coHostAmount;
-    // room.endgame_amount += coHostAmount;
-    req.user.balance -= coHostAmount;
+    await System.findOneAndUpdate(
+      { name: 'platform_trading' },
+      { $inc: { value: fee } }
+    );
 
+    room.user_bet = parseFloat(room.user_bet) + amountAfterFee;
+    room.host_pr += amountAfterFee;
     room.updated_at = moment(new Date()).format('YYYY-MM-DD HH:mm');
 
+    req.user.balance -= amountAfterFee;
+    req.user.totalTraded += Math.abs(coHostAmount);
+    req.user.tradingProfit -= amountAfterFee;
+
     const existingHostIndex = room.hosts.findIndex((host) =>
-      host.host.equals(req.user._id),
+      host.host.equals(req.user._id)
     );
     const totalBankroll = parseFloat(room.user_bet);
-
     const baseShare = (amountAfterFee / totalBankroll) * 100;
 
     const maxBoostFactor = 1.6;
     const minBoostFactor = 1.025;
     const boostFactor =
       minBoostFactor +
-      (coHostAmount / totalBankroll) * (maxBoostFactor - minBoostFactor);
+      (amountAfterFee / totalBankroll) * (maxBoostFactor - minBoostFactor);
     const boostedShare = baseShare * boostFactor;
 
     if (existingHostIndex === -1) {
+      // Add the connected account to the walletAddress field
       const newHost = {
         host: req.user._id,
         share: boostedShare,
@@ -1926,19 +2018,20 @@ router.post('/coHost', auth, async (req, res) => {
         username: req.user.username,
         avatar: req.user.avatar,
         rank: req.user.totalWagered,
-        initial_stake: coHostAmount,
+        initial_stake: amountAfterFee,
         stake: amountAfterFee,
+        walletAddress: req.body.connectedAccount, // <-- new field added
       };
       room.hosts.push(newHost);
     } else {
       const host = room.hosts[existingHostIndex];
       const updatedShare =
-        (((host.share / 100) * totalBankroll + amountAfterFee) /
-          totalBankroll) *
-        100;
+        (((host.share / 100) * totalBankroll + amountAfterFee) / totalBankroll) * 100;
       host.share = updatedShare * boostFactor;
-      host.initial_stake += coHostAmount;
+      host.initial_stake += amountAfterFee;
       host.stake += amountAfterFee;
+      // Update the walletAddress for the host
+      host.walletAddress = req.body.connectedAccount;
     }
 
     let totalShares = 0;
@@ -1948,16 +2041,15 @@ router.post('/coHost', auth, async (req, res) => {
 
     room.hosts.forEach((host) => {
       const isCurrentUserHost = host.host.equals(req.user._id);
-
-      const message = `${isCurrentUserHost ? 'You' : req.user.username} now ${isCurrentUserHost ? 'share' : 'shares'} ${boostedShare.toFixed(2)}% of ${
-        gameType.short_name + '-' + room.room_number
-      }, your new share is ${host.share.toFixed(2)}%`;
+      const message = `${isCurrentUserHost ? 'You' : req.user.username} now ${isCurrentUserHost ? 'share' : 'shares'
+        } ${boostedShare.toFixed(2)}% of ${gameType.short_name + '-' + room.room_number
+        }, your new share is ${host.share.toFixed(2)}%`;
 
       const temp = new Notification({
         from: req.user._id,
         to: host.host,
         room: room._id,
-        amount: isCurrentUserHost ? -coHostAmount : 0,
+        amount: isCurrentUserHost ? -amountAfterFee : 0,
         message: message,
         is_read: false,
       });
@@ -1976,7 +2068,7 @@ router.post('/coHost', auth, async (req, res) => {
         accessory: req.user.accessory,
         room: room._id,
         rank: req.user.totalWagered,
-        amount: isCurrentUserHost ? -coHostAmount : 0, // Use coHostAmount for the amount field
+        amount: isCurrentUserHost ? -amountAfterFee : 0,
         created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
         created_at_str: moment(new Date()).format('LLL'),
         updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
@@ -1990,7 +2082,7 @@ router.post('/coHost', auth, async (req, res) => {
     const newTransaction = new Transaction({
       created_at: now,
       user: req.user._id,
-      amount: -coHostAmount,
+      amount: -amountAfterFee,
       description: `Pumped ${gameType.short_name}-${room.room_number}`,
       room: room._id,
     });
@@ -2008,12 +2100,12 @@ router.post('/coHost', auth, async (req, res) => {
     const timeBucket = Math.floor(new Date(now).getTime() / (60 * 1000));
     const newCandle = {
       _id: timeBucket,
-      open: room.user_bet - coHostAmount,
-      close: room.user_bet,
-      high: Math.max(room.user_bet - coHostAmount, room.user_bet),
-      low: Math.min(room.user_bet - coHostAmount, room.user_bet),
-      volume: coHostAmount,
-      buyVolume: coHostAmount,
+      open: room.user_bet,
+      close: room.user_bet + amountAfterFee,
+      high: Math.max(room.user_bet + amountAfterFee, room.user_bet),
+      low: Math.min(room.user_bet + amountAfterFee, room.user_bet),
+      volume: amountAfterFee,
+      buyVolume: amountAfterFee,
       sellVolume: 0,
       startTime: new Date(timeBucket * 60 * 1000),
     };
@@ -2029,14 +2121,14 @@ router.post('/coHost', auth, async (req, res) => {
       creator: req.user._id,
       joined_user: null,
       game_type: gameType,
-      bet_amount: coHostAmount,
+      bet_amount: amountAfterFee,
       selected_rps: '',
       ai_mode: '',
       commission: 0,
       game_result: 444,
       winnings: 0,
-      endgame_amount: coHostAmount,
-      host_pr: coHostAmount,
+      endgame_amount: amountAfterFee,
+      host_pr: amountAfterFee,
       user_bet: 0,
       status: 'open',
       hosts: room.hosts,
@@ -2052,7 +2144,7 @@ router.post('/coHost', auth, async (req, res) => {
           path: 'room',
           model: Room,
           select:
-            '_id winnings commission username creator status hosts room_number game_type bet_amount user_bet host_pr created_at',
+            '_id winnings ticker image commission username creator status hosts room_number game_type bet_amount user_bet host_pr created_at',
         })
         .populate({
           path: 'game_type',
@@ -2071,7 +2163,6 @@ router.post('/coHost', auth, async (req, res) => {
         });
 
       const gameLogList = await gameLogQuery;
-
       const newLog = await convertGameLogToHistoryStyle(gameLogList);
 
       if (req.io.sockets) {
@@ -2107,12 +2198,22 @@ router.post('/coHost', auth, async (req, res) => {
   }
 });
 
-// sell route (unstake)
-router.post('/unstake', auth, async (req, res) => {
+router.post('/jeet', auth, async (req, res) => {
   try {
     const userId = req.user._id;
     const roomId = req.body.room_id;
     const stakeAmount = req.body.stake_amount;
+    // Early validation for connected account
+    if (
+      !req.body.connectedAccount ||
+      !req.user.accounts ||
+      !req.user.accounts.includes(req.body.connectedAccount)
+    ) {
+      return res.json({
+        success: false,
+        message: 'Connected account is missing or not authorized.',
+      });
+    }
 
     if (stakeAmount <= 0) {
       return res.json({
@@ -2143,7 +2244,7 @@ router.post('/unstake', auth, async (req, res) => {
     }
 
     const hostIndex = roomInfo.hosts.findIndex((host) =>
-      host.host.equals(userId),
+      host.host.equals(userId)
     );
     if (hostIndex === -1) {
       return res.json({
@@ -2152,8 +2253,10 @@ router.post('/unstake', auth, async (req, res) => {
       });
     }
 
-    const userStake = roomInfo.hosts[hostIndex].stake;
+    // Update the host's walletAddress with the connected account.
+    roomInfo.hosts[hostIndex].walletAddress = req.body.connectedAccount;
 
+    const userStake = roomInfo.hosts[hostIndex].stake;
     if (stakeAmount > userStake) {
       return res.json({
         success: false,
@@ -2162,10 +2265,24 @@ router.post('/unstake', auth, async (req, res) => {
     }
 
     const unstakeAmount = parseFloat(stakeAmount);
-    roomInfo.hosts[hostIndex].stake -= unstakeAmount;
-    roomInfo.hosts[hostIndex].initial_stake -= unstakeAmount;
-    req.user.balance = parseFloat(req.user.balance) + unstakeAmount;
 
+    const commissionDoc = await System.findOne({ name: 'commission' });
+    const commissionPercentage = commissionDoc.value;
+
+    const fee = unstakeAmount * (commissionPercentage / 100);
+    const amountAfterFee = unstakeAmount - fee;
+
+    await System.findOneAndUpdate(
+      { name: 'platform_trading' },
+      { $inc: { value: fee } }
+    );
+
+    roomInfo.hosts[hostIndex].stake -= amountAfterFee;
+    roomInfo.hosts[hostIndex].initial_stake -= amountAfterFee;
+    req.user.balance = parseFloat(req.user.balance) + amountAfterFee;
+    req.user.totalTraded += Math.abs(unstakeAmount);
+    req.user.tradingProfit += amountAfterFee;
+    
     if (roomInfo.hosts[hostIndex].stake === 0) {
       roomInfo.hosts.splice(hostIndex, 1);
     }
@@ -2189,14 +2306,14 @@ router.post('/unstake', auth, async (req, res) => {
 
     const newTransaction = new Transaction({
       user: userId,
-      amount: unstakeAmount,
-      description: `Jeeted ${roomInfo.game_type.short_name}-${roomInfo.room_number}`,
+      amount: amountAfterFee,
+      description: `Jeeted ${gameType.short_name}-${roomInfo.room_number}`,
       room: roomId,
     });
 
     // Update the candle
     const open = roomInfo.user_bet;
-    const close = roomInfo.user_bet - unstakeAmount; // New value after unstake
+    const close = roomInfo.user_bet - amountAfterFee; // New value after unstake
     const high = Math.max(open, close); // The highest value in this period
     const low = Math.min(open, close); // The lowest value in this period
 
@@ -2206,28 +2323,30 @@ router.post('/unstake', auth, async (req, res) => {
         high: high,
         low: low,
         close: close,
-        volume: unstakeAmount,
+        volume: amountAfterFee,
         buyVolume: 0,
-        sellVolume: unstakeAmount,
+        sellVolume: amountAfterFee,
         startTime: moment().valueOf(),
       },
     };
 
-    req.io.sockets.emit(`NEW_CANDLE_${roomInfo._id}`, updatedCandle);
+    if (req.io.sockets) {
+      req.io.sockets.emit(`NEW_CANDLE_${roomInfo._id}`, updatedCandle);
+    }
 
     const newGameLog = new GameLog({
       room: roomInfo,
       creator: roomInfo.creator,
       joined_user: null,
       game_type: roomInfo.game_type,
-      bet_amount: unstakeAmount,
+      bet_amount: amountAfterFee,
       selected_rps: '',
       ai_mode: '',
       commission: 0,
       game_result: 666,
       winnings: 0,
-      endgame_amount: unstakeAmount,
-      host_pr: unstakeAmount,
+      endgame_amount: amountAfterFee,
+      host_pr: amountAfterFee,
       user_bet: 0,
       status: 'open',
       hosts: [],
@@ -2243,13 +2362,12 @@ router.post('/unstake', auth, async (req, res) => {
       });
     }
 
-    roomInfo.user_bet -= unstakeAmount;
-    roomInfo.host_pr -= unstakeAmount;
-    // roomInfo.endgame_amount -= unstakeAmount;
+    roomInfo.user_bet -= amountAfterFee;
+    roomInfo.host_pr -= amountAfterFee;
     roomInfo.updated_at = moment(new Date()).format('YYYY-MM-DD HH:mm');
 
     roomInfo.hosts.forEach((host) => {
-      const isCurrentUserHost = req.user._id === host.host;
+      const isCurrentUserHost = req.user._id.equals(host.host);
       const message = `${isCurrentUserHost ? 'You' : req.user.username} jeeted ${stakeAmount} in ${gameType.short_name}-${roomInfo.room_number}, your new Share is ${host.share.toFixed(2)}%`;
 
       const notificationData = {
@@ -2292,7 +2410,7 @@ router.post('/unstake', auth, async (req, res) => {
         path: 'room',
         model: Room,
         select:
-          '_id winnings commission username creator status hosts room_number game_type bet_amount user_bet host_pr created_at',
+          '_id winnings ticker image commission username creator status hosts room_number game_type bet_amount user_bet host_pr created_at',
       })
       .populate({
         path: 'game_type',
@@ -2311,7 +2429,6 @@ router.post('/unstake', auth, async (req, res) => {
       });
 
     const gameLogList = await gameLogQuery;
-
     const newLog = await convertGameLogToHistoryStyle(gameLogList);
 
     if (req.io.sockets) {
@@ -2512,18 +2629,19 @@ router.get('/qbotStatuses', auth, async (req, res) => {
 
 router.get('/qbotStatus', auth, async (req, res) => {
   try {
-    const { userId } = req.query;
-    if (!userId) {
+    const user_id = req.user._id;
+    if (!user_id) {
       return res.status(400).json({
         success: false,
         message: 'User ID is required',
       });
     }
     const isActive = await QBot.findOne(
-      { user: userId, active: true },
+      { user: user_id, active: true },
       'active',
     );
-    res.json({
+
+    return res.json({
       success: true,
       isActive: !!isActive,
     });
@@ -2717,15 +2835,15 @@ router.post('/getGlobalChatLogs', async (req, res) => {
           replyTo && replyTo.length > 0 ? replyTo[0] : null;
         const transformedReplyTo = extractedReplyTo
           ? {
-              username: extractedReplyTo.sender?.username ?? '',
-              senderId: extractedReplyTo.sender?._id ?? '',
-              avatar: extractedReplyTo.sender?.avatar ?? '',
-              rank: extractedReplyTo.sender?.totalWagered ?? '',
-              accessory: extractedReplyTo.sender?.accessory ?? '',
-              message: extractedReplyTo.message,
-              messageType: extractedReplyTo.messageType,
-              time: moment(extractedReplyTo.created_at).format('hh:mm'),
-            }
+            username: extractedReplyTo.sender?.username ?? '',
+            senderId: extractedReplyTo.sender?._id ?? '',
+            avatar: extractedReplyTo.sender?.avatar ?? '',
+            rank: extractedReplyTo.sender?.totalWagered ?? '',
+            accessory: extractedReplyTo.sender?.accessory ?? '',
+            message: extractedReplyTo.message,
+            messageType: extractedReplyTo.messageType,
+            time: moment(extractedReplyTo.created_at).format('hh:mm'),
+          }
           : null;
 
         return {
@@ -2765,7 +2883,6 @@ router.get('/candles/:room', async (req, res) => {
   try {
     const room = req.params.room;
     const { timeRange = '1m' } = req.query;
-
     const bucketSize = getTimeBucket(timeRange);
 
     const roomData = await Room.findById(room);
@@ -2782,7 +2899,8 @@ router.get('/candles/:room', async (req, res) => {
       created_at: 1,
     });
 
-    let previousLiquidity = user_bet; // Default to user_bet
+    // Start liquidity at 0 so the first candle open is 0.
+    let previousLiquidity = 0;
     const finalCandles = [];
     const candleMap = new Map(); // Map to group transactions by minute
 
@@ -2790,11 +2908,10 @@ router.get('/candles/:room', async (req, res) => {
       const transactionTime = moment(transaction.created_at)
         .startOf('minute')
         .toISOString();
-      const transactionAmount = transaction.amount;
+      const transactionAmount = -transaction.amount;
 
-      // Check if a candle already exists for this minute
+      // If no candle exists for this minute, create one
       if (!candleMap.has(transactionTime)) {
-        // Create a new candle
         candleMap.set(transactionTime, {
           _id: `candle_${transactionTime}`,
           open: previousLiquidity,
@@ -2808,7 +2925,7 @@ router.get('/candles/:room', async (req, res) => {
         });
       }
 
-      // Merge logic: Update the existing candle for this minute
+      // Update the existing candle for this minute
       const currentCandle = candleMap.get(transactionTime);
       previousLiquidity += transactionAmount;
       currentCandle.high = Math.max(currentCandle.high, previousLiquidity);
@@ -2824,8 +2941,8 @@ router.get('/candles/:room', async (req, res) => {
 
     finalCandles.push(
       ...Array.from(candleMap.values()).sort(
-        (a, b) => new Date(a.startTime) - new Date(b.startTime),
-      ),
+        (a, b) => new Date(a.startTime) - new Date(b.startTime)
+      )
     );
 
     const transactionData = transactions.map((transaction) => ({
@@ -2840,7 +2957,6 @@ router.get('/candles/:room', async (req, res) => {
       transactions: transactionData,
     });
   } catch (err) {
-    // console.error(`[ERROR] An error occurred: ${err.message}`);
     res.status(500).json({
       success: false,
       err: err.message,

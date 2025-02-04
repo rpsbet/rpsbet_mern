@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { connect } from 'react-redux';
+import { connect, useDispatch } from 'react-redux';
 
 // MUI v5 components
 import {
@@ -15,7 +15,6 @@ import {
   Typography,
   ThemeProvider,
 } from '@mui/material';
-import { Warning as WarningIcon } from '@mui/icons-material';
 import { FileCopy as FileCopyIcon, Info as InfoIcon, Link as LinkIcon } from '@mui/icons-material';
 
 import LoadingOverlay from 'react-loading-overlay';
@@ -38,15 +37,13 @@ import history from '../../redux/history';
 
 import { setUserInfo } from '../../redux/Auth/user.actions';
 import { setCurrentOfferTargetInfo } from '../../redux/Loan/loan.action';
-import { openOfferLoanModal } from '../../redux/Notification/notification.actions';
+import { openOfferLoanModal, errorMsgBar } from '../../redux/Notification/notification.actions';
 import { setChatRoomInfo, addNewTransaction } from '../../redux/Logic/logic.actions';
 import {
   acGetCustomerInfo,
-  getCustomerStatisticsData,
   getSpendingHabit,
 } from '../../redux/Customer/customer.action';
 import { queryProducts } from '../../redux/Item/item.action';
-import { alertModal } from '../modal/ConfirmAlerts';
 import { convertToCurrency } from '../../util/conversion';
 import { renderLottieAnimation } from '../../util/LottieAnimations';
 
@@ -110,7 +107,6 @@ function PlayerModal(props) {
     onlineUserList,
     productArray = [],
     // Redux actions
-    getCustomerStatisticsData,
     acGetCustomerInfo,
     setChatRoomInfo,
     queryProducts: _queryProducts,
@@ -134,37 +130,18 @@ function PlayerModal(props) {
   const [creditScore, setCreditScore] = useState(0);
   const [lastSeen, setLastSeen] = useState('');
 
-  const [actorType, setActorType] = useState('Both');
-  const [gameType, setGameType] = useState('All');
-  const [timeType, setTimeType] = useState('24');
-
   const [status, setStatus] = useState('');
   const [gameLogList, setGameLogList] = useState([]);
-  const [deposit, setDeposit] = useState(0);
-  const [withdraw, setWithdraw] = useState(0);
   const [gameProfit, setGameProfit] = useState(0);
-  const [playerBalance, setPlayerBalance] = useState(0);
   const [gamePlayed, setGamePlayed] = useState(0);
-  const [gameHosted, setGameHosted] = useState(0);
-  const [gameJoined, setGameJoined] = useState(0);
   const [totalWagered, setTotalWagered] = useState(0);
-  const [netProfit, setNetProfit] = useState(0);
-  const [profitAllTimeHigh, setProfitAllTimeHigh] = useState(0);
-  const [profitAllTimeLow, setProfitAllTimeLow] = useState(0);
-  const [averageWager, setAverageWager] = useState(0);
-  const [averageGamesPlayedPerRoom, setAverageGamesPlayedPerRoom] = useState(0);
-  const [averageProfit, setAverageProfit] = useState(0);
-
-  // Tabbing: 0 => "Profile & Inventory", 1 => "Stats"
   const [activeTab, setActiveTab] = useState(0);
 
-  // Tip modal
   const [isTipModalOpen, setIsTipModalOpen] = useState(false);
   const [tipAmount, setTipAmount] = useState('');
   const [message, setMessage] = useState('');
-
-  // Loading states
   const [isLoading, setIsLoading] = useState(false);
+  const dispatch = useDispatch();
 
   // -----------------------------
   // Effects
@@ -174,12 +151,6 @@ function PlayerModal(props) {
     // Load stats, user info, inventory
     fetchUserData(selectedCreator);
   }, [selectedCreator]);
-
-  useEffect(() => {
-    if (creatorId) {
-      fetchStatisticsData();
-    }
-  }, [creatorId, actorType, gameType, timeType]);
 
   useEffect(() => {
     if (creatorId) {
@@ -209,7 +180,11 @@ function PlayerModal(props) {
         setDateJoined(userData.created_at);
         setCreditScore(userData.credit_score);
         setLastSeen(userData.last_seen);
-
+        // performance
+        setGamePlayed(userData.gamePlayed || 0);
+        setTotalWagered(userData.totalWagered || 0);
+        setGameProfit(userData.gameProfit || 0);
+     
         _setCurrentOfferTargetInfo({
           avatar: userData.avatar,
           _id: userId,
@@ -223,32 +198,6 @@ function PlayerModal(props) {
       console.error('Error fetching user data:', err);
     }
   };
-
-  const fetchStatisticsData = async () => {
-    try {
-      const result = await getCustomerStatisticsData(creatorId, actorType, gameType, timeType);
-      if (result) {
-        setGameLogList(result.gameLogList || []);
-        setDeposit(result.deposit || 0);
-        setWithdraw(result.withdraw || 0);
-        setGameProfit(result.gameProfit || 0);
-        setPlayerBalance(result.balance || 0);
-        setGamePlayed(result.gamePlayed || 0);
-        setGameHosted(result.gameHosted || 0);
-        setGameJoined(result.gameJoined || 0);
-        setTotalWagered(result.totalWagered || 0);
-        setNetProfit(result.netProfit || 0);
-        setProfitAllTimeHigh(result.profitAllTimeHigh || 0);
-        setProfitAllTimeLow(result.profitAllTimeLow || 0);
-        setAverageWager(result.averageWager || 0);
-        setAverageGamesPlayedPerRoom(result.averageGamesPlayedPerRoom || 0);
-        setAverageProfit(result.averageProfit || 0);
-      }
-    } catch (err) {
-      console.error('Error fetching stats:', err);
-    }
-  };
-
   // -----------------------------
   // Helpers
   // -----------------------------
@@ -257,7 +206,7 @@ function PlayerModal(props) {
       case 'very good':
         return {
           color: 'rgb(118 221 119)',
-          title: 'JEWISH JEDI',
+          title: 'JEWISH DJEDI',
           message: 'Your spending habits are outstanding!',
           progress: 100,
         };
@@ -299,7 +248,7 @@ function PlayerModal(props) {
     }
   };
   const theme = getCustomTheme(isDarkMode ? 'dark' : 'light');
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm')); 
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const { color, title, message: spendingMessage, progress } = getStatusDetails(status);
   const barStyle = {
@@ -307,11 +256,7 @@ function PlayerModal(props) {
     backgroundColor: progress <= 50 ? 'yellow' : 'red',
   };
 
-  const handleDropdownChange = (dropdownName, selectedValue) => {
-    if (dropdownName === 'actorType') setActorType(selectedValue);
-    if (dropdownName === 'gameType') setGameType(selectedValue);
-    if (dropdownName === 'timeType') setTimeType(selectedValue);
-  };
+
 
   const isOnline = onlineUserList.includes(selectedCreator);
 
@@ -349,11 +294,11 @@ function PlayerModal(props) {
     try {
       const tipAmtNum = parseFloat(tipAmount || 0);
       if (tipAmtNum <= 0) {
-        alertModal(isDarkMode, `R U FURR-REAL? TIP AMOUNT MUST BE MORE THAN 0!`);
+        dispatch(errorMsgBar(`R U FURR-REAL? TIP AMOUNT MUST BE MORE THAN 0!`));
         return;
       }
       if (tipAmtNum > balance) {
-        alertModal(isDarkMode, `NOT ENUFF FUNDS AT THIS MEOWMENT`);
+        dispatch(errorMsgBar(`NOT ENUFF FUNDS AT THIS MEOWMENT`));
         return;
       }
       setIsLoading(true);
@@ -365,17 +310,17 @@ function PlayerModal(props) {
       });
 
       if (result.data.success) {
-        alertModal(isDarkMode, result.data.message, '-cat');
+        dispatch(errorMsgBar(result.data.message));
         _addNewTransaction(result.data.newTransaction);
         setIsLoading(false);
         closeModal();
       } else {
         setIsLoading(false);
-        alertModal(isDarkMode, result.data.message);
+        dispatch(errorMsgBar(result.data.message));
       }
     } catch (err) {
       setIsLoading(false);
-      alertModal(isDarkMode, `FAILED TRANSACTION`);
+      dispatch(errorMsgBar(`FAILED TRANSACTION`));
     }
   };
 
@@ -485,8 +430,19 @@ function PlayerModal(props) {
             </Box>
 
             {/* Tabs */}
-            <Tabs value={activeTab} onChange={handleTabChange} textColor="error" indicatorColor="error">
-              <Tab label="Profile & Inventory" />
+            <Tabs
+              value={activeTab}
+              onChange={handleTabChange}
+              textColor="error"
+              indicatorColor="error"
+              sx={{
+                '& .MuiTabs-indicator': {
+                  backgroundColor: 'error.main', // uses theme's error color
+                  height: '3px',                 // adjust height to make it more prominent
+                },
+              }}
+            >
+              <Tab label="Profile" />
               <Tab label="Stats" />
             </Tabs>
 
@@ -507,9 +463,9 @@ function PlayerModal(props) {
                     className='player'
                   >
                     <Typography variant="body2" sx={{
-                       display: 'flex',
-                       justifyContent: 'space-evenly',
-                       alignItems: 'center'
+                      display: 'flex',
+                      justifyContent: 'space-evenly',
+                      alignItems: 'center'
                     }}>
                       {isOnline ? 'online' : 'offline'}&nbsp;
                       <i className={`online-status${isOnline ? ' online' : ''}`} />
@@ -566,53 +522,53 @@ function PlayerModal(props) {
                     </Box>
                   </Box>
                   <Box
-                      sx={{
-                        mb: 2,
-                        background: 'rgba(170, 170, 170, 0.06)',
-                        borderRadius: '0.3em',
-                        p: '20px',
-                      }}
-                    >
-                      <Typography variant="h6" gutterBottom>
-                        A.K.A
-                      </Typography>
-                      {accounts.length === 0 ? (
-                        <p>No associated accounts found.</p>
-                      ) : (
-                        <Grid container spacing={1}>
-                          {accounts.map((acc, index) => {
-                            // On mobile, show shortened version
-                            const displayed = isMobile ? shortenAddress(acc) : acc;
+                    sx={{
+                      mb: 2,
+                      background: 'rgba(170, 170, 170, 0.06)',
+                      borderRadius: '0.3em',
+                      p: '20px',
+                    }}
+                  >
+                    <Typography variant="h6" gutterBottom>
+                      A.K.A
+                    </Typography>
+                    {accounts.length === 0 ? (
+                      <p>No associated accounts found.</p>
+                    ) : (
+                      <Grid container spacing={1}>
+                        {accounts.map((acc, index) => {
+                          // On mobile, show shortened version
+                          const displayed = isMobile ? shortenAddress(acc) : acc;
 
-                            return (
-                              <Grid item xs={12} key={index}>
-                                <Box display="flex" alignItems="center">
-                                  {/* Chip to display the address */}
-                                  <Chip
-                                    label={displayed}
-                                    variant="outlined"
-                                    // If you want a different color for the connected account:
-                                    // color={isConnected ? 'success' : 'default'}
-                                    sx={{ mr: 1 }}
-                                  />
+                          return (
+                            <Grid item xs={12} key={index}>
+                              <Box display="flex" alignItems="center">
+                                {/* Chip to display the address */}
+                                <Chip
+                                  label={displayed}
+                                  variant="outlined"
+                                  // If you want a different color for the connected account:
+                                  // color={isConnected ? 'success' : 'default'}
+                                  sx={{ mr: 1 }}
+                                />
 
-                                  {/* Link icon to Solscan.io/acc */}
-                                  <IconButton
-                                    component="a"
-                                    href={`https://solscan.io/account/${acc}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    size="small"
-                                  >
-                                    <LinkIcon fontSize="small" />
-                                  </IconButton>
-                                </Box>
-                              </Grid>
-                            );
-                          })}
-                        </Grid>
-                      )}
-                    </Box>
+                                {/* Link icon to Solscan.io/acc */}
+                                <IconButton
+                                  component="a"
+                                  href={`https://solscan.io/account/${acc}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  size="small"
+                                >
+                                  <LinkIcon fontSize="small" />
+                                </IconButton>
+                              </Box>
+                            </Grid>
+                          );
+                        })}
+                      </Grid>
+                    )}
+                  </Box>
                   {/* Inventory */}
                   <MarketplaceContainer>
                     <Typography variant="h6" sx={{ mt: 2 }}>
@@ -623,7 +579,7 @@ function PlayerModal(props) {
                         {productArray.map((row) => (
                           <ProductCard key={row._id}>
                             {row.image && renderLottieAnimation(row.image, isLowGraphics) ? (
-                              <Box sx={{  width: 80, height: 80 }}>
+                              <Box sx={{ width: 80, height: 80 }}>
 
                                 {renderLottieAnimation(row.image, isLowGraphics)}
                               </Box>
@@ -655,34 +611,21 @@ function PlayerModal(props) {
                 <Box sx={{ mt: 2 }}>
 
                   <StatisticsForm
-                    onDropdownChange={handleDropdownChange}
                     username={username}
                     title={title}
                     barStyle={barStyle}
                     color={color}
+                    solPrice={solPrice}
                     message={spendingMessage}
-                    actorType={actorType}
-                    gameType={gameType}
-                    timeType={timeType}
                     dateJoined={dateJoined}
                     last_seen={lastSeen}
                     creditScore={creditScore}
                     gameLogList={gameLogList}
-                    deposit={deposit}
-                    withdraw={withdraw}
                     gameProfit={gameProfit}
-                    balance={playerBalance}
                     gamePlayed={gamePlayed}
-                    gameHosted={gameHosted}
-                    gameJoined={gameJoined}
                     totalWagered={totalWagered}
                     rank={rank}
-                    netProfit={netProfit}
-                    profitAllTimeHigh={profitAllTimeHigh}
-                    profitAllTimeLow={profitAllTimeLow}
-                    averageWager={averageWager}
-                    averageGamesPlayedPerRoom={averageGamesPlayedPerRoom}
-                    averageProfit={averageProfit}
+     
                   />
                 </Box>
               )}
@@ -755,7 +698,6 @@ const mapDispatchToProps = {
   setCurrentOfferTargetInfo,
   openOfferLoanModal,
   getSpendingHabit,
-  getCustomerStatisticsData,
   acGetCustomerInfo,
   queryProducts,
 };

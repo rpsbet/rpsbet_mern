@@ -90,20 +90,19 @@ const UserSchema = new Schema({
     type: Number,
     default: 0
   },
-  
   totalWagered: {
     type: Number,
     default: 0
   },
-  totalProfit: {
+  totalTraded: {
     type: Number,
     default: 0
   },
-  profitAllTimeHigh: {
+  gameProfit: {
     type: Number,
     default: 0
   },
-  profitAllTimeLow: {
+  tradingProfit: {
     type: Number,
     default: 0
   },
@@ -113,14 +112,6 @@ const UserSchema = new Schema({
   },
   status: { type: String },
   is_deleted: {
-    type: Boolean,
-    default: false
-  },
-  verification_code: {
-    type: String,
-    default: ''
-  },
-  is_activated: {
     type: Boolean,
     default: false
   },

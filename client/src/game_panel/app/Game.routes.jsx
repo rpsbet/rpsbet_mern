@@ -1,5 +1,5 @@
-import React from 'react';
-import { connect } from 'react-redux';
+import React, { useEffect } from 'react';
+import { connect, useDispatch } from 'react-redux';
 import { Route, Switch } from 'react-router-dom';
 import { Box } from '@mui/material';
 
@@ -10,14 +10,19 @@ import SiteWrapper from '../SiteWrapper';
 import MainPage from '../main_pages/MainPage';
 import JoinGame from '../main_pages/JoinGame';
 import ChatPage from '../MyGames/ChatPage';
-import ChangePasswordPage from '../main_pages/ChangePasswordPage';
 import LeaderboardsModal from '../modal/LeaderboardsModal';
 import MyGames from '../MyGames/MyGamesTable';
 import ChatPanel from '../ChatPanel/ChatPanel';
+import { getSolToUsdPrice } from '../../redux/Logic/logic.actions';
 
 function GameMainRoute({ match, isDrawerOpen }) {
   const isMobile = window.innerWidth < 1024; // Determine if the user is on mobile
+  const dispatch = useDispatch();
 
+  useEffect(() => {
+    dispatch(getSolToUsdPrice());
+  }, [dispatch]);
+  
   return (
     <Box
       sx={{
@@ -69,15 +74,10 @@ function GameMainRoute({ match, isDrawerOpen }) {
             <Route exact path={`${match.path}chat/:id`} component={ChatPage} />
             <Route
               exact
-              path={`${match.path}changePassword/:code`}
-              component={ChangePasswordPage}
-            />
-            <Route
-              exact
               path={`${match.path}leaderboards`}
               component={LeaderboardsModal}
             />
-            <Route exact path={`${match.path}dashboard`} component={MainPage} />
+            <Route exact path={`${match.path}portfolio`} component={MainPage} />
             <Route path={`${match.path}`} component={MainPage} />
           </Switch>
         </SiteWrapper>

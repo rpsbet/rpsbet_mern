@@ -163,11 +163,6 @@ export const getUser = () => async dispatch => {
   }
 };
 
-export const showError = (message) => ({
-  type: MSG_ERROR,
-  payload: message
-});
-
 export const addBonus = () => async (dispatch) => {
   try {
     const { data } = await axios.post('/user/add-bonus');

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { connect } from 'react-redux';
+import { connect, useDispatch } from 'react-redux';
 import {
   Button, Tabs, Tab, Drawer, Dialog,
   DialogTitle,
@@ -22,26 +22,18 @@ import animationData from '../LottieAnimations/cat-place-bet.json';
 import RPS from '../CreateGame/RPS';
 import QuickShoot from '../CreateGame/QuickShoot';
 import history from '../../redux/history';
-import { toggleDrawer, showError } from '../../redux/Auth/user.actions';
+import { toggleDrawer } from '../../redux/Auth/user.actions';
 import {
   createRoom,
   setGameMode,
   getGameTypeList,
   getStrategies,
-  uploadImageToPinata
+  uploadImageToPinata,
 } from '../../redux/Logic/logic.actions';
-import { alertModal } from '../modal/ConfirmAlerts';
+import { errorMsgBar } from '../../redux/Notification/notification.actions';
 import { convertToCurrency } from '../../util/conversion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faPenSquare } from '@fortawesome/free-solid-svg-icons';
-
-const customStyles = {
-  tabRoot: {
-    textTransform: 'none',
-    width: '50%',
-    backgroundColor: 'rgba(0, 0, 0, 0.8)'
-  }
-};
 
 const gifUrls = [
   'https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/641ef8e1ce09cd9cf53a4829_rock1.gif',
@@ -59,7 +51,6 @@ function CreateGame(props) {
     isAuthenticated,
     getGameTypeList,
     setGameMode: _setGameMode,
-
     getStrategies,
     match,
     solPrice,
@@ -70,8 +61,7 @@ function CreateGame(props) {
     isDrawerOpen,
     isDarkMode,
     isLowGraphics,
-    showError,
-    uploadImageToPinata,
+    connectedAccount,
     toggleDrawer: _toggleDrawer
   } = props;
 
@@ -124,6 +114,7 @@ function CreateGame(props) {
   const [skipConfirm, setSkipConfirm] = useState(
     localStorage.getItem('hideConfirmModal') === 'true'
   );
+  const dispatch = useDispatch();
 
   // -------------------------------
   //    Lifecycle & Setup
@@ -145,7 +136,6 @@ function CreateGame(props) {
     initializeGameType(gameTypeName);
 
     getStrategies();
-    // Add a keypress listener (if needed)
 
     return () => {
       // Mimic componentWillUnmount
@@ -269,59 +259,60 @@ function CreateGame(props) {
 
   const onNextButtonClicked = () => {
     if (step === 1) {
+      if (!connectedAccount) {
+        dispatch(errorMsgBar("CONNECT YOUR WALLET"));
+        return;
+      }
       if (!gameMode) {
-        showError("No Gamemode", "YOU DIDN'T PICK A GAMEMODE");
+        dispatch(errorMsgBar("YOU DIDN'T PICK A GAMEMODE"));
         return;
       }
       if (parseFloat(betAmount) <= 0 || isNaN(parseFloat(betAmount))) {
-        showError("Invalid Bet", "YOU DIDN'T BET (CAT) SHIT!!!");
+        dispatch(errorMsgBar("YOU DIDN'T BET (CAT) SHIT!!!"));
         return;
       }
       if (parseFloat(betAmount) < 0.0005) {
-        showError("Minimum Buy-in", "MEOWNIMUM BUY-IN IS 0.0005 SOL!");
+        dispatch(errorMsgBar("MEOWNIMUM BUY-IN IS 0.0005 SOL!"));
         return;
       }
       if (parseFloat(tax) > 33) {
-        showError("Minimum Buy-in", "MAX TAX IS 33%!");
+        dispatch(errorMsgBar("MAX TAX IS 33%!"));
         return;
       }
       if (parseFloat(betAmount) >= parseFloat(endgameAmount)) {
-        showError("Minimum Hard Cap", "HARD-CAP MUST BE MORE THAN YOUR BUY-IN AMOUNT!");
+        dispatch(errorMsgBar("HARD-CAP MUST BE MORE THAN YOUR BUY-IN AMOUNT!"));
         return;
       }
       if (!name.trim()) {
-        showError("Missing Name", "ADD A NAME DUMBASS!");
+        dispatch(errorMsgBar("ADD A NAME DUMBASS!"));
+        return;
+      }
+      if (!ticker.trim()) {
+        dispatch(errorMsgBar("ADD A TICKER DUMBASS!"));
         return;
       }
       if (!image.trim()) {
-        showError("Missing Image", "ADD AN IMAGE DUMBASS!");
+        dispatch(errorMsgBar("ADD AN IMAGE DUMBASS!"));
         return;
       }
       if (betAmount > localBalance) {
-        showError("Insufficient Funds", "NOT ENUFF FUNDS AT THIS MEOWMENT");
+        dispatch(errorMsgBar("NOT ENUFF FUNDS AT THIS MEOWMENT"));
         return;
       }
-      // Example logic if a certain strategy needs training data
-      if ((selectedStrategy === 'Hidden Markov') && (gameMode === 'Quick Shoot' || gameMode === 'RPS')) {
-        const list = gameMode === 'Quick Shoot' ? qsList : rpsList;
-        if (list.length < 3) {
-          showError("Training Data Insufficient", "PURR-HAPS YOU NEED AT LEAST 3 RUNS FOR AI TRAINING DATA");
-          return;
-        }
-      }
+      
     }
 
     if (step === 2) {
       if (isNaN(endgameAmount)) {
-        showError("Invalid Input", "IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!");
+        dispatch(errorMsgBar("ENTER A VALID NUMBER!"));
         return;
       }
       if (endgameType && endgameAmount < parseFloat(betAmount)) {
-        showError("Invalid Endgame Amount", "CANNOT BE LOWER THAN BANKROLL");
+        dispatch(errorMsgBar("CANNOT BE LOWER THAN BANKROLL"));
         return;
       }
       if (isPrivate && !roomPassword) {
-        showError("Missing Password", "SET THE PASSWORD TO JOIN YOUR GAME!");
+        dispatch(errorMsgBar("SET THE PASSWORD TO JOIN YOUR GAME!"));
         return;
       }
       if (endgameAmount === 0) {
@@ -436,7 +427,7 @@ function CreateGame(props) {
 
     } catch (error) {
       console.error('[Front-end] Error uploading/resizing image:', error);
-      alertModal(isDarkMode, 'Failed to process image. Please try again.');
+      dispatch(errorMsgBar('Failed to process image. Please try again.'));
     } finally {
       setCreatingRoom(false);
     }
@@ -654,7 +645,7 @@ function CreateGame(props) {
           </Drawer>
         )}
 
-        <div className="main-panel">
+        <Box className="main-panel" sx={{p: 2}}>
           <Dialog open={openDialog} onClose={handleCancel}>
             <DialogTitle>CONFIRM GAME SETTINGS?</DialogTitle>
             <DialogContent>
@@ -690,9 +681,11 @@ function CreateGame(props) {
               &nbsp; Go Back
             </Button>
           </Box>
-          <div className="create-game-panel">
-            <div className="game-page">
-              <div className="game-contents title">
+          <Box className="create-game-panel">
+            <Box className="game-page">
+              <Box className="game-contents title" sx={{p: 2}}>
+                <Summary shortVersion={false}
+                />
                 {step === 1 && step1()}
                 {step === 2 && (
                   <AdvancedSettings
@@ -719,13 +712,13 @@ function CreateGame(props) {
                     handleDescriptionChange={handleDescriptionChange}
                   />
                 )}
-              </div>
-            </div>
-          </div>
+              </Box>
+            </Box>
+          </Box>
           {step !== 4 && actionPanel()}
           <DrawerButton open={isDrawerOpen} toggleDrawer={toggleDrawer} />
           {/* <SupportButton .../> If you have a separate support toggle */}
-        </div>
+        </Box>
 
         {/* Example of a mobile bottom nav for switching tabs */}
         {!isMobile && (
@@ -773,6 +766,7 @@ function CreateGame(props) {
 // -------------------------------
 const mapStateToProps = (state) => ({
   isAuthenticated: state.auth.isAuthenticated,
+  connectedAccount: state.auth.connectedAccount,
   history: state.logic.history,
   pageNumber: state.logic.pageNumber,
   balance: state.auth.balance,
@@ -788,7 +782,6 @@ const mapStateToProps = (state) => ({
   isDarkMode: state.auth.isDarkMode,
   isLowGraphics: state.auth.isLowGraphics,
   isDrawerOpen: state.auth.isDrawerOpen,
-  isFocused: state.auth.isFocused,
 });
 
 const mapDispatchToProps = {
@@ -796,7 +789,6 @@ const mapDispatchToProps = {
   setGameMode,
   getStrategies,
   getGameTypeList,
-  showError,
   uploadImageToPinata,
   toggleDrawer
 };

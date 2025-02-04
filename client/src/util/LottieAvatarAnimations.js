@@ -141,7 +141,6 @@ const animationMap = {
   dragon: {
     animationData: dragon,
     className: 'lottie-container dragon',
-    styles: { width: '80px', top: '0', left: '-10px', transform: 'scaleX(-1)' }
   },
   'red-dolphins': { animationData: dolphin, className: 'lottie-container' },
   octopus: { animationData: octopus, className: 'lottie-container' },

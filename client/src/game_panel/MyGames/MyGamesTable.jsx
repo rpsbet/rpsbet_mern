@@ -1,1029 +1,968 @@
-import React, { Component } from 'react';
-import { connect } from 'react-redux';
-import { updateTutorialCompleted } from '../../redux/Auth/user.actions';
-import Modal from 'react-modal';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { connect, useDispatch } from 'react-redux';
+import {
+  Box,
+  Tooltip,
+  Typography,
+  Button,
+  Skeleton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Table,
+  TableBody,
+  TableCell,
+  TableRow,
+  Radio,
+  RadioGroup,
+  FormControlLabel,
+  TextField,
+  InputAdornment,
+  Chip
+} from '@mui/material';
+import Joyride from 'react-joyride';
+import Lottie from 'react-lottie';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faMoneyCheckAlt } from '@fortawesome/free-solid-svg-icons';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import EditOutline from '@mui/icons-material/EditOutlined';
 import { Info } from '@mui/icons-material';
-import SettingsRef from '../../components/SettingsRef';
+
 import {
   getMyGames,
   unstake,
-  addNewTransaction,
+  createRoom,
+  reCreateRoom,
   getStrategies,
   updateRoomStrategy,
   editPayout,
   setGameMode,
-  createRoom,
-  reCreateRoom,
+  addNewTransaction,
   getRoomList,
   endGame,
   coHost,
   updateUserPrompt
 } from '../../redux/Logic/logic.actions';
+import { errorMsgBar } from '../../redux/Notification/notification.actions';
+import { updateTutorialCompleted } from '../../redux/Auth/user.actions';
 import { getRank } from '../../util/getRank';
-import { faMoneyCheckAlt } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import Battle from '../icons/Battle';
-import { alertModal, confirmModalClosed, confirmModalCreate } from '../modal/ConfirmAlerts';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
-import AddCircleOutline from '@mui/icons-material/AddCircleOutline';
-import EditOutline from '@mui/icons-material/EditOutlined';
-import history from '../../redux/history';
 import { convertToCurrency } from '../../util/conversion';
-import Lottie from 'react-lottie';
-import animationData from '../LottieAnimations/add';
-import pressHold from '../LottieAnimations/pressHold.json';
-import Joyride from 'react-joyride';
-import CoHostModal from '../modal/CoHostModal';
+import { confirmModalCreate } from '../modal/ConfirmAlerts';
 import { tutorialStepsCreate } from '../../util/tutorialStepsCreate';
-import { InputAdornment, Button, Skeleton, Box, Tooltip, TextField, Table, TableBody, TableRow, TableCell, Radio, RadioGroup, FormControlLabel } from '@mui/material';
 
-const gifUrls = ['/img/rock.gif', '/img/paper.gif', '/img/scissors.gif'];
-const randomGifUrl = gifUrls[Math.floor(Math.random() * gifUrls.length)];
+import CoHostModal from '../modal/CoHostModal';
+import SettingsRef from '../../components/SettingsRef';
+import Battle from '../icons/Battle';
+import pressHold from '../LottieAnimations/pressHold.json';
+import animationData from '../LottieAnimations/add';
+import history from '../../redux/history'; // or useNavigate
 
-const customStyles = {
-  overlay: {
-    zIndex: 3,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)'
-  },
-  content: {
-    top: '50%',
-    left: '50%',
-    right: 'auto',
-    bottom: 'auto',
-    transform: 'translate(-50%, -50%)',
-    background: 'transparent',
-    padding: 0
-  }
-};
+function MyGamesTable(props) {
+  const {
+    balance,
+    user,
+    myGames: propsMyGames,
+    getMyGames,
+    getStrategies,
+    isDarkMode,
+    isLowGraphics,
+    solPrice,
+    updateTutorialCompleted,
+    // Redux dispatch actions:
+    unstake,
+    createRoom,
+    endGame,
+    addNewTransaction,
+    getRoomList,
+    coHost,
+    editPayout,
+    updateUserPrompt,
+    updateRoomStrategy,
+    reCreateRoom,
+    loading
+  } = props;
 
-class MyGamesTable extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      selectedGameType: 'All',
-      holding: false,
-      timer: null,
-      balance: this.props.balance,
-      selectedFilter: 'open',
-      anchorEl: null,
-      closing: false,
-      sortAnchorEl: null,
-      run: !(this.props.user?.completedTutorials?.includes(3)),
-      currentTutorial: 3,
-      selectedSort: 'desc',
-      creatingRoom: false,
-      myGames: this.props.myGames,
-      isCoHostModalOpen: false,
-      isLoading: true,
-      selectedStrategy: null,
-      isPayoutModalOpen: false,
-      selectedRow: null,
-      paymentMethod: 'manual',
-      payoutAmount: 0,
-      isFocused: false,
-      settings_panel_opened: false
+  // ---------- State ----------
+  const [selectedGameType, setSelectedGameType] = useState('All');
+  const [selectedFilter, setSelectedFilter] = useState('open');
+  const [selectedSort, setSelectedSort] = useState('desc');
+
+  const [myGames, setMyGames] = useState(propsMyGames || []);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const [runTutorial, setRunTutorial] = useState(
+    !(user?.completedTutorials?.includes(3))
+  );
+  const currentTutorial = 3;
+
+  // Co-host
+  const [isCoHostModalOpen, setIsCoHostModalOpen] = useState(false);
+  const [coHostAmount, setCoHostAmount] = useState(0);
+  const [selectedRow, setSelectedRow] = useState(null);
+
+  // Payout
+  const [isPayoutModalOpen, setIsPayoutModalOpen] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState('manual');
+  const [payoutAmount, setPayoutAmount] = useState(0);
+
+  // Settings
+  const [settingsPanelOpened, setSettingsPanelOpened] = useState(false);
+  const [selectedStrategy, setSelectedStrategy] = useState(null);
+  const settingsRef = useRef(null);
+
+  // Press-and-Hold (RUG) logic
+  const [pressState, setPressState] = useState({});
+  const dispatch = useDispatch();
+
+  // ---------- Effects ----------
+  // On mount => fetch
+  useEffect(() => {
+    async function fetchInitialData() {
+      await fetchData();
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    fetchInitialData();
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
     };
-    this.settingsRef = React.createRef();
-    this.handleClickOutside = this.handleClickOutside.bind(this);
-    this.handleSettingsIconClick = this.handleSettingsIconClick.bind(this);
-  }
+    // eslint-disable-next-line
+  }, []);
 
-  async componentDidMount() {
-    await this.fetchData();
-    document.addEventListener('mousedown', this.handleClickOutside);
-  }
+  // If filter/sort changes => re-fetch
+  useEffect(() => {
+    fetchData();
+    // eslint-disable-next-line
+  }, [selectedFilter, selectedSort]);
 
-  componentWillUnmount() {
-    document.removeEventListener('mousedown', this.handleClickOutside);
-  }
+  // If myGames from props changes => set local + stop loading
+  useEffect(() => {
+    setMyGames(propsMyGames || []);
+    setIsLoading(false);
+  }, [propsMyGames]);
 
-  componentDidUpdate(prevProps, prevState) {
-    if (
-      this.state.selectedFilter !== prevState.selectedFilter ||
-      this.state.selectedSort !== prevState.selectedSort
-    ) {
-      this.fetchData();
-    }
-    if (prevProps.myGames !== this.props.myGames) {
-      this.setState({ myGames: this.props.myGames, isLoading: false });
-    }
-  }
+  // ---------- Data fetching ----------
+  const fetchData = useCallback(() => {
+    setMyGames(propsMyGames || []);
+    getStrategies();
 
-
-  handleCoHost = (row) => {
-    this.setState({ isCoHostModalOpen: true, selectedRow: row });
-  };
-
-  handleCloseCoHostModal = () => {
-    this.setState({ isCoHostModalOpen: false });
-  };
-
-  handleCoHostAmountChange = event => {
-    this.setState({ coHostAmount: event.target.value });
-  };
-
-
-  handleSendCoHost = async () => {
-    const { coHostAmount, selectedRow } = this.state;
-    const { balance, isDarkMode, addNewTransaction, getRoomList, selectedGameType } = this.props;
-
-    try {
-      if (coHostAmount <= 0) {
-        alertModal(isDarkMode, 'R U FURR-REAL? AMOUNT MUST BE MORE THAN 0!');
-        return;
-      }
-
-      if (coHostAmount > balance) {
-        alertModal(isDarkMode, 'NOT ENUFF FUNDS AT THIS MEOWMENT');
-        return;
-      }
-
-      const result = await this.props.coHost(coHostAmount, selectedRow._id);
-      if (result.success) {
-        // alertModal(isDarkMode, result.message, '-cat');
-        addNewTransaction(result.newTransaction);
-        await getRoomList({
-          game_type: 'All',
-        });
-      } else {
-        alertModal(isDarkMode, result.message);
-      }
-    } catch (e) {
-      alertModal(isDarkMode, 'ROOM TOO BUSY, TRY AGAIN LATER');
-    }
-  };
-
-  handleSettingsIconClick = (event, row) => {
-    event.preventDefault(); // Prevent the default action
-    event.stopPropagation();
-    if (row.coHost) {
-      this.setState({ settings_panel_opened: !this.state.settings_panel_opened, selectedRow: row });
-    } else {
-      alertModal(this.props.isDarkMode, "YOU MUST OWN 100% TO CHANGE MODEL.");
-    }
-  };
-
-  fetchData = () => {
-    const { selectedFilter, selectedGameType, selectedSort } = this.state;
-
-    // Quick return of myGames from props/localStorage
-    this.setState({ myGames: this.props.myGames });
-
-    // Fetch strategies in the background
-    this.props.getStrategies();
-
-    // Fetch updated games in the background
-    this.props.getMyGames(
+    setIsLoading(true);
+    getMyGames(
       {
         game_type: selectedGameType,
         status: selectedFilter === 'open' ? 'open' : 'finished',
         sort: selectedSort
       },
-      updatedGames => {
-        // Update the state with the new data when available
-        this.setState({ myGames: updatedGames });
+      (updated) => {
+        setMyGames(updated);
+        setIsLoading(false);
       }
     );
+  }, [getMyGames, getStrategies, propsMyGames, selectedGameType, selectedFilter, selectedSort]);
+
+  // ---------- CoHost ----------
+  const handleCoHost = (row) => {
+    setSelectedRow(row);
+    setIsCoHostModalOpen(true);
   };
-
-
-  handlePayout = (row) => {
-    let paymentMethod = 'automatic';
-    let payoutAmount = row.endgame_amount;
-
-    if (!row.endgame_type) {
-      paymentMethod = 'manual';
+  const handleCloseCoHostModal = () => {
+    setIsCoHostModalOpen(false);
+  };
+  const handleCoHostAmountChange = (e) => {
+    setCoHostAmount(e.target.value);
+  };
+  const handleSendCoHost = useCallback(async () => {
+    if (coHostAmount <= 0) {
+      dispatch(errorMsgBar('R U FURR-REAL? AMOUNT MUST BE MORE THAN 0!'));
+      return;
     }
-
-    this.setState({
-      isPayoutModalOpen: true,
-      selectedRow: row,
-      paymentMethod: paymentMethod,
-      payoutAmount: payoutAmount
-    });
-  };
-
-
-
-  handleClosePayoutModal = () => {
-    this.setState({ isPayoutModalOpen: false });
-  };
-
-  handlePayoutAmountChange = event => {
-    this.setState({ payoutAmount: event.target.value });
-  };
-
-  handleSendPayout = async () => {
-    const { payoutAmount, selectedRow } = this.state;
-    const { isDarkMode, editPayout } = this.props;
-
+    if (coHostAmount > balance) {
+      dispatch(errorMsgBar('NOT ENUFF FUNDS AT THIS MEOWMENT'));
+      return;
+    }
     try {
-      if (payoutAmount <= 0) {
-        alertModal(isDarkMode, 'R U FURR-REAL? PAYOUT AMOUNT MUST BE MORE THAN 0!');
-        return;
-      }
-
-      this.setState({ isLoading: true });
-
-      const result = await editPayout(payoutAmount, selectedRow._id);
+      const result = await coHost(coHostAmount, selectedRow._id);
       if (result.success) {
-        await this.fetchData();
-        alertModal(isDarkMode, result.message, '-cat');
-        this.handleClosePayoutModal();
+        addNewTransaction(result.newTransaction);
+        await getRoomList({ game_type: 'All' });
       } else {
-        alertModal(isDarkMode, result.message);
+        dispatch(errorMsgBar(result.message));
       }
     } catch (e) {
-      alertModal(isDarkMode, 'Failed to adjust payout.');
-    } finally {
-      this.setState({ isLoading: false });
+      dispatch(errorMsgBar('ROOM TOO BUSY, TRY AGAIN LATER'));
+    }
+  }, [coHostAmount, balance, isDarkMode, coHost, selectedRow, addNewTransaction, getRoomList]);
+
+  // ---------- Payout ----------
+  const handlePayout = (row) => {
+    setSelectedRow(row);
+    const autoPayment = row.endgame_type ? 'automatic' : 'manual';
+    const amt = row.endgame_amount || 0;
+    setPaymentMethod(autoPayment);
+    setPayoutAmount(amt);
+    setIsPayoutModalOpen(true);
+  };
+  const handleClosePayoutModal = () => {
+    setIsPayoutModalOpen(false);
+  };
+  const handlePayoutAmountChange = (e) => {
+    setPayoutAmount(e.target.value);
+  };
+  const handlePaymentMethodChange = (e) => {
+    const method = e.target.value;
+    setPaymentMethod(method);
+    if (method !== 'manual' && selectedRow) {
+      setPayoutAmount(selectedRow.endgame_amount);
+    } else if (method === 'manual') {
+      setPayoutAmount(0);
     }
   };
-
-  handlePaymentMethodChange = (event) => {
-    const selectedMethod = event.target.value;
-    this.setState({ paymentMethod: selectedMethod });
-    if (selectedMethod !== 'manual') {
-      this.setState({ payoutAmount: this.state.selectedRow.endgame_amount });
-    } else {
-      this.setState({ payoutAmount: 0 });
+  const handleSendPayout = useCallback(async () => {
+    if (payoutAmount <= 0) {
+      dispatch(errorMsgBar('R U FURR-REAL? HARD CAP AMOUNT MUST BE MORE THAN 0!'));
+      return;
     }
-  };
+    if (!selectedRow) return;
 
-  handleFilterClick = event => {
-    this.setState({ anchorEl: event.currentTarget });
-  };
-
-  handleFilterClose = filter => {
-    this.setState({ anchorEl: null, selectedFilter: filter });
-  };
-
-  handleSortClick = event => {
-    this.setState({ sortAnchorEl: event.currentTarget });
-  };
-
-  handleSortClose = selectedSort => {
-    this.setState({ sortAnchorEl: null, selectedSort });
-  };
-
-  openRecreateModal = (row) => {
-    alertModal(this.props.isDarkMode, `YOU DO NOT OWN A GAME RESTORER. GO TO MARKETPLACE TO PURCHASE`);
-    return;
-  }
-
-  onCreateRoom = async (row) => {
-    if (localStorage.getItem('hideConfirmModal') === 'true') {
-      this.setState({ creatingRoom: true });
-      await this.props.createRoom({
-        game_type: row.game_type,
-        bet_amount: row.bet_amount,
-        endgame_amount: row.endgame_amount,
-      });
-
-      this.setState({ creatingRoom: false });
-    } else {
-      confirmModalCreate(
-        this.props.isDarkMode,
-        'CONFIRM GAME SETTINGS?',
-        'LFG',
-        'Cancel',
-        async () => {
-          this.setState({ creatingRoom: true });
-          await this.props.createRoom(this.state);
-          this.setState({ creatingRoom: false });
-        }
-      );
-    }
-  };
-
-
-  handleButtonClick = (winnings, room_id) => {
-    const startTime = 400;
-    const updateInterval = 10;
-    let countdown = startTime;
-    const timer = setInterval(() => {
-      countdown -= updateInterval;
-      if (countdown <= 0) {
-        clearInterval(timer);
-        this.endRoom(winnings, room_id);
-        this.setState(prevState => ({
-          [room_id]: {
-            ...prevState[room_id],
-            holding: false,
-            timeLeft: 0
-          }
-        }));
+    try {
+      setIsLoading(true);
+      const result = await editPayout(payoutAmount, selectedRow._id);
+      if (result.success) {
+        await fetchData();
+        dispatch(errorMsgBar(result.message));
+        handleClosePayoutModal();
       } else {
-        this.setState(prevState => ({
-          [room_id]: {
-            ...prevState[room_id],
-            timeLeft: countdown
-          }
-        }));
+        dispatch(errorMsgBar(result.message));
       }
-    }, updateInterval);
-
-    this.setState(prevState => ({
-      [room_id]: {
-        ...prevState[room_id],
-        holding: true,
-        timeLeft: startTime,
-        timer: timer
-      }
-    }));
-  };
-
-  handleButtonRelease = room_id => {
-    if (this.state[room_id] && this.state[room_id].timer) {
-      clearTimeout(this.state[room_id].timer);
+    } catch (error) {
+      dispatch(errorMsgBar('Failed to adjust hard cap.'));
+    } finally {
+      setIsLoading(false);
     }
-    this.setState({
-      [room_id]: { holding: false }
-    });
-  };
+  }, [payoutAmount, selectedRow, isDarkMode, editPayout, fetchData]);
 
-  endRoom = async (winnings, room_id) => {
-    this.setState(prevState => ({
-      [room_id]: {
-        ...prevState[room_id],
-        closing: true
-      }
-    }), async () => {
+  // ---------- RUG logic ----------
+  const endRoom = useCallback(
+    async (winnings, room_id) => {
+      setPressState((prev) => ({
+        ...prev,
+        [room_id]: { ...prev[room_id], closing: true }
+      }));
       try {
-        await this.props.endGame(room_id);
-        await this.props.addNewTransaction({ amount: winnings, room_id });
+        await endGame(room_id);
+        await addNewTransaction({ amount: winnings, room_id });
       } catch (error) {
         console.error('Error ending room:', error);
       } finally {
-        this.setState(prevState => ({
-          [room_id]: {
-            ...prevState[room_id],
-            closing: false
-          }
+        setPressState((prev) => ({
+          ...prev,
+          [room_id]: { ...prev[room_id], closing: false }
         }));
       }
-    });
-  };
+    },
+    [endGame, addNewTransaction]
+  );
 
-  unstake = async (winnings, room_id, stakeAmount) => {
-    this.setState(prevState => ({
-      [room_id]: {
-        ...prevState[room_id],
-        closing: true
-      }
-    }), async () => {
-      try {
-        await this.props.unstake(room_id, stakeAmount);
-        await this.props.getMyGames({
-          game_type: this.state.selectedGameType,
-          status: this.state.selectedFilter,
-          sort: this.state.selectedSort
-        });
-        await this.props.addNewTransaction({ amount: winnings, room_id });
-        this.fetchData();
-      } catch (error) {
-        console.error('Error unstaking from room:', error);
-      } finally {
-        this.setState(prevState => ({
-          [room_id]: {
-            ...prevState[room_id],
-            closing: false
-          }
-        }));
-      }
-    });
-  };
+  const handleButtonClick = useCallback(
+    (winnings, room_id) => {
+      const startTime = 400;
+      const updateInterval = 10;
+      let countdown = startTime;
 
-  handleJoyrideCallback = (data) => {
-    const { status, type } = data;
-
-    if (status === 'finished' || status === 'skipped') {
-      const { currentTutorial } = this.state;
-      this.props.updateTutorialCompleted(currentTutorial);
-      this.setState({ run: false });
-    }
-  };
-
-  handleGameTypeButtonClicked = async short_name => {
-    this.setState({ selectedGameType: short_name }, () => {
-      this.props.getMyGames({
-        game_type: short_name,
-        status: this.state.selectedFilter,
-        sort: this.state.selectedSort
-      });
-      return;
-    });
-
-  };
-
-  handleClickOutside = e => {
-    if (
-      this.settingsRef &&
-      this.settingsRef.current &&
-      !this.settingsRef.current.contains(e.target)
-    ) {
-      this.setState({ settings_panel_opened: false });
-    }
-  };
-
-  handleMaxButtonClick = () => {
-    if (this.props.balance) {
-      const maxPayoutAmount = this.state.balance;
-      const roundedMaxPayoutAmount = Math.floor(maxPayoutAmount * 1e6) / 1e6;
-      this.setState(
-        {
-          topUpAmount: roundedMaxPayoutAmount,
-        },
-        () => {
-          document.getElementById('payout').focus();
+      const timer = setInterval(() => {
+        countdown -= updateInterval;
+        if (countdown <= 0) {
+          clearInterval(timer);
+          endRoom(winnings, room_id);
+          setPressState((prev) => ({
+            ...prev,
+            [room_id]: {
+              ...prev[room_id],
+              holding: false,
+              timeLeft: 0
+            }
+          }));
+        } else {
+          setPressState((prev) => ({
+            ...prev,
+            [room_id]: {
+              ...prev[room_id],
+              holding: true,
+              timeLeft: countdown,
+              timer
+            }
+          }));
         }
-      );
-    }
-  };
+      }, updateInterval);
 
-  handleFocus = () => {
-    this.setState({ isFocused: true });
-  };
+      setPressState((prev) => ({
+        ...prev,
+        [room_id]: {
+          ...prev[room_id],
+          holding: true,
+          timeLeft: startTime,
+          timer
+        }
+      }));
+    },
+    [endRoom]
+  );
 
-  setSelectedStrategy = (selectedStrategy) => {
-    this.setState({ selectedStrategy });
-  }
-
-  handleCreateBtnClicked = e => {
-    e.preventDefault();
-    if (!this.state.selectedGameType) {
-      alertModal(this.props.isDarkMode, `SELECT A GAME FURR-ST!!!`);
-      return;
-    }
-    this.props.setGameMode('');
-    history.push(`/create/`);
-  };
-
-
-  createRoom() {
-    this.props.createRoom({
-      game_type: 3,
-      bet_amount: this.props.bet_amount,
-      is_private: this.props.is_private,
-      selectedStrategy: this.props.selectedStrategy,
-      endgame_amount: this.props.endgame_amount,
-      room_password: this.props.room_password,
-
+  const handleButtonRelease = useCallback((room_id) => {
+    setPressState((prev) => {
+      const current = prev[room_id];
+      if (current && current.timer) clearInterval(current.timer);
+      return {
+        ...prev,
+        [room_id]: { ...current, holding: false }
+      };
     });
-  }
+  }, []);
 
-  render() {
-    const { loading, strategies, updateUserPrompt, solPrice, updateRoomStrategy, isLowGraphics, isDarkMode } = this.props;
-    const { isLoading, anchorEl, coHostAmount, selectedRow, selectedStrategy, settings_panel_opened, isFocused, selectedFilter, sortAnchorEl, selectedSort } = this.state;
-    const defaultOptions = {
-      loop: this.props.isLowGraphics ? false : true,
-      autoplay: this.props.isLowGraphics ? false : true,
-      animationData: animationData,
-      rendererSettings: {
-        preserveAspectRatio: 'xMidYMid slice'
+  // ---------- CREATE/RE-CREATE ----------
+  const openRecreateModal = useCallback(
+    (row) => {
+      dispatch(errorMsgBar(`YOU DO NOT OWN A GAME RESTORER. GO TO MARKETPLACE TO PURCHASE`));
+    },
+    [isDarkMode]
+  );
+
+  const onCreateRoom = useCallback(
+    async (row) => {
+      if (localStorage.getItem('hideConfirmModal') === 'true') {
+        await createRoom({
+          game_type: row.game_type,
+          bet_amount: row.bet_amount,
+          endgame_amount: row.endgame_amount
+        });
+      } else {
+        confirmModalCreate(isDarkMode, 'CONFIRM GAME SETTINGS?', 'LFG', 'Cancel', async () => {
+          await createRoom({
+            game_type: row.game_type,
+            bet_amount: row.bet_amount,
+            endgame_amount: row.endgame_amount
+          });
+        });
       }
-    };
+    },
+    [createRoom, isDarkMode]
+  );
 
-    return (
-      <div className="my-open-games">
-        <div className="filter-container overflowX">
-          <Joyride
-            steps={tutorialStepsCreate}
-            run={this.state.run}
-            callback={this.handleJoyrideCallback}
-            continuous
-            showProgress
-            showSkipButton
-            styles={{
-              options: {
-                zIndex: 10000,
-                backgroundColor: isDarkMode ? 'rgb(208 0 47)' : '#ccc9',
-                primaryColor: '#ff0000',
-                arrowColor: isDarkMode ? 'rgb(208 0 47)' : '#ccc9',
-                textColor: isDarkMode ? '#f9f9f9' : '#333',
-                width: 300,
-                padding: 20,
-                borderRadius: 5,
-              },
-              buttonClose: {
-                borderRadius: 1,
-                color: isDarkMode ? '#f9f9f9' : '#333',
-              },
-              buttonBack: {
-                borderRadius: 1,
-                color: isDarkMode ? '#f9f9f9' : '#333',
-              },
-              buttonNext: {
-                borderRadius: 1,
-                color: isDarkMode ? '#f9f9f9' : '#333',
-              },
-              buttonSkip: {
-                borderRadius: 1,
-                color: isDarkMode ? '#f9f9f9' : '#333',
-              },
-            }}
+  // ---------- TUTORIAL ----------
+  const handleJoyrideCallback = useCallback(
+    (data) => {
+      const { status } = data;
+      if (status === 'finished' || status === 'skipped') {
+        updateTutorialCompleted(currentTutorial);
+        setRunTutorial(false);
+      }
+    },
+    [currentTutorial, updateTutorialCompleted]
+  );
+
+  // ---------- SETTINGS ----------
+  const handleSettingsIconClick = (event, row) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (row.coHost) {
+      setSelectedRow(row);
+      setSettingsPanelOpened(!settingsPanelOpened);
+    } else {
+      dispatch(errorMsgBar('YOU MUST OWN 100% TO CHANGE MODEL.'));
+    }
+  };
+
+  const handleClickOutside = (e) => {
+    if (settingsRef.current && !settingsRef.current.contains(e.target)) {
+      setSettingsPanelOpened(false);
+    }
+  };
+
+  // ---------- Lottie config ----------
+  const defaultOptions = {
+    loop: !isLowGraphics,
+    autoplay: !isLowGraphics,
+    animationData,
+    rendererSettings: { preserveAspectRatio: 'xMidYMid slice' }
+  };
+  const pressHoldOptions = {
+    loop: !isLowGraphics,
+    autoplay: !isLowGraphics,
+    animationData: pressHold
+  };
+
+  // ---------- Render ----------
+  return (
+    <Box className="my-open-games">
+      {/* Filter/Tutorial Container */}
+      <Box className="filter-container overflowX">
+        <Joyride
+          steps={tutorialStepsCreate}
+          run={runTutorial}
+          callback={handleJoyrideCallback}
+          continuous
+          showProgress
+          showSkipButton
+          styles={{
+            options: {
+              zIndex: 1500,
+              backgroundColor: isDarkMode
+                ? 'rgba(33, 33, 33, 0.95)'   // Dark gray background for dark mode
+                : 'rgba(255, 255, 255, 0.95)', // White background for light mode
+              primaryColor: isDarkMode ? '#ff0000' : '#6200ea', // Vibrant green for dark, deep purple for light
+              arrowColor: isDarkMode
+                ? 'rgba(33, 33, 33, 0.95)'
+                : 'rgba(255, 255, 255, 0.95)',
+              textColor: isDarkMode ? '#eeeeee' : '#212121', // Light text for dark mode, dark text for light mode
+              width: 320,
+              padding: 24,
+              borderRadius: 8,
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+            },
+            buttonClose: {
+              borderRadius: 4,
+              color: isDarkMode ? '#eeeeee' : '#212121',
+            },
+            buttonBack: {
+              borderRadius: 4,
+              backgroundColor: isDarkMode
+                ? 'rgba(255, 255, 255, 0.1)'
+                : 'rgba(0, 0, 0, 0.05)',
+              color: isDarkMode ? '#eeeeee' : '#212121',
+              marginRight: 8,
+            },
+            buttonNext: {
+              borderRadius: 4,
+              backgroundColor: isDarkMode ? '#ff0000' : '#6200ea',
+              color: '#fff',
+            },
+            buttonSkip: {
+              borderRadius: 4,
+              color: isDarkMode ? '#eeeeee' : '#212121',
+            },
+          }}
+        />
+        {selectedRow && (
+          <SettingsRef
+            ref={settingsRef}
+            strategies={props.strategies}
+            ai_mode={selectedRow.selectedStrategy}
+            user_id={selectedRow._id}
+            prompt={user.prompt}
+            rank={getRank(user.totalWagered)}
+            settings_panel_opened={settingsPanelOpened}
+            setSelectedStrategy={setSelectedStrategy}
+            selectedStrategy={selectedStrategy}
+            updateUserStrategy={updateRoomStrategy}
+            updateUserPrompt={updateUserPrompt}
           />
+        )}
+      </Box>
 
-          {selectedRow && (
-
-            <SettingsRef
-              strategies={strategies}
-              ai_mode={selectedRow.selectedStrategy}
-              user_id={selectedRow._id}
-              prompt={this.props.user.prompt}
-              rank={getRank(this.props.user.totalWagered)}
-              settings_panel_opened={settings_panel_opened}
-              setSelectedStrategy={this.setSelectedStrategy}
-              settingsRef={this.settingsRef}
-              selectedStrategy={selectedStrategy}
-              updateUserStrategy={updateRoomStrategy}
-              updateUserPrompt={updateUserPrompt}
-            />
-          )}
-
-        </div>
-        {isLoading && loading ? (
-          <>
-            {[...Array(5)].map((_, key) => (
+      {/* Loading Skeleton if either local isLoading or Redux's loading */}
+      {(isLoading || loading) ? (
+        <Box sx={{ p: 2 }}>
+          {[...Array(5)].map((_, i) => (
+            <Box
+              key={i}
+              sx={{
+                display: 'flex',
+                gap: 2,
+                alignItems: 'center',
+                mb: 1
+              }}
+            >
+              <Skeleton variant="rounded" width={40} height={40} />
+              <Skeleton variant="text" sx={{ width: '30%' }} />
+              <Skeleton variant="text" sx={{ width: '30%' }} />
+              <Skeleton variant="text" sx={{ width: '30%' }} />
+            </Box>
+          ))}
+        </Box>
+      ) : (
+        <Box className="table my-open-game-table" sx={{ p: 2 }}>
+          {/* No games => show message */}
+          {(!myGames || myGames.length === 0) ? (
+            <Box className="dont-have-game-msg" sx={{ textAlign: 'center', mt: 2 }}>
+              <Lottie options={defaultOptions} width={50} />
+              <Typography variant="body1" sx={{ mt: 1 }}>
+                You Have No Games
+              </Typography>
+            </Box>
+          ) : (
+            <>
+              {/* Table Header */}
               <Box
-                className="table-row"
+                className="table-header"
                 sx={{
                   display: 'grid',
                   gridTemplateColumns: '1fr 1fr 1fr 2fr 1fr 2fr 2fr',
-                  gap: 2,
-                  padding: '10px 20px',
-                  animationDelay: `${key * 0.1}s`,
-                }}
-                key={key}
-              >
-                <Skeleton variant="rectangular" sx={{ width: '100%', height: 40 }} />
-                <Skeleton variant="text" sx={{ width: '60%', height: 20 }} />
-                <Skeleton variant="text" sx={{ width: '80%', height: 20 }} />
-                <Skeleton variant="text" sx={{ width: '50%', height: 20 }} />
-                <Skeleton variant="text" sx={{ width: '70%', height: 20 }} />
-                <Skeleton variant="text" sx={{ width: '60%', height: 20 }} />
-                <Skeleton variant="text" sx={{ width: '90%', height: 20 }} />
-              </Box>
-            ))}
-          </>
-
-        ) : (
-          <div className="table my-open-game-table">
-            {this.props.myGames && this.props.myGames.length > 0 && (
-              <div
-                className="table-header"
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr 1fr 2fr 1fr 2fr 2fr", // Define column widths
-                  gap: "10px", // Spacing between cells
-                  alignItems: "center",
-                  padding: "10px 20px",
-                  fontWeight: "bold",
-                  textAlign: "center",
+                  gap: '10px',
+                  alignItems: 'center',
+                  p: '10px 20px',
+                  fontWeight: 'bold',
+                  textAlign: 'center'
                 }}
               >
-                <div className="table-cell mobile-only"></div>
-                <div className="table-cell room-id">Room ID</div>
-                <div className="table-cell "></div>
-                <div className="table-cell winnings">LQY / SHARE</div>
-                <div className="table-cell payout">Payout</div>
-                <div className="table-cell bet-info">
-                  Net Profit&nbsp;
-                  <Tooltip title="NOT INCLUDING FEES">
-                    <Info style={{ width: "18px", cursor: "pointer" }} />
+                <Box className="table-cell mobile-only" />
+                <Box className="table-cell room-id">ROOM</Box>
+                <Box className="table-cell" />
+                <Box className="table-cell winnings">LIQUIDITY / SHARE</Box>
+                <Box className="table-cell payout">HARD CAP</Box>
+                <Box className="table-cell bet-info">
+                  PROGRESS&nbsp;
+                  <Tooltip title="TO REACH RAYDIUM">
+                    <Info sx={{ width: 18, cursor: 'pointer' }} />
                   </Tooltip>
-                </div>
-                <div className="table-cell winnings ">PLAYS</div>
-                <div className="table-cell action desktop-only">Action</div>
-              </div>
-            )}
-            {this.props.myGames && this.props.myGames.length === 0 ? (
-              <div className="dont-have-game-msg">
-                <Lottie options={defaultOptions} width={50} />
-                <span>
-                  You Have No Games
-                </span>
-              </div>
-            ) : (
-              this.props.myGames?.map(
-                (row, key) => (
-                  <div
-                    className={`table-row ${key < 10 ? 'slide-in' : 'slide-in'}`}
-                    style={{ animationDelay: `${key * 0.1}s`, cursor: "pointer" }}
+                </Box>
+                <Box className="table-cell winnings">BATTLES</Box>
+                {/* <Box className="table-cell action desktop-only">EDIT</Box> */}
+              </Box>
+
+              {/* Games Rows */}
+              {myGames.map((row, idx) => {
+                const rowPress = pressState[row._id] || {};
+                const isClosing = rowPress.closing || false;
+                const isHolding = rowPress.holding || false;
+                const timeLeft = rowPress.timeLeft || 0;
+
+                const bet = row.user_bet;
+                const endgameAmount = row.endgame_amount;
+                const bondingProgress =
+                endgameAmount !== 0 ? (bet / endgameAmount) * 100 : 0;
+
+                return (
+                  <Box
                     key={row._id}
+                    className="table-row slide-in"
+                    sx={{
+                      animationDelay: `${idx * 0.1}s`,
+                      cursor: 'pointer',
+                      mb: 1
+                    }}
                     onClick={() => history.push(`/join/${row._id}`)}
                   >
-                    <div>
-                      <div className="table-cell room-id">
-
+                    <Box>
+                      {/* Room ID */}
+                      <Box className="table-cell room-id">
                         <img
                           src={`/img/gametype/icons/${row.game_type.short_name}.svg`}
+                          // src={row.image}
                           alt=""
                           className="game-type-icon"
                         />
-                        {row.game_type.short_name + '-' + row.index}
+                        <img
+                          // src={`/img/gametype/icons/${row.game_type.short_name}.svg`}
+                          src={row.image}
+                          alt=""
+                          className="game-type-icon"
+                        />
+                        {/* {row.game_type.short_name + '-' + row.index} */}
+                        {row.name + ' (' + row.ticker + ')'}
                         {row.is_private && (
-                          <img
-                            src="/img/icon-lock.png"
-                            alt=""
-                            className="lock-icon"
-                          />
+                          <img src="/img/icon-lock.png" alt="" className="lock-icon" />
                         )}
-
-                      </div>
-                      <div className="table-cell bet-info">
-                        <span className="bet-pr">
-                          {convertToCurrency(row.user_bet, solPrice)}<br className='mobile-only' />
-                          <span style={{ fontSize: '10px' }}> / {((row.share).toFixed(2))}%</span>
-                        </span>
-                      </div>
-
-                      <div className="table-cell endgame">
-                        <span className="end-amount">
-                          {!row.endgame_type ? "M" : convertToCurrency(row.endgame_amount, solPrice)}
-                        </span>
-                        {(row.coHost) &&
-                          (selectedFilter === 'open') && (
-                            <a
-                              className="ml-1"
-                              onClick={(event) => {
-                                event.preventDefault();
-                                event.stopPropagation();
-                                this.handlePayout(row);
-                              }}
-                              style={{
-                                color: "#ff0000",
-                                cursor: "pointer",
-                                borderRadius: "30px",
-                                display: "inline-flex",
-                                verticalAlign: "middle",
-                                marginBottom: "4px",
-                              }}
-                            >
-                              <EditOutline style={{ padding: "2.5px", width: "22px" }} />
-                            </a>
-                          )}
-                      </div>
-                      <div className="table-cell winnings">
-                        <span>{row.coHost ? convertToCurrency((row.share / 100 * parseFloat(row.user_bet)) - row.initial_stake, solPrice) : convertToCurrency((row.share / 100 * parseFloat(row.user_bet)) - row.initial_stake, solPrice)}&nbsp;
-                        </span>
-
-                      </div>
-
-
-                      <div className="table-cell bets" style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
-
+                      </Box>
+                      {/* LQY / SHARE */}
+                      <Box className="table-cell bet-info">
+                        <Chip
+                          label={
+                            <Typography variant="body2" component="span" >
+                              {convertToCurrency(row.user_bet, solPrice)}
+                              <br className="mobile-only" />
+                              <Box component="span" sx={{ fontSize: '10px' }}>
+                                &nbsp;/ {row.share?.toFixed(2)}%
+                              </Box>
+                            </Typography>
+                          }
+                          color="warning"
+                          className="end-amount"
+                          size="small"
+                          variant="outlined"
+                          sx={{ fontWeight: 'bold' }}
+                        />
+                      </Box>
+                      {/* Hard Cap (endgame_amount) */}
+                      <Box className="table-cell endgame">
+                        <Chip
+                          label={!row.endgame_type
+                            ? 'M'
+                            : convertToCurrency(row.endgame_amount, solPrice)}
+                          color="error"
+                          className="end-amount"
+                          size="small"
+                          variant="outlined"
+                          sx={{ fontWeight: 'bold' }}
+                        />
+                        {row.coHost && selectedFilter === 'open' && (
+                          <Box
+                            component="a"
+                            className="ml-1"
+                            sx={{
+                              color: '#ff0000',
+                              cursor: 'pointer',
+                              borderRadius: '30px',
+                              display: 'inline-flex',
+                              verticalAlign: 'middle',
+                              mb: '4px'
+                            }}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handlePayout(row);
+                            }}
+                          >
+                            {/* <EditOutline sx={{ p: '2.5px', width: 22 }} /> */}
+                          </Box>
+                        )}
+                      </Box>
+                      {/* Net Profit Chip */}
+                      <Box className="table-cell winnings">
+                        <Chip
+                          label={`${(bondingProgress).toFixed(2)}%`}
+                          color="success"
+                          size="small"
+                          variant="outlined"
+                          sx={{ fontWeight: 'bold' }}
+                        />
+                      </Box>
+                      {/* Battles */}
+                      <Box
+                        className="table-cell bets"
+                        sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}
+                      >
                         <Battle width="24px" />
                         &nbsp;
                         <span>{row.battles}</span>
-                      </div>
-
-                      <div className="table-cell winnings desktop-only">
-
-                        <Tooltip title="CHANGE AI MODEL">
-                          <a
-                            style={{
-                              borderRadius: "200px",
-                              cursor: "pointer",
-                              padding: "1px",
-                              display: "flex",
-                              justifyContent: "center",
-                              alignItems: "center",
-                            }}
-                            onClick={(event) => {
-                              event.preventDefault();
-                              event.stopPropagation();
-                              this.handleSettingsIconClick(event, row);
-                            }}
-                          >
-                            <AutoAwesomeIcon />
-                          </a>
+                      </Box>
+                      {/* AI Model */}
+                      <Box className="table-cell winnings desktop-only">
+                        <Tooltip title="AI MODEL">
+                          <Typography
+                           id="ai_mode"
+                           sx={{p: 4, fontSize: 1}}
+                          >{row.selectedStrategy}
+                            <AutoAwesomeIcon sx={{ p: "6px"}}/>
+                          </Typography>
                         </Tooltip>
-                      </div>
-                      <div className="table-cell action desktop-only">
+                      </Box>
+                      {/* Action (Desktop) */}
+                      <Box className="table-cell action desktop-only">
                         {row.status === 'finished' ? (
                           <Button
                             className="btn_recreate"
-                            onClick={() => this.openRecreateModal(row)}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              openRecreateModal(row);
+                            }}
                           >
                             RE-CREATE
                           </Button>
                         ) : (
-                          <div>
-                            {this.state[row._id] && this.state[row._id].closing ? (
-                              <span style={{ color: 'red' }}>closing...</span>
+                          <Box>
+                            {isClosing ? (
+                              <Typography variant="body2" sx={{ color: 'red' }}>
+                                closing...
+                              </Typography>
                             ) : (
-                              <div>
+                              <Box>
                                 {!row.coHost ? (
-                                  <Button
-                                    className="btn_withdraw btn_end"
-                                    onClick={(event) => {
-                                      event.preventDefault();
-                                      event.stopPropagation();
-                                      this.handleCoHost(row);
-                                    }}
-                                  >
-                                    TRADE
-                                  </Button>
+                                  // <Button
+                                  //   className="btn_withdraw btn_end"
+                                  //   onClick={(e) => {
+                                  //     e.preventDefault();
+                                  //     e.stopPropagation();
+                                  //     handleCoHost(row);
+                                  //   }}
+                                  // >
+                                  //   TRADE
+                                  // </Button>
+<></>
                                 ) : (
                                   <Button
                                     className="btn_end"
-                                    onMouseDown={(event) => {
-                                      event.preventDefault();
-                                      event.stopPropagation();
-                                      this.handleButtonClick(row.winnings, row._id);
+                                    onMouseDown={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      handleButtonClick(row.winnings, row._id);
                                     }}
-                                    onMouseUp={(event) => {
-                                      event.preventDefault();
-                                      event.stopPropagation();
-                                      this.handleButtonRelease(row._id);
+                                    onMouseUp={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      handleButtonRelease(row._id);
                                     }}
-                                    onMouseLeave={(event) => {
-                                      event.preventDefault();
-                                      event.stopPropagation();
-                                      this.handleButtonRelease(row._id);
+                                    onMouseLeave={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      handleButtonRelease(row._id);
                                     }}
-                                    onTouchStart={(event) => {
-                                      event.preventDefault();
-                                      event.stopPropagation();
-                                      this.handleButtonClick(row.winnings, row._id);
+                                    onTouchStart={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      handleButtonClick(row.winnings, row._id);
                                     }}
-                                    onTouchEnd={(event) => {
-                                      event.preventDefault();
-                                      event.stopPropagation();
-                                      this.handleButtonRelease(row._id);
+                                    onTouchEnd={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      handleButtonRelease(row._id);
                                     }}
-                                    onTouchCancel={(event) => {
-                                      event.preventDefault();
-                                      event.stopPropagation();
-                                      this.handleButtonRelease(row._id);
+                                    onTouchCancel={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      handleButtonRelease(row._id);
                                     }}
-                                    _id={row._id}
-                                    style={
-                                      this.state[row._id] && this.state[row._id].holding
-                                        ? { filter: 'hue-rotate(-10deg)' }
-                                        : {}
-                                    }
+                                    style={isHolding ? { filter: 'hue-rotate(-10deg)' } : {}}
                                   >
-                                    {this.state[row._id] && this.state[row._id].holding ? (
+                                    {isHolding ? (
                                       <>
-                                        <span style={{ position: 'absolute', zIndex: '2' }}>
-                                          {(this.state[row._id].timeLeft / 100).toFixed(1)}
-                                          <span style={{ paddingTop: '5px', fontSize: 'xx-small' }}>s</span>
-                                        </span>
-                                        <Lottie
-                                          options={{
-                                            loop: isLowGraphics ? false : true,
-                                            autoplay: isLowGraphics ? false : true,
-                                            animationData: pressHold
-                                          }}
-                                        />
+                                        <Box
+                                          component="span"
+                                          sx={{ position: 'absolute', zIndex: 2 }}
+                                        >
+                                          {(timeLeft / 100).toFixed(1)}
+                                          <Box
+                                            component="span"
+                                            sx={{ pt: '5px', fontSize: 'xx-small' }}
+                                          >
+                                            s
+                                          </Box>
+                                        </Box>
+                                        <Lottie options={pressHoldOptions} />
                                       </>
                                     ) : (
                                       <>RUG</>
                                     )}
                                   </Button>
                                 )}
-                              </div>
+                              </Box>
                             )}
-                          </div>
+                          </Box>
                         )}
-                      </div>
-                    </div>
-                    <div className="mobile-only" style={{ display: "table" }}>
-                      <div className="table-cell action" style={{ width: "auto", float: "right", display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
+                      </Box>
+                    </Box>
 
-                        <Tooltip title="CHANGE AI MODEL">
-                          <a
-                            style={{
-                              borderRadius: "200px",
-                              cursor: "pointer",
-                              padding: "1px",
-                              display: "flex",
-                              justifyContent: "center",
-                              alignItems: "center",
-                            }}
-                            onClick={(event) => {
-                              event.preventDefault();
-                              event.stopPropagation();
-                              this.handleSettingsIconClick(row);
-                            }}
-                          >
-                            <AutoAwesomeIcon />
-                          </a>
-                        </Tooltip>
-                        {row.status === 'finished' ? (
-                          <Button
-                            className="btn_recreate"
-                            onClick={() => this.openRecreateModal(row)}
-                          >
-                            RE-CREATE
-                          </Button>
-                        ) : (
-                          <div>
-                            {this.state[row._id] && this.state[row._id].closing ? (
-                              <span style={{ color: 'red' }}>closing...</span>
-                            ) : (
-                              <div>
-                                {!row.coHost ? (
-                                  <Button
-                                    className="btn_withdraw btn_end"
-                                    onClick={(event) => {
-                                      event.preventDefault();
-                                      event.stopPropagation();
-                                      this.handleCoHost(row);
-                                    }}
-                                  >
-                                    TRADE
-                                  </Button>
-                                ) : (
-                                  <Button
-                                    className="btn_end"
-                                    onMouseDown={(event) => {
-                                      event.preventDefault();
-                                      event.stopPropagation();
-                                      this.handleButtonClick(row.winnings, row._id);
-                                    }}
-                                    onMouseUp={(event) => {
-                                      event.preventDefault();
-                                      event.stopPropagation();
-                                      this.handleButtonRelease(row._id);
-                                    }}
-                                    onMouseLeave={(event) => {
-                                      event.preventDefault();
-                                      event.stopPropagation();
-                                      this.handleButtonRelease(row._id);
-                                    }}
-                                    onTouchStart={(event) => {
-                                      event.preventDefault();
-                                      event.stopPropagation();
-                                      this.handleButtonClick(row.winnings, row._id);
-                                    }}
-                                    onTouchEnd={(event) => {
-                                      event.preventDefault();
-                                      event.stopPropagation();
-                                      this.handleButtonRelease(row._id);
-                                    }}
-                                    onTouchCancel={(event) => {
-                                      event.preventDefault();
-                                      event.stopPropagation();
-                                      this.handleButtonRelease(row._id);
-                                    }}
-                                    _id={row._id}
-                                    style={
-                                      this.state[row._id] && this.state[row._id].holding
-                                        ? { filter: 'hue-rotate(-10deg)' }
-                                        : {}
-                                    }
-                                  >
-                                    {this.state[row._id] && this.state[row._id].holding ? (
-                                      <>
-                                        <span style={{ position: 'absolute', zIndex: '2' }}>
-                                          {(this.state[row._id].timeLeft / 100).toFixed(1)}
-                                          <span style={{ paddingTop: '5px', fontSize: 'xx-small' }}>s</span>
-                                        </span>
-                                        <Lottie
-                                          options={{
-                                            loop: isLowGraphics ? false : true,
-                                            autoplay: isLowGraphics ? false : true,
-                                            animationData: pressHold
-                                          }}
-                                        />
-                                      </>
-                                    ) : (
-                                      <>RUG</>
-                                    )}
-                                  </Button>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ),
-                this
-              )
-            )}
-          </div>
-        )}
-
-        <Modal
-          isOpen={this.state.isCoHostModalOpen}
-          onRequestClose={this.handleCloseCoHostModal}
-          style={customStyles}
-          contentLabel="CoHost Modal"
-        >
-          <CoHostModal
-            isDarkMode={this.props.isDarkMode}
-            coHostAmount={coHostAmount}
-            selectedRow={selectedRow}
-            balance={this.props.balance}
-            user={this.props.user}
-            togglePopup={this.togglePopup}
-            handleClose={this.handleCloseCoHostModal}
-            handleSendCoHost={this.handleSendCoHost}
-            handleCoHostAmountChange={this.handleCoHostAmountChange}
-            has_joined={false}
-            input_only={false}
-            solPrice={solPrice}
-          />
-        </Modal>
-        <Modal
-          isOpen={this.state.isPayoutModalOpen}
-          onRequestClose={this.handleClosePayoutModal}
-          style={customStyles}
-          contentLabel="Payout Modal"
-        >
-          <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
-            <div className="modal-header">
-              <h2 className="modal-title title">
-                <FontAwesomeIcon icon={faMoneyCheckAlt} className="mr-2" />
-
-                AUTO-PAYOUT
-              </h2>
-              <Button className="btn-close" variant='text' color='error'  onClick={this.handleClosePayoutModal}>
-                ×
-              </Button>
-            </div>
-            <div className="modal-body">
-              <div className="modal-content-wrapper">
-                <div className="modal-content-panel">
-                  <div>
-                    <Table>
-                      <TableBody>
-
-                        <TableRow>
-                          <TableCell>
-                            <span>CURRENT PAYOUT:</span>
-                          </TableCell>
-                          <TableCell style={{ color: "#ff8500" }}>
-                            {this.state.selectedRow && this.state.selectedRow.endgame_type ? (
-                              convertToCurrency(this.state.selectedRow.endgame_amount, solPrice)
-                            ) : (
-                              <span>MANUAL</span>
-                            )}
-                          </TableCell>
-
-                        </TableRow>
-
-                      </TableBody>
-                    </Table>
-                    <RadioGroup
-                      aria-label="paymentMethod"
-                      name="paymentMethod"
-                      value={this.state.paymentMethod}
-                      onChange={this.handlePaymentMethodChange}
-                    >
-                      <h4 className="title" style={{ textAlign: "center", padding: "0" }}>Change Auto-Payout</h4>
-                      <FormControlLabel value="manual" control={<Radio />} label="MANUAL" />
-                      <FormControlLabel value="automatic" control={<Radio />} label="AUTOMATIC" />
-                    </RadioGroup>
-
-                    <div className="input-amount">
-                       <TextField color='error' 
-                        label="Amount"
-                        value={this.state.payoutAmount || 0}
-                        type="number"
-                        onChange={this.handlePayoutAmountChange}
-                        pattern="^\\d*\\.?\\d*$"
-                        variant="filled"
-                        autoComplete="off"
-                        InputProps={{
-                          endAdornment: (
-                            <InputAdornment position="end">
-                              &nbsp;RPS
-                            </InputAdornment>
-                          ),
+                    {/* Mobile-only Actions */}
+                    <Box className="mobile-only" sx={{ display: 'table' }}>
+                      <Box
+                        className="table-cell action"
+                        sx={{
+                          width: 'auto',
+                          float: 'right',
+                          display: 'flex',
+                          flexDirection: 'row',
+                          justifyContent: 'space-between'
                         }}
-                        className="form-control"
-                        disabled={this.state.paymentMethod === "manual"}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="modal-footer">
-              <Button variant='contained' color='error' onClick={this.handleSendPayout}>
-                Update
-              </Button>
-              <Button
-                variant='contained' color='error'
-                onClick={this.handleClosePayoutModal}
-              >
-                Cancel
-              </Button>
-            </div>
-          </div>
-        </Modal>
-      </div>
-    );
-  }
+                      >
+                        <Tooltip title="CHANGE AI MODEL">
+                          <Box
+                            component="a"
+                            sx={{
+                              borderRadius: '200px',
+                              cursor: 'pointer',
+                              p: '1px',
+                              display: 'flex',
+                              justifyContent: 'center',
+                              alignItems: 'center'
+                            }}
+                            onClick={(e) => handleSettingsIconClick(e, row)}
+                          >
+                            <AutoAwesomeIcon />
+                          </Box>
+                        </Tooltip>
+                        {row.status === 'finished' ? (
+                          <Button
+                            className="btn_recreate"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              openRecreateModal(row);
+                            }}
+                          >
+                            RE-CREATE
+                          </Button>
+                        ) : (
+                          <Box>
+                            {isClosing ? (
+                              <Typography variant="body2" sx={{ color: 'red' }}>
+                                closing...
+                              </Typography>
+                            ) : (
+                              <Box>
+                                {!row.coHost ? (
+                                  <Button
+                                    className="btn_withdraw btn_end"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      handleCoHost(row);
+                                    }}
+                                  >
+                                    TRADE
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    className="btn_end"
+                                    onMouseDown={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      handleButtonClick(row.winnings, row._id);
+                                    }}
+                                    onMouseUp={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      handleButtonRelease(row._id);
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      handleButtonRelease(row._id);
+                                    }}
+                                    onTouchStart={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      handleButtonClick(row.winnings, row._id);
+                                    }}
+                                    onTouchEnd={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      handleButtonRelease(row._id);
+                                    }}
+                                    onTouchCancel={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      handleButtonRelease(row._id);
+                                    }}
+                                    style={isHolding ? { filter: 'hue-rotate(-10deg)' } : {}}
+                                  >
+                                    {isHolding ? (
+                                      <>
+                                        <Box
+                                          component="span"
+                                          sx={{ position: 'absolute', zIndex: 2 }}
+                                        >
+                                          {(timeLeft / 100).toFixed(1)}
+                                          <Box
+                                            component="span"
+                                            sx={{ pt: '5px', fontSize: 'xx-small' }}
+                                          >
+                                            s
+                                          </Box>
+                                        </Box>
+                                        <Lottie options={pressHoldOptions} />
+                                      </>
+                                    ) : (
+                                      <>RUG</>
+                                    )}
+                                  </Button>
+                                )}
+                              </Box>
+                            )}
+                          </Box>
+                        )}
+                      </Box>
+                    </Box>
+                  </Box>
+                );
+              })}
+            </>
+          )}
+        </Box>
+      )}
+
+      {/* Co-Host Dialog */}
+      <Dialog open={isCoHostModalOpen} onClose={handleCloseCoHostModal}>
+        <CoHostModal
+          isDarkMode={isDarkMode}
+          coHostAmount={coHostAmount}
+          selectedRow={selectedRow}
+          balance={balance}
+          user={user}
+          togglePopup={() => { }}
+          handleClose={handleCloseCoHostModal}
+          handleSendCoHost={handleSendCoHost}
+          handleCoHostAmountChange={handleCoHostAmountChange}
+          has_joined={false}
+          input_only={false}
+          solPrice={solPrice}
+        />
+      </Dialog>
+
+      {/* Payout Dialog */}
+      <Dialog open={isPayoutModalOpen} onClose={handleClosePayoutModal} fullWidth>
+        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box sx={{ display: 'inline-flex', alignItems: 'center' }}>
+            <FontAwesomeIcon icon={faMoneyCheckAlt} className="mr-2" />
+            HARD CAP
+          </Box>
+          <Button variant="text" color="error" onClick={handleClosePayoutModal}>
+            ×
+          </Button>
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ mb: 2 }}>
+            <Table>
+              <TableBody>
+                <TableRow>
+                  <TableCell>
+                    <span>CURRENT PAYOUT:</span>
+                  </TableCell>
+                  <TableCell sx={{ color: '#ff8500' }}>
+                    {selectedRow && selectedRow.endgame_type
+                      ? convertToCurrency(selectedRow.endgame_amount, solPrice)
+                      : 'MANUAL'}
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </Box>
+
+          <RadioGroup
+            aria-label="paymentMethod"
+            name="paymentMethod"
+            value={paymentMethod}
+            onChange={handlePaymentMethodChange}
+          >
+            <Typography variant="h6" align="center" sx={{ mb: 1 }}>
+              Change Auto-Payout
+            </Typography>
+            <FormControlLabel value="manual" control={<Radio />} label="MANUAL" />
+            <FormControlLabel value="automatic" control={<Radio />} label="AUTOMATIC" />
+          </RadioGroup>
+
+          <Box sx={{ mt: 2 }}>
+            <TextField
+              color="error"
+              label="Amount"
+              value={payoutAmount}
+              type="number"
+              onChange={handlePayoutAmountChange}
+              variant="filled"
+              autoComplete="off"
+              fullWidth
+              disabled={paymentMethod === 'manual'}
+              InputProps={{
+                endAdornment: <InputAdornment position="end">RPS</InputAdornment>
+              }}
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button variant="contained" color="error" onClick={handleSendPayout}>
+            Update
+          </Button>
+          <Button variant="contained" color="error" onClick={handleClosePayoutModal}>
+            Cancel
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
+  );
 }
 
-const mapStateToProps = state => ({
+// ---------- Redux Connection ----------
+const mapStateToProps = (state) => ({
   isDarkMode: state.auth.isDarkMode,
   isLowGraphics: state.auth.isLowGraphics,
   myGames: state.logic.myGames,
@@ -1032,8 +971,8 @@ const mapStateToProps = state => ({
   balance: state.auth.balance,
   user: state.auth.user,
   strategies: state.logic.strategies,
-  strategies: state.logic.solPrice,
-  solPrice: state.logic.solPrice
+  solPrice: state.logic.solPrice,
+  loading: state.logic.isActiveLoadingOverlay,
 });
 
 const mapDispatchToProps = {
@@ -1049,6 +988,7 @@ const mapDispatchToProps = {
   editPayout,
   updateUserPrompt,
   endGame,
+  getRoomList,
   updateTutorialCompleted
 };
 

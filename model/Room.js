@@ -18,7 +18,10 @@ const RoomSchema = new Schema({
     type: String,
     default: ''
   },
-  
+  tax: {
+    type: Number,
+    default: 0.0
+  },
   website_link: {
     type: String,
     default: ''

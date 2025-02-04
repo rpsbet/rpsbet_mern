@@ -195,10 +195,11 @@ router.post('/', async (req, res) => {
       password,
       bio,
       totalWagered: 0,
+      totalTraded: 0,
       balance: 0,
       rewards: [],
       credit_score: 1000,
-      ai_mode: 'Random',
+      ai_mode: 'Markov',
       status: 'off',
       avatar,
       referralCode: generateReferralCode(),
@@ -650,6 +651,7 @@ router.post('/get-info', async (req, res) => {
     // Remove sensitive fields from the userCopy object
     delete userCopy.email;
     delete userCopy.password;
+    delete userCopy.balance;
 
     // Send the response with the filtered user data
     res.json({

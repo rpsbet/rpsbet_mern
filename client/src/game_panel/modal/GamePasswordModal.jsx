@@ -1,13 +1,13 @@
 import React, { useState, useCallback } from 'react';
 import Modal from 'react-modal';
-import { connect } from 'react-redux';
+import { connect, useDispatch } from 'react-redux';
 import {
   setPasswordCorrect,
   closeGamePasswordModal,
+  errorMsgBar
 } from '../../redux/Notification/notification.actions';
 import { checkGamePassword } from '../../redux/Logic/logic.actions';
 import { Button, TextField } from '@mui/material';
-import { alertModal } from '../modal/ConfirmAlerts';
 
 Modal.setAppElement('#root');
 
@@ -39,6 +39,7 @@ function GamePasswordModal(props) {
   } = props;
 
   const [password, setPassword] = useState('');
+  const dispatch = useDispatch();
 
   const handleOkClick = useCallback(async () => {
     const response = await checkGamePassword({ room_id: roomId, password });
@@ -50,7 +51,7 @@ function GamePasswordModal(props) {
       closeGamePasswordModal();
       setPasswordCorrect(true);
     } else {
-      alertModal(isDarkMode, `WRONG F*CKING PUSSWORD!`);
+      dispatch(errorMsgBar(`WRONG F*CKING PUSSWORD!`));
     }
   }, [checkGamePassword, roomId, password, closeGamePasswordModal, setPasswordCorrect, isDarkMode]);
 

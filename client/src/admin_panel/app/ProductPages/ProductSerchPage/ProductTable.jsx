@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
-import { connect } from 'react-redux';
+import { connect, useDispatch } from 'react-redux';
 import {
   Box,
   Button,
@@ -28,8 +28,7 @@ import {
   setCurrentProductInfo
 } from '../../../../redux/Item/item.action';
 import { acGetCustomerInfo } from '../../../../redux/Customer/customer.action';
-import { openConfirmTradeModal } from '../../../../redux/Notification/notification.actions';
-import { alertModal } from '../../../../game_panel/modal/ConfirmAlerts';
+import { openConfirmTradeModal, errorMsgBar } from '../../../../redux/Notification/notification.actions';
 
 import Avatar from '../../../../components/Avatar';
 import PlayerModal from '../../../../game_panel/modal/PlayerModal';
@@ -119,6 +118,8 @@ const ProductTable = (props) => {
   const [sortAnchorEl, setSortAnchorEl] = useState(null);
   const [sortCriteria, setSortCriteria] = useState('updated_at');
   const [itemType, setItemType] = useState('653ee81117c9f5ee2124564b');
+
+  const dispatch = useDispatch();
 
   // Compare owners from previous render
   const prevOwnersRef = useRef(JSON.stringify(data?.owners || []));
@@ -234,13 +235,13 @@ const ProductTable = (props) => {
         if (userConfirmed) {
           openConfirmTradeModal(owner.rentOption ? 'rent' : 'trade');
         } else {
-          alertModal(isDarkMode, 'TRADE ACTION CANCELLED,PUSSY-ED OUT');
+          dispatch(errorMsgBar('TRADE ACTION CANCELLED,PUSSY-ED OUT'));
         }
       } else {
         openConfirmTradeModal(owner.rentOption ? 'rent' : 'trade');
       }
     } else {
-      alertModal(isDarkMode, 'THIS IS LITERALLY YOURS ALREADY!');
+      dispatch(errorMsgBar('THIS IS LITERALLY YOURS ALREADY!'));
     }
   };
 

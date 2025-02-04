@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { connect } from 'react-redux';
+import { connect, useDispatch } from 'react-redux';
 
 import {
   Box,
@@ -13,8 +13,6 @@ import {
   Typography,
   Button,
   Modal,
-  InputAdornment,
-  endAdornment,
   ButtonGroup
 } from '@mui/material';
 
@@ -26,25 +24,29 @@ import LottieRankIcon from '../LottieAnimations/rankIcon.json';
 import { acQueryLoan, acCalculateRemainingLoans } from '../../redux/Loan/loan.action';
 import {
   closeConfirmLoanModal,
+  errorMsgBar
 } from '../../redux/Notification/notification.actions';
 import {
   confirmLoan,
   addNewTransaction
 } from '../../redux/Logic/logic.actions';
-import { alertModal } from '../modal/ConfirmAlerts';
 import { getUser } from '../../redux/Auth/user.actions';
 import { getCustomTheme } from '../../config/theme';
 import { ThemeProvider } from '@mui/material/styles';
 
 const categories = [
   { creditScoreThreshold: 700, rankThreshold: 0, accountAgeThresholdInDays: 30, maxAllowance: 0 },
-  { creditScoreThreshold: 700, rankThreshold: 1, accountAgeThresholdInDays: 30, maxAllowance: 0.25 },
-  { creditScoreThreshold: 700, rankThreshold: 2, accountAgeThresholdInDays: 30, maxAllowance: 0.5 },
-  { creditScoreThreshold: 700, rankThreshold: 3, accountAgeThresholdInDays: 30, maxAllowance: 1 },
-  { creditScoreThreshold: 700, rankThreshold: 4, accountAgeThresholdInDays: 30, maxAllowance: 2 },
-  { creditScoreThreshold: 700, rankThreshold: 5, accountAgeThresholdInDays: 30, maxAllowance: 4 },
-  { creditScoreThreshold: 700, rankThreshold: 6, accountAgeThresholdInDays: 30, maxAllowance: 8 },
-  { creditScoreThreshold: 700, rankThreshold: 7, accountAgeThresholdInDays: 30, maxAllowance: 10 },
+  { creditScoreThreshold: 700, rankThreshold: 1, accountAgeThresholdInDays: 30, maxAllowance: 0.1 },
+  { creditScoreThreshold: 700, rankThreshold: 2, accountAgeThresholdInDays: 30, maxAllowance: 0.25 },
+  { creditScoreThreshold: 700, rankThreshold: 3, accountAgeThresholdInDays: 30, maxAllowance: 0.5 },
+  { creditScoreThreshold: 700, rankThreshold: 4, accountAgeThresholdInDays: 30, maxAllowance: 0.75 },
+  { creditScoreThreshold: 700, rankThreshold: 5, accountAgeThresholdInDays: 30, maxAllowance: 1.2 },
+  { creditScoreThreshold: 700, rankThreshold: 6, accountAgeThresholdInDays: 30, maxAllowance: 2 },
+  { creditScoreThreshold: 700, rankThreshold: 7, accountAgeThresholdInDays: 30, maxAllowance: 3 },
+  { creditScoreThreshold: 700, rankThreshold: 8, accountAgeThresholdInDays: 30, maxAllowance: 5 },
+  { creditScoreThreshold: 700, rankThreshold: 9, accountAgeThresholdInDays: 30, maxAllowance: 7 },
+  { creditScoreThreshold: 700, rankThreshold: 10, accountAgeThresholdInDays: 30, maxAllowance: 8 },
+  { creditScoreThreshold: 700, rankThreshold: 11, accountAgeThresholdInDays: 30, maxAllowance: 10 },
 ];
 
 function ConfirmLoanModal(props) {
@@ -56,7 +58,6 @@ function ConfirmLoanModal(props) {
     acQueryLoan,
     confirmLoan,
     addNewTransaction,
-    getUser,
     item,
     lender,
     loan_amount,
@@ -72,6 +73,8 @@ function ConfirmLoanModal(props) {
   const [expanded, setExpanded] = useState(false);
   const [responseText, setResponseText] = useState(0);
   const [isFocused, setIsFocused] = useState(false);
+
+  const dispatch = useDispatch();
 
   // ---------- THEME ----------
   const theme = getCustomTheme(isDarkMode ? 'dark' : 'light');
@@ -122,11 +125,11 @@ function ConfirmLoanModal(props) {
 
   const onBtnOkClicked = useCallback(async () => {
     if (parseFloat(responseText) > loan_amount) {
-      alertModal(isDarkMode, 'Entered loan amount exceeds the allowed amount.');
+      dispatch(errorMsgBar('Entered loan amount exceeds the allowed amount.'));
       return;
     }
     if (parseFloat(responseText) < 0.05) {
-      alertModal(isDarkMode, 'MEOWNIMUM IS 0.05 RPS');
+      dispatch(errorMsgBar('MEOWNIMUM IS 0.05 RPS'));
       return;
     }
 
@@ -138,15 +141,15 @@ function ConfirmLoanModal(props) {
     });
 
     if (response.success) {
-      const { balance, newTransaction, message } = response;
+      const { newTransaction, message } = response;
       closeConfirmLoanModal();
-      alertModal(isDarkMode, message, '-cat');
+      dispatch(errorMsgBar(message));
       addNewTransaction(newTransaction);
       acQueryLoan();
       acCalculateRemainingLoans();
     } else {
       closeConfirmLoanModal();
-      alertModal(isDarkMode, response.message);
+      dispatch(errorMsgBar(response.message));
     }
   }, [
     responseText,

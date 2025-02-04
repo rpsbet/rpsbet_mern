@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { connect, useDispatch } from 'react-redux';
 import {
   Modal,
   Box,
@@ -21,8 +22,6 @@ import LinkIcon from '@mui/icons-material/Link';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faEdit, faChartBar } from '@fortawesome/free-solid-svg-icons';
-import moment from 'moment';
-import { connect } from 'react-redux';
 
 import PlayerModal from './PlayerModal';
 import AvatarUpload from './upload/AvatarUpload';
@@ -36,12 +35,12 @@ import {
   changeLink,
   changeUserName,
 } from '../../redux/Auth/user.actions';
+import { errorMsgBar } from '../../redux/Notification/notification.actions';
+
 import {
-  getCustomerStatisticsData,
   acGetCustomerInfo,
   getSpendingHabit,
 } from '../../redux/Customer/customer.action';
-import { alertModal } from './ConfirmAlerts';
 import { convertToCurrency } from '../../util/conversion';
 
 import { getCustomTheme } from '../../config/theme';
@@ -60,7 +59,6 @@ function ProfileModal(props) {
     changeLink: _changeLink,
     changeUserName: _changeUserName,
     getSpendingHabit: _getSpendingHabit,
-    getCustomerStatisticsData: _getCustomerStatisticsData,
     acGetCustomerInfo: _acGetCustomerInfo,
     connectedAccount
   } = props;
@@ -81,8 +79,6 @@ function ProfileModal(props) {
     referralCode,
     created_at: dateJoined,
     credit_score: initialCreditScore,
-    profitAllTimeHigh,
-    profitAllTimeLow,
     accounts = [], // <-- This is our new array from the backend
   } = userInfo;
 
@@ -97,8 +93,6 @@ function ProfileModal(props) {
   const [avatar, setAvatar] = useState(initialAvatar || '');
   const [referralCodeState, setReferralCodeState] = useState(referralCode || '');
 
-  const [profitHigh] = useState(profitAllTimeHigh);
-  const [profitLow] = useState(profitAllTimeLow);
   const [customerInfo, setCustomerInfo] = useState({});
   const [copied, setCopied] = useState(false);
 
@@ -131,6 +125,7 @@ function ProfileModal(props) {
   const [averageGamesPlayedPerRoom, setAverageGamesPlayedPerRoom] = useState(0);
   const [averageProfit, setAverageProfit] = useState(0);
   const [creditScore, setCreditScore] = useState(initialCreditScore);
+  const dispatch = useDispatch();
 
   // -----------------------------
   // Lifecycle / Effects
@@ -176,20 +171,12 @@ function ProfileModal(props) {
     }
   };
 
-  const fetchStatisticsData = async () => {
-    const result = await _getCustomerStatisticsData(_id, actorType, gameType, timeType);
-    if (result) {
-      setDeposit(result.deposit || 0);
-      setWithdraw(result.withdraw || 0);
-      setGameProfit(result.gameProfit || 0);
-      setBalance(result.balance || 0);
-      setGamePlayed(result.gamePlayed || 0);
-      setGameHosted(result.gameHosted || 0);
-      setGameJoined(result.gameJoined || 0);
-      setNetProfit(result.netProfit || 0);
-      setAverageWager(result.averageWager || 0);
-      setAverageGamesPlayedPerRoom(result.averageGamesPlayedPerRoom || 0);
-      setAverageProfit(result.averageProfit || 0);
+  const fetchStatisticsData = () => {
+    if (userInfo) {
+      setGameProfit(userInfo.gameProfit || 0);
+      setBalance(userInfo.balance || 0);
+      setGamePlayed(userInfo.gamePlayed || 0);
+      setNetProfit(userInfo.gameProfit || 0);
     }
   };
 
@@ -218,7 +205,7 @@ function ProfileModal(props) {
       case 'very good':
         return {
           color: 'rgb(118 221 119)',
-          title: 'JEWISH JEDI',
+          title: 'JEWISH DJEDI',
           message: 'Your spending habits are outstanding!',
           progress: 100,
         };
@@ -290,7 +277,7 @@ function ProfileModal(props) {
   const saveUserInfo = async (e) => {
     e.preventDefault();
     if (password !== passwordConfirmation) {
-      alertModal(isDarkMode, `PASSWORD CONFIRMATION DOESN'T MATCH NEW PASSWORD`);
+      dispatch(errorMsgBar(`PASSWORD CONFIRMATION DOESN'T MATCH NEW PASSWORD`));
       return;
     }
     try {
@@ -340,7 +327,7 @@ function ProfileModal(props) {
       };
     } catch (error) {
       console.error('Error converting image to WebP:', error);
-      alertModal(isDarkMode, 'Failed to convert image. Please try again.');
+      dispatch(errorMsgBar('Failed to convert image. Please try again.'));
     }
   };
 
@@ -367,11 +354,11 @@ function ProfileModal(props) {
 
   const changeUserName = async () => {
     if (containsBadLanguage(newUsername)) {
-      alertModal(isDarkMode, `Username contains reserved words.`);
+      dispatch(errorMsgBar(`Username contains reserved words.`));
       return;
     }
     if (newUsername.trim() === '') {
-      alertModal(isDarkMode, 'Username cannot be empty. Please enter some text.');
+      dispatch(errorMsgBar('Username cannot be empty. Please enter some text.'));
       return;
     }
     setLoadingState(true);
@@ -379,16 +366,16 @@ function ProfileModal(props) {
     try {
       const result = await _changeUserName(newUsername);
       if (result.success) {
-        alertModal(isDarkMode, result.message, '-cat');
+        dispatch(errorMsgBar(result.message));
         setLoadingState(false);
         setIsNewUsernameModalOpen(false);
       } else {
         setLoadingState(false);
-        alertModal(isDarkMode, 'USERNAME ALREADY EXISTS. CHOOSE A DIFFERENT ONE.');
+        dispatch(errorMsgBar('USERNAME ALREADY EXISTS. CHOOSE A DIFFERENT ONE.'));
       }
     } catch (e) {
       setLoadingState(false);
-      alertModal(isDarkMode, `Username might be taken. Try something else more original.`);
+      dispatch(errorMsgBar(`Username might be taken. Try something else more original.`));
     }
   };
 
@@ -397,7 +384,7 @@ function ProfileModal(props) {
   // -----------
   const changeBio = async () => {
     if (containsBadLanguage(link)) {
-      alertModal(isDarkMode, `Bio contains reserved words.`);
+      dispatch(errorMsgBar(`Bio contains reserved words.`));
       return;
     }
     setLoadingState(true);
@@ -405,16 +392,16 @@ function ProfileModal(props) {
     try {
       const result = await _changeLink(link);
       if (result.success) {
-        alertModal(isDarkMode, result.message, '-cat');
+        dispatch(errorMsgBar(result.message));
         setLoadingState(false);
         setIsLinkModalOpen(false);
       } else {
         setLoadingState(false);
-        alertModal(isDarkMode, 'FAILED TO UPDATE BIO');
+        dispatch(errorMsgBar('FAILED TO UPDATE BIO'));
       }
     } catch (e) {
       setLoadingState(false);
-      alertModal(isDarkMode, `FAILED TO UPDATE BIO`);
+      dispatch(errorMsgBar(`FAILED TO UPDATE BIO`));
     }
   };
 
@@ -498,6 +485,13 @@ function ProfileModal(props) {
                 onChange={handleTabChange}
                 textColor="error"
                 indicatorColor="error"
+                sx={{
+                  // Force the indicator styling for better visibility
+                  '& .MuiTabs-indicator': {
+                    backgroundColor: 'error.main', // uses theme's error main color
+                    height: '3px',                 // increase the height to make it more prominent
+                  },
+                }}
               >
                 <Tab
                   label={
@@ -618,8 +612,8 @@ function ProfileModal(props) {
                                   {/* Show green dot if this is the connected account */}
                                   {isConnected && (
                                     <CircleIcon
-                                      sx={{ color: 'green', mr: 1 }}
-                                      fontSize="small"
+                                      sx={{ color: '#00ff3a', mr: 1 }}
+                                      fontSize="xx-small"
                                     />
                                   )}
 
@@ -799,20 +793,12 @@ function ProfileModal(props) {
                     actorType={actorType}
                     gameType={gameType}
                     timeType={timeType}
-                    deposit={deposit}
-                    withdraw={withdraw}
                     gameProfit={gameProfit}
                     balance={balance}
                     gamePlayed={gamePlayed}
-                    gameHosted={gameHosted}
-                    gameJoined={gameJoined}
                     netProfit={netProfit}
                     totalWagered={totalWagered}
                     rank={rank}
-                    profitAllTimeHigh={profitHigh}
-                    profitAllTimeLow={profitLow}
-                    averageWager={averageWager}
-                    averageGamesPlayedPerRoom={averageGamesPlayedPerRoom}
                     solPrice={solPrice}
                     averageProfit={averageProfit}
                   />
@@ -1099,7 +1085,6 @@ const mapDispatchToProps = {
   changeLink,
   changeUserName,
   getSpendingHabit,
-  getCustomerStatisticsData,
   acGetCustomerInfo,
 };
 

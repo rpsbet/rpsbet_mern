@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import Modal from 'react-modal';
-import { connect } from 'react-redux';
+import { connect, useDispatch } from 'react-redux';
 import {
-  closeConfirmTradeModal
+  closeConfirmTradeModal,
+  errorMsgBar
 } from '../../redux/Notification/notification.actions';
 import { confirmTrade, addNewTransaction } from '../../redux/Logic/logic.actions';
 import { Button } from '@mui/material';
-import { alertModal } from '../modal/ConfirmAlerts';
 import { acQueryItem } from '../../redux/Item/item.action';
 import { convertToCurrency } from '../../util/conversion';
 import Lottie from 'react-lottie';
@@ -49,6 +49,7 @@ function ConfirmTradeModal(props) {
 
   // Local state for loading
   const [loading, setLoading] = useState(false);
+  const dispatch = useDispatch();
 
   const defaultOptions = {
     loop: true,
@@ -69,9 +70,9 @@ function ConfirmTradeModal(props) {
       const { newTransaction, message } = response;
       addNewTransaction(newTransaction);
       acQueryItem(40, 1, 'price', '653ee81117c9f5ee2124564b');
-      alertModal(isDarkMode, message, '-cat');
+      dispatch(errorMsgBar(message));
     } else {
-      alertModal(isDarkMode, response.message);
+      dispatch(errorMsgBar(response.message));
     }
 
     closeConfirmTradeModal();

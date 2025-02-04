@@ -238,7 +238,7 @@ const Comments = ({
                 alignItems: 'flex-start',
                 mb: 2,
                 p: 2,
-                bgcolor: isDarkMode ? '#1e1e1e' : '#f5f5f5',
+                bgcolor: isDarkMode ? '#3b3140' : '#f5f5f5',
                 borderRadius: 1
               }}
             >
@@ -264,14 +264,14 @@ const Comments = ({
               </Box>
               <Box sx={{ flexGrow: 1 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 'bold',  fontSize: '0.8em' }}>
                     {comment.user.username}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography variant="caption" sx={{ fontSize: '0.6em'}} color="text.secondary">
                     {Moment(comment.created_at).fromNow()}
                   </Typography>
                 </Box>
-                <Typography variant="body1" sx={{ mt: 1 }}>
+                <Typography variant="body2" sx={{ mt: 1, fontSize: '0.7em'}}>
                   {comment.content}
                 </Typography>
               </Box>
@@ -281,7 +281,7 @@ const Comments = ({
                   aria-label="delete"
                   sx={{ ml: 1 }}
                 >
-                  <DeleteIcon />
+                  <DeleteIcon sx={{fontSize: "18px"}} />
                 </IconButton>
               )}
             </Box>

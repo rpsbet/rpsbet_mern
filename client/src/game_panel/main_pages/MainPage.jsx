@@ -4,7 +4,6 @@ import {
   setCurRoomInfo,
   getMyChat,
   getGameTypeList,
-  getSolToUsdPrice,
 } from '../../redux/Logic/logic.actions';
 import history from '../../redux/history.js';
 import { toggleDrawer } from '../../redux/Auth/user.actions';
@@ -35,7 +34,6 @@ function MainPage(props) {
   const {
     isAuthenticated,
     getMyChat,
-    getSolToUsdPrice,
     isDrawerOpen,
     isLowGraphics,
     selectedMainTabIndex,
@@ -70,7 +68,7 @@ function MainPage(props) {
   useEffect(() => {
     isMountedRef.current = true;
 
-    if (window.location.pathname === '/dashboard') {
+    if (window.location.pathname === '/portfolio') {
       setSelectedMobileTab('my_games');
       setShowOpenGame(0);
     }
@@ -78,9 +76,6 @@ function MainPage(props) {
     if (isAuthenticated) {
       getMyChat();
     }
-
-    // Example: fetch token price
-    getSolToUsdPrice();
 
     // If on mobile and the drawer is not open, open it
     if (isMobile && !isDrawerOpen) {
@@ -94,12 +89,12 @@ function MainPage(props) {
 
   // ------------------- LIFECYCLE (componentDidUpdate) for location changes -------------------
   useEffect(() => {
-    // If route changes to /dashboard, set certain states
-    if (location.pathname === '/dashboard' && location.pathname !== prevLocationRef.current) {
+    // If route changes to /portfolio, set certain states
+    if (location.pathname === '/portfolio' && location.pathname !== prevLocationRef.current) {
       setSelectedMobileTab('my_games');
       setShowOpenGame(0);
     } else if (
-      location.pathname === '/dashboard' &&
+      location.pathname === '/portfolio' &&
       location.pathname !== prevLocationRef.current &&
       location.pathname === '/'
     ) {
@@ -150,7 +145,7 @@ function MainPage(props) {
     }
 
     const totalUserBet = roomList.reduce((total, room) => {
-      return total + (parseFloat(room.user_bet) || 0);
+      return total + (room.user_bet || 0);
     }, 0);
 
     // If user is on "live_games" tab and step is not 'History' => show Create Room button
@@ -243,7 +238,7 @@ function MainPage(props) {
         {/* If not mobile & tab index = 0 OR if mobile & live_games tab & showOpenGame=0 => show open games */}
         {((!isMobile && selectedMainTabIndex === 0) ||
           (isMobile && selectedMobileTab === 'live_games' && showOpenGame === 0)) &&
-          location.pathname !== '/dashboard' && (
+          location.pathname !== '/portfolio' && (
             <OpenGamesTable
               selectedCreator={selectedCreator}
               refreshing={refreshing}
@@ -270,19 +265,19 @@ function MainPage(props) {
             userId={user._id}
           />
         )}
-        {isMobile && selectedMobileTab === 'my_games' && showOpenGame === 1 && (
+        {/* {isMobile && selectedMobileTab === 'my_games' && showOpenGame === 1 && (
           <MyHistoryTable />
-        )}
+        )} */}
 
         {/* If not mobile & selectedMainTabIndex=1 => show MyHistory */}
-        {!isMobile && selectedMainTabIndex === 1 && (
+        {/* {!isMobile && selectedMainTabIndex === 1 && (
           <div className="sub-panel">
             <h2 className="main-title desktop-only" style={{ marginBottom: '10px' }}>
               YOUR HISTORY
             </h2>
             <MyHistoryTable />
           </div>
-        )}
+        )} */}
 
         <DrawerButton open={isDrawerOpen} toggleDrawer={handleToggleDrawer} />
       </Box>
@@ -443,7 +438,6 @@ const mapStateToProps = (state) => ({
 });
 
 const mapDispatchToProps = {
-  getSolToUsdPrice,
   setCurRoomInfo,
   getGameTypeList,
   getMyChat,

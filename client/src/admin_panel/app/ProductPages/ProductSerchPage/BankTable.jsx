@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useDispatch } from 'react-redux';
+
 import styled from 'styled-components';
 import { connect } from 'react-redux';
-import { alertModal } from '../../../../game_panel/modal/ConfirmAlerts';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import MyLoansModal from '../../../../game_panel/modal/MyLoansModal';
 import RpsPriceChart from '../../../../components/RpsPriceChart';
@@ -23,6 +24,7 @@ import {
 } from '../../../../redux/Loan/loan.action';
 import { openConfirmLoanModal } from '../../../../redux/Notification/notification.actions';
 import history from '../../../../redux/history';
+import { errorMsgBar } from '../../../../redux/Notification/notification.actions';
 import {
   Button,
   IconButton,
@@ -133,6 +135,7 @@ const BankTable = (props) => {
     user,
     isLowGraphics
   } = props;
+  const dispatch = useDispatch();
 
   // ------------------- LOCAL STATE -------------------
   const [customerInfo, setCustomerInfo] = useState({});
@@ -541,7 +544,7 @@ const BankTable = (props) => {
                           if (row.lender !== user) {
                             openConfirmLoanModal();
                           } else {
-                            alertModal(isDarkMode, 'This is already your loan!');
+                            dispatch(errorMsgBar('This is already your loan!'));
                           }
                         }}
                         sx={{ mb: 1 }}
@@ -556,7 +559,7 @@ const BankTable = (props) => {
             </ProductGrid>
           ) : (
             // CHANGED HERE: if data is empty (and we're not loading), show "No Loans Available"
-            <Typography variant="body2" sx={{ textAlign:'center', fontStyle: 'italic', color: 'text.secondary' }}>
+            <Typography variant="body2" sx={{ textAlign: 'center', fontStyle: 'italic', color: 'text.secondary' }}>
               No Loans Available
             </Typography>
           )

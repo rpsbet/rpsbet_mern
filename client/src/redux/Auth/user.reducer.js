@@ -64,7 +64,6 @@ const initialState = {
   gasfee: 0,
   connectedAccount: '',
   ai_mode: '',
-  isActivated: true,
   completedTutorials: [],
   isFocused: false,
   userName: '',
@@ -207,7 +206,13 @@ export default function (state = initialState, action) {
         hasMore,
       };
     }
-    case NEW_TRANSACTION:
+    case NEW_TRANSACTION: {
+      // Check if the transaction already exists in the state
+      if (state.transactions.some(tx => tx._id === payload._id)) {
+        // If found, do not modify state further
+        return state;
+      }
+
       const newTransactions = [payload]
         .concat(JSON.parse(JSON.stringify(state.transactions)))
         .slice(0, 4);
@@ -215,9 +220,10 @@ export default function (state = initialState, action) {
       return {
         ...state,
         transactions: newTransactions,
-
         balance: updatedBalance,
       };
+    }
+
     case SET_SEVEN_DAY_PROFIT:
       return {
         ...state,
@@ -255,7 +261,6 @@ export default function (state = initialState, action) {
         userName: payload.username,
         isAuthenticated: true,
         totalWagered: payload.totalWagered,
-        isActivated: payload.is_activated,
         completedTutorials: payload.completedTutorials,
         loading: false,
         user: { ...payload, password: '' },
@@ -271,7 +276,6 @@ export default function (state = initialState, action) {
         balance: payload.user.balance,
         isAdmin: 0,
         userName: payload.user.username,
-        isActivated: payload.user.is_activated,
         completedTutorials: payload.user.completedTutorials,
         token: payload.token,
         isAuthenticated: true,

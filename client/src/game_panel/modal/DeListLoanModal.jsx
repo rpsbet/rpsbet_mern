@@ -2,6 +2,7 @@ import React from 'react';
 import Modal from 'react-modal';
 import { useDispatch, useSelector } from 'react-redux';
 import {
+  errorMsgBar,
   closeDeListLoanModal,
 } from '../../redux/Notification/notification.actions';
 import {
@@ -10,7 +11,6 @@ import {
   acCalculateRemainingLoans,
 } from '../../redux/Loan/loan.action';
 import { Button } from '@mui/material';
-import { alertModal } from './ConfirmAlerts';
 import { getUser } from '../../redux/Auth/user.actions';
 import { deListLoan } from '../../redux/Logic/logic.actions';
 
@@ -50,7 +50,7 @@ const DeListLoanModal = () => {
     const response = await dispatch(deListLoan({ loan_id: loan }));
     if (response.success) {
       const { message } = response;
-      alertModal(isDarkMode, message, '-cat');
+      dispatch(errorMsgBar(message));
 
       await dispatch(acQueryMyLoan(30, 1, 'loan_amount', ''));
       await dispatch(acQueryLoan(30, 1, 'loan_amount', ''));
@@ -59,7 +59,7 @@ const DeListLoanModal = () => {
 
       dispatch(closeDeListLoanModal());
     } else {
-      alertModal(isDarkMode, response.message);
+      dispatch(errorMsgBar(response.message));
     }
   };
 

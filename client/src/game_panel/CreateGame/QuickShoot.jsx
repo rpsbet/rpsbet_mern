@@ -103,7 +103,7 @@ const QuickShoot = (props) => {
       {step === 1 && (
         <Box className="game-info-panel">
           <Box className="glass-container">
-            <Box style={{ marginBottom: '30px' }}>
+            <Box>
               <RadioGroup value={selectedGameType} onChange={props.handleChange}>
                 <h3 className="game-sub-title roll-tag">
                   Choose Game Mode&nbsp;
@@ -211,7 +211,6 @@ const QuickShoot = (props) => {
 const mapStateToProps = (state) => ({
   auth: state.auth.isAuthenticated,
   isDarkMode: state.auth.isDarkMode,
-  isFocused: state.auth.isFocused,
   strategies: state.logic.strategies,
   gameTypeList: state.logic.gameTypeList,
   solPrice: state.logic.solPrice,

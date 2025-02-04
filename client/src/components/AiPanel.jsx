@@ -1,7 +1,7 @@
 import React from 'react';
 import BetArray from './BetArray';
 
-const AiPanel = ({ isDarkMode, bankroll, bet_amount, handle2xButtonClick, handleHalfXButtonClick, handleMaxButtonClick, creator_id, rank, attached, handleDetachAttachChange, is_betting, rpsbetitems, qsbetitems, predictedBetAmount, roomId, ai_mode, user_balance, user_id, updateUserStrategy, updateUserPrompt, strategies, game_type, onChangeState, qs_game_type, betting, handleSwitchChange, getAttachedRooms }) => {
+const AiPanel = ({ isDarkMode, playSound, detachPlayerFromRoom, updateAttachment, bankroll, bet_amount, handle2xButtonClick, handleHalfXButtonClick, handleMaxButtonClick, creator_id, rank, attached, is_betting, rpsbetitems, qsbetitems, predictedBetAmount, roomId, ai_mode, user_balance, user_id, updateUserStrategy, updateUserPrompt, strategies, game_type, onChangeState, qs_game_type, betting, handleSwitchChange, getAttachedRooms }) => {
   let list;
   switch (game_type) {
     case 'Quick Shoot':
@@ -21,8 +21,10 @@ const AiPanel = ({ isDarkMode, bankroll, bet_amount, handle2xButtonClick, handle
         onChangeState={onChangeState}
         isDarkMode={isDarkMode}
         arrayName={list}
+        playSound={playSound}
         bet_amount={bet_amount}
-        handleDetachAttachChange={handleDetachAttachChange}
+        updateAttachment={updateAttachment}
+        detachPlayerFromRoom={detachPlayerFromRoom}
         user_id={user_id}
         is_betting={is_betting}
         strategies={strategies}

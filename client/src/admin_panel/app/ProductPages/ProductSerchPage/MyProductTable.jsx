@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
-import { connect } from 'react-redux';
+import { connect, useDispatch } from 'react-redux';
 
 // MUI v5
 import { 
@@ -37,12 +37,12 @@ import {
 } from '../../../../redux/Logic/logic.actions';
 import {
   openListItemModal,
-  openDeListItemModal
+  openDeListItemModal,
+  errorMsgBar
 } from '../../../../redux/Notification/notification.actions';
 import { acGetCustomerInfo } from '../../../../redux/Customer/customer.action';
 
 // Local
-import { alertModal } from '../../../../game_panel/modal/ConfirmAlerts';
 import PlayerModal from '../../../../game_panel/modal/PlayerModal';
 import history from '../../../../redux/history';
 import Avatar from '../../../../components/Avatar';
@@ -134,6 +134,7 @@ function MyProductTable(props) {
   const [anchorEl, setAnchorEl] = useState(null);
   const [sortCriteria, setSortCriteria] = useState('updated_at');
   const [itemType, setItemType] = useState('653ee81117c9f5ee2124564b');
+  const dispatch = useDispatch();
 
   // Compare owners from previous
   const prevOwnersRef = useRef(JSON.stringify(data?.owners || []));
@@ -226,9 +227,11 @@ function MyProductTable(props) {
     const response = await equipItem({ item_id: itemId });
     if (response.success) {
       handleModalClose();
-      alertModal(isDarkMode, response.message, '-cat');
+      // Dispatch the error message (or notification) for success with the optional '-cat' parameter
+      dispatch(errorMsgBar(response.message, '-cat'));
     } else {
-      alertModal(isDarkMode, 'Unable to Equip item. De-List item first.');
+      // Dispatch the error message for failure
+      dispatch(errorMsgBar('Unable to Equip item. De-List item first.'));
     }
   };
 

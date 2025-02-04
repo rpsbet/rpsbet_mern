@@ -83,7 +83,7 @@ function TabbedContent(props) {
     playSound,
     changeBgColor,
     getAttachedRooms,
-    handleDetachAttachChange,
+    updateAttachment,
     onChangeState,
     is_mobile,
     gameResult,
@@ -95,7 +95,6 @@ function TabbedContent(props) {
     join,
     selected_qs_position,
     handleSwitchChange,
-    cp,
     selected_rps,
     total_wagered,
     updateUserStrategy,
@@ -228,30 +227,40 @@ function TabbedContent(props) {
               showSkipButton
               styles={{
                 options: {
-                  zIndex: 9,
-                  backgroundColor: isDarkMode ? 'rgb(81 48 98 / 60%)' : '#ccc9',
-                  primaryColor: '#ff0000',
-                  arrowColor: isDarkMode ? 'rgb(81 48 98 / 60%)' : '#ccc9',
-                  textColor: isDarkMode ? '#f9f9f9' : '#333',
-                  width: 300,
-                  padding: 20,
-                  borderRadius: 5,
+                  zIndex: 1500,
+                  backgroundColor: isDarkMode
+                    ? 'rgba(33, 33, 33, 0.95)'   // Dark gray background for dark mode
+                    : 'rgba(255, 255, 255, 0.95)', // White background for light mode
+                  primaryColor: isDarkMode ? '#ff0000' : '#6200ea', // Vibrant green for dark, deep purple for light
+                  arrowColor: isDarkMode
+                    ? 'rgba(33, 33, 33, 0.95)'
+                    : 'rgba(255, 255, 255, 0.95)',
+                  textColor: isDarkMode ? '#eeeeee' : '#212121', // Light text for dark mode, dark text for light mode
+                  width: 320,
+                  padding: 24,
+                  borderRadius: 8,
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
                 },
                 buttonClose: {
-                  borderRadius: 1,
-                  color: isDarkMode ? '#f9f9f9' : '#333',
+                  borderRadius: 4,
+                  color: isDarkMode ? '#eeeeee' : '#212121',
                 },
                 buttonBack: {
-                  borderRadius: 1,
-                  color: isDarkMode ? '#f9f9f9' : '#333',
+                  borderRadius: 4,
+                  backgroundColor: isDarkMode
+                    ? 'rgba(255, 255, 255, 0.1)'
+                    : 'rgba(0, 0, 0, 0.05)',
+                  color: isDarkMode ? '#eeeeee' : '#212121',
+                  marginRight: 8,
                 },
                 buttonNext: {
-                  borderRadius: 1,
-                  color: isDarkMode ? '#f9f9f9' : '#333',
+                  borderRadius: 4,
+                  backgroundColor: isDarkMode ? '#ff0000' : '#6200ea',
+                  color: '#fff',
                 },
                 buttonSkip: {
-                  borderRadius: 1,
-                  color: isDarkMode ? '#f9f9f9' : '#333',
+                  borderRadius: 4,
+                  color: isDarkMode ? '#eeeeee' : '#212121',
                 },
               }}
             />
@@ -264,9 +273,7 @@ function TabbedContent(props) {
                 result={result}
                 ai_mode={ai_mode}
                 getAttachedRooms={getAttachedRooms}
-                handleDetachAttachChange={handleDetachAttachChange}
                 onChangeState={onChangeState}
-                cp={cp}
                 is_mobile={is_mobile}
                 gameResult={gameResult}
                 rpsbetitems={rpsbetitems}
@@ -286,6 +293,7 @@ function TabbedContent(props) {
                 showPlayerModal={showPlayerModal}
                 creator_id={roomInfo.creator_id}
                 bet_amount={bet_amount}
+                updateAttachment={updateAttachment}
                 pr={roomInfo.pr}
                 updateUserStrategy={updateUserStrategy}
                 updateUserPrompt={updateUserPrompt}
@@ -302,10 +310,10 @@ function TabbedContent(props) {
                 handleOpenPlayerModal={handleOpenPlayerModal}
                 handleClosePlayerModal={handleClosePlayerModal}
                 showPlayerModal={showPlayerModal}
-                handleDetachAttachChange={handleDetachAttachChange}
                 join={join}
                 result={result}
                 gameResult={gameResult}
+                updateAttachment={updateAttachment}
                 getAttachedRooms={getAttachedRooms}
                 attached={attached}
                 updateUserStrategy={updateUserStrategy}
@@ -330,7 +338,6 @@ function TabbedContent(props) {
                 strategies={strategies}
                 handleSwitchChange={handleSwitchChange}
                 pr={roomInfo.pr}
-                cp={cp}
                 actionList={actionList}
                 getRoomData={getRoomData}
               />

@@ -37,11 +37,6 @@ const showAlert = (onClose, isDarkMode, text, icon) => {
   </Dialog>
 };
 
-export const alertModal = (onClose, isDarkMode, text, icon = '') => {
-  showAlert(onClose, isDarkMode, text, icon);
-};
-
-
 const showConfirm = (
   isDarkMode,
   text,
@@ -98,47 +93,21 @@ const showConfirm = (
 };
 
 
-const showConfirmCall = (
-  isDarkMode,
-  text,
-  icon,
-  okayButtonTitle,
-  cancelButtonTitle,
-  callback
-) => {
-  confirmAlert({
-    customUI: ({ onClose }) => {
-      return (
-        <div style={{ borderRadius: "0.3em" }} className={isDarkMode ? 'dark_mode' : ''}>
-          <div className="modal-body alert-body confirm-body">
-            <h5 style={{ margin: '30px auto' }}> {text}</h5>
-            <div className=''
-              style={{ padding: '5px 10px', height: '75px', borderRadius: "0.5em", display: 'flex', justifyContent: 'center', alignItems: 'center' }}
-            // className={`modal-icon alert-icon${icon}`}
-            ><FontAwesomeIcon style={{ fontSize: "1em" }} icon={faRobot} />&nbsp;<span style={{ fontSize: "0.9em" }}>RANDOM BOT</span></div>
-
-            <div className="modal-footer">
-              <Button
-                onClick={() => {
-                  callback();
-                  onClose();
-                }}
-              >
-
-                {okayButtonTitle}<FontAwesomeIcon icon={faPhone} style={{ marginLeft: '5px', color: '#fff' }} />
-              </Button>
-              {cancelButtonTitle && (
-                <Button variant='contained' color='error' onClick={onClose}>
-                  {cancelButtonTitle}
-                </Button>
-              )}
-            </div>
-          </div>
-        </div>
-      );
-    }
-  });
-};
+export const ConflictDialog = ({ open, onClose }) => (
+  <Dialog open={open} onClose={onClose}>
+    <DialogTitle>EXISTING ACCOUNT CONNECTED</DialogTitle>
+    <DialogContent>
+      <Typography>
+        We detected a wallet address that's already connected with us. You should log in with this account.
+      </Typography>
+    </DialogContent>
+    <DialogActions>
+      <Button onClick={onClose} color="error" variant="contained">
+        Close
+      </Button>
+    </DialogActions>
+  </Dialog>
+);
 
 export const confirmModalCreate = (
   isDarkMode,

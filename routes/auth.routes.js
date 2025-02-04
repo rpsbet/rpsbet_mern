@@ -67,7 +67,7 @@ router.post('/phantom', async (req, res) => {
       );
       return res.json({
         success: true,
-        message: "WELCOME BACK DEGEN!",
+        message: "DEGEN CONNECTED!",
         token,
         user
       });
@@ -83,6 +83,7 @@ router.post('/phantom', async (req, res) => {
       password: generateRandomPassword(),
       bio: '',
       totalWagered: 0,
+      totalTraded: 0,
       balance: 0,
       rewards: [],
       credit_score: 1000,
@@ -149,6 +150,7 @@ router.post('/google', async (req, res) => {
         password: generateRandomPassword(),
         bio: '',
         totalWagered: 0,
+        totalTraded: 0,
         balance: 0,
         email: email,
         rewards: [],

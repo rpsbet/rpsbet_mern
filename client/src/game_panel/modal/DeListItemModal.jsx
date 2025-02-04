@@ -2,11 +2,11 @@ import React from 'react';
 import Modal from 'react-modal';
 import { useDispatch, useSelector } from 'react-redux';
 import {
-  closeDeListItemModal
+  closeDeListItemModal,
+  errorMsgBar
 } from '../../redux/Notification/notification.actions';
 import { deListItem } from '../../redux/Logic/logic.actions';
 import { Button } from '@mui/material';
-import { alertModal } from './ConfirmAlerts';
 
 Modal.setAppElement('#root');
 
@@ -43,9 +43,9 @@ const DeListItemModal = () => {
     const response = await dispatch(deListItem({ item_id: item }));
     if (response.success) {
       dispatch(closeDeListItemModal());
-      alertModal(isDarkMode, response.message, '-cat');
+      dispatch(errorMsgBar(response.message));
     } else {
-      alertModal(isDarkMode, response.message);
+      dispatch(errorMsgBar(response.message));
     }
   };
 

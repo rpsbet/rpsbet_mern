@@ -29,7 +29,6 @@ import {
   ROOMS_LOADED,
   UPDATE_BET_RESULT,
   UPDATE_BANKROLL,
-  UPDATE_RAIN,
   UPDATE_BANKROLL_QS,
   BET_SUCCESS,
   MSG_SUCCESS,
@@ -76,7 +75,7 @@ export const createRoom = room_info => async dispatch => {
     } else {
       dispatch({ type: MSG_WARNING, payload: res.data.message });
     }
-    history.push('/dashboard');
+    history.push('/portfolio');
   } catch (err) {
     dispatch({ type: MSG_WARNING, payload: err });
   }
@@ -222,58 +221,6 @@ export const getTokenPrice = (tokenMintAddress) => async (dispatch) => {
   }
 };
 
-
-// join game
-export const bet = bet_info => async dispatch => {
-  try {
-    dispatch({ type: START_BET });
-    const res = await axios.post('/game/bet', bet_info);
-
-    dispatch({ type: END_BET });
-
-    if (res.data.success) {
-      dispatch({ type: NEW_TRANSACTION, payload: res.data.newTransaction });
-
-      return {
-        status: 'success',
-        betResult: res.data.betResult,
-        roomStatus: res.data.roomStatus,
-        amount: res.data.newTransaction.amount
-      };
-    } else {
-
-      if (res.data.betResult === -100) {
-        history.push('/');
-        dispatch({ type: MSG_WARNING, payload: 'THIS GAME HAS NOW ENDED' });
-
-        return {
-          status: 'failed',
-          message: 'THIS GAME HAS NOW ENDED'
-        };
-      } else if (res.data.betResult === -102) {
-        dispatch({ type: MSG_WARNING, payload: 'THIS ROOM IS BUSY' });
-
-        return {
-          status: 'failed',
-          message: res.data.message
-        };
-      } else {
-        dispatch({ type: MSG_WARNING, payload: 'THIS ROOM IS BUSY' });
-        return {
-          status: 'failed',
-          message: 'SLOW DOWN BLUD!'
-        };
-      }
-    }
-  } catch (err) {
-    console.log(err);
-  }
-
-  return {
-    status: 'failed'
-  };
-};
-
 // player
 export const bet3 = bet_info => async dispatch => {
   try {
@@ -321,50 +268,6 @@ export const bet3 = bet_info => async dispatch => {
     status: 'failed'
   };
 };
-// bot
-export const bet4 = bet_info => async dispatch => {
-  try {
-    dispatch({ type: START_BET });
-    const res = await axios.post('/game/bet4', bet_info);
-    dispatch({ type: END_BET });
-
-    if (res.data.success) {
-      dispatch({ type: NEW_TRANSACTION, payload: res.data.newTransaction });
-      return {
-        status: 'success',
-        betResult: res.data.betResult,
-        roomStatus: res.data.roomStatus,
-        amount: res.data.newTransaction.amount
-      };
-    } else {
-      if (res.data.betResult === -100) {
-        history.push('/');
-        return {
-          status: 'failed',
-          message: 'THIS GAME HAS NOW ENDED'
-        };
-      } else if (res.data.betResult === -102) {
-        return {
-          status: 'failed',
-          message: res.data.message
-        };
-      } else {
-        dispatch({ type: MSG_WARNING, payload: 'ONE SEC, G' });
-        return {
-          status: 'failed',
-          message: 'SLOW DOWN BLUD!'
-        };
-      }
-    }
-  } catch (err) {
-    console.log(err);
-  }
-
-  return {
-    status: 'failed'
-  };
-};
-
 
 export const loadRoomInfo = roomInfo => {
   return {
@@ -380,10 +283,10 @@ export const getRoomInfo = (room_id, limit, showLoader) => async (dispatch) => {
       dispatch({ type: START_LOADING });
     }
     // Use limit param
-    const apiURL = limit 
-      ? `/game/room/${room_id}?limit=${limit}` 
+    const apiURL = limit
+      ? `/game/room/${room_id}?limit=${limit}`
       : `/game/room/${room_id}`;
-    
+
     const res = await axios.get(apiURL);
     if (res.data.success) {
       dispatch({ type: ROOMINFO_LOADED, payload: res.data });
@@ -628,7 +531,6 @@ export const fetchAccessory = data => async dispatch => {
   return false;
 };
 
-
 export const equipItem = data => async dispatch => {
   try {
     dispatch({ type: START_LOADING });
@@ -669,7 +571,6 @@ export const getRoomList = (params) => async (dispatch) => {
     dispatch({ type: END_LOADING });
   }
 };
-
 
 // actions
 export const getHistory = search_condition => async dispatch => {
@@ -750,18 +651,6 @@ export const topUp = (amount, rowId) => async dispatch => {
   }
 };
 
-export const coHost = (amount, rowId) => async dispatch => {
-  try {
-    const result = await axios.post('/game/coHost/', { amount, rowId });
-    if (result.data.success) {
-      dispatch({ type: MSG_SUCCESS, payload: "YOU ARE NOW A CO-HOST!" });
-      return result.data;
-    }
-  } catch (e) {
-    dispatch({ type: MSG_ERROR, payload: 'UNABLE TO CO-HOST' });
-  }
-};
-
 export const getRecentlyClosed = () => async dispatch => {
   try {
     const res = await axios.get('/game/recently-closed');
@@ -837,7 +726,7 @@ export const kickBots = (room_id) => async (dispatch) => {
     while (!botRemoved && loopCount < 4) {
       const res = await axios.patch(`/game/rooms/${room_id}/remove-bots`);
       if (res.data.success) {
-        dispatch({ type: MSG_SUCCESS, payload: 'All bots have been removed from the room!' });
+        dispatch({ type: MSG_SUCCESS, payload: 'BOOTED All CATS!' });
 
         botRemoved = true;
       }
@@ -866,7 +755,7 @@ export const updateRoomBot = (room_id) => async dispatch => {
       const res = await axios.patch(`/game/rooms/${room_id}`);
 
       if (res.data.success) {
-        dispatch({ type: MSG_SUCCESS, payload: "BOT HAS BEEN ATTACHED TO YOUR ROOM" });
+        dispatch({ type: MSG_SUCCESS, payload: "YOU CAT CALLED A BOT TO YOUR ROOM!" });
         botAttached = true;
       }
 
@@ -885,28 +774,26 @@ export const updateRoomBot = (room_id) => async dispatch => {
   }
 };
 
-export const checkPlayerAttachment = (room_id) => async dispatch => {
+export const updateAttachment = (room_id) => async dispatch => {
   try {
-    const res = await axios.get(`/game/checkAttachment/${room_id}`);
-
+    const res = await axios.patch(`/game/updateAttachment/${room_id}`);
     if (res.data.success) {
-      if (res.data.attached) {
-        dispatch({ type: ATTACHED, payload: res.data.attached });
-      } else {
-        dispatch({ type: ATTACHED, payload: false });
-      }
+      dispatch({ type: MSG_SUCCESS, payload: "Turned on Rake mode" });
+    } else {
+      dispatch({ type: MSG_ERROR, payload: 'Failed to update RA' });
+
     }
   } catch (err) {
     console.error("API Error:", err);
     dispatch({ type: MSG_ERROR, payload: 'API request failed' });
   }
 };
+
 export const getAttachedRooms = () => async dispatch => {
   try {
     const res = await axios.get(`/game/getattachedrooms`);
 
     if (res.data.success) {
-      dispatch({ type: MSG_SUCCESS, payload: "Retrieved Player's Attachments" });
       return res.data.attachments;
     } else {
       dispatch({ type: MSG_ERROR, payload: 'Failed to get attachments' });
@@ -918,35 +805,13 @@ export const getAttachedRooms = () => async dispatch => {
 };
 
 
-export const attachPlayerToRoom = (room_id, bet_amounts) => async dispatch => {
-
-  try {
-    const res = await axios.patch(`/game/attachPlayer/${room_id}`, {
-      bet_amounts
-    });
-
-    if (res.data.success) {
-      dispatch({ type: MSG_SUCCESS, payload: "Attached AI to room" });
-      dispatch({ type: ATTACHED, payload: true });
-
-      return true;
-    } else {
-      dispatch({ type: MSG_ERROR, payload: res.data.message || 'Failed to attach player to the room' });
-      dispatch({ type: ATTACHED, payload: false });
-
-      return false;
-    }
-  } catch (err) {
-    dispatch({ type: MSG_ERROR, payload: 'Internal server error or room not found' });
-    return false;
-  }
-};
-
 export const detachPlayerFromRoom = (room_id) => async dispatch => {
+  console.log("calleldllcmlsmdlmdmldml", room_id)
   try {
     const res = await axios.post(`/game/detachPlayer/${room_id}`);
     if (res.data.success) {
-      dispatch({ type: MSG_SUCCESS, payload: "Detached AI from the room" });
+      console.log("res", res.data)
+      dispatch({ type: MSG_SUCCESS, payload: "Turned off Rake mode" });
       return true;
     } else {
       dispatch({ type: MSG_ERROR, payload: res.data.message || 'Failed to detach player from the room' });
@@ -989,73 +854,64 @@ export const getGameTypeList = () => async dispatch => {
   }
 };
 
-export const getMyGames = (search_condition, callback) => async dispatch => {
+export const getMyGames = (search_condition, callback) => async (dispatch) => {
   try {
     dispatch({ type: START_LOADING });
 
-    // Check if data is stored in localStorage
-    const storedData = localStorage.getItem('myGamesData');
-    if (storedData) {
-      const parsedData = JSON.parse(storedData);
-      dispatch({ type: MY_GAMES_LOADED, payload: { ...parsedData } });
-      if (callback) callback(parsedData); // Optional callback for immediate use
-    }
-
-    // Fetch updated data from the backend in the background
+    // Fetch data from the backend
     const res = await axios.get('/game/my_games', {
-      params: { ...search_condition }
+      params: { ...search_condition },
     });
 
     if (res.data.success) {
-      // Update localStorage and Redux store with the new data
-      localStorage.setItem('myGamesData', JSON.stringify(res.data));
-      dispatch({ type: MY_GAMES_LOADED, payload: { ...res.data } });
+      // Dispatch success
+      dispatch({
+        type: MY_GAMES_LOADED,
+        payload: { ...res.data },
+      });
+
+      // Optional callback
       if (callback) callback(res.data);
     } else {
-      // Handle failure case
+      // Handle failure
       dispatch({ type: MSG_GAMETYPE_LOAD_FAILED });
     }
   } catch (err) {
-    console.error("Error while fetching games:", err);
+    console.error('Error while fetching games:', err);
     dispatch({ type: MSG_GAMETYPE_LOAD_FAILED, payload: err });
   } finally {
     dispatch({ type: END_LOADING });
   }
 };
 
-export const endGame = (room_id, callback) => async dispatch => {
+export const endGame = (room_id, callback) => async (dispatch, getState) => {
   try {
     dispatch({ type: START_LOADING });
+
     const res = await axios.post('/game/end_game', { room_id });
 
     if (res.data.success) {
-      const storedData = localStorage.getItem('myGamesData');
-      let updatedGames = [];
+      // 1) Get old myGames from Redux state
+      const oldMyGames = getState().logic.myGames || [];
 
-      if (storedData) {
-        const parsedData = JSON.parse(storedData);
+      // 2) Filter out the ended game
+      const updatedGames = oldMyGames.filter(game => game._id !== room_id);
 
-        updatedGames = parsedData.myGames.filter(game => game._id !== room_id);
+      // 3) Dispatch to store the new array
+      dispatch({
+        type: MY_GAMES_LOADED,
+        payload: {
+          myGames: updatedGames,
+          pageNumber: 1
+        }
+      });
 
-        localStorage.setItem(
-          'myGamesData',
-          JSON.stringify({
-            ...parsedData,
-            myGames: updatedGames,
-          })
-        );
-
-        dispatch({
-          type: MY_GAMES_LOADED,
-          payload: {
-            myGames: updatedGames,
-            pageNumber: 1,
-          },
-        });
-      }
-
+      // 4) Dispatch new transaction & success message
       dispatch({ type: NEW_TRANSACTION, payload: res.data.newTransaction });
       dispatch({ type: MSG_SUCCESS, payload: "GAME HAS NOW ENDED" });
+
+      // Optional callback
+      if (callback) callback();
 
     } else {
       dispatch({ type: MSG_ERROR, payload: res.data.message });
@@ -1068,9 +924,24 @@ export const endGame = (room_id, callback) => async dispatch => {
   }
 };
 
-export const unstake = (room_id, stake_amount, callback) => async dispatch => {
+export const coHost = (amount, rowId, connectedAccount) => async dispatch => {
   try {
-    const res = await axios.post('/game/unstake', { room_id, stake_amount });
+    const result = await axios.post('/game/pump/', { amount, rowId, connectedAccount });
+    if (result.data.success) {
+      dispatch({ type: MSG_SUCCESS, payload: "YOU BOUGHT SOME %!" });
+      return result.data;
+    }
+  } catch (e) {
+    dispatch({ type: MSG_ERROR, payload: 'UNABLE TO CO-HOST' });
+  }
+};
+
+export const unstake = (room_id, stake_amount, callback) => async (dispatch, getState) => {
+  try {
+    // Retrieve connectedAccount from the auth state
+    const { auth: { connectedAccount } } = getState();
+
+    const res = await axios.post('/game/jeet', { room_id, stake_amount, connectedAccount });
 
     if (res.data.success) {
       dispatch({
@@ -1078,16 +949,16 @@ export const unstake = (room_id, stake_amount, callback) => async dispatch => {
         payload: {
           myGames: res.data.myGames,
           pages: res.data.pages,
-          pageNumber: 1
-        }
+          pageNumber: 1,
+        },
       });
       dispatch({ type: NEW_TRANSACTION, payload: res.data.newTransaction });
-      dispatch({ type: MSG_SUCCESS, payload: "GREAT SUCCESS!!" });
+      dispatch({ type: MSG_SUCCESS, payload: "YOU SOLD SOME %!" });
 
       if (callback) callback(null, res.data);
     } else {
       if (res.data.already_finished) {
-        // Handle if game already finished
+        dispatch({ type: MSG_ERROR, payload: 'GAME HAS ALREADY FINISHED' });
       }
       if (callback) callback(res.data.message);
     }
@@ -1121,7 +992,6 @@ export const getTransactionCandles = ({ roomId, timeFrame }) => async (dispatch)
       params: { timeFrame }
     });
     if (res.data.success) {
-
       dispatch({
         type: 'TRANSACTION_CANDLES_LOADED',
         payload: res.data || [],
@@ -1184,6 +1054,9 @@ export const updateQbot = (userId, isActive) => async dispatch => {
     const res = await axios.patch('/game/qbotStatus', { userId, isActive });
 
     if (res.data.success) {
+      let message = isActive ? "Turned on Elevated mode" : "Turned off Elevated mode";
+      dispatch({ type: MSG_SUCCESS, payload: message });
+
       return res.data.isActive; // Return updated isActive value
     }
   } catch (err) {
@@ -1200,7 +1073,7 @@ export const markChatAsRead = (fromId) => async dispatch => {
 
     // Option A: Just re-fetch all chats so the unread counts update
     dispatch(getMyChat());
-    
+
     // Option B: Or manually adjust store to set that user's unread_message_count = 0
     // (If you prefer not to re-fetch.)
   } catch (err) {
@@ -1268,7 +1141,7 @@ export const loadOlderChatMessages = (userId) => async (dispatch, getState) => {
     });
 
     if (res.data.success) {
-      const olderBatch = res.data.chatRoomInfo.chatLogs; 
+      const olderBatch = res.data.chatRoomInfo.chatLogs;
       const olderHasMore = res.data.chatRoomInfo.hasMore;
 
       // Dispatch the older messages to prepend them
@@ -1324,13 +1197,6 @@ export const updateBankroll = bankroll => {
   };
 };
 
-export const updateRain = rain => {
-  return {
-    type: UPDATE_RAIN,
-    payload: rain
-  };
-};
-
 export const updateBankrollQs = bankroll => {
   return {
     type: UPDATE_BANKROLL_QS,
@@ -1364,17 +1230,18 @@ export const setRoomList = (newRoom) => (dispatch, getState) => {
   }
 };
 
-export const removeRoomFromList = roomId => dispatch => {
+export const removeRoomFromList = (roomId) => (dispatch, getState) => {
   try {
-    let roomList = JSON.parse(localStorage.getItem('roomList')) || [];
-    roomList = roomList.filter(room => room._id !== roomId);
-    localStorage.setItem('roomList', JSON.stringify(roomList));
+    const oldList = getState().logic.roomList || [];
+    const updatedList = oldList.filter((room) => room._id !== roomId);
+
     dispatch({
       type: ROOMS_LOADED,
-      payload: { roomList, page: 1 },
+      // If you still want to reset page to 1, you can keep `page: 1`.
+      payload: { roomList: updatedList, page: 1 },
     });
   } catch (err) {
-    console.error('Error removing room from list in local storage:', err);
+    console.error('Error removing room from list:', err);
   }
 };
 

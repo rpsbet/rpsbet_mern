@@ -22,7 +22,7 @@ import Avatar from '../../components/Avatar';
 import { convertToCurrency } from '../../util/conversion';
 import { getRoomStatisticsData } from '../../redux/Customer/customer.action';
 import Battle from '../icons/Battle';
-import { alertModal } from '../modal/ConfirmAlerts';
+import { errorMsgBar } from '../../redux/Notification/notification.actions';
 import PlayerModal from '../modal/PlayerModal';
 import history from '../../redux/history';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
@@ -40,7 +40,7 @@ function OpenGamesTable(props) {
     handleClosePlayerModal,
     onlineUserList,
     balance,
-    isLowGraphics,
+    connectedAccount,
     user,
     solPrice,
     pageNumber,
@@ -53,7 +53,6 @@ function OpenGamesTable(props) {
     addNewTransaction,
     coHost,
   } = props;
-  const dispatch = useDispatch();
   // ------------------ LOCAL STATE ------------------
   const [localRoomList, setLocalRoomList] = useState(roomList);
   const [filter, setFilter] = useState('Live Games');
@@ -63,6 +62,8 @@ function OpenGamesTable(props) {
   const [isLoading, setIsLoading] = useState(true);
   const theme = getCustomTheme(isDarkMode);
   const [page, setPage] = useState(1);
+  const dispatch = useDispatch();
+
   const pageSize = 30;
   // total rooms from server, so we can calculate how many pages
   const startIndex = (page - 1) * pageSize;
@@ -128,25 +129,25 @@ function OpenGamesTable(props) {
 
   const handleSendCoHost = async () => {
     if (coHostAmount <= 0) {
-      alertModal(isDarkMode, 'R U FURR-REAL? AMOUNT MUST BE MORE THAN 0!');
+      dispatch(errorMsgBar('R U FURR-REAL? AMOUNT MUST BE MORE THAN 0!'));
       return;
     }
     if (coHostAmount > balance) {
-      alertModal(isDarkMode, 'NOT ENUFF FUNDS AT THIS MEOWMENT');
+      dispatch(errorMsgBar('NOT ENUFF FUNDS AT THIS MEOWMENT'));
       return;
     }
     try {
-      const result = await coHost(coHostAmount, selectedRow._id);
+      const result = await coHost(coHostAmount, selectedRow._id, connectedAccount);
       if (result.success) {
         addNewTransaction(result.newTransaction);
         await getRoomList({
           game_type: selectedGameType,
         });
       } else {
-        alertModal(isDarkMode, result.message);
+        dispatch(errorMsgBar(result.message));
       }
     } catch (e) {
-      alertModal(isDarkMode, 'ROOM TOO BUSY, TRY AGAIN LATER');
+      dispatch(errorMsgBar('ROOM TOO BUSY, TRY AGAIN LATER'));
     }
   };
 
@@ -212,7 +213,7 @@ function OpenGamesTable(props) {
     (roomDetails) => {
       const { roomStatus, id } = roomDetails;
       if (roomStatus === 'finished') {
-        alertModal(isDarkMode, 'THIS GAME HAS NOW ENDED');
+        dispatch(errorMsgBar('THIS GAME HAS NOW ENDED'));
         return;
       }
       setCurRoomInfo({
@@ -229,6 +230,7 @@ function OpenGamesTable(props) {
         x_link: roomDetails.x_link,
         telegram_link: roomDetails.telegram_link,
         website_link: roomDetails.website_link,
+        battles: roomDetails.battles,
         selectedStrategy: roomDetails.selectedStrategy,
         description: roomDetails.description,
         creator_status: roomDetails.creatorStatus,
@@ -246,7 +248,7 @@ function OpenGamesTable(props) {
       });
       history.push(`/join/${id}`);
     },
-    [alertModal, isDarkMode, setCurRoomInfo]
+    [isDarkMode, setCurRoomInfo]
   );
 
   // -------------- UI HELPERS --------------
@@ -314,7 +316,9 @@ function OpenGamesTable(props) {
                           roomId: row._id,
                           name: row.name,
                           x_link: row.x_link,
+                          tax: row.tax,
                           website_link: row.website_link,
+                          battles: row.battles,
                           selectedStrategy: row.selectedStrategy,
                           image: row.image,
                           ticker: row.ticker,
@@ -343,14 +347,24 @@ function OpenGamesTable(props) {
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                       <div className="table-cell cell-room-info">
                         <img src={row.image} alt={row.image} className="game-type-icon" />
-                        <div className="cell-game-description">
-                          {row.name}{' '}
-                          <span style={{ color: '#ff8500', fontWeight: 'bold' }}>
-                            ({row.ticker})
-                          </span>
-                          <br />
-                          <span>{row.description}</span>
-                        </div>
+                        <Box className="cell-game-description">
+                          <Typography variant="body2">
+                            {row.name}{' '}
+                            <Typography
+                              component="span"
+                              color='warning'
+                              variant="body2"
+                              sx={{ fontWeight: 'bold', fontSize: '0.75em' }}
+                            >
+                              ({row.ticker})
+                            </Typography>
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: '#b9bbbe', mt: 0.5, fontSize: '0.7em' }}>
+                            {row.description.length > 16
+                              ? `${row.description.slice(0, 16)}...`
+                              : row.description}
+                          </Typography>
+                        </Box>
                         <div className="cell-game-id ">
                           <img
                             src={`/img/gametype/icons/${row.game_type?.short_name}.svg`}
@@ -431,8 +445,8 @@ function OpenGamesTable(props) {
                         </a>
                         <i
                           className={`online-status${(onlineUserList.some((u) => u === row.creator_id) || row.creator_status === 'on')
-                              ? ' online'
-                              : ''
+                            ? ' online'
+                            : ''
                             }`}
                         ></i>
                         {row.hosts && row.hosts.slice(1, 1).map((host, index) => (
@@ -503,18 +517,18 @@ function OpenGamesTable(props) {
                           id="view"
                           style={{
                             color:
-                              parseFloat(row.user_bet) > row.bet_amount
+                              row.user_bet > row.bet_amount
                                 ? '#03ff3b'
-                                : parseFloat(row.user_bet) < row.bet_amount
+                                : row.user_bet < row.bet_amount
                                   ? '#ff033e'
                                   : '#808080',
                           }}
                         >
                           <Typography
                             variant="body2"
-                            className={`label ${parseFloat(row.user_bet) > row.bet_amount
+                            className={`label ${row.user_bet > row.bet_amount
                               ? 'green-text'
-                              : parseFloat(row.user_bet) < row.bet_amount
+                              : row.user_bet < row.bet_amount
                                 ? 'red-text'
                                 : 'grey-text'
                               }`}
@@ -531,9 +545,9 @@ function OpenGamesTable(props) {
                           >
                             <Typography
                               variant="body1"
-                              className={`number ${parseFloat(row.user_bet) > row.bet_amount
+                              className={`number ${row.user_bet > row.bet_amount
                                 ? 'green-text'
-                                : parseFloat(row.user_bet) < row.bet_amount
+                                : row.user_bet < row.bet_amount
                                   ? 'red-text'
                                   : 'grey-text'
                                 }`}
@@ -541,23 +555,23 @@ function OpenGamesTable(props) {
                               {convertToCurrency(row.user_bet, solPrice)}
                             </Typography>
 
-                            {parseFloat(row.user_bet) > row.bet_amount && (
+                            {row.user_bet > row.bet_amount && (
                               <div className="chart-arrow">
                                 <TrendingUpOutlined style={{ marginRight: '-5px' }} />
                                 <span style={{ marginLeft: '5px', fontSize: 'xx-small' }}>
                                   {`(${(
-                                    ((parseFloat(row.user_bet) - row.bet_amount) / row.bet_amount) *
+                                    ((row.user_bet - row.bet_amount) / row.bet_amount) *
                                     100
                                   ).toFixed(2)}%)`}
                                 </span>
                               </div>
                             )}
-                            {parseFloat(row.user_bet) < row.bet_amount && (
+                            {row.user_bet < row.bet_amount && (
                               <div className="chart-arrow">
                                 <TrendingDownOutlined style={{ marginRight: '-5px' }} />
                                 <span style={{ marginLeft: '5px', fontSize: 'xx-small' }}>
                                   {`(${(
-                                    ((row.bet_amount - parseFloat(row.user_bet)) / row.bet_amount) *
+                                    ((row.bet_amount - row.user_bet) / row.bet_amount) *
                                     100
                                   ).toFixed(2)}%)`}
                                 </span>
@@ -614,7 +628,7 @@ function OpenGamesTable(props) {
         </div>
       ) : (
         // If filter === "Recently Bonded"
-        <Grid container spacing={2}>
+        <Grid container spacing={2} sx={{p: 2}}>
           {recent.length === 0 ? (
             Array.from({ length: 4 }).map((_, index) => (
               <Grid item xs={6} sm={4} md={3} lg={3} xl={3} key={index}>
@@ -646,6 +660,7 @@ function OpenGamesTable(props) {
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
+                      background: '#3a2d41',
                       cursor: 'pointer',
                       transition: 'transform 0.2s ease, box-shadow 0.2s ease',
                       '&:hover': {
@@ -758,6 +773,7 @@ function OpenGamesTable(props) {
           <CoHostModal
             isDarkMode={isDarkMode}
             coHostAmount={coHostAmount}
+            connectedAccount={connectedAccount}
             selectedRow={selectedRow}
             balance={balance}
             user={user}
@@ -788,7 +804,8 @@ const mapStateToProps = (state) => ({
   isLowGraphics: state.auth.isLowGraphics,
   loading: state.logic.isActiveLoadingOverlay,
   solPrice: state.logic.solPrice,
-  roomList: state.logic.roomList
+  roomList: state.logic.roomList,
+  connectedAccount: state.auth.connectedAccount,
 });
 
 const mapDispatchToProps = {

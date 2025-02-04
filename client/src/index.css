@@ -154,6 +154,10 @@ button.btn {
   width: 100%;
 }
 
+.data-item, .roll-tag, #notistack-snackbar {
+  text-transform: uppercase;
+}
+
 a {
   color: #b9bbbe;
   font-weight: 600;
@@ -403,15 +407,10 @@ div.table .table-cell button.btn_join img {
   font-weight: 600;
 }
 
-.roll-tag {
-  position: relative;
-  top: 0px;
-  background-color: #891e1eaa;
-  color: var(--white-color);
-  padding: 4px 8px;
+.roll-tag, h4.game_header {
+  background: #2a202f;
+  padding: 4px;
   border-radius: 0.3em;
-  font-size: 10px;
-  font-weight: bold;
 }
 
 .step-tag {
@@ -445,11 +444,14 @@ div.table .table-cell button.btn_join img {
   border: 3px solid #ffd000 !important;
 }
 
-.lottie-container {
+.lottie-container div {
+  width: 100%;
   position: absolute;
   top: 0;
-  left: 0;
+  left: 50%;
+  transform: translateX(-50%);
 }
+
 
 .lottie-container.blackCube {
   top: 15%;
@@ -620,14 +622,12 @@ div.table.my-chat-table .table-cell button.btn_join {
 
 .room-image {
   max-width: 42%;
-  height: auto;
-  border-radius: 0.3em;
+  object-fit: contain;
+  object-position: top;
   margin-right: 10px;
 }
 
 .room-description {
-  font-size: 14px;
-  color: #666;
   margin: 15px 0;
 }
 
@@ -701,7 +701,6 @@ td {
   border-bottom: 1px solid #33333333;
 }
 
-
 #ai_mode {
   border: 1px solid #f13bfe;
   border-radius: 0.3em;
@@ -716,19 +715,27 @@ span.room-id.qbot {
   margin-left: 5px;
   margin-right: 10px;
   border: 1px solid #dab200;
-  border-radius: 1em;
+  border-radius: 0.3em;
   color: #f1c100;
   font-size: 0.5em !important;
   padding: 2px 4px;
   background: linear-gradient(45deg, #a391418c, #ffe01887);
 }
 
-div.table.main-history-table .table-row .table-cell img.avatar {
-  width: 16px;
-  height: 16px;
-  border-radius: 0.3em;
+div.table.main-history-table .table-row .table-cell .avatar div {
+  border: unset !important;
+  box-shadow: unset !important;
 }
-
+div.table.main-history-table .table-row .table-cell .avatar,
+.room img.game-type-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 0.3em;
+  margin-right: 5px;
+}
+.room img.game-type-icon {
+  padding: 4px;
+}
 div.table.my-chat-table {
   padding: 10px;
 }
@@ -1065,6 +1072,7 @@ button.win-bg {
   border-radius: 0.3em;
   padding: 20px 20px 20px 30px;
   margin-bottom: 20px;
+  min-height: 220px; 
   display: block !important;
   justify-content: center;
 }
@@ -1091,10 +1099,7 @@ button.win-bg {
   text-align: center;
 }
 
-
-div.table.main-game-table,
-div.table.main-history-table,
-div.table.my-open-game-table {
+div {
   -ms-overflow-style: none;
   scrollbar-width: none;
   margin-bottom: 0;
@@ -1116,17 +1121,6 @@ div.table.main-game-table .cell-coHost {
   position: absolute;
   right: 0px;
   bottom: 0px;
-}
-
-div.table.main-game-table .cell-game-description {
-  color: #333;
-  font-size: 0.8em;
-  line-height: 1.4em;
-}
-
-div.table.main-game-table .cell-game-description span {
-  color: #cfcfcf;
-  font-size: 0.7em;
 }
 
 .table-cell.cell-room-info .cell-game-id {
@@ -1358,16 +1352,6 @@ div.table.my-open-game-table .table-row .table-cell span.end-amount {
   background-color: #f1f1f1;
   z-index: 2;
 }
-
-h5.title {
-  margin: auto auto 10px auto;
-  text-transform: uppercase;
-  background: #f0b90b33;
-  padding: 5px;
-  width: 80%;
-  border-radius: 1em;
-}
-
 
 .main_table_pagination button.btn_main_table_page_number {
   margin: 0 4px 0 0;
@@ -2982,11 +2966,6 @@ ul div {
   font-weight: 600;
 }
 
-#root .site_wrapper,
-button {
-  text-transform: uppercase !important;
-}
-
 .social-icons svg {
   width: 50px !important;
   margin: 25px 0 !important;
@@ -3047,7 +3026,6 @@ h3.game-sub-title {
 #liveStakes {
   padding: 2.5px 5px;
   cursor: pointer;
-  margin-left: 18px;
 }
 
 .game-page .game-contents .game-info-panel button.other {
@@ -3113,14 +3091,6 @@ circle {
 
 .hidden {
   display: none;
-}
-
-
-.game_header {
-  width: 100%;
-  z-index: 9;
-  background: linear-gradient(45deg, #f8f9fa, #b1b1b1);
-  top: 0;
 }
 
 #rps {
@@ -3373,7 +3343,7 @@ circle {
 
 .creditScore {
   display: flex;
-  justify-content: center;
+  justify-content: end;
 }
 
 .creditScoreValue {
@@ -4130,6 +4100,9 @@ div.table .table-row .table-cell img.avatar,
   border-radius: 0 !important;
 }
 
+.table.main-history-table {
+  margin-bottom: 0;
+}
 
 .modal-body .avatar-border {
   padding: 0 !important;

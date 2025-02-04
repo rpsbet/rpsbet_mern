@@ -56,39 +56,72 @@ async function getQsBetItems(roomId, user) {
   }
 }
 
-async function predictNextBetAmount(
-  betArray,
-  penultimateSameAsLast,
-  room,
-) {
-  const allStates = Array.from(new Set(betArray));
-  if (penultimateSameAsLast !== 0) {
-    if (penultimateSameAsLast >= 3) {
-      const maxState = Math.max(...allStates);
-      return Math.min(Math.max(maxState, 0.05), parseFloat(room.user_bet));
-    } else if (penultimateSameAsLast === 2) {
-      const sortedStates = allStates.sort((a, b) => b - a);
-
-      if (sortedStates.length >= 2) {
-        const secondHighestState = sortedStates[1];
-        return Math.min(
-          Math.max(secondHighestState, 0.05),
-          parseFloat(room.user_bet),
-        );
-      } else {
-        const firstState = sortedStates[0];
-        return Math.min(Math.max(firstState, 0.05), parseFloat(room.user_bet));
-      }
-    } else if ((penultimateSameAsLast = 1)) {
-      const minState = Math.min(...allStates);
-      return Math.min(Math.max(minState, 0.05), parseFloat(room.user_bet));
-    }
-  } else {
-    const filteredBetArray = betArray.filter((value) => value > 0.05);
-    const randomIndex = Math.floor(Math.random() * filteredBetArray.length);
-    return filteredBetArray[randomIndex];
+/**
+ * Imitates the logic of the original predictNextBetAmount function.
+ *
+ * @param {number[]} betArray - array representing the user's bet range [minBet, maxBet].
+ * @param {number} penultimateSameAsLast - the "risk" value (1,2,3,4).
+ * @param {object} room - object containing at least { user_bet } field (equivalent to bankroll).
+ * @returns {number} - A randomly chosen bet amount within the calculated range.
+ */
+async function predictNextBetAmount(betArray, penultimateSameAsLast, room) {
+  // 1) If risk = 1, pick random bet in [0.0005..0.001]
+  if (penultimateSameAsLast === 1) {
+    const minFixed = 0.0005;
+    const maxFixed = 0.001;
+    const randomBet = minFixed + Math.random() * (maxFixed - minFixed);
+    return parseFloat(randomBet.toFixed(6));
   }
+
+  // 2) Determine the absolute lower & upper bound
+  //    minBet is the larger of betArray[0] and 0.0005
+  //    maxBet is the smaller of betArray[1] and room.user_bet
+  const minVal = Math.max(betArray[0] || 0, 0.0005);
+  const maxVal = Math.min(betArray[1] || 0, parseFloat(room.user_bet));
+
+  // If invalid or max < min, fall back to minVal
+  if (isNaN(minVal) || isNaN(maxVal) || maxVal < minVal) {
+    return minVal;
+  }
+
+  // 3) Decide the portion of [minVal..maxVal] based on risk
+  //    risk=2 => a lower fraction, risk=3 => moderate fraction, risk=4 => upper fraction
+  let lowerFrac, upperFrac;
+  switch (penultimateSameAsLast) {
+    case 2:
+      // e.g. lower fraction: ~2.5% .. 20% of the range
+      lowerFrac = 0.025;
+      upperFrac = 0.2;
+      break;
+    case 3:
+      // e.g. moderate fraction: 20% .. 40% of the range
+      lowerFrac = 0.2;
+      upperFrac = 0.4;
+      break;
+    case 4:
+      // e.g. upper fraction: 40% .. 100% of the range
+      lowerFrac = 0.4;
+      upperFrac = 1.0;
+      break;
+    default:
+      // If penultimateSameAsLast = 0 or any unexpected value => full range
+      lowerFrac = 0;
+      upperFrac = 1.0;
+      break;
+  }
+
+  // 4) Calculate numeric bounds within [minVal..maxVal]
+  const totalRange = maxVal - minVal;
+  const chosenMin = minVal + totalRange * lowerFrac;
+  const chosenMax = minVal + totalRange * upperFrac;
+
+  // 5) Choose a random amount in [chosenMin..chosenMax]
+  const randomBet = chosenMin + Math.random() * (chosenMax - chosenMin);
+
+  // 6) Round to 6 decimal places (or modify as needed)
+  return parseFloat(randomBet.toFixed(6));
 }
+
 
 // List of valid strategy names in JoiningStrategySchema
 const validJoiningStrategies = [
@@ -109,7 +142,7 @@ const pickSubStrategy = (joiningObj) => {
       if (typeof subStrategies === 'object') {
         for (const subStrategy in subStrategies) {
           const value = subStrategies[subStrategy];
-          if (typeof value === 'number' && value > 0) {
+          if (typeof value === 'number' && value >= 0) {
             subStrategyValues.push({
               parentStrategy: strategy,
               name: subStrategy,
@@ -123,20 +156,33 @@ const pickSubStrategy = (joiningObj) => {
 
   // Calculate probabilities for each sub-strategy
   const total = subStrategyValues.reduce((sum, sub) => sum + sub.value, 0);
-  const probabilities = subStrategyValues.map((sub) => ({
-    parentStrategy: sub.parentStrategy,
-    name: sub.name,
-    probability: sub.value / total,
-  }));
 
-  const random = Math.random();
-  let cumulativeProbability = 0;
-  for (const sub of probabilities) {
-    cumulativeProbability += sub.probability;
-    if (random < cumulativeProbability) {
-      return sub;
+  if (total === 0 && subStrategyValues.length > 0) {
+    // If total is 0, pick a random sub-strategy
+    const randomIndex = Math.floor(Math.random() * subStrategyValues.length);
+    return {
+      parentStrategy: subStrategyValues[randomIndex].parentStrategy,
+      name: subStrategyValues[randomIndex].name,
+      probability: 1 / subStrategyValues.length // Since all have equal probability
+    };
+  } else if (total > 0) {
+    const probabilities = subStrategyValues.map((sub) => ({
+      parentStrategy: sub.parentStrategy,
+      name: sub.name,
+      probability: sub.value / total,
+    }));
+
+    const random = Math.random();
+    let cumulativeProbability = 0;
+    for (const sub of probabilities) {
+      cumulativeProbability += sub.probability;
+      if (random < cumulativeProbability) {
+        return sub;
+      }
     }
   }
+
+  // If no valid sub-strategy was found or if there's some edge case
   return null;
 };
 
@@ -211,7 +257,6 @@ async function callCronJobs(io) {
         }
       }
     }
-
     // attached players
     const attachedPlayers = await AttachedPlayer.find({});
     for (const player of attachedPlayers) {
@@ -255,28 +300,11 @@ async function callCronJobs(io) {
           is_private: false,
         });
 
-        const numElements = 6;
-        let remainingBalance = user.balance;
-        const qbot_bet_amounts = [];
-
-        for (let i = 0; i < numElements; i++) {
-          const maxBet = remainingBalance - (numElements - i - 1);
-          const bet = Math.floor(Math.random() * maxBet) + 1;
-
-          qbot_bet_amounts.push(bet);
-          remainingBalance -= bet;
-
-          if (remainingBalance <= numElements - i - 1) {
-            while (qbot_bet_amounts.length < numElements) {
-              qbot_bet_amounts.push(1);
-              remainingBalance--;
-            }
-            break;
-          }
-        }
+        const qbot_bet_amounts = user.range;
 
         qbot_bet_amounts.sort((a, b) => a - b);
         if (user && room) {
+
           const result = await executeCronJob(
             user,
             qbot_bet_amounts,
@@ -394,7 +422,6 @@ async function executeCronJob(
     let penultimateSameAsLast;
     if (gameType.toString() === '62a25d2a723b9f15709d1ae7') {
       // rps BOT
-      
       if (useFirstBetFunction) {
         const randomIndex = Math.floor(Math.random() * 3);
         const rpsOptions = ['R', 'P', 'S'];
@@ -408,13 +435,13 @@ async function executeCronJob(
         } else {
           penultimateSameAsLast = 3;
         }
-        
+
         predictedBetAmount = await predictNextBetAmount(
           betArray,
           penultimateSameAsLast,
           room,
         );
-        
+
       } else {
         // attached RPS (PLAYER)
         const rpsBetItems = await getRpsBetItems(roomId, user);
@@ -475,7 +502,6 @@ async function executeCronJob(
         );
       } else {
         // attached / q-bot qs (PLAYER)
-
         const qsBetItems = await getQsBetItems(roomId, user);
 
         if (betArray && betArray.length > 0) {
@@ -534,6 +560,7 @@ async function executeCronJob(
           predictedBetAmount = parseFloat(room.user_bet);
         }
       }
+
     } else {
       console.log('Game type does not match, skipping this room.');
 
@@ -567,7 +594,6 @@ async function executeCronJob(
       ) {
         // BOT
         isExecutingBet1 = true;
-
         await executeBet1(req, true);
         isExecutingBet1 = false;
         await SystemSetting.updateOne(

@@ -55,7 +55,7 @@ function LeaderboardsModal({
   fetchReceiptStatistics
 }) {
   // -------------------- Local State --------------------
-  const [sortField, setSortField] = useState('totalProfit');
+  const [sortField, setSortField] = useState('gameProfit');
   const [sortOrder, setSortOrder] = useState('desc');
   const [showPlayerModal, setShowPlayerModal] = useState(false);
   const [selectedCreator, setSelectedCreator] = useState('');
@@ -80,8 +80,8 @@ function LeaderboardsModal({
       try {
         // Fetch everything only once per open
         await fetchLeaderboardsData();
-        await fetchEquityDistribution();
-        await fetchReceiptStatistics();
+        // await fetchEquityDistribution();
+        // await fetchReceiptStatistics();
       } catch (error) {
         console.error('Error fetching leaderboards data:', error);
       }
@@ -90,19 +90,16 @@ function LeaderboardsModal({
   }, [modalIsOpen, fetchLeaderboardsData, fetchEquityDistribution, fetchReceiptStatistics]);
 
   // -------------------- 2) Sync Equity Chart State From Redux --------------------
-  useEffect(() => {
-    // If equityChart is not an array, default to []
-    // This prevents "cannot read .map of undefined"
-    setEquityChartData(Array.isArray(equityChart) ? equityChart : []);
-    setLoadingEquityChartData(loadingEquityChart || false);
-  }, [equityChart, loadingEquityChart]);
+  // useEffect(() => {
+  //   setEquityChartData(Array.isArray(equityChart) ? equityChart : []);
+  //   setLoadingEquityChartData(loadingEquityChart || false);
+  // }, [equityChart, loadingEquityChart]);
 
   // -------------------- 3) Sync Receipt Chart State From Redux --------------------
-  useEffect(() => {
-    // If it's not an object with numeric fields, default to {}
-    setReceiptChartData(receiptChart || {});
-    setLoadingReceiptChartData(loadingReceiptChart || false);
-  }, [receiptChart, loadingReceiptChart]);
+  // useEffect(() => {
+  //   setReceiptChartData(receiptChart || {});
+  //   setLoadingReceiptChartData(loadingReceiptChart || false);
+  // }, [receiptChart, loadingReceiptChart]);
 
   // -------------------- Sorting & Player Modal Handlers --------------------
   const handleOpenPlayerModal = useCallback((creatorId) => {
@@ -308,7 +305,7 @@ function LeaderboardsModal({
           </Box>
           <Box sx={{ background: 'rgba(170, 170, 170, 0.06)', borderRadius: '0.3em', p: '20px' }}>
             {/* CHARTS SECTION */}
-            <Box
+            {/* <Box
               sx={{
                 display: 'flex',
                 flexDirection: isMobile ? 'column' : 'row',
@@ -319,9 +316,8 @@ function LeaderboardsModal({
                 mb: 3
               }}
             >
-              {/* Equity Chart */}
               <Box sx={{ textAlign: 'center' }}>
-                <Typography  className='title' variant="h5">Capital Distribution</Typography>
+                <Typography  className='roll-tag title' variant="h5">Capital Distribution</Typography>
                 {loadingEquityChartData ? (
                   <Box sx={{ mt: 2 }}>
                     <Skeleton variant="circular" width={200} height={200} />
@@ -341,9 +337,8 @@ function LeaderboardsModal({
                 )}
               </Box>
 
-              {/* Receipt Chart */}
               <Box sx={{ textAlign: 'center' }}>
-                <Typography className='title' variant="h5">Profit Distribution</Typography>
+                <Typography className='roll-tag title' variant="h5">Profit Distribution</Typography>
                 {loadingReceiptChartData ? (
                   <Box sx={{ mt: 2 }}>
                     <Skeleton variant="circular" width={200} height={200} />
@@ -362,7 +357,7 @@ function LeaderboardsModal({
                   </Typography>
                 )}
               </Box>
-            </Box>
+            </Box> */}
 
             {/* LEADERBOARDS TABLE */}
             <Typography variant="h6" sx={{ mb: 2 }}>
@@ -386,22 +381,23 @@ function LeaderboardsModal({
                     </TableCell>
                     <TableCell
                       sx={{ color: '#fff', fontWeight: '600', cursor: 'pointer' }}
-                      onClick={() => handleSort('totalProfit')}
+                      onClick={() => handleSort('totalTraded')}
                     >
-                      NET PROFIT {sortField === 'totalProfit' && <SortIcon />}
+                      TOTAL TRADED {sortField === 'totalTraded' && <SortIcon />}
                     </TableCell>
                     <TableCell
                       sx={{ color: '#fff', fontWeight: '600', cursor: 'pointer' }}
-                      onClick={() => handleSort('profitAllTimeHigh')}
+                      onClick={() => handleSort('gameProfit')}
                     >
-                      ALL-TIME-HIGH {sortField === 'profitAllTimeHigh' && <SortIcon />}
+                     GAME PROFIT {sortField === 'gameProfit' && <SortIcon />}
                     </TableCell>
                     <TableCell
                       sx={{ color: '#fff', fontWeight: '600', cursor: 'pointer' }}
-                      onClick={() => handleSort('profitAllTimeLow')}
+                      onClick={() => handleSort('gameProfit')}
                     >
-                      ALL-TIME-LOW {sortField === 'profitAllTimeLow' && <SortIcon />}
+                     TRADING PROFIT {sortField === 'tradingProfit' && <SortIcon />}
                     </TableCell>
+                    
                     <TableCell
                       sx={{ color: '#fff', fontWeight: '600', cursor: 'pointer' }}
                       onClick={() => handleSort('gamePlayed')}
@@ -435,15 +431,14 @@ function LeaderboardsModal({
                         {convertToCurrency(entry.totalWagered, solPrice)}
                       </TableCell>
                       <TableCell sx={{ color: '#fff' }}>
-                        {convertToCurrency(entry.totalProfit, solPrice)}
+                        {convertToCurrency(entry.totalTraded, solPrice)}
                       </TableCell>
                       <TableCell sx={{ color: '#fff' }}>
-                        {convertToCurrency(entry.profitAllTimeHigh, solPrice)}
+                        {convertToCurrency(entry.gameProfit, solPrice)}
                       </TableCell>
                       <TableCell sx={{ color: '#fff' }}>
-                        {convertToCurrency(entry.profitAllTimeLow, solPrice)}
+                        {(entry.gamePlayed, solPrice)}
                       </TableCell>
-                      <TableCell sx={{ color: '#fff' }}>{entry.gamePlayed}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

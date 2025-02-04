@@ -32,15 +32,6 @@ export const getCustomTheme = (isDarkMode) => createTheme({
         },
       },
     },
-    MuiTooltip: {
-      styleOverrides: {
-        tooltip: {
-          backgroundColor: 'red',
-          color: 'white',
-          fontSize: '1em',
-          padding: '8px',
-        },
-      },
-    },
+    
   },
 });

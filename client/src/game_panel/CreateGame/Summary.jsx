@@ -1,163 +1,106 @@
-import React, { useState, useEffect } from 'react';
-import { convertToCurrency } from '../../util/conversion';
-import { Warning, Info, CheckCircle } from '@mui/icons-material';
-import { Tooltip } from '@mui/material';
+import React, { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  Chip,
+  Box,
+  Typography,
+  useMediaQuery,
+  useTheme,
+  Tooltip,
+} from '@mui/material';
+import FiberManualRecordIcon from '@mui/icons-material/CircleRounded';
+import { disconnectWalletAddress, authenticateWithPhantom } from '../../redux/Auth/user.actions';
 
-const Summary = (props) => {
-  const [winChance, setWinChance] = useState(props.game_mode === 'RPS' ? 33 : 0);
+const Summary = ({shortVersion}) => {
+  const dispatch = useDispatch();
+  const connectedAccount = useSelector((state) => state.auth.connectedAccount);
 
-  useEffect(() => {
-    if (props.game_mode === 'RPS') {
-      setWinChance(33);
-    } else if (props.game_mode === 'Quick Shoot') {
-      setWinChance(15);
-    }
-  }, [props.game_mode]);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm')) || shortVersion;
 
-  const preSummary = () => {
-    const { solPrice, max_prize, max_return, bet_amount, game_mode } = props;
-    let public_max_return = convertToCurrency(max_prize, solPrice);
-
-    if (game_mode === 'Quick Shoot') {
-      public_max_return = convertToCurrency(max_return, solPrice);
-    } else if (game_mode === 'RPS') {
-      public_max_return = convertToCurrency(bet_amount, solPrice);
-    }
-
-    return (
-      <div className="pre-summary-panel title">
-        <div className="data-item">
-          <div className="label your-bet-amount">YOUR BET</div>
-          <div className="value">{convertToCurrency(bet_amount, solPrice)}</div>
-        </div>
-        <div className="data-item">
-          <div className="label your-max-return">TARGET ROI</div>
-          <div className="value">{convertToCurrency(max_return, solPrice)}</div>
-        </div>
-        <div className="data-item">
-          <div className="label win-chance">Expected Value</div>
-          <div className="value">
-            {convertToCurrency(props.winChance, solPrice) === -0
-              ? convertToCurrency(0.0).toFixed(2)
-              : convertToCurrency(props.winChance, solPrice)}
-          </div>
-        </div>
-      </div>
-    );
+  const formatAddress = (address) => {
+    if (!address) return '';
+    return `${address.substring(0, 9)}...${address.substring(address.length - 9)}`;
   };
 
-  const totalSummary = () => {
-    const {
-      qs_game_type,
-      solPrice,
-      bet_amount,
-      max_return,
-      max_prize,
-      public_bet_amount,
-      game_mode,
-      is_private,
-      ticker,
-      endgame_amount,
-      endgame_type,
-      selectedStrategy,
-      description,
-      winChance,
-    } = props;
+  // When no account is connected, attempt to connect via Phantom.
+  const handleChipClick = async () => {
+    if (!connectedAccount) {
+      try {
+        if (!window.solana || !window.solana.isPhantom) {
+          console.error('Phantom wallet not found');
+          return;
+        }
+        // Attempt to connect with Phantom
+        await window.solana.connect();
+        const walletAddress = window.solana.publicKey.toString();
 
-    const isNegative = winChance < 0;
-    const isPositive = winChance > 0;
-
-    const valueColor = isNegative ? '#ff0000' : isPositive ? 'rgb(40, 167, 69)' : 'default';
-    const backgroundColor = isNegative
-      ? '#ff000033'
-      : isPositive
-      ? 'rgba(40, 167, 69, 0.3)'
-      : 'default';
-
-    const icon = isNegative ? (
-      <Warning style={{ width: '10pt', cursor: 'pointer', marginLeft: '5px' }} />
-    ) : isPositive ? (
-      <CheckCircle style={{ width: '10pt', cursor: 'pointer', marginLeft: '5px' }} />
-    ) : (
-      <Info style={{ width: '10pt', cursor: 'pointer', marginLeft: '5px' }} />
-    );
-
-    const tooltipText = isNegative
-      ? 'High Risk Game'
-      : isPositive
-      ? 'Low Risk Game'
-      : 'Zero (Neutral Fairness)';
-
-    let public_max_return = convertToCurrency(max_prize, solPrice);
-
-    if (game_mode === 'Quick Shoot') {
-      public_max_return = convertToCurrency(props.max_return, solPrice);
+        // Dispatch Redux action to authenticate with Phantom
+        const result = await dispatch(authenticateWithPhantom({ walletAddress }));
+        if (result.status === 'success') {
+          console.log('Phantom login successful');
+        } else {
+          console.error('Phantom login failed:', result.error);
+        }
+      } catch (error) {
+        console.error('Error connecting Phantom wallet:', error);
+      }
     }
-
-    return (
-      <div className="summary-panel ">
-        <h3 className="game-sub-title">Room Summary</h3>
-        <div className="summary-info">
-          <div className="summary-item">
-            <div className="summary-item-name title">Expected Value</div>
-            <div className="summary-item-value" style={{ color: valueColor, background: backgroundColor }}>
-              {winChance === -0 ? (0.0).toFixed(2) : winChance}
-              <Tooltip title={tooltipText}>{icon}</Tooltip>
-            </div>
-          </div>
-          <div className="summary-item">
-            <div className="summary-item-name title">Bet Amount</div>
-            <div className="summary-item-value">{convertToCurrency(bet_amount, solPrice)}</div>
-          </div>
-          {game_mode === 'Quick Shoot' && (
-            <>
-              <div className="summary-item">
-                <div className="summary-item-name title">Game Mode</div>
-                <div className="summary-item-value">{qs_game_type}</div>
-              </div>
-              <div className="summary-item">
-                <div className="summary-item-name title">Public Bet Amount</div>
-                <div className="summary-item-value">{convertToCurrency(public_bet_amount, solPrice)}</div>
-              </div>
-              <div className="summary-item">
-                <div className="summary-item-name title">Public Max Return</div>
-                <div className="summary-item-value">{convertToCurrency(public_max_return, solPrice)}</div>
-              </div>
-            </>
-          )}
-          <div className="summary-item">
-            <div className="summary-item-name title">TARGET ROI</div>
-            <div className="summary-item-value">{convertToCurrency(max_return, solPrice)}</div>
-          </div>
-          {endgame_type && (
-            <div className="summary-item">
-              <div className="summary-item-name title">Payout</div>
-              <div className="summary-item-value">{convertToCurrency(endgame_amount, solPrice)}</div>
-            </div>
-          )}
-          <div className="summary-item">
-            <div className="summary-item-name title">AI Play Strategy</div>
-            <div className="summary-item-value">{selectedStrategy}</div>
-          </div>
-          <div className="summary-item">
-            <div className="summary-item-name title">Description</div>
-            <div className="summary-item-value">{description || 'No Description'}</div>
-          </div>
-          <div className="summary-item">
-            <div className="summary-item-name title">Privacy</div>
-            <div className="summary-item-value">{is_private ? 'Private' : 'Public'}</div>
-          </div>
-        </div>
-      </div>
-    );
   };
 
-  if (props.step === 2) {
-    return <></>;
-  } else if (props.step === 3) {
-    return totalSummary();
-  }
-  return preSummary();
+  // When an account is connected, clicking the delete icon disconnects it.
+  const handleDelete = () => {
+    if (connectedAccount) {
+      dispatch(disconnectWalletAddress());
+    }
+  };
+
+  // Use a shortened address on mobile.
+  const chipLabel = connectedAccount
+    ? isMobile
+      ? formatAddress(connectedAccount)
+      : connectedAccount
+    : 'CONNECT ACCOUNT';
+
+  // Show a green circle if connected; red if not.
+  const indicatorColor = connectedAccount ? '#00ff3a' : '#ff0000';
+
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 1,
+        color: 'white', // sets text color for children
+        textAlign: 'center',
+        mt: isMobile ? 0 : 2
+      }}
+    >
+      <Tooltip title="Tokens will be distributed to this address when bonded">
+
+      <Chip
+        label={chipLabel}
+        onClick={handleChipClick}
+        {...(connectedAccount ? { onDelete: handleDelete } : {})}
+        clickable
+        sx={{
+          '& .MuiChip-deleteIcon': {
+            color: 'inherit',
+            transition: 'color 0.3s',
+          },
+          textTransform: 'unset',
+          color: 'white',
+          borderColor: 'white',
+          '&:hover .MuiChip-deleteIcon': {
+            color: 'rgba(255,255,255,0.7)', // a variation on white for the icon on hover
+          },
+        }}
+      />
+      <FiberManualRecordIcon sx={{ ml: 0.5, color: indicatorColor, fontSize: 20 }} />
+      </Tooltip>
+    </Box>
+  );
 };
 
 export default Summary;

@@ -62,8 +62,12 @@ function Avatar(props) {
     4: '#FF4500',  // Orange Red
     5: '#8A2BE2',  // Blue Violet
     6: '#DC143C',  // Crimson
-    7: '#FFD700',  // Gold
+    7: '#7FFF00',  // Chartreuse
+    8: '#FF6347',  // Tomato
+    9: '#40E0D0',  // Turquoise
+    10: '#FFD700', // Gold
   };
+  
 
   let adjustedRank = rank;
   if (adjustedRank !== null && !isNaN(adjustedRank)) {
@@ -141,7 +145,7 @@ function Avatar(props) {
             : borderColor,
           boxShadow: isBot
             ? 'none'
-            : isSystem
+            : isSystem && adjustedRank > 7
             ? 'none'
             : `0 0px 2px 0px ${rankColor}`,
         }}
@@ -181,12 +185,12 @@ function Avatar(props) {
             left: '-6px',
             width: '1.8em',
             height: '1.8em',
+            display: adjustedRank <= 8 ? 'flex' : 'none',
             backgroundColor: backgroundColorStyle,
             color: isDarkMode ? '#2d2d2d' : '#f9f9f9',
             borderRadius: 1, // Slightly rounded corners for the rank icon
             fontSize: '0.55em',
             fontWeight: 'bold',
-            display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
           }}

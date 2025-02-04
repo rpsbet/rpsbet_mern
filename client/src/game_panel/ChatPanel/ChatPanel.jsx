@@ -1,8 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { connect } from 'react-redux';
+import { connect, useDispatch } from 'react-redux';
 import axios from 'axios';
 import Moment from 'moment';
-import { alertModal } from '../modal/ConfirmAlerts';
 import { getRank } from '../../util/getRank';
 import Avatar from '../../components/Avatar';
 
@@ -30,7 +29,7 @@ import {
 import GlobalChat from './GlobalChat';
 import MyChat from './MyChat';
 import { setFocused } from '../../redux/Auth/user.actions.js';
-
+import { errorMsgBar } from '../../redux/Notification/notification.actions';
 // Import your custom theme generator
 import { ThemeProvider } from '@mui/material/styles';
 import { getCustomTheme } from '../../config/theme';
@@ -170,6 +169,7 @@ function ChatPanel(props) {
     time: null
   });
   const [hoverTabIndex, setHoverTabIndex] = useState(-1);
+  const dispatch = useDispatch();
 
   // Reference to the TextField for focusing after inserting emoji
   const textareaRef = useRef(null);
@@ -204,7 +204,7 @@ function ChatPanel(props) {
         }
       }
     } else {
-      alertModal(isDarkMode, 'FURR-SST LOG IN!');
+      dispatch(errorMsgBar('FURR-SST LOG IN!'));
       return;
     }
   };
@@ -293,7 +293,7 @@ function ChatPanel(props) {
         handleCloseEmojiPopover();
       }
     } else {
-      alertModal(isDarkMode, 'FURR-SST LOG IN!');
+      dispatch(errorMsgBar('FURR-SST LOG IN!'));
       return;
     }
   };

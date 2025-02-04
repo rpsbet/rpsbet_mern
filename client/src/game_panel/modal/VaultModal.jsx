@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { connect } from 'react-redux';
+import { connect, useDispatch } from 'react-redux';
 import {
   Modal,
   Box,
@@ -10,7 +10,10 @@ import {
   TableCell,
   Button,
   TextField,
-  Paper
+  Paper,
+  Chip,
+  Divider,
+  TableContainer
 } from '@mui/material';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import MoneyOffIcon from '@mui/icons-material/MoneyOff';
@@ -25,9 +28,8 @@ import {
   fetchRecentVaultTransactions,
 } from '../../redux/Auth/user.actions';
 import { addNewTransaction } from '../../redux/Logic/logic.actions';
+import { errorMsgBar } from '../../redux/Notification/notification.actions';
 import { convertToCurrency } from '../../util/conversion';
-import { alertModal } from './ConfirmAlerts';
-import history from '../../redux/history';
 
 // Remove react-modal usage and .setAppElement()
 // MUI handles that internally.
@@ -54,6 +56,7 @@ function VaultModal(props) {
   const [isWithdraw, setIsWithdraw] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [vaultTransactions, setVaultTransactions] = useState([]);
+  const dispatch = useDispatch();
 
   // ------------------ EFFECTS ------------------
   useEffect(() => {
@@ -86,7 +89,7 @@ function VaultModal(props) {
       amountParsed <= 0 ||
       amountParsed > user.balance
     ) {
-      alertModal(false, 'IM-PAW-SIBBLEEE, ENTER A VALID AMOUNT!');
+      dispatch(errorMsgBar('IM-PAW-SIBBLEEE, ENTER A VALID AMOUNT!'));
       return;
     }
 
@@ -114,7 +117,7 @@ function VaultModal(props) {
 
     // Basic validation
     if (isNaN(amountParsed) || amountParsed <= 0 || amountParsed > vaultBal) {
-      alertModal(false, 'IM-PAW-SIBBLEEE, ENTER A VALID AMOUNT!');
+      dispatch(errorMsgBar('IM-PAW-SIBBLEEE, ENTER A VALID AMOUNT!'));
       return;
     }
 
@@ -129,8 +132,8 @@ function VaultModal(props) {
     setLoaded(true);
 
     if (onVaultBalChange) {
-        onVaultBalChange(result.vaultBalance);
-      }
+      onVaultBalChange(result.vaultBalance);
+    }
 
     // Redux updates
     addNewTransaction(result.newTransaction);
@@ -175,7 +178,7 @@ function VaultModal(props) {
               VAULT
             </Typography>
             <Button variant="text" color="error" onClick={closeModal}>
-            ×
+              ×
             </Button>
           </Box>
 
@@ -184,21 +187,29 @@ function VaultModal(props) {
 
             {/* Balance Section */}
             <Box>
-              <Typography variant="h5" textAlign="center">
+              <Typography className="title" variant="subtitle2" textAlign="center" sx={{ mt: 2, mb: 2 }}>
                 Your Vault Balance
               </Typography>
-              <Typography variant="h4" textAlign="center">
-                <CountUp
-                  start={0}
-                  end={vaultBal}
-                  duration={1.5}
-                  separator=","
-                  decimals={2}
-                  useEasing={true}
-                  useGrouping={true}
-                />{' '}
-                SOL (${(vaultBal * solPrice).toFixed(2)})
-              </Typography>
+              <Divider>
+                <Chip
+                  size="xx-large"
+                  label={
+                    <Typography variant="h5" component="span" sx={{ fontSize: '1.2rem', p: 2 }}>
+                      <CountUp
+                        start={0}
+                        end={vaultBal}
+                        duration={1.5}
+                        separator=","
+                        decimals={2}
+                        useEasing
+                        useGrouping
+                      />{' '}
+                      SOL (${(vaultBal * solPrice).toFixed(2)})
+                    </Typography>
+                  }
+                  sx={{ mb: 2 }}
+                />
+              </Divider>
 
               <TextField
                 color='error'
@@ -214,64 +225,58 @@ function VaultModal(props) {
 
             {/* Recent Transactions */}
             <Box>
-              <Typography variant="h5" textAlign="center">
+              <Typography className="title" variant="subtitle2" sx={{ mt: 2 }} textAlign="center">
                 Recent Transactions
               </Typography>
-              <Table component={Paper} size="small" sx={{ mt: 1 }}>
-                <TableBody>
-                  {vaultTransactions.map((transaction, index) => {
-                    const isWithdrawal =
-                      transaction.description.includes('withdrawal');
-                    return (
-                      <TableRow
-                        key={index}
-                       
-                      >
-                        <TableCell  sx={{
-                          color: isWithdrawal ? '#00ff3a' : '#ff0000'
-                        }}>{isWithdrawal ? '-' : '+'}</TableCell>
-                        <TableCell  sx={{
-                          color: isWithdrawal ? '#00ff3a' : '#ff0000'
-                        }}>
-                          {convertToCurrency(transaction.amount, solPrice)}
-                        </TableCell>
-                        <TableCell  sx={{
-                          color: isWithdrawal ? '#00ff3a' : '#ff0000'
-                        }}>
-                          {new Date(transaction.created_at).toLocaleString()}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
+              <TableContainer component={Paper} sx={{ mt: 1, maxHeight: 100 }}>
+                <Table size="small" stickyHeader>
+                  <TableBody>
+                    {vaultTransactions.map((transaction, index) => {
+                      const isWithdrawal = transaction?.description.includes('withdrawal');
+                      return (
+                        <TableRow key={index}>
+                          <TableCell sx={{ color: isWithdrawal ? '#00ff3a' : '#ff0000' }}>
+                            {isWithdrawal ? '-' : '+'}
+                          </TableCell>
+                          <TableCell sx={{ color: isWithdrawal ? '#00ff3a' : '#ff0000' }}>
+                            {convertToCurrency(transaction?.amount, solPrice)}
+                          </TableCell>
+                          <TableCell sx={{ color: isWithdrawal ? '#00ff3a' : '#ff0000' }}>
+                            {new Date(transaction?.created_at).toLocaleString()}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </TableContainer>
             </Box>
           </Box>
 
           {/* FOOTER (Deposit / Withdraw Buttons) */}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3, gap: 2 }}>
             <Button
               variant="contained"
-              color="success"
+              color="error"
               onClick={handleDeposit}
               startIcon={<AttachMoneyIcon />}
-              sx={{ minWidth: 120 }}
+              fullWidth
             >
               Deposit
             </Button>
             <Button
               variant="contained"
-              color="error"
+              color="success"
               onClick={handleWithdraw}
               startIcon={<MoneyOffIcon />}
-              sx={{ minWidth: 120 }}
+              fullWidth
             >
               Withdraw
             </Button>
           </Box>
         </Box>
       </Modal>
-    </ThemeProvider>
+    </ThemeProvider >
 
   );
 }

@@ -51,7 +51,7 @@ import {
   ArrowDropDown,
   ExitToApp,
   PersonOutline,
-  Dashboard,
+  ListTwoTone,
   MonetizationOn,
   Help,
   Settings,
@@ -65,7 +65,8 @@ import {
   AccountBalanceWalletOutlined,
   SavingsOutlined,
   AttachMoneyOutlined,
-  MoneyOffCsredOutlined
+  MoneyOffCsredOutlined,
+  Dashboard
 } from '@mui/icons-material';
 
 import history from '../redux/history';
@@ -121,7 +122,7 @@ import {
 import {
   openOfferLoanModal
 } from '../redux/Notification/notification.actions';
-
+import { ConflictDialog } from './modal/ConfirmAlerts.jsx';
 import {
   setRoomList,
   addChatLog,
@@ -135,7 +136,8 @@ import {
   getNotifications,
   readNotifications,
   removeRoomFromList,
-  getGlobalChatLogs
+  getGlobalChatLogs,
+  getHistory,
 } from '../redux/Logic/logic.actions';
 
 // We remove this to avoid Proptype issues in MUI v5
@@ -240,7 +242,7 @@ function SiteWrapper(props) {
     selectMainTab,
     acCalculateRemainingLoans,
     globalChatReceived,
-    setGlobalChat,
+    getHistory,
     updateBetResult,
     openOfferLoanModal,
     setCurrentOfferTargetInfo,
@@ -344,7 +346,7 @@ function SiteWrapper(props) {
       setWebsiteLoading(true);
       setIsInvestorsPage(location.pathname.startsWith('/investors'));
       setIsPlayer(location.pathname.startsWith('/play'));
-
+      getHistory();
       // Add event listeners
       window.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mousedown', handleClickOutside);
@@ -395,7 +397,7 @@ function SiteWrapper(props) {
       window.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [getGlobalChatLogs]);
+  }, [getGlobalChatLogs, getHistory]);
 
 
   /**
@@ -497,12 +499,11 @@ function SiteWrapper(props) {
   useEffect(() => {
     // 1) Create the socket client
     const newSocket = socketIOClient(endpoint, { transports: ['websocket'] });
-  
-    // 2) “Public” events that don't depend on a logged-in user:
-    newSocket.on('connect', () => {
-      console.log('[Socket] connected');
-    });
-  
+
+    // newSocket.on('connect', () => {
+    //   console.log('[Socket] connected');
+    // });
+
     let lastGlobalChat = null;
     const handleGlobalChat = (data) => {
       // If new message is the same as last => skip
@@ -518,21 +519,22 @@ function SiteWrapper(props) {
       globalChatReceived(data);
     };
     newSocket.on('GLOBAL_CHAT_RECEIVED', handleGlobalChat);
-  
+
     // Room list updates:
     const handleUpdatedRoomList = (data) => {
       setRoomList(data);
     };
     newSocket.on('UPDATED_ROOM_LIST', handleUpdatedRoomList);
-  
+
     const handleRoomEnded = (data) => {
+      console.log("data.room", data)
       removeRoomFromList(data.roomId);
     };
     newSocket.on('ROOM_ENDED', handleRoomEnded);
-  
+
     // 3) Store the socket reference
     setSocket(newSocket);
-  
+
     // 4) Cleanup on unmount
     return () => {
       newSocket.off('GLOBAL_CHAT_RECEIVED', handleGlobalChat);
@@ -549,120 +551,128 @@ function SiteWrapper(props) {
   ]);
 
   useEffect(() => {
-  // If no socket yet, or user not logged in => do nothing
-  if (!socket) return;
-  if (!user || !user._id) return;
+    // If no socket yet, or user not logged in => do nothing
+    if (!socket) return;
+    if (!user || !user._id) return;
 
-  // Identify user to the server
-  socket.emit('STORE_CLIENT_USER_ID', { user_id: user._id });
+    // Identify user to the server
+    socket.emit('STORE_CLIENT_USER_ID', { user_id: user._id });
 
-  // ----- User-specific listeners -----
+    // ----- User-specific listeners -----
 
-  // 1) Private chat
-  const handleSendChat = (data) => {
-    if (!isMuted || !notificationSounds) {
-      notificationSoundRef.current?.play();
-    }
-    addChatLog(data);
-
-    const pathName = history.location.pathname;
-    const segments = pathName.split('/');
-    const chatUserId = segments[2];
-
-    if (pathName.startsWith('/chat/') && chatUserId === data.from) {
-      socket.emit('READ_MESSAGE', { to: user._id, from: data.from });
-    } else {
-      socket.emit('REQUEST_UNREAD_MESSAGE_COUNT', { to: user._id });
-    }
-  };
-  socket.on('SEND_CHAT', handleSendChat);
-
-  // 2) Loan offers
-  const handleLoanOffer = (payload) => {
-    openOfferLoanModal();
-    if (!isMuted) {
-      needALoanRef.current?.play();
-    }
-    setCurrentOfferTargetInfo({
-      _id: user._id,
-      lender: payload.lender,
-      avatar: payload.avatar,
-      accessory: payload.accessory,
-      username: payload.username,
-      totalWagered: payload.totalWagered
-    });
-  };
-  socket.on(`RECEIVED_LOAN_OFFER_${user._id}`, handleLoanOffer);
-
-  // 3) Bet result
-  const handleBetResult = (data) => {
-    updateBetResult(data);
-  };
-  socket.on('UPDATE_BET_RESULT', handleBetResult);
-
-  // 4) Notifications
-  const handleSendNotification = (data) => {
-    if (!isMuted || !notificationSounds) {
-      notificationSoundRef.current?.play();
-    }
-
-    if (data.message.includes('Deposit')) {
-      getUser();
-    }
-
-    if (isNotificationsAllowed && window.Notification) {
-      const options = { body: data.message, silent: false };
-      if (Notification.permission === 'granted') {
-        new Notification('New Notification', options);
-      } else if (Notification.permission !== 'denied') {
-        Notification.requestPermission().then((permission) => {
-          if (permission === 'granted') {
-            setNotificationsAllowed(true);
-            new Notification('New Notification', options);
-          }
-        });
+    // 1) Private chat
+    const handleSendChat = (data) => {
+      if (!isMuted || !notificationSounds) {
+        notificationSoundRef.current?.play();
       }
-    }
-  };
-  socket.on('SEND_NOTIFICATION', handleSendNotification);
+      addChatLog(data);
 
-  // 5) Unread message count
-  const handleUnreadCount = (countData) => {
-    setUnreadMessageCount(countData);
-  };
-  socket.on('SET_UNREAD_MESSAGE_COUNT', handleUnreadCount);
+      const pathName = history.location.pathname;
+      const segments = pathName.split('/');
+      const chatUserId = segments[2];
 
-  // 6) Online status
-  const handleOnlineStatusUpdated = (data) => {
-    updateOnlineUserList(data.user_list);
-  };
-  socket.on('ONLINE_STATUS_UPDATED', handleOnlineStatusUpdated);
+      if (pathName.startsWith('/chat/') && chatUserId === data.from) {
+        socket.emit('READ_MESSAGE', { to: user._id, from: data.from });
+      } else {
+        socket.emit('REQUEST_UNREAD_MESSAGE_COUNT', { to: user._id });
+      }
+    };
+    socket.on('SEND_CHAT', handleSendChat);
 
-  // ----- Cleanup: remove these user-specific listeners when user changes or unmount
-  return () => {
-    socket.off('SEND_CHAT', handleSendChat);
-    socket.off(`RECEIVED_LOAN_OFFER_${user._id}`, handleLoanOffer);
-    socket.off('UPDATE_BET_RESULT', handleBetResult);
-    socket.off('SEND_NOTIFICATION', handleSendNotification);
-    socket.off('SET_UNREAD_MESSAGE_COUNT', handleUnreadCount);
-    socket.off('ONLINE_STATUS_UPDATED', handleOnlineStatusUpdated);
-  };
-}, [
-  socket,
-  user,
-  isMuted,
-  notificationSounds,
-  openOfferLoanModal,
-  needALoanRef,
-  setCurrentOfferTargetInfo,
-  updateBetResult,
-  getUser,
-  isNotificationsAllowed,
-  setNotificationsAllowed,
-  setUnreadMessageCount,
-  updateOnlineUserList,
-  addChatLog
-]);
+    // 2) Loan offers
+    const handleLoanOffer = (payload) => {
+      openOfferLoanModal();
+      if (!isMuted) {
+        needALoanRef.current?.play();
+      }
+      setCurrentOfferTargetInfo({
+        _id: user._id,
+        lender: payload.lender,
+        avatar: payload.avatar,
+        accessory: payload.accessory,
+        username: payload.username,
+        totalWagered: payload.totalWagered
+      });
+    };
+    socket.on(`RECEIVED_LOAN_OFFER_${user._id}`, handleLoanOffer);
+
+    // 3) Bet result
+    const handleBetResult = (data) => {
+      updateBetResult(data);
+    };
+    socket.on('UPDATE_BET_RESULT', handleBetResult);
+
+    // 4) Notifications
+    const handleSendNotification = (data) => {
+      if (!isMuted || !notificationSounds) {
+        notificationSoundRef.current?.play();
+      }
+
+      if (data.message.includes('Deposit')) {
+        getUser();
+      }
+
+      if (isNotificationsAllowed && window.Notification) {
+        const options = { body: data.message, silent: false };
+        if (Notification.permission === 'granted') {
+          new Notification('New Notification', options);
+        } else if (Notification.permission !== 'denied') {
+          Notification.requestPermission().then((permission) => {
+            if (permission === 'granted') {
+              setNotificationsAllowed(true);
+              new Notification('New Notification', options);
+            }
+          });
+        }
+      }
+    };
+
+    socket.on('SEND_NOTIFICATION', handleSendNotification);
+
+    const handleAddTransaction = (data) => {
+      addNewTransaction(data)
+
+    };
+
+    socket.on('NEW_TRANSACTION', handleAddTransaction);
+
+    // 5) Unread message count
+    const handleUnreadCount = (countData) => {
+      setUnreadMessageCount(countData);
+    };
+    socket.on('SET_UNREAD_MESSAGE_COUNT', handleUnreadCount);
+
+    // 6) Online status
+    const handleOnlineStatusUpdated = (data) => {
+      updateOnlineUserList(data.user_list);
+    };
+    socket.on('ONLINE_STATUS_UPDATED', handleOnlineStatusUpdated);
+
+    // ----- Cleanup: remove these user-specific listeners when user changes or unmount
+    return () => {
+      socket.off('SEND_CHAT', handleSendChat);
+      socket.off(`RECEIVED_LOAN_OFFER_${user._id}`, handleLoanOffer);
+      socket.off('UPDATE_BET_RESULT', handleBetResult);
+      socket.off('SEND_NOTIFICATION', handleSendNotification);
+      socket.off('SET_UNREAD_MESSAGE_COUNT', handleUnreadCount);
+      socket.off('ONLINE_STATUS_UPDATED', handleOnlineStatusUpdated);
+    };
+  }, [
+    socket,
+    user,
+    isMuted,
+    notificationSounds,
+    openOfferLoanModal,
+    needALoanRef,
+    setCurrentOfferTargetInfo,
+    updateBetResult,
+    getUser,
+    isNotificationsAllowed,
+    setNotificationsAllowed,
+    setUnreadMessageCount,
+    updateOnlineUserList,
+    addChatLog
+  ]);
 
 
   // -------------- WALLET / WEB3 --------------
@@ -931,8 +941,8 @@ function SiteWrapper(props) {
   };
 
   // -------------- UI HELPERS --------------
-  const handleDashboard = () => {
-    history.push('/dashboard');
+  const handlePortfolio = () => {
+    history.push('/portfolio');
     selectMainTab(1);
   };
 
@@ -1321,11 +1331,11 @@ function SiteWrapper(props) {
 
                     <Divider />
 
-                    <MenuItem className="desktop-only" onClick={handleDashboard}>
+                    <MenuItem className="desktop-only" onClick={handlePortfolio}>
                       <ListItemIcon>
-                        <Dashboard />
+                        <ListTwoTone />
                       </ListItemIcon>
-                      <ListItemText>DASHBOARD</ListItemText>
+                      <ListItemText>PORTFOLIO</ListItemText>
                     </MenuItem>
 
                     <MenuItem onClick={handleOpenSettingsModal}>
@@ -1799,9 +1809,9 @@ function SiteWrapper(props) {
             </Box>
 
             {/* Phantom Wallet connect or address display */}
-            {walletAddress || connectedAccount ? (
+            {connectedAccount ? (
               <Box sx={{ mt: 2 }}>
-                <input id="wallet-address" type="text" value={walletAddress || connectedAccount} readOnly />
+                <input id="wallet-address" type="text" value={connectedAccount} readOnly />
                 <Button
                   color="error"
                   variant="outlined"
@@ -1838,19 +1848,7 @@ function SiteWrapper(props) {
           </Popover>
         </div>
         {/* Conflict Dialog */}
-        <Dialog open={walletConflictOpen} onClose={handleCloseConflictDialog}>
-          <DialogTitle>EXISTING ACCOUNT CONNECTED</DialogTitle>
-          <DialogContent>
-            <Typography>
-              We detected a wallet address that's already connected with us. You should login with this account.
-            </Typography>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleCloseConflictDialog} color="error" variant="contained">
-              Close
-            </Button>
-          </DialogActions>
-        </Dialog>
+        <ConflictDialog open={walletConflictOpen} onClose={handleCloseConflictDialog} />
         {/* ========== MAIN CONTENT ========== */}
         <div className="game_wrapper">
           <div className="contents_wrapper">{children}</div>
@@ -2024,41 +2022,51 @@ function SiteWrapper(props) {
         <GamePasswordModal />
 
         <Joyride
-          steps={tutorialStepsMain}
-          run={runTutorial}
-          callback={handleJoyrideCallback}
-          continuous
-          showProgress
-          showSkipButton
-          styles={{
-            options: {
-              zIndex: 9,
-              backgroundColor: isDarkMode ? 'rgb(255 0 234 / 60%)' : '#ccc9',
-              primaryColor: '#ff0000',
-              arrowColor: isDarkMode ? 'rgb(255 0 234 / 60%)' : '#ccc9',
-              textColor: isDarkMode ? '#f9f9f9' : '#333',
-              width: 300,
-              padding: 20,
-              borderRadius: 5
-            },
-            buttonClose: {
-              borderRadius: 1,
-              color: isDarkMode ? '#f9f9f9' : '#333'
-            },
-            buttonBack: {
-              borderRadius: 1,
-              color: isDarkMode ? '#f9f9f9' : '#333'
-            },
-            buttonNext: {
-              borderRadius: 1,
-              color: isDarkMode ? '#f9f9f9' : '#333'
-            },
-            buttonSkip: {
-              borderRadius: 1,
-              color: isDarkMode ? '#f9f9f9' : '#333'
-            }
-          }}
-        />
+  steps={tutorialStepsMain}
+  run={runTutorial}
+  callback={handleJoyrideCallback}
+  continuous
+  showProgress
+  showSkipButton
+  styles={{
+    options: {
+      zIndex: 1500,
+      backgroundColor: isDarkMode
+        ? 'rgba(33, 33, 33, 0.95)'   // Dark gray background for dark mode
+        : 'rgba(255, 255, 255, 0.95)', // White background for light mode
+      primaryColor: isDarkMode ? '#ff0000' : '#6200ea', // Vibrant green for dark, deep purple for light
+      arrowColor: isDarkMode
+        ? 'rgba(33, 33, 33, 0.95)'
+        : 'rgba(255, 255, 255, 0.95)',
+      textColor: isDarkMode ? '#eeeeee' : '#212121', // Light text for dark mode, dark text for light mode
+      width: 320,
+      padding: 24,
+      borderRadius: 8,
+      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+    },
+    buttonClose: {
+      borderRadius: 4,
+      color: isDarkMode ? '#eeeeee' : '#212121',
+    },
+    buttonBack: {
+      borderRadius: 4,
+      backgroundColor: isDarkMode
+        ? 'rgba(255, 255, 255, 0.1)'
+        : 'rgba(0, 0, 0, 0.05)',
+      color: isDarkMode ? '#eeeeee' : '#212121',
+      marginRight: 8,
+    },
+    buttonNext: {
+      borderRadius: 4,
+      backgroundColor: isDarkMode ? '#ff0000' : '#6200ea',
+      color: '#fff',
+    },
+    buttonSkip: {
+      borderRadius: 4,
+      color: isDarkMode ? '#eeeeee' : '#212121',
+    },
+  }}
+/>
       </div>
     </ThemeProvider>
   );
@@ -2125,7 +2133,8 @@ const mapDispatchToProps = {
   setCurrentOfferTargetInfo,
   fetchVaultBalance,
   getGlobalChatLogs,
-  authenticateWithPhantom
+  authenticateWithPhantom,
+  getHistory,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(SiteWrapper);

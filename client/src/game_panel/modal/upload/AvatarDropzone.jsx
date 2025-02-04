@@ -1,11 +1,11 @@
 import React, { useState, useRef, useCallback } from 'react';
 import './AvatarDropzone.css';
-
+import { useDispatch } from 'react-redux';
+import { errorMsgBar } from '../../../redux/Notification/notification.actions';
 import { Button, TextField, Grid, Box } from '@mui/material';
 import uniqid from 'uniqid';
 
 import Avatar from '../../../components/Avatar';
-import { alertModal } from '../ConfirmAlerts';
 
 /**
  * @component AvatarDropzone
@@ -29,6 +29,7 @@ function AvatarDropzone({
   const [aiText, setAiText] = useState('');
   const [showAIText, setShowAIText] = useState(false);
   const [loading, setLoading] = useState(false);
+  const dispatch = useDispatch();
 
   // -------------------------------
   //       REFS & CALLBACKS
@@ -127,7 +128,7 @@ function AvatarDropzone({
           if (!blob) return;
 
           if (blob.size > 4_194_304) {
-            alertModal(darkMode, 'THIS ONE IS TOO LARGE, TRY ANOTHER');
+            dispatch(errorMsgBar('THIS ONE IS TOO LARGE, TRY ANOTHER'));
             return;
           }
 
@@ -177,11 +178,11 @@ function AvatarDropzone({
       if (data.output_url) {
         setImageFilename(data.output_url);
       } else {
-        alertModal(darkMode, 'Failed to generate 3D Origami image. Please try again.');
+        dispatch(errorMsgBar('Failed to generate 3D Origami image. Please try again.'));
       }
     } catch (error) {
       console.error('Error generating 3D Origami image:', error);
-      alertModal(darkMode, 'An error occurred while generating 3D Origami image. Please try again.');
+      dispatch(errorMsgBar('An error occurred while generating 3D Origami image. Please try again.'));
     } finally {
       setLoading(false);
     }
@@ -223,7 +224,7 @@ function AvatarDropzone({
           <Grid item>
             <Button
               color="error"
-              variant="outlined"
+              variant="contained"
               onClick={openFileDialog}
               fullWidth
             >
@@ -276,7 +277,7 @@ function AvatarDropzone({
             ) : (
               <Button
                 color="error"
-                variant="outlined"
+                variant="contained"
                 onClick={() => setShowAIText(true)}
                 fullWidth
               >

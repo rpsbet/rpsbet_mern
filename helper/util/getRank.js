@@ -6,7 +6,10 @@ function getBorderByRank(rank) {
     4: '#FF4500',  // Orange Red
     5: '#8A2BE2',  // Blue Violet
     6: '#DC143C',  // Crimson
-    7: '#FFD700',  // Gold
+    7: '#7FFF00',  // Chartreuse
+    8: '#FF6347',  // Tomato
+    9: '#40E0D0',  // Turquoise
+    10: '#FFD700', // Gold
   };
 
 

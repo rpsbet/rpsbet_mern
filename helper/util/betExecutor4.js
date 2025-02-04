@@ -25,13 +25,11 @@ const addToQueue = async (req, bot = false, qbot) => {
 
     try {
         const taxPromise = SystemSetting.findOne({ name: 'commission' });
-        const rainPromise = SystemSetting.findOne({ name: 'rain' });
         const platformPromise = SystemSetting.findOne({ name: 'platform' });
         const [
             tax,
-            rain,
             platform
-        ] = await Promise.all([taxPromise, rainPromise, platformPromise]);
+        ] = await Promise.all([taxPromise, platformPromise]);
         let bet_item;
         let responseData = {};
         let gameLogArray = [];
@@ -70,11 +68,11 @@ const addToQueue = async (req, bot = false, qbot) => {
 
             let betAmount = parseFloat(req.body.bet_amount);
             roomInfo = await Room.findOne({ _id: req.body._id })
-                .select('room_number battles selectedStrategy game_type qs_game_type rps_game_type joiners creator bet_amount user_bet pr host_pr endgame_type endgame_amount is_private room_password status hosts')
+                .select('name image tax room_number ticker prompt battles selectedStrategy game_type qs_game_type rps_game_type joiners creator bet_amount user_bet pr host_pr endgame_type endgame_amount is_private room_password status hosts')
                 .populate({
                     path: 'creator',
                     model: User,
-                    select: '_id avatar ai_mode accessory totalWagered username totalProfit gamePlayed profitAllTimeHigh profitAllTimeLow balance'
+                    select: '_id avatar ai_mode accessory totalWagered username gameProfit gamePlayed balance'
                 })
                 .populate({
                     path: 'game_type',
@@ -117,7 +115,6 @@ const addToQueue = async (req, bot = false, qbot) => {
                 };
 
                 return responseData;
-                
             }
 
             if (roomInfo['status'] === 'finished') {
@@ -130,26 +127,7 @@ const addToQueue = async (req, bot = false, qbot) => {
                 return responseData;
             }
 
-            const creatorUser = await User.findOne({
-                _id: roomInfo['creator']._id
-            }).select('accessory');
-
-            const accessory = creatorUser.accessory;
-            const accessoryJ = user.accessory;
-            let item;
-            let commission;
-
-            if (accessory) {
-                const item = await Item.findOne({ image: accessory }).select('CP');
-                const itemJ = await Item.findOne({ image: accessoryJ }).select('DP');
-                const cp = item ? item.CP || 0 : 0;
-                const dp = itemJ ? itemJ.DP || 0 : 0;
-
-                commission = cp - dp + parseFloat(tax.value);
-            } else {
-                commission = parseFloat(tax.value); // If no accessory, use tax.value directly
-            }
-
+            const commission = roomInfo['tax'] + tax.value;
 
             newGameLog = new GameLog({
                 room: roomInfo,
@@ -178,7 +156,6 @@ const addToQueue = async (req, bot = false, qbot) => {
                 roomInfo['game_type']['short_name'] +
                 '-' +
                 roomInfo['room_number'];
-
 
             let message = new Notification({
                 from: user._id,
@@ -214,45 +191,16 @@ const addToQueue = async (req, bot = false, qbot) => {
                     let nextItem;
 
                     switch (roomInfo['selectedStrategy']) {
-                        case 'Random':
-                            nextItem = await getRandomItem();
-                            break;
-                        case 'Martingale':
-                            nextItem = await getRandomItem();
-                            break;
-                        case 'Hertz':
-                            nextItem = await patternBasedAI(allBetItems);
-                            break;
-                        case 'Feedback':
-                            nextItem = await counterSwitchAI(allBetItems);
-                            break;
-                        case 'Skill-issue-old':
-                            nextItem = await counterRandomness(allBetItems);
-                            break;
-                        case 'Skill-issue':
-                            nextItem = await counterRandomness(allBetItems);
-                            break;
-                        case 'NPC':
-                            nextItem = await NPC(allBetItems);
-                            break;
-                        case 'Tesla':
-                            nextItem = await generatePattern(allBetItems);
-                            break;
-                        case 'CopyCat':
-                            nextItem = await getCopyCatItem(allBetItems);
-                            break;
                         case 'Markov':
                             nextItem = await getNextItemUsingMarkov(allBetItems);
                             break;
-                        case 'Hidden Markov':
-                            nextItem = await predictNext(allBetItems);
+                        case 'GPT3':
+                            nextItem = await predictNextOpenAI(
+                                allBetItems,
+                                roomInfo['prompt'] ??
+                                'You are an expert in Rock Paper Scissors.',
+                            );
                             break;
-                        case 'Innovate':
-                            const nextState = await innovate(allBetItems)
-                            nextItem = nextState.counterMove;
-                            break;
-
-
                         default:
                             const move = await reinforcementAI(allBetItems);
                             nextItem = move.move;
@@ -268,11 +216,6 @@ const addToQueue = async (req, bot = false, qbot) => {
                     function getRandomItem() {
                         const rpsOptions = ['R', 'P', 'S'];
                         return rpsOptions[Math.floor(Math.random() * 3)];
-                    }
-
-                    function getCopyCatItem(allBetItems) {
-                        const copyCatBetItem = allBetItems.find(item => item.joiner_rps);
-                        return copyCatBetItem ? copyCatBetItem.joiner_rps : getRandomItem();
                     }
 
                     async function getNextItemUsingMarkov(allBetItems) {
@@ -303,25 +246,20 @@ const addToQueue = async (req, bot = false, qbot) => {
                             betAmount * 2 * ((100 - commission) / 100);
 
                         newGameLog.commission =
-                            betAmount * 2 * (commission / 100);
-
-                        // update rtb count
-                        rain.value =
-                            parseFloat(rain.value) +
-                            betAmount * 2 * (commission / 100);
+                            betAmount * 2 * (roomInfo['tax'] / 100);
 
                         // update platform earnings (0.5%)
                         platform.value =
-                            parseFloat(platform.value) +
-                            betAmount * 2 * (parseFloat(tax.value) / 100);
+                            platform.value +
+                            betAmount * 2 * (tax.value / 100);
 
                         // update bankroll
-                        roomInfo['user_bet'] = parseFloat(roomInfo['user_bet']);
+                        roomInfo['user_bet'] = roomInfo['user_bet'];
 
                         roomInfo['host_pr'] -= betAmount;
                         roomInfo['user_bet'] -= betAmount;
-                        roomInfo['user_bet'] = parseFloat(roomInfo['user_bet']) + (betAmount * 2 * (commission / 100));
-                        roomInfo['host_pr'] = parseFloat(roomInfo['host_pr']) + (betAmount * 2 * (commission / 100));
+                        roomInfo['user_bet'] = roomInfo['user_bet'] + (betAmount * 2 * (commission / 100));
+                        roomInfo['host_pr'] = roomInfo['host_pr'] + (betAmount * 2 * (commission / 100));
 
                         // send notification
                         message.message =
@@ -332,14 +270,13 @@ const addToQueue = async (req, bot = false, qbot) => {
                             '-' +
                             roomInfo['room_number'];
 
-
                         // if draw
                     } else if (bet_item.rps === req.body.selected_rps) {
                         game_result = 0;
 
-                        roomInfo['user_bet'] = parseFloat(roomInfo['user_bet']) - (betAmount * (parseFloat(tax.value) / 100));
-                        roomInfo['host_pr'] = parseFloat(roomInfo['host_pr']) - (betAmount * (parseFloat(tax.value) / 100));
-                        newTransactionAmount += (betAmount - betAmount * (parseFloat(tax.value) / 100));
+                        roomInfo['user_bet'] = roomInfo['user_bet'] - (betAmount * (tax.value / 100));
+                        roomInfo['host_pr'] = roomInfo['host_pr'] - (betAmount * (tax.value / 100));
+                        newTransactionAmount += (betAmount - betAmount * (tax.value / 100));
 
                         message.message =
                             'Split ' +
@@ -349,10 +286,9 @@ const addToQueue = async (req, bot = false, qbot) => {
                             '-' +
                             roomInfo['room_number'];
 
-                        // update platform stat (0.5%)
                         platform.value =
-                            parseFloat(platform.value) +
-                            betAmount * 2 * (parseFloat(tax.value) / 100);
+                            platform.value +
+                            betAmount * 2 * (tax.value / 100);
 
                         // if loss
                     } else {
@@ -360,15 +296,15 @@ const addToQueue = async (req, bot = false, qbot) => {
 
                         // update bankroll & other
                         roomInfo['host_pr'] =
-                            parseFloat(roomInfo['host_pr']) +
-                            (betAmount * 2 * ((100 - parseFloat(tax.value)) / 100)) - betAmount;
+                            roomInfo['host_pr'] +
+                            (betAmount * 2 * ((100 - tax.value) / 100)) - betAmount;
                         roomInfo['user_bet'] =
-                            parseFloat(roomInfo['user_bet']) +
-                            (betAmount * 2 * ((100 - parseFloat(tax.value)) / 100)) - betAmount;
+                            roomInfo['user_bet'] +
+                            (betAmount * 2 * ((100 - tax.value) / 100)) - betAmount;
 
                         platform.value =
-                            parseFloat(platform.value) +
-                            betAmount * 2 * (parseFloat(tax.value) / 100);
+                            platform.value +
+                            betAmount * 2 * (tax.value / 100);
 
                         // autopayout host
                         if (
@@ -376,8 +312,8 @@ const addToQueue = async (req, bot = false, qbot) => {
                             roomInfo['user_bet'] >= roomInfo['endgame_amount']
                         ) {
                             newTransactionC.amount +=
-                                parseFloat(roomInfo['user_bet']) -
-                                parseFloat(roomInfo['endgame_amount']);
+                                roomInfo['user_bet'] -
+                                roomInfo['endgame_amount'];
 
                             const newGameLogC = new GameLog({
                                 room: roomInfo,
@@ -393,9 +329,7 @@ const addToQueue = async (req, bot = false, qbot) => {
 
                             saveDocumentWithRetry(newGameLogC);
 
-                            roomInfo['user_bet'] = parseFloat(
-                                roomInfo['endgame_amount']
-                            );
+                            roomInfo['user_bet'] = roomInfo['endgame_amount']
                         }
 
                         message.message =
@@ -417,56 +351,6 @@ const addToQueue = async (req, bot = false, qbot) => {
                 bet_item.bet_amount = betAmount;
                 await saveDocumentWithRetry(bet_item);
 
-                // console.log("saveDocumentWithRetry", bet_item);
-
-                gameLogArray.push(newGameLog);
-
-
-                const updatedGameLogArray = await Promise.all(gameLogArray.map(async (gameLog) => {
-                    // Populate room
-                    const room = await Room.findById(gameLog.room).exec();
-                    const populatedRoom = room ? room.toObject() : null;
-
-                    // Populate creator
-                    const creator = await User.findById(gameLog.creator).exec();
-                    const populatedCreator = creator ? creator.toObject() : null;
-
-                    // Populate joined_user
-                    const joinedUser = await User.findById(gameLog.joined_user).exec();
-                    const populatedJoinedUser = joinedUser ? joinedUser.toObject() : null;
-
-                    // Populate game_type
-                    const gameType = await GameType.findById(gameLog.game_type).exec();
-                    const populatedGameType = gameType ? gameType.toObject() : null;
-
-                    // Merge original fields with populated sub-documents
-                    const mergedObject = {
-                        bet_amount: gameLog.bet_amount,
-                        commission: gameLog.commission,
-                        game_result: gameLog.game_result,
-                        winnings: gameLog.winnings,
-                        host_pr: gameLog.host_pr,
-                        user_bet: gameLog.user_bet,
-                        _id: gameLog._id,
-                        room: populatedRoom,
-                        creator: populatedCreator,
-                        joined_user: populatedJoinedUser,
-                        game_type: populatedGameType,
-                        created_at: gameLog.created_at,
-                        updated_at: gameLog.updated_at,
-                        hosts: gameLog.hosts,
-                        ai_mode: gameLog.ai_mode,
-                        qbot: gameLog.qbot,
-                    };
-
-                    return mergedObject;
-                }));
-
-                // Now the updatedGameLogArray should have the original fields along with the populated sub-documents
-
-                const newLog = await convertGameLogToHistoryStyle(updatedGameLogArray);
-
-                // socket for last 5 items
                 if (roomInfo['rps_game_type'] === 0) {
                     mostRecentItems.reverse();
                     mostRecentItems.push(bet_item);
@@ -476,11 +360,7 @@ const addToQueue = async (req, bot = false, qbot) => {
                                 bankroll: roomInfo['user_bet'],
                                 host_pr: roomInfo['host_pr'],
                                 rps: mostRecentItems,
-                                newLog: newLog,
                                 user: user
-                            });
-                            req.io.sockets.emit('NEW_LOG', {
-                                newLog: newLog
                             });
                         }
                     } else {
@@ -498,7 +378,7 @@ const addToQueue = async (req, bot = false, qbot) => {
                     roomInfo.status = 'finished';
                     if (req.io.sockets) {
                         req.io.sockets.emit('ROOM_ENDED', { roomId: roomInfo._id });
-                      }
+                    }
                     game_result = 1;
                     message.message =
                         'Won ' +
@@ -514,8 +394,8 @@ const addToQueue = async (req, bot = false, qbot) => {
                 if (
                     parseFloat(req.body.bet_amount) / (roomInfo['qs_game_type'] - 1) +
                     parseFloat(req.body.bet_amount) -
-                    (roomInfo['qs_game_type'] - 1) * parseFloat(roomInfo['user_bet']) >
-                    parseFloat(roomInfo['user_bet']) ||
+                    (roomInfo['qs_game_type'] - 1) * roomInfo['user_bet'] >
+                    roomInfo['user_bet'] ||
                     parseFloat(req.body.bet_amount) > parseFloat(req.user.balance)
                 ) {
                     responseData = {
@@ -547,51 +427,26 @@ const addToQueue = async (req, bot = false, qbot) => {
                 const mostRecentItems = reversedBetItems.slice(0, 4);
 
                 if (!bet_item) {
-
                     let nextItem;
-
+                    // console.log('---room method---', roomInfo['selectedStrategy']);
                     switch (roomInfo['selectedStrategy']) {
-                        case 'Random':
-                            nextItem = await getRandomItem_qs(roomInfo['qs_game_type']);
-                            break;
-                        case 'Martingale':
-                            nextItem = await getRandomItem_qs(roomInfo['qs_game_type']);
-                            break;
-                        case 'Hertz':
-                            nextItem = await patternBasedAI_qs(allBetItems, roomInfo['qs_game_type']);
-                            break;
-                        case 'Feedback':
-                            nextItem = await counterSwitchAI_qs(allBetItems, roomInfo['qs_game_type']);
-                            break;
-                        case 'Skill-issue-old':
-                            nextItem = await counterRandomness_qs(allBetItems, roomInfo['qs_game_type']);
-                            break;
-                        case 'Skill-issue':
-                            nextItem = await counterRandomness_qs(allBetItems, roomInfo['qs_game_type']);
-                            break;
-                        case 'NPC':
-                            nextItem = await NPC_qs(allBetItems, roomInfo['qs_game_type']);
-                            break;
-                        case 'Tesla':
-                            nextItem = await generatePattern_qs(allBetItems, roomInfo['qs_game_type']);
-                            break;
-                        case 'CopyCat':
-                            nextItem = await getCopyCatItem_qs(allBetItems, roomInfo['qs_game_type']);
-                            break;
                         case 'Markov':
-                            nextItem = await getNextItemUsingMarkov_qs(allBetItems, roomInfo['qs_game_type']);
+                            nextItem = await getNextItemUsingMarkov_qs(
+                                allBetItems,
+                                roomInfo['qs_game_type'],
+                            );
                             break;
-                        case 'Hidden Markov':
-                            nextItem = await predictNextQs(allBetItems, roomInfo['qs_game_type']);
+                        case 'GPT3':
+                            nextItem = await openAIPredictionAI_qs(
+                                allBetItems,
+                                roomInfo['qs_game_type'],
+                            );
                             break;
-                        case 'Innovate':
-                            let nextState;
-                            nextState = await innovate_qs(allBetItems, roomInfo['qs_game_type']);
-                            nextItem = nextState;
-                            break;
-
                         default:
-                            const move = await reinforcementAI_qs(allBetItems, roomInfo['qs_game_type']);
+                            const move = await reinforcementAI_qs(
+                                allBetItems,
+                                roomInfo['qs_game_type'],
+                            );
                             nextItem = move.move;
                             break;
                     }
@@ -606,7 +461,9 @@ const addToQueue = async (req, bot = false, qbot) => {
                             return getRandomItem_qs(roomInfo['qs_game_type']);
                         }
 
-                        const transformedItems = allBetItems.map(item => ({ qs: item.joiner_qs }));
+                        const transformedItems = allBetItems.map((item) => ({
+                            qs: item.joiner_qs,
+                        }));
                         const nextItem = await predictNextQs(transformedItems, gameType);
                         return nextItem;
                     }
@@ -614,21 +471,21 @@ const addToQueue = async (req, bot = false, qbot) => {
                 newGameLog.selected_qs_position = req.body.selected_qs_position;
                 // deduct the joiner's bet
                 newTransactionAmount -= betAmount;
-                roomInfo['user_bet'] = parseFloat(roomInfo['user_bet']);
+                roomInfo['user_bet'] = roomInfo['user_bet'];
                 if (Number(bet_item.qs) === req.body.selected_qs_position) {
                     game_result = -1;
 
                     roomInfo['user_bet'] =
-                        parseFloat(roomInfo['user_bet']) + parseFloat(req.body.bet_amount);
+                        roomInfo['user_bet'] + parseFloat(req.body.bet_amount);
                     roomInfo['host_pr'] =
-                        parseFloat(roomInfo['host_pr']) + parseFloat(req.body.bet_amount);
+                        roomInfo['host_pr'] + parseFloat(req.body.bet_amount);
                     if (
                         roomInfo['endgame_type'] &&
                         roomInfo['user_bet'] >= roomInfo['endgame_amount']
                     ) {
                         newTransactionC.amount +=
-                            parseFloat(roomInfo['user_bet']) -
-                            parseFloat(roomInfo['endgame_amount']);
+                            roomInfo['user_bet'] -
+                            roomInfo['endgame_amount'];
                         const newGameLogC = new GameLog({
                             room: roomInfo,
                             creator: roomInfo['creator'],
@@ -641,9 +498,7 @@ const addToQueue = async (req, bot = false, qbot) => {
                             game_result: 3
                         });
                         saveDocumentWithRetry(newGameLogC);
-                        roomInfo['user_bet'] = parseFloat(
-                            roomInfo['endgame_amount']
-                        );
+                        roomInfo['user_bet'] = roomInfo['endgame_amount']
                     }
 
                     bet_item.joiner = req.user._id;
@@ -679,27 +534,16 @@ const addToQueue = async (req, bot = false, qbot) => {
                         (betAmount +
                             betAmount /
                             (roomInfo['qs_game_type'] - 1)) *
-                        (commission / 100);
-                    // update rain
-                    rain.value =
-                        parseFloat(rain.value) +
-                        (betAmount +
-                            betAmount /
-                            (roomInfo['qs_game_type'] - 1)) *
-                        (commission / 100);
+                        (roomInfo['tax'] / 100);
+
                     // update platform stat (0.5%)
                     platform.value =
-                        parseFloat(platform.value) +
+                        platform.value +
                         (betAmount +
                             betAmount /
                             (roomInfo['qs_game_type'] - 1)) *
                         (tax.value / 100);
-                    if (req.io.sockets) {
-                        req.io.sockets.emit('UPDATE_RAIN', {
-                            rain: rain.value
-                        });
-                    }
-                 
+
                     message.message =
                         'Won ' +
                         (
@@ -722,52 +566,7 @@ const addToQueue = async (req, bot = false, qbot) => {
                 newGameLog.winnings = newTransactionAmount;
                 newGameLog.game_result = game_result;
                 newGameLog.endgame_amount = roomInfo['endgame_amount'];
-                gameLogArray.push(newGameLog);
 
-
-                const updatedGameLogArray = await Promise.all(gameLogArray.map(async (gameLog) => {
-                    // Populate room
-                    const room = await Room.findById(gameLog.room).exec();
-                    const populatedRoom = room ? room.toObject() : null;
-
-                    // Populate creator
-                    const creator = await User.findById(gameLog.creator).exec();
-                    const populatedCreator = creator ? creator.toObject() : null;
-
-                    // Populate joined_user
-                    const joinedUser = await User.findById(gameLog.joined_user).exec();
-                    const populatedJoinedUser = joinedUser ? joinedUser.toObject() : null;
-
-                    // Populate game_type
-                    const gameType = await GameType.findById(gameLog.game_type).exec();
-                    const populatedGameType = gameType ? gameType.toObject() : null;
-
-                    // Merge original fields with populated sub-documents
-                    const mergedObject = {
-                        bet_amount: gameLog.bet_amount,
-                        commission: gameLog.commission,
-                        game_result: gameLog.game_result,
-                        winnings: gameLog.winnings,
-                        host_pr: gameLog.host_pr,
-                        user_bet: gameLog.user_bet,
-                        _id: gameLog._id,
-                        room: populatedRoom,
-                        qs_game_type: gameLog.qs_game_type,
-                        creator: populatedCreator,
-                        joined_user: populatedJoinedUser,
-                        game_type: populatedGameType,
-                        created_at: gameLog.created_at,
-                        updated_at: gameLog.updated_at,
-                        hosts: gameLog.hosts,
-                        ai_mode: gameLog.ai_mode,
-                        qbot: gameLog.qbot,
-                    };
-
-                    return mergedObject;
-                }));
-
-                const newLog = await convertGameLogToHistoryStyle(updatedGameLogArray);
-                // socket for last 5 items
                 mostRecentItems.reverse();
                 mostRecentItems.push(bet_item);
                 if (mostRecentItems.length > 0) {
@@ -776,12 +575,9 @@ const addToQueue = async (req, bot = false, qbot) => {
                             bankroll: roomInfo['user_bet'],
                             host_pr: roomInfo['host_pr'],
                             qs: mostRecentItems,
-                            newLog: newLog,
                             user: user
                         });
-                        req.io.sockets.emit('NEW_LOG', {
-                            newLog: newLog
-                        });
+
                     }
                 } else {
                     responseData = {
@@ -798,7 +594,7 @@ const addToQueue = async (req, bot = false, qbot) => {
                     game_result = 1;
                     if (req.io.sockets) {
                         req.io.sockets.emit('ROOM_ENDED', { roomId: roomInfo._id });
-                      }
+                    }
                     message.message =
                         'Won ' +
                         (roomInfo['host_pr'] + roomInfo['bet_amount']) +
@@ -811,29 +607,16 @@ const addToQueue = async (req, bot = false, qbot) => {
 
             user['balance'] += newTransactionAmount;
             user['gamePlayed']++;
-            user['totalProfit'] += newTransactionAmount;
+            user['gameProfit'] += newTransactionAmount;
             user['totalWagered'] += Math.abs(bet_item.bet_amount);
-
-            if (user['profitAllTimeHigh'] < newTransactionAmount) {
-                user['profitAllTimeHigh'] = newTransactionAmount;
-            }
-            if (user['profitAllTimeLow'] > newTransactionAmount) {
-                user['profitAllTimeLow'] = newTransactionAmount;
-            }
 
             // setTimeout(async () => {
             const host = await User.findOne({ _id: roomInfo['creator'] });
             if (host) {
                 host.gamePlayed++;
-                host.totalProfit += newTransactionAmount * -1;
+                host.gameProfit += newTransactionAmount * -1;
                 host.totalWagered += Math.abs(bet_item.bet_amount);
 
-                if (host.profitAllTimeHigh < newTransactionAmount * -1) {
-                    host.profitAllTimeHigh = newTransactionAmount * -1;
-                }
-                if (host.profitAllTimeLow > newTransactionAmount * -1) {
-                    host.profitAllTimeLow = newTransactionAmount * -1;
-                }
             }
             if (roomInfo.hosts[0].share === 100) {
                 let notification = new Notification({
@@ -848,7 +631,7 @@ const addToQueue = async (req, bot = false, qbot) => {
                 notification.to = roomInfo['creator']._id;
                 notification.message = 'Hosting ' + (newTransactionC.amount) + ' auto-payout in ' + roomInfo.game_type.short_name + '-' + roomInfo.room_number;
                 notification.amount = newTransactionC.amount;
-                
+
                 const notificationData = {
                     _id: roomInfo['creator']._id,
                     message: notification.message,
@@ -879,7 +662,7 @@ const addToQueue = async (req, bot = false, qbot) => {
                         if (host) {
                             try {
                                 host.balance += newTransactionC.amount;
-                                host.totalProfit += newTransactionC.amount;
+                                host.gameProfit += newTransactionC.amount;
                             } catch (error) {
                                 console.error("Error saving host:", error);
                             }
@@ -976,7 +759,6 @@ const addToQueue = async (req, bot = false, qbot) => {
                         saveDocumentWithRetry(platform),
                         await saveDocumentWithRetry(user),
                         await saveDocumentWithRetry(roomInfo),
-                        saveDocumentWithRetry(rain),
                         saveDocumentWithRetry(host),
                         await saveDocumentWithRetry(newGameLog)
                     ]);
@@ -984,6 +766,37 @@ const addToQueue = async (req, bot = false, qbot) => {
                     console.error("Error saving", error);
                 }
             }
+
+            let gameLogQuery = GameLog.find({ room: roomInfo._id })
+                .sort({ created_at: 'desc' })
+                .limit(1)
+                .populate({
+                    path: 'room',
+                    model: Room,
+                    select:
+                        '_id winnings ticker image commission username creator status hosts room_number game_type bet_amount user_bet host_pr created_at',
+                })
+                .populate({
+                    path: 'game_type',
+                    model: GameType,
+                    select: 'short_name game_type_name',
+                })
+                .populate({
+                    path: 'creator',
+                    model: User,
+                    select: '_id avatar username accessory totalWagered',
+                })
+                .populate({
+                    path: 'joined_user',
+                    model: User,
+                    select: '_id avatar username accessory totalWagered',
+                });
+
+            const gameLogList = await gameLogQuery;
+
+            const newLog = await convertGameLogToHistoryStyle(gameLogList);
+            req.io.sockets.emit('NEW_LOG', { newLog });
+
 
             const notificationData = {
                 _id: user._id,
@@ -1035,7 +848,6 @@ const addToQueue = async (req, bot = false, qbot) => {
 };
 
 const executeBet4 = (req, bot = false, qbot) => {
-
     return new Promise((resolve, reject) => {
         requestQueue.push({ req, bot, qbot, resolve, reject });
         if (requestQueue.length === 1) {

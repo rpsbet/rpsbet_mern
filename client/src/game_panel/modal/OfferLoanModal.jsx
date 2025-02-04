@@ -1,774 +1,34 @@
-import React, { Component } from 'react';
-import Modal from 'react-modal';
-import { connect } from 'react-redux';
-import { Typography, Table, TableBody, Button, TextField, TableCell, TableContainer, TableHead, TableRow, Tooltip, InputAdornment } from '@mui/material';
-import { acQueryLoan, acCalculateRemainingLoans, emitLoanOffer, cancelledOffer, reconsiderOffer, offerLoan, createAndLend } from '../../redux/Loan/loan.action';
-import { getUser } from '../../redux/Auth/user.actions';
-import { addNewTransaction } from '../../redux/Logic/logic.actions';
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  Typography,
+  Table,
+  TableBody,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TableCell,
+  TextField,
+  Tooltip,
+  InputAdornment,
+  Box,
+} from '@mui/material';
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faExclamationTriangle, faDollarSign, faCalendarAlt, faMoneyBillWave } from '@fortawesome/free-solid-svg-icons';
+import InfoIcon from '@mui/icons-material/Info';
+
 import Lottie from 'react-lottie';
 import spinningIcon from '../LottieAnimations/spinningIcon';
-import { convertToCurrency } from '../../util/conversion';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
-import { faDollarSign, faCalendarAlt, faMoneyBillWave } from '@fortawesome/free-solid-svg-icons';
-import { Info } from '@mui/icons-material';
-import styled from 'styled-components';
-import {
-  closeOfferLoanModal
-} from '../../redux/Notification/notification.actions';
-import { alertModal } from '../modal/ConfirmAlerts';
 import Avatar from '../../components/Avatar';
 
-Modal.setAppElement('#root');
-
-const customStyles = {
-  overlay: {
-    zIndex: 3,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)'
-  },
-  content: {
-    top: '50%',
-    left: '50%',
-    right: 'auto',
-    bottom: 'auto',
-    transform: 'translate(-50%, -50%)',
-    padding: 0,
-    background: 'transparent',
-    border: 'none'
-  }
-};
-
-const CalculationField = styled.div`
-  margin-top: 0px;
-`;
-
-const WarningContainer = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  border-radius: 1em;
-  margin-top: 10px;
-`;
-
-
-class OfferLoanModal extends Component {
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      expanded: false,
-      responseText: 0,
-      showPlayerModal: false,
-      socket: props.socket,
-      cancelled: false,
-      waiting: true,
-      isComplete: false
-    };
-    this.rejected = new Audio('/sounds/rejected.mp3');
-    this.rejected.load();
-  }
-
-  componentDidMount() {
-    this.setupSocketListener();
-  }
-
-  setupSocketListener = (attempt = 1) => {
-
-    const { og } = this.state;
-    const { socket, offerInfo, userInfo } = this.props;
-
-    if (!socket || !offerInfo) {
-      if (attempt < 5) {
-        // Retry after 1 second if the attempt count is less than 5
-        setTimeout(() => this.setupSocketListener(attempt + 1), 1000);
-      }
-      return;
-    }
-
-    socket.off(`CANCEL_OFFER_${offerInfo._id}`); // Remove any previous listeners to avoid duplication
-    socket.on(`CANCEL_OFFER_${offerInfo._id}`, (data) => {
-      this.setState({
-        cancelled: data.cancelled,
-        waiting: true,
-      }, () => {
-        if (this.props.isOpen && data.cancelled && !this.props.isMuted && this.props.offerInfo.isLender && !this.state.isComplete) {
-          this.rejected.play();
-        }
-        if (data.cancelled && !this.props.offerInfo.isLender) {
-          this.props.closeOfferLoanModal();
-        }
-      });
-
-    });
-
-    socket.off(`OFFER_LOAN_${offerInfo._id}`); // Remove any previous listeners to avoid duplication
-    socket.on(`OFFER_LOAN_${offerInfo._id}`, (data) => {
-      this.setState({
-        responseText: data.loanAmount,
-        loanPeriodText: data.loanPeriod,
-        interestRateText: data.interestRate,
-        waiting: false,
-        cancelled: false,
-        og: data.og,
-        isComplete: data.isComplete ? true : false
-      });
-
-    });
-
-    socket.off(`OFFER_LOAN_${userInfo._id}`); // Remove any previous listeners to avoid duplication
-    socket.on(`OFFER_LOAN_${userInfo._id}`, (data) => {
-      this.setState({
-        responseText: data.loanAmount,
-        loanPeriodText: data.loanPeriod,
-        interestRateText: data.interestRate,
-        waiting: false,
-        cancelled: false,
-        og: data.og,
-        isComplete: data.isComplete ? true : false
-      });
-
-    });
-  }
-
-
-  async componentDidUpdate(prevProps, prevState) {
-    if (prevProps.isOpen !== this.props.isOpen && this.props.isOpen && this.props.offerInfo.isLender) {
-      this.nudge();
-      this.setState({ cancelled: false, waiting: true });
-      this.setupSocketListener();
-    } else if (prevProps.isOpen !== this.props.isOpen && this.props.isOpen && !this.props.offerInfo.isLender) {
-      this.props.reconsiderOffer({
-        _id: this.props.userInfo._id,
-        username: '',
-      });
-      this.setupSocketListener();
-    }
-    if (prevState.isComplete !== this.state.isComplete && this.state.isComplete) {
-      await this.props.getUser();
-      // await this.props.acCalculateRemainingLoans();
-      this.props.closeOfferLoanModal();
-    }
-  }
-
-  nudge = () => {
-    this.props.emitLoanOffer({
-      _id: this.props.offerInfo._id,
-      lender: this.props.userInfo._id,
-      avatar: this.props.userInfo.avatar,
-      totalWagered: this.props.userInfo.totalWagered,
-      accessory: this.props.userInfo.accessory,
-      username: this.props.userInfo.username
-    });
-  }
-
-  calculateNewBalance = (user_balance, loan_amount) => {
-    const newBalance = user_balance - parseFloat(loan_amount);
-    return isNaN(newBalance) ? user_balance : newBalance;
-  };
-
-  calculateInterest = (loan_amount, interestRateText) => {
-    const amount = parseFloat(loan_amount);
-    const interestRate = parseFloat(interestRateText);
-    const interestAmount = (amount * interestRate) / 100;
-    return isNaN(interestAmount) ? 0 : interestAmount;
-  };
-
-  determineLoanType = (user_balance, loan_amount) => {
-    const newBalance = this.calculateNewBalance(user_balance, loan_amount);
-    return newBalance < 0 ? 'FRACTIONAL' : 'FULL';
-  };
-
-  createAndLend = async () => {
-    const { responseText, loanPeriodText, interestRateText, og } = this.state;
-    const { isDarkMode, getUser, closeOfferLoanModal, offerLoan, userInfo, offerInfo } = this.props;
-
-    this.setState({ waiting: true });
-    const result = await this.props.createAndLend({
-      loan_amount: responseText,
-      loan_period: loanPeriodText,
-      apy: interestRateText,
-      lender: og,
-    });
-    this.onBtnCancelClicked();
-    if (result.success) {
-      await getUser();
-      alertModal(isDarkMode, result.message, '-cat');
-      closeOfferLoanModal();
-      offerLoan({
-        loanAmount: '',
-        loanPeriod: '',
-        interestRate: '',
-        lender: userInfo._id,
-        complete: true
-      });
-    }
-  }
-
-  toggleExpand = () => {
-    this.setState((prevState) => ({
-      expanded: !prevState.expanded,
-    }));
-  };
-
-  handleResponseTextChange = (e) => {
-    const inputValue = e.target.value;
-    // Use a regular expression to allow decimals
-    const parsedValue = inputValue.match(/^\d*\.?\d*$/);
-    // Update the state with the parsed value or an empty string
-    this.setState({ responseText: parsedValue ? parsedValue[0] : "" });
-  };
-
-  handleLoanPeriodTextChange = (e) => {
-    const inputValue = e.target.value;
-    const parsedValue = inputValue.match(/^\d*\.?\d*$/);
-    this.setState({ loanPeriodText: parsedValue ? parsedValue[0] : "" });
-  };
-
-  handleInterestRateTextChange = (e) => {
-    const inputValue = e.target.value;
-    const parsedValue = inputValue.match(/^\d*\.?\d*$/);
-    this.setState({ interestRateText: parsedValue ? parsedValue[0] : "" });
-  };
-
-  exceedsReservesLimit = (user_balance, loan_amount) => {
-    const loanAmount = parseFloat(loan_amount);
-    return loanAmount > (user_balance * 10);
-  };
-
-  onBtnOkClicked = async e => {
-    const { userInfo, closeOfferLoanModal, acQueryLoan, addNewTransaction, isDarkMode, offerLoan, offerInfo } = this.props;
-    const { responseText, loanPeriodText, interestRateText } = this.state;
-
-    if (parseFloat(responseText) > 10 * userInfo.balance) {
-      alertModal(isDarkMode, "PLEASE ENSURE THE LOAN AMOUNT IS NO MORE THAN 10X YOUR BALANCE");
-      return;
-    }
-    if (parseFloat(responseText) < 0.05) {
-      alertModal(isDarkMode, "MEOWNIMUM IS 0.05 RPS");
-      return;
-    }
-
-    this.setState({ waiting: false });
-    offerLoan({
-      loanAmount: parseFloat(responseText),
-      loanPeriod: parseInt(loanPeriodText),
-      interestRate: parseFloat(interestRateText),
-      lender: offerInfo._id,
-      og: userInfo._id,
-    });
-  };
-
-  onBtnCancelClicked = () => {
-    if (!this.props.isMuted && !this.props.offerInfo.isLender && !this.state.isComplete) {
-      this.rejected.play();
-    }
-    if (!this.state.isComplete) {
-      this.props.cancelledOffer({
-        avatar: '',
-        _id: this.props.offerInfo._id,
-        username: '',
-        accessory: '',
-        totalWagered: '',
-        isLender: ''
-      });
-    }
-
-    this.props.closeOfferLoanModal();
-  };
-
-  render() {
-    const { expanded, responseText, loanPeriodText, interestRateText, cancelled, waiting } = this.state;
-    const { userInfo, solPrice, isLowGraphics } = this.props;
-    const tableCellStyle = { textAlign: 'center' };
-
-    const inputCellStyle = {
-      flex: 4,
-      border: 'none',
-      padding: '30px 20px'
-    };
-
-    return (
-      <Modal
-        isOpen={this.props.isOpen}
-        style={customStyles}
-      >
-
-        <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
-          <div className="modal-body alert-body password-modal-body">
-            <div className={`modal-icon result-icon-trade`}></div>
-            {this.props.offerInfo.isLender ?
-              (
-                <h5>OFFER LOAN TO {this.props.offerInfo.username}</h5>
-              ) : (
-                <h5>LOAN OFFER FROM {this.props.offerInfo.username}</h5>
-
-              )}
-
-            <div className='thresholds' style={{ padding: '20px', overflow: 'hidden' }}>
-              <TableContainer style={{ borderRadius: "20px", maxHeight: 150, overflow: 'hidden' }}>
-                <Table aria-label="nice-table">
-                  <TableHead style={{  textTransform: "uppercase", position: 'sticky', top: 0, zIndex: 1, backgroundColor: this.props.isDarkMode ? '#0000006e' : '#e9ecef99' }}>
-                    <TableRow>
-                      <TableCell style={{textAlign: 'center' }}>
-                        <div className={'player'} style={{ display: 'flex' }}>
-                          <Avatar
-                            className="avatar"
-                            src={userInfo.avatar}
-                            rank={userInfo.totalWagered}
-                            username={userInfo.username}
-                            accessory={userInfo.accessory}
-                            alt=""
-                            darkMode={this.props.isDarkMode}
-                          />
-                          <i
-                            style={{ marginTop: '1px', width: '14px', height: '14px' }}
-                            className={`online-status${this.props.onlineUserList.filter(user => user === this.props.offerInfo._id).length > 0
-                              ? ' online'
-                              : ''
-                              }`}
-                          ></i>
-                        </div>
-                        {!cancelled && !waiting ? (
-                          <h6 style={{ color: 'rgb(72 255 4)' }}>READY!</h6>
-                        ) : (
-                          <h6 style={{ color: '#ccc' }}>WAITING!</h6>
-                        )}
-                      </TableCell>
-
-                      {!cancelled || !this.props.offerInfo.isLender ? (
-                        <TableCell style={{ textAlign: 'center' }}>
-                          <div className={'player'} style={{ display: 'flex' }}>
-                            <Avatar
-                              className="avatar"
-                              src={this.props.offerInfo.avatar}
-                              rank={this.props.offerInfo.totalWagered}
-                              accessory={this.props.offerInfo.accessory}
-                              username={this.props.offerInfo.username}
-                              alt=""
-                              darkMode={this.props.isDarkMode}
-                            />
-                            <i
-                              style={{ marginTop: '1px', width: '14px', height: '14px' }}
-                              className={`online-status${this.props.onlineUserList.filter(user => user === this.props.offerInfo._id).length > 0
-                                ? ' online'
-                                : ''
-                                }`}
-                            ></i>
-                          </div>
-                          <h6 style={{ color: '#ccc' }}>WAITING!</h6>
-                        </TableCell>
-                      ) : (
-                        <TableCell>
-                          <div className={'player'} style={{ display: 'flex' }}>
-                            <Avatar
-                              className="avatar"
-                              src={this.props.offerInfo.avatar}
-                              rank={this.props.offerInfo.totalWagered}
-                              accessory={this.props.offerInfo.accessory}
-                              username={this.props.offerInfo.username}
-                              alt=""
-                              darkMode={this.props.isDarkMode}
-                            />
-                            <i
-                              style={{ marginTop: '1px', width: '14px', height: '14px' }}
-                              className={`online-status${this.props.onlineUserList.filter(user => user === this.props.offerInfo._id).length > 0
-                                ? ' online'
-                                : ''
-                                }`}
-                            ></i>
-                            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'end', flexDirection: 'column', padding: '0 20px' }}>
-                              <h6 style={{ color: '#ff0000' }}>REJECTED</h6>
-                              <Button onClick={this.nudge}>NUDGE</Button>
-                            </div>
-                          </div>
-                        </TableCell>
-                      )}
-                    </TableRow>
-
-                  </TableHead>
-
-
-                </Table>
-              </TableContainer>
-
-
-            </div>
-            {this.props.offerInfo.isLender && (
-              <>
-                <TableContainer style={{ padding: '0 20px 10px' }}>
-                  <Table style={{ borderCollapse: 'collapse' }}>
-                    <TableRow>
-                      <TableCell style={inputCellStyle}>
-                         <TextField color='error' 
-                          variant="filled"
-                          label="Loan Amount"
-                          value={responseText}
-                          onChange={this.handleResponseTextChange}
-                          InputProps={{
-                            endAdornment: (
-                              <InputAdornment position="end">
-                                &nbsp;RPS
-                              </InputAdornment>
-                            ),
-                          }}
-                          fullWidth
-                        />
-                      </TableCell>
-                      <TableCell style={{ textAlign: "center" }} >
-                        <Tooltip title="Enter the amount of loan you are lending in RPS">
-                          <Info style={{ cursor: "pointer" }} />
-                        </Tooltip>
-                      </TableCell>
-                    </TableRow>
-
-                    {this.exceedsReservesLimit(userInfo.balance, responseText) && (
-                      <TableRow>
-                        <TableCell colSpan={2}>
-                          <WarningContainer>
-                            <FontAwesomeIcon icon={faExclamationTriangle} style={{ color: '#ff0000', marginRight: '10px' }} />
-                            <Typography variant="body1"  style={{ marginTop: '0' }}>
-                              PLEASE ENSURE THE LOAN AMOUNT IS NO MORE THAN 10X YOUR BALANCE
-                            </Typography>
-                          </WarningContainer>
-                        </TableCell>
-                      </TableRow>
-                    )}
-                    <TableRow>
-                      <TableCell style={inputCellStyle}>
-                         <TextField color='error' 
-                          variant="filled"
-                          label="Loan Period"
-                          value={loanPeriodText}
-                          onChange={this.handleLoanPeriodTextChange}
-                          InputProps={{
-                            endAdornment: (
-                              <InputAdornment position="end">
-                                &nbsp;DAYS
-                              </InputAdornment>
-                            ),
-                          }}
-                          fullWidth
-                        />
-                      </TableCell>
-                      <TableCell style={{ textAlign: "center" }}>
-                        <Tooltip title="Enter the duration for which you want the loan in days">
-                          <Info style={{ cursor: "pointer" }} />
-                        </Tooltip>
-                      </TableCell>
-                    </TableRow>
-
-                    <TableRow>
-                      <TableCell style={inputCellStyle}>
-                         <TextField color='error' 
-                          variant="filled"
-                          label="Interest Rate"
-                          value={interestRateText}
-                          onChange={this.handleInterestRateTextChange}
-                          InputProps={{
-                            endAdornment: (
-                              <InputAdornment position="end">
-                                &nbsp;%
-                              </InputAdornment>
-                            ),
-                          }}
-                          fullWidth
-                        />
-                      </TableCell>
-                      <TableCell style={{ borderBottom: 'none', textAlign: "center" }}>
-                        <Tooltip title="Enter the yielding interest rate for the loan">
-                          <Info style={{ cursor: "pointer" }} />
-                        </Tooltip>
-                      </TableCell>
-                    </TableRow>
-
-                    <TableRow>
-                      <TableCell>
-                        <CalculationField>
-                          <Typography variant="body1" style={{ fontWeight: 'bold', marginTop: '0' }}>
-                            YOUR BALANCE:
-                          </Typography>
-                        </CalculationField>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body1" style={{ marginTop: '0' }}>
-                          {convertToCurrency(userInfo.balance, solPrice)}
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
-
-                    <TableRow>
-                      <TableCell>
-                        <CalculationField>
-                          <Typography variant="body1" style={{ fontWeight: 'bold', marginTop: '0' }}>
-                            NEW BALANCE:
-                          </Typography>
-                        </CalculationField>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body1" style={{ marginTop: '0' }}>
-                          {this.calculateNewBalance(userInfo.balance, responseText) < 0
-                            ? <>{convertToCurrency(0, solPrice)} AND {convertToCurrency(Math.abs(this.calculateNewBalance(userInfo.balance, responseText)), solPrice)} IN DEBT</>
-                            : convertToCurrency(this.calculateNewBalance(userInfo.balance, responseText), solPrice)
-                          }
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
-
-                    <TableRow>
-                      <TableCell>
-                        <CalculationField>
-                          <Typography variant="body1" style={{ fontWeight: 'bold', marginTop: '0' }}>
-                            GROSS PROFIT:
-                          </Typography>
-                        </CalculationField>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body1" style={{ marginTop: '0' }}>
-                          {isNaN(parseFloat(responseText)) || isNaN(parseFloat(interestRateText)) || parseFloat(responseText) <= 0 || parseFloat(interestRateText) <= 0
-                            ? convertToCurrency(0, solPrice)
-                            : convertToCurrency(this.calculateInterest(responseText, interestRateText) + parseFloat(responseText), solPrice)
-                          }
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
-
-                    <TableRow>
-                      <TableCell>
-                        <CalculationField>
-                          <Typography variant="body1" style={{ fontWeight: 'bold', marginTop: '0' }}>
-                            NET PROFIT:
-                          </Typography>
-                        </CalculationField>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body1" style={{ marginTop: '0' }}>
-                          <span id="interest">(+{convertToCurrency(this.calculateInterest(responseText, interestRateText), solPrice)})</span>
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
-
-                    <TableRow>
-                      <TableCell>
-                        <CalculationField>
-                          <Typography variant="body1" style={{ fontWeight: 'bold', marginTop: '0' }}>
-                            LOAN TYPE:
-                          </Typography>
-                        </CalculationField>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body1" style={{ marginTop: '0' }}>
-                          {this.determineLoanType(userInfo.balance, responseText)}
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
-
-                    {parseFloat(interestRateText) > 6 && (
-                      <TableRow>
-                        <TableCell colSpan={2}>
-                          <Typography variant="body1" style={{ color: '#ff0000', fontWeight: 'bold', textAlign: 'center' }}>
-                            Charging an interest rate above 6% may be considered usury and could increase the risk of borrower default. We recommend setting a rate below 6% to mitigate this risk.
-                          </Typography>
-                        </TableCell>
-                      </TableRow>
-                    )}
-
-                  </Table>
-                </TableContainer>
-
-              </>
-            )}
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell style={tableCellStyle}>
-                      Loan Amount <FontAwesomeIcon icon={faDollarSign} />
-                    </TableCell>
-                    <TableCell style={tableCellStyle}>
-                      Days Left <FontAwesomeIcon icon={faCalendarAlt} />
-                    </TableCell>
-                    <TableCell style={tableCellStyle}>
-                      Payback Amount <FontAwesomeIcon icon={faMoneyBillWave} />
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  <TableRow>
-                    <TableCell style={{ textAlign: "center" }}>
-                      {cancelled || waiting ? 'waiting' : convertToCurrency(parseFloat(responseText), solPrice)}
-                    </TableCell>
-                    <TableCell style={{ textAlign: "center" }}>
-                      {cancelled || waiting ? 'waiting' : `${loanPeriodText} days`}
-                    </TableCell>
-                    <TableCell style={{ textAlign: "center" }}>
-                      {cancelled || waiting
-                        ? 'waiting'
-                        : <> {convertToCurrency(((parseFloat(responseText) / 100) * parseFloat(interestRateText)) + parseFloat(responseText), solPrice)} <span>({parseFloat(interestRateText).toFixed(2)}%)</span>
-                        </>
-                      }
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </TableContainer>
-
-
-            <h6 style={{ marginTop: "30px", marginBottom: "10px" }}>
-              By clicking 'ACCEPT OR OFFER', you agree to the following <span onClick={this.toggleExpand} style={{ color: "#ff0000", textDecoration: "underline", cursor: "pointer" }}>terms and conditions:
-              </span>
-            </h6>
-
-            {expanded && (
-              <>
-                <table className="terms-and-conditions-table">
-                  <tbody>
-                    <tr>
-                      <td className="list-number">1.</td>
-                      <td>The loan amount is <span style={{ color: "#ff0000" }}>[{convertToCurrency(parseFloat(responseText), solPrice)}]</span>.</td>
-                    </tr>
-                    <tr>
-                      <td className="list-number">2.</td>
-                      <td>The loan period is <span style={{ color: "#ff0000" }}>[{loanPeriodText}]</span> days.</td>
-                    </tr>
-                    <tr>
-                      <td className="list-number">3.</td>
-                      <td>You are responsible for repaying the loan within the specified period.</td>
-                    </tr>
-                    <tr>
-                      <td className="list-number">4.</td>
-                      <td>Interest may be applicable on the loan amount as per the agreed Interest Rate: <span style={{ color: "#ff0000" }}>[{parseFloat(interestRateText).toFixed(2)}%]</span>.</td>
-                    </tr>
-                    <tr>
-                      <td className="list-number">5.</td>
-                      <td>Failure to repay the loan on time may result in user's score credit penalties.</td>
-                    </tr>
-                    <tr>
-                      <td className="list-number">6.</td>
-                      <td>Any outstanding balance after the loan period may be automatically deducted from the user's available in-game balance</td>
-                    </tr>
-                    <tr>
-                      <td className="list-number">7.</td>
-                      <td>Make sure to review and understand the loan terms and conditions provided by the lender.</td>
-                    </tr>
-                    <tr>
-                      <td className="list-number">8.</td>
-                      <td>Clicking 'ACCEPT' offers your understanding and agreement to these terms.</td>
-                    </tr>
-                    <tr>
-                      <td className="list-number">9.</td>
-                      <td>No legal action in the case of non-repayment can be taken on un-settled debts, all loans are final and this is strictly peer-to-peer.</td>
-                    </tr>
-                    <tr>
-                      <td className="list-number">10.</td>
-                      <td>Ensure that you have sufficient resources to pay back the loan amount. Check your debts by clicking your wallet</td>
-                    </tr>
-                    <tr>
-                      <td className="list-number">11.</td>
-                      <td>This agreement is binding and enforceable.</td>
-                    </tr>
-                    <tr>
-                      <td className="list-number">12.</td>
-                      <td>Withdrawals & Tipping to be suspended for the loaner whilst in debt.</td>
-                    </tr>
-                    <tr>
-                      <td className="list-number">13.</td>
-                      <td>All loans are final.</td>
-                    </tr>
-                    <tr>
-                      <td className="list-number">14.</td>
-                      <td>You are required to clean your genitals often.</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </>
-            )}
-          </div>
-
-          <div className="modal-footer">
-            {this.props.offerInfo.isLender ? (
-              <div>
-                <Button
-                  className={`btn-submit ${!this.state.waiting && !cancelled ? 'isWaiting' : ''}`}
-                  disabled={!this.state.waiting && !cancelled}
-                  onClick={this.state.waiting && cancelled ? this.nudge : this.onBtnOkClicked}>
-                  {this.state.waiting ? (cancelled ? 'NUDGE' : 'OFFER') : 'WAITING'}&nbsp;
-                  {!this.state.waiting && !cancelled && (
-                    <Lottie
-                      options={{
-                        loop: isLowGraphics ? false : true,
-                        autoplay: isLowGraphics ? false : true,
-                        animationData: spinningIcon
-                      }}
-                      style={{ width: '25px', marginTop: '-2px' }}
-                    />
-                  )}
-                </Button>
-              </div>
-            ) : (
-              <div>
-                <Button
-                  className={`btn-submit ${this.state.waiting ? 'disabled' : ''}`}
-                  disabled={this.state.waiting}
-                  onClick={this.createAndLend}>
-                  {!this.state.waiting ? 'ACCEPT' : 'WAITING'}&nbsp;
-                  {this.state.waiting && (
-                    <Lottie
-                      options={{
-                        loop: isLowGraphics ? false : true,
-                        autoplay: isLowGraphics ? false : true,
-                        animationData: spinningIcon
-                      }}
-                      style={{ width: '25px', marginTop: '-4px' }}
-                    />
-                  )}
-                </Button>
-              </div>
-            )}
-
-
-            {this.props.offerInfo.isLender ? (
-              <Button
-                variant='contained' color='error'
-                onClick={this.onBtnCancelClicked}
-              >
-                Cancel
-              </Button>
-            ) : (
-              <Button
-                variant='contained' color='error'
-                onClick={this.onBtnCancelClicked}
-              >
-                Reject
-              </Button>
-            )}
-          </div>
-        </div>
-      </Modal >
-    );
-  }
-}
-
-const mapStateToProps = state => ({
-  isDarkMode: state.auth.isDarkMode,
-  rank: state.auth.totalWagered,
-  isOpen: state.snackbar.showOfferLoanModal,
-  title: state.snackbar.title,
-  item: state.loanReducer._id,
-  isLender: state.loanReducer.isLender,
-  offerInfo: state.loanReducer.offerInfo,
-  loan_amount: state.loanReducer.data.loan_amount,
-  loan_period: state.loanReducer.data.loan_period,
-  apy: state.loanReducer.data.apy,
-  alertMessage: state.snackbar.alertMessage,
-  userInfo: state.auth.user,
-  alertType: state.snackbar.alertType,
-  onlineUserList: state.logic.onlineUserList,
-  isMuted: state.auth.isMuted,
-  solPrice: state.auth.solPrice
-});
-
-const mapDispatchToProps = {
-  closeOfferLoanModal,
+// Redux
+import { useSelector, useDispatch } from 'react-redux';
+import {
   offerLoan,
   acCalculateRemainingLoans,
   addNewTransaction,
@@ -777,7 +37,778 @@ const mapDispatchToProps = {
   cancelledOffer,
   reconsiderOffer,
   createAndLend,
-  getUser
-};
+} from '../../redux/Loan/loan.action';
+import { closeOfferLoanModal, errorMsgBar } from '../../redux/Notification/notification.actions';
+import { getUser } from '../../redux/Auth/user.actions';
 
-export default connect(mapStateToProps, mapDispatchToProps)(OfferLoanModal);
+// Utility
+import { convertToCurrency } from '../../util/conversion';
+
+function OfferLoanModal() {
+  const dispatch = useDispatch();
+
+  // ----------- Redux State -----------
+  const isOpen = useSelector((state) => state.snackbar.showOfferLoanModal);
+  const isDarkMode = useSelector((state) => state.auth.isDarkMode);
+  const isLowGraphics = useSelector((state) => state.auth.isLowGraphics);
+  const solPrice = useSelector((state) => state.auth.solPrice);
+  const userInfo = useSelector((state) => state.auth.user);
+  const onlineUserList = useSelector((state) => state.logic.onlineUserList);
+
+  // The loan-related info passed via Redux
+  const offerInfo = useSelector((state) => state.loanReducer.offerInfo);
+  const isMuted = useSelector((state) => state.auth.isMuted);
+
+  // ----------- Local State -----------
+  const [expanded, setExpanded] = useState(false);
+  const [responseText, setResponseText] = useState('0');
+  const [loanPeriodText, setLoanPeriodText] = useState('0');
+  const [interestRateText, setInterestRateText] = useState('0');
+  const [cancelled, setCancelled] = useState(false);
+  const [waiting, setWaiting] = useState(true);
+  const [isComplete, setIsComplete] = useState(false);
+  const [og, setOg] = useState(null);
+
+  // For playing audio
+  const rejectedAudioRef = useRef(null);
+
+  // --------------- EFFECTS ---------------
+  // Initialize audio on mount
+  useEffect(() => {
+    const audio = new Audio('/sounds/rejected.mp3');
+    audio.load();
+    rejectedAudioRef.current = audio;
+  }, []);
+
+  // Re-run socket setup if the modal re-opens or offerInfo changes
+  useEffect(() => {
+    if (isOpen) {
+      setCancelled(false);
+      setWaiting(true);
+      setupSocketListener(1);
+
+      // If user is lender, “nudge” the other party
+      if (offerInfo?.isLender) {
+        nudge();
+      } else {
+        // If not lender, reconsider the offer
+        dispatch(
+          reconsiderOffer({
+            _id: userInfo._id,
+            username: '',
+          })
+        );
+      }
+    }
+  }, [isOpen, offerInfo]);
+
+  // If the “isComplete” state changes to true, close the modal and refresh user
+  useEffect(() => {
+    if (isComplete) {
+      dispatch(getUser());
+      dispatch(closeOfferLoanModal());
+    }
+  }, [isComplete, dispatch]);
+
+  // -------------- Socket Logic --------------
+  const setupSocketListener = (attempt) => {
+    // If either no socket or no offer info, retry a few times
+    if (!offerInfo?.socket || !offerInfo?._id) {
+      if (attempt < 5) {
+        setTimeout(() => setupSocketListener(attempt + 1), 1000);
+      }
+      return;
+    }
+
+    const socket = offerInfo.socket;
+    const offerId = offerInfo._id;
+
+    // Clean up any existing listeners
+    socket.off(`CANCEL_OFFER_${offerId}`);
+    socket.off(`OFFER_LOAN_${offerId}`);
+    socket.off(`OFFER_LOAN_${userInfo?._id}`);
+
+    // Cancel Offer handler
+    socket.on(`CANCEL_OFFER_${offerId}`, (data) => {
+      setCancelled(data.cancelled);
+      setWaiting(true);
+
+      // If lender and modal is open and not complete => play rejection sound
+      if (isOpen && data.cancelled && !isMuted && offerInfo.isLender && !isComplete) {
+        rejectedAudioRef.current?.play();
+      }
+      // If borrower, close the modal immediately on cancel
+      if (data.cancelled && !offerInfo.isLender) {
+        dispatch(closeOfferLoanModal());
+      }
+    });
+
+    // Offer Loan update (by ID of the offer or the user)
+    const onOfferLoanUpdate = (data) => {
+      setResponseText(`${data.loanAmount}`);
+      setLoanPeriodText(`${data.loanPeriod}`);
+      setInterestRateText(`${data.interestRate}`);
+      setWaiting(false);
+      setCancelled(false);
+      setOg(data.og);
+      setIsComplete(!!data.isComplete);
+    };
+
+    socket.on(`OFFER_LOAN_${offerId}`, onOfferLoanUpdate);
+    socket.on(`OFFER_LOAN_${userInfo?._id}`, onOfferLoanUpdate);
+  };
+
+  // “Nudge” the other party
+  const nudge = () => {
+    if (!offerInfo?._id || !userInfo?._id) return;
+    dispatch(
+      emitLoanOffer({
+        _id: offerInfo._id,
+        lender: userInfo._id,
+        avatar: userInfo.avatar,
+        totalWagered: userInfo.totalWagered,
+        accessory: userInfo.accessory,
+        username: userInfo.username,
+      })
+    );
+  };
+
+  // -------------- Utility Functions --------------
+  const calculateNewBalance = (userBalance, loanAmount) => {
+    const val = parseFloat(loanAmount);
+    const newBalance = userBalance - (isNaN(val) ? 0 : val);
+    return isNaN(newBalance) ? userBalance : newBalance;
+  };
+
+  const calculateInterest = (loanAmount, interestRate) => {
+    const amt = parseFloat(loanAmount);
+    const rate = parseFloat(interestRate);
+    if (isNaN(amt) || isNaN(rate)) return 0;
+    return (amt * rate) / 100;
+  };
+
+  const determineLoanType = (userBalance, loanAmount) => {
+    const nb = calculateNewBalance(userBalance, loanAmount);
+    return nb < 0 ? 'FRACTIONAL' : 'FULL';
+  };
+
+  const exceedsReservesLimit = (userBalance, loanAmount) => {
+    const amt = parseFloat(loanAmount);
+    return amt > userBalance * 10;
+  };
+
+  // -------------- Event Handlers --------------
+  const handleResponseTextChange = (e) => {
+    const val = e.target.value;
+    const parsed = val.match(/^\d*\.?\d*$/);
+    setResponseText(parsed ? parsed[0] : '');
+  };
+  const handleLoanPeriodTextChange = (e) => {
+    const val = e.target.value;
+    const parsed = val.match(/^\d*\.?\d*$/);
+    setLoanPeriodText(parsed ? parsed[0] : '');
+  };
+  const handleInterestRateTextChange = (e) => {
+    const val = e.target.value;
+    const parsed = val.match(/^\d*\.?\d*$/);
+    setInterestRateText(parsed ? parsed[0] : '');
+  };
+
+  // The Lender’s “OFFER” button
+  const onBtnOkClicked = () => {
+    if (parseFloat(responseText) > 10 * userInfo.balance) {
+      dispatch(errorMsgBar("PLEASE ENSURE THE LOAN AMOUNT IS NO MORE THAN 10X YOUR BALANCE"));
+      return;
+    }
+    if (parseFloat(responseText) < 0.0005) {
+      dispatch(errorMsgBar("MEOWNIMUM IS 0.0005 SOL"));
+      return;
+    }
+
+    setWaiting(false);
+
+    // Send the loan offer
+    dispatch(
+      offerLoan({
+        loanAmount: parseFloat(responseText),
+        loanPeriod: parseInt(loanPeriodText),
+        interestRate: parseFloat(interestRateText),
+        lender: offerInfo._id,
+        og: userInfo._id,
+      })
+    );
+  };
+
+  // The Borrower’s “ACCEPT” button
+  const createAndLendHandler = async () => {
+    setWaiting(true);
+
+    const result = await dispatch(
+      createAndLend({
+        loan_amount: responseText,
+        loan_period: loanPeriodText,
+        apy: interestRateText,
+        lender: og,
+      })
+    );
+
+    // If success, refresh user data, close modal
+    onBtnCancelClicked();
+    if (result?.success) {
+      dispatch(getUser());
+      dispatch(errorMsgBar(result.message));
+      dispatch(
+        offerLoan({
+          loanAmount: '',
+          loanPeriod: '',
+          interestRate: '',
+          lender: userInfo._id,
+          complete: true,
+        })
+      );
+    }
+  };
+
+  // Cancel or Reject
+  const onBtnCancelClicked = () => {
+    // Play sound if not lender and not complete
+    if (!isMuted && !offerInfo.isLender && !isComplete) {
+      rejectedAudioRef.current?.play();
+    }
+    // If it’s not complete => notify the server it’s cancelled
+    if (!isComplete) {
+      dispatch(
+        cancelledOffer({
+          avatar: '',
+          _id: offerInfo._id,
+          username: '',
+          accessory: '',
+          totalWagered: '',
+          isLender: '',
+        })
+      );
+    }
+    // Close the modal
+    dispatch(closeOfferLoanModal());
+  };
+
+  const toggleExpand = () => setExpanded((prev) => !prev);
+
+  // -------------- Render JSX --------------
+  return (
+    <Dialog
+      open={isOpen}
+      onClose={onBtnCancelClicked}
+      PaperProps={{
+        sx: {
+          bgcolor: isDarkMode ? '#1c1c1e' : '#f5f5f5',
+          color: isDarkMode ? '#f9f9f9' : '#333',
+          borderRadius: 2,
+          minWidth: { xs: '90%', sm: 600 },
+        },
+      }}
+    >
+      <DialogTitle sx={{ textAlign: 'center', pb: 1 }}>
+        {offerInfo?.isLender
+          ? `OFFER LOAN TO ${offerInfo?.username || ''}`
+          : `LOAN OFFER FROM ${offerInfo?.username || ''}`}
+      </DialogTitle>
+
+      <DialogContent dividers sx={{ pt: 1 }}>
+        {/* STATUS TABLE */}
+        <Box sx={{ mb: 2 }}>
+          <TableContainer sx={{ borderRadius: 2, maxHeight: 150 }}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  {/* Current User Cell */}
+                  <TableCell align="center">
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Avatar
+                        className="avatar"
+                        src={userInfo?.avatar}
+                        rank={userInfo?.totalWagered}
+                        username={userInfo?.username}
+                        accessory={userInfo?.accessory}
+                        alt=""
+                        darkMode={isDarkMode}
+                      />
+                      <i
+                        style={{
+                          marginLeft: 8,
+                          width: 14,
+                          height: 14,
+                        }}
+                        className={`online-status${
+                          onlineUserList.includes(offerInfo?._id) ? ' online' : ''
+                        }`}
+                      />
+                    </Box>
+                    {!cancelled && !waiting ? (
+                      <Typography variant="body2" color="green">
+                        READY!
+                      </Typography>
+                    ) : (
+                      <Typography variant="body2" color="#ccc">
+                        WAITING!
+                      </Typography>
+                    )}
+                  </TableCell>
+
+                  {/* Other Party Cell */}
+                  <TableCell align="center">
+                    {!cancelled || !offerInfo?.isLender ? (
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Avatar
+                          className="avatar"
+                          src={offerInfo?.avatar}
+                          rank={offerInfo?.totalWagered}
+                          accessory={offerInfo?.accessory}
+                          username={offerInfo?.username}
+                          alt=""
+                          darkMode={isDarkMode}
+                        />
+                        <i
+                          style={{
+                            marginLeft: 8,
+                            width: 14,
+                            height: 14,
+                          }}
+                          className={`online-status${
+                            onlineUserList.includes(offerInfo?._id) ? ' online' : ''
+                          }`}
+                        />
+                      </Box>
+                    ) : (
+                      // If cancelled by Lender
+                      <Box sx={{ display: 'flex' }}>
+                        <Avatar
+                          className="avatar"
+                          src={offerInfo?.avatar}
+                          rank={offerInfo?.totalWagered}
+                          accessory={offerInfo?.accessory}
+                          username={offerInfo?.username}
+                          alt=""
+                          darkMode={isDarkMode}
+                        />
+                        <i
+                          style={{
+                            marginLeft: 8,
+                            width: 14,
+                            height: 14,
+                          }}
+                          className={`online-status${
+                            onlineUserList.includes(offerInfo?._id) ? ' online' : ''
+                          }`}
+                        />
+                        <Box sx={{ ml: 2, textAlign: 'right' }}>
+                          <Typography variant="body2" color="error">
+                            REJECTED
+                          </Typography>
+                          <Button size="small" onClick={nudge}>
+                            NUDGE
+                          </Button>
+                        </Box>
+                      </Box>
+                    )}
+                    {!cancelled || !offerInfo?.isLender ? (
+                      <Typography variant="body2" color="#ccc">
+                        WAITING!
+                      </Typography>
+                    ) : null}
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+            </Table>
+          </TableContainer>
+        </Box>
+
+        {/* If current user is Lender -> show input fields */}
+        {offerInfo?.isLender && (
+          <Box sx={{ mb: 2 }}>
+            <TableContainer>
+              <Table sx={{ borderCollapse: 'collapse' }}>
+                <TableBody>
+                  {/* Loan Amount */}
+                  <TableRow>
+                    <TableCell sx={{ px: 2, py: 2, width: '70%' }}>
+                      <TextField
+                        color="error"
+                        variant="filled"
+                        label="Loan Amount"
+                        fullWidth
+                        value={responseText}
+                        onChange={handleResponseTextChange}
+                        InputProps={{
+                          endAdornment: <InputAdornment position="end">RPS</InputAdornment>,
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell align="center" width="30%">
+                      <Tooltip title="Enter the loan amount in RPS">
+                        <InfoIcon sx={{ cursor: 'pointer' }} />
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+
+                  {/* Warnings */}
+                  {exceedsReservesLimit(userInfo.balance, responseText) && (
+                    <TableRow>
+                      <TableCell colSpan={2}>
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 1,
+                            bgcolor: isDarkMode ? '#2c2c2c' : '#ffe9e9',
+                            p: 1,
+                            borderRadius: 1,
+                            mt: 1,
+                          }}
+                        >
+                          <FontAwesomeIcon icon={faExclamationTriangle} color="#ff0000" />
+                          <Typography variant="body2" color="error">
+                            PLEASE ENSURE THE LOAN AMOUNT IS NO MORE THAN 10X YOUR BALANCE
+                          </Typography>
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  )}
+
+                  {/* Loan Period */}
+                  <TableRow>
+                    <TableCell sx={{ px: 2, py: 2 }}>
+                      <TextField
+                        color="error"
+                        variant="filled"
+                        label="Loan Period"
+                        fullWidth
+                        value={loanPeriodText}
+                        onChange={handleLoanPeriodTextChange}
+                        InputProps={{
+                          endAdornment: <InputAdornment position="end">DAYS</InputAdornment>,
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell align="center">
+                      <Tooltip title="Enter the duration in days">
+                        <InfoIcon sx={{ cursor: 'pointer' }} />
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+
+                  {/* Interest Rate */}
+                  <TableRow>
+                    <TableCell sx={{ px: 2, py: 2 }}>
+                      <TextField
+                        color="error"
+                        variant="filled"
+                        label="Interest Rate"
+                        fullWidth
+                        value={interestRateText}
+                        onChange={handleInterestRateTextChange}
+                        InputProps={{
+                          endAdornment: <InputAdornment position="end">%</InputAdornment>,
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell align="center">
+                      <Tooltip title="Enter the yielding interest rate for the loan">
+                        <InfoIcon sx={{ cursor: 'pointer' }} />
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+
+                  {/* Your Balance */}
+                  <TableRow>
+                    <TableCell>
+                      <Typography sx={{ fontWeight: 'bold' }}>YOUR BALANCE:</Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography>
+                        {convertToCurrency(userInfo.balance, solPrice)}
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+
+                  {/* New Balance */}
+                  <TableRow>
+                    <TableCell>
+                      <Typography sx={{ fontWeight: 'bold' }}>NEW BALANCE:</Typography>
+                    </TableCell>
+                    <TableCell>
+                      {calculateNewBalance(userInfo.balance, responseText) < 0 ? (
+                        <>
+                          {convertToCurrency(0, solPrice)} AND{' '}
+                          {convertToCurrency(
+                            Math.abs(
+                              calculateNewBalance(userInfo.balance, responseText)
+                            ),
+                            solPrice
+                          )}{' '}
+                          IN DEBT
+                        </>
+                      ) : (
+                        convertToCurrency(
+                          calculateNewBalance(userInfo.balance, responseText),
+                          solPrice
+                        )
+                      )}
+                    </TableCell>
+                  </TableRow>
+
+                  {/* GROSS PROFIT */}
+                  <TableRow>
+                    <TableCell>
+                      <Typography sx={{ fontWeight: 'bold' }}>GROSS PROFIT:</Typography>
+                    </TableCell>
+                    <TableCell>
+                      {isNaN(parseFloat(responseText)) ||
+                      isNaN(parseFloat(interestRateText)) ||
+                      parseFloat(responseText) <= 0 ||
+                      parseFloat(interestRateText) <= 0 ? (
+                        convertToCurrency(0, solPrice)
+                      ) : (
+                        convertToCurrency(
+                          calculateInterest(responseText, interestRateText) +
+                            parseFloat(responseText),
+                          solPrice
+                        )
+                      )}
+                    </TableCell>
+                  </TableRow>
+
+                  {/* NET PROFIT */}
+                  <TableRow>
+                    <TableCell>
+                      <Typography sx={{ fontWeight: 'bold' }}>NET PROFIT:</Typography>
+                    </TableCell>
+                    <TableCell>
+                      <span id="interest">
+                        (+{' '}
+                        {convertToCurrency(
+                          calculateInterest(responseText, interestRateText),
+                          solPrice
+                        )}
+                        )
+                      </span>
+                    </TableCell>
+                  </TableRow>
+
+                  {/* LOAN TYPE */}
+                  <TableRow>
+                    <TableCell>
+                      <Typography sx={{ fontWeight: 'bold' }}>LOAN TYPE:</Typography>
+                    </TableCell>
+                    <TableCell>
+                      {determineLoanType(userInfo.balance, responseText)}
+                    </TableCell>
+                  </TableRow>
+
+                  {/* High Interest Warning */}
+                  {parseFloat(interestRateText) > 6 && (
+                    <TableRow>
+                      <TableCell colSpan={2}>
+                        <Typography
+                          variant="body1"
+                          sx={{ color: 'red', fontWeight: 'bold', textAlign: 'center' }}
+                        >
+                          Charging an interest rate above 6% may be considered usury and could
+                          increase the risk of borrower default. We recommend setting a rate
+                          below 6% to mitigate this risk.
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Box>
+        )}
+
+        {/* DISPLAY “Loan Amount, Days Left, Payback” */}
+        <TableContainer>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell align="center">
+                  Loan Amount <FontAwesomeIcon icon={faDollarSign} />
+                </TableCell>
+                <TableCell align="center">
+                  Days Left <FontAwesomeIcon icon={faCalendarAlt} />
+                </TableCell>
+                <TableCell align="center">
+                  Payback Amount <FontAwesomeIcon icon={faMoneyBillWave} />
+                </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              <TableRow>
+                <TableCell align="center">
+                  {cancelled || waiting
+                    ? 'waiting'
+                    : convertToCurrency(parseFloat(responseText), solPrice)}
+                </TableCell>
+                <TableCell align="center">
+                  {cancelled || waiting ? 'waiting' : `${loanPeriodText} days`}
+                </TableCell>
+                <TableCell align="center">
+                  {cancelled || waiting ? (
+                    'waiting'
+                  ) : (
+                    <>
+                      {convertToCurrency(
+                        (parseFloat(responseText) * (1 + parseFloat(interestRateText) / 100)) ||
+                          0,
+                        solPrice
+                      )}{' '}
+                      <span>
+                        (
+                        {isNaN(parseFloat(interestRateText))
+                          ? '0.00'
+                          : parseFloat(interestRateText).toFixed(2)}
+                        %)
+                      </span>
+                    </>
+                  )}
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TableContainer>
+
+        {/* Terms & Conditions */}
+        <Typography variant="subtitle2" sx={{ mt: 3, mb: 1 }}>
+          By clicking 'ACCEPT OR OFFER', you agree to the following{' '}
+          <Box
+            component="span"
+            sx={{ color: '#ff0000', textDecoration: 'underline', cursor: 'pointer' }}
+            onClick={toggleExpand}
+          >
+            terms and conditions
+          </Box>
+          :
+        </Typography>
+
+        {expanded && (
+          <Box
+            sx={{
+              border: '1px solid',
+              borderColor: isDarkMode ? '#444' : '#ccc',
+              p: 2,
+              borderRadius: 1,
+              mb: 1,
+              maxHeight: 200,
+              overflowY: 'auto',
+            }}
+          >
+            <ol style={{ paddingLeft: '20px' }}>
+              <li>
+                The loan amount is{' '}
+                <Box component="span" sx={{ color: '#ff0000' }}>
+                  [{convertToCurrency(parseFloat(responseText), solPrice)}]
+                </Box>
+                .
+              </li>
+              <li>
+                The loan period is{' '}
+                <Box component="span" sx={{ color: '#ff0000' }}>
+                  [{loanPeriodText}]
+                </Box>{' '}
+                days.
+              </li>
+              <li>You are responsible for repaying the loan within the specified period.</li>
+              <li>
+                Interest may be applicable as per the agreed Interest Rate:{' '}
+                <Box component="span" sx={{ color: '#ff0000' }}>
+                  [{parseFloat(interestRateText).toFixed(2)}%]
+                </Box>
+                .
+              </li>
+              <li>Failure to repay on time may result in user credit penalties.</li>
+              <li>
+                Any outstanding balance after the loan period may be automatically deducted
+                from your in-game balance.
+              </li>
+              <li>Review and understand the loan terms provided by the lender.</li>
+              <li>Clicking 'ACCEPT' indicates your agreement to these terms.</li>
+              <li>
+                No legal action in the case of non-repayment can be taken on unsettled debts;
+                all loans are final and strictly peer-to-peer.
+              </li>
+              <li>Ensure that you have sufficient resources to pay back the loan amount.</li>
+              <li>This agreement is binding and enforceable.</li>
+              <li>Withdrawals & Tipping to be suspended for the loaner while in debt.</li>
+              <li>All loans are final.</li>
+              <li>You are required to maintain personal hygiene frequently.</li>
+            </ol>
+          </Box>
+        )}
+      </DialogContent>
+
+      <DialogActions sx={{ justifyContent: 'space-between', px: 3, py: 2 }}>
+        {offerInfo?.isLender ? (
+          <>
+            {/* “OFFER” button */}
+            <Button
+              variant="contained"
+              color="success"
+              disabled={!waiting && !cancelled}
+              onClick={waiting && cancelled ? nudge : onBtnOkClicked}
+            >
+              {waiting ? (cancelled ? 'NUDGE' : 'OFFER') : 'WAITING'}
+              &nbsp;
+              {!waiting && !cancelled && (
+                <Lottie
+                  options={{
+                    loop: isLowGraphics ? false : true,
+                    autoplay: isLowGraphics ? false : true,
+                    animationData: spinningIcon,
+                  }}
+                  height={25}
+                  width={25}
+                  style={{ marginTop: '-2px' }}
+                />
+              )}
+            </Button>
+            {/* “Cancel” button */}
+            <Button variant="contained" color="error" onClick={onBtnCancelClicked}>
+              Cancel
+            </Button>
+          </>
+        ) : (
+          <>
+            {/* “ACCEPT” button for borrower */}
+            <Button
+              variant="contained"
+              color="success"
+              disabled={waiting}
+              onClick={createAndLendHandler}
+            >
+              {!waiting ? 'ACCEPT' : 'WAITING'}
+              &nbsp;
+              {waiting && (
+                <Lottie
+                  options={{
+                    loop: isLowGraphics ? false : true,
+                    autoplay: isLowGraphics ? false : true,
+                    animationData: spinningIcon,
+                  }}
+                  height={25}
+                  width={25}
+                  style={{ marginTop: '-4px' }}
+                />
+              )}
+            </Button>
+            {/* “Reject” button */}
+            <Button variant="contained" color="error" onClick={onBtnCancelClicked}>
+              Reject
+            </Button>
+          </>
+        )}
+      </DialogActions>
+    </Dialog>
+  );
+}
+
+export default OfferLoanModal;

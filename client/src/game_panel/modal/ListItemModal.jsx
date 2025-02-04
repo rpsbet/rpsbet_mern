@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { connect } from 'react-redux';
+import { connect, useDispatch } from 'react-redux';
 import {
-  closeListItemModal
+  closeListItemModal,
+  errorMsgBar
 } from '../../redux/Notification/notification.actions';
 import {
   listItem
@@ -20,8 +21,6 @@ import {
 import { ThemeProvider } from '@mui/material/styles';
 import { getCustomTheme } from '../../config/theme';
 
-import { alertModal } from './ConfirmAlerts';
-
 function ListItemModal(props) {
   const {
     isOpen,
@@ -39,6 +38,8 @@ function ListItemModal(props) {
   const [price, setPrice] = useState(0);
   const [rentOption, setRentOption] = useState(false);
   const [showOverrideConfirmation, setShowOverrideConfirmation] = useState(false);
+  const dispatch = useDispatch();
+
   const theme = getCustomTheme(isDarkMode ? 'dark' : 'light');
 
   // ------------------------------
@@ -79,15 +80,15 @@ function ListItemModal(props) {
       });
 
       if (response.success) {
-        alertModal(isDarkMode, response.message, '-cat');
+        dispatch(errorMsgBar(response.message));
         closeListItemModal();
         setShowOverrideConfirmation(false);
       } else {
-        alertModal(isDarkMode, response.message);
+        dispatch(errorMsgBar(response.message));
       }
     } catch (error) {
       console.error('Error listing item:', error);
-      alertModal(isDarkMode, 'Failed to list the item.');
+      dispatch(errorMsgBar('Failed to list the item.'));
     }
   };
 

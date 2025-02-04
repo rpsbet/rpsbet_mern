@@ -17,7 +17,9 @@ import {
   faCoins, faUser,
   faCalendarAlt,
   faSortNumericUp,
-  faRobot
+  faRobot,
+  faCat,
+  faShieldAlt
 } from '@fortawesome/free-solid-svg-icons';
 import {
   Stack,
@@ -32,7 +34,6 @@ const PreSummaryPanel = (props) => {
     status,
     bankroll,
     isLowBankroll,
-    cp,
     isHighCommission,
     payoutPercentage,
     roomInfo,
@@ -60,7 +61,7 @@ const PreSummaryPanel = (props) => {
     if (qs_game_type && bet_amount) {
       return (
         (bet_amount / (qs_game_type - 1) + parseFloat(bet_amount)) *
-        (1 - (cp + 2.5) / 100) -
+        (1 - (roomInfo.tax + 2.5) / 100) -
         bet_amount
       );
     }
@@ -68,24 +69,34 @@ const PreSummaryPanel = (props) => {
   };
 
   const calculateRPSReturn = () => {
-    return bet_amount * 2 * ((100 - (cp + 2.5)) / 100) - bet_amount;
+    return bet_amount * 2 * ((100 - (roomInfo.tax + 2.5)) / 100) - bet_amount;
   };
 
   return (
     <Stack direction="row" spacing={2}>
 
-      <Box className="pre-summary-panel title">
+      <Box
+        className="pre-summary-panel title"
+        sx={{
+          '&::-webkit-scrollbar': {
+            display: 'none'
+          },
+          scrollbarWidth: 'none', // For Firefox
+          msOverflowStyle: 'none', // For IE and Edge
+          overflow: 'hidden' // This will prevent content from being scrollable at all
+        }}
+      >
 
         {/* ROOM NAME */}
         <Box className="data-item">
           <Typography variant="body2" className="label room-name">
-            <FontAwesomeIcon icon={faBuilding} style={{ marginRight: 8 }} /> Name / Ticker
+            <FontAwesomeIcon icon={faCat} style={{ marginRight: 8 }} /> Name / Ticker
           </Typography>
           {/* Tooltip + info icon for the value */}
           <Tooltip title="This is the name of the room.">
             <Box sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
               <Typography variant="body1" className="value">
-                {roomInfo?.name}{' '}<span style={{ fontSize: "x-small" }}>/ {roomInfo?.ticker}</span>
+                {roomInfo?.name}{' '}<span style={{ fontSize: "x-small" }}>/ ${roomInfo?.ticker}</span>
               </Typography>
               <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
             </Box>
@@ -101,6 +112,22 @@ const PreSummaryPanel = (props) => {
             <Box sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
               <Typography id="ai_mode" variant="body1" className="value">
                 {roomInfo?.selectedStrategy}
+              </Typography>
+              <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
+            </Box>
+          </Tooltip>
+        </Box>
+
+        {/* BATTLES */}
+        <Box className="data-item">
+          <Typography variant="body2" className="label room-name">
+            <FontAwesomeIcon icon={faShieldAlt} style={{ marginRight: 8 }} /> BATTLES
+          </Typography>
+          {/* Tooltip + info icon for the value */}
+          <Tooltip title="This is the number of battles of this room.">
+            <Box sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+              <Typography variant="body1" className="value">
+                {roomInfo?.battles}
               </Typography>
               <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
             </Box>
@@ -144,14 +171,14 @@ const PreSummaryPanel = (props) => {
                 <div>
                   <span>EXPLANATION: </span>
                   <p>
-                    Quick Shoot logic: (Bet Amount / (qs_game_type - 1) + Bet Amount), minus commission ({cp}%) and platform tax (2.5%).
+                    Quick Shoot logic: (Bet Amount / (QS Game Type - 1) + Bet Amount), minus commission ({roomInfo.tax}%) and platform tax (2.5%).
                   </p>
                   <span>CALCULATION: </span>
                   <div>
                     {convertToCurrency(bet_amount, solPrice)} / ({qs_game_type - 1}) + {convertToCurrency(bet_amount, solPrice)} =
                     {convertToCurrency(bet_amount / (qs_game_type - 1) + bet_amount, solPrice)}
                   </div>
-                  <div>-({cp} + 2.5)% = {convertToCurrency(calculateQuickShootReturn(), solPrice)}</div>
+                  <div>-({roomInfo.tax} + 2.5)% = {convertToCurrency(calculateQuickShootReturn(), solPrice)}</div>
                 </div>
               ) : (
                 <div>
@@ -163,7 +190,7 @@ const PreSummaryPanel = (props) => {
                   <div>
                     {convertToCurrency(bet_amount, solPrice)} x 2 = {convertToCurrency(bet_amount * 2, solPrice)}
                   </div>
-                  <div>-({cp} + 2.5)% = {convertToCurrency(calculateRPSReturn(), solPrice)}</div>
+                  <div>-({roomInfo.tax} + 2.5)% = {convertToCurrency(calculateRPSReturn(), solPrice)}</div>
                 </div>
               )
             }
@@ -186,22 +213,6 @@ const PreSummaryPanel = (props) => {
                   : calculateRPSReturn(),
                 solPrice
               )}
-              <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
-            </Box>
-          </Tooltip>
-        </Box>
-
-        {/* WIN CHANCE */}
-        <Box className="data-item">
-          <Typography variant="body2" className="label chance">
-            <FontAwesomeIcon icon={faDice} style={{ marginRight: 8 }} />Win Chance
-          </Typography>
-          {/* Add a tooltip + info icon for the value */}
-          <Tooltip title="Probability of winning each battle, based on your strategy or random factors.">
-            <Box sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-              <Typography variant="body1" className="value">
-                {winChance}%
-              </Typography>
               <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
             </Box>
           </Tooltip>
@@ -245,7 +256,7 @@ const PreSummaryPanel = (props) => {
           <Typography variant="body2" className="label commission">
             <FontAwesomeIcon icon={faPercentage} style={{ marginRight: 8 }} />Tax
           </Typography>
-          <Tooltip title="Host's CP - Player's BP. Minimum 2.5% goes to the platform.">
+          <Tooltip title="Host's Room Tax. Minimum 2.5% goes to the platform.">
             <Box
               sx={{ cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
             >
@@ -254,7 +265,7 @@ const PreSummaryPanel = (props) => {
                 className={`value ${isHighCommission ? 'red-text' : ''}`}
                 sx={{ display: 'flex', alignItems: 'center' }}
               >
-                {cp < 1 ? '1%' : `${cp}%`}
+                {roomInfo.tax < 1 ? '1%' : `${roomInfo.tax}%`}
                 {!isHighCommission ? (
                   <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
                 ) : (
@@ -265,51 +276,65 @@ const PreSummaryPanel = (props) => {
           </Tooltip>
         </Box>
 
-        {/* AUTO-PAYOUT (already has a tooltip) */}
-        {endgame_type && (
-          <Box className="data-item">
-            <Typography variant="body2" className="label created">
-              <FontAwesomeIcon icon={faHandHoldingUsd} style={{ marginRight: 8 }} />Auto-Payout
-            </Typography>
-            <Tooltip title="Automatic dividends paid to Hosts & CoHosts upon reaching the payout threshold.">
-              <Box
-                sx={{
-                  cursor: 'pointer',
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  mb: '-7.5px',
-                  mr: '-20px',
-                }}
-              >
-                <Box position="relative" display="inline-flex">
-                  <CircularProgress
-                    variant="determinate"
-                    value={payoutPercentage}
-                    color="error"
-                    size={35}
-                    thickness={4}
-                  />
-                  <Box
-                    top={0}
-                    left={0}
-                    bottom={0}
-                    right={0}
-                    position="absolute"
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="center"
-                  >
-                    <Typography variant="caption" component="div" sx={{ fontSize: '0.6em', fontWeight: 'bold' }}>
-                      {`${payoutPercentage}%`}
-                    </Typography>
-                  </Box>
+        <Box className="data-item">
+          <Typography variant="body2" className="label created">
+            <FontAwesomeIcon icon={faHandHoldingUsd} style={{ marginRight: 8 }} />Hard Cap
+          </Typography>
+          <Tooltip title="Automatic dividends paid to Hosts & CoHosts upon reaching the payout threshold.">
+            <Box
+              sx={{
+                cursor: 'pointer',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                mb: '-7.5px',
+                mr: '-20px',
+              }}
+            >
+              <Box position="relative" display="inline-flex">
+                <CircularProgress
+                  variant="determinate"
+                  value={payoutPercentage}
+                  color="error"
+                  size={35}
+                  thickness={4}
+                />
+                <Box
+                  top={0}
+                  left={0}
+                  bottom={0}
+                  right={0}
+                  position="absolute"
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                >
+                  <Typography variant="caption" component="div" sx={{ fontSize: '0.6em', fontWeight: 'bold' }}>
+                    {`${payoutPercentage}%`}
+                  </Typography>
                 </Box>
-                <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
               </Box>
-            </Tooltip>
-          </Box>
-        )}
+              <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
+            </Box>
+          </Tooltip>
+        </Box>
+
+        {/* WIN CHANCE */}
+        <Box className="data-item">
+          <Typography variant="body2" className="label chance">
+            <FontAwesomeIcon icon={faDice} style={{ marginRight: 8 }} />Win Chance
+          </Typography>
+          {/* Add a tooltip + info icon for the value */}
+          <Tooltip title="Probability of winning each battle, based on your strategy or random factors.">
+            <Box sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+              <Typography variant="body1" className="value">
+                {winChance}%
+              </Typography>
+              <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
+            </Box>
+          </Tooltip>
+        </Box>
+
 
         {/* INTEREST RECEIVED (already has a tooltip) */}
         <Box className="data-item">
@@ -331,7 +356,7 @@ const PreSummaryPanel = (props) => {
         {/* CREATOR */}
         <Box className="data-item">
           <Typography variant="body2" className="label host-display-name">
-            <FontAwesomeIcon icon={faUser} style={{ marginRight: 8 }} />Creator
+            <FontAwesomeIcon icon={faUser} style={{ marginRight: 8 }} />Dev
           </Typography>
           <Tooltip title="The user who created this room.">
             <Box sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
@@ -420,7 +445,7 @@ const PreSummaryPanel = (props) => {
             </Box>
           </Tooltip>
         </Box>
-        
+
       </Box>
     </Stack>
   );

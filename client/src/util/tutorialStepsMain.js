@@ -10,7 +10,7 @@ export const tutorialStepsMain = [
       target: isMobile() ? '.main-page-nav-button-group' : '.main-game-page-tabs',
       content: (
         <div className="tutorial">
-          <p>The mains tabs let you switch to Live Games or Your Dashboard ('Manage').</p>
+          <p>The mains tabs let you switch to Live Games or Your Portfolio ('Manage').</p>
           <img src={happyCat} alt="Caesar the car" />
         </div>
       ),

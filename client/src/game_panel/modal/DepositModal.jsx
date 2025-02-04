@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { connect } from 'react-redux';
+import { connect, useDispatch } from 'react-redux';
 import LoadingOverlay from 'react-loading-overlay';
 import axios from '../../util/Api';
-import { alertModal } from '../modal/ConfirmAlerts';
 import { setGasfee } from '../../redux/Auth/user.actions';
 import { addNewTransaction } from '../../redux/Logic/logic.actions';
 import { ThemeProvider } from '@mui/material/styles';
@@ -149,6 +148,7 @@ function DepositModal(props) {
   const [tokenPrice, setTokenPrice] = useState(null);
   const [copied, setCopied] = useState(false);
   const [paymentId, setPaymentId] = useState('');
+  const dispatch = useDispatch();
 
   // Pack options and images
   const options = [0.25, 0.5, 1, 2.5, 10];
@@ -282,7 +282,7 @@ function DepositModal(props) {
   // -------------------- Web3: Send Transaction --------------------
   const send = async () => {
     if (amount > tokenBalance) {
-      alertModal(isDarkMode, 'NOT ENUFF FUNDS AT THIS MEOWMENT');
+      dispatch(errorMsgBar('NOT ENUFF FUNDS AT THIS MEOWMENT'));
       return;
     }
 
@@ -345,18 +345,18 @@ function DepositModal(props) {
       });
 
       if (result.data.success) {
-        alertModal(isDarkMode, result.data.message, '-cat');
+        dispatch(errorMsgBar(result.data.message, '-cat'));
         addNewTransaction(result.data.newTransaction);
         setIsLoading(false);
         closeModal();
       } else {
         setIsLoading(false);
-        alertModal(isDarkMode, 'Something went wrong. Please try again later.');
+        dispatch(errorMsgBar('Something went wrong. Please try again later.'));
       }
     } catch (error) {
       console.error('Error sending web3 transaction:', error);
       setIsLoading(false);
-      alertModal(isDarkMode, 'FAILED TRANSACTION');
+      dispatch(errorMsgBar('FAILED TRANSACTION'));
     }
   };
 
@@ -369,7 +369,7 @@ function DepositModal(props) {
         user_id,
         tokenMintAddress: token
       });
-      alertModal(isDarkMode, response.data.message, '-cat');
+      dispatch(errorMsgBar(response.data.message));
       closeModal();
     } catch (error) {
       console.error('Error creating web2 payment:', error);

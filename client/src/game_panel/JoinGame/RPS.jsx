@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { connect } from 'react-redux';
+import { connect, useDispatch } from 'react-redux';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { acQueryMyItem } from '../../redux/Item/item.action';
 import { setSpectateMode } from '../../redux/Auth/user.actions';
@@ -28,17 +28,16 @@ import {
   DialogActions,
   Typography,
   Checkbox,
-  FormControlLabel
+  FormControlLabel,
+  Box
 } from '@mui/material';
 
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { Info } from '@mui/icons-material';
 import ViewIcon from '@mui/icons-material/Visibility';
 import SwordsIcon from '@mui/icons-material/VisibilityOff';
 
 import Lottie from 'react-lottie';
 import Avatar from '../../components/Avatar';
-import BetAmountInput from '../../components/BetAmountInput';
 import PlayerModal from '../modal/PlayerModal';
 import AiPanel from '../../components/AiPanel';
 import ImageResultModal from '../modal/ImageResultModal';
@@ -70,11 +69,8 @@ function RPS(props) {
     solPrice,
     data,
     isLowGraphics,
-    isMusicEnabled,
-    isFocused,
     is_betting,
     openGamePasswordModal,
-    acQueryMyItem,
     updateRoomBot,
     kickBots,
     setSpectateMode,
@@ -85,14 +81,12 @@ function RPS(props) {
     roomInfo,
     creator_id,
     user_id,
-    bankroll,
-    bet_amount: propBetAmount = 1,
+    bet_amount,
     changeBgColor,
     join, // function from parent: e.g. props.joinGame
     selected_rps,
     onChangeState,
     playSound,
-    handleDetachAttachChange,
     handleClosePlayerModal,
     showPlayerModal,
     ai_mode,
@@ -103,7 +97,6 @@ function RPS(props) {
     betResult,
     handleOpenPlayerModal,
     creator_avatar,
-    rps_game_type,
     strategies,
     pr,
     cp,
@@ -123,27 +116,18 @@ function RPS(props) {
   const [botsCount, setBotsCount] = useState(0);
   const [intervalDuration, setIntervalDuration] = useState(500);
   const [startedPlaying, setStartedPlaying] = useState(false);
-  const [isQbot, setIsQbot] = useState(false);
-  const [advancedStatus, setAdvancedStatus] = useState('');
   const [status, setStatus] = useState(roomInfo.status);
   const [hostPr, setHostPr] = useState(roomInfo.host_pr);
   const [rpsHistory, setRpsHistory] = useState([]); // current RPS array
   const [prevRps, setPrevRps] = useState([]);
   const [localIsPasswordCorrect, setLocalIsPasswordCorrect] = useState(propIsPasswordCorrect);
   const [localSelectedRps, setLocalSelectedRps] = useState(selected_rps);
-
-  // For bet amount:
-  const [currentBetAmount, setCurrentBetAmount] = useState(propBetAmount);
-  const [potentialReturn, setPotentialReturn] = useState(0);
-  const [isMax, setIsMax] = useState(false);
-
-  // MUI v5 Confirm dialog
   const [openConfirmBet, setOpenConfirmBet] = useState(false);
   const [confirmBetMessage, setConfirmBetMessage] = useState('');
   const [confirmBetCallback, setConfirmBetCallback] = useState(null);
-
-  // "Don't show again" checkbox
   const [skipConfirm, setSkipConfirm] = useState(localStorage.getItem('hideConfirmModal') === 'true');
+
+  const dispatch = useDispatch();
 
   // Refs
   const intervalIdRef = useRef(null);
@@ -273,9 +257,8 @@ function RPS(props) {
     async (chosenRps) => {
       if (!join) return;
       onChangeState({ result: '' });
-
       const resultData = await join({
-        bet_amount: parseFloat(currentBetAmount),
+        bet_amount: parseFloat(bet_amount),
         selected_rps: chosenRps
       });
 
@@ -317,7 +300,7 @@ function RPS(props) {
     },
     [
       join,
-      currentBetAmount,
+      bet_amount,
       onChangeState,
       playSound,
       changeBgColor,
@@ -403,7 +386,7 @@ function RPS(props) {
     setLocalSelectedRps(selection);
     updateSelectedRps(selection, async () => {
       // 1) Auth check
-      if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
+      if (!validateIsAuthenticated(isAuthenticated, dispatch)) {
         return;
       }
 
@@ -418,12 +401,12 @@ function RPS(props) {
       }
 
       // 3) Validate bet amount
-      if (!validateBetAmount(currentBetAmount, balance, isDarkMode)) {
+      if (!validateBetAmount(bet_amount, balance, dispatch)) {
         return;
       }
 
       // 4) Validate bankroll
-      if (!validateBankroll(currentBetAmount, bankroll, isDarkMode)) {
+      if (!validateBankroll(bet_amount, bankroll, dispatch)) {
         return;
       }
 
@@ -486,6 +469,13 @@ function RPS(props) {
   const rpsValueAtLastIndex = rpsHistory[rpsHistory.length - 1]?.rps;
   const joinerRpsValueAtLastIndex =
     rpsHistory[rpsHistory.length - 1]?.joiner_rps;
+  const isCreator =
+    creator_id && user_id && creator_id.toString() === user_id.toString();
+  const subTitleText = isCreator ? "This is Your Own Room" : "Select: R - P - S!";
+  const tooltipText = isCreator
+    ? "Betting is disabled in your own room."
+    : "Play against the AI, at the same time, train your AI.";
+
   return (
     <div className="game-page">
       {/* MUI DIALOG for Confirmation */}
@@ -733,14 +723,14 @@ function RPS(props) {
 
                 {!startedPlaying ? (
                   <h3 className="game-sub-title roll-tag">
-                    Select: R - P - S! &nbsp;
+                    {subTitleText} &nbsp;
                     <Tooltip
                       style={{
                         position: 'absolute',
                         right: '20px',
                         marginBottom: '30px'
                       }}
-                      title={'Play against the AI, at the same time, train your AI.'}
+                      title={tooltipText}
                       placement="top"
                     >
                       <Info style={{ cursor: 'pointer', float: 'right' }} />
@@ -748,14 +738,14 @@ function RPS(props) {
                   </h3>
                 ) : (
                   <h3 className="game-sub-title roll-tag fade-out">
-                    Select: R - P - S! &nbsp;
+                    {subTitleText} &nbsp;
                     <Tooltip
                       style={{
                         position: 'absolute',
                         right: '20px',
                         marginBottom: '30px'
                       }}
-                      title={'Play against the AI, at the same time, train your AI.'}
+                      title={tooltipText}
                       placement="top"
                     >
                       <Info style={{ cursor: 'pointer', float: 'right' }} />
@@ -764,36 +754,39 @@ function RPS(props) {
                 )}
 
                 <div id="rps-radio" style={{ marginTop: '45px' }}>
-                  {options.map(({ classname, selection }, index) => (
-                    <Button
-                      key={index}
-                      variant="contained"
-                      color='error'
-                      id={`rps-${classname}`}
-                      className={`rps-option ${classname}${joinerRpsValueAtLastIndex === selection ? ' active' : ''
-                        }${props.bgColorChanged &&
-                          betResult === -1 &&
-                          joinerRpsValueAtLastIndex === selection
-                          ? ' lose-bg'
-                          : ''
-                        }${betResult === 0 && joinerRpsValueAtLastIndex === selection
-                          ? ' draw-bg'
-                          : ''
-                        }${betResult === 1 && joinerRpsValueAtLastIndex === selection
-                          ? ' win-bg'
-                          : ''
-                        }${is_betting ? ' disabled' : ''}`}
-                      onClick={() => {
-                        if (!is_betting) {
-                          onBtnBetClick(selection);
-                          playSound && playSound('select');
-                        }
-                      }}
-                    >
-                      &nbsp;
-                      <span className="roll-tag">[{selection}]</span>
-                    </Button>
-                  ))}
+                  {options.map(({ classname, selection }, index) => {
+                    // Condition to disable
+                    const shouldDisable = is_betting || isCreator;
+
+                    return (
+                      <Button
+                        key={index}
+                        variant="contained"
+                        color="error"
+                        id={`rps-${classname}`}
+                        disabled={shouldDisable}  // MUI will style it as disabled
+                        className={`rps-option ${classname}${joinerRpsValueAtLastIndex === selection ? ' active' : ''
+                          }${props.bgColorChanged && betResult === -1 && joinerRpsValueAtLastIndex === selection
+                            ? ' lose-bg'
+                            : ''
+                          }${betResult === 0 && joinerRpsValueAtLastIndex === selection
+                            ? ' draw-bg'
+                            : ''
+                          }${betResult === 1 && joinerRpsValueAtLastIndex === selection
+                            ? ' win-bg'
+                            : ''
+                          }${shouldDisable ? ' disabled' : ''}`}
+                        onClick={() => {
+                          // Only run onBtnBetClick if NOT disabled
+                          if (!shouldDisable) {
+                            onBtnBetClick(selection);
+                            playSound && playSound('select');
+                          }
+                        }}
+                      >
+                      </Button>
+                    );
+                  })}
                 </div>
 
                 {creator_id &&
@@ -807,7 +800,7 @@ function RPS(props) {
                       className="hover-text-button"
                     >
                       <FontAwesomeIcon className="button-icon" icon={faRobot} />
-                      <span className="button-text">&nbsp;CALL BOT? [{botsCount}]</span>
+                      <span className="button-text">&nbsp;CAT CALL x{botsCount}</span>
                     </Button>
                     {botsCount > 0 && (
                       <Button variant="outlined"
@@ -835,7 +828,6 @@ function RPS(props) {
                         user_id={user_id}
                         ai_mode={ai_mode}
                         user_balance={balance}
-                        handleDetachAttachChange={handleDetachAttachChange}
                         attached={attached}
                         creator_id={roomInfo.creator_id}
                         getAttachedRooms={getAttachedRooms}
@@ -848,7 +840,18 @@ function RPS(props) {
               </div>
             </>
           ) : (
-            <span style={{ color: '#ff0000' }}>THIS GAME HAS ENDED</span>
+            <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+
+              <Typography variant="subtitle2" sx={{ color: '#ff0000' }}>GAME ENDED</Typography><br />
+              <Typography>
+              Pool seeded! SEE 
+              <Box component="a"
+                href={`https://dexscreener.com/solana/`}
+                sx={{ ml: 0.5, cursor: 'pointer' }}
+                >DEX 🚀</Box>
+                </Typography>
+
+            </Box>
           )}
         </div>
       </div>
@@ -871,7 +874,6 @@ const mapStateToProps = (state) => ({
   data: state.itemReducer.myItemArray,
   isLowGraphics: state.auth.isLowGraphics,
   isMusicEnabled: state.auth.isMusicEnabled,
-  isFocused: state.auth.isFocused,
   is_betting: state.logic.is_betting
 });
 

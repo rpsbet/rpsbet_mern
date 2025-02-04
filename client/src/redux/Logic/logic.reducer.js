@@ -30,7 +30,6 @@ import {
   UPDATE_BET_RESULT,
   UPDATE_BANKROLL,
   UPDATE_BANKROLL_QS,
-  UPDATE_RAIN,
   ATTACHED,
   HISTORY_LOADED,
   ONLINE_USER_LIST_UPDATED,
@@ -93,6 +92,8 @@ const initialState = {
     website_link: '',
     telegram_link: '',
     creator_id: '',
+    battles: 0,
+    tax: 0,
     creator_avatar: '',
     rank: 0,
     accessory: '',
@@ -121,7 +122,6 @@ const initialState = {
   },
   betResult: -1,
   bankroll: 0,
-  rain: 0,
   accessories: [],
   roomStatus: '',
   qBotStatuses: {},
@@ -254,11 +254,6 @@ export default function (state = initialState, action) {
       return {
         ...state,
         bankroll: action.payload
-      };
-    case UPDATE_RAIN:
-      return {
-        ...state,
-        rain: action.payload
       };
     case START_LOADING:
       return {

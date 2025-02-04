@@ -106,7 +106,7 @@ const RPS = (props) => {
     <>
       {step === 1 && rps_game_type === 0 && (
         <Box className="game-info-panel">
-          <Box className="glass-container" style={{ marginBottom: '30px', display: 'flex', flexDirection: 'column' }}>
+          <Box className="glass-container" style={{ display: 'flex', flexDirection: 'column' }}>
             <RadioGroup value={selectedGameType} onChange={handleChange}>
               <h3 className="game-sub-title roll-tag">
                 Choose Game Mode&nbsp;
@@ -175,7 +175,6 @@ const mapStateToProps = (state) => ({
   isDarkMode: state.auth.isDarkMode,
   data: state.itemReducer.myItemArray,
   strategies: state.logic.strategies,
-  isFocused: state.auth.isFocused,
   gameTypeList: state.logic.gameTypeList,
 });
 

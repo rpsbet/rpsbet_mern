@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { connect } from 'react-redux';
+import { connect, useDispatch } from 'react-redux';
 import {
   Modal,
   Box,
@@ -20,15 +20,13 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import Info from '@mui/icons-material/Info';
 
 import TermsModal from '../modal/TermsModal';
-import { alertModal } from './ConfirmAlerts';
 import { confirmAlert } from 'react-confirm-alert';
 import 'react-confirm-alert/src/react-confirm-alert.css';
 
 import { ThemeProvider } from '@mui/material/styles';
 import { getCustomTheme } from '../../config/theme';
 import { userSignUp, setFocused } from '../../redux/Auth/user.actions';
-import {
-} from '../../redux/Auth/user.actions';
+import { errorMsgBar } from '../../redux/Notification/notification.actions';
 
 function SignupModal(props) {
   const {
@@ -52,6 +50,7 @@ function SignupModal(props) {
   const [showPassword, setShowPassword] = useState(false);
   const [recaptchaToken, setRecaptchaToken] = useState('');
   const [loaded, setLoaded] = useState(false);
+  const dispatch = useDispatch();
 
   // For referencing the form element directly
   const formRef = useRef(null);
@@ -118,10 +117,7 @@ function SignupModal(props) {
     if (allowedCharsRegex.test(username)) {
       setUserName(username);
     } else {
-      alertModal(
-        isDarkMode,
-        'Invalid characters in username. Only alphanumeric characters and underscores are allowed.'
-      );
+      dispatch(errorMsgBar('Invalid characters in username. Only alphanumeric characters and underscores are allowed.'));
     }
   };
 
@@ -159,12 +155,12 @@ function SignupModal(props) {
     setRecaptchaToken(token);
 
     if (!token) {
-      alertModal(isDarkMode, 'reCAPTCHA verification failed. Please try again.');
+      dispatch(errorMsgBar('reCAPTCHA verification failed. Please try again.'));
       return;
     }
 
     if (!termsChecked) {
-      alertModal(isDarkMode, 'Please agree to the Terms and Conditions.');
+      dispatch(errorMsgBar('Please agree to the Terms and Conditions.'));
       return;
     }
 

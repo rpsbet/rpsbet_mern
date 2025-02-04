@@ -13,7 +13,6 @@ import {
   faPiggyBank,
   faCalendar,
 } from '@fortawesome/free-solid-svg-icons';
-import { alertModal } from '../../../../game_panel/modal/ConfirmAlerts';
 import {
   acQueryMyLoan,
   setCurrentLoanId,

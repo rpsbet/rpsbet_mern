@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { connect } from 'react-redux';
+import { connect, useDispatch } from 'react-redux';
 import LoadingOverlay from 'react-loading-overlay';
 import axios from '../../util/Api';
-import { alertModal } from '../modal/ConfirmAlerts';
 import { convertToCurrency } from '../../util/conversion';
 import {
-  setBalance,
   setGasfee
 } from '../../redux/Auth/user.actions';
 import {
@@ -42,10 +40,9 @@ import {
   CheckCircleOutline as CheckCircleOutlineIcon
 } from '@mui/icons-material';
 
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import QRCodeIcon from '@mui/icons-material/CropFreeOutlined';
 import WalletIcon from '@mui/icons-material/AccountBalanceWallet';
-
+import { errorMsgBar } from '../../redux/Notification/notification.actions';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faBolt,
@@ -66,7 +63,6 @@ function WithdrawModal(props) {
     account,
     modalIsOpen,
     closeModal,
-    setBalance,
     setGasfee,
     addNewTransaction,
     getCustomerStatisticsData
@@ -86,6 +82,7 @@ function WithdrawModal(props) {
   const [suggestions, setSuggestions] = useState([]);
   const [estimatedAmount, setEstimatedAmount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const dispatch = useDispatch();
 
   // ----------------- EFFECTS -----------------
   useEffect(() => {
@@ -206,19 +203,19 @@ function WithdrawModal(props) {
   const createPayoutAndClose = async () => {
     // Daily, max, balance checks
     if (userInfo.dailyWithdrawals > 4.269) {
-      alertModal(isDarkMode, 'EXCEEDED DAILY WITHDRAWAL LIMIT! (LAUNCH PHASE)');
+      dispatch(errorMsgBar('EXCEEDED DAILY WITHDRAWAL LIMIT! (LAUNCH PHASE)'));
       return;
     }
     if (amountToWithdraw <= 0) {
-      alertModal(isDarkMode, 'ENTER A VALID NUMBER!');
+      dispatch(errorMsgBar('ENTER A VALID NUMBER!'));
       return;
     }
     if (amountToWithdraw >= 4.269) {
-      alertModal(isDarkMode, 'MAX PER DAY IS 4.269 SOL DURING LAUNCH PHASE');
+      dispatch(errorMsgBar('MAX PER DAY IS 4.269 SOL DURING LAUNCH PHASE'));
       return;
     }
     if (amountToWithdraw > balance) {
-      alertModal(isDarkMode, 'NOT ENUFF FUNDS');
+      dispatch(errorMsgBar('NOT ENUFF FUNDS'));
       return;
     }
 
@@ -232,18 +229,17 @@ function WithdrawModal(props) {
       });
 
       if (response.data.success) {
-        setBalance(response.data.balance);
         addNewTransaction(response.data.newTransaction);
         setIsLoading(false);
         closeModal();
-        alertModal(isDarkMode, response.data.message, '-cat');
+        dispatch(errorMsgBar(response.data.message));
       } else {
         setIsLoading(false);
-        alertModal(isDarkMode, response.data.message);
+        dispatch(errorMsgBar(response.data.message));
       }
     } catch (error) {
       setIsLoading(false);
-      alertModal(isDarkMode, 'Something went wrong.');
+      dispatch(errorMsgBar('Something went wrong.'));
       console.error(error);
     }
   };
@@ -251,19 +247,19 @@ function WithdrawModal(props) {
   const send = async () => {
     // Web3
     if (userInfo.dailyWithdrawals > 4.269) {
-      alertModal(isDarkMode, 'EXCEEDED DAILY WITHDRAWAL LIMIT! (LAUNCH PHASE)');
+      dispatch(errorMsgBar('EXCEEDED DAILY WITHDRAWAL LIMIT! (LAUNCH PHASE)'));
       return;
     }
     if (amountToWithdraw <= 0) {
-      alertModal(isDarkMode, 'ENTER A VALID NUMBER!');
+      dispatch(errorMsgBar('ENTER A VALID NUMBER!'));
       return;
     }
     if (amountToWithdraw >= 4.269) {
-      alertModal(isDarkMode, 'MAX PER DAY IS 4.269 SOL DURING LAUNCH PHASE');
+      dispatch(errorMsgBar('MAX PER DAY IS 4.269 SOL DURING LAUNCH PHASE'));
       return;
     }
     if (amountToWithdraw > balance) {
-      alertModal(isDarkMode, 'NOT ENUFF FUNDS');
+      dispatch(errorMsgBar('NOT ENUFF FUNDS'));
       return;
     }
 
@@ -275,17 +271,17 @@ function WithdrawModal(props) {
       });
 
       if (result.data.success) {
-        alertModal(isDarkMode, result.data.message, '-cat');
+        dispatch(errorMsgBar(result.data.message));
         addNewTransaction(result.data.newTransaction);
         setIsLoading(false);
         // closeModal(); // Optional if you want to close after success
       } else {
         setIsLoading(false);
-        alertModal(isDarkMode, result.data.message);
+        dispatch(errorMsgBar(result.data.message));
       }
     } catch (error) {
       setIsLoading(false);
-      alertModal(isDarkMode, 'FAILED TRANSACTION');
+      dispatch(errorMsgBar('FAILED TRANSACTION'));
       console.error(error);
     }
   };
@@ -732,7 +728,6 @@ const mapStateToProps = (state) => ({
 });
 
 const mapDispatchToProps = {
-  setBalance,
   setGasfee,
   addNewTransaction,
   getCustomerStatisticsData
