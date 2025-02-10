@@ -7,12 +7,12 @@ import {
   setRoomList,
   getRecentlyClosed,
   addNewTransaction,
-  coHost,
+  pumpGame,
 } from '../../redux/Logic/logic.actions';
 import isEqual from 'lodash/isEqual';
 
 import { TrendingUpOutlined, TrendingDownOutlined, ShowChartOutlined, LockOutlined, Add, Remove, } from '@mui/icons-material';
-import { Grid, Pagination, Tooltip, Typography, Skeleton, Box, Button, Card, Modal } from '@mui/material';
+import { AvatarGroup, Grid, Pagination, Tooltip, Typography, Skeleton, Box, Button, Card, Modal } from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import Moment from 'moment';
 import { faHeart, faHeartBroken, faStopwatch } from '@fortawesome/free-solid-svg-icons';
@@ -51,7 +51,7 @@ function OpenGamesTable(props) {
     highlightedRooms,
     getRecentlyClosed,
     addNewTransaction,
-    coHost,
+    pumpGame,
   } = props;
   // ------------------ LOCAL STATE ------------------
   const [localRoomList, setLocalRoomList] = useState(roomList);
@@ -137,7 +137,7 @@ function OpenGamesTable(props) {
       return;
     }
     try {
-      const result = await coHost(coHostAmount, selectedRow._id, connectedAccount);
+      const result = await pumpGame(coHostAmount, selectedRow._id, connectedAccount);
       if (result.success) {
         addNewTransaction(result.newTransaction);
         await getRoomList({
@@ -208,7 +208,6 @@ function OpenGamesTable(props) {
     [getRecentlyClosed]
   );
 
-  // "Join" a game
   const joinRoom = useCallback(
     (roomDetails) => {
       const { roomStatus, id } = roomDetails;
@@ -216,40 +215,11 @@ function OpenGamesTable(props) {
         dispatch(errorMsgBar('THIS GAME HAS NOW ENDED'));
         return;
       }
-      setCurRoomInfo({
-        _id: id,
-        game_type: roomDetails.gameType,
-        bankroll: parseFloat(roomDetails.user_bet),
-        creator_id: roomDetails.creatorId,
-        accessory: roomDetails.accessory,
-        rank: roomDetails.rank,
-        image: roomDetails.image,
-        name: roomDetails.name,
-        ticker: roomDetails.ticker,
-        tax: roomDetails.tax,
-        x_link: roomDetails.x_link,
-        telegram_link: roomDetails.telegram_link,
-        website_link: roomDetails.website_link,
-        battles: roomDetails.battles,
-        selectedStrategy: roomDetails.selectedStrategy,
-        description: roomDetails.description,
-        creator_status: roomDetails.creatorStatus,
-        creator_avatar: roomDetails.creatorAvatar,
-        username: roomDetails.username,
-        total_stakes: roomDetails.totalStakes,
-        created_at: roomDetails.createdAt,
-        room_name: roomDetails.roomName,
-        hosts: roomDetails.hosts,
-        status: roomDetails.roomStatus,
-        qs_game_type: roomDetails.qsGameType,
-        pr: roomDetails.pr,
-        host_pr: roomDetails.host_pr,
-        game_log_list: [],
-      });
-      history.push(`/join/${id}`);
+      window.location.href = `/join/${id}`;
     },
-    [isDarkMode, setCurRoomInfo]
+    [dispatch]
   );
+  
 
   // -------------- UI HELPERS --------------
   const getColorClass = (value) => {
@@ -306,43 +276,17 @@ function OpenGamesTable(props) {
               ) : (
                 displayedRooms.map((row, key) => (
                   <div
-                    key={row._id}
-                    className={`table-row ${key < 10 ? '' : ''} ${highlightedRooms.includes(row._id) ? 'highlighted-row' : ''
-                      }`}
-                    onClick={(event) => {
-                      if (!event.defaultPrevented) {
-                        joinRoom({
-                          id: row._id,
-                          roomId: row._id,
-                          name: row.name,
-                          x_link: row.x_link,
-                          tax: row.tax,
-                          website_link: row.website_link,
-                          battles: row.battles,
-                          selectedStrategy: row.selectedStrategy,
-                          image: row.image,
-                          ticker: row.ticker,
-                          telegram_link: row.telegram_link,
-                          creatorId: row.creator_id,
-                          creatorAvatar: row.creator_avatar,
-                          creatorStatus: row.creator_status,
-                          accessory: row.accessory,
-                          rank: row.rank,
-                          hosts: row.hosts,
-                          roomStatus: row.status,
-                          username: row.username,
-                          gameType: row.game_type.game_type_name,
-                          user_bet: row.user_bet,
-                          totalStakes: row.total_stakes,
-                          createdAt: row.created_at,
-                          roomName: row.room_name,
-                          qsGameType: row.qs_game_type,
-                          pr: row.pr,
-                          host_pr: row.host_pr,
-                        });
-                      }
-                    }}
-                  >
+                  key={row._id}
+                  className={`table-row ${highlightedRooms.includes(row._id) ? 'highlighted-row' : ''}`}
+                  onClick={(event) => {
+                    if (!event.defaultPrevented) {
+                      joinRoom({
+                        id: row._id,
+                        roomStatus: row.status,
+                      });
+                    }
+                  }}
+                >
                     {/* Info panel */}
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                       <div className="table-cell cell-room-info">
@@ -382,7 +326,7 @@ function OpenGamesTable(props) {
                       </div>
                       {/* CoHost icon / Private icon */}
                       <div className="cell-coHost">
-                        <Button
+                        {/* <Button
                           variant='outlined'
                           color='error'
                           onClick={(event) => {
@@ -396,14 +340,14 @@ function OpenGamesTable(props) {
                             justifyContent: 'center',
                             alignItems: 'center',
                             cursor: 'pointer',
-                            borderRadius: 1, // Rounded corners but not fully circular
+                            borderRadius: 1,
                             fontSize: '14px',
                             textDecoration: 'none',
 
                           }}
                         >
                           <ShowChartOutlined sx={{ fontSize: 20 }} />
-                        </Button>
+                        </Button> */}
                         {row.is_private && (
                           <Tooltip title="A password is required to battle this room." arrow>
                             <div
@@ -411,10 +355,6 @@ function OpenGamesTable(props) {
                                 display: 'flex',
                                 justifyContent: 'center',
                                 alignItems: 'center',
-                                padding: '8px',
-                                borderRadius: 1,
-                                backgroundColor: '#f1f1f1',
-                                border: '2px solid #cccccc',
                                 cursor: 'default',
                                 marginTop: '5px',
                               }}
@@ -424,93 +364,129 @@ function OpenGamesTable(props) {
                           </Tooltip>
                         )}
                       </div>
-                      <div className="table-cell cell-user-name">
-                        <a
-                          className="player"
-                          onClick={(event) => {
-                            event.preventDefault();
-                            event.stopPropagation();
-                            handleOpenPlayerModal(row.creator_id);
-                          }}
-                        >
-                          <Avatar
-                            className="avatar"
-                            src={row.creator_avatar}
-                            accessory={row.accessory}
-                            username={row.username}
-                            rank={row.rank}
-                            alt=""
-                            darkMode={isDarkMode}
-                          />
-                        </a>
-                        <i
-                          className={`online-status${(onlineUserList.some((u) => u === row.creator_id) || row.creator_status === 'on')
-                            ? ' online'
-                            : ''
-                            }`}
-                        ></i>
-                        {row.hosts && row.hosts.slice(1, 1).map((host, index) => (
-                          <div className="hosts" key={index}>
-                            <a
-                              className="player"
-                              onClick={(event) => {
-                                event.preventDefault();
-                                event.stopPropagation();
-                                handleOpenPlayerModal(host.host);
+
+                      <div
+                        className="table-cell cell-user-name"
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          border: 'none',
+                        }}
+                      >
+                        {/* HOSTS */}
+                        {row.hosts?.length > 0 && (
+                          <div
+                            className="table-cell avatar hosts"
+                            style={{ border: 'none', marginRight: '8px' }}
+                          >
+                            <AvatarGroup
+                              max={1}
+                              // Enforce uniform 32x32, remove borders, and fix dot to bottom-left
+                              sx={{
+                                '& .MuiAvatar-root': {
+                                  width: 32,
+                                  height: 32,
+                                  minWidth: 32,
+                                  minHeight: 32,
+                                  borderRadius: 1,
+                                  border: 'none !important',
+                                  boxShadow: 'none !important',
+                                  margin: '0 !important',
+                                },
+                                '& .MuiAvatarGroup-avatar:not(:first-of-type)': {
+                                  marginLeft: '-8px !important', // or 0 for no overlap
+                                },
+                                // Force the online dot to bottom-left
+                                '& .MuiBadge-anchorOriginBottomLeftCircular, & .MuiBadge-anchorOriginBottomLeftRectangular': {
+                                  bottom: '0 !important',
+                                  left: '0 !important',
+                                  transform: 'none !important',
+                                },
                               }}
                             >
-                              <Avatar
-                                className="avatar"
-                                src={host.avatar}
-                                accessory={host.accessory}
-                                username={host.username}
-                                rank={host.rank}
-                                alt=""
-                                darkMode={isDarkMode}
-                              />
-                            </a>
-                          </div>
-                        ))}
-                        {row.hosts.length > 1 && (
-                          <div className="hosts avatar-square">
-                            <div className="avatar-count">+{row.hosts.length - 1}</div>
+                              {row.hosts.map((host, index) => (
+                                <div key={index} onClick={(e) => e.stopPropagation()}>
+                                  <Avatar
+                                    alt={host.username}
+                                    username={host.username}
+                                    src={host.avatar}
+                                    rank={host.rank}
+                                    accessory={host.accessory}
+                                    user_id={host.host}
+                                    darkMode={isDarkMode}
+                                    sx={{ cursor: 'pointer' }}
+                                    onClick={(event) => {
+                                      event.preventDefault();
+                                      event.stopPropagation();
+                                      handleOpenPlayerModal(row.hosts[index]);
+                                    }}
+                                  />
+                                </div>
+                              ))}
+                            </AvatarGroup>
                           </div>
                         )}
-                        {row.joiners && row.joiners.length > 0 && (
-                          <div className="table-cell avatar cell-joiners">
-                            <Battle />
-                            {row.joiner_avatars.slice(0, 1).map((joiner, index) => (
-                              <a
-                                key={index}
-                                className="player"
-                                onClick={(event) => {
-                                  event.preventDefault();
-                                  event.stopPropagation();
-                                  handleOpenPlayerModal(row.joiners[index]);
-                                }}
-                              >
-                                <Avatar
-                                  className="avatar"
-                                  key={index}
-                                  accessory={joiner.accessory}
-                                  src={joiner.avatar}
-                                  username={joiner.username}
-                                  rank={joiner.rank}
-                                  alt=""
-                                  darkMode={isDarkMode}
-                                />
-                              </a>
-                            ))}
-                            {row.joiner_avatars.length > 1 && (
-                              <div className="avatar-square">
-                                <div className="avatar-count">
-                                  +{row.joiner_avatars.length - 1}
+
+                          {/* BATTLE ICON IN THE MIDDLE with spacing */}
+                          <div style={{ margin: '0 4px', border: 'none' }}>
+                          <Battle />
+                        </div>
+
+
+                        {/* JOINERS */}
+                        {row.joiners?.length > 0 && (
+                          <div
+                            className="table-cell avatar joiners"
+                            style={{ border: 'none', marginLeft: '8px' }}
+                          >
+                            <AvatarGroup
+                              max={1}
+                              sx={{
+                                '& .MuiAvatar-root': {
+                                  width: 32,
+                                  height: 32,
+                                  minWidth: 32,
+                                  minHeight: 32,
+                                  borderRadius: 1,
+                                  border: 'none !important',
+                                  boxShadow: 'none !important',
+                                  margin: '0 !important',
+                                },
+                                '& .MuiAvatarGroup-avatar:not(:first-of-type)': {
+                                  marginLeft: '-8px !important',
+                                },
+                                '& .MuiBadge-anchorOriginBottomLeftCircular, & .MuiBadge-anchorOriginBottomLeftRectangular': {
+                                  bottom: '0 !important',
+                                  left: '0 !important',
+                                  transform: 'none !important',
+                                },
+                              }}
+                            >
+                              {row.joiners.map((joiner, index) => (
+                                <div key={index} onClick={(e) => e.stopPropagation()}>
+                                  <Avatar
+                                    username={joiner.username}
+                                    alt={joiner.username}
+                                    src={joiner.avatar}
+                                    rank={joiner.rank}
+                                    accessory={joiner.accessory}
+                                    user_id={joiner.user_id}
+                                    darkMode={isDarkMode}
+                                    sx={{ cursor: 'pointer' }}
+                                    onClick={(event) => {
+                                      event.preventDefault();
+                                      event.stopPropagation();
+                                      handleOpenPlayerModal(row.joiners[index]);
+                                    }}
+                                  />
                                 </div>
-                              </div>
-                            )}
+                              ))}
+                            </AvatarGroup>
                           </div>
                         )}
                       </div>
+
                       {/* Cell-likes info */}
                       <div className="table-cell cell-likes title">
                         <div
@@ -628,7 +604,7 @@ function OpenGamesTable(props) {
         </div>
       ) : (
         // If filter === "Recently Bonded"
-        <Grid container spacing={2} sx={{p: 2}}>
+        <Grid container spacing={2} sx={{ p: 2 }}>
           {recent.length === 0 ? (
             Array.from({ length: 4 }).map((_, index) => (
               <Grid item xs={6} sm={4} md={3} lg={3} xl={3} key={index}>
@@ -816,7 +792,7 @@ const mapDispatchToProps = {
   getRecentlyClosed,
   setRoomList,
   addNewTransaction,
-  coHost,
+  pumpGame,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(OpenGamesTable);

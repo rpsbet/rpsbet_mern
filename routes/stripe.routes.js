@@ -6,7 +6,7 @@ const Receipt = require('../model/Receipt');
 const GameLog = require('../model/GameLog');
 const gameTransaction = require('../model/Transaction');
 const { newTransaction } = require('../socketController');
-const { Connection, Keypair, Transaction, PublicKey, SystemProgram, sendAndConfirmTransaction } = require('@solana/web3.js');
+const { Connection, Keypair, Transaction, PublicKey, SystemProgram, LAMPORTS_PER_SOL } = require('@solana/web3.js');
 const { getAssociatedTokenAddress, TOKEN_PROGRAM_ID, createTransferInstruction, createAssociatedTokenAccount } = require('@solana/spl-token'); // Import from spl-token package
 const saveDocumentWithRetry = require('../helper/util/retrySave');
 
@@ -664,10 +664,13 @@ router.post('/deposit_successed', auth, async (req, res) => {
 
 router.post('/withdraw_request', auth, async (req, res) => {
   try {
-    const username = req.user.username;
-    const totalWagered = req.user.totalWagered;
+    const user = req.user; // from auth middleware
+    const username = user.username;
+    const totalWagered = user.totalWagered;
+    const balance = user.balance;
+    const withdrawalLimit = user.dailyWithdrawals;
 
-    // Permission checks
+    // Basic permission checks
     if (username.includes('BOT')) {
       return res.json({ success: false, message: 'DO NOT HAVE PERMISSION' });
     }
@@ -675,176 +678,174 @@ router.post('/withdraw_request', auth, async (req, res) => {
       return res.json({ success: false, message: 'ACCOUNT TOO NEW' });
     }
 
-    const balance = req.user.balance;
-    const withdrawalLimit = req.user.dailyWithdrawals;
+    // Parse requested amount
+    const requestedAmount = parseFloat(req.body.amount);
+    if (isNaN(requestedAmount) || requestedAmount <= 0) {
+      return res.json({ success: false, message: 'Invalid withdrawal amount' });
+    }
 
-    // Balance and limit checks
-    if (balance < req.body.amount) {
+    // Check user balance
+    if (balance < requestedAmount) {
       return res.json({ success: false, message: 'Insufficient balance' });
     }
+    // Check daily limit
     if (withdrawalLimit > 4.269) {
-      console.log("Exceeded Daily Withdrawal Limit", req.user);
-      return res.json({ success: false, message: 'EXCEEDED DAILY WITHDRAWAL LIMIT (DURING LAUNCH PHASE ONLY!)' });
+      console.log('Exceeded Daily Withdrawal Limit', user);
+      return res.json({
+        success: false,
+        message: 'EXCEEDED DAILY WITHDRAWAL LIMIT (DURING LAUNCH PHASE)!'
+      });
     }
-    if (req.body.amount > 4.269) {
-      return res.json({ success: false, message: 'Maximum Withdrawal Amount is 4.269 RPS per DAY during Launch' });
+    if (requestedAmount > 4.269) {
+      return res.json({
+        success: false,
+        message: 'Maximum Withdrawal Amount is 4.269 SOL per DAY during Launch'
+      });
     }
 
-    const remainingLoanAmount = await calculateRemainingLoans(req.user);
+    // Check loans
+    const remainingLoanAmount = await calculateRemainingLoans(user);
     if (remainingLoanAmount > 0) {
-      return res.json({ success: false, message: 'EXISTING LOANS, CANNOT WITHDRAW' });
+      return res.json({
+        success: false,
+        message: 'EXISTING LOANS, CANNOT WITHDRAW'
+      });
     }
 
+    // Validate 'toAddress'
     const toAddress = req.body.addressTo;
     if (!toAddress) {
       console.log("Invalid 'to' address");
-      return res.json({ success: false, message: "Invalid Solana wallet address." });
+      return res.json({ success: false, message: 'Invalid Solana wallet address.' });
     }
-    
+
+    // Load admin wallet secret from environment
+    let walletKey = process.env.wk; // base58-encoded
+    if (!walletKey) {
+      return res.json({ success: false, message: 'Admin wallet secret not set in env' });
+    }
+
     let secretKey;
     try {
-      secretKey = bs58.default.decode(walletKey);
+      secretKey = bs58.decode(walletKey);
     } catch (error) {
-      console.error("Failed to decode walletKey:", error);
+      console.error('Failed to decode walletKey:', error);
       return res.json({ success: false, message: 'Failed to decode wallet key' });
     }
 
+    // Must be 64 bytes for Ed25519 secret
     if (secretKey.length !== 64) {
-      return res.json({ success: false, message: 'Invalid secret key size. Must be 64 bytes.' });
-    }
-
-    const walletKeyPair = Keypair.fromSecretKey(secretKey);
-    const connection = new Connection(process.env.PROVIDER_URL);
-    const amountInTokens = Math.floor(req.body.amount * TOKEN_MULTIPLIER);
-
-    const fromTokenAccount = await getAssociatedTokenAddress(
-      new PublicKey(tokenMintAddress),
-      walletKeyPair.publicKey,
-      false,
-      TOKEN_PROGRAM_ID
-    );
-
-    let toTokenAccount = await getAssociatedTokenAddress(
-      new PublicKey(tokenMintAddress),
-      new PublicKey(toAddress),
-      false,
-      TOKEN_PROGRAM_ID
-    );
-
-    const toAccountInfo = await connection.getAccountInfo(toTokenAccount);
-    if (!toAccountInfo) {
-      console.log('Recipient token account does not exist, creating it now...');
-      await createAssociatedTokenAccount(
-        connection,
-        walletKeyPair,
-        new PublicKey(tokenMintAddress),
-        new PublicKey(toAddress),
-        TOKEN_PROGRAM_ID
-      );
-    }
-
-    const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
-    const transaction = new Transaction({
-      recentBlockhash: blockhash,
-      feePayer: walletKeyPair.publicKey,
-    }).add(
-      createTransferInstruction(
-        fromTokenAccount,
-        toTokenAccount,
-        walletKeyPair.publicKey,
-        amountInTokens,
-        [],
-        TOKEN_PROGRAM_ID
-      )
-    );
-
-    try {
-      if (!req.user.accounts.includes(toAddress)) {
-        req.user.accounts.push(toAddress);
-      }
-      req.user.balance -= req.body.amount;
-      await saveDocumentWithRetry(req.user);
-
-      let retries = 3;
-      let success = false;
-      let signature;
-
-      // Retry logic for blockhash expiration
-      while (retries > 0 && !success) {
-        try {
-          signature = await connection.sendTransaction(transaction, [walletKeyPair]);
-          await connection.confirmTransaction({
-            signature,
-            blockhash,
-            lastValidBlockHeight,
-          });
-          success = true;
-        } catch (err) {
-          console.log('Retrying transaction due to:', err.message);
-          if (err.message.includes('blockhash expired')) {
-            const newBlockhash = await connection.getLatestBlockhash();
-            transaction.recentBlockhash = newBlockhash.blockhash;
-          }
-          retries -= 1;
-        }
-      }
-
-      if (!success) {
-        throw new Error('Transaction failed after retries.');
-      }
-
-      const receipt = new Receipt({
-        user_id: req.user._id,
-        payment_method: 'Web3',
-        payment_type: 'Withdraw',
-        amount: req.body.amount,
-      });
-      await saveDocumentWithRetry(receipt);
-
-      const newTransaction = new gameTransaction({
-        user: req.user,
-        amount: -req.body.amount,
-        description: 'withdraw',
-        status: 'completed',
-        hash: signature,
-      });
-      await saveDocumentWithRetry(newTransaction);
-
-      const newGameLog = new GameLog({
-        room: null,
-        creator: req.user._id,
-        joined_user: null,
-        game_type: null,
-        bet_amount: req.body.amount,
-        selected_rps: '',
-        commission: 0,
-        game_result: 777,
-        winnings: 0,
-        endgame_amount: 0,
-        host_pr: 0,
-        user_bet: 0,
-        status: 'complete',
-        hosts: [],
-      });
-      await saveDocumentWithRetry(newGameLog);
-      return res.json({
-        success: true,
-        balance: req.user.balance,
-        newTransaction,
-        message: `Withdrawal request received and is complete. 🤑 Much Wow.<br /> View the transaction details on Solana Explorer using this <a href="https://explorer.solana.com/tx/${signature}" target="_blank">transaction link</a>.`,
-      });
-    } catch (saveError) {
-      console.error('Error saving transaction documents:', saveError);
       return res.json({
         success: false,
-        message: 'Failed to save transaction records',
+        message: 'Invalid secret key size. Must be 64 bytes.'
       });
     }
+
+    // Construct the admin wallet Keypair
+    const walletKeyPair = Keypair.fromSecretKey(secretKey);
+
+    // Connect to Solana
+    const connection = new Connection(process.env.PROVIDER_URL);
+
+    // Convert to lamports
+    const lamports = Math.floor(requestedAmount * LAMPORTS_PER_SOL);
+
+    // Get a fresh blockhash
+    const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+
+    // Build the transaction: admin => user
+    const transaction = new Transaction({
+      recentBlockhash: blockhash,
+      feePayer: walletKeyPair.publicKey
+    }).add(
+      SystemProgram.transfer({
+        fromPubkey: walletKeyPair.publicKey,
+        toPubkey: new PublicKey(toAddress),
+        lamports
+      })
+    );
+
+    // -- Attempt the Solana send + confirm once --
+    let signature;
+    try {
+      // Send
+      signature = await connection.sendTransaction(transaction, [walletKeyPair]);
+      // Confirm
+      await connection.confirmTransaction({
+        signature,
+        blockhash,
+        lastValidBlockHeight
+      });
+    } catch (err) {
+      console.error('Error sending transaction:', err);
+      return res.json({
+        success: false,
+        message: 'Transaction failed. Please try again.'
+      });
+    }
+
+    // If we're here, transaction was successful
+    // Update the user doc (subtract from in-game balance)
+    if (!user.accounts.includes(toAddress)) {
+      user.accounts.push(toAddress);
+    }
+    user.balance -= requestedAmount;
+    await saveDocumentWithRetry(user);
+
+    // Create a receipt
+    const receipt = new Receipt({
+      user_id: user._id,
+      payment_method: 'Web3',
+      payment_type: 'Withdraw',
+      amount: requestedAmount
+    });
+    await saveDocumentWithRetry(receipt);
+
+    // Create a gameTransaction
+    const newTransaction = new gameTransaction({
+      user: user._id,
+      amount: -requestedAmount,
+      description: 'withdraw',
+      status: 'completed',
+      hash: signature
+    });
+    await saveDocumentWithRetry(newTransaction);
+
+    // Log the withdrawal in GameLog
+    const newGameLog = new GameLog({
+      room: null,
+      creator: user._id,
+      joined_user: null,
+      game_type: null,
+      bet_amount: requestedAmount,
+      selected_rps: '',
+      commission: 0,
+      game_result: 777,
+      winnings: 0,
+      endgame_amount: 0,
+      host_pr: 0,
+      user_bet: 0,
+      status: 'complete',
+      hosts: []
+    });
+    await saveDocumentWithRetry(newGameLog);
+
+    console.log(
+      `View on Explorer: https://explorer.solana.com/tx/${signature}`
+    );
+
+    return res.json({
+      success: true,
+      balance: user.balance,
+      newTransaction,
+      message: `Withdrawal request completed. 🤑`
+    });
   } catch (e) {
-    console.log('ERROR in withdraw send transaction', e);
+    console.log('ERROR in /withdraw_request route:', e);
     return res.json({ success: false, message: 'Failed to initiate withdrawal' });
   }
 });
+
 
 async function estimateAmount(web2Amount, currencyTo) {
 
@@ -912,7 +913,7 @@ router.post('/get_gasfee', auth, async (req, res) => {
     const feeLamports = (typeof feeResponse === 'object' && feeResponse !== null && feeResponse.value !== undefined)
       ? feeResponse.value
       : feeResponse;
-    const gasFeeSol = feeLamports / 1e9; // Convert lamports to SOL
+    const gasFeeSol = (feeLamports / 1e9) * 3; // Convert lamports to SOL
 
     return res.json({ success: true, data: gasFeeSol });
   } catch (error) {

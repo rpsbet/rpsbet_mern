@@ -39,6 +39,7 @@ const PreSummaryPanel = (props) => {
     roomInfo,
     isDarkMode,
     hostProfit,
+    battles,
     totalStakes,
     isLowProfit,
     handleOpenPlayerModal,
@@ -56,6 +57,8 @@ const PreSummaryPanel = (props) => {
     pr,
     bet_amount,
   } = props;
+
+
 
   const calculateQuickShootReturn = () => {
     if (qs_game_type && bet_amount) {
@@ -127,7 +130,7 @@ const PreSummaryPanel = (props) => {
           <Tooltip title="This is the number of battles of this room.">
             <Box sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
               <Typography variant="body1" className="value">
-                {roomInfo?.battles}
+                {battles}
               </Typography>
               <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
             </Box>
@@ -339,10 +342,10 @@ const PreSummaryPanel = (props) => {
         {/* INTEREST RECEIVED (already has a tooltip) */}
         <Box className="data-item">
           <Typography variant="body2" className="label public-interest">
-            <FontAwesomeIcon icon={faCoins} style={{ marginRight: 8 }} />Interest Received
+            <FontAwesomeIcon icon={faCoins} style={{ marginRight: 8 }} />Staking Rewards
           </Typography>
           <Typography variant="body1" className="value">
-            <Tooltip title="Paid every 33 minutes at 0.00001% of the bankroll if the room is public.">
+            <Tooltip title="Paid every 3 hours at 0.0001% of the bankroll if the room is public.">
               <Box sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
                 <Typography component="span" sx={{ color: '#00fff5' }}>
                   {convertToCurrency(pr, solPrice)}
@@ -368,6 +371,7 @@ const PreSummaryPanel = (props) => {
                 <Avatar
                   className="avatar"
                   src={creator_avatar}
+                  user_id={creator_id}
                   username={username}
                   rank={rank}
                   accessory={accessory}

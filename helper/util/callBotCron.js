@@ -331,15 +331,16 @@ async function callCronJobs(io) {
       let updatedRooms = await Room.find({ status: 'open' })
         .sort({ updated_at: -1 })
         .populate('creator', 'avatar username accessory status totalWagered')
-        .populate('joiners', 'avatar totalWagered username accessory') // only these fields
+        .populate('joiners', 'avatar _id totalWagered username accessory') // only these fields
         .populate('game_type', 'short_name description')
         .lean();
       updatedRooms = updatedRooms.map((room) => {
-        const joiner_avatars = (room.joiners || []).map((joiner) => ({
+        const joiners = (room.joiners || []).map((joiner) => ({
           avatar: joiner.avatar,
           rank: joiner.totalWagered,
           username: joiner.username,
           accessory: joiner.accessory,
+          user_id: joiner._id
         }));
 
         const creator = room.creator?._id || '';
@@ -373,7 +374,7 @@ async function callCronJobs(io) {
           username: creator_username,
           rank: creator_rank,
           accessory: creator_accessory,
-          joiner_avatars,
+          joiners,
           game_type: gameTypeData,
         };
       });

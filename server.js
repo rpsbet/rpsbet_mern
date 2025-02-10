@@ -34,7 +34,7 @@ const io = socketController.socketio(server, {
 
 creditScoreCron.checkOutstandingLoans(io);
 rentCron.checkRentalPayments(io);
-// cronJob.checkConfirmations();
+cronJob.checkConfirmations();
 callCronJob.callCronJobs(io);
 withdrawalCron.resetWithdrawalLimits();
 interestCron.updateRoomInterests(io);

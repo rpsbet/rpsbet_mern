@@ -504,6 +504,12 @@ function SiteWrapper(props) {
     // newSocket.on('connect', () => {
     //   console.log('[Socket] connected');
     // });
+    // 6) Online status
+    const handleOnlineStatusUpdated = (data) => {
+      updateOnlineUserList(data.user_list);
+    };
+    newSocket.on('ONLINE_STATUS_UPDATED', handleOnlineStatusUpdated);
+
 
     let lastGlobalChat = null;
     const handleGlobalChat = (data) => {
@@ -541,6 +547,8 @@ function SiteWrapper(props) {
       newSocket.off('GLOBAL_CHAT_RECEIVED', handleGlobalChat);
       newSocket.off('UPDATED_ROOM_LIST', handleUpdatedRoomList);
       newSocket.off('ROOM_ENDED', handleRoomEnded);
+      newSocket.off('ONLINE_STATUS_UPDATED', handleOnlineStatusUpdated);
+
       newSocket.disconnect();
     };
   }, [
@@ -639,11 +647,6 @@ function SiteWrapper(props) {
     };
     socket.on('SET_UNREAD_MESSAGE_COUNT', handleUnreadCount);
 
-    // 6) Online status
-    const handleOnlineStatusUpdated = (data) => {
-      updateOnlineUserList(data.user_list);
-    };
-    socket.on('ONLINE_STATUS_UPDATED', handleOnlineStatusUpdated);
 
     // ----- Cleanup: remove these user-specific listeners when user changes or unmount
     return () => {
@@ -652,7 +655,6 @@ function SiteWrapper(props) {
       socket.off('UPDATE_BET_RESULT', handleBetResult);
       socket.off('SEND_NOTIFICATION', handleSendNotification);
       socket.off('SET_UNREAD_MESSAGE_COUNT', handleUnreadCount);
-      socket.off('ONLINE_STATUS_UPDATED', handleOnlineStatusUpdated);
     };
   }, [
     socket,
@@ -679,8 +681,8 @@ function SiteWrapper(props) {
         // 1) Connect to Phantom
         await window.solana.connect();
         const wAddress = window.solana.publicKey.toString();
-        console.log("Wallet Address:", wAddress);
-        
+        // console.log("Wallet Address:", wAddress);
+
         // 2) Attempt to register/add this wallet to the user
         const { success, message } = await props.checkAndAddWalletAddress(wAddress);
         if (!success) {
@@ -689,27 +691,27 @@ function SiteWrapper(props) {
           setWalletConflictOpen(true);
           return; // Stop execution if the wallet is already in use
         }
-    
+
         // 3) Get provider URL from your backend and initialize a connection
         const response = await axios.get('/stripe/get_provider_url');
         const providerUrl = response.data.providerUrl;
-        console.log("Provider URL:", providerUrl);
-        
+        // console.log("Provider URL:", providerUrl);
+
         const solanaConnection = new Connection(providerUrl, 'confirmed');
-    
+
         // 4) Fetch the SOL balance (in lamports)
         const solBalLamports = await solanaConnection.getBalance(new PublicKey(wAddress));
-        console.log("SOL Balance (lamports):", solBalLamports);
-    
+        // console.log("SOL Balance (lamports):", solBalLamports);
+
         // Convert lamports to SOL
         const solBalance = solBalLamports / LAMPORTS_PER_SOL;
-        console.log("SOL Balance (SOL):", solBalance);
-    
+        // console.log("SOL Balance (SOL):", solBalance);
+
         // 5) Update your local state with the wallet address and SOL balance
         setWalletAddress(wAddress);
         setAccount({ publicKey: new PublicKey(wAddress) });
         setSolanaBalance(solBalance);
-        
+
         // If you need to see the updated balance later, consider using a useEffect:
         // useEffect(() => { console.log("Updated solanaBalance:", solanaBalance); }, [solanaBalance]);
       }
@@ -955,13 +957,19 @@ function SiteWrapper(props) {
   const halloween = new Date(`${new Date().getFullYear()}-02-14T00:00:00`);
   const currentDate = new Date();
   const timeRemaining = halloween - currentDate;
-  const secondsRemaining = Math.floor(timeRemaining / 1000);
+
+  function appendCurrencyBracket(message, amount) {
+    if (!amount) return message;
+    
+    const amountStr = String(amount);
+    const currencyStr = convertToCurrency(amount, solPrice);
+    return message + ` (${currencyStr}) / ${amountStr} SOL`;
+  }
 
   return (
     <ThemeProvider theme={isDarkMode ? darkTheme : mainTheme}>
       {showCookieConsent && <CookieConsent />}
 
-      {/* Possibly show big overlay if live & tokenModalOpen */}
       {isLive && tokenModalOpen && (
         <CatsinoModalOverlay
           currentGif={currentGif}
@@ -1263,6 +1271,7 @@ function SiteWrapper(props) {
                   >
                     <Avatar
                       src={user.avatar}
+                      user_id={user._id}
                       rank={user.totalWagered}
                       accessory={user.accessory}
                       alt=""
@@ -1440,74 +1449,84 @@ function SiteWrapper(props) {
               }}
             >
               {notificationsArray.length > 0 ? (
-                notificationsArray.map((notification, index) => (
-                  <Box key={index}>
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        flexDirection: 'row',
-                        alignItems: 'flex-start',
-                        py: 1.5
-                      }}
-                      className={`notification-container ${notification.is_read ? 'read' : ''
-                        }`}
-                    >
-                      <a
-                        className="player"
-                        onClick={() => handleOpenPlayerModal(notification._id)}
-                        style={{ display: 'flex', flexDirection: 'row' }}
-                      >
-                        <Avatar
-                          src={notification.avatar}
-                          rank={notification.rank}
-                          accessory={notification.accessory}
-                          username={notification.username}
-                          className="avatar"
-                        />
-                      </a>
+                notificationsArray.map((notification, index) => {
+                  const processedMessage = appendCurrencyBracket(
+                    notification.message,
+                    notification.amount
+                  );
 
-                      <a
-                        href={`/join/${notification.room}/`}
-                        style={{
-                          width: '100%',
-                          textDecoration: 'none',
-                          color: 'inherit',
-                          marginLeft: '0.75rem',
-                          position: 'relative'
+                  return (
+                    <Box key={index}>
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          flexDirection: 'row',
+                          alignItems: 'flex-start',
+                          py: 1.5
                         }}
+                        className={`notification-container ${notification.is_read ? 'read' : ''
+                          }`}
                       >
-                        {!notification.is_read && (
-                          <Box
-                            sx={{
-                              position: 'absolute',
-                              top: 0,
-                              right: 10,
-                              width: 8,
-                              height: 8,
-                              borderRadius: '50%',
-                              backgroundColor: 'red',
+                        <a
+                          className="player"
+                          onClick={() => handleOpenPlayerModal(notification._id)}
+                          style={{ display: 'flex', flexDirection: 'row' }}
+                        >
+                          <Avatar
+                            user_id={notification._id}
+                            src={notification.avatar}
+                            rank={notification.rank}
+                            accessory={notification.accessory}
+                            username={notification.username}
+                            className="avatar"
+                          />
+                        </a>
+
+                        <a
+                          href={`/join/${notification.room}/`}
+                          style={{
+                            width: '100%',
+                            textDecoration: 'none',
+                            color: 'inherit',
+                            marginLeft: '0.75rem',
+                            position: 'relative'
+                          }}
+                        >
+                          {/* Show red dot if it's unread */}
+                          {!notification.is_read && (
+                            <Box
+                              sx={{
+                                position: 'absolute',
+                                top: 0,
+                                right: 10,
+                                width: 8,
+                                height: 8,
+                                borderRadius: '50%',
+                                backgroundColor: 'red',
+                              }}
+                            />
+                          )}
+
+                          <Typography
+                            variant="body2"
+                            component="div"
+                            sx={{ mb: 0.5 }}
+                            // Insert our processed message with HTML
+                            dangerouslySetInnerHTML={{
+                              __html: processedMessage
                             }}
                           />
-                        )}
-
-                        <Typography
-                          variant="body2"
-                          component="div"
-                          sx={{ mb: 0.5 }}
-                          dangerouslySetInnerHTML={{
-                            __html: notification.message
-                          }}
-                        />
-                        <Typography variant="caption" sx={{ color: '#ccc' }}>
-                          {notification.from_now}
-                        </Typography>
-                      </a>
+                          <Typography variant="caption" sx={{ color: '#ccc' }}>
+                            {notification.from_now}
+                          </Typography>
+                        </a>
+                      </Box>
+                      {index < notificationsArray.length - 1 && (
+                        <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
+                      )}
                     </Box>
-                    {index < notificationsArray.length - 1 && (
-                      <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
-                    )}
-                  </Box>
-                ))
+                  );
+                })
               ) : (
                 <Typography variant="body2" sx={{ fontStyle: 'italic', mt: 1 }}>
                   No notifications available.
@@ -1995,7 +2014,7 @@ function SiteWrapper(props) {
             closeModal={handleCloseWithdrawModal}
             balance={balance}
             web3={null} // or your web3 instance if needed
-            account={walletAddress}
+            account={account}
           />
         )}
 

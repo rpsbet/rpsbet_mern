@@ -13,7 +13,12 @@ import {
   TableCell,
   TableRow,
   TableContainer,
-  Paper
+  Paper,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  IconButton,
 } from '@mui/material';
 import {
   ShowChartOutlined,
@@ -22,21 +27,23 @@ import {
 } from '@mui/icons-material';
 import { debounce } from 'lodash';
 import { ThemeProvider } from '@mui/material/styles';
-
+import CircularProgress from '@mui/material/CircularProgress';
 import { createChart } from 'lightweight-charts';
 import Summary from '../CreateGame/Summary';
 import { getCustomTheme } from '../../config/theme';
 import {
   getTransactionCandles,
-  unstake,
-  addNewTransaction,
+  jeetGame,
   someActionToAppendCandle,
   getMyGames
 } from '../../redux/Logic/logic.actions';
 import { convertToCurrency } from '../../util/conversion';
 import Avatar from '../../components/Avatar';
 import PlayerModal from '../modal/PlayerModal';
-import { Sum } from '@tensorflow/tfjs';
+import { errorMsgBar } from '../../redux/Notification/notification.actions';
+import SettingsIcon from '@mui/icons-material/Tune';
+import InfoIcon from '@mui/icons-material/Info';
+
 
 function CoHostModal({
   isDarkMode,
@@ -44,6 +51,7 @@ function CoHostModal({
   selectedRow,
   balance,
   user,
+  hosts,
   handleClose,
   handleSendCoHost,
   has_joined,
@@ -53,6 +61,7 @@ function CoHostModal({
 }) {
   const dispatch = useDispatch();
   const socket = useSelector((state) => state.auth.socket);
+  const trade_loading = useSelector((state) => state.logic.trade_loading);
 
   // 1) We read the candles & transactions from Redux:
   const storeCandles = useSelector((state) => state.logic.candles);
@@ -70,19 +79,15 @@ function CoHostModal({
   const chartContainerRef = useRef(null);
   const chartInstanceRef = useRef(null);
   const candlestickSeriesRef = useRef(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
-  // ------------------ FETCH CANDLES FROM REDUX (via an action) ------------------
-  useEffect(() => {
-    if (!selectedRow?._id) return;
-    dispatch(getTransactionCandles({ roomId: selectedRow._id, timeFrame }));
-  }, [dispatch, selectedRow?._id, timeFrame]);
+
 
   // ------------------ WATCH storeCandles from Redux ------------------
   useEffect(() => {
     if (storeCandles?.length) {
       const sorted = sortAndDeduplicate(storeCandles);
       setLocalChartData(sorted);
-
     }
   }, [storeCandles]);
 
@@ -168,6 +173,14 @@ function CoHostModal({
     };
   }, [selectedRow?._id, socket]);
 
+  const handleDialogOpen = () => {
+    setDialogOpen(true);
+  };
+
+  const handleDialogClose = () => {
+    setDialogOpen(false);
+  };
+
   // ------------------ REMAINING LOGIC (Pump/Jeet, Table, etc.) ------------------
   const calculatePercentageChange = (current, original) => {
     if (!original) return 'N/A';
@@ -178,8 +191,8 @@ function CoHostModal({
     selectedRow.bet_amount
   );
 
-  const totalShare = Array.isArray(selectedRow.hosts)
-    ? selectedRow.hosts.reduce((acc, host) => acc + host.share, 0)
+  const totalShare = Array.isArray(hosts)
+    ? hosts.reduce((acc, host) => acc + host.share, 0)
     : 0;
 
   const formatRelativeTime = (date) => {
@@ -230,19 +243,32 @@ function CoHostModal({
 
   const handleUnstake = async (winnings, room_id, stakeAmount) => {
     try {
+      // 1) Parse and validate stakeAmount
+      const parsedStake = parseFloat(stakeAmount);
+      if (isNaN(parsedStake) || parsedStake <= 0) {
+        dispatch(errorMsgBar('R U FURR-REAL? AMOUNT IS INVALID!'));
+        return;
+      }
+
       const parsedWinnings = parseFloat(winnings);
-      if (isNaN(parsedWinnings)) return console.error('Invalid winnings value');
+      if (isNaN(parsedWinnings)) {
+        dispatch(errorMsgBar('Invalid winnings value'));
+        return;
+      }
 
       const parsedBalance = parseFloat(balance);
-      if (isNaN(parsedBalance)) return console.error('Invalid balance value');
+      if (parsedStake >= parsedWinnings) {
+        dispatch(errorMsgBar('NOT ENUFF EQUUITY AT THIS MEOWMENT'));
+        return;
+      }
 
-      await dispatch(unstake(room_id, stakeAmount));
+      await dispatch(jeetGame(room_id, parsedStake));
       await dispatch(getMyGames({ game_type: 'All', status: 'open', sort: 'desc' }));
-      await dispatch(addNewTransaction({ amount: parsedWinnings, room_id }));
     } catch (error) {
       console.error('Error unstaking from room:', error);
     }
   };
+
 
   const theme = getCustomTheme(isDarkMode ? 'dark' : 'light');
 
@@ -333,8 +359,8 @@ function CoHostModal({
                   arrow
                   title={
                     <Box>
-                      {Array.isArray(selectedRow.hosts) &&
-                        selectedRow.hosts.map((host, i) => {
+                      {Array.isArray(hosts) &&
+                        hosts.map((host, i) => {
                           const pct =
                             totalShare > 0 ? ((host.share / totalShare) * 100).toFixed(2) : 0;
                           return (
@@ -351,7 +377,7 @@ function CoHostModal({
                       HOLDERS
                     </Typography>
                     <Typography variant="h6">
-                      {Array.isArray(selectedRow.hosts) ? selectedRow.hosts.length : 0}
+                      {Array.isArray(hosts) ? hosts.length : 0}
                     </Typography>
                   </Box>
                 </Tooltip>
@@ -379,6 +405,7 @@ function CoHostModal({
                     <Avatar
                       className="avatar desktop-only"
                       src={selectedRow.creator_avatar}
+                      user_id={selectedRow.creator_id}
                       username={selectedRow.username}
                       rank={selectedRow.rank}
                       accessory={selectedRow.accessory}
@@ -391,7 +418,30 @@ function CoHostModal({
             </Box>
           </Box>
         )}
-
+        {/* Dialog that appears when the gear icon is clicked */}
+        <Dialog open={dialogOpen} onClose={handleDialogClose}>
+          <DialogTitle sx={{ display: 'flex', alignItems: 'center' }}>
+            Slippage — coming soon
+            <Tooltip
+              title="Tired of waiting for rooms to be less busy? Slippage comes soon to RPS.Game allowing you to trade seamlessly"
+              arrow
+            >
+              <IconButton size="small" sx={{ ml: 1 }}>
+                <InfoIcon fontSize="inherit" />
+              </IconButton>
+            </Tooltip>
+          </DialogTitle>
+          <DialogContent>
+            <Typography>
+              Stay tuned! Slippage functionality is coming soon to allow you to trade seamlessly even during busy times.
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button color="error" onClick={handleDialogClose}>
+              Close
+            </Button>
+          </DialogActions>
+        </Dialog>
         {/* PUMP / JEET inputs */}
         {((!input_only && !has_joined) || input_only) && (
           <Box
@@ -405,6 +455,14 @@ function CoHostModal({
             }}
           >
             <Summary shortVersion={!has_joined ? false : true} />
+            <Tooltip
+              title="Tired of waiting for rooms to be less busy? Slippage comes soon to RPS.Game allowing you to trade seamlessly"
+              arrow
+            >
+              <IconButton size="small" sx={{ color: 'white', position: 'absolute', right: '35px', }} onClick={handleDialogOpen}>
+                <SettingsIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
             <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
               <Button
                 onClick={() => setSelectedTab('PUMP')}
@@ -468,27 +526,53 @@ function CoHostModal({
               {input_only && (
                 <Box sx={{ mt: 2 }}>
                   {selectedTab === 'PUMP' ? (
-                    <Button variant="contained" color="error" onClick={handleSendCoHost} fullWidth>
-                      PUMP
+                    <Button
+                      variant="contained"
+                      color="error"
+                      onClick={() => {
+                        if (trade_loading) {
+                          dispatch(errorMsgBar("Trade is already in progress."));
+                          return;
+                        }
+                        handleSendCoHost();
+                      }}
+                      disabled={trade_loading}
+                      fullWidth
+                    >
+                      {trade_loading ? (
+                        <CircularProgress size={24} color="inherit" />
+                      ) : (
+                        "PUMP"
+                      )}
                     </Button>
                   ) : (
                     <Button
                       variant="contained"
                       color="error"
-                      onClick={() =>
+                      onClick={() => {
+                        if (trade_loading) {
+                          dispatch(errorMsgBar("Trade is already in progress."));
+                          return;
+                        }
                         handleUnstake(
                           selectedRow?.winnings ?? parseFloat(selectedRow?.user_bet || 0),
                           selectedRow?._id,
                           coHostAmount
-                        )
-                      }
+                        );
+                      }}
+                      disabled={trade_loading}
                       fullWidth
                     >
-                      JEET
+                      {trade_loading ? (
+                        <CircularProgress size={24} color="inherit" />
+                      ) : (
+                        "JEET"
+                      )}
                     </Button>
                   )}
                 </Box>
               )}
+
             </Box>
 
             {/* Balance / Before / After Table */}
@@ -510,64 +594,102 @@ function CoHostModal({
                 )}
                 <TableRow>
                   <TableCell>BEFORE:</TableCell>
-                  <TableCell align="right" sx={{ color: '#ff8500' }}>
+                  <TableCell align="right" sx={{ color: '#ff8500', whiteSpace: 'pre-wrap' }}>
                     {(() => {
                       if (
-                        Array.isArray(selectedRow.hosts) &&
-                        selectedRow.hosts.some((host) => host.host === user?._id)
+                        Array.isArray(hosts) &&
+                        hosts.some((host) => host.host === user?._id)
                       ) {
-                        const userHost = selectedRow.hosts.find((host) => host.host === user._id);
+                        const userHost = hosts.find((host) => host.host === user._id);
                         if (userHost) {
                           const sharePct = userHost.share.toFixed(2);
-                          const shareValue = convertToCurrency(
-                            (userHost.share / 100) * parseFloat(selectedRow.user_bet),
-                            solPrice
-                          );
-                          return `${sharePct}% (${shareValue})`;
+                          const shareValue = (userHost.share / 100) * parseFloat(selectedRow.user_bet);
+                          return `${sharePct}%\n(${convertToCurrency(shareValue, solPrice)} / ${shareValue.toFixed(6)} SOL)`;
                         }
                       }
                       return convertToCurrency(0, solPrice);
                     })()}
                   </TableCell>
+
                 </TableRow>
                 <TableRow>
                   <TableCell>AFTER:</TableCell>
-                  <TableCell align="right" sx={{ color: '#ff8500' }}>
+                  <TableCell align="right" sx={{ color: '#ff8500', whiteSpace: 'pre-line' }}>
                     {(() => {
-                      if (!selectedRow || !Array.isArray(selectedRow.hosts)) return '0%';
+                      if (!selectedRow || !Array.isArray(hosts)) return '0%';
 
-                      const userHost = selectedRow.hosts.find((host) => host.host === user?._id);
-                      const userStake = userHost ? parseFloat(userHost.stake) : 0;
-                      const coHostAmountFloat = parseFloat(coHostAmount || 0);
-                      const fee = coHostAmountFloat * 0.025;
-                      const amountAfterFee = coHostAmountFloat - fee;
+                      // Find the current user as a host, and read their current share
+                      const userHost = hosts.find((host) => host.host === user?._id);
+                      const userCurrentShare =
+                        userHost && !isNaN(userHost.share) ? userHost.share : 0;
 
+                      // Calculate the user’s current absolute stake from their share
                       const currentBankroll = parseFloat(selectedRow.user_bet || 0);
                       if (!currentBankroll) return '0%';
+                      const userAbsoluteStake = (userCurrentShare / 100) * currentBankroll;
 
-                      const totalStake = selectedRow.hosts.reduce(
-                        (acc, host) => acc + parseFloat(host.stake),
-                        0
-                      );
-                      const totalStakeIncludingUser = totalStake + amountAfterFee;
+                      // Convert input to a float and deduct fees
+                      const coHostAmountFloat = parseFloat(coHostAmount || 0);
+                      const fee = coHostAmountFloat * 0.025; // 2.5% fee
+                      const amountAfterFee = coHostAmountFloat - fee;
 
-                      const newUserStake = userStake + amountAfterFee;
-                      const newUserShareBuy = (newUserStake / totalStakeIncludingUser) * 100;
+                      /**
+                       * PUMP (BUY) scenario
+                       */
+                      const newTotalBuy = currentBankroll + amountAfterFee; // new total bankroll
+                      const newUserAbsoluteStakeBuy = userAbsoluteStake + amountAfterFee; // user’s new stake
+                      let buySharePercent = 0;
+                      if (newTotalBuy > 0 && newUserAbsoluteStakeBuy > 0) {
+                        buySharePercent = (newUserAbsoluteStakeBuy / newTotalBuy) * 100;
+                      }
+                      const buyShare = `${buySharePercent.toFixed(2)}%`;
 
-                      const userCurrentShareVal =
-                        userHost && !isNaN(userHost.share)
-                          ? (userHost.share / 100) * currentBankroll
-                          : 0;
-                      const newUserStakeAfterSell = userCurrentShareVal - amountAfterFee;
-                      const newUserShareSell = (newUserStakeAfterSell / currentBankroll) * 100;
+                      /**
+                       * JEET (SELL) scenario
+                       */
+                      const newTotalSell = currentBankroll - amountAfterFee; // new total bankroll
+                      const newUserAbsoluteStakeSell = userAbsoluteStake - amountAfterFee; // user’s new stake
+                      let sellSharePercent = 0;
+                      if (newTotalSell > 0 && newUserAbsoluteStakeSell > 0) {
+                        sellSharePercent = (newUserAbsoluteStakeSell / newTotalSell) * 100;
+                      }
+                      const sellShare = `${sellSharePercent.toFixed(2)}%`;
 
-                      const buyShare = `${Math.min(newUserShareBuy, 100).toFixed(2)}%`;
-                      const sellShare =
-                        newUserStakeAfterSell > 0
-                          ? `${Math.min(newUserShareSell, 100).toFixed(2)}%`
-                          : '0%';
+                      /**
+                       * Helper function to convert SOL to currency (e.g. USD).
+                       * If solPrice is in scope, it can be used here. Otherwise, remove or adjust as needed.
+                       */
+                      const convertCurrency = (amount) => {
+                        return solPrice
+                          ? '$' + (amount * solPrice).toFixed(2)
+                          : amount.toFixed(2);
+                      };
 
-                      return selectedTab === 'PUMP' ? `~${buyShare}` : `~${sellShare}`;
+                      /**
+                       * Decide which scenario to display based on the selectedTab:
+                       *  - PUMP → Show "BUY" results
+                       *  - Otherwise → Show "SELL" results
+                       */
+                      if (selectedTab === 'PUMP') {
+                        // BUY
+                        return `~${buyShare}\n(${convertCurrency(newUserAbsoluteStakeBuy)} / ${newUserAbsoluteStakeBuy.toFixed(
+                          6
+                        )} SOL)`;
+                      } else {
+                        // SELL
+                        // If user’s new stake is <= 0, display “0%”
+                        const finalSellShare = newUserAbsoluteStakeSell > 0 ? sellShare : '0%';
+                        const displayCurrency =
+                          newUserAbsoluteStakeSell > 0
+                            ? convertCurrency(newUserAbsoluteStakeSell)
+                            : '$0.00';
+                        const displaySol =
+                          newUserAbsoluteStakeSell > 0
+                            ? newUserAbsoluteStakeSell.toFixed(6)
+                            : '0.000000';
+
+                        return `~${finalSellShare}\n(${displayCurrency} / ${displaySol} SOL)`;
+                      }
                     })()}
                   </TableCell>
                 </TableRow>

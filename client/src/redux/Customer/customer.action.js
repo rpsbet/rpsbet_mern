@@ -281,10 +281,6 @@ export const getMarketingStat = () => async (dispatch) => {
 
 export const getCustomerStatisticsData = (
   _id,
-  actorType,
-  gameType,
-  timeType,
-  limit
 ) => async dispatch => {
   try {
     // dispatch({ type: START_LOADING });

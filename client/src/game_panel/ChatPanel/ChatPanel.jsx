@@ -492,6 +492,7 @@ function ChatPanel(props) {
                       accessory={selectedMessage.accessory}
                       src={selectedMessage.avatar}
                       username={selectedMessage.sender}
+                      user_id={selectedMessage.senderId}
                       alt="Avatar"
                     />
                   </Box>

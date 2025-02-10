@@ -14,7 +14,7 @@ import {
   TNX_INCOMPLETE,
   SET_TOKEN_PRICE,
   SET_SOL_TO_USD_PRICE,
-  COMMENT_CREATED,
+  TRADE_LOADING,
   PREPEND_OLDER_CHAT_MESSAGES,
   SET_FETCHING_OLDER_MESSAGES,
   TOP_WINS,
@@ -639,17 +639,6 @@ export const editPayout = (amount, rowId) => async dispatch => {
     dispatch({ type: MSG_ERROR, payload: 'UNABLE TO EDIT PAYOUT SETTINGS' });
   }
 };
-export const topUp = (amount, rowId) => async dispatch => {
-  try {
-    const result = await axios.post('/game/topUp/', { amount, rowId });
-    if (result.data.success) {
-      dispatch({ type: MSG_SUCCESS, payload: "TOP UP SUCCESSFUL" });
-      return result.data;
-    }
-  } catch (e) {
-    dispatch({ type: MSG_ERROR, payload: 'UNABLE TO TOP UP' });
-  }
-};
 
 export const getRecentlyClosed = () => async dispatch => {
   try {
@@ -806,11 +795,9 @@ export const getAttachedRooms = () => async dispatch => {
 
 
 export const detachPlayerFromRoom = (room_id) => async dispatch => {
-  console.log("calleldllcmlsmdlmdmldml", room_id)
   try {
     const res = await axios.post(`/game/detachPlayer/${room_id}`);
     if (res.data.success) {
-      console.log("res", res.data)
       dispatch({ type: MSG_SUCCESS, payload: "Turned off Rake mode" });
       return true;
     } else {
@@ -886,57 +873,46 @@ export const getMyGames = (search_condition, callback) => async (dispatch) => {
 
 export const endGame = (room_id, callback) => async (dispatch, getState) => {
   try {
-    dispatch({ type: START_LOADING });
-
     const res = await axios.post('/game/end_game', { room_id });
 
     if (res.data.success) {
-      // 1) Get old myGames from Redux state
-      const oldMyGames = getState().logic.myGames || [];
-
-      // 2) Filter out the ended game
-      const updatedGames = oldMyGames.filter(game => game._id !== room_id);
-
-      // 3) Dispatch to store the new array
-      dispatch({
-        type: MY_GAMES_LOADED,
-        payload: {
-          myGames: updatedGames,
-          pageNumber: 1
-        }
-      });
-
-      // 4) Dispatch new transaction & success message
+      // Dispatch your new transaction & success message
       dispatch({ type: NEW_TRANSACTION, payload: res.data.newTransaction });
       dispatch({ type: MSG_SUCCESS, payload: "GAME HAS NOW ENDED" });
 
-      // Optional callback
       if (callback) callback();
-
     } else {
       dispatch({ type: MSG_ERROR, payload: res.data.message });
     }
   } catch (err) {
     console.error("Error ending game:", err);
     dispatch({ type: MSG_ERROR, payload: "An error occurred while ending the game." });
-  } finally {
-    dispatch({ type: END_LOADING });
   }
 };
 
-export const coHost = (amount, rowId, connectedAccount) => async dispatch => {
+
+export const pumpGame = (amount, rowId, connectedAccount) => async dispatch => {
+  // Set loading state to true before starting the request
+  dispatch({ type: TRADE_LOADING, payload: true });
   try {
     const result = await axios.post('/game/pump/', { amount, rowId, connectedAccount });
+    console.log("result", result.data)
     if (result.data.success) {
       dispatch({ type: MSG_SUCCESS, payload: "YOU BOUGHT SOME %!" });
-      return result.data;
     }
+    return result.data;
   } catch (e) {
     dispatch({ type: MSG_ERROR, payload: 'UNABLE TO CO-HOST' });
+  } finally {
+    // Always remove the loading state after the request completes
+    dispatch({ type: TRADE_LOADING, payload: false });
   }
 };
 
-export const unstake = (room_id, stake_amount, callback) => async (dispatch, getState) => {
+// Jeet endpoint with loading state
+export const jeetGame = (room_id, stake_amount, callback) => async (dispatch, getState) => {
+  // Set loading state to true before starting the request
+  dispatch({ type: TRADE_LOADING, payload: true });
   try {
     // Retrieve connectedAccount from the auth state
     const { auth: { connectedAccount } } = getState();
@@ -966,6 +942,9 @@ export const unstake = (room_id, stake_amount, callback) => async (dispatch, get
     console.error(err);
     dispatch({ type: MSG_ERROR, payload: 'SOMETHING WENT WRONG, TRY AGAIN LATER' });
     if (callback) callback(err);
+  } finally {
+    // Always remove the loading state after the request completes
+    dispatch({ type: TRADE_LOADING, payload: false });
   }
 };
 

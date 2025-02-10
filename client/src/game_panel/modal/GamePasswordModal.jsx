@@ -1,5 +1,4 @@
 import React, { useState, useCallback } from 'react';
-import Modal from 'react-modal';
 import { connect, useDispatch } from 'react-redux';
 import {
   setPasswordCorrect,
@@ -7,9 +6,9 @@ import {
   errorMsgBar
 } from '../../redux/Notification/notification.actions';
 import { checkGamePassword } from '../../redux/Logic/logic.actions';
-import { Button, TextField } from '@mui/material';
-
-Modal.setAppElement('#root');
+import { Button, TextField, Box, Modal } from '@mui/material';
+import { getCustomTheme } from '../../config/theme';
+import { ThemeProvider } from '@mui/material/styles';
 
 const customStyles = {
   overlay: {
@@ -40,6 +39,7 @@ function GamePasswordModal(props) {
 
   const [password, setPassword] = useState('');
   const dispatch = useDispatch();
+  const theme = getCustomTheme(isDarkMode ? 'dark' : 'light');
 
   const handleOkClick = useCallback(async () => {
     const response = await checkGamePassword({ room_id: roomId, password });
@@ -60,28 +60,34 @@ function GamePasswordModal(props) {
   }, [closeGamePasswordModal]);
 
   return (
-    <Modal isOpen={isOpen} style={customStyles} contentLabel="Password">
-      <div className={isDarkMode ? 'dark_mode' : ''}>
-        <div className="modal-body alert-body password-modal-body">
-          <div className={`modal-icon result-icon-password`} />
-          <h5>PASSWORD REQUIRED</h5>
-           <TextField color='error' 
-            id="game_password"
-            variant="filled"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="form-control"
-            style={{ marginBottom: '15px' }}
-          />
-          <Button variant='contained' color='error' onClick={handleOkClick}>
-            Continue Bet
-          </Button>
-          <Button variant='contained' color='error' onClick={handleCancelClick}>
-            Cancel
-          </Button>
+    <ThemeProvider theme={theme}>
+
+      <Modal isOpen={isOpen} style={customStyles} contentLabel="Password">
+        <div className={isDarkMode ? 'dark_mode' : ''}>
+          <div className="modal-body alert-body password-modal-body">
+            <div className={`modal-icon result-icon-password`} />
+            <h5>PASSWORD REQUIRED</h5>
+            <TextField color='error'
+              id="game_password"
+              variant="filled"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="form-control"
+              style={{ marginBottom: '15px' }}
+            />
+          </div>
+          <Box className="modal-footer">
+
+            <Button variant='contained' color='error' onClick={handleOkClick}>
+              Continue Bet
+            </Button>
+            <Button variant='contained' color='error' onClick={handleCancelClick}>
+              Cancel
+            </Button>
+          </Box>
         </div>
-      </div>
-    </Modal>
+      </Modal>
+    </ThemeProvider>
   );
 }
 

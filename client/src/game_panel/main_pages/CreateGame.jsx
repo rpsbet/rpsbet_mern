@@ -92,7 +92,7 @@ function CreateGame(props) {
   const [selectedQsPosition, setSelectedQsPosition] = useState(0);
 
   const [betAmount, setBetAmount] = useState(0.25);
-  const [endgameAmount, setEndgameAmount] = useState(0.5);
+  const [endgameAmount, setEndgameAmount] = useState(10);
   const [maxReturn, setMaxReturn] = useState(0);
   const [creatingRoom, setCreatingRoom] = useState(false);
   const [winChance, setWinChance] = useState(0);
@@ -299,18 +299,21 @@ function CreateGame(props) {
         dispatch(errorMsgBar("NOT ENUFF FUNDS AT THIS MEOWMENT"));
         return;
       }
-      
-    }
 
-    if (step === 2) {
       if (isNaN(endgameAmount)) {
         dispatch(errorMsgBar("ENTER A VALID NUMBER!"));
         return;
       }
-      if (endgameType && endgameAmount < parseFloat(betAmount)) {
-        dispatch(errorMsgBar("CANNOT BE LOWER THAN BANKROLL"));
+      console.log("endgameAmount", endgameAmount)
+      if (endgameAmount < 4) {
+        dispatch(errorMsgBar("MINIMUM HARD CAP IS 4 SOL"));
         return;
       }
+      
+    }
+
+    if (step === 2) {
+      
       if (isPrivate && !roomPassword) {
         dispatch(errorMsgBar("SET THE PASSWORD TO JOIN YOUR GAME!"));
         return;
@@ -413,6 +416,7 @@ function CreateGame(props) {
         bet_amount: betAmount,
         endgame_amount: endgameAmount,
         max_return: maxReturn,
+        connectedAccount,
         winChance,
         public_bet_amount: publicBetAmount,
         is_private: isPrivate,

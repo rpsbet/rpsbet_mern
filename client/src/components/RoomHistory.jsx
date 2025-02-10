@@ -250,6 +250,7 @@ function RoomHistory({
             src={userObj.avatar}
             username={userObj.username}
             rank={userObj.totalWagered}
+            user_id={userObj._id}
             accessory={userObj.accessory}
             alt=""
             className="avatar"
@@ -285,7 +286,7 @@ function RoomHistory({
       case 'created':
         return (
           <Box sx={{ fontSize: '0.7rem', fontWeight: 700, display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            {renderUserAvatar(creator)} created {renderRoomInfo(row.room)} with {userBetStr}
+            {renderUserAvatar(creator)} created {renderRoomInfo(row.room)} with {betAmtStr}
           </Box>
         );
       case 'split': {

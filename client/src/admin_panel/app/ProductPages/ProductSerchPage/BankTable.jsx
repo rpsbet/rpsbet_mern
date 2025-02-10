@@ -426,6 +426,7 @@ const BankTable = (props) => {
                               rank={customerInfo[row.lender].totalWagered}
                               accessory={customerInfo[row.lender].accessory}
                               username={customerInfo[row.lender].username}
+                              user_id={customerInfo[row.lender]._id}
                               alt=""
                               darkMode={isDarkMode}
                               style={{ width: 48, height: 48 }}
@@ -495,6 +496,7 @@ const BankTable = (props) => {
                                             src={loaner.avatar}
                                             rank={loaner.totalWagered || 0}
                                             accessory={loaner.accessory || ''}
+                                            user_id={loaner._id || ''}
                                             username={loaner.username || ''}
                                             darkMode={isDarkMode}
                                             alt={loaner.username || 'Unknown'}
@@ -640,6 +642,7 @@ const BankTable = (props) => {
                               className='player'
                             >
                               <Avatar
+                                user_id={loan.customerInfo?._id}
                                 src={loan.customerInfo?.avatar}
                                 rank={loan.customerInfo?.totalWagered}
                                 accessory={loan.customerInfo?.accessory}
@@ -685,6 +688,7 @@ const BankTable = (props) => {
                               >
                                 <Avatar
                                   className='avatar'
+                                  user_id={loaner.customerInfo?._id}
                                   src={loaner.customerInfo?.avatar}
                                   rank={loaner.customerInfo?.totalWagered}
                                   accessory={loaner.customerInfo?.accessory}

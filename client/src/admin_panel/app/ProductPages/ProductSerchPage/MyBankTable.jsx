@@ -419,6 +419,7 @@ const MyBankTable = (props) => {
                                     >
                                       <Avatar
                                         className="avatar"
+                                        user_id={loaner._id}
                                         src={loaner.avatar}
                                         rank={loaner.totalWagered || 0}
                                         accessory={loaner.accessory || ''}

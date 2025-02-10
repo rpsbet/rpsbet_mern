@@ -118,11 +118,10 @@ function ProfileModal(props) {
   const [gameProfit, setGameProfit] = useState(0);
   const [balance, setBalance] = useState(0);
   const [gamePlayed, setGamePlayed] = useState(0);
-  const [gameHosted, setGameHosted] = useState(0);
-  const [gameJoined, setGameJoined] = useState(0);
+  const [totalTraded, setTotalTraded] = useState(0);
+  const [tradingProfit, setTradingProfit] = useState(0);
+
   const [netProfit, setNetProfit] = useState(0);
-  const [averageWager, setAverageWager] = useState(0);
-  const [averageGamesPlayedPerRoom, setAverageGamesPlayedPerRoom] = useState(0);
   const [averageProfit, setAverageProfit] = useState(0);
   const [creditScore, setCreditScore] = useState(initialCreditScore);
   const dispatch = useDispatch();
@@ -177,7 +176,10 @@ function ProfileModal(props) {
       setBalance(userInfo.balance || 0);
       setGamePlayed(userInfo.gamePlayed || 0);
       setNetProfit(userInfo.gameProfit || 0);
+      setTotalTraded(userInfo.totalTraded || 0);
+      setTradingProfit(userInfo.tradingProfit || 0);
     }
+    
   };
 
   // -----------------------------
@@ -206,7 +208,7 @@ function ProfileModal(props) {
         return {
           color: 'rgb(118 221 119)',
           title: 'JEWISH DJEDI',
-          message: 'Your spending habits are outstanding!',
+          message: 'Your greed is fueling your growth!',
           progress: 100,
         };
       case 'good':
@@ -538,6 +540,7 @@ function ProfileModal(props) {
                         username={username}
                         accessory={accessory}
                         avatar={avatar}
+                        user_id={_id}
                       />
 
                       <Box
@@ -800,6 +803,8 @@ function ProfileModal(props) {
                     totalWagered={totalWagered}
                     rank={rank}
                     solPrice={solPrice}
+                    totalTraded={totalTraded}
+                    tradingProfit={tradingProfit}
                     averageProfit={averageProfit}
                   />
                 </Box>
@@ -1018,6 +1023,7 @@ function ProfileModal(props) {
                             >
                               <Avatar
                                 src={customerInfo[reward.user].avatar}
+                                user_id={customerInfo[reward.user]._id}
                                 alt="User Avatar"
                                 rank={customerInfo[reward.user].totalWagered}
                                 accessory={customerInfo[reward.user].accessory}

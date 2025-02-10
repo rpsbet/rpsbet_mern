@@ -171,7 +171,7 @@ async function checkRentalPayments(io) {
                     to: currentUser,
                     room: '',
                     amount: -amountToDeduct,
-                    message: `Paid ${(amountToDeduct)} Rental Payment for ${item.productName}`,
+                    message: `Paid Rental Payment for ${item.productName}`,
                     is_read: false
                   })
 

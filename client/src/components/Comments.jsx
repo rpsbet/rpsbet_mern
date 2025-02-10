@@ -252,6 +252,7 @@ const Comments = ({
                   >
                     <Avatar
                       src={comment.user.avatar}
+                      user_id={comment.user._id}
                       username={comment.user.username}
                       rank={comment.user.totalWagered}
                       accessory={comment.user.accessory}

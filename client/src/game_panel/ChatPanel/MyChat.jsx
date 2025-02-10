@@ -165,7 +165,7 @@ function MyChat(props) {
 					<Box>
 						{historyKeys.length === 0 && !loading ? (
 							<Typography variant="body2" color="text.secondary">
-								You have no chat conversations.
+								Your inbox is dry, find some friends?
 							</Typography>
 						) : (
 							historyKeys.map((rowKey, index) => {
@@ -205,6 +205,7 @@ function MyChat(props) {
 												rank={rowData.rank}
 												src={rowData.avatar}
 												username={rowData.username}
+												user_id={rowData._id}
 												alt=""
 												className="avatar"
 												darkMode={isDarkMode}

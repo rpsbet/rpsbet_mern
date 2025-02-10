@@ -12,7 +12,7 @@ import {
   START_BET,
   END_BET,
   ROOMS_LOADED,
-  SET_QBOT_STATUSES,
+  TRADE_LOADING,
   PREPEND_OLDER_CHAT_MESSAGES,
   SET_FETCHING_OLDER_MESSAGES,
   BET_SUCCESS,
@@ -74,6 +74,7 @@ const initialState = {
   transactions: [],
   transactionCandlesError: null,
   bangs: [],
+  trade_loading: false,
   is_betting: false,
   rolls: [],
   comments: [],
@@ -228,25 +229,49 @@ export default function (state = initialState, action) {
       };
 
     case APPEND_NEW_CANDLE: {
-      let newArr = [...state.candles, action.payload];
-      newArr.sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
+      const incoming = action.payload;
+      const existingCandles = [...state.candles];
 
-      const deduped = [];
-      let prevTimeSec = null;
-      for (let i = 0; i < newArr.length; i++) {
-        const cur = newArr[i];
-        const curTimeSec = Math.floor(new Date(cur.startTime).getTime() / 1000);
-        if (prevTimeSec === null || curTimeSec > prevTimeSec) {
-          deduped.push(cur);
-          prevTimeSec = curTimeSec;
-        } else {
-          console.warn('Skipping duplicate candle at', cur.startTime);
+      // Convert to a second-based integer or minute-based integer, e.g.:
+      const incomingStartTimeMs = new Date(incoming.startTime).getTime();
+      const incomingStartTimeMin = Math.floor(incomingStartTimeMs / 60000);
+      // integer representing 'minute bucket'
+
+      // 1) Find if there's an existing candle for that same minute
+      let foundIndex = -1;
+      for (let i = existingCandles.length - 1; i >= 0; i--) {
+        const c = existingCandles[i];
+        const cStart = Math.floor(new Date(c.startTime).getTime() / 60000);
+        if (cStart === incomingStartTimeMin) {
+          foundIndex = i;
+          break;
         }
+      }
+
+      if (foundIndex >= 0) {
+        // 2) Merge the new candle data with the existing candle
+        const existingCandle = existingCandles[foundIndex];
+
+        const mergedCandle = {
+          ...existingCandle,
+          open: existingCandle.open, // typically unchanged
+          close: incoming.close,
+          high: Math.max(existingCandle.high, incoming.high),
+          low: Math.min(existingCandle.low, incoming.low),
+          // you might handle volume differently, etc.
+        };
+        existingCandles[foundIndex] = mergedCandle;
+
+      } else {
+
+        existingCandles.push(incoming);
+        // keep them sorted (if needed, or push in correct position).
+        existingCandles.sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
       }
 
       return {
         ...state,
-        candles: deduped
+        candles: existingCandles
       };
     }
 
@@ -260,6 +285,11 @@ export default function (state = initialState, action) {
       return {
         ...state,
         isActiveLoadingOverlay: true
+      };
+    case TRADE_LOADING:
+      return {
+        ...state,
+        trade_loading: action.payload
       };
     case END_LOADING:
       return {

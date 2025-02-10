@@ -299,6 +299,7 @@ function ChatPage(props) {
                   rank={rank}
                   username={username}
                   accessory={accessory}
+                  user_id={user_id}
                   className="avatar"
                 />
                 <Box

@@ -218,7 +218,7 @@ function AvatarDropzone({
       />
 
       {/* Controls Panel */}
-      <Box className="AvatarControlPanel" sx={{mt: '-50%', background: '#ff000011', borderRadius: '0.3em', p: '20px'}}>
+      <Box className="AvatarControlPanel">
         <Grid container spacing={2} direction="column" alignItems="center">
           {/* Change Image Button */}
           <Grid item>

@@ -419,6 +419,7 @@ function LeaderboardsModal({
                             className="avatar"
                             src={entry.avatar}
                             rank={entry.totalWagered}
+                            user_id={entry._id}
                             accessory={entry.accessory}
                             username={entry.username}
                             alt={entry.username}

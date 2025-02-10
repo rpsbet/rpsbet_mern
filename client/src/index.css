@@ -154,7 +154,9 @@ button.btn {
   width: 100%;
 }
 
-.data-item, .roll-tag, #notistack-snackbar {
+.data-item,
+.roll-tag,
+#notistack-snackbar {
   text-transform: uppercase;
 }
 
@@ -181,7 +183,6 @@ a:hover {
   color: #333;
 }
 
-div.table .table-row .table-cell button:last-child:before,
 .game_header .main_header .header_action_panel button#btn-login:before,
 #wallet-btn::before {
   content: '';
@@ -242,7 +243,6 @@ a {
   margin-right: 10px;
 }
 
-div.table .table-row .table-cell button:last-child,
 .game_header .main_header .header_action_panel button#btn-login,
 #balance button,
 .spectate,
@@ -286,13 +286,11 @@ div.table .table-row .table-cell button:last-child,
 div.table .table-row .table-cell button.active,
 #balance button:active,
 .game_header .main_header .header_action_panel button#btn-login:active,
-div.table .table-row .table-cell button:last-child:active,
 #rps-radio div.active {
   background-color: var(--secondary-color);
   box-shadow: none !important;
 }
 
-div.table .table-row .table-cell button:last-child:hover,
 #balance button:hover,
 .game_header .main_header .header_action_panel button#btn-login:hover,
 .btn-create-room:hover {
@@ -396,10 +394,6 @@ div.table .table-cell button.btn_join img {
   color: #72767d;
 }
 
-.hosts {
-  margin-left: -15px;
-}
-
 .create-room-btn-panel button.btn-create-room {
   margin: 15px auto;
   overflow: hidden;
@@ -407,7 +401,8 @@ div.table .table-cell button.btn_join img {
   font-weight: 600;
 }
 
-.roll-tag, h4.game_header {
+.roll-tag,
+h4.game_header {
   background: #2a202f;
   padding: 4px;
   border-radius: 0.3em;
@@ -726,6 +721,7 @@ div.table.main-history-table .table-row .table-cell .avatar div {
   border: unset !important;
   box-shadow: unset !important;
 }
+
 div.table.main-history-table .table-row .table-cell .avatar,
 .room img.game-type-icon {
   width: 24px;
@@ -733,9 +729,11 @@ div.table.main-history-table .table-row .table-cell .avatar,
   border-radius: 0.3em;
   margin-right: 5px;
 }
+
 .room img.game-type-icon {
   padding: 4px;
 }
+
 div.table.my-chat-table {
   padding: 10px;
 }
@@ -953,7 +951,6 @@ img.game-type-icon {
 .header_action_panel .avatar,
 .my-chat-table .avatar,
 .player .avatar {
-  width: 40px;
   height: 40px;
 }
 
@@ -1072,7 +1069,7 @@ button.win-bg {
   border-radius: 0.3em;
   padding: 20px 20px 20px 30px;
   margin-bottom: 20px;
-  min-height: 220px; 
+  min-height: 220px;
   display: block !important;
   justify-content: center;
 }
@@ -1114,13 +1111,12 @@ div.table.main-game-table .table-row .table-cell.cell-room-info {
   width: 100%;
   display: flex;
   padding-bottom: 15px;
-  z-index: 2;
 }
 
 div.table.main-game-table .cell-coHost {
   position: absolute;
   right: 0px;
-  bottom: 0px;
+  bottom: 5px;
 }
 
 .table-cell.cell-room-info .cell-game-id {
@@ -1135,13 +1131,7 @@ div.table.main-game-table .cell-coHost {
 div.table.main-game-table .table-row .table-cell.cell-user-name {
   display: flex;
   position: absolute;
-  text-align: center;
-  right: 35px;
-  top: 24px;
-}
-
-div.table.main-game-table .table-row .table-cell.cell-user-name .avatar {
-  margin-left: 10px;
+  right: 0;
 }
 
 i.online-status {
@@ -1172,14 +1162,13 @@ i.online-status.online {
 }
 
 .cell-likes {
-  text-align: center;
-  color: #333;
   display: flex;
   flex-direction: row;
-  justify-content: space-evenly;
-  align-items: center;
+  justify-content: end;
+  align-items: end;
   gap: 8px;
-  margin: 10px auto 0;
+  width: 100%;
+  margin-right: 40px;
 }
 
 #view .liquidity {
@@ -1470,11 +1459,6 @@ table td.amount.red {
 .transaction-panel {
   border-top: 2px solid #dee2e6;
   padding-top: 5px;
-}
-
-.align-center img,
-.AvatarDropzone img {
-  filter: contrast(0.5);
 }
 
 .balance {
@@ -1770,12 +1754,6 @@ h6.score {
   font-size: 2em;
 }
 
-.guesses {
-  position: absolute;
-  left: 12.5px;
-  top: 15px;
-}
-
 .blueish-hue {
   filter: hue-rotate(180deg);
   transition: filter 1.5s cubic-bezier(0.4, 0, 0.2, 1);
@@ -1795,33 +1773,10 @@ h6.score {
   color: #343a40 !important;
 }
 
-.guesses .avatar div:nth-child(2),
-.guesses .avatar .rank-icon {
-  display: none !important;
-}
-
-.guesses div {
-  display: flex;
-  margin-right: 6px;
-  margin-left: 3px;
-}
-
 .guesses div:last-child,
 .guesses p:last-child {
   opacity: 1 !important;
 }
-
-.guesses p {
-  background-color: #ff000044;
-  border: solid 2px var(--secondary-color);
-  padding: 2px 10px;
-  border-radius: 0.3em;
-  color: var(--secondary-color) !important;
-  opacity: 0.6;
-  margin-right: 5px;
-
-}
-
 
 svg#delete:hover {
   transform: scale(1.1);
@@ -2090,7 +2045,7 @@ svg#delete:hover {
 }
 
 .msgtooltip:hover {
-  background-color: rgba(0, 0, 0, 0.1); 
+  background-color: rgba(0, 0, 0, 0.1);
 }
 
 
@@ -2249,9 +2204,7 @@ svg#delete:hover {
 }
 
 .chat-player .avatar {
-  background-color: rgb(235, 235, 235);
   position: relative;
-  overflow: hidden;
   width: 50px !important;
   height: 50px !important;
 }
@@ -2911,16 +2864,6 @@ button#bl {
   margin-right: -15px !important;
 }
 
-a.chat-player:hover,
-a.player:hover,
-div.avatar:hover,
-a.avatar:hover,
-a.chat-player:hover,
-.bottom-footer a {
-  border: none !important;
-  box-shadow: none !important;
-  transform: translateY(-1px);
-}
 
 ul div {
   min-width: 44px !important;
@@ -3629,16 +3572,15 @@ circle {
   transform: translateX(0%);
 }
 
-.chat-content .avatar {
-  margin-bottom: 5px;
-  margin-right: 5px !important;
-}
 
 .game_header .main_header .header_action_panel img.avatar,
 .chat-content .avatar {
   width: 30px;
   height: 30px;
-  margin-right: 6px;
+}
+
+.chat-content .avatar img {
+  border-radius: 4px;
 }
 
 .game-page .pre-summary-panel>div.host-display-name {
@@ -3747,12 +3689,6 @@ circle {
 #view svg {
   padding: 4px;
   margin-right: 3px;
-}
-
-div.table .table-row .table-cell img.avatar,
-.game_header .main_header .header_action_panel img.avatar,
-.chat-content .avatar {
-  background-color: rgb(21 21 21 / 60%);
 }
 
 .trade-container .modal-content-panel {
@@ -4499,6 +4435,7 @@ div.table .table-row .table-cell img.avatar,
 .host-container {
   display: contents;
 }
+
 /* 
   ##Device = Desktops
   ##Screen = 1281px to higher resolution desktops
@@ -5306,7 +5243,7 @@ div.table .table-row .table-cell img.avatar,
     width: 100vw;
     height: calc(100% - 120px) !important;
   }
-  
+
   .game-page .game-contents .game-info-panel {
     padding: 20px 5px;
   }

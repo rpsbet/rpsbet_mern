@@ -9,10 +9,13 @@ function getBorderByRank(rank) {
     7: '#7FFF00',  // Chartreuse
     8: '#FF6347',  // Tomato
     9: '#40E0D0',  // Turquoise
-    10: '#FFD700', // Gold
+    10: '#8B4513', // Saddle Brown
+    11: '#5F9EA0', // Cadet Blue
+    12: '#D2691E', // Chocolate
+    13: '#DA70D6', // Orchid (replacing Hot Pink)
+    14: '#FFD700'  // Gold
   };
-
-
+  
 
   if (rank !== null) {
     rank = getRank(rank);

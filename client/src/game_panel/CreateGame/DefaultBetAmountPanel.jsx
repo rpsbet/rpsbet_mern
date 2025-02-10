@@ -38,7 +38,7 @@ const DefaultBetAmountPanel = ({
   const theme = getCustomTheme(isDarkMode);
 
   // Hard Cap values = 2x each defaultBetAmount
-  const defaultHardCapAmounts = defaultBetAmounts.map(amount => amount * 2);
+  const defaultHardCapAmounts = [10, 20, 40, 60, 80];
 
   // --------------- INITIAL BUY-IN Logic ---------------
   const handleInputChange = (field, value) => {

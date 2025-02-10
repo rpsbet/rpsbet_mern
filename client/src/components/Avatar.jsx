@@ -2,14 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { connect } from 'react-redux';
 import chroma from 'chroma-js';
 import verified from '../game_panel/LottieAnimations/verified.json';
-import { Box, Avatar as MUIAvatar } from '@mui/material';
+import { Box, Avatar as MUIAvatar, Badge } from '@mui/material';
 import Lottie from 'react-lottie';
 import { renderLottieAvatarAnimation } from '../util/LottieAvatarAnimations';
 import { getRank } from '../util/getRank';
 
 function Avatar(props) {
   const {
-    // Redux-level or passed-down props
     src: initialSrc,
     alt: initialAlt,
     accessory: initialAccessory,
@@ -18,6 +17,8 @@ function Avatar(props) {
     darkMode: initialDarkMode,
     isLowGraphics,
     isDarkMode,
+    onlineUserList = [],
+    user_id, // ID to check if user is online
   } = props;
 
   // ------------------ LOCAL STATE ------------------
@@ -27,13 +28,9 @@ function Avatar(props) {
   const [username, setUsername] = useState(initialUsername);
   const [rank, setRank] = useState(initialRank);
   const [darkMode, setDarkMode] = useState(initialDarkMode);
-  // Although `dominantColor` is in the original code,
-  // it never gets set to anything other than `'3px solid transparent'`.
-  // We'll keep it for completeness:
   const [dominantColor, setDominantColor] = useState(null);
 
-  // --------------- SIDE EFFECTS / "getDerivedStateFromProps" ---------------
-  // If any of the relevant props change, update local state accordingly
+  // --------------- SIDE EFFECTS ---------------
   useEffect(() => {
     setSrc(initialSrc);
     setAlt(initialAlt);
@@ -41,20 +38,19 @@ function Avatar(props) {
     setUsername(initialUsername);
     setRank(initialRank);
     setDarkMode(initialDarkMode);
-    setDominantColor('3px solid transparent');
-  }, [initialSrc, initialAlt, initialAccessory, initialUsername, initialRank, initialDarkMode]);
+    setDominantColor(null); // If you compute a color from the avatar, do it here
+  }, [
+    initialSrc,
+    initialAlt,
+    initialAccessory,
+    initialUsername,
+    initialRank,
+    initialDarkMode,
+  ]);
 
   // --------------- RENDER LOGIC ---------------
-  let borderColor = '3px solid transparent';
-  let rankColor = '#3498db';
-  let shadedColor = chroma(rankColor).darken(4).hex();
+  const isOnline = user_id ? onlineUserList.includes(user_id) : false;
 
-  if (!isDarkMode) {
-    rankColor = '#2c3e50';
-    shadedColor = chroma(rankColor).brighten(8).hex();
-  }
-
-  // Predefined rank colors
   const rankColors = {
     1: '#1E90FF',  // Dodger Blue
     2: '#00C851',  // Bright Green
@@ -65,29 +61,24 @@ function Avatar(props) {
     7: '#7FFF00',  // Chartreuse
     8: '#FF6347',  // Tomato
     9: '#40E0D0',  // Turquoise
-    10: '#FFD700', // Gold
+    10: '#8B4513', // Saddle Brown
+    11: '#5F9EA0', // Cadet Blue
+    12: '#D2691E', // Chocolate
+    13: '#DA70D6', // Orchid (replacing Hot Pink)
+    14: '#FFD700'  // Gold
   };
   
 
   let adjustedRank = rank;
   if (adjustedRank !== null && !isNaN(adjustedRank)) {
-    adjustedRank = getRank(adjustedRank);
-    if (adjustedRank in rankColors) {
-      borderColor = `3px solid ${rankColors[adjustedRank]}`;
-      rankColor = rankColors[adjustedRank];
-    } else {
-      borderColor = '3px solid red';
-      rankColor = 'red';
-    }
+    adjustedRank = getRank(adjustedRank); // your custom utility
   } else {
     adjustedRank = '';
-    borderColor = '3px solid transparent';
-    rankColor = 'transparent';
   }
 
+  const rankColor = rankColors[adjustedRank] || 'transparent';
   const usernameString = username || '';
 
-  // Identify if user is "bot" or "system" or "verified"
   const isBot = usernameString.toUpperCase().includes('BOT');
   const systemUsernames = [
     'pimpedpistols',
@@ -101,8 +92,6 @@ function Avatar(props) {
     'WHALE WATCHERS',
     'NO BROKIES',
   ];
-  const isSystem = systemUsernames.includes(usernameString);
-
   const verifiedUsernames = [
     'pimpedpistols',
     'KEKW',
@@ -118,117 +107,99 @@ function Avatar(props) {
     'Sachin5512',
     'jimbobjocorn',
   ];
+
+  const isSystem = systemUsernames.includes(usernameString);
   const isVerified = verifiedUsernames.includes(usernameString);
 
-  const backgroundColorStyle = rankColors[adjustedRank] ? rankColors[adjustedRank] : 'transparent';
+  // ---------------- BADGES SETUP ----------------
+  // Outer badge = rank (bottom-right)
+  // Inner badge = online (top-left)
+
   return (
-    <Box
-      className="avatar"
-      sx={{
-        position: 'relative',
-        backgroundColor: 'transparent',
+    <Badge
+      anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      badgeContent={
+        (!isBot && !isSystem && adjustedRank) ? adjustedRank : null
+      }
+      slotProps={{
+        badge: {
+          sx: {
+            backgroundColor: rankColor,
+            color: '#212121',
+            borderRadius: '4px',
+            fontSize: '0.5rem',
+            fontWeight: 'bold',
+            maxWidth: '0.4rem',
+            maxheight: '0.4rem',
+          },
+        },
       }}
     >
-      {/* Avatar Image */}
-      <MUIAvatar
-        id="user-avatar"
-        src={src}
-        alt={alt}
-        variant="rounded" // Makes the avatar square with rounded corners
-        sx={{
-          width: '100%',
-          height: '100%',
-          border: isBot
-            ? '3px solid red'
-            : isSystem
-            ? '3px solid grey'
-            : borderColor,
-          boxShadow: isBot
-            ? 'none'
-            : isSystem && adjustedRank > 7
-            ? 'none'
-            : `0 0px 2px 0px ${rankColor}`,
+      <Badge
+        overlap="circular"
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+        variant="dot"
+        slotProps={{
+          badge: {
+            sx: {
+              backgroundColor: isOnline ? '#00ff3a' : 'gray',
+              width: '0.75rem',
+              height: '0.75rem',
+            },
+          },
         }}
-        onError={(e) => {
-          e.target.src = darkMode
-            ? '/img/profile-thumbnail-dark.svg'
-            : '/img/profile-thumbnail.svg';
-        }}
-      />
-  
-      {/* Lottie Animation */}
-      {renderLottieAvatarAnimation(accessory, isLowGraphics)}
-  
-      {/* Dominant Color Background */}
-      {dominantColor && (
-        <Box
-          sx={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            zIndex: -1,
-            boxSizing: 'border-box',
-            borderRadius: 1, // Slightly rounded corners for background
-          }}
-        />
-      )}
-  
-      {/* Rank Icon */}
-      {!isBot && !isSystem && adjustedRank !== null && adjustedRank !== '' && (
-        <Box
-          className="rank-icon"
-          sx={{
-            position: 'absolute',
-            bottom: '1px',
-            left: '-6px',
-            width: '1.8em',
-            height: '1.8em',
-            display: adjustedRank <= 8 ? 'flex' : 'none',
-            backgroundColor: backgroundColorStyle,
-            color: isDarkMode ? '#2d2d2d' : '#f9f9f9',
-            borderRadius: 1, // Slightly rounded corners for the rank icon
-            fontSize: '0.55em',
-            fontWeight: 'bold',
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}
-        >
-          {adjustedRank}
-        </Box>
-      )}
-  
-      {/* Verified Badge */}
-      {isVerified && (
-        <Box
-          className="verified"
-          sx={{
-            width: '32px',
-            height: '32px',
-            position: 'absolute',
-            top: 0,
-            right: 0,
-            marginTop: '-15px',
-            marginRight: '-14px',
-            transform: 'scale(0.7)',
-            filter: isSystem ? 'grayscale(1)' : 'hue-rotate(55deg)',
-          }}
-        >
-          <Lottie
-            options={{
-              loop: isLowGraphics ? false : true,
-              autoplay: isLowGraphics ? false : true,
-              animationData: verified,
-            }}
-            style={{
+      >
+        <Box className="player" sx={{ position: 'relative', display: 'inline-block' }}>
+          {/* MUI Avatar */}
+          <MUIAvatar
+            src={src}
+            alt={alt}
+            className='avatar'
+            variant="rounded"
+            sx={{
               width: '100%',
               height: '100%',
+              borderRadius: 1,
+              border: 'none',
+            }}
+            onError={(e) => {
+              e.target.src = darkMode
+                ? '/img/profile-thumbnail-dark.svg'
+                : '/img/profile-thumbnail.svg';
             }}
           />
+
+          {/* Lottie Accessory */}
+          {renderLottieAvatarAnimation(accessory, isLowGraphics)}
+
+ 
+
+          {/* Verified Badge (top-right) */}
+          {isVerified && (
+            <Box
+              sx={{
+                width: '32px',
+                height: '32px',
+                position: 'absolute',
+                top: 0,
+                right: 0,
+                transform: 'translate(13px, -15px) scale(0.6)',
+                filter: isSystem ? 'grayscale(1)' : 'none',
+              }}
+            >
+              <Lottie
+                options={{
+                  loop: !isLowGraphics,
+                  autoplay: !isLowGraphics,
+                  animationData: verified,
+                }}
+                style={{ width: '100%', height: '100%' }}
+              />
+            </Box>
+          )}
         </Box>
-      )}
-    </Box>
+      </Badge>
+    </Badge>
   );
 }
 
@@ -237,6 +208,7 @@ const mapStateToProps = (state) => ({
   userInfo: state.auth.user,
   isLowGraphics: state.auth.isLowGraphics,
   isDarkMode: state.auth.isDarkMode,
+  onlineUserList: state.logic.onlineUserList,
 });
 
 export default connect(mapStateToProps)(Avatar);

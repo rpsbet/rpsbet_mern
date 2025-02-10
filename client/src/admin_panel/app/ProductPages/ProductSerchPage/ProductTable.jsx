@@ -194,6 +194,7 @@ const ProductTable = (props) => {
 
   // Player Modal
   const handleOpenPlayerModal = (creatorId) => {
+    console.log("creatorId",creatorId)
     setSelectedCreator(creatorId);
     setShowPlayerModal(true);
   };
@@ -363,12 +364,13 @@ const ProductTable = (props) => {
                               onClick={(e) => {
                                 e.stopPropagation();
                                 e.preventDefault();
-                                handleOpenPlayerModal(owner.user);
+                                handleOpenPlayerModal(customerInfo[owner.user]._id);
                               }}
                               className='player'
                             >
                               <Avatar
                                 className="avatar"
+                                user_id={customerInfo[owner.user]._id}
                                 src={customerInfo[owner.user].avatar}
                                 rank={customerInfo[owner.user].totalWagered}
                                 accessory={customerInfo[owner.user].accessory}

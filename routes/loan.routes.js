@@ -89,8 +89,8 @@ router.post('/create-and-lend', auth, async (req, res) => {
     });
 
     let loanMessage = loanType === 'FRACTIONAL'
-      ? `Fractional Loan created ${(oldBalance)}`
-      : `Loan created ${(parsedLoanAmount)}`;
+      ? `Fractional Loan created`
+      : `Loan created`;
 
     let notificationJ = new Notification({
       from: originalLender._id,
@@ -270,8 +270,8 @@ router.post('/create', auth, async (req, res) => {
     currentUser.balance = updatedBalance;
 
     const notificationMessage = loanType === 'FRACTIONAL'
-      ? `Fractional loan created: ${(oldBalance)}`
-      : `Loan created: ${(parsedLoanAmount)}`;
+      ? `Fractional loan created`
+      : `Loan created`;
 
     const notification = new Notification({
       from: currentUser._id,
@@ -429,7 +429,7 @@ router.post('/payback', auth, async (req, res) => {
       to: currentUser._id,
       amount: -amount,
       room: '',
-      message: `Repayed ${(amount)} loan${isLenderSameAsCurrentUser ? '' : ` to ${lender.username}`}`,
+      message: `Repayed loan${isLenderSameAsCurrentUser ? '' : ` to ${lender.username}`}`,
       is_read: false
     });
 
@@ -464,7 +464,7 @@ router.post('/payback', auth, async (req, res) => {
         to: lender._id,
         amount: amount,
         room: '',
-        message: `Received ${(amount)} loan repayment from ${currentUser.username}`,
+        message: `Received loan repayment from ${currentUser.username}`,
         is_read: false
       });
 
@@ -673,17 +673,19 @@ async function checkLoanEligibility(currentUser, loanAmount) {
 
   const categories = [
     { creditScoreThreshold: 700, rankThreshold: 0, accountAgeThresholdInDays: 30, maxAllowance: 0 },
-    { creditScoreThreshold: 700, rankThreshold: 1, accountAgeThresholdInDays: 30, maxAllowance: 0.1 },
-    { creditScoreThreshold: 700, rankThreshold: 2, accountAgeThresholdInDays: 30, maxAllowance: 0.25 },
-    { creditScoreThreshold: 700, rankThreshold: 3, accountAgeThresholdInDays: 30, maxAllowance: 0.5 },
-    { creditScoreThreshold: 700, rankThreshold: 4, accountAgeThresholdInDays: 30, maxAllowance: 0.75 },
-    { creditScoreThreshold: 700, rankThreshold: 5, accountAgeThresholdInDays: 30, maxAllowance: 1.2 },
-    { creditScoreThreshold: 700, rankThreshold: 6, accountAgeThresholdInDays: 30, maxAllowance: 2 },
-    { creditScoreThreshold: 700, rankThreshold: 7, accountAgeThresholdInDays: 30, maxAllowance: 3 },
-    { creditScoreThreshold: 700, rankThreshold: 8, accountAgeThresholdInDays: 30, maxAllowance: 5 },
-    { creditScoreThreshold: 700, rankThreshold: 9, accountAgeThresholdInDays: 30, maxAllowance: 7 },
-    { creditScoreThreshold: 700, rankThreshold: 10, accountAgeThresholdInDays: 30, maxAllowance: 8 },
-    { creditScoreThreshold: 700, rankThreshold: 11, accountAgeThresholdInDays: 30, maxAllowance: 10 },
+    { creditScoreThreshold: 700, rankThreshold: 1, accountAgeThresholdInDays: 30, maxAllowance: 0.02 },
+    { creditScoreThreshold: 700, rankThreshold: 2, accountAgeThresholdInDays: 30, maxAllowance: 0.05 },
+    { creditScoreThreshold: 700, rankThreshold: 3, accountAgeThresholdInDays: 30, maxAllowance: 0.1 },
+    { creditScoreThreshold: 700, rankThreshold: 4, accountAgeThresholdInDays: 30, maxAllowance: 0.25 },
+    { creditScoreThreshold: 700, rankThreshold: 5, accountAgeThresholdInDays: 30, maxAllowance: 0.5 },
+    { creditScoreThreshold: 700, rankThreshold: 6, accountAgeThresholdInDays: 30, maxAllowance: 1 },
+    { creditScoreThreshold: 700, rankThreshold: 7, accountAgeThresholdInDays: 30, maxAllowance: 1.5 },
+    { creditScoreThreshold: 700, rankThreshold: 8, accountAgeThresholdInDays: 30, maxAllowance: 2 },
+    { creditScoreThreshold: 700, rankThreshold: 9, accountAgeThresholdInDays: 30, maxAllowance: 3 },
+    { creditScoreThreshold: 700, rankThreshold: 10, accountAgeThresholdInDays: 30, maxAllowance: 4 },
+    { creditScoreThreshold: 700, rankThreshold: 12, accountAgeThresholdInDays: 30, maxAllowance: 6 },
+    { creditScoreThreshold: 700, rankThreshold: 13, accountAgeThresholdInDays: 30, maxAllowance: 8 },
+    { creditScoreThreshold: 700, rankThreshold: 14, accountAgeThresholdInDays: 30, maxAllowance: 10 },
   ];
 
   let bestMatch = null;
@@ -767,7 +769,7 @@ router.post('/lend', auth, async (req, res) => {
       to: currentUser._id,
       room: '',
       amount: parseFloat(responseText),
-      message: `Loan received ${(parseFloat(responseText))}`,
+      message: `Loan received`,
       is_read: false
     });
 
@@ -775,7 +777,8 @@ router.post('/lend', auth, async (req, res) => {
       from: currentUser._id,
       to: originalLender._id,
       room: '',
-      message: `Loan to ${currentUser.username} ${(parseFloat(responseText))}`,
+      amount: parseFloat(responseText),
+      message: `Loan to ${currentUser.username}}`,
       is_read: false
     });
 
@@ -988,7 +991,8 @@ router.post('/withdraw-loan', auth, async (req, res) => {
       from: currentUser._id,
       to: currentUser._id,
       room: '',
-      message: `Loan withdrawal ${(amount)}`,
+      message: `Loan withdrawal`,
+      amount: amount,
       is_read: false
     });
 

@@ -3,6 +3,7 @@ import { connect, useDispatch } from 'react-redux';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { acQueryMyItem } from '../../redux/Item/item.action';
 import { setSpectateMode } from '../../redux/Auth/user.actions';
+import GuessesSection from '../../components/GuessesSection';
 import {
   getRpsBetItems,
   getRoomBotCount,
@@ -29,7 +30,8 @@ import {
   Typography,
   Checkbox,
   FormControlLabel,
-  Box
+  Box,
+  Stack
 } from '@mui/material';
 
 import { Info } from '@mui/icons-material';
@@ -162,6 +164,7 @@ function RPS(props) {
 
     // --- LISTENERS ---
     const handleSocketData = (data) => {
+
       if (!data) {
         console.error('Error: Received undefined or null data from the socket.');
         return;
@@ -174,15 +177,17 @@ function RPS(props) {
         return updated;
       });
       playSound && playSound('blip');
-
+      onChangeState({
+        bankroll: data.bankroll,
+        battles: 1,
+        hosts: data.hosts,
+      });
+      setHostPr(data.host_pr);
       if (!data.rps) return;
 
       // Filter for user's RPS if isWatching
       const filteredRPS = data.rps.filter((game) => game.joiner === user_id);
       const rpsState = isWatching ? filteredRPS : data.rps;
-
-      onChangeState({ bankroll: data.bankroll });
-      setHostPr(data.host_pr);
       setRpsHistory(rpsState);
       setPrevRps(data.rps);
       setStartedPlaying(true);
@@ -207,23 +212,6 @@ function RPS(props) {
       socket.off(channel2, handleSocketData2);
     };
   }, [socket, roomInfo._id, isWatching, onChangeState, user_id, playSound]);
-
-  // useEffect(() => {
-  //   if (!is_betting) {
-  //     const prevLastItemId =
-  //       rpsbetitems.length > 4
-  //         ? rpsbetitems.slice(0, 5).reverse()[4]._id
-  //         : null;
-  //     const currentLastItemId =
-  //       rpsHistory.length > 4 ? rpsHistory[4]._id : null;
-  //     if (prevLastItemId === currentLastItemId) {
-  //       (async () => {
-  //         await getRpsBetItems(roomInfo._id);
-
-  //       })();
-  //     }
-  //   }
-  // }, [is_betting, rpsHistory, rpsbetitems, getRpsBetItems, roomInfo]);
 
   // Watch for host_pr changes
   useEffect(() => {
@@ -530,44 +518,12 @@ function RPS(props) {
       <div className="game-contents title">
         <div className="game-info-panel" style={{ position: 'relative' }}>
           {/* RPS history + players */}
-          <div className="guesses">
-            <div>
-              {prevRps.slice().map((item, index) => (
-                <p key={index}>{item.rps}</p>
-              ))}
-            </div>
-            <div>
-              {players.length !== 0 && (
-                <>
-                  {players.slice(0, 5).map((player, index) => (
-                    <div
-                      key={index}
-                      style={{
-                        opacity: '0.4',
-                        width: '29px',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      <a
-                        className="avatar"
-                        onClick={() => handleOpenPlayerModal(player._id)}
-                      >
-                        <Avatar
-                          className="avatar"
-                          src={player.avatar}
-                          rank={player.totalWagered}
-                          username={player.username}
-                          accessory={player.accessory}
-                          alt=""
-                          darkMode={isDarkMode}
-                        />
-                      </a>
-                    </div>
-                  ))}
-                </>
-              )}
-            </div>
-          </div>
+          <GuessesSection
+  prevRps={prevRps}
+  players={players}
+  isDarkMode={isDarkMode}
+  handleOpenPlayerModal={handleOpenPlayerModal}
+/>
 
           {status === 'open' ? (
             <>

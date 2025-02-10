@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { connect, useDispatch } from 'react-redux';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { Info } from '@mui/icons-material';
-import Avatar from '../../components/Avatar';
+import GuessesSection from '../../components/GuessesSection';
 import progress from '../LottieAnimations/progress.json';
 import pressHold from '../LottieAnimations/pressHold.json';
 import PlayerModal from '../modal/PlayerModal';
@@ -25,7 +25,8 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Typography
+  Typography,
+  Box
 } from '@mui/material';
 import {
   validateIsAuthenticated,
@@ -189,24 +190,29 @@ function QuickShoot(props) {
       playSound('blip');
     }
 
-    // Filter or use entire array
-    const filtered = data.qs.filter((game) => game.joiner === user_id);
-    const newQsHistory = isWatching ? filtered : data.qs;
-
-    // Update your state
-    setQsHistory(newQsHistory);
-
-    // Compute the last shot
-    const newPlayerShot = newQsHistory?.[newQsHistory.length - 1]?.joiner_qs ?? null;
-    const newLastShot = newQsHistory?.[newQsHistory.length - 1]?.qs ?? null;
-    setJoinerQsValueAtLastIndex(parseFloat(newPlayerShot));
-    setQsValueAtLastIndex(parseFloat(newLastShot));
-
-    // The rest of your updates
-    setPrevQs(data.qs);
-    setStartedPlaying(true);
-    onChangeState({ bankroll: data.bankroll });
+console.log("data.hosts—————————————", data.hosts)
+    onChangeState({
+      bankroll: data.bankroll,
+      battles: 1,
+      hosts: data.hosts,
+    });
     setHostPr(data.host_pr);
+    if (!data.qs) return;
+     // Filter or use entire array
+     const filtered = data.qs.filter((game) => game.joiner === user_id);
+     const newQsHistory = isWatching ? filtered : data.qs;
+ 
+     // Update your state
+     setQsHistory(newQsHistory);
+ 
+     // Compute the last shot
+     const newPlayerShot = newQsHistory?.[newQsHistory.length - 1]?.joiner_qs ?? null;
+     const newLastShot = newQsHistory?.[newQsHistory.length - 1]?.qs ?? null;
+     setJoinerQsValueAtLastIndex(parseFloat(newPlayerShot));
+     setQsValueAtLastIndex(parseFloat(newLastShot));
+ 
+    setStartedPlaying(true);
+    setPrevQs(data.qs);
 
     updateAnimation(newQsHistory, newLastShot);
 
@@ -222,8 +228,8 @@ function QuickShoot(props) {
   const removeSocketListeners = useCallback(() => {
     // If you want an explicit cleanup that runs on unmount or socket changes:
     if (socket) {
-      socket.off(`UPDATED_BANKROLL_QS_${roomInfo._id}`, handleSocketData);
-      socket.off(`UPDATED_BANKROLL_QS2_${roomInfo._id}`, handleSocketData2);
+      socket.off(`UPDATED_BANKROLL_${roomInfo._id}`, handleSocketData);
+      socket.off(`UPDATED_BANKROLL2_${roomInfo._id}`, handleSocketData2);
     }
   }, [socket, roomInfo._id, handleSocketData, handleSocketData2]);
 
@@ -265,13 +271,13 @@ function QuickShoot(props) {
     if (!socket) return;
 
     // Attach listeners
-    socket.on(`UPDATED_BANKROLL_QS_${roomInfo._id}`, handleSocketData);
-    socket.on(`UPDATED_BANKROLL_QS2_${roomInfo._id}`, handleSocketData2);
+    socket.on(`UPDATED_BANKROLL_${roomInfo._id}`, handleSocketData);
+    socket.on(`UPDATED_BANKROLL2_${roomInfo._id}`, handleSocketData2);
 
     return () => {
       // Remove listeners on unmount or when socket changes
-      socket.off(`UPDATED_BANKROLL_QS_${roomInfo._id}`, handleSocketData);
-      socket.off(`UPDATED_BANKROLL_QS2_${roomInfo._id}`, handleSocketData2);
+      socket.off(`UPDATED_BANKROLL_${roomInfo._id}`, handleSocketData);
+      socket.off(`UPDATED_BANKROLL2_${roomInfo._id}`, handleSocketData2);
     };
   }, [socket, roomInfo._id, handleSocketData, handleSocketData2]);
 
@@ -580,14 +586,14 @@ function QuickShoot(props) {
     position_name = ['Top-Left', 'Top-Right', 'Bottom-Left', 'Bottom-Right'];
     position_short_name = ['tl', 'tr', 'bl', 'br'];
   }
-   // Determine if the current user is the creator
-   const isCreator = creator_id && user_id && creator_id.toString() === user_id.toString();
+  // Determine if the current user is the creator
+  const isCreator = creator_id && user_id && creator_id.toString() === user_id.toString();
 
-   // Set the subtitle and tooltip texts based on whether the user is the creator
-   const subTitleText = isCreator ? "This is Your Own Room" : "Choose WHERE TO SHOOT";
-   const tooltipText = isCreator
-   ? "Shooting is disabled in your own room."
-   : "Play against the AI; at the same time, train your AI.";
+  // Set the subtitle and tooltip texts based on whether the user is the creator
+  const subTitleText = isCreator ? "This is Your Own Room" : "Choose WHERE TO SHOOT";
+  const tooltipText = isCreator
+    ? "Shooting is disabled in your own room."
+    : "Play against the AI; at the same time, train your AI.";
 
   return (
     <div className="game-page">
@@ -645,58 +651,13 @@ function QuickShoot(props) {
       <div className="game-contents title">
         <div className="game-info-panel" style={{ position: 'relative' }}>
           {/* Example guesses panel */}
-          <div className="guesses">
-            <div>
-              {prev_qs.map((item, index) => (
-                <p key={index}>{item.qs}</p>
-              ))}
-            </div>
-            <div>
-              {players.length > 0 &&
-                players.slice(0, 5).map((p, i) => (
-                  <div key={i} style={{ opacity: '0.4', width: '29px', cursor: 'pointer' }}>
-                    <a className="avatar" onClick={() => handleOpenPlayerModal(p._id)}>
-                      <Avatar
-                        className="avatar"
-                        src={p.avatar}
-                        rank={p.totalWagered}
-                        username={p.username}
-                        accessory={p.accessory}
-                        alt=""
-                        darkMode={isDarkMode}
-                      />
-                    </a>
-                  </div>
-                ))}
-            </div>
-          </div>
+          <GuessesSection
+            prevRps={prev_qs}
+            players={players}
+            isDarkMode={isDarkMode}
+            handleOpenPlayerModal={handleOpenPlayerModal}
+          />
 
-          {/* Second row of guesses if needed */}
-          <div className="guesses">
-            <div>
-              {prev_qs.map((item, index) => (
-                <p key={index}>{item.qs}</p>
-              ))}
-            </div>
-            <div>
-              {players.length > 0 &&
-                players.slice(0, 5).map((p, i) => (
-                  <div key={i} style={{ opacity: '0.4', width: '29px', cursor: 'pointer' }}>
-                    <a className="avatar" onClick={() => handleOpenPlayerModal(p._id)}>
-                      <Avatar
-                        className="avatar"
-                        src={p.avatar}
-                        rank={p.totalWagered}
-                        username={p.username}
-                        accessory={p.accessory}
-                        alt=""
-                        darkMode={isDarkMode}
-                      />
-                    </a>
-                  </div>
-                ))}
-            </div>
-          </div>
 
           {status === 'open' ? (
             <>
@@ -781,7 +742,7 @@ function QuickShoot(props) {
                   </span>
                 </div>
 
-             
+
                 {!startedPlaying && (
                   <h3 className="game-sub-title roll-tag">
                     {subTitleText} &nbsp;
@@ -876,7 +837,18 @@ function QuickShoot(props) {
               </div>
             </>
           ) : (
-            <span style={{ color: '#ff0000' }}>THIS GAME HAS ENDED</span>
+            <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+
+              <Typography variant="subtitle2" sx={{ color: '#ff0000' }}>GAME ENDED</Typography><br />
+              <Typography>
+              Pool seeded! SEE 
+              <Box component="a"
+                href={`https://dexscreener.com/solana/`}
+                sx={{ ml: 0.5, cursor: 'pointer' }}
+                >DEX 🚀</Box>
+                </Typography>
+
+            </Box>
           )}
         </div>
       </div>

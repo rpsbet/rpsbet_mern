@@ -261,14 +261,10 @@ function GlobalChat(props) {
                         username={chat.replyTo.username}
                         rank={chat.replyTo.rank}
                         accessory={chat.replyTo.accessory}
+                        user_id={chat.replyTo.senderId}
                         darkMode={isDarkMode}
                       />
-                      <i
-                        className={`online-status${onlineUserList.includes(chat.replyTo.senderId)
-                            ? ' online'
-                            : ''
-                          }`}
-                      />
+                   
                     </a>
                     <span className="reply-sender sender-name">
                       {chat.replyTo.username}
@@ -297,16 +293,12 @@ function GlobalChat(props) {
                       src={chat.avatar}
                       accessory={chat.accessory}
                       alt=""
+                      user_id={chat.senderId}
                       username={chat.sender}
                       rank={chat.rank}
                       darkMode={isDarkMode}
                     />
-                    <i
-                      className={`online-status${onlineUserList.includes(chat.senderId)
-                          ? ' online'
-                          : ''
-                        }`}
-                    />
+                  
                   </a>
                   <div className="chat-msg">
                     <span className="sender-name">{chat.sender}</span>

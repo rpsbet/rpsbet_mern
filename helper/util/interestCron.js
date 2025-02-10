@@ -6,7 +6,7 @@ const Notification = require('../../model/Notification.js');
 const SystemSetting = require('../../model/SystemSetting');
 const saveDocumentWithRetry = require('./retrySave');
 const socketController = require('../../socketController.js');
-const senderId = '629685058f368a1838372754';
+const senderId = '62990fe242ac4d26501dd97f';
 
 let socketio = null;
 async function updateRoomInterests(io) {
@@ -21,10 +21,10 @@ async function updateRoomInterests(io) {
     if (interestSetting) {
       const lastUpdated = interestSetting.updated_at;
       const fiveMinutesAgo = new Date();
-      fiveMinutesAgo.setMinutes(fiveMinutesAgo.getMinutes() - 33);
+      fiveMinutesAgo.setHours(fiveMinutesAgo.getHours() - 3);
       
 
-      if (lastUpdated <= fiveMinutesAgo) {
+      if (lastUpdated >= fiveMinutesAgo) {
         const bonusRooms = await Room.find({ status: 'open', is_private: 'false' });
         for (const bonusRoom of bonusRooms) {
           const req = {
@@ -36,7 +36,7 @@ async function updateRoomInterests(io) {
             }
           };
           let userBet = parseFloat(bonusRoom.user_bet);
-          const newInterest = userBet * 1.0000001;  // 10x the original interest calculation
+          const newInterest = userBet * 1.0001;  // 10x the original interest calculation
           const interestAdded = newInterest - userBet;  // Calculate the actual interest added
           
           bonusRoom.user_bet = newInterest.toString();  // Update the user_bet with the new interest
@@ -53,8 +53,8 @@ async function updateRoomInterests(io) {
             from: senderId,
             to: bonusRoom.creator,
             room: bonusRoom._id,
-            amount: userBet * 0.0000001,
-            message: `Interest earned (${(userBet * 0.0000001)})`,
+            amount: userBet * 0.0001,
+            message: `Staking Reward earned`,
             is_read: false
           });
 
@@ -63,7 +63,7 @@ async function updateRoomInterests(io) {
             username: system.username,
             avatar: system.avatar,
             accessory: system.accessory,
-            amount: userBet * 0.0000001,
+            amount: userBet * 0.0001,
             rank: system.totalWagered,
             created_at: moment().format('YYYY-MM-DD HH:mm'),
             created_at_str: moment().format('LLL'),
@@ -105,7 +105,7 @@ async function updateRoomInterests(io) {
   }
 }
 
-cron.schedule('*/99 * * * *', async () => {
+cron.schedule('0 */3 * * *', async () => {
   await updateRoomInterests();
 });
 

@@ -31,7 +31,7 @@ import { Info } from '@mui/icons-material';
 
 import {
   getMyGames,
-  unstake,
+  jeetGame,
   createRoom,
   reCreateRoom,
   getStrategies,
@@ -41,7 +41,7 @@ import {
   addNewTransaction,
   getRoomList,
   endGame,
-  coHost,
+  pumpGame,
   updateUserPrompt
 } from '../../redux/Logic/logic.actions';
 import { errorMsgBar } from '../../redux/Notification/notification.actions';
@@ -56,7 +56,6 @@ import SettingsRef from '../../components/SettingsRef';
 import Battle from '../icons/Battle';
 import pressHold from '../LottieAnimations/pressHold.json';
 import animationData from '../LottieAnimations/add';
-import history from '../../redux/history'; // or useNavigate
 
 function MyGamesTable(props) {
   const {
@@ -64,22 +63,22 @@ function MyGamesTable(props) {
     user,
     myGames: propsMyGames,
     getMyGames,
+    socket,
     getStrategies,
     isDarkMode,
     isLowGraphics,
     solPrice,
     updateTutorialCompleted,
     // Redux dispatch actions:
-    unstake,
+    jeetGame,
     createRoom,
     endGame,
     addNewTransaction,
     getRoomList,
-    coHost,
+    pumpGame,
     editPayout,
     updateUserPrompt,
     updateRoomStrategy,
-    reCreateRoom,
     loading
   } = props;
 
@@ -111,12 +110,11 @@ function MyGamesTable(props) {
   const [selectedStrategy, setSelectedStrategy] = useState(null);
   const settingsRef = useRef(null);
 
-  // Press-and-Hold (RUG) logic
   const [pressState, setPressState] = useState({});
   const dispatch = useDispatch();
 
   // ---------- Effects ----------
-  // On mount => fetch
+
   useEffect(() => {
     async function fetchInitialData() {
       await fetchData();
@@ -127,16 +125,44 @@ function MyGamesTable(props) {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-    // eslint-disable-next-line
   }, []);
 
-  // If filter/sort changes => re-fetch
+  const handleBankrollUpdate = useCallback((data) => {
+    setMyGames((prevMyGames) =>
+      prevMyGames.map((game) => {
+        if (game._id === data.room) {
+          console.log("data", data.hosts)
+          return {
+            ...game,
+            user_bet: data.bankroll,
+            battles: (game.battles || 0) + 1,
+            coHost: data.hosts ? false : game.coHost,
+          };
+        }
+        return game;
+      })
+    );
+  }, [setMyGames]);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    myGames.forEach((game) => {
+      socket.on(`UPDATED_BANKROLL_${game._id}`, handleBankrollUpdate);
+    });
+
+    return () => {
+      myGames.forEach((game) => {
+        socket.off(`UPDATED_BANKROLL_${game._id}`, handleBankrollUpdate);
+      });
+    };
+  }, [socket, myGames, handleBankrollUpdate]);
+
+
   useEffect(() => {
     fetchData();
-    // eslint-disable-next-line
   }, [selectedFilter, selectedSort]);
 
-  // If myGames from props changes => set local + stop loading
   useEffect(() => {
     setMyGames(propsMyGames || []);
     setIsLoading(false);
@@ -182,7 +208,7 @@ function MyGamesTable(props) {
       return;
     }
     try {
-      const result = await coHost(coHostAmount, selectedRow._id);
+      const result = await pumpGame(coHostAmount, selectedRow._id);
       if (result.success) {
         addNewTransaction(result.newTransaction);
         await getRoomList({ game_type: 'All' });
@@ -192,7 +218,7 @@ function MyGamesTable(props) {
     } catch (e) {
       dispatch(errorMsgBar('ROOM TOO BUSY, TRY AGAIN LATER'));
     }
-  }, [coHostAmount, balance, isDarkMode, coHost, selectedRow, addNewTransaction, getRoomList]);
+  }, [coHostAmount, balance, isDarkMode, pumpGame, selectedRow, addNewTransaction, getRoomList]);
 
   // ---------- Payout ----------
   const handlePayout = (row) => {
@@ -245,15 +271,18 @@ function MyGamesTable(props) {
   // ---------- RUG logic ----------
   const endRoom = useCallback(
     async (winnings, room_id) => {
+      // Toggle local pressState to show "closing..."
       setPressState((prev) => ({
         ...prev,
         [room_id]: { ...prev[room_id], closing: true }
       }));
+  
       try {
         await endGame(room_id);
-        await addNewTransaction({ amount: winnings, room_id });
+        setMyGames((prevGames) => prevGames.filter((g) => g._id !== room_id));
+  
       } catch (error) {
-        console.error('Error ending room:', error);
+        console.error('Error ending game:', error);
       } finally {
         setPressState((prev) => ({
           ...prev,
@@ -261,7 +290,7 @@ function MyGamesTable(props) {
         }));
       }
     },
-    [endGame, addNewTransaction]
+    [endGame, setMyGames]
   );
 
   const handleButtonClick = useCallback(
@@ -319,35 +348,6 @@ function MyGamesTable(props) {
       };
     });
   }, []);
-
-  // ---------- CREATE/RE-CREATE ----------
-  const openRecreateModal = useCallback(
-    (row) => {
-      dispatch(errorMsgBar(`YOU DO NOT OWN A GAME RESTORER. GO TO MARKETPLACE TO PURCHASE`));
-    },
-    [isDarkMode]
-  );
-
-  const onCreateRoom = useCallback(
-    async (row) => {
-      if (localStorage.getItem('hideConfirmModal') === 'true') {
-        await createRoom({
-          game_type: row.game_type,
-          bet_amount: row.bet_amount,
-          endgame_amount: row.endgame_amount
-        });
-      } else {
-        confirmModalCreate(isDarkMode, 'CONFIRM GAME SETTINGS?', 'LFG', 'Cancel', async () => {
-          await createRoom({
-            game_type: row.game_type,
-            bet_amount: row.bet_amount,
-            endgame_amount: row.endgame_amount
-          });
-        });
-      }
-    },
-    [createRoom, isDarkMode]
-  );
 
   // ---------- TUTORIAL ----------
   const handleJoyrideCallback = useCallback(
@@ -530,7 +530,7 @@ function MyGamesTable(props) {
                 const bet = row.user_bet;
                 const endgameAmount = row.endgame_amount;
                 const bondingProgress =
-                endgameAmount !== 0 ? (bet / endgameAmount) * 100 : 0;
+                  endgameAmount !== 0 ? (bet / endgameAmount) * 100 : 0;
 
                 return (
                   <Box
@@ -541,7 +541,7 @@ function MyGamesTable(props) {
                       cursor: 'pointer',
                       mb: 1
                     }}
-                    onClick={() => history.push(`/join/${row._id}`)}
+                    onClick={() => (window.location.href = `/join/${row._id}`)}
                   >
                     <Box>
                       {/* Room ID */}
@@ -640,10 +640,10 @@ function MyGamesTable(props) {
                       <Box className="table-cell winnings desktop-only">
                         <Tooltip title="AI MODEL">
                           <Typography
-                           id="ai_mode"
-                           sx={{p: 4, fontSize: 1}}
+                            id="ai_mode"
+                            sx={{ p: 4, fontSize: 1 }}
                           >{row.selectedStrategy}
-                            <AutoAwesomeIcon sx={{ p: "6px"}}/>
+                            <AutoAwesomeIcon sx={{ p: "6px" }} />
                           </Typography>
                         </Tooltip>
                       </Box>
@@ -679,10 +679,12 @@ function MyGamesTable(props) {
                                   // >
                                   //   TRADE
                                   // </Button>
-<></>
+                                  <></>
                                 ) : (
                                   <Button
-                                    className="btn_end"
+                                  variant='contained'
+                                  color="error"
+                                  disableElevation
                                     onMouseDown={(e) => {
                                       e.preventDefault();
                                       e.stopPropagation();
@@ -803,7 +805,9 @@ function MyGamesTable(props) {
                                   </Button>
                                 ) : (
                                   <Button
-                                    className="btn_end"
+                                         variant='contained'
+                                  color="error"
+                                  disableElevation
                                     onMouseDown={(e) => {
                                       e.preventDefault();
                                       e.stopPropagation();
@@ -968,6 +972,7 @@ const mapStateToProps = (state) => ({
   myGames: state.logic.myGames,
   pageNumber: state.logic.myGamesPageNumber,
   game_mode: state.logic.game_mode,
+  socket: state.auth.socket,
   balance: state.auth.balance,
   user: state.auth.user,
   strategies: state.logic.strategies,
@@ -976,11 +981,11 @@ const mapStateToProps = (state) => ({
 });
 
 const mapDispatchToProps = {
-  unstake,
+  jeetGame,
   createRoom,
   getMyGames,
   getStrategies,
-  coHost,
+  pumpGame,
   addNewTransaction,
   setGameMode,
   updateRoomStrategy,

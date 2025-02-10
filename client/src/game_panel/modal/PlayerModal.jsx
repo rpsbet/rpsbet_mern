@@ -135,6 +135,9 @@ function PlayerModal(props) {
   const [gameProfit, setGameProfit] = useState(0);
   const [gamePlayed, setGamePlayed] = useState(0);
   const [totalWagered, setTotalWagered] = useState(0);
+  const [totalTraded, setTotalTraded] = useState(0);
+  const [tradingProfit, setTradingProfit] = useState(0);
+
   const [activeTab, setActiveTab] = useState(0);
 
   const [isTipModalOpen, setIsTipModalOpen] = useState(false);
@@ -183,8 +186,10 @@ function PlayerModal(props) {
         // performance
         setGamePlayed(userData.gamePlayed || 0);
         setTotalWagered(userData.totalWagered || 0);
+        setTotalTraded(userData.totalTraded || 0);
+        setTradingProfit(userData.tradingProfit || 0);
         setGameProfit(userData.gameProfit || 0);
-     
+
         _setCurrentOfferTargetInfo({
           avatar: userData.avatar,
           _id: userId,
@@ -207,35 +212,35 @@ function PlayerModal(props) {
         return {
           color: 'rgb(118 221 119)',
           title: 'JEWISH DJEDI',
-          message: 'Your spending habits are outstanding!',
+          message: 'Greed is fueling their growth!',
           progress: 100,
         };
       case 'good':
         return {
           color: 'rgb(3 221 255)',
           title: 'SEASONED CZAR',
-          message: 'Your spending habits are commendable.',
+          message: 'Spending habits are commendable.',
           progress: 80,
         };
       case 'average':
         return {
           color: '#ffc107',
           title: 'UNCONSCIOUS COMPETENT',
-          message: 'You’re doing fine, but bitch don’t get too comfortable.',
+          message: 'Doing fine, but the bitch is comfortable.',
           progress: 60,
         };
       case 'bad':
         return {
           color: '#fd7e14',
           title: 'PEASANT PUPPET',
-          message: 'Consider revisiting your spending strategy.',
+          message: 'They need to revisit their spending strategy.',
           progress: 40,
         };
       case 'very bad':
         return {
           color: '#dc3545',
           title: 'MISERABLE MULE',
-          message: 'Your spending habits make you miserable.',
+          message: 'Spending habits make them miserable.',
           progress: 20,
         };
       default:
@@ -478,6 +483,7 @@ function PlayerModal(props) {
                       <Avatar
                         src={avatar || '/img/profile-thumbnail.svg'}
                         accessory={accessory}
+                        user_id={creatorId}
                         username={username}
                         rank={rank}
                         alt=""
@@ -624,8 +630,10 @@ function PlayerModal(props) {
                     gameProfit={gameProfit}
                     gamePlayed={gamePlayed}
                     totalWagered={totalWagered}
+                    totalTraded={totalTraded}
+                    tradingProfit={tradingProfit}
                     rank={rank}
-     
+
                   />
                 </Box>
               )}
@@ -641,12 +649,12 @@ function PlayerModal(props) {
                   mt: 3,
                 }}
               >
-                {isOnline && (
+                {/* {isOnline && (
                   <Button color="error" variant="contained" onClick={handleOpenOfferModal}>
                     Lend&nbsp;
                     <FontAwesomeIcon icon={faCoins} />
                   </Button>
-                )}
+                )} */}
                 <Button color="error" variant="contained" onClick={handleTip}>
                   Tip&nbsp;
                   <FontAwesomeIcon icon={faMoneyBill} />

@@ -159,10 +159,8 @@ const addToQueue = async (req, bot = false) => {
             });
             newTransactionJ.user = user._id;
             newTransactionJ.description =
-                'joined ' +
-                roomInfo['game_type']['short_name'] +
-                '-' +
-                roomInfo['room_number'];
+                'Joined ' +
+                roomInfo['name'];
 
 
             let message = new Notification({
@@ -170,6 +168,7 @@ const addToQueue = async (req, bot = false) => {
                 to: roomInfo['creator'],
                 room: req.body._id,
                 message: '',
+                amount: 0,
                 is_read: false
             });
 
@@ -311,13 +310,10 @@ const addToQueue = async (req, bot = false) => {
 
                         // send notification
                         message.message =
-                            'Won ' +
-                            (req.body.bet_amount * 2) +
-                            ' in ' +
-                            roomInfo['game_type']['short_name'] +
-                            '-' +
-                            roomInfo['room_number'];
+                            'Won in ' +
+                            roomInfo['name'];
 
+                        message.amount = req.body.bet_amount * 2;
 
                         // if draw
                     } else if (bet_item.rps === req.body.selected_rps) {
@@ -328,12 +324,10 @@ const addToQueue = async (req, bot = false) => {
                         newTransactionAmount += (betAmount - betAmount * (tax.value / 100));
 
                         message.message =
-                            'Split ' +
-                            (req.body.bet_amount * 2) +
-                            ' in ' +
-                            roomInfo['game_type']['short_name'] +
-                            '-' +
-                            roomInfo['room_number'];
+                            'Split in ' +
+                            roomInfo['name'];
+
+                        message.amount = req.body.bet_amount * 2;
 
                         // update platform stat (cd%)
                         platform.value =
@@ -385,12 +379,9 @@ const addToQueue = async (req, bot = false) => {
                         }
 
                         message.message =
-                            'Lost ' +
-                            (req.body.bet_amount) +
-                            ' in ' +
-                            roomInfo['game_type']['short_name'] +
-                            '-' +
-                            roomInfo['room_number'];
+                            'Lost in ' +
+                            roomInfo['name'];
+                        message.amount = req.body.bet_amount;
                     }
                 }
 
@@ -412,6 +403,7 @@ const addToQueue = async (req, bot = false) => {
                                 bankroll: roomInfo['user_bet'],
                                 host_pr: roomInfo['host_pr'],
                                 rps: mostRecentItems,
+                                room: roomInfo._id,
                                 user: user
                             });
 
@@ -639,10 +631,11 @@ const addToQueue = async (req, bot = false) => {
                 mostRecentItems.push(bet_item);
                 if (mostRecentItems.length > 0) {
                     if (req.io.sockets) {
-                        req.io.sockets.emit(`UPDATED_BANKROLL_QS_${roomInfo._id}`, {
+                        req.io.sockets.emit(`UPDATED_BANKROLL_${roomInfo._id}`, {
                             bankroll: roomInfo['user_bet'],
                             host_pr: roomInfo['host_pr'],
                             qs: mostRecentItems,
+                            room: roomInfo._id,
                             user: user
                         });
 
@@ -874,6 +867,7 @@ const addToQueue = async (req, bot = false) => {
                 username: user.username,
                 avatar: user.avatar,
                 accessory: user.accessory,
+                amount: newTransactionAmount,
                 room: req.body._id,
                 rank: user.totalWagered,
                 created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),

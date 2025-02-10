@@ -456,13 +456,15 @@ router.post('/deposit', auth, async (req, res) => {
       from: userId,
       to: userId,
       room: '',
-      message: `You deposited ${(parsedAmount)} into your vault`
+      amount: -parsedAmount,
+      message: `You deposited into your vault`
     });
 
     const notificationData = {
       message: notification.message,
       username: req.user.username,
       avatar: req.user.avatar,
+      amount: -parsedAmount,
       accessory: req.user.accessory,
       rank: req.user.totalWagered,
       created_at: new Date(),
@@ -542,7 +544,8 @@ router.post('/withdraw', auth, async (req, res) => {
       from: userId,
       to: userId,
       room: '',
-      message: `You withdrew ${(parsedAmount)} from your vault`
+      amount: parsedAmount,
+      message: `You withdrew from your vault`
     });
 
     const notificationData = {
@@ -550,6 +553,7 @@ router.post('/withdraw', auth, async (req, res) => {
       username: req.user.username,
       avatar: req.user.avatar,
       accessory: req.user.accessory,
+      amount: parsedAmount,
       rank: req.user.totalWagered,
       created_at: new Date(),
       created_at_str: new Date().toISOString(),
@@ -587,19 +591,16 @@ router.get('/vault', auth, async (req, res) => {
     }
 
     const vault = await Vault.findOne({ user: userId });
-    if (!vault) {
-      return res.json({ success: false, error: 'VAULT NOT FOUND' });
-    }
-
     res.json({
       success: true,
-      vaultBalance: vault.balance
+      vaultBalance: vault ? vault.balance : 0
     });
   } catch (err) {
     console.error(err);
     res.json({ success: false, error: err.message });
   }
 });
+
 
 
 router.post('/bio', auth, async (req, res) => {
@@ -762,14 +763,16 @@ router.post('/add-bonus', auth, async (req, res) => {
       from: user._id,
       to: user._id,
       room: '',
-      message: `You received a bonus of ${(number)}`,
+      amount: number,
+      message: `You received a bonus`,
     });
 
     const notificationData = {
-      message: `You received a bonus of ${(number)}`,
+      message: `You received a bonus`,
       username: user.username,
       avatar: user.avatar,
       accessory: user.accessory,
+      amount: number,
       rank: user.totalWagered,
       created_at: new Date(),
       created_at_str: new Date().toISOString(),

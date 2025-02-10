@@ -99,10 +99,6 @@ const GameLogSchema = new Schema({
             type: Number,
             default: 0.0
         },
-        initial_stake: {
-            type: Number,
-            default: 0.0
-        },
     }],
 });
 

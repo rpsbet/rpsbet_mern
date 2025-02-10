@@ -128,7 +128,7 @@ async function checkConfirmations(io) {
             to: referralOwner._id,
             amount: referralReward,
             room: '',
-            message: `Received ${referralReward} SOL in referral rewards.`
+            message: `Received SOL in referral rewards`
           });
 
           const notificationDataRef = {
@@ -161,7 +161,7 @@ async function checkConfirmations(io) {
           to: user._id,
           amount: depositSOL,
           room: '',
-          message: `Deposit successful, received ${depositSOL} SOL`
+          message: `Deposit successful, received`
         });
 
         const notificationData = {

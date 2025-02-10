@@ -110,9 +110,10 @@ function HistoryTable({
           component="a"
           onClick={() => handleOpenPlayerModal(userObj._id)}
           sx={{ cursor: 'pointer' }}
-          className='player'
+          className=''
         >
           <Avatar
+          user_id={userObj._id}
             src={userObj.avatar}
             username={userObj.username}
             rank={userObj.totalWagered}
@@ -160,13 +161,13 @@ function HistoryTable({
       case 'created':
         return (
           <Box sx={{ fontSize: '0.7rem', fontWeight: 700, display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            {renderAvatar(creator)} created {renderRoomInfo(logItem.room)} with {userBet}
+            {renderAvatar(creator)} created {renderRoomInfo(logItem.room)} with {betAmt}
           </Box>
         );
       case 'rugged':
         return (
           <Box sx={{ fontSize: '0.7rem', fontWeight: 700, display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            {renderAvatar(creator)} rugged {userBet} in {renderRoomInfo(logItem.room)}
+            {renderAvatar(creator)} rugged {winnings} in {renderRoomInfo(logItem.room)}
           </Box>
         );
 
@@ -235,7 +236,6 @@ function HistoryTable({
 
   // Socket event handler
   const handleNewLog = (data) => {
-    console.log("NEW_LOG", data)
     const newLogArray = data?.newLog;
     if (!newLogArray || !Array.isArray(newLogArray)) return;
 

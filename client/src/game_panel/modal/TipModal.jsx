@@ -20,6 +20,7 @@ export default function TipModal({
   solPrice,
   handleSendTip,
 }) {
+  
   return (
     <Modal open={isTipModalOpen} onClose={handleCloseTipModal}>
       <ThemeProvider theme={theme}>

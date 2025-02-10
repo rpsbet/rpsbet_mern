@@ -48,8 +48,10 @@ import {
 } from '@mui/icons-material';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faGasPump } from '@fortawesome/free-solid-svg-icons';
-
+import {
+  faBolt,
+  faGasPump
+} from '@fortawesome/free-solid-svg-icons';
 import { convertToCurrency } from '../../util/conversion';
 
 // -------------------- STYLES (MUI) --------------------
@@ -83,7 +85,8 @@ function DepositModal(props) {
     balance,          // User's SOL balance
     account,          // { publicKey: ... }
     setGasfee,        // Redux action to fetch and store gas fee
-    addNewTransaction // Redux action to record new transaction
+    addNewTransaction,
+    connectedAccount
   } = props;
 
   // -------------------- Local State --------------------
@@ -207,7 +210,7 @@ function DepositModal(props) {
   };
 
   // -------------------- Render --------------------
-  const isBlurred = !user_id; // If user not logged in, blur everything
+  const isConnected = !user_id || !connectedAccount; // If user not logged in, blur everything
 
   return (
     <ThemeProvider theme={getCustomTheme(isDarkMode ? 'dark' : 'light')}>
@@ -249,9 +252,9 @@ function DepositModal(props) {
           </Box>
 
           {/* If user not logged in */}
-          {isBlurred && (
+          {isConnected && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'yellow' }}>
-              LOGIN FIRST <Warning />
+              CONNECT WALLET FIRST <Warning />
             </Box>
           )}
 
@@ -261,17 +264,18 @@ function DepositModal(props) {
               background: 'rgba(170, 170, 170, 0.06)',
               p: 2,
               borderRadius: 1,
-              opacity: isBlurred ? 0.5 : 1
             }}
           >
             <Summary />
 
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center', p: 2 }}>
+            <Box sx={{  p: 2 }}>
               <Divider>
                 <Typography>ENTER DEPOSIT AMOUNT (SOL)</Typography>
               </Divider>
 
               {/* Preset Buttons */}
+              <Box sx={{ display: 'flex', justifyContent: 'center', my: 2 }}>
+
               <ButtonGroup variant="outlined" color="error" sx={{ mb: 1 }}>
                 {presetSolAmounts.map((preset) => (
                   <Button key={preset} onClick={() => handlePresetClick(preset)}>
@@ -279,6 +283,7 @@ function DepositModal(props) {
                   </Button>
                 ))}
               </ButtonGroup>
+              </Box>
 
               {/* Amount TextField */}
               <TextField
@@ -338,7 +343,7 @@ function DepositModal(props) {
             {/* Disclaimer */}
             <Box sx={{ textAlign: 'center', mt: 2 }}>
               <Typography color="warning" sx={{ fontSize: '0.8em', mb: 2, fontWeight: 600 }}>
-                RECEIVE WITHIN SECONDS 🚀
+                RECEIVE WITHIN SECONDS&nbsp;<FontAwesomeIcon icon={faBolt} />
               </Typography>
             </Box>
           </Box>
@@ -350,7 +355,7 @@ function DepositModal(props) {
               color="error"
               fullWidth
               onClick={sendSOL}
-              disabled={isBlurred || isLoading}
+              disabled={isConnected || isLoading}
             >
               {isLoading ? (
                 // Show MUI spinner in the button
@@ -371,7 +376,8 @@ const mapStateToProps = (state) => ({
   isDarkMode: state.auth.isDarkMode,
   gasfee: state.auth.gasfee,    // Numeric gas fee in SOL
   solPrice: state.logic.solPrice,
-  user_id: state.auth.user._id
+  user_id: state.auth.user._id,
+  connectedAccount: state.auth.connectedAccount
 });
 
 const mapDispatchToProps = {

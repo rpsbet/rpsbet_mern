@@ -86,20 +86,8 @@
 	color: #b9bbbe;
 }
 
-.dark_mode .chat-player .avatar {
-	background-color: rgb(45, 45, 45);
-}
-
 .dark_mode .cell-likes {
 	text-align: center;
-}
-
-.dark_mode .mobile-only .active,
-.dark_mode div.table.my-chat-table .table-row>div.message-panel,
-.dark_mode .transaction-panel button,
-.dark_mode .align-center img,
-.dark_mode .AvatarDropzone img {
-	filter: unset;
 }
 
 .dark_mode .transaction-panel button:hover {
@@ -143,7 +131,6 @@
 	color: #696969;
 }
 
-.dark_mode div.table .table-row .table-cell button:last-child,
 .dark_mode .game_header .main_header .header_action_panel button#btn-login,
 .dark_mode #balance button {
 	background: linear-gradient(0deg, #fa2222, #ff0000) border-box;

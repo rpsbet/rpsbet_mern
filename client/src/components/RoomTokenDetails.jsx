@@ -11,7 +11,7 @@ import {
 } from '@mui/material';
 import LinkIcon from '@mui/icons-material/Link';
 
-const RoomTokenDetails = ({ roomInfo, solPrice, isDarkMode, handleOpenPlayerModal, progressPercentage }) => {
+const RoomTokenDetails = ({ roomInfo, hosts, solPrice, isDarkMode, handleOpenPlayerModal, progressPercentage }) => {
 
     function formatAddress(address) {
         return address.slice(0, 4) + '...' + address.slice(-4);
@@ -84,7 +84,7 @@ const RoomTokenDetails = ({ roomInfo, solPrice, isDarkMode, handleOpenPlayerModa
 
             <Box className="bonding-curve" style={{ marginBottom: "30px" }}>
                 <h4 className='roll-tag label' style={{ display: 'block', fontWeight: 'bold', marginBottom: '8px' }}>
-                    HARD CAP (BONDING-CURVE): {progressPercentage}%
+                    HARD CAP: {progressPercentage}%
                 </h4>
                 <Box
                     className='payout-bar'
@@ -106,10 +106,10 @@ const RoomTokenDetails = ({ roomInfo, solPrice, isDarkMode, handleOpenPlayerModa
                     ></Box>
                 </Box>
             </Box>
-            {roomInfo.hosts && roomInfo.hosts.length > 0 && (
-                <Box style={{ marginBottom: "30px" }}>
+            {hosts && hosts.length > 0 && (
+                <Box style={{ marginBottom: '30px' }}>
                     <h4 className="roll-tag label">Holder Distribution</h4>
-                    {roomInfo.hosts
+                    {hosts
                         .sort((a, b) => b.share - a.share) // Sort hosts by share in descending order
                         .slice(0, 10) // Take the top 10 hosts
                         .map((host, index) => (
@@ -140,6 +140,7 @@ const RoomTokenDetails = ({ roomInfo, solPrice, isDarkMode, handleOpenPlayerModa
                                     <Avatar
                                         className="avatar"
                                         src={host.avatar}
+                                        user_id={host.host}
                                         rank={host.rank}
                                         username={host.username}
                                         accessory={host.accessory}

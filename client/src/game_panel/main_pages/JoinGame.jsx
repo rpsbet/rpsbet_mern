@@ -22,7 +22,6 @@ import CoHostModal from '../modal/CoHostModal';
 import AiPanel from '../../components/AiPanel';
 import RoomTokenDetails from '../../components/RoomTokenDetails';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
-import { getCustomerStatisticsData } from '../../redux/Customer/customer.action';
 import { getRank } from '../../util/getRank';
 import { convertToCurrency } from '../../util/conversion';
 
@@ -40,8 +39,9 @@ import {
   detachPlayerFromRoom,
   getAttachedRooms,
   addNewTransaction,
-  coHost,
+  pumpGame,
   getRoomList,
+  getTransactionCandles
 } from '../../redux/Logic/logic.actions';
 import { successMsgBar, errorMsgBar } from '../../redux/Notification/notification.actions';
 import {
@@ -112,13 +112,14 @@ function JoinGame(props) {
     updateTutorialCompleted,
     getRoomInfo: getRoomInfoAction,
     getStrategies,
+    getTransactionCandles,
     bet3: bet3Action,
     updateAttachment,
     detachPlayerFromRoom,
     updateUserStrategy,
     updateUserPrompt,
     addNewTransaction,
-    coHost: coHostAction,
+    pumpGame: pumpGameAction,
     getRoomList: getRoomListAction,
     getRoomStatisticsData: getRoomStatisticsDataAction,
     getAttachedRooms,
@@ -126,7 +127,6 @@ function JoinGame(props) {
     getRpsBetItems,
     getQsBetItems,
     openGamePasswordModal,
-    getCustomerStatisticsData: getCustomerStatisticsDataAction,
 
     match,
   } = props;
@@ -140,9 +140,12 @@ function JoinGame(props) {
   const [betting, setBetting] = useState(false);
   const [selectedCreator, setSelectedCreator] = useState('');
   const [selectedMobileTab, setSelectedMobileTab] = useState('live_games');
+  const [hosts, setHosts] = useState(roomInfo.hosts ?? []);
 
   const [localRoomInfo, setLocalRoomInfo] = useState(roomInfo);
   const [bankroll, setBankroll] = useState(roomInfo.bankroll);
+  const [battles, setBattles] = useState(roomInfo.battles);
+
   const [selected_rps, setSelected_rps] = useState('');
   const [selected_qs_position, setSelected_qs_position] = useState(0);
   const [index, setIndex] = useState(0); // used in markov logic
@@ -156,7 +159,7 @@ function JoinGame(props) {
   const [betResult, setBetResult] = useState(null);
   const [result, setResult] = useState(0);
   const [productName, setProductName] = useState('');
-  const [coHostAmount, setCoHostAmount] = useState(0.1);
+  const [coHostAmount, setCoHostAmount] = useState(0.01);
   const [intervalId, setIntervalId] = useState(null);
   const [isMax, setIsMax] = useState(false);
   const [bet_amount, setBetAmount] = useState(0.0005);
@@ -164,7 +167,6 @@ function JoinGame(props) {
   const [componentHistory, setComponentHistory] = useState(
     updateFromNow(propsHistory),
   );
-  const [showAnimation, setShowAnimation] = useState(false);
   const [loading, setLoading] = useState(propsLoading);
 
   // Audio references
@@ -196,7 +198,8 @@ function JoinGame(props) {
       try {
         const { id } = match.params;
 
-        // 1) load room data
+        // ------------------ FETCH CANDL
+        await getTransactionCandles({ roomId: id, timeFrame: '1m' });
         await initializeRoomData();
 
       } catch (error) {
@@ -270,6 +273,8 @@ function JoinGame(props) {
     if (localRoomInfo._id !== roomInfo._id) {
       setLocalRoomInfo(roomInfo);
       setBankroll(roomInfo.user_bet);
+      setBattles(roomInfo.battles);
+      setHosts(roomInfo.hosts);
     }
   }, [propsHistory, roomInfo]);
 
@@ -462,7 +467,6 @@ function JoinGame(props) {
     },
     [roomInfo],
   );
-
   // Example Refactored joinGame2
   const joinGame2 = useCallback(
     async (randomItem, bet_amount) => {
@@ -764,7 +768,7 @@ function JoinGame(props) {
     }
 
     try {
-      const result = await coHostAction(coHostAmount, roomInfo._id, connectedAccount);
+      const result = await pumpGameAction(coHostAmount, roomInfo._id, connectedAccount);
       if (result.success) {
         addNewTransaction(result.newTransaction);
         await getRoomListAction({
@@ -781,7 +785,7 @@ function JoinGame(props) {
     user_balance,
     isDarkMode,
     roomInfo,
-    coHostAction,
+    pumpGameAction,
     addNewTransaction,
     getRoomListAction,
   ]);
@@ -791,13 +795,19 @@ function JoinGame(props) {
     if ('bankroll' in newState) {
       setBankroll(newState.bankroll);
     }
+    if ('hosts' in newState && Array.isArray(newState.hosts)) {
+      console.log("newState.hosts", newState.hosts)
+      setHosts(newState.hosts);
+    }
     if ('result' in newState) {
       setResult(newState.result);
     }
     if ('bet_amount' in newState) {
       setBetAmount(newState.bet_amount);
     }
-    // Handle other fields similarly...
+    if ('battles' in newState) {
+      setBattles((prevBattles) => prevBattles + newState.battles);
+    }
   }, []);
 
   const handleHalfXButtonClick = useCallback(() => {
@@ -890,6 +900,7 @@ function JoinGame(props) {
           creator_avatar={creator_avatar}
           username={username}
           rank={roomRank}
+          battles={battles}
           accessory={creator_accessory}
           rps_game_type={roomInfo.rps_game_type}
           qs_game_type={roomInfo.qs_game_type}
@@ -1027,6 +1038,7 @@ function JoinGame(props) {
               isDarkMode={isDarkMode}
               coHostAmount={coHostAmount}
               selectedRow={roomInfo}
+              hosts={hosts}
               connectedAccount={connectedAccount}
               balance={user_balance}
               solPrice={solPrice}
@@ -1041,6 +1053,7 @@ function JoinGame(props) {
 
             <RoomTokenDetails
               solPrice={solPrice}
+              hosts={hosts}
               progressPercentage={progressPercentage}
               handleOpenPlayerModal={handleOpenPlayerModal}
               roomInfo={roomInfo}
@@ -1130,7 +1143,7 @@ const mapDispatchToProps = {
   updateUserStrategy,
   updateUserPrompt,
   addNewTransaction,
-  coHost,
+  pumpGame,
   getRoomList,
   getRoomStatisticsData,
   getAttachedRooms,
@@ -1139,7 +1152,7 @@ const mapDispatchToProps = {
   getRpsBetItems,
   getQsBetItems,
   openGamePasswordModal,
-  getCustomerStatisticsData,
+  getTransactionCandles,
   updateTutorialCompleted,
 };
 
