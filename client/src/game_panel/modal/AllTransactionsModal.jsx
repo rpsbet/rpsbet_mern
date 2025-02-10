@@ -19,7 +19,7 @@ import {
   CircularProgress,
   Skeleton,
   Tooltip,
-  Link
+  Link,
 } from '@mui/material';
 
 import {
@@ -30,7 +30,7 @@ import {
   SwapHoriz as SwapHorizIcon,
   CardGiftcard as CardGiftcardIcon,
   Sort as SortIcon,
-  Search as SearchIcon
+  Search as SearchIcon,
 } from '@mui/icons-material';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -54,22 +54,17 @@ function AllTransactionsModal({
   const dispatch = useDispatch();
 
   // State from Redux
-  const {
-    all_transactions,
-    page,
-    hasMore,
-    transactions_loading,
-    totalCount
-  } = useSelector(state => state.auth);
+  const { all_transactions, page, hasMore, transactions_loading, totalCount } =
+    useSelector((state) => state.auth);
 
   const [filterAnchorEl, setFilterAnchorEl] = useState(null);
   const [sortAnchorEl, setSortAnchorEl] = useState(null);
   const [searchAnchorEl, setSearchAnchorEl] = useState(null);
 
   // The actual filter, sort, and search values we’re using
-  const [filterType, setFilterType] = useState(null);   // e.g. 'showTrades', 'showTips', etc.
-  const [sortType, setSortType] = useState('date');     // e.g. 'date', 'amount'
-  const [searchQuery, setSearchQuery] = useState('');   // e.g. a string to search in description
+  const [filterType, setFilterType] = useState(null); // e.g. 'showTrades', 'showTips', etc.
+  const [sortType, setSortType] = useState('date'); // e.g. 'date', 'amount'
+  const [searchQuery, setSearchQuery] = useState(''); // e.g. a string to search in description
 
   const [copiedRowId, setCopiedRowId] = useState(null);
 
@@ -150,7 +145,6 @@ function AllTransactionsModal({
     }
   };
 
-
   /**
    * Copy transaction ID to clipboard
    */
@@ -197,6 +191,7 @@ function AllTransactionsModal({
     justifyContent: 'space-between',
     gap: 2,
     mb: 2,
+    flexDirection: { xs: 'column', sm: 'row' },
   };
 
   const tableContainerStyle = {
@@ -233,7 +228,7 @@ function AllTransactionsModal({
 
           {/* BODY */}
           <Box>
-            {/** 
+            {/**
              * 1) If we're still loading the very first batch => show Skeleton
              *    - i.e. all_transactions is null (hasn't been set yet) and transactions_loading is true
              */}
@@ -259,9 +254,9 @@ function AllTransactionsModal({
                 />
               </Box>
             ) : (
-              /** 
-               * 2) If all_transactions is not null (or we have fallback transactions) 
-               *    then show the table and possible spinner if loading more 
+              /**
+               * 2) If all_transactions is not null (or we have fallback transactions)
+               *    then show the table and possible spinner if loading more
                */
               <Box>
                 <Box
@@ -330,7 +325,11 @@ function AllTransactionsModal({
                     </Menu>
 
                     {/* Sort Button */}
-                    <Button variant="outlined" color="error" onClick={handleSortClick}>
+                    <Button
+                      variant="outlined"
+                      color="error"
+                      onClick={handleSortClick}
+                    >
                       Sort By <SortIcon sx={{ ml: 1 }} />
                     </Button>
                     <Menu
@@ -353,7 +352,11 @@ function AllTransactionsModal({
                     </Menu>
 
                     {/* Search Button */}
-                    <Button variant="outlined" color="error" onClick={handleSearchClick}>
+                    <Button
+                      variant="outlined"
+                      color="error"
+                      onClick={handleSearchClick}
+                    >
                       SEARCH <SearchIcon sx={{ ml: 1 }} />
                     </Button>
                     <Menu
@@ -400,9 +403,9 @@ function AllTransactionsModal({
                                 sx={{
                                   color:
                                     transaction.status === 'waiting' ||
-                                      transaction.status === 'pending' ||
-                                      transaction.status === 'processing' ||
-                                      transaction.status === 'in_process'
+                                    transaction.status === 'pending' ||
+                                    transaction.status === 'processing' ||
+                                    transaction.status === 'in_process'
                                       ? '#888'
                                       : transaction.amount > 0
                                         ? '#00ff3a' // greenish
@@ -412,19 +415,25 @@ function AllTransactionsModal({
                                 {transaction.amount > 0 ? (
                                   <>
                                     +{' '}
-                                    {convertToCurrency(transaction.amount, solPrice)}
+                                    {convertToCurrency(
+                                      transaction.amount,
+                                      solPrice,
+                                    )}
                                   </>
                                 ) : (
                                   <>
                                     -{' '}
                                     {convertToCurrency(
                                       Math.abs(transaction.amount),
-                                      solPrice
+                                      solPrice,
                                     )}
                                   </>
                                 )}
                               </TableCell>
-                              <TableCell> {moment(transaction.created_at).fromNow()}</TableCell>
+                              <TableCell>
+                                {' '}
+                                {moment(transaction.created_at).fromNow()}
+                              </TableCell>
                               <TableCell>{transaction.description}</TableCell>
                               <TableCell>{transaction.status}</TableCell>
                               <TableCell>
@@ -455,7 +464,9 @@ function AllTransactionsModal({
                                   placement="top"
                                 >
                                   <IconButton
-                                    onClick={() => copyToClipboard(transaction._id)}
+                                    onClick={() =>
+                                      copyToClipboard(transaction._id)
+                                    }
                                   >
                                     <FileCopyIcon />
                                   </IconButton>
@@ -465,7 +476,7 @@ function AllTransactionsModal({
                           ))
                         )}
 
-                        {/** 
+                        {/**
                          * 3) If we are loading more (subsequent fetch), show spinner row
                          *    - i.e., we already have some data, but transactions_loading is true
                          */}

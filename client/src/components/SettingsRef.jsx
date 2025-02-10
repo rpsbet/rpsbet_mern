@@ -9,7 +9,7 @@ import {
   TextField,
   useMediaQuery,
   Typography,
-  Box
+  Box,
 } from '@mui/material';
 import LockIcon from '@mui/icons-material/Lock';
 import { green, yellow } from '@mui/material/colors';
@@ -39,7 +39,6 @@ const SettingsRef = ({
   updateUserStrategy,
   updateUserPrompt,
 }) => {
-
   const dispatch = useDispatch();
 
   const [descriptionOpen, setDescriptionOpen] = useState(false);
@@ -51,10 +50,11 @@ const SettingsRef = ({
   const timeoutRef = useRef(null);
 
   const isMobile = useMediaQuery('(max-width: 768px)');
-  const isGPT3Selected = selectedStrategy === 'GPT3' || ai_mode === 'GPT3' && !selectedStrategy;
+  const isGPT3Selected =
+    selectedStrategy === 'GPT3' || (ai_mode === 'GPT3' && !selectedStrategy);
 
   const filteredStrategies = strategies.filter(
-    (strategy) => strategy.name === (selectedStrategy || ai_mode)
+    (strategy) => strategy.name === (selectedStrategy || ai_mode),
   );
   const sortedStrategies = strategies
     .slice() // clone array so we don't mutate original
@@ -82,11 +82,11 @@ const SettingsRef = ({
 
     debouncedUpdateRef.current = debounce(async (newPrompt) => {
       setSaving(true);
-      if (typeof (updateUserPrompt) === 'function') {
+      if (typeof updateUserPrompt === 'function') {
         await updateUserPrompt(user_id, newPrompt);
       } else {
         onChangeState({
-          prompt: newPrompt
+          prompt: newPrompt,
         });
       }
 
@@ -143,11 +143,13 @@ const SettingsRef = ({
           display: 'flex',
           alignItems: 'center',
           mb: 1,
-          fontWeight: 600
+          fontWeight: 600,
         }}
       >
         AI Play Models
-        <AutoAwesomeIcon sx={{ ml: 1, fontSize: '1.25rem', color: 'error.main' }} />
+        <AutoAwesomeIcon
+          sx={{ ml: 1, fontSize: '1.25rem', color: 'error.main' }}
+        />
       </Typography>
 
       {filteredStrategies.map((strategy, index) => (
@@ -159,7 +161,7 @@ const SettingsRef = ({
             sx={{
               mb: 1,
               color: 'text.secondary',
-              fontWeight: 500
+              fontWeight: 500,
             }}
           >
             {selectedStrategy || ai_mode}
@@ -179,7 +181,7 @@ const SettingsRef = ({
                 disableElevation
                 sx={{
                   textTransform: 'none',
-                  fontSize: '0.9rem'
+                  fontSize: '0.9rem',
                 }}
                 onClick={() => setDescriptionOpen(!descriptionOpen)}
                 startIcon={
@@ -210,7 +212,7 @@ const SettingsRef = ({
             sx={{
               height: '1px',
               backgroundColor: (theme) => theme.palette.divider,
-              mb: 1
+              mb: 1,
             }}
           />
           {/* Strengths */}
@@ -227,7 +229,7 @@ const SettingsRef = ({
                 disableElevation
                 sx={{
                   textTransform: 'none',
-                  fontSize: '0.9rem'
+                  fontSize: '0.9rem',
                 }}
                 onClick={() => setStrengthsOpen(!strengthsOpen)}
                 startIcon={
@@ -256,10 +258,9 @@ const SettingsRef = ({
             sx={{
               height: '1px',
               backgroundColor: (theme) => theme.palette.divider,
-              my: 1
+              my: 1,
             }}
           />
-
         </Box>
       ))}
 
@@ -285,13 +286,16 @@ const SettingsRef = ({
                 }
                 arrow
               >
-                <span>
+                <Box>
                   <Button
                     variant={isActive ? 'contained' : 'outlined'}
                     color={isActive ? 'error' : 'inherit'}
                     disableElevation
                     onClick={() => {
-                      if (typeof updateUserStrategy === 'function' && isUnlocked) {
+                      if (
+                        typeof updateUserStrategy === 'function' &&
+                        isUnlocked
+                      ) {
                         updateUserStrategy(user_id, strategy.name);
                       }
                       if (isUnlocked) {
@@ -303,10 +307,11 @@ const SettingsRef = ({
                       textTransform: 'none',
                       fontWeight: 500,
                       borderRadius: 2,
+                      width: '100%',
                       '&.Mui-disabled': {
                         opacity: 0.5,
                         color: 'text.disabled',
-                      }
+                      },
                     }}
                   >
                     {!isUnlocked && (
@@ -327,7 +332,7 @@ const SettingsRef = ({
                       {decodeHtmlEntity(strategy.icon)}
                     </Box>
                   </Button>
-                </span>
+                </Box>
               </Tooltip>
             );
           })}
@@ -366,7 +371,6 @@ const SettingsRef = ({
             onFocus={() => dispatch(setFocused(true))}
             onBlur={() => dispatch(setFocused(false))}
           />
-
         </Paper>
       )}
     </Box>

@@ -19,7 +19,7 @@ import {
   FormControlLabel,
   TextField,
   InputAdornment,
-  Chip
+  Chip,
 } from '@mui/material';
 import Joyride from 'react-joyride';
 import Lottie from 'react-lottie';
@@ -42,7 +42,7 @@ import {
   getRoomList,
   endGame,
   pumpGame,
-  updateUserPrompt
+  updateUserPrompt,
 } from '../../redux/Logic/logic.actions';
 import { errorMsgBar } from '../../redux/Notification/notification.actions';
 import { updateTutorialCompleted } from '../../redux/Auth/user.actions';
@@ -79,7 +79,7 @@ function MyGamesTable(props) {
     editPayout,
     updateUserPrompt,
     updateRoomStrategy,
-    loading
+    loading,
   } = props;
 
   // ---------- State ----------
@@ -91,7 +91,7 @@ function MyGamesTable(props) {
   const [isLoading, setIsLoading] = useState(true);
 
   const [runTutorial, setRunTutorial] = useState(
-    !(user?.completedTutorials?.includes(3))
+    !user?.completedTutorials?.includes(3),
   );
   const currentTutorial = 3;
 
@@ -127,22 +127,25 @@ function MyGamesTable(props) {
     };
   }, []);
 
-  const handleBankrollUpdate = useCallback((data) => {
-    setMyGames((prevMyGames) =>
-      prevMyGames.map((game) => {
-        if (game._id === data.room) {
-          console.log("data", data.hosts)
-          return {
-            ...game,
-            user_bet: data.bankroll,
-            battles: (game.battles || 0) + 1,
-            coHost: data.hosts ? false : game.coHost,
-          };
-        }
-        return game;
-      })
-    );
-  }, [setMyGames]);
+  const handleBankrollUpdate = useCallback(
+    (data) => {
+      setMyGames((prevMyGames) =>
+        prevMyGames.map((game) => {
+          if (game._id === data.room) {
+            console.log('data', data.hosts);
+            return {
+              ...game,
+              user_bet: data.bankroll,
+              battles: (game.battles || 0) + 1,
+              coHost: data.hosts ? false : game.coHost,
+            };
+          }
+          return game;
+        }),
+      );
+    },
+    [setMyGames],
+  );
 
   useEffect(() => {
     if (!socket) return;
@@ -157,7 +160,6 @@ function MyGamesTable(props) {
       });
     };
   }, [socket, myGames, handleBankrollUpdate]);
-
 
   useEffect(() => {
     fetchData();
@@ -178,14 +180,21 @@ function MyGamesTable(props) {
       {
         game_type: selectedGameType,
         status: selectedFilter === 'open' ? 'open' : 'finished',
-        sort: selectedSort
+        sort: selectedSort,
       },
       (updated) => {
         setMyGames(updated);
         setIsLoading(false);
-      }
+      },
     );
-  }, [getMyGames, getStrategies, propsMyGames, selectedGameType, selectedFilter, selectedSort]);
+  }, [
+    getMyGames,
+    getStrategies,
+    propsMyGames,
+    selectedGameType,
+    selectedFilter,
+    selectedSort,
+  ]);
 
   // ---------- CoHost ----------
   const handleCoHost = (row) => {
@@ -218,7 +227,15 @@ function MyGamesTable(props) {
     } catch (e) {
       dispatch(errorMsgBar('ROOM TOO BUSY, TRY AGAIN LATER'));
     }
-  }, [coHostAmount, balance, isDarkMode, pumpGame, selectedRow, addNewTransaction, getRoomList]);
+  }, [
+    coHostAmount,
+    balance,
+    isDarkMode,
+    pumpGame,
+    selectedRow,
+    addNewTransaction,
+    getRoomList,
+  ]);
 
   // ---------- Payout ----------
   const handlePayout = (row) => {
@@ -246,7 +263,9 @@ function MyGamesTable(props) {
   };
   const handleSendPayout = useCallback(async () => {
     if (payoutAmount <= 0) {
-      dispatch(errorMsgBar('R U FURR-REAL? HARD CAP AMOUNT MUST BE MORE THAN 0!'));
+      dispatch(
+        errorMsgBar('R U FURR-REAL? HARD CAP AMOUNT MUST BE MORE THAN 0!'),
+      );
       return;
     }
     if (!selectedRow) return;
@@ -274,23 +293,22 @@ function MyGamesTable(props) {
       // Toggle local pressState to show "closing..."
       setPressState((prev) => ({
         ...prev,
-        [room_id]: { ...prev[room_id], closing: true }
+        [room_id]: { ...prev[room_id], closing: true },
       }));
-  
+
       try {
         await endGame(room_id);
         setMyGames((prevGames) => prevGames.filter((g) => g._id !== room_id));
-  
       } catch (error) {
         console.error('Error ending game:', error);
       } finally {
         setPressState((prev) => ({
           ...prev,
-          [room_id]: { ...prev[room_id], closing: false }
+          [room_id]: { ...prev[room_id], closing: false },
         }));
       }
     },
-    [endGame, setMyGames]
+    [endGame, setMyGames],
   );
 
   const handleButtonClick = useCallback(
@@ -309,8 +327,8 @@ function MyGamesTable(props) {
             [room_id]: {
               ...prev[room_id],
               holding: false,
-              timeLeft: 0
-            }
+              timeLeft: 0,
+            },
           }));
         } else {
           setPressState((prev) => ({
@@ -319,8 +337,8 @@ function MyGamesTable(props) {
               ...prev[room_id],
               holding: true,
               timeLeft: countdown,
-              timer
-            }
+              timer,
+            },
           }));
         }
       }, updateInterval);
@@ -331,11 +349,11 @@ function MyGamesTable(props) {
           ...prev[room_id],
           holding: true,
           timeLeft: startTime,
-          timer
-        }
+          timer,
+        },
       }));
     },
-    [endRoom]
+    [endRoom],
   );
 
   const handleButtonRelease = useCallback((room_id) => {
@@ -344,7 +362,7 @@ function MyGamesTable(props) {
       if (current && current.timer) clearInterval(current.timer);
       return {
         ...prev,
-        [room_id]: { ...current, holding: false }
+        [room_id]: { ...current, holding: false },
       };
     });
   }, []);
@@ -358,7 +376,7 @@ function MyGamesTable(props) {
         setRunTutorial(false);
       }
     },
-    [currentTutorial, updateTutorialCompleted]
+    [currentTutorial, updateTutorialCompleted],
   );
 
   // ---------- SETTINGS ----------
@@ -384,12 +402,12 @@ function MyGamesTable(props) {
     loop: !isLowGraphics,
     autoplay: !isLowGraphics,
     animationData,
-    rendererSettings: { preserveAspectRatio: 'xMidYMid slice' }
+    rendererSettings: { preserveAspectRatio: 'xMidYMid slice' },
   };
   const pressHoldOptions = {
     loop: !isLowGraphics,
     autoplay: !isLowGraphics,
-    animationData: pressHold
+    animationData: pressHold,
   };
 
   // ---------- Render ----------
@@ -408,7 +426,7 @@ function MyGamesTable(props) {
             options: {
               zIndex: 1500,
               backgroundColor: isDarkMode
-                ? 'rgba(33, 33, 33, 0.95)'   // Dark gray background for dark mode
+                ? 'rgba(33, 33, 33, 0.95)' // Dark gray background for dark mode
                 : 'rgba(255, 255, 255, 0.95)', // White background for light mode
               primaryColor: isDarkMode ? '#ff0000' : '#6200ea', // Vibrant green for dark, deep purple for light
               arrowColor: isDarkMode
@@ -461,7 +479,7 @@ function MyGamesTable(props) {
       </Box>
 
       {/* Loading Skeleton if either local isLoading or Redux's loading */}
-      {(isLoading || loading) ? (
+      {isLoading || loading ? (
         <Box sx={{ p: 2 }}>
           {[...Array(5)].map((_, i) => (
             <Box
@@ -470,7 +488,7 @@ function MyGamesTable(props) {
                 display: 'flex',
                 gap: 2,
                 alignItems: 'center',
-                mb: 1
+                mb: 1,
               }}
             >
               <Skeleton variant="rounded" width={40} height={40} />
@@ -483,8 +501,11 @@ function MyGamesTable(props) {
       ) : (
         <Box className="table my-open-game-table" sx={{ p: 2 }}>
           {/* No games => show message */}
-          {(!myGames || myGames.length === 0) ? (
-            <Box className="dont-have-game-msg" sx={{ textAlign: 'center', mt: 2 }}>
+          {!myGames || myGames.length === 0 ? (
+            <Box
+              className="dont-have-game-msg"
+              sx={{ textAlign: 'center', mt: 2 }}
+            >
               <Lottie options={defaultOptions} width={50} />
               <Typography variant="body1" sx={{ mt: 1 }}>
                 You Have No Games
@@ -496,28 +517,32 @@ function MyGamesTable(props) {
               <Box
                 className="table-header"
                 sx={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr 1fr 2fr 1fr 2fr 2fr',
-                  gap: '10px',
+                  width: '100%',
                   alignItems: 'center',
                   p: '10px 20px',
                   fontWeight: 'bold',
-                  textAlign: 'center'
+                  textAlign: 'center',
                 }}
               >
-                <Box className="table-cell mobile-only" />
-                <Box className="table-cell room-id">ROOM</Box>
-                <Box className="table-cell" />
-                <Box className="table-cell winnings">LIQUIDITY / SHARE</Box>
-                <Box className="table-cell payout">HARD CAP</Box>
-                <Box className="table-cell bet-info">
+                <Box className="table-cell room-id" sx={{ width: '17%' }}>
+                  ROOM
+                </Box>
+                <Box className="table-cell winnings" sx={{ width: '17%' }}>
+                  LIQUIDITY / SHARE
+                </Box>
+                <Box className="table-cell payout" sx={{ width: '17%' }}>
+                  HARD CAP
+                </Box>
+                <Box className="table-cell bet-info" sx={{ width: '17%' }}>
                   PROGRESS&nbsp;
                   <Tooltip title="TO REACH RAYDIUM">
                     <Info sx={{ width: 18, cursor: 'pointer' }} />
                   </Tooltip>
                 </Box>
-                <Box className="table-cell winnings">BATTLES</Box>
-                {/* <Box className="table-cell action desktop-only">EDIT</Box> */}
+                <Box className="table-cell winnings" sx={{ width: '17%' }}>
+                  BATTLES
+                </Box>
+                <Box className="table-cell" sx={{ width: '15%' }} />
               </Box>
 
               {/* Games Rows */}
@@ -539,13 +564,15 @@ function MyGamesTable(props) {
                     sx={{
                       animationDelay: `${idx * 0.1}s`,
                       cursor: 'pointer',
-                      mb: 1
+                      mb: 1,
+                      display: 'flex',
+                      flexDirection: 'row',
                     }}
                     onClick={() => (window.location.href = `/join/${row._id}`)}
                   >
-                    <Box>
+                    <Box sx={{ width: '100%' }}>
                       {/* Room ID */}
-                      <Box className="table-cell room-id">
+                      <Box className="table-cell room-id" sx={{ width: '17%' }}>
                         <img
                           src={`/img/gametype/icons/${row.game_type.short_name}.svg`}
                           // src={row.image}
@@ -561,14 +588,21 @@ function MyGamesTable(props) {
                         {/* {row.game_type.short_name + '-' + row.index} */}
                         {row.name + ' (' + row.ticker + ')'}
                         {row.is_private && (
-                          <img src="/img/icon-lock.png" alt="" className="lock-icon" />
+                          <img
+                            src="/img/icon-lock.png"
+                            alt=""
+                            className="lock-icon"
+                          />
                         )}
                       </Box>
                       {/* LQY / SHARE */}
-                      <Box className="table-cell bet-info">
+                      <Box
+                        className="table-cell bet-info"
+                        sx={{ justifyContent: 'center', width: '17%' }}
+                      >
                         <Chip
                           label={
-                            <Typography variant="body2" component="span" >
+                            <Typography variant="body2" component="span">
                               {convertToCurrency(row.user_bet, solPrice)}
                               <br className="mobile-only" />
                               <Box component="span" sx={{ fontSize: '10px' }}>
@@ -584,11 +618,13 @@ function MyGamesTable(props) {
                         />
                       </Box>
                       {/* Hard Cap (endgame_amount) */}
-                      <Box className="table-cell endgame">
+                      <Box className="table-cell endgame" sx={{ width: '17%' }}>
                         <Chip
-                          label={!row.endgame_type
-                            ? 'M'
-                            : convertToCurrency(row.endgame_amount, solPrice)}
+                          label={
+                            !row.endgame_type
+                              ? 'M'
+                              : convertToCurrency(row.endgame_amount, solPrice)
+                          }
                           color="error"
                           className="end-amount"
                           size="small"
@@ -605,7 +641,7 @@ function MyGamesTable(props) {
                               borderRadius: '30px',
                               display: 'inline-flex',
                               verticalAlign: 'middle',
-                              mb: '4px'
+                              mb: '4px',
                             }}
                             onClick={(e) => {
                               e.preventDefault();
@@ -618,9 +654,12 @@ function MyGamesTable(props) {
                         )}
                       </Box>
                       {/* Net Profit Chip */}
-                      <Box className="table-cell winnings">
+                      <Box
+                        className="table-cell winnings"
+                        sx={{ width: '17%' }}
+                      >
                         <Chip
-                          label={`${(bondingProgress).toFixed(2)}%`}
+                          label={`${bondingProgress.toFixed(2)}%`}
                           color="success"
                           size="small"
                           variant="outlined"
@@ -630,20 +669,27 @@ function MyGamesTable(props) {
                       {/* Battles */}
                       <Box
                         className="table-cell bets"
-                        sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}
+                        sx={{
+                          display: 'flex',
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: '17%',
+                        }}
                       >
                         <Battle width="24px" />
                         &nbsp;
                         <span>{row.battles}</span>
                       </Box>
                       {/* AI Model */}
-                      <Box className="table-cell winnings desktop-only">
+                      <Box
+                        className="table-cell winnings desktop-only"
+                        sx={{ width: '15%' }}
+                      >
                         <Tooltip title="AI MODEL">
-                          <Typography
-                            id="ai_mode"
-                            sx={{ p: 4, fontSize: 1 }}
-                          >{row.selectedStrategy}
-                            <AutoAwesomeIcon sx={{ p: "6px" }} />
+                          <Typography id="ai_mode" sx={{ p: 4, fontSize: 1 }}>
+                            {row.selectedStrategy}
+                            <AutoAwesomeIcon sx={{ p: '6px' }} />
                           </Typography>
                         </Tooltip>
                       </Box>
@@ -682,9 +728,9 @@ function MyGamesTable(props) {
                                   <></>
                                 ) : (
                                   <Button
-                                  variant='contained'
-                                  color="error"
-                                  disableElevation
+                                    variant="contained"
+                                    color="error"
+                                    disableElevation
                                     onMouseDown={(e) => {
                                       e.preventDefault();
                                       e.stopPropagation();
@@ -715,18 +761,28 @@ function MyGamesTable(props) {
                                       e.stopPropagation();
                                       handleButtonRelease(row._id);
                                     }}
-                                    style={isHolding ? { filter: 'hue-rotate(-10deg)' } : {}}
+                                    style={
+                                      isHolding
+                                        ? { filter: 'hue-rotate(-10deg)' }
+                                        : {}
+                                    }
                                   >
                                     {isHolding ? (
                                       <>
                                         <Box
                                           component="span"
-                                          sx={{ position: 'absolute', zIndex: 2 }}
+                                          sx={{
+                                            position: 'absolute',
+                                            zIndex: 2,
+                                          }}
                                         >
                                           {(timeLeft / 100).toFixed(1)}
                                           <Box
                                             component="span"
-                                            sx={{ pt: '5px', fontSize: 'xx-small' }}
+                                            sx={{
+                                              pt: '5px',
+                                              fontSize: 'xx-small',
+                                            }}
                                           >
                                             s
                                           </Box>
@@ -746,7 +802,13 @@ function MyGamesTable(props) {
                     </Box>
 
                     {/* Mobile-only Actions */}
-                    <Box className="mobile-only" sx={{ display: 'table' }}>
+                    <Box
+                      className="mobile-only"
+                      sx={{
+                        display: 'flex',
+                        width: '15% !important',
+                      }}
+                    >
                       <Box
                         className="table-cell action"
                         sx={{
@@ -754,7 +816,7 @@ function MyGamesTable(props) {
                           float: 'right',
                           display: 'flex',
                           flexDirection: 'row',
-                          justifyContent: 'space-between'
+                          justifyContent: 'space-between',
                         }}
                       >
                         <Tooltip title="CHANGE AI MODEL">
@@ -766,7 +828,7 @@ function MyGamesTable(props) {
                               p: '1px',
                               display: 'flex',
                               justifyContent: 'center',
-                              alignItems: 'center'
+                              alignItems: 'center',
                             }}
                             onClick={(e) => handleSettingsIconClick(e, row)}
                           >
@@ -805,9 +867,9 @@ function MyGamesTable(props) {
                                   </Button>
                                 ) : (
                                   <Button
-                                         variant='contained'
-                                  color="error"
-                                  disableElevation
+                                    variant="contained"
+                                    color="error"
+                                    disableElevation
                                     onMouseDown={(e) => {
                                       e.preventDefault();
                                       e.stopPropagation();
@@ -838,18 +900,28 @@ function MyGamesTable(props) {
                                       e.stopPropagation();
                                       handleButtonRelease(row._id);
                                     }}
-                                    style={isHolding ? { filter: 'hue-rotate(-10deg)' } : {}}
+                                    style={
+                                      isHolding
+                                        ? { filter: 'hue-rotate(-10deg)' }
+                                        : {}
+                                    }
                                   >
                                     {isHolding ? (
                                       <>
                                         <Box
                                           component="span"
-                                          sx={{ position: 'absolute', zIndex: 2 }}
+                                          sx={{
+                                            position: 'absolute',
+                                            zIndex: 2,
+                                          }}
                                         >
                                           {(timeLeft / 100).toFixed(1)}
                                           <Box
                                             component="span"
-                                            sx={{ pt: '5px', fontSize: 'xx-small' }}
+                                            sx={{
+                                              pt: '5px',
+                                              fontSize: 'xx-small',
+                                            }}
                                           >
                                             s
                                           </Box>
@@ -883,7 +955,7 @@ function MyGamesTable(props) {
           selectedRow={selectedRow}
           balance={balance}
           user={user}
-          togglePopup={() => { }}
+          togglePopup={() => {}}
           handleClose={handleCloseCoHostModal}
           handleSendCoHost={handleSendCoHost}
           handleCoHostAmountChange={handleCoHostAmountChange}
@@ -894,8 +966,18 @@ function MyGamesTable(props) {
       </Dialog>
 
       {/* Payout Dialog */}
-      <Dialog open={isPayoutModalOpen} onClose={handleClosePayoutModal} fullWidth>
-        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <Dialog
+        open={isPayoutModalOpen}
+        onClose={handleClosePayoutModal}
+        fullWidth
+      >
+        <DialogTitle
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
           <Box sx={{ display: 'inline-flex', alignItems: 'center' }}>
             <FontAwesomeIcon icon={faMoneyCheckAlt} className="mr-2" />
             HARD CAP
@@ -931,8 +1013,16 @@ function MyGamesTable(props) {
             <Typography variant="h6" align="center" sx={{ mb: 1 }}>
               Change Auto-Payout
             </Typography>
-            <FormControlLabel value="manual" control={<Radio />} label="MANUAL" />
-            <FormControlLabel value="automatic" control={<Radio />} label="AUTOMATIC" />
+            <FormControlLabel
+              value="manual"
+              control={<Radio />}
+              label="MANUAL"
+            />
+            <FormControlLabel
+              value="automatic"
+              control={<Radio />}
+              label="AUTOMATIC"
+            />
           </RadioGroup>
 
           <Box sx={{ mt: 2 }}>
@@ -947,7 +1037,9 @@ function MyGamesTable(props) {
               fullWidth
               disabled={paymentMethod === 'manual'}
               InputProps={{
-                endAdornment: <InputAdornment position="end">RPS</InputAdornment>
+                endAdornment: (
+                  <InputAdornment position="end">RPS</InputAdornment>
+                ),
               }}
             />
           </Box>
@@ -956,7 +1048,11 @@ function MyGamesTable(props) {
           <Button variant="contained" color="error" onClick={handleSendPayout}>
             Update
           </Button>
-          <Button variant="contained" color="error" onClick={handleClosePayoutModal}>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={handleClosePayoutModal}
+          >
             Cancel
           </Button>
         </DialogActions>
@@ -994,7 +1090,7 @@ const mapDispatchToProps = {
   updateUserPrompt,
   endGame,
   getRoomList,
-  updateTutorialCompleted
+  updateTutorialCompleted,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(MyGamesTable);

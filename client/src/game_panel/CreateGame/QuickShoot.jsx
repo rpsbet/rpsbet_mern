@@ -1,6 +1,13 @@
 import React, { useState, useRef } from 'react';
 import { connect } from 'react-redux';
-import { Button, Tooltip, FormControlLabel, RadioGroup, Radio, Box } from '@mui/material';
+import {
+  Button,
+  Tooltip,
+  FormControlLabel,
+  RadioGroup,
+  Radio,
+  Box,
+} from '@mui/material';
 import { Info } from '@mui/icons-material';
 import styled from 'styled-components';
 import GameSettingsPanel from './GameSettingsPanel';
@@ -90,7 +97,7 @@ const QuickShoot = (props) => {
     ai_mode,
     user,
     rank,
-    ticker
+    ticker,
   } = props;
 
   const gameTypeStyleClass = {
@@ -104,7 +111,10 @@ const QuickShoot = (props) => {
         <Box className="game-info-panel">
           <Box className="glass-container">
             <Box>
-              <RadioGroup value={selectedGameType} onChange={props.handleChange}>
+              <RadioGroup
+                value={selectedGameType}
+                onChange={props.handleChange}
+              >
                 <h3 className="game-sub-title roll-tag">
                   Choose Game Mode&nbsp;
                   <Tooltip
@@ -130,8 +140,11 @@ const QuickShoot = (props) => {
                         <StyledProductCard
                           id="rps-game-type-radio"
                           isDarkMode={isDarkMode}
-                          className={`btn-game-type title btn-icon ${gameTypeStyleClass[gameType.short_name]} ${selectedGameType === gameType.short_name ? 'active' : ''
-                            }`}
+                          className={`btn-game-type title btn-icon ${gameTypeStyleClass[gameType.short_name]} ${
+                            selectedGameType === gameType.short_name
+                              ? 'active'
+                              : ''
+                          }`}
                         >
                           <StyledProductImage
                             src={`/img/gametype/icons/${gameType.short_name}.svg`}
@@ -158,18 +171,24 @@ const QuickShoot = (props) => {
                 <Info style={{ cursor: 'pointer', float: 'right' }} />
               </Tooltip>
             </h3>
-            <Box className="qs-game-type-panel" style={{ textAlign: 'center', marginBottom: '30px' }}>
+            <Box
+              className="qs-game-type-panel"
+              style={{ textAlign: 'center', marginBottom: '30px' }}
+            >
               {[2, 3, 4, 5].map((i) => (
                 <Button
-                  variant='outlined'
-                  color='error'
+                  variant="outlined"
+                  color="error"
                   key={i}
                   className={qs_game_type === i ? 'active' : ''}
                   onClick={() => {
                     onChangeState({
                       qs_game_type: i,
                       max_return: bet_amount * Number(i),
-                      public_bet_amount: convertToCurrency(bet_amount * Number(i - 1), solPrice),
+                      public_bet_amount: convertToCurrency(
+                        bet_amount * Number(i - 1),
+                        solPrice,
+                      ),
                       selected_qs_position: 0,
                     });
                   }}
@@ -191,7 +210,13 @@ const QuickShoot = (props) => {
               strategies={strategies}
             />
 
-            <CoinInfo onChangeState={onChangeState} name={name} image={image} ticker={ticker} isDarkMode={isDarkMode} />
+            <CoinInfo
+              onChangeState={onChangeState}
+              name={name}
+              image={image}
+              ticker={ticker}
+              isDarkMode={isDarkMode}
+            />
 
             <DefaultBetAmountPanel
               tax={tax}

@@ -15,14 +15,14 @@ import {
   faUsers,
   faMoneyCheckAlt,
   faChartLine,
-  faChevronLeft,    // ← We'll use these for left/right carousel arrows
-  faChevronRight
+  faChevronLeft, // ← We'll use these for left/right carousel arrows
+  faChevronRight,
 } from '@fortawesome/free-solid-svg-icons';
 import {
   acQueryLoan,
   previousLoans,
   setCurrentLoanId,
-  setCurrentLoanInfo
+  setCurrentLoanInfo,
 } from '../../../../redux/Loan/loan.action';
 import { openConfirmLoanModal } from '../../../../redux/Notification/notification.actions';
 import history from '../../../../redux/history';
@@ -43,7 +43,7 @@ import {
   Card,
   CardContent,
   CardActions,
-  Typography
+  Typography,
 } from '@mui/material';
 import { acGetCustomerInfo } from '../../../../redux/Customer/customer.action';
 import SwapHoriz from '@mui/icons-material/SwapHoriz';
@@ -92,9 +92,10 @@ const PreviousLoansContainer = styled.div`
 
 /** NEW: A wrapper that holds the arrows and the actual carousel container */
 const CarouselWrapper = styled.div`
-  position: relative;    /* so arrows can be placed absolutely */
+  position: relative; /* so arrows can be placed absolutely */
   display: flex;
-  align-items: center;   /* center the arrow buttons vertically */
+  align-items: center; /* center the arrow buttons vertically */
+  justify-content: center;
 `;
 
 /** NEW: The horizontally scrollable container */
@@ -106,9 +107,9 @@ const CarouselContainer = styled.div`
      scroll-snap-type: x mandatory; */
 
   /* Customize scrollbar (optional): */
-  scrollbar-width: thin;          /* Firefox */
+  scrollbar-width: thin; /* Firefox */
   &::-webkit-scrollbar {
-    height: 8px;                  /* height for horizontal scroller */
+    height: 8px; /* height for horizontal scroller */
   }
   &::-webkit-scrollbar-thumb {
     background-color: #aaa;
@@ -118,7 +119,7 @@ const CarouselContainer = styled.div`
   /* Make the cards a fixed width so they scroll horizontally,
      or let them shrink if you prefer. */
   .carousel-card {
-    min-width: 300px;  /* force each card to be 300px wide, for example */
+    min-width: 300px; /* force each card to be 300px wide, for example */
     /* scroll-snap-align: start; */ /* if using snap */
   }
 `;
@@ -160,7 +161,7 @@ const BankTable = (props) => {
     previousLoans,
     isDarkMode,
     user,
-    isLowGraphics
+    isLowGraphics,
   } = props;
   const dispatch = useDispatch();
 
@@ -239,11 +240,14 @@ const BankTable = (props) => {
             ...prev,
             [product.lender]: info || {
               username: 'Anon',
-              avatar: 'default-avatar-url'
+              avatar: 'default-avatar-url',
             },
           }));
         } catch (error) {
-          console.error(`Error fetching customer info for ${product.lender}:`, error);
+          console.error(
+            `Error fetching customer info for ${product.lender}:`,
+            error,
+          );
         }
       }
     }
@@ -277,7 +281,7 @@ const BankTable = (props) => {
             // fetch customer info for each loaner
             const lInfo = await acGetCustomerInfo(loaner.user);
             loaner.customerInfo = lInfo;
-          })
+          }),
         );
 
         const profit = totalPaidBack * loan.apy - totalLoanerAmount;
@@ -291,7 +295,7 @@ const BankTable = (props) => {
           profit,
           customerInfo: cInfo,
         };
-      })
+      }),
     );
 
     return result;
@@ -360,7 +364,13 @@ const BankTable = (props) => {
   // ------------------- RENDER -------------------
   return (
     <ThemeProvider theme={theme}>
-      <Box sx={{ background: 'rgba(170, 170, 170, 0.06)', borderRadius: '0.3em', p: '20px' }}>
+      <Box
+        sx={{
+          background: 'rgba(170, 170, 170, 0.06)',
+          borderRadius: '0.3em',
+          p: '20px',
+        }}
+      >
         {/* Filter & Sort UI */}
         <FilterSortContainer className="desktop-only">
           <div className="filters">
@@ -372,8 +382,15 @@ const BankTable = (props) => {
             >
               Filter
             </Button>
-            <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => handleFilterClose(null)}>
-              <MenuItem onClick={() => handleFilterClose('FULL')} selected={loanType === ''}>
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={() => handleFilterClose(null)}
+            >
+              <MenuItem
+                onClick={() => handleFilterClose('FULL')}
+                selected={loanType === ''}
+              >
                 FULL
               </MenuItem>
               {/* Add other filter items as needed */}
@@ -459,9 +476,18 @@ const BankTable = (props) => {
                   <LoanAPY>{(row.apy * 100).toFixed(2)}%</LoanAPY>
 
                   <Card variant="outlined" sx={{ mb: 0.5 }}>
-                    <CardContent sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <CardContent
+                      sx={{
+                        p: 2,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 2,
+                      }}
+                    >
                       {/* Lender/Creator Avatar */}
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box
+                        sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+                      >
                         {customerInfo[row.lender] ? (
                           <a
                             className="player"
@@ -469,7 +495,10 @@ const BankTable = (props) => {
                               e.stopPropagation();
                               handleOpenPlayerModal(row.lender);
                             }}
-                            style={{ textDecoration: 'none', cursor: 'pointer' }}
+                            style={{
+                              textDecoration: 'none',
+                              cursor: 'pointer',
+                            }}
                           >
                             <Avatar
                               src={customerInfo[row.lender].avatar}
@@ -486,7 +515,10 @@ const BankTable = (props) => {
                           <Skeleton variant="circular" width={48} height={48} />
                         )}
                         <Box>
-                          <Typography variant="subtitle2" color="text.secondary">
+                          <Typography
+                            variant="subtitle2"
+                            color="text.secondary"
+                          >
                             Lender
                           </Typography>
                           <Typography variant="body2">
@@ -497,9 +529,14 @@ const BankTable = (props) => {
 
                       {/* Loan Amount (with label) */}
                       <Box>
-                        <Typography variant="h6" sx={{ fontWeight: 600, textAlign: 'center' }}>
+                        <Typography
+                          variant="h6"
+                          sx={{ fontWeight: 600, textAlign: 'center' }}
+                        >
                           {convertToCurrency(row.loan_amount, solPrice)}{' '}
-                          <span style={{ fontSize: 'small' }}>/ {row.loan_amount} SOL</span>
+                          <span style={{ fontSize: 'small' }}>
+                            / {row.loan_amount} SOL
+                          </span>
                         </Typography>
                       </Box>
 
@@ -509,8 +546,16 @@ const BankTable = (props) => {
                           <TableBody>
                             {/* Loan Period */}
                             <TableRow>
-                              <TableCell sx={{ borderBottom: 'none', width: '40%' }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <TableCell
+                                sx={{ borderBottom: 'none', width: '40%' }}
+                              >
+                                <Box
+                                  sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 1,
+                                  }}
+                                >
                                   <FontAwesomeIcon icon={faClock} />
                                   <Typography variant="body2">Days</Typography>
                                 </Box>
@@ -523,49 +568,72 @@ const BankTable = (props) => {
                             {/* Loaners */}
                             <TableRow>
                               <TableCell sx={{ borderBottom: 'none' }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Box
+                                  sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 1,
+                                  }}
+                                >
                                   <FontAwesomeIcon icon={faUsers} />
-                                  <Typography variant="body2">Loaners</Typography>
+                                  <Typography variant="body2">
+                                    Loaners
+                                  </Typography>
                                 </Box>
                               </TableCell>
                               <TableCell sx={{ borderBottom: 'none' }}>
                                 {row.loaners && row.loaners.length > 0 ? (
-                                  <Box className="cell-joiners" sx={{ display: 'flex', alignItems: 'center' }}>
-                                    {row.loaners.slice(0, 2).map((loaner, index) =>
-                                      loaner && loaner.avatar ? (
-                                        <a
-                                          key={`${loaner._id}-${index}`}
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleOpenPlayerModal(loaner._id);
-                                          }}
-                                          style={{ cursor: 'pointer' }}
-                                          className="player"
-                                        >
-                                          <Avatar
-                                            src={loaner.avatar}
-                                            rank={loaner.totalWagered || 0}
-                                            accessory={loaner.accessory || ''}
-                                            user_id={loaner._id || ''}
-                                            username={loaner.username || ''}
-                                            darkMode={isDarkMode}
-                                            alt={loaner.username || 'Unknown'}
-                                            style={{ width: 32, height: 32 }}
-                                          />
-                                        </a>
-                                      ) : null
-                                    )}
+                                  <Box
+                                    className="cell-joiners"
+                                    sx={{
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                    }}
+                                  >
+                                    {row.loaners
+                                      .slice(0, 2)
+                                      .map((loaner, index) =>
+                                        loaner && loaner.avatar ? (
+                                          <a
+                                            key={`${loaner._id}-${index}`}
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleOpenPlayerModal(loaner._id);
+                                            }}
+                                            style={{ cursor: 'pointer' }}
+                                            className="player"
+                                          >
+                                            <Avatar
+                                              src={loaner.avatar}
+                                              rank={loaner.totalWagered || 0}
+                                              accessory={loaner.accessory || ''}
+                                              user_id={loaner._id || ''}
+                                              username={loaner.username || ''}
+                                              darkMode={isDarkMode}
+                                              alt={loaner.username || 'Unknown'}
+                                              style={{ width: 32, height: 32 }}
+                                            />
+                                          </a>
+                                        ) : null,
+                                      )}
                                     {row.loaners.length > 2 && (
                                       <Typography
                                         variant="body2"
-                                        sx={{ ml: 1, fontSize: '0.8rem', fontWeight: 600 }}
+                                        sx={{
+                                          ml: 1,
+                                          fontSize: '0.8rem',
+                                          fontWeight: 600,
+                                        }}
                                       >
                                         +{row.loaners.length - 2}
                                       </Typography>
                                     )}
                                   </Box>
                                 ) : (
-                                  <Typography variant="body2" sx={{ fontStyle: 'italic' }}>
+                                  <Typography
+                                    variant="body2"
+                                    sx={{ fontStyle: 'italic' }}
+                                  >
                                     No Loaners
                                   </Typography>
                                 )}
@@ -611,7 +679,14 @@ const BankTable = (props) => {
             </ProductGrid>
           ) : (
             // If data is empty (and we're not loading), show "No Loans Available"
-            <Typography variant="body2" sx={{ textAlign: 'center', fontStyle: 'italic', color: 'text.secondary' }}>
+            <Typography
+              variant="body2"
+              sx={{
+                textAlign: 'center',
+                fontStyle: 'italic',
+                color: 'text.secondary',
+              }}
+            >
               No Loans Available
             </Typography>
           )
@@ -629,9 +704,18 @@ const BankTable = (props) => {
                 }}
               >
                 <Skeleton variant="text" sx={{ width: '80%', height: 30 }} />
-                <Skeleton variant="circular" sx={{ width: 40, height: 40, margin: '10px 0' }} />
-                <Skeleton variant="rectangular" sx={{ width: '100%', height: 100 }} />
-                <Skeleton variant="text" sx={{ width: '60%', height: 20, margin: '10px 0' }} />
+                <Skeleton
+                  variant="circular"
+                  sx={{ width: 40, height: 40, margin: '10px 0' }}
+                />
+                <Skeleton
+                  variant="rectangular"
+                  sx={{ width: '100%', height: 100 }}
+                />
+                <Skeleton
+                  variant="text"
+                  sx={{ width: '60%', height: 20, margin: '10px 0' }}
+                />
               </Box>
             ))}
           </ProductGrid>
@@ -667,31 +751,64 @@ const BankTable = (props) => {
                     }}
                   >
                     <CardContent>
-                      <Skeleton variant="text" width="50%" height={30} sx={{ mb: 1 }} />
-                      <Skeleton variant="circular" width={40} height={40} sx={{ mb: 1 }} />
-                      <Skeleton variant="text" width="100%" height={20} sx={{ mb: 1 }} />
-                      <Skeleton variant="text" width="80%" height={20} sx={{ mb: 1 }} />
-                      <Skeleton variant="text" width="60%" height={20} sx={{ mb: 1 }} />
-                      <Skeleton variant="rectangular" width="100%" height={50} />
+                      <Skeleton
+                        variant="text"
+                        width="50%"
+                        height={30}
+                        sx={{ mb: 1 }}
+                      />
+                      <Skeleton
+                        variant="circular"
+                        width={40}
+                        height={40}
+                        sx={{ mb: 1 }}
+                      />
+                      <Skeleton
+                        variant="text"
+                        width="100%"
+                        height={20}
+                        sx={{ mb: 1 }}
+                      />
+                      <Skeleton
+                        variant="text"
+                        width="80%"
+                        height={20}
+                        sx={{ mb: 1 }}
+                      />
+                      <Skeleton
+                        variant="text"
+                        width="60%"
+                        height={20}
+                        sx={{ mb: 1 }}
+                      />
+                      <Skeleton
+                        variant="rectangular"
+                        width="100%"
+                        height={50}
+                      />
                     </CardContent>
                   </Card>
                 ))
               ) : loansWithProfit &&
                 loansWithProfit.filter(
-                  loan =>
-                    !(loan.totalLoanerAmount === 0 &&
+                  (loan) =>
+                    !(
+                      loan.totalLoanerAmount === 0 &&
                       loan.totalPaidBack === 0 &&
-                      loan.profit === 0)
+                      loan.profit === 0
+                    ),
                 ).length > 0 ? (
                 // 2) If NOT loading and there are loans after filtering => map over them
                 loansWithProfit
                   .filter(
-                    loan =>
-                      !(loan.totalLoanerAmount === 0 &&
+                    (loan) =>
+                      !(
+                        loan.totalLoanerAmount === 0 &&
                         loan.totalPaidBack === 0 &&
-                        loan.profit === 0)
+                        loan.profit === 0
+                      ),
                   )
-                  .map(loan => (
+                  .map((loan) => (
                     <Card
                       key={loan._id}
                       className="carousel-card"
@@ -711,7 +828,9 @@ const BankTable = (props) => {
                               </TableCell>
                               <TableCell sx={{ borderBottom: 'none' }}>
                                 <a
-                                  onClick={() => handleOpenPlayerModal(loan.lender)}
+                                  onClick={() =>
+                                    handleOpenPlayerModal(loan.lender)
+                                  }
                                   style={{ cursor: 'pointer' }}
                                   className="player"
                                 >
@@ -742,22 +861,34 @@ const BankTable = (props) => {
                             </TableRow>
                             <TableRow>
                               <TableCell sx={{ borderBottom: 'none' }}>
-                                <FontAwesomeIcon icon={faMoneyBillAlt} /> Unpaid:
+                                <FontAwesomeIcon icon={faMoneyBillAlt} />{' '}
+                                Unpaid:
                               </TableCell>
                               <TableCell sx={{ borderBottom: 'none' }}>
-                                {convertToCurrency(loan.totalLoanerAmount, solPrice)}
+                                {convertToCurrency(
+                                  loan.totalLoanerAmount,
+                                  solPrice,
+                                )}
                               </TableCell>
                             </TableRow>
                             <TableRow>
                               <TableCell sx={{ borderBottom: 'none' }}>
                                 <FontAwesomeIcon icon={faUsers} /> Loaners:
                               </TableCell>
-                              <TableCell className="cell-joiners" sx={{ borderBottom: 'none' }}>
+                              <TableCell
+                                className="cell-joiners"
+                                sx={{ borderBottom: 'none' }}
+                              >
                                 {loan.loaners.map((loaner, index) => (
                                   <a
                                     key={`${loaner.user}-${index}`}
-                                    onClick={() => handleOpenPlayerModal(loaner.user)}
-                                    style={{ marginRight: '4px', cursor: 'pointer' }}
+                                    onClick={() =>
+                                      handleOpenPlayerModal(loaner.user)
+                                    }
+                                    style={{
+                                      marginRight: '4px',
+                                      cursor: 'pointer',
+                                    }}
                                     className="player"
                                   >
                                     <Avatar
@@ -776,10 +907,14 @@ const BankTable = (props) => {
                             </TableRow>
                             <TableRow>
                               <TableCell sx={{ borderBottom: 'none' }}>
-                                <FontAwesomeIcon icon={faMoneyCheckAlt} /> Total Paid Back:
+                                <FontAwesomeIcon icon={faMoneyCheckAlt} /> Total
+                                Paid Back:
                               </TableCell>
                               <TableCell sx={{ borderBottom: 'none' }}>
-                                {convertToCurrency(loan.totalPaidBack, solPrice)}
+                                {convertToCurrency(
+                                  loan.totalPaidBack,
+                                  solPrice,
+                                )}
                               </TableCell>
                             </TableRow>
                             <TableRow>

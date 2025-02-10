@@ -10,7 +10,16 @@ import { toggleDrawer } from '../../redux/Auth/user.actions';
 import MyGamesTable from '../MyGames/MyGamesTable';
 import MyHistoryTable from '../MyGames/MyHistoryTable';
 import { Add, Remove } from '@mui/icons-material';
-import { Button, Tabs, Tab, Drawer, Box, Tooltip, Typography } from '@mui/material';
+import {
+  Button,
+  Tabs,
+  Tab,
+  Drawer,
+  Box,
+  Tooltip,
+  Typography,
+  useMediaQuery,
+} from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCoins, faStore, faLink } from '@fortawesome/free-solid-svg-icons';
 import DrawerButton from './DrawerButton';
@@ -64,6 +73,8 @@ function MainPage(props) {
   const isMountedRef = useRef(false);
   // We'll track the previous location to replicate componentDidUpdate location checks
   const prevLocationRef = useRef(location.pathname);
+  //responsive
+  const isSmallScreen = useMediaQuery('(max-width:1024px)');
   // ------------------- LIFECYCLE (componentDidMount) -------------------
   useEffect(() => {
     isMountedRef.current = true;
@@ -90,7 +101,10 @@ function MainPage(props) {
   // ------------------- LIFECYCLE (componentDidUpdate) for location changes -------------------
   useEffect(() => {
     // If route changes to /portfolio, set certain states
-    if (location.pathname === '/portfolio' && location.pathname !== prevLocationRef.current) {
+    if (
+      location.pathname === '/portfolio' &&
+      location.pathname !== prevLocationRef.current
+    ) {
       setSelectedMobileTab('my_games');
       setShowOpenGame(0);
     } else if (
@@ -103,7 +117,6 @@ function MainPage(props) {
     // update ref
     prevLocationRef.current = location.pathname;
   }, [location.pathname]);
-
 
   // ------------------- HANDLERS -------------------
   const toggleP2PLending = () => {
@@ -156,7 +169,12 @@ function MainPage(props) {
     ) {
       return (
         <div className="create-room-btn-panel">
-          <Button variant="text" color='error' className="btn-create-room" onClick={handleCreateBtnClicked}>
+          <Button
+            variant="text"
+            color="error"
+            className="btn-create-room"
+            onClick={handleCreateBtnClicked}
+          >
             START NEW GAME +
           </Button>
         </div>
@@ -165,23 +183,22 @@ function MainPage(props) {
 
     return 'Your Games';
   };
-
+  console.log('----isSmallScreen----:', isSmallScreen);
   // ------------------- RENDER -------------------
   return (
-    <Box
-      className="main-game"
-   
-    >
+    <Box className="main-game">
       {/* If mobile & in chat tab, or if not mobile -> show Chat Drawer */}
-      {(isMobile && selectedMobileTab === 'chat') ? (
+      {isMobile && selectedMobileTab === 'chat' ? (
         <Drawer
           className="mat-chat"
-          style={{ display: isDrawerOpen ? 'flex' : 'none' }}
+          style={{ display: isDrawerOpen && !isSmallScreen ? 'flex' : 'none' }}
           variant="persistent"
           anchor="left"
-          open={isDrawerOpen}
+          open={!isSmallScreen && isDrawerOpen}
         >
-          <ChatPanel toggleDrawer={handleToggleDrawer} is_mobile={isMobile} />
+          {!isSmallScreen && (
+            <ChatPanel toggleDrawer={handleToggleDrawer} is_mobile={isMobile} />
+          )}
         </Drawer>
       ) : null}
 
@@ -192,7 +209,12 @@ function MainPage(props) {
           <Box sx={{ textAlign: 'center', mb: 2 }}>
             <Button
               color="error"
-              sx={{ width: '100%', py: '60px', display: 'flex', flexDirection: 'column' }}
+              sx={{
+                width: '100%',
+                py: '60px',
+                display: 'flex',
+                flexDirection: 'column',
+              }}
               onClick={toggleP2PLending}
             >
               {showP2PLending ? <Remove /> : <Add />}
@@ -213,7 +235,12 @@ function MainPage(props) {
           <Box sx={{ textAlign: 'center' }}>
             <Button
               color="error"
-              sx={{ width: '100%', py: '60px', display: 'flex', flexDirection: 'column' }}
+              sx={{
+                width: '100%',
+                py: '60px',
+                display: 'flex',
+                flexDirection: 'column',
+              }}
               onClick={toggleMarketplace}
             >
               {showMarketplace ? <Remove /> : <Add />}
@@ -237,7 +264,9 @@ function MainPage(props) {
 
         {/* If not mobile & tab index = 0 OR if mobile & live_games tab & showOpenGame=0 => show open games */}
         {((!isMobile && selectedMainTabIndex === 0) ||
-          (isMobile && selectedMobileTab === 'live_games' && showOpenGame === 0)) &&
+          (isMobile &&
+            selectedMobileTab === 'live_games' &&
+            showOpenGame === 0)) &&
           location.pathname !== '/portfolio' && (
             <OpenGamesTable
               selectedCreator={selectedCreator}
@@ -257,14 +286,14 @@ function MainPage(props) {
           )}
 
         {/* My Games -> if mobile & my_games & showOpenGame=0 */}
-        {selectedMobileTab === 'my_games' && showOpenGame === 0 && <MyGamesTable />}
+        {selectedMobileTab === 'my_games' && showOpenGame === 0 && (
+          <MyGamesTable />
+        )}
 
         {/* If mobile & live_games => show history, or if my_games => show MyHistory */}
-        {isMobile && selectedMobileTab === 'live_games' && showOpenGame === 1 && (
-          <HistoryTable
-            userId={user._id}
-          />
-        )}
+        {isMobile &&
+          selectedMobileTab === 'live_games' &&
+          showOpenGame === 1 && <HistoryTable userId={user._id} />}
         {/* {isMobile && selectedMobileTab === 'my_games' && showOpenGame === 1 && (
           <MyHistoryTable />
         )} */}
@@ -289,7 +318,13 @@ function MainPage(props) {
             className={`mobile-tab-live ${selectedMobileTab === 'live_games' ? 'active' : ''}`}
             onClick={() => setSelectedMobileTab('live_games')}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none" viewBox="0 0 32 32">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="32"
+              height="32"
+              fill="none"
+              viewBox="0 0 32 32"
+            >
               <path
                 stroke={selectedMobileTab === 'live_games' ? '#fff' : '#8E9297'}
                 strokeWidth="1.5"
@@ -303,7 +338,13 @@ function MainPage(props) {
             className={`mobile-tab-my ${selectedMobileTab === 'my_games' ? 'active' : ''}`}
             onClick={() => setSelectedMobileTab('my_games')}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="33" height="32" fill="none" viewBox="0 0 33 32">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="33"
+              height="32"
+              fill="none"
+              viewBox="0 0 33 32"
+            >
               <path
                 stroke={selectedMobileTab === 'my_games' ? '#fff' : '#8E9297'}
                 strokeWidth="1.5"
@@ -377,7 +418,13 @@ function MainPage(props) {
             className={`mobile-tab-chat ${selectedMobileTab === 'chat' ? 'active' : ''}`}
             onClick={() => setSelectedMobileTab('chat')}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="33" height="32" fill="none" viewBox="0 0 33 32">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="33"
+              height="32"
+              fill="none"
+              viewBox="0 0 33 32"
+            >
               <path
                 stroke={selectedMobileTab === 'chat' ? '#fff' : '#8E9297'}
                 strokeWidth="1.5"
@@ -410,10 +457,7 @@ function MainPage(props) {
         </div>
       )}
 
-      <Footer
-        className="footer"
-        open={isDrawerOpen}
-      />
+      <Footer className="footer" open={isDrawerOpen} />
     </Box>
   );
 }

@@ -41,9 +41,12 @@ import {
   addNewTransaction,
   pumpGame,
   getRoomList,
-  getTransactionCandles
+  getTransactionCandles,
 } from '../../redux/Logic/logic.actions';
-import { successMsgBar, errorMsgBar } from '../../redux/Notification/notification.actions';
+import {
+  successMsgBar,
+  errorMsgBar,
+} from '../../redux/Notification/notification.actions';
 import {
   predictNext,
   reinforcementAI,
@@ -201,7 +204,6 @@ function JoinGame(props) {
         // ------------------ FETCH CANDL
         await getTransactionCandles({ roomId: id, timeFrame: '1m' });
         await initializeRoomData();
-
       } catch (error) {
         console.error('Error in init useEffect:', error);
       }
@@ -680,7 +682,6 @@ function JoinGame(props) {
       clearInterval(intervalId);
       setIntervalId(null);
       setBetting(false);
-
     } catch (error) {
       console.error('Error stopping betting:', error);
     }
@@ -715,7 +716,6 @@ function JoinGame(props) {
 
   // ---------- Betting Loop ----------
   const handleSwitchChange = useCallback(() => {
-
     if (!validateIsAuthenticated(auth, isDarkMode)) return;
     if (!validateCreatorId(roomInfo.creator_id, user_id, isDarkMode)) return;
 
@@ -725,11 +725,11 @@ function JoinGame(props) {
 
       setBetting(true);
       startBetting();
-      dispatch(successMsgBar("Turn on Isocratic mode"));
+      dispatch(successMsgBar('Turn on Isocratic mode'));
     } else {
       setBetting(false);
       stopBetting();
-      dispatch(successMsgBar("Turn off Isocratic mode"));
+      dispatch(successMsgBar('Turn off Isocratic mode'));
     }
   }, [
     auth,
@@ -768,7 +768,11 @@ function JoinGame(props) {
     }
 
     try {
-      const result = await pumpGameAction(coHostAmount, roomInfo._id, connectedAccount);
+      const result = await pumpGameAction(
+        coHostAmount,
+        roomInfo._id,
+        connectedAccount,
+      );
       if (result.success) {
         addNewTransaction(result.newTransaction);
         await getRoomListAction({
@@ -796,7 +800,7 @@ function JoinGame(props) {
       setBankroll(newState.bankroll);
     }
     if ('hosts' in newState && Array.isArray(newState.hosts)) {
-      console.log("newState.hosts", newState.hosts)
+      console.log('newState.hosts', newState.hosts);
       setHosts(newState.hosts);
     }
     if ('result' in newState) {
@@ -966,7 +970,7 @@ function JoinGame(props) {
           is_private={roomInfo.is_private}
           isDarkMode={isDarkMode}
           actionList={actionList}
-          getRoomData={() => { }} // or remove if not needed
+          getRoomData={() => {}} // or remove if not needed
           user={user}
           coHostAmount={coHostAmount}
           getRoomInfo={getRoomInfoAction}
@@ -1043,8 +1047,8 @@ function JoinGame(props) {
               balance={user_balance}
               solPrice={solPrice}
               user={user}
-              togglePopup={() => { }}
-              handleClose={() => { }}
+              togglePopup={() => {}}
+              handleClose={() => {}}
               handleSendCoHost={handleSendCoHost}
               handleCoHostAmountChange={handleCoHostAmountChange}
               has_joined={true}

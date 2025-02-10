@@ -6,6 +6,7 @@ import {
   Modal,
   Box,
   Table,
+  TableContainer,
   TableHead,
   TableRow,
   TableCell,
@@ -13,7 +14,7 @@ import {
   Button,
   Skeleton,
   Typography,
-  useMediaQuery
+  useMediaQuery,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { Sort as SortIcon } from '@mui/icons-material';
@@ -30,7 +31,7 @@ import Avatar from '../../components/Avatar';
 import {
   fetchLeaderboardsData,
   fetchReceiptStatistics,
-  fetchEquityDistribution
+  fetchEquityDistribution,
 } from '../../redux/Customer/customer.action';
 import { convertToCurrency } from '../../util/conversion';
 
@@ -41,8 +42,8 @@ function LeaderboardsModal({
 
   // Redux props
   isDarkMode,
-  equityChart,           // from Redux store
-  receiptChart,          // from Redux store
+  equityChart, // from Redux store
+  receiptChart, // from Redux store
   leaderboards,
   loading,
   solPrice,
@@ -52,7 +53,7 @@ function LeaderboardsModal({
   // Redux actions
   fetchLeaderboardsData,
   fetchEquityDistribution,
-  fetchReceiptStatistics
+  fetchReceiptStatistics,
 }) {
   // -------------------- Local State --------------------
   const [sortField, setSortField] = useState('gameProfit');
@@ -87,7 +88,12 @@ function LeaderboardsModal({
       }
     })();
     // Only re-run when modalIsOpen or the (stable) fetch actions change
-  }, [modalIsOpen, fetchLeaderboardsData, fetchEquityDistribution, fetchReceiptStatistics]);
+  }, [
+    modalIsOpen,
+    fetchLeaderboardsData,
+    fetchEquityDistribution,
+    fetchReceiptStatistics,
+  ]);
 
   // -------------------- 2) Sync Equity Chart State From Redux --------------------
   // useEffect(() => {
@@ -133,12 +139,13 @@ function LeaderboardsModal({
     `${baseColor}80`,
     `${baseColor}66`,
     `${baseColor}33`,
-    `${baseColor}1A`
+    `${baseColor}1A`,
   ];
   const chartWidth = isMobile ? '250px' : '350px';
 
   // **Equity Chart**: safe array map
-  const equityChartSeries = equityChartData.map((u) => u.equityPercentage) || [];
+  const equityChartSeries =
+    equityChartData.map((u) => u.equityPercentage) || [];
   const equityChartOptions = {
     chart: {
       type: equityChartSeries.length > 0 ? 'pie' : 'donut',
@@ -147,8 +154,8 @@ function LeaderboardsModal({
     responsive: [
       {
         breakpoint: 480,
-        options: { chart: { width: chartWidth } }
-      }
+        options: { chart: { width: chartWidth } },
+      },
     ],
     colors: chartColors,
     legend: { show: false },
@@ -158,8 +165,8 @@ function LeaderboardsModal({
       style: {
         colors: ['#ffffff'],
         fontSize: '14px',
-        fontWeight: 600
-      }
+        fontWeight: 600,
+      },
     },
     tooltip: {
       custom: ({ seriesIndex, w }) => {
@@ -175,16 +182,16 @@ function LeaderboardsModal({
         `;
       },
       theme: isDarkMode ? 'dark' : 'light',
-      useHTML: true
+      useHTML: true,
     },
     plotOptions: {
       pie: {
         donut: {
           size: '70%',
-          labels: { show: false }
-        }
-      }
-    }
+          labels: { show: false },
+        },
+      },
+    },
   };
 
   // **Receipt Chart**: destructure safely from receiptChartData
@@ -192,14 +199,14 @@ function LeaderboardsModal({
     overTenMillion = 0,
     betweenOneAndTenMillion = 0,
     betweenZeroAndOneMillion = 0,
-    lessThanZero = 0
+    lessThanZero = 0,
   } = receiptChartData;
 
   const receiptChartSeries = [
     overTenMillion,
     betweenOneAndTenMillion,
     betweenZeroAndOneMillion,
-    lessThanZero
+    lessThanZero,
   ];
   const receiptChartOptions = {
     chart: {
@@ -209,8 +216,8 @@ function LeaderboardsModal({
     responsive: [
       {
         breakpoint: 480,
-        options: { chart: { width: chartWidth } }
-      }
+        options: { chart: { width: chartWidth } },
+      },
     ],
     colors: chartColors,
     legend: { show: false },
@@ -220,8 +227,8 @@ function LeaderboardsModal({
       style: {
         colors: ['#ffffff'],
         fontSize: '14px',
-        fontWeight: 600
-      }
+        fontWeight: 600,
+      },
     },
     tooltip: {
       custom: ({ seriesIndex, w }) => {
@@ -229,7 +236,7 @@ function LeaderboardsModal({
           'Made over 10M',
           'Made over 1M',
           'Made over 0',
-          'Not profitable'
+          'Not profitable',
         ];
         return `
           <div style="display: flex; align-items: center;">
@@ -240,16 +247,16 @@ function LeaderboardsModal({
         `;
       },
       theme: isDarkMode ? 'dark' : 'light',
-      useHTML: true
+      useHTML: true,
     },
     plotOptions: {
       pie: {
         donut: {
           size: '70%',
-          labels: { show: false }
-        }
-      }
-    }
+          labels: { show: false },
+        },
+      },
+    },
   };
 
   // -------------------- Sort Leaderboards --------------------
@@ -283,7 +290,7 @@ function LeaderboardsModal({
             overflowY: 'auto',
             borderRadius: 2,
             boxShadow: 24,
-            p: 3
+            p: 3,
           }}
         >
           {/* HEADER */}
@@ -292,18 +299,32 @@ function LeaderboardsModal({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              mb: 2
+              mb: 2,
             }}
           >
-            <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography
+              variant="h6"
+              sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+            >
               <FontAwesomeIcon icon={faList} />
               LEADERBOARDS
             </Typography>
-            <Button variant="text" color="error" onClick={closeModal} sx={{ fontSize: '1.25rem' }}>
+            <Button
+              variant="text"
+              color="error"
+              onClick={closeModal}
+              sx={{ fontSize: '1.25rem' }}
+            >
               ×
             </Button>
           </Box>
-          <Box sx={{ background: 'rgba(170, 170, 170, 0.06)', borderRadius: '0.3em', p: '20px' }}>
+          <Box
+            sx={{
+              background: 'rgba(170, 170, 170, 0.06)',
+              borderRadius: '0.3em',
+              p: '20px',
+            }}
+          >
             {/* CHARTS SECTION */}
             {/* <Box
               sx={{
@@ -364,92 +385,136 @@ function LeaderboardsModal({
               All-time Leaderboards
             </Typography>
             {!loading ? (
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell
-                      sx={{ color: '#fff', fontWeight: '600', cursor: 'pointer' }}
-                      onClick={() => handleSort('username')}
-                    >
-                      PLAYER {sortField === 'username' && <SortIcon />}
-                    </TableCell>
-                    <TableCell
-                      sx={{ color: '#fff', fontWeight: '600', cursor: 'pointer' }}
-                      onClick={() => handleSort('totalWagered')}
-                    >
-                      TOTAL WAGERED {sortField === 'totalWagered' && <SortIcon />}
-                    </TableCell>
-                    <TableCell
-                      sx={{ color: '#fff', fontWeight: '600', cursor: 'pointer' }}
-                      onClick={() => handleSort('totalTraded')}
-                    >
-                      TOTAL TRADED {sortField === 'totalTraded' && <SortIcon />}
-                    </TableCell>
-                    <TableCell
-                      sx={{ color: '#fff', fontWeight: '600', cursor: 'pointer' }}
-                      onClick={() => handleSort('gameProfit')}
-                    >
-                     GAME PROFIT {sortField === 'gameProfit' && <SortIcon />}
-                    </TableCell>
-                    <TableCell
-                      sx={{ color: '#fff', fontWeight: '600', cursor: 'pointer' }}
-                      onClick={() => handleSort('gameProfit')}
-                    >
-                     TRADING PROFIT {sortField === 'tradingProfit' && <SortIcon />}
-                    </TableCell>
-                    
-                    <TableCell
-                      sx={{ color: '#fff', fontWeight: '600', cursor: 'pointer' }}
-                      onClick={() => handleSort('gamePlayed')}
-                    >
-                      GAMES PLAYED {sortField === 'gamePlayed' && <SortIcon />}
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {sortedLeaderboards.map((entry, idx) => (
-                    <TableRow key={idx}>
-                      <TableCell sx={{ color: '#fff' }}>
-                        <Box
-                          className="player"
-                          sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
-                          onClick={() => handleOpenPlayerModal(entry._id)}
-                        >
-                          <Avatar
-                            className="avatar"
-                            src={entry.avatar}
-                            rank={entry.totalWagered}
-                            user_id={entry._id}
-                            accessory={entry.accessory}
-                            username={entry.username}
-                            alt={entry.username}
-                            darkMode={isDarkMode}
-                          />
-                          <Typography sx={{ ml: 1 }}>{entry.username}</Typography>
-                        </Box>
+              <TableContainer sx={{ overflowX: 'auto' }}>
+                <Table sx={{ minWidth: '588px' }}>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell
+                        sx={{
+                          color: '#fff',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                        }}
+                        onClick={() => handleSort('username')}
+                      >
+                        PLAYER {sortField === 'username' && <SortIcon />}
                       </TableCell>
-                      <TableCell sx={{ color: '#fff' }}>
-                        {convertToCurrency(entry.totalWagered, solPrice)}
+                      <TableCell
+                        sx={{
+                          color: '#fff',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                        }}
+                        onClick={() => handleSort('totalWagered')}
+                      >
+                        TOTAL WAGERED{' '}
+                        {sortField === 'totalWagered' && <SortIcon />}
                       </TableCell>
-                      <TableCell sx={{ color: '#fff' }}>
-                        {convertToCurrency(entry.totalTraded, solPrice)}
+                      <TableCell
+                        sx={{
+                          color: '#fff',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                        }}
+                        onClick={() => handleSort('totalTraded')}
+                      >
+                        TOTAL TRADED{' '}
+                        {sortField === 'totalTraded' && <SortIcon />}
                       </TableCell>
-                      <TableCell sx={{ color: '#fff' }}>
-                        {convertToCurrency(entry.gameProfit, solPrice)}
+                      <TableCell
+                        sx={{
+                          color: '#fff',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                        }}
+                        onClick={() => handleSort('gameProfit')}
+                      >
+                        GAME PROFIT {sortField === 'gameProfit' && <SortIcon />}
                       </TableCell>
-                      <TableCell sx={{ color: '#fff' }}>
-                        {(entry.gamePlayed, solPrice)}
+                      <TableCell
+                        sx={{
+                          color: '#fff',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                        }}
+                        onClick={() => handleSort('gameProfit')}
+                      >
+                        TRADING PROFIT{' '}
+                        {sortField === 'tradingProfit' && <SortIcon />}
+                      </TableCell>
+
+                      <TableCell
+                        sx={{
+                          color: '#fff',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                        }}
+                        onClick={() => handleSort('gamePlayed')}
+                      >
+                        GAMES PLAYED{' '}
+                        {sortField === 'gamePlayed' && <SortIcon />}
                       </TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHead>
+                  <TableBody>
+                    {sortedLeaderboards.map((entry, idx) => (
+                      <TableRow key={idx}>
+                        <TableCell sx={{ color: '#fff' }}>
+                          <Box
+                            className="player"
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              cursor: 'pointer',
+                            }}
+                            onClick={() => handleOpenPlayerModal(entry._id)}
+                          >
+                            <Avatar
+                              className="avatar"
+                              src={entry.avatar}
+                              rank={entry.totalWagered}
+                              user_id={entry._id}
+                              accessory={entry.accessory}
+                              username={entry.username}
+                              alt={entry.username}
+                              darkMode={isDarkMode}
+                            />
+                            <Typography sx={{ ml: 1 }}>
+                              {entry.username}
+                            </Typography>
+                          </Box>
+                        </TableCell>
+                        <TableCell sx={{ color: '#fff' }}>
+                          {convertToCurrency(entry.totalWagered, solPrice)}
+                        </TableCell>
+                        <TableCell sx={{ color: '#fff' }}>
+                          {convertToCurrency(entry.totalTraded, solPrice)}
+                        </TableCell>
+                        <TableCell sx={{ color: '#fff' }}>
+                          {convertToCurrency(entry.gameProfit, solPrice)}
+                        </TableCell>
+                        <TableCell sx={{ color: '#fff' }}>
+                          {(entry.gamePlayed, solPrice)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
             ) : (
               // Loading Skeletons for the table
               <Box sx={{ mt: 2 }}>
                 {[...Array(5)].map((_, index) => (
-                  <Box key={index} sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                    <Skeleton variant="circular" width={40} height={40} sx={{ mr: 2 }} />
+                  <Box
+                    key={index}
+                    sx={{ display: 'flex', alignItems: 'center', mb: 2 }}
+                  >
+                    <Skeleton
+                      variant="circular"
+                      width={40}
+                      height={40}
+                      sx={{ mr: 2 }}
+                    />
                     <Skeleton variant="text" width="20%" sx={{ mr: 2 }} />
                     <Skeleton variant="text" width="15%" sx={{ mr: 2 }} />
                     <Skeleton variant="text" width="15%" sx={{ ml: 'auto' }} />
@@ -476,19 +541,19 @@ function LeaderboardsModal({
 // ---------------------- Redux Mappings ----------------------
 const mapStateToProps = (state) => ({
   isDarkMode: state.auth.isDarkMode,
-  equityChart: state.customerReducer.equityChart,   // array of user distribution? 
+  equityChart: state.customerReducer.equityChart, // array of user distribution?
   receiptChart: state.customerReducer.receiptChart, // object with .overTenMillion, etc.
   leaderboards: state.customerReducer.leaderboards,
   loading: state.customerReducer.loading,
   solPrice: state.logic.solPrice,
   loadingEquityChart: state.customerReducer.loadingEquityChart,
-  loadingReceiptChart: state.customerReducer.loadingReceiptChart
+  loadingReceiptChart: state.customerReducer.loadingReceiptChart,
 });
 
 const mapDispatchToProps = {
   fetchLeaderboardsData,
   fetchEquityDistribution,
-  fetchReceiptStatistics
+  fetchReceiptStatistics,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(LeaderboardsModal);

@@ -15,20 +15,29 @@ import {
   MenuItem,
   Skeleton,
   Pagination,
-  Typography
+  Typography,
 } from '@mui/material';
 import SwapHoriz from '@mui/icons-material/SwapHoriz';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTag, faCubes, faGem, faSort, faFilter } from '@fortawesome/free-solid-svg-icons';
+import {
+  faTag,
+  faCubes,
+  faGem,
+  faSort,
+  faFilter,
+} from '@fortawesome/free-solid-svg-icons';
 
 // Redux + Others
 import {
   acQueryItem,
   setCurrentProductId,
-  setCurrentProductInfo
+  setCurrentProductInfo,
 } from '../../../../redux/Item/item.action';
 import { acGetCustomerInfo } from '../../../../redux/Customer/customer.action';
-import { openConfirmTradeModal, errorMsgBar } from '../../../../redux/Notification/notification.actions';
+import {
+  openConfirmTradeModal,
+  errorMsgBar,
+} from '../../../../redux/Notification/notification.actions';
 
 import Avatar from '../../../../components/Avatar';
 import PlayerModal from '../../../../game_panel/modal/PlayerModal';
@@ -63,6 +72,12 @@ const ProductGrid = styled.div`
   gap: 16px;
   width: 100%;
   margin: 20px 0;
+  @media (max-width: 720px) {
+    grid-template-columns: repeat(2, 1fr); /* 1 column on small screens */
+  }
+  @media (max-width: 480px) {
+    grid-template-columns: repeat(1, 1fr); /* 1 column on small screens */
+  }
 `;
 
 const PaginationContainer = styled.div`
@@ -107,7 +122,7 @@ const ProductTable = (props) => {
     acGetCustomerInfo,
     user,
     isDarkMode,
-    isLowGraphics
+    isLowGraphics,
   } = props;
 
   // Local state
@@ -130,7 +145,7 @@ const ProductTable = (props) => {
     '653ee7df17c9f5ee2124564a': 'Game Background',
     '653ee81117c9f5ee2124564b': 'Accessories',
     '654231df29446bc96d689d0f': 'Tools',
-    '6542321929446bc96d689d10': 'Games'
+    '6542321929446bc96d689d10': 'Games',
   };
 
   // MUI theme
@@ -151,7 +166,7 @@ const ProductTable = (props) => {
 
   // If data changes => fetch user info
   useEffect(() => {
-      fetchItems();
+    fetchItems();
     // no deps
   }, []);
 
@@ -159,7 +174,7 @@ const ProductTable = (props) => {
     if (data && data.length > 0) {
       fetchCustomerInfo();
     }
-    
+
     // no deps
   }, [data]);
 
@@ -180,11 +195,14 @@ const ProductTable = (props) => {
                 ...prev,
                 [owner.user]: info || {
                   username: 'Anon',
-                  avatar: 'default-avatar-url'
-                }
+                  avatar: 'default-avatar-url',
+                },
               }));
             } catch (error) {
-              console.error(`Error fetching customer info for ${owner.user}:`, error);
+              console.error(
+                `Error fetching customer info for ${owner.user}:`,
+                error,
+              );
             }
           }
         }
@@ -194,7 +212,7 @@ const ProductTable = (props) => {
 
   // Player Modal
   const handleOpenPlayerModal = (creatorId) => {
-    console.log("creatorId",creatorId)
+    console.log('creatorId', creatorId);
     setSelectedCreator(creatorId);
     setShowPlayerModal(true);
   };
@@ -227,7 +245,7 @@ const ProductTable = (props) => {
       owner: owner.user,
       productName: row.productName,
       rentOption: owner.rentOption,
-      price: owner.price
+      price: owner.price,
     });
 
     if (owner.user !== user) {
@@ -247,15 +265,24 @@ const ProductTable = (props) => {
   };
 
   // ----- Render -----
-
   return (
     <ThemeProvider theme={theme}>
-      <Box sx={{ background: 'rgba(170, 170, 170, 0.06)', borderRadius: '0.3em', p: '20px' }}>
+      <Box
+        sx={{
+          background: 'rgba(170, 170, 170, 0.06)',
+          borderRadius: '0.3em',
+          p: '20px',
+        }}
+      >
         <MarketplaceContainer>
           {/* Filter/Sort */}
           <FilterSortContainer>
             <div className="filters">
-              <Button color="error" variant="outlined" onClick={handleFilterClick}>
+              <Button
+                color="error"
+                variant="outlined"
+                onClick={handleFilterClick}
+              >
                 Filter&nbsp;
                 <FontAwesomeIcon icon={faFilter} />
               </Button>
@@ -274,7 +301,11 @@ const ProductTable = (props) => {
             </div>
 
             <div className="filters">
-              <Button color="error" variant="outlined" onClick={handleSortClick}>
+              <Button
+                color="error"
+                variant="outlined"
+                onClick={handleSortClick}
+              >
                 Sort By&nbsp;
                 <FontAwesomeIcon icon={faSort} />
               </Button>
@@ -301,10 +332,23 @@ const ProductTable = (props) => {
 
           {/* If loading => skeletons */}
           {loading ? (
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, justifyContent: 'center', mt: 2 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: 2,
+                justifyContent: 'center',
+                mt: 2,
+              }}
+            >
               {Array.from(new Array(6)).map((_, i) => (
                 <Box key={i}>
-                  <Skeleton variant="rectangular" width={165} height={160} sx={{ mb: 1 }} />
+                  <Skeleton
+                    variant="rectangular"
+                    width={165}
+                    height={160}
+                    sx={{ mb: 1 }}
+                  />
                   <Skeleton variant="text" width={120} />
                   <Skeleton variant="text" width={100} />
                 </Box>
@@ -333,7 +377,7 @@ const ProductTable = (props) => {
                         owner: firstOwner.user,
                         productName: row.productName,
                         rentOption: firstOwner.rentOption,
-                        price: firstOwner.price
+                        price: firstOwner.price,
                       });
                       history.push(`/product/${row._id}`);
                     }}
@@ -345,7 +389,7 @@ const ProductTable = (props) => {
                         flex: 1,
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'center'
+                        justifyContent: 'center',
                       }}
                     >
                       {/* Avatars => top-left */}
@@ -355,7 +399,7 @@ const ProductTable = (props) => {
                           sx={{
                             position: 'absolute',
                             top: 8,
-                            left: 8
+                            left: 8,
                           }}
                         >
                           {customerInfo[owner.user] ? (
@@ -364,9 +408,11 @@ const ProductTable = (props) => {
                               onClick={(e) => {
                                 e.stopPropagation();
                                 e.preventDefault();
-                                handleOpenPlayerModal(customerInfo[owner.user]._id);
+                                handleOpenPlayerModal(
+                                  customerInfo[owner.user]._id,
+                                );
                               }}
-                              className='player'
+                              className="player"
                             >
                               <Avatar
                                 className="avatar"
@@ -380,13 +426,18 @@ const ProductTable = (props) => {
                               />
                             </Box>
                           ) : (
-                            <Skeleton variant="circular" width={40} height={40} />
+                            <Skeleton
+                              variant="circular"
+                              width={40}
+                              height={40}
+                            />
                           )}
                         </Box>
                       ))}
 
                       {/* Lottie or Image => center */}
-                      {row.image && renderLottieAnimation(row.image, isLowGraphics) ? (
+                      {row.image &&
+                      renderLottieAnimation(row.image, isLowGraphics) ? (
                         <Box sx={{ width: 80, height: 80 }}>
                           {renderLottieAnimation(row.image, isLowGraphics)}
                         </Box>
@@ -398,7 +449,7 @@ const ProductTable = (props) => {
                           sx={{
                             maxWidth: 80,
                             maxHeight: 80,
-                            borderRadius: 2
+                            borderRadius: 2,
                           }}
                         />
                       )}
@@ -411,14 +462,18 @@ const ProductTable = (props) => {
                         p: 1,
                         display: 'flex',
                         flexDirection: 'column',
-                        justifyContent: 'space-between'
+                        justifyContent: 'space-between',
                       }}
                     >
                       {/* Details */}
                       <Box>
                         <Typography
                           variant="h6"
-                          sx={{ fontSize: '1rem', color: '#fff', textAlign: 'center' }}
+                          sx={{
+                            fontSize: '1rem',
+                            color: '#fff',
+                            textAlign: 'center',
+                          }}
                         >
                           {row.productName}
                         </Typography>
@@ -428,7 +483,10 @@ const ProductTable = (props) => {
                               <TableRow>
                                 <TableCell sx={{ color: '#bbb' }}>
                                   <FontAwesomeIcon icon={faTag} />{' '}
-                                  {firstOwner.rentOption ? 'Price / month' : 'Price / unit'}:
+                                  {firstOwner.rentOption
+                                    ? 'Price / month'
+                                    : 'Price / unit'}
+                                  :
                                 </TableCell>
                                 <TableCell sx={{ color: '#ff8500' }}>
                                   {convertToCurrency(firstOwner.price)}
@@ -449,7 +507,9 @@ const ProductTable = (props) => {
 
                       {/* Trade/Rent button => always visible bottom-right */}
                       <Box sx={{ textAlign: 'right', mt: 1 }}>
-                        <Tooltip title={firstOwner.rentOption ? 'Rent' : 'Trade'}>
+                        <Tooltip
+                          title={firstOwner.rentOption ? 'Rent' : 'Trade'}
+                        >
                           <Button
                             variant="contained"
                             color="error"
@@ -479,8 +539,8 @@ const ProductTable = (props) => {
                 color="error"
                 sx={{
                   '& .MuiPaginationItem-root': {
-                    borderRadius: '4px' // "rounded square" corners
-                  }
+                    borderRadius: '4px', // "rounded square" corners
+                  },
                 }}
                 onChange={(event, newPage) => {
                   acQueryItem(100, newPage, sortCriteria, itemType);

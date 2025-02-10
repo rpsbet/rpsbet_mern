@@ -9,7 +9,7 @@ import {
   getGameTypeList,
   loadRoomInfo,
   setCurRoomInfo,
-  loadOlderChatMessages
+  loadOlderChatMessages,
 } from '../../redux/Logic/logic.actions';
 import { toggleDrawer } from '../../redux/Auth/user.actions';
 
@@ -34,7 +34,7 @@ import {
   Box,
   Skeleton,
   TextField,
-  CircularProgress
+  CircularProgress,
 } from '@mui/material';
 
 const moment = require('moment');
@@ -167,7 +167,7 @@ function ChatPage(props) {
         from: my_info?._id,
         message: trimmed,
         is_read: false,
-        created_at: moment().format('MM-DD-YYYY HH:mm:ss')
+        created_at: moment().format('MM-DD-YYYY HH:mm:ss'),
       };
       addChatLog(chatLog);
 
@@ -245,7 +245,10 @@ function ChatPage(props) {
             anchor="left"
             open={isDrawerOpen}
           >
-            <ChatPanel is_mobile={is_mobile} toggleDrawer={toggleDrawerAction} />
+            <ChatPanel
+              is_mobile={is_mobile}
+              toggleDrawer={toggleDrawerAction}
+            />
           </Drawer>
         )}
 
@@ -262,7 +265,9 @@ function ChatPage(props) {
             <Box
               className="chat-header title"
               sx={{
-                width: isDrawerOpen ? 'calc(100% - 610px)' : 'calc(100% - 350px)',
+                width: isDrawerOpen
+                  ? 'calc(100% - 610px)'
+                  : 'calc(100% - 350px)',
                 display: 'flex',
                 alignItems: 'center',
                 p: 1,
@@ -321,7 +326,7 @@ function ChatPage(props) {
                 flex: 1,
                 p: 2,
                 minHeight: 300,
-                maxHeight: '60vh'
+                maxHeight: '60vh',
               }}
               onScroll={handleScroll}
             >
@@ -337,7 +342,7 @@ function ChatPage(props) {
                     justifyContent: 'center',
                   }}
                 >
-                  <CircularProgress color='error' size={48} />
+                  <CircularProgress color="error" size={48} />
                 </Box>
               )}
 
@@ -354,7 +359,11 @@ function ChatPage(props) {
                     <Box className="message-content">{row.message}</Box>
                     <Box
                       className="message-header"
-                      sx={{ display: 'flex', alignItems: 'center', fontSize: '0.8em' }}
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        fontSize: '0.8em',
+                      }}
                     >
                       {row.from !== my_info?._id && (
                         <Box
@@ -387,7 +396,7 @@ function ChatPage(props) {
                         flexDirection: 'column',
                         mb: 2,
                         gap: 1,
-                        alignItems: index % 2 === 0 ? 'flex-end' : 'flex-start'
+                        alignItems: index % 2 === 0 ? 'flex-end' : 'flex-start',
                       }}
                     >
                       <Skeleton
@@ -414,7 +423,7 @@ function ChatPage(props) {
                 display: 'flex',
                 alignItems: 'center',
                 p: 1,
-                borderTop: '1px solid rgba(255,255,255,0.1)'
+                borderTop: '1px solid rgba(255,255,255,0.1)',
               }}
             >
               <TextField
@@ -429,7 +438,11 @@ function ChatPage(props) {
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
-                      <Button variant="outlined" color="error" onClick={handleEmojiClick}>
+                      <Button
+                        variant="outlined"
+                        color="error"
+                        onClick={handleEmojiClick}
+                      >
                         <InsertEmoticon sx={{ fontSize: '18px' }} />
                       </Button>
                       <Popover
@@ -438,12 +451,15 @@ function ChatPage(props) {
                         onClose={handleEmojiClose}
                         elevation={0}
                         anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
-                        transformOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+                        transformOrigin={{
+                          vertical: 'bottom',
+                          horizontal: 'left',
+                        }}
                       >
                         <PopoverEmojiGrid onSelect={insertEmoji} />
                       </Popover>
                     </InputAdornment>
-                  )
+                  ),
                 }}
               />
 
@@ -510,18 +526,20 @@ function PopoverEmojiGrid({ onSelect }) {
     '💸',
     '💰',
     '🍀',
-    '🏦'
+    '🏦',
   ];
 
   return (
-    <Box sx={{ p: 2, maxWidth: 200, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+    <Box
+      sx={{ p: 2, maxWidth: 200, display: 'flex', flexWrap: 'wrap', gap: 1 }}
+    >
       {emojis.map((emoji) => (
         <Box
           key={emoji}
           sx={{
             cursor: 'pointer',
             fontSize: '1.5rem',
-            '&:hover': { opacity: 0.7 }
+            '&:hover': { opacity: 0.7 },
           }}
           onClick={() => onSelect(emoji)}
         >
@@ -553,7 +571,7 @@ const mapStateToProps = (state) => ({
   is_mobile: state.logic.is_mobile,
   selectedMobileTab: state.logic.selectedMobileTab,
   hasMore: state.logic.chatRoomInfo.hasMore,
-  fetchingOlder: state.logic.fetchingOlder
+  fetchingOlder: state.logic.fetchingOlder,
 });
 
 const mapDispatchToProps = {
@@ -564,7 +582,7 @@ const mapDispatchToProps = {
   loadRoomInfo,
   getMyChat,
   toggleDrawer,
-  loadOlderChatMessages
+  loadOlderChatMessages,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(ChatPage);

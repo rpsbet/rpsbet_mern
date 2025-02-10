@@ -15,7 +15,7 @@ import {
   CircularProgress,
   Popover,
   Typography,
-  Skeleton
+  Skeleton,
 } from '@mui/material';
 
 import {
@@ -23,7 +23,7 @@ import {
   Gif,
   Clear,
   ChatOutlined,
-  ChatBubbleOutlineOutlined
+  ChatBubbleOutlineOutlined,
 } from '@mui/icons-material';
 
 import GlobalChat from './GlobalChat';
@@ -43,19 +43,23 @@ const emojis = [
   { command: ':gang:', url: '/img/emotes/gangSigns.webp', alt: 'gang signs' },
   { command: ':happy:', url: '/img/emotes/happy.webp', alt: 'happy' },
   { command: ':sus:', url: '/img/emotes/sus.webp', alt: 'sus' },
-  { command: ':flatearth:', url: '/img/emotes/flatearth.webp', alt: 'flat earth' },
+  {
+    command: ':flatearth:',
+    url: '/img/emotes/flatearth.webp',
+    alt: 'flat earth',
+  },
   { command: ':pepedance:', url: '/img/emotes/pepepe.webp', alt: 'pepe dance' },
   { command: ':leo:', url: '/img/emotes/leo.webp', alt: 'leo' },
   {
     command: ':wellyousee:',
     url: '/img/emotes/wellyousee.webp',
-    alt: 'wellyousee'
+    alt: 'wellyousee',
   },
   { command: ':laugh:', url: '/img/emotes/laugh.webp', alt: 'laugh' },
   {
     command: ':randomemote:',
     url: '/img/emotes/randomemote.webp',
-    alt: 'randomemote'
+    alt: 'randomemote',
   },
   { command: ':rainbow:', url: '/img/emotes/rainbow.webp', alt: 'rainbow' },
   { command: ':cross:', url: '/img/emotes/cross.webp', alt: 'cross' },
@@ -63,15 +67,27 @@ const emojis = [
   { command: ':babycar:', url: '/img/emotes/babycar.webp', alt: 'baby car' },
   { command: ':sexykiss:', url: '/img/emotes/sexykiss.webp', alt: 'sexy kiss' },
   { command: ':sexyclap:', url: '/img/emotes/sexyclap.webp', alt: 'sexy clap' },
-  { command: ':sexyfinger:', url: '/img/emotes/sexyfinger.webp', alt: 'sexy finger' },
+  {
+    command: ':sexyfinger:',
+    url: '/img/emotes/sexyfinger.webp',
+    alt: 'sexy finger',
+  },
   { command: ':pickle:', url: '/img/emotes/pickle.webp', alt: 'pickle' },
-  { command: ':trooperbae:', url: '/img/emotes/trooperbae.webp', alt: 'storm trooper bae' },
+  {
+    command: ':trooperbae:',
+    url: '/img/emotes/trooperbae.webp',
+    alt: 'storm trooper bae',
+  },
   { command: ':catpop:', url: '/img/emotes/catpop.webp', alt: 'catpop' },
   { command: ':brother:', url: '/img/emotes/brother.webp', alt: 'brother' },
   { command: ':pepenou:', url: '/img/emotes/pepenou.webp', alt: 'pepenou' },
   { command: ':skibidi:', url: '/img/emotes/skibidi.webp', alt: 'skibidi' },
   { command: ':salute:', url: '/img/emotes/salute.webp', alt: 'salute' },
-  { command: ':bananacat:', url: '/img/emotes/bananacat.webp', alt: 'banana cat' },
+  {
+    command: ':bananacat:',
+    url: '/img/emotes/bananacat.webp',
+    alt: 'banana cat',
+  },
   { command: ':sadthink:', url: '/img/emotes/sadthink.webp', alt: 'sadthink' },
   { command: ':alien:', url: '/img/emotes/alien.webp', alt: 'alien' },
   { command: ':chad:', url: '/img/emotes/chad.webp', alt: 'chad' },
@@ -87,7 +103,11 @@ const emojis = [
   { command: ':wutdog:', url: '/img/emotes/wutdog.webp', alt: 'wutdog' },
   { command: ':wut:', url: '/img/emotes/wut.webp', alt: 'wut' },
   { command: ':pogger:', url: '/img/emotes/pogger.webp', alt: 'pogger' },
-  { command: ':pleasecat:', url: '/img/emotes/pleasecat.webp', alt: 'please cat' },
+  {
+    command: ':pleasecat:',
+    url: '/img/emotes/pleasecat.webp',
+    alt: 'please cat',
+  },
   { command: ':nocap:', url: '/img/emotes/nocap.webp', alt: 'nocap' },
   { command: ':mexican:', url: '/img/emotes/mexican.webp', alt: 'cat' },
   { command: ':mike:', url: '/img/emotes/mike.webp', alt: 'mike' },
@@ -106,7 +126,7 @@ const emojis = [
   {
     command: ':moneypepe:',
     url: '/img/emotes/moneypepe.webp',
-    alt: 'moneypepe'
+    alt: 'moneypepe',
   },
   { command: ':truemf:', url: '/img/emotes/truemf.webp', alt: 'truemf' },
   { command: ':hattip:', url: '/img/emotes/hattip.webp', alt: 'hat tip' },
@@ -119,8 +139,8 @@ const emojis = [
   {
     command: ':minecraftcookie:',
     url: '/img/emotes/minecraftcookie.webp',
-    alt: 'minecraftcookie'
-  }
+    alt: 'minecraftcookie',
+  },
 ];
 
 // Instead of filling with the same reference, create individual objects:
@@ -137,13 +157,14 @@ function ChatPanel(props) {
     is_mobile,
     toggleDrawer,
     setFocused,
-    highlightChatId
+    highlightChatId,
   } = props;
 
-    // ------------------ LOCAL STORAGE ------------------
+  // ------------------ LOCAL STORAGE ------------------
   // 1) Retrieve a previously stored tab index OR default to 1
   const storedTabIndex = localStorage.getItem('selectedTabIndex');
-  const initialTabIndex = storedTabIndex !== null ? parseInt(storedTabIndex, 10) : 1;
+  const initialTabIndex =
+    storedTabIndex !== null ? parseInt(storedTabIndex, 10) : 1;
 
   // ------------------ LOCAL STATE ------------------
   const [selectedTabIndex, setSelectedTabIndex] = useState(initialTabIndex);
@@ -154,9 +175,7 @@ function ChatPanel(props) {
   const [gifAnchorEl, setGifAnchorEl] = useState(null);
 
   // Initialize with a new array of 10 distinct objects (not just .fill() of the same object)
-  const [gifs, setGifs] = useState(
-    []
-  );
+  const [gifs, setGifs] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const [selectedMessage, setSelectedMessage] = useState({
@@ -166,7 +185,7 @@ function ChatPanel(props) {
     accessory: null,
     message: null,
     messageType: null,
-    time: null
+    time: null,
   });
   const [hoverTabIndex, setHoverTabIndex] = useState(-1);
   const dispatch = useDispatch();
@@ -196,7 +215,7 @@ function ChatPanel(props) {
             avatar: user.avatar,
             accessory: user.accessory,
             replyTo: selectedMessage,
-            rank: user.totalWagered
+            rank: user.totalWagered,
           });
           handleClearTooltip();
           handleCloseEmojiPopover();
@@ -217,7 +236,7 @@ function ChatPanel(props) {
       rank: null,
       message: null,
       messageType: null,
-      time: null
+      time: null,
     });
     setText(''); // Clear the text field input
   };
@@ -278,7 +297,7 @@ function ChatPanel(props) {
       if (socket) {
         const message = {
           type: 'gif',
-          content: gifUrl
+          content: gifUrl,
         };
         socket.emit('GLOBAL_CHAT_SEND', {
           sender: userName,
@@ -287,7 +306,7 @@ function ChatPanel(props) {
           rank: user.totalWagered,
           avatar: user.avatar,
           accessory: user.accessory,
-          messageType: 'gif'
+          messageType: 'gif',
         });
         handleCloseGifPopover();
         handleCloseEmojiPopover();
@@ -331,7 +350,7 @@ function ChatPanel(props) {
       const fetchedGifs = response.data.data.map((gif) => ({
         ...initialGifState,
         url: gif.images.fixed_height.url,
-        title: gif.title
+        title: gif.title,
       }));
 
       setGifs(fetchedGifs);
@@ -375,8 +394,8 @@ function ChatPanel(props) {
           minHeight: '100%',
           p: 1,
           bgcolor: '#29202f', // override background
-          color: 'white',    // default text color
-          border: '0'
+          color: 'white', // default text color
+          border: '0',
         }}
       >
         {/* Tabs Section */}
@@ -459,7 +478,11 @@ function ChatPanel(props) {
 
         {/* Tab Content */}
         {selectedTabIndex === 0 ? (
-          <MyChat highlightChatId={highlightChatId} is_mobile={is_mobile} toggleDrawer={toggleDrawer} />
+          <MyChat
+            highlightChatId={highlightChatId}
+            is_mobile={is_mobile}
+            toggleDrawer={toggleDrawer}
+          />
         ) : (
           <GlobalChat
             emojis={emojis}
@@ -481,12 +504,22 @@ function ChatPanel(props) {
                   borderRadius: 1,
                   bgcolor: 'background.default',
                   position: 'absolute',
-                  width: '100%'
+                  width: '100%',
                 }}
               >
-                <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    width: '100%',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                  }}
+                >
                   <Box sx={{ mr: 1, fontSize: 'small' }}>Reply to:</Box>
-                  <Box className='player' sx={{ display: 'flex', alignItems: 'center', mr: 1 }}>
+                  <Box
+                    className="player"
+                    sx={{ display: 'flex', alignItems: 'center', mr: 1 }}
+                  >
                     <Avatar
                       rank={selectedMessage.rank}
                       accessory={selectedMessage.accessory}
@@ -496,7 +529,9 @@ function ChatPanel(props) {
                       alt="Avatar"
                     />
                   </Box>
-                  <Box sx={{ flex: 1, fontSize: 'small', mr: '10px' }}>{selectedMessage.sender}</Box>
+                  <Box sx={{ flex: 1, fontSize: 'small', mr: '10px' }}>
+                    {selectedMessage.sender}
+                  </Box>
                   <Button
                     onClick={handleClearTooltip}
                     color="error"
@@ -569,8 +604,7 @@ function ChatPanel(props) {
                   borderRadius: 1,
                   maxWidth: '200px',
                   overflowY: 'auto',
-                  bgcolor: 'background.default'
-
+                  bgcolor: 'background.default',
                 },
               }}
             >
@@ -607,7 +641,6 @@ function ChatPanel(props) {
               anchorEl={gifAnchorEl}
               onClose={handleCloseGifPopover}
               elevation={0}
-
               anchorOrigin={{
                 vertical: 'top',
                 horizontal: 'left',
@@ -646,10 +679,7 @@ function ChatPanel(props) {
                   <CircularProgress color="error" size={20} />
                   <Typography variant="body2">Loading GIFs...</Typography>
                 </Box>
-              ) : gifs.length === 0 ? (
-                // 2) NO GIFS & NOT LOADING => SHOW NOTHING
-                null
-              ) : (
+              ) : gifs.length === 0 ? null : ( // 2) NO GIFS & NOT LOADING => SHOW NOTHING
                 // 3) SHOW GIF GRID
                 <Box
                   sx={{
@@ -708,11 +738,11 @@ const mapStateToProps = (state) => ({
   userName: state.auth.userName,
   user: state.auth.user,
   socket: state.auth.socket,
-  onlineUserList: state.logic.onlineUserList
+  onlineUserList: state.logic.onlineUserList,
 });
 
 const mapDispatchToProps = {
-  setFocused
+  setFocused,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(ChatPanel);

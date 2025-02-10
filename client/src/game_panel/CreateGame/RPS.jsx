@@ -1,6 +1,14 @@
 import React, { useState } from 'react';
 import { connect } from 'react-redux';
-import { Button, Tooltip, RadioGroup, IconButton, Box, Radio, FormControlLabel } from '@mui/material';
+import {
+  Button,
+  Tooltip,
+  RadioGroup,
+  IconButton,
+  Box,
+  Radio,
+  FormControlLabel,
+} from '@mui/material';
 import { Info } from '@mui/icons-material';
 import styled from 'styled-components';
 import DefaultBetAmountPanel from './DefaultBetAmountPanel';
@@ -68,7 +76,6 @@ const StyledProductImage = styled.img`
 `;
 
 const RPS = (props) => {
-
   const {
     rps_game_type,
     step,
@@ -92,7 +99,7 @@ const RPS = (props) => {
     ai_mode,
     user,
     rank,
-    ticker
+    ticker,
   } = props;
 
   const gameTypeStyleClass = {
@@ -106,7 +113,10 @@ const RPS = (props) => {
     <>
       {step === 1 && rps_game_type === 0 && (
         <Box className="game-info-panel">
-          <Box className="glass-container" style={{ display: 'flex', flexDirection: 'column' }}>
+          <Box
+            className="glass-container"
+            style={{ display: 'flex', flexDirection: 'column' }}
+          >
             <RadioGroup value={selectedGameType} onChange={handleChange}>
               <h3 className="game-sub-title roll-tag">
                 Choose Game Mode&nbsp;
@@ -123,21 +133,34 @@ const RPS = (props) => {
                   <FormControlLabel
                     key={index}
                     value={gameType.short_name}
-                    control={<Radio icon={<div style={{ display: 'none' }} />} checkedIcon={<div style={{ display: 'none' }} />} />}
+                    control={
+                      <Radio
+                        icon={<div style={{ display: 'none' }} />}
+                        checkedIcon={<div style={{ display: 'none' }} />}
+                      />
+                    }
                     label={
                       <StyledProductCard
                         id="rps-game-type-radio"
                         isDarkMode={isDarkMode}
-                        className={`btn-game-type title btn-icon ${gameTypeStyleClass[gameType.short_name]} ${selectedGameType === gameType.short_name ? 'active' : ''
-                          }`}
+                        className={`btn-game-type title btn-icon ${gameTypeStyleClass[gameType.short_name]} ${
+                          selectedGameType === gameType.short_name
+                            ? 'active'
+                            : ''
+                        }`}
                       >
                         <StyledProductImage
                           src={`/img/gametype/icons/${gameType.short_name}.svg`}
                           alt={gameType.game_type_name}
                         />
-                        <span style={{ color: '#f9f9f9', marginTop: '0' }}>{gameType.game_type_name}</span>
+                        <span style={{ color: '#f9f9f9', marginTop: '0' }}>
+                          {gameType.game_type_name}
+                        </span>
                       </StyledProductCard>
                     }
+                    sx={{
+                      justifyContent: 'center',
+                    }}
                   />
                 ))}
               </StyledRadioGrid>
@@ -154,7 +177,13 @@ const RPS = (props) => {
               rank={rank}
               ai_mode={ai_mode}
             />
-            <CoinInfo onChangeState={onChangeState} name={name} image={image} ticker={ticker} isDarkMode={isDarkMode} />
+            <CoinInfo
+              onChangeState={onChangeState}
+              name={name}
+              image={image}
+              ticker={ticker}
+              isDarkMode={isDarkMode}
+            />
             <DefaultBetAmountPanel
               tax={tax}
               bet_amount={bet_amount}
