@@ -415,8 +415,6 @@ export const deListLoan = data => async (dispatch) => {
 
     const res = await axios.post('/loan/withdraw-loan', data);
     if (res.data.success) {
-      dispatch({ type: MSG_SUCCESS, payload: "GREAAT SUCCESS!!" });
-
       return res.data;
     }
   } catch (err) {

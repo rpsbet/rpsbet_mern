@@ -191,7 +191,7 @@ function CreateProductForm({
                 </TableCell>
                 <TableCell>
                   <Typography variant="body2">
-                    {convertToCurrency(user_balance, solPrice)}
+                  {(user_balance).toFixed(6)} SOL / {convertToCurrency(user_balance, solPrice)}
                   </Typography>
                 </TableCell>
               </TableRow>

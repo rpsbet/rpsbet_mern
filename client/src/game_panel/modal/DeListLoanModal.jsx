@@ -1,16 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Modal from 'react-modal';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   errorMsgBar,
   closeDeListLoanModal,
+  successMsgBar,
 } from '../../redux/Notification/notification.actions';
 import {
   acQueryMyLoan,
   acQueryLoan,
   acCalculateRemainingLoans,
 } from '../../redux/Loan/loan.action';
-import { Button } from '@mui/material';
+import { Button, CircularProgress } from '@mui/material';
 import { getUser } from '../../redux/Auth/user.actions';
 import { deListLoan } from '../../redux/Logic/logic.actions';
 
@@ -18,7 +19,7 @@ Modal.setAppElement('#root');
 
 const customStyles = {
   overlay: {
-    zIndex: 3,
+    zIndex: 999999,
     backgroundColor: 'rgba(0, 0, 0, 0.8)',
   },
   content: {
@@ -46,17 +47,20 @@ const DeListLoanModal = () => {
     loan: state.loanReducer._id,
   }));
 
-  const handleConfirm = async () => {
-    const response = await dispatch(deListLoan({ loan_id: loan }));
-    if (response.success) {
-      const { message } = response;
-      dispatch(errorMsgBar(message));
+  // Local loading state to show spinner and disable the CONFIRM button
+  const [loading, setLoading] = useState(false);
 
+  const handleConfirm = async () => {
+    setLoading(true); // Start loading
+    const response = await dispatch(deListLoan({ loan_id: loan }));
+    setLoading(false); // Stop loading
+
+    if (response.success) {
+      dispatch(successMsgBar(response.message));
       await dispatch(acQueryMyLoan(30, 1, 'loan_amount', ''));
       await dispatch(acQueryLoan(30, 1, 'loan_amount', ''));
-      // await dispatch(acCalculateRemainingLoans());
+      await dispatch(acCalculateRemainingLoans());
       await dispatch(getUser());
-
       dispatch(closeDeListLoanModal());
     } else {
       dispatch(errorMsgBar(response.message));
@@ -68,10 +72,7 @@ const DeListLoanModal = () => {
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      style={customStyles}
-    >
+    <Modal isOpen={isOpen} style={customStyles}>
       <div className={isDarkMode ? 'dark_mode' : ''}>
         <div className="modal-body alert-body password-modal-body">
           <div className="modal-icon result-icon-prize"></div>
@@ -81,10 +82,19 @@ const DeListLoanModal = () => {
           <br />
         </div>
         <div className="modal-footer">
-          <Button variant='contained' color='error' onClick={handleConfirm}>
-            CONFIRM
+          <Button
+            variant="contained"
+            color="error"
+            onClick={handleConfirm}
+            disabled={loading} // Disable while loading
+          >
+            {loading ? (
+              <CircularProgress size={24} color="inherit" />
+            ) : (
+              'CONFIRM'
+            )}
           </Button>
-          <Button variant='contained' color='error' onClick={handleCancel}>
+          <Button variant="contained" color="error" onClick={handleCancel}>
             CANCEL
           </Button>
         </div>

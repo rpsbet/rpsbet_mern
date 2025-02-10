@@ -13,7 +13,8 @@ import {
   Paper,
   Chip,
   Divider,
-  TableContainer
+  TableContainer,
+  CircularProgress
 } from '@mui/material';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import MoneyOffIcon from '@mui/icons-material/MoneyOff';
@@ -26,13 +27,12 @@ import {
   vaultDeposit,
   vaultWithdraw,
   fetchRecentVaultTransactions,
+  getUser
 } from '../../redux/Auth/user.actions';
 import { addNewTransaction } from '../../redux/Logic/logic.actions';
 import { errorMsgBar } from '../../redux/Notification/notification.actions';
 import { convertToCurrency } from '../../util/conversion';
 
-// Remove react-modal usage and .setAppElement()
-// MUI handles that internally.
 function VaultModal(props) {
   const {
     vaultBal,
@@ -46,7 +46,8 @@ function VaultModal(props) {
     user,
     solPrice,
     isDarkMode,
-    addNewTransaction
+    addNewTransaction,
+    getUser
   } = props;
 
   // ------------------ LOCAL STATE ------------------
@@ -56,11 +57,16 @@ function VaultModal(props) {
   const [isWithdraw, setIsWithdraw] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [vaultTransactions, setVaultTransactions] = useState([]);
+
+  // Loading states for each button
+  const [depositLoading, setDepositLoading] = useState(false);
+  const [withdrawLoading, setWithdrawLoading] = useState(false);
+
   const dispatch = useDispatch();
 
   // ------------------ EFFECTS ------------------
   useEffect(() => {
-    // Fetch recent transactions right away
+    // Fetch recent transactions when modal opens
     fetchRecentVaultTransactions();
     setAnimate(true);
     // eslint-disable-next-line
@@ -84,31 +90,35 @@ function VaultModal(props) {
     const amountParsed = parseFloat(amount);
 
     // Basic validation
-    if (
-      isNaN(amountParsed) ||
-      amountParsed <= 0 ||
-      amountParsed > user.balance
-    ) {
+    if (isNaN(amountParsed) || amountParsed <= 0 || amountParsed > user.balance) {
       dispatch(errorMsgBar('IM-PAW-SIBBLEEE, ENTER A VALID AMOUNT!'));
       return;
     }
 
-    const result = await vaultDeposit(amount);
-    const newTransaction = result.newTransaction;
+    // Begin loading for Deposit
+    setDepositLoading(true);
+    try {
+      const result = await vaultDeposit(amount);
+      await getUser();
+      const newTransaction = result.newTransaction;
 
-    // Update local state
-    setVaultTransactions([newTransaction, ...vaultTransactions]);
-    setLastUpdatedBalance(vaultBal);
-    setAmount('');
-    setIsWithdraw(false);
-    setLoaded(true);
+      // Update local state
+      setVaultTransactions([newTransaction, ...vaultTransactions]);
+      setLastUpdatedBalance(vaultBal);
+      setAmount('');
+      setIsWithdraw(false);
+      setLoaded(true);
 
-    if (onVaultBalChange) {
-      onVaultBalChange(result.vaultBalance);
+      if (onVaultBalChange) {
+        onVaultBalChange(result.vaultBalance);
+      }
+
+      // Redux updates
+      addNewTransaction(result.newTransaction);
+    } finally {
+      // Stop loading whether success or error
+      setDepositLoading(false);
     }
-
-    // Redux updates
-    addNewTransaction(result.newTransaction);
   };
 
   const handleWithdraw = async () => {
@@ -121,22 +131,30 @@ function VaultModal(props) {
       return;
     }
 
-    const result = await vaultWithdraw(amount);
-    const newTransaction = result.newTransaction;
+    // Begin loading for Withdraw
+    setWithdrawLoading(true);
+    try {
+      const result = await vaultWithdraw(amount);
+      await getUser();
+      const newTransaction = result.newTransaction;
 
-    // Update local state
-    setVaultTransactions([newTransaction, ...vaultTransactions]);
-    setLastUpdatedBalance(vaultBal);
-    setAmount('');
-    setIsWithdraw(true);
-    setLoaded(true);
+      // Update local state
+      setVaultTransactions([newTransaction, ...vaultTransactions]);
+      setLastUpdatedBalance(vaultBal);
+      setAmount('');
+      setIsWithdraw(true);
+      setLoaded(true);
 
-    if (onVaultBalChange) {
-      onVaultBalChange(result.vaultBalance);
+      if (onVaultBalChange) {
+        onVaultBalChange(result.vaultBalance);
+      }
+
+      // Redux updates
+      addNewTransaction(result.newTransaction);
+    } finally {
+      // Stop loading whether success or error
+      setWithdrawLoading(false);
     }
-
-    // Redux updates
-    addNewTransaction(result.newTransaction);
   };
 
   // ------------------ STYLES (MUI) ------------------
@@ -145,7 +163,7 @@ function VaultModal(props) {
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    bgcolor: '#1f1a25',  // same background color as your login modal
+    bgcolor: '#1f1a25',
     color: '#fff',
     boxShadow: 24,
     borderRadius: 1,
@@ -160,7 +178,6 @@ function VaultModal(props) {
   // ------------------ RENDER ------------------
   return (
     <ThemeProvider theme={theme}>
-
       <Modal
         open={modalIsOpen}
         onClose={closeModal}
@@ -183,18 +200,35 @@ function VaultModal(props) {
           </Box>
 
           {/* BODY */}
-          <Box sx={{ background: 'rgba(170, 170, 170, 0.06)', borderRadius: '0.3em', p: '20px', display: 'flex', flexDirection: 'column', gap: 2 }}>
-
+          <Box
+            sx={{
+              background: 'rgba(170, 170, 170, 0.06)',
+              borderRadius: '0.3em',
+              p: '20px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 2
+            }}
+          >
             {/* Balance Section */}
             <Box>
-              <Typography className="title" variant="subtitle2" textAlign="center" sx={{ mt: 2, mb: 2 }}>
+              <Typography
+                className="title"
+                variant="subtitle2"
+                textAlign="center"
+                sx={{ mt: 2, mb: 2 }}
+              >
                 Your Vault Balance
               </Typography>
               <Divider>
                 <Chip
                   size="xx-large"
                   label={
-                    <Typography variant="h5" component="span" sx={{ fontSize: '1.2rem', p: 2 }}>
+                    <Typography
+                      variant="h5"
+                      component="span"
+                      sx={{ fontSize: '1.2rem', p: 2 }}
+                    >
                       <CountUp
                         start={0}
                         end={vaultBal}
@@ -212,7 +246,7 @@ function VaultModal(props) {
               </Divider>
 
               <TextField
-                color='error'
+                color="error"
                 label="Enter Amount"
                 variant="filled"
                 type="number"
@@ -225,7 +259,12 @@ function VaultModal(props) {
 
             {/* Recent Transactions */}
             <Box>
-              <Typography className="title" variant="subtitle2" sx={{ mt: 2 }} textAlign="center">
+              <Typography
+                className="title"
+                variant="subtitle2"
+                sx={{ mt: 2 }}
+                textAlign="center"
+              >
                 Recent Transactions
               </Typography>
               <TableContainer component={Paper} sx={{ mt: 1, maxHeight: 100 }}>
@@ -259,25 +298,39 @@ function VaultModal(props) {
               variant="contained"
               color="error"
               onClick={handleDeposit}
-              startIcon={<AttachMoneyIcon />}
+              disabled={depositLoading || withdrawLoading} // disable if either is loading
+              startIcon={
+                depositLoading ? (
+                  <CircularProgress size={18} color="inherit" />
+                ) : (
+                  <AttachMoneyIcon />
+                )
+              }
               fullWidth
             >
-              Deposit
+              {depositLoading ? 'processing...' : 'Deposit'}
             </Button>
+
             <Button
               variant="contained"
               color="success"
               onClick={handleWithdraw}
-              startIcon={<MoneyOffIcon />}
+              disabled={depositLoading || withdrawLoading} // disable if either is loading
+              startIcon={
+                withdrawLoading ? (
+                  <CircularProgress size={18} color="inherit" />
+                ) : (
+                  <MoneyOffIcon />
+                )
+              }
               fullWidth
             >
-              Withdraw
+              {withdrawLoading ? 'processing...' : 'Withdraw'}
             </Button>
           </Box>
         </Box>
       </Modal>
-    </ThemeProvider >
-
+    </ThemeProvider>
   );
 }
 
@@ -293,6 +346,7 @@ const mapDispatchToProps = {
   vaultWithdraw,
   addNewTransaction,
   fetchRecentVaultTransactions,
+  getUser
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(VaultModal);

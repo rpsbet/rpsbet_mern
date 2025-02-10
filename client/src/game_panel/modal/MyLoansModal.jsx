@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { connect, useDispatch } from 'react-redux';
 import Lottie from 'react-lottie';
 import {
@@ -14,7 +14,7 @@ import {
   TextField,
   Typography,
   Skeleton,
-  IconButton,
+  CircularProgress,
   Dialog,
   DialogContent
 } from '@mui/material';
@@ -36,10 +36,8 @@ import {
   acCalculateRemainingLoans
 } from '../../redux/Loan/loan.action';
 import { getUser } from '../../redux/Auth/user.actions';
-import {
-errorMsgBar,
-  successMsgBar
-} from '../../redux/Notification/notification.actions';
+import { errorMsgBar, successMsgBar } from '../../redux/Notification/notification.actions';
+
 
 // ------------------ CONSTANTS & HELPERS ------------------
 const categories = [
@@ -76,7 +74,7 @@ const getHighlightedRowIndex = (categoriesArr, rankValue, accountAgeInDays) => {
       currentRank >= category.rankThreshold &&
       accountAgeInDays >= category.accountAgeThresholdInDays
     ) {
-      bestCategoryIndex = i;
+      bestCategoryIndex = i - 1;
     }
   }
   return bestCategoryIndex;
@@ -93,7 +91,7 @@ const MyLoansModal = (props) => {
     remainingLoans,
     solPrice,
     loading,
-    myLoans, // Make sure this is provided via mapStateToProps
+    myLoans,
     // Redux actions
     errorMsgBar,
     successMsgBar,
@@ -109,15 +107,18 @@ const MyLoansModal = (props) => {
   const [loanPeriod, setLoanPeriod] = useState('');
   const [apy, setApy] = useState('');
   const [productCreateModalIsOpen, setProductCreateModalIsOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const dispatch = useDispatch();
-  
+
+  // Track the previous modalIsOpen in a ref
+  const previousModalOpenRef = useRef(false);
+
+  // Only call acQueryMyLoan once each time modal transitions from closed -> open
   useEffect(() => {
-    if (modalIsOpen) {
-      console.log('[MyLoansModal] Modal opened -> calling acQueryMyLoan...');
-      acQueryMyLoan(30, 1, 'loan_amount', '');
-    }
-  }, [modalIsOpen, acQueryMyLoan]);
+    acQueryMyLoan(30, 1, 'loan_amount', '');
+
+  }, []);
 
   // ------------------ HANDLERS ------------------
   const openProductCreateModal = useCallback(() => {
@@ -134,44 +135,41 @@ const MyLoansModal = (props) => {
         setLoanAmount(data.loan_amount || '');
         setApy(data.apy || '');
         setLoanPeriod(data.loan_period || '');
-      } else {
-        errorMsgBar(`One of the fields has an empty or invalid value.`);
       }
-    },
-    [errorMsgBar]
+    }
   );
 
   const onSubmitForm = useCallback(async () => {
-    // 1. Validate required fields
     if (!loanAmount || !apy || !loanPeriod) {
       errorMsgBar('Please fill in all required fields.');
-      return; // Stop if any field is missing
+      return;
     }
-  
+
+    setIsSubmitting(true);
+
     try {
-      // 2. Attempt to create the loan
       await createLoan({
         _id,
         loan_amount: loanAmount,
         loan_period: loanPeriod,
-        apy
+        apy,
       });
-      
-      // 4. Re-fetch data or any other actions
+
+      // Re-fetch data if needed
       await acQueryMyLoan(30, 1, 'loan_amount', '');
       await acQueryLoan(30, 1, 'loan_amount', '');
-      // await acCalculateRemainingLoans();  // Uncomment if needed
+      await acCalculateRemainingLoans();
       await getUser();
-  
-      // 5. Close the modal
+
       closeProductCreateModal();
     } catch (error) {
-      // If there is an error during createLoan or any subsequent steps, show an error message
       errorMsgBar(
-        error?.message 
-        ? `Error creating new loan: ${error.message}`
-        : 'Something went wrong while creating the loan.'
+        error?.message
+          ? `Error creating new loan: ${error.message}`
+          : 'Something went wrong while creating the loan.'
       );
+    } finally {
+      setIsSubmitting(false);
     }
   }, [
     loanAmount,
@@ -183,9 +181,9 @@ const MyLoansModal = (props) => {
     acQueryLoan,
     acCalculateRemainingLoans,
     getUser,
-    successMsgBar,
     errorMsgBar,
-    closeProductCreateModal
+    closeProductCreateModal,
+    successMsgBar,
   ]);
 
   // ------------------ CALCULATIONS ------------------
@@ -313,8 +311,7 @@ const MyLoansModal = (props) => {
             }}
           >
             <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            <FontAwesomeIcon icon={faPlus} /> &nbsp;
-              NEW LOAN
+              <FontAwesomeIcon icon={faPlus} /> &nbsp;NEW LOAN
             </Typography>
             <Button
               variant="text"
@@ -378,10 +375,10 @@ const MyLoansModal = (props) => {
                       <TableRow
                         key={index}
                         sx={{
-                          backgroundColor: highlightedRowIndex === index ? '#28a745' : '#333',
+                          backgroundColor: highlightedRowIndex === index ? '#28a745' : '#333'
                         }}
                       >
-                        <TableCell sx={{color: '#fff'}} align="center">
+                        <TableCell sx={{ color: '#fff' }} align="center">
                           <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
                             <Lottie
                               options={{
@@ -396,7 +393,7 @@ const MyLoansModal = (props) => {
                             <span>{category.rankThreshold}</span>
                           </Box>
                         </TableCell>
-                        <TableCell sx={{color: '#fff'}} align="center">
+                        <TableCell sx={{ color: '#fff' }} align="center">
                           {category.maxAllowance} ({convertToCurrency(category.maxAllowance, solPrice)})
                         </TableCell>
                       </TableRow>
@@ -422,8 +419,18 @@ const MyLoansModal = (props) => {
 
           {/* FOOTER: SUBMIT BUTTON */}
           <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <Button variant="contained" color="error" onClick={onSubmitForm}>
-              Submit
+            <Button
+              fullWidth
+              variant="contained"
+              color="error"
+              onClick={onSubmitForm}
+              disabled={isSubmitting} // Disable the button while loading
+            >
+              {isSubmitting ? (
+                <CircularProgress size={24} color="inherit" />
+              ) : (
+                'Submit'
+              )}
             </Button>
           </Box>
         </DialogContent>
@@ -442,7 +449,7 @@ const mapStateToProps = (state) => ({
   loading: state.loanReducer.loading,
   solPrice: state.logic.solPrice,
   // Example: store user loans in state.loanReducer.myLoans
-  myLoans: state.loanReducer.myLoans || []
+  myLoans: state.loanReducer.myLoanArray || []
 });
 
 const mapDispatchToProps = {
