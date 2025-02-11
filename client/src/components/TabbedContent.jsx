@@ -8,7 +8,6 @@ import {
   Paper,
   Typography
 } from '@mui/material';
-import { styled } from '@mui/material/styles';
 import Leaderboards from './Leaderboards';
 import RoomHistory from './RoomHistory';
 import Comments from './Comments';
@@ -28,30 +27,6 @@ function updateFromNow(history) {
   }
   return result;
 }
-
-const StyledTab = styled(Tab)(({ theme, isDarkMode, active }) => ({
-  color: active
-    ? isDarkMode
-      ? '#f9f9f9'
-      : '#ff0000'
-    : isDarkMode
-    ? '#aaa'
-    : '#ccc',
-  '& .MuiTab-wrapper': {
-    color: active ? '#ff0000' : isDarkMode ? '#aaa' : '#ccc',
-  },
-}));
-
-const FlexContainer = styled('div')({
-  display: 'flex',
-  gap: '16px',
-  flexWrap: 'wrap',
-});
-
-const Column = styled('div')({
-  flex: 1,
-  minWidth: '100%',
-});
 
 function TabbedContent(props) {
   const {
@@ -189,7 +164,7 @@ function TabbedContent(props) {
         // "Play" Tab
         if (!roomInfo || !roomInfo.game_type) {
           return (
-            <Box square component={Paper} className="join-game-panel">
+            <Box square className="join-game-panel">
               <Box className="game-page loading-skeleton" sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 {/* Skeleton placeholders */}
                 <Box className="game-contents" sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -413,22 +388,18 @@ function TabbedContent(props) {
           TabIndicatorProps={{ style: { background: '#ff0000' } }}
           value={selectedTab}
           onChange={handleTabChange}
+          textColor="error"
+          indicatorColor="error"
         >
           {/* 0: "Play" */}
-          <StyledTab label="Play" active={selectedTab === 0} isDarkMode={isDarkMode} />
+          <Tab label="Play" active={selectedTab === 0} isDarkMode={isDarkMode} />
           {/* 1: "Chart" */}
-          <StyledTab label="Chart" active={selectedTab === 1} isDarkMode={isDarkMode} />
+          <Tab label="Chart" active={selectedTab === 1} isDarkMode={isDarkMode} />
           {/* 2: "History" */}
-          <StyledTab label="History" active={selectedTab === 2} isDarkMode={isDarkMode} />
+          <Tab label="History" active={selectedTab === 2} isDarkMode={isDarkMode} />
           {/* 3: "Thread" */}
-          <StyledTab label="Comments" active={selectedTab === 3} isDarkMode={isDarkMode} />
-          {/* 4: "Insights" => disabled */}
-          <StyledTab
-            label="Insights (Coming Soon)"
-            active={selectedTab === 4}
-            isDarkMode={isDarkMode}
-            disabled
-          />
+          <Tab label="Comments" active={selectedTab === 3} isDarkMode={isDarkMode} />
+
         </Tabs>
 
         <div>
@@ -486,11 +457,11 @@ function TabbedContent(props) {
         })}
       </Box>
 
-      <FlexContainer>
+      <Box>
         {activeTabs.map((tabIndex) => (
-          <Column key={tabIndex}>{renderTabContent(tabIndex)}</Column>
+          <Box key={tabIndex}>{renderTabContent(tabIndex)}</Box>
         ))}
-      </FlexContainer>
+      </Box>
     </div>
   );
 }

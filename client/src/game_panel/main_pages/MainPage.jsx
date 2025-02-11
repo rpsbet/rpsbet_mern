@@ -31,20 +31,11 @@ import Footer from './Footer';
 import ProductPage from '../../admin_panel/app/ProductPages/ProductSerchPage/ProductPage.jsx';
 import BankPage from '../../admin_panel/app/ProductPages/ProductSerchPage/BankPage.jsx';
 
-const customStyles = {
-  tabRoot: {
-    textTransform: 'none',
-    width: '50%',
-    height: '48px',
-  },
-};
-
 function MainPage(props) {
   const {
     isAuthenticated,
     getMyChat,
     isDrawerOpen,
-    isLowGraphics,
     selectedMainTabIndex,
     roomList,
     balance,
@@ -183,7 +174,7 @@ function MainPage(props) {
 
     return 'Your Games';
   };
-  console.log('----isSmallScreen----:', isSmallScreen);
+
   // ------------------- RENDER -------------------
   return (
     <Box className="main-game">
@@ -191,12 +182,12 @@ function MainPage(props) {
       {isMobile && selectedMobileTab === 'chat' ? (
         <Drawer
           className="mat-chat"
-          style={{ display: isDrawerOpen && !isSmallScreen ? 'flex' : 'none' }}
+          style={{ display: isDrawerOpen && isSmallScreen ? 'flex' : 'none' }}
           variant="persistent"
           anchor="left"
-          open={!isSmallScreen && isDrawerOpen}
+          open={isSmallScreen && isDrawerOpen}
         >
-          {!isSmallScreen && (
+          {isSmallScreen && (
             <ChatPanel toggleDrawer={handleToggleDrawer} is_mobile={isMobile} />
           )}
         </Drawer>

@@ -237,11 +237,6 @@ a {
   overflow: scroll;
 }
 
-.game-contents .game-info-panel button {
-  margin-left: 5px !important;
-  margin-right: 10px;
-}
-
 .game_header .main_header .header_action_panel button#btn-login,
 #balance button,
 .spectate,
@@ -4500,14 +4495,12 @@ circle {
     height: 16px;
   }
 
-  .gamified-container {
-    padding: 20px;
-    margin: 20px;
-    color: #3e4554 !important;
-  }
-
   .bottom-footer {
     margin-left: 0 !important;
+  }
+
+  .ai-container {
+    margin-top: 60px;
   }
 
   #footer-container {
@@ -4563,7 +4556,7 @@ circle {
     width: 100%;
     bottom: 0;
     display: flex;
-    z-index: 9;
+    z-index: 9999;
     align-items: center;
     padding: 12px 16px;
     justify-content: space-between;
@@ -4742,11 +4735,6 @@ circle {
   .modal-body {
     max-width: 95vw;
     min-width: 300px;
-  }
-
-  div.table .table-row {
-    width: 100%;
-    margin-bottom: 0;
   }
 
   .statistics-panel table tr td:first-child {

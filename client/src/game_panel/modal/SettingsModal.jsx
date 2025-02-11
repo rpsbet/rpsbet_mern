@@ -151,30 +151,14 @@ const SettingsModal = ({
               {/* Sub-settings for sounds */}
               {showSubSettings && (
                 <>
-                  <TableRow>
-                    <TableCell>
-                      <Button color='error'
-                        onClick={() => toggleClickounds(!clickSounds)}
-                        sx={{ textTransform: 'none' }}
-                      >
-                        {clickSounds ? <VolumeMute /> : <VolumeDown />} &nbsp; Typing &amp; Clicks
-                      </Button>
-                    </TableCell>
-                    <TableCell>
-                      <Checkbox color='error'
-                        checked={clickSounds}
-                        onChange={() => toggleClickounds(!clickSounds)}
-                      />
-                    </TableCell>
-                  </TableRow>
-
+                  
                   <TableRow>
                     <TableCell>
                       <Button color='error'
                         onClick={() => toggleGameSounds(!gameSounds)}
                         sx={{ textTransform: 'none' }}
                       >
-                        {gameSounds ? <VolumeMute /> : <VolumeDown />} &nbsp; Game Sounds
+                        {gameSounds ? <VolumeMute /> : <VolumeDown />} &nbsp; GAME SOUNDS
                       </Button>
                     </TableCell>
                     <TableCell>
@@ -191,7 +175,7 @@ const SettingsModal = ({
                         onClick={() => toggleNotificationSounds(!notificationSounds)}
                         sx={{ textTransform: 'none' }}
                       >
-                        {notificationSounds ? <VolumeMute /> : <VolumeDown />}&nbsp; Notifications
+                        {notificationSounds ? <VolumeMute /> : <VolumeDown />}&nbsp; NOTIFICATIONS
                       </Button>
                     </TableCell>
                     <TableCell>

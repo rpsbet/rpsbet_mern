@@ -995,9 +995,7 @@ function JoinGame(props) {
           {!is_mobile && selectedMainTabIndex === 1 && (
             <MyGamesTable gameTypeList={gameTypeList} />
           )}
-          {is_mobile && selectedMobileTab === 'live_games' && (
-            <HistoryTable userId={user_id} />
-          )}
+        
           {/* {is_mobile && selectedMobileTab === 'my_games' && <MyHistoryTable />} */}
         </div>
       </Box>

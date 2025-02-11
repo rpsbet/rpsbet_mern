@@ -19,6 +19,7 @@ import {
   DialogContent,
   DialogActions,
   IconButton,
+  useMediaQuery
 } from '@mui/material';
 import {
   ShowChartOutlined,
@@ -81,6 +82,7 @@ function CoHostModal({
   const candlestickSeriesRef = useRef(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
+  const isSmallScreen = useMediaQuery('(max-width:1024px)');
 
 
   // ------------------ WATCH storeCandles from Redux ------------------
@@ -443,7 +445,7 @@ function CoHostModal({
           </DialogActions>
         </Dialog>
         {/* PUMP / JEET inputs */}
-        {((!input_only && !has_joined) || input_only) && (
+        {((!input_only && !has_joined) || input_only || isSmallScreen) && (
           <Box
             sx={{
               background: 'rgba(170, 170, 170, 0.06)',
