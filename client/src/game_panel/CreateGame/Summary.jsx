@@ -9,9 +9,12 @@ import {
   Tooltip,
 } from '@mui/material';
 import FiberManualRecordIcon from '@mui/icons-material/CircleRounded';
-import { disconnectWalletAddress, authenticateWithPhantom } from '../../redux/Auth/user.actions';
+import {
+  disconnectWalletAddress,
+  authenticateWithPhantom,
+} from '../../redux/Auth/user.actions';
 
-const Summary = ({shortVersion}) => {
+const Summary = ({ shortVersion }) => {
   const dispatch = useDispatch();
   const connectedAccount = useSelector((state) => state.auth.connectedAccount);
 
@@ -36,7 +39,9 @@ const Summary = ({shortVersion}) => {
         const walletAddress = window.solana.publicKey.toString();
 
         // Dispatch Redux action to authenticate with Phantom
-        const result = await dispatch(authenticateWithPhantom({ walletAddress }));
+        const result = await dispatch(
+          authenticateWithPhantom({ walletAddress }),
+        );
         if (result.status === 'success') {
           console.log('Phantom login successful');
         } else {
@@ -74,30 +79,33 @@ const Summary = ({shortVersion}) => {
         gap: 1,
         color: 'white', // sets text color for children
         textAlign: 'center',
-        mt: isMobile ? 0 : 2
+        mt: isMobile ? 0 : 2,
       }}
     >
       <Tooltip title="Tokens will be distributed to this address when bonded">
-
-      <Chip
-        label={chipLabel}
-        onClick={handleChipClick}
-        {...(connectedAccount ? { onDelete: handleDelete } : {})}
-        clickable
-        sx={{
-          '& .MuiChip-deleteIcon': {
-            color: 'inherit',
-            transition: 'color 0.3s',
-          },
-          textTransform: 'unset',
-          color: 'white',
-          borderColor: 'white',
-          '&:hover .MuiChip-deleteIcon': {
-            color: 'rgba(255,255,255,0.7)', // a variation on white for the icon on hover
-          },
-        }}
-      />
-      <FiberManualRecordIcon sx={{ ml: 0.5, color: indicatorColor, fontSize: 20 }} />
+        <span style={{ display: 'flex', alignItems: 'center' }}>
+          <Chip
+            label={chipLabel}
+            onClick={handleChipClick}
+            {...(connectedAccount ? { onDelete: handleDelete } : {})}
+            clickable
+            sx={{
+              '& .MuiChip-deleteIcon': {
+                color: 'inherit',
+                transition: 'color 0.3s',
+              },
+              textTransform: 'unset',
+              color: 'white',
+              borderColor: 'white',
+              '&:hover .MuiChip-deleteIcon': {
+                color: 'rgba(255,255,255,0.7)', // a variation on white for the icon on hover
+              },
+            }}
+          />
+          <FiberManualRecordIcon
+            sx={{ ml: 0.5, color: indicatorColor, fontSize: 20 }}
+          />
+        </span>
       </Tooltip>
     </Box>
   );

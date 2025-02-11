@@ -1,6 +1,17 @@
 // TipModal.jsx
 import React from 'react';
-import { Modal, Box, Button, TextField, Typography, ThemeProvider, Table, TableBody, TableRow, TableCell } from '@mui/material';
+import {
+  Modal,
+  Box,
+  Button,
+  TextField,
+  Typography,
+  ThemeProvider,
+  Table,
+  TableBody,
+  TableRow,
+  TableCell,
+} from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMoneyBill } from '@fortawesome/free-solid-svg-icons';
 import { Warning as WarningIcon } from '@mui/icons-material';
@@ -20,9 +31,8 @@ export default function TipModal({
   solPrice,
   handleSendTip,
 }) {
-  
   return (
-    <Modal open={isTipModalOpen} onClose={handleCloseTipModal}>
+    <Modal open={isTipModalOpen || false} onClose={handleCloseTipModal}>
       <ThemeProvider theme={theme}>
         <Box
           sx={{
@@ -55,7 +65,10 @@ export default function TipModal({
                 variant="h6"
                 sx={{ display: 'flex', alignItems: 'center' }}
               >
-                <FontAwesomeIcon icon={faMoneyBill} style={{ marginRight: 8 }} />
+                <FontAwesomeIcon
+                  icon={faMoneyBill}
+                  style={{ marginRight: 8 }}
+                />
                 ENTER TIP AMOUNT
               </Typography>
               <Button color="error" onClick={closeModal}>
@@ -83,7 +96,11 @@ export default function TipModal({
                 inputProps={{ pattern: '^\\d*\\.?\\d*$' }}
                 sx={{ width: '100%', mb: 2 }}
                 InputProps={{
-                  endAdornment: <Box component="span" sx={{ ml: 1 }}>SOL</Box>,
+                  endAdornment: (
+                    <Box component="span" sx={{ ml: 1 }}>
+                      SOL
+                    </Box>
+                  ),
                 }}
               />
 
@@ -107,7 +124,7 @@ export default function TipModal({
                     <TableCell>
                       {convertToCurrency(
                         balance - (parseFloat(tipAmount) || 0),
-                        solPrice
+                        solPrice,
                       )}
                       &nbsp;
                       {balance - (parseFloat(tipAmount) || 0) < 0 && (

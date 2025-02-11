@@ -1,11 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { connect } from 'react-redux';
-import {
-  Modal,
-  Box,
-  Typography,
-  Button
-} from '@mui/material';
+import { Modal, Box, Typography, Button } from '@mui/material';
 import Moment from 'moment';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStar, faClock, faSyncAlt } from '@fortawesome/free-solid-svg-icons';
@@ -24,7 +19,7 @@ function BonusModal(props) {
     addBonus,
     getUser,
     isMuted,
-    gameSounds
+    gameSounds,
   } = props;
 
   // ------------------ STATE ------------------
@@ -33,7 +28,7 @@ function BonusModal(props) {
   const [landedNumber, setLandedNumber] = useState(null);
   const [showFlash, setShowFlash] = useState(false);
   const [translateDistance, setTranslateDistance] = useState(
-    window.innerWidth <= 600 ? '100px' : '120px'
+    window.innerWidth <= 600 ? '100px' : '120px',
   );
 
   // ------------------ DATA ------------------
@@ -49,9 +44,9 @@ function BonusModal(props) {
     const sixHoursInMs = 6 * 60 * 60 * 1000;
     const remainingMs = sixHoursInMs - elapsedTime;
     if (remainingMs > 0) {
-      remainingTime = Moment
-        .duration(remainingMs, 'milliseconds')
-        .humanize(true);
+      remainingTime = Moment.duration(remainingMs, 'milliseconds').humanize(
+        true,
+      );
     }
   }
 
@@ -113,7 +108,7 @@ function BonusModal(props) {
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    bgcolor: '#1f1a25',   // same purple background color
+    bgcolor: '#1f1a25', // same purple background color
     color: '#fff',
     boxShadow: 24,
     borderRadius: 1,
@@ -121,13 +116,13 @@ function BonusModal(props) {
     width: 400,
     maxWidth: '90vw',
     maxHeight: '90vh',
-    overflowY: 'auto'
+    overflowY: 'auto',
   };
 
   // ------------------ RENDER ------------------
   return (
     <Modal
-      open={modalIsOpen}
+      open={modalIsOpen || false}
       onClose={closeModal}
       closeAfterTransition
       sx={{ zIndex: 1300 }}
@@ -142,9 +137,11 @@ function BonusModal(props) {
             alignItems: 'center',
             mb: 2,
           }}
-
         >
-          <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center' }}>
+          <Typography
+            variant="h6"
+            sx={{ display: 'flex', alignItems: 'center' }}
+          >
             <FontAwesomeIcon icon={faStar} />
             &nbsp;CORN WHEEL
           </Typography>
@@ -153,22 +150,24 @@ function BonusModal(props) {
             src="../img/icons/corn.svg"
             alt="corn"
             style={{
-              transform: 'rotate(167deg) scaleY(-1) translate(10px, 7px) rotate(5deg)',
+              transform:
+                'rotate(167deg) scaleY(-1) translate(10px, 7px) rotate(5deg)',
               width: '40px',
-              zIndex: 0
+              zIndex: 0,
             }}
           />
           <Button variant="text" color="error" onClick={closeModal}>
-          ×
+            ×
           </Button>
         </Box>
 
-        <Box sx={{
-          p: '20px',
-          background: 'rgb(170 170 170 / 6%)',
-          borderRadius: '0.3em'
-        }}>
-
+        <Box
+          sx={{
+            p: '20px',
+            background: 'rgb(170 170 170 / 6%)',
+            borderRadius: '0.3em',
+          }}
+        >
           <Box
             sx={{
               textAlign: 'center',
@@ -176,7 +175,7 @@ function BonusModal(props) {
               borderRadius: 1,
               backgroundColor: '#5dabf02b',
               p: 1,
-              mb: 2
+              mb: 2,
             }}
           >
             <Typography variant="body2" sx={{ color: 'rgb(222, 226, 230)' }}>
@@ -220,17 +219,16 @@ function BonusModal(props) {
                 p: 2,
                 borderRadius: 1,
                 backgroundColor: showFlash ? 'success.light' : 'transparent',
-                transition: 'background-color 0.3s ease'
+                transition: 'background-color 0.3s ease',
               }}
             >
-              {landedNumber} SOL (
-              {convertToCurrency(landedNumber, solPrice)})
+              {landedNumber} SOL ({convertToCurrency(landedNumber, solPrice)})
             </Box>
           ) : (
             <Button
               variant="contained"
               onClick={spinWheel}
-              color='error'
+              color="error"
               disabled={spinning || totalWagered < 1.2973967}
               sx={{ display: 'block', margin: '0 auto' }}
             >
@@ -238,15 +236,17 @@ function BonusModal(props) {
                 'UNLOCK AT RANK 1'
               ) : (
                 <>
-                  SPIN FOR 0.01 SOL! ({convertToCurrency(0.01, solPrice)}) &nbsp;
+                  SPIN FOR 0.01 SOL! ({convertToCurrency(0.01, solPrice)})
+                  &nbsp;
                   <FontAwesomeIcon icon={faSyncAlt} />
                   <img
                     src="../img/icons/corn.svg"
                     alt="corn"
                     style={{
-                      transform: 'rotate(167deg) scaleY(-1) translate(10px, 7px) rotate(5deg)',
+                      transform:
+                        'rotate(167deg) scaleY(-1) translate(10px, 7px) rotate(5deg)',
                       width: '40px',
-                      zIndex: 0
+                      zIndex: 0,
                     }}
                   />
                 </>
@@ -255,7 +255,6 @@ function BonusModal(props) {
           )}
         </Box>
       </Box>
-
     </Modal>
   );
 }
@@ -268,12 +267,12 @@ const mapStateToProps = (state) => ({
   isMuted: state.auth.isMuted,
   gameSounds: state.auth.gameSounds,
   solPrice: state.logic.solPrice,
-  user: state.auth.user
+  user: state.auth.user,
 });
 
 const mapDispatchToProps = {
   addBonus,
-  getUser
+  getUser,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(BonusModal);

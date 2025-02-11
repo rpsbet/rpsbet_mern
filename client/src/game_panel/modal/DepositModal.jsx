@@ -7,7 +7,10 @@ import { addNewTransaction } from '../../redux/Logic/logic.actions';
 import { ThemeProvider } from '@mui/material/styles';
 import { getCustomTheme } from '../../config/theme';
 import Summary from '../CreateGame/Summary';
-import { errorMsgBar, successMsgBar } from '../../redux/Notification/notification.actions';
+import {
+  errorMsgBar,
+  successMsgBar,
+} from '../../redux/Notification/notification.actions';
 
 // FIX #1: Import and set Buffer for browser usage
 import { Buffer } from 'buffer';
@@ -20,7 +23,7 @@ import {
   Transaction,
   PublicKey,
   LAMPORTS_PER_SOL,
-  SystemProgram
+  SystemProgram,
 } from '@solana/web3.js';
 
 import {
@@ -38,20 +41,13 @@ import {
   Typography,
   InputAdornment,
   ButtonGroup,
-  Divider
+  Divider,
 } from '@mui/material';
 
-import {
-  Warning,
-  Info,
-  AccountBalanceWallet
-} from '@mui/icons-material';
+import { Warning, Info, AccountBalanceWallet } from '@mui/icons-material';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faBolt,
-  faGasPump
-} from '@fortawesome/free-solid-svg-icons';
+import { faBolt, faGasPump } from '@fortawesome/free-solid-svg-icons';
 import { convertToCurrency } from '../../util/conversion';
 
 // -------------------- STYLES (MUI) --------------------
@@ -71,7 +67,7 @@ const modalBoxStyle = {
   overflowY: 'auto',
   display: 'flex',
   flexDirection: 'column',
-  gap: 2
+  gap: 2,
 };
 
 function DepositModal(props) {
@@ -82,15 +78,15 @@ function DepositModal(props) {
     user_id,
     modalIsOpen,
     closeModal,
-    balance,          // User's SOL balance
-    account,          // { publicKey: ... }
-    setGasfee,        // Redux action to fetch and store gas fee
+    balance, // User's SOL balance
+    account, // { publicKey: ... }
+    setGasfee, // Redux action to fetch and store gas fee
     addNewTransaction,
-    connectedAccount
+    connectedAccount,
   } = props;
 
   // -------------------- Local State --------------------
-  const [amount, setAmount] = useState('');  // user-entered SOL amount (string for easy input)
+  const [amount, setAmount] = useState(''); // user-entered SOL amount (string for easy input)
   const [isLoading, setIsLoading] = useState(false);
 
   // Preset SOL amounts for quick selection
@@ -114,7 +110,7 @@ function DepositModal(props) {
     debounceTimer.current = setTimeout(async () => {
       const params = {
         amount: parseFloat(amount), // ensure numeric
-        addressTo: account.publicKey.toString()
+        addressTo: account.publicKey.toString(),
       };
       try {
         await setGasfee(params);
@@ -155,7 +151,7 @@ function DepositModal(props) {
       const connection = new Connection(providerUrl, 'confirmed');
 
       // 3) Build a SystemProgram transfer from user's wallet => admin wallet
-      const fromWallet = account; 
+      const fromWallet = account;
       if (!fromWallet?.publicKey) {
         console.error('No fromWallet publicKey found.');
         return;
@@ -173,8 +169,8 @@ function DepositModal(props) {
         SystemProgram.transfer({
           fromPubkey: fromWallet.publicKey,
           toPubkey: adminWalletPubkey,
-          lamports
-        })
+          lamports,
+        }),
       );
 
       // 5) Get blockhash & set feePayer
@@ -188,9 +184,9 @@ function DepositModal(props) {
 
       // 7) Notify your backend
       const result = await axios.post('/stripe/deposit_successed', {
-        account, 
+        account,
         amount: numAmount,
-        txtHash: signature
+        txtHash: signature,
       });
 
       if (result.data.success) {
@@ -223,17 +219,17 @@ function DepositModal(props) {
             position: 'fixed',
             width: '100%',
             height: '100vh',
-            zIndex: isLoading ? 999 : 0
-          }
+            zIndex: isLoading ? 999 : 0,
+          },
         }}
       />
 
       <Modal
-        open={modalIsOpen}
+        open={modalIsOpen || false}
         onClose={closeModal}
         sx={{ zIndex: 1300 }}
         BackdropProps={{
-          style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' }
+          style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' },
         }}
       >
         <Box sx={modalBoxStyle}>
@@ -253,7 +249,14 @@ function DepositModal(props) {
 
           {/* If user not logged in */}
           {isConnected && (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'yellow' }}>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                color: 'yellow',
+              }}
+            >
               CONNECT WALLET FIRST <Warning />
             </Box>
           )}
@@ -268,21 +271,23 @@ function DepositModal(props) {
           >
             <Summary />
 
-            <Box sx={{  p: 2 }}>
+            <Box sx={{ p: 2 }}>
               <Divider>
                 <Typography>ENTER DEPOSIT AMOUNT (SOL)</Typography>
               </Divider>
 
               {/* Preset Buttons */}
               <Box sx={{ display: 'flex', justifyContent: 'center', my: 2 }}>
-
-              <ButtonGroup variant="outlined" color="error" sx={{ mb: 1 }}>
-                {presetSolAmounts.map((preset) => (
-                  <Button key={preset} onClick={() => handlePresetClick(preset)}>
-                    {preset}
-                  </Button>
-                ))}
-              </ButtonGroup>
+                <ButtonGroup variant="outlined" color="error" sx={{ mb: 1 }}>
+                  {presetSolAmounts.map((preset) => (
+                    <Button
+                      key={preset}
+                      onClick={() => handlePresetClick(preset)}
+                    >
+                      {preset}
+                    </Button>
+                  ))}
+                </ButtonGroup>
               </Box>
 
               {/* Amount TextField */}
@@ -299,7 +304,9 @@ function DepositModal(props) {
                     : ''
                 }
                 InputProps={{
-                  endAdornment: <InputAdornment position="end">SOL</InputAdornment>
+                  endAdornment: (
+                    <InputAdornment position="end">SOL</InputAdornment>
+                  ),
                 }}
                 sx={{ width: '100%' }}
               />
@@ -329,7 +336,10 @@ function DepositModal(props) {
                       {gasfee} SOL
                     </TableCell>
                     <TableCell>
-                      <Tooltip title="Network processing & validation fee" arrow>
+                      <Tooltip
+                        title="Network processing & validation fee"
+                        arrow
+                      >
                         <IconButton size="small">
                           <Info />
                         </IconButton>
@@ -342,8 +352,12 @@ function DepositModal(props) {
 
             {/* Disclaimer */}
             <Box sx={{ textAlign: 'center', mt: 2 }}>
-              <Typography color="warning" sx={{ fontSize: '0.8em', mb: 2, fontWeight: 600 }}>
-                RECEIVE WITHIN SECONDS&nbsp;<FontAwesomeIcon icon={faBolt} />
+              <Typography
+                color="warning"
+                sx={{ fontSize: '0.8em', mb: 2, fontWeight: 600 }}
+              >
+                RECEIVE WITHIN SECONDS&nbsp;
+                <FontAwesomeIcon icon={faBolt} />
               </Typography>
             </Box>
           </Box>
@@ -374,15 +388,15 @@ function DepositModal(props) {
 // -------------------- REDUX --------------------
 const mapStateToProps = (state) => ({
   isDarkMode: state.auth.isDarkMode,
-  gasfee: state.auth.gasfee,    // Numeric gas fee in SOL
+  gasfee: state.auth.gasfee, // Numeric gas fee in SOL
   solPrice: state.logic.solPrice,
   user_id: state.auth.user._id,
-  connectedAccount: state.auth.connectedAccount
+  connectedAccount: state.auth.connectedAccount,
 });
 
 const mapDispatchToProps = {
   setGasfee,
-  addNewTransaction
+  addNewTransaction,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(DepositModal);

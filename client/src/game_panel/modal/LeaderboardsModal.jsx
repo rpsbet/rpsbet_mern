@@ -272,7 +272,7 @@ function LeaderboardsModal({
   return (
     <>
       <Modal
-        open={modalIsOpen}
+        open={modalIsOpen || false}
         onClose={closeModal}
         closeAfterTransition
         BackdropProps={{ style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' } }}

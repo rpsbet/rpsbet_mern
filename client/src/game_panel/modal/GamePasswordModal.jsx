@@ -3,7 +3,7 @@ import { connect, useDispatch } from 'react-redux';
 import {
   setPasswordCorrect,
   closeGamePasswordModal,
-  errorMsgBar
+  errorMsgBar,
 } from '../../redux/Notification/notification.actions';
 import { checkGamePassword } from '../../redux/Logic/logic.actions';
 import { Button, TextField, Box, Modal } from '@mui/material';
@@ -53,7 +53,14 @@ function GamePasswordModal(props) {
     } else {
       dispatch(errorMsgBar(`WRONG F*CKING PUSSWORD!`));
     }
-  }, [checkGamePassword, roomId, password, closeGamePasswordModal, setPasswordCorrect, isDarkMode]);
+  }, [
+    checkGamePassword,
+    roomId,
+    password,
+    closeGamePasswordModal,
+    setPasswordCorrect,
+    isDarkMode,
+  ]);
 
   const handleCancelClick = useCallback(() => {
     closeGamePasswordModal();
@@ -61,13 +68,17 @@ function GamePasswordModal(props) {
 
   return (
     <ThemeProvider theme={theme}>
-
-      <Modal isOpen={isOpen} style={customStyles} contentLabel="Password">
+      <Modal
+        open={isOpen || false}
+        style={customStyles}
+        contentLabel="Password"
+      >
         <div className={isDarkMode ? 'dark_mode' : ''}>
           <div className="modal-body alert-body password-modal-body">
             <div className={`modal-icon result-icon-password`} />
             <h5>PASSWORD REQUIRED</h5>
-            <TextField color='error'
+            <TextField
+              color="error"
               id="game_password"
               variant="filled"
               value={password}
@@ -77,11 +88,14 @@ function GamePasswordModal(props) {
             />
           </div>
           <Box className="modal-footer">
-
-            <Button variant='contained' color='error' onClick={handleOkClick}>
+            <Button variant="contained" color="error" onClick={handleOkClick}>
               Continue Bet
             </Button>
-            <Button variant='contained' color='error' onClick={handleCancelClick}>
+            <Button
+              variant="contained"
+              color="error"
+              onClick={handleCancelClick}
+            >
               Cancel
             </Button>
           </Box>

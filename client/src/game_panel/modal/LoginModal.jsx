@@ -1,14 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { connect } from 'react-redux';
-import {
-  Button,
-  TextField,
-  Modal,
-  Box,
-  Typography
-} from '@mui/material';
+import { Button, TextField, Modal, Box, Typography } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSignInAlt, faExternalLinkAlt } from '@fortawesome/free-solid-svg-icons';
+import {
+  faSignInAlt,
+  faExternalLinkAlt,
+} from '@fortawesome/free-solid-svg-icons';
 import { ThemeProvider } from '@mui/material/styles';
 import { getCustomTheme } from '../../config/theme';
 import {
@@ -16,12 +13,12 @@ import {
   userSignIn,
   getUser,
   authenticateWithGoogle,
-  authenticateWithPhantom
+  authenticateWithPhantom,
 } from '../../redux/Auth/user.actions';
 import {
   getMyHistory,
   getMyChat,
-  getNotifications
+  getNotifications,
 } from '../../redux/Logic/logic.actions';
 
 import history from '../../redux/history';
@@ -33,7 +30,7 @@ function LoginModal(props) {
   const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState(initialPassword);
   const [isInvestorsPage, setIsInvestorsPage] = useState(
-    window.location.pathname.startsWith('/investors')
+    window.location.pathname.startsWith('/investors'),
   );
 
   const theme = getCustomTheme(props.isDarkMode);
@@ -53,12 +50,12 @@ function LoginModal(props) {
         google.accounts.id.initialize({
           client_id:
             '565609210873-2ajd0detnt4h6q8ufhrl5nvlv4h01ol0.apps.googleusercontent.com',
-          callback: handleGoogleCredentialResponse
+          callback: handleGoogleCredentialResponse,
         });
 
         google.accounts.id.renderButton(buttonElement, {
           theme: 'outline',
-          size: 'large'
+          size: 'large',
         });
 
         google.accounts.id.prompt();
@@ -141,7 +138,6 @@ function LoginModal(props) {
     }, 100);
 
     setIsInvestorsPage(window.location.pathname.startsWith('/investors'));
-
   }, []);
 
   // ------------------ STYLES ------------------
@@ -150,25 +146,24 @@ function LoginModal(props) {
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    bgcolor: '#1f1a25',      // Custom background color
-    color: '#fff',           // Text color for contrast
+    bgcolor: '#1f1a25', // Custom background color
+    color: '#fff', // Text color for contrast
     boxShadow: 24,
     borderRadius: 1,
     p: 3,
     width: 360,
-    maxWidth: '90vw'
+    maxWidth: '90vw',
   };
 
   // ------------------ RENDER ------------------
   return (
     <ThemeProvider theme={theme}>
-
       <Modal
-        open={props.modalIsOpen}
+        open={props.modalIsOpen || false}
         onClose={props.closeModal}
         closeAfterTransition
         BackdropProps={{
-          style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' }
+          style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' },
         }}
         sx={{ zIndex: 1300 }}
       >
@@ -192,7 +187,7 @@ function LoginModal(props) {
             <TextField
               fullWidth
               variant="filled"
-              color='error'
+              color="error"
               label="Username"
               value={email}
               onChange={onChangeEmail}
@@ -204,7 +199,7 @@ function LoginModal(props) {
             <TextField
               fullWidth
               variant="filled"
-              color='error'
+              color="error"
               label="Password"
               type="password"
               value={password}
@@ -285,11 +280,10 @@ function LoginModal(props) {
                   width: '100%',
                   maxWidth: 300,
                   display: 'flex',
-                  justifyContent: 'center'
+                  justifyContent: 'center',
                 }}
               />
             </Box>
-
 
             {/* Conditional Links */}
             {!isInvestorsPage ? (
@@ -304,7 +298,7 @@ function LoginModal(props) {
                   textDecoration: 'underline',
                   textAlign: 'center',
                   cursor: 'pointer',
-                  mt: 1
+                  mt: 1,
                 }}
               >
                 INVESTOR? ($RPS PORTAL)&nbsp;
@@ -322,7 +316,7 @@ function LoginModal(props) {
                   textDecoration: 'underline',
                   textAlign: 'center',
                   cursor: 'pointer',
-                  mt: 1
+                  mt: 1,
                 }}
               >
                 Play RPS.Game&nbsp;
@@ -340,7 +334,7 @@ function LoginModal(props) {
 const mapStateToProps = (state) => ({
   isDarkMode: state.auth.isDarkMode,
   email: state.auth.user.email,
-  password: state.auth.user.password
+  password: state.auth.user.password,
 });
 
 const mapDispatchToProps = {
@@ -351,7 +345,7 @@ const mapDispatchToProps = {
   getNotifications,
   setFocused,
   authenticateWithGoogle,
-  authenticateWithPhantom
+  authenticateWithPhantom,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(LoginModal);

@@ -2,11 +2,9 @@ import React, { useState } from 'react';
 import { connect, useDispatch } from 'react-redux';
 import {
   closeListItemModal,
-  errorMsgBar
+  errorMsgBar,
 } from '../../redux/Notification/notification.actions';
-import {
-  listItem
-} from '../../redux/Logic/logic.actions';
+import { listItem } from '../../redux/Logic/logic.actions';
 import {
   Button,
   TextField,
@@ -16,7 +14,7 @@ import {
   InputAdornment,
   Modal,
   Box,
-  Typography
+  Typography,
 } from '@mui/material';
 import { ThemeProvider } from '@mui/material/styles';
 import { getCustomTheme } from '../../config/theme';
@@ -32,12 +30,13 @@ function ListItemModal(props) {
     itemType,
     item,
     closeListItemModal,
-    listItem  // from mapDispatchToProps
+    listItem, // from mapDispatchToProps
   } = props;
 
   const [price, setPrice] = useState(0);
   const [rentOption, setRentOption] = useState(false);
-  const [showOverrideConfirmation, setShowOverrideConfirmation] = useState(false);
+  const [showOverrideConfirmation, setShowOverrideConfirmation] =
+    useState(false);
   const dispatch = useDispatch();
 
   const theme = getCustomTheme(isDarkMode ? 'dark' : 'light');
@@ -50,7 +49,7 @@ function ListItemModal(props) {
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    bgcolor: '#1f1a25',  // Purple background
+    bgcolor: '#1f1a25', // Purple background
     color: '#fff',
     boxShadow: 24,
     borderRadius: 1,
@@ -58,7 +57,7 @@ function ListItemModal(props) {
     width: 400,
     maxWidth: '90vw',
     maxHeight: '90vh',
-    overflowY: 'auto'
+    overflowY: 'auto',
   };
 
   const onBtnOkClicked = () => {
@@ -76,7 +75,7 @@ function ListItemModal(props) {
       const response = await listItem({
         item_id: item,
         price: price,
-        rentOption: rentOption
+        rentOption: rentOption,
       });
 
       if (response.success) {
@@ -107,13 +106,12 @@ function ListItemModal(props) {
 
   return (
     <ThemeProvider theme={theme}>
-
       <Modal
-        open={isOpen}
+        open={isOpen || false}
         onClose={closeListItemModal}
         sx={{ zIndex: 1300 }}
         BackdropProps={{
-          style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' }
+          style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' },
         }}
       >
         <Box sx={modalBoxStyle}>
@@ -121,7 +119,8 @@ function ListItemModal(props) {
             variant="h6"
             sx={{ textAlign: 'center', mb: 2, fontWeight: 'bold' }}
           >
-            CONFIRM <span style={{ color: '#ffd000' }}>{productName}</span> LISTING
+            CONFIRM <span style={{ color: '#ffd000' }}>{productName}</span>{' '}
+            LISTING
           </Typography>
 
           {/* If itemType matches, show RENT vs. SELL radio options */}
@@ -150,7 +149,7 @@ function ListItemModal(props) {
           {rentOption ? (
             <TextField
               variant="filled"
-              color='error'
+              color="error"
               type="text"
               label="Rent price"
               value={price}
@@ -158,21 +157,21 @@ function ListItemModal(props) {
               placeholder="0.0002"
               inputProps={{
                 pattern: '^\\d*\\.?\\d*$',
-                maxLength: 9
+                maxLength: 9,
               }}
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
                     &nbsp;SOL / MONTH
                   </InputAdornment>
-                )
+                ),
               }}
               sx={{ width: '100%', mb: 2 }}
             />
           ) : (
             <TextField
               variant="filled"
-              color='error'
+              color="error"
               type="text"
               label="Set price"
               value={price}
@@ -180,14 +179,12 @@ function ListItemModal(props) {
               placeholder="0.0002"
               inputProps={{
                 pattern: '^\\d*\\.?\\d*$',
-                maxLength: 9
+                maxLength: 9,
               }}
               InputProps={{
                 endAdornment: (
-                  <InputAdornment position="end">
-                    &nbsp;SOL
-                  </InputAdornment>
-                )
+                  <InputAdornment position="end">&nbsp;SOL</InputAdornment>
+                ),
               }}
               sx={{ width: '100%', mb: 2 }}
             />
@@ -197,7 +194,11 @@ function ListItemModal(props) {
             <Button variant="contained" color="error" onClick={onBtnOkClicked}>
               Confirm
             </Button>
-            <Button variant="contained" color='error' onClick={onBtnCancelClicked}>
+            <Button
+              variant="contained"
+              color="error"
+              onClick={onBtnCancelClicked}
+            >
               Cancel
             </Button>
           </Box>
@@ -210,7 +211,7 @@ function ListItemModal(props) {
         onClose={() => setShowOverrideConfirmation(false)}
         sx={{ zIndex: 1300 }}
         BackdropProps={{
-          style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' }
+          style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' },
         }}
       >
         <Box sx={modalBoxStyle}>
@@ -221,8 +222,8 @@ function ListItemModal(props) {
             OVERRIDE PREVIOUS LISTING?
           </Typography>
           <Typography variant="body2" sx={{ mb: 3 }}>
-            You already have this item listed with different settings. Click "Confirm" to override
-            the previous listing.
+            You already have this item listed with different settings. Click
+            "Confirm" to override the previous listing.
           </Typography>
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
             <Button variant="contained" onClick={handleOverrideConfirmation}>
@@ -252,12 +253,12 @@ const mapStateToProps = (state) => ({
   oldPrice: state.itemReducer.data.price,
   productName: state.itemReducer.data.productName,
   onSale: state.itemReducer.data.onSale,
-  oldRentOption: state.itemReducer.data.rentOption
+  oldRentOption: state.itemReducer.data.rentOption,
 });
 
 const mapDispatchToProps = {
   closeListItemModal,
-  listItem
+  listItem,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(ListItemModal);

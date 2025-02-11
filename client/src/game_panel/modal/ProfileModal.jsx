@@ -439,7 +439,7 @@ function ProfileModal(props) {
       <>
         {/* MAIN PROFILE MODAL */}
         <Modal
-          open={modalIsOpen}
+          open={modalIsOpen || false}
           onClose={handleClose}
           sx={{
             zIndex: 1300, // optional

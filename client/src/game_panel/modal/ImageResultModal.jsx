@@ -7,7 +7,7 @@ Modal.setAppElement('#root');
 const customStyles = {
   overlay: {
     zIndex: 3,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)'
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
   },
 
   content: {
@@ -18,20 +18,23 @@ const customStyles = {
     transform: 'translate(-50%, -50%)',
     background: 'transparent',
     padding: 0,
-    border: 'none'
-  }
+    border: 'none',
+  },
 };
 
 class ImageResultModal extends Component {
   componentDidMount() {
     const { productName } = this.props;
     setTimeout(() => {
-
-    this.speak("You've found a motherfucking " + productName + ', have a cookie you fat fuck!');
+      this.speak(
+        "You've found a motherfucking " +
+          productName +
+          ', have a cookie you fat fuck!',
+      );
     }, 1500);
   }
 
-  speak = message => {
+  speak = (message) => {
     if (window.speechSynthesis) {
       const utterance = new SpeechSynthesisUtterance(message);
       utterance.rate = 1.0; // set the speed to 1.0 (normal speed)
@@ -45,7 +48,7 @@ class ImageResultModal extends Component {
 
     return (
       <Modal
-        isOpen={this.props.modalIsOpen}
+        isOpen={this.props.modalIsOpen || false}
         onRequestClose={this.props.closeModal}
         style={customStyles}
         contentLabel="Prize Won"
@@ -53,12 +56,17 @@ class ImageResultModal extends Component {
         <div
           style={{
             borderRadius: 1,
-            background: isDarkMode ? '#333' : '#fff'
+            background: isDarkMode ? '#333' : '#fff',
           }}
           className={isDarkMode ? 'dark_mode' : ''}
         >
           <div className="modal-body alert-body result-body">
-            <Button className="btn-close" variant='text' color='error'  onClick={this.props.closeModal}>
+            <Button
+              className="btn-close"
+              variant="text"
+              color="error"
+              onClick={this.props.closeModal}
+            >
               ×
             </Button>
             <h1
@@ -76,7 +84,7 @@ class ImageResultModal extends Component {
                 maxWidth: '150px',
                 maxHeight: '200px',
                 margin: 'auto',
-                display: 'block'
+                display: 'block',
               }}
             />
           </div>

@@ -1,17 +1,15 @@
 import React, { useState } from 'react';
 import { connect } from 'react-redux';
-import {
-  Modal,
-  Box,
-  Button,
-  Typography
-} from '@mui/material';
+import { Modal, Box, Button, Typography } from '@mui/material';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBox } from '@fortawesome/free-solid-svg-icons';
 
 import MyProductPage from '../../admin_panel/app/ProductPages/ProductSerchPage/MyProductPage';
-import { warningMsgBar, infoMsgBar } from '../../redux/Notification/notification.actions';
+import {
+  warningMsgBar,
+  infoMsgBar,
+} from '../../redux/Notification/notification.actions';
 import MarketplaceModal from './MarketplaceModal';
 
 function InventoryModal(props) {
@@ -42,18 +40,18 @@ function InventoryModal(props) {
     width: 600,
     maxWidth: '90vw',
     maxHeight: '90vh',
-    overflowY: 'auto'
+    overflowY: 'auto',
   };
 
   return (
     <>
       <Modal
-        open={modalIsOpen}
+        open={modalIsOpen || false}
         onClose={closeModal}
         closeAfterTransition
         sx={{ zIndex: 1300 }}
         BackdropProps={{
-          style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' }
+          style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' },
         }}
       >
         <Box sx={modalBoxStyle}>
@@ -79,7 +77,7 @@ function InventoryModal(props) {
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
             <Button
               variant="contained"
-              color='error'
+              color="error"
               onClick={handleOpenMarketplaceModal}
               startIcon={<AttachMoneyIcon />}
             >

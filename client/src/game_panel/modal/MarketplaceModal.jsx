@@ -1,12 +1,7 @@
 import React, { useState } from 'react';
 import { connect } from 'react-redux';
 
-import {
-  Modal,
-  Box,
-  Typography,
-  Button,
-} from '@mui/material';
+import { Modal, Box, Typography, Button } from '@mui/material';
 import { useTheme, ThemeProvider } from '@mui/material/styles';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -17,17 +12,15 @@ import AttachMoney from '@mui/icons-material/AttachMoney';
 import ProductPage from '../../admin_panel/app/ProductPages/ProductSerchPage/ProductPage';
 import InventoryModal from '../modal/InventoryModal';
 
-import { warningMsgBar, infoMsgBar } from '../../redux/Notification/notification.actions';
+import {
+  warningMsgBar,
+  infoMsgBar,
+} from '../../redux/Notification/notification.actions';
 
 // Theme
 import { getCustomTheme } from '../../config/theme';
 
-function MarketplaceModal({
-  modalIsOpen,
-  closeModal,
-  isDarkMode,
-  createItem,
-}) {
+function MarketplaceModal({ modalIsOpen, closeModal, isDarkMode, createItem }) {
   const [showInventoryModal, setShowInventoryModal] = useState(false);
   const [sortCriteria] = useState('updated_at');
   const [itemType] = useState('653ee81117c9f5ee2124564b');
@@ -56,7 +49,7 @@ function MarketplaceModal({
   return (
     <ThemeProvider theme={theme}>
       <Modal
-        open={modalIsOpen}
+        open={modalIsOpen || false}
         onClose={closeModal}
         closeAfterTransition
         BackdropProps={{
@@ -73,11 +66,19 @@ function MarketplaceModal({
               mb: 2,
             }}
           >
-            <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography
+              variant="h6"
+              sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+            >
               <FontAwesomeIcon icon={faList} />
               MARKETPLACE
             </Typography>
-            <Button variant="text" color="error" onClick={closeModal} sx={{ fontSize: '1.25rem' }}>
+            <Button
+              variant="text"
+              color="error"
+              onClick={closeModal}
+              sx={{ fontSize: '1.25rem' }}
+            >
               ×
             </Button>
           </Box>

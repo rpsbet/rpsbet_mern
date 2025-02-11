@@ -139,7 +139,6 @@ const QuickShoot = (props) => {
                       label={
                         <StyledProductCard
                           id="rps-game-type-radio"
-                          isDarkMode={isDarkMode}
                           className={`btn-game-type title btn-icon ${gameTypeStyleClass[gameType.short_name]} ${
                             selectedGameType === gameType.short_name
                               ? 'active'

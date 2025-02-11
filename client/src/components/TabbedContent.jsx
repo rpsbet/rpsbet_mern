@@ -6,7 +6,7 @@ import {
   Box,
   Chip,
   Paper,
-  Typography
+  Typography,
 } from '@mui/material';
 import Leaderboards from './Leaderboards';
 import RoomHistory from './RoomHistory';
@@ -80,7 +80,7 @@ function TabbedContent(props) {
     bet_amount,
     borderColor,
     updateSelectedQs,
-    changeBgColorQs
+    changeBgColorQs,
   } = props;
 
   // ------------------ LOCAL STATE ------------------
@@ -88,7 +88,7 @@ function TabbedContent(props) {
   const [numToShow, setNumToShow] = useState(10);
   const [showPlayerModal, setShowPlayerModal] = useState(false);
   const [roomHistory, setRoomHistory] = useState(
-    updateFromNow(roomInfo?.room_history || [])
+    updateFromNow(roomInfo?.room_history || []),
   );
   // activeTabs for desktop view
   const [activeTabs, setActiveTabs] = useState([0, 1]); // e.g. 0="Play", 1="Chart"
@@ -164,21 +164,54 @@ function TabbedContent(props) {
         // "Play" Tab
         if (!roomInfo || !roomInfo.game_type) {
           return (
-            <Box square className="join-game-panel">
-              <Box className="game-page loading-skeleton" sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Box square="true" className="join-game-panel">
+              <Box
+                className="game-page loading-skeleton"
+                sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
+              >
                 {/* Skeleton placeholders */}
-                <Box className="game-contents" sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <Skeleton variant="rectangular" sx={{ width: '100%', height: 60 }} />
+                <Box
+                  className="game-contents"
+                  sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
+                >
+                  <Skeleton
+                    variant="rectangular"
+                    sx={{ width: '100%', height: 60 }}
+                  />
                   <Box
                     className="game-info-panel"
-                    sx={{ position: 'relative', paddingBottom: '90px', display: 'flex', flexDirection: 'column', gap: 2 }}
+                    sx={{
+                      position: 'relative',
+                      paddingBottom: '90px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 2,
+                    }}
                   >
-                    <Skeleton variant="text" sx={{ width: '20%', height: 30 }} />
-                    <Skeleton variant="text" sx={{ width: '80%', height: 30 }} />
-                    <Skeleton variant="text" sx={{ width: '60%', height: 100 }} />
-                    <Skeleton variant="text" sx={{ width: '80%', height: 30 }} />
-                    <Skeleton variant="text" sx={{ width: '10%', height: 90 }} />
-                    <Skeleton variant="text" sx={{ width: '20%', height: 90 }} />
+                    <Skeleton
+                      variant="text"
+                      sx={{ width: '20%', height: 30 }}
+                    />
+                    <Skeleton
+                      variant="text"
+                      sx={{ width: '80%', height: 30 }}
+                    />
+                    <Skeleton
+                      variant="text"
+                      sx={{ width: '60%', height: 100 }}
+                    />
+                    <Skeleton
+                      variant="text"
+                      sx={{ width: '80%', height: 30 }}
+                    />
+                    <Skeleton
+                      variant="text"
+                      sx={{ width: '10%', height: 90 }}
+                    />
+                    <Skeleton
+                      variant="text"
+                      sx={{ width: '20%', height: 90 }}
+                    />
                   </Box>
                 </Box>
               </Box>
@@ -204,7 +237,7 @@ function TabbedContent(props) {
                 options: {
                   zIndex: 1500,
                   backgroundColor: isDarkMode
-                    ? 'rgba(33, 33, 33, 0.95)'   // Dark gray background for dark mode
+                    ? 'rgba(33, 33, 33, 0.95)' // Dark gray background for dark mode
                     : 'rgba(255, 255, 255, 0.95)', // White background for light mode
                   primaryColor: isDarkMode ? '#ff0000' : '#6200ea', // Vibrant green for dark, deep purple for light
                   arrowColor: isDarkMode
@@ -388,18 +421,17 @@ function TabbedContent(props) {
           TabIndicatorProps={{ style: { background: '#ff0000' } }}
           value={selectedTab}
           onChange={handleTabChange}
-          textColor="error"
+          textColor="inherit"
           indicatorColor="error"
         >
           {/* 0: "Play" */}
-          <Tab label="Play" active={selectedTab === 0} isDarkMode={isDarkMode} />
+          <Tab label="Play" />
           {/* 1: "Chart" */}
-          <Tab label="Chart" active={selectedTab === 1} isDarkMode={isDarkMode} />
+          <Tab label="Chart" />
           {/* 2: "History" */}
-          <Tab label="History" active={selectedTab === 2} isDarkMode={isDarkMode} />
+          <Tab label="History" />
           {/* 3: "Thread" */}
-          <Tab label="Comments" active={selectedTab === 3} isDarkMode={isDarkMode} />
-
+          <Tab label="Comments" />
         </Tabs>
 
         <div>
@@ -436,25 +468,25 @@ function TabbedContent(props) {
           flexWrap: 'wrap',
         }}
       >
-        {['Play', 'Chart', 'History', 'Comments', 'Insights'].map((label, index) => {
-          const isInsights = index === 4;
-          return (
-            <Chip
-              key={index}
-              label={isInsights ? `${label} (Coming Soon)` : label}
-              // disable the onClick if it's Insights
-              onClick={isInsights ? undefined : () => handleChipClick(index)}
-              clickable={!isInsights}
-              color={
-                // if it's active, highlight; else default
-                activeTabs.includes(index) ? 'error' : 'error'
-              }
-              variant={
-                activeTabs.includes(index) ? 'filled' : 'outlined'
-              }
-            />
-          );
-        })}
+        {['Play', 'Chart', 'History', 'Comments', 'Insights'].map(
+          (label, index) => {
+            const isInsights = index === 4;
+            return (
+              <Chip
+                key={index}
+                label={isInsights ? `${label} (Coming Soon)` : label}
+                // disable the onClick if it's Insights
+                onClick={isInsights ? undefined : () => handleChipClick(index)}
+                clickable={!isInsights}
+                color={
+                  // if it's active, highlight; else default
+                  activeTabs.includes(index) ? 'error' : 'error'
+                }
+                variant={activeTabs.includes(index) ? 'filled' : 'outlined'}
+              />
+            );
+          },
+        )}
       </Box>
 
       <Box>

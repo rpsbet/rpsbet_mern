@@ -15,14 +15,20 @@ import {
   Box,
   Card,
   CardContent,
-  Skeleton
+  Skeleton,
 } from '@mui/material';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMoneyBillWave, faMoneyBillWaveAlt } from '@fortawesome/free-solid-svg-icons';
+import {
+  faMoneyBillWave,
+  faMoneyBillWaveAlt,
+} from '@fortawesome/free-solid-svg-icons';
 
 import { errorMsgBar } from '../../redux/Notification/notification.actions';
-import { paybackLoan, acCalculateRemainingLoans } from '../../redux/Loan/loan.action';
+import {
+  paybackLoan,
+  acCalculateRemainingLoans,
+} from '../../redux/Loan/loan.action';
 import { addNewTransaction } from '../../redux/Logic/logic.actions';
 import { convertToCurrency } from '../../util/conversion';
 import { getCustomTheme } from '../../config/theme';
@@ -138,7 +144,7 @@ const DebtsModal = ({ modalIsOpen, closeModal }) => {
     <ThemeProvider theme={theme}>
       {/* Main Debts Modal */}
       <Modal
-        isOpen={modalIsOpen}
+        isOpen={modalIsOpen || false}
         onRequestClose={closeModal}
         style={customStyles}
         contentLabel="Debts Modal"
@@ -153,8 +159,11 @@ const DebtsModal = ({ modalIsOpen, closeModal }) => {
               mb: 2,
             }}
           >
-            <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <FontAwesomeIcon icon={faMoneyBillWaveAlt} sx={{mr: 2}} />
+            <Typography
+              variant="h6"
+              sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+            >
+              <FontAwesomeIcon icon={faMoneyBillWaveAlt} sx={{ mr: 2 }} />
               YOUR DEBTS
             </Typography>
             <Button
@@ -168,14 +177,24 @@ const DebtsModal = ({ modalIsOpen, closeModal }) => {
           </Box>
 
           {/* Outer Container for loans, with background & radius */}
-          <Box sx={{ background: 'rgba(170, 170, 170, 0.06)', p: 2, borderRadius: 1 }}>
+          <Box
+            sx={{
+              background: 'rgba(170, 170, 170, 0.06)',
+              p: 2,
+              borderRadius: 1,
+            }}
+          >
             <Grid container spacing={2}>
               {/* If no debts */}
               {!userLoans || userLoans.length === 0 ? (
                 <Grid item xs={12}>
                   <Typography
                     variant="h6"
-                    style={{ textAlign: 'center', marginTop: '20px', color: 'gray' }}
+                    style={{
+                      textAlign: 'center',
+                      marginTop: '20px',
+                      color: 'gray',
+                    }}
                   >
                     NO DEBTS!
                   </Typography>
@@ -187,12 +206,21 @@ const DebtsModal = ({ modalIsOpen, closeModal }) => {
                   .map((loan) => (
                     <Grid item xs={12} key={loan._id}>
                       <Card variant="outlined" sx={{ mb: 0.5 }}>
-                        <CardContent sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <CardContent
+                          sx={{
+                            p: 2,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 2,
+                          }}
+                        >
                           {/* Optionally highlight the outstanding amount on top */}
                           <Box sx={{ textAlign: 'center' }}>
                             <Typography variant="h6" sx={{ fontWeight: 600 }}>
                               {convertToCurrency(loan.amount, solPrice)}
-                              <span style={{ fontSize: 'small', marginLeft: 4 }}>
+                              <span
+                                style={{ fontSize: 'small', marginLeft: 4 }}
+                              >
                                 / {loan.amount} SOL
                               </span>
                             </Typography>
@@ -209,13 +237,17 @@ const DebtsModal = ({ modalIsOpen, closeModal }) => {
                                 <TableRow>
                                   <TableCell>Paid Back:</TableCell>
                                   <TableCell>
-                                    {convertToCurrency(loan.paid_back, solPrice)}
+                                    {convertToCurrency(
+                                      loan.paid_back,
+                                      solPrice,
+                                    )}
                                   </TableCell>
                                 </TableRow>
                                 <TableRow>
                                   <TableCell>Outstanding Debt:</TableCell>
                                   <TableCell>
-                                    {convertToCurrency(loan.amount, solPrice)}&nbsp;
+                                    {convertToCurrency(loan.amount, solPrice)}
+                                    &nbsp;
                                     {`(${loan.apy * 100}%)`}
                                   </TableCell>
                                 </TableRow>
@@ -274,14 +306,10 @@ const DebtsModal = ({ modalIsOpen, closeModal }) => {
               }}
             >
               <Typography variant="h6" className="modal-title title">
-              <FontAwesomeIcon icon={faMoneyBillWave} sx={{mr: 2}} />&nbsp;
-                Pay back Loan
+                <FontAwesomeIcon icon={faMoneyBillWave} sx={{ mr: 2 }} />
+                &nbsp; Pay back Loan
               </Typography>
-              <Button
-                variant="text"
-                color="error"
-                onClick={closePaybackModal}
-              >
+              <Button variant="text" color="error" onClick={closePaybackModal}>
                 ×
               </Button>
             </Box>
@@ -291,10 +319,16 @@ const DebtsModal = ({ modalIsOpen, closeModal }) => {
               {loading ? (
                 <Box
                   className="loading-overlay"
-                  sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+                  sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                  }}
                 >
                   <img src={randomGifUrl} alt="Loading" />
-                  <Typography sx={{ mt: 1, color: '#fff' }}>Repaying loan...</Typography>
+                  <Typography sx={{ mt: 1, color: '#fff' }}>
+                    Repaying loan...
+                  </Typography>
                 </Box>
               ) : (
                 <TextField
@@ -311,7 +345,9 @@ const DebtsModal = ({ modalIsOpen, closeModal }) => {
                     endAdornment: paybackAmount ? (
                       ' SOL '
                     ) : (
-                      <ButtonGroup className={isFocused ? 'fade-in' : 'fade-out'}>
+                      <ButtonGroup
+                        className={isFocused ? 'fade-in' : 'fade-out'}
+                      >
                         <Button
                           variant="outlined"
                           color="error"
@@ -330,7 +366,11 @@ const DebtsModal = ({ modalIsOpen, closeModal }) => {
             {/* Payback Modal Footer */}
             <Box className="modal-footer" sx={{ textAlign: 'right' }}>
               {!loading && (
-                <Button variant="contained" color="error" onClick={handlePaybackLoan}>
+                <Button
+                  variant="contained"
+                  color="error"
+                  onClick={handlePaybackLoan}
+                >
                   Pay Back
                 </Button>
               )}

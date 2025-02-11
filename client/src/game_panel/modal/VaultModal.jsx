@@ -14,7 +14,7 @@ import {
   Chip,
   Divider,
   TableContainer,
-  CircularProgress
+  CircularProgress,
 } from '@mui/material';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import MoneyOffIcon from '@mui/icons-material/MoneyOff';
@@ -27,7 +27,7 @@ import {
   vaultDeposit,
   vaultWithdraw,
   fetchRecentVaultTransactions,
-  getUser
+  getUser,
 } from '../../redux/Auth/user.actions';
 import { addNewTransaction } from '../../redux/Logic/logic.actions';
 import { errorMsgBar } from '../../redux/Notification/notification.actions';
@@ -47,7 +47,7 @@ function VaultModal(props) {
     solPrice,
     isDarkMode,
     addNewTransaction,
-    getUser
+    getUser,
   } = props;
 
   // ------------------ LOCAL STATE ------------------
@@ -90,7 +90,11 @@ function VaultModal(props) {
     const amountParsed = parseFloat(amount);
 
     // Basic validation
-    if (isNaN(amountParsed) || amountParsed <= 0 || amountParsed > user.balance) {
+    if (
+      isNaN(amountParsed) ||
+      amountParsed <= 0 ||
+      amountParsed > user.balance
+    ) {
       dispatch(errorMsgBar('IM-PAW-SIBBLEEE, ENTER A VALID AMOUNT!'));
       return;
     }
@@ -171,7 +175,7 @@ function VaultModal(props) {
     width: 500,
     maxWidth: '90vw',
     maxHeight: '90vh',
-    overflowY: 'auto'
+    overflowY: 'auto',
   };
   const theme = getCustomTheme(isDarkMode ? 'dark' : 'light');
 
@@ -179,18 +183,21 @@ function VaultModal(props) {
   return (
     <ThemeProvider theme={theme}>
       <Modal
-        open={modalIsOpen}
+        open={modalIsOpen || false}
         onClose={closeModal}
         closeAfterTransition
         sx={{ zIndex: 1300 }}
         BackdropProps={{
-          style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' }
+          style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' },
         }}
       >
         <Box sx={modalBoxStyle}>
           {/* HEADER */}
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-            <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center' }}>
+            <Typography
+              variant="h6"
+              sx={{ display: 'flex', alignItems: 'center' }}
+            >
               <FontAwesomeIcon icon={faLock} style={{ marginRight: 8 }} />
               VAULT
             </Typography>
@@ -207,7 +214,7 @@ function VaultModal(props) {
               p: '20px',
               display: 'flex',
               flexDirection: 'column',
-              gap: 2
+              gap: 2,
             }}
           >
             {/* Balance Section */}
@@ -271,16 +278,23 @@ function VaultModal(props) {
                 <Table size="small" stickyHeader>
                   <TableBody>
                     {vaultTransactions.map((transaction, index) => {
-                      const isWithdrawal = transaction?.description.includes('withdrawal');
+                      const isWithdrawal =
+                        transaction?.description.includes('withdrawal');
                       return (
                         <TableRow key={index}>
-                          <TableCell sx={{ color: isWithdrawal ? '#00ff3a' : '#ff0000' }}>
+                          <TableCell
+                            sx={{ color: isWithdrawal ? '#00ff3a' : '#ff0000' }}
+                          >
                             {isWithdrawal ? '-' : '+'}
                           </TableCell>
-                          <TableCell sx={{ color: isWithdrawal ? '#00ff3a' : '#ff0000' }}>
+                          <TableCell
+                            sx={{ color: isWithdrawal ? '#00ff3a' : '#ff0000' }}
+                          >
                             {convertToCurrency(transaction?.amount, solPrice)}
                           </TableCell>
-                          <TableCell sx={{ color: isWithdrawal ? '#00ff3a' : '#ff0000' }}>
+                          <TableCell
+                            sx={{ color: isWithdrawal ? '#00ff3a' : '#ff0000' }}
+                          >
                             {new Date(transaction?.created_at).toLocaleString()}
                           </TableCell>
                         </TableRow>
@@ -293,7 +307,14 @@ function VaultModal(props) {
           </Box>
 
           {/* FOOTER (Deposit / Withdraw Buttons) */}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3, gap: 2 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              mt: 3,
+              gap: 2,
+            }}
+          >
             <Button
               variant="contained"
               color="error"
@@ -346,7 +367,7 @@ const mapDispatchToProps = {
   vaultWithdraw,
   addNewTransaction,
   fetchRecentVaultTransactions,
-  getUser
+  getUser,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(VaultModal);

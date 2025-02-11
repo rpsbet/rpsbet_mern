@@ -6,7 +6,7 @@ import {
   AccordionSummary,
   AccordionDetails,
   Typography,
-  Button
+  Button,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import QuestionMark from '@mui/icons-material/QuestionMark';
@@ -26,29 +26,28 @@ function HowToPlayModal({ modalIsOpen, closeModal }) {
     width: 500,
     maxWidth: '90vw',
     maxHeight: '90vh',
-    overflowY: 'auto'
+    overflowY: 'auto',
   };
 
   return (
     <Modal
-      open={modalIsOpen}
+      open={modalIsOpen || false}
       onClose={closeModal}
       closeAfterTransition
       sx={{ zIndex: 1300 }}
       BackdropProps={{
-        style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' }
+        style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' },
       }}
     >
       <Box sx={modalBoxStyle}>
         {/* HEADER */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
           <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-          <QuestionMark sx={{ mr: 1 }} />
-
+            <QuestionMark sx={{ mr: 1 }} />
             HOW IT WORKS
           </Typography>
           <Button variant="text" color="error" onClick={closeModal}>
-          ×
+            ×
           </Button>
         </Box>
 
@@ -63,23 +62,24 @@ function HowToPlayModal({ modalIsOpen, closeModal }) {
                 style={{
                   background: 'linear-gradient(165deg, #ffd000, #ff0000)',
                   padding: '0em 0.4em',
-                  borderRadius: 1
+                  borderRadius: 1,
                 }}
               >
                 RPS.Game
               </span>{' '}
-              is more than just a platform—it’s a powerful game creation tool! Players can design their
-              own games, and when they reach{' '}
+              is more than just a platform—it’s a powerful game creation tool!
+              Players can design their own games, and when they reach{' '}
               <strong
                 style={{
                   background: 'linear-gradient(165deg, #ffd000, #ff0000)',
                   padding: '0em 0.4em',
-                  borderRadius: 1
+                  borderRadius: 1,
                 }}
               >
                 80 SOL
               </strong>{' '}
-              in contributions, these games can be minted as unique tokens on the blockchain.
+              in contributions, these games can be minted as unique tokens on
+              the blockchain.
             </Typography>
           </AccordionDetails>
         </Accordion>
@@ -116,9 +116,12 @@ function HowToPlayModal({ modalIsOpen, closeModal }) {
             </Typography>
             <ol>
               <li>Enter a predetermined Bet Amount.</li>
-              <li>Choose "Rock", "Paper", or "Scissors" to play against the AI.</li>
               <li>
-                Winner is determined by: Rock beats Scissors, Scissors beats Paper, and Paper beats Rock.
+                Choose "Rock", "Paper", or "Scissors" to play against the AI.
+              </li>
+              <li>
+                Winner is determined by: Rock beats Scissors, Scissors beats
+                Paper, and Paper beats Rock.
               </li>
             </ol>
           </AccordionDetails>
@@ -130,7 +133,8 @@ function HowToPlayModal({ modalIsOpen, closeModal }) {
           </AccordionSummary>
           <AccordionDetails>
             <Typography variant="body2" paragraph>
-              Hosts receive ZERO tax on their winnings AND EARN 0% - 20% from their players' winnings.
+              Hosts receive ZERO tax on their winnings AND EARN 0% - 20% from
+              their players' winnings.
             </Typography>
           </AccordionDetails>
         </Accordion>

@@ -7,7 +7,7 @@ import {
   Typography,
   IconButton,
   Dialog,
-  DialogContent
+  DialogContent,
 } from '@mui/material';
 import { Help, AttachMoney } from '@mui/icons-material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -15,12 +15,13 @@ import { faCoins, faAdjust, faInfo } from '@fortawesome/free-solid-svg-icons';
 
 import BankPage from '../../admin_panel/app/ProductPages/ProductSerchPage/BankPage';
 import MyLoansModal from '../modal/MyLoansModal';
-import { warningMsgBar, infoMsgBar } from '../../redux/Notification/notification.actions';
+import {
+  warningMsgBar,
+  infoMsgBar,
+} from '../../redux/Notification/notification.actions';
 import { Diag } from '@tensorflow/tfjs';
 import { ThemeProvider } from '@mui/material/styles';
 import { getCustomTheme } from '../../config/theme';
-
-
 
 function BankModal({ modalIsOpen, closeModal, isDarkMode, remainingLoans }) {
   const [showMyLoansModal, setShowMyLoansModal] = useState(false);
@@ -35,11 +36,11 @@ function BankModal({ modalIsOpen, closeModal, isDarkMode, remainingLoans }) {
     <ThemeProvider theme={theme}>
       {/* MAIN BANK MODAL */}
       <Modal
-        open={modalIsOpen}
+        open={modalIsOpen || false}
         onClose={closeModal}
         closeAfterTransition
         BackdropProps={{
-          style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' }
+          style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' },
         }}
       >
         <Box
@@ -56,7 +57,7 @@ function BankModal({ modalIsOpen, closeModal, isDarkMode, remainingLoans }) {
             overflowY: 'auto',
             borderRadius: 1,
             p: 3,
-            boxShadow: 24
+            boxShadow: 24,
           }}
         >
           {/* Header */}
@@ -65,14 +66,22 @@ function BankModal({ modalIsOpen, closeModal, isDarkMode, remainingLoans }) {
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              mb: 2
+              mb: 2,
             }}
           >
-            <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography
+              variant="h6"
+              sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+            >
               <FontAwesomeIcon icon={faCoins} />
               CENTRAL BANK
             </Typography>
-            <Button variant="text" color="error" onClick={closeModal} sx={{ fontSize: '1.25rem' }}>
+            <Button
+              variant="text"
+              color="error"
+              onClick={closeModal}
+              sx={{ fontSize: '1.25rem' }}
+            >
               ×
             </Button>
           </Box>
@@ -84,7 +93,7 @@ function BankModal({ modalIsOpen, closeModal, isDarkMode, remainingLoans }) {
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                mb: 2
+                mb: 2,
               }}
             >
               <Typography variant="h5">PRIVATE LENDERS</Typography>
@@ -100,7 +109,7 @@ function BankModal({ modalIsOpen, closeModal, isDarkMode, remainingLoans }) {
           <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
             <Button
               variant="contained"
-              color='error'
+              color="error"
               onClick={() => setShowMyLoansModal(true)}
               fullWidth
               startIcon={<AttachMoney />}
@@ -132,19 +141,25 @@ function BankModal({ modalIsOpen, closeModal, isDarkMode, remainingLoans }) {
             backgroundColor: '#1f1a25',
             color: '#fff',
             borderRadius: 2,
-            boxShadow: 24
-          }
+            boxShadow: 24,
+          },
         }}
       >
         <DialogContent sx={{ p: 4 }}>
           {/* Header Row */}
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+            mb={3}
+          >
             <Typography
               variant="h6"
               sx={{ fontWeight: 600, flex: 1, mr: -4 }}
-            /* Center the title while leaving space for close button */
-            ><FontAwesomeIcon icon={faInfo} />&nbsp;
-              LOAN INFORMATION
+              /* Center the title while leaving space for close button */
+            >
+              <FontAwesomeIcon icon={faInfo} />
+              &nbsp; LOAN INFORMATION
             </Typography>
             <Button
               variant="text"
@@ -169,7 +184,7 @@ function BankModal({ modalIsOpen, closeModal, isDarkMode, remainingLoans }) {
                     border: '1px solid #aaa9',
                     filter: invertFilter ? 'invert(1)' : 'none',
                     maxWidth: '100%',
-                    height: 'auto'
+                    height: 'auto',
                   }}
                 />
                 <IconButton
@@ -180,7 +195,7 @@ function BankModal({ modalIsOpen, closeModal, isDarkMode, remainingLoans }) {
                     right: 8,
                     bgcolor: 'rgba(0, 0, 0, 0.4)',
                     color: '#fff',
-                    '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.6)' }
+                    '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.6)' },
                   }}
                 >
                   <FontAwesomeIcon icon={faAdjust} />
@@ -189,12 +204,18 @@ function BankModal({ modalIsOpen, closeModal, isDarkMode, remainingLoans }) {
             </Box>
 
             {/* Central Bank Overview */}
-            <Typography className='title' variant="h5" align="center" sx={{ fontWeight: 600, mb: 2 }}>
+            <Typography
+              className="title"
+              variant="h5"
+              align="center"
+              sx={{ fontWeight: 600, mb: 2 }}
+            >
               Central Bank Overview
             </Typography>
             <Typography variant="body1" sx={{ mb: 4, lineHeight: 1.6 }}>
-              The central bank is funded by private lenders, also known as Peer-to-Peer (P2P) lending.
-              P2P lending connects borrowers directly with investors.
+              The central bank is funded by private lenders, also known as
+              Peer-to-Peer (P2P) lending. P2P lending connects borrowers
+              directly with investors.
             </Typography>
 
             {/* Steps to get started (Loaner) */}
@@ -214,12 +235,13 @@ function BankModal({ modalIsOpen, closeModal, isDarkMode, remainingLoans }) {
               <li>Go to &quot;Manage Your Loans&quot;</li>
               <li>Click &quot;Create New Loan&quot;</li>
               <li>
-                Set &quot;Loan Type&quot; (coming soon). Secured Loans guarantee repayments
-                (e.g., via collateral). Unsecured Loans do not.
+                Set &quot;Loan Type&quot; (coming soon). Secured Loans guarantee
+                repayments (e.g., via collateral). Unsecured Loans do not.
               </li>
               <li>Set an Interest Rate (APY), typically around 10%~30%</li>
               <li>
-                Earn returns as borrowers repay their loans, including principal and interest.
+                Earn returns as borrowers repay their loans, including principal
+                and interest.
               </li>
             </Box>
 
@@ -236,19 +258,26 @@ function BankModal({ modalIsOpen, closeModal, isDarkMode, remainingLoans }) {
                 Click &quot;Loan&quot; and <em>Check Eligibility</em>
               </li>
               <li>
-                Make sure the criteria fits your circumstances
-                (loan period, APY, etc.).
+                Make sure the criteria fits your circumstances (loan period,
+                APY, etc.).
               </li>
               <li>Enter the amount you want to loan and accept the debt.</li>
               <li>
-                Repay the loan by going to your wallet and clicking
-                the red button that shows your remaining debt.
+                Repay the loan by going to your wallet and clicking the red
+                button that shows your remaining debt.
               </li>
-              <li>Credit score may increase / decrease upon repayment or failure.</li>
+              <li>
+                Credit score may increase / decrease upon repayment or failure.
+              </li>
             </Box>
 
             {/* Definitions */}
-            <Typography className='title' variant="h5" align="center" sx={{ fontWeight: 600, mb: 3 }}>
+            <Typography
+              className="title"
+              variant="h5"
+              align="center"
+              sx={{ fontWeight: 600, mb: 3 }}
+            >
               Definitions
             </Typography>
 
@@ -261,8 +290,8 @@ function BankModal({ modalIsOpen, closeModal, isDarkMode, remainingLoans }) {
             </Typography>
             <Typography variant="body1" sx={{ mb: 3, lineHeight: 1.6 }}>
               A system in which only a fraction of bank deposits are backed by
-              actual cash on hand and available for withdrawal. The remainder
-              is lent out to borrowers.
+              actual cash on hand and available for withdrawal. The remainder is
+              lent out to borrowers.
             </Typography>
 
             {/* Full Reserve Banking */}
@@ -274,8 +303,8 @@ function BankModal({ modalIsOpen, closeModal, isDarkMode, remainingLoans }) {
             </Typography>
             <Typography variant="body1" sx={{ mb: 3, lineHeight: 1.6 }}>
               A banking system in which banks are required to keep the full
-              amount of depositors&apos; funds in reserve, meaning they do
-              not lend any of it out.
+              amount of depositors&apos; funds in reserve, meaning they do not
+              lend any of it out.
             </Typography>
 
             {/* Usury */}

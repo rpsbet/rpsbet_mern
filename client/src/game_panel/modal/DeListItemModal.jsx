@@ -3,7 +3,7 @@ import Modal from 'react-modal';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   closeDeListItemModal,
-  errorMsgBar
+  errorMsgBar,
 } from '../../redux/Notification/notification.actions';
 import { deListItem } from '../../redux/Logic/logic.actions';
 import { Button } from '@mui/material';
@@ -13,7 +13,7 @@ Modal.setAppElement('#root');
 const customStyles = {
   overlay: {
     zIndex: 3,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)'
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
   },
   content: {
     top: '50%',
@@ -23,17 +23,13 @@ const customStyles = {
     transform: 'translate(-50%, -50%)',
     padding: 0,
     background: 'transparent',
-    border: 'none'
-  }
+    border: 'none',
+  },
 };
 
 const DeListItemModal = () => {
   const dispatch = useDispatch();
-  const {
-    isDarkMode,
-    isOpen,
-    item,
-  } = useSelector(state => ({
+  const { isDarkMode, isOpen, item } = useSelector((state) => ({
     isDarkMode: state.auth.isDarkMode,
     isOpen: state.snackbar.showDeListItemModal,
     item: state.itemReducer._id,
@@ -54,10 +50,7 @@ const DeListItemModal = () => {
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      style={customStyles}
-    >
+    <Modal isOpen={isOpen || false} style={customStyles}>
       <div className={isDarkMode ? 'dark_mode' : ''}>
         <div className="modal-body alert-body password-modal-body">
           <div className={`modal-icon result-icon-trade`}></div>
@@ -67,10 +60,10 @@ const DeListItemModal = () => {
           <br />
         </div>
         <div className="modal-footer">
-          <Button variant='contained' color='error' onClick={handleConfirm}>
+          <Button variant="contained" color="error" onClick={handleConfirm}>
             CONFIRM
           </Button>
-          <Button variant='contained' color='error' onClick={handleCancel}>
+          <Button variant="contained" color="error" onClick={handleCancel}>
             CANCEL
           </Button>
         </div>

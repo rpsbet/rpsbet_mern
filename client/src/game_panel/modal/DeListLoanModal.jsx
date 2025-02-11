@@ -37,11 +37,7 @@ const customStyles = {
 const DeListLoanModal = () => {
   const dispatch = useDispatch();
 
-  const {
-    isDarkMode,
-    isOpen,
-    loan,
-  } = useSelector((state) => ({
+  const { isDarkMode, isOpen, loan } = useSelector((state) => ({
     isDarkMode: state.auth.isDarkMode,
     isOpen: state.snackbar.showDeListLoanModal,
     loan: state.loanReducer._id,
@@ -72,7 +68,7 @@ const DeListLoanModal = () => {
   };
 
   return (
-    <Modal isOpen={isOpen} style={customStyles}>
+    <Modal isOpen={isOpen || false} style={customStyles}>
       <div className={isDarkMode ? 'dark_mode' : ''}>
         <div className="modal-body alert-body password-modal-body">
           <div className="modal-icon result-icon-prize"></div>

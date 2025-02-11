@@ -13,7 +13,7 @@ import {
   Typography,
   Button,
   Modal,
-  ButtonGroup
+  ButtonGroup,
 } from '@mui/material';
 
 import Lottie from 'react-lottie';
@@ -21,34 +21,107 @@ import { convertToCurrency } from '../../util/conversion';
 import { getRank } from '../../util/getRank';
 import LottieRankIcon from '../LottieAnimations/rankIcon.json';
 
-import { acQueryLoan, acCalculateRemainingLoans } from '../../redux/Loan/loan.action';
+import {
+  acQueryLoan,
+  acCalculateRemainingLoans,
+} from '../../redux/Loan/loan.action';
 import {
   closeConfirmLoanModal,
-  errorMsgBar
+  errorMsgBar,
 } from '../../redux/Notification/notification.actions';
 import {
   confirmLoan,
-  addNewTransaction
+  addNewTransaction,
 } from '../../redux/Logic/logic.actions';
 import { getUser } from '../../redux/Auth/user.actions';
 import { getCustomTheme } from '../../config/theme';
 import { ThemeProvider } from '@mui/material/styles';
 
 const categories = [
-  { creditScoreThreshold: 700, rankThreshold: 0, accountAgeThresholdInDays: 30, maxAllowance: 0 },
-  { creditScoreThreshold: 700, rankThreshold: 1, accountAgeThresholdInDays: 30, maxAllowance: 0.02 },
-  { creditScoreThreshold: 700, rankThreshold: 2, accountAgeThresholdInDays: 30, maxAllowance: 0.05 },
-  { creditScoreThreshold: 700, rankThreshold: 3, accountAgeThresholdInDays: 30, maxAllowance: 0.1 },
-  { creditScoreThreshold: 700, rankThreshold: 4, accountAgeThresholdInDays: 30, maxAllowance: 0.25 },
-  { creditScoreThreshold: 700, rankThreshold: 5, accountAgeThresholdInDays: 30, maxAllowance: 0.5 },
-  { creditScoreThreshold: 700, rankThreshold: 6, accountAgeThresholdInDays: 30, maxAllowance: 1 },
-  { creditScoreThreshold: 700, rankThreshold: 7, accountAgeThresholdInDays: 30, maxAllowance: 1.5 },
-  { creditScoreThreshold: 700, rankThreshold: 8, accountAgeThresholdInDays: 30, maxAllowance: 2 },
-  { creditScoreThreshold: 700, rankThreshold: 9, accountAgeThresholdInDays: 30, maxAllowance: 3 },
-  { creditScoreThreshold: 700, rankThreshold: 10, accountAgeThresholdInDays: 30, maxAllowance: 4 },
-  { creditScoreThreshold: 700, rankThreshold: 12, accountAgeThresholdInDays: 30, maxAllowance: 6 },
-  { creditScoreThreshold: 700, rankThreshold: 13, accountAgeThresholdInDays: 30, maxAllowance: 8 },
-  { creditScoreThreshold: 700, rankThreshold: 14, accountAgeThresholdInDays: 30, maxAllowance: 10 },
+  {
+    creditScoreThreshold: 700,
+    rankThreshold: 0,
+    accountAgeThresholdInDays: 30,
+    maxAllowance: 0,
+  },
+  {
+    creditScoreThreshold: 700,
+    rankThreshold: 1,
+    accountAgeThresholdInDays: 30,
+    maxAllowance: 0.02,
+  },
+  {
+    creditScoreThreshold: 700,
+    rankThreshold: 2,
+    accountAgeThresholdInDays: 30,
+    maxAllowance: 0.05,
+  },
+  {
+    creditScoreThreshold: 700,
+    rankThreshold: 3,
+    accountAgeThresholdInDays: 30,
+    maxAllowance: 0.1,
+  },
+  {
+    creditScoreThreshold: 700,
+    rankThreshold: 4,
+    accountAgeThresholdInDays: 30,
+    maxAllowance: 0.25,
+  },
+  {
+    creditScoreThreshold: 700,
+    rankThreshold: 5,
+    accountAgeThresholdInDays: 30,
+    maxAllowance: 0.5,
+  },
+  {
+    creditScoreThreshold: 700,
+    rankThreshold: 6,
+    accountAgeThresholdInDays: 30,
+    maxAllowance: 1,
+  },
+  {
+    creditScoreThreshold: 700,
+    rankThreshold: 7,
+    accountAgeThresholdInDays: 30,
+    maxAllowance: 1.5,
+  },
+  {
+    creditScoreThreshold: 700,
+    rankThreshold: 8,
+    accountAgeThresholdInDays: 30,
+    maxAllowance: 2,
+  },
+  {
+    creditScoreThreshold: 700,
+    rankThreshold: 9,
+    accountAgeThresholdInDays: 30,
+    maxAllowance: 3,
+  },
+  {
+    creditScoreThreshold: 700,
+    rankThreshold: 10,
+    accountAgeThresholdInDays: 30,
+    maxAllowance: 4,
+  },
+  {
+    creditScoreThreshold: 700,
+    rankThreshold: 12,
+    accountAgeThresholdInDays: 30,
+    maxAllowance: 6,
+  },
+  {
+    creditScoreThreshold: 700,
+    rankThreshold: 13,
+    accountAgeThresholdInDays: 30,
+    maxAllowance: 8,
+  },
+  {
+    creditScoreThreshold: 700,
+    rankThreshold: 14,
+    accountAgeThresholdInDays: 30,
+    maxAllowance: 10,
+  },
 ];
 
 function ConfirmLoanModal(props) {
@@ -110,20 +183,23 @@ function ConfirmLoanModal(props) {
     return Math.floor(diffMs / (24 * 60 * 60 * 1000));
   }, []);
 
-  const getHighlightedRowIndex = useCallback((categories, rankValue, accountAgeInDays) => {
-    const currentRank = getRank(rankValue);
-    let bestCategoryIndex = -1;
-    for (let i = 0; i < categories.length; i++) {
-      const category = categories[i];
-      if (
-        currentRank >= category.rankThreshold &&
-        accountAgeInDays >= category.accountAgeThresholdInDays
-      ) {
-        bestCategoryIndex = i - 1;
+  const getHighlightedRowIndex = useCallback(
+    (categories, rankValue, accountAgeInDays) => {
+      const currentRank = getRank(rankValue);
+      let bestCategoryIndex = -1;
+      for (let i = 0; i < categories.length; i++) {
+        const category = categories[i];
+        if (
+          currentRank >= category.rankThreshold &&
+          accountAgeInDays >= category.accountAgeThresholdInDays
+        ) {
+          bestCategoryIndex = i - 1;
+        }
       }
-    }
-    return bestCategoryIndex;
-  }, []);
+      return bestCategoryIndex;
+    },
+    [],
+  );
 
   const onBtnOkClicked = useCallback(async () => {
     if (parseFloat(responseText) > loan_amount) {
@@ -171,7 +247,11 @@ function ConfirmLoanModal(props) {
 
   // ---------- DERIVED VALUES ----------
   const accountAgeInDays = getAccountAgeInDays(created_at);
-  const highlightedRowIndex = getHighlightedRowIndex(categories, rank, accountAgeInDays);
+  const highlightedRowIndex = getHighlightedRowIndex(
+    categories,
+    rank,
+    accountAgeInDays,
+  );
   const maxAllowance =
     highlightedRowIndex >= 0 ? categories[highlightedRowIndex].maxAllowance : 0;
 
@@ -186,11 +266,7 @@ function ConfirmLoanModal(props) {
 
   return (
     <ThemeProvider theme={theme}>
-      <Modal
-        open={isOpen}
-        onClose={onBtnCancelClicked}
-
-      >
+      <Modal open={isOpen || false} onClose={onBtnCancelClicked}>
         {/* 
           Outer <Box> for the "paper" area. 
           We position absolute to center it: 
@@ -216,7 +292,13 @@ function ConfirmLoanModal(props) {
                 ACCEPT DEBT
               </Typography>
 
-              <Box sx={{ background: 'rgba(170, 170, 170, 0.06)', p: 2, borderRadius: 1 }}>
+              <Box
+                sx={{
+                  background: 'rgba(170, 170, 170, 0.06)',
+                  p: 2,
+                  borderRadius: 1,
+                }}
+              >
                 {/* TABLE: RANK ALLOWANCES */}
                 <Box sx={{ mb: 3 }}>
                   <TableContainer
@@ -268,11 +350,19 @@ function ConfirmLoanModal(props) {
                               key={index}
                               sx={{
                                 backgroundColor:
-                                  highlightedRowIndex === index ? '#28a745' : '#333',
+                                  highlightedRowIndex === index
+                                    ? '#28a745'
+                                    : '#333',
                               }}
                             >
                               <TableCell sx={{ color: '#fff' }} align="center">
-                                <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
+                                <Box
+                                  sx={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: 1,
+                                  }}
+                                >
                                   <Lottie
                                     options={{
                                       loop: true,
@@ -288,7 +378,11 @@ function ConfirmLoanModal(props) {
                               </TableCell>
                               <TableCell sx={{ color: '#fff' }} align="center">
                                 {category.maxAllowance} (
-                                {convertToCurrency(category.maxAllowance, solPrice)})
+                                {convertToCurrency(
+                                  category.maxAllowance,
+                                  solPrice,
+                                )}
+                                )
                               </TableCell>
                             </TableRow>
                           );
@@ -299,10 +393,15 @@ function ConfirmLoanModal(props) {
 
                   <Typography
                     variant="body2"
-                    sx={{ mt: 2, fontStyle: 'italic', textAlign: 'center', opacity: 0.8 }}
+                    sx={{
+                      mt: 2,
+                      fontStyle: 'italic',
+                      textAlign: 'center',
+                      opacity: 0.8,
+                    }}
                   >
-                    You must have a credit score above 700 and an account age of at least 30 days
-                    to be eligible.
+                    You must have a credit score above 700 and an account age of
+                    at least 30 days to be eligible.
                   </Typography>
                 </Box>
 
@@ -312,20 +411,29 @@ function ConfirmLoanModal(props) {
                       {/* Available Funds Row */}
                       <TableRow className="roll-tag">
                         <TableCell style={{ borderBottom: 'none' }}>
-                          <span style={{ whiteSpace: 'nowrap' }}>AVAILABLE FUNDS:</span>
+                          <span style={{ whiteSpace: 'nowrap' }}>
+                            AVAILABLE FUNDS:
+                          </span>
                         </TableCell>
                         <TableCell
-                          className={`label ${parseFloat(responseText) > loan_amount ? 'red-text' : 'green-text'
-                            }`}
+                          className={`label ${
+                            parseFloat(responseText) > loan_amount
+                              ? 'red-text'
+                              : 'green-text'
+                          }`}
                           style={{ borderBottom: 'none' }}
                         >
-                          {loan_amount} SOL ({convertToCurrency(loan_amount, solPrice)})
+                          {loan_amount} SOL (
+                          {convertToCurrency(loan_amount, solPrice)})
                         </TableCell>
                       </TableRow>
 
                       {/* TextField */}
                       <TableRow>
-                        <TableCell colSpan={2} style={{ textAlign: 'center', borderBottom: 'none' }}>
+                        <TableCell
+                          colSpan={2}
+                          style={{ textAlign: 'center', borderBottom: 'none' }}
+                        >
                           <TextField
                             color="error"
                             label="Loan"
@@ -342,7 +450,9 @@ function ConfirmLoanModal(props) {
                                 ' SOL '
                               ) : (
                                 // If the user hasn't typed anything, show a Max button
-                                <ButtonGroup className={isFocused ? 'fade-in' : 'fade-out'}>
+                                <ButtonGroup
+                                  className={isFocused ? 'fade-in' : 'fade-out'}
+                                >
                                   <Button
                                     variant="outlined"
                                     color="error"
@@ -358,7 +468,9 @@ function ConfirmLoanModal(props) {
                           />
 
                           {errorMessage && (
-                            <Box sx={{ color: 'red', fontSize: '0.875rem', mt: 1 }}>
+                            <Box
+                              sx={{ color: 'red', fontSize: '0.875rem', mt: 1 }}
+                            >
                               {errorMessage}
                             </Box>
                           )}
@@ -380,15 +492,22 @@ function ConfirmLoanModal(props) {
                       }}
                     >
                       <TableRow>
-                        <TableCell style={tableCellStyle}>Loan Amount</TableCell>
+                        <TableCell style={tableCellStyle}>
+                          Loan Amount
+                        </TableCell>
                         <TableCell style={tableCellStyle}>Days Left</TableCell>
-                        <TableCell style={tableCellStyle}>Payback Amount</TableCell>
+                        <TableCell style={tableCellStyle}>
+                          Payback Amount
+                        </TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
                       <TableRow>
                         <TableCell sx={{ textAlign: 'center' }}>
-                          {convertToCurrency(parseFloat(responseText), solPrice)}
+                          {convertToCurrency(
+                            parseFloat(responseText),
+                            solPrice,
+                          )}
                         </TableCell>
                         <TableCell sx={{ textAlign: 'center' }}>
                           {loan_period} days
@@ -399,7 +518,8 @@ function ConfirmLoanModal(props) {
                             const payback = apy * principal + principal;
                             return (
                               <>
-                                {payback.toFixed(3)} ({convertToCurrency(payback, solPrice)}){' '}
+                                {payback.toFixed(3)} (
+                                {convertToCurrency(payback, solPrice)}){' '}
                                 <span>({(apy * 100).toFixed(2)}%)</span>
                               </>
                             );
@@ -415,7 +535,11 @@ function ConfirmLoanModal(props) {
                   <Box
                     component="span"
                     onClick={toggleExpand}
-                    sx={{ color: '#ff0000', textDecoration: 'underline', cursor: 'pointer' }}
+                    sx={{
+                      color: '#ff0000',
+                      textDecoration: 'underline',
+                      cursor: 'pointer',
+                    }}
                   >
                     terms and conditions:
                   </Box>
@@ -429,7 +553,12 @@ function ConfirmLoanModal(props) {
                         <td>
                           The loan amount is{' '}
                           <Box component="span" sx={{ color: '#ff0000' }}>
-                            [{convertToCurrency(parseFloat(responseText), solPrice)}]
+                            [
+                            {convertToCurrency(
+                              parseFloat(responseText),
+                              solPrice,
+                            )}
+                            ]
                           </Box>
                           .
                         </td>
@@ -446,13 +575,16 @@ function ConfirmLoanModal(props) {
                       </tr>
                       <tr>
                         <td className="list-number">3.</td>
-                        <td>You are responsible for repaying the loan within the specified period.</td>
+                        <td>
+                          You are responsible for repaying the loan within the
+                          specified period.
+                        </td>
                       </tr>
                       <tr>
                         <td className="list-number">4.</td>
                         <td>
-                          Interest may be applicable on the loan amount as per the agreed Interest
-                          Rate:{' '}
+                          Interest may be applicable on the loan amount as per
+                          the agreed Interest Rate:{' '}
                           <Box component="span" sx={{ color: '#ff0000' }}>
                             [{(apy * 100).toFixed(1)}%]
                           </Box>
@@ -462,43 +594,46 @@ function ConfirmLoanModal(props) {
                       <tr>
                         <td className="list-number">5.</td>
                         <td>
-                          Failure to repay the loan on time may result in user's score credit
-                          penalties.
+                          Failure to repay the loan on time may result in user's
+                          score credit penalties.
                         </td>
                       </tr>
                       <tr>
                         <td className="list-number">6.</td>
                         <td>
-                          Any outstanding balance after the loan period may be automatically
-                          deducted from the user's available in-game balance
+                          Any outstanding balance after the loan period may be
+                          automatically deducted from the user's available
+                          in-game balance
                         </td>
                       </tr>
                       <tr>
                         <td className="list-number">7.</td>
                         <td>
-                          Make sure to review and understand the loan terms and conditions provided
-                          by the lender.
+                          Make sure to review and understand the loan terms and
+                          conditions provided by the lender.
                         </td>
                       </tr>
                       <tr>
                         <td className="list-number">8.</td>
                         <td>
-                          Clicking 'ACCEPT' confirms your understanding and agreement to these
-                          terms.
+                          Clicking 'ACCEPT' confirms your understanding and
+                          agreement to these terms.
                         </td>
                       </tr>
                       <tr>
                         <td className="list-number">9.</td>
                         <td>
-                          No legal action in the case of non-repayment can be taken on un-settled
-                          debts, all loans are final and this is strictly peer-to-peer.
+                          No legal action in the case of non-repayment can be
+                          taken on un-settled debts, all loans are final and
+                          this is strictly peer-to-peer.
                         </td>
                       </tr>
                       <tr>
                         <td className="list-number">10.</td>
                         <td>
-                          Ensure that you have sufficient resources to pay back the loan amount.
-                          Check your debts by clicking your wallet
+                          Ensure that you have sufficient resources to pay back
+                          the loan amount. Check your debts by clicking your
+                          wallet
                         </td>
                       </tr>
                       <tr>
@@ -507,7 +642,10 @@ function ConfirmLoanModal(props) {
                       </tr>
                       <tr>
                         <td className="list-number">12.</td>
-                        <td>Withdrawals & Tipping to be suspended for the loaner whilst in debt.</td>
+                        <td>
+                          Withdrawals & Tipping to be suspended for the loaner
+                          whilst in debt.
+                        </td>
                       </tr>
                       <tr>
                         <td className="list-number">13.</td>
@@ -524,10 +662,18 @@ function ConfirmLoanModal(props) {
             </Box>
 
             <Box className="modal-footer" sx={{ display: 'flex', gap: 2 }}>
-              <Button variant="contained" color="success" onClick={onBtnOkClicked}>
+              <Button
+                variant="contained"
+                color="success"
+                onClick={onBtnOkClicked}
+              >
                 ACCEPT
               </Button>
-              <Button variant="contained" color="error" onClick={onBtnCancelClicked}>
+              <Button
+                variant="contained"
+                color="error"
+                onClick={onBtnCancelClicked}
+              >
                 Cancel
               </Button>
             </Box>

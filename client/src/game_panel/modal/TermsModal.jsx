@@ -1,10 +1,5 @@
 import React from 'react';
-import {
-  Modal,
-  Box,
-  Typography,
-  Button
-} from '@mui/material';
+import { Modal, Box, Typography, Button } from '@mui/material';
 
 function TermsModal({ modalIsOpen, closeModal }) {
   // MUI styles
@@ -13,7 +8,7 @@ function TermsModal({ modalIsOpen, closeModal }) {
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    bgcolor: '#1f1a25',  // Purple background
+    bgcolor: '#1f1a25', // Purple background
     color: '#fff',
     boxShadow: 24,
     borderRadius: 1,
@@ -21,16 +16,16 @@ function TermsModal({ modalIsOpen, closeModal }) {
     width: 600,
     maxWidth: '90vw',
     maxHeight: '90vh',
-    overflowY: 'auto'
+    overflowY: 'auto',
   };
 
   return (
     <Modal
-      open={modalIsOpen}
+      open={modalIsOpen || false}
       onClose={closeModal}
       sx={{ zIndex: 1300 }}
       BackdropProps={{
-        style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' }
+        style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' },
       }}
     >
       <Box sx={modalBoxStyle}>
@@ -56,7 +51,7 @@ function TermsModal({ modalIsOpen, closeModal }) {
             </Typography>
           </Typography>
           <Button variant="text" color="error" onClick={closeModal}>
-          ×
+            ×
           </Button>
         </Box>
 
@@ -72,19 +67,18 @@ function TermsModal({ modalIsOpen, closeModal }) {
             Welcome to RPS GAME!
           </Typography>
           <Typography variant="body2" paragraph>
-            These terms and conditions outline the rules and regulations
-            for the use of RPS Game's site, located at rps.game.
-            By accessing this site we assume you accept these terms
-            and conditions. Do not continue to use RPS Game if you do
-            not agree to take all of the terms and conditions stated
-            on this page.
+            These terms and conditions outline the rules and regulations for the
+            use of RPS Game's site, located at rps.game. By accessing this site
+            we assume you accept these terms and conditions. Do not continue to
+            use RPS Game if you do not agree to take all of the terms and
+            conditions stated on this page.
           </Typography>
 
           <Typography variant="h6">1.0 General</Typography>
           <Typography variant="h6">1.1 Cookies</Typography>
           <Typography variant="body2" paragraph>
-            We employ the use of cookies. By accessing RPS Game, you agreed
-            to use cookies in agreement with the RPS Game's Privacy Policy.
+            We employ the use of cookies. By accessing RPS Game, you agreed to
+            use cookies in agreement with the RPS Game's Privacy Policy.
           </Typography>
 
           <Typography variant="h6">1.2 License</Typography>
@@ -109,14 +103,16 @@ function TermsModal({ modalIsOpen, closeModal }) {
 
           <Typography variant="h6">1.5 Content Liability</Typography>
           <Typography variant="body2" paragraph>
-            We shall not be held responsible for any content that appears
-            on your site.
+            We shall not be held responsible for any content that appears on
+            your site.
           </Typography>
 
-          <Typography variant="h6">2.0 Your Dealings With Other Players</Typography>
+          <Typography variant="h6">
+            2.0 Your Dealings With Other Players
+          </Typography>
           <Typography variant="body2" paragraph>
-            You are responsible for your interactions with other players. If
-            you have a dispute with another player, you release RPS Game from
+            You are responsible for your interactions with other players. If you
+            have a dispute with another player, you release RPS Game from
             responsibility, claims, demands, and/or damages.
           </Typography>
 
@@ -137,7 +133,10 @@ function TermsModal({ modalIsOpen, closeModal }) {
           </Typography>
           <Typography variant="body2" paragraph>
             For any technical/general problems, please contact&nbsp;
-            <Typography component="span" sx={{ color: '#f5b22d', textDecoration: 'underline' }}>
+            <Typography
+              component="span"
+              sx={{ color: '#f5b22d', textDecoration: 'underline' }}
+            >
               support@rps.game
             </Typography>
             . We thank you for playing!

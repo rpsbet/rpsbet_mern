@@ -11,7 +11,7 @@ import {
   FormControlLabel,
   InputAdornment,
   IconButton,
-  Tooltip
+  Tooltip,
 } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUserPlus } from '@fortawesome/free-solid-svg-icons';
@@ -35,7 +35,7 @@ function SignupModal(props) {
     openLoginModal,
     isDarkMode,
     userSignUp,
-    setFocused
+    setFocused,
   } = props;
 
   // -------------------- LOCAL STATE --------------------
@@ -72,7 +72,7 @@ function SignupModal(props) {
     if (form) {
       form.addEventListener('submit', handleFormSubmit);
     } else {
-      console.error("Form element not found");
+      console.error('Form element not found');
     }
   };
 
@@ -81,7 +81,10 @@ function SignupModal(props) {
     const form = e.target;
     /* global grecaptcha */
     grecaptcha.ready(function () {
-      grecaptcha.execute('6Lfto1EpAAAAAD5UzhL6Fp7YCZeIDmenzpZewpCv', { action: 'submit' })
+      grecaptcha
+        .execute('6Lfto1EpAAAAAD5UzhL6Fp7YCZeIDmenzpZewpCv', {
+          action: 'submit',
+        })
         .then(function (token) {
           form.querySelector('input[name="recaptchaToken"]').value = token;
           form.submit();
@@ -117,7 +120,11 @@ function SignupModal(props) {
     if (allowedCharsRegex.test(username)) {
       setUserName(username);
     } else {
-      dispatch(errorMsgBar('Invalid characters in username. Only alphanumeric characters and underscores are allowed.'));
+      dispatch(
+        errorMsgBar(
+          'Invalid characters in username. Only alphanumeric characters and underscores are allowed.',
+        ),
+      );
     }
   };
 
@@ -140,7 +147,9 @@ function SignupModal(props) {
     return new Promise((resolve) => {
       window.grecaptcha.ready(() => {
         window.grecaptcha
-          .execute('6Lfto1EpAAAAAD5UzhL6Fp7YCZeIDmenzpZewpCv', { action: 'submit' })
+          .execute('6Lfto1EpAAAAAD5UzhL6Fp7YCZeIDmenzpZewpCv', {
+            action: 'submit',
+          })
           .then((token) => {
             resolve(token);
           });
@@ -173,7 +182,7 @@ function SignupModal(props) {
       avatarMethod,
       termsChecked,
       showPassword,
-      recaptchaToken: token
+      recaptchaToken: token,
     };
 
     const result = await userSignUp(newUser);
@@ -184,7 +193,7 @@ function SignupModal(props) {
             <Box
               sx={{
                 bgcolor: isDarkMode ? 'grey.900' : 'background.paper',
-                p: 3
+                p: 3,
               }}
             >
               <Typography variant="h6" sx={{ mb: 2 }}>
@@ -206,7 +215,7 @@ function SignupModal(props) {
               </Button>
             </Box>
           );
-        }
+        },
       });
     }
   };
@@ -217,32 +226,34 @@ function SignupModal(props) {
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    bgcolor: '#1f1a25',      // Same background color as login
+    bgcolor: '#1f1a25', // Same background color as login
     color: '#fff',
     boxShadow: 24,
     borderRadius: 1,
     p: 3,
     width: 400,
-    maxWidth: '90vw'
+    maxWidth: '90vw',
   };
   const theme = getCustomTheme(isDarkMode);
 
   // -------------------- RENDER --------------------
   return (
     <ThemeProvider theme={theme}>
-
       <Modal
-        open={modalIsOpen}
+        open={modalIsOpen || false}
         onClose={closeModal}
         closeAfterTransition
         BackdropProps={{
-          style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' }
+          style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' },
         }}
       >
         <Box sx={modalBoxStyle}>
           {/* HEADER */}
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-            <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center' }}>
+            <Typography
+              variant="h6"
+              sx={{ display: 'flex', alignItems: 'center' }}
+            >
               <FontAwesomeIcon icon={faUserPlus} style={{ marginRight: 8 }} />
               REGISTER
             </Typography>
@@ -261,7 +272,7 @@ function SignupModal(props) {
           >
             <TextField
               variant="filled"
-              color='error'
+              color="error"
               label="Your Username"
               required
               value={userName}
@@ -274,16 +285,23 @@ function SignupModal(props) {
 
             {/* AVATAR SELECT */}
             <Box>
-              <Typography className='roll-tag' variant="subtitle1" sx={{ mb: 1 }}>
+              <Typography
+                className="roll-tag"
+                variant="subtitle1"
+                sx={{ mb: 1 }}
+              >
                 AVATAR
               </Typography>
               <Box sx={{ display: 'flex', gap: 2 }}>
                 <ButtonBase
                   onClick={() => onChangeAvatarMethod('robohash')}
                   sx={{
-                    border: avatarMethod === 'robohash' ? '2px solid #fff' : '2px solid transparent',
+                    border:
+                      avatarMethod === 'robohash'
+                        ? '2px solid #fff'
+                        : '2px solid transparent',
                     borderRadius: 1,
-                    p: 0.5
+                    p: 0.5,
                   }}
                 >
                   <Typography>[ CAT ]</Typography>
@@ -292,20 +310,22 @@ function SignupModal(props) {
                 <ButtonBase
                   onClick={() => onChangeAvatarMethod('jdenticon')}
                   sx={{
-                    border: avatarMethod === 'jdenticon' ? '2px solid #fff' : '2px solid transparent',
+                    border:
+                      avatarMethod === 'jdenticon'
+                        ? '2px solid #fff'
+                        : '2px solid transparent',
                     borderRadius: 1,
-                    p: 0.5
+                    p: 0.5,
                   }}
                 >
                   <Typography>[ PATTERN] </Typography>
-
                 </ButtonBase>
               </Box>
             </Box>
 
             <TextField
               variant="filled"
-              color='error'
+              color="error"
               label="Your Password"
               required
               placeholder="●●●●●●"
@@ -327,13 +347,13 @@ function SignupModal(props) {
                       </Tooltip>
                     </IconButton>
                   </InputAdornment>
-                )
+                ),
               }}
             />
 
             <TextField
               variant="filled"
-              color='error'
+              color="error"
               placeholder="V9FTGY"
               label="Re-furr-al"
               value={referralCode}
@@ -357,7 +377,11 @@ function SignupModal(props) {
                   <Typography
                     component="span"
                     onClick={handleOpenTermsModal}
-                    sx={{ textDecoration: 'underline', cursor: 'pointer', color: '#ff8500' }}
+                    sx={{
+                      textDecoration: 'underline',
+                      cursor: 'pointer',
+                      color: '#ff8500',
+                    }}
                   >
                     Terms and Conditions
                   </Typography>
@@ -369,7 +393,10 @@ function SignupModal(props) {
 
             {/* REGISTER BUTTON */}
             <Button variant="contained" color="error" type="submit" fullWidth>
-              Register <Typography component="span" fontStyle="italic">[↵]</Typography>
+              Register{' '}
+              <Typography component="span" fontStyle="italic">
+                [↵]
+              </Typography>
             </Button>
           </Box>
 
@@ -401,19 +428,18 @@ function SignupModal(props) {
         </Box>
       </Modal>
     </ThemeProvider>
-
   );
 }
 
 // ------------------ REDUX CONNECT ------------------
 const mapStateToProps = (state) => ({
   isDarkMode: state.auth.isDarkMode,
-  isActiveLoadingOverlay: state.logic.isActiveLoadingOverlay
+  isActiveLoadingOverlay: state.logic.isActiveLoadingOverlay,
 });
 
 const mapDispatchToProps = {
   userSignUp,
-  setFocused
+  setFocused,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(SignupModal);

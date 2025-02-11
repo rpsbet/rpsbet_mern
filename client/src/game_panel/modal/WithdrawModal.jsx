@@ -3,13 +3,8 @@ import { connect, useDispatch } from 'react-redux';
 import LoadingOverlay from 'react-loading-overlay';
 import axios from '../../util/Api';
 import { convertToCurrency } from '../../util/conversion';
-import {
-  getUser,
-  setGasfee
-} from '../../redux/Auth/user.actions';
-import {
-  addNewTransaction
-} from '../../redux/Logic/logic.actions';
+import { getUser, setGasfee } from '../../redux/Auth/user.actions';
+import { addNewTransaction } from '../../redux/Logic/logic.actions';
 import { ThemeProvider } from '@mui/material/styles';
 import { getCustomTheme } from '../../config/theme';
 import Summary from '../CreateGame/Summary';
@@ -28,19 +23,22 @@ import {
   InputAdornment,
   Divider,
   ButtonGroup,
-  CircularProgress
+  CircularProgress,
 } from '@mui/material';
 
 import {
   Warning,
   Info,
   FiberManualRecord,
-  AccountBalanceWallet
+  AccountBalanceWallet,
 } from '@mui/icons-material';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBolt, faGasPump } from '@fortawesome/free-solid-svg-icons';
-import { errorMsgBar, successMsgBar } from '../../redux/Notification/notification.actions';
+import {
+  errorMsgBar,
+  successMsgBar,
+} from '../../redux/Notification/notification.actions';
 
 function WithdrawModal(props) {
   const {
@@ -55,7 +53,7 @@ function WithdrawModal(props) {
     setGasfee,
     getUser,
     addNewTransaction,
-    connectedAccount
+    connectedAccount,
   } = props;
 
   // --------------------- Local State ---------------------
@@ -79,7 +77,7 @@ function WithdrawModal(props) {
     debounceTimer.current = setTimeout(async () => {
       const params = {
         amount: parsed,
-        addressTo: connectedAccount
+        addressTo: connectedAccount,
       };
       try {
         await setGasfee(params);
@@ -131,14 +129,14 @@ function WithdrawModal(props) {
       setIsLoading(true);
       const result = await axios.post('/stripe/withdraw_request/', {
         amount: parsed,
-        addressTo: connectedAccount
+        addressTo: connectedAccount,
       });
 
       if (result.data.success) {
         dispatch(successMsgBar(result.data.message));
         addNewTransaction(result.data.newTransaction);
         setIsLoading(false);
-        getUser()
+        getUser();
         closeModal();
       } else {
         setIsLoading(false);
@@ -165,7 +163,7 @@ function WithdrawModal(props) {
     width: 500,
     maxWidth: '90vw',
     maxHeight: '90vh',
-    overflowY: 'auto'
+    overflowY: 'auto',
   };
 
   const isConnected = !userInfo._id || !connectedAccount;
@@ -181,17 +179,17 @@ function WithdrawModal(props) {
             position: 'fixed',
             width: '100%',
             height: '100vh',
-            zIndex: isLoading ? 3000 : 0
-          }
+            zIndex: isLoading ? 3000 : 0,
+          },
         }}
       />
 
       <Modal
-        open={modalIsOpen}
+        open={modalIsOpen || false}
         onClose={closeModal}
         sx={{ zIndex: 1300 }}
         BackdropProps={{
-          style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' }
+          style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' },
         }}
       >
         <Box sx={modalBoxStyle}>
@@ -210,7 +208,15 @@ function WithdrawModal(props) {
           </Box>
 
           {isConnected && (
-            <Box sx={{ display: 'flex', textAlign: 'center', alignItems: 'center', gap: 1, color: 'yellow' }}>
+            <Box
+              sx={{
+                display: 'flex',
+                textAlign: 'center',
+                alignItems: 'center',
+                gap: 1,
+                color: 'yellow',
+              }}
+            >
               CONNECT WALLET FIRST <Warning />
             </Box>
           )}
@@ -219,7 +225,6 @@ function WithdrawModal(props) {
               background: 'rgba(170, 170, 170, 0.06)',
               p: 2,
               borderRadius: 1,
-
             }}
           >
             {/* Step 1: Enter Amount */}
@@ -235,7 +240,6 @@ function WithdrawModal(props) {
               </ButtonGroup>
             </Box>
 
-
             <TextField
               color="error"
               variant="filled"
@@ -249,7 +253,9 @@ function WithdrawModal(props) {
                   : ''
               }
               InputProps={{
-                endAdornment: <InputAdornment position="end">SOL</InputAdornment>
+                endAdornment: (
+                  <InputAdornment position="end">SOL</InputAdornment>
+                ),
               }}
               sx={{ width: '100%', mb: 3 }}
             />
@@ -301,7 +307,10 @@ function WithdrawModal(props) {
 
               {/* Disclaimer */}
               <Box sx={{ textAlign: 'center', mt: 2 }}>
-                <Typography color="warning" sx={{ fontSize: '0.8em', mb: 2, fontWeight: 600 }}>
+                <Typography
+                  color="warning"
+                  sx={{ fontSize: '0.8em', mb: 2, fontWeight: 600 }}
+                >
                   RECEIVE WITHIN SECONDS&nbsp;
                   <FontAwesomeIcon icon={faBolt} />
                 </Typography>
@@ -339,7 +348,7 @@ const mapStateToProps = (state) => ({
   userInfo: state.auth.user, // user => { _id, ... }
   balance: state.auth.user.balance,
   account: state.auth.user.account,
-  connectedAccount: state.auth.connectedAccount
+  connectedAccount: state.auth.connectedAccount,
 });
 
 const mapDispatchToProps = {

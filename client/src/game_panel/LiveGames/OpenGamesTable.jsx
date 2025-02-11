@@ -434,7 +434,7 @@ function OpenGamesTable(props) {
                               style={{ border: 'none', marginRight: '8px' }}
                             >
                               <AvatarGroup
-                                max={1}
+                                max={2}
                                 // Enforce uniform 32x32, remove borders, and fix dot to bottom-left
                                 sx={{
                                   '& .MuiAvatar-root': {
@@ -498,7 +498,7 @@ function OpenGamesTable(props) {
                               style={{ border: 'none', marginLeft: '8px' }}
                             >
                               <AvatarGroup
-                                max={1}
+                                max={2}
                                 sx={{
                                   '& .MuiAvatar-root': {
                                     width: 32,

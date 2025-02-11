@@ -3,9 +3,12 @@ import Modal from 'react-modal';
 import { connect, useDispatch } from 'react-redux';
 import {
   closeConfirmTradeModal,
-  errorMsgBar
+  errorMsgBar,
 } from '../../redux/Notification/notification.actions';
-import { confirmTrade, addNewTransaction } from '../../redux/Logic/logic.actions';
+import {
+  confirmTrade,
+  addNewTransaction,
+} from '../../redux/Logic/logic.actions';
 import { Button } from '@mui/material';
 import { acQueryItem } from '../../redux/Item/item.action';
 import { convertToCurrency } from '../../util/conversion';
@@ -17,7 +20,7 @@ Modal.setAppElement('#root');
 const customStyles = {
   overlay: {
     zIndex: 10000,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)'
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
   },
   content: {
     top: '50%',
@@ -27,8 +30,8 @@ const customStyles = {
     transform: 'translate(-50%, -50%)',
     padding: 0,
     background: 'transparent',
-    border: 'none'
-  }
+    border: 'none',
+  },
 };
 
 function ConfirmTradeModal(props) {
@@ -39,12 +42,12 @@ function ConfirmTradeModal(props) {
     price,
     rentOption,
     solPrice,
-    item, 
+    item,
     owner,
     closeConfirmTradeModal,
     confirmTrade,
     addNewTransaction,
-    acQueryItem
+    acQueryItem,
   } = props;
 
   // Local state for loading
@@ -56,8 +59,8 @@ function ConfirmTradeModal(props) {
     autoplay: true,
     animationData: progress,
     rendererSettings: {
-      preserveAspectRatio: 'xMidYMid slice'
-    }
+      preserveAspectRatio: 'xMidYMid slice',
+    },
   };
 
   // Handler for the confirm (OK) button
@@ -85,7 +88,7 @@ function ConfirmTradeModal(props) {
   };
 
   return (
-    <Modal isOpen={isOpen} style={customStyles}>
+    <Modal isOpen={isOpen || false} style={customStyles}>
       <div className={isDarkMode ? 'dark_mode' : ''}>
         <div className="modal-body alert-body password-modal-body">
           {!loading ? (
@@ -119,10 +122,14 @@ function ConfirmTradeModal(props) {
 
         {!loading && (
           <div className="modal-footer">
-            <Button variant='contained' color='error' onClick={onBtnOkClicked}>
+            <Button variant="contained" color="error" onClick={onBtnOkClicked}>
               {rentOption ? 'RENT' : 'TRADE'}
             </Button>
-            <Button variant='contained' color='error' onClick={onBtnCancelClicked}>
+            <Button
+              variant="contained"
+              color="error"
+              onClick={onBtnCancelClicked}
+            >
               Cancel
             </Button>
           </div>
@@ -143,14 +150,14 @@ const mapStateToProps = (state) => ({
   productName: state.itemReducer.data.productName,
   alertMessage: state.snackbar.alertMessage,
   alertType: state.snackbar.alertType,
-  solPrice: state.logic.solPrice
+  solPrice: state.logic.solPrice,
 });
 
 const mapDispatchToProps = {
   closeConfirmTradeModal,
   confirmTrade,
   addNewTransaction,
-  acQueryItem
+  acQueryItem,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(ConfirmTradeModal);

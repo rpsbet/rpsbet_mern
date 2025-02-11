@@ -204,7 +204,7 @@ function AllTransactionsModal({
   return (
     <ThemeProvider theme={theme}>
       <Modal
-        open={modalIsOpen}
+        open={modalIsOpen || false}
         onClose={close}
         sx={{ zIndex: 1300 }}
         BackdropProps={{

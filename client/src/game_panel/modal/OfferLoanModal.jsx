@@ -17,12 +17,17 @@ import {
   InputAdornment,
   ThemeProvider,
   Box,
-  CircularProgress
+  CircularProgress,
 } from '@mui/material';
 import { getCustomTheme } from '../../config/theme';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faExclamationTriangle, faDollarSign, faCalendarAlt, faMoneyBillWave } from '@fortawesome/free-solid-svg-icons';
+import {
+  faExclamationTriangle,
+  faDollarSign,
+  faCalendarAlt,
+  faMoneyBillWave,
+} from '@fortawesome/free-solid-svg-icons';
 import InfoIcon from '@mui/icons-material/Info';
 
 import Lottie from 'react-lottie';
@@ -41,7 +46,10 @@ import {
   reconsiderOffer,
   createAndLend,
 } from '../../redux/Loan/loan.action';
-import { closeOfferLoanModal, errorMsgBar } from '../../redux/Notification/notification.actions';
+import {
+  closeOfferLoanModal,
+  errorMsgBar,
+} from '../../redux/Notification/notification.actions';
 import { getUser } from '../../redux/Auth/user.actions';
 
 // Utility
@@ -99,7 +107,7 @@ function OfferLoanModal() {
           reconsiderOffer({
             _id: userInfo._id,
             username: '',
-          })
+          }),
         );
       }
     }
@@ -137,7 +145,13 @@ function OfferLoanModal() {
       setWaiting(true);
 
       // If lender and modal is open and not complete => play rejection sound
-      if (isOpen && data.cancelled && !isMuted && offerInfo.isLender && !isComplete) {
+      if (
+        isOpen &&
+        data.cancelled &&
+        !isMuted &&
+        offerInfo.isLender &&
+        !isComplete
+      ) {
         rejectedAudioRef.current?.play();
       }
       // If borrower, close the modal immediately on cancel
@@ -172,7 +186,7 @@ function OfferLoanModal() {
         totalWagered: userInfo.totalWagered,
         accessory: userInfo.accessory,
         username: userInfo.username,
-      })
+      }),
     );
   };
 
@@ -220,11 +234,15 @@ function OfferLoanModal() {
   // The Lender’s “OFFER” button
   const onBtnOkClicked = () => {
     if (parseFloat(responseText) > 10 * userInfo.balance) {
-      dispatch(errorMsgBar("PLEASE ENSURE THE LOAN AMOUNT IS NO MORE THAN 10X YOUR BALANCE"));
+      dispatch(
+        errorMsgBar(
+          'PLEASE ENSURE THE LOAN AMOUNT IS NO MORE THAN 10X YOUR BALANCE',
+        ),
+      );
       return;
     }
     if (parseFloat(responseText) < 0.0005) {
-      dispatch(errorMsgBar("MEOWNIMUM IS 0.0005 SOL"));
+      dispatch(errorMsgBar('MEOWNIMUM IS 0.0005 SOL'));
       return;
     }
 
@@ -238,7 +256,7 @@ function OfferLoanModal() {
         interestRate: parseFloat(interestRateText),
         lender: offerInfo._id,
         og: userInfo._id,
-      })
+      }),
     );
   };
 
@@ -252,7 +270,7 @@ function OfferLoanModal() {
         loan_period: loanPeriodText,
         apy: interestRateText,
         lender: og,
-      })
+      }),
     );
 
     // If success, refresh user data, close modal
@@ -267,7 +285,7 @@ function OfferLoanModal() {
           interestRate: '',
           lender: userInfo._id,
           complete: true,
-        })
+        }),
       );
     }
   };
@@ -288,7 +306,7 @@ function OfferLoanModal() {
           accessory: '',
           totalWagered: '',
           isLender: '',
-        })
+        }),
       );
     }
     // Close the modal
@@ -301,7 +319,7 @@ function OfferLoanModal() {
   return (
     <ThemeProvider theme={theme}>
       <Dialog
-        open={isOpen}
+        open={isOpen || false}
         onClose={onBtnCancelClicked}
         PaperProps={{
           sx: {
@@ -327,7 +345,13 @@ function OfferLoanModal() {
                   <TableRow>
                     {/* Current User Cell */}
                     <TableCell align="center">
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
                         <Avatar
                           className="avatar"
                           src={userInfo?.avatar}
@@ -353,7 +377,13 @@ function OfferLoanModal() {
                     {/* Other Party Cell */}
                     <TableCell align="center">
                       {!cancelled || !offerInfo?.isLender ? (
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
                           <Avatar
                             className="avatar"
                             src={offerInfo?.avatar}
@@ -374,7 +404,6 @@ function OfferLoanModal() {
                             rank={offerInfo?.totalWagered}
                             accessory={offerInfo?.accessory}
                             user_id={offerInfo?._id}
-
                             username={offerInfo?.username}
                             alt=""
                             darkMode={isDarkMode}
@@ -418,7 +447,11 @@ function OfferLoanModal() {
                           value={responseText}
                           onChange={handleResponseTextChange}
                           InputProps={{
-                            endAdornment: <InputAdornment position="end">SOL</InputAdornment>,
+                            endAdornment: (
+                              <InputAdornment position="end">
+                                SOL
+                              </InputAdornment>
+                            ),
                           }}
                         />
                       </TableCell>
@@ -444,9 +477,13 @@ function OfferLoanModal() {
                               mt: 1,
                             }}
                           >
-                            <FontAwesomeIcon icon={faExclamationTriangle} color="#ff0000" />
+                            <FontAwesomeIcon
+                              icon={faExclamationTriangle}
+                              color="#ff0000"
+                            />
                             <Typography variant="body2" color="error">
-                              PLEASE ENSURE THE LOAN AMOUNT IS NO MORE THAN 10X YOUR BALANCE
+                              PLEASE ENSURE THE LOAN AMOUNT IS NO MORE THAN 10X
+                              YOUR BALANCE
                             </Typography>
                           </Box>
                         </TableCell>
@@ -464,7 +501,11 @@ function OfferLoanModal() {
                           value={loanPeriodText}
                           onChange={handleLoanPeriodTextChange}
                           InputProps={{
-                            endAdornment: <InputAdornment position="end">DAYS</InputAdornment>,
+                            endAdornment: (
+                              <InputAdornment position="end">
+                                DAYS
+                              </InputAdornment>
+                            ),
                           }}
                         />
                       </TableCell>
@@ -486,7 +527,9 @@ function OfferLoanModal() {
                           value={interestRateText}
                           onChange={handleInterestRateTextChange}
                           InputProps={{
-                            endAdornment: <InputAdornment position="end">%</InputAdornment>,
+                            endAdornment: (
+                              <InputAdornment position="end">%</InputAdornment>
+                            ),
                           }}
                         />
                       </TableCell>
@@ -500,7 +543,9 @@ function OfferLoanModal() {
                     {/* Your Balance */}
                     <TableRow>
                       <TableCell>
-                        <Typography sx={{ fontWeight: 'bold' }}>YOUR BALANCE:</Typography>
+                        <Typography sx={{ fontWeight: 'bold' }}>
+                          YOUR BALANCE:
+                        </Typography>
                       </TableCell>
                       <TableCell>
                         <Typography>
@@ -512,24 +557,30 @@ function OfferLoanModal() {
                     {/* New Balance */}
                     <TableRow>
                       <TableCell>
-                        <Typography sx={{ fontWeight: 'bold' }}>NEW BALANCE:</Typography>
+                        <Typography sx={{ fontWeight: 'bold' }}>
+                          NEW BALANCE:
+                        </Typography>
                       </TableCell>
                       <TableCell>
-                        {calculateNewBalance(userInfo.balance, responseText) < 0 ? (
+                        {calculateNewBalance(userInfo.balance, responseText) <
+                        0 ? (
                           <>
                             {convertToCurrency(0, solPrice)} AND{' '}
                             {convertToCurrency(
                               Math.abs(
-                                calculateNewBalance(userInfo.balance, responseText)
+                                calculateNewBalance(
+                                  userInfo.balance,
+                                  responseText,
+                                ),
                               ),
-                              solPrice
+                              solPrice,
                             )}{' '}
                             IN DEBT
                           </>
                         ) : (
                           convertToCurrency(
                             calculateNewBalance(userInfo.balance, responseText),
-                            solPrice
+                            solPrice,
                           )
                         )}
                       </TableCell>
@@ -538,35 +589,39 @@ function OfferLoanModal() {
                     {/* GROSS PROFIT */}
                     <TableRow>
                       <TableCell>
-                        <Typography sx={{ fontWeight: 'bold' }}>GROSS PROFIT:</Typography>
+                        <Typography sx={{ fontWeight: 'bold' }}>
+                          GROSS PROFIT:
+                        </Typography>
                       </TableCell>
                       <TableCell>
                         {isNaN(parseFloat(responseText)) ||
-                          isNaN(parseFloat(interestRateText)) ||
-                          parseFloat(responseText) <= 0 ||
-                          parseFloat(interestRateText) <= 0 ? (
-                          convertToCurrency(0, solPrice)
-                        ) : (
-                          convertToCurrency(
-                            calculateInterest(responseText, interestRateText) +
-                            parseFloat(responseText),
-                            solPrice
-                          )
-                        )}
+                        isNaN(parseFloat(interestRateText)) ||
+                        parseFloat(responseText) <= 0 ||
+                        parseFloat(interestRateText) <= 0
+                          ? convertToCurrency(0, solPrice)
+                          : convertToCurrency(
+                              calculateInterest(
+                                responseText,
+                                interestRateText,
+                              ) + parseFloat(responseText),
+                              solPrice,
+                            )}
                       </TableCell>
                     </TableRow>
 
                     {/* NET PROFIT */}
                     <TableRow>
                       <TableCell>
-                        <Typography sx={{ fontWeight: 'bold' }}>NET PROFIT:</Typography>
+                        <Typography sx={{ fontWeight: 'bold' }}>
+                          NET PROFIT:
+                        </Typography>
                       </TableCell>
                       <TableCell>
                         <span id="interest">
                           (+{' '}
                           {convertToCurrency(
                             calculateInterest(responseText, interestRateText),
-                            solPrice
+                            solPrice,
                           )}
                           )
                         </span>
@@ -576,7 +631,9 @@ function OfferLoanModal() {
                     {/* LOAN TYPE */}
                     <TableRow>
                       <TableCell>
-                        <Typography sx={{ fontWeight: 'bold' }}>LOAN TYPE:</Typography>
+                        <Typography sx={{ fontWeight: 'bold' }}>
+                          LOAN TYPE:
+                        </Typography>
                       </TableCell>
                       <TableCell>
                         {determineLoanType(userInfo.balance, responseText)}
@@ -589,11 +646,16 @@ function OfferLoanModal() {
                         <TableCell colSpan={2}>
                           <Typography
                             variant="body1"
-                            sx={{ color: 'red', fontWeight: 'bold', textAlign: 'center' }}
+                            sx={{
+                              color: 'red',
+                              fontWeight: 'bold',
+                              textAlign: 'center',
+                            }}
                           >
-                            Charging an interest rate above 6% may be considered usury and could
-                            increase the risk of borrower default. We recommend setting a rate
-                            below 6% to mitigate this risk.
+                            Charging an interest rate above 6% may be considered
+                            usury and could increase the risk of borrower
+                            default. We recommend setting a rate below 6% to
+                            mitigate this risk.
                           </Typography>
                         </TableCell>
                       </TableRow>
@@ -628,7 +690,9 @@ function OfferLoanModal() {
                       : convertToCurrency(parseFloat(responseText), solPrice)}
                   </TableCell>
                   <TableCell align="center">
-                    {cancelled || waiting ? 'waiting' : `${loanPeriodText} days`}
+                    {cancelled || waiting
+                      ? 'waiting'
+                      : `${loanPeriodText} days`}
                   </TableCell>
                   <TableCell align="center">
                     {cancelled || waiting ? (
@@ -636,9 +700,9 @@ function OfferLoanModal() {
                     ) : (
                       <>
                         {convertToCurrency(
-                          (parseFloat(responseText) * (1 + parseFloat(interestRateText) / 100)) ||
-                          0,
-                          solPrice
+                          parseFloat(responseText) *
+                            (1 + parseFloat(interestRateText) / 100) || 0,
+                          solPrice,
                         )}{' '}
                         <span>
                           (
@@ -660,7 +724,11 @@ function OfferLoanModal() {
             By clicking 'ACCEPT OR OFFER', you agree to the following{' '}
             <Box
               component="span"
-              sx={{ color: '#ff0000', textDecoration: 'underline', cursor: 'pointer' }}
+              sx={{
+                color: '#ff0000',
+                textDecoration: 'underline',
+                cursor: 'pointer',
+              }}
               onClick={toggleExpand}
             >
               terms and conditions
@@ -695,7 +763,10 @@ function OfferLoanModal() {
                   </Box>{' '}
                   days.
                 </li>
-                <li>You are responsible for repaying the loan within the specified period.</li>
+                <li>
+                  You are responsible for repaying the loan within the specified
+                  period.
+                </li>
                 <li>
                   Interest may be applicable as per the agreed Interest Rate:{' '}
                   <Box component="span" sx={{ color: '#ff0000' }}>
@@ -703,22 +774,37 @@ function OfferLoanModal() {
                   </Box>
                   .
                 </li>
-                <li>Failure to repay on time may result in user credit penalties.</li>
                 <li>
-                  Any outstanding balance after the loan period may be automatically deducted
-                  from your in-game balance.
+                  Failure to repay on time may result in user credit penalties.
                 </li>
-                <li>Review and understand the loan terms provided by the lender.</li>
-                <li>Clicking 'ACCEPT' indicates your agreement to these terms.</li>
                 <li>
-                  No legal action in the case of non-repayment can be taken on unsettled debts;
-                  all loans are final and strictly peer-to-peer.
+                  Any outstanding balance after the loan period may be
+                  automatically deducted from your in-game balance.
                 </li>
-                <li>Ensure that you have sufficient resources to pay back the loan amount.</li>
+                <li>
+                  Review and understand the loan terms provided by the lender.
+                </li>
+                <li>
+                  Clicking 'ACCEPT' indicates your agreement to these terms.
+                </li>
+                <li>
+                  No legal action in the case of non-repayment can be taken on
+                  unsettled debts; all loans are final and strictly
+                  peer-to-peer.
+                </li>
+                <li>
+                  Ensure that you have sufficient resources to pay back the loan
+                  amount.
+                </li>
                 <li>This agreement is binding and enforceable.</li>
-                <li>Withdrawals & Tipping to be suspended for the loaner while in debt.</li>
+                <li>
+                  Withdrawals & Tipping to be suspended for the loaner while in
+                  debt.
+                </li>
                 <li>All loans are final.</li>
-                <li>You are required to maintain personal hygiene frequently.</li>
+                <li>
+                  You are required to maintain personal hygiene frequently.
+                </li>
               </ol>
             </Box>
           )}
@@ -736,10 +822,16 @@ function OfferLoanModal() {
               >
                 {waiting ? (cancelled ? 'NUDGE' : 'OFFER') : 'WAITING'}
                 &nbsp;
-                {!waiting && !cancelled && <CircularProgress color="error" size={15} sx={{ ml: 1 }} />}
+                {!waiting && !cancelled && (
+                  <CircularProgress color="error" size={15} sx={{ ml: 1 }} />
+                )}
               </Button>
               {/* “Cancel” button */}
-              <Button variant="contained" color="error" onClick={onBtnCancelClicked}>
+              <Button
+                variant="contained"
+                color="error"
+                onClick={onBtnCancelClicked}
+              >
                 Cancel
               </Button>
             </>
@@ -753,10 +845,16 @@ function OfferLoanModal() {
                 onClick={createAndLendHandler}
               >
                 {!waiting ? 'ACCEPT' : 'WAITING'}
-                {waiting && <CircularProgress color="error" size={15} sx={{ ml: 1 }} />}
+                {waiting && (
+                  <CircularProgress color="error" size={15} sx={{ ml: 1 }} />
+                )}
               </Button>
               {/* “Reject” button */}
-              <Button variant="contained" color="error" onClick={onBtnCancelClicked}>
+              <Button
+                variant="contained"
+                color="error"
+                onClick={onBtnCancelClicked}
+              >
                 Reject
               </Button>
             </>
@@ -764,7 +862,6 @@ function OfferLoanModal() {
         </DialogActions>
       </Dialog>
     </ThemeProvider>
-
   );
 }
 

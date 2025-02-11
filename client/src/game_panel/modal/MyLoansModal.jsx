@@ -16,7 +16,7 @@ import {
   Skeleton,
   CircularProgress,
   Dialog,
-  DialogContent
+  DialogContent,
 } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCoins, faPlus } from '@fortawesome/free-solid-svg-icons';
@@ -33,28 +33,100 @@ import {
   createLoan,
   acQueryMyLoan,
   acQueryLoan,
-  acCalculateRemainingLoans
+  acCalculateRemainingLoans,
 } from '../../redux/Loan/loan.action';
 import { getUser } from '../../redux/Auth/user.actions';
-import { errorMsgBar, successMsgBar } from '../../redux/Notification/notification.actions';
-
+import {
+  errorMsgBar,
+  successMsgBar,
+} from '../../redux/Notification/notification.actions';
 
 // ------------------ CONSTANTS & HELPERS ------------------
 const categories = [
-  { creditScoreThreshold: 700, rankThreshold: 0, accountAgeThresholdInDays: 30, maxAllowance: 0 },
-  { creditScoreThreshold: 700, rankThreshold: 1, accountAgeThresholdInDays: 30, maxAllowance: 0.02 },
-  { creditScoreThreshold: 700, rankThreshold: 2, accountAgeThresholdInDays: 30, maxAllowance: 0.05 },
-  { creditScoreThreshold: 700, rankThreshold: 3, accountAgeThresholdInDays: 30, maxAllowance: 0.1 },
-  { creditScoreThreshold: 700, rankThreshold: 4, accountAgeThresholdInDays: 30, maxAllowance: 0.25 },
-  { creditScoreThreshold: 700, rankThreshold: 5, accountAgeThresholdInDays: 30, maxAllowance: 0.5 },
-  { creditScoreThreshold: 700, rankThreshold: 6, accountAgeThresholdInDays: 30, maxAllowance: 1 },
-  { creditScoreThreshold: 700, rankThreshold: 7, accountAgeThresholdInDays: 30, maxAllowance: 1.5 },
-  { creditScoreThreshold: 700, rankThreshold: 8, accountAgeThresholdInDays: 30, maxAllowance: 2 },
-  { creditScoreThreshold: 700, rankThreshold: 9, accountAgeThresholdInDays: 30, maxAllowance: 3 },
-  { creditScoreThreshold: 700, rankThreshold: 10, accountAgeThresholdInDays: 30, maxAllowance: 4 },
-  { creditScoreThreshold: 700, rankThreshold: 12, accountAgeThresholdInDays: 30, maxAllowance: 6 },
-  { creditScoreThreshold: 700, rankThreshold: 13, accountAgeThresholdInDays: 30, maxAllowance: 8 },
-  { creditScoreThreshold: 700, rankThreshold: 14, accountAgeThresholdInDays: 30, maxAllowance: 10 },
+  {
+    creditScoreThreshold: 700,
+    rankThreshold: 0,
+    accountAgeThresholdInDays: 30,
+    maxAllowance: 0,
+  },
+  {
+    creditScoreThreshold: 700,
+    rankThreshold: 1,
+    accountAgeThresholdInDays: 30,
+    maxAllowance: 0.02,
+  },
+  {
+    creditScoreThreshold: 700,
+    rankThreshold: 2,
+    accountAgeThresholdInDays: 30,
+    maxAllowance: 0.05,
+  },
+  {
+    creditScoreThreshold: 700,
+    rankThreshold: 3,
+    accountAgeThresholdInDays: 30,
+    maxAllowance: 0.1,
+  },
+  {
+    creditScoreThreshold: 700,
+    rankThreshold: 4,
+    accountAgeThresholdInDays: 30,
+    maxAllowance: 0.25,
+  },
+  {
+    creditScoreThreshold: 700,
+    rankThreshold: 5,
+    accountAgeThresholdInDays: 30,
+    maxAllowance: 0.5,
+  },
+  {
+    creditScoreThreshold: 700,
+    rankThreshold: 6,
+    accountAgeThresholdInDays: 30,
+    maxAllowance: 1,
+  },
+  {
+    creditScoreThreshold: 700,
+    rankThreshold: 7,
+    accountAgeThresholdInDays: 30,
+    maxAllowance: 1.5,
+  },
+  {
+    creditScoreThreshold: 700,
+    rankThreshold: 8,
+    accountAgeThresholdInDays: 30,
+    maxAllowance: 2,
+  },
+  {
+    creditScoreThreshold: 700,
+    rankThreshold: 9,
+    accountAgeThresholdInDays: 30,
+    maxAllowance: 3,
+  },
+  {
+    creditScoreThreshold: 700,
+    rankThreshold: 10,
+    accountAgeThresholdInDays: 30,
+    maxAllowance: 4,
+  },
+  {
+    creditScoreThreshold: 700,
+    rankThreshold: 12,
+    accountAgeThresholdInDays: 30,
+    maxAllowance: 6,
+  },
+  {
+    creditScoreThreshold: 700,
+    rankThreshold: 13,
+    accountAgeThresholdInDays: 30,
+    maxAllowance: 8,
+  },
+  {
+    creditScoreThreshold: 700,
+    rankThreshold: 14,
+    accountAgeThresholdInDays: 30,
+    maxAllowance: 10,
+  },
 ];
 
 const getAccountAgeInDays = (createdAtDate) => {
@@ -99,14 +171,15 @@ const MyLoansModal = (props) => {
     acQueryMyLoan,
     acQueryLoan,
     acCalculateRemainingLoans,
-    getUser
+    getUser,
   } = props;
 
   // ------------------ LOCAL STATE ------------------
   const [loanAmount, setLoanAmount] = useState('');
   const [loanPeriod, setLoanPeriod] = useState('');
   const [apy, setApy] = useState('');
-  const [productCreateModalIsOpen, setProductCreateModalIsOpen] = useState(false);
+  const [productCreateModalIsOpen, setProductCreateModalIsOpen] =
+    useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const dispatch = useDispatch();
@@ -117,7 +190,6 @@ const MyLoansModal = (props) => {
   // Only call acQueryMyLoan once each time modal transitions from closed -> open
   useEffect(() => {
     acQueryMyLoan(30, 1, 'loan_amount', '');
-
   }, []);
 
   // ------------------ HANDLERS ------------------
@@ -129,15 +201,13 @@ const MyLoansModal = (props) => {
     setProductCreateModalIsOpen(false);
   }, []);
 
-  const updateTextField = useCallback(
-    (data) => {
-      if (data.loan_amount !== '' || data.apy !== '' || data.loan_period !== '') {
-        setLoanAmount(data.loan_amount || '');
-        setApy(data.apy || '');
-        setLoanPeriod(data.loan_period || '');
-      }
+  const updateTextField = useCallback((data) => {
+    if (data.loan_amount !== '' || data.apy !== '' || data.loan_period !== '') {
+      setLoanAmount(data.loan_amount || '');
+      setApy(data.apy || '');
+      setLoanPeriod(data.loan_period || '');
     }
-  );
+  });
 
   const onSubmitForm = useCallback(async () => {
     if (!loanAmount || !apy || !loanPeriod) {
@@ -166,7 +236,7 @@ const MyLoansModal = (props) => {
       errorMsgBar(
         error?.message
           ? `Error creating new loan: ${error.message}`
-          : 'Something went wrong while creating the loan.'
+          : 'Something went wrong while creating the loan.',
       );
     } finally {
       setIsSubmitting(false);
@@ -188,18 +258,22 @@ const MyLoansModal = (props) => {
 
   // ------------------ CALCULATIONS ------------------
   const accountAgeInDays = getAccountAgeInDays(created_at);
-  const highlightedRowIndex = getHighlightedRowIndex(categories, totalWagered, accountAgeInDays);
+  const highlightedRowIndex = getHighlightedRowIndex(
+    categories,
+    totalWagered,
+    accountAgeInDays,
+  );
 
   // ------------------ RENDER ------------------
   return (
     <>
       {/* ================= MAIN LOANS MODAL ================= */}
       <Modal
-        open={modalIsOpen}
+        open={modalIsOpen || false}
         onClose={closeModal}
         closeAfterTransition
         BackdropProps={{
-          style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' }
+          style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' },
         }}
       >
         <Box
@@ -216,7 +290,7 @@ const MyLoansModal = (props) => {
             overflowY: 'auto',
             borderRadius: 2,
             p: 3,
-            boxShadow: 24
+            boxShadow: 24,
           }}
         >
           {/* HEADER */}
@@ -225,17 +299,27 @@ const MyLoansModal = (props) => {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              mb: 2
+              mb: 2,
             }}
           >
             <Typography
               variant="h6"
-              sx={{ display: 'flex', alignItems: 'center', gap: 1, fontWeight: 600 }}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                fontWeight: 600,
+              }}
             >
               <FontAwesomeIcon icon={faCoins} />
               YOUR LOANS
             </Typography>
-            <Button variant="text" color="error" onClick={closeModal} sx={{ fontSize: '1.25rem' }}>
+            <Button
+              variant="text"
+              color="error"
+              onClick={closeModal}
+              sx={{ fontSize: '1.25rem' }}
+            >
               ×
             </Button>
           </Box>
@@ -255,7 +339,7 @@ const MyLoansModal = (props) => {
                   my: 4,
                   fontSize: 18,
                   fontStyle: 'italic',
-                  opacity: 0.8
+                  opacity: 0.8,
                 }}
               >
                 No Loans Found
@@ -296,8 +380,8 @@ const MyLoansModal = (props) => {
             backgroundColor: '#1f1a25',
             color: '#fff',
             borderRadius: 2,
-            boxShadow: 24
-          }
+            boxShadow: 24,
+          },
         }}
       >
         <DialogContent sx={{ p: 4 }}>
@@ -307,7 +391,7 @@ const MyLoansModal = (props) => {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              mb: 3
+              mb: 3,
             }}
           >
             <Typography variant="h6" sx={{ fontWeight: 600 }}>
@@ -329,7 +413,7 @@ const MyLoansModal = (props) => {
               sx={{
                 maxHeight: 150,
                 overflow: 'auto',
-                borderRadius: 2
+                borderRadius: 2,
               }}
             >
               <Table
@@ -339,8 +423,8 @@ const MyLoansModal = (props) => {
                   // Optional: make the text a bit smaller and reduce cell padding
                   'td, th': {
                     fontSize: '0.85rem',
-                    padding: '4px 8px'
-                  }
+                    padding: '4px 8px',
+                  },
                 }}
               >
                 <TableHead>
@@ -350,7 +434,7 @@ const MyLoansModal = (props) => {
                       sx={{
                         color: '#fff',
                         fontWeight: 600,
-                        backgroundColor: '#333'
+                        backgroundColor: '#333',
                       }}
                     >
                       RANK
@@ -360,7 +444,7 @@ const MyLoansModal = (props) => {
                       sx={{
                         color: '#fff',
                         fontWeight: 600,
-                        backgroundColor: '#333'
+                        backgroundColor: '#333',
                       }}
                     >
                       MAX ALLOWANCE (SOL)
@@ -375,16 +459,23 @@ const MyLoansModal = (props) => {
                       <TableRow
                         key={index}
                         sx={{
-                          backgroundColor: highlightedRowIndex === index ? '#28a745' : '#333'
+                          backgroundColor:
+                            highlightedRowIndex === index ? '#28a745' : '#333',
                         }}
                       >
                         <TableCell sx={{ color: '#fff' }} align="center">
-                          <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
+                          <Box
+                            sx={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 1,
+                            }}
+                          >
                             <Lottie
                               options={{
                                 loop: true,
                                 autoplay: true,
-                                animationData: LottieRankIcon
+                                animationData: LottieRankIcon,
                               }}
                               height={22}
                               width={22}
@@ -394,7 +485,8 @@ const MyLoansModal = (props) => {
                           </Box>
                         </TableCell>
                         <TableCell sx={{ color: '#fff' }} align="center">
-                          {category.maxAllowance} ({convertToCurrency(category.maxAllowance, solPrice)})
+                          {category.maxAllowance} (
+                          {convertToCurrency(category.maxAllowance, solPrice)})
                         </TableCell>
                       </TableRow>
                     );
@@ -405,10 +497,15 @@ const MyLoansModal = (props) => {
 
             <Typography
               variant="body2"
-              sx={{ mt: 2, fontStyle: 'italic', textAlign: 'center', opacity: 0.8 }}
+              sx={{
+                mt: 2,
+                fontStyle: 'italic',
+                textAlign: 'center',
+                opacity: 0.8,
+              }}
             >
-              You must have a credit score above 700 and an account age of at least 30 days
-              to be eligible.
+              You must have a credit score above 700 and an account age of at
+              least 30 days to be eligible.
             </Typography>
           </Box>
 
@@ -449,7 +546,7 @@ const mapStateToProps = (state) => ({
   loading: state.loanReducer.loading,
   solPrice: state.logic.solPrice,
   // Example: store user loans in state.loanReducer.myLoans
-  myLoans: state.loanReducer.myLoanArray || []
+  myLoans: state.loanReducer.myLoanArray || [],
 });
 
 const mapDispatchToProps = {
@@ -459,7 +556,7 @@ const mapDispatchToProps = {
   acQueryMyLoan,
   acQueryLoan,
   acCalculateRemainingLoans,
-  getUser
+  getUser,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(MyLoansModal);

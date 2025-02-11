@@ -11,7 +11,7 @@ import {
   IconButton,
   Modal,
   Box,
-  Typography
+  Typography,
 } from '@mui/material';
 
 import {
@@ -29,7 +29,7 @@ import {
   VolumeDown,
   Add,
   Remove,
-  Settings
+  Settings,
 } from '@mui/icons-material';
 
 import {
@@ -40,7 +40,7 @@ import {
   toggleLowGraphics,
   toggleGameSounds,
   toggleNotificationSounds,
-  toggleClickounds
+  toggleClickounds,
 } from '../../redux/Auth/user.actions';
 
 // ------------------ MUI Modal Styles ------------------
@@ -57,7 +57,7 @@ const modalBoxStyle = {
   width: 500,
   maxWidth: '90vw',
   maxHeight: '90vh',
-  overflowY: 'auto'
+  overflowY: 'auto',
 };
 
 const SettingsModal = ({
@@ -78,7 +78,7 @@ const SettingsModal = ({
   notificationSounds,
   toggleClickounds,
   toggleGameSounds,
-  toggleNotificationSounds
+  toggleNotificationSounds,
 }) => {
   const [showSubSettings, setShowSubSettings] = useState(false);
 
@@ -95,7 +95,7 @@ const SettingsModal = ({
 
   return (
     <Modal
-      open={modalIsOpen}
+      open={modalIsOpen || false}
       onClose={closeModal}
       sx={{ zIndex: 1300 }}
       BackdropProps={{ style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' } }}
@@ -106,7 +106,7 @@ const SettingsModal = ({
           sx={{
             display: 'flex',
             justifyContent: 'space-between',
-            mb: 2
+            mb: 2,
           }}
         >
           <Typography variant="h6" sx={{ m: 0, fontWeight: 'bold' }}>
@@ -119,50 +119,70 @@ const SettingsModal = ({
         </Box>
 
         {/* BODY */}
-        <Box sx={{
-          background: 'rgba(170, 170, 170, 0.06)',
-          borderRadius: '0.3em',
-          p: '20px'
-        }}>
-
+        <Box
+          sx={{
+            background: 'rgba(170, 170, 170, 0.06)',
+            borderRadius: '0.3em',
+            p: '20px',
+          }}
+        >
           <Table>
             <TableBody>
               {/* Mute / Unmute */}
               <TableRow>
                 <TableCell>
                   {isMuted ? (
-                    <Button color='error' onClick={handleMuteToggle} sx={{ textTransform: 'none' }}>
+                    <Button
+                      color="error"
+                      onClick={handleMuteToggle}
+                      sx={{ textTransform: 'none' }}
+                    >
                       <VolumeOff /> &nbsp; UNMUTE
                     </Button>
                   ) : (
-                    <Button color='error' onClick={handleMuteToggle} sx={{ textTransform: 'none' }}>
+                    <Button
+                      color="error"
+                      onClick={handleMuteToggle}
+                      sx={{ textTransform: 'none' }}
+                    >
                       <VolumeUp /> &nbsp; MUTE
                     </Button>
                   )}
                 </TableCell>
-                <TableCell sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <IconButton color='error' onClick={toggleSubSettingsVisibility}>
+                <TableCell
+                  sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+                >
+                  <IconButton
+                    color="error"
+                    onClick={toggleSubSettingsVisibility}
+                  >
                     {showSubSettings ? <Remove /> : <Add />}
                   </IconButton>
-                  <Checkbox color='error' checked={isMuted} onChange={handleMuteToggle} />
+                  <Checkbox
+                    color="error"
+                    checked={isMuted}
+                    onChange={handleMuteToggle}
+                  />
                 </TableCell>
               </TableRow>
 
               {/* Sub-settings for sounds */}
               {showSubSettings && (
                 <>
-                  
                   <TableRow>
                     <TableCell>
-                      <Button color='error'
+                      <Button
+                        color="error"
                         onClick={() => toggleGameSounds(!gameSounds)}
                         sx={{ textTransform: 'none' }}
                       >
-                        {gameSounds ? <VolumeMute /> : <VolumeDown />} &nbsp; GAME SOUNDS
+                        {gameSounds ? <VolumeMute /> : <VolumeDown />} &nbsp;
+                        GAME SOUNDS
                       </Button>
                     </TableCell>
                     <TableCell>
-                      <Checkbox color='error'
+                      <Checkbox
+                        color="error"
                         checked={gameSounds}
                         onChange={() => toggleGameSounds(!gameSounds)}
                       />
@@ -171,17 +191,24 @@ const SettingsModal = ({
 
                   <TableRow>
                     <TableCell>
-                      <Button color='error'
-                        onClick={() => toggleNotificationSounds(!notificationSounds)}
+                      <Button
+                        color="error"
+                        onClick={() =>
+                          toggleNotificationSounds(!notificationSounds)
+                        }
                         sx={{ textTransform: 'none' }}
                       >
-                        {notificationSounds ? <VolumeMute /> : <VolumeDown />}&nbsp; NOTIFICATIONS
+                        {notificationSounds ? <VolumeMute /> : <VolumeDown />}
+                        &nbsp; NOTIFICATIONS
                       </Button>
                     </TableCell>
                     <TableCell>
-                      <Checkbox color='error'
+                      <Checkbox
+                        color="error"
                         checked={notificationSounds}
-                        onChange={() => toggleNotificationSounds(!notificationSounds)}
+                        onChange={() =>
+                          toggleNotificationSounds(!notificationSounds)
+                        }
                       />
                     </TableCell>
                   </TableRow>
@@ -192,14 +219,16 @@ const SettingsModal = ({
               <TableRow>
                 <TableCell>
                   {isLowGraphics ? (
-                    <Button color='error'
+                    <Button
+                      color="error"
                       onClick={() => toggleLowGraphics(!isLowGraphics)}
                       sx={{ textTransform: 'none' }}
                     >
                       <EnergySavingsLeaf /> &nbsp; LOW GRAPHICS
                     </Button>
                   ) : (
-                    <Button color='error'
+                    <Button
+                      color="error"
                       onClick={() => toggleLowGraphics(!isLowGraphics)}
                       sx={{ textTransform: 'none' }}
                     >
@@ -208,7 +237,8 @@ const SettingsModal = ({
                   )}
                 </TableCell>
                 <TableCell>
-                  <Checkbox color='error'
+                  <Checkbox
+                    color="error"
                     checked={isLowGraphics}
                     onChange={() => toggleLowGraphics(!isLowGraphics)}
                   />
@@ -236,15 +266,21 @@ const SettingsModal = ({
               <TableRow>
                 <TableCell>
                   {isNotificationsAllowed ? (
-                    <Button color='error'
-                      onClick={() => setNotificationsAllowed(!isNotificationsAllowed)}
+                    <Button
+                      color="error"
+                      onClick={() =>
+                        setNotificationsAllowed(!isNotificationsAllowed)
+                      }
                       sx={{ textTransform: 'none' }}
                     >
                       <NotificationsActive /> &nbsp; NOTIFICATIONS ON
                     </Button>
                   ) : (
-                    <Button color='error'
-                      onClick={() => setNotificationsAllowed(!isNotificationsAllowed)}
+                    <Button
+                      color="error"
+                      onClick={() =>
+                        setNotificationsAllowed(!isNotificationsAllowed)
+                      }
                       sx={{ textTransform: 'none' }}
                     >
                       <NotificationsOff /> &nbsp; NOTIFICATIONS OFF
@@ -252,16 +288,18 @@ const SettingsModal = ({
                   )}
                 </TableCell>
                 <TableCell>
-                  <Checkbox color='error'
+                  <Checkbox
+                    color="error"
                     checked={isNotificationsAllowed}
-                    onChange={() => setNotificationsAllowed(!isNotificationsAllowed)}
+                    onChange={() =>
+                      setNotificationsAllowed(!isNotificationsAllowed)
+                    }
                   />
                 </TableCell>
               </TableRow>
             </TableBody>
           </Table>
         </Box>
-
       </Box>
     </Modal>
   );
@@ -276,7 +314,7 @@ const mapStateToProps = (state) => ({
   gameSounds: state.auth.gameSounds,
   notificationSounds: state.auth.notificationSounds,
   isMusicEnabled: state.auth.isMusicEnabled,
-  isLowGraphics: state.auth.isLowGraphics
+  isLowGraphics: state.auth.isLowGraphics,
 });
 
 const mapDispatchToProps = {
@@ -287,7 +325,7 @@ const mapDispatchToProps = {
   toggleMusic,
   toggleLowGraphics,
   setDarkMode,
-  setNotificationsAllowed
+  setNotificationsAllowed,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(SettingsModal);

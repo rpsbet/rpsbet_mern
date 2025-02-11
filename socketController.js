@@ -13,7 +13,6 @@ const send = (msg_type, to_id, data) => {
   }
 };
 
-
 const globalChatSend = (io, data) => {
   const {
     sender,
@@ -25,7 +24,7 @@ const globalChatSend = (io, data) => {
     accessory,
     username,
     rank,
-    replyTo
+    replyTo,
   } = data;
   const chat = new Chat({
     sender: senderId,
@@ -38,24 +37,24 @@ const globalChatSend = (io, data) => {
     accessory: accessory,
     replyTo: replyTo
       ? {
-        sender: replyTo.senderId,
-        username: replyTo.username,
-        rank: replyTo.rank,
-        avatar: replyTo.avatar,
-        accessory: replyTo.accessory,
-        message: replyTo.message,
-        messageType: replyTo.messageType,
-        time: Moment(replyTo.created_at).format('hh:mm')
-      }
-      : null
+          sender: replyTo.senderId,
+          username: replyTo.username,
+          rank: replyTo.rank,
+          avatar: replyTo.avatar,
+          accessory: replyTo.accessory,
+          message: replyTo.message,
+          messageType: replyTo.messageType,
+          time: Moment(replyTo.created_at).format('hh:mm'),
+        }
+      : null,
   });
   chat
     .save()
-    .then(savedChat => {
-      const fetchUsername = userId => {
+    .then((savedChat) => {
+      const fetchUsername = (userId) => {
         return User.findById(userId)
-          .then(user => user.username)
-          .catch(error => {
+          .then((user) => user.username)
+          .catch((error) => {
             return null;
           });
       };
@@ -76,26 +75,25 @@ const globalChatSend = (io, data) => {
             rank: rank,
             replyTo: replyTo
               ? {
-                sender: replyTo._id,
-                username: replyToUsername,
-                avatar: replyTo.avatar,
-                accessory: replyTo.accessory,
-                rank: replyTo.rank,
-                message: replyTo.message,
-                messageType: replyTo.messageType,
-                time: Moment(replyTo.created_at).format('hh:mm')
-              }
+                  sender: replyTo._id,
+                  username: replyToUsername,
+                  avatar: replyTo.avatar,
+                  accessory: replyTo.accessory,
+                  rank: replyTo.rank,
+                  message: replyTo.message,
+                  messageType: replyTo.messageType,
+                  time: Moment(replyTo.created_at).format('hh:mm'),
+                }
               : null, // Include the replyTo message details if it exists
-            time: Moment(savedChat.created_at).format('hh:mm')
+            time: Moment(savedChat.created_at).format('hh:mm'),
           });
         })
-        .catch(error => {
+        .catch((error) => {
           console.error('Error fetching replyTo username:', error);
         });
     })
-    .catch(error => {
+    .catch((error) => {
       console.error('Error saving chat:', error);
-
     });
 };
 module.exports.globalChatSend = globalChatSend;
@@ -112,8 +110,8 @@ module.exports.sendNotification = (to_user_id, data) => {
   send('SEND_NOTIFICATION', to_user_id, data);
 };
 
-module.exports.newTransaction = transaction => {
-  console.log("transaction", transaction)
+module.exports.newTransaction = (transaction) => {
+  console.log('transaction', transaction);
   send('NEW_TRANSACTION', transaction['user']['_id'], transaction);
 };
 
@@ -124,7 +122,6 @@ module.exports.socketio = (server) => {
     socket.on('connect_error', (error) => {
       console.error('Socket connection error:', error);
     });
-
     socket.on('STORE_CLIENT_USER_ID', async (data) => {
       try {
         // Update last_seen for the user
@@ -137,39 +134,38 @@ module.exports.socketio = (server) => {
 
         // Emit the event to everyone
         io.sockets.emit('ONLINE_STATUS_UPDATED', {
-          user_list: onlineUsers
+          user_list: onlineUsers,
         });
-
       } catch (error) {
         console.error('Error updating user last_seen:', error);
       }
     });
 
-    socket.on('GLOBAL_CHAT_SEND', data => {
+    socket.on('GLOBAL_CHAT_SEND', (data) => {
       globalChatSend(io, data);
     });
 
-    socket.on('disconnect', reason => {
+    socket.on('disconnect', (reason) => {
       Object.keys(sockets).forEach((key, index) => {
         if (sockets[key].id === socket.id) {
           delete sockets[key];
         }
       });
       io.sockets.emit('ONLINE_STATUS_UPDATED', {
-        user_list: Object.keys(sockets)
+        user_list: Object.keys(sockets),
       });
     });
 
-    socket.on('RPS_1', data => {
+    socket.on('RPS_1', (data) => {
       socket.broadcast.emit('RPS_1', data);
     });
 
-    socket.on('INITIAL_STATE', data => {
+    socket.on('INITIAL_STATE', (data) => {
       const roomId = data.roomId; // assuming roomId is passed in the data object
       socket.to(roomId).emit('INITIAL_STATE', data);
     });
 
-    socket.on('error', err => {
+    socket.on('error', (err) => {
       console.log(err.stack);
     });
 
@@ -178,23 +174,23 @@ module.exports.socketio = (server) => {
         {
           is_read: false,
           from: new ObjectId(data.from),
-          to: new ObjectId(data.to)
+          to: new ObjectId(data.to),
         },
-        { $set: { is_read: true } }
+        { $set: { is_read: true } },
       );
     });
 
-    socket.on('REQUEST_UNREAD_MESSAGE_COUNT', async data => {
+    socket.on('REQUEST_UNREAD_MESSAGE_COUNT', async (data) => {
       const count = await Message.countDocuments({
         to: data.to,
-        is_read: false
+        is_read: false,
       });
       socket.emit('SET_UNREAD_MESSAGE_COUNT', count);
     });
 
-    socket.on('SEND_CHAT', async data => {
+    socket.on('SEND_CHAT', async (data) => {
       send('SEND_CHAT', data.to, data);
-      console.log(`Forward the message to ${data.to} user`, data)
+      console.log(`Forward the message to ${data.to} user`, data);
       const message = new Message(data);
       await message.save();
     });

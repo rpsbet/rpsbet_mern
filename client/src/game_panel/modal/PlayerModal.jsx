@@ -15,7 +15,11 @@ import {
   Typography,
   ThemeProvider,
 } from '@mui/material';
-import { FileCopy as FileCopyIcon, Info as InfoIcon, Link as LinkIcon } from '@mui/icons-material';
+import {
+  FileCopy as FileCopyIcon,
+  Info as InfoIcon,
+  Link as LinkIcon,
+} from '@mui/icons-material';
 
 import LoadingOverlay from 'react-loading-overlay';
 import styled from 'styled-components';
@@ -37,8 +41,14 @@ import history from '../../redux/history';
 
 import { setUserInfo } from '../../redux/Auth/user.actions';
 import { setCurrentOfferTargetInfo } from '../../redux/Loan/loan.action';
-import { openOfferLoanModal, errorMsgBar } from '../../redux/Notification/notification.actions';
-import { setChatRoomInfo, addNewTransaction } from '../../redux/Logic/logic.actions';
+import {
+  openOfferLoanModal,
+  errorMsgBar,
+} from '../../redux/Notification/notification.actions';
+import {
+  setChatRoomInfo,
+  addNewTransaction,
+} from '../../redux/Logic/logic.actions';
 import {
   acGetCustomerInfo,
   getSpendingHabit,
@@ -255,13 +265,16 @@ function PlayerModal(props) {
   const theme = getCustomTheme(isDarkMode ? 'dark' : 'light');
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  const { color, title, message: spendingMessage, progress } = getStatusDetails(status);
+  const {
+    color,
+    title,
+    message: spendingMessage,
+    progress,
+  } = getStatusDetails(status);
   const barStyle = {
     width: `${progress}%`,
     backgroundColor: progress <= 50 ? 'yellow' : 'red',
   };
-
-
 
   const isOnline = onlineUserList.includes(selectedCreator);
 
@@ -285,7 +298,6 @@ function PlayerModal(props) {
     if (!address) return '';
     return address.slice(0, 12) + '...' + address.slice(-12);
   };
-
 
   // -----------------------------
   // Tip Modal Logic
@@ -384,7 +396,7 @@ function PlayerModal(props) {
       )}
 
       <ThemeProvider theme={theme}>
-        <Modal open={modalIsOpen} onClose={closeModal}>
+        <Modal open={modalIsOpen || false} onClose={closeModal}>
           <Box
             sx={{
               position: 'absolute',
@@ -411,15 +423,25 @@ function PlayerModal(props) {
                 mb: 2,
               }}
             >
-              <Typography variant="h6" component="h2" className="modal-title title">
+              <Typography
+                variant="h6"
+                component="h2"
+                className="modal-title title"
+              >
                 {isBot ? (
                   <>
-                    <FontAwesomeIcon icon={faRobot} style={{ color: 'red', marginRight: 8 }} />
+                    <FontAwesomeIcon
+                      icon={faRobot}
+                      style={{ color: 'red', marginRight: 8 }}
+                    />
                     Bot Card
                   </>
                 ) : isSystem ? (
                   <>
-                    <FontAwesomeIcon icon={faCog} style={{ color: 'grey', marginRight: 8 }} />
+                    <FontAwesomeIcon
+                      icon={faCog}
+                      style={{ color: 'grey', marginRight: 8 }}
+                    />
                     ADMIN
                   </>
                 ) : (
@@ -443,7 +465,7 @@ function PlayerModal(props) {
               sx={{
                 '& .MuiTabs-indicator': {
                   backgroundColor: 'error.main', // uses theme's error color
-                  height: '3px',                 // adjust height to make it more prominent
+                  height: '3px', // adjust height to make it more prominent
                 },
               }}
             >
@@ -452,8 +474,13 @@ function PlayerModal(props) {
             </Tabs>
 
             {/* Tab 0: Profile & Inventory */}
-            <Box sx={{ background: 'rgba(170, 170, 170, 0.06)', borderRadius: '0.3em', p: '20px' }}>
-
+            <Box
+              sx={{
+                background: 'rgba(170, 170, 170, 0.06)',
+                borderRadius: '0.3em',
+                p: '20px',
+              }}
+            >
               {activeTab === 0 && (
                 <Box>
                   {/* Online/Offline */}
@@ -465,21 +492,29 @@ function PlayerModal(props) {
                       maxWidth: '90px',
                       backgroundColor: '#6c757d26',
                     }}
-                    className='player'
+                    className="player"
                   >
-                    <Typography variant="body2" sx={{
-                      display: 'flex',
-                      justifyContent: 'space-evenly',
-                      alignItems: 'center'
-                    }}>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'space-evenly',
+                        alignItems: 'center',
+                      }}
+                    >
                       {isOnline ? 'online' : 'offline'}&nbsp;
-                      <i className={`online-status${isOnline ? ' online' : ''}`} />
+                      <i
+                        className={`online-status${isOnline ? ' online' : ''}`}
+                      />
                     </Typography>
                   </Box>
 
                   {/* Avatar & Bio */}
                   <Box sx={{ textAlign: 'center' }}>
-                    <Box className="avatar-border" sx={{ display: 'inline-block' }}>
+                    <Box
+                      className="avatar-border"
+                      sx={{ display: 'inline-block' }}
+                    >
                       <Avatar
                         src={avatar || '/img/profile-thumbnail.svg'}
                         accessory={accessory}
@@ -544,7 +579,9 @@ function PlayerModal(props) {
                       <Grid container spacing={1}>
                         {accounts.map((acc, index) => {
                           // On mobile, show shortened version
-                          const displayed = isMobile ? shortenAddress(acc) : acc;
+                          const displayed = isMobile
+                            ? shortenAddress(acc)
+                            : acc;
 
                           return (
                             <Grid item xs={12} key={index}>
@@ -584,18 +621,28 @@ function PlayerModal(props) {
                       <ProductGrid>
                         {productArray.map((row) => (
                           <ProductCard key={row._id}>
-                            {row.image && renderLottieAnimation(row.image, isLowGraphics) ? (
+                            {row.image &&
+                            renderLottieAnimation(row.image, isLowGraphics) ? (
                               <Box sx={{ width: 80, height: 80 }}>
-
-                                {renderLottieAnimation(row.image, isLowGraphics)}
+                                {renderLottieAnimation(
+                                  row.image,
+                                  isLowGraphics,
+                                )}
                               </Box>
                             ) : (
-                              <ProductImage src={row.image} alt={row.productName} />
+                              <ProductImage
+                                src={row.image}
+                                alt={row.productName}
+                              />
                             )}
                             <ProductInfo>
                               <Typography
                                 variant="h6"
-                                sx={{ fontSize: '1rem', color: '#fff', textAlign: 'center' }}
+                                sx={{
+                                  fontSize: '1rem',
+                                  color: '#fff',
+                                  textAlign: 'center',
+                                }}
                               >
                                 {row.productName}
                               </Typography>
@@ -615,7 +662,6 @@ function PlayerModal(props) {
               {/* Tab 1: Stats */}
               {activeTab === 1 && (
                 <Box sx={{ mt: 2 }}>
-
                   <StatisticsForm
                     username={username}
                     title={title}
@@ -633,7 +679,6 @@ function PlayerModal(props) {
                     totalTraded={totalTraded}
                     tradingProfit={tradingProfit}
                     rank={rank}
-
                   />
                 </Box>
               )}
@@ -659,7 +704,11 @@ function PlayerModal(props) {
                   Tip&nbsp;
                   <FontAwesomeIcon icon={faMoneyBill} />
                 </Button>
-                <Button color="error" variant="outlined" onClick={handleOpenChat}>
+                <Button
+                  color="error"
+                  variant="outlined"
+                  onClick={handleOpenChat}
+                >
                   DM&nbsp;
                   <FontAwesomeIcon icon={faEnvelope} />
                 </Button>
