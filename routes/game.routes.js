@@ -29,6 +29,7 @@ const avatarUtils = require('../helper/util/getRank');
 const executeBet3 = require('../helper/util/betExecutor3');
 const saveDocumentWithRetry = require('../helper/util/retrySave');
 const check_access_time = require('../helper/util/checkAccessTime');
+const getUserTokens = require('../helper/util/getUserToken');
 let semaphore2 = 1;
 let semaphore3 = 1;
 const roomLocks = {};
@@ -1271,7 +1272,7 @@ const getRoomList = async (game_type) => {
           const joinerData = await Promise.all(
             room.joiners.map(async (joinedUserId) => {
               const user = await User.findOne({ _id: joinedUserId }).select(
-                'avatar totalWagered _id username accessory status'
+                'avatar totalWagered _id username accessory status',
               );
               return {
                 user_id: user._id,
@@ -1294,7 +1295,7 @@ const getRoomList = async (game_type) => {
               rank: joiner.totalWagered,
               username: joiner.username,
               accessory: joiner.accessory,
-              _id: joiner._id
+              _id: joiner._id,
             })),
             rank: room.creator?.totalWagered || 0,
             creator_avatar: room.creator?.avatar || '',
@@ -1453,7 +1454,7 @@ router.post('/rooms', auth, async (req, res) => {
           rank: totalWagered,
           share: 100,
           stake: amountAfterFee,
-          walletAddress: connectedAccount
+          walletAddress: connectedAccount,
         },
       ],
       game_type: gameTypeDoc,
@@ -2024,7 +2025,7 @@ router.post('/pump', auth, async (req, res) => {
 
     // 5B) The new buyer gets buyerShares.
     const existingHostIndex = oldHosts.findIndex((h) =>
-      h.host.equals(req.user._id)
+      h.host.equals(req.user._id),
     );
     if (existingHostIndex === -1) {
       // New user: add as a host.
@@ -2226,7 +2227,6 @@ router.post('/pump', auth, async (req, res) => {
   }
 });
 
-
 // JEET (unstake / sell) endpoint – simplified version that sells the specified share amount
 router.post('/jeet', auth, async (req, res) => {
   try {
@@ -2315,7 +2315,7 @@ router.post('/jeet', auth, async (req, res) => {
       return res.json({
         success: false,
         message: `You cannot sell ${sellShares.toFixed(
-          2
+          2,
         )} shares; you only have ${seller.absShares.toFixed(2)} shares.`,
       });
     }
@@ -2337,7 +2337,7 @@ router.post('/jeet', auth, async (req, res) => {
     //    - All other hosts lose a fixed fraction of their stake (shock effect).
     seller.newAbsShares = seller.absShares - sellShares;
 
-    const shockRatio = 0.10; // 10% shock applied to other hosts
+    const shockRatio = 0.1; // 10% shock applied to other hosts
     oldHosts.forEach((host, idx) => {
       if (idx !== hostIndex) {
         host.newAbsShares = host.absShares * (1 - shockRatio);
@@ -2347,7 +2347,7 @@ router.post('/jeet', auth, async (req, res) => {
     // 8) Compute the new total share supply after the sale and shock
     let newTotalShareSupply = oldHosts.reduce(
       (acc, host) => acc + (host.newAbsShares || 0),
-      0
+      0,
     );
 
     // 9) Update pool liquidity: the pool’s liquidity decreases by the full amount (net of fee)
@@ -2533,7 +2533,6 @@ router.post('/jeet', auth, async (req, res) => {
     });
   }
 });
-
 
 router.get('/my_chat', auth, async (req, res) => {
   try {
@@ -3192,7 +3191,7 @@ router.post('/tip', auth, async (req, res) => {
       from: req.user._id,
       to: userToTip._id,
       room: '',
-      message: tipMessage ? `Tipped you — "${tipMessage}"` : "Tipped you",
+      message: tipMessage ? `Tipped you — "${tipMessage}"` : 'Tipped you',
       amount: tipAmount,
       is_read: false,
     });
@@ -3201,9 +3200,7 @@ router.post('/tip', auth, async (req, res) => {
       from: userToTip,
       to: req.user._id,
       room: '',
-      message: tipMessage
-        ? `You Tipped ${tipMessage}`
-        : `You Tipped`,
+      message: tipMessage ? `You Tipped ${tipMessage}` : `You Tipped`,
       amount: -tipAmount,
       is_read: false,
     });
@@ -3401,6 +3398,14 @@ router.post('/bet3', auth, async (req, res) => {
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
   }
+});
+
+router.post('/checkTokens', auth, async (req, res) => {
+  const connectedWallets = req.user.accounts;
+  const available = await getUserTokens(connectedWallets);
+  return res.json({
+    status: available,
+  });
 });
 
 module.exports = router;

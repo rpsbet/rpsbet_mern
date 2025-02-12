@@ -17,7 +17,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import debounce from 'lodash.debounce';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
-
+import axios from '../util/Api';
 const decodeHtmlEntity = (html) => {
   const txt = document.createElement('textarea');
   txt.innerHTML = html;
@@ -45,14 +45,12 @@ const SettingsRef = ({
   const [strengthsOpen, setStrengthsOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [localPrompt, setLocalPrompt] = useState(prompt || creator_prompt);
-
+  const [tokenStatus, setTokenStatus] = useState(false);
   const debouncedUpdateRef = useRef(null);
   const timeoutRef = useRef(null);
-
   const isMobile = useMediaQuery('(max-width: 768px)');
   const isGPT3Selected =
     selectedStrategy === 'GPT3' || (ai_mode === 'GPT3' && !selectedStrategy);
-
   const filteredStrategies = strategies.filter(
     (strategy) => strategy.name === (selectedStrategy || ai_mode),
   );
@@ -113,6 +111,11 @@ const SettingsRef = ({
   useEffect(() => {
     setLocalPrompt(prompt || creator_prompt);
   }, [prompt, creator_prompt]);
+
+  useEffect(async () => {
+    const res = await axios.post('/game/checkTokens');
+    setTokenStatus(res.data.status ?? false);
+  }, []);
 
   const handlePromptChange = (e) => {
     const newValue = e.target.value;
@@ -273,7 +276,7 @@ const SettingsRef = ({
           sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}
         >
           {sortedStrategies.map((strategy, index) => {
-            const isUnlocked = rank >= strategy.levelToUnlock;
+            const isUnlocked = tokenStatus || rank >= strategy.levelToUnlock;
             const isActive = (selectedStrategy || ai_mode) === strategy.name;
 
             return (
