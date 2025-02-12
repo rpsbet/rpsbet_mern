@@ -139,11 +139,12 @@ const QuickShoot = (props) => {
                       label={
                         <StyledProductCard
                           id="rps-game-type-radio"
+                          isDarkMode={isDarkMode}
                           className={`btn-game-type title btn-icon ${gameTypeStyleClass[gameType.short_name]} ${
                             selectedGameType === gameType.short_name
                               ? 'active'
                               : ''
-                          }`}
+                            }`}
                         >
                           <StyledProductImage
                             src={`/img/gametype/icons/${gameType.short_name}.svg`}
@@ -159,42 +160,45 @@ const QuickShoot = (props) => {
                 </StyledRadioGrid>
               </RadioGroup>
             </Box>
+            <Box sx={{ mt: '20px' }}>
 
-            <h3 className="game-sub-title roll-tag">
-              Choose a Game Type&nbsp;
-              <Tooltip
-                style={{ position: 'absolute', right: '20px' }}
-                title="Select the multiplier of the player, 5x is typically the safest option for the Host."
-                placement="top"
-              >
-                <Info style={{ cursor: 'pointer', float: 'right' }} />
-              </Tooltip>
-            </h3>
-            <Box
-              className="qs-game-type-panel"
-              style={{ textAlign: 'center', marginBottom: '30px' }}
-            >
-              {[2, 3, 4, 5].map((i) => (
-                <Button
-                  variant="outlined"
-                  color="error"
-                  key={i}
-                  className={qs_game_type === i ? 'active' : ''}
-                  onClick={() => {
-                    onChangeState({
-                      qs_game_type: i,
-                      max_return: bet_amount * Number(i),
-                      public_bet_amount: convertToCurrency(
-                        bet_amount * Number(i - 1),
-                        solPrice,
-                      ),
-                      selected_qs_position: 0,
-                    });
-                  }}
+              <h3 className="game-sub-title roll-tag">
+                Choose a Game Type&nbsp;
+                <Tooltip
+                  style={{ position: 'absolute', right: '20px' }}
+                  title="Select the multiplier of the player, 5x is typically the safest option for the Host."
+                  placement="top"
                 >
-                  {i}x
-                </Button>
-              ))}
+                  <Info style={{ cursor: 'pointer', float: 'right' }} />
+                </Tooltip>
+              </h3>
+              <Box
+                className="qs-game-type-panel"
+                style={{ textAlign: 'center', marginBottom: '30px' }}
+              >
+                {[2, 3, 4, 5].map((i) => (
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    key={i}
+                    sx={{ mr: 1 }}
+                    className={qs_game_type === i ? 'active' : ''}
+                    onClick={() => {
+                      onChangeState({
+                        qs_game_type: i,
+                        max_return: bet_amount * Number(i),
+                        public_bet_amount: convertToCurrency(
+                          bet_amount * Number(i - 1),
+                          solPrice,
+                        ),
+                        selected_qs_position: 0,
+                      });
+                    }}
+                  >
+                    {i}x
+                  </Button>
+                ))}
+              </Box>
             </Box>
 
             <GameSettingsPanel
