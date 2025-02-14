@@ -119,6 +119,7 @@ function RPS(props) {
   const [intervalDuration, setIntervalDuration] = useState(500);
   const [startedPlaying, setStartedPlaying] = useState(false);
   const [status, setStatus] = useState(roomInfo.status);
+  const [pool_id, setPoolId] = useState(roomInfo.pool_id);
   const [hostPr, setHostPr] = useState(roomInfo.host_pr);
   const [rpsHistory, setRpsHistory] = useState([]); // current RPS array
   const [prevRps, setPrevRps] = useState([]);
@@ -164,7 +165,6 @@ function RPS(props) {
 
     // --- LISTENERS ---
     const handleSocketData = (data) => {
-
       if (!data) {
         console.error('Error: Received undefined or null data from the socket.');
         return;
@@ -183,6 +183,12 @@ function RPS(props) {
         hosts: data.hosts,
       });
       setHostPr(data.host_pr);
+
+      // Set pool_id if it exists in the data
+      if (data.pool_id) {
+        setPoolId(data.pool_id);
+      }
+
       if (!data.rps) return;
 
       // Filter for user's RPS if isWatching
@@ -201,8 +207,6 @@ function RPS(props) {
     const channel1 = `UPDATED_BANKROLL_${roomInfo._id}`;
     const channel2 = `UPDATED_BANKROLL2_${roomInfo._id}`;
 
-    // If you only want to listen while *not* isWatching, or always listen:
-    // For example, let's say we always attach, but you can conditionally attach if needed:
     socket.on(channel1, handleSocketData);
     socket.on(channel2, handleSocketData2);
 
@@ -211,7 +215,7 @@ function RPS(props) {
       socket.off(channel1, handleSocketData);
       socket.off(channel2, handleSocketData2);
     };
-  }, [socket, roomInfo._id, isWatching, onChangeState, user_id, playSound]);
+  }, [socket, roomInfo._id, isWatching, onChangeState, user_id, playSound, setPoolId]);
 
   // Watch for host_pr changes
   useEffect(() => {
@@ -519,11 +523,11 @@ function RPS(props) {
         <div className="game-info-panel" style={{ position: 'relative' }}>
           {/* RPS history + players */}
           <GuessesSection
-  prevRps={prevRps}
-  players={players}
-  isDarkMode={isDarkMode}
-  handleOpenPlayerModal={handleOpenPlayerModal}
-/>
+            prevRps={prevRps}
+            players={players}
+            isDarkMode={isDarkMode}
+            handleOpenPlayerModal={handleOpenPlayerModal}
+          />
 
           {status === 'open' ? (
             <>
@@ -759,7 +763,7 @@ function RPS(props) {
                       <span className="button-text">&nbsp;CAT CALL x{botsCount}</span>
                     </Button>
                     {botsCount > 0 && (
-                      <Button variant="outlined"
+                      <Button sx={{ ml: 1 }} variant="outlined"
                         color='warning' onClick={bootBots} className="hover-text-button">
                         <FontAwesomeIcon className="button-icon" icon={faBan} />
                         <span className="button-text">&nbsp;KICK BOTS?</span>
@@ -796,17 +800,36 @@ function RPS(props) {
               </div>
             </>
           ) : (
-            <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-
-              <Typography variant="subtitle2" sx={{ color: '#ff0000' }}>GAME ENDED</Typography><br />
-              <Typography>
-              Pool seeded! SEE 
-              <Box component="a"
-                href={`https://dexscreener.com/solana/`}
-                sx={{ ml: 0.5, cursor: 'pointer' }}
-                >DEX 🚀</Box>
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center'
+              }}
+            >
+              <Typography variant="subtitle2" sx={{ color: '#ff0000' }}>
+                GAME ENDED
+              </Typography>
+              <br />
+              {pool_id ? (
+                <Typography>
+                  Pool seeded! SEE{' '}
+                  <Box
+                    component="a"
+                    href={`https://www.geckoterminal.com/solana/pools/${pool_id}`}
+                    sx={{ ml: 0.5, cursor: 'pointer', textDecoration: 'underline' }}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    DEX 🚀
+                  </Box>
                 </Typography>
-
+              ) : (
+                <Typography>
+                  Pool is currently being seeded, please wait a few minutes.
+                </Typography>
+              )}
             </Box>
           )}
         </div>

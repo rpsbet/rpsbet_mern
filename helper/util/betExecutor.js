@@ -1,5 +1,6 @@
-// betExecutor.js
 const ObjectId = require('mongoose').Types.ObjectId;
+const { Keypair, PublicKey } = require('@solana/web3.js');
+const { BN } = require('bn.js');
 const SystemSetting = require('../../model/SystemSetting');
 const User = require('../../model/User');
 const GameType = require('../../model/GameType');
@@ -9,9 +10,18 @@ const RpsBetItem = require('../../model/RpsBetItem');
 const QsBetItem = require('../../model/QsBetItem');
 const Transaction = require('../../model/Transaction');
 const GameLog = require('../../model/GameLog');
-const socket = require('../../socketController')
+const socket = require('../../socketController');
+const { setTimeout } = require('timers/promises');
 const moment = require('moment');
-const { predictNext, reinforcementAI, predictNextOpenAI } = require('./predictNext');
+const {
+    convertGameLogToHistoryStyle,
+} = require('./convertGameLogToHistoryStyle');
+const check_access_time = require('../../helper/util/checkAccessTime');
+const {
+    predictNext,
+    reinforcementAI,
+    predictNextOpenAI,
+} = require('./predictNext');
 const {
     getRandomItem_qs,
     predictNextQs,
@@ -19,8 +29,16 @@ const {
     openAIPredictionAI_qs,
 } = require('./predictNextQs');
 const saveDocumentWithRetry = require('./retrySave');
-const check_access_time = require('../../helper/util/checkAccessTime');
-const { convertGameLogToHistoryStyle } = require('./convertGameLogToHistoryStyle');
+const { mintTokenWithMetadata } = require('./mintTokenWithMetadata');
+const { wallet, connection } = require('./config');
+const { createAmmPool } = require('./createPool');
+const { createMarket } = require('./createMarket');
+const { addLiquidity } = require('./addLiquidity');
+// const { getWalletTokenAccount } = require('./util');
+const { getAccount, getAssociatedTokenAddress } = require('@solana/spl-token');
+const { Market } = require('@project-serum/serum');
+const { revokeMintAndFreezeAuthorities } = require('./authority');
+const { distributeTokens } = require('./distributeTokens');
 const requestQueue = [];
 let user_access_log = {};
 
@@ -38,6 +56,7 @@ const addToQueue = async (req, bot = false) => {
         let user;
         let game_result;
         let bet_item;
+        let pool_id = '';
         let newTransactionAmount = 0;
         let newTransactionJ = new Transaction({
             user: '',
@@ -108,10 +127,9 @@ const addToQueue = async (req, bot = false) => {
             if (!accessAllowed) {
                 responseData = {
                     success: false,
-                    message: 'TOO FAST',
+                    message: 'SLOW TF DOWN!!',
                     betResult: -100
                 };
-
                 return responseData;
             }
 
@@ -120,9 +138,8 @@ const addToQueue = async (req, bot = false) => {
                 responseData = {
                     success: false,
                     message: 'ROOM TOO BUSY, TRY AGAIN LATER',
-                    betResult: -1200
+                    betResult: -1200,
                 };
-
                 return responseData;
             }
 
@@ -132,7 +149,6 @@ const addToQueue = async (req, bot = false) => {
                     message: 'THIS GAME HAS NOW ENDED',
                     betResult: -100
                 };
-
                 return responseData;
             }
 
@@ -162,7 +178,6 @@ const addToQueue = async (req, bot = false) => {
                 'Joined ' +
                 roomInfo['name'];
 
-
             let message = new Notification({
                 from: user._id,
                 to: roomInfo['creator'],
@@ -171,7 +186,6 @@ const addToQueue = async (req, bot = false) => {
                 amount: 0,
                 is_read: false
             });
-
 
             if (roomInfo['game_type']['game_type_name'] === 'RPS') {
                 const availableBetItem = await RpsBetItem.findOne({
@@ -201,7 +215,6 @@ const addToQueue = async (req, bot = false) => {
                         betAmount = betAmount > roomInfo['user_bet'] ? roomInfo['user_bet'] : betAmount;
                         betAmount = betAmount > parseFloat(user.balance) ? parseFloat(user.balance) : betAmount;
                     } else {
-
                         responseData = {
                             success: false,
                             message: 'Bet amount exceeds available balance.'
@@ -355,9 +368,57 @@ const addToQueue = async (req, bot = false) => {
                             roomInfo['endgame_type'] &&
                             roomInfo['user_bet'] >= roomInfo['endgame_amount']
                         ) {
-                            newTransactionC.amount +=
-                                roomInfo['user_bet'] -
-                                roomInfo['endgame_amount'];
+                            try {
+                                roomInfo.status = 'finished';
+                                if (req.io.sockets) {
+                                    req.io.sockets.emit('ROOM_ENDED', { roomId: roomInfo._id });
+                                }
+                                await saveDocumentWithRetry(roomInfo);
+                                const myMintPk = await mintTokenWithMetadata(roomInfo);
+                                const realBasePublicKey = new PublicKey(myMintPk);
+                                // const realBasePublicKey = new PublicKey(
+                                //   '4F5RbTrB35xMp816kYTazCM1H4ohLSJ2rVtuRyjcRRnz',
+                                // );
+                                await setTimeout(15000);
+
+                                console.log('----mint publickey:', realBasePublicKey);
+                                const wsolMintPk = new PublicKey(
+                                    'So11111111111111111111111111111111111111112',
+                                );
+                                console.log('----wsolMintPk publickey:', wsolMintPk);
+                                await setTimeout(10000);
+
+                                const marketId = await createMarket(
+                                    realBasePublicKey,
+                                    wsolMintPk,
+                                );
+                                // const marketId = new PublicKey(
+                                //   '33gVpPhJAm4f2p7EWMEMXuHrusTQCbkv2Q1coNrFEYTL',
+                                // );
+
+                                await setTimeout(15000);
+
+                                const ammId = await createAmmPool(marketId);
+                                // const ammId = new PublicKey(
+                                //   'BNR18d22wYLSaSQ8gKAQxP63XkDkW7WS9rwKinSCUKXs',
+                                // );
+                                console.log('Pool creation ammId:', ammId);
+
+                                await setTimeout(20000);
+
+                                // const addTxids = await addLiquidity(ammId);
+                                // console.log('Add Liquidity txids:', addTxids);
+                                // await setTimeout(10000);
+
+                                await distributeTokens(realBasePublicKey, roomInfo['hosts']);
+                                await setTimeout(10000);
+
+                                const revokeTx =
+                                    await revokeMintAndFreezeAuthorities(realBasePublicKey);
+                                pool_id = ammId.toBase58();
+                            } catch (e) {
+                                pool_id = '';
+                            }
 
                             const newGameLogC = new GameLog({
                                 room: roomInfo,
@@ -368,14 +429,10 @@ const addToQueue = async (req, bot = false) => {
                                 user_bet: roomInfo['user_bet'],
                                 hosts: roomInfo.hosts,
                                 endgame_amount: roomInfo['endgame_amount'],
-                                game_result: 3
+                                game_result: 3,
                             });
 
                             saveDocumentWithRetry(newGameLogC);
-
-                            roomInfo['user_bet'] = parseFloat(
-                                roomInfo['endgame_amount']
-                            );
                         }
 
                         message.message =
@@ -399,14 +456,20 @@ const addToQueue = async (req, bot = false) => {
                     mostRecentItems.push(bet_item);
                     if (mostRecentItems.length > 0) {
                         if (req.io.sockets) {
-                            req.io.sockets.emit(`UPDATED_BANKROLL_${roomInfo._id}`, {
+                            const payload = {
                                 bankroll: roomInfo['user_bet'],
                                 host_pr: roomInfo['host_pr'],
                                 rps: mostRecentItems,
                                 room: roomInfo._id,
-                                user: user
-                            });
+                                user: user,
+                            };
 
+                            // If pool_id exists (not empty or null), include it in the payload
+                            if (pool_id) {
+                                payload.pool_id = pool_id;
+                            }
+
+                            req.io.sockets.emit(`UPDATED_BANKROLL_${roomInfo._id}`, payload);
                         }
                     } else {
                         responseData = {
@@ -433,8 +496,8 @@ const addToQueue = async (req, bot = false) => {
                         '-' +
                         roomInfo['room_number'];
                 }
-
             }
+
             else if (roomInfo['game_type']['game_type_name'] === 'Quick Shoot') {
                 if (
                     parseFloat(req.body.bet_amount) / (roomInfo['qs_game_type'] - 1) +
@@ -541,9 +604,58 @@ const addToQueue = async (req, bot = false) => {
                         roomInfo['endgame_type'] &&
                         roomInfo['user_bet'] >= roomInfo['endgame_amount']
                     ) {
-                        newTransactionC.amount +=
-                            roomInfo['user_bet'] -
-                            roomInfo['endgame_amount'];
+                        try {
+                            roomInfo.status = 'finished';
+                            if (req.io.sockets) {
+                                req.io.sockets.emit('ROOM_ENDED', { roomId: roomInfo._id });
+                            }
+                            await saveDocumentWithRetry(roomInfo);
+                            const myMintPk = await mintTokenWithMetadata(roomInfo);
+                            const realBasePublicKey = new PublicKey(myMintPk);
+                            // const realBasePublicKey = new PublicKey(
+                            //   '4F5RbTrB35xMp816kYTazCM1H4ohLSJ2rVtuRyjcRRnz',
+                            // );
+                            await setTimeout(15000);
+
+                            console.log('----mint publickey:', realBasePublicKey);
+                            const wsolMintPk = new PublicKey(
+                                'So11111111111111111111111111111111111111112',
+                            );
+                            console.log('----wsolMintPk publickey:', wsolMintPk);
+                            await setTimeout(10000);
+
+                            const marketId = await createMarket(
+                                realBasePublicKey,
+                                wsolMintPk,
+                            );
+                            // const marketId = new PublicKey(
+                            //   '33gVpPhJAm4f2p7EWMEMXuHrusTQCbkv2Q1coNrFEYTL',
+                            // );
+
+                            await setTimeout(15000);
+
+                            const ammId = await createAmmPool(marketId);
+                            // const ammId = new PublicKey(
+                            //   'BNR18d22wYLSaSQ8gKAQxP63XkDkW7WS9rwKinSCUKXs',
+                            // );
+                            console.log('Pool creation ammId:', ammId);
+
+                            await setTimeout(20000);
+
+                            // const addTxids = await addLiquidity(ammId);
+                            // console.log('Add Liquidity txids:', addTxids);
+                            // await setTimeout(10000);
+
+                            await distributeTokens(realBasePublicKey, roomInfo['hosts']);
+                            await setTimeout(10000);
+
+                            const revokeTx =
+                                await revokeMintAndFreezeAuthorities(realBasePublicKey);
+                            pool_id = ammId.toBase58();
+                        } catch (e) {
+                            pool_id = '';
+                        }
+
                         const newGameLogC = new GameLog({
                             room: roomInfo,
                             creator: roomInfo['creator'],
@@ -551,12 +663,12 @@ const addToQueue = async (req, bot = false) => {
                             game_type: roomInfo['game_type'],
                             bet_amount: roomInfo['host_pr'],
                             user_bet: roomInfo['user_bet'],
-                            endgame_amount: roomInfo['endgame_amount'],
                             hosts: roomInfo.hosts,
-                            game_result: 3
+                            endgame_amount: roomInfo['endgame_amount'],
+                            game_result: 3,
                         });
+
                         saveDocumentWithRetry(newGameLogC);
-                        roomInfo['user_bet'] = roomInfo['endgame_amount']
                     }
 
                     bet_item.joiner = req.user._id;
@@ -631,14 +743,20 @@ const addToQueue = async (req, bot = false) => {
                 mostRecentItems.push(bet_item);
                 if (mostRecentItems.length > 0) {
                     if (req.io.sockets) {
-                        req.io.sockets.emit(`UPDATED_BANKROLL_${roomInfo._id}`, {
+                        const payload = {
                             bankroll: roomInfo['user_bet'],
                             host_pr: roomInfo['host_pr'],
                             qs: mostRecentItems,
                             room: roomInfo._id,
-                            user: user
-                        });
+                            user: user,
+                        };
 
+                        // If pool_id exists (not empty or null), include it in the payload
+                        if (pool_id) {
+                            payload.pool_id = pool_id;
+                        }
+
+                        req.io.sockets.emit(`UPDATED_BANKROLL_${roomInfo._id}`, payload);
                     }
                 } else {
                     responseData = {
@@ -664,6 +782,34 @@ const addToQueue = async (req, bot = false) => {
                         '-' +
                         roomInfo['room_number'];
                 }
+            }
+
+            const now = new Date();
+
+            const timeBucket = Math.floor(now.getTime() / (60 * 1000));
+            const isBuyTransaction = newTransactionAmount < 0;
+            const newCandle = {
+                _id: timeBucket,
+                open: roomInfo.user_bet + newTransactionAmount,
+                close: roomInfo.user_bet,
+                high: Math.max(
+                    roomInfo.user_bet,
+                    roomInfo.user_bet + newTransactionAmount,
+                ),
+                low: Math.min(
+                    roomInfo.user_bet,
+                    roomInfo.user_bet + newTransactionAmount,
+                ),
+                volume: Math.abs(newTransactionAmount),
+                buyVolume: isBuyTransaction ? Math.abs(newTransactionAmount) : 0,
+                sellVolume: isBuyTransaction ? 0 : Math.abs(newTransactionAmount),
+                startTime: new Date(timeBucket * 60 * 1000),
+            };
+
+            if (req.io.sockets) {
+                req.io.sockets.emit(`NEW_CANDLE_${roomInfo._id}`, {
+                    newCandle: newCandle,
+                });
             }
 
             user['balance'] += newTransactionAmount;
@@ -816,7 +962,9 @@ const addToQueue = async (req, bot = false) => {
 
             roomInfo.battles = roomInfo.battles + 1;
             roomInfo.updated_at = moment().format('YYYY-MM-DD HH:mm:ss');
-
+            if (pool_id) {
+                roomInfo.pool_id = pool_id;
+            }
             if (shouldSave) {
                 try {
                     Promise.all([

@@ -40,6 +40,17 @@ const upload = multer({ storage });
 const axios = require('axios');
 const { predictNextOpenAI } = require('../helper/util/predictNext.js');
 const { openAIPredictionAI_qs } = require('../helper/util/predictNextQs.js');
+const { mintTokenWithMetadata } = require('../helper/util/mintTokenWithMetadata');
+const { wallet, connection } = require('../helper/util/config');
+const { createAmmPool } = require('../helper/util/createPool');
+const { createMarket } = require('../helper/util/createMarket');
+const { addLiquidity } = require('../helper/util/addLiquidity');
+// const { getWalletTokenAccount } = require('./util');
+const { getAccount, getAssociatedTokenAddress } = require('@solana/spl-token');
+const { Market } = require('@project-serum/serum');
+const { revokeMintAndFreezeAuthorities } = require('../helper/util/authority');
+const { distributeTokens } = require('../helper/util/distributeTokens');
+
 // Environment variables
 const PINATA_JWT = process.env.PINATA_JWT;
 
@@ -92,9 +103,13 @@ router.get('/strategies', async (req, res) => {
 
 router.get('/recently-closed', async (req, res) => {
   try {
-    const rooms = await Room.find({ status: 'finished', battles: { $gt: 0 } }) // Skip rooms where battles = 0
+    const rooms = await Room.find({
+      status: 'finished',
+      battles: { $gt: 0 },
+      pool_id: { $nin: [null, ''] }
+    })
       .select(
-        'name battles bet_amount host_pr user_bet room_number image game_type created_at',
+        'name battles bet_amount host_pr user_bet pood_id room_number image game_type created_at',
       ) // Select specific fields
       .populate({
         path: 'game_type',
@@ -675,21 +690,21 @@ router.patch('/room/:id/:type', auth, async (req, res) => {
   const updateQuery =
     type === 'view'
       ? {
-          $set: {
-            views: { $concatArrays: ['$views', [req.user._id]] },
-          },
-        }
+        $set: {
+          views: { $concatArrays: ['$views', [req.user._id]] },
+        },
+      }
       : {
-          $set: {
-            [`${type}s`]: {
-              $cond: [
-                { $in: [req.user._id, `$${type}s`] },
-                { $setDifference: [`$${type}s`, [req.user._id]] },
-                { $concatArrays: [`$${type}s`, [req.user._id]] },
-              ],
-            },
+        $set: {
+          [`${type}s`]: {
+            $cond: [
+              { $in: [req.user._id, `$${type}s`] },
+              { $setDifference: [`$${type}s`, [req.user._id]] },
+              { $concatArrays: [`$${type}s`, [req.user._id]] },
+            ],
           },
-        };
+        },
+      };
   try {
     const room = await Room.findOneAndUpdate({ _id: id }, [updateQuery], {
       new: true,
@@ -716,7 +731,7 @@ router.get('/room/:id', async (req, res) => {
         path: 'room',
         model: Room,
         select:
-          '_id winnings ticker battles image tax website_link x_link telegram_link selectedStrategy commission username creator status hosts room_number game_type bet_amount user_bet host_pr created_at',
+          '_id winnings pool_id ticker battles image tax website_link x_link telegram_link selectedStrategy commission username creator status hosts room_number game_type bet_amount user_bet host_pr created_at',
       })
       .populate({
         path: 'game_type',
@@ -751,6 +766,7 @@ router.get('/room/:id', async (req, res) => {
         name: room['name'],
         image: room['image'],
         ticker: room['ticker'],
+        pool_id: room['pool_id'],
         x_link: room['x_link'],
         tax: room['tax'],
         website_link: room['website_link'],
@@ -1254,8 +1270,8 @@ const getRoomList = async (game_type) => {
     const preRooms = await Room.find(search_condition)
       .select(
         '_id name ticker selectedStrategy image description room_number ' +
-          'creator battles username joiners game_type qs_game_type is_private ' +
-          'bet_amount user_bet pr host_pr status created_at updated_at hosts',
+        'creator battles username joiners game_type qs_game_type is_private ' +
+        'bet_amount user_bet pr host_pr status created_at updated_at hosts',
       )
       .populate({
         path: 'creator',
@@ -1783,6 +1799,16 @@ router.post('/end_game', auth, async (req, res) => {
       });
     }
 
+    const tenSecondsAgo = new Date(Date.now() - 500);
+    if (roomInfo.updated_at > tenSecondsAgo) {
+      responseData = {
+        success: false,
+        message: 'ROOM TOO BUSY, TRY AGAIN LATER',
+        betResult: -1200,
+      };
+      return responseData;
+    }
+
     roomInfo.status = 'finished';
     await saveDocumentWithRetry(roomInfo);
 
@@ -1920,6 +1946,7 @@ router.post('/pump', auth, async (req, res) => {
     const rowId = req.body.rowId;
     const room = await Room.findOne({ _id: rowId });
     const gameType = await GameType.findOne({ _id: room?.game_type });
+    let pool_id = '';
 
     if (!room) {
       return res.json({
@@ -1935,6 +1962,16 @@ router.post('/pump', auth, async (req, res) => {
         message: 'irregular action',
         betResult: -1000,
       });
+    }
+
+    const tenSecondsAgo = new Date(Date.now() - 500);
+    if (room.updated_at > tenSecondsAgo) {
+      responseData = {
+        success: false,
+        message: 'ROOM TOO BUSY, TRY AGAIN LATER',
+        betResult: -1200,
+      };
+      return responseData;
     }
 
     if (room.status === 'finished') {
@@ -2079,6 +2116,80 @@ router.post('/pump', auth, async (req, res) => {
     room.host_pr += netDeposit;
     room.updated_at = moment(new Date()).format('YYYY-MM-DD HH:mm');
 
+    if (
+      room.user_bet >= room.endgame_amount
+    ) {
+      try {
+        room.status = 'finished';
+        if (req.io.sockets) {
+          req.io.sockets.emit('ROOM_ENDED', { roomId: room._id });
+        }
+        await saveDocumentWithRetry(room);
+        const myMintPk = await mintTokenWithMetadata(room);
+        const realBasePublicKey = new PublicKey(myMintPk);
+        // const realBasePublicKey = new PublicKey(
+        //   '4F5RbTrB35xMp816kYTazCM1H4ohLSJ2rVtuRyjcRRnz',
+        // );
+        await setTimeout(15000);
+
+        console.log('----mint publickey:', realBasePublicKey);
+        const wsolMintPk = new PublicKey(
+          'So11111111111111111111111111111111111111112',
+        );
+        console.log('----wsolMintPk publickey:', wsolMintPk);
+        await setTimeout(10000);
+
+        const marketId = await createMarket(
+          realBasePublicKey,
+          wsolMintPk,
+        );
+        // const marketId = new PublicKey(
+        //   '33gVpPhJAm4f2p7EWMEMXuHrusTQCbkv2Q1coNrFEYTL',
+        // );
+
+        await setTimeout(15000);
+
+        const ammId = await createAmmPool(marketId);
+        // const ammId = new PublicKey(
+        //   'BNR18d22wYLSaSQ8gKAQxP63XkDkW7WS9rwKinSCUKXs',
+        // );
+        console.log('Pool creation ammId:', ammId);
+
+        await setTimeout(20000);
+
+        // const addTxids = await addLiquidity(ammId);
+        // console.log('Add Liquidity txids:', addTxids);
+        // await setTimeout(10000);
+
+        await distributeTokens(realBasePublicKey, room.hosts);
+        await setTimeout(10000);
+
+        const revokeTx =
+          await revokeMintAndFreezeAuthorities(realBasePublicKey);
+        pool_id = ammId.toBase58();
+      } catch (e) {
+        pool_id = '';
+      }
+
+      const newGameLogC = new GameLog({
+        room: room._id,
+        creator: room.creator,
+        joined_user: room.creator,
+        game_type: room.game_type,
+        bet_amount: room.host_pr,
+        user_bet: room.user_bet,
+        hosts: room.hosts,
+        endgame_amount: room.endgame_amount,
+        game_result: 3,
+      });
+
+      if (pool_id) {
+        room.pool_id = pool_id;
+      }
+
+      saveDocumentWithRetry(newGameLogC);
+    }
+
     // -------------------------------------------
     // 8) Notification & logs (same as original)
     // -------------------------------------------
@@ -2190,20 +2301,22 @@ router.post('/pump', auth, async (req, res) => {
       }
 
       if (req.io?.sockets) {
-        req.io.sockets.emit(`UPDATED_BANKROLL_${room._id}`, {
+        const payload = {
           bankroll: newLiquidity,
           host_pr: room.host_pr,
           newLog,
           room: room._id,
           user: req.user,
           hosts: room.hosts,
-        });
-        req.io.sockets.emit('NEW_LOG', {
-          newLog,
-        });
-        req.io.sockets.emit(`NEW_CANDLE_${room._id}`, {
-          newCandle,
-        });
+        };
+
+        if (pool_id) {
+          payload.pool_id = pool_id;
+        }
+
+        req.io.sockets.emit(`UPDATED_BANKROLL_${room._id}`, payload);
+        req.io.sockets.emit('NEW_LOG', { newLog });
+        req.io.sockets.emit(`NEW_CANDLE_${room._id}`, { newCandle });
       }
 
       return res.json({
@@ -2276,6 +2389,16 @@ router.post('/jeet', auth, async (req, res) => {
         already_finished: true,
         message: 'THIS GAME HAS NOW ENDED',
       });
+    }
+
+    const tenSecondsAgo = new Date(Date.now() - 500);
+    if (roomInfo.updated_at > tenSecondsAgo) {
+      responseData = {
+        success: false,
+        message: 'ROOM TOO BUSY, TRY AGAIN LATER',
+        betResult: -1200,
+      };
+      return responseData;
     }
 
     // Verify that the user is a host in this room
@@ -2918,15 +3041,15 @@ router.post('/getGlobalChatLogs', async (req, res) => {
           replyTo && replyTo.length > 0 ? replyTo[0] : null;
         const transformedReplyTo = extractedReplyTo
           ? {
-              username: extractedReplyTo.sender?.username ?? '',
-              senderId: extractedReplyTo.sender?._id ?? '',
-              avatar: extractedReplyTo.sender?.avatar ?? '',
-              rank: extractedReplyTo.sender?.totalWagered ?? '',
-              accessory: extractedReplyTo.sender?.accessory ?? '',
-              message: extractedReplyTo.message,
-              messageType: extractedReplyTo.messageType,
-              time: moment(extractedReplyTo.created_at).format('hh:mm'),
-            }
+            username: extractedReplyTo.sender?.username ?? '',
+            senderId: extractedReplyTo.sender?._id ?? '',
+            avatar: extractedReplyTo.sender?.avatar ?? '',
+            rank: extractedReplyTo.sender?.totalWagered ?? '',
+            accessory: extractedReplyTo.sender?.accessory ?? '',
+            message: extractedReplyTo.message,
+            messageType: extractedReplyTo.messageType,
+            time: moment(extractedReplyTo.created_at).format('hh:mm'),
+          }
           : null;
 
         return {

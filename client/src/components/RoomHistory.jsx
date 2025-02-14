@@ -299,10 +299,9 @@ function RoomHistory({
       }
 
       case 'receivedAutoPayout': {
-        const payout = convertToCurrency(userBet - endgame, solPrice);
         return (
           <Box sx={{ fontSize: '0.9rem', display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            Hosts received auto-payout of {payout} in {renderRoomInfo(row.room)}
+            Raydium Pool seeded for {renderRoomInfo(logItem.room)}
           </Box>
         );
       }

@@ -147,13 +147,9 @@ function HistoryTable({
       }
 
       case 'receivedAutoPayout': {
-        const payout = convertToCurrency(
-          logItem.user_bet - logItem.endgame_amount,
-          solPrice
-        );
         return (
           <Box sx={{ fontSize: '0.7rem', fontWeight: 700, display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            Hosts received auto-payout of {payout} in {renderRoomInfo(logItem.room)}
+            Raydium Pool seeded for {renderRoomInfo(logItem.room)}
           </Box>
         );
       }

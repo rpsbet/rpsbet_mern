@@ -894,7 +894,6 @@ export const pumpGame = (amount, rowId, connectedAccount) => async dispatch => {
   dispatch({ type: TRADE_LOADING, payload: true });
   try {
     const result = await axios.post('/game/pump/', { amount, rowId, connectedAccount });
-    console.log("result", result.data)
     if (result.data.success) {
       dispatch({ type: MSG_SUCCESS, payload: "YOU BOUGHT SOME %!" });
     }

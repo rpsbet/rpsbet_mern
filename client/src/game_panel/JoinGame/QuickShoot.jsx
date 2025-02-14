@@ -107,7 +107,7 @@ function QuickShoot(props) {
   const [qsHistory, setQsHistory] = useState([]);
   const [localSelectedQs, setLocalSelectedQs] = useState(selected_qs_position);
 
-  const [ballClassApplied, setBallClassApplied] = useState(false);
+  const [poolId, setPoolId] = useState(roomInfo.pool_id);
   const [joinerQsValueAtLastIndex, setJoinerQsValueAtLastIndex] = useState('');
   const [qsValueAtLastIndex, setQsValueAtLastIndex] = useState('');
   const [startedPlaying, setStartedPlaying] = useState(false);
@@ -190,7 +190,7 @@ function QuickShoot(props) {
       playSound('blip');
     }
 
-console.log("data.hosts—————————————", data.hosts)
+    console.log("data.hosts—————————————", data.hosts)
     onChangeState({
       bankroll: data.bankroll,
       battles: 1,
@@ -198,19 +198,19 @@ console.log("data.hosts—————————————", data.hosts)
     });
     setHostPr(data.host_pr);
     if (!data.qs) return;
-     // Filter or use entire array
-     const filtered = data.qs.filter((game) => game.joiner === user_id);
-     const newQsHistory = isWatching ? filtered : data.qs;
- 
-     // Update your state
-     setQsHistory(newQsHistory);
- 
-     // Compute the last shot
-     const newPlayerShot = newQsHistory?.[newQsHistory.length - 1]?.joiner_qs ?? null;
-     const newLastShot = newQsHistory?.[newQsHistory.length - 1]?.qs ?? null;
-     setJoinerQsValueAtLastIndex(parseFloat(newPlayerShot));
-     setQsValueAtLastIndex(parseFloat(newLastShot));
- 
+    // Filter or use entire array
+    const filtered = data.qs.filter((game) => game.joiner === user_id);
+    const newQsHistory = isWatching ? filtered : data.qs;
+
+    // Update your state
+    setQsHistory(newQsHistory);
+
+    // Compute the last shot
+    const newPlayerShot = newQsHistory?.[newQsHistory.length - 1]?.joiner_qs ?? null;
+    const newLastShot = newQsHistory?.[newQsHistory.length - 1]?.qs ?? null;
+    setJoinerQsValueAtLastIndex(parseFloat(newPlayerShot));
+    setQsValueAtLastIndex(parseFloat(newLastShot));
+
     setStartedPlaying(true);
     setPrevQs(data.qs);
 
@@ -346,11 +346,16 @@ console.log("data.hosts—————————————", data.hosts)
 
   // Watch for changes to roomInfo (host_pr, status)
   useEffect(() => {
-    if (roomInfo && roomInfo.host_pr !== undefined) {
-      setHostPr(parseFloat(roomInfo.host_pr));
-    }
-    if (roomInfo && roomInfo.status !== undefined) {
-      setStatus(roomInfo.status);
+    if (roomInfo) {
+      if (roomInfo.host_pr !== undefined) {
+        setHostPr(parseFloat(roomInfo.host_pr));
+      }
+      if (roomInfo.status !== undefined) {
+        setStatus(roomInfo.status);
+      }
+      if (roomInfo.pool_id !== undefined && roomInfo.pool_id) {
+        setPoolId(roomInfo.pool_id);
+      }
     }
   }, [roomInfo]);
 
@@ -800,7 +805,7 @@ console.log("data.hosts—————————————", data.hosts)
                       <span className="button-text">&nbsp;CAT CALL x{botsCount}</span>
                     </Button>
                     {botsCount > 0 && (
-                      <Button variant="outlined"
+                      <Button sx={{ ml: 1 }} variant="outlined"
                         color='warning' onClick={bootBots} className="hover-text-button">
                         <FontAwesomeIcon className="button-icon" icon={faBan} />
                         <span className="button-text">&nbsp;KICK BOTS?</span>
@@ -837,17 +842,36 @@ console.log("data.hosts—————————————", data.hosts)
               </div>
             </>
           ) : (
-            <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-
-              <Typography variant="subtitle2" sx={{ color: '#ff0000' }}>GAME ENDED</Typography><br />
-              <Typography>
-              Pool seeded! SEE 
-              <Box component="a"
-                href={`https://dexscreener.com/solana/`}
-                sx={{ ml: 0.5, cursor: 'pointer' }}
-                >DEX 🚀</Box>
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center'
+              }}
+            >
+              <Typography variant="subtitle2" sx={{ color: '#ff0000' }}>
+                GAME ENDED
+              </Typography>
+              <br />
+              {pool_id ? (
+                <Typography>
+                  Pool seeded! SEE{' '}
+                  <Box
+                    component="a"
+                    href={`https://www.geckoterminal.com/solana/pools/${pool_id}`}
+                    sx={{ ml: 0.5, cursor: 'pointer', textDecoration: 'underline' }}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    DEX 🚀
+                  </Box>
                 </Typography>
-
+              ) : (
+                <Typography>
+                  Pool is currently being seeded, please wait a few minutes.
+                </Typography>
+              )}
             </Box>
           )}
         </div>

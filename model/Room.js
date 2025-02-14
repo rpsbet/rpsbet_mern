@@ -105,6 +105,10 @@ const RoomSchema = new Schema({
     type: String,
     default: ''
   },
+  pool_id: {
+    type: String,
+    default: ''
+  },
   prompt: {
     type: String,
     default: 'You are an expert at Rock Paper Scissors'

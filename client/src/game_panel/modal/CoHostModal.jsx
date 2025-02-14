@@ -193,6 +193,207 @@ function CoHostModal({
     selectedRow.bet_amount
   );
 
+  /**
+ * Simulate a Pump (Buy) action on the front end.
+ * Mirrors the key logic from your /pump endpoint:
+ *  - Mints new shares = netDeposit
+ *  - Distributes a bonus fraction of those shares to existing holders
+ *  - Gives the remainder to the buyer
+ *  - Normalizes percentages so they sum to 100
+ */
+  function simulatePump({
+    currentLiquidity,
+    hosts,
+    userId,
+    deposit,
+    commissionPct = 2.5,   // e.g. 2.5 = 2.5%
+    bonusFraction = 0.12,  // 12% bonus to old holders
+  }) {
+    // 1) Commission & net deposit
+    const fee = (deposit * commissionPct) / 100;
+    const netDeposit = deposit - fee;
+
+    // 2) “Total share supply” is often set to currentLiquidity by your back-end
+    let totalShareSupply = currentLiquidity;
+
+    // 3) Convert each host’s percentage into absolute shares
+    const oldHosts = hosts.map((h) => {
+      const oldAbsoluteShares = (h.share / 100) * totalShareSupply;
+      return {
+        ...h,
+        oldAbsoluteShares,
+        newAbsoluteShares: 0,
+      };
+    });
+
+    // 4) Minted shares = netDeposit
+    const mintedShares = netDeposit;
+
+    // 5) Bonus portion for old holders
+    const bonusForOld = mintedShares * bonusFraction;
+    const buyerShares = mintedShares - bonusForOld;
+
+    // 6) Distribute bonus among old holders proportionally
+    const totalOldAbs = oldHosts.reduce((sum, x) => sum + x.oldAbsoluteShares, 0) || 1;
+    oldHosts.forEach((h) => {
+      const fraction = h.oldAbsoluteShares / totalOldAbs;
+      h.newAbsoluteShares = h.oldAbsoluteShares + bonusForOld * fraction;
+    });
+
+    // 7) Add the buyer’s new shares
+    const buyerIndex = oldHosts.findIndex((h) => h.host === userId);
+    if (buyerIndex === -1) {
+      // Buyer is new
+      oldHosts.push({
+        host: userId,
+        share: 0,
+        oldAbsoluteShares: 0,
+        newAbsoluteShares: buyerShares,
+      });
+    } else {
+      oldHosts[buyerIndex].newAbsoluteShares += buyerShares;
+    }
+
+    // 8) New total share supply = old + minted
+    const newTotalShareSupply = totalShareSupply + mintedShares;
+
+    // 9) Recompute share %
+    oldHosts.forEach((h) => {
+      h.share =
+        newTotalShareSupply > 0
+          ? (h.newAbsoluteShares / newTotalShareSupply) * 100
+          : 0;
+    });
+
+    // 10) Normalize so sum of shares is 100
+    const sumPct = oldHosts.reduce((acc, x) => acc + x.share, 0);
+    if (sumPct > 0) {
+      const factor = 100 / sumPct;
+      oldHosts.forEach((h) => {
+        h.share *= factor;
+      });
+    }
+
+    // 11) The user’s final share in absolute + percent
+    const newLiquidity = currentLiquidity + netDeposit;
+    const updatedHosts = oldHosts;
+    const userHost = updatedHosts.find((h) => h.host === userId);
+    const userFinalSharePct = userHost ? userHost.share : 0;
+    const userFinalAbsolute = (userFinalSharePct / 100) * newLiquidity;
+
+    return {
+      updatedHosts,
+      newTotalShareSupply,
+      newLiquidity,
+      userFinalSharePct,
+      userFinalAbsolute,
+    };
+  }
+
+  /**
+   * Simulate a Jeet (Sell) action on the front end.
+   * Mirrors the key logic from your /jeet endpoint:
+   *  - User sells `sharesToSell` shares
+   *  - There's a shockRatio that reduces other hosts' shares
+   *  - Recompute new total, normalize, etc.
+   */
+  function simulateJeet({
+    currentLiquidity,
+    hosts,
+    userId,
+    sharesToSell,
+    commissionPct = 2.5, // e.g. 2.5 = 2.5%
+    shockRatio = 0.10,   // 10% shock to other hosts
+  }) {
+    // 1) "Total share supply" equals currentLiquidity or a dedicated field if you store it separately
+    let totalShareSupply = currentLiquidity;
+
+    // 2) Convert each host’s % into absolute shares
+    const oldHosts = hosts.map((h) => {
+      const absShares = (h.share / 100) * totalShareSupply;
+      return {
+        ...h,
+        absShares,
+        newAbsShares: absShares,
+      };
+    });
+
+    // 3) Find the seller
+    const sellerIndex = oldHosts.findIndex((h) => h.host === userId);
+    if (sellerIndex === -1) {
+      return {
+        error: `You are not a host; cannot sell shares.`,
+      };
+    }
+
+    // 4) Check if user has enough shares
+    const seller = oldHosts[sellerIndex];
+    if (sharesToSell > seller.absShares + 1e-9) {
+      return {
+        error: `Cannot sell ${sharesToSell.toFixed(2)} shares; you only have ${seller.absShares.toFixed(
+          2
+        )} shares.`,
+      };
+    }
+
+    // 5) Convert shares to currency
+    //    1 share => (currentLiquidity / totalShareSupply) currency
+    const valueBeforeFee = sharesToSell * (currentLiquidity / totalShareSupply);
+
+    // 6) Commission
+    const fee = (valueBeforeFee * commissionPct) / 100;
+    const amountAfterFee = valueBeforeFee - fee;
+
+    // 7) Update the seller’s absolute shares
+    seller.newAbsShares = seller.absShares - sharesToSell;
+
+    // 8) Apply shock ratio to other hosts
+    oldHosts.forEach((h, idx) => {
+      if (idx !== sellerIndex) {
+        h.newAbsShares = h.newAbsShares * (1 - shockRatio);
+        if (h.newAbsShares < 1e-9) h.newAbsShares = 0;
+      }
+    });
+
+    // 9) New total share supply
+    let newTotalShareSupply = oldHosts.reduce((acc, h) => acc + h.newAbsShares, 0);
+
+    // 10) New liquidity => minus the amount the user withdrew
+    const newLiquidity = currentLiquidity - amountAfterFee;
+
+    // 11) Recompute share percentages
+    oldHosts.forEach((h) => {
+      h.share =
+        newTotalShareSupply > 0
+          ? (h.newAbsShares / newTotalShareSupply) * 100
+          : 0;
+    });
+
+    // 12) Normalize to 100
+    const sumPct = oldHosts.reduce((acc, x) => acc + x.share, 0);
+    if (sumPct > 0) {
+      const factor = 100 / sumPct;
+      oldHosts.forEach((h) => {
+        h.share *= factor;
+      });
+    }
+
+    // 13) Final user data
+    const userFinalSharePct = oldHosts[sellerIndex].share;
+    const userFinalAbsolute = (userFinalSharePct / 100) * newLiquidity;
+
+    return {
+      updatedHosts: oldHosts,
+      newTotalShareSupply,
+      newLiquidity,
+      userFinalSharePct,
+      userFinalAbsolute,
+      valueBeforeFee,
+      amountAfterFee,
+      error: null,
+    };
+  }
+
   const totalShare = Array.isArray(hosts)
     ? hosts.reduce((acc, host) => acc + host.share, 0)
     : 0;
@@ -577,120 +778,125 @@ function CoHostModal({
 
             </Box>
 
-            {/* Balance / Before / After Table */}
             <Table>
               <TableBody>
                 {!input_only && (
                   <>
                     <TableRow>
                       <TableCell>BALANCE:</TableCell>
-                      <TableCell align="right">{convertToCurrency(balance, solPrice)}</TableCell>
+                      <TableCell align="right">
+                        {convertToCurrency(balance, solPrice)}
+                      </TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell>CURRENT BANKROLL:</TableCell>
                       <TableCell align="right" sx={{ color: '#ff8500' }}>
-                        {selectedRow ? convertToCurrency(selectedRow.user_bet, solPrice) : null}
+                        {selectedRow
+                          ? convertToCurrency(parseFloat(selectedRow.user_bet || 0), solPrice)
+                          : null}
                       </TableCell>
                     </TableRow>
                   </>
                 )}
+
+                {/* BEFORE */}
                 <TableRow>
                   <TableCell>BEFORE:</TableCell>
-                  <TableCell align="right" sx={{ color: '#ff8500', whiteSpace: 'pre-wrap' }}>
+                  <TableCell
+                    align="right"
+                    sx={{ color: '#ff8500', whiteSpace: 'pre-wrap' }}
+                  >
                     {(() => {
-                      if (
-                        Array.isArray(hosts) &&
-                        hosts.some((host) => host.host === user?._id)
-                      ) {
-                        const userHost = hosts.find((host) => host.host === user._id);
-                        if (userHost) {
-                          const sharePct = userHost.share.toFixed(2);
-                          const shareValue = (userHost.share / 100) * parseFloat(selectedRow.user_bet);
-                          return `${sharePct}%\n(${convertToCurrency(shareValue, solPrice)} / ${shareValue.toFixed(6)} SOL)`;
-                        }
+                      if (!Array.isArray(hosts) || !selectedRow) {
+                        return convertToCurrency(0, solPrice);
                       }
-                      return convertToCurrency(0, solPrice);
+
+                      // Check if current user is a host
+                      const existingHost = hosts.find((h) => h.host === user?._id);
+                      if (!existingHost) {
+                        return convertToCurrency(0, solPrice);
+                      }
+
+                      // Show % and absolute stake
+                      const currentBankroll = parseFloat(selectedRow.user_bet) || 0;
+                      const pct = existingHost.share.toFixed(2);
+                      const absStake = (existingHost.share / 100) * currentBankroll;
+
+                      return `${pct}%\n(${convertToCurrency(absStake, solPrice)} / ${absStake.toFixed(
+                        6
+                      )} SOL)`;
                     })()}
                   </TableCell>
-
                 </TableRow>
+
+                {/* AFTER */}
                 <TableRow>
                   <TableCell>AFTER:</TableCell>
-                  <TableCell align="right" sx={{ color: '#ff8500', whiteSpace: 'pre-line' }}>
+                  <TableCell
+                    align="right"
+                    sx={{ color: '#ff8500', whiteSpace: 'pre-line' }}
+                  >
                     {(() => {
+                      // Guard checks
                       if (!selectedRow || !Array.isArray(hosts)) return '0%';
 
-                      // Find the current user as a host, and read their current share
-                      const userHost = hosts.find((host) => host.host === user?._id);
-                      const userCurrentShare =
-                        userHost && !isNaN(userHost.share) ? userHost.share : 0;
-
-                      // Calculate the user’s current absolute stake from their share
                       const currentBankroll = parseFloat(selectedRow.user_bet || 0);
                       if (!currentBankroll) return '0%';
-                      const userAbsoluteStake = (userCurrentShare / 100) * currentBankroll;
 
-                      // Convert input to a float and deduct fees
-                      const coHostAmountFloat = parseFloat(coHostAmount || 0);
-                      const fee = coHostAmountFloat * 0.025; // 2.5% fee
-                      const amountAfterFee = coHostAmountFloat - fee;
-
-                      /**
-                       * PUMP (BUY) scenario
-                       */
-                      const newTotalBuy = currentBankroll + amountAfterFee; // new total bankroll
-                      const newUserAbsoluteStakeBuy = userAbsoluteStake + amountAfterFee; // user’s new stake
-                      let buySharePercent = 0;
-                      if (newTotalBuy > 0 && newUserAbsoluteStakeBuy > 0) {
-                        buySharePercent = (newUserAbsoluteStakeBuy / newTotalBuy) * 100;
+                      // Convert user input to a float
+                      const inputValue = parseFloat(coHostAmount || '0');
+                      if (inputValue <= 0) {
+                        // If user didn't input anything > 0, there's no difference from "BEFORE".
+                        return '0%';
                       }
-                      const buyShare = `${buySharePercent.toFixed(2)}%`;
 
-                      /**
-                       * JEET (SELL) scenario
-                       */
-                      const newTotalSell = currentBankroll - amountAfterFee; // new total bankroll
-                      const newUserAbsoluteStakeSell = userAbsoluteStake - amountAfterFee; // user’s new stake
-                      let sellSharePercent = 0;
-                      if (newTotalSell > 0 && newUserAbsoluteStakeSell > 0) {
-                        sellSharePercent = (newUserAbsoluteStakeSell / newTotalSell) * 100;
-                      }
-                      const sellShare = `${sellSharePercent.toFixed(2)}%`;
-
-                      /**
-                       * Helper function to convert SOL to currency (e.g. USD).
-                       * If solPrice is in scope, it can be used here. Otherwise, remove or adjust as needed.
-                       */
-                      const convertCurrency = (amount) => {
-                        return solPrice
-                          ? '$' + (amount * solPrice).toFixed(2)
-                          : amount.toFixed(2);
-                      };
-
-                      /**
-                       * Decide which scenario to display based on the selectedTab:
-                       *  - PUMP → Show "BUY" results
-                       *  - Otherwise → Show "SELL" results
-                       */
+                      // Decide which “simulate” to run
                       if (selectedTab === 'PUMP') {
-                        // BUY
-                        return `~${buyShare}\n(${convertCurrency(newUserAbsoluteStakeBuy)} / ${newUserAbsoluteStakeBuy.toFixed(
-                          6
-                        )} SOL)`;
-                      } else {
-                        // SELL
-                        // If user’s new stake is <= 0, display “0%”
-                        const finalSellShare = newUserAbsoluteStakeSell > 0 ? sellShare : '0%';
-                        const displayCurrency =
-                          newUserAbsoluteStakeSell > 0
-                            ? convertCurrency(newUserAbsoluteStakeSell)
-                            : '$0.00';
-                        const displaySol =
-                          newUserAbsoluteStakeSell > 0
-                            ? newUserAbsoluteStakeSell.toFixed(6)
-                            : '0.000000';
+                        // Simulate Pump
+                        const {
+                          userFinalSharePct,
+                          userFinalAbsolute,
+                        } = simulatePump({
+                          currentLiquidity: currentBankroll,
+                          hosts,
+                          userId: user?._id,
+                          deposit: inputValue, // user is depositing coHostAmount
+                          commissionPct: 2.5,  // adapt to your real fee
+                          bonusFraction: 0.12, // adapt to your real bonus fraction
+                        });
 
-                        return `~${finalSellShare}\n(${displayCurrency} / ${displaySol} SOL)`;
+                        const finalPctStr = `${userFinalSharePct.toFixed(2)}%`;
+                        const displayCurrency = convertToCurrency(userFinalAbsolute, solPrice);
+                        const displaySol = userFinalAbsolute.toFixed(6);
+                        return `~${finalPctStr}\n(${displayCurrency} / ${displaySol} SOL)`;
+                      } else {
+                        // Simulate Jeet
+                        // If your back-end sells by “absolute currency” instead of “shares,”
+                        // you need to convert currency -> shares or adjust accordingly.
+                        // Here we assume coHostAmount = the number of SHARES to sell:
+                        const sharesToSell = inputValue; // or do your conversion if needed
+
+                        const {
+                          userFinalSharePct,
+                          userFinalAbsolute,
+                          error,
+                        } = simulateJeet({
+                          currentLiquidity: currentBankroll,
+                          hosts,
+                          userId: user?._id,
+                          sharesToSell,
+                          commissionPct: 2.5,
+                          shockRatio: 0.10,
+                        });
+
+                        if (error) {
+                          return error; // e.g. “Not enough shares”
+                        }
+
+                        const finalPctStr = `${userFinalSharePct.toFixed(2)}%`;
+                        const displayCurrency = convertToCurrency(userFinalAbsolute, solPrice);
+                        const displaySol = userFinalAbsolute.toFixed(6);
+                        return `~${finalPctStr}\n(${displayCurrency} / ${displaySol} SOL)`;
                       }
                     })()}
                   </TableCell>

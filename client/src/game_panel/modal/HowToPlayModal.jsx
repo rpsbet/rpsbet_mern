@@ -67,22 +67,85 @@ function HowToPlayModal({ modalIsOpen, closeModal }) {
               >
                 RPS.Game
               </span>{' '}
-              is more than just a platform—it’s a powerful game creation tool!
-              Players can design their own games, and when they reach{' '}
-              <strong
+              casino-styled launchpad that enables you to fast-track token seeding
+              using the casino's profitable business model. All games on {' '}
+              <span
                 style={{
                   background: 'linear-gradient(165deg, #ffd000, #ff0000)',
                   padding: '0em 0.4em',
                   borderRadius: 1,
                 }}
               >
-                80 SOL
-              </strong>{' '}
-              in contributions, these games can be minted as unique tokens on
-              the blockchain.
+                RPS.Game
+              </span>{' '} are skill-based using AI for added control. All tokens launched on{' '}
+              <span
+                style={{
+                  background: 'linear-gradient(165deg, #ffd000, #ff0000)',
+                  padding: '0em 0.4em',
+                  borderRadius: 1,
+                }}
+              >
+                RPS.Game
+              </span>{' '}
+              are standardized and have no private keys, minimizing risks and reducing
+              the need for extensive DYOR. Each token is fairly launched with no presale
+              or team allocation, ensuring an equitable environment for all participants.
+            </Typography>
+
+            <Typography variant="body2" component="div">
+              <ol style={{ marginLeft: 20, paddingLeft: 0 }}>
+                <li style={{ marginBottom: '0.5em' }}>
+
+                  Join a Game.
+                </li>
+
+                <li style={{ marginBottom: '0.5em' }}>
+
+                  Pump the Game before its Hard Cap.
+                </li>
+
+                <li style={{ marginBottom: '0.5em' }}>
+
+                  Jeet at any time to secure gains or realize losses.
+                </li>
+
+                <li style={{ marginBottom: '0.5em' }}>
+
+                  The game “graduates” from{' '}
+                  <span
+                    style={{
+                      background: 'linear-gradient(165deg, #ffd000, #ff0000)',
+                      padding: '0em 0.4em',
+                      borderRadius: 1,
+                    }}
+                  >
+                    RPS.Game
+                  </span>{' '}
+                  once sufficient users engage and contribute toeards its Hard Cap (set by the game creator).
+                </li>
+
+                <li style={{ marginBottom: '0.5em' }}>
+
+                  Upon graduation, 80% of the Game’s liquidity is deposited into{' '}
+                  <span
+                    style={{
+                      background: 'linear-gradient(165deg, #ffd000, #ff0000)',
+                      padding: '0em 0.4em',
+                      borderRadius: 1,
+                    }}
+                  >
+                    Raydium
+                  </span>{' '}
+                  and permanently burned. The remaining 20% is distributed to the Game's holders in the form of newly minted tokens.
+                </li>
+              </ol>
+              <Typography variant="body2" paragraph>
+                Note: You can also create your own Games and utilize other tools on the platform such as AI, Tax, Loaning and more.
+              </Typography>
             </Typography>
           </AccordionDetails>
         </Accordion>
+
 
         <Accordion>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
@@ -98,7 +161,7 @@ function HowToPlayModal({ modalIsOpen, closeModal }) {
             <ol>
               <li>Enter a predetermined Bet Amount.</li>
               <li>Choose a direction to shoot against the AI keeper.</li>
-              <li>If you score, you win 1.25x to 2x your Bet Amount.</li>
+              <li>If you score, you win 1.25x to 4x your Bet Amount.</li>
             </ol>
           </AccordionDetails>
         </Accordion>
@@ -133,8 +196,7 @@ function HowToPlayModal({ modalIsOpen, closeModal }) {
           </AccordionSummary>
           <AccordionDetails>
             <Typography variant="body2" paragraph>
-              Hosts receive ZERO tax on their winnings AND EARN 0% - 20% from
-              their players' winnings.
+              1% on all transactions except tipping and loans.
             </Typography>
           </AccordionDetails>
         </Accordion>
@@ -149,14 +211,14 @@ function HowToPlayModal({ modalIsOpen, closeModal }) {
             </Typography>
             <Button
               variant="contained"
-              onClick={() => window.open('https://x.com/rpsdotgame', '_blank')}
+              onClick={() => window.open('https://x.com/RPSDG_SOL', '_blank')}
               sx={{ mr: 1 }}
             >
-              Twitter
+              X
             </Button>
             <Button
               variant="contained"
-              onClick={() => window.open('https://t.me/rpsfinance', '_blank')}
+              onClick={() => window.open('https://t.me/RPSDOTGAMESOL', '_blank')}
               sx={{ mr: 1 }}
             >
               Telegram

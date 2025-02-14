@@ -96,6 +96,7 @@ const initialState = {
     creator_id: '',
     battles: 0,
     tax: 0,
+    pool_id: '',
     creator_avatar: '',
     rank: 0,
     accessory: '',
