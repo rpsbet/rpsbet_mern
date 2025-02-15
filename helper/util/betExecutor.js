@@ -152,7 +152,7 @@ const addToQueue = async (req, bot = false) => {
                 return responseData;
             }
 
-            const commission = roomInfo['tax'] + tax.value;
+            const commission = tax.value;
 
             newGameLog = new GameLog({
                 room: roomInfo,
@@ -306,7 +306,7 @@ const addToQueue = async (req, bot = false) => {
                             betAmount * 2 * ((100 - commission) / 100);
 
                         newGameLog.commission =
-                            betAmount * 2 * (roomInfo['tax'] / 100);
+                            betAmount * 2;
 
                         // update platform earnings (0.5%)
                         platform.value =

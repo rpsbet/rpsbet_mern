@@ -4706,6 +4706,10 @@ circle {
     margin: unset;
   }
 
+  .player {
+    overflow: hidden !important;
+  }
+
   .wheel {
     width: 250px;
     height: 250px;

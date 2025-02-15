@@ -854,12 +854,12 @@ function QuickShoot(props) {
                 GAME ENDED
               </Typography>
               <br />
-              {pool_id && pool_id ? (
+              {roomInfo.pool_id && roomInfo.pool_id ? (
                 <Typography>
                   Pool seeded! SEE{' '}
                   <Box
                     component="a"
-                    href={`https://www.geckoterminal.com/solana/pools/${pool_id}`}
+                    href={`https://www.geckoterminal.com/solana/pools/${roomInfo.pool_id}`}
                     sx={{ ml: 0.5, cursor: 'pointer', textDecoration: 'underline' }}
                     target="_blank"
                     rel="noopener noreferrer"
