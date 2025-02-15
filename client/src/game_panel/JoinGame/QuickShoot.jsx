@@ -854,7 +854,7 @@ function QuickShoot(props) {
                 GAME ENDED
               </Typography>
               <br />
-              {pool_id ? (
+              {pool_id && pool_id ? (
                 <Typography>
                   Pool seeded! SEE{' '}
                   <Box
@@ -869,7 +869,7 @@ function QuickShoot(props) {
                 </Typography>
               ) : (
                 <Typography>
-                  Pool is currently being seeded, please wait a few minutes.
+                  Pool is either being seeded, or the room has ended.
                 </Typography>
               )}
             </Box>

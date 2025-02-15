@@ -231,7 +231,7 @@ function LoginModal(props) {
                   [↵]
                 </Typography>
               </Button>
-              <Button
+              {/* <Button
                 variant="text"
                 color="error"
                 onClick={() => {
@@ -241,7 +241,7 @@ function LoginModal(props) {
                 fullWidth
               >
                 SIGN UP →
-              </Button>
+              </Button> */}
             </Box>
 
             {/* OR Separator */}

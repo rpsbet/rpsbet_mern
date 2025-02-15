@@ -8,7 +8,7 @@ const openai = new OpenAI({
 
 const predictNext = (rps_list, markov = false) => {
   const choices = ['R', 'P', 'S'];
-  const smoothingFactor = 0.1;
+  const smoothingFactor = 0.3;
 
   if (rps_list.length <= 1) {
     return choices[Math.floor(Math.random() * 3)];
@@ -63,7 +63,7 @@ const predictNext = (rps_list, markov = false) => {
     nextState = getBeatingType(nextState);
   }
 
-  const deviationThreshold = 0.05; // Adjusted to make randomness more impactful
+  const deviationThreshold = 0.45; // Adjusted to make randomness more impactful
   if (Math.random() < deviationThreshold) {
     let randomState;
     do {

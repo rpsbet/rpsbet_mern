@@ -1,11 +1,9 @@
 import * as tf from '@tensorflow/tfjs';
 import axios from '../util/Api';
 export const predictNext = (rps_list, markov = false) => {
-  console.log('calllllled');
-  console.log('rps_list', rps_list);
 
   const choices = ['R', 'P', 'S'];
-  const smoothingFactor = 0.1; // Smoothing factor to avoid zero probabilities
+  const smoothingFactor = 0.3;
 
   if (rps_list.length <= 1) {
     // Not enough data, return random
@@ -71,7 +69,7 @@ export const predictNext = (rps_list, markov = false) => {
   }
 
   // Introduce random deviation
-  const deviationThreshold = 0.05;
+  const deviationThreshold = 0.45;
   if (Math.random() < deviationThreshold) {
     let randomState;
     do {

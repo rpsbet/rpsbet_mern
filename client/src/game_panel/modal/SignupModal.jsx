@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { connect, useDispatch } from 'react-redux';
 import {
   Modal,
@@ -49,49 +49,9 @@ function SignupModal(props) {
   const [termsChecked, setTermsChecked] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [recaptchaToken, setRecaptchaToken] = useState('');
-  const [loaded, setLoaded] = useState(false);
   const dispatch = useDispatch();
 
-  // For referencing the form element directly
-  const formRef = useRef(null);
-
-  // -------------------- EFFECTS --------------------
-  useEffect(() => {
-    setLoaded(true);
-  }, []);
-
-  useEffect(() => {
-    if (loaded && formRef.current) {
-      attachFormSubmitHandler();
-    }
-  }, [loaded]);
-
   // -------------------- HANDLERS --------------------
-  const attachFormSubmitHandler = () => {
-    const form = formRef.current;
-    if (form) {
-      form.addEventListener('submit', handleFormSubmit);
-    } else {
-      console.error('Form element not found');
-    }
-  };
-
-  const handleFormSubmit = (e) => {
-    e.preventDefault();
-    const form = e.target;
-    /* global grecaptcha */
-    grecaptcha.ready(function () {
-      grecaptcha
-        .execute('6Lfto1EpAAAAAD5UzhL6Fp7YCZeIDmenzpZewpCv', {
-          action: 'submit',
-        })
-        .then(function (token) {
-          form.querySelector('input[name="recaptchaToken"]').value = token;
-          form.submit();
-        });
-    });
-  };
-
   const handleCheckboxChange = () => {
     setTermsChecked((prev) => !prev);
   };
@@ -143,6 +103,7 @@ function SignupModal(props) {
     setReferralCode(e.target.value);
   };
 
+  // Runs the reCAPTCHA in React (instead of attaching a native form listener).
   const executeRecaptcha = () => {
     return new Promise((resolve) => {
       window.grecaptcha.ready(() => {
@@ -157,9 +118,12 @@ function SignupModal(props) {
     });
   };
 
+  // -------------------- REACT onSubmit Handler --------------------
   const onSubmitForm = async (e) => {
-    e.preventDefault();
+    e.preventDefault(); // Prevents page reload
+    console.log('Called onSubmitForm!');
 
+    // 1) reCAPTCHA
     const token = await executeRecaptcha();
     setRecaptchaToken(token);
 
@@ -168,11 +132,13 @@ function SignupModal(props) {
       return;
     }
 
+    // 2) Terms check
     if (!termsChecked) {
       dispatch(errorMsgBar('Please agree to the Terms and Conditions.'));
       return;
     }
 
+    // 3) Gather form data
     const newUser = {
       userName,
       password,
@@ -185,6 +151,9 @@ function SignupModal(props) {
       recaptchaToken: token,
     };
 
+    console.log('newUser', newUser);
+
+    // 4) Submit to redux action
     const result = await userSignUp(newUser);
     if (result.status === 'success') {
       confirmAlert({
@@ -262,12 +231,11 @@ function SignupModal(props) {
             </Button>
           </Box>
 
-          {/* FORM */}
+          {/* FORM (React submission only) */}
           <Box
             component="form"
-            id="signupForm"
-            ref={formRef}
             onSubmit={onSubmitForm}
+            noValidate
             sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
           >
             <TextField
@@ -285,11 +253,7 @@ function SignupModal(props) {
 
             {/* AVATAR SELECT */}
             <Box>
-              <Typography
-                className="roll-tag"
-                variant="subtitle1"
-                sx={{ mb: 1 }}
-              >
+              <Typography variant="subtitle1" sx={{ mb: 1 }}>
                 AVATAR
               </Typography>
               <Box sx={{ display: 'flex', gap: 2 }}>
@@ -318,7 +282,7 @@ function SignupModal(props) {
                     p: 0.5,
                   }}
                 >
-                  <Typography>[ PATTERN] </Typography>
+                  <Typography>[ PATTERN ]</Typography>
                 </ButtonBase>
               </Box>
             </Box>
@@ -331,9 +295,9 @@ function SignupModal(props) {
               placeholder="●●●●●●"
               type={showPassword ? 'text' : 'password'}
               value={password}
+              onChange={onChangePassword}
               onFocus={onFocusHandler}
               onBlur={onBlurHandler}
-              onChange={onChangePassword}
               fullWidth
               InputProps={{
                 endAdornment: (
@@ -357,9 +321,9 @@ function SignupModal(props) {
               placeholder="V9FTGY"
               label="Re-furr-al"
               value={referralCode}
+              onChange={onChangeReferralCode}
               onFocus={onFocusHandler}
               onBlur={onBlurHandler}
-              onChange={onChangeReferralCode}
               fullWidth
             />
 
@@ -389,7 +353,12 @@ function SignupModal(props) {
               }
             />
 
-            <input type="hidden" name="recaptchaToken" value={recaptchaToken} />
+            <input
+              type="hidden"
+              name="recaptchaToken"
+              value={recaptchaToken}
+              readOnly
+            />
 
             {/* REGISTER BUTTON */}
             <Button variant="contained" color="error" type="submit" fullWidth>
@@ -417,7 +386,7 @@ function SignupModal(props) {
             </Button>
           </Box>
 
-          {/* Terms & Conditions Modal (if still using react-modal) */}
+          {/* Terms & Conditions Modal */}
           {showTermsModal && (
             <TermsModal
               modalIsOpen={showTermsModal}

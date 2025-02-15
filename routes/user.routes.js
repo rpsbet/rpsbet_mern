@@ -107,6 +107,7 @@ router.get('/activity', admin, async (req, res) => {
 // new user
 router.post('/', async (req, res) => {
   try {
+    console.log("called")
     const { username, password, bio, avatar, referralCode, avatarMethod, recaptchaToken } = req.body;
 
     // Check if username contains bad language
@@ -134,7 +135,7 @@ router.post('/', async (req, res) => {
         error: 'reCAPTCHA verification failed. Please try again.',
       });
     }
-
+console.log("fu")
     // Simple validation
     if (!username || !password) {
       return res.json({
@@ -205,6 +206,7 @@ router.post('/', async (req, res) => {
       referralCode: generateReferralCode(),
       referralId: referralOwner ? referralOwner._id : null
     });
+    console.log("newUser", newUser)
 
     // Generate avatar based on the chosen method
     newUser.avatar = generateAvatar(username, avatarMethod);
@@ -216,6 +218,7 @@ router.post('/', async (req, res) => {
         if (err) throw err;
         newUser.password = hash;
         await newUser.save();
+        console.log("newUser saved")
 
         // If there is a referral owner, send notification to reffal owner
         if (referralOwner) {

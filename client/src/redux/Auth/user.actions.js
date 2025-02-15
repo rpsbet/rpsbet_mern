@@ -234,6 +234,7 @@ export const userSignUp = ({
     });
 
     const res = await axios.post('/user', body);
+    console.log("res/", res.data)
     dispatch({ type: END_LOADING });
 
     if (res.data.success) {
