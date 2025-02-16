@@ -376,7 +376,6 @@ function RPS(props) {
       balance,
       bankroll
     } = props;
-
     setLocalSelectedRps(selection);
     updateSelectedRps(selection, async () => {
       // 1) Auth check
@@ -739,7 +738,6 @@ function RPS(props) {
                             : ''
                           }${shouldDisable ? ' disabled' : ''}`}
                         onClick={() => {
-                          // Only run onBtnBetClick if NOT disabled
                           if (!shouldDisable) {
                             onBtnBetClick(selection);
                             playSound && playSound('select');

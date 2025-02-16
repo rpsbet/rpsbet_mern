@@ -239,7 +239,7 @@ function MyChat(props) {
 												variant="caption"
 												sx={{ textTransform: 'uppercase', color: 'text.disabled' }}
 											>
-												{formatDateShort(rowData.created_at_str)}
+												{/* {formatDateShort(rowData.created_at_str)} */}
 
 											</Typography>
 										</Box>

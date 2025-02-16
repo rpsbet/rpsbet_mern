@@ -439,19 +439,17 @@ const addToQueue = async (req, bot = false, qbot) => {
                 }
 
                 // rug game if bankroll too low
-                if (roomInfo['user_bet'] <= 0.001) {
+                if (roomInfo['user_bet'] <= 0.0005) {
                     roomInfo.status = 'finished';
                     if (req.io.sockets) {
                         req.io.sockets.emit('ROOM_ENDED', { roomId: roomInfo._id });
                     }
                     game_result = 1;
                     message.message =
-                        'Won ' +
-                        (roomInfo['host_pr'] + roomInfo['bet_amount']) +
-                        ' in ' +
-                        roomInfo['game_type']['short_name'] +
-                        '-' +
-                        roomInfo['room_number'];
+                        'Won in ' +
+                        roomInfo['name'];
+
+                    message.amount = roomInfo['host_pr'] + roomInfo['bet_amount'];
                 }
 
             }
@@ -619,12 +617,9 @@ const addToQueue = async (req, bot = false, qbot) => {
                     bet_item.joiner_qs = req.body.selected_qs_position;
 
                     message.message =
-                        'Lost ' +
-                        (req.body.bet_amount) +
-                        ' in ' +
-                        roomInfo['game_type']['short_name'] +
-                        '-' +
-                        roomInfo['room_number'];
+                        'Lost in '
+                    roomInfo['name'];
+                    message.amount = req.body.bet_amount;
                 } else {
                     game_result = 1;
                     newTransactionAmount +=
@@ -659,16 +654,11 @@ const addToQueue = async (req, bot = false, qbot) => {
                         (tax.value / 100);
 
                     message.message =
-                        'Won ' +
-                        (
-                            betAmount /
-                            parseFloat(roomInfo['qs_game_type'] - 1) +
-                            betAmount
-                        ) +
-                        ' in ' +
-                        roomInfo['game_type']['short_name'] +
-                        '-' +
-                        roomInfo['room_number'];
+                        'Won in ' +
+                        roomInfo['name'];
+                    message.amount = betAmount /
+                        parseFloat(roomInfo['qs_game_type'] - 1) +
+                        betAmount;
                 }
 
                 bet_item.joiner = req.user._id;
@@ -710,19 +700,17 @@ const addToQueue = async (req, bot = false, qbot) => {
                 }
 
                 // rug game if bankroll too low
-                if (roomInfo['user_bet'] <= 0.001) {
+                if (roomInfo['user_bet'] <= 0.0005) {
                     roomInfo.status = 'finished';
                     game_result = 1;
                     if (req.io.sockets) {
                         req.io.sockets.emit('ROOM_ENDED', { roomId: roomInfo._id });
                     }
                     message.message =
-                        'Won ' +
-                        (roomInfo['host_pr'] + roomInfo['bet_amount']) +
-                        ' in ' +
-                        roomInfo['game_type']['short_name'] +
-                        '-' +
-                        roomInfo['room_number'];
+                        'Won in ' +
+                        roomInfo['name'];
+
+                    message.amount = roomInfo['host_pr'] + roomInfo['bet_amount'];
                 }
             }
 

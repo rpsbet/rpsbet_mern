@@ -9,14 +9,8 @@ async function getUserTokens(connectedWallets) {
   for (const connectedAccount of connectedWallets) {
     try {
       const userPublicKey = new PublicKey(connectedAccount);
-
-      const userATA = await getAssociatedTokenAddress(
-        mintPublicKey,
-        userPublicKey,
-      );
-
+      const userATA = await getAssociatedTokenAddress(mintPublicKey, userPublicKey);
       const accountInfo = await getAccount(connection, userATA);
-
       const decimals = 6;
       const userBalance = Number(accountInfo.amount) / Math.pow(10, decimals);
 
@@ -24,10 +18,13 @@ async function getUserTokens(connectedWallets) {
         return true;
       }
     } catch (error) {
-      console.error(
-        `Failed to get balance for wallet: ${connectedAccount}`,
-        error,
-      );
+      // Check if the error is due to a missing token account.
+      if (error.message.includes('TokenAccountNotFoundError')) {
+        console.warn(`Wallet ${connectedAccount} does not have the token account.`);
+      } else {
+        // For unexpected errors, log the error message without the full stack trace.
+        console.error(`Failed to get balance for wallet ${connectedAccount}: ${error.message}`);
+      }
     }
   }
 

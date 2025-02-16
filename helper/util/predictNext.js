@@ -320,18 +320,19 @@ async function predictNextOpenAI(rps_list, user_prompt = '') {
     return randomChoice;
   }
 
-  console.log('----userprompt----', user_prompt);
+  console.log('----userprompt', user_prompt);
+  const opMovesString = rps_list.map((item) => item.joiner_rps).join(' ');
   const userMovesString = rps_list.map((item) => item.rps).join(' ');
 
   const systemMessage = {
     role: 'system',
     content:
-      'You are an expert at predicting Rock-Paper-Scissors moves. Respond only with R, P, or S.',
+      `You are playing Rock-Paper-Scissors moves. The oponents past moves are: ${opMovesString}, whilst your previous moves are ${userMovesString}. Respond only with R, P, or S.`,
   };
 
   const userPrompt = {
     role: 'user',
-    content: `${user_prompt}. The user's past moves are: ${userMovesString}. Predict their next move. Valid answers: R, P, or S.`,
+    content: `Don't remember previous interactions. ${user_prompt}.`,
   };
 
   try {
@@ -341,13 +342,13 @@ async function predictNextOpenAI(rps_list, user_prompt = '') {
       model: 'gpt-3.5-turbo',
       messages: [systemMessage, userPrompt],
       max_tokens: 10,
-      temperature: 0.5,
+      temperature: 0,
     });
     let predictedMove = response.choices?.[0]?.message?.content
       ?.trim()
       ?.toUpperCase();
 
-    console.log('------------openai: ', predictedMove);
+    console.log('------------openai——: ', predictedMove);
 
     if (!['R', 'P', 'S'].includes(predictedMove)) {
       predictedMove = ['R', 'P', 'S'][Math.floor(Math.random() * 3)];

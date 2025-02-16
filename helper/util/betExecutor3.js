@@ -207,7 +207,6 @@ const addToQueue = async (req, bot = false) => {
         }
 
         newGameLog.bet_amount = betAmount;
-
         const availableBetItem = await RpsBetItem.findOne({
           room: req.body._id,
           // joiner: user._id,
@@ -462,19 +461,16 @@ const addToQueue = async (req, bot = false) => {
             return responseData;
           }
         }
-        if (roomInfo['user_bet'] <= 0.001) {
+        if (roomInfo['user_bet'] <= 0.0005) {
           roomInfo.status = 'finished';
           if (req.io.sockets) {
             req.io.sockets.emit('ROOM_ENDED', { roomId: roomInfo._id });
           }
           game_result = 1;
           message.message =
-            'Won ' +
-            (roomInfo['host_pr'] + roomInfo['bet_amount']) +
-            ' in ' +
-            roomInfo['game_type']['short_name'] +
-            '-' +
-            roomInfo['room_number'];
+            'Won in ' +
+            roomInfo['name'];
+          message.amount = roomInfo['host_pr'] + roomInfo['bet_amount'];
         }
       } else if (roomInfo['game_type']['game_type_name'] === 'Quick Shoot') {
         if (
@@ -642,12 +638,9 @@ const addToQueue = async (req, bot = false) => {
           bet_item.joiner_qs = req.body.selected_qs_position;
 
           message.message =
-            'Lost ' +
-            req.body.bet_amount +
-            ' in ' +
-            roomInfo['game_type']['short_name'] +
-            '-' +
-            roomInfo['room_number'];
+            'Lost in ' +
+            roomInfo['name'];
+          message.amount = req.body.bet_amount;
         } else {
           game_result = 1;
           newTransactionAmount +=
@@ -671,13 +664,12 @@ const addToQueue = async (req, bot = false) => {
             (tax.value / 100);
 
           message.message =
-            'Won ' +
-            betAmount / parseFloat(roomInfo['qs_game_type'] - 1) +
-            betAmount +
-            ' in ' +
-            roomInfo['game_type']['short_name'] +
-            '-' +
-            roomInfo['room_number'];
+            'Won in ' +
+            roomInfo['name'];
+
+          message.amount = betAmount / parseFloat(roomInfo['qs_game_type'] - 1) +
+            betAmount;
+
         }
 
         bet_item.joiner = req.user._id;
@@ -718,19 +710,17 @@ const addToQueue = async (req, bot = false) => {
           return responseData;
         }
 
-        if (roomInfo['user_bet'] <= 0.001) {
+        if (roomInfo['user_bet'] <= 0.0005) {
           roomInfo.status = 'finished';
           if (req.io.sockets) {
             req.io.sockets.emit('ROOM_ENDED', { roomId: roomInfo._id });
           }
           game_result = 1;
           message.message =
-            'Won ' +
-            (roomInfo['host_pr'] + roomInfo['bet_amount']) +
-            ' in ' +
-            roomInfo['game_type']['short_name'] +
-            '-' +
-            roomInfo['room_number'];
+            'Won in ' +
+            roomInfo['name'];
+
+          message.amount = roomInfo['host_pr'] + roomInfo['bet_amount'];
         }
       }
 

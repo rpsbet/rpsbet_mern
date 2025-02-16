@@ -3466,7 +3466,7 @@ const MAX_RETRIES = 3;
 
 router.post('/bet3', auth, async (req, res) => {
   let retryCount = 0;
-
+console.log("called")
   while (retryCount < MAX_RETRIES) {
     try {
       const requestId = uuidv4();

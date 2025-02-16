@@ -491,18 +491,19 @@ async function openAIPredictionAI_qs(
   }
   console.log('----userprompt----', user_prompt);
 
+  const opMoves = historicData.map((item) => item.joiner_qs);
   const userMoves = historicData.map((item) => item.joiner_qs);
   const userMovesString = userMoves.join(', ');
   const messages = [
     {
       role: 'system',
-      content: `You are an expert AI that predicts the user's next Quick Shoot move. Respond only with a single integer between 0 and ${qs_game_type - 1}).`,
+      content: `The aim of the game is to predict the oponent's next move. Respond only with a single integer between 0 and ${qs_game_type - 1}).`,
     },
     {
       role: 'user',
-      content: `The user's past moves are: ${userMovesString}. There are ${qs_game_type} possible moves (0 through ${
+      content: `${user_prompt}. Your past moves are: ${userMovesString} whilst your opponents past moves are ${opMoves}. There are ${qs_game_type} possible moves (0 through ${
         qs_game_type - 1
-      }). Predict the user's next move as an integer.`,
+      }).`,
     },
   ];
 

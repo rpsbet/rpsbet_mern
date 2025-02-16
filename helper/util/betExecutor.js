@@ -295,7 +295,7 @@ const addToQueue = async (req, bot = false) => {
 
                     // deduct the joiner's bet
                     newTransactionAmount -= betAmount;
-                    
+
                     // if win
                     if (
                         (bet_item.rps === 'R' && req.body.selected_rps == 'P') ||
@@ -426,8 +426,7 @@ const addToQueue = async (req, bot = false) => {
                                 creator: roomInfo['creator'],
                                 joined_user: roomInfo['creator'],
                                 game_type: roomInfo['game_type'],
-                                bet_amount: roomInfo['host_pr'],
-                                user_bet: roomInfo['user_bet'],
+                                bet_amount: roomInf ['user_bet'],
                                 hosts: roomInfo.hosts,
                                 endgame_amount: roomInfo['endgame_amount'],
                                 game_result: 3,
@@ -483,19 +482,17 @@ const addToQueue = async (req, bot = false) => {
                 }
 
                 // rug game if bankroll too low
-                if (roomInfo['user_bet'] <= 0.001) {
+                if (roomInfo['user_bet'] <= 0.0005) {
                     roomInfo.status = 'finished';
                     if (req.io.sockets) {
                         req.io.sockets.emit('ROOM_ENDED', { roomId: roomInfo._id });
                     }
                     game_result = 1;
                     message.message =
-                        'Won ' +
-                        (roomInfo['host_pr'] + roomInfo['bet_amount']) +
-                        ' in ' +
-                        roomInfo['game_type']['short_name'] +
-                        '-' +
-                        roomInfo['room_number'];
+                        'Won in ' +
+                        roomInfo['name'];
+
+                    message.amount = roomInfo['host_pr'] + roomInfo['bet_amount'];
                 }
             }
 
@@ -677,12 +674,10 @@ const addToQueue = async (req, bot = false) => {
                     bet_item.joiner_qs = req.body.selected_qs_position;
 
                     message.message =
-                        'Lost ' +
-                        (req.body.bet_amount) +
-                        ' in ' +
-                        roomInfo['game_type']['short_name'] +
-                        '-' +
-                        roomInfo['room_number'];
+                        'Lost in ' +
+                        roomInfo['name'];
+
+                    message.amount = (req.body.bet_amount)
                 } else {
                     game_result = 1;
                     newTransactionAmount +=
@@ -718,16 +713,12 @@ const addToQueue = async (req, bot = false) => {
 
 
                     message.message =
-                        'Won ' +
-                        (
-                            betAmount /
-                            parseFloat(roomInfo['qs_game_type'] - 1) +
-                            betAmount
-                        ) +
-                        ' in ' +
-                        roomInfo['game_type']['short_name'] +
-                        '-' +
-                        roomInfo['room_number'];
+                        'Won in ' +
+                        roomInfo['name'];
+
+                    message.amount = betAmount /
+                        parseFloat(roomInfo['qs_game_type'] - 1) +
+                        betAmount;
                 }
 
                 bet_item.joiner = req.user._id;
@@ -770,19 +761,16 @@ const addToQueue = async (req, bot = false) => {
                 }
 
                 // rug game if bankroll too low
-                if (roomInfo['user_bet'] <= 0.001) {
+                if (roomInfo['user_bet'] <= 0.0005) {
                     roomInfo.status = 'finished';
                     if (req.io.sockets) {
                         req.io.sockets.emit('ROOM_ENDED', { roomId: roomInfo._id });
                     }
                     game_result = 1;
                     message.message =
-                        'Won ' +
-                        (roomInfo['host_pr'] + roomInfo['bet_amount']) +
-                        ' in ' +
-                        roomInfo['game_type']['short_name'] +
-                        '-' +
-                        roomInfo['room_number'];
+                        'Won in ' +
+                        roomInfo['name'];
+                    message.amount = roomInfo['host_pr'] + roomInfo['bet_amount'];
                 }
             }
 

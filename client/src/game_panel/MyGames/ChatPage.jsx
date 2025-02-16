@@ -167,7 +167,6 @@ function ChatPage(props) {
         from: my_info?._id,
         message: trimmed,
         is_read: false,
-        created_at: moment().format('MM-DD-YYYY HH:mm:ss'),
       };
       addChatLog(chatLog);
 
