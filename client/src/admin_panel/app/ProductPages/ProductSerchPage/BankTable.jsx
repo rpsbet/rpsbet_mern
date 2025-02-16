@@ -427,21 +427,7 @@ const BankTable = (props) => {
           </div>
         </FilterSortContainer>
 
-        {isMobile && (
-          <>
-            <Button
-              style={{ marginBottom: '30px' }}
-              variant="contained"
-              color="error"
-              fullWidth
-              onClick={handleOpenMyLoansModal}
-              startIcon={<AttachMoney />}
-            >
-              Manage Your Loans
-            </Button>
-            <RpsPriceChart isDarkMode={isDarkMode} tokenMintAddress={token} />
-          </>
-        )}
+       
 
         {/* Main Product Grid */}
         {!loading ? (

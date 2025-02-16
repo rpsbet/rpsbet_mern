@@ -472,7 +472,6 @@ function JoinGame(props) {
   // Example Refactored joinGame2
   const joinGame2 = useCallback(
     async (randomItem, bet_amount) => {
-      console.log('joingame2', randomItem, bet_amount);
 
       const { game_type: gameType, _id: roomId, status: status } = roomInfo;
       // 1) Early exits for basic conditions
@@ -490,10 +489,8 @@ function JoinGame(props) {
         // 4) Build payload & call `join2`
         let joinResult = null;
         const payload = { bet_amount };
-        console.log('payload——————before', payload);
         if (isRps) {
           payload.selected_rps = randomItem;
-          console.log('payload————after', payload);
           joinResult = await join2(payload);
         } else if (isQuickShoot) {
           payload.selected_qs_position = randomItem;
@@ -926,8 +923,12 @@ function JoinGame(props) {
           connectedAccount={connectedAccount}
           strategies={strategies}
           result={result}
+          detachPlayerFromRoom={detachPlayerFromRoom}
           updateAttachment={updateAttachment}
           solPrice={solPrice}
+          handle2xButtonClick={handle2xButtonClick}
+          handleHalfXButtonClick={handleHalfXButtonClick}
+          handleMaxButtonClick={handleMaxButtonClick}
           ai_mode={ai_mode}
           getAttachedRooms={getAttachedRooms}
           onChangeState={onChangeState}
@@ -970,7 +971,7 @@ function JoinGame(props) {
           is_private={roomInfo.is_private}
           isDarkMode={isDarkMode}
           actionList={actionList}
-          getRoomData={() => {}} // or remove if not needed
+          getRoomData={() => { }} // or remove if not needed
           user={user}
           coHostAmount={coHostAmount}
           getRoomInfo={getRoomInfoAction}
@@ -995,7 +996,7 @@ function JoinGame(props) {
           {!is_mobile && selectedMainTabIndex === 1 && (
             <MyGamesTable gameTypeList={gameTypeList} />
           )}
-        
+
           {/* {is_mobile && selectedMobileTab === 'my_games' && <MyHistoryTable />} */}
         </div>
       </Box>
@@ -1045,8 +1046,8 @@ function JoinGame(props) {
               balance={user_balance}
               solPrice={solPrice}
               user={user}
-              togglePopup={() => {}}
-              handleClose={() => {}}
+              togglePopup={() => { }}
+              handleClose={() => { }}
               handleSendCoHost={handleSendCoHost}
               handleCoHostAmountChange={handleCoHostAmountChange}
               has_joined={true}

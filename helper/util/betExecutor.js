@@ -295,6 +295,7 @@ const addToQueue = async (req, bot = false) => {
 
                     // deduct the joiner's bet
                     newTransactionAmount -= betAmount;
+                    
                     // if win
                     if (
                         (bet_item.rps === 'R' && req.body.selected_rps == 'P') ||
@@ -482,7 +483,7 @@ const addToQueue = async (req, bot = false) => {
                 }
 
                 // rug game if bankroll too low
-                if (roomInfo['user_bet'] <= 0.0005) {
+                if (roomInfo['user_bet'] <= 0.001) {
                     roomInfo.status = 'finished';
                     if (req.io.sockets) {
                         req.io.sockets.emit('ROOM_ENDED', { roomId: roomInfo._id });
@@ -516,6 +517,7 @@ const addToQueue = async (req, bot = false) => {
                 }
 
                 newGameLog.bet_amount = parseFloat(req.body.bet_amount);
+                console.log("betAmount", req.body.bet_amount);
 
                 const availableBetItem = await QsBetItem.findOne({
                     _id: req.body._id,
@@ -768,7 +770,7 @@ const addToQueue = async (req, bot = false) => {
                 }
 
                 // rug game if bankroll too low
-                if (roomInfo['user_bet'] <= 0.0005) {
+                if (roomInfo['user_bet'] <= 0.001) {
                     roomInfo.status = 'finished';
                     if (req.io.sockets) {
                         req.io.sockets.emit('ROOM_ENDED', { roomId: roomInfo._id });

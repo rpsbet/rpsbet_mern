@@ -726,7 +726,7 @@ function CoHostModal({
                 fullWidth
               />
 
-              {input_only && (
+              {input_only  || isSmallScreen && (
                 <Box sx={{ mt: 2 }}>
                   {selectedTab === 'PUMP' ? (
                     <Button

@@ -439,7 +439,7 @@ const addToQueue = async (req, bot = false, qbot) => {
                 }
 
                 // rug game if bankroll too low
-                if (roomInfo['user_bet'] <= 0.0005) {
+                if (roomInfo['user_bet'] <= 0.001) {
                     roomInfo.status = 'finished';
                     if (req.io.sockets) {
                         req.io.sockets.emit('ROOM_ENDED', { roomId: roomInfo._id });
@@ -710,7 +710,7 @@ const addToQueue = async (req, bot = false, qbot) => {
                 }
 
                 // rug game if bankroll too low
-                if (roomInfo['user_bet'] <= 0.0005) {
+                if (roomInfo['user_bet'] <= 0.001) {
                     roomInfo.status = 'finished';
                     game_result = 1;
                     if (req.io.sockets) {

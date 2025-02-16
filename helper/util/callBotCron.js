@@ -442,7 +442,6 @@ async function executeCronJob(
           penultimateSameAsLast,
           room,
         );
-
       } else {
         // attached RPS (PLAYER)
         const rpsBetItems = await getRpsBetItems(roomId, user);
@@ -501,6 +500,7 @@ async function executeCronJob(
           penultimateSameAsLast,
           room,
         );
+
       } else {
         // attached / q-bot qs (PLAYER)
         const qsBetItems = await getQsBetItems(roomId, user);
@@ -583,6 +583,11 @@ async function executeCronJob(
       },
     };
 
+    // Cap predictedBetAmount to room.user_bet if it's higher
+    if (predictedBetAmount > parseFloat(room.user_bet)) {
+      predictedBetAmount = parseFloat(room.user_bet);
+    }
+
     if (
       parseFloat(room.user_bet) >= 0.0005 &&
       predictedBetAmount >= 0 &&
@@ -599,7 +604,7 @@ async function executeCronJob(
         isExecutingBet1 = false;
         await SystemSetting.updateOne(
           { name: 'last_updated_bot' },
-          { updated_at: new Date() },
+          { updated_at: new Date() }
         );
       } else if (!useFirstBetFunction && !isExecutingBet4) {
         // attached || qbot
@@ -608,7 +613,7 @@ async function executeCronJob(
         isExecutingBet4 = false;
         await SystemSetting.updateOne(
           { name: 'last_updated_bot' },
-          { updated_at: new Date() },
+          { updated_at: new Date() }
         );
       }
     }

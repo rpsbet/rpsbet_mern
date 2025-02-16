@@ -1376,6 +1376,7 @@ router.post('/rooms', auth, async (req, res) => {
       qs_game_type,
       room_password,
       connectedAccount,
+      prompt,
       qs_nation,
     } = req.body;
 
@@ -1481,6 +1482,7 @@ router.post('/rooms', auth, async (req, res) => {
       image,
       ticker,
       x_link,
+      prompt,
       telegram_link,
       website_link,
       selectedStrategy,

@@ -684,7 +684,6 @@ function MyGamesTable(props) {
                       {/* AI Model */}
                       <Box
                         className="table-cell winnings desktop-only"
-                        sx={{ width: '15%' }}
                       >
                         <Tooltip title="AI MODEL">
                           <Typography id="ai_mode" sx={{ p: 4, fontSize: 1 }}>
@@ -855,16 +854,17 @@ function MyGamesTable(props) {
                             ) : (
                               <Box>
                                 {!row.coHost ? (
-                                  <Button
-                                    className="btn_withdraw btn_end"
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      handleCoHost(row);
-                                    }}
-                                  >
-                                    TRADE
-                                  </Button>
+                                  // <Button
+                                  //   className="btn_withdraw btn_end"
+                                  //   onClick={(e) => {
+                                  //     e.preventDefault();
+                                  //     e.stopPropagation();
+                                  //     handleCoHost(row);
+                                  //   }}
+                                  // >
+                                  //   TRADE
+                                  // </Button>
+                                  <></>
                                 ) : (
                                   <Button
                                     variant="contained"

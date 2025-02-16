@@ -36,6 +36,9 @@ function TabbedContent(props) {
     solPrice,
     balance,
     user,
+    handle2xButtonClick,
+    handleHalfXButtonClick,
+    handleMaxButtonClick,
     has_joined,
     coHostAmount,
     handleCoHostAmountChange,
@@ -281,6 +284,9 @@ function TabbedContent(props) {
                 result={result}
                 ai_mode={ai_mode}
                 getAttachedRooms={getAttachedRooms}
+                handle2xButtonClick={handle2xButtonClick}
+                handleHalfXButtonClick={handleHalfXButtonClick}
+                handleMaxButtonClick={handleMaxButtonClick}
                 onChangeState={onChangeState}
                 is_mobile={is_mobile}
                 gameResult={gameResult}
@@ -318,6 +324,9 @@ function TabbedContent(props) {
                 handleOpenPlayerModal={handleOpenPlayerModal}
                 handleClosePlayerModal={handleClosePlayerModal}
                 showPlayerModal={showPlayerModal}
+                handle2xButtonClick={handle2xButtonClick}
+                handleHalfXButtonClick={handleHalfXButtonClick}
+                handleMaxButtonClick={handleMaxButtonClick}
                 join={join}
                 result={result}
                 gameResult={gameResult}

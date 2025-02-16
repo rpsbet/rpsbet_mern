@@ -228,10 +228,6 @@ a:hover {
     inset 0 2px #ff2525;
 }
 
-a {
-  border-radius: 1em;
-}
-
 .create-game-panel .game-contents {
   max-height: 600px;
   overflow: scroll;
@@ -4704,10 +4700,6 @@ circle {
   .AvatarControlPanel {
     position: absolute;
     margin: unset;
-  }
-
-  .player {
-    overflow: hidden !important;
   }
 
   .wheel {

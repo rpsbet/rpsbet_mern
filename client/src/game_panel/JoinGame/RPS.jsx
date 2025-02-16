@@ -8,7 +8,8 @@ import {
   getRpsBetItems,
   getRoomBotCount,
   updateRoomBot,
-  kickBots
+  kickBots,
+  detachPlayerFromRoom
 } from '../../redux/Logic/logic.actions';
 
 import {
@@ -78,7 +79,7 @@ function RPS(props) {
     setSpectateMode,
     getRpsBetItems,
     getRoomBotCount,
-
+    updateAttachment,
     // Additional props from parent or Redux:
     roomInfo,
     creator_id,
@@ -100,8 +101,9 @@ function RPS(props) {
     handleOpenPlayerModal,
     creator_avatar,
     strategies,
-    pr,
-    cp,
+    handle2xButtonClick,
+    handleHalfXButtonClick,
+    handleMaxButtonClick,
     result, // from parent state
     gameResult, // from parent state
     is_mobile, // if provided
@@ -773,27 +775,35 @@ function RPS(props) {
                 ) : (
                   <>
                     {is_mobile && (
-                      <AiPanel
-                        rpsbetitems={rpsbetitems}
-                        updateUserStrategy={props.updateUserStrategy}
-                        updateUserPrompt={props.updateUserPrompt}
-                        strategies={strategies}
-                        betting={betting}
-                        is_betting={is_betting}
-                        predictedBetAmount={predictedBetAmount}
-                        roomId={roomInfo._id}
-                        handleSwitchChange={props.handleSwitchChange}
-                        game_type={roomInfo.game_type}
-                        rank={props.rank}
-                        user_id={user_id}
-                        ai_mode={ai_mode}
-                        user_balance={balance}
-                        attached={attached}
-                        creator_id={roomInfo.creator_id}
-                        getAttachedRooms={getAttachedRooms}
-                        rps_game_type={roomInfo.rps_game_type}
-                        isDarkMode={isDarkMode}
-                      />
+                     <AiPanel
+                     rpsbetitems={rpsbetitems}
+                     onChangeState={onChangeState}
+                     updateUserStrategy={updateUserStrategy}
+                     updateUserPrompt={updateUserPrompt}
+                     updateAttachment={updateAttachment}
+                     detachPlayerFromRoom={detachPlayerFromRoom}
+                     strategies={strategies}
+                     betting={betting}
+                     playSound={playSound}
+                     bet_amount={bet_amount}
+                     handle2xButtonClick={handle2xButtonClick}
+                     handleHalfXButtonClick={handleHalfXButtonClick}
+                     handleMaxButtonClick={handleMaxButtonClick}
+                     bankroll={bankroll}
+                     is_betting={is_betting}
+                     attached={attached}
+                     creator_id={roomInfo.creator_id}
+                     getAttachedRooms={getAttachedRooms}
+                     predictedBetAmount={predictedBetAmount}
+                     roomId={roomInfo._id}
+                     handleSwitchChange={handleSwitchChange}
+                     game_type={roomInfo.game_type}
+                     rank={getRank(total_wagered)}
+                     user_id={user_id}
+                     ai_mode={ai_mode}
+                     user_balance={user_balance}
+                     isDarkMode={isDarkMode}
+                   />
                     )}
                   </>
                 )}

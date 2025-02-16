@@ -10,7 +10,7 @@ import AiPanel from '../../components/AiPanel';
 import ViewIcon from '@mui/icons-material/Visibility';
 import SwordsIcon from '@mui/icons-material/VisibilityOff';
 import { getQsLottieAnimation } from '../../util/helper';
-import { updateRoomBot, kickBots, getQsBetItems, getRoomBotCount } from '../../redux/Logic/logic.actions';
+import { updateRoomBot, kickBots, getQsBetItems, getRoomBotCount, detachPlayerFromRoom } from '../../redux/Logic/logic.actions';
 import { setSpectateMode } from '../../redux/Auth/user.actions';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
@@ -58,7 +58,7 @@ function QuickShoot(props) {
     is_betting,
     bet_amount,
     selected_qs_position,
-
+    updateAttachment,
     // Additional props
     onChangeState,
     playSound,
@@ -96,9 +96,9 @@ function QuickShoot(props) {
     betResult,
     bgColorChanged,
     result,
-    cp,
-    username,
-    creator_avatar,
+    handle2xButtonClick,
+    handleHalfXButtonClick,
+    handleMaxButtonClick,
   } = props;
 
   // Local state
@@ -190,7 +190,6 @@ function QuickShoot(props) {
       playSound('blip');
     }
 
-    console.log("data.hosts—————————————", data.hosts)
     onChangeState({
       bankroll: data.bankroll,
       battles: 1,
@@ -285,7 +284,6 @@ function QuickShoot(props) {
 
   const joinGame = useCallback(async (position) => {
     onChangeState({ result: '' });
-    console.log("parseFloat(bet_amount)", parseFloat(bet_amount))
 
     const resultData = await join({
       bet_amount: parseFloat(bet_amount),
@@ -663,7 +661,6 @@ function QuickShoot(props) {
             handleOpenPlayerModal={handleOpenPlayerModal}
           />
 
-
           {status === 'open' ? (
             <>
               <Tooltip
@@ -822,18 +819,26 @@ function QuickShoot(props) {
                         strategies={strategies}
                         betting={betting}
                         is_betting={is_betting}
+                        detachPlayerFromRoom={detachPlayerFromRoom}
+                        handle2xButtonClick={handle2xButtonClick}
+                        handleHalfXButtonClick={handleHalfXButtonClick}
+                        handleMaxButtonClick={handleMaxButtonClick}
+                        playSound={playSound}
                         predictedBetAmount={predictedBetAmount}
                         roomId={roomInfo._id}
                         handleSwitchChange={handleSwitchChange}
                         game_type={roomInfo.game_type}
                         rank={rank}
+                        updateAttachment={updateAttachment}
                         user_id={user_id}
                         ai_mode={ai_mode}
+                        bankroll={bankroll}
                         user_balance={balance}
+                        bet_amount={bet_amount}
                         attached={attached}
                         creator_id={roomInfo.creator_id}
                         getAttachedRooms={getAttachedRooms}
-                        rps_game_type={roomInfo.rps_game_type}
+                        qs_game_type={roomInfo.qs_game_type}
                         isDarkMode={isDarkMode}
                       />
                     )}
