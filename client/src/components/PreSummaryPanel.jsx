@@ -186,7 +186,7 @@ const PreSummaryPanel = (props) => {
                   <p>
                     Quick Shoot logic: (Bet Amount / (QS Game Type - 1) + Bet
                     Amount), minus commission ({roomInfo.tax}%) and platform tax
-                    (2.5%).
+                    (1%).
                   </p>
                   <span>CALCULATION: </span>
                   <div>
@@ -208,7 +208,7 @@ const PreSummaryPanel = (props) => {
                   <span>EXPLANATION: </span>
                   <p>
                     2x your Bet Amount, then deduct Host(s)'s(') commission
-                    (RTB), finally 2.5% platform tax.
+                    (RTB), finally 1% platform tax.
                   </p>
                   <span>CALCULATION: </span>
                   <div>
@@ -288,7 +288,7 @@ const PreSummaryPanel = (props) => {
             <FontAwesomeIcon icon={faPercentage} style={{ marginRight: 8 }} />
             Tax
           </Typography>
-          <Tooltip title="Host's Room Tax. Minimum 2.5% goes to the platform.">
+          <Tooltip title="Host's Room Tax. Minimum 1% goes to the platform.">
             <Box
               sx={{
                 cursor: 'pointer',

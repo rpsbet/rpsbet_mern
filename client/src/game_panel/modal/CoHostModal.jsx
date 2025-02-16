@@ -206,7 +206,7 @@ function CoHostModal({
     hosts,
     userId,
     deposit,
-    commissionPct = 2.5,   // e.g. 2.5 = 2.5%
+    commissionPct = 1,   // e.g. 2.5 = 2.5%
     bonusFraction = 0.12,  // 12% bonus to old holders
   }) {
     // 1) Commission & net deposit
@@ -302,7 +302,7 @@ function CoHostModal({
     hosts,
     userId,
     sharesToSell,
-    commissionPct = 2.5, // e.g. 2.5 = 2.5%
+    commissionPct = 1, // e.g. 2.5 = 2.5%
     shockRatio = 0.10,   // 10% shock to other hosts
   }) {
     // 1) "Total share supply" equals currentLiquidity or a dedicated field if you store it separately
