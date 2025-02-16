@@ -513,7 +513,8 @@ async function openAIPredictionAI_qs(
       model: 'gpt-3.5-turbo',
       messages,
       max_tokens: 10,
-      temperature: 0.5,
+      temperature: 1.0,
+      n: 3,
     });
 
     // The new library returns { choices: [ { message: { content: '...' } } ] }

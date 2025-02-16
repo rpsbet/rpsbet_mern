@@ -158,16 +158,13 @@ const addToQueue = async (req, bot = false) => {
         game_type: roomInfo['game_type'],
         bet_amount: req.body.bet_amount,
       });
-
-      newTransactionC = new Transaction({
+      let newTransactionC = new Transaction({
         user: roomInfo['creator'],
         amount: 0,
         description:
-          'auto-payout in ' +
-          roomInfo['game_type']['short_name'] +
-          '-' +
-          roomInfo['room_number'],
-        room: req.body._id,
+          'Exit liquidity received in ' +
+          roomInfo['name'],
+        room: req.body._id
       });
       newTransactionJ = new Transaction({
         user: user,
@@ -461,7 +458,7 @@ const addToQueue = async (req, bot = false) => {
             return responseData;
           }
         }
-        if (roomInfo['user_bet'] <= 0.0005) {
+        if (roomInfo['user_bet'] <= 0.001) {
           roomInfo.status = 'finished';
           if (req.io.sockets) {
             req.io.sockets.emit('ROOM_ENDED', { roomId: roomInfo._id });
@@ -471,6 +468,8 @@ const addToQueue = async (req, bot = false) => {
             'Won in ' +
             roomInfo['name'];
           message.amount = roomInfo['host_pr'] + roomInfo['bet_amount'];
+          roomInfo['user_bet'] -= roomInfo['user_bet'];
+          newTransactionC.amount += roomInfo['user_bet'];
         }
       } else if (roomInfo['game_type']['game_type_name'] === 'Quick Shoot') {
         if (
@@ -710,7 +709,7 @@ const addToQueue = async (req, bot = false) => {
           return responseData;
         }
 
-        if (roomInfo['user_bet'] <= 0.0005) {
+        if (roomInfo['user_bet'] <= 0.001) {
           roomInfo.status = 'finished';
           if (req.io.sockets) {
             req.io.sockets.emit('ROOM_ENDED', { roomId: roomInfo._id });
@@ -721,6 +720,8 @@ const addToQueue = async (req, bot = false) => {
             roomInfo['name'];
 
           message.amount = roomInfo['host_pr'] + roomInfo['bet_amount'];
+          roomInfo['user_bet'] -= roomInfo['user_bet'];
+          newTransactionC.amount += roomInfo['user_bet'];
         }
       }
 
@@ -814,7 +815,7 @@ const addToQueue = async (req, bot = false) => {
             if (host) {
               try {
                 host.balance += newTransactionC.amount;
-                host.gameProfit += newTransactionC.amount;
+                host.tradeProfit += newTransactionC.amount;
               } catch (error) {
                 console.error('Error saving host:', error);
               }

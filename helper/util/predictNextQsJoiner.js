@@ -295,7 +295,8 @@ async function openAIPredictionAI_qs(historicData, qs_game_type) {
       model: 'gpt-3.5-turbo',
       messages,
       max_tokens: 10,
-      temperature: 0.5,
+      temperature: 1.0,
+      n: 3,
     });
 
     let predictedMoveStr = response.choices[0].message.content.trim();

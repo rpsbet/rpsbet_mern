@@ -342,7 +342,8 @@ async function predictNextOpenAI(rps_list, user_prompt = '') {
       model: 'gpt-3.5-turbo',
       messages: [systemMessage, userPrompt],
       max_tokens: 10,
-      temperature: 0,
+      temperature: 1.0,
+      n: 3,
     });
     let predictedMove = response.choices?.[0]?.message?.content
       ?.trim()
