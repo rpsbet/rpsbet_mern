@@ -53,7 +53,7 @@ function QuickShoot(props) {
     roomInfo,
     qs_game_type,
     isDarkMode,
-    isFocused,
+    updateUserStrategy,
     isWatching,
     is_betting,
     bet_amount,

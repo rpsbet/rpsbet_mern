@@ -70,7 +70,7 @@ function RPS(props) {
     balance,
     rpsbetitems,
     solPrice,
-    data,
+    updateUserStrategy,
     isLowGraphics,
     is_betting,
     openGamePasswordModal,

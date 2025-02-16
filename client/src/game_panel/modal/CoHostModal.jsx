@@ -726,55 +726,53 @@ function CoHostModal({
                 fullWidth
               />
 
-              {input_only  || isSmallScreen && (
-                <Box sx={{ mt: 2 }}>
-                  {selectedTab === 'PUMP' ? (
-                    <Button
-                      variant="contained"
-                      color="error"
-                      onClick={() => {
-                        if (trade_loading) {
-                          dispatch(errorMsgBar("Trade is already in progress."));
-                          return;
-                        }
-                        handleSendCoHost();
-                      }}
-                      disabled={trade_loading}
-                      fullWidth
-                    >
-                      {trade_loading ? (
-                        <CircularProgress size={24} color="inherit" />
-                      ) : (
-                        "PUMP"
-                      )}
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="contained"
-                      color="error"
-                      onClick={() => {
-                        if (trade_loading) {
-                          dispatch(errorMsgBar("Trade is already in progress."));
-                          return;
-                        }
-                        handleUnstake(
-                          selectedRow?.winnings ?? parseFloat(selectedRow?.user_bet || 0),
-                          selectedRow?._id,
-                          coHostAmount
-                        );
-                      }}
-                      disabled={trade_loading}
-                      fullWidth
-                    >
-                      {trade_loading ? (
-                        <CircularProgress size={24} color="inherit" />
-                      ) : (
-                        "JEET"
-                      )}
-                    </Button>
-                  )}
-                </Box>
-              )}
+              <Box sx={{ mt: 2 }}>
+                {selectedTab === 'PUMP' ? (
+                  <Button
+                    variant="contained"
+                    color="error"
+                    onClick={() => {
+                      if (trade_loading) {
+                        dispatch(errorMsgBar("Trade is already in progress."));
+                        return;
+                      }
+                      handleSendCoHost();
+                    }}
+                    disabled={trade_loading}
+                    fullWidth
+                  >
+                    {trade_loading ? (
+                      <CircularProgress size={24} color="inherit" />
+                    ) : (
+                      "PUMP"
+                    )}
+                  </Button>
+                ) : (
+                  <Button
+                    variant="contained"
+                    color="error"
+                    onClick={() => {
+                      if (trade_loading) {
+                        dispatch(errorMsgBar("Trade is already in progress."));
+                        return;
+                      }
+                      handleUnstake(
+                        selectedRow?.winnings ?? parseFloat(selectedRow?.user_bet || 0),
+                        selectedRow?._id,
+                        coHostAmount
+                      );
+                    }}
+                    disabled={trade_loading}
+                    fullWidth
+                  >
+                    {trade_loading ? (
+                      <CircularProgress size={24} color="inherit" />
+                    ) : (
+                      "JEET"
+                    )}
+                  </Button>
+                )}
+              </Box>
 
             </Box>
 
