@@ -40,7 +40,9 @@ const upload = multer({ storage });
 const axios = require('axios');
 const { predictNextOpenAI } = require('../helper/util/predictNext.js');
 const { openAIPredictionAI_qs } = require('../helper/util/predictNextQs.js');
-const { mintTokenWithMetadata } = require('../helper/util/mintTokenWithMetadata');
+const {
+  mintTokenWithMetadata,
+} = require('../helper/util/mintTokenWithMetadata');
 const { wallet, connection } = require('../helper/util/config');
 const { createAmmPool } = require('../helper/util/createPool');
 const { createMarket } = require('../helper/util/createMarket');
@@ -106,7 +108,7 @@ router.get('/recently-closed', async (req, res) => {
     const rooms = await Room.find({
       status: 'finished',
       battles: { $gt: 0 },
-      pool_id: { $nin: [null, ''] }
+      pool_id: { $nin: [null, ''] },
     })
       .select(
         'name battles bet_amount host_pr user_bet pood_id room_number image game_type created_at',
@@ -690,21 +692,21 @@ router.patch('/room/:id/:type', auth, async (req, res) => {
   const updateQuery =
     type === 'view'
       ? {
-        $set: {
-          views: { $concatArrays: ['$views', [req.user._id]] },
-        },
-      }
-      : {
-        $set: {
-          [`${type}s`]: {
-            $cond: [
-              { $in: [req.user._id, `$${type}s`] },
-              { $setDifference: [`$${type}s`, [req.user._id]] },
-              { $concatArrays: [`$${type}s`, [req.user._id]] },
-            ],
+          $set: {
+            views: { $concatArrays: ['$views', [req.user._id]] },
           },
-        },
-      };
+        }
+      : {
+          $set: {
+            [`${type}s`]: {
+              $cond: [
+                { $in: [req.user._id, `$${type}s`] },
+                { $setDifference: [`$${type}s`, [req.user._id]] },
+                { $concatArrays: [`$${type}s`, [req.user._id]] },
+              ],
+            },
+          },
+        };
   try {
     const room = await Room.findOneAndUpdate({ _id: id }, [updateQuery], {
       new: true,
@@ -875,11 +877,12 @@ router.get(
   auth,
   async (req, res) => {
     const { roomId, user_id } = req.params;
+
     try {
       const rpsBetItems = await QsBetItem.find({
-        room: roomId,
+        room: new ObjectId(roomId),
         joiner: req.user._id,
-        joiner_rps: { $ne: null },
+        joiner_qs: { $ne: null },
       }).sort({ created_at: -1 });
       const roomInfo = await Room.findOne({ _id: roomId }).select(
         'name image ticker room_number updated_at battles selectedStrategy qs_game_type game_type rps_game_type joiners creator bet_amount user_bet pr host_pr endgame_type endgame_amount is_private room_password status hosts',
@@ -889,12 +892,15 @@ router.get(
         rpsBetItems,
         roomInfo['qs_game_type'],
         user.prompt ?? 'You are an expert in Rock Paper Scissors.',
+        true,
       );
-      res.json({
+
+      return res.json({
         success: true,
         data: predictedMove,
       });
     } catch (err) {
+      console.log('--error:', err);
       res.json({
         success: false,
         err: err,
@@ -1270,8 +1276,8 @@ const getRoomList = async (game_type) => {
     const preRooms = await Room.find(search_condition)
       .select(
         '_id name ticker selectedStrategy image description room_number ' +
-        'creator battles username joiners game_type qs_game_type is_private ' +
-        'bet_amount user_bet pr host_pr status created_at updated_at hosts',
+          'creator battles username joiners game_type qs_game_type is_private ' +
+          'bet_amount user_bet pr host_pr status created_at updated_at hosts',
       )
       .populate({
         path: 'creator',
@@ -2118,9 +2124,7 @@ router.post('/pump', auth, async (req, res) => {
     room.host_pr += netDeposit;
     room.updated_at = moment(new Date()).format('YYYY-MM-DD HH:mm');
 
-    if (
-      room.user_bet >= room.endgame_amount
-    ) {
+    if (room.user_bet >= room.endgame_amount) {
       try {
         room.status = 'finished';
         if (req.io.sockets) {
@@ -2141,10 +2145,7 @@ router.post('/pump', auth, async (req, res) => {
         console.log('----wsolMintPk publickey:', wsolMintPk);
         await setTimeout(10000);
 
-        const marketId = await createMarket(
-          realBasePublicKey,
-          wsolMintPk,
-        );
+        const marketId = await createMarket(realBasePublicKey, wsolMintPk);
         // const marketId = new PublicKey(
         //   '33gVpPhJAm4f2p7EWMEMXuHrusTQCbkv2Q1coNrFEYTL',
         // );
@@ -3043,15 +3044,15 @@ router.post('/getGlobalChatLogs', async (req, res) => {
           replyTo && replyTo.length > 0 ? replyTo[0] : null;
         const transformedReplyTo = extractedReplyTo
           ? {
-            username: extractedReplyTo.sender?.username ?? '',
-            senderId: extractedReplyTo.sender?._id ?? '',
-            avatar: extractedReplyTo.sender?.avatar ?? '',
-            rank: extractedReplyTo.sender?.totalWagered ?? '',
-            accessory: extractedReplyTo.sender?.accessory ?? '',
-            message: extractedReplyTo.message,
-            messageType: extractedReplyTo.messageType,
-            time: moment(extractedReplyTo.created_at).format('hh:mm'),
-          }
+              username: extractedReplyTo.sender?.username ?? '',
+              senderId: extractedReplyTo.sender?._id ?? '',
+              avatar: extractedReplyTo.sender?.avatar ?? '',
+              rank: extractedReplyTo.sender?.totalWagered ?? '',
+              accessory: extractedReplyTo.sender?.accessory ?? '',
+              message: extractedReplyTo.message,
+              messageType: extractedReplyTo.messageType,
+              time: moment(extractedReplyTo.created_at).format('hh:mm'),
+            }
           : null;
 
         return {
@@ -3466,17 +3467,10 @@ const MAX_RETRIES = 3;
 
 router.post('/bet3', auth, async (req, res) => {
   let retryCount = 0;
-console.log("called")
+  console.log('called');
   while (retryCount < MAX_RETRIES) {
     try {
       const requestId = uuidv4();
-
-      if (semaphore3 === 0) {
-        return res
-          .status(503)
-          .json({ success: false, message: 'Service Unavailable' });
-      }
-      semaphore3 = 0;
 
       const [accessAllowed, betResult] = await Promise.all([
         check_access_time(req.user._id),
@@ -3496,7 +3490,7 @@ console.log("called")
         return res.json(responseData);
       }
 
-      res.json({
+      return res.json({
         success: betResult.success,
         message: betResult.message,
         betResult: betResult.betResult,
@@ -3505,8 +3499,6 @@ console.log("called")
         pool_id: betResult.pool_id,
         requestId: requestId,
       });
-
-      return;
     } catch (err) {
       console.error(`Error occurred on attempt ${retryCount + 1}:`, err);
       retryCount++; // Increment retry count

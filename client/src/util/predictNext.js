@@ -315,7 +315,7 @@ export const predictNextByGPT = async (roomId, user_id) => {
       return { move: 'R', risk: 2 };
     }
   } catch (e) {
-    consol.log(e);
+    console.log(e);
     return { move: 'R', risk: 2 };
   }
 };

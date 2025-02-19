@@ -135,7 +135,7 @@ const addToQueue = async (req, bot = false) => {
         responseData = {
           success: false,
           message: 'SLOW TF DOWN!!',
-          betResult: -100
+          betResult: -100,
         };
         return responseData;
       }
@@ -161,17 +161,13 @@ const addToQueue = async (req, bot = false) => {
       let newTransactionC = new Transaction({
         user: roomInfo['creator'],
         amount: 0,
-        description:
-          'Exit liquidity received in ' +
-          roomInfo['name'],
-        room: req.body._id
+        description: 'Exit liquidity received in ' + roomInfo['name'],
+        room: req.body._id,
       });
       newTransactionJ = new Transaction({
         user: user,
         amount: 0,
-        description:
-          'Joined ' +
-          roomInfo['name'],
+        description: 'Joined ' + roomInfo['name'],
         room: req.body._id,
       });
 
@@ -233,7 +229,7 @@ const addToQueue = async (req, bot = false) => {
               nextItem = await predictNextOpenAI(
                 allBetItems,
                 roomInfo['prompt'] ??
-                'You are an expert in Rock Paper Scissors.',
+                  'You are an expert in Rock Paper Scissors.',
               );
               break;
             default:
@@ -243,8 +239,10 @@ const addToQueue = async (req, bot = false) => {
           }
           bet_item = new RpsBetItem({
             room: new ObjectId(req.body._id),
+            joiner: req.user._id,
             rps: nextItem,
             bet_amount: betAmount,
+            joiner_rps: req.body.selected_rps,
           });
           function getRandomItem() {
             const rpsOptions = ['R', 'P', 'S'];
@@ -269,6 +267,8 @@ const addToQueue = async (req, bot = false) => {
         if (roomInfo['rps_game_type'] === 0) {
           // deduct the joiner's bet
           newTransactionAmount -= betAmount;
+          console.log('----result rps room:', bet_item.rps);
+          console.log('----result rps user:', req.body.selected_rps);
 
           // if win
           if (
@@ -295,9 +295,7 @@ const addToQueue = async (req, bot = false) => {
               roomInfo['host_pr'] + betAmount * 2 * (commission / 100);
 
             // send notification
-            message.message =
-              'Won in ' +
-              roomInfo['name'];
+            message.message = 'Won in ' + roomInfo['name'];
             message.amount = req.body.bet_amount * 2;
 
             // if draw
@@ -311,9 +309,7 @@ const addToQueue = async (req, bot = false) => {
 
             newTransactionAmount += betAmount - betAmount * (tax.value / 100);
 
-            message.message =
-              'Split in ' +
-              roomInfo['name'];
+            message.message = 'Split in ' + roomInfo['name'];
 
             message.amount = req.body.bet_amount * 2;
             // update platform stat (0.5%)
@@ -407,9 +403,7 @@ const addToQueue = async (req, bot = false) => {
               saveDocumentWithRetry(newGameLogC);
             }
 
-            message.message =
-              'Lost in ' +
-              roomInfo['name'];
+            message.message = 'Lost in ' + roomInfo['name'];
 
             message.amount = req.body.bet_amount;
           }
@@ -464,9 +458,7 @@ const addToQueue = async (req, bot = false) => {
             req.io.sockets.emit('ROOM_ENDED', { roomId: roomInfo._id });
           }
           game_result = 1;
-          message.message =
-            'Won in ' +
-            roomInfo['name'];
+          message.message = 'Won in ' + roomInfo['name'];
           message.amount = roomInfo['host_pr'] + roomInfo['bet_amount'];
           roomInfo['user_bet'] -= roomInfo['user_bet'];
           newTransactionC.amount += roomInfo['user_bet'];
@@ -474,9 +466,9 @@ const addToQueue = async (req, bot = false) => {
       } else if (roomInfo['game_type']['game_type_name'] === 'Quick Shoot') {
         if (
           parseFloat(req.body.bet_amount) / (roomInfo['qs_game_type'] - 1) +
-          parseFloat(req.body.bet_amount) -
-          (roomInfo['qs_game_type'] - 1) * roomInfo['user_bet'] >
-          roomInfo['user_bet'] ||
+            parseFloat(req.body.bet_amount) -
+            (roomInfo['qs_game_type'] - 1) * roomInfo['user_bet'] >
+            roomInfo['user_bet'] ||
           parseFloat(req.body.bet_amount) > parseFloat(req.user.balance)
         ) {
           responseData = {
@@ -521,6 +513,7 @@ const addToQueue = async (req, bot = false) => {
               nextItem = await openAIPredictionAI_qs(
                 allBetItems,
                 roomInfo['qs_game_type'],
+                roomInfo['prompt'] ?? '',
               );
               break;
             default:
@@ -533,10 +526,12 @@ const addToQueue = async (req, bot = false) => {
           }
           bet_item = new QsBetItem({
             room: new ObjectId(req.body._id),
+            joiner: req.user._id,
             qs: nextItem,
             bet_amount: betAmount,
+            joiner_qs: req.body.selected_qs_position,
           });
-
+          console.log('---bet:', bet_item);
           async function getNextItemUsingMarkov_qs(allBetItems, gameType) {
             if (allBetItems.length <= 3) {
               return getRandomItem_qs(roomInfo['qs_game_type']);
@@ -636,9 +631,7 @@ const addToQueue = async (req, bot = false) => {
           bet_item.joiner = req.user._id;
           bet_item.joiner_qs = req.body.selected_qs_position;
 
-          message.message =
-            'Lost in ' +
-            roomInfo['name'];
+          message.message = 'Lost in ' + roomInfo['name'];
           message.amount = req.body.bet_amount;
         } else {
           game_result = 1;
@@ -647,11 +640,11 @@ const addToQueue = async (req, bot = false) => {
             ((100 - commission) / 100);
           roomInfo['host_pr'] -=
             (betAmount + betAmount / (roomInfo['qs_game_type'] - 1)) *
-            ((100 - commission) / 100) -
+              ((100 - commission) / 100) -
             betAmount;
           roomInfo['user_bet'] -=
             (betAmount + betAmount / (roomInfo['qs_game_type'] - 1)) *
-            ((100 - commission) / 100) -
+              ((100 - commission) / 100) -
             betAmount;
           newGameLog.commission =
             (betAmount + betAmount / (roomInfo['qs_game_type'] - 1)) *
@@ -660,15 +653,12 @@ const addToQueue = async (req, bot = false) => {
           platform.value =
             platform.value +
             (betAmount + betAmount / (roomInfo['qs_game_type'] - 1)) *
-            (tax.value / 100);
+              (tax.value / 100);
 
-          message.message =
-            'Won in ' +
-            roomInfo['name'];
+          message.message = 'Won in ' + roomInfo['name'];
 
-          message.amount = betAmount / parseFloat(roomInfo['qs_game_type'] - 1) +
-            betAmount;
-
+          message.amount =
+            betAmount / parseFloat(roomInfo['qs_game_type'] - 1) + betAmount;
         }
 
         bet_item.joiner = req.user._id;
@@ -715,9 +705,7 @@ const addToQueue = async (req, bot = false) => {
             req.io.sockets.emit('ROOM_ENDED', { roomId: roomInfo._id });
           }
           game_result = 1;
-          message.message =
-            'Won in ' +
-            roomInfo['name'];
+          message.message = 'Won in ' + roomInfo['name'];
 
           message.amount = roomInfo['host_pr'] + roomInfo['bet_amount'];
           roomInfo['user_bet'] -= roomInfo['user_bet'];

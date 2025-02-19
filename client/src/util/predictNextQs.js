@@ -1,4 +1,5 @@
 import * as tf from '@tensorflow/tfjs';
+import axios from '../util/Api';
 
 // 1) CALCULATE WIN CHANCE (unchanged)
 export const calcWinChanceQs = (gameType, rounds) => {
@@ -279,14 +280,16 @@ export function getRandomItem_qs(qs_game_type, possibleMoves = null) {
 }
 export const predictQuickNextByGPT = async (roomId, qs_game_type, user_id) => {
   try {
-    const res = await axios.get(`/predictQuickNextByGPT/${roomId}/${user_id}`);
+    const res = await axios.get(
+      `/game/predictQuickNextByGPT/${roomId}/${user_id}`,
+    );
     if (res.data.success) {
       return { move: res.data.data, risk: 2 };
     } else {
       return { move: getRandomItem_qs(qs_game_type), risk: 2 };
     }
   } catch (e) {
-    consol.log(e);
+    console.log(e);
     return { move: getRandomItem_qs(qs_game_type), risk: 2 };
   }
 };

@@ -503,6 +503,7 @@ const addToQueue = async (req, bot = false, qbot) => {
                             nextItem = await openAIPredictionAI_qs(
                                 allBetItems,
                                 roomInfo['qs_game_type'],
+                                roomInfo['prompt'] ?? '',
                             );
                             break;
                         default:

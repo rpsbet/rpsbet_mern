@@ -485,14 +485,19 @@ async function openAIPredictionAI_qs(
   historicData,
   qs_game_type,
   user_prompt = '',
+  isUser = false,
 ) {
   if (!historicData || historicData.length === 0) {
     return getRandomItem_qs(qs_game_type);
   }
-  console.log('----userprompt----', user_prompt);
 
-  const opMoves = historicData.map((item) => item.joiner_qs);
-  const userMoves = historicData.map((item) => item.joiner_qs);
+  const opMoves = isUser
+    ? historicData.map((item) => item.qs)
+    : historicData.map((item) => item.joiner_qs);
+  const opMovesString = opMoves.join(', ');
+  const userMoves = isUser
+    ? historicData.map((item) => item.joiner_qs)
+    : historicData.map((item) => item.qs);
   const userMovesString = userMoves.join(', ');
   const messages = [
     {
@@ -501,26 +506,26 @@ async function openAIPredictionAI_qs(
     },
     {
       role: 'user',
-      content: `${user_prompt}. Your past moves are: ${userMovesString} whilst your opponents past moves are ${opMoves}. There are ${qs_game_type} possible moves (0 through ${
+      content: `${user_prompt}. Your past moves are: ${userMovesString} whilst your opponents past moves are ${opMovesString}. There are ${qs_game_type} possible moves (0 through ${
         qs_game_type - 1
       }).`,
     },
   ];
 
   try {
-    // Instead of openai.createChatCompletion, use openai.Chat.Completions.create
     const response = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
-      messages,
-      max_tokens: 10,
-      temperature: 1.0,
-      n: 3,
+      messages: messages,
+      temperature: 1.0, // Increase randomness
+      max_tokens: 5,
+      top_p: 1.0,
+      n: 1,
+      stop: ['\n'],
     });
 
-    // The new library returns { choices: [ { message: { content: '...' } } ] }
     let predictedMoveStr = response.choices?.[0]?.message?.content?.trim();
-    let predictedMove = parseInt(predictedMoveStr, 10);
 
+    let predictedMove = parseInt(predictedMoveStr, 10);
     if (
       isNaN(predictedMove) ||
       predictedMove < 0 ||

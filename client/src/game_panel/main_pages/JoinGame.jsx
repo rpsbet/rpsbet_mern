@@ -472,7 +472,6 @@ function JoinGame(props) {
   // Example Refactored joinGame2
   const joinGame2 = useCallback(
     async (randomItem, bet_amount) => {
-
       const { game_type: gameType, _id: roomId, status: status } = roomInfo;
       // 1) Early exits for basic conditions
       // 2) Extract room info & determine game type
@@ -613,27 +612,22 @@ function JoinGame(props) {
   }
 
   const startBetting = useCallback(() => {
-    const {
-      game_type: gameType,
-      _id: roomId,
-      qs_game_type,
-      is_private,
-    } = roomInfo;
-    // Adjust interval based on AI mode
+    const executeBetting = async () => {
+      const {
+        game_type: gameType,
+        _id: roomId,
+        qs_game_type,
+        is_private,
+      } = roomInfo;
 
-    let interval = 3300;
-    if (ai_mode === 'Adam' || ai_mode === 'GPT3') {
-      interval = 4200;
-    }
-    const newIntervalId = setInterval(async () => {
       try {
         let randomItem;
         let nextBetAmount;
 
-        // Check if Quick Shoot or RPS
         const isQuickShoot = gameType === 'Quick Shoot';
         const dataRef = isQuickShoot ? qsbetitemsRef : rpsbetitemsRef;
-        // Now get the next AI move + risk
+
+        // Get the next AI move + risk
         const nextMove = await getNextAIMove(
           ai_mode,
           gameType,
@@ -642,11 +636,12 @@ function JoinGame(props) {
           roomId,
         );
         console.log('nextMove', nextMove);
+
         if (nextMove.move !== null) {
           randomItem = nextMove.move;
           nextBetAmount = await predictNextBetAmount(nextMove.risk);
         }
-        // Check if private game (require password)
+
         const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
         const passwordCorrect = rooms[roomId];
         if (is_private && !passwordCorrect) {
@@ -654,29 +649,31 @@ function JoinGame(props) {
         } else {
           await joinGame2(randomItem, nextBetAmount);
         }
-      } catch (error) {
-        console.error('Error in interval function:', error);
-      }
-    }, interval);
 
-    setIntervalId(newIntervalId);
+        const delay = ai_mode === 'Adam' || ai_mode === 'GPT3' ? 6000 : 3300;
+
+        const timerId = setTimeout(executeBetting, delay);
+        setIntervalId(timerId);
+      } catch (error) {
+        console.error('Error in betting process:', error);
+      }
+    };
+
+    executeBetting();
   }, [
     ai_mode,
     roomInfo,
-    qsbetitems,
-    rpsbetitems,
+    qsbetitemsRef,
+    rpsbetitemsRef,
     openGamePasswordModal,
     joinGame2,
     predictNextBetAmount,
-    reinforcementAI_qs,
-    reinforcementAI,
-    predictNextQs,
-    predictNext,
+    getNextAIMove,
   ]);
 
   const stopBetting = useCallback(() => {
     try {
-      clearInterval(intervalId);
+      clearTimeout(intervalId);
       setIntervalId(null);
       setBetting(false);
     } catch (error) {
@@ -971,7 +968,7 @@ function JoinGame(props) {
           is_private={roomInfo.is_private}
           isDarkMode={isDarkMode}
           actionList={actionList}
-          getRoomData={() => { }} // or remove if not needed
+          getRoomData={() => {}} // or remove if not needed
           user={user}
           coHostAmount={coHostAmount}
           getRoomInfo={getRoomInfoAction}
@@ -1046,8 +1043,8 @@ function JoinGame(props) {
               balance={user_balance}
               solPrice={solPrice}
               user={user}
-              togglePopup={() => { }}
-              handleClose={() => { }}
+              togglePopup={() => {}}
+              handleClose={() => {}}
               handleSendCoHost={handleSendCoHost}
               handleCoHostAmountChange={handleCoHostAmountChange}
               has_joined={true}
