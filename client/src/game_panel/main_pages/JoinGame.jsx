@@ -1003,7 +1003,7 @@ function JoinGame(props) {
         {/* AiPanel & CoHostModal & RoomTokenDetails, etc. */}
         {!is_mobile && selectedMainTabIndex === 0 && (
           <Box>
-            <AiPanel
+            {/* <AiPanel
               rpsbetitems={rpsbetitems}
               qsbetitems={qsbetitems}
               onChangeState={onChangeState}
@@ -1033,7 +1033,7 @@ function JoinGame(props) {
               ai_mode={ai_mode}
               user_balance={user_balance}
               isDarkMode={isDarkMode}
-            />
+            /> */}
             <CoHostModal
               isDarkMode={isDarkMode}
               coHostAmount={coHostAmount}

@@ -267,57 +267,10 @@ function getRandomItem_qs(qs_game_type, possibleMoves = null) {
   return possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
 }
 
-async function openAIPredictionAI_qs(historicData, qs_game_type) {
-  if (!historicData || historicData.length === 0) {
-    return getRandomItem_qs(qs_game_type);
-  }
-
-  const userMoves = historicData.map((item) => item.joiner_qs);
-  const userMovesString = userMoves.join(', ');
-
-  const messages = [
-    {
-      role: 'system',
-      content:
-        "You are an expert AI that predicts the user's next Quick Shoot move. Respond with a single integer (0 to N-1).",
-    },
-    {
-      role: 'user',
-      content: `The user's past moves are: ${userMovesString}. There are ${qs_game_type} possible moves (0 through ${
-        qs_game_type - 1
-      }). Predict the user's next move as an integer.`,
-    },
-  ];
-
-  try {
-    // Updated call for the new openai usage
-    const response = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages,
-      max_tokens: 10,
-      temperature: 1.0,
-      n: 3,
-    });
-
-    let predictedMoveStr = response.choices[0].message.content.trim();
-    let predictedMove = parseInt(predictedMoveStr, 10);
-
-    if (isNaN(predictedMove) || predictedMove < 0 || predictedMove >= qs_game_type) {
-      predictedMove = getRandomItem_qs(qs_game_type);
-    }
-
-    const nextMove = (predictedMove + 1) % qs_game_type;
-    return nextMove;
-  } catch (error) {
-    console.error('Error calling OpenAI API:', error);
-    return getRandomItem_qs(qs_game_type);
-  }
-}
 
 module.exports = {
   reinforcementAI_qs,
   predictNextMove_qs,
   getRandomItem_qs,
   predictNextQs,
-  openAIPredictionAI_qs,
 };

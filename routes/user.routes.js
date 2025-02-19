@@ -107,7 +107,6 @@ router.get('/activity', admin, async (req, res) => {
 // new user
 router.post('/', async (req, res) => {
   try {
-    console.log("called")
     const { username, password, bio, avatar, referralCode, avatarMethod, recaptchaToken } = req.body;
 
     // Check if username contains bad language

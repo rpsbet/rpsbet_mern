@@ -230,33 +230,6 @@ async function reinforcementAI_qs(data, qs_game_type) {
   }
 }
 
-function innovate_qs(historicData, qs_game_type) {
-  let nextState = {};
-  const firstEntries = historicData.slice(-6);
-  const firstJoinerQs = firstEntries.map((entry) => parseInt(entry.qs, 10));
-
-  if (firstJoinerQs.length < 6 || firstJoinerQs.some(isNaN)) {
-    nextState.move = getRandomItem_qs(qs_game_type);
-    nextState.risk = 1;
-    return nextState;
-  }
-
-  const allSame = firstJoinerQs.every((qs) => qs === firstJoinerQs[0]);
-  if (allSame) {
-    const lastMove = firstJoinerQs[0];
-    const possibleMoves = Array.from(
-      { length: qs_game_type },
-      (_, i) => i,
-    ).filter((move) => move !== lastMove);
-    nextState.move = getRandomItem_qs(qs_game_type, possibleMoves);
-    nextState.risk = 3;
-  } else {
-    const previousMove = parseInt(historicData[historicData.length - 1].qs, 10);
-    nextState.move = previousMove;
-    nextState.risk = 1;
-  }
-  return nextState;
-}
 
 function getRandomItem_qs(qs_game_type, possibleMoves = null) {
   if (!possibleMoves) {
@@ -265,282 +238,281 @@ function getRandomItem_qs(qs_game_type, possibleMoves = null) {
   return possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
 }
 
-function patternBasedAI_qs(historicData, qs_game_type) {
-  if (historicData.length <= 3) {
-    return getRandomItem_qs(qs_game_type);
-  }
-  const opponentMoves = historicData.map((item) => item.joiner_qs);
-  const moveCounts = Array(qs_game_type).fill(0);
-
-  opponentMoves.slice(-10).forEach((move) => {
-    moveCounts[move]++;
-  });
-
-  const mostFrequentMove = moveCounts.indexOf(Math.max(...moveCounts));
-  const nextMove = (mostFrequentMove + 1) % qs_game_type;
-  return nextMove;
-}
-
-function counterSwitchAI_qs(historicData, qs_game_type) {
-  if (historicData.length > 0) {
-    const lastGame = historicData[historicData.length - 1];
-
-    const lastGameWasWin = lastGame.qs === lastGame.joiner_qs;
-    const lastGameWasLoss = lastGame.qs !== lastGame.joiner_qs;
-
-    if (lastGameWasWin) {
-      // Always repeat if win
-      const repeatProbability = 1;
-      if (Math.random() < repeatProbability) {
-        return parseInt(lastGame.qs, 10);
-      }
-    } else if (lastGameWasLoss) {
-      // Switch to the next move if loss
-      return (parseInt(lastGame.qs, 10) + 1) % qs_game_type;
-    }
-  }
-  // Fallback
-  return getRandomItem_qs(qs_game_type);
-}
-
-function counterRandomness_qs(historicData, qs_game_type) {
-  if (!historicData || historicData.length === 0) {
-    return getRandomItem_qs(qs_game_type);
-  }
-  return getRandomItem_qs(qs_game_type);
-}
-
-function NPC_qs(historicData) {
-  const lastMove =
-    historicData.length > 0 ? historicData[historicData.length - 1].qs : 0;
-  return lastMove;
-}
-
-function martingaleStrategy_qs(historicData, qs_game_type) {
-  if (historicData.length === 0) {
-    const randomMove = getRandomItem_qs(qs_game_type);
-    return {
-      move: randomMove,
-      lastResult: null,
-    };
-  }
-
-  const lastOpponentMove = historicData[historicData.length - 1].qs;
-  const lastAIMove = historicData[historicData.length - 1].joiner_qs;
-  const lastResult = getResult(lastAIMove, lastOpponentMove);
-
-  const randomMove = getRandomItem_qs(qs_game_type);
-  return {
-    move: randomMove,
-    lastResult: lastResult,
-  };
-}
-
-function getResult(aiMove, opponentMove) {
-  // Simple logic: if they match, it's a 'loss', else 'win'
-  if (aiMove === opponentMove) {
-    return 'loss';
-  } else {
-    return 'win';
-  }
-}
-
-function generatePattern_qs(allBetItems, qs_game_type) {
-  if (allBetItems.length <= 3) {
-    return getRandomItem_qs(qs_game_type);
-  }
-  const patterns = [];
-  for (let i = 0; i < qs_game_type; i++) {
-    for (let j = 0; j < qs_game_type; j++) {
-      if (i !== j) {
-        patterns.push([i, j]);
-      }
-    }
-  }
-  const lastTwoMoves = allBetItems
-    .slice(0, 2)
-    .map((item) => parseInt(item.qs, 10));
-
-  let matchedPattern = null;
-  for (const pattern of patterns) {
-    if (
-      (pattern[0] === lastTwoMoves[0] && pattern[1] === lastTwoMoves[1]) ||
-      (pattern[1] === lastTwoMoves[0] && pattern[0] === lastTwoMoves[1])
-    ) {
-      matchedPattern = pattern;
-      break;
-    }
-  }
-
-  if (matchedPattern) {
-    let continuationCount = 0;
-    for (let i = 2; i < allBetItems.length; i++) {
-      if (
-        (parseInt(allBetItems[i - 1].qs, 10) === matchedPattern[0] &&
-          parseInt(allBetItems[i].qs, 10) === matchedPattern[1]) ||
-        (parseInt(allBetItems[i - 1].qs, 10) === matchedPattern[1] &&
-          parseInt(allBetItems[i].qs, 10) === matchedPattern[0])
-      ) {
-        continuationCount++;
-      } else {
-        break;
-      }
-    }
-    const maxContinuation = Math.floor(Math.random() * 4) + 2;
-
-    if (continuationCount > maxContinuation) {
-      const movesNotInPattern = Array.from(
-        { length: qs_game_type },
-        (_, i) => i,
-      ).filter((move) => !matchedPattern.includes(move));
-      const randomMove =
-        movesNotInPattern[Math.floor(Math.random() * movesNotInPattern.length)];
-      return randomMove;
-    }
-    return parseInt(allBetItems[1].qs, 10);
-  } else {
-    const eef = getRandomItem_qs(qs_game_type);
-    return eef;
-  }
-}
-
-function getCopyCatItem_qs(allBetItems, qs_game_type) {
-  const copyCatBetItem = [...allBetItems]
-    .reverse()
-    .find((item) => item.joiner_qs !== undefined);
-  if (copyCatBetItem) {
-    if (copyCatBetItem.qs && copyCatBetItem.qs.trim() !== '') {
-      return copyCatBetItem.joiner_qs;
-    }
-  }
-  const randomItem_qs = getRandomItem_qs(qs_game_type);
-  return randomItem_qs;
-}
-
-function skillissueold_qs(historicData, qs_game_type) {
-  const dataLength = qs_game_type + 3;
-  if (historicData.length < 3) {
-    return { counterMove: getRandomItem_qs(qs_game_type), risk: 1 };
-  }
-
-  const moveCounts = Array(qs_game_type).fill(0);
-  const recentMoves = historicData
-    .slice(0, dataLength)
-    .map((move) => parseInt(move.qs, 10))
-    .filter((move) => !Number.isNaN(move) && move >= 0 && move < qs_game_type);
-
-  if (recentMoves.length < dataLength) {
-    return { counterMove: getRandomItem_qs(qs_game_type), risk: 1 };
-  }
-
-  recentMoves.forEach((move) => {
-    moveCounts[move]++;
-  });
-
-  const leastPlayedMove = getLeastPlayedMove(moveCounts);
-  const lastTwoMoves = getLastMoves(historicData, 4);
-  const lastThreeMoves = getLastMoves(historicData, 3);
-
-  const availableMoves = Array.from(
-    { length: qs_game_type },
-    (_, i) => i,
-  ).filter((move) => move !== leastPlayedMove);
-
-  if (Number.isNaN(leastPlayedMove)) {
-    return { counterMove: getRandomItem_qs(qs_game_type), risk: 1 };
-  } else if (!lastTwoMoves.includes(leastPlayedMove)) {
-    return {
-      counterMove: getRandomItem_qs(qs_game_type, availableMoves),
-      risk: 3,
-    };
-  } else if (!lastThreeMoves.includes(leastPlayedMove)) {
-    return {
-      counterMove: getRandomItem_qs(qs_game_type, availableMoves),
-      risk: 2,
-    };
-  } else {
-    return { counterMove: getRandomItem_qs(qs_game_type), risk: 1 };
-  }
-}
-
-function getLeastPlayedMove(moveCounts) {
-  const minCount = Math.min(...moveCounts);
-  const leastPlayedMoves = moveCounts
-    .map((count, move) => ({ move, count }))
-    .filter(({ count }) => count === minCount)
-    .map(({ move }) => move);
-
-  return leastPlayedMoves.length > 0 ? leastPlayedMoves[0] : NaN;
-}
-
-function getLastMoves(historicData, n) {
-  return historicData
-    .slice(0, n)
-    .map((move) => parseInt(move.joiner_qs, 10))
-    .filter((move) => !Number.isNaN(move));
-}
-
-// UPDATED: use the .Chat.Completions.create(...) method
 async function openAIPredictionAI_qs(
   historicData,
   qs_game_type,
   user_prompt = '',
-  isUser = false,
+  isUser = false
 ) {
+  // Helper: get a random move (an integer between 0 and qs_game_type-1)
+  function getRandomItem_qs(count) {
+    return Math.floor(Math.random() * count);
+  }
+
+  // Helper: do a weighted random pick from an array of frequencies.
+  // freq[i] = weight for move i.
+  function weightedRandom(freq) {
+    const sum = freq.reduce((a, b) => a + b, 0);
+    if (sum === 0) return getRandomItem_qs(freq.length);
+    let r = Math.random() * sum;
+    for (let i = 0; i < freq.length; i++) {
+      if (r < freq[i]) return i;
+      r -= freq[i];
+    }
+    return freq.length - 1; // fallback if numerical error
+  }
+
+  // Early bailout if no historic data
   if (!historicData || historicData.length === 0) {
     return getRandomItem_qs(qs_game_type);
   }
 
-  const opMoves = isUser
-    ? historicData.map((item) => item.qs)
-    : historicData.map((item) => item.joiner_qs);
-  const opMovesString = opMoves.join(', ');
-  const userMoves = isUser
-    ? historicData.map((item) => item.joiner_qs)
-    : historicData.map((item) => item.qs);
+  // Reverse the order so that the most recent move is at index 0.
+  const userMoves = (
+    isUser
+      ? historicData.map((item) => item.joiner_qs)
+      : historicData.map((item) => item.qs)
+  ).reverse();
+  const opMoves = (
+    isUser
+      ? historicData.map((item) => item.qs)
+      : historicData.map((item) => item.joiner_qs)
+  ).reverse();
+
   const userMovesString = userMoves.join(', ');
+  const opMovesString = opMoves.join(', ');
+
+  // We'll use the raw prompt (with regex /i flag) for matching.
+  const prompt = user_prompt;
+
+  // Define a prioritized list of strategies.
+  const strategies = [
+    // 1) "play randomly" – catches phrases like "play randomly", "return randomly", etc.
+    {
+      pattern: /random/i,
+      action: () => {
+        return getRandomItem_qs(qs_game_type);
+      }
+    },
+    // 2) "play the same move over and over" (or "repeat the same move")
+    {
+      pattern: /(play|repeat).*same move/i,
+      action: () => {
+        let lastAIMove = isUser ? opMoves[0] : userMoves[0];
+        lastAIMove = parseInt(lastAIMove, 10);
+        if (isNaN(lastAIMove)) {
+          return getRandomItem_qs(qs_game_type);
+        }
+        return lastAIMove;
+      }
+    },
+    // 3) "alternate between 0 and 1"
+    {
+      pattern: /alternate\s+between\s+0\s+and\s+1/i,
+      action: () => {
+        let lastAIMove = isUser ? opMoves[0] : userMoves[0];
+        lastAIMove = parseInt(lastAIMove, 10);
+        if (isNaN(lastAIMove)) lastAIMove = 0;
+        return lastAIMove === 0 ? 1 : 0;
+      }
+    },
+    // 4) "play move X" – e.g. "play move 2"
+    {
+      pattern: /play\s+move\s+(\d+)/i,
+      action: (match) => {
+        const moveNum = parseInt(match[1], 10);
+        if (!isNaN(moveNum) && moveNum >= 0 && moveNum < qs_game_type) {
+          return moveNum;
+        }
+        return getRandomItem_qs(qs_game_type);
+      }
+    },
+    // 5) "rotate through all moves"
+    {
+      pattern: /rotate.*moves/i,
+      action: () => {
+        let lastAIMove = isUser ? opMoves[0] : userMoves[0];
+        lastAIMove = parseInt(lastAIMove, 10);
+        if (isNaN(lastAIMove)) lastAIMove = -1;
+        return (lastAIMove + 1) % qs_game_type;
+      }
+    },
+    // 6) "mirror the last opponent move"
+    {
+      pattern: /mirror.*last.*opponent.*move/i,
+      action: () => {
+        let lastOppMove = parseInt(opMoves[0], 10);
+        if (isNaN(lastOppMove)) return getRandomItem_qs(qs_game_type);
+        return lastOppMove;
+      }
+    },
+    // 7) "mirror the last ai move" (or "mirror the last your move")
+    {
+      pattern: /mirror.*last.*(ai|your).*move/i,
+      action: () => {
+        let lastAIMove = isUser ? opMoves[0] : userMoves[0];
+        lastAIMove = parseInt(lastAIMove, 10);
+        if (isNaN(lastAIMove)) return getRandomItem_qs(qs_game_type);
+        return lastAIMove;
+      }
+    },
+    // 8) "play the most frequent opponent move"
+    {
+      pattern: /most\s+frequent.*opponent.*move/i,
+      action: () => {
+        const freq = new Array(qs_game_type).fill(0);
+        opMoves.forEach((m) => {
+          const num = parseInt(m, 10);
+          if (!isNaN(num) && num >= 0 && num < qs_game_type) {
+            freq[num]++;
+          }
+        });
+        let bestMove = 0, maxCount = -1;
+        for (let i = 0; i < qs_game_type; i++) {
+          if (freq[i] > maxCount) {
+            maxCount = freq[i];
+            bestMove = i;
+          }
+        }
+        return bestMove;
+      }
+    },
+    // 9) "play the least frequent opponent move"
+    {
+      pattern: /least\s+frequent.*opponent.*move/i,
+      action: () => {
+        const freq = new Array(qs_game_type).fill(0);
+        opMoves.forEach((m) => {
+          const num = parseInt(m, 10);
+          if (!isNaN(num) && num >= 0 && num < qs_game_type) {
+            freq[num]++;
+          }
+        });
+        let leastMove = 0, minCount = Infinity;
+        for (let i = 0; i < qs_game_type; i++) {
+          if (freq[i] < minCount) {
+            minCount = freq[i];
+            leastMove = i;
+          }
+        }
+        return leastMove;
+      }
+    },
+    // 10) "always beat the last opponent move"
+    {
+      pattern: /always\s+beat.*last.*opponent.*move/i,
+      action: () => {
+        let lastOppMove = parseInt(opMoves[0], 10);
+        if (isNaN(lastOppMove)) return getRandomItem_qs(qs_game_type);
+        return (lastOppMove + 1) % qs_game_type;
+      }
+    },
+    // 11) "always lose to the last opponent move"
+    {
+      pattern: /always\s+lose.*last.*opponent.*move/i,
+      action: () => {
+        let lastOppMove = parseInt(opMoves[0], 10);
+        if (isNaN(lastOppMove)) return getRandomItem_qs(qs_game_type);
+        return (lastOppMove - 1 + qs_game_type) % qs_game_type;
+      }
+    },
+    // 12) "play in proportion to the frequency of the opponent's moves"
+    {
+      pattern: /play.*in\s+proportion.*opponent/i,
+      action: () => {
+        const freq = new Array(qs_game_type).fill(0);
+        opMoves.forEach((m) => {
+          const num = parseInt(m, 10);
+          if (!isNaN(num) && num >= 0 && num < qs_game_type) {
+            freq[num]++;
+          }
+        });
+        return weightedRandom(freq);
+      }
+    },
+    // 13) "play the second most frequent opponent move"
+    {
+      pattern: /second\s+most\s+frequent/i,
+      action: () => {
+        const freq = new Array(qs_game_type).fill(0);
+        opMoves.forEach((m) => {
+          const num = parseInt(m, 10);
+          if (!isNaN(num) && num >= 0 && num < qs_game_type) {
+            freq[num]++;
+          }
+        });
+        const sorted = freq
+          .map((count, idx) => ({ move: idx, count }))
+          .sort((a, b) => b.count - a.count);
+        if (sorted.length < 2) return sorted[0]?.move || getRandomItem_qs(qs_game_type);
+        return sorted[1].move;
+      }
+    },
+    // 14) "play the second least frequent opponent move"
+    {
+      pattern: /second\s+least\s+frequent/i,
+      action: () => {
+        const freq = new Array(qs_game_type).fill(0);
+        opMoves.forEach((m) => {
+          const num = parseInt(m, 10);
+          if (!isNaN(num) && num >= 0 && num < qs_game_type) {
+            freq[num]++;
+          }
+        });
+        const sorted = freq
+          .map((count, idx) => ({ move: idx, count }))
+          .sort((a, b) => a.count - b.count);
+        if (sorted.length < 2) return sorted[0]?.move || getRandomItem_qs(qs_game_type);
+        return sorted[1].move;
+      }
+    }
+  ];
+
+  // Iterate over strategies and use the first one that matches.
+  for (const { pattern, action } of strategies) {
+    const match = prompt.match(pattern);
+    if (match) {
+      return action(match);
+    }
+  }
+
+  // If no custom strategy matched, fall back to calling OpenAI.
+  console.log('No custom strategy matched. Falling back to OpenAI API.');
+
   const messages = [
     {
       role: 'system',
-      content: `The aim of the game is to predict the oponent's next move. Respond only with a single integer between 0 and ${qs_game_type - 1}).`,
+      content: `Respond only with a single integer between 0 and ${qs_game_type - 1}.`
     },
     {
       role: 'user',
-      content: `${user_prompt}. Your past moves are: ${userMovesString} whilst your opponents past moves are ${opMovesString}. There are ${qs_game_type} possible moves (0 through ${
-        qs_game_type - 1
-      }).`,
-    },
+      content: `${user_prompt}. Your past moves are: ${userMovesString} whilst your opponent's past moves are: ${opMovesString}. There are ${qs_game_type} possible moves (0 through ${qs_game_type - 1}).`
+    }
   ];
 
   try {
     const response = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: messages,
-      temperature: 1.0, // Increase randomness
+      temperature: 1.0,
       max_tokens: 5,
       top_p: 1.0,
       n: 1,
       stop: ['\n'],
     });
 
-    let predictedMoveStr = response.choices?.[0]?.message?.content?.trim();
-
+    const predictedMoveStr = response.choices?.[0]?.message?.content?.trim();
     let predictedMove = parseInt(predictedMoveStr, 10);
-    if (
-      isNaN(predictedMove) ||
-      predictedMove < 0 ||
-      predictedMove >= qs_game_type
-    ) {
+    if (isNaN(predictedMove) || predictedMove < 0 || predictedMove >= qs_game_type) {
       predictedMove = getRandomItem_qs(qs_game_type);
     }
-
-    const nextMove = (predictedMove + 1) % qs_game_type;
-    return nextMove;
+    return predictedMove;
   } catch (error) {
     console.error('Error calling OpenAI API:', error);
     return getRandomItem_qs(qs_game_type);
   }
 }
+
 
 module.exports = {
   predictNextQs,

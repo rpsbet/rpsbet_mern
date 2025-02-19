@@ -69,7 +69,6 @@ function QuickShoot(props) {
     kickBots,
     getRoomBotCount,
     setSpectateMode,
-    endGame,
     join,
     updateSelectedQs,
 
@@ -82,7 +81,7 @@ function QuickShoot(props) {
     isLowGraphics,
     borderColor,
     handleSwitchChange,
-    is_mobile,
+    updateUserPrompt,
     rank,
     ai_mode,
     attached,
@@ -791,27 +790,27 @@ function QuickShoot(props) {
                 </div>
 
                 {creator_id && user_id && creator_id.toString() === user_id.toString() ? (
-                  <div className="host-controls">
-                    <Button
-                      variant="outlined"
-                      color='error'
-                      onClick={handleBotClick}
-                      className="hover-text-button"
-                    >
-                      <FontAwesomeIcon className="button-icon" icon={faRobot} />
-                      <span className="button-text">&nbsp;CAT CALL x{botsCount}</span>
-                    </Button>
-                    {botsCount > 0 && (
-                      <Button sx={{ ml: 1 }} variant="outlined"
-                        color='warning' onClick={bootBots} className="hover-text-button">
-                        <FontAwesomeIcon className="button-icon" icon={faBan} />
-                        <span className="button-text">&nbsp;KICK BOTS?</span>
-                      </Button>
-                    )}
-                  </div>
+                  // <div className="host-controls">
+                  //   <Button
+                  //     variant="outlined"
+                  //     color='error'
+                  //     onClick={handleBotClick}
+                  //     className="hover-text-button"
+                  //   >
+                  //     <FontAwesomeIcon className="button-icon" icon={faRobot} />
+                  //     <span className="button-text">&nbsp;CAT CALL x{botsCount}</span>
+                  //   </Button>
+                  //   {botsCount > 0 && (
+                  //     <Button sx={{ ml: 1 }} variant="outlined"
+                  //       color='warning' onClick={bootBots} className="hover-text-button">
+                  //       <FontAwesomeIcon className="button-icon" icon={faBan} />
+                  //       <span className="button-text">&nbsp;KICK BOTS?</span>
+                  //     </Button>
+                  //   )}
+                  // </div>
+                  <></>
                 ) : (
                   <>
-                    {is_mobile && (
                       <AiPanel
                         qsbetitems={props.qsbetitems}
                         updateUserStrategy={props.updateUserStrategy}
@@ -841,7 +840,6 @@ function QuickShoot(props) {
                         qs_game_type={roomInfo.qs_game_type}
                         isDarkMode={isDarkMode}
                       />
-                    )}
                   </>
                 )}
               </div>

@@ -264,110 +264,224 @@ function getBeatingType(currentState) {
   }
 }
 
-function patternBasedAI(historicData) {
-  if (historicData.length === 0) {
-    return ['R', 'P', 'S'][Math.floor(Math.random() * 3)];
-  }
-
-  const opponentMoves = historicData.map((item) => item.joiner_rps);
-  const moveCounts = {
-    R: 0,
-    P: 0,
-    S: 0,
-  };
-
-  opponentMoves.slice(-10).forEach((move) => {
-    moveCounts[move]++;
-  });
-
-  const mostFrequentMove = Object.keys(moveCounts).reduce((a, b) =>
-    moveCounts[a] > moveCounts[b] ? a : b,
-  );
-
-  switch (mostFrequentMove) {
-    case 'R':
-      return 'P';
-    case 'P':
-      return 'S';
-    case 'S':
-      return 'R';
-    default:
-      return ['R', 'P', 'S'][Math.floor(Math.random() * 3)];
-  }
-}
-
-function getRandomMoveExcluding(excludeMove) {
-  if (excludeMove === 'R') {
-    return 'S';
-  } else if (excludeMove === 'P') {
-    return 'R';
-  } else {
-    return 'P';
-  }
-}
-
-function counterRandomness(historicData) {
-  if (!historicData || historicData.length === 0) {
-    return getRandomMove();
-  }
-  return getRandomMove();
-}
-
-// UPDATED: use the .Chat.Completions.create(...) method instead of createChatCompletion(...)
 async function predictNextOpenAI(rps_list, user_prompt = '') {
-  if (!rps_list || rps_list.length === 0) {
-    const randomChoice = ['R', 'P', 'S'][Math.floor(Math.random() * 3)];
-    return randomChoice;
+  function getRandomRPS() {
+    const moves = ['R', 'P', 'S'];
+    return moves[Math.floor(Math.random() * moves.length)];
   }
 
-  console.log('----userprompt', user_prompt);
-  const opMovesString = rps_list.map((item) => item.joiner_rps).join(' ');
-  const userMovesString = rps_list.map((item) => item.rps).join(' ');
+  // If there's no history, return random.
+  if (!rps_list || rps_list.length === 0) {
+    console.log('No historic data. Returning a random R/P/S.');
+    return getRandomRPS();
+  }
 
+  // Assume rps_list is in chronological order (earliest → latest).
+  const opMoves = rps_list.map(item => item.joiner_rps);
+  const userMoves = rps_list.map(item => item.rps);
+  const lastUserMove = userMoves[userMoves.length - 1];
+  const lastOppMove = opMoves[opMoves.length - 1];
+
+  // Define a list of strategies with regex patterns and corresponding actions.
+  const strategies = [
+    {
+      // Explicit move: e.g. "play move R"
+      pattern: /play\s+move\s+([rps])/i,
+      action: (match) => {
+        const move = match[1].toUpperCase();
+        console.log('User prompt: "play move X". Parsed move:', move);
+        return move;
+      }
+    },
+    {
+      // Mirror the last opponent move.
+      pattern: /mirror.*opponent/i,
+      action: () => {
+        console.log('User prompt: "mirror the last opponent move".');
+        return ['R', 'P', 'S'].includes(lastOppMove) ? lastOppMove : getRandomRPS();
+      }
+    },
+    {
+      // Beat the last opponent move.
+      pattern: /beat.*opponent/i,
+      action: () => {
+        console.log('User prompt: "beat the last opponent move".');
+        if (!['R', 'P', 'S'].includes(lastOppMove)) return getRandomRPS();
+        return lastOppMove === 'R' ? 'P'
+             : lastOppMove === 'P' ? 'S'
+             : 'R';
+      }
+    },
+    {
+      // Lose to the last opponent move.
+      pattern: /lose.*opponent/i,
+      action: () => {
+        console.log('User prompt: "lose to the last opponent move".');
+        if (!['R', 'P', 'S'].includes(lastOppMove)) return getRandomRPS();
+        return lastOppMove === 'R' ? 'S'
+             : lastOppMove === 'P' ? 'R'
+             : 'P';
+      }
+    },
+    {
+      // Rotate moves: e.g., R → P → S → R.
+      pattern: /rotate.*moves/i,
+      action: () => {
+        console.log('User prompt: "rotate moves R->P->S".');
+        if (!['R', 'P', 'S'].includes(lastUserMove)) return 'R';
+        return lastUserMove === 'R' ? 'P'
+             : lastUserMove === 'P' ? 'S'
+             : 'R';
+      }
+    },
+    {
+      // Alternate between R and P.
+      pattern: /alternate.*(?:r).*?(?:p)|alternate.*(?:p).*?(?:r)/i,
+      action: () => {
+        console.log('User prompt: "alternate between R and P".');
+        if (lastUserMove === 'R') return 'P';
+        if (lastUserMove === 'P') return 'R';
+        return 'R'; // Fallback if last move is S or undefined.
+      }
+    },
+    {
+      // Repeat the same move (e.g., "play/repeat the same move").
+      pattern: /(play|repeat).*same move/i,
+      action: () => {
+        console.log('User prompt: "repeat the same move".');
+        if (!['R', 'P', 'S'].includes(lastUserMove)) return getRandomRPS();
+        console.log('Repeating last move:', lastUserMove);
+        return lastUserMove;
+      }
+    },
+    {
+      // Play the most frequent opponent move.
+      pattern: /most\s+frequent.*opponent/i,
+      action: () => {
+        console.log('User prompt: "play the most frequent opponent move".');
+        const freq = { R: 0, P: 0, S: 0 };
+        opMoves.forEach(move => { if (freq.hasOwnProperty(move)) freq[move]++; });
+        let bestMove = 'R';
+        let maxCount = freq['R'];
+        ['P', 'S'].forEach(m => {
+          if (freq[m] > maxCount) {
+            bestMove = m;
+            maxCount = freq[m];
+          }
+        });
+        console.log(`Opponent frequencies: R=${freq.R}, P=${freq.P}, S=${freq.S}. Using ${bestMove}.`);
+        return bestMove;
+      }
+    },
+    {
+      // Play the least frequent opponent move.
+      pattern: /least\s+frequent.*opponent/i,
+      action: () => {
+        console.log('User prompt: "play the least frequent opponent move".');
+        const freq = { R: 0, P: 0, S: 0 };
+        opMoves.forEach(move => { if (freq.hasOwnProperty(move)) freq[move]++; });
+        let worstMove = 'R';
+        let minCount = freq['R'];
+        ['P', 'S'].forEach(m => {
+          if (freq[m] < minCount) {
+            worstMove = m;
+            minCount = freq[m];
+          }
+        });
+        console.log(`Opponent frequencies: R=${freq.R}, P=${freq.P}, S=${freq.S}. Using ${worstMove}.`);
+        return worstMove;
+      }
+    },
+    {
+      // Play in proportion to how often the opponent has used each move.
+      pattern: /in\s+proportion/i,
+      action: () => {
+        console.log('User prompt: "play in proportion to opponent frequencies".');
+        const freq = { R: 0, P: 0, S: 0 };
+        opMoves.forEach(move => { if (freq.hasOwnProperty(move)) freq[move]++; });
+        const sum = freq.R + freq.P + freq.S;
+        if (sum === 0) return getRandomRPS();
+        const r = Math.random() * sum;
+        if (r < freq.R) return 'R';
+        if (r < freq.R + freq.P) return 'P';
+        return 'S';
+      }
+    },
+    {
+      // Play the second most frequent opponent move.
+      pattern: /second\s+most\s+frequent/i,
+      action: () => {
+        console.log('User prompt: "play the second most frequent opponent move".');
+        const freq = { R: 0, P: 0, S: 0 };
+        opMoves.forEach(move => { if (freq.hasOwnProperty(move)) freq[move]++; });
+        const sorted = Object.entries(freq)
+          .map(([move, count]) => ({ move, count }))
+          .sort((a, b) => b.count - a.count);
+        if (sorted.length < 2) return sorted[0]?.move || getRandomRPS();
+        return sorted[1].move;
+      }
+    },
+    {
+      // Catch-all: if the prompt contains "random" anywhere.
+      pattern: /random/i,
+      action: () => {
+        console.log('User prompt: "random" detected. Returning random R/P/S.');
+        return getRandomRPS();
+      }
+    }
+  ];
+
+  // Iterate over the strategies (in order) and use the first one that matches.
+  for (const { pattern, action } of strategies) {
+    const match = user_prompt.match(pattern);
+    if (match) {
+      return action(match);
+    }
+  }
+
+  // If no strategy matched, fall back to calling the OpenAI API.
+  console.log('No custom strategy matched. Falling back to OpenAI GPT.');
+
+  const opMovesString = opMoves.join(' ');
+  const userMovesString = userMoves.join(' ');
   const systemMessage = {
     role: 'system',
     content:
-      `You are playing Rock-Paper-Scissors moves. The oponents past moves are: ${opMovesString}, whilst your previous moves are ${userMovesString}. Respond only with R, P, or S.`,
+      `You are playing Rock-Paper-Scissors. The opponent's past moves are: ${opMovesString}, while your previous moves are: ${userMovesString}. Respond only with R, P, or S.`,
   };
 
-  const userPrompt = {
+  const userMessage = {
     role: 'user',
     content: `Don't remember previous interactions. ${user_prompt}.`,
   };
 
   try {
-    // Here is the key difference: openai.Chat.Completions.create(...)
-    // instead of openai.createChatCompletion(...)
     const response = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
-      messages: [systemMessage, userPrompt],
+      messages: [systemMessage, userMessage],
       max_tokens: 10,
       temperature: 1.0,
       n: 3,
     });
-    let predictedMove = response.choices?.[0]?.message?.content
-      ?.trim()
-      ?.toUpperCase();
 
-    console.log('------------openai——: ', predictedMove);
+    let predictedMove = response.choices?.[0]?.message?.content?.trim()?.toUpperCase();
+    console.log('OpenAI raw response:', predictedMove);
 
     if (!['R', 'P', 'S'].includes(predictedMove)) {
-      predictedMove = ['R', 'P', 'S'][Math.floor(Math.random() * 3)];
+      predictedMove = getRandomRPS();
     }
 
     return predictedMove;
   } catch (error) {
     console.error('Error calling OpenAI API:', error);
-    const randomChoice = ['R', 'P', 'S'][Math.floor(Math.random() * 3)];
-    return randomChoice;
+    return getRandomRPS();
   }
 }
+
 
 module.exports = {
   predictNext,
   calcWinChance,
   reinforcementAI,
-  patternBasedAI,
-  counterRandomness,
   predictNextOpenAI,
 };

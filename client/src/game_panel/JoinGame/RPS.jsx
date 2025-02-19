@@ -68,6 +68,7 @@ function RPS(props) {
     isDarkMode,
     isWatching,
     balance,
+    rank,
     rpsbetitems,
     solPrice,
     updateUserStrategy,
@@ -80,7 +81,7 @@ function RPS(props) {
     getRpsBetItems,
     getRoomBotCount,
     updateAttachment,
-    // Additional props from parent or Redux:
+    updateUserPrompt,
     roomInfo,
     creator_id,
     user_id,
@@ -99,14 +100,14 @@ function RPS(props) {
     predictedBetAmount,
     betResult,
     handleOpenPlayerModal,
-    creator_avatar,
+    handleSwitchChange,
     strategies,
     handle2xButtonClick,
     handleHalfXButtonClick,
     handleMaxButtonClick,
     result, // from parent state
     gameResult, // from parent state
-    is_mobile, // if provided
+    bankroll, // if provided
   } = props;
 
   /**
@@ -752,27 +753,27 @@ function RPS(props) {
                 {creator_id &&
                   user_id &&
                   creator_id.toString() === user_id.toString() ? (
-                  <div className="host-controls">
-                    <Button
-                      variant="outlined"
-                      color='error'
-                      onClick={handleBotClick}
-                      className="hover-text-button"
-                    >
-                      <FontAwesomeIcon className="button-icon" icon={faRobot} />
-                      <span className="button-text">&nbsp;CAT CALL x{botsCount}</span>
-                    </Button>
-                    {botsCount > 0 && (
-                      <Button sx={{ ml: 1 }} variant="outlined"
-                        color='warning' onClick={bootBots} className="hover-text-button">
-                        <FontAwesomeIcon className="button-icon" icon={faBan} />
-                        <span className="button-text">&nbsp;KICK BOTS?</span>
-                      </Button>
-                    )}
-                  </div>
+                  // <div className="host-controls">
+                  //   <Button
+                  //     variant="outlined"
+                  //     color='error'
+                  //     onClick={handleBotClick}
+                  //     className="hover-text-button"
+                  //   >
+                  //     <FontAwesomeIcon className="button-icon" icon={faRobot} />
+                  //     <span className="button-text">&nbsp;CAT CALL x{botsCount}</span>
+                  //   </Button>
+                  //   {botsCount > 0 && (
+                  //     <Button sx={{ ml: 1 }} variant="outlined"
+                  //       color='warning' onClick={bootBots} className="hover-text-button">
+                  //       <FontAwesomeIcon className="button-icon" icon={faBan} />
+                  //       <span className="button-text">&nbsp;KICK BOTS?</span>
+                  //     </Button>
+                  //   )}
+                  // </div>
+                  <></>
                 ) : (
                   <>
-                    {is_mobile && (
                      <AiPanel
                      rpsbetitems={rpsbetitems}
                      onChangeState={onChangeState}
@@ -796,13 +797,12 @@ function RPS(props) {
                      roomId={roomInfo._id}
                      handleSwitchChange={handleSwitchChange}
                      game_type={roomInfo.game_type}
-                     rank={getRank(total_wagered)}
+                     rank={rank}
                      user_id={user_id}
                      ai_mode={ai_mode}
-                     user_balance={user_balance}
+                     user_balance={balance}
                      isDarkMode={isDarkMode}
                    />
-                    )}
                   </>
                 )}
               </div>
@@ -861,7 +861,8 @@ const mapStateToProps = (state) => ({
   data: state.itemReducer.myItemArray,
   isLowGraphics: state.auth.isLowGraphics,
   isMusicEnabled: state.auth.isMusicEnabled,
-  is_betting: state.logic.is_betting
+  is_betting: state.logic.is_betting,
+  rank: state.logic.curRoomInfo.rank,
 });
 
 const mapDispatchToProps = {

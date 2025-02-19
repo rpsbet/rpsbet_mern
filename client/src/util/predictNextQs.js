@@ -278,6 +278,7 @@ export function getRandomItem_qs(qs_game_type, possibleMoves = null) {
   }
   return possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
 }
+
 export const predictQuickNextByGPT = async (roomId, qs_game_type, user_id) => {
   try {
     const res = await axios.get(

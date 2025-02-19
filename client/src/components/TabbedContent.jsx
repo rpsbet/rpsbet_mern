@@ -406,16 +406,16 @@ function TabbedContent(props) {
         );
       }
 
-      case 4: {
-        // "Insights" -> COMING SOON
-        return (
-          <Box textAlign="center" p={2}>
-            <Typography variant="h6" color="error">
-              Insights Coming Soon
-            </Typography>
-          </Box>
-        );
-      }
+      // case 4: {
+      //   // "Insights" -> COMING SOON
+      //   return (
+      //     <Box textAlign="center" p={2}>
+      //       <Typography variant="h6" color="error">
+      //         Insights Coming Soon
+      //       </Typography>
+      //     </Box>
+      //   );
+      // }
 
       default:
         return null;
@@ -448,13 +448,13 @@ function TabbedContent(props) {
           {selectedTab === 1 && renderTabContent(1)}
           {selectedTab === 2 && renderTabContent(2)}
           {selectedTab === 3 && renderTabContent(3)}
-          {selectedTab === 4 && (
+          {/* {selectedTab === 4 && (
             <Box textAlign="center" p={2}>
               <Typography variant="h6" color="error">
                 Insights Coming Soon
               </Typography>
             </Box>
-          )}
+          )} */}
         </div>
       </div>
     );
@@ -477,7 +477,7 @@ function TabbedContent(props) {
           flexWrap: 'wrap',
         }}
       >
-        {['Play', 'Chart', 'History', 'Comments', 'Insights'].map(
+        {['Play', 'Chart', 'History', 'Comments'].map(
           (label, index) => {
             const isInsights = index === 4;
             return (

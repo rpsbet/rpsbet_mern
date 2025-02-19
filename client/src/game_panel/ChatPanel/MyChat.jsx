@@ -44,9 +44,9 @@ function MyChat(props) {
 
 	useEffect(() => {
 		if (unreadMessageCount !== undefined && unreadMessageCount !== null) {
-		  getMyChat();
+			getMyChat();
 		}
-	  }, [unreadMessageCount, getMyChat]);
+	}, [unreadMessageCount, getMyChat]);
 
 	useEffect(() => {
 		setMyChat(myChatFromProps);
@@ -89,33 +89,33 @@ function MyChat(props) {
 		const now = moment();
 		const date = moment(dateString);
 		const diffSeconds = now.diff(date, 'seconds');
-	  
+
 		// Less than 1 minute => seconds
 		if (diffSeconds < 60) {
-		  return `${diffSeconds}s`;
+			return `${diffSeconds}s`;
 		}
-	  
+
 		const diffMinutes = Math.floor(diffSeconds / 60);
 		// Less than 1 hour => minutes
 		if (diffMinutes < 60) {
-		  return `${diffMinutes}m`;
+			return `${diffMinutes}m`;
 		}
-	  
+
 		const diffHours = Math.floor(diffMinutes / 60);
 		// Less than 24 hours => hours
 		if (diffHours < 24) {
-		  return `${diffHours}h`;
+			return `${diffHours}h`;
 		}
-	  
+
 		// 24+ hours => either "D MMM" (same year) or "D MMM YYYY" (past year)
 		if (date.year() === now.year()) {
-		  // e.g. "23 Jan"
-		  return date.format('D MMM');
+			// e.g. "23 Jan"
+			return date.format('D MMM');
 		} else {
-		  // e.g. "23 Jan 2022"
-		  return date.format('D MMM YYYY');
+			// e.g. "23 Jan 2022"
+			return date.format('D MMM YYYY');
 		}
-	  }
+	}
 
 	return (
 		<ThemeProvider theme={theme}>
@@ -229,12 +229,12 @@ function MyChat(props) {
 											>
 												{rowData.username}
 											</Typography>
-											<Typography
-												variant="body2"
-												sx={{ color: 'text.secondary', mb: 0.5 }}
-											>
-												{rowData.message}
+											<Typography variant="body2" sx={{ color: 'text.secondary', mb: 0.5 }}>
+												{rowData.message.length > 10
+													? `${rowData.message.substring(0, 10)}...`
+													: rowData.message}
 											</Typography>
+
 											<Typography
 												variant="caption"
 												sx={{ textTransform: 'uppercase', color: 'text.disabled' }}

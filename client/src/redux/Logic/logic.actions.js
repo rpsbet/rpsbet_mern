@@ -223,7 +223,6 @@ export const getTokenPrice = (tokenMintAddress) => async (dispatch) => {
 
 // player
 export const bet3 = bet_info => async dispatch => {
-  console.log("called")
   try {
     dispatch({ type: START_BET });
     const res = await axios.post('/game/bet3', bet_info);

@@ -371,9 +371,9 @@ function ChatPage(props) {
                         />
                       )}
                       <Box>
-                        <Box className="message-time">
+                        {/* <Box className="message-time">
                           {formatCustomDate(row.created_at)}
-                        </Box>
+                        </Box> */}
                       </Box>
                       {row.from === my_info?._id && (
                         <Box

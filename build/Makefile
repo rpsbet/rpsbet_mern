@@ -331,8 +331,8 @@ ifeq ($(strip $(foreach prefix,$(NO_LOAD),\
 endif
 
 quiet_cmd_regen_makefile = ACTION Regenerating $@
-cmd_regen_makefile = cd $(srcdir); /Users/lennybeadle/rpsbet_mern/node_modules/node-gyp/gyp/gyp_main.py -fmake --ignore-environment "-Dlibrary=shared_library" "-Dvisibility=default" "-Dnode_root_dir=/Users/lennybeadle/Library/Caches/node-gyp/21.4.0" "-Dnode_gyp_dir=/Users/lennybeadle/rpsbet_mern/node_modules/node-gyp" "-Dnode_lib_file=/Users/lennybeadle/Library/Caches/node-gyp/21.4.0/<(target_arch)/node.lib" "-Dmodule_root_dir=/Users/lennybeadle/rpsbet_mern" "-Dnode_engine=v8" "--depth=." "-Goutput_dir=." "--generator-output=build" -I/Users/lennybeadle/rpsbet_mern/build/config.gypi -I/Users/lennybeadle/rpsbet_mern/node_modules/node-gyp/addon.gypi -I/Users/lennybeadle/Library/Caches/node-gyp/21.4.0/include/node/common.gypi "--toplevel-dir=." binding.gyp
-Makefile: $(srcdir)/binding.gyp $(srcdir)/node_modules/node-gyp/addon.gypi $(srcdir)/build/config.gypi $(srcdir)/../Library/Caches/node-gyp/21.4.0/include/node/common.gypi
+cmd_regen_makefile = cd $(srcdir); /Users/lennybeadle/rpsbet_mern/node_modules/node-gyp/gyp/gyp_main.py -fmake --ignore-environment "-Dlibrary=shared_library" "-Dvisibility=default" "-Dnode_root_dir=/Users/lennybeadle/Library/Caches/node-gyp/18.20.5" "-Dnode_gyp_dir=/Users/lennybeadle/rpsbet_mern/node_modules/node-gyp" "-Dnode_lib_file=/Users/lennybeadle/Library/Caches/node-gyp/18.20.5/<(target_arch)/node.lib" "-Dmodule_root_dir=/Users/lennybeadle/rpsbet_mern" "-Dnode_engine=v8" "--depth=." "-Goutput_dir=." "--generator-output=build" -I/Users/lennybeadle/rpsbet_mern/build/config.gypi -I/Users/lennybeadle/rpsbet_mern/node_modules/node-gyp/addon.gypi -I/Users/lennybeadle/Library/Caches/node-gyp/18.20.5/include/node/common.gypi "--toplevel-dir=." binding.gyp
+Makefile: $(srcdir)/../Library/Caches/node-gyp/18.20.5/include/node/common.gypi $(srcdir)/binding.gyp $(srcdir)/build/config.gypi $(srcdir)/node_modules/node-gyp/addon.gypi
 	$(call do_cmd,regen_makefile)
 
 # "all" is a concatenation of the "all" targets from all the included

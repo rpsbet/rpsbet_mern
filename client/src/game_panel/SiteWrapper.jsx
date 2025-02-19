@@ -1343,7 +1343,7 @@ function SiteWrapper(props) {
                       <ListItemText>SETTINGS</ListItemText>
                     </MenuItem>
 
-                    <MenuItem onClick={handleBonusModal}>
+                    {/* <MenuItem onClick={handleBonusModal}>
                       <ListItemIcon>
                         <Star />
                       </ListItemIcon>
@@ -1359,7 +1359,7 @@ function SiteWrapper(props) {
                           alt="corn"
                         />
                       </ListItemIcon>
-                    </MenuItem>
+                    </MenuItem> */}
 
                     <MenuItem onClick={handleOpenHowToPlayModal}>
                       <ListItemIcon>
