@@ -2,37 +2,34 @@ import React from 'react';
 import { Stack, Typography, Box } from '@mui/material';
 import Avatar from './Avatar';
 
-
 function GuessesSection({ prevRps, players, isDarkMode, handleOpenPlayerModal }) {
-  // The lesser of the two array lengths
-  const minLength = Math.min(prevRps.length, players.length);
-
   return (
-    <Stack 
-      direction="row" 
+    <Stack
+      direction="row"
       spacing={2}
-      // Optional: center or left-align, depending on your design
-      justifyContent="center" 
+      justifyContent="center"
       alignItems="flex-start"
-      sx={{ border: 'none', position: 'absolute', left: 15, top: 0,  }}
+      sx={{
+        border: 'none',
+        position: 'absolute',
+        left: 15,
+        top: 0,
+      }}
     >
-      {Array.from({ length: minLength }).map((_, i) => {
-        const guessItem = prevRps[i];
+      {prevRps.map((guessItem, i) => {
+        // Attempt to match the i-th player
         const player = players[i];
-        
+
         return (
           <Stack
             key={i}
             direction="column"
             spacing={1}
             alignItems="center"
-            sx={{
-              // You can tweak these styles as you like
-              border: 'none',
-            }}
+            sx={{ border: 'none' }}
           >
-            {/* Guess on top */}
-            {/* <Typography
+            {/* Display the guess on top */}
+            <Typography
               variant="body2"
               sx={{
                 backgroundColor: '#ff000044',
@@ -43,11 +40,11 @@ function GuessesSection({ prevRps, players, isDarkMode, handleOpenPlayerModal })
                 opacity: 0.6,
               }}
             >
-              {guessItem.rps || guessItem.qs }
-            </Typography> */}
+              {guessItem.rps || guessItem.qs}
+            </Typography>
 
-            {/* Player underneath */}
-            {player && (
+            {/* Conditionally display the player avatar below if we have a matching player */}
+            {/* {player && (
               <Box
                 sx={{
                   opacity: 0.4,
@@ -60,14 +57,14 @@ function GuessesSection({ prevRps, players, isDarkMode, handleOpenPlayerModal })
                   className="avatar"
                   user_id={player._id}
                   src={player.avatar}
-                  rank={player.totalWagered} 
+                  rank={player.totalWagered}
                   username={player.username}
                   accessory={player.accessory}
                   alt=""
                   darkMode={isDarkMode}
                 />
               </Box>
-            )}
+            )} */}
           </Stack>
         );
       })}

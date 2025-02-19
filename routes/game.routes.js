@@ -596,7 +596,6 @@ router.get('/rooms/:room_id/bots-count', async (req, res) => {
   try {
     const room = await Room.findById(room_id);
     if (!room) {
-      console.log('Room not found');
       return res
         .status(404)
         .json({ success: false, message: 'Room not found' });

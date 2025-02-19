@@ -549,6 +549,7 @@ const addToQueue = async (req, bot = false) => {
         // deduct the joiner's bet
         newTransactionAmount -= betAmount;
         roomInfo['user_bet'] = roomInfo['user_bet'];
+      
         if (Number(bet_item.qs) === req.body.selected_qs_position) {
           game_result = -1;
 
