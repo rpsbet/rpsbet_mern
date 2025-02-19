@@ -218,7 +218,6 @@ router.post('/create', auth, async (req, res) => {
       });
     }
     const isEligible = await checkLoanEligibility(currentUser, loan_amount);
-    console.log("isEligible", isEligible)
     if (!isEligible) {
       return res.json({
         success: false,

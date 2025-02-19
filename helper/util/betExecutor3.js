@@ -531,7 +531,6 @@ const addToQueue = async (req, bot = false) => {
             bet_amount: betAmount,
             joiner_qs: req.body.selected_qs_position,
           });
-          console.log('---bet:', bet_item);
           async function getNextItemUsingMarkov_qs(allBetItems, gameType) {
             if (allBetItems.length <= 3) {
               return getRandomItem_qs(roomInfo['qs_game_type']);

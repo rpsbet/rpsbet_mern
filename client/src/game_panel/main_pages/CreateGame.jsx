@@ -313,7 +313,6 @@ function CreateGame(props) {
         dispatch(errorMsgBar('ENTER A VALID NUMBER!'));
         return;
       }
-      console.log('endgameAmount', endgameAmount);
       if (endgameAmount < 4) {
         dispatch(errorMsgBar('MINIMUM HARD CAP IS 4 SOL'));
         return;

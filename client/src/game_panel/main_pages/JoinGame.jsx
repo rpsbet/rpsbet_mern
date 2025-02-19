@@ -635,7 +635,6 @@ function JoinGame(props) {
           qs_game_type,
           roomId,
         );
-        console.log('nextMove', nextMove);
 
         if (nextMove.move !== null) {
           randomItem = nextMove.move;
@@ -794,7 +793,6 @@ function JoinGame(props) {
       setBankroll(newState.bankroll);
     }
     if ('hosts' in newState && Array.isArray(newState.hosts)) {
-      console.log('newState.hosts', newState.hosts);
       setHosts(newState.hosts);
     }
     if ('result' in newState) {

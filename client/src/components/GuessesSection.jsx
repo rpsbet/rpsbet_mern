@@ -32,7 +32,7 @@ function GuessesSection({ prevRps, players, isDarkMode, handleOpenPlayerModal })
             }}
           >
             {/* Guess on top */}
-            <Typography
+            {/* <Typography
               variant="body2"
               sx={{
                 backgroundColor: '#ff000044',
@@ -44,7 +44,7 @@ function GuessesSection({ prevRps, players, isDarkMode, handleOpenPlayerModal })
               }}
             >
               {guessItem.rps || guessItem.qs }
-            </Typography>
+            </Typography> */}
 
             {/* Player underneath */}
             {player && (

@@ -132,7 +132,6 @@ function MyGamesTable(props) {
       setMyGames((prevMyGames) =>
         prevMyGames.map((game) => {
           if (game._id === data.room) {
-            console.log('data', data.hosts);
             return {
               ...game,
               user_bet: data.bankroll,
