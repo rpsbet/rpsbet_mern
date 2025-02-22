@@ -80,6 +80,15 @@ const addToQueue = async (req, bot = false) => {
         return responseData;
       }
 
+      if (user.isWithdrawing) {
+        responseData = {
+          success: false,
+          message: 'WITHDRAWAL IN PROGRESS. Please wait until it completes.',
+          betResult: -1000,
+        };
+        return responseData;
+      }
+
       if (parseFloat(req.body.bet_amount) < 0.0005) {
         responseData = {
           success: false,

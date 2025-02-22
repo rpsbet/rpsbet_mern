@@ -65,6 +65,13 @@ router.post('/create-and-lend', auth, async (req, res) => {
       });
     }
 
+    if (req.user.isWithdrawing) {
+      return res.json({
+        success: false,
+        error: 'WITHDRAWAL IN PROGRESS. Please wait until it completes.'
+      });
+    }
+
     let loanType = 'FULL';
     let updatedBalance = originalLender.balance - parsedLoanAmount;
     let remainingAmount = parsedLoanAmount;
@@ -225,6 +232,13 @@ router.post('/create', auth, async (req, res) => {
       });
     }
     
+    if (req.user.isWithdrawing) {
+      return res.json({
+        success: false,
+        error: 'WITHDRAWAL IN PROGRESS. Please wait until it completes.'
+      });
+    }
+
     const parsedLoanAmount = parseFloat(loan_amount);
     const parsedLoanPeriod = parseFloat(loan_period);
     const parsedApy = parseFloat(apy);
@@ -371,6 +385,13 @@ router.post('/payback', auth, async (req, res) => {
     const { loanId, paybackAmount } = req.body;
     const loan = await Loan.findOne({ _id: loanId });
     const currentUser = await User.findOne({ _id: req.user._id });
+
+    if (req.user.isWithdrawing) {
+      return res.json({
+        success: false,
+        error: 'WITHDRAWAL IN PROGRESS. Please wait until it completes.'
+      });
+    }
 
     let amount = parseFloat(paybackAmount);
 
@@ -553,6 +574,14 @@ router.get('/calculate-remaining-loans', auth, async (req, res) => {
 router.post('/emit-offer-loan', auth, async (req, res) => {
   try {
     const { _id, lender, avatar, totalWagered, accessory, username } = req.body;
+
+    if (req.user.isWithdrawing) {
+      return res.json({
+        success: false,
+        error: 'WITHDRAWAL IN PROGRESS. Please wait until it completes.'
+      });
+    }
+
     req.io.sockets.emit(`RECEIVED_LOAN_OFFER_${_id}`, {
       lender,
       avatar,
@@ -709,6 +738,13 @@ router.post('/lend', auth, async (req, res) => {
     const loan = await Loan.findOne({ _id: loan_id });
     const originalLender = await User.findOne({ _id: lender });
     const currentUser = await User.findById(req.user._id);
+
+    if (req.user.isWithdrawing) {
+      return res.json({
+        success: false,
+        error: 'WITHDRAWAL IN PROGRESS. Please wait until it completes.'
+      });
+    }
 
     const accessAllowed = await check_access_time(req.user._id);
     if (!accessAllowed) {
@@ -933,6 +969,13 @@ router.post('/withdraw-loan', auth, async (req, res) => {
   try {
     const { loan_id } = req.body;
     const currentUser = await User.findById(req.user._id);
+
+    if (req.user.isWithdrawing) {
+      return res.json({
+        success: false,
+        error: 'WITHDRAWAL IN PROGRESS. Please wait until it completes.'
+      });
+    }
 
     const accessAllowed = await check_access_time(currentUser._id);
     if (!accessAllowed) {

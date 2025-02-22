@@ -120,11 +120,6 @@ function MainPage(props) {
     setShowP2PLending(false);
   };
 
-  const showOpenGameOrHistory = (e, newValue) => {
-    e.preventDefault();
-    setShowOpenGame(newValue);
-  };
-
   const handleOpenPlayerModal = (creatorId) => {
     setShowPlayerModal(true);
     setSelectedCreator(creatorId);

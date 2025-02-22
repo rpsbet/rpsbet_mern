@@ -17,9 +17,9 @@ const {
   getRandomItem_qs,
   predictNextQs,
   reinforcementAI_qs,
-  openAIPredictionAI_qs,
 } = require('./predictNextQsJoiner');
 
+const { openAIPredictionAI_qs } = require('./predictNextQs.js')
 const os = require('os');
 let socketio = null;
 let isExecutingBet1 = false;

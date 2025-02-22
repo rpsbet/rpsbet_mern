@@ -12,6 +12,10 @@ const UserSchema = new Schema({
     type: [String],
     default: [],
   },
+  isWithdrawing: {
+    type: Boolean,
+    default: false
+  },
   email: {
     type: String,
     required: false,

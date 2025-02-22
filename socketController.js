@@ -111,7 +111,6 @@ module.exports.sendNotification = (to_user_id, data) => {
 };
 
 module.exports.newTransaction = (transaction) => {
-  console.log('transaction', transaction);
   send('NEW_TRANSACTION', transaction['user']['_id'], transaction);
 };
 

@@ -691,21 +691,21 @@ router.patch('/room/:id/:type', auth, async (req, res) => {
   const updateQuery =
     type === 'view'
       ? {
-          $set: {
-            views: { $concatArrays: ['$views', [req.user._id]] },
-          },
-        }
+        $set: {
+          views: { $concatArrays: ['$views', [req.user._id]] },
+        },
+      }
       : {
-          $set: {
-            [`${type}s`]: {
-              $cond: [
-                { $in: [req.user._id, `$${type}s`] },
-                { $setDifference: [`$${type}s`, [req.user._id]] },
-                { $concatArrays: [`$${type}s`, [req.user._id]] },
-              ],
-            },
+        $set: {
+          [`${type}s`]: {
+            $cond: [
+              { $in: [req.user._id, `$${type}s`] },
+              { $setDifference: [`$${type}s`, [req.user._id]] },
+              { $concatArrays: [`$${type}s`, [req.user._id]] },
+            ],
           },
-        };
+        },
+      };
   try {
     const room = await Room.findOneAndUpdate({ _id: id }, [updateQuery], {
       new: true,
@@ -1275,8 +1275,8 @@ const getRoomList = async (game_type) => {
     const preRooms = await Room.find(search_condition)
       .select(
         '_id name ticker selectedStrategy image description room_number ' +
-          'creator battles username joiners game_type qs_game_type is_private ' +
-          'bet_amount user_bet pr host_pr status created_at updated_at hosts',
+        'creator battles username joiners game_type qs_game_type is_private ' +
+        'bet_amount user_bet pr host_pr status created_at updated_at hosts',
       )
       .populate({
         path: 'creator',
@@ -1393,7 +1393,15 @@ router.post('/rooms', auth, async (req, res) => {
       totalWagered,
       username,
       dailyWithdrawals,
+      isWithdrawing
     } = req.user;
+
+    if (isWithdrawing) {
+      return res.json({
+        success: false,
+        error: 'WITHDRAWAL IN PROGRESS. Please wait until it completes.'
+      });
+    }
 
     // validations:
     if (bet_amount <= 0) {
@@ -1950,6 +1958,13 @@ router.post('/pump', auth, async (req, res) => {
       });
     }
 
+    if (req.user.isWithdrawing) {
+      return res.json({
+        success: false,
+        error: 'WITHDRAWAL IN PROGRESS. Please wait until it completes.'
+      });
+    }
+
     const rowId = req.body.rowId;
     const room = await Room.findOne({ _id: rowId });
     const gameType = await GameType.findOne({ _id: room?.game_type });
@@ -2354,6 +2369,13 @@ router.post('/jeet', auth, async (req, res) => {
       return res.json({
         success: false,
         message: 'Connected account is missing or not authorized.',
+      });
+    }
+
+    if (req.user.isWithdrawing) {
+      return res.json({
+        success: false,
+        error: 'WITHDRAWAL IN PROGRESS. Please wait until it completes.'
       });
     }
 
@@ -3043,15 +3065,15 @@ router.post('/getGlobalChatLogs', async (req, res) => {
           replyTo && replyTo.length > 0 ? replyTo[0] : null;
         const transformedReplyTo = extractedReplyTo
           ? {
-              username: extractedReplyTo.sender?.username ?? '',
-              senderId: extractedReplyTo.sender?._id ?? '',
-              avatar: extractedReplyTo.sender?.avatar ?? '',
-              rank: extractedReplyTo.sender?.totalWagered ?? '',
-              accessory: extractedReplyTo.sender?.accessory ?? '',
-              message: extractedReplyTo.message,
-              messageType: extractedReplyTo.messageType,
-              time: moment(extractedReplyTo.created_at).format('hh:mm'),
-            }
+            username: extractedReplyTo.sender?.username ?? '',
+            senderId: extractedReplyTo.sender?._id ?? '',
+            avatar: extractedReplyTo.sender?.avatar ?? '',
+            rank: extractedReplyTo.sender?.totalWagered ?? '',
+            accessory: extractedReplyTo.sender?.accessory ?? '',
+            message: extractedReplyTo.message,
+            messageType: extractedReplyTo.messageType,
+            time: moment(extractedReplyTo.created_at).format('hh:mm'),
+          }
           : null;
 
         return {
@@ -3247,6 +3269,7 @@ router.post('/tip', auth, async (req, res) => {
         message: 'PURR-SON NOT FOUND',
       });
     }
+
     if (parseFloat(userToTip.totalWagered) < 500) {
       return res.json({
         success: false,
@@ -3260,6 +3283,13 @@ router.post('/tip', auth, async (req, res) => {
       return res.json({
         success: false,
         message: 'DO NOT HAVE PURRMISSION',
+      });
+    }
+
+    if (user.isWithdrawing) {
+      return res.json({
+        success: false,
+        error: 'WITHDRAWAL IN PROGRESS. Please wait until it completes.'
       });
     }
 

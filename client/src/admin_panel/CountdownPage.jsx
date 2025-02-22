@@ -218,7 +218,6 @@ const CountdownPage = ({
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showMerchModal, setShowMerchModal] = useState(false);
   const [divStyles, setDivStyles] = useState({});
-  const [copiedTooltipOpen, setCopiedTooltipOpen] = useState(false);
 
   // open/close terms, privacy, merch modals
   const handleOpenTermsModal = () => setShowTermsModal(true);
