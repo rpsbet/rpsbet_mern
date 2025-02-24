@@ -226,6 +226,7 @@ const CountdownPage = ({
   const handleClosePrivacyModal = () => setShowPrivacyModal(false);
   const openMerchModal = () => setShowMerchModal(true);
   const closeMerchModal = () => setShowMerchModal(false);
+  const [copiedTooltipOpen, setCopiedTooltipOpen] = useState(false);
 
   // Gifs used for random background overlays
   const gifs = [

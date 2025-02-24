@@ -960,7 +960,7 @@ function SiteWrapper(props) {
 
   function appendCurrencyBracket(message, amount) {
     if (!amount) return message;
-    
+
     const amountStr = String(amount);
     const currencyStr = convertToCurrency(amount, solPrice);
     return message + ` (${currencyStr}) / ${amountStr} SOL`;
@@ -1001,6 +1001,20 @@ function SiteWrapper(props) {
               }}
             >
               <img src="/img/game-logo.svg" alt="Game Logo" width="25" height="25" />
+            </a>
+            <a
+              href="#"
+              style={{
+                position: window.innerWidth <= 768 ? "relative" : "absolute",
+                transform: window.innerWidth <= 768 ? "none" : "translate(40px)",
+                fontWeight: "400",
+              }}
+              onClick={(e) => {
+                e.preventDefault();
+                handleOpenHowToPlayModal();
+              }}
+            >
+              [ how it works ]
             </a>
 
             {!isInvestorsPage ? (

@@ -4459,6 +4459,11 @@ circle {
 */
 
 @media (max-width: 1023px) {
+  .player .avatar, .avatar img  {
+    max-width: 40px;
+    max-height: 40px;
+  }
+
   #quickShoot_lottie div {
     width: 278px !important;
     height: 156px !important;

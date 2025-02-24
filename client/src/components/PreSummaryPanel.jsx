@@ -199,7 +199,7 @@ const PreSummaryPanel = (props) => {
                     )}
                   </div>
                   <div>
-                    -({roomInfo.tax} + 2.5)% ={' '}
+                    -({roomInfo.tax} + 5)% ={' '}
                     {convertToCurrency(calculateQuickShootReturn(), solPrice)}
                   </div>
                 </div>
@@ -208,7 +208,7 @@ const PreSummaryPanel = (props) => {
                   <span>EXPLANATION: </span>
                   <p>
                     2x your Bet Amount, then deduct Host(s)'s(') commission
-                    (RTB), finally 1% platform tax.
+                    (RTB), finally 5% platform tax.
                   </p>
                   <span>CALCULATION: </span>
                   <div>
@@ -216,7 +216,7 @@ const PreSummaryPanel = (props) => {
                     {convertToCurrency(bet_amount * 2, solPrice)}
                   </div>
                   <div>
-                    -({roomInfo.tax} + 2.5)% ={' '}
+                    -({roomInfo.tax} + 5)% ={' '}
                     {convertToCurrency(calculateRPSReturn(), solPrice)}
                   </div>
                 </div>
@@ -288,7 +288,7 @@ const PreSummaryPanel = (props) => {
             <FontAwesomeIcon icon={faPercentage} style={{ marginRight: 8 }} />
             Tax
           </Typography>
-          <Tooltip title="Host's Room Tax. Minimum 1% goes to the platform.">
+          <Tooltip title="Host's Room Tax. Minimum 5% goes to the platform.">
             <Box
               sx={{
                 cursor: 'pointer',

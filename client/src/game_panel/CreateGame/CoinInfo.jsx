@@ -109,8 +109,8 @@ const CoinInfo = ({
           }}
           onBlur={() => {
             dispatch(setFocused(false));
-            if ((name || '').length > 10) {
-              setNameError('10 character limit'); 
+            if ((name || '').length > 16) {
+              setNameError('16 character limit'); 
             }
           }}
           error={!!nameError}

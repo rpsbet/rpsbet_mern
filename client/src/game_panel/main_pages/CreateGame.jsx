@@ -280,6 +280,12 @@ function CreateGame(props) {
         dispatch(errorMsgBar("YOU DIDN'T BET (CAT) SHIT!!!"));
         return;
       }
+      const parsedQsGameType = parseInt(qsGameType);
+      if (parsedQsGameType >= 3 && tax >= 20) {
+        dispatch(errorMsgBar('Tax must be 20 or less for this Game Type!'));
+        return;
+      }
+
       if (parseFloat(betAmount) < 0.0005) {
         dispatch(errorMsgBar('MEOWNIMUM BUY-IN IS 0.0005 SOL!'));
         return;
@@ -294,6 +300,10 @@ function CreateGame(props) {
       }
       if (!name.trim()) {
         dispatch(errorMsgBar('ADD A NAME DUMBASS!'));
+        return;
+      }
+      if (name.trim().length > 16) {
+        dispatch(errorMsgBar('Name cannot be longer than 20 characters!'));
         return;
       }
       if (!ticker.trim()) {
@@ -725,8 +735,8 @@ function CreateGame(props) {
                     step={step}
                     child_step={childStep}
                     isPlaying={isPlaying}
-                    handleUrlChange={() => {}}
-                    handleSubmit={() => {}}
+                    handleUrlChange={() => { }}
+                    handleSubmit={() => { }}
                     handleDescriptionChange={handleDescriptionChange}
                   />
                 )}
@@ -756,9 +766,8 @@ function CreateGame(props) {
               {selectedMobileTab === 'my_games' && 'YOUR GAMES'}
             </Button>
             <Button
-              className={`mobile-tab-marketplace ${
-                selectedMobileTab === 'marketplace' ? 'active' : ''
-              }`}
+              className={`mobile-tab-marketplace ${selectedMobileTab === 'marketplace' ? 'active' : ''
+                }`}
               onClick={() => setSelectedMobileTab('marketplace')}
             >
               {/* SVG ICON */}
