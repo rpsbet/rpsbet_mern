@@ -63,7 +63,7 @@ const PreSummaryPanel = (props) => {
     if (qs_game_type && bet_amount) {
       return (
         (bet_amount / (qs_game_type - 1) + parseFloat(bet_amount)) *
-          (1 - (roomInfo.tax + 2.5) / 100) -
+          (1 - (roomInfo.tax + 5) / 100) -
         bet_amount
       );
     }
@@ -71,7 +71,7 @@ const PreSummaryPanel = (props) => {
   };
 
   const calculateRPSReturn = () => {
-    return bet_amount * 2 * ((100 - (roomInfo.tax + 2.5)) / 100) - bet_amount;
+    return bet_amount * 2 * ((100 - (roomInfo.tax + 5)) / 100) - bet_amount;
   };
 
   return (
@@ -302,7 +302,7 @@ const PreSummaryPanel = (props) => {
                 className={`value ${isHighCommission ? 'red-text' : ''}`}
                 sx={{ display: 'flex', alignItems: 'center' }}
               >
-                {roomInfo.tax < 1 ? '1%' : `${roomInfo.tax}%`}
+                {roomInfo.tax < 5 ? '5%' : `${roomInfo.tax}%`}
                 {!isHighCommission ? (
                   <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
                 ) : (

@@ -2972,11 +2972,6 @@ h3.game-sub-title {
   word-break: break-word;
 }
 
-.game-info-panel table th:last-child,
-.game-info-panel table th:first-child {
-  background-color: transparent !important;
-}
-
 div.table.my-open-game-table .table-row .table-cell.room-id {
   display: flex;
   align-items: center;

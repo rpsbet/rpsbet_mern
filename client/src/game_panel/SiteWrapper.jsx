@@ -100,7 +100,6 @@ import DepositModal from './modal/DepositModal';
 import WithdrawModal from './modal/WithdrawModal';
 import InventoryModal from './modal/InventoryModal';
 import VaultModal from './modal/VaultModal';
-import Joyride from 'react-joyride';
 import { tutorialStepsMain } from '../util/tutorialStepsMain';
 import CookieConsent from '../util/cookieConsent';
 import { convertToCurrency } from '../util/conversion';
@@ -780,15 +779,6 @@ function SiteWrapper(props) {
     setShowAllGameLogs((prev) => !prev);
   };
 
-  // -------------- TUTORIAL / JOYRIDE --------------
-  const handleJoyrideCallback = (data) => {
-    const { status } = data;
-    if (status === 'finished' || status === 'skipped') {
-      updateTutorialCompleted(currentTutorial);
-      setRunTutorial(false);
-    }
-  };
-
   // -------------- LOG IN / LOG OUT --------------
   const handleLogout = (clear_token) => {
     setWalletAddress(null);
@@ -992,30 +982,33 @@ function SiteWrapper(props) {
         <div className="game_header">
           <div className="main_header">
             {/* LOGO */}
-            <a
-              className="game_logo"
-              href="/"
-              onClick={(e) => {
-                e.preventDefault();
-                window.location.href = '/';
-              }}
-            >
-              <img src="/img/game-logo.svg" alt="Game Logo" width="25" height="25" />
-            </a>
-            <a
-              href="#"
-              style={{
-                position: window.innerWidth <= 768 ? "relative" : "absolute",
-                transform: window.innerWidth <= 768 ? "none" : "translate(40px)",
-                fontWeight: "400",
-              }}
-              onClick={(e) => {
-                e.preventDefault();
-                handleOpenHowToPlayModal();
-              }}
-            >
-              [ how it works ]
-            </a>
+            <Box>
+
+              <a
+                className="game_logo"
+                href="/"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.location.href = '/';
+                }}
+              >
+                <img src="/img/game-logo.svg" alt="Game Logo" width="25" height="25" />
+              </a>
+              <a
+                href="#"
+                style={{
+                  position: "relative",
+                  fontWeight: "400",
+                  marginLeft: '20px'
+                }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleOpenHowToPlayModal();
+                }}
+              >
+                [ how it works ]
+              </a>
+            </Box>
 
             {!isInvestorsPage ? (
               <HistoryTable userId={user?._id} />
@@ -1054,7 +1047,7 @@ function SiteWrapper(props) {
                   </Box>
 
                   {/* Store Icon */}
-                  <Box
+                  {/* <Box
                     component="a"
                     href="#"
                     className="desktop-only"
@@ -1078,7 +1071,7 @@ function SiteWrapper(props) {
                     }}
                   >
                     <StorefrontOutlinedIcon fontSize="medium" />
-                  </Box>
+                  </Box> */}
 
                   {/* Leaderboard Icon */}
                   <Box
@@ -1386,15 +1379,14 @@ function SiteWrapper(props) {
 
                     <MenuItem
                       onClick={() => {
-                        history.push('/investors');
+                        window.open('https://raydium.io/swap/?inputMint=sol&outputMint=BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump', '_blank');
                       }}
                     >
                       <ListItemIcon>
                         <MonetizationOn fontSize="small" />
                       </ListItemIcon>
-                      <ListItemText>$RPS 🚀</ListItemText>
+                      <ListItemText>BUY $RPS 🚀</ListItemText>
                     </MenuItem>
-
                     <MenuItem
                       onClick={() => {
                         handleLogout(true);
@@ -2041,52 +2033,7 @@ function SiteWrapper(props) {
         <OfferLoanModal solPrice={solPrice} socket={socket} />
         <GamePasswordModal />
 
-        <Joyride
-          steps={tutorialStepsMain}
-          run={runTutorial}
-          callback={handleJoyrideCallback}
-          continuous
-          showProgress
-          showSkipButton
-          styles={{
-            options: {
-              zIndex: 1500,
-              backgroundColor: isDarkMode
-                ? 'rgba(33, 33, 33, 0.95)'   // Dark gray background for dark mode
-                : 'rgba(255, 255, 255, 0.95)', // White background for light mode
-              primaryColor: isDarkMode ? '#ff0000' : '#6200ea', // Vibrant green for dark, deep purple for light
-              arrowColor: isDarkMode
-                ? 'rgba(33, 33, 33, 0.95)'
-                : 'rgba(255, 255, 255, 0.95)',
-              textColor: isDarkMode ? '#eeeeee' : '#212121', // Light text for dark mode, dark text for light mode
-              width: 320,
-              padding: 24,
-              borderRadius: 8,
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-            },
-            buttonClose: {
-              borderRadius: 4,
-              color: isDarkMode ? '#eeeeee' : '#212121',
-            },
-            buttonBack: {
-              borderRadius: 4,
-              backgroundColor: isDarkMode
-                ? 'rgba(255, 255, 255, 0.1)'
-                : 'rgba(0, 0, 0, 0.05)',
-              color: isDarkMode ? '#eeeeee' : '#212121',
-              marginRight: 8,
-            },
-            buttonNext: {
-              borderRadius: 4,
-              backgroundColor: isDarkMode ? '#ff0000' : '#6200ea',
-              color: '#fff',
-            },
-            buttonSkip: {
-              borderRadius: 4,
-              color: isDarkMode ? '#eeeeee' : '#212121',
-            },
-          }}
-        />
+
       </div>
     </ThemeProvider>
   );

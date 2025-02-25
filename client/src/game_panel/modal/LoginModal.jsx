@@ -286,7 +286,7 @@ function LoginModal(props) {
             </Box>
 
             {/* Conditional Links */}
-            {!isInvestorsPage ? (
+            {/* {!isInvestorsPage ? (
               <Typography
                 component="a"
                 onClick={() => {
@@ -322,7 +322,7 @@ function LoginModal(props) {
                 Play RPS.Game&nbsp;
                 <FontAwesomeIcon icon={faExternalLinkAlt} />
               </Typography>
-            )}
+            )} */}
           </Box>
         </Box>
       </Modal>

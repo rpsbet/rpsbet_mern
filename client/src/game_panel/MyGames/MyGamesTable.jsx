@@ -21,7 +21,6 @@ import {
   InputAdornment,
   Chip,
 } from '@mui/material';
-import Joyride from 'react-joyride';
 import Lottie from 'react-lottie';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMoneyCheckAlt } from '@fortawesome/free-solid-svg-icons';
@@ -366,17 +365,7 @@ function MyGamesTable(props) {
     });
   }, []);
 
-  // ---------- TUTORIAL ----------
-  const handleJoyrideCallback = useCallback(
-    (data) => {
-      const { status } = data;
-      if (status === 'finished' || status === 'skipped') {
-        updateTutorialCompleted(currentTutorial);
-        setRunTutorial(false);
-      }
-    },
-    [currentTutorial, updateTutorialCompleted],
-  );
+
 
   // ---------- SETTINGS ----------
   const handleSettingsIconClick = (event, row) => {
@@ -414,52 +403,7 @@ function MyGamesTable(props) {
     <Box className="my-open-games">
       {/* Filter/Tutorial Container */}
       <Box className="filter-container overflowX">
-        <Joyride
-          steps={tutorialStepsCreate}
-          run={runTutorial}
-          callback={handleJoyrideCallback}
-          continuous
-          showProgress
-          showSkipButton
-          styles={{
-            options: {
-              zIndex: 1500,
-              backgroundColor: isDarkMode
-                ? 'rgba(33, 33, 33, 0.95)' // Dark gray background for dark mode
-                : 'rgba(255, 255, 255, 0.95)', // White background for light mode
-              primaryColor: isDarkMode ? '#ff0000' : '#6200ea', // Vibrant green for dark, deep purple for light
-              arrowColor: isDarkMode
-                ? 'rgba(33, 33, 33, 0.95)'
-                : 'rgba(255, 255, 255, 0.95)',
-              textColor: isDarkMode ? '#eeeeee' : '#212121', // Light text for dark mode, dark text for light mode
-              width: 320,
-              padding: 24,
-              borderRadius: 8,
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-            },
-            buttonClose: {
-              borderRadius: 4,
-              color: isDarkMode ? '#eeeeee' : '#212121',
-            },
-            buttonBack: {
-              borderRadius: 4,
-              backgroundColor: isDarkMode
-                ? 'rgba(255, 255, 255, 0.1)'
-                : 'rgba(0, 0, 0, 0.05)',
-              color: isDarkMode ? '#eeeeee' : '#212121',
-              marginRight: 8,
-            },
-            buttonNext: {
-              borderRadius: 4,
-              backgroundColor: isDarkMode ? '#ff0000' : '#6200ea',
-              color: '#fff',
-            },
-            buttonSkip: {
-              borderRadius: 4,
-              color: isDarkMode ? '#eeeeee' : '#212121',
-            },
-          }}
-        />
+       
         {selectedRow && (
           <SettingsRef
             ref={settingsRef}

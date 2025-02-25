@@ -62,7 +62,7 @@ async function predictNextMove(model, rpsNumeric) {
   let bestCounterMove;
 
   // Introduce 33% chance of returning a random move
-  if (Math.random() < 0.33) {
+  if (Math.random() < 0.43) {
     const randomMoveIndex = Math.floor(Math.random() * 3);
     bestCounterMove = randomMoveIndex === 0 ? 'R' : randomMoveIndex === 1 ? 'P' : 'S';
   } else {

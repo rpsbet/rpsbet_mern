@@ -215,7 +215,7 @@ const MyBankTable = (props) => {
               // If row.fractional_amount applies, define reserves
               const reserves =
                 row.loan_type === 'FRACTIONAL'
-                  ? row.loan_amount * (row.fractional_amount / 100)
+                  ? row.fractional_amount
                   : row.loan_amount;
 
               return (
@@ -245,40 +245,6 @@ const MyBankTable = (props) => {
 
                   <Card variant="outlined" sx={{ mb: 0.5 }}>
                     <CardContent sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                      {/* Top Info / Possibly Lender Avatar */}
-                      {/* If you store 'row.lender' in row.owners as well, adapt accordingly */}
-                      {/* Example: row.owners?.[0].user is the lender? Or row.lender? */}
-                      {/* We'll just show row.lender’s avatar if needed. */}
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        {customerInfo[row.lender] ? (
-                          <a
-                            className="player"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleOpenPlayerModal(row.lender);
-                            }}
-                            style={{ textDecoration: 'none', cursor: 'pointer' }}
-                          >
-                            <Avatar
-                              src={customerInfo[row.lender].avatar}
-                              rank={customerInfo[row.lender].totalWagered}
-                              accessory={customerInfo[row.lender].accessory}
-                              username={customerInfo[row.lender].username}
-                              user_id={customerInfo[row.lender]._id}
-                              alt=""
-                              darkMode={isDarkMode}
-                              style={{ width: 48, height: 48 }}
-                            />
-                          </a>
-                        ) : (
-                          <span>No Lender Info</span>
-                        )}
-                        <Box>
-                          <strong>Lender</strong>
-                          <div>{customerInfo[row.lender]?.username || 'Unknown'}</div>
-                        </Box>
-                      </Box>
-
                       {/* Loan Amount */}
                       <Box sx={{ textAlign: 'center' }}>
                         <h3 style={{ margin: 0 }}>

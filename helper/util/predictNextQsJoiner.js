@@ -239,7 +239,7 @@ async function reinforcementAI_qs(data, qs_game_type) {
     let bestCounterMove = await predictNextMove_qs(model, qsNumeric, qs_game_type);
 
     // Introduce some randomness
-    const randomnessFactor = 0.1;
+    const randomnessFactor = 0.3;
     if (Math.random() < randomnessFactor) {
       const possibleMoves = Array.from({ length: qs_game_type }, (_, i) => i);
       possibleMoves.splice(bestCounterMove.move, 1);

@@ -81,7 +81,7 @@ function CreateGame(props) {
   const [selectedGameType, setSelectedGameType] = useState('RPS');
   const [rpsList, setRpsList] = useState([]);
   const [qsList, setQsList] = useState([]);
-  const [tax, setTax] = useState(1);
+  const [tax, setTax] = useState(20);
 
   const [name, setName] = useState('');
   const [image, setImage] = useState('');
@@ -96,7 +96,7 @@ function CreateGame(props) {
   const [selectedQsPosition, setSelectedQsPosition] = useState(0);
 
   const [betAmount, setBetAmount] = useState(0.25);
-  const [endgameAmount, setEndgameAmount] = useState(10);
+  const [endgameAmount, setEndgameAmount] = useState(20);
   const [maxReturn, setMaxReturn] = useState(0);
   const [creatingRoom, setCreatingRoom] = useState(false);
   const [winChance, setWinChance] = useState(0);
@@ -290,8 +290,12 @@ function CreateGame(props) {
         dispatch(errorMsgBar('MEOWNIMUM BUY-IN IS 0.0005 SOL!'));
         return;
       }
-      if (parseFloat(tax) > 33) {
-        dispatch(errorMsgBar('MAX TAX IS 33%!'));
+      if (parseFloat(tax) > 35) {
+        dispatch(errorMsgBar('MAX TAX IS 35%!'));
+        return;
+      }
+      if (parseFloat(tax) > 20) {
+        dispatch(errorMsgBar('MIN TAX IS 20%!'));
         return;
       }
       if (parseFloat(betAmount) >= parseFloat(endgameAmount)) {
@@ -323,8 +327,8 @@ function CreateGame(props) {
         dispatch(errorMsgBar('ENTER A VALID NUMBER!'));
         return;
       }
-      if (endgameAmount < 4) {
-        dispatch(errorMsgBar('MINIMUM HARD CAP IS 4 SOL'));
+      if (endgameAmount < 10) {
+        dispatch(errorMsgBar('MINIMUM HARD CAP IS 10 SOL'));
         return;
       }
     }

@@ -20,11 +20,11 @@ async function updateRoomInterests(io) {
     let interestSetting = await SystemSetting.findOne({ name: 'last_updated_interest' });
     if (interestSetting) {
       const lastUpdated = interestSetting.updated_at;
-      const fiveMinutesAgo = new Date();
-      fiveMinutesAgo.setHours(fiveMinutesAgo.getHours() - 3);
+      const threeHoursAgo = new Date();
+      threeHoursAgo.setHours(threeHoursAgo.getHours() - 3);
       
+      if (lastUpdated <= threeHoursAgo) {
 
-      if (lastUpdated >= fiveMinutesAgo) {
         const bonusRooms = await Room.find({ status: 'open', is_private: 'false' });
         for (const bonusRoom of bonusRooms) {
           const req = {
@@ -38,10 +38,9 @@ async function updateRoomInterests(io) {
           let userBet = parseFloat(bonusRoom.user_bet);
           const newInterest = userBet * 1.0001;  // 10x the original interest calculation
           const interestAdded = newInterest - userBet;  // Calculate the actual interest added
-          
+
           bonusRoom.user_bet = newInterest.toString();  // Update the user_bet with the new interest
           bonusRoom.pr = bonusRoom.pr + interestAdded;  // Increase the pr by the actual interest added
-          
           await saveDocumentWithRetry(bonusRoom);
           if (req.io.sockets) {
             req.io.sockets.emit(`UPDATED_BANKROLL2_${bonusRoom._id}`, {

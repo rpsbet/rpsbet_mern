@@ -201,9 +201,7 @@ function HowToPlayModal({ modalIsOpen, closeModal }) {
           </AccordionSummary>
           <AccordionDetails>
             <List dense>
-              <ListItem>✅ Holders earn 10% of platform fees!!!<br />  <Typography className='roll-tag' sx={{ color: 'white' }} variant="body2" paragraph>
-                coming soon!
-              </Typography></ListItem>
+              <ListItem>✅ Holders earn 10% of platform fees!!!</ListItem>
               <ListItem>🔓 Holders instantly unlock all AI models (Hold 2.5M Tokens to Qualify).</ListItem>
             </List>
 

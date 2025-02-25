@@ -46,17 +46,19 @@ const addToQueue = async (req, bot = false, qbot) => {
 
     try {
         const taxPromise = SystemSetting.findOne({ name: 'commission' });
-        const platformPromise = SystemSetting.findOne({ name: 'platform' });
-        const [
-            tax,
-            platform
-        ] = await Promise.all([taxPromise, platformPromise]);
+        const platformPromise = SystemSetting.findOne({ name: 'platform_betting' });
+        const holdersPoolPromise = SystemSetting.findOne({ name: 'holders_pool' });
+
+        const [tax, platform, holdersPool] = await Promise.all([taxPromise, platformPromise, holdersPoolPromise]);
+
+
         let bet_item;
         let responseData = {};
         let gameLogArray = [];
         let user;
         let pool_id = '';
         let game_result;
+        let platformEarnings;
         let newTransactionAmount = 0;
         let newTransactionJ = new Transaction({
             user: '',
@@ -264,10 +266,16 @@ const addToQueue = async (req, bot = false, qbot) => {
                         newGameLog.commission =
                             betAmount * 2 * (roomInfo['tax'] / 100);
 
-                        // update platform earnings (0.5%)
-                        platform.value =
-                            platform.value +
-                            betAmount * 2 * (tax.value / 100);
+                        // Calculate the platform earnings
+                        platformEarnings = betAmount * 2 * (tax.value / 100);
+
+                        // Update platform earnings
+                        platform.value += platformEarnings;
+
+                        // Distribute 10% of the earnings to the holdersPool
+                        const holdersPoolEarnings = platformEarnings * 0.1;
+                        holdersPool.value += holdersPoolEarnings;
+
 
                         // update bankroll
                         roomInfo['user_bet'] = roomInfo['user_bet'];
@@ -314,9 +322,15 @@ const addToQueue = async (req, bot = false, qbot) => {
                             roomInfo['user_bet'] +
                             (betAmount * 2 * ((100 - tax.value) / 100)) - betAmount;
 
-                        platform.value =
-                            platform.value +
-                            betAmount * 2 * (tax.value / 100);
+                        // Calculate the platform earnings
+                        platformEarnings = betAmount * 2 * (tax.value / 100);
+
+                        // Update platform earnings
+                        platform.value += platformEarnings;
+
+                        // Distribute 10% of the earnings to the holdersPool
+                        const holdersPoolEarnings = platformEarnings * 0.1;
+                        holdersPool.value += holdersPoolEarnings;
 
                         // autopayout host
                         if (
@@ -540,9 +554,21 @@ const addToQueue = async (req, bot = false, qbot) => {
                     game_result = -1;
 
                     roomInfo['user_bet'] =
-                        roomInfo['user_bet'] + parseFloat(req.body.bet_amount);
+                        roomInfo['user_bet'] + parseFloat(req.body.bet_amount) * ((100 - tax.value) / 100);
                     roomInfo['host_pr'] =
-                        roomInfo['host_pr'] + parseFloat(req.body.bet_amount);
+                        roomInfo['host_pr'] + parseFloat(req.body.bet_amount) * ((100 - tax.value) / 100);
+
+
+                    // Calculate the platform earnings
+                    platformEarnings = betAmount * (tax.value / 100);
+
+                    // Update platform earnings
+                    platform.value += platformEarnings;
+
+                    // Distribute 10% of the earnings to the holdersPool
+                    const holdersPoolEarnings = platformEarnings * 0.1;
+                    holdersPool.value += holdersPoolEarnings;
+
                     if (
                         roomInfo['endgame_type'] &&
                         roomInfo['user_bet'] >= roomInfo['endgame_amount']
@@ -900,6 +926,7 @@ const addToQueue = async (req, bot = false, qbot) => {
                 try {
                     Promise.all([
                         saveDocumentWithRetry(platform),
+                        saveDocumentWithRetry(holdersPool),
                         await saveDocumentWithRetry(user),
                         await saveDocumentWithRetry(roomInfo),
                         saveDocumentWithRetry(host),

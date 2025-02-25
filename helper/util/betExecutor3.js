@@ -47,7 +47,9 @@ const addToQueue = async (req, bot = false) => {
   try {
     const taxPromise = SystemSetting.findOne({ name: 'commission' });
     const platformPromise = SystemSetting.findOne({ name: 'platform_betting' });
-    const [tax, platform] = await Promise.all([taxPromise, platformPromise]);
+    const holdersPoolPromise = SystemSetting.findOne({ name: 'holders_pool' });
+
+    const [tax, platform, holdersPool] = await Promise.all([taxPromise, platformPromise, holdersPoolPromise]);
 
     let responseData = {};
     let gameLogArray = [];
@@ -55,6 +57,7 @@ const addToQueue = async (req, bot = false) => {
     let game_result;
     let pool_id = '';
     let bet_item;
+    let platformEarnings;
     let roomInfo;
     let newTransactionAmount = 0;
     let newTransactionJ = new Transaction({
@@ -238,7 +241,7 @@ const addToQueue = async (req, bot = false) => {
               nextItem = await predictNextOpenAI(
                 allBetItems,
                 roomInfo['prompt'] ??
-                  'You are an expert in Rock Paper Scissors.',
+                'You are an expert in Rock Paper Scissors.',
               );
               break;
             default:
@@ -290,8 +293,16 @@ const addToQueue = async (req, bot = false) => {
 
             newGameLog.commission = betAmount * 2 * (roomInfo['tax'] / 100);
 
-            // update platform earnings (0.5%)
-            platform.value = platform.value + betAmount * 2 * (tax.value / 100);
+            // Calculate the platform earnings
+            platformEarnings = betAmount * 2 * (tax.value / 100);
+
+            // Update platform earnings
+            platform.value += platformEarnings;
+
+            // Distribute 10% of the earnings to the holdersPool
+            const holdersPoolEarnings = platformEarnings * 0.1;
+            holdersPool.value += holdersPoolEarnings;
+
 
             // update bankroll
             roomInfo['user_bet'] = roomInfo['user_bet'];
@@ -321,8 +332,15 @@ const addToQueue = async (req, bot = false) => {
             message.message = 'Split in ' + roomInfo['name'];
 
             message.amount = req.body.bet_amount * 2;
-            // update platform stat (0.5%)
-            platform.value = platform.value + betAmount * 2 * (tax.value / 100);
+            // Calculate the platform earnings
+            platformEarnings = betAmount * 2 * (tax.value / 100);
+
+            // Update platform earnings
+            platform.value += platformEarnings;
+
+            // Distribute 10% of the earnings to the holdersPool
+            const holdersPoolEarnings = platformEarnings * 0.1;
+            holdersPool.value += holdersPoolEarnings;
 
             // if loss
           } else {
@@ -338,8 +356,15 @@ const addToQueue = async (req, bot = false) => {
               betAmount * 2 * ((100 - tax.value) / 100) -
               betAmount;
 
-            platform.value =
-              parseFloat(platform.value) + betAmount * 2 * (tax.value / 100);
+            // Calculate the platform earnings
+            platformEarnings = betAmount * 2 * (tax.value / 100);
+
+            // Update platform earnings
+            platform.value += platformEarnings;
+
+            // Distribute 10% of the earnings to the holdersPool
+            const holdersPoolEarnings = platformEarnings * 0.1;
+            holdersPool.value += holdersPoolEarnings;
 
             if (
               roomInfo['endgame_type'] &&
@@ -475,9 +500,9 @@ const addToQueue = async (req, bot = false) => {
       } else if (roomInfo['game_type']['game_type_name'] === 'Quick Shoot') {
         if (
           parseFloat(req.body.bet_amount) / (roomInfo['qs_game_type'] - 1) +
-            parseFloat(req.body.bet_amount) -
-            (roomInfo['qs_game_type'] - 1) * roomInfo['user_bet'] >
-            roomInfo['user_bet'] ||
+          parseFloat(req.body.bet_amount) -
+          (roomInfo['qs_game_type'] - 1) * roomInfo['user_bet'] >
+          roomInfo['user_bet'] ||
           parseFloat(req.body.bet_amount) > parseFloat(req.user.balance)
         ) {
           responseData = {
@@ -558,14 +583,26 @@ const addToQueue = async (req, bot = false) => {
         // deduct the joiner's bet
         newTransactionAmount -= betAmount;
         roomInfo['user_bet'] = roomInfo['user_bet'];
-      
+
         if (Number(bet_item.qs) === req.body.selected_qs_position) {
           game_result = -1;
 
           roomInfo['user_bet'] =
-            roomInfo['user_bet'] + parseFloat(req.body.bet_amount);
+            roomInfo['user_bet'] + parseFloat(req.body.bet_amount) * ((100 - tax.value) / 100);
           roomInfo['host_pr'] =
-            roomInfo['host_pr'] + parseFloat(req.body.bet_amount);
+            roomInfo['host_pr'] + parseFloat(req.body.bet_amount) * ((100 - tax.value) / 100);
+
+
+          // Calculate the platform earnings
+          platformEarnings = betAmount * (tax.value / 100);
+
+          // Update platform earnings
+          platform.value += platformEarnings;
+
+          // Distribute 10% of the earnings to the holdersPool
+          const holdersPoolEarnings = platformEarnings * 0.1;
+          holdersPool.value += holdersPoolEarnings;
+
           if (
             roomInfo['endgame_type'] &&
             roomInfo['user_bet'] >= roomInfo['endgame_amount']
@@ -649,11 +686,11 @@ const addToQueue = async (req, bot = false) => {
             ((100 - commission) / 100);
           roomInfo['host_pr'] -=
             (betAmount + betAmount / (roomInfo['qs_game_type'] - 1)) *
-              ((100 - commission) / 100) -
+            ((100 - commission) / 100) -
             betAmount;
           roomInfo['user_bet'] -=
             (betAmount + betAmount / (roomInfo['qs_game_type'] - 1)) *
-              ((100 - commission) / 100) -
+            ((100 - commission) / 100) -
             betAmount;
           newGameLog.commission =
             (betAmount + betAmount / (roomInfo['qs_game_type'] - 1)) *
@@ -662,7 +699,7 @@ const addToQueue = async (req, bot = false) => {
           platform.value =
             platform.value +
             (betAmount + betAmount / (roomInfo['qs_game_type'] - 1)) *
-              (tax.value / 100);
+            (tax.value / 100);
 
           message.message = 'Won in ' + roomInfo['name'];
 
@@ -922,6 +959,7 @@ const addToQueue = async (req, bot = false) => {
         try {
           Promise.all([
             saveDocumentWithRetry(platform),
+            saveDocumentWithRetry(holdersPool),
             await saveDocumentWithRetry(user),
             await saveDocumentWithRetry(roomInfo),
             saveDocumentWithRetry(host),

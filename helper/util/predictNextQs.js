@@ -44,7 +44,7 @@ const predictNextQs = (qs_list, gameType) => {
 
   const options = [...Array(gameType).keys()];
   const transitionMatrix = {};
-  const randomnessFactor = 0.15;
+  const randomnessFactor = 0.3;
 
   // Initialize the transition matrix
   options.forEach((option1) => {
@@ -191,7 +191,7 @@ async function reinforcementAI_qs(data, qs_game_type) {
     const mostRecentGame = results[results.length - 1];
 
     // Introduce randomness to avoid overfitting
-    const randomnessFactor = 0.1;
+    const randomnessFactor = 0.3;
     if (Math.random() < randomnessFactor) {
       bestCounterMove.move = getRandomItem_qs(qs_game_type);
       bestCounterMove.risk = 0;

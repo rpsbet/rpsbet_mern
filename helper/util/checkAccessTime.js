@@ -1,11 +1,11 @@
 // checkAccessTime.js
 
-const MAX_RETRIES = 5;
+const MAX_RETRIES = 1;
 let user_access_log = {};
 
 async function check_access_time(user_id, retryCount = 0) {
   const check_result =
-    user_access_log[user_id] && Date.now() - user_access_log[user_id] < 1500
+    user_access_log[user_id] && Date.now() - user_access_log[user_id] < 2500
       ? false
       : true;
 
@@ -16,7 +16,7 @@ async function check_access_time(user_id, retryCount = 0) {
       setTimeout(async () => {
         const result = await check_access_time(user_id, retryCount + 1);
         resolve(result);
-      }, 1500);
+      }, 2500);
     });
   }
 

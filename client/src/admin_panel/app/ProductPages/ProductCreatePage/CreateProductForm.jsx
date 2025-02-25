@@ -87,7 +87,6 @@ function CreateProductForm({
                     label="Loan Amount"
                     name="loan_amount"
                     margin="normal"
-                    type="number"
                     value={formValues.loan_amount}
                     onChange={(e) => handleInputChange(e.target.name, e.target.value, 8)}
                     autoComplete="off"
@@ -114,6 +113,7 @@ function CreateProductForm({
                         alignItems: 'center',
                         bgcolor: 'rgba(255, 0, 0, 0.1)',
                         p: 1,
+                        borderLeft: '2px solid #ff0000',
                         borderRadius: 1,
                         mt: 1
                       }}
@@ -139,7 +139,6 @@ function CreateProductForm({
                     label="Loan Period"
                     name="loan_period"
                     margin="normal"
-                    type="number"
                     value={formValues.loan_period}
                     onChange={(e) => handleInputChange(e.target.name, e.target.value, 2)}
                     autoComplete="off"
@@ -165,7 +164,6 @@ function CreateProductForm({
                     label="Interest Rate"
                     name="apy"
                     margin="normal"
-                    type="number"
                     value={formValues.apy}
                     onChange={(e) => handleInputChange(e.target.name, e.target.value, 3)}
                     autoComplete="off"
@@ -207,7 +205,7 @@ function CreateProductForm({
                   {calculateNewBalance() < 0 ? (
                     <Typography variant="body2">
                       {convertToCurrency(0, solPrice)} AND{' '}
-                      {convertToCurrency(Math.abs(calculateNewBalance()), solPrice)} IN DEBT
+                      {Math.abs(calculateNewBalance()).toFixed(6)} SOL / {convertToCurrency(Math.abs(calculateNewBalance()), solPrice)} IN DEBT
                     </Typography>
                   ) : (
                     <Typography variant="body2">

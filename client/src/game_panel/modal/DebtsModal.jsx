@@ -15,7 +15,7 @@ import {
   Box,
   Card,
   CardContent,
-  Skeleton,
+  CircularProgress,
 } from '@mui/material';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -58,9 +58,10 @@ const DebtsModal = ({ modalIsOpen, closeModal }) => {
   const [selectedLoan, setSelectedLoan] = useState(null);
   const [paybackAmount, setPaybackAmount] = useState('');
   const [isFocused, setIsFocused] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const dispatch = useDispatch();
-  const { isDarkMode, userLoans, loading, solPrice } = useSelector((state) => ({
+  const { isDarkMode, userLoans, solPrice } = useSelector((state) => ({
     isDarkMode: state.auth.isDarkMode,
     userLoans: state.loanReducer.userLoans,
     loading: state.loanReducer.loadingRemainingLoans,
@@ -108,19 +109,20 @@ const DebtsModal = ({ modalIsOpen, closeModal }) => {
       return;
     }
 
+    setLoading(true); // Set loading to true before API call
     const loanId = selectedLoan._id;
     const response = await dispatch(paybackLoan(loanId, paybackAmount));
 
     if (response.success) {
-      const { newTransaction, message } = response;
+      const { newTransaction } = response;
       closePaybackModal();
-      dispatch(errorMsgBar(message));
       dispatch(addNewTransaction(newTransaction));
       dispatch(acCalculateRemainingLoans());
     } else {
-      closePaybackModal();
       dispatch(errorMsgBar(response.message));
     }
+
+    setLoading(false); // Set loading to false after API call
   };
 
   const handleMaxButtonClick = () => {
@@ -316,64 +318,48 @@ const DebtsModal = ({ modalIsOpen, closeModal }) => {
 
             {/* Payback Modal Body */}
             <Box className="modal-body edit-modal-body Payback-modal-body">
-              {loading ? (
-                <Box
-                  className="loading-overlay"
-                  sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                  }}
-                >
-                  <img src={randomGifUrl} alt="Loading" />
-                  <Typography sx={{ mt: 1, color: '#fff' }}>
-                    Repaying loan...
-                  </Typography>
-                </Box>
-              ) : (
-                <TextField
-                  color="error"
-                  label="Pay Back"
-                  variant="filled"
-                  fullWidth
-                  id="payback"
-                  value={paybackAmount}
-                  onChange={(e) => setPaybackAmount(e.target.value)}
-                  InputProps={{
-                    onFocus: handleFocus,
-                    onBlur: handleBlur,
-                    endAdornment: paybackAmount ? (
-                      ' SOL '
-                    ) : (
-                      <ButtonGroup
-                        className={isFocused ? 'fade-in' : 'fade-out'}
+
+              <TextField
+                color="error"
+                label="Pay Back"
+                variant="filled"
+                fullWidth
+                id="payback"
+                value={paybackAmount}
+                onChange={(e) => setPaybackAmount(e.target.value)}
+                InputProps={{
+                  onFocus: handleFocus,
+                  onBlur: handleBlur,
+                  endAdornment: paybackAmount ? (
+                    ' SOL '
+                  ) : (
+                    <ButtonGroup
+                      className={isFocused ? 'fade-in' : 'fade-out'}
+                    >
+                      <Button
+                        variant="outlined"
+                        color="error"
+                        onClick={handleMaxButtonClick}
                       >
-                        <Button
-                          variant="outlined"
-                          color="error"
-                          onClick={handleMaxButtonClick}
-                        >
-                          Max
-                        </Button>
-                      </ButtonGroup>
-                    ),
-                  }}
-                  sx={{ mb: 2 }}
-                />
-              )}
+                        Max
+                      </Button>
+                    </ButtonGroup>
+                  ),
+                }}
+                sx={{ mb: 2 }}
+              />
             </Box>
 
             {/* Payback Modal Footer */}
             <Box className="modal-footer" sx={{ textAlign: 'right' }}>
-              {!loading && (
-                <Button
-                  variant="contained"
-                  color="error"
-                  onClick={handlePaybackLoan}
-                >
-                  Pay Back
-                </Button>
-              )}
+              <Button
+                variant="contained"
+                color="error"
+                onClick={handlePaybackLoan}
+                disabled={loading} // Disable button when loading
+              >
+                {loading ? <CircularProgress size={24} sx={{ color: '#fff' }} /> : 'Pay Back'}
+              </Button>
             </Box>
           </Box>
         </Modal>

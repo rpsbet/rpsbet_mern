@@ -84,6 +84,7 @@ const Summary = ({ shortVersion }) => {
     >
       <Tooltip title="Tokens will be distributed to this address when bonded">
         <span style={{ display: 'flex', alignItems: 'center' }}>
+          <img width="20" style={{marginRight: '5px', filter: 'grayscale(1)'}} src='https://cdn.prod.website-files.com/6410de4b1ee56e7333393b23/66d87fb4733b331acc81216e_Phantom-Icon_Transparent_Purple.png' />
           <Chip
             label={chipLabel}
             onClick={handleChipClick}

@@ -231,7 +231,7 @@ router.post('/create', auth, async (req, res) => {
         message: 'This account is currently not eligible for loaning this amount. Try again another time or another amount.',
       });
     }
-    
+
     if (req.user.isWithdrawing) {
       return res.json({
         success: false,
@@ -256,14 +256,14 @@ router.post('/create', auth, async (req, res) => {
         message: 'Loan period and APY must be valid positive numbers',
       });
     }
-    
+
     if (currentUser.balance * 10 < parsedLoanAmount) {
       return res.json({
         success: false,
         message: 'Insufficient funds',
       });
     }
-    
+
     const newTransaction = new Transaction({
       user: currentUser._id,
       amount: -parsedLoanAmount,
@@ -313,7 +313,7 @@ router.post('/create', auth, async (req, res) => {
       loan_period: parsedLoanPeriod,
       apy: parsedApy / 100,
       loan_type: loanType,
-      fractional_amount: loanType === 'FRACTIONAL' ? parsedLoanAmount / oldBalance : 0
+      fractional_amount: loanType === 'FRACTIONAL' ? oldBalance : 0
     });
 
     if (loanType === 'FRACTIONAL') {
@@ -678,14 +678,13 @@ async function calculateRemainingLoans(currentUser) {
 
 async function checkLoanEligibility(currentUser, loanAmount) {
   // Convert loanAmount to a number
-  const loanAmountFloat = parseFloat(loanAmount);
-  if (isNaN(loanAmountFloat)) {
+  const debtAmount = currentUser.balance <= parseFloat(loanAmount) ? currentUser.balance - parseFloat(loanAmount) : parseFloat(loanAmount);
+  if (isNaN(debtAmount)) {
     return false; // Return false if loanAmount is not a valid number
   }
-
   const creditScore = currentUser.credit_score;
   const rank = Math.floor(Math.log2(currentUser.totalWagered + 1) / 1.2) + 1;
-  
+
   const accountCreatedAt = new Date(currentUser.created_at);
   const currentDate = new Date();
   const accountAgeInMilliseconds = currentDate - accountCreatedAt;
@@ -694,23 +693,27 @@ async function checkLoanEligibility(currentUser, loanAmount) {
   const { remainingAmount } = await calculateRemainingLoans(currentUser);
 
   const categories = [
-    { creditScoreThreshold: 700, rankThreshold: 0,  accountAgeThresholdInDays: 30, maxAllowance: 0 },
-    { creditScoreThreshold: 700, rankThreshold: 1,  accountAgeThresholdInDays: 30, maxAllowance: 0.02 },
-    { creditScoreThreshold: 700, rankThreshold: 2,  accountAgeThresholdInDays: 30, maxAllowance: 0.05 },
-    { creditScoreThreshold: 700, rankThreshold: 3,  accountAgeThresholdInDays: 30, maxAllowance: 0.1 },
-    { creditScoreThreshold: 700, rankThreshold: 4,  accountAgeThresholdInDays: 30, maxAllowance: 0.25 },
-    { creditScoreThreshold: 700, rankThreshold: 5,  accountAgeThresholdInDays: 30, maxAllowance: 0.5 },
-    { creditScoreThreshold: 700, rankThreshold: 6,  accountAgeThresholdInDays: 30, maxAllowance: 1 },
-    { creditScoreThreshold: 700, rankThreshold: 7,  accountAgeThresholdInDays: 30, maxAllowance: 1.5 },
-    { creditScoreThreshold: 700, rankThreshold: 8,  accountAgeThresholdInDays: 30, maxAllowance: 2 },
-    { creditScoreThreshold: 700, rankThreshold: 9,  accountAgeThresholdInDays: 30, maxAllowance: 3 },
-    { creditScoreThreshold: 700, rankThreshold: 10, accountAgeThresholdInDays: 30, maxAllowance: 4 },
-    { creditScoreThreshold: 700, rankThreshold: 12, accountAgeThresholdInDays: 30, maxAllowance: 6 },
-    { creditScoreThreshold: 700, rankThreshold: 13, accountAgeThresholdInDays: 30, maxAllowance: 8 },
-    { creditScoreThreshold: 700, rankThreshold: 14, accountAgeThresholdInDays: 30, maxAllowance: 10 },
+    { creditScoreThreshold: 700, rankThreshold: 0, accountAgeThresholdInDays: 30, maxAllowance: 0 },
+    { creditScoreThreshold: 700, rankThreshold: 1, accountAgeThresholdInDays: 30, maxAllowance: 0.02 },
+    { creditScoreThreshold: 700, rankThreshold: 2, accountAgeThresholdInDays: 30, maxAllowance: 0.05 },
+    { creditScoreThreshold: 700, rankThreshold: 3, accountAgeThresholdInDays: 30, maxAllowance: 0.1 },
+    { creditScoreThreshold: 700, rankThreshold: 4, accountAgeThresholdInDays: 30, maxAllowance: 0.3 },
+    { creditScoreThreshold: 700, rankThreshold: 5, accountAgeThresholdInDays: 30, maxAllowance: 0.6 },
+    { creditScoreThreshold: 700, rankThreshold: 6, accountAgeThresholdInDays: 30, maxAllowance: 1.2 },
+    { creditScoreThreshold: 700, rankThreshold: 7, accountAgeThresholdInDays: 30, maxAllowance: 1.5 },
+    { creditScoreThreshold: 700, rankThreshold: 8, accountAgeThresholdInDays: 30, maxAllowance: 2 },
+    { creditScoreThreshold: 700, rankThreshold: 9, accountAgeThresholdInDays: 30, maxAllowance: 4 },
+    { creditScoreThreshold: 700, rankThreshold: 10, accountAgeThresholdInDays: 30, maxAllowance: 8 },
+    { creditScoreThreshold: 700, rankThreshold: 12, accountAgeThresholdInDays: 30, maxAllowance: 10 },
+    { creditScoreThreshold: 700, rankThreshold: 13, accountAgeThresholdInDays: 30, maxAllowance: 12 },
+    { creditScoreThreshold: 700, rankThreshold: 14, accountAgeThresholdInDays: 30, maxAllowance: 14 },
+    { creditScoreThreshold: 700, rankThreshold: 15, accountAgeThresholdInDays: 30, maxAllowance: 16 },
+    { creditScoreThreshold: 700, rankThreshold: 16, accountAgeThresholdInDays: 30, maxAllowance: 18 },
+    { creditScoreThreshold: 700, rankThreshold: 17, accountAgeThresholdInDays: 30, maxAllowance: 20 },
   ];
 
-  const totalLoanAmount = remainingAmount + loanAmountFloat;
+  const totalDebtAmount =remainingAmount + Math.abs(debtAmount);
+
 
   // Updated: start at the index matching the user's rank (or the last index)
   let startingIndex = Math.min(rank, categories.length - 1);
@@ -719,15 +722,18 @@ async function checkLoanEligibility(currentUser, loanAmount) {
     const category = categories[i];
 
     if (
-      creditScore > category.creditScoreThreshold &&
+      creditScore >= category.creditScoreThreshold &&
       rank >= category.rankThreshold &&  // Allow equality here
-      totalLoanAmount < category.maxAllowance
+      totalDebtAmount <= category.maxAllowance
     ) {
       if (accountAgeInDays > category.accountAgeThresholdInDays) {
+        console.log("true")
+
         return true; // Eligible
       }
     }
   }
+  console.log("false")
   return false;
 }
 
@@ -920,22 +926,22 @@ router.get('/my-loans', auth, async (req, res) => {
     if (loanTypeFilter) {
       query['loan_type'] = loanTypeFilter;
     }
-    
+
     const loans = await Loan.find(query)
-    .sort({ updated_at: 'desc' })
-    .skip(pagination * page - pagination)
-    .limit(pagination);
-    
+      .sort({ updated_at: 'desc' })
+      .skip(pagination * page - pagination)
+      .limit(pagination);
+
     const count = await Loan.countDocuments(query);
-  
-  const loan_list = await Promise.all(loans.map(async (loan) => {
-    const loaners = await Promise.all(
-      loan.loaners.map(async (loaner) => {
-        const user = await User.findById(loaner.user, 'avatar _id totalWagered accessory');
-        return user;
-      })
-    );
-    
+
+    const loan_list = await Promise.all(loans.map(async (loan) => {
+      const loaners = await Promise.all(
+        loan.loaners.map(async (loaner) => {
+          const user = await User.findById(loaner.user, 'avatar _id totalWagered accessory');
+          return user;
+        })
+      );
+
       return {
         _id: loan._id,
         loan_amount: loan.loan_amount,
@@ -996,7 +1002,7 @@ router.post('/withdraw-loan', auth, async (req, res) => {
 
     let amount = loan.loan_amount;
     if (loan.loan_type === 'FRACTIONAL') {
-      amount = loan.loan_amount * (loan.fractional_amount / 100);
+      amount = loan.fractional_amount;
     }
 
     // Update loan amount to 0

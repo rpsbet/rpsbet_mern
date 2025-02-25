@@ -47,10 +47,10 @@ const addToQueue = async (req, bot = false) => {
     try {
         const taxPromise = SystemSetting.findOne({ name: 'commission' });
         const platformPromise = SystemSetting.findOne({ name: 'platform_betting' });
-        const [
-            tax,
-            platform
-        ] = await Promise.all([taxPromise, platformPromise]);
+        const holdersPoolPromise = SystemSetting.findOne({ name: 'holders_pool' });
+
+        const [tax, platform, holdersPool] = await Promise.all([taxPromise, platformPromise, holdersPoolPromise]);
+
         let responseData = {};
         let gameLogArray = [];
         let user;
@@ -64,6 +64,7 @@ const addToQueue = async (req, bot = false) => {
             description: '',
             room: req.body._id
         });
+        let platformEarnings;
         if (bot) {
             user = await User.findOne({ _id: req.user._id });
 
@@ -307,10 +308,16 @@ const addToQueue = async (req, bot = false) => {
                         newGameLog.commission =
                             betAmount * 2;
 
-                        // update platform earnings (0.5%)
-                        platform.value =
-                            platform.value +
-                            betAmount * 2 * (tax.value / 100);
+                        // Calculate the platform earnings
+                        platformEarnings = betAmount * 2 * (tax.value / 100);
+
+                        // Update platform earnings
+                        platform.value += platformEarnings;
+
+                        // Distribute 10% of the earnings to the holdersPool
+                        const holdersPoolEarnings = platformEarnings * 0.1;
+                        holdersPool.value += holdersPoolEarnings;
+
 
                         // update bankroll
                         roomInfo['user_bet'] = roomInfo['user_bet'];
@@ -341,10 +348,16 @@ const addToQueue = async (req, bot = false) => {
 
                         message.amount = req.body.bet_amount * 2;
 
-                        // update platform stat (cd%)
-                        platform.value =
-                            platform.value +
-                            betAmount * 2 * (tax.value / 100);
+                        // Calculate the platform earnings
+                        platformEarnings = betAmount * 2 * (tax.value / 100);
+
+                        // Update platform earnings
+                        platform.value += platformEarnings;
+
+                        // Distribute 10% of the earnings to the holdersPool
+                        const holdersPoolEarnings = platformEarnings * 0.1;
+                        holdersPool.value += holdersPoolEarnings;
+
 
                         // if loss
                     } else {
@@ -358,9 +371,16 @@ const addToQueue = async (req, bot = false) => {
                             roomInfo['user_bet'] +
                             (betAmount * 2 * ((100 - tax.value) / 100)) - betAmount;
 
-                        platform.value =
-                            platform.value +
-                            betAmount * 2 * (tax.value / 100);
+                        // Calculate the platform earnings
+                        platformEarnings = betAmount * 2 * (tax.value / 100);
+
+                        // Update platform earnings
+                        platform.value += platformEarnings;
+
+                        // Distribute 10% of the earnings to the holdersPool
+                        const holdersPoolEarnings = platformEarnings * 0.1;
+                        holdersPool.value += holdersPoolEarnings;
+
 
                         // autopayout host
                         if (
@@ -424,7 +444,7 @@ const addToQueue = async (req, bot = false) => {
                                 creator: roomInfo['creator'],
                                 joined_user: roomInfo['creator'],
                                 game_type: roomInfo['game_type'],
-                                bet_amount: roomInf ['user_bet'],
+                                bet_amount: roomInf['user_bet'],
                                 hosts: roomInfo.hosts,
                                 endgame_amount: roomInfo['endgame_amount'],
                                 game_result: 3,
@@ -597,9 +617,21 @@ const addToQueue = async (req, bot = false) => {
                     game_result = -1;
 
                     roomInfo['user_bet'] =
-                        roomInfo['user_bet'] + parseFloat(req.body.bet_amount);
+                        roomInfo['user_bet'] + parseFloat(req.body.bet_amount) * ((100 - tax.value) / 100);
                     roomInfo['host_pr'] =
-                        roomInfo['host_pr'] + parseFloat(req.body.bet_amount);
+                        roomInfo['host_pr'] + parseFloat(req.body.bet_amount) * ((100 - tax.value) / 100);
+
+
+                    // Calculate the platform earnings
+                    platformEarnings = betAmount * (tax.value / 100);
+
+                    // Update platform earnings
+                    platform.value += platformEarnings;
+
+                    // Distribute 10% of the earnings to the holdersPool
+                    const holdersPoolEarnings = platformEarnings * 0.1;
+                    holdersPool.value += holdersPoolEarnings;
+
                     if (
                         roomInfo['endgame_type'] &&
                         roomInfo['user_bet'] >= roomInfo['endgame_amount']
@@ -962,6 +994,7 @@ const addToQueue = async (req, bot = false) => {
                 try {
                     Promise.all([
                         saveDocumentWithRetry(platform),
+                        saveDocumentWithRetry(holdersPool),
                         await saveDocumentWithRetry(user),
                         await saveDocumentWithRetry(roomInfo),
                         saveDocumentWithRetry(host),

@@ -240,7 +240,7 @@ function GlobalChat(props) {
               <div
                 key={index}
                 className={`chat-line ${chat.sender === 'SYSTEM' ? 'special-message' : ''
-                  } ${chat.sender === 'SYSTEM' && chat.message.includes('rent')
+                  } ${chat.sender === 'SYSTEM' && chat.message.includes('debt')
                     ? 'special-message-rent'
                     : ''
                   }`}

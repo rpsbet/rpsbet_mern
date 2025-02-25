@@ -250,7 +250,7 @@ export async function reinforcementAI_qs(data, qs_game_type) {
     );
 
     // small chance to randomize anyway
-    const randomnessFactor = 0.1;
+    const randomnessFactor = 0.3;
     if (Math.random() < randomnessFactor) {
       const possibleMoves = Array.from({ length: qs_game_type }, (_, i) => i);
       // remove predicted

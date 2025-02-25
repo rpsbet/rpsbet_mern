@@ -938,13 +938,7 @@ function JoinGame(props) {
             if (callback) callback();
           }}
           selected_rps={selected_rps}
-          handleJoyrideCallback={(data) => {
-            const { status, type } = data;
-            if (status === 'finished' || status === 'skipped') {
-              updateTutorialCompleted(2);
-              setRun(false);
-            }
-          }}
+
           playSound={playSound}
           join={join}
           handleSwitchChange={handleSwitchChange}

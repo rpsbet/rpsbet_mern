@@ -14,9 +14,10 @@ import {
   Button,
   Modal,
   ButtonGroup,
+  CircularProgress
 } from '@mui/material';
 
-import Lottie from 'react-lottie';
+import RankAllowancesTable from '../../components/RankAllowancesTable';
 import { convertToCurrency } from '../../util/conversion';
 import { getRank } from '../../util/getRank';
 import LottieRankIcon from '../LottieAnimations/rankIcon.json';
@@ -38,90 +39,23 @@ import { getCustomTheme } from '../../config/theme';
 import { ThemeProvider } from '@mui/material/styles';
 
 const categories = [
-  {
-    creditScoreThreshold: 700,
-    rankThreshold: 0,
-    accountAgeThresholdInDays: 30,
-    maxAllowance: 0,
-  },
-  {
-    creditScoreThreshold: 700,
-    rankThreshold: 1,
-    accountAgeThresholdInDays: 30,
-    maxAllowance: 0.02,
-  },
-  {
-    creditScoreThreshold: 700,
-    rankThreshold: 2,
-    accountAgeThresholdInDays: 30,
-    maxAllowance: 0.05,
-  },
-  {
-    creditScoreThreshold: 700,
-    rankThreshold: 3,
-    accountAgeThresholdInDays: 30,
-    maxAllowance: 0.1,
-  },
-  {
-    creditScoreThreshold: 700,
-    rankThreshold: 4,
-    accountAgeThresholdInDays: 30,
-    maxAllowance: 0.25,
-  },
-  {
-    creditScoreThreshold: 700,
-    rankThreshold: 5,
-    accountAgeThresholdInDays: 30,
-    maxAllowance: 0.5,
-  },
-  {
-    creditScoreThreshold: 700,
-    rankThreshold: 6,
-    accountAgeThresholdInDays: 30,
-    maxAllowance: 1,
-  },
-  {
-    creditScoreThreshold: 700,
-    rankThreshold: 7,
-    accountAgeThresholdInDays: 30,
-    maxAllowance: 1.5,
-  },
-  {
-    creditScoreThreshold: 700,
-    rankThreshold: 8,
-    accountAgeThresholdInDays: 30,
-    maxAllowance: 2,
-  },
-  {
-    creditScoreThreshold: 700,
-    rankThreshold: 9,
-    accountAgeThresholdInDays: 30,
-    maxAllowance: 3,
-  },
-  {
-    creditScoreThreshold: 700,
-    rankThreshold: 10,
-    accountAgeThresholdInDays: 30,
-    maxAllowance: 4,
-  },
-  {
-    creditScoreThreshold: 700,
-    rankThreshold: 12,
-    accountAgeThresholdInDays: 30,
-    maxAllowance: 6,
-  },
-  {
-    creditScoreThreshold: 700,
-    rankThreshold: 13,
-    accountAgeThresholdInDays: 30,
-    maxAllowance: 8,
-  },
-  {
-    creditScoreThreshold: 700,
-    rankThreshold: 14,
-    accountAgeThresholdInDays: 30,
-    maxAllowance: 10,
-  },
+  { creditScoreThreshold: 700, rankThreshold: 0, accountAgeThresholdInDays: 30, maxAllowance: 0 },
+  { creditScoreThreshold: 700, rankThreshold: 1, accountAgeThresholdInDays: 30, maxAllowance: 0.02 },
+  { creditScoreThreshold: 700, rankThreshold: 2, accountAgeThresholdInDays: 30, maxAllowance: 0.05 },
+  { creditScoreThreshold: 700, rankThreshold: 3, accountAgeThresholdInDays: 30, maxAllowance: 0.1 },
+  { creditScoreThreshold: 700, rankThreshold: 4, accountAgeThresholdInDays: 30, maxAllowance: 0.3 },
+  { creditScoreThreshold: 700, rankThreshold: 5, accountAgeThresholdInDays: 30, maxAllowance: 0.6 },
+  { creditScoreThreshold: 700, rankThreshold: 6, accountAgeThresholdInDays: 30, maxAllowance: 1.2 },
+  { creditScoreThreshold: 700, rankThreshold: 7, accountAgeThresholdInDays: 30, maxAllowance: 1.5 },
+  { creditScoreThreshold: 700, rankThreshold: 8, accountAgeThresholdInDays: 30, maxAllowance: 2 },
+  { creditScoreThreshold: 700, rankThreshold: 9, accountAgeThresholdInDays: 30, maxAllowance: 4 },
+  { creditScoreThreshold: 700, rankThreshold: 10, accountAgeThresholdInDays: 30, maxAllowance: 8 },
+  { creditScoreThreshold: 700, rankThreshold: 12, accountAgeThresholdInDays: 30, maxAllowance: 10 },
+  { creditScoreThreshold: 700, rankThreshold: 13, accountAgeThresholdInDays: 30, maxAllowance: 12 },
+  { creditScoreThreshold: 700, rankThreshold: 14, accountAgeThresholdInDays: 30, maxAllowance: 14 },
+  { creditScoreThreshold: 700, rankThreshold: 15, accountAgeThresholdInDays: 30, maxAllowance: 16 },
+  { creditScoreThreshold: 700, rankThreshold: 16, accountAgeThresholdInDays: 30, maxAllowance: 18 },
+  { creditScoreThreshold: 700, rankThreshold: 17, accountAgeThresholdInDays: 30, maxAllowance: 20 },
 ];
 
 function ConfirmLoanModal(props) {
@@ -148,6 +82,7 @@ function ConfirmLoanModal(props) {
   const [expanded, setExpanded] = useState(false);
   const [responseText, setResponseText] = useState(0);
   const [isFocused, setIsFocused] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const dispatch = useDispatch();
 
@@ -211,6 +146,7 @@ function ConfirmLoanModal(props) {
       return;
     }
 
+    setLoading(true); // Set loading before API call
     const response = await confirmLoan({
       loan_id: item,
       loanAmount: loan_amount,
@@ -218,27 +154,27 @@ function ConfirmLoanModal(props) {
       responseText,
     });
 
+    closeConfirmLoanModal();
     if (response.success) {
-      const { newTransaction, message } = response;
-      closeConfirmLoanModal();
-      dispatch(errorMsgBar(message));
+      const { newTransaction } = response;
       addNewTransaction(newTransaction);
       acQueryLoan();
       acCalculateRemainingLoans();
     } else {
-      closeConfirmLoanModal();
       dispatch(errorMsgBar(response.message));
     }
+
+    setLoading(false); // Reset loading after API call
   }, [
     responseText,
     loan_amount,
-    isDarkMode,
     item,
     lender,
     confirmLoan,
     closeConfirmLoanModal,
     addNewTransaction,
     acQueryLoan,
+    acCalculateRemainingLoans,
   ]);
 
   const onBtnCancelClicked = useCallback(() => {
@@ -254,7 +190,6 @@ function ConfirmLoanModal(props) {
   );
   const maxAllowance =
     highlightedRowIndex >= 0 ? categories[highlightedRowIndex].maxAllowance : 0;
-
   let errorMessage = '';
   if (parseFloat(responseText) > loan_amount) {
     errorMessage = `The entered amount exceeds the loan limit of ${loan_amount} SOL.`;
@@ -300,110 +235,7 @@ function ConfirmLoanModal(props) {
                 }}
               >
                 {/* TABLE: RANK ALLOWANCES */}
-                <Box sx={{ mb: 3 }}>
-                  <TableContainer
-                    sx={{
-                      maxHeight: 150,
-                      overflow: 'auto',
-                      borderRadius: 2,
-                    }}
-                  >
-                    <Table
-                      stickyHeader
-                      size="small"
-                      sx={{
-                        'td, th': {
-                          fontSize: '0.85rem',
-                          padding: '4px 8px',
-                        },
-                      }}
-                    >
-                      <TableHead>
-                        <TableRow>
-                          <TableCell
-                            align="center"
-                            sx={{
-                              color: '#fff',
-                              fontWeight: 600,
-                              backgroundColor: '#333',
-                            }}
-                          >
-                            RANK
-                          </TableCell>
-                          <TableCell
-                            align="center"
-                            sx={{
-                              color: '#fff',
-                              fontWeight: 600,
-                              backgroundColor: '#333',
-                            }}
-                          >
-                            MAX ALLOWANCE (SOL)
-                          </TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {categories.map((category, index) => {
-                          if (index < highlightedRowIndex) return null;
-                          return (
-                            <TableRow
-                              key={index}
-                              sx={{
-                                backgroundColor:
-                                  highlightedRowIndex === index
-                                    ? '#28a745'
-                                    : '#333',
-                              }}
-                            >
-                              <TableCell sx={{ color: '#fff' }} align="center">
-                                <Box
-                                  sx={{
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: 1,
-                                  }}
-                                >
-                                  <Lottie
-                                    options={{
-                                      loop: true,
-                                      autoplay: true,
-                                      animationData: LottieRankIcon,
-                                    }}
-                                    height={22}
-                                    width={22}
-                                    style={{ display: 'inline-block' }}
-                                  />
-                                  <span>{category.rankThreshold}</span>
-                                </Box>
-                              </TableCell>
-                              <TableCell sx={{ color: '#fff' }} align="center">
-                                {category.maxAllowance} (
-                                {convertToCurrency(
-                                  category.maxAllowance,
-                                  solPrice,
-                                )}
-                                )
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      mt: 2,
-                      fontStyle: 'italic',
-                      textAlign: 'center',
-                      opacity: 0.8,
-                    }}
-                  >
-                    You must have a credit score above 700 and an account age of
-                    at least 30 days to be eligible.
-                  </Typography>
-                </Box>
+                <RankAllowancesTable categories={categories} />
 
                 <TableContainer>
                   <Table>
@@ -416,11 +248,10 @@ function ConfirmLoanModal(props) {
                           </span>
                         </TableCell>
                         <TableCell
-                          className={`label ${
-                            parseFloat(responseText) > loan_amount
-                              ? 'red-text'
-                              : 'green-text'
-                          }`}
+                          className={`label ${parseFloat(responseText) > loan_amount
+                            ? 'red-text'
+                            : 'green-text'
+                            }`}
                           style={{ borderBottom: 'none' }}
                         >
                           {loan_amount} SOL (
@@ -666,13 +497,15 @@ function ConfirmLoanModal(props) {
                 variant="contained"
                 color="success"
                 onClick={onBtnOkClicked}
+                disabled={loading} // Disable while processing
               >
-                ACCEPT
+                {loading ? <CircularProgress size={24} sx={{ color: '#fff' }} /> : 'ACCEPT'}
               </Button>
               <Button
                 variant="contained"
                 color="error"
                 onClick={onBtnCancelClicked}
+                disabled={loading} // Prevent canceling mid-process
               >
                 Cancel
               </Button>
