@@ -7,7 +7,6 @@ import { convertToCurrency } from '../util/conversion';
 import { getRank } from '../util/getRank';
 
 const RankAllowancesTable = ({ categories }) => {
-
 	const accountCreationDate = useSelector((state) => state.auth.user.created_at);
 	const rank = getRank(useSelector((state) => state.auth.totalWagered));
 	const solPrice = useSelector((state) => state.logic.solPrice);
@@ -85,7 +84,7 @@ const RankAllowancesTable = ({ categories }) => {
 			</TableContainer>
 
 			<Typography variant="body2" sx={{ mt: 2, fontStyle: 'italic', textAlign: 'center', opacity: 0.8 }}>
-				You must have a credit score above 700 and an account age of at least 30 days to be eligible.
+				You must have a credit score above 700 to be eligible.
 			</Typography>
 		</Box>
 	);

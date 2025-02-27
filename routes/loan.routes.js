@@ -677,11 +677,14 @@ async function calculateRemainingLoans(currentUser) {
 }
 
 async function checkLoanEligibility(currentUser, loanAmount) {
-  // Convert loanAmount to a number
-  const debtAmount = currentUser.balance <= parseFloat(loanAmount) ? currentUser.balance - parseFloat(loanAmount) : parseFloat(loanAmount);
+  const debtAmount = currentUser.balance <= parseFloat(loanAmount) 
+    ? currentUser.balance - parseFloat(loanAmount) 
+    : parseFloat(loanAmount);
+
   if (isNaN(debtAmount)) {
     return false; // Return false if loanAmount is not a valid number
   }
+
   const creditScore = currentUser.credit_score;
   const rank = Math.floor(Math.log2(currentUser.totalWagered + 1) / 1.2) + 1;
 
@@ -693,50 +696,45 @@ async function checkLoanEligibility(currentUser, loanAmount) {
   const { remainingAmount } = await calculateRemainingLoans(currentUser);
 
   const categories = [
-    { creditScoreThreshold: 700, rankThreshold: 0, accountAgeThresholdInDays: 30, maxAllowance: 0.25 },
-    { creditScoreThreshold: 700, rankThreshold: 1, accountAgeThresholdInDays: 30, maxAllowance: 0.5 },
-    { creditScoreThreshold: 700, rankThreshold: 2, accountAgeThresholdInDays: 30, maxAllowance: 0.75 },
-    { creditScoreThreshold: 700, rankThreshold: 3, accountAgeThresholdInDays: 30, maxAllowance: 1 },
-    { creditScoreThreshold: 700, rankThreshold: 4, accountAgeThresholdInDays: 30, maxAllowance: 1.3 },
-    { creditScoreThreshold: 700, rankThreshold: 5, accountAgeThresholdInDays: 30, maxAllowance: 1.6 },
-    { creditScoreThreshold: 700, rankThreshold: 6, accountAgeThresholdInDays: 30, maxAllowance: 2.2 },
-    { creditScoreThreshold: 700, rankThreshold: 7, accountAgeThresholdInDays: 30, maxAllowance: 3.5 },
-    { creditScoreThreshold: 700, rankThreshold: 8, accountAgeThresholdInDays: 30, maxAllowance: 4 },
-    { creditScoreThreshold: 700, rankThreshold: 9, accountAgeThresholdInDays: 30, maxAllowance: 5 },
-    { creditScoreThreshold: 700, rankThreshold: 10, accountAgeThresholdInDays: 30, maxAllowance: 6 },
-    { creditScoreThreshold: 700, rankThreshold: 12, accountAgeThresholdInDays: 30, maxAllowance: 7 },
-    { creditScoreThreshold: 700, rankThreshold: 13, accountAgeThresholdInDays: 30, maxAllowance: 8 },
-    { creditScoreThreshold: 700, rankThreshold: 14, accountAgeThresholdInDays: 30, maxAllowance: 9 },
-    { creditScoreThreshold: 700, rankThreshold: 15, accountAgeThresholdInDays: 30, maxAllowance: 10 },
-    { creditScoreThreshold: 700, rankThreshold: 16, accountAgeThresholdInDays: 30, maxAllowance: 11 },
-    { creditScoreThreshold: 700, rankThreshold: 17, accountAgeThresholdInDays: 30, maxAllowance: 12 },
-    { creditScoreThreshold: 700, rankThreshold: 18, accountAgeThresholdInDays: 30, maxAllowance: 13 },
-    { creditScoreThreshold: 700, rankThreshold: 19, accountAgeThresholdInDays: 30, maxAllowance: 14 },
-    { creditScoreThreshold: 700, rankThreshold: 20, accountAgeThresholdInDays: 30, maxAllowance: 15 },
+    { creditScoreThreshold: 700, rankThreshold: 1, accountAgeThresholdInDays: 0, maxAllowance: 0.25 },
+    { creditScoreThreshold: 700, rankThreshold: 2, accountAgeThresholdInDays: 0, maxAllowance: 0.5 },
+    { creditScoreThreshold: 700, rankThreshold: 3, accountAgeThresholdInDays: 0, maxAllowance: 0.75 },
+    { creditScoreThreshold: 700, rankThreshold: 4, accountAgeThresholdInDays: 0, maxAllowance: 1 },
+    { creditScoreThreshold: 700, rankThreshold: 5, accountAgeThresholdInDays: 0, maxAllowance: 1.3 },
+    { creditScoreThreshold: 700, rankThreshold: 6, accountAgeThresholdInDays: 0, maxAllowance: 1.6 },
+    { creditScoreThreshold: 700, rankThreshold: 7, accountAgeThresholdInDays: 0, maxAllowance: 2.2 },
+    { creditScoreThreshold: 700, rankThreshold: 8, accountAgeThresholdInDays: 0, maxAllowance: 3.5 },
+    { creditScoreThreshold: 700, rankThreshold: 9, accountAgeThresholdInDays: 0, maxAllowance: 4 },
+    { creditScoreThreshold: 700, rankThreshold: 10, accountAgeThresholdInDays: 0, maxAllowance: 5 },
+    { creditScoreThreshold: 700, rankThreshold: 11, accountAgeThresholdInDays: 0, maxAllowance: 6 },
+    { creditScoreThreshold: 700, rankThreshold: 12, accountAgeThresholdInDays: 0, maxAllowance: 7 },
+    { creditScoreThreshold: 700, rankThreshold: 14, accountAgeThresholdInDays: 0, maxAllowance: 8 },
+    { creditScoreThreshold: 700, rankThreshold: 15, accountAgeThresholdInDays: 0, maxAllowance: 9 },
+    { creditScoreThreshold: 700, rankThreshold: 16, accountAgeThresholdInDays: 0, maxAllowance: 10 },
+    { creditScoreThreshold: 700, rankThreshold: 17, accountAgeThresholdInDays: 0, maxAllowance: 11 },
+    { creditScoreThreshold: 700, rankThreshold: 18, accountAgeThresholdInDays: 0, maxAllowance: 12 },
+    { creditScoreThreshold: 700, rankThreshold: 19, accountAgeThresholdInDays: 0, maxAllowance: 13 },
+    { creditScoreThreshold: 700, rankThreshold: 20, accountAgeThresholdInDays: 0, maxAllowance: 14 },
+    { creditScoreThreshold: 700, rankThreshold: 21, accountAgeThresholdInDays: 0, maxAllowance: 15 },
   ];
 
-  const totalDebtAmount =remainingAmount + Math.abs(debtAmount);
+  const totalDebtAmount = remainingAmount + Math.abs(debtAmount);
 
-
-  // Updated: start at the index matching the user's rank (or the last index)
   let startingIndex = Math.min(rank, categories.length - 1);
 
   for (let i = startingIndex; i >= 0; i--) {
     const category = categories[i];
-
     if (
       creditScore >= category.creditScoreThreshold &&
-      rank >= category.rankThreshold &&  // Allow equality here
+      rank >= category.rankThreshold &&
       totalDebtAmount <= category.maxAllowance
     ) {
       if (accountAgeInDays > category.accountAgeThresholdInDays) {
-        console.log("true")
-
-        return true; // Eligible
+        return true;
       }
     }
   }
-  console.log("false")
+
   return false;
 }
 
@@ -789,7 +787,7 @@ router.post('/lend', auth, async (req, res) => {
     if (!isEligible) {
       return res.json({
         success: false,
-        message: 'This account is currently not eligible for this amount. Check your account Age or Try again another time at a later rank.',
+        message: 'This account is currently not eligible.',
       });
     }
 
