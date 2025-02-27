@@ -27,7 +27,7 @@ const RankAllowancesTable = ({ categories }) => {
 		let bestCategoryIndex = 0; // Default to the first row
 		for (let i = 0; i < categories.length; i++) {
 			if (rank >= categories[i].rankThreshold && accountAgeInDays >= categories[i].accountAgeThresholdInDays) {
-				bestCategoryIndex = i - 1;
+				bestCategoryIndex = i;
 			} else {
 				break; // Stop at the first invalid rank
 			}

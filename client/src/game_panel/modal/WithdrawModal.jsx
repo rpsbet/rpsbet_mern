@@ -25,7 +25,7 @@ import {
   ButtonGroup,
   CircularProgress,
 } from '@mui/material';
-
+import { getRank } from '../../util/getRank';
 import {
   Warning,
   Info,
@@ -61,7 +61,6 @@ function WithdrawModal(props) {
   const [isLoading, setIsLoading] = useState(false);
 
   const dispatch = useDispatch();
-
   // --------------------- Debounce Logic for Gas Fee ---------------------
   const debounceTimer = useRef(null);
   useEffect(() => {
@@ -324,10 +323,12 @@ function WithdrawModal(props) {
               variant="contained"
               color="error"
               onClick={send}
-              disabled={isConnected || isLoading}
+              disabled={isConnected || isLoading || getRank(userInfo.totalWagered) < 7}
               fullWidth
             >
-              {isLoading ? (
+              {getRank(userInfo.totalWagered) < 7 ? (
+                'LVL 7 REQUIRED'
+              ) : isLoading ? (
                 <CircularProgress color="inherit" size={24} />
               ) : (
                 'WITHDRAW'

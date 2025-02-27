@@ -39,26 +39,6 @@ const DefaultBetAmountPanel = ({
 
   const theme = getCustomTheme(isDarkMode);
 
-  const categories = [
-    { rankThreshold: 0, accountAgeThresholdInDays: 30, maxAllowance: 0 },
-    { rankThreshold: 1, accountAgeThresholdInDays: 30, maxAllowance: 0.02 },
-    { rankThreshold: 2, accountAgeThresholdInDays: 30, maxAllowance: 0.05 },
-    { rankThreshold: 3, accountAgeThresholdInDays: 30, maxAllowance: 0.1 },
-    { rankThreshold: 4, accountAgeThresholdInDays: 30, maxAllowance: 0.3 },
-    { rankThreshold: 5, accountAgeThresholdInDays: 30, maxAllowance: 0.6 },
-    { rankThreshold: 6, accountAgeThresholdInDays: 30, maxAllowance: 1.2 },
-    { rankThreshold: 7, accountAgeThresholdInDays: 30, maxAllowance: 1.5 },
-    { rankThreshold: 8, accountAgeThresholdInDays: 30, maxAllowance: 2 },
-    { rankThreshold: 9, accountAgeThresholdInDays: 30, maxAllowance: 4 },
-    { rankThreshold: 10, accountAgeThresholdInDays: 30, maxAllowance: 8 },
-    { rankThreshold: 12, accountAgeThresholdInDays: 30, maxAllowance: 10 },
-    { rankThreshold: 13, accountAgeThresholdInDays: 30, maxAllowance: 12 },
-    { rankThreshold: 14, accountAgeThresholdInDays: 30, maxAllowance: 14 },
-    { rankThreshold: 15, accountAgeThresholdInDays: 30, maxAllowance: 16 },
-    { rankThreshold: 16, accountAgeThresholdInDays: 30, maxAllowance: 18 },
-    { rankThreshold: 17, accountAgeThresholdInDays: 30, maxAllowance: 20 },
-  ];
-
   // Hard Cap values = 2x each defaultBetAmount
   const defaultHardCapAmounts = [20, 40, 50, 80, 100];
 

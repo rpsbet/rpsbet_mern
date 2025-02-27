@@ -128,7 +128,7 @@ function ConfirmLoanModal(props) {
           currentRank >= category.rankThreshold &&
           accountAgeInDays >= category.accountAgeThresholdInDays
         ) {
-          bestCategoryIndex = i - 1;
+          bestCategoryIndex = i;
         }
       }
       return bestCategoryIndex;

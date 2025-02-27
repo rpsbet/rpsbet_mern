@@ -100,13 +100,13 @@ const StatisticsForm = (props) => {
   const getRank = (amount) => {
     // 1) Calculate raw rank (0-based)
     const raw = Math.log2(amount + 1) / 1.2;
-    const rankFloor = Math.floor(raw);
+    const rankFloor = Math.floor(raw) + 1; // Add +1 to match the pure function
     const nextRank = rankFloor + 1;
 
     // 2) Thresholds for linear progress
     const thresholdForThisRank =
-      rankFloor > 0 ? Math.pow(2, 1.2 * rankFloor) - 1 : 0;
-    const thresholdForNextRank = Math.pow(2, 1.2 * nextRank) - 1;
+      rankFloor > 1 ? Math.pow(2, 1.2 * (rankFloor - 1)) - 1 : 0;
+    const thresholdForNextRank = Math.pow(2, 1.2 * rankFloor) - 1;
 
     // 3) fraction => portion between [rankFloor .. nextRank]
     let fraction =
@@ -139,7 +139,7 @@ const StatisticsForm = (props) => {
         </div>
       </div>
     );
-  };
+};
 
   // ----- Computed Values -----
   const date_joined = moment(dateJoined);
