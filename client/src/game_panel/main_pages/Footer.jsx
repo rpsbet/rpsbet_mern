@@ -121,13 +121,13 @@ const Footer = (props) => {
               <FontAwesomeIcon icon={faTiktok} />
             </a>
         </Box>
-        <Currencies>
+        {/* <Currencies>
           <AvailableCurrency src={sol} alt="SOL" />
           <AvailableCurrency src={btc} alt="BTC" />
           <AvailableCurrency src={eth} alt="ETH" />
           <AvailableCurrency src={ltc} alt="LTC" />
           <span>+ 50 MORE!</span>
-        </Currencies>
+        </Currencies> */}
 
         <LinksContainer>
           <StyledLink
