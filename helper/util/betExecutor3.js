@@ -441,13 +441,10 @@ const addToQueue = async (req, bot = false) => {
 
             message.amount = req.body.bet_amount;
           }
-          newGameLog.winnings = req.body.bet_amount * 2;
-        }
-        if (roomInfo['rps_game_type'] === 0) {
-          winnings = betAmount * 2;
-        }
 
-        newGameLog.winnings = winnings;
+        }
+console.log("newTransactionAmount", newTransactionAmount)
+        newGameLog.winnings = newTransactionAmount;
         newGameLog.game_result = game_result;
         newGameLog.endgame_amount = roomInfo['endgame_amount'];
 

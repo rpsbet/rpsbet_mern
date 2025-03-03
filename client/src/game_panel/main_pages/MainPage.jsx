@@ -161,7 +161,7 @@ function MainPage(props) {
             className="btn-create-room"
             onClick={handleCreateBtnClicked}
           >
-            START NEW GAME +
+            CREATE A GAME +
           </Button>
         </div>
       );

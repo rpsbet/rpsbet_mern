@@ -20,7 +20,7 @@ const StyledRadioGrid = styled.div`
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   width: 100%;
   max-width: 800px;
-
+margin-bottom: 20px;
   @media (max-width: 768px) {
     grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     padding: 10px;
@@ -116,7 +116,7 @@ const QuickShoot = (props) => {
                 onChange={props.handleChange}
               >
                 <h3 className="game-sub-title roll-tag">
-                  Choose Game Mode&nbsp;
+                  Choose a Game&nbsp;
                   <Tooltip
                     style={{ position: 'absolute', right: '20px' }}
                     title="Select a game-mode to use as collateral against your capital."
@@ -125,6 +125,17 @@ const QuickShoot = (props) => {
                     <Info style={{ cursor: 'pointer', float: 'right' }} />
                   </Tooltip>
                 </h3>
+                <GameSettingsPanel
+              selectedStrategy={selectedStrategy}
+              setSelectedStrategy={setSelectedStrategy}
+              prompt={prompt}
+              onChangeState={onChangeState}
+              user={user}
+              rank={rank}
+              ai_mode={ai_mode}
+              isDarkMode={isDarkMode}
+              strategies={strategies}
+            />
                 <StyledRadioGrid>
                   {gameTypeList.map((gameType, index) => (
                     <FormControlLabel
@@ -159,6 +170,7 @@ const QuickShoot = (props) => {
                   ))}
                 </StyledRadioGrid>
               </RadioGroup>
+        
             </Box>
             <Box sx={{ mt: '20px' }}>
 
@@ -201,17 +213,7 @@ const QuickShoot = (props) => {
               </Box>
             </Box>
 
-            <GameSettingsPanel
-              selectedStrategy={selectedStrategy}
-              setSelectedStrategy={setSelectedStrategy}
-              prompt={prompt}
-              onChangeState={onChangeState}
-              user={user}
-              rank={rank}
-              ai_mode={ai_mode}
-              isDarkMode={isDarkMode}
-              strategies={strategies}
-            />
+    
 
             <CoinInfo
               onChangeState={onChangeState}

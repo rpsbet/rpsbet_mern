@@ -269,7 +269,7 @@ function CreateGame(props) {
   const onNextButtonClicked = () => {
     if (step === 1) {
       if (!connectedAccount) {
-        dispatch(errorMsgBar('CONNECT YOUR WALLET'));
+        dispatch(errorMsgBar("CONNECT YOUR WALLET"));
         return;
       }
       if (!gameMode) {
@@ -280,69 +280,81 @@ function CreateGame(props) {
         dispatch(errorMsgBar("YOU DIDN'T BET (CAT) SHIT!!!"));
         return;
       }
+  
       const parsedQsGameType = parseInt(qsGameType);
-      if (parsedQsGameType >= 3 && tax >= 20) {
-        dispatch(errorMsgBar('Tax must be 20 or less for this Game Type!'));
+  
+      // ✅ Set tax based on `parsedQsGameType`
+      if (gameMode === "RPS") {
+        setTax(30);
+      } else {
+        switch (parsedQsGameType) {
+          case 5:
+            setTax(12);
+            break;
+          case 4:
+            setTax(14);
+            break;
+          case 3:
+            setTax(16);
+            break;
+          case 2:
+            setTax(18);
+            break;
+          default:
+            setTax(20); // Default value
+        }
+      }
+  
+      if (parseFloat(betAmount) < 0.0005) {
+        dispatch(errorMsgBar("MEOWNIMUM BUY-IN IS 0.0005 SOL!"));
         return;
       }
 
-      if (parseFloat(betAmount) < 0.0005) {
-        dispatch(errorMsgBar('MEOWNIMUM BUY-IN IS 0.0005 SOL!'));
-        return;
-      }
-      if (parseFloat(tax) > 35) {
-        dispatch(errorMsgBar('MAX TAX IS 35%!'));
-        return;
-      }
-      if (parseFloat(tax) > 20) {
-        dispatch(errorMsgBar('MIN TAX IS 20%!'));
-        return;
-      }
       if (parseFloat(betAmount) >= parseFloat(endgameAmount)) {
-        dispatch(errorMsgBar('HARD-CAP MUST BE MORE THAN YOUR BUY-IN AMOUNT!'));
+        dispatch(errorMsgBar("HARD-CAP MUST BE MORE THAN YOUR BUY-IN AMOUNT!"));
         return;
       }
       if (!name.trim()) {
-        dispatch(errorMsgBar('ADD A NAME DUMBASS!'));
+        dispatch(errorMsgBar("ADD A NAME DUMBASS!"));
         return;
       }
       if (name.trim().length > 16) {
-        dispatch(errorMsgBar('Name cannot be longer than 20 characters!'));
+        dispatch(errorMsgBar("Name cannot be longer than 20 characters!"));
         return;
       }
       if (!ticker.trim()) {
-        dispatch(errorMsgBar('ADD A TICKER DUMBASS!'));
+        dispatch(errorMsgBar("ADD A TICKER DUMBASS!"));
         return;
       }
       if (!image.trim()) {
-        dispatch(errorMsgBar('ADD AN IMAGE DUMBASS!'));
+        dispatch(errorMsgBar("ADD AN IMAGE DUMBASS!"));
         return;
       }
       if (betAmount > localBalance) {
-        dispatch(errorMsgBar('NOT ENUFF FUNDS AT THIS MEOWMENT'));
+        dispatch(errorMsgBar("NOT ENUFF FUNDS AT THIS MEOWMENT"));
         return;
       }
-
+  
       if (isNaN(endgameAmount)) {
-        dispatch(errorMsgBar('ENTER A VALID NUMBER!'));
+        dispatch(errorMsgBar("ENTER A VALID NUMBER!"));
         return;
       }
       if (endgameAmount < 10) {
-        dispatch(errorMsgBar('MINIMUM HARD CAP IS 10 SOL'));
+        dispatch(errorMsgBar("MINIMUM HARD CAP IS 10 SOL"));
         return;
       }
     }
-
+  
     if (step === 2) {
       if (isPrivate && !roomPassword) {
-        dispatch(errorMsgBar('SET THE PASSWORD TO JOIN YOUR GAME!'));
+        dispatch(errorMsgBar("SET THE PASSWORD TO JOIN YOUR GAME!"));
         return;
       }
       if (endgameAmount === 0) {
         setEndgameType(false);
       }
     }
-
+  
     if (step !== 3) {
       setStep(step + 1);
     }

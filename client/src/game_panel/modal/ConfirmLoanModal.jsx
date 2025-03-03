@@ -194,10 +194,8 @@ function ConfirmLoanModal(props) {
   const maxAllowance =
     highlightedRowIndex >= 0 ? categories[highlightedRowIndex].maxAllowance : 0;
   let errorMessage = '';
-  if (parseFloat(responseText) > loan_amount) {
-    errorMessage = `The entered amount exceeds the loan limit of ${loan_amount} SOL.`;
-  } else if (parseFloat(responseText) > maxAllowance) {
-    errorMessage = `The entered amount exceeds the maximum allowance of ${maxAllowance} SOL for your rank.`;
+  if (parseFloat(responseText) > maxAllowance) {
+    errorMessage = `The entered amount exceeds the loan limit of ${maxAllowance} SOL.`;
   }
 
   const tableCellStyle = { textAlign: 'center' };

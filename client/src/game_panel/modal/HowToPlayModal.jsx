@@ -1,4 +1,4 @@
-import React, {  useState } from 'react';
+import React, { useState } from 'react';
 import {
   Modal,
   Accordion,
@@ -10,20 +10,27 @@ import {
   Box,
   Link,
   Button,
-  Paper,
-  Table,
-  TableBody,
+  ListItemText,
+  ListItemAvatar,
+  Avatar,
   TableCell,
-  TableContainer,
-  TableHead,
+  ListItemIcon,
   Tooltip,
-  TableRow,
+  Divider,
   useMediaQuery
 } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import QuestionMark from '@mui/icons-material/QuestionMark';
-import CheckIcon from '@mui/icons-material/Check';
-
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import SportsSoccerIcon from "@mui/icons-material/SportsSoccer";
+import CasinoIcon from "@mui/icons-material/CardGiftcard";
+import QuestionMark from "@mui/icons-material/QuestionMark";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import LockOpenIcon from "@mui/icons-material/LockOpen";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faXTwitter, faTelegram, faYoutube, faTiktok } from "@fortawesome/free-brands-svg-icons";
+import EmailIcon from "@mui/icons-material/Email";
 
 function HowToPlayModal({ modalIsOpen, closeModal }) {
   // ------------------ STYLES ------------------
@@ -70,7 +77,7 @@ function HowToPlayModal({ modalIsOpen, closeModal }) {
     }
     return address; // Fallback (unlikely needed)
   };
-  
+
   return (
     <Modal
       open={modalIsOpen || false}
@@ -96,7 +103,7 @@ function HowToPlayModal({ modalIsOpen, closeModal }) {
         {/* ACCORDIONS */}
         <Accordion>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography variant="h6">HOW IT WORKS</Typography>
+            <Typography variant="h6" fontWeight="bold">🚀 HOW IT WORKS</Typography>
           </AccordionSummary>
           <AccordionDetails>
             <Typography variant="body2" paragraph>
@@ -109,195 +116,213 @@ function HowToPlayModal({ modalIsOpen, closeModal }) {
               >
                 RPS.Game
               </span>{" "}
-              helps devs launch at lower costs by using games to amplify token seeding! No marketing wallet? No problem!
-              Just create a game and let AI vary the pattern for fair and strategic launches.
+              lets **creators** raise funds with games! 🎮
             </Typography>
 
-
-            <Typography variant="body2" component="div">
-              <ol style={{ marginLeft: 20, paddingLeft: 0 }}>
-                <li style={{ marginBottom: '0.5em' }}>Join a Game.</li>
-                <li style={{ marginBottom: '0.5em' }}>Pump the Game before its Hard Cap.</li>
-                <li style={{ marginBottom: '0.5em' }}>
-                  Jeet at any time to secure gains or realize losses.
-                </li>
-                <li style={{ marginBottom: '0.5em' }}>
-                  The game “graduates” from{' '}
-                  <span
-                    style={{
-                      background: 'linear-gradient(165deg, #ffd000, #ff0000)',
-                      padding: '0em 0.4em',
-                      borderRadius: 1,
-                    }}
-                  >
-                    RPS.Game
-                  </span>{' '}
-                  once sufficient users engage and contribute towards its Hard Cap (set by the game creator).
-                </li>
-                <li style={{ marginBottom: '0.5em' }}>
-                  Upon graduation, 80% of the Game’s liquidity is deposited into{' '}
-                  <span
-                    style={{
-                      background: 'linear-gradient(165deg, #ffd000, #ff0000)',
-                      padding: '0em 0.4em',
-                      borderRadius: 1,
-                    }}
-                  >
-                    Raydium
-                  </span>{' '}
-                  and permanently burned. The remaining 20% is distributed to the Game's holders in the
-                  form of newly minted tokens.
-                </li>
-              </ol>
-              <Typography variant="body2" paragraph>
-                Note: You can also create your own Games and utilize other tools on the platform such as
-                AI, Tax, Loaning and more.
-              </Typography>
-            </Typography>
-
-            {/* Comparison Table */}
-            <TableContainer component={Paper} sx={{ mt: 2, boxShadow: 3, borderRadius: 2 }}>
-              <Table>
-                <TableHead sx={{ backgroundColor: "#f5f5f5" }}>
-                  <TableRow>
-                    <TableCell sx={{ fontWeight: "bold" }}>Feature</TableCell>
-                    <TableCell align="center" sx={{ fontWeight: "bold" }}>RPS.Game</TableCell>
-                    <TableCell align="center" sx={{ fontWeight: "bold" }}>Pump.Fun</TableCell>
-                    <TableCell align="center" sx={{ fontWeight: "bold" }}>Memeroyale</TableCell>
-                    <TableCell align="center" sx={{ fontWeight: "bold" }}>Moonshot</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {[
-                    { feature: "Adjustable Bonding Curve Limit", rps: true, pump: false, memeroyale: false, moonshot: false },
-                    { feature: "Allows Battling against Liquidity", rps: true, pump: false, memeroyale: true, moonshot: false },
-                    { feature: "Portfolio Section", rps: true, pump: false, memeroyale: false, moonshot: false },
-                    { feature: "Dev Staking Rewards", rps: true, pump: false, memeroyale: false, moonshot: false },
-                    { feature: "Low Fees", rps: true, pump: false, memeroyale: false, moonshot: false },
-                  ].map((row, index) => (
-                    <TableRow
-                      key={index}
+            <List sx={{ pl: 2 }}>
+              {[
+                { number: "1️⃣", title: "Create a Game", desc: "Choose RPS or Quick Shoot." },
+                { number: "2️⃣", title: "Raise Funds", desc: "Players bet or invest in your game." },
+                { number: "3️⃣", title: "Cash Out Anytime", desc: "Secure gains or stay in for bigger rewards." },
+                { number: "4️⃣", title: "Game Graduates", desc: "Once enough funds are raised, it converts to a tradeable token." },
+                {
+                  number: "5️⃣", title: "Liquidity Locked", desc:
+                    <>
+                      80% goes to{" "}
+                      <span
+                        style={{
+                          background: "linear-gradient(165deg, #ffd000, #ff0000)",
+                          padding: "0em 0.4em",
+                          borderRadius: 1,
+                        }}
+                      >
+                        Raydium
+                      </span>{" "}
+                      forever, while 20% is shared with holders.
+                    </>
+                },
+              ].map((item, index) => (
+                <ListItem key={index} sx={{ alignItems: "flex-start" }}>
+                  <ListItemAvatar>
+                    <Avatar
                       sx={{
-                        "&:nth-of-type(even)": { backgroundColor: "#fafafa" },
-                        "&:hover": { backgroundColor: "#e0f7fa", transition: "0.3s ease-in-out" },
+                        backgroundColor: "transparent",
+                        fontSize: "1.5rem",
                       }}
                     >
-                      <TableCell>{row.feature}</TableCell>
-                      <TableCell align="center">{row.rps && <CheckIcon color="success" />}</TableCell>
-                      <TableCell align="center">{row.pump && <CheckIcon color="success" />}</TableCell>
-                      <TableCell align="center">{row.memeroyale && <CheckIcon color="success" />}</TableCell>
-                      <TableCell align="center">{row.moonshot && <CheckIcon color="success" />}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                      {item.number}
+                    </Avatar>
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary={<Typography fontWeight="bold">{item.title}</Typography>}
+                    secondary={item.desc}
+                  />
+                </ListItem>
+              ))}
+            </List>
+
+            <Typography variant="body2" paragraph>
+              💡 **Want more?** <br />
+              **Explore tools like AI, staking rewards, loans, and more!**
+            </Typography>
           </AccordionDetails>
         </Accordion>
         {/* New Accordion for $RPS Token */}
-        <Accordion>
+        <Accordion sx={{ boxShadow: 3 }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography variant="h6">$RPS Token</Typography>
+            <Typography variant="h6" fontWeight="bold">💰 $RPS Token</Typography>
           </AccordionSummary>
           <AccordionDetails>
             <List dense>
-              <ListItem>✅ Holders earn 10% of platform fees!!!</ListItem>
-              <ListItem>🔓 Holders instantly unlock all AI models (Hold 2.5M Tokens to Qualify).</ListItem>
+              <ListItem>
+                <ListItemIcon><CheckCircleIcon color="success" /></ListItemIcon>
+                <Typography variant="body2" fontWeight="bold">
+                  Holders earn **10% of platform fees**! 💸
+                </Typography>
+              </ListItem>
+              <ListItem>
+                <ListItemIcon><LockOpenIcon color="primary" /></ListItemIcon>
+                <Typography variant="body2" fontWeight="bold">
+                  Holders unlock **all AI models** instantly (Hold **2.5M** $RPS to qualify). 🔓
+                </Typography>
+              </ListItem>
             </List>
 
-          <Box sx={{ m: 2 }}>
-            <Typography variant="subtitle2" className="title">
-              Contract Address (click to copy)
-            </Typography>
-            {/* Tooltip around shortened address */}
-            <Tooltip
-              title="Copied!"
-              open={copiedTooltipOpen}
-              disableFocusListener
-              disableHoverListener
-              disableTouchListener
-              placement="top"
-              arrow
-            >
-              <Typography
-                variant="body1"
-                sx={{ cursor: 'pointer' }}
-                onClick={handleCopyAddress}
-              >
-              <Link>{shortenAddress(CONTRACT_ADDRESS, 9, 9)}</Link>
+            <Box sx={{ mt: 2, textAlign: "center" }}>
+              <Typography variant="subtitle2" fontWeight="bold">
+                🔗 Contract Address (Click to Copy)
               </Typography>
-            </Tooltip>
-          </Box>
+              <Tooltip
+                title="Copied!"
+                open={copiedTooltipOpen}
+                disableFocusListener
+                disableHoverListener
+                disableTouchListener
+                placement="top"
+                arrow
+              >
+                <Typography
+                  variant="body1"
+                  sx={{
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    mt: 1,
+                    gap: 0.5,
+                    color: "primary.main",
+                    "&:hover": { textDecoration: "underline" },
+                  }}
+                  onClick={handleCopyAddress}
+                >
+                  <ContentCopyIcon fontSize="small" />
+                  <Link underline="none">{shortenAddress(CONTRACT_ADDRESS, 9, 9)}</Link>
+                </Typography>
+              </Tooltip>
+            </Box>
           </AccordionDetails>
         </Accordion>
-        <Accordion>
+        <Accordion sx={{ boxShadow: 3 }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography variant="h6">Games</Typography>
+            <Typography variant="h6" fontWeight="bold">🎮 Games</Typography>
           </AccordionSummary>
           <AccordionDetails>
+
             {/* Quick Shoot */}
-            <Typography variant="subtitle1"><strong>Quick Shoot</strong></Typography>
-            <Typography variant="body2"><strong>Objective:</strong> Score a goal past the keeper.</Typography>
-            <Typography variant="body2"><strong>Gameplay:</strong></Typography>
+            <Typography variant="subtitle1" sx={{ display: "flex", alignItems: "center", gap: 1, fontWeight: "bold" }}>
+              <SportsSoccerIcon color="primary" /> Quick Shoot
+            </Typography>
+            <Typography variant="body2"><strong>🎯 Objective:</strong> Score a goal past the AI keeper.</Typography>
+            <Typography variant="body2" fontWeight="bold">🕹️ Gameplay:</Typography>
             <List dense>
-              <ListItem>1. Enter a predetermined Bet Amount.</ListItem>
-              <ListItem>2. Choose a direction to shoot against the AI keeper.</ListItem>
-              <ListItem>3. If you score, you win 1.25x to 4x your Bet Amount.</ListItem>
+              {[
+                "Enter a predetermined Bet Amount.",
+                "Choose a direction to shoot against the AI keeper.",
+                "If you score, you win 1.25x to 4x your Bet Amount.",
+              ].map((text, index) => (
+                <ListItem key={index}>
+                  <ListItemIcon><CheckCircleIcon color="success" /></ListItemIcon>
+                  <ListItemText primary={<Typography variant="body2">{text}</Typography>} />
+                </ListItem>
+              ))}
             </List>
+
+            <Divider sx={{ my: 2 }} />
 
             {/* RPS */}
-            <Typography variant="subtitle1" sx={{ mt: 2 }}><strong>RPS</strong></Typography>
-            <Typography variant="body2"><strong>Objective:</strong> Predict the correct "hand" gesture.</Typography>
-            <Typography variant="body2"><strong>Gameplay:</strong></Typography>
+            <Typography variant="subtitle1" sx={{ display: "flex", alignItems: "center", gap: 1, fontWeight: "bold" }}>
+              <CasinoIcon color="secondary" /> RPS (Rock Paper Scissors)
+            </Typography>
+            <Typography variant="body2"><strong>🎯 Objective:</strong> Predict the correct hand gesture.</Typography>
+            <Typography variant="body2" fontWeight="bold">🕹️ Gameplay:</Typography>
             <List dense>
-              <ListItem>1. Enter a predetermined Bet Amount.</ListItem>
-              <ListItem>2. Choose "Rock", "Paper", or "Scissors" to play against the AI.</ListItem>
-              <ListItem>3. Winner is determined by: Rock beats Scissors, Scissors beats Paper, and Paper beats Rock.</ListItem>
+              {[
+                "Enter a predetermined Bet Amount.",
+                'Choose "Rock", "Paper", or "Scissors" to play against the AI.',
+                "Winner is determined by: Rock beats Scissors, Scissors beats Paper, and Paper beats Rock.",
+              ].map((text, index) => (
+                <ListItem key={index}>
+                  <ListItemIcon><CheckCircleIcon color="success" /></ListItemIcon>
+                  <ListItemText primary={<Typography variant="body2">{text}</Typography>} />
+                </ListItem>
+              ))}
             </List>
+
           </AccordionDetails>
         </Accordion>
+        <Accordion sx={{ boxShadow: 3,}}>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Typography variant="h6" fontWeight="bold" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <AttachMoneyIcon color="success" /> Fees
+          </Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Typography variant="body2" fontWeight="bold">
+            💸 **5% fee** on all transactions **except** tipping & loans.
+          </Typography>
+        </AccordionDetails>
+      </Accordion>
 
-        <Accordion>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography variant="h6">Fees</Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Typography variant="body2" paragraph>
-              5% on all transactions except tipping and loans.
-            </Typography>
-          </AccordionDetails>
-        </Accordion>
+      {/* Get Help Section */}
+      <Accordion sx={{ boxShadow: 3,  mt: 2 }}>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Typography variant="h6" fontWeight="bold" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <HelpOutlineIcon color="primary" /> Get Help
+          </Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Typography variant="body2" fontWeight="bold">
+            Need assistance? Contact us via:
+          </Typography>
 
-        <Accordion>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography variant="h6">Get Help?</Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Typography variant="body2" paragraph>
-              Need assistance? Reach out via:
-            </Typography>
+          <Box sx={{ mt: 2, display: "flex", gap: 1, flexWrap: "wrap" }}>
             <Button
               variant="contained"
-              onClick={() => window.open('https://x.com/RPSDG_SOL', '_blank')}
-              sx={{ mr: 1 }}
+              color="primary"
+              startIcon={<FontAwesomeIcon icon={faXTwitter} />}
+              onClick={() => window.open("https://x.com/RPSDG_SOL", "_blank")}
             >
-              X
+              Twitter
             </Button>
             <Button
               variant="contained"
-              onClick={() => window.open('https://t.me/RPSDOTGAMESOL', '_blank')}
-              sx={{ mr: 1 }}
+              color="info"
+              startIcon={<FontAwesomeIcon icon={faTelegram} />}
+              onClick={() => window.open("https://t.me/RPSDOTGAMESOL", "_blank")}
             >
               Telegram
             </Button>
             <Button
               variant="contained"
-              onClick={() => window.open('mailto:inv_inquiries@rps.game')}
+              color="secondary"
+              startIcon={<EmailIcon />}
+              onClick={() => window.open("mailto:inv_inquiries@rps.game")}
             >
               Email
             </Button>
-          </AccordionDetails>
-        </Accordion>
+          </Box>
+        </AccordionDetails>
+      </Accordion>
       </Box>
     </Modal>
   );

@@ -19,7 +19,7 @@ const StyledRadioGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 12px;
-
+margin-bottom: 20px;
   width: 100%;
   max-width: 800px;
 
@@ -119,7 +119,7 @@ const RPS = (props) => {
           >
             <RadioGroup value={selectedGameType} onChange={handleChange}>
               <h3 className="game-sub-title roll-tag">
-                Choose Game Mode&nbsp;
+                Choose a Game&nbsp;
                 <Tooltip
                   style={{ position: 'absolute', right: '20px' }}
                   title="Select a game-mode to use as collateral against your capital."
@@ -128,6 +128,17 @@ const RPS = (props) => {
                   <Info style={{ cursor: 'pointer', float: 'right' }} />
                 </Tooltip>
               </h3>
+              <GameSettingsPanel
+                selectedStrategy={selectedStrategy}
+                setSelectedStrategy={setSelectedStrategy}
+                prompt={prompt}
+                onChangeState={onChangeState}
+                isDarkMode={isDarkMode}
+                strategies={strategies}
+                user={user}
+                rank={rank}
+                ai_mode={ai_mode}
+              />
               <StyledRadioGrid>
                 {gameTypeList.map((gameType, index) => (
                   <FormControlLabel
@@ -142,11 +153,10 @@ const RPS = (props) => {
                     label={
                       <StyledProductCard
                         id="rps-game-type-radio"
-                        className={`btn-game-type title btn-icon ${gameTypeStyleClass[gameType.short_name]} ${
-                          selectedGameType === gameType.short_name
-                            ? 'active'
-                            : ''
-                        }`}
+                        className={`btn-game-type title btn-icon ${gameTypeStyleClass[gameType.short_name]} ${selectedGameType === gameType.short_name
+                          ? 'active'
+                          : ''
+                          }`}
                       >
                         <StyledProductImage
                           src={`/img/gametype/icons/${gameType.short_name}.svg`}
@@ -165,17 +175,7 @@ const RPS = (props) => {
               </StyledRadioGrid>
             </RadioGroup>
 
-            <GameSettingsPanel
-              selectedStrategy={selectedStrategy}
-              setSelectedStrategy={setSelectedStrategy}
-              prompt={prompt}
-              onChangeState={onChangeState}
-              isDarkMode={isDarkMode}
-              strategies={strategies}
-              user={user}
-              rank={rank}
-              ai_mode={ai_mode}
-            />
+
             <CoinInfo
               onChangeState={onChangeState}
               name={name}

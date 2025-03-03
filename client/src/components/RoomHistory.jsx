@@ -262,7 +262,7 @@ function RoomHistory({
 
     switch (row.action) {
       case 'won': {
-        const totalWinStr = convertToCurrency(winnings + betAmt, solPrice);
+        const totalWinStr = convertToCurrency(winnings, solPrice);
         return (
           <Box sx={{ fontSize: '0.9rem', display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
             {renderUserAvatar(joinedUser)} won {totalWinStr} in {renderRoomInfo(row.room)}

@@ -47,20 +47,12 @@ const GameSettingsPanel = ({
   }, [settingsPanelOpened]);
 
   return (
-    <div style={{ marginTop: '20px', marginBottom: '30px' }}>
-      <h3 className="game-sub-title roll-tag">
-        Choose AI Model&nbsp;
-        <Tooltip
-          title="Select the strategy your game will use. AI offers patterns and reasoning, while RNG is randomized."
-          placement="top"
-        >
-          <Info style={{ cursor: 'pointer', float: 'right' }} />
-        </Tooltip>
-      </h3>
+    <div>
+
       <div
         className="qs-game-type-panel"
         style={{
-          marginTop: '20px',
+          marginBottom: '20px',
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
@@ -80,23 +72,42 @@ const GameSettingsPanel = ({
           settingsRef={settingsRef}
           isDarkMode={isDarkMode}
         />
-       <ButtonBase
+        <ButtonBase
           onClick={handleSettingsIconClick}
           style={{
-            boxShadow: 'unset',
-            color: isDarkMode ? 'white' : 'inherit', // Conditional color
-            borderRadius: 1,
-            padding: '10px 20px', // Added padding
-            background: 'transparent',
-            display: 'flex',
-            borderRadius: '0.3em',
-            alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'color 0.3s ease', // Smooth transition for color changes
+            position: "relative",
+            backgroundColor: isDarkMode ? "#333" : "#fff", // Background color
+            border: `1px solid ${isDarkMode ? "#888" : "#ccc"}`, // Border to mimic dropdown
+            borderRadius: "4px", // Slight rounding for a dropdown feel
+            padding: "10px 15px", // More padding for a dropdown look
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between", // Space between text and icon
+            transition: "all 0.3s ease", // Smooth transition for hover
+            minWidth: "160px", // Ensuring it looks like a dropdown
+            cursor: "pointer", // Cursor change on hover
+            color: isDarkMode ? "white" : "black", // Text color
           }}
         >
-          <span style={{ textTransform: 'uppercase', marginRight: '5px' }}>{selectedStrategy}</span>
-          <AutoAwesomeIcon sx={{ p: 0.4, color: isDarkMode ? 'white' : 'inherit' }} />
+          <span
+            style={{
+              textTransform: "uppercase",
+              fontSize: "0.85em",
+              flexGrow: 1, // Allows text to take up available space
+            }}
+          >
+            {selectedStrategy}
+          </span>
+
+          {/* ▼ Dropdown indicator */}
+          <AutoAwesomeIcon
+            sx={{
+              p: 0.6,
+              color: isDarkMode ? "white" : "black",
+              transform: settingsPanelOpened ? "rotate(180deg)" : "rotate(0deg)", // Rotate when open
+              transition: "transform 0.3s ease", // Smooth transition for arrow rotation
+            }}
+          />
         </ButtonBase>
       </div>
     </div>

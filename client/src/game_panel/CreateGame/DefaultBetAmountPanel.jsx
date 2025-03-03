@@ -404,7 +404,7 @@ const DefaultBetAmountPanel = ({
       </div>
 
       {/* Tax Moved BELOW Hard Cap */}
-      <h3 className="game-sub-title roll-tag" style={{ marginTop: '30px' }}>
+      {/* <h3 className="game-sub-title roll-tag" style={{ marginTop: '30px' }}>
         Tax&nbsp;
         <Tooltip
           style={{ position: 'absolute', right: '20px' }}
@@ -449,7 +449,7 @@ const DefaultBetAmountPanel = ({
                 : ''
           }
         />
-      </div>
+      </div> */}
     </div>
     </ThemeProvider >
   );
