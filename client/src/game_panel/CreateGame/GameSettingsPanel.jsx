@@ -96,7 +96,7 @@ const GameSettingsPanel = ({
               flexGrow: 1, // Allows text to take up available space
             }}
           >
-            {selectedStrategy}
+            GENERATE
           </span>
 
           {/* ▼ Dropdown indicator */}

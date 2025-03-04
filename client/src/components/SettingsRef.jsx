@@ -13,11 +13,10 @@ import {
 } from '@mui/material';
 import LockIcon from '@mui/icons-material/Lock';
 import { green, yellow } from '@mui/material/colors';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
-import debounce from 'lodash.debounce';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import axios from '../util/Api';
+import debounce from 'lodash.debounce';
+
 const decodeHtmlEntity = (html) => {
   const txt = document.createElement('textarea');
   txt.innerHTML = html;
@@ -40,38 +39,18 @@ const SettingsRef = ({
   updateUserPrompt,
 }) => {
   const dispatch = useDispatch();
-
-  const [descriptionOpen, setDescriptionOpen] = useState(false);
-  const [strengthsOpen, setStrengthsOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [localPrompt, setLocalPrompt] = useState(prompt || creator_prompt);
   const [tokenStatus, setTokenStatus] = useState(false);
+  const [gameCode, setGameCode] = useState('');
   const debouncedUpdateRef = useRef(null);
   const timeoutRef = useRef(null);
   const isMobile = useMediaQuery('(max-width: 768px)');
+
   const isGPT3Selected =
     selectedStrategy === 'GPT3' || (ai_mode === 'GPT3' && !selectedStrategy);
-  const filteredStrategies = strategies.filter(
-    (strategy) => strategy.name === (selectedStrategy || ai_mode),
-  );
-  const sortedStrategies = strategies
-    .slice() // clone array so we don't mutate original
-    .sort((a, b) => a.levelToUnlock - b.levelToUnlock);
 
-  const calculateBarWidths = (value) => {
-    let bars = [];
-    let remaining = value;
-    while (remaining > 0) {
-      if (remaining >= 100) {
-        bars.push(100);
-        remaining -= 100;
-      } else {
-        bars.push(remaining);
-        remaining = 0;
-      }
-    }
-    return bars;
-  };
+  const sortedStrategies = strategies.slice().sort((a, b) => a.levelToUnlock - b.levelToUnlock);
 
   useEffect(() => {
     if (debouncedUpdateRef.current) {
@@ -80,17 +59,15 @@ const SettingsRef = ({
 
     debouncedUpdateRef.current = debounce(async (newPrompt) => {
       setSaving(true);
+
       if (typeof updateUserPrompt === 'function') {
         await updateUserPrompt(user_id, newPrompt);
       } else {
-        onChangeState({
-          prompt: newPrompt,
-        });
+        onChangeState({ prompt: newPrompt });
       }
 
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
+      // Generate the game from the prompt
+      generateGameFromPrompt(newPrompt);
 
       timeoutRef.current = setTimeout(() => {
         setSaving(false);
@@ -108,13 +85,55 @@ const SettingsRef = ({
     };
   }, [user_id, updateUserPrompt]);
 
+  // OpenAI API call to generate game code
+  const generateGameFromPrompt = async (gamePrompt) => {
+    if (!gamePrompt.trim()) return;
+
+    try {
+      const response = await axios.post('/game/openai/generate', { prompt: gamePrompt });
+
+      let gameCode = response.data.gameCode || '// No game generated.';
+console.log("gameCode", gameCode)
+      // Attempt to extract only JavaScript code (remove explanations from OpenAI)
+      const extractedCode = gameCode.match(/```javascript([\s\S]*?)```/);
+      if (extractedCode) {
+        gameCode = extractedCode[1].trim(); // Extract only the code inside the JS block
+      }
+
+      // Basic sanitization to remove non-JS symbols
+      gameCode = gameCode.replace(/[^ -~\n]/g, ''); // Remove non-printable characters
+
+      // Add a try-catch wrapper for error handling
+      gameCode = `
+        try {
+          ${gameCode}
+        } catch (error) {
+          console.error("Game Error:", error);
+        }
+      `;
+
+      setGameCode(gameCode);
+    } catch (error) {
+      console.error('Error generating game:', error);
+      setGameCode('// Failed to generate game.');
+    }
+  };
+
   useEffect(() => {
     setLocalPrompt(prompt || creator_prompt);
   }, [prompt, creator_prompt]);
 
-  useEffect(async () => {
-    const res = await axios.post('/game/checkTokens');
-    setTokenStatus(res.data.status ?? false);
+  useEffect(() => {
+    const checkTokenStatus = async () => {
+      try {
+        const res = await axios.post('/game/checkTokens');
+        setTokenStatus(res.data.status ?? false);
+      } catch (error) {
+        console.error('Error checking tokens:', error);
+      }
+    };
+
+    checkTokenStatus();
   }, []);
 
   const handlePromptChange = (e) => {
@@ -140,165 +159,30 @@ const SettingsRef = ({
         padding: 2,
       }}
     >
-      <Typography
-        variant="h6"
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          mb: 1,
-          fontWeight: 600,
-        }}
-      >
-        AI Play Models
-        <AutoAwesomeIcon
-          sx={{ ml: 1, fontSize: '1.25rem', color: 'error.main' }}
-        />
+      <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', mb: 1, fontWeight: 600 }}>
+        AI Game Generator
+        <AutoAwesomeIcon sx={{ ml: 1, fontSize: '1.25rem', color: 'error.main' }} />
       </Typography>
 
-      {filteredStrategies.map((strategy, index) => (
-        <Box key={index} sx={{ mb: 2 }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-            CHOSEN MODEL:
-          </Typography>
-          <Typography
-            sx={{
-              mb: 1,
-              color: 'text.secondary',
-              fontWeight: 500,
-            }}
-          >
-            {selectedStrategy || ai_mode}
-          </Typography>
-
-          {/* Description */}
-          {!isMobile && (
-            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-              Description:
-            </Typography>
-          )}
-          {isMobile ? (
-            <>
-              <Button
-                variant="text"
-                color="error"
-                disableElevation
-                sx={{
-                  textTransform: 'none',
-                  fontSize: '0.9rem',
-                }}
-                onClick={() => setDescriptionOpen(!descriptionOpen)}
-                startIcon={
-                  <FontAwesomeIcon
-                    icon={descriptionOpen ? faChevronUp : faChevronDown}
-                  />
-                }
-              >
-                Description
-              </Button>
-              {descriptionOpen && (
-                <Typography
-                  sx={{ color: 'text.secondary', fontSize: '0.9rem', mb: 1 }}
-                >
-                  {strategy.description}
-                </Typography>
-              )}
-            </>
-          ) : (
-            <Typography
-              sx={{ color: 'text.secondary', fontSize: '0.9rem', mb: 1 }}
-            >
-              {strategy.description}
-            </Typography>
-          )}
-
-          <Box
-            sx={{
-              height: '1px',
-              backgroundColor: (theme) => theme.palette.divider,
-              mb: 1,
-            }}
-          />
-          {/* Strengths */}
-          {!isMobile && (
-            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-              Strengths:
-            </Typography>
-          )}
-          {isMobile ? (
-            <>
-              <Button
-                variant="text"
-                color="error"
-                disableElevation
-                sx={{
-                  textTransform: 'none',
-                  fontSize: '0.9rem',
-                }}
-                onClick={() => setStrengthsOpen(!strengthsOpen)}
-                startIcon={
-                  <FontAwesomeIcon
-                    icon={strengthsOpen ? faChevronUp : faChevronDown}
-                  />
-                }
-              >
-                Strengths
-              </Button>
-              {strengthsOpen && (
-                <StrengthsTable
-                  strategy={strategy}
-                  calculateBarWidths={calculateBarWidths}
-                />
-              )}
-            </>
-          ) : (
-            <StrengthsTable
-              strategy={strategy}
-              calculateBarWidths={calculateBarWidths}
-            />
-          )}
-
-          <Box
-            sx={{
-              height: '1px',
-              backgroundColor: (theme) => theme.palette.divider,
-              my: 1,
-            }}
-          />
-        </Box>
-      ))}
-
+      {/* Game Model Selection */}
       <Box sx={{ mb: 2 }}>
         <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
-          Model Selection
+          MODEL SELECTION
         </Typography>
-        <Box
-          className="slippage-select-panel"
-          sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}
-        >
+        <Box className="slippage-select-panel" sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
           {sortedStrategies.map((strategy, index) => {
             const isUnlocked = tokenStatus || rank >= strategy.levelToUnlock;
             const isActive = (selectedStrategy || ai_mode) === strategy.name;
 
             return (
-              <Tooltip
-                key={index}
-                title={
-                  isUnlocked
-                    ? 'Unlocked!'
-                    : `Unlock at level ${strategy.levelToUnlock}`
-                }
-                arrow
-              >
+              <Tooltip key={index} title={isUnlocked ? 'Unlocked!' : `Unlock at level ${strategy.levelToUnlock}`} arrow>
                 <Box>
                   <Button
                     variant={isActive ? 'contained' : 'outlined'}
                     color={isActive ? 'error' : 'inherit'}
                     disableElevation
                     onClick={() => {
-                      if (
-                        typeof updateUserStrategy === 'function' &&
-                        isUnlocked
-                      ) {
+                      if (typeof updateUserStrategy === 'function' && isUnlocked) {
                         updateUserStrategy(user_id, strategy.name);
                       }
                       if (isUnlocked) {
@@ -309,25 +193,15 @@ const SettingsRef = ({
                     sx={{
                       textTransform: 'none',
                       fontWeight: 500,
-                      borderRadius: 2,
+                      borderRadius: 1,
                       width: '100%',
-                      '&.Mui-disabled': {
-                        opacity: 0.5,
-                        color: 'text.disabled',
-                      },
+                      '&.Mui-disabled': { opacity: 0.5, color: 'text.disabled' },
                     }}
                   >
-                    {!isUnlocked && (
-                      <LockIcon
-                        sx={{ color: yellow[700], mr: 0.5, fontSize: '1.1rem' }}
-                      />
-                    )}
+                    {!isUnlocked && <LockIcon sx={{ color: yellow[700], mr: 0.5, fontSize: '1.1rem' }} />}
                     {strategy.name}{' '}
                     {rank === strategy.levelToUnlock + 1 && (
-                      <Box
-                        component="span"
-                        sx={{ color: green[500], fontWeight: 'bold', ml: 0.5 }}
-                      >
+                      <Box component="span" sx={{ color: green[500], fontWeight: 'bold', ml: 0.5 }}>
                         [NEW!]
                       </Box>
                     )}
@@ -339,27 +213,39 @@ const SettingsRef = ({
               </Tooltip>
             );
           })}
-
-          {saving && (
-            <Box
-              sx={{
-                position: 'absolute',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                right: '20px',
-                fontSize: 'x-small',
-                fontStyle: 'italic',
-              }}
-            >
-              SAVING
-              <CircularProgress color="error" size={10} sx={{ ml: 1 }} />
-            </Box>
-          )}
         </Box>
       </Box>
 
-      {/* Prompt Box at the Bottom */}
+      {/* Game Rendering Section */}
+      {gameCode && (
+        <Box sx={{ mt: 3, p: 2, border: '1px solid #ccc', borderRadius: 2 }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+            Generated Game:
+          </Typography>
+          <iframe
+            title="Generated Game"
+            sandbox="allow-scripts"
+            style={{ width: '600px', height: '400px', border: '1px solid black', marginTop: '20px' }}
+            srcDoc={`
+    <html>
+      <head>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+        <script>
+          window.onerror = function(message, source, lineno, colno, error) {
+            document.body.innerHTML = '<h3 style="color:red;">Game Error: ' + message + '</h3>';
+          };
+        </script>
+      </head>
+      <body>
+        <script>${gameCode}</script>
+      </body>
+    </html>
+  `}
+          />
+        </Box>
+      )}
+
+      {/* Prompt Box */}
       {isGPT3Selected && (
         <Paper variant="outlined">
           <TextField
@@ -379,96 +265,5 @@ const SettingsRef = ({
     </Box>
   );
 };
-
-/** A small helper component to render the Strengths table. */
-function StrengthsTable({ strategy, calculateBarWidths }) {
-  return (
-    <Box component="table" sx={{ width: '100%', mt: 1 }}>
-      <Box component="tbody">
-        {/* SPEED */}
-        <Box component="tr">
-          <Box component="th" scope="row" sx={{ textAlign: 'left' }}>
-            Speed
-          </Box>
-          <Box component="td" sx={{ textAlign: 'left' }}>
-            ({strategy.speed}%)
-          </Box>
-          {calculateBarWidths(strategy.speed).map((width, idx) => (
-            <Box component="td" key={idx} sx={{ width: '50px', p: 0 }}>
-              <Box
-                sx={{
-                  height: 6,
-                  backgroundColor:
-                    strategy.speed < 100
-                      ? 'error.dark'
-                      : strategy.speed <= 100
-                        ? 'warning.main'
-                        : 'success.light',
-                  borderRadius: 1,
-                  width: `${width}%`,
-                  mr: 1,
-                }}
-              />
-            </Box>
-          ))}
-        </Box>
-        {/* REASONING */}
-        <Box component="tr">
-          <Box component="th" scope="row" sx={{ textAlign: 'left' }}>
-            Reasoning
-          </Box>
-          <Box component="td" sx={{ textAlign: 'left' }}>
-            ({strategy.reasoning}%)
-          </Box>
-          {calculateBarWidths(strategy.reasoning).map((width, idx) => (
-            <Box component="td" key={idx} sx={{ width: '50px', p: 0 }}>
-              <Box
-                sx={{
-                  height: 6,
-                  backgroundColor:
-                    strategy.reasoning < 100
-                      ? 'error.dark'
-                      : strategy.reasoning <= 100
-                        ? 'warning.main'
-                        : 'success.light',
-                  borderRadius: 1,
-                  width: `${width}%`,
-                  mr: 13,
-                }}
-              />
-            </Box>
-          ))}
-        </Box>
-        {/* PREDICTABILITY */}
-        <Box component="tr">
-          <Box component="th" scope="row" sx={{ textAlign: 'left' }}>
-            Predictability
-          </Box>
-          <Box component="td" sx={{ textAlign: 'left' }}>
-            ({strategy.predictability}%)
-          </Box>
-          {calculateBarWidths(strategy.predictability).map((width, idx) => (
-            <Box component="td" key={idx} sx={{ width: '50px', p: 0 }}>
-              <Box
-                sx={{
-                  height: 6,
-                  backgroundColor:
-                    strategy.predictability < 100
-                      ? 'error.dark'
-                      : strategy.predictability <= 100
-                        ? 'warning.main'
-                        : 'success.light',
-                  borderRadius: 1,
-                  mr: 1,
-                  width: `${width}%`,
-                }}
-              />
-            </Box>
-          ))}
-        </Box>
-      </Box>
-    </Box>
-  );
-}
 
 export default SettingsRef;

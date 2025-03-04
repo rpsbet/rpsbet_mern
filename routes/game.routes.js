@@ -7,7 +7,9 @@ const auth = require('../middleware/auth');
 const { v4: uuidv4 } = require('uuid');
 const Comment = require('../model/Comment');
 
-const Item = require('../model/Item');
+const { OpenAI } = require('openai');
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
 const User = require('../model/User');
 const Room = require('../model/Room');
 const GameType = require('../model/GameType');
@@ -86,7 +88,7 @@ router.get('/game_types', async (req, res) => {
 
 router.get('/strategies', async (req, res) => {
   try {
-    const excludedStrategies = ['Bush Mosteller', 'Random', 'Skill-issue-old'];
+    const excludedStrategies = ['Markov', 'Adam'];
     const strategies = await Strategy.find({
       name: { $nin: excludedStrategies },
     }).sort({ created_at: 1 });
@@ -222,6 +224,33 @@ router.patch('/range/:user_id', async (req, res) => {
       success: false,
       err: err.message,
     });
+  }
+});
+
+router.post('/openai/generate', async (req, res) => {
+  try {
+    const { prompt } = req.body;
+    console.log("call", prompt)
+
+    if (!prompt) {
+      return res.status(400).json({ error: 'Prompt is required' });
+    }
+
+   const aiResponse = await openai.chat.completions.create({
+      model: 'gpt-4',
+      messages: [
+        { role: 'system', content: 'You are an expert game developer who creates HTML5/JavaScript games using p5.js or Phaser.js.' },
+        { role: 'user', content: `Generate a simple JavaScript game using p5.js based on this idea: ${prompt}` },
+      ],
+      max_tokens: 800,
+    });
+
+    const generatedGameCode = aiResponse.choices[0]?.message?.content?.trim();
+
+    res.json({ gameCode: generatedGameCode });
+  } catch (error) {
+    console.error('OpenAI API error:', error);
+    res.status(500).json({ error: 'Failed to generate game' });
   }
 });
 

@@ -116,7 +116,7 @@ const QuickShoot = (props) => {
                 onChange={props.handleChange}
               >
                 <h3 className="game-sub-title roll-tag">
-                  Choose a Game&nbsp;
+                  Add Game&nbsp;
                   <Tooltip
                     style={{ position: 'absolute', right: '20px' }}
                     title="Select a game-mode to use as collateral against your capital."
