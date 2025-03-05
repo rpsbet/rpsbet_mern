@@ -6,6 +6,7 @@ import {
   Button,
   Tooltip,
   CircularProgress,
+  Backdrop,
   TextField,
   useMediaQuery,
   Typography,
@@ -43,6 +44,7 @@ const SettingsRef = ({
   const [localPrompt, setLocalPrompt] = useState(prompt || creator_prompt);
   const [tokenStatus, setTokenStatus] = useState(false);
   const [gameCode, setGameCode] = useState('');
+  const [isProgress, setIsProgress] = useState(false);
   const debouncedUpdateRef = useRef(null);
   const timeoutRef = useRef(null);
   const isMobile = useMediaQuery('(max-width: 768px)');
@@ -50,7 +52,9 @@ const SettingsRef = ({
   const isGPT3Selected =
     selectedStrategy === 'GPT3' || (ai_mode === 'GPT3' && !selectedStrategy);
 
-  const sortedStrategies = strategies.slice().sort((a, b) => a.levelToUnlock - b.levelToUnlock);
+  const sortedStrategies = strategies
+    .slice()
+    .sort((a, b) => a.levelToUnlock - b.levelToUnlock);
 
   useEffect(() => {
     if (debouncedUpdateRef.current) {
@@ -90,12 +94,18 @@ const SettingsRef = ({
     if (!gamePrompt.trim()) return;
 
     try {
-      const response = await axios.post('/game/openai/generate', { prompt: gamePrompt });
+      setIsProgress(true);
+
+      const response = await axios.post('/game/openai/generate', {
+        prompt: gamePrompt,
+      });
+      setIsProgress(false);
 
       let gameCode = response.data.gameCode || '// No game generated.';
-console.log("gameCode", gameCode)
       // Attempt to extract only JavaScript code (remove explanations from OpenAI)
-      const extractedCode = gameCode.match(/```javascript([\s\S]*?)```/);
+      // const extractedCode = gameCode.match(/```javascript([\s\S]*?)```/);
+      const extractedCode = gameCode.match(/```(?:javascript)?([\s\S]*?)```/);
+
       if (extractedCode) {
         gameCode = extractedCode[1].trim(); // Extract only the code inside the JS block
       }
@@ -114,6 +124,7 @@ console.log("gameCode", gameCode)
 
       setGameCode(gameCode);
     } catch (error) {
+      setIsProgress(false);
       console.error('Error generating game:', error);
       setGameCode('// Failed to generate game.');
     }
@@ -139,9 +150,13 @@ console.log("gameCode", gameCode)
   const handlePromptChange = (e) => {
     const newValue = e.target.value;
     setLocalPrompt(newValue);
-    debouncedUpdateRef.current(newValue);
   };
 
+  const handleSend = () => {
+    if (!localPrompt.trim()) return;
+
+    debouncedUpdateRef.current(localPrompt);
+  };
   return (
     <Box
       ref={settingsRef}
@@ -159,9 +174,14 @@ console.log("gameCode", gameCode)
         padding: 2,
       }}
     >
-      <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', mb: 1, fontWeight: 600 }}>
+      <Typography
+        variant="h6"
+        sx={{ display: 'flex', alignItems: 'center', mb: 1, fontWeight: 600 }}
+      >
         AI Game Generator
-        <AutoAwesomeIcon sx={{ ml: 1, fontSize: '1.25rem', color: 'error.main' }} />
+        <AutoAwesomeIcon
+          sx={{ ml: 1, fontSize: '1.25rem', color: 'error.main' }}
+        />
       </Typography>
 
       {/* Game Model Selection */}
@@ -169,20 +189,34 @@ console.log("gameCode", gameCode)
         <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
           MODEL SELECTION
         </Typography>
-        <Box className="slippage-select-panel" sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+        <Box
+          className="slippage-select-panel"
+          sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}
+        >
           {sortedStrategies.map((strategy, index) => {
             const isUnlocked = tokenStatus || rank >= strategy.levelToUnlock;
             const isActive = (selectedStrategy || ai_mode) === strategy.name;
 
             return (
-              <Tooltip key={index} title={isUnlocked ? 'Unlocked!' : `Unlock at level ${strategy.levelToUnlock}`} arrow>
+              <Tooltip
+                key={index}
+                title={
+                  isUnlocked
+                    ? 'Unlocked!'
+                    : `Unlock at level ${strategy.levelToUnlock}`
+                }
+                arrow
+              >
                 <Box>
                   <Button
                     variant={isActive ? 'contained' : 'outlined'}
                     color={isActive ? 'error' : 'inherit'}
                     disableElevation
                     onClick={() => {
-                      if (typeof updateUserStrategy === 'function' && isUnlocked) {
+                      if (
+                        typeof updateUserStrategy === 'function' &&
+                        isUnlocked
+                      ) {
                         updateUserStrategy(user_id, strategy.name);
                       }
                       if (isUnlocked) {
@@ -195,13 +229,23 @@ console.log("gameCode", gameCode)
                       fontWeight: 500,
                       borderRadius: 1,
                       width: '100%',
-                      '&.Mui-disabled': { opacity: 0.5, color: 'text.disabled' },
+                      '&.Mui-disabled': {
+                        opacity: 0.5,
+                        color: 'text.disabled',
+                      },
                     }}
                   >
-                    {!isUnlocked && <LockIcon sx={{ color: yellow[700], mr: 0.5, fontSize: '1.1rem' }} />}
+                    {!isUnlocked && (
+                      <LockIcon
+                        sx={{ color: yellow[700], mr: 0.5, fontSize: '1.1rem' }}
+                      />
+                    )}
                     {strategy.name}{' '}
                     {rank === strategy.levelToUnlock + 1 && (
-                      <Box component="span" sx={{ color: green[500], fontWeight: 'bold', ml: 0.5 }}>
+                      <Box
+                        component="span"
+                        sx={{ color: green[500], fontWeight: 'bold', ml: 0.5 }}
+                      >
                         [NEW!]
                       </Box>
                     )}
@@ -225,7 +269,12 @@ console.log("gameCode", gameCode)
           <iframe
             title="Generated Game"
             sandbox="allow-scripts"
-            style={{ width: '600px', height: '400px', border: '1px solid black', marginTop: '20px' }}
+            style={{
+              width: '600px',
+              height: '400px',
+              border: '1px solid black',
+              marginTop: '20px',
+            }}
             srcDoc={`
     <html>
       <head>
@@ -259,9 +308,21 @@ console.log("gameCode", gameCode)
             onChange={handlePromptChange}
             onFocus={() => dispatch(setFocused(true))}
             onBlur={() => dispatch(setFocused(false))}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+              }
+            }}
           />
         </Paper>
       )}
+      <Backdrop
+        sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1000 }}
+        open={isProgress}
+      >
+        <CircularProgress color="inherit" />
+      </Backdrop>
     </Box>
   );
 };
