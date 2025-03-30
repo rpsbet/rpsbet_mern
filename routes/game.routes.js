@@ -9,6 +9,7 @@ const Comment = require('../model/Comment');
 const { OpenAI } = require('openai');
 const esprima = require('esprima');
 const vm = require('vm');
+const JavaScriptObfuscator = require('javascript-obfuscator');
 
 // Instead of Configuration/OpenAIApi, we create an instance of OpenAI directly:
 const openai = new OpenAI({
@@ -233,107 +234,6 @@ router.patch('/range/:user_id', async (req, res) => {
   }
 });
 
-router.post('/verify', auth, async (req, res) => {
-  try {
-    const { inputLog } = req.body;
-
-    if (!inputLog || !Array.isArray(inputLog) || inputLog.length === 0) {
-      return res.status(400).json({ error: 'Input log is required, must be an array, and cannot be empty' });
-    }
-
-    console.log('🎮 Verifying game with input log:', JSON.stringify(inputLog, null, 2));
-
-    const aiResponse = await openai.chat.completions.create({
-      model: 'o3-mini',
-      messages: [
-        {
-          role: 'system',
-          content: `
-            You are an expert game rule analyzer. Given a log of player inputs, determine the game's status, outcome, and whether it had 100% user interaction.
-            - The input log is an array of objects with { timestamp, action, details }.
-            - **User Interaction Check**: 
-              - Consider actions like 'click', 'guessLetter', 'spin', 'move', 'RESTART_BUTTON_CLICK', or similar as user-initiated.
-              - Exclude actions like 'win', 'loss', or 'update' unless explicitly tied to a user action (e.g., details indicate user input).
-              - Return "false" for hasUserInteraction if no clear user-initiated actions are found or if all actions appear automated.
-            - Analyze the sequence of actions and timestamps to infer:
-              - **Game Status**: "started" (first action), "ongoing" (continued actions), or "ended" (conditions met or no recent activity).
-              - **Outcome**: "win", "loss", or "other" (e.g., ongoing or unclear).
-              - **Multiplier**: Default to 2 unless specific actions imply otherwise (e.g., a 'spin' landing on a number in details).
-            - Generic rules:
-              - First user action marks "started".
-              - Explicit 'win' or 'loss' actions mark "ended" with that outcome, if preceded by user interaction.
-              - Continuous user actions without 'win' or 'loss' mark "ongoing".
-              - If no actions for >30 seconds from the last timestamp to now (current timestamp: ${Date.now()}), assume "ended" with "other".
-            - Return a JSON object with:
-              - hasUserInteraction: true/false (true only if 100% of relevant actions are user-initiated)
-              - status: "started", "ongoing", or "ended"
-              - result: "win", "loss", or "other"
-              - multiplier: The winning multiplier (number, default 2)
-              - reason: A detailed explanation of the decision
-            - Make reasonable assumptions and note them in the reason.
-          `,
-        },
-        {
-          role: 'user',
-          content: `
-            Input Log: ${JSON.stringify(inputLog)}
-            Analyze the game state, determine its status, outcome, multiplier, and confirm 100% user interaction based only on the input log.
-          `,
-        },
-      ],
-      max_completion_tokens: 10000,
-    });
-
-    const rawResponse = aiResponse?.choices?.[0]?.message?.content?.trim() || '{}';
-    let result;
-    try {
-      result = JSON.parse(rawResponse);
-    } catch (e) {
-      console.error('Failed to parse AI response:', rawResponse);
-      result = { 
-        hasUserInteraction: false, 
-        status: 'error', 
-        result: 'error', 
-        multiplier: 0, 
-        reason: 'Failed to analyze game state' 
-      };
-    }
-
-    // Ensure required fields are present and valid
-    if (
-      typeof result.hasUserInteraction !== 'boolean' || 
-      !result.status || 
-      !result.result || 
-      !result.reason || 
-      typeof result.multiplier !== 'number'
-    ) {
-      result = {
-        hasUserInteraction: false,
-        status: 'error',
-        result: 'error',
-        multiplier: 0,
-        reason: 'Invalid AI response format',
-      };
-    }
-
-    console.log('🎮 Has User Interaction:', result.hasUserInteraction);
-    console.log('🎮 Game Status:', result.status);
-    console.log('🏆 Game Result:', result.result);
-    console.log('✖️ Multiplier:', result.multiplier);
-    console.log('📋 Reason:', result.reason);
-
-    res.json(result);
-  } catch (error) {
-    console.error('Error verifying game:', error);
-    res.status(500).json({
-      hasUserInteraction: false,
-      status: 'error',
-      result: 'error',
-      multiplier: 0,
-      reason: 'Internal server error',
-    });
-  }
-});
 
 router.get('/proxy-asset', async (req, res) => {
   const { url } = req.query;
@@ -353,16 +253,14 @@ router.get('/proxy-asset', async (req, res) => {
   }
 });
 
+
 router.post('/openai/generate', auth, async (req, res) => {
   try {
     const { prompt, imageUrls = [] } = req.body || {};
     const cost = 0.01;
 
     if (cost > req.user.balance) {
-      return res.json({
-        success: false,
-        message: 'NOT ENUFF FUNDS AT THIS MEOWMENT',
-      });
+      throw new Error('NOT ENUFF FUNDS AT THIS MEOWMENT');
     }
 
     const newTransaction = new Transaction({
@@ -381,15 +279,12 @@ router.post('/openai/generate', auth, async (req, res) => {
 
     socket.newTransaction(newTransaction);
 
-    console.log('🎮 Generating game with prompt:', prompt);
-    console.log('🖼️ Using images:', imageUrls);
-
     if (!prompt || typeof prompt !== 'string') {
-      return res.status(400).json({ error: 'Prompt is required and must be a string' });
+      throw new Error('Prompt is required and must be a string');
     }
 
     if (!Array.isArray(imageUrls)) {
-      return res.status(400).json({ error: 'imageUrls must be an array' });
+      throw new Error('imageUrls must be an array');
     }
 
     // Extract URLs from prompt as fallback
@@ -406,15 +301,12 @@ router.post('/openai/generate', auth, async (req, res) => {
         .map((url, i) => ({ key: `audio${i}`, proxiedUrl: url })),
     };
 
-    console.log('Backend proxiedAssets:', JSON.stringify(proxiedAssets));
-
     let generatedGameCode = null;
-    const maxAttempts = 3;
+    const maxAttempts = 5;
     const timeoutMs = 300000;
     const maxCompletionTokens = 100000;
 
     for (let attempts = 0; attempts < maxAttempts && !generatedGameCode; attempts++) {
-      console.log(`🔄 [Attempt ${attempts + 1}/${maxAttempts}] Calling OpenAI API with ${maxCompletionTokens} tokens...`);
       const userPrompt = attempts > 0 ? `${prompt} (Ensure complete Phaser.Scene structure and accurate prompt interpretation)` : prompt;
 
       try {
@@ -433,24 +325,24 @@ router.post('/openai/generate', auth, async (req, res) => {
             - Check if proxiedAssets.images and proxiedAssets.audio are arrays with length > 0 before accessing elements.
             - Verify each item (e.g., proxiedAssets.images[0]) exists and has key/proxiedUrl before using.
           - For additional assets not in proxiedAssets:
-            - Send window.parent.postMessage({ type: 'PROXY_IMAGE', data: { key: 'unique-key', url: 'image-url' } }, '*') for images.
-            - Send window.parent.postMessage({ type: 'PROXY_AUDIO', data: { key: 'unique-key', url: 'audio-url' } }, '*') for audio.
+            - Send window.sendGameMessage('PROXY_IMAGE', { key: 'unique-key', url: 'image-url' }) for images.
+            - Send window.sendGameMessage('PROXY_AUDIO', { key: 'unique-key', url: 'audio-url' }) for audio.
             - Store pending assets in Maps (pendingImages, pendingAudio) and load dynamically on PROXY_IMAGE_RESULT or PROXY_AUDIO_RESULT.
           - Show multipliers on win using this.add.text().
           - Use professional UI with glassy panels, animated transitions, and cyberpunk aesthetics.
           - Ensure compatibility with Phaser 3.60+ using scale: { mode: Phaser.Scale.RESIZE, autoCenter: Phaser.Scale.CENTER_BOTH }.
-          - Include a restart button triggering scene.restart() and a GAME_RESULT message with result 'restart'.
-          - Track user inputs in an inputLog array ({ timestamp, action, details }) and send via window.parent.postMessage({ type: 'INPUT_LOG', inputLog }, '*').
+          - Include a restart button triggering scene.restart() and a window.sendGameMessage('GAME_RESULT', { result: 'restart' }).
+          - Track user inputs in an inputLog array ({ timestamp, action, details }) and send via window.sendGameMessage('INPUT_LOG', { inputLog }).
           - Load pre-proxied assets in preload() and play audio in create() if available.
           - Handle dynamic assets in create() or update() based on PROXY_IMAGE_RESULT or PROXY_AUDIO_RESULT messages.
-          - Handle VERIFY_RESULT messages from the parent to determine game outcome, sending GAME_RESULT with result and multiplier.
+          - Handle VERIFY_RESULT messages from the parent to determine game outcome, sending window.sendGameMessage('GAME_RESULT', { result, multiplier }).
           - Structure the code as:
             - One or more classes extending Phaser.Scene with preload(), create(), and update() as needed.
             - A const config object defining the game setup with scene: [Scene1, Scene2, ...] for multi-scene games.
             - A new Phaser.Game(config) instantiation.
           - If the prompt is vague, create a simple interactive scene with a clickable object and a 2x multiplier.
-          - Wrap in a self-executing function with try-catch showing detailed errors.
-          - Add console.log statements for debugging key steps (e.g., asset loading, scene transitions).
+          - Wrap in a self-executing function with try-catch, but do not include console.log statements in the try-catch or elsewhere.
+          - Do NOT include console.log, console.warn, or console.error statements anywhere in the code for debugging or otherwise; keep the code silent.
           - Optimize for larger codebases by modularizing logic where possible and avoiding redundant code.
           - Return only JavaScript code inside \`\`\`javascript and \`\`\`.
         `,
@@ -463,22 +355,20 @@ router.post('/openai/generate', auth, async (req, res) => {
           max_completion_tokens: maxCompletionTokens,
         });
 
-        const aiResponse = await Promise.race([apiCall, new Promise((_, reject) => setTimeout(() => reject(new Error('API call timed out')), timeoutMs))]);
+        const aiResponse = await Promise.race([
+          apiCall,
+          new Promise((_, reject) => setTimeout(() => reject(new Error('API call timed out')), timeoutMs)),
+        ]);
         const rawGameCode = aiResponse?.choices?.[0]?.message?.content?.trim() || '';
         const extractedCodeMatch = rawGameCode.match(/```javascript([\s\S]*?)```/);
         let candidateCode = extractedCodeMatch ? extractedCodeMatch[1].trim() : rawGameCode;
 
-        if (!candidateCode) {
-          console.warn(`Attempt ${attempts + 1}: No valid code generated`);
-          continue;
-        }
+        if (!candidateCode) continue;
 
         // Syntax Validation
         try {
           esprima.parseScript(candidateCode);
-          console.log(`Attempt ${attempts + 1}: Syntax is valid`);
         } catch (syntaxError) {
-          console.warn(`Attempt ${attempts + 1}: Syntax error - ${syntaxError.message}`);
           candidateCode = null;
           continue;
         }
@@ -490,15 +380,14 @@ router.post('/openai/generate', auth, async (req, res) => {
         const hasConfig = candidateCode.match(/const\s+config\s*=/);
         const hasGameInstantiation = candidateCode.match(/new\s+Phaser\.Game\s*\(/);
         if (!hasScene || !hasPreload || !hasCreate || !hasConfig || !hasGameInstantiation) {
-          console.warn(`Attempt ${attempts + 1}: Missing components`);
           candidateCode = null;
           continue;
         }
 
         // Enhanced Sandbox Validation
         const sandbox = {
-          console: { log: () => { }, warn: () => { }, error: () => { } },
-          window: { addEventListener: () => { }, parent: { postMessage: () => { } } },
+          console: { log: () => {}, warn: () => {}, error: () => {} },
+          window: { addEventListener: () => {}, sendGameMessage: () => {} },
           proxiedAssets: proxiedAssets,
           Phaser: {
             Scene: class MockScene {
@@ -514,22 +403,22 @@ router.post('/openai/generate', auth, async (req, res) => {
                       throw new Error(`Audio asset with key '${key}' not found in proxiedAssets.audio`);
                     }
                   },
-                  on: () => { },
-                  start: () => { },
+                  on: () => {},
+                  start: () => {},
                 };
                 this.add = {
-                  image: () => ({ setDisplaySize: () => { }, setInteractive: () => { } }),
-                  rectangle: () => ({ setInteractive: () => { }, setStrokeStyle: () => { } }),
-                  text: () => ({ setOrigin: () => { }, setInteractive: () => { } }),
+                  image: () => ({ setDisplaySize: () => {}, setInteractive: () => {} }),
+                  rectangle: () => ({ setInteractive: () => {}, setStrokeStyle: () => {} }),
+                  text: () => ({ setOrigin: () => {}, setInteractive: () => {} }),
                 };
-                this.sound = { play: () => { }, get: () => true, add: () => { } };
-                this.tweens = { add: () => { } };
-                this.scale = { width: 800, height: 600, on: () => { } };
-                this.time = { delayedCall: () => { } };
-                this.textures = { exists: (key) => proxiedAssets.images.some(img => img?.key === key) };
+                this.sound = { play: () => {}, get: () => true, add: () => {} };
+                this.tweens = { add: () => {} };
+                this.scale = { width: 800, height: 600, on: () => {} };
+                this.time = { delayedCall: () => {} };
+                this.textures = { exists: key => proxiedAssets.images.some(img => img?.key === key) };
               }
             },
-            Game: function () { },
+            Game: function () {},
             Scale: { RESIZE: 1, CENTER_BOTH: 1 },
             AUTO: 1,
             Math: { Between: () => 0 },
@@ -537,19 +426,15 @@ router.post('/openai/generate', auth, async (req, res) => {
         };
         try {
           vm.runInNewContext(candidateCode, sandbox, { timeout: 10000 });
-          console.log(`Attempt ${attempts + 1}: Sandbox execution successful`);
         } catch (runtimeError) {
-          console.warn(`Attempt ${attempts + 1}: Runtime error - ${runtimeError.message}`);
           candidateCode = null;
           continue;
         }
 
         generatedGameCode = candidateCode;
-        console.log(`✅ Attempt ${attempts + 1}: Game code validated`);
       } catch (apiError) {
-        console.error(`Attempt ${attempts + 1} failed:`, apiError.message);
         if (attempts === maxAttempts - 1) throw new Error('All attempts failed');
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        await new Promise(resolve => setTimeout(resolve, 2000));
       }
     }
 
@@ -557,12 +442,36 @@ router.post('/openai/generate', auth, async (req, res) => {
       throw new Error('Failed to generate valid game code after all attempts');
     }
 
-    res.json({ finalGame: generatedGameCode });
+    // Strip any remaining console.log statements
+    const cleanedCode = generatedGameCode.replace(/console\.(log|warn|error)\s*\(.*?\);?/g, '');
+
+    // Obfuscate the cleaned code
+    const obfuscatedCode = JavaScriptObfuscator.obfuscate(cleanedCode, {
+      compact: true,
+      controlFlowFlattening: true,
+      deadCodeInjection: true,
+      stringArray: true,
+      stringArrayRotate: true,
+      stringArrayShuffle: true,
+    }).getObfuscatedCode();
+
+    // Inject createScene message at the start of the game
+    const finalCode = `
+      window.sendGameMessage('INPUT_LOG', { 
+        inputLog: [{ timestamp: Date.now(), action: 'createScene', details: 'Game scene initialized' }] 
+      });
+      ${obfuscatedCode}
+    `;
+
+    res.json({ finalGame: finalCode });
   } catch (error) {
     console.error('Unexpected error in route handler:', error);
-    res.status(500).json({
-      error: 'Internal server error',
-      message: error.message.includes('timed out')
+    const statusCode = error.message === 'Prompt is required and must be a string' || error.message === 'imageUrls must be an array' ? 400 : 500;
+    res.status(statusCode).json({
+      error: statusCode === 400 ? 'Bad Request' : 'Internal server error',
+      message: error.message === 'NOT ENUFF FUNDS AT THIS MEOWMENT'
+        ? error.message
+        : error.message.includes('timed out')
         ? 'Game generation timed out. Please try again or simplify your prompt.'
         : 'Failed to generate game. Please try again.',
     });

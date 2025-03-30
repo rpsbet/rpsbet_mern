@@ -21,7 +21,8 @@ import {
 } from '@mui/material';
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import SportsSoccerIcon from "@mui/icons-material/SportsSoccer";
-import CasinoIcon from "@mui/icons-material/CardGiftcard";
+import CasinoIcon from "@mui/icons-material/Casino";
+import CardGiftcard from "@mui/icons-material/CardGiftcard";
 import QuestionMark from "@mui/icons-material/QuestionMark";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
@@ -121,7 +122,7 @@ function HowToPlayModal({ modalIsOpen, closeModal }) {
 
             <List sx={{ pl: 2 }}>
               {[
-                { number: "1️⃣", title: "Create a Game", desc: "Choose RPS or Quick Shoot." },
+                { number: "1️⃣", title: "Create a Game", desc: "Choose RPS, Quick Shoot or Custom." },
                 { number: "2️⃣", title: "Raise Funds", desc: "Players bet or invest in your game." },
                 { number: "3️⃣", title: "Cash Out Anytime", desc: "Secure gains or stay in for bigger rewards." },
                 { number: "4️⃣", title: "Game Graduates", desc: "Once enough funds are raised, it converts to a tradeable token." },
@@ -227,7 +228,26 @@ function HowToPlayModal({ modalIsOpen, closeModal }) {
             <Typography variant="h6" fontWeight="bold">🎮 Games</Typography>
           </AccordionSummary>
           <AccordionDetails>
-
+            {/* Custom */}
+            <Typography variant="subtitle1" sx={{ display: "flex", alignItems: "center", gap: 1, fontWeight: "bold" }}>
+              <CasinoIcon color="warning" /> Custom
+            </Typography>
+            <Typography variant="body2">
+              <strong>🎯 Objective:</strong> Win the creator-designed game to earn from the multiplier (varies by game).
+            </Typography>
+            <Typography variant="body2" fontWeight="bold">🕹️ Gameplay:</Typography>
+            <List dense>
+              {[
+                "Enter a predetermined Bet Amount.",
+                "Follow the unique rules set by the game creator.",
+                "Win to earn a multiplier on your bet (determined by the specific game design).",
+              ].map((text, index) => (
+                <ListItem key={index}>
+                  <ListItemIcon><CheckCircleIcon color="success" /></ListItemIcon>
+                  <ListItemText primary={<Typography variant="body2">{text}</Typography>} />
+                </ListItem>
+              ))}
+            </List>
             {/* Quick Shoot */}
             <Typography variant="subtitle1" sx={{ display: "flex", alignItems: "center", gap: 1, fontWeight: "bold" }}>
               <SportsSoccerIcon color="primary" /> Quick Shoot
@@ -251,7 +271,7 @@ function HowToPlayModal({ modalIsOpen, closeModal }) {
 
             {/* RPS */}
             <Typography variant="subtitle1" sx={{ display: "flex", alignItems: "center", gap: 1, fontWeight: "bold" }}>
-              <CasinoIcon color="secondary" /> RPS (Rock Paper Scissors)
+              <CardGiftcard color="secondary" /> RPS (Rock Paper Scissors)
             </Typography>
             <Typography variant="body2"><strong>🎯 Objective:</strong> Predict the correct hand gesture.</Typography>
             <Typography variant="body2" fontWeight="bold">🕹️ Gameplay:</Typography>
@@ -270,59 +290,59 @@ function HowToPlayModal({ modalIsOpen, closeModal }) {
 
           </AccordionDetails>
         </Accordion>
-        <Accordion sx={{ boxShadow: 3,}}>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography variant="h6" fontWeight="bold" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <AttachMoneyIcon color="success" /> Fees
-          </Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Typography variant="body2" fontWeight="bold">
-            💸 **1% fee** on all transactions **except** tipping & loans.
-          </Typography>
-        </AccordionDetails>
-      </Accordion>
+        <Accordion sx={{ boxShadow: 3, }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="h6" fontWeight="bold" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <AttachMoneyIcon color="success" /> Fees
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Typography variant="body2" fontWeight="bold">
+              💸 **1% fee** on all transactions **except** tipping & loans.
+            </Typography>
+          </AccordionDetails>
+        </Accordion>
 
-      {/* Get Help Section */}
-      <Accordion sx={{ boxShadow: 3,  mt: 2 }}>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography variant="h6" fontWeight="bold" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <HelpOutlineIcon color="primary" /> Get Help
-          </Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Typography variant="body2" fontWeight="bold">
-            Need assistance? Contact us via:
-          </Typography>
+        {/* Get Help Section */}
+        <Accordion sx={{ boxShadow: 3, mt: 2 }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="h6" fontWeight="bold" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <HelpOutlineIcon color="primary" /> Get Help
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Typography variant="body2" fontWeight="bold">
+              Need assistance? Contact us via:
+            </Typography>
 
-          <Box sx={{ mt: 2, display: "flex", gap: 1, flexWrap: "wrap" }}>
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<FontAwesomeIcon icon={faXTwitter} />}
-              onClick={() => window.open("https://x.com/RPSDG_SOL", "_blank")}
-            >
-              Twitter
-            </Button>
-            <Button
-              variant="contained"
-              color="info"
-              startIcon={<FontAwesomeIcon icon={faTelegram} />}
-              onClick={() => window.open("https://t.me/RPSDOTGAMESOL", "_blank")}
-            >
-              Telegram
-            </Button>
-            <Button
-              variant="contained"
-              color="secondary"
-              startIcon={<EmailIcon />}
-              onClick={() => window.open("mailto:inv_inquiries@rps.game")}
-            >
-              Email
-            </Button>
-          </Box>
-        </AccordionDetails>
-      </Accordion>
+            <Box sx={{ mt: 2, display: "flex", gap: 1, flexWrap: "wrap" }}>
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={<FontAwesomeIcon icon={faXTwitter} />}
+                onClick={() => window.open("https://x.com/RPSDG_SOL", "_blank")}
+              >
+                Twitter
+              </Button>
+              <Button
+                variant="contained"
+                color="info"
+                startIcon={<FontAwesomeIcon icon={faTelegram} />}
+                onClick={() => window.open("https://t.me/RPSDOTGAMESOL", "_blank")}
+              >
+                Telegram
+              </Button>
+              <Button
+                variant="contained"
+                color="secondary"
+                startIcon={<EmailIcon />}
+                onClick={() => window.open("mailto:inv_inquiries@rps.game")}
+              >
+                Email
+              </Button>
+            </Box>
+          </AccordionDetails>
+        </Accordion>
       </Box>
     </Modal>
   );

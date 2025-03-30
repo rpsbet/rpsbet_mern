@@ -164,7 +164,7 @@ function MyChat(props) {
 				) : (
 					<Box>
 						{historyKeys.length === 0 && !loading ? (
-							<Typography variant="body2" color="text.secondary">
+							<Typography variant="body2" sx={{p: 2}} color="text.secondary">
 								Your inbox is dry, find some friends?
 							</Typography>
 						) : (

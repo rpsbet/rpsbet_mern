@@ -45,6 +45,8 @@ import Lottie from 'react-lottie';
 import coins from './LottieAnimations/coins.json';
 import AllTransactionsModal from './modal/AllTransactionsModal.jsx';
 import { debounce } from 'lodash';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faXTwitter, faTelegram, faYoutube, faTiktok } from '@fortawesome/free-brands-svg-icons';
 
 import {
   AccountBalanceWallet,
@@ -75,6 +77,7 @@ import Moment from 'moment';
 import Avatar from '../components/Avatar';
 import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import EmailIcon from "@mui/icons-material/Email";
 
 import ProfileModal from './modal/ProfileModal';
 import PlayerModal from './modal/PlayerModal';
@@ -290,6 +293,7 @@ function SiteWrapper(props) {
   );
   const [showInventoryModal, setShowInventoryModal] = useState(false);
   const [showVaultModal, setShowVaultModal] = useState(false);
+  const [showNegativeBalanceDialog, setShowNegativeBalanceDialog] = useState(false);
 
   const [walletConflictOpen, setWalletConflictOpen] = useState(false);
   const handleCloseConflictDialog = () => setWalletConflictOpen(false);
@@ -417,6 +421,15 @@ function SiteWrapper(props) {
     setRemainingLoans(propsRemainingLoans);
   }, [propsRemainingLoans]);
 
+  useEffect(() => {
+    if (propsBalance < 0) {
+      setShowNegativeBalanceDialog(true);
+    } else {
+      setShowNegativeBalanceDialog(false); // Close when balance is non-negative
+    }
+  }, [propsBalance]);
+
+
   /**
    * Check if transactions updated => set local transactions
    * We also do an example check if the first transaction changed => do getUser
@@ -521,7 +534,7 @@ function SiteWrapper(props) {
     // Room list updates:
     const handleUpdatedRoomList = (data) => {
       setRoomList(data);
-endLoading();
+      endLoading();
     };
     newSocket.on('UPDATED_ROOM_LIST', handleUpdatedRoomList);
 
@@ -950,7 +963,60 @@ endLoading();
   return (
     <ThemeProvider theme={isDarkMode ? darkTheme : mainTheme}>
       {showCookieConsent && <CookieConsent />}
-
+      <Dialog
+        open={showNegativeBalanceDialog}
+        disableEscapeKeyDown
+        BackdropProps={{
+          style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' },
+          onClick: (e) => e.stopPropagation(),
+        }}
+        PaperProps={{
+          sx: {
+            backgroundColor: '#2D3A4B',
+            color: '#fff',
+          },
+        }}
+      >
+        <DialogTitle sx={{ color: '#fff' }}>
+          Account Under Review
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body1" sx={{ color: '#fff' }}>
+            Your profile is currently under review due to breaking our terms of service.
+            We cannot give any details at this moment. Your balance is to be negative
+            during this verification period.
+          </Typography>
+          <Typography variant="body2" sx={{ color: '#ccc', mt: 1 }}>
+            Need assistance? Contact us via:
+          </Typography>
+          <Box sx={{ mt: 2, display: "flex", gap: 1, flexWrap: "wrap" }}>
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<FontAwesomeIcon icon={faXTwitter} />}
+              onClick={() => window.open("https://x.com/RPSDG_SOL", "_blank")}
+            >
+              X
+            </Button>
+            <Button
+              variant="contained"
+              color="info"
+              startIcon={<FontAwesomeIcon icon={faTelegram} />}
+              onClick={() => window.open("https://t.me/RPSDOTGAMESOL", "_blank")}
+            >
+              Telegram
+            </Button>
+            <Button
+              variant="contained"
+              color="secondary"
+              startIcon={<EmailIcon />}
+              onClick={() => window.open("mailto:inv_inquiries@rps.game")}
+            >
+              Email
+            </Button>
+          </Box>
+        </DialogContent>
+      </Dialog>
       {isLive && tokenModalOpen && (
         <CatsinoModalOverlay
           currentGif={currentGif}

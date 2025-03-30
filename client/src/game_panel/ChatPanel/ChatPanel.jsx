@@ -400,82 +400,89 @@ function ChatPanel(props) {
       >
         {/* Tabs Section */}
         <Tabs
-          value={selectedTabIndex}
-          onChange={handleTabChange}
-          TabIndicatorProps={{
-            style: {
-              backgroundColor: 'red',
-            },
-          }}
-          sx={{
-            '& .MuiTab-root': {
-              textTransform: 'none',
-              color: 'white',
-              '& .MuiTab-iconWrapper': {
-                color: 'grey',
-                transition: 'color 0.3s ease',
-              },
-              '&:hover .MuiTab-iconWrapper': {
-                color: 'white',
-              },
-              '&.Mui-selected': {
-                color: 'white',
-                '& .MuiTab-iconWrapper': {
-                  color: 'red',
-                },
-              },
-            },
-          }}
-        >
-          {/* Inbox Tab */}
-          <Tab
-            className="custom-tab"
-            label="Inbox"
-            icon={
-              <ChatOutlined
-                sx={{
-                  color:
-                    hoverTabIndex === 0 || selectedTabIndex === 0
-                      ? 'white'
-                      : 'grey',
-                  transition: 'color 0.3s ease',
-                }}
-              />
-            }
-            sx={{
-              '&:hover .MuiTab-iconWrapper': {
-                color: 'white',
-              },
-            }}
-            onMouseEnter={() => handleMouseEnter(0)}
-            onMouseLeave={handleMouseLeave}
-          />
+  value={selectedTabIndex}
+  onChange={handleTabChange}
+  TabIndicatorProps={{
+    style: {
+      backgroundColor: 'red',
+    },
+  }}
+  sx={{
+    '& .MuiTab-root': {
+      textTransform: 'none',
+      color: 'white',
+      '& .MuiTab-iconWrapper': {
+        color: 'grey',
+        transition: 'color 0.3s ease',
+      },
+      '&:hover .MuiTab-iconWrapper': {
+        color: 'white',
+      },
+      '&.Mui-selected': {
+        color: 'white',
+        '& .MuiTab-iconWrapper': {
+          color: 'red',
+        },
+      },
+      // Attempt 1: Target the label directly
+      '& .MuiTab-label': {
+        marginBottom: '8px !important', // Force with !important
+      },
+      // Attempt 2: Adjust padding of the tab content
+      paddingBottom: '8px', // Adds space below the entire tab content
+    },
+  }}
+>
+  {/* Inbox Tab */}
+  <Tab
+    className="custom-tab"
+    label={
+      <span style={{ marginBottom: '8px', display: 'inline-block' }}>
+        Inbox
+      </span>
+    } // Attempt 3: Wrap label in a span with inline style
+    icon={
+      <ChatOutlined
+        sx={{
+          color: hoverTabIndex === 0 || selectedTabIndex === 0 ? 'white' : 'grey',
+          transition: 'color 0.3s ease',
+        }}
+      />
+    }
+    sx={{
+      '&:hover .MuiTab-iconWrapper': {
+        color: 'white',
+      },
+    }}
+    onMouseEnter={() => handleMouseEnter(0)}
+    onMouseLeave={handleMouseLeave}
+  />
 
-          {/* Chat Tab */}
-          <Tab
-            className="custom-tab"
-            label="Chat"
-            icon={
-              <ChatBubbleOutlineOutlined
-                sx={{
-                  color:
-                    hoverTabIndex === 1 || selectedTabIndex === 1
-                      ? 'white'
-                      : 'grey',
-                  transition: 'color 0.3s ease',
-                }}
-              />
-            }
-            sx={{
-              '&:hover .MuiTab-iconWrapper': {
-                color: 'white',
-              },
-            }}
-            onMouseEnter={() => handleMouseEnter(1)}
-            onMouseLeave={handleMouseLeave}
-          />
-        </Tabs>
-
+  {/* Chat Tab */}
+  <Tab
+    className="custom-tab"
+    label={
+      <span style={{ marginBottom: '8px', display: 'inline-block' }}>
+        Chat
+      </span>
+    } // Attempt 3: Wrap label in a span with inline style
+    icon={
+      <ChatBubbleOutlineOutlined
+        sx={{
+          color: hoverTabIndex === 1 || selectedTabIndex === 1 ? 'white' : 'grey',
+          transition: 'color 0.3s ease',
+        }}
+      />
+    }
+    sx={{
+      '&:hover .MuiTab-iconWrapper': {
+        color: 'white',
+      },
+    }}
+    onMouseEnter={() => handleMouseEnter(1)}
+    onMouseLeave={handleMouseLeave}
+  />
+</Tabs>
         {/* Tab Content */}
         {selectedTabIndex === 0 ? (
           <MyChat

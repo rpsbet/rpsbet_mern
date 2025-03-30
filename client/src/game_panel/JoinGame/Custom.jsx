@@ -18,7 +18,8 @@ import {
   DialogContent,
   DialogActions,
   Typography,
-  Box
+  Box,
+  useMediaQuery
 } from '@mui/material';
 import {
   validateIsAuthenticated,
@@ -94,6 +95,8 @@ function Custom(props) {
 
 
   const dispatch = useDispatch();
+  const isMobile = useMediaQuery("(max-width: 768px)");
+
 
   // We track mounted status to avoid setting state after unmount
   const isComponentMountedRef = useRef(false);
@@ -238,16 +241,17 @@ function Custom(props) {
         case 'INPUT_LOG':
           const inputLog = event.data.inputLog || [];
           const lastInput = inputLog[inputLog.length - 1];
-          
-          // Check if the last input indicates the start of a game or an interaction
+  
           if (lastInput) {
-            if (lastInput.action === 'createScene') {
+            const action = lastInput.action.toLowerCase();
+  
+            if (action === 'createscene') {
               // Reset interaction state when a new game scene is created
               setHasInteracted(false);
               setGameStartedCount((prev) => prev + 1);
-              console.log('Game scene created, resetting interaction state.');
+              console.log('Game scene created, resetting interaction state. Count:', gameStartedCount + 1);
             } else if (gameStartedCount > 0 && !hasInteracted) {
-              // Any input log after game start (but before result) counts as interaction
+              // Any INPUT_LOG after createScene counts as interaction
               setHasInteracted(true);
               console.log('User interaction detected:', lastInput.action);
             }
@@ -256,25 +260,23 @@ function Custom(props) {
   
         case 'GAME_RESULT':
           const { result, multiplier: rawMultiplier } = event.data;
-          // Default to 2 if multiplier is undefined or invalid
           const multiplier =
             rawMultiplier !== undefined && !isNaN(parseFloat(rawMultiplier))
               ? parseFloat(rawMultiplier)
               : 2;
           console.log('Frontend: Received result -', result, 'Multiplier:', multiplier);
   
-          // Valid game result values
           const validResults = ['win', 'won', 'lose', 'lost', 'loss'];
           if (
             validResults.includes(result) &&
             hasInteracted &&
             gameStartedCount > 0
           ) {
-            console.log('Processing game result after interaction and new game start.');
-            // Pass result and multiplier (defaulting to 2 if not provided)
+            console.log('Processing game result after interaction and game start.');
             onBtnBetClick(result, result === 'win' ? multiplier : undefined);
           } else {
-            console.log('Ignoring game result: No prior interaction or new game start.');
+            console.log('Ignoring game result: No prior interaction or game start.');
+            console.log('hasInteracted:', hasInteracted, 'gameStartedCount:', gameStartedCount);
           }
           break;
   
@@ -285,7 +287,7 @@ function Custom(props) {
   
     window.addEventListener('message', handleGameMessage);
     return () => window.removeEventListener('message', handleGameMessage);
-  }, [hasInteracted, gameStartedCount, onBtnBetClick]);
+  }, [hasInteracted, gameStartedCount, onBtnBetClick]); // Dependencies are correct
 
   // Simulate getDerivedStateFromProps for password correctness
   useEffect(() => {
@@ -425,7 +427,7 @@ function Custom(props) {
                 className={`rps-radio-host ${is_betting || betting ? 'blueish-hue' : ''}`}
                 style={{
                   top: '150px',
-                  right: '-25px',
+                  right: isMobile ? 'unset' : '-25px',
                   position: 'absolute',
                   width: '12.5px',
                   height: '12.5px',
@@ -434,7 +436,12 @@ function Custom(props) {
               >
                 <span
                   className="result"
-                  style={{ display: 'flex' }}
+                  style={{
+                    display: 'flex',
+                    top: isMobile ? '15px' : '0',
+                    width: isMobile ? '100%' : '130px',
+                    right: isMobile ? 'unset' : '0'
+                    }}
                 >
                   {result !== '' ? (
                     <>
@@ -473,42 +480,32 @@ function Custom(props) {
                 className="join-game-panel"
               >
                 <Box sx={{ p: 2, width: '100%', position: 'relative' }}>
-                  <iframe
-                    title="Generated Game"
-                    sandbox="allow-scripts allow-same-origin"
-                    style={{
-                      width: '100%',
-                      height: '600px',
-                      border: '1px solid #ccc',
-                      borderRadius: '8px',
-                      backgroundColor: '#000', // Black background for game
-                      // Disable pointer events if isCreator is true.
-                      pointerEvents: isCreator ? 'none' : 'auto',
-                      opacity: isCreator ? 0.5 : 1,
-                    }}
-                    srcDoc={`
-        <html>
-          <head>
-            <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.min.js"></script>
-            <script>
-              window.onerror = function(message, source, lineno, colno, error) {
-                document.body.innerHTML = '<h3 style="color:red; text-align: center; padding: 20px;">Game Error: ' + message + '</h3>';
-                console.error('Game Error:', message, 'at', source, 'line:', lineno);
-              };
-              Object.defineProperty(window, 'phaserGame', {
-                writable: false,
-                configurable: false,
-              });
-            </script>
-          </head>
-          <body style="margin: 0; padding: 0; overflow: hidden; background: #000;">
-            <script>
-              ${roomInfo.gameCode}
-            </script>
-          </body>
-        </html>
-      `}
-                  />
+                <iframe
+  title="Generated Game"
+  sandbox="allow-scripts allow-same-origin"
+  style={{ width: '100%', height: '600px', border: '1px solid #ccc', borderRadius: '8px', backgroundColor: '#000' }}
+  srcDoc={`
+    <html>
+      <head>
+        <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.min.js"></script>
+      </head>
+      <body style="margin: 0; padding: 0; overflow: hidden; background: #000;">
+        <script>
+          window.sendGameMessage = function(type, data) {
+          console.log(data)
+            window.parent.postMessage({ type: type, ...data }, '*');
+          };
+          window.addEventListener('message', (e) => {
+            if (e.data.type === 'RANDOM_RESULT' || e.data.type === 'GAME_RESULT') {
+              window.dispatchEvent(new CustomEvent(e.data.type, { detail: e.data }));
+            }
+          });
+          ${roomInfo.gameCode}
+        </script>
+      </body>
+    </html>
+  `}
+/>
                   {isCreator && (
                     <Box
                       sx={{

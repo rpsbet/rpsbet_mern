@@ -179,64 +179,6 @@ const SettingsRef = ({
       });
   };
 
-  useEffect(() => {
-    const handleMessage = async (event) => {
-      console.log('Received message from iframe:', event.data);
-      if (!event.data || typeof event.data.type !== 'string') return;
-  
-      if (event.data.type === 'GAME_RESULT') {
-        if (event.data.result === 'win') {
-          dispatch({ type: 'MSG_SUCCESS', payload: `You won! Multiplier: ${event.data.multiplier}x` });
-        } else if (event.data.result === 'loss') {
-          dispatch({ type: 'MSG_ERROR', payload: 'Game over! You lost.' });
-        } else if (event.data.result === 'restart') {
-          dispatch({ type: 'MSG_INFO', payload: 'Game restarted.' });
-        }
-      } else if (event.data.type === 'PROXY_IMAGE') {
-        const { key, url } = event.data.data;
-        try {
-          const result = await dispatch(proxyAsset(key, url));
-          if (iframeRef.current) {
-            iframeRef.current.contentWindow.postMessage(
-              { type: 'PROXY_IMAGE_RESULT', key, proxiedUrl: result.proxiedUrl || url },
-              '*'
-            );
-          }
-        } catch (error) {
-          console.error('Error proxying image:', error);
-          if (iframeRef.current) {
-            iframeRef.current.contentWindow.postMessage(
-              { type: 'PROXY_IMAGE_RESULT', key, proxiedUrl: url },
-              '*'
-            );
-          }
-        }
-      } else if (event.data.type === 'PROXY_AUDIO') {
-        const { key, url } = event.data.data;
-        try {
-          const result = await dispatch(proxyAsset(key, url));
-          if (iframeRef.current) {
-            iframeRef.current.contentWindow.postMessage(
-              { type: 'PROXY_AUDIO_RESULT', key, proxiedUrl: result.proxiedUrl || url },
-              '*'
-            );
-          }
-        } catch (error) {
-          console.error('Error proxying audio:', error);
-          if (iframeRef.current) {
-            iframeRef.current.contentWindow.postMessage(
-              { type: 'PROXY_AUDIO_RESULT', key, proxiedUrl: url },
-              '*'
-            );
-          }
-        }
-      }
-    };
-  
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, [dispatch, iframeRef]);
-
   const gameSrcDoc = useMemo(() => {
     if (!gameCode) return '';
     return `
@@ -249,6 +191,10 @@ const SettingsRef = ({
               console.error('Game Error:', message, 'Source:', source, 'Line:', lineno, 'Error:', error);
               return true;
             };
+            window.sendGameMessage = function(type, data) {
+            window.parent.postMessage({ type: type, ...data }, '*');
+          };
+
             let gameInstance = null;
             function startGame() {
               const canvas = document.createElement('canvas');

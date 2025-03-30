@@ -2060,9 +2060,10 @@ svg#delete:hover {
   white-space: nowrap;
   position: absolute;
   top: -7px;
-  right: 22px;
+  right:30px;
   display: flex;
   width: 130px;
+  font-size: 20px;
   flex-direction: row;
   justify-content: center;
   align-items: center;
@@ -4434,6 +4435,9 @@ circle {
 .host-container {
   display: contents;
 }
+.rps-radio-host {
+  font-weight: 800 !important;
+}
 
 .bottom-footer {
   display: flex;
@@ -4507,10 +4511,6 @@ circle {
 
   .bottom-footer {
     margin-left: 0 !important;
-  }
-
-  .ai-container {
-    margin-top: 60px;
   }
 
   #footer-container {
@@ -4624,7 +4624,7 @@ circle {
   }
 
   .game-page .game-contents {
-    margin-top: 24px;
+    padding-top: 24px;
   }
 
   .summary-panel {
@@ -5274,10 +5274,6 @@ circle {
 @media (max-width: 480px) {
   #wallet-text {
     display: none;
-  }
-
-  .result {
-    right: 0px;
   }
 
   .lottie-progress {
