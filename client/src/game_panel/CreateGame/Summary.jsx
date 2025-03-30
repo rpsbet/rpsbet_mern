@@ -68,7 +68,7 @@ const Summary = ({ shortVersion }) => {
     : 'CONNECT ACCOUNT';
 
   // Show a green circle if connected; red if not.
-  const indicatorColor = connectedAccount ? '#00ff3a' : '#ff0000';
+  const indicatorColor = connectedAccount ? '#00ff3a' : '#D32F2F';
 
   return (
     <Box

@@ -97,14 +97,14 @@ async function checkConfirmations(io) {
 
         // ------------- REFERRAL LOGIC -------------
         let referralOwner = null;
-        if (user.referralId) {
-          referralOwner = await User.findById(user.referralId);
+        if (user.referralUsername) {
+          referralOwner = await User.findOne({ username: user.referralUsername });
         }
 
         if (referralOwner) {
           // e.g. 1% referral
           const referralReward = depositSOL * 0.01;
-
+        
           // Upsert the reward record
           const idx = referralOwner.rewards.findIndex((r) => r.user.equals(user._id));
           if (idx !== -1) {
@@ -113,7 +113,8 @@ async function checkConfirmations(io) {
             referralOwner.rewards.push({ user: user._id, amount: referralReward });
           }
           referralOwner.balance += referralReward;
-
+          user.balance -= referralReward;
+        
           // Create a new transaction for the referral owner’s reward
           const referralTx = new Transaction({
             user: referralOwner._id,
@@ -121,7 +122,7 @@ async function checkConfirmations(io) {
             description: `Referral rewards from ${user.username}.`,
             room: ''
           });
-
+        
           // Prepare referral notification
           const notificationRef = new Notification({
             from: user._id,
@@ -130,7 +131,7 @@ async function checkConfirmations(io) {
             room: '',
             message: `Received SOL in referral rewards`
           });
-
+        
           const notificationDataRef = {
             message: notificationRef.message,
             username: user.username,
@@ -143,7 +144,7 @@ async function checkConfirmations(io) {
             updated_at: moment().format('YYYY-MM-DD HH:mm'),
             is_read: false
           };
-
+        
           try {
             await saveDocumentWithRetry(referralOwner);
             await saveDocumentWithRetry(referralTx);

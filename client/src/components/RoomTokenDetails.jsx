@@ -87,7 +87,7 @@ const RoomTokenDetails = ({ roomInfo, hosts, solPrice, isDarkMode, handleOpenPla
                     HARD CAP: {progressPercentage}%
                 </h4>
                 <Box
-                    className='payout-bar'
+                    className='progress-bar'
                     style={{
                         width: '100%',
                         height: '20px',

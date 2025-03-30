@@ -146,7 +146,7 @@ function LoginModal(props) {
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    bgcolor: '#1f1a25', // Custom background color
+    bgcolor: '#2D3A4B', // Custom background color
     color: '#fff', // Text color for contrast
     boxShadow: 24,
     borderRadius: 1,

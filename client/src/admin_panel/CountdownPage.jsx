@@ -354,7 +354,7 @@ const CountdownPage = ({
         type: 'gradient',
         gradient: {
           shade: 'dark',
-          gradientToColors: ['#FFD800', '#FF0000', '#00A1FF', '#28A745'],
+          gradientToColors: ['#FFD800', '#D32F2F', '#00A1FF', '#28A745'],
           shadeIntensity: 1,
           opacityFrom: 0.9,
           opacityTo: 0.5,

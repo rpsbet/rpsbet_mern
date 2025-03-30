@@ -5,7 +5,7 @@ const Schema = mongoose.Schema;
 const SubStrategySchema = new Schema({
     markov: { type: Number, default: 0 },
     adam: { type: Number, default: 0 },
-    gpt3: { type: Number, default: 0 },
+    o3mini: { type: Number, default: 0 },
     created_at: { type: Date, default: Date.now },
     updated_at: { type: Date, default: Date.now }
 });

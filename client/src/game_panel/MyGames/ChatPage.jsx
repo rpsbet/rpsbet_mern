@@ -254,7 +254,7 @@ function ChatPage(props) {
         <Box
           sx={{
             mb: 2,
-            background: 'rgba(170, 170, 170, 0.06)',
+            background: '#2D3A4A',
             borderRadius: '0.3em',
           }}
         >

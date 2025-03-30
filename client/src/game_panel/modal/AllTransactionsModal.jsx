@@ -169,7 +169,7 @@ function AllTransactionsModal({
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    bgcolor: '#1f1a25', // Purple background
+    bgcolor: '#2D3A4B', // Purple background
     color: '#fff',
     boxShadow: 24,
     borderRadius: 1,
@@ -197,6 +197,7 @@ function AllTransactionsModal({
   const tableContainerStyle = {
     height: 280,
     overflowY: 'auto',
+    background: '#2D3A4A',
   };
 
   const theme = getCustomTheme(isDarkMode ? 'dark' : 'light');
@@ -261,7 +262,7 @@ function AllTransactionsModal({
               <Box>
                 <Box
                   sx={{
-                    background: 'rgba(170, 170, 170, 0.06)',
+                    background: '#2D3A4A',
                     borderRadius: '0.3em',
                     p: '20px',
                   }}
@@ -377,8 +378,8 @@ function AllTransactionsModal({
                       </MenuItem>
                     </Menu>
                   </Box>
-                  <Typography variant="subtitle1" sx={{ mt: 2 }}>
-                    Total Transactions: {totalCount}
+                  <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
+                    Total: {totalCount}
                   </Typography>
                   {/* TABLE AREA */}
                   <TableContainer
@@ -409,7 +410,7 @@ function AllTransactionsModal({
                                       ? '#888'
                                       : transaction.amount > 0
                                         ? '#00ff3a' // greenish
-                                        : '#ff0000', // reddish
+                                        : '#D32F2F', // reddish
                                 }}
                               >
                                 {transaction.amount > 0 ? (

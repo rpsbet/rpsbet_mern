@@ -753,24 +753,6 @@ function RPS(props) {
                 {creator_id &&
                   user_id &&
                   creator_id.toString() === user_id.toString() ? (
-                  // <div className="host-controls">
-                  //   <Button
-                  //     variant="outlined"
-                  //     color='error'
-                  //     onClick={handleBotClick}
-                  //     className="hover-text-button"
-                  //   >
-                  //     <FontAwesomeIcon className="button-icon" icon={faRobot} />
-                  //     <span className="button-text">&nbsp;CAT CALL x{botsCount}</span>
-                  //   </Button>
-                  //   {botsCount > 0 && (
-                  //     <Button sx={{ ml: 1 }} variant="outlined"
-                  //       color='warning' onClick={bootBots} className="hover-text-button">
-                  //       <FontAwesomeIcon className="button-icon" icon={faBan} />
-                  //       <span className="button-text">&nbsp;KICK BOTS?</span>
-                  //     </Button>
-                  //   )}
-                  // </div>
                   <></>
                 ) : (
                   <>
@@ -816,7 +798,7 @@ function RPS(props) {
                 alignItems: 'center'
               }}
             >
-              <Typography variant="subtitle2" sx={{ color: '#ff0000' }}>
+              <Typography variant="subtitle2" sx={{ color: '#D32F2F' }}>
                 GAME ENDED
               </Typography>
               <br />

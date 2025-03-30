@@ -76,7 +76,7 @@ const SideTabs = ({ selectedTab, handleTabChange }) => (
       },
       // Make the text red when the tab is selected
       '& .Mui-selected': {
-        color: '#ff0000 !important',
+        color: '#D32F2F !important',
       },
     }}
   >
@@ -138,7 +138,6 @@ function BetArray({
   const [isSliderDisabled, setIsSliderDisabled] = useState(false);
   const [text, setText] = useState('');
   const [accumulativeProfit, setAccumulativeProfit] = useState([]);
-  const [selectedStrategy, setSelectedStrategy] = useState(ai_mode);
   const [bettingQbot, setBettingQbot] = useState(false);
   const [attachedRooms, setAttachedRooms] = useState([]);
   const [aiOn, setAiOn] = useState(false);
@@ -341,10 +340,10 @@ function BetArray({
         <span style={{
           padding: '0 5px',
           fontSize: '0.75em',
-          background: '#ff000022',
+          background: '#D32F2F22',
           borderRadius: '30px',
-          border: '2px solid #ff0000',
-          color: '#ff0000'
+          border: '2px solid #D32F2F',
+          color: '#D32F2F'
         }}>
           -{convertToCurrency(Math.abs(profit), solPrice)}
         </span>
@@ -354,21 +353,6 @@ function BetArray({
     }
   };
 
-
-  const formatTag = (tag) => {
-    return (
-      <span style={{
-        padding: '0 5px',
-        fontSize: '0.75em',
-        background: '#007bff22',
-        borderRadius: '30px',
-        border: '2px solid #007bff45',
-        color: '#007bff'
-      }}>
-        {tag}
-      </span>
-    );
-  };
 
   // EVENT HANDLERS
   // ----------------------------------------------------------------------------------
@@ -393,17 +377,17 @@ function BetArray({
     const newChecked = event.target.checked;
     if (newChecked) {
       playSound('start');
-  } else {
+    } else {
       playSound('stop');
-  }
+    }
     setAiOn(newChecked);
-      if (alignment === 'RA') {
-        handleSwitchChangeWithFetch();
-      } else if (alignment === 'EL') {
-        updateQbot(user_id, newChecked);
-      } else {
-        handleSwitchChange();
-      }
+    if (alignment === 'RA') {
+      handleSwitchChangeWithFetch();
+    } else if (alignment === 'EL') {
+      updateQbot(user_id, newChecked);
+    } else {
+      handleSwitchChange();
+    }
   }, [
     alignment,
     attached,
@@ -496,16 +480,16 @@ function BetArray({
   const filteredArray = game_type === 'Quick Shoot' ? qsbetitems : rpsbetitems;
   const [newMin, newMax] = range;
   return (
-    <Box sx={{ position: 'relative', width: '100%', mt: 4, }}>
-          <BetAmountInput
-                bet_amount={bet_amount}
-                handle2xButtonClick={handle2xButtonClick}
-                handleHalfXButtonClick={handleHalfXButtonClick}
-                handleMaxButtonClick={handleMaxButtonClick}
-                onChangeState={onChangeState}
-                isDarkMode={isDarkMode}
-                bankroll={bankroll}
-              />
+    <Box sx={{ position: 'relative', width: '100%', mt: game_type !== 'Custom' ? 4 : 0, }}>
+      <BetAmountInput
+        bet_amount={bet_amount}
+        handle2xButtonClick={handle2xButtonClick}
+        handleHalfXButtonClick={handleHalfXButtonClick}
+        handleMaxButtonClick={handleMaxButtonClick}
+        onChangeState={onChangeState}
+        isDarkMode={isDarkMode}
+        bankroll={bankroll}
+      />
 
     </Box>
   );

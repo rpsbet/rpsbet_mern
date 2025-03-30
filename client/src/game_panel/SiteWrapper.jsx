@@ -111,7 +111,6 @@ import {
   setUnreadMessageCount,
   setDarkMode,
   setNotificationsAllowed,
-  fetchVaultBalance,
   updateTutorialCompleted,
   checkAndAddWalletAddress,
   disconnectWalletAddress,
@@ -138,6 +137,7 @@ import {
   removeRoomFromList,
   getGlobalChatLogs,
   getHistory,
+  endLoading,
 } from '../redux/Logic/logic.actions';
 
 // We remove this to avoid Proptype issues in MUI v5
@@ -238,7 +238,7 @@ function SiteWrapper(props) {
     getNotifications,
     readNotifications,
     updateOnlineUserList,
-    setDarkMode,
+    endLoading,
     setNotificationsAllowed,
     selectMainTab,
     acCalculateRemainingLoans,
@@ -247,7 +247,6 @@ function SiteWrapper(props) {
     updateBetResult,
     openOfferLoanModal,
     setCurrentOfferTargetInfo,
-    fetchVaultBalance,
     children,
     connectedAccount
   } = props;
@@ -279,7 +278,6 @@ function SiteWrapper(props) {
   const [currentTutorial, setCurrentTutorial] = useState(1);
 
   const [showHowToPlayModal, setShowHowToPlayModal] = useState(false);
-  const [vaultBal, setVaultBal] = useState(0);
   const [showMarketplaceModal, setShowMarketplaceModal] = useState(false);
   const [showBankModal, setShowBankModal] = useState(false);
   const [showLeaderboardsModal, setShowLeaderboardsModal] = useState(false);
@@ -347,27 +345,20 @@ function SiteWrapper(props) {
       setIsInvestorsPage(location.pathname.startsWith('/investors'));
       setIsPlayer(location.pathname.startsWith('/play'));
       getHistory();
-      // Add event listeners
       window.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mousedown', handleClickOutside);
 
       try {
-        // 1) fetch initial vaultBalance
-        const initialBalance = await fetchVaultBalance();
-        setVaultBal(initialBalance);
 
-        // 2) get notifications, user, and audio in parallel
+        // 2) Get notifications, user, and audio in parallel
         await Promise.all([
           getNotifications(),
-          getUser(),              // this populates user in state (or Redux) 
+          getUser(), // This populates user in state (or Redux)
           initializeAudio(),
-          acCalculateRemainingLoans()
+          acCalculateRemainingLoans(),
         ]);
 
-        // By here, user should be stored in your state/Redux,
-        // but we do NOT init the socket here anymore.
         setWebsiteLoading(false);
-
       } catch (error) {
         console.error('Mount error:', error);
       }
@@ -384,6 +375,7 @@ function SiteWrapper(props) {
       if (location.pathname.startsWith('/play')) {
         closeTokenModal();
       }
+
     };
 
     doMount();
@@ -529,11 +521,11 @@ function SiteWrapper(props) {
     // Room list updates:
     const handleUpdatedRoomList = (data) => {
       setRoomList(data);
+endLoading();
     };
     newSocket.on('UPDATED_ROOM_LIST', handleUpdatedRoomList);
 
     const handleRoomEnded = (data) => {
-      console.log("data.room", data)
       removeRoomFromList(data.roomId);
     };
     newSocket.on('ROOM_ENDED', handleRoomEnded);
@@ -684,7 +676,8 @@ function SiteWrapper(props) {
 
         // 2) Attempt to register/add this wallet to the user
         const { success, message } = await props.checkAndAddWalletAddress(wAddress);
-        if (!success) {
+        if (!success && user._id !== null) {
+          console.log("user._id !== '", user._id)
           console.warn('Wallet conflict:', message);
           // Show our MUI dialog to alert the user
           setWalletConflictOpen(true);
@@ -758,9 +751,7 @@ function SiteWrapper(props) {
     setAnchorElGameLog(e.currentTarget);
   };
 
-  const handleVaultBalChange = useCallback((newBalance) => {
-    setVaultBal(newBalance);
-  }, []);
+
 
   const handleCloseGameLog = () => {
     setAnchorElGameLog(null);
@@ -1305,13 +1296,13 @@ function SiteWrapper(props) {
                     }}
                     PaperProps={{
                       sx: {
-                        backgroundColor: '#1f1a25',
+                        backgroundColor: '#2D3A4B',
                         color: '#fff',
                         '& .MuiMenuItem-root': {
                           textTransform: 'none',
                           color: 'inherit',
                           '&:hover': {
-                            backgroundColor: '#ff0000',
+                            backgroundColor: '#D32F2F',
                             color: '#fff'
                           }
                         },
@@ -1423,7 +1414,7 @@ function SiteWrapper(props) {
             }}
             PaperProps={{
               sx: {
-                backgroundColor: '#1f1a25',
+                backgroundColor: '#2D3A4B',
                 color: '#fff',
                 width: 320,
                 maxWidth: '90vw',
@@ -1437,7 +1428,7 @@ function SiteWrapper(props) {
               sx={{
                 position: 'sticky',
                 top: 0,
-                backgroundColor: '#1f1a25',
+                backgroundColor: '#2D3A4B',
                 color: '#fff',
                 p: 2,
                 zIndex: 2
@@ -1569,7 +1560,7 @@ function SiteWrapper(props) {
             }}
             PaperProps={{
               sx: {
-                backgroundColor: '#1f1a25',
+                backgroundColor: '#2D3A4B',
                 color: '#fff',
                 p: 2,
                 '& .MuiPaper-root': {
@@ -1582,12 +1573,12 @@ function SiteWrapper(props) {
                 },
                 '& .MuiTableCell-root': {
                   color: '#fff',
-                  borderColor: '#444'
+                  borderColor: '#607D8B'
                 },
                 '& #wallet-address': {
-                  backgroundColor: '#1f1a25',
+                  backgroundColor: '#2D3A4B',
                   color: '#fff',
-                  border: '1px solid #444',
+                  border: '1px solid #607D8B',
                   borderRadius: '4px',
                   width: '100%',
                   padding: '0.5rem',
@@ -1617,7 +1608,7 @@ function SiteWrapper(props) {
                       {' - '}
                       <Box
                         component="span"
-                        sx={{ fontWeight: 'bold', color: '#ff0000' }}
+                        sx={{ fontWeight: 'bold', color: '#D32F2F' }}
                       >
                         bet amount
                       </Box>
@@ -1669,7 +1660,7 @@ function SiteWrapper(props) {
               BALANCE HISTORY
             </Typography>
 
-            <TableContainer component={Paper}>
+            <TableContainer component={Paper} style={{ backgroundColor: '#2D3A4A', marginBottom: '15px' }} elevation={0}>
               <Table aria-label="a dense table" size="small">
                 <TableBody>
                   {transactions.length === 0 ? (
@@ -1680,6 +1671,8 @@ function SiteWrapper(props) {
                     transactions.slice(0, 5).map((row, key) => {
                       const clickable =
                         row.hash && row.hash.length !== 10 && row.status !== 'processing';
+                      const isPositive = row.amount > 0;
+
                       return (
                         <TableRow
                           key={key}
@@ -1694,18 +1687,12 @@ function SiteWrapper(props) {
                           sx={{
                             cursor: clickable ? 'pointer' : 'default',
                             '&:hover': {
-                              backgroundColor: clickable
-                                ? 'rgba(255,255,255,0.05)'
-                                : 'inherit'
+                              backgroundColor: clickable ? 'rgba(255,255,255,0.05)' : 'inherit'
                             }
                           }}
                         >
-                          <TableCell
-                            sx={{
-                              color: row.amount > 0 ? 'success.main' : 'error.main'
-                            }}
-                          >
-                            {row.amount > 0
+                          <TableCell className={isPositive ? 'green-text' : 'red-text'}>
+                            {isPositive
                               ? `+ ${convertToCurrency(row.amount, solPrice)}`
                               : `- ${convertToCurrency(Math.abs(row.amount), solPrice)}`}
                           </TableCell>
@@ -1717,25 +1704,31 @@ function SiteWrapper(props) {
                 </TableBody>
               </Table>
 
-              <Button
-                color="error"
-                variant="outlined"
-                onClick={toggleAllTransactions}
-                sx={{
-                  '&:hover': {
-                    backgroundColor: 'error.main',
-                    color: '#fff'
-                  },
-                  width: '100%',
-                  mt: 1
-                }}
-              >
-                ALL TRANSACTIONS
-              </Button>
             </TableContainer>
+            <Button
+              color="error"
+              variant="outlined"
+              onClick={toggleAllTransactions}
+              sx={{
+                '&:hover': {
+                  backgroundColor: 'error.main',
+                  color: '#fff'
+                },
+                width: '100%'
+              }}
+            >
+              ALL TRANSACTIONS
+            </Button>
 
             {/* Inventory / Vault */}
-            <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
+            <Box
+              sx={{
+                mt: 2,
+                display: 'grid',
+                gridTemplateColumns: 'repeat(2, 1fr)',
+                gap: 1,
+              }}
+            >
               <Button
                 color="error"
                 variant="outlined"
@@ -1744,8 +1737,8 @@ function SiteWrapper(props) {
                 sx={{
                   '&:hover': {
                     backgroundColor: 'error.main',
-                    color: '#fff'
-                  }
+                    color: '#fff',
+                  },
                 }}
               >
                 Inventory
@@ -1759,17 +1752,13 @@ function SiteWrapper(props) {
                 sx={{
                   '&:hover': {
                     backgroundColor: 'error.main',
-                    color: '#fff'
-                  }
+                    color: '#fff',
+                  },
                 }}
               >
-                Vault&nbsp;
-                {vaultBal ? convertToCurrency(vaultBal, solPrice) : 0}
+                Vault
               </Button>
-            </Box>
 
-            {/* Withdraw or Debts / Deposit */}
-            <Box sx={{ mt: 2, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
               <Button
                 color="error"
                 variant="outlined"
@@ -1778,12 +1767,13 @@ function SiteWrapper(props) {
                 sx={{
                   '&:hover': {
                     backgroundColor: 'error.main',
-                    color: '#fff'
-                  }
+                    color: '#fff',
+                  },
                 }}
               >
                 Deposit
               </Button>
+
               {remainingLoans > 0 ? (
                 <Button
                   color="error"
@@ -1793,8 +1783,8 @@ function SiteWrapper(props) {
                   sx={{
                     '&:hover': {
                       backgroundColor: 'error.main',
-                      color: '#fff'
-                    }
+                      color: '#fff',
+                    },
                   }}
                 >
                   {convertToCurrency(remainingLoans, solPrice)} IN DEBT
@@ -1808,19 +1798,14 @@ function SiteWrapper(props) {
                   sx={{
                     '&:hover': {
                       backgroundColor: 'error.main',
-                      color: '#fff'
-                    }
+                      color: '#fff',
+                    },
                   }}
                 >
                   Withdraw
                 </Button>
               )}
             </Box>
-
-            <Box sx={{ mt: 2 }}>
-              <hr style={{ borderColor: '#444' }} />
-            </Box>
-
             {/* Phantom Wallet connect or address display */}
             {connectedAccount ? (
               <Box sx={{ mt: 2 }}>
@@ -2005,12 +1990,10 @@ function SiteWrapper(props) {
 
         {showVaultModal && (
           <VaultModal
-            vaultBal={vaultBal}
             modalIsOpen={showVaultModal}
             closeModal={handleCloseVaultModal}
             conversionRate={solPrice}
             isDarkMode={isDarkMode}
-            onVaultBalChange={handleVaultBalChange}
           />
         )}
 
@@ -2099,9 +2082,9 @@ const mapDispatchToProps = {
   updateBetResult,
   openOfferLoanModal,
   setCurrentOfferTargetInfo,
-  fetchVaultBalance,
   getGlobalChatLogs,
   authenticateWithPhantom,
+  endLoading,
   getHistory,
 };
 

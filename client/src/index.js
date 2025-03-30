@@ -9,25 +9,28 @@ import store from './redux/store';
 import App from './App';
 import history from './redux/history';
 import MessageBar from './components/MessageBar';
+import Background from './background'; // Import the Background component
 import './index.css';
 import './dark.css';
 
 // Define a function to create theme based on mode
-const getTheme = (mode) => createTheme({
-  palette: {
-    mode: mode,
-    primary: { main: '#3949ab' },  // Example primary color
-    secondary: { main: '#f50057' },  // Example secondary color
-    error: { main: '#f44336' },  // Example error color
-    background: {
-      default: mode === 'dark' ? '#29202f' : '#f4f6f8',  // Conditional background color
+const getTheme = (mode) =>
+  createTheme({
+    palette: {
+      mode: mode,
+      primary: { main: '#3949ab' },
+      secondary: { main: '#f50057' },
+      error: { main: '#D32F2F' },
+      background: {
+        default: mode === 'dark' ? '#1E272E' : '#f4f6f8',
+      },
     },
-  },
-});
+    typography: {
+      fontFamily: "'Roboto Mono', monospace",
+    },
+  });
 
-// Use a state or a global context to toggle between light and dark mode, here for example purposes
-const currentMode = 'dark';  // Change to 'light' as needed
-
+const currentMode = 'dark'; // Change to 'light' as needed
 const theme = getTheme(currentMode);
 
 ReactDOM.render(
@@ -35,7 +38,11 @@ ReactDOM.render(
     <Provider store={store}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <SnackbarProvider maxSnack={10} anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }} autoHideDuration={3000}>
+        <SnackbarProvider
+          maxSnack={10}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+          autoHideDuration={3000}
+        >
           <BrowserRouter>
             <Router history={history}>
               <App />

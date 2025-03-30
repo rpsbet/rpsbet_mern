@@ -233,7 +233,7 @@ const addToQueue = async (req, bot = false) => {
                         case 'Markov':
                             nextItem = await getNextItemUsingMarkov(allBetItems);
                             break;
-                        case 'GPT3':
+                        case 'o3Mini':
                             nextItem = await predictNextOpenAI(
                                 allBetItems,
                                 roomInfo['prompt'] ??
@@ -534,7 +534,6 @@ const addToQueue = async (req, bot = false) => {
                 }
 
                 newGameLog.bet_amount = parseFloat(req.body.bet_amount);
-                console.log("betAmount", req.body.bet_amount);
 
                 const availableBetItem = await QsBetItem.findOne({
                     _id: req.body._id,
@@ -564,7 +563,7 @@ const addToQueue = async (req, bot = false) => {
                                 roomInfo['qs_game_type'],
                             );
                             break;
-                        case 'GPT3':
+                        case 'o3Mini':
                             nextItem = await openAIPredictionAI_qs(
                                 allBetItems,
                                 roomInfo['qs_game_type'],

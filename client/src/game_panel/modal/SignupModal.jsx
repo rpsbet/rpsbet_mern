@@ -195,7 +195,7 @@ function SignupModal(props) {
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    bgcolor: '#1f1a25', // Same background color as login
+    bgcolor: '#2D3A4B', // Same background color as login
     color: '#fff',
     boxShadow: 24,
     borderRadius: 1,

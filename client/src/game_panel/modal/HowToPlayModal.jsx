@@ -39,7 +39,7 @@ function HowToPlayModal({ modalIsOpen, closeModal }) {
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    bgcolor: '#1f1a25', // Same background color as login
+    bgcolor: '#2D3A4B', // Same background color as login
     color: '#fff',
     boxShadow: 24,
     borderRadius: 1,
@@ -109,7 +109,7 @@ function HowToPlayModal({ modalIsOpen, closeModal }) {
             <Typography variant="body2" paragraph>
               <span
                 style={{
-                  background: "linear-gradient(165deg, #ffd000, #ff0000)",
+                  background: "linear-gradient(165deg, #ffd000, #D32F2F)",
                   padding: "0em 0.4em",
                   borderRadius: 1,
                 }}
@@ -131,7 +131,7 @@ function HowToPlayModal({ modalIsOpen, closeModal }) {
                       80% goes to{" "}
                       <span
                         style={{
-                          background: "linear-gradient(165deg, #ffd000, #ff0000)",
+                          background: "linear-gradient(165deg, #ffd000, #D32F2F)",
                           padding: "0em 0.4em",
                           borderRadius: 1,
                         }}
@@ -278,7 +278,7 @@ function HowToPlayModal({ modalIsOpen, closeModal }) {
         </AccordionSummary>
         <AccordionDetails>
           <Typography variant="body2" fontWeight="bold">
-            💸 **5% fee** on all transactions **except** tipping & loans.
+            💸 **1% fee** on all transactions **except** tipping & loans.
           </Typography>
         </AccordionDetails>
       </Accordion>

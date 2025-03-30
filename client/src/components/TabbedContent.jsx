@@ -6,7 +6,6 @@ import {
   Box,
   Chip,
   Paper,
-  Typography,
 } from '@mui/material';
 import Leaderboards from './Leaderboards';
 import RoomHistory from './RoomHistory';
@@ -15,6 +14,7 @@ import Moment from 'moment';
 import { tutorialStepsGame } from '../util/tutorialStepsGame';
 import RPS from '../game_panel/JoinGame/RPS';
 import QuickShoot from '../game_panel/JoinGame/QuickShoot';
+import Custom from '../game_panel/JoinGame/Custom';
 import CoHostModal from '../game_panel/modal/CoHostModal';
 import { getRank } from '../util/getRank';
 
@@ -156,7 +156,6 @@ function TabbedContent(props) {
       }
     });
   }, []);
-
   // ------------------ RENDERERS ------------------
   const renderTabContent = (tabIndex) => {
     switch (tabIndex) {
@@ -226,7 +225,7 @@ function TabbedContent(props) {
             sx={{ backgroundColor: 'transparent' }}
             className="join-game-panel"
           >
-           
+
             {roomInfo.game_type === 'RPS' ? (
               <RPS
                 changeBgColor={changeBgColor}
@@ -311,7 +310,42 @@ function TabbedContent(props) {
                 getRoomData={getRoomData}
               />
             ) : (
-              <div>Unsupported game type.</div>
+              <Custom
+                onChangeState={onChangeState}
+                handleOpenPlayerModal={handleOpenPlayerModal}
+                handleClosePlayerModal={handleClosePlayerModal}
+                showPlayerModal={showPlayerModal}
+                handle2xButtonClick={handle2xButtonClick}
+                handleHalfXButtonClick={handleHalfXButtonClick}
+                handleMaxButtonClick={handleMaxButtonClick}
+                join={join}
+                result={result}
+                gameResult={gameResult}
+                updateAttachment={updateAttachment}
+                getAttachedRooms={getAttachedRooms}
+                attached={attached}
+                updateUserStrategy={updateUserStrategy}
+                updateUserPrompt={updateUserPrompt}
+                borderColor={borderColor}
+                bgColorChanged={bgColorChanged}
+                updateSelectedQs={updateSelectedQs}
+                user_id={user_id}
+                betResult={betResult}
+                is_mobile={is_mobile}
+                creator_id={roomInfo.creator_id}
+                bankroll={bankroll}
+                bet_amount={bet_amount}
+                is_private={roomInfo.is_private}
+                roomInfo={roomInfo}
+                playSound={playSound}
+                ai_mode={ai_mode}
+                betting={betting}
+                strategies={strategies}
+                handleSwitchChange={handleSwitchChange}
+                pr={roomInfo.pr}
+                actionList={actionList}
+                getRoomData={getRoomData}
+              />
             )}
           </Paper>
         );
@@ -379,7 +413,7 @@ function TabbedContent(props) {
     return (
       <div className="tabs-container">
         <Tabs
-          TabIndicatorProps={{ style: { background: '#ff0000' } }}
+          TabIndicatorProps={{ style: { background: '#D32F2F' } }}
           value={selectedTab}
           onChange={handleTabChange}
           textColor="inherit"
@@ -421,7 +455,7 @@ function TabbedContent(props) {
         square
         variant="filled"
         sx={{
-          background: 'linear-gradient(45deg, #322a37, #2b212f)',
+          background: '#2D3A4A',
           padding: '20px 10px',
           marginTop: '5px',
           display: 'flex',

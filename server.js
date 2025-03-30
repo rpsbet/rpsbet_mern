@@ -26,7 +26,7 @@ const server = app.listen(PORT, () => {
 // -------------------- Socket.io Setup --------------------
 const io = socketController.socketio(server, {
   cors: {
-    origin: 'http://localhost:1337', // Allow requests from your frontend
+    origin: 'http://localhost:3000', // Allow requests from your frontend
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Allowed HTTP methods
     credentials: true, // Enable cookies for cross-origin
   },
@@ -47,12 +47,15 @@ app.use((req, res, next) => {
 
 // -------------------- CORS Configuration --------------------
 const corsOptions = {
-  origin: 'http://localhost:1337', // Frontend URL
+  origin: 'http://localhost:3000', // Frontend URL
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], // Allowed HTTP methods
   credentials: true, // Allow cookies and credentials
 };
 
 app.use(cors(corsOptions));
+
+const compression = require('compression');
+app.use(compression());
 
 // -------------------- Middleware --------------------
 app.use(helmet());
@@ -80,6 +83,7 @@ const connectWithRetry = async () => {
     await mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
+      maxPoolSize: 50,
     });
     console.log('*** MongoDB connected');
   } catch (error) {

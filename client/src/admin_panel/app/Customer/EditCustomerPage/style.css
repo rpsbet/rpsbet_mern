@@ -101,12 +101,11 @@
   transform: translateX(20px) !important;
 
 }
-
 .progress-bar-filled {
   position: relative;
   z-index: 2;
   height: 100%;
-  background: linear-gradient(#e1ff00, #fdb500 ) !important;
+  background: linear-gradient(#34C759, #00A8CC) !important; /* Green to teal */
 }
 
 .progress-bar-filled::after {
@@ -118,20 +117,18 @@
   height: 0;
   border-style: solid;
   border-width: 0px 2px 20px 4px;
-  border-color: #fb03ff98;
+  border-color: #34C75980; /* Green with 50% opacity */
   z-index: 3;
 }
 
-
 .progress-bar-remaining {
   height: 100%;
-  background: linear-gradient(#af02ff, #f01fff) !important;
+  background: linear-gradient(#4A5A6A, #2D3A4A) !important; /* Gray-blue to background */
   position: relative;
   z-index: 1;
   float: right;
   margin-top: -10px !important;
 }
-
 
 .statistics-panel {
   margin-bottom: 20px;

@@ -579,7 +579,7 @@ function MyGamesTable(props) {
                             component="a"
                             className="ml-1"
                             sx={{
-                              color: '#ff0000',
+                              color: '#D32F2F',
                               cursor: 'pointer',
                               borderRadius: '30px',
                               display: 'inline-flex',

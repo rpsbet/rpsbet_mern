@@ -403,7 +403,7 @@ function PlayerModal(props) {
               top: '50%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
-              bgcolor: isDarkMode ? '#1f1a25' : '#fff',
+              bgcolor: isDarkMode ? '#2D3A4B' : '#fff',
               color: isDarkMode ? '#fff' : '#000',
               width: '90vw',
               maxWidth: '700px',
@@ -476,7 +476,7 @@ function PlayerModal(props) {
             {/* Tab 0: Profile & Inventory */}
             <Box
               sx={{
-                background: 'rgba(170, 170, 170, 0.06)',
+                background: '#2D3A4A',
                 borderRadius: '0.3em',
                 p: '20px',
               }}
@@ -565,7 +565,7 @@ function PlayerModal(props) {
                   <Box
                     sx={{
                       mb: 2,
-                      background: 'rgba(170, 170, 170, 0.06)',
+                      background: '#2D3A4A',
                       borderRadius: '0.3em',
                       p: '20px',
                     }}

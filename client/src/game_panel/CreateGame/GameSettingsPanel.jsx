@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Tooltip, ButtonBase } from '@mui/material';
+import { Box, ButtonBase } from '@mui/material';
 import { Info } from '@mui/icons-material';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import SettingsRef from '../../components/SettingsRef';
@@ -13,6 +13,13 @@ const GameSettingsPanel = ({
   onChangeState,
   selectedStrategy,
   setSelectedStrategy,
+  gameCode,
+  setGameCode,
+  gameMode,
+  setGameMode,
+  initializeGameType,
+  setGameModeLocal,
+  setSelectedGameType,
   isDarkMode,
 }) => {
   // State to manage the visibility of the settings panel
@@ -22,6 +29,10 @@ const GameSettingsPanel = ({
 
   // Toggle the settings panel visibility
   const handleSettingsIconClick = () => {
+    setGameMode('Custom');
+    setSelectedGameType(9);
+    setGameModeLocal('Custom');
+    initializeGameType('custom');
     setSettingsPanelOpened((prev) => !prev);
   };
 
@@ -47,70 +58,59 @@ const GameSettingsPanel = ({
   }, [settingsPanelOpened]);
 
   return (
-    <div>
+    <Box sx={{ height: '100%', display: 'flex', alignItems: 'center' }}>
 
-      <div
-        className="qs-game-type-panel"
+      <SettingsRef
+        strategies={strategies}
+        selectedStrategy={selectedStrategy}
+        setSelectedStrategy={setSelectedStrategy}
+        gameCode={gameCode}
+        setGameCode={setGameCode}
+        settings_panel_opened={settingsPanelOpened}
+        ai_mode={ai_mode}
+        creator_prompt={prompt}
+        onChangeState={onChangeState}
+        user_id={user._id}
+        user_balance={user.balance}
+        rank={rank}
+        settingsRef={settingsRef}
+        isDarkMode={isDarkMode}
+      />
+      <ButtonBase
+        onClick={handleSettingsIconClick}
         style={{
-          marginBottom: '20px',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          flexDirection: 'row',
+          position: "relative",
+          border: gameMode === "Custom" ? "3px solid #ffd000" : `none`,
+          borderRadius: "4px",
+          padding: "10px 15px",
+          display: "flex",
+          height: '100%',
+          alignItems: "center",
+          justifyContent: "space-between",
+          transition: "all 0.3s ease",
+          minWidth: "160px",
+          cursor: "pointer",
+          color: isDarkMode ? "white" : "black",
         }}
       >
-        <SettingsRef
-          strategies={strategies}
-          selectedStrategy={selectedStrategy}
-          setSelectedStrategy={setSelectedStrategy}
-          settings_panel_opened={settingsPanelOpened} // Pass the internal state
-          ai_mode={ai_mode}
-          creator_prompt={prompt}
-          onChangeState={onChangeState}
-          user_id={user._id}
-          rank={rank}
-          settingsRef={settingsRef}
-          isDarkMode={isDarkMode}
-        />
-        <ButtonBase
-          onClick={handleSettingsIconClick}
+        <span
           style={{
-            position: "relative",
-            backgroundColor: isDarkMode ? "#333" : "#fff", // Background color
-            border: `1px solid ${isDarkMode ? "#888" : "#ccc"}`, // Border to mimic dropdown
-            borderRadius: "4px", // Slight rounding for a dropdown feel
-            padding: "10px 15px", // More padding for a dropdown look
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between", // Space between text and icon
-            transition: "all 0.3s ease", // Smooth transition for hover
-            minWidth: "160px", // Ensuring it looks like a dropdown
-            cursor: "pointer", // Cursor change on hover
-            color: isDarkMode ? "white" : "black", // Text color
+            flexGrow: 1,
           }}
         >
-          <span
-            style={{
-              textTransform: "uppercase",
-              fontSize: "0.85em",
-              flexGrow: 1, // Allows text to take up available space
-            }}
-          >
-            GENERATE
-          </span>
+          {gameMode === "Custom" ? "Custom" : "Generate"}
+        </span>
 
-          {/* ▼ Dropdown indicator */}
-          <AutoAwesomeIcon
-            sx={{
-              p: 0.6,
-              color: isDarkMode ? "white" : "black",
-              transform: settingsPanelOpened ? "rotate(180deg)" : "rotate(0deg)", // Rotate when open
-              transition: "transform 0.3s ease", // Smooth transition for arrow rotation
-            }}
-          />
-        </ButtonBase>
-      </div>
-    </div>
+        <AutoAwesomeIcon
+          sx={{
+            p: 0.6,
+            color: isDarkMode ? "white" : "black",
+            transform: settingsPanelOpened ? "rotate(180deg)" : "rotate(0deg)",
+            transition: "transform 0.3s ease",
+          }}
+        />
+      </ButtonBase>
+    </Box>
   );
 };
 

@@ -92,7 +92,7 @@ router.post('/phantom', async (req, res) => {
       accounts: [walletAddress],
       avatar: '',
       referralCode: generateReferralCode(),
-      referralId: null
+      referralUsername: ''
     });
     await newUser.save();
 
@@ -159,7 +159,7 @@ router.post('/google', async (req, res) => {
         status: 'off',
         avatar: picture,
         referralCode: generateReferralCode(),
-        referralId: null
+        referralUsername: ''
       });
 
       await user.save();
@@ -330,6 +330,48 @@ router.get('/profit', auth, async (req, res) => {
     });
   } catch (error) {
     res.json({ success: false, error: error.message });
+  }
+});
+
+router.post('/set-referral', auth, async (req, res) => {
+  try {
+    const { referralCode } = req.body;
+
+    // If referralCode is blank, clear the referralUsername field
+    if (!referralCode || referralCode.trim() === '') {
+      req.user.referralUsername = null;
+      await req.user.save();
+      return res.json({
+        success: true,
+        message: 'Referral code cleared successfully.',
+      });
+    }
+
+    // Find the user with the given referralCode
+    const referredUser = await User.findOne({ referralCode });
+
+    if (!referredUser) {
+      return res.json({
+        success: false,
+        error: 'Invalid referral code.',
+      });
+    }
+
+    // Save the referred user's ID in the referralUsername field of the current user
+    req.user.referralUsername = referredUser.username;
+    await req.user.save();
+
+    return res.json({
+      success: true,
+      message: 'Referral code applied successfully.',
+      referredUser: referredUser.username,
+    });
+  } catch (error) {
+    console.error('Error in /set-referral route:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Server error while setting referral code.',
+    });
   }
 });
 

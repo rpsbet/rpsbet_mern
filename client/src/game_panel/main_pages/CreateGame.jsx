@@ -2,8 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { connect, useDispatch } from 'react-redux';
 import {
   Button,
-  Tabs,
-  Tab,
+  Radio,
+  RadioGroup,
   Drawer,
   Dialog,
   DialogTitle,
@@ -12,7 +12,10 @@ import {
   Checkbox,
   FormControlLabel,
   Box,
+  Tooltip
 } from '@mui/material';
+import { Info } from '@mui/icons-material';
+import { getRank } from '../../util/getRank';
 import axios from '../../util/Api';
 import LoadingOverlay from 'react-loading-overlay';
 import Lottie from 'react-lottie';
@@ -21,10 +24,10 @@ import Summary from '../CreateGame/Summary';
 import AdvancedSettings from '../CreateGame/AdvancedSettings';
 import ChatPanel from '../ChatPanel/ChatPanel';
 import DrawerButton from './DrawerButton';
-import { getRank } from '../../util/getRank.js';
 import animationData from '../LottieAnimations/cat-place-bet.json';
-import RPS from '../CreateGame/RPS';
-import QuickShoot from '../CreateGame/QuickShoot';
+import CoinInfo from '../CreateGame/CoinInfo';
+import GameSettingsPanel from '../CreateGame/GameSettingsPanel';
+import DefaultBetAmountPanel from '../CreateGame/DefaultBetAmountPanel';
 import history from '../../redux/history';
 import { toggleDrawer } from '../../redux/Auth/user.actions';
 import {
@@ -38,6 +41,72 @@ import { errorMsgBar } from '../../redux/Notification/notification.actions';
 import { convertToCurrency } from '../../util/conversion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faPenSquare } from '@fortawesome/free-solid-svg-icons';
+import styled from 'styled-components';
+
+const gameTypeStyleClass = {
+  RPS: 'rps',
+  QS: 'quick-shoot',
+};
+
+const StyledRadioGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+margin-bottom: 20px;
+  width: 100%;
+  max-width: 800px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    padding: 10px;
+  }
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+`;
+
+const StyledProductCard = styled.a`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 0.3em;
+  padding: 12px;
+  width: 150px;
+  text-align: center;
+  text-decoration: none;
+  color: ${({ isDarkMode }) => (isDarkMode ? '#ddd' : '#607D8B')};
+  box-shadow: none;
+  transition: background 0.2s ease;
+
+  span {
+    margin-top: 8px;
+    font-size: 0.9rem;
+    font-weight: 400;
+    color: ${({ isDarkMode }) => (isDarkMode ? '#ddd' : '#607D8B')};
+  }
+
+  @media (max-width: 768px) {
+    width: 130px;
+    padding: 10px;
+  }
+
+  @media (max-width: 480px) {
+    width: 100%;
+    padding: 8px;
+  }
+`;
+
+const StyledProductImage = styled.img`
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  margin-bottom: 6px;
+  opacity: 0.85;
+`;
 
 const gifUrls = [
   'https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/641ef8e1ce09cd9cf53a4829_rock1.gif',
@@ -91,7 +160,8 @@ function CreateGame(props) {
 
   const [ticker, setTicker] = useState('');
   const [selectedStrategy, setSelectedStrategy] = useState('Markov');
-  const [prompt, setPrompt] = useState('You are the pro rps player');
+  const [gameCode, setGameCode] = useState('');
+  const [prompt, setPrompt] = useState('Create a Wheel of Fortune game, display the numbers 1 through 10 on the wheel and use https://t4.ftcdn.net/jpg/02/66/72/41/360_F_266724172_Iy8gdKgMa7XmrhYYxLCxyhx6J7070Pr8.jpg  as the background and show a spin button. Add this https://cdn.freesound.org/previews/752/752225_15867640-lq.mp3 sound. Whichever number the wheel lands on is the multiplier.');
   const [qsNation, setQsNation] = useState(0);
   const [selectedQsPosition, setSelectedQsPosition] = useState(0);
 
@@ -134,6 +204,10 @@ function CreateGame(props) {
     } else if (path === '/create/quick-shoot') {
       setSelectedGameType('QS');
       setGameModeLocal('QS');
+    } else if (path === '/create/custom') {
+      setSelectedGameType('Custom');
+      setGameMode('Custom');
+      setGameModeLocal('Custom');
     }
 
     const gameTypeName = match.params.game_type_name || 'RPS';
@@ -147,6 +221,14 @@ function CreateGame(props) {
       // Mimic componentWillUnmount
     };
   }, []);
+
+  useEffect(() => {
+    if (gameCode.trim()) {
+      setGameModeLocal('Custom');  // Change game mode
+      setSelectedGameType('Custom'); // Change selected game type
+      setGameType(9); // Set game type to 0 (or whatever represents "Custom")
+    }
+  }, [gameCode]);
 
   // Mimic componentDidUpdate when match.params.game_type_name changes
   useEffect(() => {
@@ -172,12 +254,13 @@ function CreateGame(props) {
       if (selectedGameTypeObj && selectedGameTypeObj.short_name) {
         setSelectedGameType(selectedGameTypeObj.short_name);
       }
-
       if (gameTypeName === 'rps') {
         setGameType(1);
       } else if (gameTypeName === 'quick-shoot') {
         setGameType(5);
         setQsNation(Math.floor(Math.random() * 4));
+      } else {
+        setGameType(9);
       }
 
       setStep(1);
@@ -204,6 +287,8 @@ function CreateGame(props) {
     if ('endgame_type' in newState) setEndgameType(newState.endgame_type);
     if ('selectedStrategy' in newState)
       setSelectedStrategy(newState.selectedStrategy);
+    if ('gameCode' in newState)
+      setGameCode(newState.gameCode);
     if ('prompt' in newState) setPrompt(newState.prompt);
     if ('winChance' in newState) setWinChance(newState.winChance);
     if ('rps_game_type' in newState) setRpsGameType(newState.rps_game_type);
@@ -280,9 +365,13 @@ function CreateGame(props) {
         dispatch(errorMsgBar("YOU DIDN'T BET (CAT) SHIT!!!"));
         return;
       }
-  
+      if (gameMode === "Custom" && gameCode === '') {
+        console.log("gameCode", gameCode);
+        dispatch(errorMsgBar("YOU DIDN'T GENERATE A GAME MOTHERFUCKER!"));
+        return;
+      }
       const parsedQsGameType = parseInt(qsGameType);
-  
+
       // ✅ Set tax based on `parsedQsGameType`
       if (gameMode === "RPS") {
         setTax(30);
@@ -304,9 +393,9 @@ function CreateGame(props) {
             setTax(20); // Default value
         }
       }
-  
-      if (parseFloat(betAmount) < 0.0005) {
-        dispatch(errorMsgBar("MEOWNIMUM BUY-IN IS 0.0005 SOL!"));
+
+      if (parseFloat(betAmount) < 0.001) {
+        dispatch(errorMsgBar("MEOWNIMUM BUY-IN IS 0.001 SOL!"));
         return;
       }
 
@@ -334,7 +423,7 @@ function CreateGame(props) {
         dispatch(errorMsgBar("NOT ENUFF FUNDS AT THIS MEOWMENT"));
         return;
       }
-  
+
       if (isNaN(endgameAmount)) {
         dispatch(errorMsgBar("ENTER A VALID NUMBER!"));
         return;
@@ -344,7 +433,7 @@ function CreateGame(props) {
         return;
       }
     }
-  
+
     if (step === 2) {
       if (isPrivate && !roomPassword) {
         dispatch(errorMsgBar("SET THE PASSWORD TO JOIN YOUR GAME!"));
@@ -354,7 +443,7 @@ function CreateGame(props) {
         setEndgameType(false);
       }
     }
-  
+
     if (step !== 3) {
       setStep(step + 1);
     }
@@ -438,6 +527,7 @@ function CreateGame(props) {
         prompt: prompt,
         website_link: websiteLink,
         telegram_link: telegramLink,
+        gameCode: gameCode,
         selectedStrategy,
         qs_game_type: qsGameType,
         qs_nation: qsNation,
@@ -511,79 +601,157 @@ function CreateGame(props) {
   const step1 = () => {
     const defaultBetAmounts = [0.25, 0.5, 1, 2.5, 10];
 
-    switch (gameMode) {
-      case 'RPS':
-        return (
-          <RPS
+    return (
+      <Box className="game-info-panel">
+        <Box className="glass-container">
+          <Box>
+            <RadioGroup value={selectedGameType} onChange={handleChange}>
+              <h3 className="game-sub-title roll-tag">
+                Add Game&nbsp;
+                <Tooltip
+                  style={{ position: 'absolute', right: '20px' }}
+                  title="Select a game-mode to use as collateral against your capital."
+                  placement="top"
+                >
+                  <Info style={{ cursor: 'pointer', float: 'right' }} />
+                </Tooltip>
+              </h3>
+              <StyledRadioGrid>
+                {gameTypeList
+                  .filter((gameType) => gameType.short_name !== "Custom")
+                  .map((gameType, index) => (
+                    <FormControlLabel
+                      key={index}
+                      value={gameType.short_name}
+                      control={
+                        <Radio
+                          icon={<div style={{ display: 'none' }} />}
+                          checkedIcon={<div style={{ display: 'none' }} />}
+                        />
+                      }
+                      label={
+                        <StyledProductCard
+                          id="rps-game-type-radio"
+                          isDarkMode={isDarkMode}
+                          className={`btn-game-type title btn-icon ${gameTypeStyleClass[gameType.short_name]} ${selectedGameType === gameType.short_name ? 'active' : ''
+                            }`}
+                        >
+                          <StyledProductImage
+                            src={`/img/gametype/icons/${gameType.short_name}.svg`}
+                            alt={gameType.game_type_name}
+                          />
+                          <span className="label" style={{ marginTop: '0' }}>
+                            {gameType.game_type_name}
+                          </span>
+                        </StyledProductCard>
+                      }
+                    />
+                  ))}
+
+                {/* Custom Option */}
+                <FormControlLabel
+                  value="Custom"
+                  control={<Radio style={{ opacity: 0, position: 'absolute' }} />}
+                  label={
+                    <div
+                      onClick={(e) => {
+                        // Prevent event bubbling if needed
+                        e.stopPropagation();
+                        // Trigger handleChange with a synthetic event object
+                        handleChange({ target: { value: 'Custom' } });
+                      }}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <GameSettingsPanel
+                        isCustomLabel={true}  // Display-only mode; no internal onClick
+                        selectedStrategy={selectedStrategy}
+                        setSelectedStrategy={setSelectedStrategy}
+                        gameCode={gameCode}
+                        setGameMode={setGameMode}
+                        setGameModeLocal={setGameModeLocal}
+                        setSelectedGameType={setSelectedGameType}
+                        setGameCode={setGameCode}
+                        prompt={prompt}
+                        initializeGameType={initializeGameType}
+                        onChangeState={onChangeState}
+                        user={user}
+                        gameMode={gameMode}
+                        rank={getRank(user.totalWagered)}
+                        ai_mode={aiMode}
+                        isDarkMode={isDarkMode}
+                        strategies={strategies}
+                      />
+                    </div>
+                  }
+                />
+              </StyledRadioGrid>
+            </RadioGroup>
+          </Box>
+          {gameMode === 'QS' && (
+
+            <Box sx={{ mt: '20px' }}>
+
+              <h3 className="game-sub-title roll-tag">
+                Choose a Game Type&nbsp;
+                <Tooltip
+                  style={{ position: 'absolute', right: '20px' }}
+                  title="Select the multiplier of the player, 5x is typically the safest option for the Host."
+                  placement="top"
+                >
+                  <Info style={{ cursor: 'pointer', float: 'right' }} />
+                </Tooltip>
+              </h3>
+              <Box
+                className="qs-game-type-panel"
+                style={{ textAlign: 'center', marginBottom: '30px' }}
+              >
+                {[2, 3, 4, 5].map((i) => (
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    key={i}
+                    sx={{ mr: 1 }}
+                    className={qsGameType === i ? 'active' : ''}
+                    onClick={() => {
+                      onChangeState({
+                        qs_game_type: i,
+                        max_return: betAmount * Number(i),
+                        public_bet_amount: convertToCurrency(
+                          betAmount * Number(i - 1),
+                          solPrice,
+                        ),
+                        selected_qs_position: 0,
+                      });
+                    }}
+                  >
+                    {i}x
+                  </Button>
+                ))}
+              </Box>
+            </Box>
+
+          )}
+
+
+          <CoinInfo
+            onChangeState={onChangeState}
             name={name}
             image={image}
-            x_link={xLink}
             ticker={ticker}
-            website_link={websiteLink}
+            isDarkMode={isDarkMode}
+          />
+
+          <DefaultBetAmountPanel
             tax={tax}
-            telegram_link={telegramLink}
-            setSelectedStrategy={setSelectedStrategy}
-            selectedStrategy={selectedStrategy}
-            prompt={prompt}
-            selectedGameType={selectedGameType}
-            ai_mode={user.ai_mode}
-            user_id={user._id}
-            user={user}
-            rank={getRank(user.totalWagered)}
+            endgame_amount={endgameAmount}
+            bet_amount={betAmount}
+            onChangeState={onChangeState}
+            game_type={gameType}
             defaultBetAmounts={defaultBetAmounts}
-            handleChange={handleChange}
-            strategies={strategies}
-            onChangeState={onChangeState}
-            bet_amount={betAmount}
-            winChance={winChance}
-            is_private={isPrivate}
-            room_password={roomPassword}
-            step={childStep}
-            endgame_amount={endgameAmount}
-            rps_game_type={rpsGameType}
           />
-        );
-
-      case 'QS':
-      case 'Quick Shoot':
-        return (
-          <QuickShoot
-            name={name}
-            image={image}
-            tax={tax}
-            ticker={ticker}
-            x_link={xLink}
-            website_link={websiteLink}
-            telegram_link={telegramLink}
-            setSelectedStrategy={setSelectedStrategy}
-            selectedStrategy={selectedStrategy}
-            prompt={prompt}
-            ai_mode={user.ai_mode}
-            selectedGameType={selectedGameType}
-            onChangeState={onChangeState}
-            user_id={user._id}
-            user={user}
-            rank={getRank(user.totalWagered)}
-            bet_amount={betAmount}
-            is_private={isPrivate}
-            endgame_type={endgameType}
-            strategies={strategies}
-            winChance={winChance}
-            handleChange={handleChange}
-            room_password={roomPassword}
-            endgame_amount={endgameAmount}
-            qs_game_type={qsGameType}
-            selected_qs_position={selectedQsPosition}
-            step={childStep}
-            qs_nation={qsNation}
-          />
-        );
-
-      default:
-        // Fallback or re-assign
-        props.setGameMode(gameMode);
-        return <div>Loading game...</div>;
-    }
+        </Box>
+      </Box>
+    )
   };
 
   const actionPanel = () => {

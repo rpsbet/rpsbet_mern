@@ -260,7 +260,7 @@ const DefaultBetAmountPanel = ({
             <p
               style={{
                 color: 'red',
-                backgroundColor: '#ff000011',
+                backgroundColor: '#D32F2F11',
                 borderLeft: '4px solid red',
                 padding: '8px',
                 fontSize: '0.8rem',

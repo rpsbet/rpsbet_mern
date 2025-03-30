@@ -8,6 +8,8 @@ import {
   getRecentlyClosed,
   addNewTransaction,
   pumpGame,
+  endLoading,
+  startLoading
 } from '../../redux/Logic/logic.actions';
 import isEqual from 'lodash/isEqual';
 
@@ -64,7 +66,8 @@ function OpenGamesTable(props) {
     connectedAccount,
     user,
     solPrice,
-    pageNumber,
+    endLoading,
+    startLoading,
     // Redux actions
     getRoomList,
     roomList,
@@ -80,7 +83,6 @@ function OpenGamesTable(props) {
   const [isCoHostModalOpen, setIsCoHostModalOpen] = useState(false);
   const [coHostAmount, setCoHostAmount] = useState('');
   const [selectedRow, setSelectedRow] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
   const theme = getCustomTheme(isDarkMode);
   const [page, setPage] = useState(1);
   const dispatch = useDispatch();
@@ -92,11 +94,6 @@ function OpenGamesTable(props) {
   const endIndex = startIndex + pageSize;
   const displayedRooms = roomList.slice(startIndex, endIndex);
   const prevRoomListRef = useRef(roomList);
-
-  useEffect(() => {
-    getRoomList({ game_type: 'All' });
-  }, [getRoomList]);
-
   useEffect(() => {
     if (!isEqual(prevRoomListRef.current, roomList)) {
       prevRoomListRef.current = roomList;
@@ -252,7 +249,7 @@ function OpenGamesTable(props) {
   const getColorClass = (value) => {
     if (value > 0) return '#03ff3b';
     if (value === 0) return 'grey';
-    return '#ff0000';
+    return '#D32F2F';
   };
 
   // Filter state
@@ -294,9 +291,61 @@ function OpenGamesTable(props) {
 
       {isLiveGames ? (
         <div className="table main-game-table open-games">
-          {displayedRooms.length === 0 && !isLoading && !loading ? (
+          {displayedRooms.length === 0 || loading ? (
+            // Skeleton loader while loading
+            <Grid container className="grid-container" spacing={1} style={{ padding: '20px' }}>
+              {Array.from({ length: 9 }).map((_, index) => (
+                <Grid
+                  item
+                  xs={12}  // Full width on extra small screens
+                  sm={6}   // Half width on small screens
+                  md={4}   // One-third width on medium and larger screens (3 columns)
+                  key={index}
+                  sx={{
+                    flexBasis: { xs: '100%', }, // Ensure 3x3 on medium+
+                    maxWidth: { xs: '100%', },
+                    flexGrow: 1,
+                  }}
+                >
+                  <Card
+                    sx={{
+                      width: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      padding: '16px',
+                      borderRadius: '8px',
+                      backgroundColor: isDarkMode ? '#1E2A38' : '#FFFFFF',
+                      boxShadow: isDarkMode
+                        ? '0 2px 8px rgba(0, 0, 0, 0.3)'
+                        : '0 2px 8px rgba(0, 0, 0, 0.1)',
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                      <Skeleton variant="rectangular" width={40} height={40} sx={{ borderRadius: '4px', mr: 2 }} />
+                      <Box sx={{ flexGrow: 1 }}>
+                        <Skeleton variant="text" width="60%" />
+                        <Skeleton variant="text" width="40%" />
+                      </Box>
+                      <Skeleton variant="circular" width={24} height={24} />
+                    </Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+                      <Skeleton variant="circular" width={32} height={32} sx={{ mr: 2 }} />
+                      <Skeleton variant="rectangular" width={24} height={24} sx={{ mx: 2 }} />
+                      <Skeleton variant="circular" width={32} height={32} sx={{ ml: 2 }} />
+                    </Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                      <Skeleton variant="text" width="30%" />
+                      <Skeleton variant="text" width="20%" />
+                      <Skeleton variant="text" width="20%" />
+                    </Box>
+                    <Skeleton variant="rectangular" width="100%" height={10} sx={{ borderRadius: '4px' }} />
+                  </Card>
+                </Grid>
+              ))}
+            </Grid> 
+          ) : displayedRooms.length === 0 ? (
             <div className="dont-have-game-msg">
-              <div>NO LIVE GAMES, GO TO 'MANAGE' TO CREATE ONE</div>
+              <div>NO LIVE GAMES, GO TO 'CREATE A GAME' TO CREATE ONE</div>
             </div>
           ) : (
             <Grid
@@ -305,368 +354,234 @@ function OpenGamesTable(props) {
               spacing={1}
               style={{ padding: '20px' }}
             >
-              {displayedRooms.length === 0
-                ? // Skeleton
-                Array.from({ length: 5 }).map((_, index) => (
-                  <Grid item xs={12} sm={6} md={4} key={index}>
-                    <Skeleton
-                      variant="rectangular"
-                      sx={{ width: '100%', height: 100 }}
-                    />
-                    <Skeleton sx={{ width: '60%' }} />
-                    <Skeleton sx={{ width: '40%' }} />
-                  </Grid>
-                ))
-                : displayedRooms.map((row, key) => (
-                  <div
+              {displayedRooms.map((row, key) => {
+                // Calculate progress percentage (ensure no division by zero)
+                const progressPercentage = row.endgame_amount
+                  ? Math.min((row.user_bet / row.endgame_amount) * 100, 100)
+                  : 0;
+
+                return (
+                  <Grid
+                    item
+                    xs={12}
                     key={row._id}
-                    className={`table-row ${highlightedRooms.includes(row._id) ? 'highlighted-row' : ''}`}
-                    onClick={(event) => {
-                      if (!event.defaultPrevented) {
-                        joinRoom({
-                          id: row._id,
-                          roomStatus: row.status,
-                        });
-                      }
+                    sx={{
+                      flexBasis: '100% !important',
+                      maxWidth: '100% !important',
+                      flexGrow: 1,
                     }}
                   >
-                    {/* Info panel */}
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <div className="table-cell cell-room-info">
+                    <Card
+                      className={`table-row ${highlightedRooms.includes(row._id) ? 'highlighted-row' : ''}`}
+                      onClick={(event) => {
+                        if (!event.defaultPrevented) {
+                          joinRoom({
+                            id: row._id,
+                            roomStatus: row.status,
+                          });
+                        }
+                      }}
+                      sx={{
+                        width: '100%',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        padding: '16px',
+                        borderRadius: '8px',
+                        backgroundColor: isDarkMode ? '#1E2A38' : '#FFFFFF',
+                        boxShadow: isDarkMode ? '0 2px 8px rgba(0, 0, 0, 0.3)' : '0 2px 8px rgba(0, 0, 0, 0.1)',
+                        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                        '&:hover': {
+                          transform: 'translateY(-2px)',
+                          boxShadow: isDarkMode ? '0 4px 12px rgba(0, 0, 0, 0.4)' : '0 4px 12px rgba(0, 0, 0, 0.15)',
+                          cursor: 'pointer',
+                        },
+                      }}
+                    >
+                      {/* Header Section */}
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                         <img
                           src={row.image}
-                          alt={row.image}
-                          className="game-type-icon"
+                          alt={row.name}
+                          style={{ width: 40, height: 40, borderRadius: '4px', marginRight: '12px' }}
                         />
-                        <Box className="cell-game-description">
-                          <Typography variant="body2">
+                        <Box>
+                          <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
                             {row.name}{' '}
-                            <Typography
-                              component="span"
-                              color="warning"
-                              variant="body2"
-                              sx={{ fontWeight: 'bold', fontSize: '0.75em' }}
-                            >
+                            <Typography component="span" color="text.secondary" variant="body2">
                               ({row.ticker})
                             </Typography>
                           </Typography>
-                          <Typography
-                            variant="body2"
-                            sx={{
-                              color: '#b9bbbe',
-                              mt: 0.5,
-                              fontSize: '0.7em',
-                            }}
-                          >
-                            {row.description.length > 16
-                              ? `${row.description.slice(0, 16)}...`
-                              : row.description}
+                          <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
+                            {row.description.length > 16 ? `${row.description.slice(0, 16)}...` : row.description}
                           </Typography>
                         </Box>
-                        <div className="cell-game-id ">
+                        <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center' }}>
                           <img
                             src={`/img/gametype/icons/${row.game_type?.short_name}.svg`}
                             alt={row.game_type?.short_name}
-                            className="game-type-icon"
+                            style={{ width: 24, height: 24, marginRight: '8px' }}
                           />
-                          {row.selectedStrategy && (
-                            <span id="ai_mode">{row.selectedStrategy}</span>
-                          )}
-                        </div>
-                      </div>
-                      {/* CoHost icon / Private icon */}
-                      <div className="cell-coHost">
-                        {/* <Button
-                          variant='outlined'
-                          color='error'
-                          onClick={(event) => {
-                            event.preventDefault();
-                            event.stopPropagation();
-                            handleCoHost(row);
-                          }}
-                          sx={{
-                            padding: '8px 12px',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            cursor: 'pointer',
-                            borderRadius: 1,
-                            fontSize: '14px',
-                            textDecoration: 'none',
+                          {/* Removed selectedStrategy */}
+                        </Box>
+                      </Box>
 
-                          }}
-                        >
-                          <ShowChartOutlined sx={{ fontSize: 20 }} />
-                        </Button> */}
-                        {row.is_private && (
-                          <Tooltip
-                            title="A password is required to battle this room."
-                            arrow
-                          >
-                            <div
-                              style={{
-                                display: 'flex',
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                cursor: 'default',
-                                marginTop: '5px',
-                              }}
-                            >
-                              <LockOutlined
-                                style={{ color: '#808080', fontSize: '18px' }}
-                              />
-                            </div>
-                          </Tooltip>
-                        )}
-                      </div>
-
-                      <div
-                        className="table-cell cell-user-name"
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          border: 'none',
-                        }}
-                      >
-                        {/* HOSTS */}
+                      {/* Hosts and Joiners Section */}
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
                         {row.hosts?.length > 0 && (
-                          <div
-                            className="table-cell avatar hosts"
-                            style={{ border: 'none', marginRight: '8px' }}
-                          >
-                            <AvatarGroup
-                              max={2}
-                              // Enforce uniform 32x32, remove borders, and fix dot to bottom-left
-                              sx={{
-                                '& .MuiAvatar-root': {
-                                  width: 32,
-                                  height: 32,
-                                  minWidth: 32,
-                                  minHeight: 32,
-                                  borderRadius: 1,
-                                  border: 'none !important',
-                                  boxShadow: 'none !important',
-                                  margin: '0 !important',
-                                },
-                                '& .MuiAvatarGroup-avatar:not(:first-of-type)':
-                                {
-                                  marginLeft: '-8px !important', // or 0 for no overlap
-                                },
-                                // Force the online dot to bottom-left
-                                '& .MuiBadge-anchorOriginBottomLeftCircular, & .MuiBadge-anchorOriginBottomLeftRectangular':
-                                {
-                                  bottom: '0 !important',
-                                  left: '0 !important',
-                                  transform: 'none !important',
-                                },
-                              }}
-                            >
-                              {row.hosts.map((host, index) => (
-                                <div
-                                  key={index}
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <Avatar
-                                    alt={host.username}
-                                    username={host.username}
-                                    src={host.avatar}
-                                    rank={host.rank}
-                                    accessory={host.accessory}
-                                    user_id={host.host}
-                                    darkMode={isDarkMode}
-                                    sx={{ cursor: 'pointer' }}
-                                    onClick={(event) => {
-                                      event.preventDefault();
-                                      event.stopPropagation();
-                                      handleOpenPlayerModal(row.hosts[index]);
-                                    }}
-                                  />
-                                </div>
-                              ))}
-                            </AvatarGroup>
-                          </div>
-                        )}
-
-                        {/* BATTLE ICON IN THE MIDDLE with spacing */}
-                        <div style={{ margin: '0 4px', border: 'none' }}>
-                          <Battle />
-                        </div>
-
-                        {/* JOINERS */}
-                        {row.joiners?.length > 0 && (
-                          <div
-                            className="table-cell avatar joiners"
-                            style={{ border: 'none', marginLeft: '8px' }}
-                          >
-                            <AvatarGroup
-                              max={2}
-                              sx={{
-                                '& .MuiAvatar-root': {
-                                  width: 32,
-                                  height: 32,
-                                  minWidth: 32,
-                                  minHeight: 32,
-                                  borderRadius: 1,
-                                  border: 'none !important',
-                                  boxShadow: 'none !important',
-                                  margin: '0 !important',
-                                },
-                                '& .MuiAvatarGroup-avatar:not(:first-of-type)':
-                                {
-                                  marginLeft: '-8px !important',
-                                },
-                                '& .MuiBadge-anchorOriginBottomLeftCircular, & .MuiBadge-anchorOriginBottomLeftRectangular':
-                                {
-                                  bottom: '0 !important',
-                                  left: '0 !important',
-                                  transform: 'none !important',
-                                },
-                              }}
-                            >
-                              {row.joiners.map((joiner, index) => (
-                                <div
-                                  key={index}
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <Avatar
-                                    username={joiner.username}
-                                    alt={joiner.username}
-                                    src={joiner.avatar}
-                                    rank={joiner.rank}
-                                    accessory={joiner.accessory}
-                                    user_id={joiner.user_id}
-                                    darkMode={isDarkMode}
-                                    sx={{ cursor: 'pointer' }}
-                                    onClick={(event) => {
-                                      event.preventDefault();
-                                      event.stopPropagation();
-                                      handleOpenPlayerModal(
-                                        row.joiners[index],
-                                      );
-                                    }}
-                                  />
-                                </div>
-                              ))}
-                            </AvatarGroup>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Cell-likes info */}
-                      <div className="cell-likes title">
-                        <div
-                          id="view"
-                          style={{
-                            color:
-                              row.user_bet > row.bet_amount
-                                ? '#03ff3b'
-                                : row.user_bet < row.bet_amount
-                                  ? '#ff033e'
-                                  : '#808080',
-                          }}
-                        >
-                          <Typography
-                            variant="body2"
-                            className={`label ${row.user_bet > row.bet_amount
-                                ? 'green-text'
-                                : row.user_bet < row.bet_amount
-                                  ? 'red-text'
-                                  : 'grey-text'
-                              }`}
-                            style={{ display: 'flex', alignItems: 'center' }}
-                          >
-                            Liquidity
-                          </Typography>
-                          <div
-                            style={{
-                              display: 'flex',
-                              flexDirection: 'row',
-                              whiteSpace: 'nowrap',
+                          <AvatarGroup
+                            max={2}
+                            sx={{
+                              '& .MuiAvatar-root': {
+                                width: 32,
+                                height: 32,
+                                borderRadius: '6px',
+                                border: 'none',
+                              },
+                              '& .MuiAvatarGroup-avatar:not(:first-of-type)': {
+                                marginLeft: '-8px',
+                              },
                             }}
                           >
-                            <Typography
-                              variant="body1"
-                              className={`number ${row.user_bet > row.bet_amount
-                                  ? 'green-text'
-                                  : row.user_bet < row.bet_amount
-                                    ? 'red-text'
-                                    : 'grey-text'
-                                }`}
-                            >
-                              {convertToCurrency(row.user_bet, solPrice)}
-                            </Typography>
+                            {row.hosts.map((host, index) => (
+                              <Avatar
+                                key={index}
+                                alt={host.username}
+                                src={host.avatar}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpenPlayerModal(row.hosts[index]);
+                                }}
+                                sx={{ cursor: 'pointer' }}
+                              />
+                            ))}
+                          </AvatarGroup>
+                        )}
+                        <Battle sx={{ mx: 2, color: isDarkMode ? '#FFFFFF' : '#000000' }} />
+                        {row.joiners?.length > 0 && (
+                          <AvatarGroup
+                            max={2}
+                            sx={{
+                              '& .MuiAvatar-root': {
+                                width: 32,
+                                height: 32,
+                                borderRadius: '6px',
+                                border: 'none',
+                              },
+                              '& .MuiAvatarGroup-avatar:not(:first-of-type)': {
+                                marginLeft: '-8px',
+                              },
+                            }}
+                          >
+                            {row.joiners.map((joiner, index) => (
+                              <Avatar
+                                key={index}
+                                alt={joiner.username}
+                                src={joiner.avatar}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpenPlayerModal(row.joiners[index]);
+                                }}
+                                sx={{ cursor: 'pointer' }}
+                              />
+                            ))}
+                          </AvatarGroup>
+                        )}
+                      </Box>
 
-                            {row.user_bet > row.bet_amount && (
-                              <div className="chart-arrow">
-                                <TrendingUpOutlined
-                                  style={{ marginRight: '-5px' }}
-                                />
-                                <span
-                                  style={{
-                                    marginLeft: '5px',
-                                    fontSize: 'xx-small',
-                                  }}
-                                >
-                                  {`(${(
-                                    ((row.user_bet - row.bet_amount) /
-                                      row.bet_amount) *
-                                    100
-                                  ).toFixed(2)}%)`}
-                                </span>
-                              </div>
+                      {/* Stats Section */}
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                        <Box sx={{ textAlign: 'center' }}>
+                          <Typography variant="caption" color="text.secondary">
+                            Liquidity
+                          </Typography>
+                          <Typography
+                            variant="body1"
+                            sx={{ color: getColorClass(row.user_bet - row.bet_amount), fontWeight: 600 }}
+                          >
+                            {convertToCurrency(row.user_bet, solPrice)}
+                            {row.user_bet !== row.bet_amount && (
+                              <span style={{ fontSize: '0.75rem', marginLeft: '4px' }}>
+                                {row.user_bet > row.bet_amount ? (
+                                  <TrendingUpOutlined fontSize="small" />
+                                ) : (
+                                  <TrendingDownOutlined fontSize="small" />
+                                )}
+                                {` (${(((row.user_bet - row.bet_amount) / row.bet_amount) * 100).toFixed(2)}%)`}
+                              </span>
                             )}
-                            {row.user_bet < row.bet_amount && (
-                              <div className="chart-arrow">
-                                <TrendingDownOutlined
-                                  style={{ marginRight: '-5px' }}
-                                />
-                                <span
-                                  style={{
-                                    marginLeft: '5px',
-                                    fontSize: 'xx-small',
-                                  }}
-                                >
-                                  {`(${(
-                                    ((row.bet_amount - row.user_bet) /
-                                      row.bet_amount) *
-                                    100
-                                  ).toFixed(2)}%)`}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        <div
-                          id="view"
-                          style={{
-                            filter: isDarkMode ? 'brightness(3)' : 'none',
-                          }}
-                        >
-                          <Typography variant="body2" className="label">
+                          </Typography>
+                        </Box>
+                        <Box sx={{ textAlign: 'center' }}>
+                          <Typography variant="caption" color="text.secondary">
                             Battles
                           </Typography>
-                          <Typography variant="body1" className="number">
+                          <Typography variant="body1" sx={{ fontWeight: 600 }}>
                             {row.battles}
                           </Typography>
-                        </div>
-                        <div
-                          id="view"
-                          style={{
-                            filter: isDarkMode ? 'brightness(3)' : 'none',
-                          }}
-                        >
-                          <Typography variant="body2" className="label">
+                        </Box>
+                        <Box sx={{ textAlign: 'center' }}>
+                          <Typography variant="caption" color="text.secondary">
                             Age
                           </Typography>
-                          <Typography variant="body1" className="number">
+                          <Typography variant="body1" sx={{ fontWeight: 600 }}>
                             {customFromNow(Moment(row.created_at))}
                           </Typography>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                        </Box>
+                      </Box>
+
+                      {/* Progress Bar */}
+                      <Box
+                        sx={{
+                          width: '100%',
+                          height: '10px', // Adjust height as needed
+                          background: 'rgb(224, 224, 224)', // progress-bar-remaining style
+                          borderRadius: '4px',
+                          overflow: 'hidden',
+                          position: 'relative',
+                        }}
+                      >
+                        <Box
+                          className="progress-bar-filled"
+                          sx={{
+                            width: `${progressPercentage}%`,
+                            height: '100%',
+                            background: 'linear-gradient(#e1ff00, #fdb500)', // progress-bar-filled style
+                            position: 'relative',
+                            zIndex: 2,
+                            '&::after': {
+                              content: '""',
+                              position: 'absolute',
+                              top: 0,
+                              right: 0,
+                              width: 0,
+                              height: 0,
+                              borderStyle: 'solid',
+                              borderWidth: '0 2px 20px 4px',
+                              borderColor: '#eeff0098', // progress-bar-filled::after style
+                              zIndex: 3,
+                            },
+                          }}
+                        />
+                      </Box>
+
+                      {/* Private Indicator */}
+                      {row.is_private && (
+                        <Tooltip title="A password is required to battle this room." arrow>
+                          <LockOutlined
+                            sx={{
+                              fontSize: 18,
+                              color: isDarkMode ? '#808080' : '#666666',
+                              position: 'absolute',
+                              top: 8,
+                              right: 8,
+                            }}
+                          />
+                        </Tooltip>
+                      )}
+                    </Card>
+                  </Grid>
+                );
+              })}
             </Grid>
           )}
           <Pagination
@@ -810,7 +725,7 @@ function OpenGamesTable(props) {
             maxWidth: 1000,
             maxHeight: '90vh',
             overflowY: 'auto',
-            bgcolor: '#1f1a25',
+            bgcolor: '#2D3A4B',
             borderRadius: 1,
             p: 3,
             color: '#fff', // for readable text
@@ -861,6 +776,8 @@ const mapDispatchToProps = {
   getRecentlyClosed,
   setRoomList,
   addNewTransaction,
+  startLoading,
+  endLoading,
   pumpGame,
 };
 

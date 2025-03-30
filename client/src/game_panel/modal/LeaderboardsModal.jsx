@@ -283,7 +283,7 @@ function LeaderboardsModal({
             top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
-            bgcolor: isDarkMode ? '#1f1a25' : '#fff',
+            bgcolor: isDarkMode ? '#2D3A4B' : '#fff',
             color: isDarkMode ? '#fff' : '#000',
             width: isMobile ? '95vw' : '80vw',
             height: isMobile ? '95vh' : '80vh',
@@ -320,7 +320,7 @@ function LeaderboardsModal({
           </Box>
           <Box
             sx={{
-              background: 'rgba(170, 170, 170, 0.06)',
+              background: '#2D3A4A',
               borderRadius: '0.3em',
               p: '20px',
             }}
@@ -382,7 +382,7 @@ function LeaderboardsModal({
 
             {/* LEADERBOARDS TABLE */}
             <Typography variant="h6" sx={{ mb: 2 }}>
-              All-time Leaderboards
+              ALL-TIME LEADERBOARDS
             </Typography>
             {!loading ? (
               <TableContainer sx={{ overflowX: 'auto' }}>
@@ -494,7 +494,10 @@ function LeaderboardsModal({
                           {convertToCurrency(entry.gameProfit, solPrice)}
                         </TableCell>
                         <TableCell sx={{ color: '#fff' }}>
-                          {(entry.gamePlayed, solPrice)}
+                          {convertToCurrency(entry.tradingProfit, solPrice)}
+                        </TableCell>
+                        <TableCell sx={{ color: '#fff' }}>
+                          {entry.gamePlayed}
                         </TableCell>
                       </TableRow>
                     ))}

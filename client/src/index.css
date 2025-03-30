@@ -10,7 +10,7 @@
 :root {
   --primary-color: #48ff00;
   /* Green */
-  --secondary-color: #ff0000;
+  --secondary-color: #D32F2F;
   /* Red */
   --white-color: #f9f9f9;
   /* White */
@@ -324,7 +324,7 @@ div.table .table-row .table-cell button.active,
 }
 
 .tutorial p {
-  background: linear-gradient(#ff0000, #dc3545);
+  background: linear-gradient(#D32F2F, #dc3545);
   border-radius: 1em;
   padding: 10px 15px;
   position: relative;
@@ -393,7 +393,7 @@ div.table .table-cell button.btn_join img {
 
 .roll-tag,
 h4.game_header {
-  background: #2a202f;
+  background: #2F4050;
   padding: 4px;
   border-radius: 0.3em;
 }
@@ -572,12 +572,12 @@ div.table.my-chat-table .table-cell button.btn_join {
 }
 
 .debt {
-  background-color: #ff000066 !important;
+  background-color: #D32F2F66 !important;
   margin-bottom: 5px !important;
 }
 
 .debt:hover {
-  background-color: #ff0000dd !important;
+  background-color: #D32F2Fdd !important;
   transition: 0.1s;
   transform: translateY(-2) !important;
 }
@@ -586,7 +586,7 @@ div.table.my-chat-table .table-cell button.btn_join {
   margin-top: 20px;
   padding: 16px;
   border-radius: 0.3em;
-  background: rgba(170, 170, 170, 0.06);
+  background: #2D3A4A;
 }
 
 .room-header {
@@ -1496,11 +1496,21 @@ table td.amount.red {
   max-width: 100%;
 }
 
+.overlay-canvas {
+  top: 0;
+  left: 0;
+  z-index: 10; /* Higher z-index to overlay on top of other content */
+  width: 100%;
+  height: 100vh;
+  pointer-events: none; /* Allows mouse events to pass through the canvas to underlying elements */
+  background: transparent; /* Ensure the canvas container is transparent */
+}
+
 .pre-summary-panel {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #f2f2f20a;
+  background-color: #2D3A4A;
   margin-top: 0.25rem;
   color: #4f5660;
   padding: 1.5em;
@@ -1712,7 +1722,8 @@ h6.score {
   flex-direction: column;
   align-items: center;
   overflow: hidden;
-  padding: 30px 10px;
+  padding: 10px 10px;
+  width: 100%;
 }
 
 .create-game-panel .game-page .game-contents .game-info-panel button.active,
@@ -1996,7 +2007,7 @@ svg#delete:hover {
   top: 50%;
   transform: translate(-50%, -50%);
   padding: 20px 20px !important;
-  background: #a9a9a9;
+  background: #355065;
   border-radius: 0.3em;
   opacity: 0;
   z-index: 2;
@@ -2006,9 +2017,10 @@ svg#delete:hover {
 
 .transaction-settings.active {
   opacity: 1;
-  display: inline-block;
   z-index: 9;
+  display: flex;
   position: fixed;
+  width: 100%;
 }
 
 .host-controls {
@@ -2112,32 +2124,34 @@ svg#delete:hover {
 .special-message-rent .chat-msg,
 .special-message .chat-msg {
   margin-left: unset !important;
-  text-transform: uppercase;
-  background: linear-gradient(-58deg, #692fdd, #e047ff) !important;
-  font-weight: bold !important;
-  /* Add any additional styles you want for special messages */
+  padding: 0.5rem !important;
+}
+.special-message-rent .chat-time,
+.special-message .chat-time{
+  display: none;
 }
 
-.special-message-rent .chat-msg {
+/* .special-message-rent .chat-msg {
   background: linear-gradient(-58deg, #dd2f2f57, #69030369) !important;
-}
+} */
 
 .chat-wrapper .chat-panel .chat-line.special-message-rent .sender-name,
 .chat-wrapper .chat-panel .chat-line.special-message .sender-name {
   margin-left: unset !important;
-  color: rgb(255, 47, 47) !important;
+  color: #00ff3a !important;
   position: relative;
 }
 
+.chat-wrapper .chat-panel .chat-line.special-message .sender-name,
 .chat-wrapper .chat-panel .chat-line.special-message-rent .sender-name {
-  color: rgb(255, 47, 0) !important;
+  display: none;
 }
 
 .special-message-rent .chat-text,
 .special-message .chat-text {
   margin-left: unset !important;
   text-transform: uppercase;
-  color: #f9f9f9 !important;
+  color: #00ff3a !important;
   font-weight: bold !important;
 }
 
@@ -2148,9 +2162,9 @@ svg#delete:hover {
   width: 30px;
   height: 40px;
   border-radius: 7px;
-  border-top: 1px solid #444;
-  border-bottom: 1px solid #444;
-  border-left: 1px solid #444;
+  border-top: 1px solid #607D8B;
+  border-bottom: 1px solid #607D8B;
+  border-left: 1px solid #607D8B;
 }
 
 .reply-to .chat-player .avatar {
@@ -2202,7 +2216,7 @@ svg#delete:hover {
 }
 
 .chat-msg {
-  background: #3b3140;
+  background: #2D3A4A;
   padding: 1.75rem 0.4rem 0.75rem 1rem;
   border-radius: 0.3em;
   margin-bottom: 20px;
@@ -2294,7 +2308,7 @@ svg#delete:hover {
 }
 
 .chat-text a {
-  color: #ff0000 !important;
+  color: #D32F2F !important;
 }
 
 .chat-text a:hover {
@@ -2409,7 +2423,7 @@ svg#delete:hover {
   height: 56px !important;
   border-bottom: 3px solid #810000;
   border-top: 3px solid #fd5e5e;
-  background-color: rgb(250, 34, 34);
+  background-color: #D32F2F;
 }
 
 #drawer-btn:active {
@@ -3135,7 +3149,7 @@ circle {
 .label.red-text,
 .red-text,
 .cell .red {
-  color: #ff0000 !important;
+  color: #D32F2F !important;
 }
 
 .green-text {
@@ -3157,7 +3171,7 @@ circle {
 
 .disclaimer-web2 {
   color: #ff5000;
-  background: #ff000033 !important;
+  background: #D32F2F33 !important;
 }
 
 .disclaimer-web3 {
@@ -3778,7 +3792,7 @@ circle {
 .wheel {
   margin: 30px auto;
   border: 4px solid #f4f4f4;
-  box-shadow: 0px 2px 10px 5px #ff0000;
+  box-shadow: 0px 2px 10px 5px #D32F2F;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -3862,7 +3876,7 @@ circle {
   transform: translate(-50%, -50%);
   color: #f9f9f9;
   font-size: 22px;
-  background: #ff0000;
+  background: #D32F2F;
   border-radius: 1em;
   padding: 10px 20px;
 }

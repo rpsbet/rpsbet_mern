@@ -34,6 +34,7 @@ import {
   getUser,
   changeLink,
   changeUserName,
+  setReferralCode
 } from '../../redux/Auth/user.actions';
 import { errorMsgBar } from '../../redux/Notification/notification.actions';
 
@@ -77,6 +78,7 @@ function ProfileModal(props) {
     accessory,
     totalWagered,
     referralCode,
+    referralUsername,
     created_at: dateJoined,
     credit_score: initialCreditScore,
     accounts = [], // <-- This is our new array from the backend
@@ -92,6 +94,9 @@ function ProfileModal(props) {
   const [link, setLink] = useState(initialLink || '');
   const [avatar, setAvatar] = useState(initialAvatar || '');
   const [referralCodeState, setReferralCodeState] = useState(referralCode || '');
+  const [referralUsernameState, setReferralUsernameState] = useState(referralUsername || '');
+  const [referralInput, setReferralInput] = useState('');
+  const [isReferralLoading, setIsReferralLoading] = useState(false);
 
   const [customerInfo, setCustomerInfo] = useState({});
   const [copied, setCopied] = useState(false);
@@ -105,6 +110,7 @@ function ProfileModal(props) {
   const [status, setStatus] = useState('');
   const [showPlayerModal, setShowPlayerModal] = useState(false);
   const [selectedCreator, setSelectedCreator] = useState('');
+  const [referredUser, setReferredUser] = useState(null);
 
   const [rank, setRank] = useState(totalWagered);
   const [newUsername, setNewUsername] = useState('');
@@ -145,6 +151,7 @@ function ProfileModal(props) {
     setAvatar(userInfo.avatar);
     setUsername(userInfo.username);
     setReferralCodeState(userInfo.referralCode);
+    setReferralUsernameState(userInfo.referralUsername);
     setRank(userInfo.totalWagered);
     setRewardsState(userInfo.rewards || []);
   }, [userInfo]);
@@ -190,6 +197,26 @@ function ProfileModal(props) {
     closeModal();
   };
 
+  const handleSaveReferralCode = async () => {
+    setIsReferralLoading(true);
+    try {
+      const result = await dispatch(setReferralCode(referralInput.trim()));
+      if (result.success) {
+        setReferredUser(result.referredUser); // Update referredUser state
+        setReferralUsernameState(result.referredUser); // Update referralUsernameState
+      } else {
+        setReferredUser(null);
+        setReferralUsernameState(''); // Clear referralUsernameState on failure
+        dispatch(errorMsgBar(result.error || 'Failed to apply referral code.'));
+      }
+    } catch (error) {
+      console.error('Error saving referral code:', error);
+      dispatch(errorMsgBar('An error occurred while saving the referral code.'));
+    } finally {
+      setIsReferralLoading(false);
+    }
+  };
+  
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
   };
@@ -368,7 +395,6 @@ function ProfileModal(props) {
     try {
       const result = await _changeUserName(newUsername);
       if (result.success) {
-        dispatch(errorMsgBar(result.message));
         setLoadingState(false);
         setIsNewUsernameModalOpen(false);
       } else {
@@ -394,7 +420,6 @@ function ProfileModal(props) {
     try {
       const result = await _changeLink(link);
       if (result.success) {
-        dispatch(errorMsgBar(result.message));
         setLoadingState(false);
         setIsLinkModalOpen(false);
       } else {
@@ -451,7 +476,7 @@ function ProfileModal(props) {
               top: '50%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
-              bgcolor: isDarkMode ? '#1f1a25' : '#fff',
+              bgcolor: isDarkMode ? '#2D3A4B' : '#fff',
               color: isDarkMode ? '#fff' : '#000',
               width: '80vw',
               maxWidth: 600,
@@ -517,7 +542,7 @@ function ProfileModal(props) {
               {activeTab === 0 && (
                 <Box
                   sx={{
-                    background: 'rgba(170, 170, 170, 0.06)',
+                    background: '#2D3A4A',
                     borderRadius: '0.3em',
                     p: '20px',
                   }}
@@ -581,7 +606,7 @@ function ProfileModal(props) {
                     <Box
                       sx={{
                         mb: 2,
-                        background: 'rgba(170, 170, 170, 0.06)',
+                        background: '#2D3A4A',
                         borderRadius: '0.3em',
                         p: '20px',
                       }}
@@ -637,11 +662,46 @@ function ProfileModal(props) {
                         </Grid>
                       )}
                     </Box>
+                    {!referralUsernameState && (
+                      <>
+                        <Typography variant="h6" gutterBottom>REFERRED BY</Typography>
+                        <TextField
+                          variant="filled"
+                          label="Enter Referral Code"
+                          color='error'
+                          value={referralInput}
+                          onChange={(e) => setReferralInput(e.target.value)}
+                          sx={{
+                            mb: 1,
+                            width: '100%',
+                          }}
+                        />
+                        <Button
+                          sx={{
+                            mb: 1,
+                            width: '100%',
+                          }}
+                          color='error'
+                          variant="outlined"
+                          onClick={handleSaveReferralCode}
+                          disabled={isReferralLoading}
+                        >
+                          {isReferralLoading ? <CircularProgress size={24} sx={{ color: '#000' }} /> : 'Save Referral Code'}
+                        </Button>
+                      </>
+
+                    )
+                    }
+                    {referralUsernameState && (
+                      <Typography variant="body2" sx={{ color: '#f44336', mt: 1, mb: 2 }}>
+                        REFERRED BY: <strong>{referralUsernameState}</strong>
+                      </Typography>
+                    )}
                     {/* REFERRAL CODE */}
                     <TextField
                       color="error"
                       variant="filled"
-                      label="REFERRAL CODE"
+                      label="YOUR REFERRAL CODE"
                       value={referralCodeState}
                       InputProps={{
                         readOnly: true,
@@ -690,7 +750,7 @@ function ProfileModal(props) {
                                 component="span"
                                 sx={{ fontWeight: 'bold', color: '#28a745' }}
                               >
-                                &nbsp;5%&nbsp;
+                                &nbsp;1%&nbsp;
                               </Box>
                               of the deposit amount of your referred users.
                             </Typography>
@@ -699,9 +759,9 @@ function ProfileModal(props) {
                               <Box component="span" sx={{ fontWeight: 'bold' }}>
                                 &nbsp;{convertToCurrency(100, solPrice)}
                               </Box>
-                              &nbsp;in total, you will earn 5% which is
+                              &nbsp;in total, you will earn 1% which is
                               <Box component="span" sx={{ fontWeight: 'bold' }}>
-                                &nbsp;{convertToCurrency(5, solPrice)}
+                                &nbsp;{convertToCurrency(1, solPrice)}
                               </Box>
                               .
                             </Typography>
@@ -779,7 +839,7 @@ function ProfileModal(props) {
                 <Box
                   className="user-statistics"
                   sx={{
-                    background: 'rgba(170, 170, 170, 0.06)',
+                    background: '#2D3A4A',
                     borderRadius: '0.3em',
                     p: '20px',
                   }}
@@ -839,7 +899,7 @@ function ProfileModal(props) {
               top: '50%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
-              bgcolor: isDarkMode ? '#1f1a25' : '#fff',
+              bgcolor: isDarkMode ? '#2D3A4B' : '#fff',
               color: isDarkMode ? '#fff' : '#000',
               width: '80vw',
               maxWidth: 600,
@@ -900,7 +960,7 @@ function ProfileModal(props) {
               top: '50%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
-              bgcolor: isDarkMode ? '#1f1a25' : '#fff',
+              bgcolor: isDarkMode ? '#2D3A4B' : '#fff',
               color: isDarkMode ? '#fff' : '#000',
               width: '80vw',
               maxWidth: 600,
@@ -966,7 +1026,7 @@ function ProfileModal(props) {
               top: '50%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
-              bgcolor: isDarkMode ? '#1f1a25' : '#fff',
+              bgcolor: isDarkMode ? '#2D3A4B' : '#fff',
               color: isDarkMode ? '#fff' : '#000',
               width: '80vw',
               maxWidth: 600,
@@ -1003,7 +1063,7 @@ function ProfileModal(props) {
               <Box
                 sx={{
                   mb: 2,
-                  background: 'rgba(170, 170, 170, 0.06)',
+                  background: '#2D3A4A',
                   borderRadius: '0.3em',
                   p: '20px',
                 }}
@@ -1092,6 +1152,7 @@ const mapDispatchToProps = {
   changeUserName,
   getSpendingHabit,
   acGetCustomerInfo,
+  setReferralCode 
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(ProfileModal);

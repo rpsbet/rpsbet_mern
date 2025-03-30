@@ -49,7 +49,7 @@
     "web3": "^4.3.0"
   },
   "scripts": {
-    "start": "cross-env PORT=1337 SKIP_PREFLIGHT_CHECK=true react-scripts start",
+    "start": "cross-env PORT=3000 SKIP_PREFLIGHT_CHECK=true react-scripts start",
     "build": "export SKIP_PREFLIGHT_CHECK=true && react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"

@@ -101,6 +101,123 @@ export const reCreateRoom = room_id => async dispatch => {
   }
 };
 
+export const startLoading = () => async (dispatch) => {
+  dispatch({ type: START_LOADING });
+};
+
+export const endLoading = () => async (dispatch) => {
+  dispatch({ type: END_LOADING });
+};
+
+
+export const verifyGameResult = (
+  user_id, // Kept for consistency, though not used in the request
+  inputLog,
+  setLoading = () => {} // Optional callback to manage loading state in UI
+) => async (dispatch) => {
+  if (!inputLog || !Array.isArray(inputLog) || inputLog.length === 0) {
+    dispatch({ type: MSG_ERROR, payload: 'Input log is required, must be an array, and cannot be empty.' });
+    return null;
+  }
+
+  dispatch({ type: START_LOADING });
+  setLoading(true);
+
+  try {
+    const response = await axios.post('/game/verify', {
+      inputLog: inputLog,
+    }); // No headers, assuming auth is handled elsewhere
+
+    const { hasUserInteraction, status, result, multiplier, reason } = response.data;
+
+    console.log('🎮 Verification Response:', { hasUserInteraction, status, result, multiplier, reason });
+
+    if (!hasUserInteraction) {
+      dispatch({ type: MSG_ERROR, payload: 'Game verification failed: No user interaction detected.' });
+    } else {
+      dispatch({ type: MSG_SUCCESS, payload: `Game verified: ${result} (Multiplier: ${multiplier}) - ${reason}` });
+    }
+
+    // Return the result directly instead of storing in Redux
+    return { hasUserInteraction, status, result, multiplier, reason };
+  } catch (error) {
+    console.error('❌ Error verifying game result:', error);
+    const errorMessage = error.response?.data?.reason || 'Failed to verify game result. Please try again.';
+    dispatch({ type: MSG_ERROR, payload: errorMessage });
+    return null; // Return null on error
+  } finally {
+    dispatch({ type: END_LOADING });
+    setLoading(false);
+  }
+};
+
+export const proxyAsset = (key, url) => async (dispatch) => {
+  try {
+    // Proxy all external URLs through the backend
+    const response = await axios.get('/game/proxy-asset', {
+      params: { url },
+      responseType: 'blob',
+    });
+
+    const blob = new Blob([response.data], { type: response.headers['content-type'] });
+    const proxiedUrl = URL.createObjectURL(blob);
+    return { key, proxiedUrl };
+  } catch (error) {
+    console.error('Error proxying asset:', error);
+    dispatch({ type: MSG_ERROR, payload: `Failed to load asset: ${url}` });
+    return { key, proxiedUrl: null };
+  }
+};
+
+
+export const generateGameFromPrompt = (
+  user_id,
+  gamePrompt,
+  user_balance,
+  setGameCode,
+  onChangeState,
+  updateUserPrompt,
+  setGameLoading,
+  preProxiedAssets = { images: [], audio: [] } // Add default parameter
+) => async (dispatch) => {
+  if (user_balance < 0.005) {
+    dispatch({ type: MSG_ERROR, payload: 'Insufficient balance. Each send costs 0.005 SOL.' });
+    return;
+  }
+
+  if (!gamePrompt.trim()) {
+    dispatch({ type: MSG_ERROR, payload: 'Please enter a valid game prompt.' });
+    return;
+  }
+
+  dispatch({ type: START_LOADING });
+  setGameLoading(true);
+
+  try {
+    const response = await axios.post('/game/openai/generate', {
+      prompt: gamePrompt,
+      imageUrls: preProxiedAssets.images.map(asset => asset.proxiedUrl), // Send pre-proxied image URLs
+    });
+
+    let generatedCode = response.data.finalGame || '// No game generated.';
+    setGameCode(generatedCode);
+    if (typeof updateUserPrompt === 'function') {
+      await updateUserPrompt(user_id, gamePrompt);
+    } else {
+      onChangeState({ prompt: gamePrompt });
+    }
+
+    dispatch({ type: MSG_SUCCESS, payload: 'Game generated successfully!' });
+  } catch (error) {
+    console.error('❌ Error generating game:', error);
+    dispatch({ type: MSG_ERROR, payload: 'Failed to generate game. Please try again.' });
+    setGameCode('// Failed to generate game.');
+  } finally {
+    dispatch({ type: END_LOADING });
+    setGameLoading(false);
+  }
+};
+
 // logic.actions.js
 export const uploadImageToPinata = (formData) => async (dispatch) => {
   try {
@@ -551,16 +668,16 @@ export const equipItem = data => async dispatch => {
 export const getRoomList = (params) => async (dispatch) => {
   dispatch({ type: START_LOADING });
   try {
-    // This fetch returns ALL rooms from server in one shot
-    // (Your server should not be doing .skip/.limit for this method.)
+    console.time('getRoomList');
+    // Call the EC2 backend, which will proxy to CloudFront
     const res = await axios.get('/game/rooms', { params });
+    console.timeEnd('getRoomList');
     if (res.data.success) {
       dispatch({
         type: ROOMS_LOADED,
         payload: {
-          // The entire array of rooms
-          roomList: res.data.roomList
-        }
+          roomList: res.data.roomList,
+        },
       });
     }
   } catch (err) {
@@ -791,7 +908,6 @@ export const getAttachedRooms = () => async dispatch => {
   }
 };
 
-
 export const detachPlayerFromRoom = (room_id) => async dispatch => {
   try {
     const res = await axios.post(`/game/detachPlayer/${room_id}`);
@@ -824,7 +940,6 @@ export const getRoomBotCount = (room_id) => async (dispatch) => {
     dispatch({ type: MSG_ERROR, payload: 'Error fetching bot count' });
   }
 };
-
 
 export const getGameTypeList = () => async dispatch => {
   try {
@@ -1277,7 +1392,15 @@ export function updateBetResult(betResult) {
     betResult
   };
 }
-export const addNewTransaction = data => dispatch => {
+
+const dispatchedTransactionIds = new Set();
+
+export const addNewTransaction = (data) => (dispatch) => {
+  if (dispatchedTransactionIds.has(data._id)) {
+    return; // Prevent duplicate dispatch
+  }
+
+  dispatchedTransactionIds.add(data._id); // Add the transaction ID to the Set
   dispatch({ type: NEW_TRANSACTION, payload: data });
 };
 

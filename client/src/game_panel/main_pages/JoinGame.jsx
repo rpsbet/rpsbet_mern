@@ -165,7 +165,7 @@ function JoinGame(props) {
   const [coHostAmount, setCoHostAmount] = useState(0.01);
   const [intervalId, setIntervalId] = useState(null);
   const [isMax, setIsMax] = useState(false);
-  const [bet_amount, setBetAmount] = useState(0.0005);
+  const [bet_amount, setBetAmount] = useState(0.001);
   const [predictedBetAmount, setPredictedBetAmount] = useState(0);
   const [componentHistory, setComponentHistory] = useState(
     updateFromNow(propsHistory),
@@ -242,13 +242,12 @@ function JoinGame(props) {
     const gameType = roomInfo.game_type;
     if (gameType === 'Quick Shoot') {
       getQsBetItems(roomInfo._id);
-    } else {
+    } else if (gameType === 'RPS') {
       getRpsBetItems(roomInfo._id);
-    }
+    } 
+
     if (isMountedRef.current && attached) {
       setBetting(true);
-      // isQbot => not explicitly stored in original state?
-      // We'll store it if we want to replicate that logic.
     }
   }, [roomInfo]);
 
@@ -307,6 +306,7 @@ function JoinGame(props) {
   // Replacing "join" => manual bet
   const join = useCallback(
     async (betInfo) => {
+      console.log('betInfo:____', betInfo);
       return await bet3Action({
         _id: roomInfo._id,
         user: user_id,
@@ -355,26 +355,23 @@ function JoinGame(props) {
 
   // ---------- AI-Related Predict Logic ----------
   function predictNextBetAmount(risk, user_range, user_balance, bankroll) {
-    // 1) If risk=1 => random bet in [0.0005..0.001]
     if (risk === 1) {
-      const minFixed = 0.0005;
+      const minFixed = 0.001;
       const maxFixed = 0.001;
       const randomBet = minFixed + Math.random() * (maxFixed - minFixed);
       return parseFloat(randomBet.toFixed(6));
     }
 
-    // 2) If no user_range, use [0.0005 .. user_balance or 0.1]
     if (!user_range) {
       // If user_balance is falsy => fallback to 0.1
       const upperBound = user_balance && user_balance > 0 ? user_balance : 0.1;
-      user_range = [0.0005, upperBound];
+      user_range = [0.001, upperBound];
     }
 
     // 3) Decide final minVal/maxVal
-    //    - At least 0.0005
     //    - No more than user_balance
     //    - Also check bankroll if provided
-    const minVal = Math.max(user_range[0], 0.0005);
+    const minVal = Math.max(user_range[0], 0.001);
     let maxVal = user_range[1];
 
     // If user_balance is defined => clamp maxVal
@@ -593,7 +590,7 @@ function JoinGame(props) {
         return await reinforcementAI_qs(dataRef.current, qsGameType);
       } else if (aiMode === 'Markov') {
         return await predictNextQs(dataRef.current, qsGameType);
-      } else if (aiMode === 'GPT3') {
+      } else if (aiMode === 'o3Mini') {
         return await predictQuickNextByGPT(roomId, qsGameType, user_id);
       }
     } else {
@@ -602,7 +599,7 @@ function JoinGame(props) {
         return await reinforcementAI(dataRef.current);
       } else if (aiMode === 'Markov') {
         return await predictNext(dataRef.current, true);
-      } else if (aiMode === 'GPT3') {
+      } else if (aiMode === 'o3Mini') {
         return await predictNextByGPT(roomId, user_id);
       }
     }
@@ -649,7 +646,7 @@ function JoinGame(props) {
           await joinGame2(randomItem, nextBetAmount);
         }
 
-        const delay = ai_mode === 'Adam' || ai_mode === 'GPT3' ? 6000 : 3300;
+        const delay = ai_mode === 'Adam' || ai_mode === 'o3Mini' ? 6000 : 3300;
 
         const timerId = setTimeout(executeBetting, delay);
         setIntervalId(timerId);

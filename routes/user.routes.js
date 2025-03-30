@@ -202,7 +202,7 @@ router.post('/', async (req, res) => {
       status: 'off',
       avatar,
       referralCode: generateReferralCode(),
-      referralId: referralOwner ? referralOwner._id : null
+      referralUsername: referralOwner ? referralOwner._id : null
     });
 
     // Generate avatar based on the chosen method

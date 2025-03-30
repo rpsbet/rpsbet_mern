@@ -391,9 +391,9 @@ function ChatPanel(props) {
         sx={{
           display: 'flex',
           flexDirection: 'column',
-          minHeight: '100%',
+          height: '100%',
           p: 1,
-          bgcolor: '#29202f', // override background
+          bgcolor: '#1E272E', // override background
           color: 'white', // default text color
           border: '0',
         }}

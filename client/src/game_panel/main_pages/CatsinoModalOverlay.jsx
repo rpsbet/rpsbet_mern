@@ -446,7 +446,7 @@ function CatsinoModalOverlay({
             sx={{
               color: '#fff',
               transition: '0.2s',
-              '&:hover': { color: '#FF0000' }
+              '&:hover': { color: '#D32F2F' }
             }}
             onClick={() => window.open('https://www.youtube.com/@rpsdotgame', '_blank')}
           >

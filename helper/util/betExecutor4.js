@@ -212,7 +212,7 @@ const addToQueue = async (req, bot = false, qbot) => {
                         case 'Markov':
                             nextItem = await getNextItemUsingMarkov(allBetItems);
                             break;
-                        case 'GPT3':
+                        case 'o3Mini':
                             nextItem = await predictNextOpenAI(
                                 allBetItems,
                                 roomInfo['prompt'] ??
@@ -513,7 +513,7 @@ const addToQueue = async (req, bot = false, qbot) => {
                                 roomInfo['qs_game_type'],
                             );
                             break;
-                        case 'GPT3':
+                        case 'o3Mini':
                             nextItem = await openAIPredictionAI_qs(
                                 allBetItems,
                                 roomInfo['qs_game_type'],

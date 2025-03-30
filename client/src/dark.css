@@ -20,7 +20,7 @@
 }
 
 .dark_mode .label.red-text {
-	color: #ff0000 !important;
+	color: #D32F2F !important;
 }
 
 .dark_mode #rps-radio div {
@@ -34,13 +34,13 @@
 	border-color: #f9f9f9 !important;
 }
 
-.dark_mode .special-message-rent .chat-msg {
+/* .dark_mode .special-message-rent .chat-msg {
 	background: linear-gradient(258deg, #651184, #4b008a) !important;
 }
 
 .dark_mode .special-message .chat-msg {
 	background: linear-gradient(-58deg, #41008e, #8106a5);
-}
+} */
 
 .dark_mode .payout-bar {
 	background: #101010;
@@ -133,7 +133,7 @@
 
 .dark_mode .game_header .main_header .header_action_panel button#btn-login,
 .dark_mode #balance button {
-	background: linear-gradient(0deg, #fa2222, #ff0000) border-box;
+	background: linear-gradient(0deg, #fa2222, #D32F2F) border-box;
 	box-shadow: 0 10px 27px rgb(255 0 0 / 10%), inset 0 -3px #a20000, inset 0 2px #e60000;
 }
 
@@ -151,13 +151,13 @@
 }
 
 .dark_mode .game-page .game-contents {
-	background: linear-gradient(52deg, #372e3b, #2a202f);
+	background: #2D3A4A;
 }
 
 .dark_mode .avatar-square {
 
 	background: #222e;
-	border: 3px solid #444;
+	border: 3px solid #607D8B;
 	color: #c4c4c4;
 }
 
@@ -171,7 +171,7 @@
 }
 
 .dark_mode div.table .table-row {
-	background: #3a2d41 !important;
+	background: #2D3A4A	!important;
 	color: #8e9297;
 }
 
@@ -243,7 +243,7 @@
 }
 
 .dark_mode .transaction-panel button:hover {
-	background-color: #ff0000;
+	background-color: #D32F2F;
 }
 
 .dark_mode circle {
@@ -287,7 +287,7 @@
 }
 
 .dark_mode #balance {
-	background: linear-gradient(39deg, #590000, #ff0000);
+	background: linear-gradient(39deg, #590000, #D32F2F);
 }
 
 .dark_mode .main-panel div.table .table-row:hover {

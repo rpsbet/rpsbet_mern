@@ -53,17 +53,17 @@ const UserSchema = new Schema({
   },
   range: {
     type: [Number],
-    default: [0.0005, 0.001],
+    default: [0.001, 0.002],
   },
   referralCode: {
     type: String,
     required: true,
     unique: true
   },
-  referralId: {
-    type: Schema.Types.ObjectId,
+  referralUsername: {
+    type: String,
     ref: 'rps_users',
-    default: null
+    default: ''
   },
   rewards: [{
     user: {

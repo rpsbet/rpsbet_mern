@@ -269,7 +269,7 @@ const ProductTable = (props) => {
     <ThemeProvider theme={theme}>
       <Box
         sx={{
-          background: 'rgba(170, 170, 170, 0.06)',
+          background: '#2D3A4A',
           borderRadius: '0.3em',
           p: '20px',
         }}

@@ -260,7 +260,7 @@ function MyProductTable(props) {
   // -------------- Render --------------
   return (
     <ThemeProvider theme={theme}>
-      <Box sx={{ background: 'rgba(170, 170, 170, 0.06)', borderRadius: '0.3em', p: '20px' }}>
+      <Box sx={{ background: '#2D3A4A', borderRadius: '0.3em', p: '20px' }}>
         <MarketplaceContainer>
           <FilterSortContainer>
             <div className="filters">

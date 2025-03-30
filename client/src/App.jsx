@@ -7,11 +7,12 @@ import AppMainRoute from './admin_panel/app/App.routes';
 import DepositModal from './game_panel/modal/DepositModal'
 import Error404Page from './admin_panel/Error404Page';
 import setAuthToken from './util/setAuthToken';
-
+import Background from './background'; // Import the Background component
 if (localStorage.token) {
   setAuthToken(localStorage.token);
 }
 
+const currentMode = 'dark';
 const App = () => {
   return (
     <>
@@ -34,6 +35,8 @@ const App = () => {
           path="/"
           render={routeProps => <GameMainRoute {...routeProps} />}
         />
+              <Background mode={currentMode} /> {/* Overlay background with nodes */}
+
         <Route component={Error404Page} />
       </Switch>
     </>

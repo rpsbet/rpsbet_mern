@@ -26,7 +26,7 @@ async function convertGameLogToHistoryStyle(gameLogList) {
       host_pr: gameLog.host_pr ?? 0,
       // The numeric amounts needed on the front end
       bet_amount: gameLog.bet_amount ?? 0,
-      winnings: gameLog.winnings - gameLog.bet_amount ?? 0,
+      winnings: gameLog.winnings ?? 0,
       user_bet: gameLog.user_bet ?? 0,
 
       // Mark an "action" for front-end interpretation
@@ -48,43 +48,35 @@ async function convertGameLogToHistoryStyle(gameLogList) {
       // Creator references
       creator: gameLog.creator
         ? {
-            _id: gameLog.creator._id,
-            avatar: gameLog.creator.avatar,
-            totalWagered: gameLog.creator.totalWagered,
-            accessory: gameLog.creator.accessory || '',
-            username: gameLog.creator.username || '',
-            
-          }
+          _id: gameLog.creator._id,
+          avatar: gameLog.creator.avatar,
+          totalWagered: gameLog.creator.totalWagered,
+          accessory: gameLog.creator.accessory || '',
+          username: gameLog.creator.username || '',
+
+        }
         : null,
 
       // Joined user references
       joined_user: gameLog.joined_user
         ? {
-            _id: gameLog.joined_user._id,
-            avatar: gameLog.joined_user.avatar,
-            totalWagered: gameLog.joined_user.totalWagered,
-            accessory: gameLog.joined_user.accessory || '',
-            username: gameLog.joined_user.username || '',
-          }
+          _id: gameLog.joined_user._id,
+          avatar: gameLog.joined_user.avatar,
+          totalWagered: gameLog.joined_user.totalWagered,
+          accessory: gameLog.joined_user.accessory || '',
+          username: gameLog.joined_user.username || '',
+        }
         : null,
     };
-// Decide the "action" based on game_result + game type
-if (![3000, 333, 666, 444, 777].includes(parseInt(gameLog.game_result))) {
-  // For "normal" game results (RPS or Quick Shoot)
-      if (temp.room.game_type_name === 'RPS') {
-        if (temp.game_result === 1) temp.action = 'won';
-        else if (temp.game_result === 3) temp.action = 'receivedAutoPayout';
-        else if (temp.game_result === -100) temp.action = 'rugged';
-        else if (temp.game_result === -3000) temp.action = 'created';
-        else if (temp.game_result === 0) temp.action = 'split';
-        else temp.action = 'lost';
-      } else if (temp.room.game_type_name === 'Quick Shoot') {
-        if (temp.game_result === 1) temp.action = 'won';
-        else if (temp.game_result === 3) temp.action = 'receivedAutoPayout';
-        else if (temp.game_result === -100) temp.action = 'rugged';
-        else if (temp.game_result === -3000) temp.action = 'created';
-        else temp.action = 'lost';
-      }
+    // Decide the "action" based on game_result + game type
+    if (![3000, 333, 666, 444, 777].includes(parseInt(gameLog.game_result))) {
+      // For "normal" game results (RPS or Quick Shoot)
+      if (temp.game_result === 1) temp.action = 'won';
+      else if (temp.game_result === 3) temp.action = 'receivedAutoPayout';
+      else if (temp.game_result === -100) temp.action = 'rugged';
+      else if (temp.game_result === -3000) temp.action = 'created';
+      else if (temp.game_result === 0) temp.action = 'split';
+      else temp.action = 'lost';
     } else {
       // Special logs
       switch (temp.game_result) {

@@ -85,6 +85,7 @@ const initialState = {
   gameTypeList: [
     { game_type_id: 1, game_type_name: 'RPS', short_name: 'RPS', _id: '62a25d2a723b9f15709d1ae7', created_at: '2018-06-09T20:50:50.217Z' },
     { game_type_id: 5, game_type_name: 'Quick Shoot', short_name: 'QS', _id: '62a25d2a723b9f15709d1aeb', created_at: '2020-06-09T20:50:50.219Z', },
+    { game_type_id: 9, game_type_name: 'Custom', short_name: 'Custom', _id: '656cd55bb2c2d9dfb59a4bfa', created_at: '2034-03-08T14:40:50.217+00:00', },
   ],
   curRoomInfo: {
     _id: 0,
@@ -94,6 +95,7 @@ const initialState = {
     website_link: '',
     telegram_link: '',
     creator_id: '',
+    gameCode: '',
     battles: 0,
     tax: 0,
     pool_id: '',

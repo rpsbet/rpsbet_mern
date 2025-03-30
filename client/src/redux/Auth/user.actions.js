@@ -234,7 +234,6 @@ export const userSignUp = ({
     });
 
     const res = await axios.post('/user', body);
-    console.log("res/", res.data)
     dispatch({ type: END_LOADING });
 
     if (res.data.success) {
@@ -254,12 +253,41 @@ export const userSignUp = ({
 };
 
 //referral
-export const setReferralCode = (referralCode) => {
-  return {
-    type: SET_REFERRAL_CODE,
-    payload: referralCode
+export const setReferralCode = (referralCode) => async (dispatch) => {
+  try {
+    // Make a POST request to the backend to set the referral code
+    const { data } = await axios.post('/auth/set-referral', { referralCode });
+    if (data.success) {
+      if (referralCode) {
+        dispatch({
+          type: MSG_SUCCESS,
+          payload: data.message || 'Referral code applied successfully.',
+        });
+      } else {
+        dispatch({
+          type: MSG_SUCCESS,
+          payload: 'Referral code cleared successfully.',
+        });
+      }
+
+      return { success: true, referredUser: data.referredUser || null };
+    } else {
+      dispatch({
+        type: MSG_ERROR,
+        payload: data.error || 'Failed to apply referral code.',
+      });
+      return { success: false, error: data.error };
+    }
+  } catch (error) {
+    console.error('Error setting referral code:', error);
+    dispatch({
+      type: MSG_WARNING,
+      payload: error?.response?.data?.message || 'Server error while setting referral code.',
+    });
+    return { success: false, error: error.message };
   }
-}
+};
+
 
 // Just like authenticateWithGoogle, but for Phantom
 export const authenticateWithPhantom = ({ walletAddress }) => async (dispatch) => {

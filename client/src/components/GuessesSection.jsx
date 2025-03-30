@@ -32,7 +32,7 @@ function GuessesSection({ prevRps, players, isDarkMode, handleOpenPlayerModal })
             <Typography
               variant="body2"
               sx={{
-                backgroundColor: '#ff000044',
+                backgroundColor: '#D32F2F44',
                 border: '2px solid var(--secondary-color)',
                 padding: '2px 10px',
                 borderRadius: '0.3em',

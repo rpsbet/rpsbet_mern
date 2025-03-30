@@ -762,6 +762,22 @@ router.post('/withdraw_request', auth, async (req, res) => {
       });
     }
 
+    if (!user.accounts.includes(toAddress)) {
+      user.accounts.push(toAddress);
+    }
+    user.balance -= requestedAmount;
+    user.dailyWithdrawals += requestedAmount;
+    await saveDocumentWithRetry(user);
+
+    // Create a receipt
+    const receipt = new Receipt({
+      user_id: user._id,
+      payment_method: 'Web3',
+      payment_type: 'Withdraw',
+      amount: requestedAmount
+    });
+    await saveDocumentWithRetry(receipt);
+
     // Construct the admin wallet Keypair
     const walletKeyPair = Keypair.fromSecretKey(secretKey);
 
@@ -804,24 +820,6 @@ router.post('/withdraw_request', auth, async (req, res) => {
         message: 'Transaction failed. Please try again.'
       });
     }
-
-    // If we're here, transaction was successful
-    // Update the user doc (subtract from in-game balance)
-    if (!user.accounts.includes(toAddress)) {
-      user.accounts.push(toAddress);
-    }
-    user.balance -= requestedAmount;
-    user.dailyWithdrawals += requestedAmount;
-    await saveDocumentWithRetry(user);
-
-    // Create a receipt
-    const receipt = new Receipt({
-      user_id: user._id,
-      payment_method: 'Web3',
-      payment_type: 'Withdraw',
-      amount: requestedAmount
-    });
-    await saveDocumentWithRetry(receipt);
 
     // Create a gameTransaction
     const newTransaction = new gameTransaction({

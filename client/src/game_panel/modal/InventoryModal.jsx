@@ -32,7 +32,7 @@ function InventoryModal(props) {
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    bgcolor: '#1f1a25', // Purple background
+    bgcolor: '#2D3A4B', // Purple background
     color: '#fff',
     boxShadow: 24,
     borderRadius: 1,

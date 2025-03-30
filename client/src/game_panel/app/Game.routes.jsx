@@ -4,8 +4,7 @@ import { Route, Switch } from 'react-router-dom';
 import { Box } from '@mui/material';
 
 import CreateGame from '../main_pages/CreateGame';
-import RPS from '../CreateGame/RPS';
-import QuickShoot from '../CreateGame/QuickShoot';
+
 import SiteWrapper from '../SiteWrapper';
 import MainPage from '../main_pages/MainPage';
 import JoinGame from '../main_pages/JoinGame';
@@ -68,8 +67,6 @@ function GameMainRoute({ match, isDrawerOpen }) {
               component={CreateGame}
             />
             <Route exact path={`${match.path}create/`} component={CreateGame} />
-            <Route exact path={`${match.path}/create/quick-shoot/`} component={QuickShoot} />
-            <Route exact path={`${match.path}/create/rps/`} component={RPS} />
             <Route exact path={`${match.path}join/:id`} component={JoinGame} />
             <Route exact path={`${match.path}chat/:id`} component={ChatPage} />
             <Route

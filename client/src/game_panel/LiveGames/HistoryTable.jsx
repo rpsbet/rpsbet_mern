@@ -76,7 +76,6 @@ function HistoryTable({
     const betAmt = convertToCurrency(logItem.bet_amount, solPrice);
     const winnings = convertToCurrency(logItem.winnings, solPrice);
     const userBet = convertToCurrency(logItem.user_bet, solPrice);
-console.log(logItem)
     const displayRoom = `(${logItem.room?.ticker})`;
 
     // Grab references to joined_user or creator

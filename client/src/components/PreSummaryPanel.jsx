@@ -111,15 +111,15 @@ const PreSummaryPanel = (props) => {
         {/* STRATEGY */}
         <Box className="data-item">
           <Typography variant="body2" className="label room-name">
-            <FontAwesomeIcon icon={faRobot} style={{ marginRight: 8 }} /> MODEL
+            <FontAwesomeIcon icon={faRobot} style={{ marginRight: 8 }} /> Game-Type
           </Typography>
           {/* Tooltip + info icon for the value */}
-          <Tooltip title="This is the AI Model of the room.">
+          <Tooltip title="This is the Game-Type of the room.">
             <Box
               sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
             >
               <Typography id="ai_mode" variant="body1" className="value">
-                {roomInfo?.selectedStrategy}
+                {roomInfo?.game_type}
               </Typography>
               <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
             </Box>
@@ -199,7 +199,7 @@ const PreSummaryPanel = (props) => {
                     )}
                   </div>
                   <div>
-                    -({roomInfo.tax} + 5)% ={' '}
+                    -({roomInfo.tax} + 1)% ={' '}
                     {convertToCurrency(calculateQuickShootReturn(), solPrice)}
                   </div>
                 </div>
@@ -208,7 +208,7 @@ const PreSummaryPanel = (props) => {
                   <span>EXPLANATION: </span>
                   <p>
                     2x your Bet Amount, then deduct Host(s)'s(') commission
-                    (RTB), finally 5% platform tax.
+                    (RTB), finally 1% platform tax.
                   </p>
                   <span>CALCULATION: </span>
                   <div>
@@ -216,7 +216,7 @@ const PreSummaryPanel = (props) => {
                     {convertToCurrency(bet_amount * 2, solPrice)}
                   </div>
                   <div>
-                    -({roomInfo.tax} + 5)% ={' '}
+                    -({roomInfo.tax} + 1)% ={' '}
                     {convertToCurrency(calculateRPSReturn(), solPrice)}
                   </div>
                 </div>
@@ -288,7 +288,7 @@ const PreSummaryPanel = (props) => {
             <FontAwesomeIcon icon={faPercentage} style={{ marginRight: 8 }} />
             Tax
           </Typography>
-          <Tooltip title="Host's Room Tax. Minimum 5% goes to the platform.">
+          <Tooltip title="Host's Room Tax. Minimum 1% goes to the platform.">
             <Box
               sx={{
                 cursor: 'pointer',
@@ -302,7 +302,7 @@ const PreSummaryPanel = (props) => {
                 className={`value ${isHighCommission ? 'red-text' : ''}`}
                 sx={{ display: 'flex', alignItems: 'center' }}
               >
-                {roomInfo.tax < 5 ? '5%' : `${roomInfo.tax}%`}
+                {roomInfo.tax < 1 ? '1%' : `${roomInfo.tax}%`}
                 {!isHighCommission ? (
                   <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
                 ) : (

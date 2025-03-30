@@ -853,7 +853,7 @@ function QuickShoot(props) {
                 alignItems: 'center'
               }}
             >
-              <Typography variant="subtitle2" sx={{ color: '#ff0000' }}>
+              <Typography variant="subtitle2" sx={{ color: '#D32F2F' }}>
                 GAME ENDED
               </Typography>
               <br />

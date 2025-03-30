@@ -123,7 +123,7 @@ function CoHostModal({
         width: container.clientWidth, // <-- Use container's width
         height: 350,
         layout: {
-          background: { type: 'solid', color: isDarkMode ? '#2d2331' : '#ffffff' },
+          background: { type: 'solid', color: isDarkMode ? '#2D3A4A' : '#ffffff' },
           textColor: isDarkMode ? '#ffffff' : '#000000',
         },
         grid: {
@@ -511,7 +511,7 @@ function CoHostModal({
 
         {/* Info Box */}
         {!input_only && !has_joined && (
-          <Box sx={{ background: 'rgba(170, 170, 170, 0.06)', p: 2, borderRadius: 1 }}>
+          <Box sx={{ background: '#2D3A4A', p: 2, borderRadius: 1 }}>
             <Box
               sx={{
                 display: 'grid',
@@ -649,7 +649,7 @@ function CoHostModal({
         {((!input_only && !has_joined) || input_only || isSmallScreen) && (
           <Box
             sx={{
-              background: 'rgba(170, 170, 170, 0.06)',
+              background: '#2D3A4A',
               p: 2,
               borderRadius: 1,
               display: 'flex',
@@ -693,12 +693,12 @@ function CoHostModal({
                 sx={{
                   flexGrow: 1,
                   textTransform: 'none',
-                  borderColor: selectedTab !== 'JEET' ? '#f44336' : '',
-                  color: selectedTab !== 'JEET' ? '#f44336' : ''
+                  borderColor: selectedTab !== 'JEET' ? '#D32F2F' : '',
+                  color: selectedTab !== 'JEET' ? '#D32F2F' : ''
                 }}
               >
                 JEET
-                <TrendingDownOutlined sx={{ ml: 1, color: selectedTab === 'JEET' ? '#fff' : '#f44336' }} />
+                <TrendingDownOutlined sx={{ ml: 1, color: selectedTab === 'JEET' ? '#fff' : '#D32F2F' }} />
               </Button>
             </Box>
 
@@ -921,7 +921,7 @@ function CoHostModal({
 
         {/* Transactions Table */}
         {!has_joined && !input_only && (
-          <Box sx={{ background: 'rgba(170, 170, 170, 0.06)', p: 2, borderRadius: 1 }}>
+          <Box sx={{ background: '#2D3A4A', p: 2, borderRadius: 1 }}>
             <TableContainer component={Paper} sx={{ maxHeight: 300, mt: 1 }}>
               <Table stickyHeader>
                 <TableHead>

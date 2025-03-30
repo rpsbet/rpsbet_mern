@@ -230,7 +230,7 @@ function ConfirmLoanModal(props) {
 
               <Box
                 sx={{
-                  background: 'rgba(170, 170, 170, 0.06)',
+                  background: '#2D3A4A',
                   p: 2,
                   borderRadius: 1,
                 }}
@@ -368,7 +368,7 @@ function ConfirmLoanModal(props) {
                     component="span"
                     onClick={toggleExpand}
                     sx={{
-                      color: '#ff0000',
+                      color: '#D32F2F',
                       textDecoration: 'underline',
                       cursor: 'pointer',
                     }}
@@ -384,7 +384,7 @@ function ConfirmLoanModal(props) {
                         <td className="list-number">1.</td>
                         <td>
                           The loan amount is{' '}
-                          <Box component="span" sx={{ color: '#ff0000' }}>
+                          <Box component="span" sx={{ color: '#D32F2F' }}>
                             [
                             {convertToCurrency(
                               parseFloat(responseText),
@@ -399,7 +399,7 @@ function ConfirmLoanModal(props) {
                         <td className="list-number">2.</td>
                         <td>
                           The loan period is{' '}
-                          <Box component="span" sx={{ color: '#ff0000' }}>
+                          <Box component="span" sx={{ color: '#D32F2F' }}>
                             [{loan_period}]
                           </Box>{' '}
                           days.
@@ -417,7 +417,7 @@ function ConfirmLoanModal(props) {
                         <td>
                           Interest may be applicable on the loan amount as per
                           the agreed Interest Rate:{' '}
-                          <Box component="span" sx={{ color: '#ff0000' }}>
+                          <Box component="span" sx={{ color: '#D32F2F' }}>
                             [{(apy * 100).toFixed(1)}%]
                           </Box>
                           .

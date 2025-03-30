@@ -143,7 +143,7 @@ const ProductCardActions = styled(CardActions)`
 
 // Helper for profit text color
 const ProfitSpan = styled.span`
-  color: ${(props) => (props.negative ? '#f44336' : '#4caf50')};
+  color: ${(props) => (props.negative ? '#D32F2F' : '#4caf50')};
   font-weight: 600;
 `;
 
@@ -367,7 +367,7 @@ const BankTable = (props) => {
     <ThemeProvider theme={theme}>
       <Box
         sx={{
-          background: 'rgba(170, 170, 170, 0.06)',
+          background: '#2D3A4A',
           borderRadius: '0.3em',
           p: '20px',
         }}

@@ -40,7 +40,7 @@ export default function TipModal({
             top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
-            bgcolor: isDarkMode ? '#1f1a25' : '#fff',
+            bgcolor: isDarkMode ? '#2D3A4B' : '#fff',
             color: isDarkMode ? '#fff' : '#000',
             width: '80vw',
             maxWidth: 600,
@@ -80,7 +80,7 @@ export default function TipModal({
             <Box
               sx={{
                 mb: 2,
-                background: 'rgba(170, 170, 170, 0.06)',
+                background: '#2D3A4A',
                 borderRadius: '0.3em',
                 p: '20px',
               }}

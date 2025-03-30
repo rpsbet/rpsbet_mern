@@ -24,6 +24,7 @@ import CountUp from 'react-countup';
 import { ThemeProvider } from '@mui/material/styles';
 import { getCustomTheme } from '../../config/theme';
 import {
+  fetchVaultBalance,
   vaultDeposit,
   vaultWithdraw,
   fetchRecentVaultTransactions,
@@ -35,11 +36,9 @@ import { convertToCurrency } from '../../util/conversion';
 
 function VaultModal(props) {
   const {
-    vaultBal,
     modalIsOpen,
     closeModal,
     fetchRecentVaultTransactions,
-    onVaultBalChange,
     vaultTransactions: propVaultTransactions,
     vaultDeposit,
     vaultWithdraw,
@@ -48,12 +47,14 @@ function VaultModal(props) {
     isDarkMode,
     addNewTransaction,
     getUser,
+    fetchVaultBalance
   } = props;
 
   // ------------------ LOCAL STATE ------------------
   const [amount, setAmount] = useState('');
   const [animate, setAnimate] = useState(false);
   const [lastUpdatedBalance, setLastUpdatedBalance] = useState(0);
+  const [vaultBal, setVaultBal] = useState(0);
   const [isWithdraw, setIsWithdraw] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [vaultTransactions, setVaultTransactions] = useState([]);
@@ -66,10 +67,17 @@ function VaultModal(props) {
 
   // ------------------ EFFECTS ------------------
   useEffect(() => {
-    // Fetch recent transactions when modal opens
+    async function loadBalance() {
+      try {
+        const initialBalance = await fetchVaultBalance();
+        setVaultBal(initialBalance);
+      } catch (err) {
+        console.error('Error fetching vault balance:', err);
+      }
+    }
+    loadBalance();
     fetchRecentVaultTransactions();
     setAnimate(true);
-    // eslint-disable-next-line
   }, []);
 
   useEffect(() => {
@@ -113,9 +121,8 @@ function VaultModal(props) {
       setIsWithdraw(false);
       setLoaded(true);
 
-      if (onVaultBalChange) {
-        onVaultBalChange(result.vaultBalance);
-      }
+      setVaultBal(result.vaultBalance);
+
 
       // Redux updates
       addNewTransaction(result.newTransaction);
@@ -149,9 +156,7 @@ function VaultModal(props) {
       setIsWithdraw(true);
       setLoaded(true);
 
-      if (onVaultBalChange) {
-        onVaultBalChange(result.vaultBalance);
-      }
+      setVaultBal(result.vaultBalance);
 
       // Redux updates
       addNewTransaction(result.newTransaction);
@@ -167,7 +172,7 @@ function VaultModal(props) {
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    bgcolor: '#1f1a25',
+    bgcolor: '#2D3A4B',
     color: '#fff',
     boxShadow: 24,
     borderRadius: 1,
@@ -209,7 +214,7 @@ function VaultModal(props) {
           {/* BODY */}
           <Box
             sx={{
-              background: 'rgba(170, 170, 170, 0.06)',
+              background: '#2D3A4A',
               borderRadius: '0.3em',
               p: '20px',
               display: 'flex',
@@ -283,17 +288,17 @@ function VaultModal(props) {
                       return (
                         <TableRow key={index}>
                           <TableCell
-                            sx={{ color: isWithdrawal ? '#00ff3a' : '#ff0000' }}
+                            sx={{ color: isWithdrawal ? '#00ff3a' : '#D32F2F' }}
                           >
                             {isWithdrawal ? '-' : '+'}
                           </TableCell>
                           <TableCell
-                            sx={{ color: isWithdrawal ? '#00ff3a' : '#ff0000' }}
+                            sx={{ color: isWithdrawal ? '#00ff3a' : '#D32F2F' }}
                           >
                             {convertToCurrency(transaction?.amount, solPrice)}
                           </TableCell>
                           <TableCell
-                            sx={{ color: isWithdrawal ? '#00ff3a' : '#ff0000' }}
+                            sx={{ color: isWithdrawal ? '#00ff3a' : '#D32F2F' }}
                           >
                             {new Date(transaction?.created_at).toLocaleString()}
                           </TableCell>
@@ -367,6 +372,7 @@ const mapDispatchToProps = {
   vaultWithdraw,
   addNewTransaction,
   fetchRecentVaultTransactions,
+  fetchVaultBalance,
   getUser,
 };
 

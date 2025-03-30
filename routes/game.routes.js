@@ -6,10 +6,16 @@ const moment = require('moment');
 const auth = require('../middleware/auth');
 const { v4: uuidv4 } = require('uuid');
 const Comment = require('../model/Comment');
-
 const { OpenAI } = require('openai');
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const esprima = require('esprima');
+const vm = require('vm');
 
+// Instead of Configuration/OpenAIApi, we create an instance of OpenAI directly:
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+const Item = require('../model/Item');
 const User = require('../model/User');
 const Room = require('../model/Room');
 const GameType = require('../model/GameType');
@@ -227,39 +233,339 @@ router.patch('/range/:user_id', async (req, res) => {
   }
 });
 
-router.post('/openai/generate', async (req, res) => {
+router.post('/verify', auth, async (req, res) => {
   try {
-    const { prompt } = req.body;
-    console.log('call', prompt);
+    const { inputLog } = req.body;
 
-    if (!prompt) {
-      return res.status(400).json({ error: 'Prompt is required' });
+    if (!inputLog || !Array.isArray(inputLog) || inputLog.length === 0) {
+      return res.status(400).json({ error: 'Input log is required, must be an array, and cannot be empty' });
     }
 
+    console.log('🎮 Verifying game with input log:', JSON.stringify(inputLog, null, 2));
+
     const aiResponse = await openai.chat.completions.create({
-      model: 'gpt-4',
+      model: 'o3-mini',
       messages: [
         {
           role: 'system',
-          content:
-            'You are an expert game developer who creates HTML5/JavaScript games using p5.js or Phaser.js. Optimize the code for better performance and there should be only one code part.  Game code should be start with \\`\\`\\`javascript and end with \\`\\`\\`',
+          content: `
+            You are an expert game rule analyzer. Given a log of player inputs, determine the game's status, outcome, and whether it had 100% user interaction.
+            - The input log is an array of objects with { timestamp, action, details }.
+            - **User Interaction Check**: 
+              - Consider actions like 'click', 'guessLetter', 'spin', 'move', 'RESTART_BUTTON_CLICK', or similar as user-initiated.
+              - Exclude actions like 'win', 'loss', or 'update' unless explicitly tied to a user action (e.g., details indicate user input).
+              - Return "false" for hasUserInteraction if no clear user-initiated actions are found or if all actions appear automated.
+            - Analyze the sequence of actions and timestamps to infer:
+              - **Game Status**: "started" (first action), "ongoing" (continued actions), or "ended" (conditions met or no recent activity).
+              - **Outcome**: "win", "loss", or "other" (e.g., ongoing or unclear).
+              - **Multiplier**: Default to 2 unless specific actions imply otherwise (e.g., a 'spin' landing on a number in details).
+            - Generic rules:
+              - First user action marks "started".
+              - Explicit 'win' or 'loss' actions mark "ended" with that outcome, if preceded by user interaction.
+              - Continuous user actions without 'win' or 'loss' mark "ongoing".
+              - If no actions for >30 seconds from the last timestamp to now (current timestamp: ${Date.now()}), assume "ended" with "other".
+            - Return a JSON object with:
+              - hasUserInteraction: true/false (true only if 100% of relevant actions are user-initiated)
+              - status: "started", "ongoing", or "ended"
+              - result: "win", "loss", or "other"
+              - multiplier: The winning multiplier (number, default 2)
+              - reason: A detailed explanation of the decision
+            - Make reasonable assumptions and note them in the reason.
+          `,
         },
         {
           role: 'user',
-          content: `Generate a simple JavaScript game using p5.js based on this idea: ${prompt}. 
-                  - Use improved, more detailed graphics and animations.
-                  - Include robust error handling to ensure the game loads reliably.
-                  - Make sure the code is well-organized and clearly commented.`,
+          content: `
+            Input Log: ${JSON.stringify(inputLog)}
+            Analyze the game state, determine its status, outcome, multiplier, and confirm 100% user interaction based only on the input log.
+          `,
         },
       ],
+      max_completion_tokens: 10000,
     });
 
-    const generatedGameCode = aiResponse.choices[0]?.message?.content?.trim();
-    console.log(generatedGameCode);
-    res.json({ gameCode: generatedGameCode });
+    const rawResponse = aiResponse?.choices?.[0]?.message?.content?.trim() || '{}';
+    let result;
+    try {
+      result = JSON.parse(rawResponse);
+    } catch (e) {
+      console.error('Failed to parse AI response:', rawResponse);
+      result = { 
+        hasUserInteraction: false, 
+        status: 'error', 
+        result: 'error', 
+        multiplier: 0, 
+        reason: 'Failed to analyze game state' 
+      };
+    }
+
+    // Ensure required fields are present and valid
+    if (
+      typeof result.hasUserInteraction !== 'boolean' || 
+      !result.status || 
+      !result.result || 
+      !result.reason || 
+      typeof result.multiplier !== 'number'
+    ) {
+      result = {
+        hasUserInteraction: false,
+        status: 'error',
+        result: 'error',
+        multiplier: 0,
+        reason: 'Invalid AI response format',
+      };
+    }
+
+    console.log('🎮 Has User Interaction:', result.hasUserInteraction);
+    console.log('🎮 Game Status:', result.status);
+    console.log('🏆 Game Result:', result.result);
+    console.log('✖️ Multiplier:', result.multiplier);
+    console.log('📋 Reason:', result.reason);
+
+    res.json(result);
   } catch (error) {
-    console.error('OpenAI API error:', error);
-    res.status(500).json({ error: 'Failed to generate game' });
+    console.error('Error verifying game:', error);
+    res.status(500).json({
+      hasUserInteraction: false,
+      status: 'error',
+      result: 'error',
+      multiplier: 0,
+      reason: 'Internal server error',
+    });
+  }
+});
+
+router.get('/proxy-asset', async (req, res) => {
+  const { url } = req.query;
+  if (!url) {
+    return res.status(400).json({ error: 'Asset URL is required' });
+  }
+
+  try {
+    const assetResponse = await axios.get(url, { responseType: 'arraybuffer' });
+    const contentType = assetResponse.headers['content-type'];
+    res.set('Content-Type', contentType);
+    res.set('Access-Control-Allow-Origin', '*'); // Allow all origins
+    res.send(assetResponse.data);
+  } catch (error) {
+    console.error('Error proxying asset:', error.message);
+    res.status(500).json({ error: 'Failed to fetch asset' });
+  }
+});
+
+router.post('/openai/generate', auth, async (req, res) => {
+  try {
+    const { prompt, imageUrls = [] } = req.body || {};
+    const cost = 0.01;
+
+    if (cost > req.user.balance) {
+      return res.json({
+        success: false,
+        message: 'NOT ENUFF FUNDS AT THIS MEOWMENT',
+      });
+    }
+
+    const newTransaction = new Transaction({
+      user: req.user,
+      amount: -cost,
+      description: 'Generated AI game',
+    });
+
+    req.user.balance -= cost;
+    req.user.updated_at = new Date();
+
+    await Promise.all([
+      saveDocumentWithRetry(req.user),
+      saveDocumentWithRetry(newTransaction),
+    ]);
+
+    socket.newTransaction(newTransaction);
+
+    console.log('🎮 Generating game with prompt:', prompt);
+    console.log('🖼️ Using images:', imageUrls);
+
+    if (!prompt || typeof prompt !== 'string') {
+      return res.status(400).json({ error: 'Prompt is required and must be a string' });
+    }
+
+    if (!Array.isArray(imageUrls)) {
+      return res.status(400).json({ error: 'imageUrls must be an array' });
+    }
+
+    // Extract URLs from prompt as fallback
+    const urlRegex = /https?:\/\/[^\s]+?\.(jpg|jpeg|png|mp3|wav|ogg)/gi;
+    const promptUrls = (prompt.match(urlRegex) || []).filter(url => url.length < 500);
+    const allImageUrls = imageUrls.length > 0 ? imageUrls : promptUrls.filter(url => /\.(jpg|jpeg|png)$/i.test(url));
+    const audioUrls = promptUrls.filter(url => /\.(mp3|wav|ogg)$/i.test(url));
+
+    const proxiedAssets = {
+      images: allImageUrls
+        .filter(url => /\.(jpg|jpeg|png)$/i.test(url))
+        .map((url, i) => ({ key: `image${i}`, proxiedUrl: url })),
+      audio: audioUrls
+        .map((url, i) => ({ key: `audio${i}`, proxiedUrl: url })),
+    };
+
+    console.log('Backend proxiedAssets:', JSON.stringify(proxiedAssets));
+
+    let generatedGameCode = null;
+    const maxAttempts = 3;
+    const timeoutMs = 300000;
+    const maxCompletionTokens = 100000;
+
+    for (let attempts = 0; attempts < maxAttempts && !generatedGameCode; attempts++) {
+      console.log(`🔄 [Attempt ${attempts + 1}/${maxAttempts}] Calling OpenAI API with ${maxCompletionTokens} tokens...`);
+      const userPrompt = attempts > 0 ? `${prompt} (Ensure complete Phaser.Scene structure and accurate prompt interpretation)` : prompt;
+
+      try {
+        const apiCall = openai.chat.completions.create({
+          model: 'o3-mini',
+          messages: [
+            {
+              role: 'system',
+              content: `
+          You are an expert Phaser.js game developer using Phaser 3.60+. Generate a complete, working Phaser.js game based on the user's prompt:
+          - Carefully interpret the prompt to determine game type (e.g., platformer, clicker, puzzle), mechanics, win conditions, and multipliers.
+          - Support complex games with multiple scenes, physics (e.g., Arcade Physics), and advanced interactions if specified.
+          - Use pre-proxied assets from the global 'proxiedAssets' object ({ images: [{ key, proxiedUrl }], audio: [{ key, proxiedUrl }] }) when available.
+          - Safely handle proxiedAssets:
+            - Check if proxiedAssets exists and is an object.
+            - Check if proxiedAssets.images and proxiedAssets.audio are arrays with length > 0 before accessing elements.
+            - Verify each item (e.g., proxiedAssets.images[0]) exists and has key/proxiedUrl before using.
+          - For additional assets not in proxiedAssets:
+            - Send window.parent.postMessage({ type: 'PROXY_IMAGE', data: { key: 'unique-key', url: 'image-url' } }, '*') for images.
+            - Send window.parent.postMessage({ type: 'PROXY_AUDIO', data: { key: 'unique-key', url: 'audio-url' } }, '*') for audio.
+            - Store pending assets in Maps (pendingImages, pendingAudio) and load dynamically on PROXY_IMAGE_RESULT or PROXY_AUDIO_RESULT.
+          - Show multipliers on win using this.add.text().
+          - Use professional UI with glassy panels, animated transitions, and cyberpunk aesthetics.
+          - Ensure compatibility with Phaser 3.60+ using scale: { mode: Phaser.Scale.RESIZE, autoCenter: Phaser.Scale.CENTER_BOTH }.
+          - Include a restart button triggering scene.restart() and a GAME_RESULT message with result 'restart'.
+          - Track user inputs in an inputLog array ({ timestamp, action, details }) and send via window.parent.postMessage({ type: 'INPUT_LOG', inputLog }, '*').
+          - Load pre-proxied assets in preload() and play audio in create() if available.
+          - Handle dynamic assets in create() or update() based on PROXY_IMAGE_RESULT or PROXY_AUDIO_RESULT messages.
+          - Handle VERIFY_RESULT messages from the parent to determine game outcome, sending GAME_RESULT with result and multiplier.
+          - Structure the code as:
+            - One or more classes extending Phaser.Scene with preload(), create(), and update() as needed.
+            - A const config object defining the game setup with scene: [Scene1, Scene2, ...] for multi-scene games.
+            - A new Phaser.Game(config) instantiation.
+          - If the prompt is vague, create a simple interactive scene with a clickable object and a 2x multiplier.
+          - Wrap in a self-executing function with try-catch showing detailed errors.
+          - Add console.log statements for debugging key steps (e.g., asset loading, scene transitions).
+          - Optimize for larger codebases by modularizing logic where possible and avoiding redundant code.
+          - Return only JavaScript code inside \`\`\`javascript and \`\`\`.
+        `,
+            },
+            {
+              role: 'user',
+              content: `Create a Phaser.js game based on: "${userPrompt}". Use pre-proxied assets from 'proxiedAssets': ${JSON.stringify(proxiedAssets)}. Ensure error-free, complete code that accurately reflects the prompt and supports complex game mechanics if specified.`,
+            },
+          ],
+          max_completion_tokens: maxCompletionTokens,
+        });
+
+        const aiResponse = await Promise.race([apiCall, new Promise((_, reject) => setTimeout(() => reject(new Error('API call timed out')), timeoutMs))]);
+        const rawGameCode = aiResponse?.choices?.[0]?.message?.content?.trim() || '';
+        const extractedCodeMatch = rawGameCode.match(/```javascript([\s\S]*?)```/);
+        let candidateCode = extractedCodeMatch ? extractedCodeMatch[1].trim() : rawGameCode;
+
+        if (!candidateCode) {
+          console.warn(`Attempt ${attempts + 1}: No valid code generated`);
+          continue;
+        }
+
+        // Syntax Validation
+        try {
+          esprima.parseScript(candidateCode);
+          console.log(`Attempt ${attempts + 1}: Syntax is valid`);
+        } catch (syntaxError) {
+          console.warn(`Attempt ${attempts + 1}: Syntax error - ${syntaxError.message}`);
+          candidateCode = null;
+          continue;
+        }
+
+        // Structural Validation
+        const hasScene = candidateCode.match(/class\s+\w+\s+extends\s+Phaser\.Scene/);
+        const hasPreload = candidateCode.match(/preload\s*\(\s*\)/);
+        const hasCreate = candidateCode.match(/create\s*\(\s*\)/);
+        const hasConfig = candidateCode.match(/const\s+config\s*=/);
+        const hasGameInstantiation = candidateCode.match(/new\s+Phaser\.Game\s*\(/);
+        if (!hasScene || !hasPreload || !hasCreate || !hasConfig || !hasGameInstantiation) {
+          console.warn(`Attempt ${attempts + 1}: Missing components`);
+          candidateCode = null;
+          continue;
+        }
+
+        // Enhanced Sandbox Validation
+        const sandbox = {
+          console: { log: () => { }, warn: () => { }, error: () => { } },
+          window: { addEventListener: () => { }, parent: { postMessage: () => { } } },
+          proxiedAssets: proxiedAssets,
+          Phaser: {
+            Scene: class MockScene {
+              constructor() {
+                this.load = {
+                  image: (key, url) => {
+                    if (!proxiedAssets.images.some(img => img?.key === key)) {
+                      throw new Error(`Image asset with key '${key}' not found in proxiedAssets.images`);
+                    }
+                  },
+                  audio: (key, url) => {
+                    if (!proxiedAssets.audio.some(aud => aud?.key === key)) {
+                      throw new Error(`Audio asset with key '${key}' not found in proxiedAssets.audio`);
+                    }
+                  },
+                  on: () => { },
+                  start: () => { },
+                };
+                this.add = {
+                  image: () => ({ setDisplaySize: () => { }, setInteractive: () => { } }),
+                  rectangle: () => ({ setInteractive: () => { }, setStrokeStyle: () => { } }),
+                  text: () => ({ setOrigin: () => { }, setInteractive: () => { } }),
+                };
+                this.sound = { play: () => { }, get: () => true, add: () => { } };
+                this.tweens = { add: () => { } };
+                this.scale = { width: 800, height: 600, on: () => { } };
+                this.time = { delayedCall: () => { } };
+                this.textures = { exists: (key) => proxiedAssets.images.some(img => img?.key === key) };
+              }
+            },
+            Game: function () { },
+            Scale: { RESIZE: 1, CENTER_BOTH: 1 },
+            AUTO: 1,
+            Math: { Between: () => 0 },
+          },
+        };
+        try {
+          vm.runInNewContext(candidateCode, sandbox, { timeout: 10000 });
+          console.log(`Attempt ${attempts + 1}: Sandbox execution successful`);
+        } catch (runtimeError) {
+          console.warn(`Attempt ${attempts + 1}: Runtime error - ${runtimeError.message}`);
+          candidateCode = null;
+          continue;
+        }
+
+        generatedGameCode = candidateCode;
+        console.log(`✅ Attempt ${attempts + 1}: Game code validated`);
+      } catch (apiError) {
+        console.error(`Attempt ${attempts + 1} failed:`, apiError.message);
+        if (attempts === maxAttempts - 1) throw new Error('All attempts failed');
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+      }
+    }
+
+    if (!generatedGameCode) {
+      throw new Error('Failed to generate valid game code after all attempts');
+    }
+
+    res.json({ finalGame: generatedGameCode });
+  } catch (error) {
+    console.error('Unexpected error in route handler:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: error.message.includes('timed out')
+        ? 'Game generation timed out. Please try again or simplify your prompt.'
+        : 'Failed to generate game. Please try again.',
+    });
   }
 });
 
@@ -291,6 +597,7 @@ router.patch('/strategies/:user_id', async (req, res) => {
     });
   }
 });
+
 router.patch('/prompt/:user_id', async (req, res) => {
   const { user_id } = req.params;
   const { prompt } = req.body;
@@ -729,21 +1036,21 @@ router.patch('/room/:id/:type', auth, async (req, res) => {
   const updateQuery =
     type === 'view'
       ? {
-          $set: {
-            views: { $concatArrays: ['$views', [req.user._id]] },
-          },
-        }
+        $set: {
+          views: { $concatArrays: ['$views', [req.user._id]] },
+        },
+      }
       : {
-          $set: {
-            [`${type}s`]: {
-              $cond: [
-                { $in: [req.user._id, `$${type}s`] },
-                { $setDifference: [`$${type}s`, [req.user._id]] },
-                { $concatArrays: [`$${type}s`, [req.user._id]] },
-              ],
-            },
+        $set: {
+          [`${type}s`]: {
+            $cond: [
+              { $in: [req.user._id, `$${type}s`] },
+              { $setDifference: [`$${type}s`, [req.user._id]] },
+              { $concatArrays: [`$${type}s`, [req.user._id]] },
+            ],
           },
-        };
+        },
+      };
   try {
     const room = await Room.findOneAndUpdate({ _id: id }, [updateQuery], {
       new: true,
@@ -770,7 +1077,7 @@ router.get('/room/:id', async (req, res) => {
         path: 'room',
         model: Room,
         select:
-          '_id winnings pool_id ticker battles image tax website_link x_link telegram_link selectedStrategy commission username creator status hosts room_number game_type bet_amount user_bet host_pr created_at',
+          '_id winnings gameCode pool_id ticker battles image tax website_link x_link telegram_link selectedStrategy commission username creator status hosts room_number game_type bet_amount user_bet host_pr created_at',
       })
       .populate({
         path: 'game_type',
@@ -806,6 +1113,7 @@ router.get('/room/:id', async (req, res) => {
         image: room['image'],
         ticker: room['ticker'],
         pool_id: room['pool_id'],
+        gameCode: room['gameCode'],
         x_link: room['x_link'],
         tax: room['tax'],
         website_link: room['website_link'],
@@ -1312,9 +1620,9 @@ const getRoomList = async (game_type) => {
     // Return all matching rooms with no skip/limit
     const preRooms = await Room.find(search_condition)
       .select(
-        '_id name ticker selectedStrategy image description room_number ' +
-          'creator battles username joiners game_type qs_game_type is_private ' +
-          'bet_amount user_bet pr host_pr status created_at updated_at hosts',
+        '_id name ticker image description room_number ' +
+        'creator battles username joiners game_type qs_game_type is_private ' +
+        'bet_amount user_bet pr host_pr endgame_amount status created_at updated_at hosts',
       )
       .populate({
         path: 'creator',
@@ -1368,6 +1676,7 @@ const getRoomList = async (game_type) => {
             qs_game_type: room.qs_game_type,
             bet_amount: room.bet_amount,
             pr: room.pr,
+            endgame_amount: room.endgame_amount,
             host_pr: room.host_pr,
             room_name: room.game_type.short_name + '-' + room.room_number,
             total_stakes: room.hosts.reduce((acc, host) => acc + host.stake, 0),
@@ -1379,7 +1688,6 @@ const getRoomList = async (game_type) => {
             updated_at: room.updated_at,
             battles: room.battles,
             hosts: room.hosts,
-            selectedStrategy: room.selectedStrategy,
             winnings: parseFloat(room.user_bet),
           };
 
@@ -1420,6 +1728,7 @@ router.post('/rooms', auth, async (req, res) => {
       room_password,
       connectedAccount,
       prompt,
+      gameCode,
       qs_nation,
     } = req.body;
 
@@ -1431,13 +1740,13 @@ router.post('/rooms', auth, async (req, res) => {
       totalWagered,
       username,
       dailyWithdrawals,
-      isWithdrawing,
+      isWithdrawing
     } = req.user;
 
     if (isWithdrawing) {
       return res.json({
         success: false,
-        error: 'WITHDRAWAL IN PROGRESS. Please wait until it completes.',
+        error: 'WITHDRAWAL IN PROGRESS. Please wait until it completes.'
       });
     }
 
@@ -1456,10 +1765,10 @@ router.post('/rooms', auth, async (req, res) => {
       });
     }
 
-    if (bet_amount < 0.0005) {
+    if (bet_amount < 0.001) {
       return res.json({
         success: false,
-        message: 'MEOWNIMUM BUY-IN IS 0.0005 SOL!',
+        message: 'MEOWNIMUM BUY-IN IS 0.001 SOL!',
       });
     }
     if (endgame_type && parseFloat(endgame_amount) < bet_amount) {
@@ -1487,6 +1796,7 @@ router.post('/rooms', auth, async (req, res) => {
 
     // get gameType doc & compute room_number
     const roomCount = await Room.countDocuments({});
+    console.log("game_type", game_type)
     const gameTypeDoc = await GameType.findOne({
       game_type_id: parseInt(game_type),
     });
@@ -1533,6 +1843,7 @@ router.post('/rooms', auth, async (req, res) => {
       image,
       ticker,
       x_link,
+      gameCode,
       prompt,
       telegram_link,
       website_link,
@@ -1999,7 +2310,7 @@ router.post('/pump', auth, async (req, res) => {
     if (req.user.isWithdrawing) {
       return res.json({
         success: false,
-        error: 'WITHDRAWAL IN PROGRESS. Please wait until it completes.',
+        error: 'WITHDRAWAL IN PROGRESS. Please wait until it completes.'
       });
     }
 
@@ -2413,7 +2724,7 @@ router.post('/jeet', auth, async (req, res) => {
     if (req.user.isWithdrawing) {
       return res.json({
         success: false,
-        error: 'WITHDRAWAL IN PROGRESS. Please wait until it completes.',
+        error: 'WITHDRAWAL IN PROGRESS. Please wait until it completes.'
       });
     }
 
@@ -3103,15 +3414,15 @@ router.post('/getGlobalChatLogs', async (req, res) => {
           replyTo && replyTo.length > 0 ? replyTo[0] : null;
         const transformedReplyTo = extractedReplyTo
           ? {
-              username: extractedReplyTo.sender?.username ?? '',
-              senderId: extractedReplyTo.sender?._id ?? '',
-              avatar: extractedReplyTo.sender?.avatar ?? '',
-              rank: extractedReplyTo.sender?.totalWagered ?? '',
-              accessory: extractedReplyTo.sender?.accessory ?? '',
-              message: extractedReplyTo.message,
-              messageType: extractedReplyTo.messageType,
-              time: moment(extractedReplyTo.created_at).format('hh:mm'),
-            }
+            username: extractedReplyTo.sender?.username ?? '',
+            senderId: extractedReplyTo.sender?._id ?? '',
+            avatar: extractedReplyTo.sender?.avatar ?? '',
+            rank: extractedReplyTo.sender?.totalWagered ?? '',
+            accessory: extractedReplyTo.sender?.accessory ?? '',
+            message: extractedReplyTo.message,
+            messageType: extractedReplyTo.messageType,
+            time: moment(extractedReplyTo.created_at).format('hh:mm'),
+          }
           : null;
 
         return {
@@ -3327,7 +3638,7 @@ router.post('/tip', auth, async (req, res) => {
     if (user.isWithdrawing) {
       return res.json({
         success: false,
-        error: 'WITHDRAWAL IN PROGRESS. Please wait until it completes.',
+        error: 'WITHDRAWAL IN PROGRESS. Please wait until it completes.'
       });
     }
 

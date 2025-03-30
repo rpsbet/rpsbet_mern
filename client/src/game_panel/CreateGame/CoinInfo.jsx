@@ -193,7 +193,7 @@ const CoinInfo = ({
               }}
               style={{
                 fontSize: '12px',
-                color: '#ff0000',
+                color: '#D32F2F',
                 textDecoration: 'underline',
                 padding: '0 5px',
                 cursor: 'pointer',

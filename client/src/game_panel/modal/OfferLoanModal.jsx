@@ -241,8 +241,8 @@ function OfferLoanModal() {
       );
       return;
     }
-    if (parseFloat(responseText) < 0.0005) {
-      dispatch(errorMsgBar('MEOWNIMUM IS 0.0005 SOL'));
+    if (parseFloat(responseText) < 0.001) {
+      dispatch(errorMsgBar('MEOWNIMUM IS 0.001 SOL'));
       return;
     }
 
@@ -479,7 +479,7 @@ function OfferLoanModal() {
                           >
                             <FontAwesomeIcon
                               icon={faExclamationTriangle}
-                              color="#ff0000"
+                              color="#D32F2F"
                             />
                             <Typography variant="body2" color="error">
                               PLEASE ENSURE THE LOAN AMOUNT IS NO MORE THAN 10X
@@ -725,7 +725,7 @@ function OfferLoanModal() {
             <Box
               component="span"
               sx={{
-                color: '#ff0000',
+                color: '#D32F2F',
                 textDecoration: 'underline',
                 cursor: 'pointer',
               }}
@@ -740,7 +740,7 @@ function OfferLoanModal() {
             <Box
               sx={{
                 border: '1px solid',
-                borderColor: isDarkMode ? '#444' : '#ccc',
+                borderColor: isDarkMode ? '#607D8B' : '#ccc',
                 p: 2,
                 borderRadius: 1,
                 mb: 1,
@@ -751,14 +751,14 @@ function OfferLoanModal() {
               <ol style={{ paddingLeft: '20px' }}>
                 <li>
                   The loan amount is{' '}
-                  <Box component="span" sx={{ color: '#ff0000' }}>
+                  <Box component="span" sx={{ color: '#D32F2F' }}>
                     [{convertToCurrency(parseFloat(responseText), solPrice)}]
                   </Box>
                   .
                 </li>
                 <li>
                   The loan period is{' '}
-                  <Box component="span" sx={{ color: '#ff0000' }}>
+                  <Box component="span" sx={{ color: '#D32F2F' }}>
                     [{loanPeriodText}]
                   </Box>{' '}
                   days.
@@ -769,7 +769,7 @@ function OfferLoanModal() {
                 </li>
                 <li>
                   Interest may be applicable as per the agreed Interest Rate:{' '}
-                  <Box component="span" sx={{ color: '#ff0000' }}>
+                  <Box component="span" sx={{ color: '#D32F2F' }}>
                     [{parseFloat(interestRateText).toFixed(2)}%]
                   </Box>
                   .

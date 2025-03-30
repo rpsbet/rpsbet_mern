@@ -140,7 +140,7 @@ const Leaderboards = ({
                                     playerData.net_profit > 0
                                       ? ['#00FF00']
                                       : playerData.net_profit < 0
-                                      ? ['#FF0000']
+                                      ? ['#D32F2F']
                                       : ['#808080'],
                                   shadeIntensity: 1,
                                   opacityFrom: 0.7,
