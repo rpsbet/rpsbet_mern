@@ -190,7 +190,7 @@ function CatsinoModalOverlay({
                 zIndex: 999,      // ensure on top
               }}
             >
-              💘 Valentine’s Day 💘
+              STEALTH LAUNCH • 2ND APRIL 2025!
             </Box>
 
             <Box
@@ -285,25 +285,27 @@ function CatsinoModalOverlay({
               /> */}
             </Box>
 
-            <Button
-              variant="contained"
-              sx={{
-                backgroundColor: 'rgb(98, 3, 172)',
-                color: '#fff',
-                borderRadius: 2,
-                px: 4,
-                py: 1.2,
-                boxShadow: '0 0 8px rgba(98, 3, 172, 0.4)',
-                transition: '0.2s',
-                '&:hover': {
-                  backgroundColor: 'rgb(110, 15, 182)',
-                  boxShadow: '0 0 12px rgba(98, 3, 172, 0.6)'
-                }
-              }}
-              onClick={handleCountdownButtonClick}
-            >
-              Investor Portal
-            </Button>
+            <a href="https://www.youtube.com/@rpsdotgame" target="_blank" rel="noopener noreferrer">
+              <Button
+                variant="contained"
+                sx={{
+                  backgroundColor: 'rgb(98, 3, 172)',
+                  color: '#fff',
+                  borderRadius: 2,
+                  px: 4,
+                  py: 1.2,
+                  boxShadow: '0 0 8px rgba(98, 3, 172, 0.4)',
+                  transition: '0.2s',
+                  '&:hover': {
+                    backgroundColor: 'rgb(110, 15, 182)',
+                    boxShadow: '0 0 12px rgba(98, 3, 172, 0.6)'
+                  }
+                }}
+                onClick={handleCountdownButtonClick}
+              >
+                WATCH TRAILER
+              </Button>
+            </a>
           </Box>
         </Grid>
 
@@ -359,7 +361,6 @@ function CatsinoModalOverlay({
                   boxShadow: '0 0 12px rgba(98, 3, 172, 0.6)'
                 }
               }}
-              disabled
               onClick={handleYoutubeButtonClick}
             >
               Game Portal
@@ -426,7 +427,7 @@ function CatsinoModalOverlay({
               transition: '0.2s',
               '&:hover': { color: '#1DA1F2' }
             }}
-            onClick={() => window.open('https://x.com/RPSDG_SOL', '_blank')}
+            onClick={() => window.open('https://x.com/rpsdotgame', '_blank')}
           >
             <FontAwesomeIcon icon={faXTwitter} size="lg" />
           </IconButton>
@@ -437,7 +438,7 @@ function CatsinoModalOverlay({
               transition: '0.2s',
               '&:hover': { color: '#0088cc' }
             }}
-            onClick={() => window.open('https://t.me/RPSDOTGAMESOL', '_blank')}
+            onClick={() => window.open('https://t.me/rpsgamesol', '_blank')}
           >
             <FontAwesomeIcon icon={faTelegram} size="lg" />
           </IconButton>
@@ -460,7 +461,7 @@ function CatsinoModalOverlay({
               '&:hover': { color: '#ff0050' }
             }}
             onClick={() =>
-              window.open('https://www.tiktok.com/@rpsdotgames', '_blank')
+              window.open('https://www.tiktok.com/@rpsdotgame', '_blank')
             }
           >
             <FontAwesomeIcon icon={faTiktok} size="lg" />

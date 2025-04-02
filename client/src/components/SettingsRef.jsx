@@ -11,6 +11,21 @@ import {
   useMediaQuery,
   Typography,
   Box,
+  Slider,
+  Tabs,
+  Tab,
+  FormControlLabel,
+  Checkbox,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow
 } from '@mui/material';
 import LockIcon from '@mui/icons-material/Lock';
 import SendIcon from '@mui/icons-material/Send';
@@ -20,6 +35,7 @@ import axios from '../util/Api';
 import * as Babel from '@babel/standalone';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDice, faCoins, faRocket, faGem, faTrophy, faRedo, faBomb, faStar } from '@fortawesome/free-solid-svg-icons';
+import Matter from 'matter-js'; // Add Matter.js import
 
 const decodeHtmlEntity = (html) => {
   const txt = document.createElement('textarea');
@@ -86,7 +102,7 @@ const SettingsRef = ({
         setComponentError(null);
 
         const cleanedCode = gameCode
-          .replace(/import .*? from .+?;/g, '')
+          .replace(/import .*? from .+?;/g, '') // Remove all imports
           .replace('export default App;', '')
           .trim();
 
@@ -104,10 +120,19 @@ const SettingsRef = ({
           'Typography',
           'TextField',
           'Button',
+          'Slider',
           'CircularProgress',
           'logEvent',
-          'FontAwesomeIcon', // Add FontAwesomeIcon
-          'faDice', 'faCoins', 'faRocket', 'faGem', 'faTrophy', 'faRedo', 'faBomb', 'faStar',
+          'FontAwesomeIcon',
+          'faDice',
+          'faCoins',
+          'faRocket',
+          'faGem',
+          'faTrophy',
+          'faRedo',
+          'faBomb',
+          'faStar',
+          'Matter', // Add Matter.js to the factory function
           `${transpiledCode}; return App;`
         );
 
@@ -120,10 +145,19 @@ const SettingsRef = ({
           Typography,
           TextField,
           Button,
+          Slider,
           CircularProgress,
           logEvent,
-          FontAwesomeIcon, // Pass FontAwesomeIcon
-          faDice, faCoins, faRocket, faGem, faTrophy, faRedo, faBomb, faStar
+          FontAwesomeIcon,
+          faDice,
+          faCoins,
+          faRocket,
+          faGem,
+          faTrophy,
+          faRedo,
+          faBomb,
+          faStar,
+          Matter // Pass Matter.js to the generated component
         );
 
         if (typeof GeneratedApp === 'function') {
@@ -149,10 +183,10 @@ const SettingsRef = ({
   const preProxyAssets = async (prompt) => {
     const promptLower = prompt.toLowerCase();
     const urlRegex = /https?:\/\/[^\s]+?\.(jpg|jpeg|png|mp3|wav|ogg)/gi;
-    const promptUrls = (prompt.match(urlRegex) || []).filter(url => url.length < 500);
+    const promptUrls = (prompt.match(urlRegex) || []).filter((url) => url.length < 500);
 
-    const imageUrlsFromPrompt = promptUrls.filter(url => /\.(jpg|jpeg|png)$/i.test(url));
-    const audioUrlsFromPrompt = promptUrls.filter(url => /\.(mp3|wav|ogg)$/i.test(url));
+    const imageUrlsFromPrompt = promptUrls.filter((url) => /\.(jpg|jpeg|png)$/i.test(url));
+    const audioUrlsFromPrompt = promptUrls.filter((url) => /\.(mp3|wav|ogg)$/i.test(url));
 
     console.log('Detected image URLs in prompt:', imageUrlsFromPrompt);
     console.log('Detected audio URLs in prompt:', audioUrlsFromPrompt);

@@ -20,6 +20,7 @@ import {
   Typography,
   Box,
   useMediaQuery,
+  Drawer
 } from '@mui/material';
 import {
   validateIsAuthenticated,
@@ -30,6 +31,7 @@ import Lottie from 'react-lottie';
 import ImageResultModal from '../modal/ImageResultModal';
 import { convertToCurrency } from '../../util/conversion';
 import * as Babel from '@babel/standalone';
+import Matter from 'matter-js'; // Add Matter.js import
 
 function Custom(props) {
   const dispatch = useDispatch();
@@ -193,7 +195,7 @@ function Custom(props) {
 
       setGameStartedCount((prev) => prev + 1);
     },
-    [bet_amount, join, onChangeState, solPrice, playSound] // Added playSound to dependencies
+    [bet_amount, join, onChangeState, solPrice, playSound]
   );
 
   const onBtnBetClick = async (result, multiplier) => {
@@ -271,7 +273,15 @@ function Custom(props) {
           'CircularProgress',
           'logEvent',
           'FontAwesomeIcon',
-          'faDice', 'faCoins', 'faRocket', 'faGem', 'faTrophy', 'faRedo', 'faBomb', 'faStar',
+          'faDice',
+          'faCoins',
+          'faRocket',
+          'faGem',
+          'faTrophy',
+          'faRedo',
+          'faBomb',
+          'faStar',
+          'Matter', // Add Matter.js to the factory function
           `${transpiledCode}; return App;`
         );
 
@@ -287,7 +297,15 @@ function Custom(props) {
           CircularProgress,
           logEvent,
           FontAwesomeIcon,
-          faDice, faCoins, faRocket, faGem, faTrophy, faRedo, faBomb, faStar
+          faDice,
+          faCoins,
+          faRocket,
+          faGem,
+          faTrophy,
+          faRedo,
+          faBomb,
+          faStar,
+          Matter // Pass Matter.js to the generated component
         );
 
         if (typeof GeneratedApp === 'function') {
