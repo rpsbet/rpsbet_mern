@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { connect } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
 // MUI v5
 import {
@@ -36,25 +36,22 @@ import {
 import { convertToCurrency } from '../../util/conversion';
 
 function LeaderboardsModal({
-  // Modal props
+  // Modal props (only keep parent-passed props)
   modalIsOpen,
   closeModal,
-
-  // Redux props
-  isDarkMode,
-  equityChart, // from Redux store
-  receiptChart, // from Redux store
-  leaderboards,
-  loading,
-  solPrice,
-  loadingEquityChart,
-  loadingReceiptChart,
-
-  // Redux actions
-  fetchLeaderboardsData,
-  fetchEquityDistribution,
-  fetchReceiptStatistics,
 }) {
+  const dispatch = useDispatch();
+
+  // Replace mapStateToProps with useSelector
+  const isDarkMode = useSelector((state) => state.auth.isDarkMode);
+  const equityChart = useSelector((state) => state.customerReducer.equityChart);
+  const receiptChart = useSelector((state) => state.customerReducer.receiptChart);
+  const leaderboards = useSelector((state) => state.customerReducer.leaderboards);
+  const loading = useSelector((state) => state.customerReducer.loading);
+  const solPrice = useSelector((state) => state.logic.solPrice);
+  const loadingEquityChart = useSelector((state) => state.customerReducer.loadingEquityChart);
+  const loadingReceiptChart = useSelector((state) => state.customerReducer.loadingReceiptChart);
+
   // -------------------- Local State --------------------
   const [sortField, setSortField] = useState('gameProfit');
   const [sortOrder, setSortOrder] = useState('desc');
@@ -80,20 +77,14 @@ function LeaderboardsModal({
     (async () => {
       try {
         // Fetch everything only once per open
-        await fetchLeaderboardsData();
-        // await fetchEquityDistribution();
-        // await fetchReceiptStatistics();
+        await dispatch(fetchLeaderboardsData()); // Dispatch directly
+        // await dispatch(fetchEquityDistribution());
+        // await dispatch(fetchReceiptStatistics());
       } catch (error) {
         console.error('Error fetching leaderboards data:', error);
       }
     })();
-    // Only re-run when modalIsOpen or the (stable) fetch actions change
-  }, [
-    modalIsOpen,
-    fetchLeaderboardsData,
-    fetchEquityDistribution,
-    fetchReceiptStatistics,
-  ]);
+  }, [modalIsOpen, dispatch]); // Add dispatch to dependencies
 
   // -------------------- 2) Sync Equity Chart State From Redux --------------------
   // useEffect(() => {
@@ -120,11 +111,9 @@ function LeaderboardsModal({
   const handleSort = useCallback((field) => {
     setSortField((prevField) => {
       if (prevField === field) {
-        // Toggle asc/desc if same field
         setSortOrder((prevOrder) => (prevOrder === 'asc' ? 'desc' : 'asc'));
         return prevField;
       } else {
-        // New field => default to ascending
         setSortOrder('asc');
         return field;
       }
@@ -437,12 +426,11 @@ function LeaderboardsModal({
                           fontWeight: '600',
                           cursor: 'pointer',
                         }}
-                        onClick={() => handleSort('gameProfit')}
+                        onClick={() => handleSort('tradingProfit')} // Fixed typo: 'gameProfit' -> 'tradingProfit'
                       >
                         TRADING PROFIT{' '}
                         {sortField === 'tradingProfit' && <SortIcon />}
                       </TableCell>
-
                       <TableCell
                         sx={{
                           color: '#fff',
@@ -541,22 +529,4 @@ function LeaderboardsModal({
   );
 }
 
-// ---------------------- Redux Mappings ----------------------
-const mapStateToProps = (state) => ({
-  isDarkMode: state.auth.isDarkMode,
-  equityChart: state.customerReducer.equityChart, // array of user distribution?
-  receiptChart: state.customerReducer.receiptChart, // object with .overTenMillion, etc.
-  leaderboards: state.customerReducer.leaderboards,
-  loading: state.customerReducer.loading,
-  solPrice: state.logic.solPrice,
-  loadingEquityChart: state.customerReducer.loadingEquityChart,
-  loadingReceiptChart: state.customerReducer.loadingReceiptChart,
-});
-
-const mapDispatchToProps = {
-  fetchLeaderboardsData,
-  fetchEquityDistribution,
-  fetchReceiptStatistics,
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(LeaderboardsModal);
+export default LeaderboardsModal;

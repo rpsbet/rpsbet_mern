@@ -909,27 +909,4 @@ router.post('/add-bonus', auth, async (req, res) => {
   }
 });
 
-router.post('/updateCustomer', auth, async (req, res) => {
-  try {
-    const user = await User.findOne({ _id: req.body._id });
-    if (req.body.balance) {
-      user.balance = req.body.balance;
-    }
-
-    if (req.body.is_deleted === true || req.body.is_deleted === false) {
-      user.is_deleted = req.body.is_deleted;
-    }
-    await user.save();
-
-    res.json({
-      success: true
-    });
-  } catch (err) {
-    console.error(err);
-    res.json({
-      success: false,
-      err: message
-    });
-  }
-});
 module.exports = router;

@@ -1,23 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import styled from 'styled-components';
-import { connect, useDispatch } from 'react-redux';
-import {
-  Box,
-  Button,
-  IconButton,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableRow,
-  Tooltip,
-  Menu,
-  MenuItem,
-  Skeleton,
-  Pagination,
-  Typography,
-} from '@mui/material';
-import SwapHoriz from '@mui/icons-material/SwapHoriz';
+import moment from 'moment';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faTag,
@@ -26,23 +9,28 @@ import {
   faSort,
   faFilter,
 } from '@fortawesome/free-solid-svg-icons';
-
-// Redux + Others
 import {
-  acQueryItem,
-  setCurrentProductId,
-  setCurrentProductInfo,
-} from '../../../../redux/Item/item.action';
+  Box,
+  Button,
+  IconButton,
+  Menu,
+  MenuItem,
+  Skeleton,
+  Pagination,
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableRow,
+} from '@mui/material';
+import SwapHoriz from '@mui/icons-material/SwapHoriz';
+import { useSelector, useDispatch } from 'react-redux';
+import { acQueryItem, setCurrentProductId, setCurrentProductInfo } from '../../../../redux/Item/item.action';
 import { acGetCustomerInfo } from '../../../../redux/Customer/customer.action';
-import {
-  openConfirmTradeModal,
-  errorMsgBar,
-} from '../../../../redux/Notification/notification.actions';
-
+import { openConfirmTradeModal, errorMsgBar } from '../../../../redux/Notification/notification.actions';
 import Avatar from '../../../../components/Avatar';
 import PlayerModal from '../../../../game_panel/modal/PlayerModal';
-import history from '../../../../redux/history';
-
 import { convertToCurrency } from '../../../../util/conversion';
 import { renderLottieAnimation } from '../../../../util/LottieAnimations';
 import { ThemeProvider } from '@mui/material/styles';
@@ -65,18 +53,18 @@ const FilterSortContainer = styled.div`
   margin-bottom: 20px;
 `;
 
-// Force 3 items max per row
+// Force 3 items max per row (responsive)
 const ProductGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(3, 1fr); /* 3 columns max */
+  grid-template-columns: repeat(3, 1fr);
   gap: 16px;
   width: 100%;
   margin: 20px 0;
   @media (max-width: 720px) {
-    grid-template-columns: repeat(2, 1fr); /* 1 column on small screens */
+    grid-template-columns: repeat(2, 1fr);
   }
   @media (max-width: 480px) {
-    grid-template-columns: repeat(1, 1fr); /* 1 column on small screens */
+    grid-template-columns: repeat(1, 1fr);
   }
 `;
 
@@ -87,7 +75,7 @@ const PaginationContainer = styled.div`
   margin-top: 20px;
 `;
 
-// The card container (top half + bottom half)
+// The card container
 const ProductCard = styled.div`
   background-color: #2e2e2e;
   border-radius: 8px;
@@ -97,33 +85,41 @@ const ProductCard = styled.div`
   display: flex;
   flex-direction: column;
   transition: transform 0.2s;
-
   &:hover {
     transform: scale(1.03);
   }
 `;
 
-// ---------- Utility: compare owners ----------
-function areOwnersEqual(prevOwners, currentOwners) {
-  return JSON.stringify(prevOwners) === JSON.stringify(currentOwners);
-}
+const LoanAPY = styled.div`
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #28a745;
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+`;
 
-// ---------- Main Functional Component ----------
-const ProductTable = (props) => {
-  const {
-    data,
-    pages,
-    page,
-    loading,
-    acQueryItem,
-    setCurrentProductId,
-    setCurrentProductInfo,
-    openConfirmTradeModal,
-    acGetCustomerInfo,
-    user,
-    isDarkMode,
-    isLowGraphics,
-  } = props;
+const ProductCardActions = styled.div`
+  display: flex;
+  justify-content: center;
+`;
+
+const ProductTable = () => {
+  const dispatch = useDispatch();
+  const theme = getCustomTheme(useSelector((state) => state.auth.isDarkMode) ? 'dark' : 'light');
+
+  // Redux state via hooks
+  const data = useSelector((state) => state.itemReducer.itemArray);
+  const pages = useSelector((state) => state.itemReducer.pages);
+  const page = useSelector((state) => state.itemReducer.page);
+  const loading = useSelector((state) => state.itemReducer.loading);
+  const isDarkMode = useSelector((state) => state.auth.isDarkMode);
+  const user = useSelector((state) => state.auth.user);
+  const solPrice = useSelector((state) => state.logic.solPrice);
+  const isLowGraphics = useSelector((state) => state.auth.isLowGraphics);
 
   // Local state
   const [customerInfo, setCustomerInfo] = useState({});
@@ -134,26 +130,11 @@ const ProductTable = (props) => {
   const [sortCriteria, setSortCriteria] = useState('updated_at');
   const [itemType, setItemType] = useState('653ee81117c9f5ee2124564b');
 
-  const dispatch = useDispatch();
-
-  // Compare owners from previous render
+  // Reference to previous owners to avoid unnecessary fetches
   const prevOwnersRef = useRef(JSON.stringify(data?.owners || []));
 
-  // itemType map
-  const itemTypeMap = {
-    '653ee7ac17c9f5ee21245649': 'RRPS Card',
-    '653ee7df17c9f5ee2124564a': 'Game Background',
-    '653ee81117c9f5ee2124564b': 'Accessories',
-    '654231df29446bc96d689d0f': 'Tools',
-    '6542321929446bc96d689d10': 'Games',
-  };
-
-  // MUI theme
-  const theme = getCustomTheme(isDarkMode ? 'dark' : 'light');
-
   // ----- Effects -----
-
-  // Check if owners changed => fetch items
+  // Fetch items if owners change
   useEffect(() => {
     const prevOwners = prevOwnersRef.current;
     const currentOwners = JSON.stringify(data?.owners || []);
@@ -161,26 +142,24 @@ const ProductTable = (props) => {
       fetchItems();
       prevOwnersRef.current = currentOwners;
     }
-    // no deps to avoid react-hooks/exhaustive-deps
   });
 
-  // If data changes => fetch user info
+  // Fetch items on mount
   useEffect(() => {
     fetchItems();
-    // no deps
+    // eslint-disable-next-line
   }, []);
 
+  // Fetch customer info when data changes
   useEffect(() => {
     if (data && data.length > 0) {
       fetchCustomerInfo();
     }
-
-    // no deps
-  }, [data]);
+  }, [data, dispatch]);
 
   // ----- Functions -----
   const fetchItems = (criteria = sortCriteria, type = itemType) => {
-    acQueryItem(100, page, criteria, type);
+    dispatch(acQueryItem(100, page, criteria, type));
   };
 
   const fetchCustomerInfo = async () => {
@@ -190,19 +169,13 @@ const ProductTable = (props) => {
         for (const owner of product.owners) {
           if (!customerInfo[owner.user]) {
             try {
-              const info = await acGetCustomerInfo(owner.user);
+              const info = await dispatch(acGetCustomerInfo(owner.user));
               setCustomerInfo((prev) => ({
                 ...prev,
-                [owner.user]: info || {
-                  username: 'Anon',
-                  avatar: 'default-avatar-url',
-                },
+                [owner.user]: info || { username: 'Anon', avatar: 'default-avatar-url' },
               }));
             } catch (error) {
-              console.error(
-                `Error fetching customer info for ${owner.user}:`,
-                error,
-              );
+              console.error(`Error fetching customer info for ${owner.user}:`, error);
             }
           }
         }
@@ -210,15 +183,7 @@ const ProductTable = (props) => {
     }
   };
 
-  // Player Modal
-  const handleOpenPlayerModal = (creatorId) => {
-    console.log('creatorId', creatorId);
-    setSelectedCreator(creatorId);
-    setShowPlayerModal(true);
-  };
-  const handleClosePlayerModal = () => setShowPlayerModal(false);
-
-  // Filter
+  // ----- Handlers -----
   const handleFilterClick = (e) => setAnchorEl(e.currentTarget);
   const handleFilterClose = (newItemType) => {
     setAnchorEl(null);
@@ -228,7 +193,6 @@ const ProductTable = (props) => {
     }
   };
 
-  // Sort
   const handleSortClick = (e) => setSortAnchorEl(e.currentTarget);
   const handleSortClose = (newSortCriteria) => {
     setSortAnchorEl(null);
@@ -238,59 +202,55 @@ const ProductTable = (props) => {
     }
   };
 
-  // Rent / Trade logic
+  // Rent/Trade logic
   const handleTradeOrRent = (row, owner) => {
-    setCurrentProductId(row._id);
-    setCurrentProductInfo({
-      owner: owner.user,
-      productName: row.productName,
-      rentOption: owner.rentOption,
-      price: owner.price,
-    });
-
+    dispatch(setCurrentProductId(row._id));
+    dispatch(
+      setCurrentProductInfo({
+        owner: owner.user,
+        productName: row.productName,
+        rentOption: owner.rentOption,
+        price: owner.price,
+      })
+    );
     if (owner.user !== user) {
       if (row.showConfirmationModal) {
         const userConfirmed = window.confirm(row.message);
         if (userConfirmed) {
-          openConfirmTradeModal(owner.rentOption ? 'rent' : 'trade');
+          dispatch(openConfirmTradeModal(owner.rentOption ? 'rent' : 'trade'));
         } else {
           dispatch(errorMsgBar('TRADE ACTION CANCELLED,PUSSY-ED OUT'));
         }
       } else {
-        openConfirmTradeModal(owner.rentOption ? 'rent' : 'trade');
+        dispatch(openConfirmTradeModal(owner.rentOption ? 'rent' : 'trade'));
       }
     } else {
       dispatch(errorMsgBar('THIS IS LITERALLY YOURS ALREADY!'));
     }
   };
 
+  // Sorted leaderboards
+  const sortedLeaderboards = data
+    ? [...data].sort((a, b) => {
+        const aValue = a[sortCriteria];
+        const bValue = b[sortCriteria];
+        return sortCriteria === 'asc' ? aValue - bValue : bValue - aValue;
+      })
+    : [];
+
   // ----- Render -----
   return (
     <ThemeProvider theme={theme}>
-      <Box
-        sx={{
-          background: '#2D3A4A',
-          borderRadius: '0.3em',
-          p: '20px',
-        }}
-      >
+      <Box sx={{ background: '#2D3A4A', borderRadius: '0.3em', p: '20px' }}>
         <MarketplaceContainer>
           {/* Filter/Sort */}
           <FilterSortContainer>
             <div className="filters">
-              <Button
-                color="error"
-                variant="outlined"
-                onClick={handleFilterClick}
-              >
+              <Button color="error" variant="outlined" onClick={handleFilterClick}>
                 Filter&nbsp;
                 <FontAwesomeIcon icon={faFilter} />
               </Button>
-              <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={() => handleFilterClose(null)}
-              >
+              <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => handleFilterClose(null)}>
                 <MenuItem
                   onClick={() => handleFilterClose('653ee81117c9f5ee2124564b')}
                   selected={itemType === '653ee81117c9f5ee2124564b'}
@@ -299,90 +259,58 @@ const ProductTable = (props) => {
                 </MenuItem>
               </Menu>
             </div>
-
             <div className="filters">
-              <Button
-                color="error"
-                variant="outlined"
-                onClick={handleSortClick}
-              >
+              <Button color="error" variant="outlined" onClick={handleSortClick}>
                 Sort By&nbsp;
                 <FontAwesomeIcon icon={faSort} />
               </Button>
-              <Menu
-                anchorEl={sortAnchorEl}
-                open={Boolean(sortAnchorEl)}
-                onClose={() => handleSortClose(null)}
-              >
-                <MenuItem
-                  onClick={() => handleSortClose('updated_at')}
-                  selected={sortCriteria === 'updated_at'}
-                >
+              <Menu anchorEl={sortAnchorEl} open={Boolean(sortAnchorEl)} onClose={() => handleSortClose(null)}>
+                <MenuItem onClick={() => handleSortClose('updated_at')} selected={sortCriteria === 'updated_at'}>
                   Sort by CP
                 </MenuItem>
-                <MenuItem
-                  onClick={() => handleSortClose('price')}
-                  selected={sortCriteria === 'price'}
-                >
+                <MenuItem onClick={() => handleSortClose('price')} selected={sortCriteria === 'price'}>
                   Sort by Price
                 </MenuItem>
               </Menu>
             </div>
           </FilterSortContainer>
 
-          {/* If loading => skeletons */}
+          {/* Main Content */}
           {loading ? (
-            <Box
-              sx={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: 2,
-                justifyContent: 'center',
-                mt: 2,
-              }}
-            >
-              {Array.from(new Array(6)).map((_, i) => (
-                <Box key={i}>
-                  <Skeleton
-                    variant="rectangular"
-                    width={165}
-                    height={160}
-                    sx={{ mb: 1 }}
-                  />
-                  <Skeleton variant="text" width={120} />
-                  <Skeleton variant="text" width={100} />
-                </Box>
-              ))}
+            <Box sx={{ textAlign: 'center', fontStyle: 'italic', color: 'text.secondary' }}>
+              No Loans Found
             </Box>
           ) : (
             <ProductGrid>
+              {/* Conditionally render the PlayerModal */}
               {showPlayerModal && (
                 <PlayerModal
                   selectedCreator={selectedCreator}
                   modalIsOpen={showPlayerModal}
-                  closeModal={handleClosePlayerModal}
+                  closeModal={() => setShowPlayerModal(false)}
                 />
               )}
-
-              {data.map((row) => {
+              {sortedLeaderboards.map((row) => {
                 if (!row.owners?.length) return null;
                 const firstOwner = row.owners[0];
-
+                const reserves = row.loan_type === 'FRACTIONAL' ? row.fractional_amount : row.loan_amount;
                 return (
                   <ProductCard
                     key={`${row._id}-${firstOwner.user}`}
                     onClick={() => {
-                      setCurrentProductId(row._id);
-                      setCurrentProductInfo({
-                        owner: firstOwner.user,
-                        productName: row.productName,
-                        rentOption: firstOwner.rentOption,
-                        price: firstOwner.price,
-                      });
-                      history.push(`/product/${row._id}`);
+                      dispatch(setCurrentProductId(row._id));
+                      dispatch(
+                        setCurrentProductInfo({
+                          owner: firstOwner.user,
+                          productName: row.productName,
+                          rentOption: firstOwner.rentOption,
+                          price: firstOwner.price,
+                        })
+                      );
+                      // history.push(`/product/${row._id}`);
                     }}
                   >
-                    {/* TOP HALF => avatar + lottie */}
+                    {/* Top half: avatar(s) and lottie/image */}
                     <Box
                       sx={{
                         position: 'relative',
@@ -392,30 +320,20 @@ const ProductTable = (props) => {
                         justifyContent: 'center',
                       }}
                     >
-                      {/* Avatars => top-left */}
                       {row.owners.map((owner) => (
-                        <Box
-                          key={owner.user}
-                          sx={{
-                            position: 'absolute',
-                            top: 8,
-                            left: 8,
-                          }}
-                        >
+                        <Box key={owner.user} sx={{ position: 'absolute', top: 8, left: 8 }}>
                           {customerInfo[owner.user] ? (
                             <Box
                               component="a"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 e.preventDefault();
-                                handleOpenPlayerModal(
-                                  customerInfo[owner.user]._id,
-                                );
+                                setSelectedCreator(customerInfo[owner.user]._id);
+                                setShowPlayerModal(true);
                               }}
                               className="player"
                             >
                               <Avatar
-                                className="avatar"
                                 user_id={customerInfo[owner.user]._id}
                                 src={customerInfo[owner.user].avatar}
                                 rank={customerInfo[owner.user].totalWagered}
@@ -426,18 +344,11 @@ const ProductTable = (props) => {
                               />
                             </Box>
                           ) : (
-                            <Skeleton
-                              variant="circular"
-                              width={40}
-                              height={40}
-                            />
+                            <Skeleton variant="circular" width={40} height={40} />
                           )}
                         </Box>
                       ))}
-
-                      {/* Lottie or Image => center */}
-                      {row.image &&
-                      renderLottieAnimation(row.image, isLowGraphics) ? (
+                      {row.image && renderLottieAnimation(row.image, isLowGraphics) ? (
                         <Box sx={{ width: 80, height: 80 }}>
                           {renderLottieAnimation(row.image, isLowGraphics)}
                         </Box>
@@ -446,16 +357,11 @@ const ProductTable = (props) => {
                           component="img"
                           src={row.image}
                           alt={row.productName}
-                          sx={{
-                            maxWidth: 80,
-                            maxHeight: 80,
-                            borderRadius: 2,
-                          }}
+                          sx={{ maxWidth: 80, maxHeight: 80, borderRadius: 2 }}
                         />
                       )}
                     </Box>
-
-                    {/* BOTTOM HALF => details + trade button */}
+                    {/* Bottom half: product details and trade button */}
                     <Box
                       sx={{
                         flex: 1,
@@ -465,7 +371,6 @@ const ProductTable = (props) => {
                         justifyContent: 'space-between',
                       }}
                     >
-                      {/* Details */}
                       <Box>
                         <Typography
                           variant="h6"
@@ -478,18 +383,15 @@ const ProductTable = (props) => {
                           {row.productName}
                         </Typography>
                         <TableContainer>
-                          <Table id="all-trades" className="product-detail">
+                          <Table size="small" aria-label="loan-details-table">
                             <TableBody>
                               <TableRow>
                                 <TableCell sx={{ color: '#bbb' }}>
                                   <FontAwesomeIcon icon={faTag} />{' '}
-                                  {firstOwner.rentOption
-                                    ? 'Price / month'
-                                    : 'Price / unit'}
-                                  :
+                                  {firstOwner.rentOption ? 'Price / month' : 'Price / unit'}:
                                 </TableCell>
                                 <TableCell sx={{ color: '#ff8500' }}>
-                                  {convertToCurrency(firstOwner.price)}
+                                  {convertToCurrency(firstOwner.price, solPrice)}
                                 </TableCell>
                               </TableRow>
                               <TableRow>
@@ -504,19 +406,39 @@ const ProductTable = (props) => {
                           </Table>
                         </TableContainer>
                       </Box>
-
-                      {/* Trade/Rent button => always visible bottom-right */}
                       <Box sx={{ textAlign: 'right', mt: 1 }}>
-                        <Tooltip
-                          title={firstOwner.rentOption ? 'Rent' : 'Trade'}
-                        >
+                        <Tooltip title={firstOwner.rentOption ? 'Rent' : 'Trade'}>
                           <Button
                             variant="contained"
                             color="error"
                             startIcon={<SwapHoriz />}
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleTradeOrRent(row, firstOwner);
+                              // Dispatch trade/rent logic
+                              dispatch(setCurrentProductId(row._id));
+                              dispatch(
+                                setCurrentProductInfo({
+                                  owner: firstOwner.user,
+                                  productName: row.productName,
+                                  rentOption: firstOwner.rentOption,
+                                  price: firstOwner.price,
+                                })
+                              );
+                              if (firstOwner.user !== user) {
+                                if (row.showConfirmationModal) {
+                                  const userConfirmed = window.confirm(row.message);
+                                  if (userConfirmed) {
+                                    dispatch(openConfirmTradeModal(firstOwner.rentOption ? 'rent' : 'trade'));
+                                  } else {
+                                    dispatch(errorMsgBar('TRADE ACTION CANCELLED,PUSSY-ED OUT'));
+                                  }
+                                } else {
+                                  dispatch(openConfirmTradeModal(firstOwner.rentOption ? 'rent' : 'trade'));
+                                }
+                              } else {
+                                dispatch(errorMsgBar('THIS IS LITERALLY YOURS ALREADY!'));
+                              }
+                              // history.push(`/product/${row._id}`);
                             }}
                           >
                             {firstOwner.rentOption ? 'Rent' : 'Trade'}
@@ -529,8 +451,6 @@ const ProductTable = (props) => {
               })}
             </ProductGrid>
           )}
-
-          {/* Pagination => only if not loading */}
           {!loading && (
             <PaginationContainer>
               <Pagination
@@ -539,49 +459,26 @@ const ProductTable = (props) => {
                 color="error"
                 sx={{
                   '& .MuiPaginationItem-root': {
-                    borderRadius: '4px', // "rounded square" corners
+                    borderRadius: '4px',
                   },
                 }}
                 onChange={(event, newPage) => {
-                  acQueryItem(100, newPage, sortCriteria, itemType);
+                  dispatch(acQueryItem(100, newPage, sortCriteria, itemType));
                 }}
               />
             </PaginationContainer>
           )}
-
-          {/* If there's a PlayerModal open */}
-          {showPlayerModal && (
-            <PlayerModal
-              selectedCreator={selectedCreator}
-              modalIsOpen={showPlayerModal}
-              closeModal={handleClosePlayerModal}
-            />
-          )}
         </MarketplaceContainer>
       </Box>
+      {showPlayerModal && (
+        <PlayerModal
+          selectedCreator={selectedCreator}
+          modalIsOpen={showPlayerModal}
+          closeModal={() => setShowPlayerModal(false)}
+        />
+      )}
     </ThemeProvider>
   );
 };
 
-// ---------- Redux Connections ----------
-const mapStateToProps = (state) => ({
-  data: state.itemReducer.itemArray,
-  pages: state.itemReducer.pages,
-  page: state.itemReducer.page,
-  loading: state.itemReducer.loading,
-  total: state.itemReducer.totalResults,
-  showConfirmTradeModal: state.snackbar.showConfirmTradeModal,
-  isDarkMode: state.auth.isDarkMode,
-  user: state.auth.user._id,
-  isLowGraphics: state.auth.isLowGraphics,
-});
-
-const mapDispatchToProps = {
-  acQueryItem,
-  setCurrentProductId,
-  setCurrentProductInfo,
-  openConfirmTradeModal,
-  acGetCustomerInfo,
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(ProductTable);
+export default ProductTable;

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { connect } from 'react-redux';
+import { useSelector } from 'react-redux';
 import {
   Modal,
   Box,
@@ -15,15 +15,14 @@ import { faCoins, faAdjust, faInfo } from '@fortawesome/free-solid-svg-icons';
 
 import BankPage from '../../admin_panel/app/ProductPages/ProductSerchPage/BankPage';
 import MyLoansModal from '../modal/MyLoansModal';
-import {
-  warningMsgBar,
-  infoMsgBar,
-} from '../../redux/Notification/notification.actions';
-import { Diag } from '@tensorflow/tfjs';
 import { ThemeProvider } from '@mui/material/styles';
 import { getCustomTheme } from '../../config/theme';
 
-function BankModal({ modalIsOpen, closeModal, isDarkMode, remainingLoans }) {
+const BankModal = ({ modalIsOpen, closeModal, remainingLoans }) => {
+  // Access Redux state via hooks
+  const isDarkMode = useSelector((state) => state.auth.isDarkMode);
+
+  // Local state
   const [showMyLoansModal, setShowMyLoansModal] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [invertFilter, setInvertFilter] = useState(false);
@@ -120,7 +119,7 @@ function BankModal({ modalIsOpen, closeModal, isDarkMode, remainingLoans }) {
         </Box>
       </Modal>
 
-      {/* MY LOANS MODAL (still using your existing MyLoansModal) */}
+      {/* MY LOANS MODAL */}
       {showMyLoansModal && (
         <MyLoansModal
           modalIsOpen={showMyLoansModal}
@@ -137,7 +136,6 @@ function BankModal({ modalIsOpen, closeModal, isDarkMode, remainingLoans }) {
         fullWidth
         PaperProps={{
           sx: {
-            // Dark background
             backgroundColor: '#2D3A4B',
             color: '#fff',
             borderRadius: 2,
@@ -156,7 +154,6 @@ function BankModal({ modalIsOpen, closeModal, isDarkMode, remainingLoans }) {
             <Typography
               variant="h6"
               sx={{ fontWeight: 600, flex: 1, mr: -4 }}
-              /* Center the title while leaving space for close button */
             >
               <FontAwesomeIcon icon={faInfo} />
               &nbsp; LOAN INFORMATION
@@ -213,9 +210,8 @@ function BankModal({ modalIsOpen, closeModal, isDarkMode, remainingLoans }) {
               Central Bank Overview
             </Typography>
             <Typography variant="body1" sx={{ mb: 4, lineHeight: 1.6 }}>
-              The central bank is funded by private lenders, also known as
-              Peer-to-Peer (P2P) lending. P2P lending connects borrowers
-              directly with investors.
+              The central bank is funded by private lenders, also known as Peer-to-Peer (P2P) lending.
+              P2P lending connects borrowers directly with investors.
             </Typography>
 
             {/* Steps to get started (Loaner) */}
@@ -232,16 +228,15 @@ function BankModal({ modalIsOpen, closeModal, isDarkMode, remainingLoans }) {
               (As Loaner)
             </Typography>
             <Box component="ol" sx={{ pl: 3, mb: 3 }}>
-              <li>Go to &quot;Manage Your Loans&quot;</li>
-              <li>Click &quot;Create New Loan&quot;</li>
+              <li>Go to "Manage Your Loans"</li>
+              <li>Click "Create New Loan"</li>
               <li>
-                Set &quot;Loan Type&quot; (coming soon). Secured Loans guarantee
-                repayments (e.g., via collateral). Unsecured Loans do not.
+                Set "Loan Type" (coming soon). Secured Loans guarantee repayments (e.g., via collateral).
+                Unsecured Loans do not.
               </li>
               <li>Set an Interest Rate (APY), typically around 10%~30%</li>
               <li>
-                Earn returns as borrowers repay their loans, including principal
-                and interest.
+                Earn returns as borrowers repay their loans, including principal and interest.
               </li>
             </Box>
 
@@ -255,16 +250,14 @@ function BankModal({ modalIsOpen, closeModal, isDarkMode, remainingLoans }) {
             <Box component="ol" sx={{ pl: 3, mb: 4 }}>
               <li>Browse available loan listings by peers.</li>
               <li>
-                Click &quot;Loan&quot; and <em>Check Eligibility</em>
+                Click "Loan" and <em>Check Eligibility</em>
               </li>
               <li>
-                Make sure the criteria fits your circumstances (loan period,
-                APY, etc.).
+                Make sure the criteria fits your circumstances (loan period, APY, etc.).
               </li>
               <li>Enter the amount you want to loan and accept the debt.</li>
               <li>
-                Repay the loan by going to your wallet and clicking the red
-                button that shows your remaining debt.
+                Repay the loan by going to your wallet and clicking the red button that shows your remaining debt.
               </li>
               <li>
                 Credit score may increase / decrease upon repayment or failure.
@@ -289,9 +282,8 @@ function BankModal({ modalIsOpen, closeModal, isDarkMode, remainingLoans }) {
               Fractional Reserve Banking
             </Typography>
             <Typography variant="body1" sx={{ mb: 3, lineHeight: 1.6 }}>
-              A system in which only a fraction of bank deposits are backed by
-              actual cash on hand and available for withdrawal. The remainder is
-              lent out to borrowers.
+              A system in which only a fraction of bank deposits are backed by actual cash on hand
+              and available for withdrawal. The remainder is lent out to borrowers.
             </Typography>
 
             {/* Full Reserve Banking */}
@@ -302,9 +294,8 @@ function BankModal({ modalIsOpen, closeModal, isDarkMode, remainingLoans }) {
               Full Reserve Banking
             </Typography>
             <Typography variant="body1" sx={{ mb: 3, lineHeight: 1.6 }}>
-              A banking system in which banks are required to keep the full
-              amount of depositors&apos; funds in reserve, meaning they do not
-              lend any of it out.
+              A banking system in which banks are required to keep the full amount of depositors&apos; funds in reserve,
+              meaning they do not lend any of it out.
             </Typography>
 
             {/* Usury */}
@@ -315,8 +306,8 @@ function BankModal({ modalIsOpen, closeModal, isDarkMode, remainingLoans }) {
               Usury
             </Typography>
             <Typography variant="body1" sx={{ mb: 4, lineHeight: 1.6 }}>
-              The practice of charging excessive or unreasonably high interest
-              rates on loans, often above the legally permitted rate.
+              The practice of charging excessive or unreasonably high interest rates on loans,
+              often above the legally permitted rate.
             </Typography>
           </Box>
 
@@ -335,15 +326,6 @@ function BankModal({ modalIsOpen, closeModal, isDarkMode, remainingLoans }) {
       </Dialog>
     </ThemeProvider>
   );
-}
-
-const mapStateToProps = (state) => ({
-  isDarkMode: state.auth.isDarkMode,
-});
-
-const mapDispatchToProps = {
-  warningMsgBar,
-  infoMsgBar,
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(BankModal);
+export default BankModal;

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { connect, useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
 import Moment from 'moment';
 import { getRank } from '../../util/getRank';
@@ -30,7 +30,6 @@ import GlobalChat from './GlobalChat';
 import MyChat from './MyChat';
 import { setFocused } from '../../redux/Auth/user.actions.js';
 import { errorMsgBar } from '../../redux/Notification/notification.actions';
-// Import your custom theme generator
 import { ThemeProvider } from '@mui/material/styles';
 import { getCustomTheme } from '../../config/theme';
 
@@ -143,25 +142,26 @@ const emojis = [
   },
 ];
 
-// Instead of filling with the same reference, create individual objects:
 const initialGifState = { loaded: false, url: '', title: '' };
 
 function ChatPanel(props) {
   const {
-    isAuthenticated,
-    isDarkMode,
-    userName,
-    user,
-    socket,
-    onlineUserList,
     is_mobile,
     toggleDrawer,
-    setFocused,
     highlightChatId,
-  } = props;
+  } = props; // Only keep props passed from parent
+
+  const dispatch = useDispatch();
+
+  // Replace mapStateToProps with useSelector
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+  const isDarkMode = useSelector((state) => state.auth.isDarkMode);
+  const userName = useSelector((state) => state.auth.userName);
+  const user = useSelector((state) => state.auth.user);
+  const socket = useSelector((state) => state.auth.socket);
+  const onlineUserList = useSelector((state) => state.logic.onlineUserList);
 
   // ------------------ LOCAL STORAGE ------------------
-  // 1) Retrieve a previously stored tab index OR default to 1
   const storedTabIndex = localStorage.getItem('selectedTabIndex');
   const initialTabIndex =
     storedTabIndex !== null ? parseInt(storedTabIndex, 10) : 1;
@@ -169,15 +169,10 @@ function ChatPanel(props) {
   // ------------------ LOCAL STATE ------------------
   const [selectedTabIndex, setSelectedTabIndex] = useState(initialTabIndex);
   const [text, setText] = useState('');
-
-  // Popover anchor states
   const [emojiAnchorEl, setEmojiAnchorEl] = useState(null);
   const [gifAnchorEl, setGifAnchorEl] = useState(null);
-
-  // Initialize with a new array of 10 distinct objects (not just .fill() of the same object)
   const [gifs, setGifs] = useState([]);
   const [loading, setLoading] = useState(false);
-
   const [selectedMessage, setSelectedMessage] = useState({
     sender: null,
     avatar: null,
@@ -188,9 +183,7 @@ function ChatPanel(props) {
     time: null,
   });
   const [hoverTabIndex, setHoverTabIndex] = useState(-1);
-  const dispatch = useDispatch();
 
-  // Reference to the TextField for focusing after inserting emoji
   const textareaRef = useRef(null);
 
   useEffect(() => {
@@ -224,7 +217,6 @@ function ChatPanel(props) {
       }
     } else {
       dispatch(errorMsgBar('FURR-SST LOG IN!'));
-      return;
     }
   };
 
@@ -238,7 +230,7 @@ function ChatPanel(props) {
       messageType: null,
       time: null,
     });
-    setText(''); // Clear the text field input
+    setText('');
   };
 
   const handleMouseEnter = (index) => {
@@ -251,7 +243,6 @@ function ChatPanel(props) {
 
   // ------------------ EMOJI POPOVER ------------------
   const handleEmojiClick = (event) => {
-    // If popover is already open, close it
     if (emojiAnchorEl) {
       handleCloseEmojiPopover();
     } else {
@@ -278,7 +269,6 @@ function ChatPanel(props) {
 
   // ------------------ GIF POPOVER ------------------
   const handleGifButtonClick = (event) => {
-    // If popover is already open, close it
     if (gifAnchorEl) {
       handleCloseGifPopover();
     } else {
@@ -313,13 +303,9 @@ function ChatPanel(props) {
       }
     } else {
       dispatch(errorMsgBar('FURR-SST LOG IN!'));
-      return;
     }
   };
 
-  /**
-   * Called once an <img> finishes loading.
-   */
   const handleGifLoad = (index) => {
     setGifs((prevGifs) => {
       const updated = [...prevGifs];
@@ -333,13 +319,11 @@ function ChatPanel(props) {
 
   const handleSearchInputChange = async (event) => {
     const searchTerm = event.target.value.trim();
-    const apiKey = 'EoYYQ1kbX7mRfqwJ6xC4M6wgQmds4Dq1'; // Replace with your Giphy API key
+    const apiKey = 'EoYYQ1kbX7mRfqwJ6xC4M6wgQmds4Dq1';
     const url = `https://api.giphy.com/v1/gifs/search?api_key=${apiKey}&q=${searchTerm}`;
 
     try {
       setLoading(true);
-
-      // If user clears input, you could handle that separately, e.g. set empty array
       if (!searchTerm) {
         setGifs([]);
         setLoading(false);
@@ -368,11 +352,11 @@ function ChatPanel(props) {
   };
 
   const onFocusHandler = () => {
-    setFocused(true);
+    dispatch(setFocused(true)); // Dispatch directly
   };
 
   const onBlurHandler = () => {
-    setFocused(false);
+    dispatch(setFocused(false)); // Dispatch directly
   };
 
   const handleTabChange = (event, newValue) => {
@@ -393,96 +377,92 @@ function ChatPanel(props) {
           flexDirection: 'column',
           height: '100%',
           p: 1,
-          bgcolor: '#1E272E', // override background
-          color: 'white', // default text color
+          bgcolor: '#1E272E',
+          color: 'white',
           border: '0',
         }}
       >
         {/* Tabs Section */}
         <Tabs
-  value={selectedTabIndex}
-  onChange={handleTabChange}
-  TabIndicatorProps={{
-    style: {
-      backgroundColor: 'red',
-    },
-  }}
-  sx={{
-    '& .MuiTab-root': {
-      textTransform: 'none',
-      color: 'white',
-      '& .MuiTab-iconWrapper': {
-        color: 'grey',
-        transition: 'color 0.3s ease',
-      },
-      '&:hover .MuiTab-iconWrapper': {
-        color: 'white',
-      },
-      '&.Mui-selected': {
-        color: 'white',
-        '& .MuiTab-iconWrapper': {
-          color: 'red',
-        },
-      },
-      // Attempt 1: Target the label directly
-      '& .MuiTab-label': {
-        marginBottom: '8px !important', // Force with !important
-      },
-      // Attempt 2: Adjust padding of the tab content
-      paddingBottom: '8px', // Adds space below the entire tab content
-    },
-  }}
->
-  {/* Inbox Tab */}
-  <Tab
-    className="custom-tab"
-    label={
-      <span style={{ marginBottom: '8px', display: 'inline-block' }}>
-        Inbox
-      </span>
-    } // Attempt 3: Wrap label in a span with inline style
-    icon={
-      <ChatOutlined
-        sx={{
-          color: hoverTabIndex === 0 || selectedTabIndex === 0 ? 'white' : 'grey',
-          transition: 'color 0.3s ease',
-        }}
-      />
-    }
-    sx={{
-      '&:hover .MuiTab-iconWrapper': {
-        color: 'white',
-      },
-    }}
-    onMouseEnter={() => handleMouseEnter(0)}
-    onMouseLeave={handleMouseLeave}
-  />
+          value={selectedTabIndex}
+          onChange={handleTabChange}
+          TabIndicatorProps={{
+            style: {
+              backgroundColor: 'red',
+            },
+          }}
+          sx={{
+            '& .MuiTab-root': {
+              textTransform: 'none',
+              color: 'white',
+              '& .MuiTab-iconWrapper': {
+                color: 'grey',
+                transition: 'color 0.3s ease',
+              },
+              '&:hover .MuiTab-iconWrapper': {
+                color: 'white',
+              },
+              '&.Mui-selected': {
+                color: 'white',
+                '& .MuiTab-iconWrapper': {
+                  color: 'red',
+                },
+              },
+              '& .MuiTab-label': {
+                marginBottom: '8px !important',
+              },
+              paddingBottom: '8px',
+            },
+          }}
+        >
+          <Tab
+            className="custom-tab"
+            label={
+              <span style={{ marginBottom: '8px', display: 'inline-block' }}>
+                Inbox
+              </span>
+            }
+            icon={
+              <ChatOutlined
+                sx={{
+                  color: hoverTabIndex === 0 || selectedTabIndex === 0 ? 'white' : 'grey',
+                  transition: 'color 0.3s ease',
+                }}
+              />
+            }
+            sx={{
+              '&:hover .MuiTab-iconWrapper': {
+                color: 'white',
+              },
+            }}
+            onMouseEnter={() => handleMouseEnter(0)}
+            onMouseLeave={handleMouseLeave}
+          />
+          <Tab
+            className="custom-tab"
+            label={
+              <span style={{ marginBottom: '8px', display: 'inline-block' }}>
+                Chat
+              </span>
+            }
+            icon={
+              <ChatBubbleOutlineOutlined
+                sx={{
+                  color: hoverTabIndex === 1 || selectedTabIndex === 1 ? 'white' : 'grey',
+                  transition: 'color 0.3s ease',
+                }}
+              />
+            }
+            sx={{
+              '&:hover .MuiTab-iconWrapper': {
+                color: 'white',
+              },
+            }}
+            onMouseEnter={() => handleMouseEnter(1)}
+            onMouseLeave={handleMouseLeave}
+          />
+        </Tabs>
 
-  {/* Chat Tab */}
-  <Tab
-    className="custom-tab"
-    label={
-      <span style={{ marginBottom: '8px', display: 'inline-block' }}>
-        Chat
-      </span>
-    } // Attempt 3: Wrap label in a span with inline style
-    icon={
-      <ChatBubbleOutlineOutlined
-        sx={{
-          color: hoverTabIndex === 1 || selectedTabIndex === 1 ? 'white' : 'grey',
-          transition: 'color 0.3s ease',
-        }}
-      />
-    }
-    sx={{
-      '&:hover .MuiTab-iconWrapper': {
-        color: 'white',
-      },
-    }}
-    onMouseEnter={() => handleMouseEnter(1)}
-    onMouseLeave={handleMouseLeave}
-  />
-</Tabs>
         {/* Tab Content */}
         {selectedTabIndex === 0 ? (
           <MyChat
@@ -662,7 +642,6 @@ function ChatPanel(props) {
                   p: 2,
                   borderRadius: 1,
                   bgcolor: 'background.default',
-                  // Adjust the maxWidth here
                   minWidth: '300px',
                   maxWidth: '378px',
                 },
@@ -681,13 +660,11 @@ function ChatPanel(props) {
               </Box>
 
               {loading ? (
-                // 1) STILL LOADING
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <CircularProgress color="error" size={20} />
                   <Typography variant="body2">Loading GIFs...</Typography>
                 </Box>
-              ) : gifs.length === 0 ? null : ( // 2) NO GIFS & NOT LOADING => SHOW NOTHING
-                // 3) SHOW GIF GRID
+              ) : gifs.length === 0 ? null : (
                 <Box
                   sx={{
                     display: 'flex',
@@ -738,18 +715,4 @@ function ChatPanel(props) {
   );
 }
 
-// ------------------ REDUX CONNECT ------------------
-const mapStateToProps = (state) => ({
-  isAuthenticated: state.auth.isAuthenticated,
-  isDarkMode: state.auth.isDarkMode,
-  userName: state.auth.userName,
-  user: state.auth.user,
-  socket: state.auth.socket,
-  onlineUserList: state.logic.onlineUserList,
-});
-
-const mapDispatchToProps = {
-  setFocused,
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(ChatPanel);
+export default ChatPanel;

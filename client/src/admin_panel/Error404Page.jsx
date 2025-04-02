@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { connect } from 'react-redux';
 import styled from 'styled-components';
-
+import { Helmet } from 'react-helmet';
 import Paper from '@mui/material/Paper';
 import InputBase from '@mui/material/InputBase';
 import IconButton from '@mui/material/IconButton';
@@ -10,9 +9,9 @@ import Button from '@mui/material/Button';
 import Fade from '@mui/material/Fade';
 import Grow from '@mui/material/Grow';
 import Slide from '@mui/material/Slide';
-// import { RemoveLickLine } from '../Styles/Elements/ButtonEls';
-import { Helmet } from 'react-helmet';
+import { Link } from 'react-router-dom'; // Added for navigation (if needed)
 
+// Styled Components
 const ErrorTextEL = styled.h1`
   font-size: 150px;
   font-weight: 900;
@@ -31,6 +30,7 @@ const MainContainerEl = styled.div`
   height: 80vh;
 `;
 
+// Reusable Search Input Component
 const CustomizedInputBase = () => {
   return (
     <Paper
@@ -47,23 +47,21 @@ const CustomizedInputBase = () => {
         placeholder="Search..."
         aria-label="search"
       />
-      <IconButton
-        sx={{ p: '10px' }}
-        aria-label="search"
-      >
+      <IconButton sx={{ p: '10px' }} aria-label="search">
         <SearchIcon />
       </IconButton>
     </Paper>
   );
 };
 
-const Error404Page = () => {
+// Main Error 404 Component
+function Error404Page() {
   const [openPage, setOpenPage] = useState(false);
-  const one = '';
 
+  // Trigger animation on mount
   useEffect(() => {
     setOpenPage(true);
-  }, [one]);
+  }, []); // Empty dependency array since it only runs on mount
 
   return (
     <MainContainerEl>
@@ -84,21 +82,17 @@ const Error404Page = () => {
         </form>
       </Slide>
       <Grow in={openPage}>
-        {/* <RemoveLickLine to="/">
-          <Button variant="contained" color='error'>
-            Go To Home Page
-          </Button>
-        </RemoveLickLine> */}
+        <Button
+          variant="contained"
+          color="error"
+          component={Link} // Use Link from react-router-dom for navigation
+          to="/"
+        >
+          Go To Home Page
+        </Button>
       </Grow>
     </MainContainerEl>
   );
-};
+}
 
-const mapStateToProps = (state) => ({});
-
-const mapDispatchToProps = {};
-
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(Error404Page);
+export default Error404Page;

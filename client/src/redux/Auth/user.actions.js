@@ -43,7 +43,6 @@ import {
 } from '../types';
 import axios from '../../util/Api';
 import setAuthToken from '../../util/setAuthToken';
-import history from '../history';
 
 export const getTransactions = (
   page = 1,
@@ -403,13 +402,13 @@ export const deleteAccount = () => async dispatch => {
 };
 
 // Logout / Clear Profile
-export const userSignOut = clear_token => async dispatch => {
+export const userSignOut = (clear_token, navigate) => async (dispatch) => {
   dispatch({ type: LOGOUT });
   try {
     const { data } = await axios.post('/auth/logout');
     if (data.success) {
       if (clear_token) setAuthToken();
-      history.push('/');
+      navigate('/');
       dispatch({ type: MSG_SUCCESS, payload: data.message });
     } else {
       dispatch({ type: MSG_ERROR, payload: data.error });

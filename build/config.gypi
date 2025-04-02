@@ -30,7 +30,7 @@
     "icu_ver_major": "74",
     "is_debug": 0,
     "libdir": "lib",
-    "llvm_version": "14.0",
+    "llvm_version": "16.0",
     "napi_build_version": "9",
     "node_builtin_shareable_builtins": [
       "deps/cjs-module-lexer/lexer.js",
@@ -405,20 +405,20 @@
     "v8_trace_maps": 0,
     "v8_use_siphash": 1,
     "want_separate_host_toolset": 0,
-    "xcode_version": "14.0",
-    "nodedir": "/Users/lennybeadle/Library/Caches/node-gyp/18.20.5",
+    "xcode_version": "16.0",
+    "nodedir": "/Users/lennybeadle/Library/Caches/node-gyp/18.20.7",
     "python": "/Users/lennybeadle/.pyenv/versions/3.10.0/bin/python3",
     "standalone_static_library": 1,
     "legacy_peer_deps": "true",
-    "global_prefix": "/Users/lennybeadle/.nvm/versions/node/v18.20.5",
+    "global_prefix": "/Users/lennybeadle/.nvm/versions/node/v18.20.7",
     "local_prefix": "/Users/lennybeadle/rpsbet_mern",
-    "globalconfig": "/Users/lennybeadle/.nvm/versions/node/v18.20.5/etc/npmrc",
-    "userconfig": "/Users/lennybeadle/.npmrc",
+    "globalconfig": "/Users/lennybeadle/.nvm/versions/node/v18.20.7/etc/npmrc",
     "init_module": "/Users/lennybeadle/.npm-init.js",
+    "userconfig": "/Users/lennybeadle/.npmrc",
     "npm_version": "10.8.2",
-    "node_gyp": "/Users/lennybeadle/.nvm/versions/node/v18.20.5/lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js",
+    "node_gyp": "/Users/lennybeadle/.nvm/versions/node/v18.20.7/lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js",
     "cache": "/Users/lennybeadle/.npm",
-    "user_agent": "npm/10.8.2 node/v18.20.5 darwin arm64 workspaces/false",
-    "prefix": "/Users/lennybeadle/.nvm/versions/node/v18.20.5"
+    "user_agent": "npm/10.8.2 node/v18.20.7 darwin arm64 workspaces/false",
+    "prefix": "/Users/lennybeadle/.nvm/versions/node/v18.20.7"
   }
 }

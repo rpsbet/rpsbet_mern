@@ -8,7 +8,7 @@ import {
   useMediaQuery
 } from '@mui/material';
 import { useTheme, keyframes } from '@mui/material/styles';
-import Countdown from 'react-countdown';
+// import Countdown from 'react-countdown';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faXTwitter,
@@ -220,7 +220,7 @@ function CatsinoModalOverlay({
                 mb: 4
               }}
             >
-              <Countdown
+              {/* <Countdown
                 date={halloween}
                 renderer={({ days, hours, minutes, seconds, completed }) => {
                   if (completed) {
@@ -282,7 +282,7 @@ function CatsinoModalOverlay({
                     </Box>
                   );
                 }}
-              />
+              /> */}
             </Box>
 
             <Button

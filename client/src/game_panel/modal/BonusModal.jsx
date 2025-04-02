@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { connect } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { Modal, Box, Typography, Button } from '@mui/material';
 import Moment from 'moment';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -7,32 +7,27 @@ import { faStar, faClock, faSyncAlt } from '@fortawesome/free-solid-svg-icons';
 
 import { addBonus, getUser } from '../../redux/Auth/user.actions';
 import { convertToCurrency } from '../../util/conversion';
-import history from '../../redux/history';
 
-function BonusModal(props) {
-  const {
-    modalIsOpen,
-    closeModal,
-    totalWagered,
-    solPrice,
-    user,
-    addBonus,
-    getUser,
-    isMuted,
-    gameSounds,
-  } = props;
+function BonusModal({ modalIsOpen, closeModal }) {
+  const dispatch = useDispatch();
 
-  // ------------------ STATE ------------------
+  // Retrieve Redux state using useSelector
+  const totalWagered = useSelector((state) => state.auth.user.totalWagered);
+  const solPrice = useSelector((state) => state.logic.solPrice);
+  const user = useSelector((state) => state.auth.user);
+  const isMuted = useSelector((state) => state.auth.isMuted);
+  const gameSounds = useSelector((state) => state.auth.gameSounds);
+
+  // ------------------ LOCAL STATE ------------------
   const [spinning, setSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
   const [landedNumber, setLandedNumber] = useState(null);
   const [showFlash, setShowFlash] = useState(false);
   const [translateDistance, setTranslateDistance] = useState(
-    window.innerWidth <= 600 ? '100px' : '120px',
+    window.innerWidth <= 600 ? '100px' : '120px'
   );
 
   // ------------------ DATA ------------------
-  // The numbers displayed on the wheel
   const numbers = [0.04, 0, 0.01, 0.03, 0.3, 0, 0.2, 0.1, 0.05, 0.02];
 
   // Calculate next bonus time
@@ -44,9 +39,7 @@ function BonusModal(props) {
     const sixHoursInMs = 6 * 60 * 60 * 1000;
     const remainingMs = sixHoursInMs - elapsedTime;
     if (remainingMs > 0) {
-      remainingTime = Moment.duration(remainingMs, 'milliseconds').humanize(
-        true,
-      );
+      remainingTime = Moment.duration(remainingMs, 'milliseconds').humanize(true);
     }
   }
 
@@ -84,17 +77,17 @@ function BonusModal(props) {
     }
 
     // Dispatch bonus action
-    const result = await addBonus();
+    const result = await dispatch(addBonus());
     setSpinning(false);
     setLandedNumber(result.amount);
     setShowFlash(true);
 
     // Refresh user data
-    await getUser();
+    await dispatch(getUser());
 
     // Remove flash effect after a short delay
     setTimeout(() => setShowFlash(false), 1500);
-  }, [spinning, isMuted, gameSounds, addBonus, getUser]);
+  }, [spinning, isMuted, gameSounds, dispatch]);
 
   // ------------------ EFFECTS ------------------
   useEffect(() => {
@@ -138,10 +131,7 @@ function BonusModal(props) {
             mb: 2,
           }}
         >
-          <Typography
-            variant="h6"
-            sx={{ display: 'flex', alignItems: 'center' }}
-          >
+          <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center' }}>
             <FontAwesomeIcon icon={faStar} />
             &nbsp;CORN WHEEL
           </Typography>
@@ -259,20 +249,4 @@ function BonusModal(props) {
   );
 }
 
-// ------------------ REDUX CONNECT ------------------
-const mapStateToProps = (state) => ({
-  user_id: state.auth.user._id,
-  totalWagered: state.auth.user.totalWagered,
-  isDarkMode: state.auth.isDarkMode,
-  isMuted: state.auth.isMuted,
-  gameSounds: state.auth.gameSounds,
-  solPrice: state.logic.solPrice,
-  user: state.auth.user,
-});
-
-const mapDispatchToProps = {
-  addBonus,
-  getUser,
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(BonusModal);
+export default BonusModal;

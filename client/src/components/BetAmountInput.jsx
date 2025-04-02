@@ -1,8 +1,9 @@
 import React, { useEffect, useCallback, useState } from 'react';
-import { Button, InputAdornment, TextField } from '@mui/material';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
-import { debounce } from 'lodash';
+import { Button, InputAdornment, TextField, Box } from '@mui/material';
+import { ThemeProvider } from '@mui/material/styles';
 import { getCustomTheme } from '../config/theme';
+import { debounce } from 'lodash';
+import sol from '../game_panel/icons/sol.png';
 
 export default function BetAmountInput(props) {
   const {
@@ -35,105 +36,91 @@ export default function BetAmountInput(props) {
     debouncedOnChangeState(value);
   };
 
-  const handle2x = () => {
-    handle2xButtonClick();
-  };
-
-  const handleHalfX = () => {
-    handleHalfXButtonClick();
-  };
-
-  const handleMax = () => {
-    handleMaxButtonClick();
-  };
-
   const theme = getCustomTheme(isDarkMode);
 
-
   return (
-    <div
-      className="bet-amount"
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'stretch',
-        gap: '5px',
-        width: '100%',
-      }}
-    >
-      <ThemeProvider theme={theme}>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            width: '100%',
-          }}
-        >
-          <Button
-            variant="contained"
-            color='error'
-            style={{ flex: 1 }}
-            onClick={handle2x}
-            disableElevation
-          >
-            2x
-          </Button>
-          <Button
-            variant="contained"
-            color='error'
-            style={{ flex: 1 }}
-            onClick={handleHalfX}
-            disableElevation
-          >
-            1/2x
-          </Button>
-          <Button
-            variant="contained"
-            color='error'
-            style={{ flex: 1 }}
-            onClick={handleMax}
-            disableElevation
-          >
-            Max
-          </Button>
-        </div>
-
+    <ThemeProvider theme={theme}>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 2, // Consistent spacing between elements
+          width: '100%',
+          maxWidth: 400, // Reasonable maximum width
+          margin: '0 auto', // Center the component
+        }}
+      >
         <TextField
           color="error"
-          type="text"
-          name="betamount"
+          type="number"
           variant="filled"
-          id="betamount"
           ref={betAmountRef}
           disabled={disabledButtons || false}
           value={localBetAmount}
           onChange={handleTextFieldChange}
-          placeholder="BET AMOUNT"
+          placeholder="Enter Bet Amount"
           fullWidth
           inputProps={{
-            pattern: '^\\d*\\.?\\d*$',
+            step: '0.01',
+            min: '0',
+            style: {
+              padding: '12px 14px',
+              fontSize: '1.1rem',
+            },
           }}
-          InputLabelProps={{
-            shrink: true,
-          }}
-          sx={{
-            marginBottom: '10px',
-            borderTopLeftRadius: '0.3em',
-            borderTopRightRadius: '0.3em',
-            overflow: 'hidden'
-          }}
-          // Add this section to put "SOL" at the end
           InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                SOL
+            startAdornment: (
+              <InputAdornment position="start" sx={{ mr: 1, pb: 2 }}>
+                <img src={sol} width="24" alt="SOL" style={{ verticalAlign: 'middle' }} />
               </InputAdornment>
             ),
           }}
+          sx={{
+            '& .MuiFilledInput-root': {
+              backgroundColor: 'rgba(255, 255, 255, 0.09)',
+              '&:before': {
+                borderBottomColor: 'white', // When not focused/hovered
+              },
+              '&:hover:not(.Mui-disabled):before': {
+                borderBottomColor: 'white', // Maintain white on hover when not focused
+              },
+
+            },
+          }}
         />
 
-      </ThemeProvider>
-    </div>
+        <Box
+          sx={{
+            display: 'flex',
+            gap: 1, // Consistent spacing between buttons
+            justifyContent: 'space-between',
+          }}
+        >
+          {[
+            { label: '2x', onClick: handle2xButtonClick },
+            { label: '½x', onClick: handleHalfXButtonClick },
+            { label: 'Max', onClick: handleMaxButtonClick },
+          ].map((btn) => (
+            <Button
+              key={btn.label}
+              variant="outlined"
+              color="error"
+              onClick={btn.onClick}
+              disableElevation
+              disabled={disabledButtons || false}
+              sx={{
+                flex: 1,
+                fontSize: '1rem',
+                fontWeight: 500,
+                borderRadius: '4px',
+                textTransform: 'none', // Prevent uppercase transformation
+              }}
+            >
+              {btn.label}
+            </Button>
+          ))}
+        </Box>
+      </Box>
+    </ThemeProvider>
   );
 }

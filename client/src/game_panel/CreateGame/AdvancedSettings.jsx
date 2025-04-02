@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { connect, useDispatch } from 'react-redux';
+import React, { useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { acQueryMyItem } from '../../redux/Item/item.action';
 import { setFocused } from '../../redux/Auth/user.actions';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
@@ -14,9 +14,14 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPenSquare } from '@fortawesome/free-solid-svg-icons';
 import { getCustomTheme } from '../../config/theme';
 
-const AdvancedSettings = (props) => {
-
+function AdvancedSettings(props) {
   const dispatch = useDispatch();
+
+  // Map state from Redux using useSelector
+  const { data } = useSelector((state) => ({
+    data: state.itemReducer.myItemArray,
+  }));
+
   const theme = getCustomTheme(props.isDarkMode);
 
   const [showOptions, setShowOptions] = useState(false);
@@ -28,34 +33,33 @@ const AdvancedSettings = (props) => {
   return (
     <ThemeProvider theme={theme}>
       <div id="advanced_panel">
-        {/* Step 1: Privacy */}
         <div className="game-privacy-panel game-info-panel">
           <h3 className="game-sub-title roll-tag">
             Advanced Settings
             <Tooltip
-              style={{ position: "absolute", right: "20px" }}
+              style={{ position: 'absolute', right: '20px' }}
               title={'Optional - Skip if needed.'}
               placement="top"
             >
-              <Info style={{ cursor: "pointer", float: "right" }} />
+              <Info style={{ cursor: 'pointer', float: 'right' }} />
             </Tooltip>
           </h3>
 
           <div
             style={{
-              padding: "15px",
-              gridTemplateColumns: "1fr",
-              display: "grid",
-              gap: "20px",
-              width: "80%",
+              padding: '15px',
+              gridTemplateColumns: '1fr',
+              display: 'grid',
+              gap: '20px',
+              width: '80%',
             }}
           >
             {/* Privacy Section */}
             <div
               className="grid-item label roll-tag"
-              style={{ display: 'flex', alignItems: 'center', justifyContent: "center", width: '100%' }}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}
             >
-              <span>Privacy</span>&nbsp;
+              <span>Privacy</span> 
               <Tooltip
                 style={{ marginLeft: '8px' }}
                 title="Set private to require players enter a password to play"
@@ -68,7 +72,7 @@ const AdvancedSettings = (props) => {
             <div className="grid-item content">
               <div className="radio-button-group">
                 <Button
-                  color='error'
+                  color="error"
                   className={!props.is_private ? 'active' : ''}
                   onClick={() => handleInputChange('is_private', false)}
                 >
@@ -77,7 +81,7 @@ const AdvancedSettings = (props) => {
                 </Button>
 
                 <Button
-                  color='error'
+                  color="error"
                   className={props.is_private ? 'active' : ''}
                   onClick={() => handleInputChange('is_private', true)}
                 >
@@ -88,7 +92,7 @@ const AdvancedSettings = (props) => {
 
               {props.is_private && (
                 <TextField
-                  color='error'
+                  color="error"
                   id="room_password"
                   variant="filled"
                   value={props.room_password}
@@ -97,12 +101,12 @@ const AdvancedSettings = (props) => {
               )}
             </div>
 
-            {/* Payout Section */}
+            {/* Commented-Out Payout Section */}
             {/* <div
               className="grid-item label roll-tag"
               style={{ display: 'flex', alignItems: 'center', justifyContent: "center", width: '100%', marginTop: "20px" }}
             >
-              <span style={{ textAlign: "center" }}>Payout</span>&nbsp;
+              <span style={{ textAlign: "center" }}>Payout</span> 
               <Tooltip
                 style={{ marginLeft: '8px' }}
                 title="Choose Automatic to be paid into your balance each time the set threshold has been reached"
@@ -150,9 +154,9 @@ const AdvancedSettings = (props) => {
 
             <div
               className="grid-item label roll-tag"
-              style={{ display: 'flex', alignItems: 'center', justifyContent: "center", width: '100%', marginTop: "20px" }}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', marginTop: '20px' }}
             >
-              <span>Other Information</span>&nbsp;
+              <span>Other Information</span> 
               <Tooltip
                 style={{ marginLeft: '8px' }}
                 title="Add a description to your room."
@@ -164,24 +168,24 @@ const AdvancedSettings = (props) => {
 
             <div
               className="grid-item content"
-              style={{ justifyItems: "center" }}
+              style={{ justifyItems: 'center' }}
             >
               <div
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: "center",
-                  width: '100%'
+                  justifyContent: 'center',
+                  width: '100%',
                 }}
               >
                 <TextField
-                  color='error'
+                  color="error"
                   label="Add Description"
                   value={props.description}
                   placeholder="e.g. This gonna go crazy"
                   onChange={props.handleDescriptionChange}
-                  onFocus={() => props.setFocused(true)}
-                  onBlur={() => props.setFocused(false)}
+                  onFocus={() => dispatch(setFocused(true))}
+                  onBlur={() => dispatch(setFocused(false))}
                   fullWidth
                   variant="filled"
                 />
@@ -195,21 +199,21 @@ const AdvancedSettings = (props) => {
                 style={{
                   fontSize: '12px',
                   padding: '0 10px',
-                  color: props.isDarkMode ? 'white' : '#666'
+                  color: props.isDarkMode ? 'white' : '#666',
                 }}
                 onClick={(e) => {
                   e.preventDefault();
                   setShowOptions(!showOptions);
                 }}
               >
-                {showOptions ? <>Hide options &uarr;</> : <>Show more options &darr;</>}
+                {showOptions ? <>Hide options ↑</> : <>Show more options ↓</>}
               </a>
             </div>
 
             {showOptions && (
               <div>
                 <TextField
-                  color='error'
+                  color="error"
                   label="X Link"
                   variant="filled"
                   fullWidth
@@ -221,7 +225,7 @@ const AdvancedSettings = (props) => {
                   onBlur={() => dispatch(setFocused(false))}
                 />
                 <TextField
-                  color='error'
+                  color="error"
                   label="Website Link"
                   variant="filled"
                   fullWidth
@@ -233,7 +237,7 @@ const AdvancedSettings = (props) => {
                   onBlur={() => dispatch(setFocused(false))}
                 />
                 <TextField
-                  color='error'
+                  color="error"
                   label="Telegram Link"
                   variant="filled"
                   fullWidth
@@ -251,15 +255,6 @@ const AdvancedSettings = (props) => {
       </div>
     </ThemeProvider>
   );
-};
+}
 
-const mapStateToProps = (state) => ({
-  data: state.itemReducer.myItemArray,
-});
-
-const mapDispatchToProps = {
-  acQueryMyItem,
-  setFocused,
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(AdvancedSettings);
+export default AdvancedSettings;

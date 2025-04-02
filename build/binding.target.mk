@@ -25,8 +25,7 @@ CFLAGS_Debug := \
 	-O0 \
 	-gdwarf-2 \
 	-mmacosx-version-min=10.15 \
-	-arch \
-	arm64 \
+	-arch arm64 \
 	-Wall \
 	-Wendif-labels \
 	-W \
@@ -51,13 +50,13 @@ CFLAGS_OBJC_Debug :=
 CFLAGS_OBJCC_Debug :=
 
 INCS_Debug := \
-	-I/Users/lennybeadle/Library/Caches/node-gyp/18.20.5/include/node \
-	-I/Users/lennybeadle/Library/Caches/node-gyp/18.20.5/src \
-	-I/Users/lennybeadle/Library/Caches/node-gyp/18.20.5/deps/openssl/config \
-	-I/Users/lennybeadle/Library/Caches/node-gyp/18.20.5/deps/openssl/openssl/include \
-	-I/Users/lennybeadle/Library/Caches/node-gyp/18.20.5/deps/uv/include \
-	-I/Users/lennybeadle/Library/Caches/node-gyp/18.20.5/deps/zlib \
-	-I/Users/lennybeadle/Library/Caches/node-gyp/18.20.5/deps/v8/include
+	-I/Users/lennybeadle/Library/Caches/node-gyp/18.20.7/include/node \
+	-I/Users/lennybeadle/Library/Caches/node-gyp/18.20.7/src \
+	-I/Users/lennybeadle/Library/Caches/node-gyp/18.20.7/deps/openssl/config \
+	-I/Users/lennybeadle/Library/Caches/node-gyp/18.20.7/deps/openssl/openssl/include \
+	-I/Users/lennybeadle/Library/Caches/node-gyp/18.20.7/deps/uv/include \
+	-I/Users/lennybeadle/Library/Caches/node-gyp/18.20.7/deps/zlib \
+	-I/Users/lennybeadle/Library/Caches/node-gyp/18.20.7/deps/v8/include
 
 DEFS_Release := \
 	'-DNODE_GYP_MODULE_NAME=binding' \
@@ -79,8 +78,7 @@ CFLAGS_Release := \
 	-O3 \
 	-gdwarf-2 \
 	-mmacosx-version-min=10.15 \
-	-arch \
-	arm64 \
+	-arch arm64 \
 	-Wall \
 	-Wendif-labels \
 	-W \
@@ -105,13 +103,13 @@ CFLAGS_OBJC_Release :=
 CFLAGS_OBJCC_Release :=
 
 INCS_Release := \
-	-I/Users/lennybeadle/Library/Caches/node-gyp/18.20.5/include/node \
-	-I/Users/lennybeadle/Library/Caches/node-gyp/18.20.5/src \
-	-I/Users/lennybeadle/Library/Caches/node-gyp/18.20.5/deps/openssl/config \
-	-I/Users/lennybeadle/Library/Caches/node-gyp/18.20.5/deps/openssl/openssl/include \
-	-I/Users/lennybeadle/Library/Caches/node-gyp/18.20.5/deps/uv/include \
-	-I/Users/lennybeadle/Library/Caches/node-gyp/18.20.5/deps/zlib \
-	-I/Users/lennybeadle/Library/Caches/node-gyp/18.20.5/deps/v8/include
+	-I/Users/lennybeadle/Library/Caches/node-gyp/18.20.7/include/node \
+	-I/Users/lennybeadle/Library/Caches/node-gyp/18.20.7/src \
+	-I/Users/lennybeadle/Library/Caches/node-gyp/18.20.7/deps/openssl/config \
+	-I/Users/lennybeadle/Library/Caches/node-gyp/18.20.7/deps/openssl/openssl/include \
+	-I/Users/lennybeadle/Library/Caches/node-gyp/18.20.7/deps/uv/include \
+	-I/Users/lennybeadle/Library/Caches/node-gyp/18.20.7/deps/zlib \
+	-I/Users/lennybeadle/Library/Caches/node-gyp/18.20.7/deps/v8/include
 
 OBJS :=
 
@@ -124,8 +122,7 @@ LDFLAGS_Debug := \
 	-undefined dynamic_lookup \
 	-Wl,-search_paths_first \
 	-mmacosx-version-min=10.15 \
-	-arch \
-	arm64 \
+	-arch arm64 \
 	-L$(builddir) \
 	-stdlib=libc++
 
@@ -137,8 +134,7 @@ LDFLAGS_Release := \
 	-undefined dynamic_lookup \
 	-Wl,-search_paths_first \
 	-mmacosx-version-min=10.15 \
-	-arch \
-	arm64 \
+	-arch arm64 \
 	-L$(builddir) \
 	-stdlib=libc++
 

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { connect } from 'react-redux';
-import history from '../../redux/history';
+import { useSelector, useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 
 import {
   getChatRoomInfo,
@@ -39,10 +39,11 @@ import {
 
 const moment = require('moment');
 
-function ChatPage(props) {
+function ChatPage({ match }) { // Keep match as a prop since it’s from React Router
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  // Map state from Redux using useSelector
   const {
-    // Redux props
-    match,
     user_id,
     chatLogs = [],
     my_info,
@@ -61,34 +62,41 @@ function ChatPage(props) {
     isDarkMode,
     hasMore,
     fetchingOlder,
-
-    // Redux actions
-    loadOlderChatMessages,
-    getChatRoomInfo,
-    addChatLog,
-    getMyChat,
-    toggleDrawer,
-  } = props;
+  } = useSelector((state) => ({
+    auth: state.auth.isAuthenticated,
+    my_info: state.auth.user,
+    socket: state.auth.socket,
+    user_id: state.logic.chatRoomInfo.user_id,
+    avatar: state.logic.chatRoomInfo.avatar,
+    rank: state.logic.chatRoomInfo.rank,
+    accessory: state.logic.chatRoomInfo.accessory,
+    username: state.logic.chatRoomInfo.username,
+    chatLogs: state.logic.chatRoomInfo.chatLogs,
+    gameTypeList: state.logic.gameTypeList,
+    selectedMainTabIndex: state.logic.selectedMainTabIndex,
+    isDrawerOpen: state.auth.isDrawerOpen,
+    isDarkMode: state.auth.isDarkMode,
+    history: state.logic.history,
+    loading: state.logic.isActiveLoadingOverlay,
+    pageNumber: state.logic.pageNumber,
+    is_mobile: state.logic.is_mobile,
+    selectedMobileTab: state.logic.selectedMobileTab,
+    hasMore: state.logic.chatRoomInfo.hasMore,
+    fetchingOlder: state.logic.fetchingOlder,
+  }));
 
   // ---------- LOCAL STATE ----------
   const [text, setText] = useState('');
   const [anchorEl, setAnchorEl] = useState(null); // anchor for the Popover
-
   const [showPlayerModal, setShowPlayerModal] = useState(false);
   const [showEmojiPanel, setShowEmojiPanel] = useState(false);
   const [selectedCreator, setSelectedCreator] = useState(null);
-
-  // Track if the user is near the bottom, so we only auto-scroll
-  // to the bottom if they were already there.
   const [userScrollAtBottom, setUserScrollAtBottom] = useState(true);
 
   const { id: routeId } = match.params;
 
   // ---------- REFS ----------
   const chatLogPanelRef = useRef(null);
-
-  // We'll store the scrollHeight before loading older messages
-  // so we can preserve the scroll position after prepending them.
   const oldScrollHeightRef = useRef(0);
 
   // ---------- EFFECTS ----------
@@ -96,39 +104,24 @@ function ChatPage(props) {
   // Initial room load
   useEffect(() => {
     if (routeId) {
-      getChatRoomInfo(routeId, 0, 20);
+      dispatch(getChatRoomInfo(routeId, 0, 20));
       if (isAuthenticated) {
-        getMyChat();
+        dispatch(getMyChat());
       }
     }
-  }, [routeId, getChatRoomInfo, getMyChat, isAuthenticated]);
+  }, [routeId, dispatch, isAuthenticated]);
 
-  /**
-   * ADVANCED SCROLL BEHAVIOR
-   *
-   * We do two things here:
-   * 1) If we just fetched older messages (fetchingOlder just went from true -> false),
-   *    we restore the scroll so the chat doesn’t visually jump.
-   * 2) If new messages arrived (chatLogs changed) AND the user was at the bottom,
-   *    we scroll to bottom so they see the latest message.
-   */
+  // Advanced scroll behavior
   useEffect(() => {
     const container = chatLogPanelRef.current;
     if (!container) return;
 
-    // 1) If we *were* fetching older messages, but now are not,
-    //    restore scroll position so the user doesn't jump up/down.
     if (!fetchingOlder && oldScrollHeightRef.current > 0) {
       const newScrollHeight = container.scrollHeight;
       const oldScrollHeight = oldScrollHeightRef.current;
-      // Preserve the user's vertical offset in the chat
       container.scrollTop = newScrollHeight - oldScrollHeight;
-      // Reset so we don't do this again accidentally
       oldScrollHeightRef.current = 0;
-    }
-    // 2) If user was near bottom (userScrollAtBottom === true), scroll all the way down
-    else if (userScrollAtBottom && chatLogs.length > 0 && !loading) {
-      // A tiny delay so the UI can render before we measure scrollHeight
+    } else if (userScrollAtBottom && chatLogs.length > 0 && !loading) {
       setTimeout(() => {
         container.scrollTop = container.scrollHeight;
       }, 0);
@@ -137,25 +130,18 @@ function ChatPage(props) {
 
   // ---------- METHODS ----------
 
-  // Called by the scroll container on scroll
   const handleScroll = (e) => {
     const container = e.currentTarget;
     const scrollTop = container.scrollTop;
     const scrollHeight = container.scrollHeight;
     const clientHeight = container.clientHeight;
 
-    // Figure out if user is near the bottom.
-    // If they are within 50px of the bottom, we consider them "at bottom."
     const isNearBottom = scrollHeight - (scrollTop + clientHeight) < 50;
     setUserScrollAtBottom(isNearBottom);
 
-    // If close to the top AND we have more older messages AND not already fetching
     if (scrollTop < 20 && hasMore && !fetchingOlder) {
-      // Save the old scroll height. We'll use it to maintain position
-      // once we prepend older messages.
       oldScrollHeightRef.current = container.scrollHeight;
-      // Dispatch Redux action to load older messages
-      loadOlderChatMessages(routeId);
+      dispatch(loadOlderChatMessages(routeId));
     }
   };
 
@@ -168,7 +154,7 @@ function ChatPage(props) {
         message: trimmed,
         is_read: false,
       };
-      addChatLog(chatLog);
+      dispatch(addChatLog(chatLog));
 
       if (socket) {
         socket.emit('SEND_CHAT', chatLog);
@@ -196,7 +182,7 @@ function ChatPage(props) {
   };
 
   const toggleDrawerAction = () => {
-    toggleDrawer(!isDrawerOpen);
+    dispatch(toggleDrawer(!isDrawerOpen));
   };
 
   const handleOpenPlayerModal = (creator_id) => {
@@ -220,7 +206,6 @@ function ChatPage(props) {
 
   // ---------- STYLING ----------
   const theme = getCustomTheme(isDarkMode ? 'dark' : 'light');
-
   const openPopover = Boolean(anchorEl);
 
   return (
@@ -277,12 +262,12 @@ function ChatPage(props) {
                 variant="text"
                 color="error"
                 onClick={() => {
-                  history.push('/');
+                  navigate('/');
                 }}
                 sx={{ position: 'absolute', left: '15px' }}
               >
                 <FontAwesomeIcon icon={faArrowLeft} />
-                &nbsp; Go Back
+                  Go Back
               </Button>
               <Box
                 component="a"
@@ -371,6 +356,7 @@ function ChatPage(props) {
                         />
                       )}
                       <Box>
+                        {/* Uncomment if you want timestamps */}
                         {/* <Box className="message-time">
                           {formatCustomDate(row.created_at)}
                         </Box> */}
@@ -385,7 +371,6 @@ function ChatPage(props) {
                   </Box>
                 ))
               ) : (
-                // Skeleton placeholders while loading
                 <Box>
                   {[...Array(5)].map((_, index) => (
                     <Box
@@ -468,7 +453,7 @@ function ChatPage(props) {
                 startIcon={<FontAwesomeIcon icon={faPenSquare} />}
                 color="error"
               >
-                <Typography variant="button">[&#x23CE;]</Typography>
+                <Typography variant="button">[⏎]</Typography>
               </Button>
             </Box>
           </Box>
@@ -549,39 +534,4 @@ function PopoverEmojiGrid({ onSelect }) {
   );
 }
 
-// Redux
-const mapStateToProps = (state) => ({
-  auth: state.auth.isAuthenticated,
-  my_info: state.auth.user,
-  socket: state.auth.socket,
-  user_id: state.logic.chatRoomInfo.user_id,
-  avatar: state.logic.chatRoomInfo.avatar,
-  rank: state.logic.chatRoomInfo.rank,
-  accessory: state.logic.chatRoomInfo.accessory,
-  username: state.logic.chatRoomInfo.username,
-  chatLogs: state.logic.chatRoomInfo.chatLogs,
-  gameTypeList: state.logic.gameTypeList,
-  selectedMainTabIndex: state.logic.selectedMainTabIndex,
-  isDrawerOpen: state.auth.isDrawerOpen,
-  isDarkMode: state.auth.isDarkMode,
-  history: state.logic.history,
-  loading: state.logic.isActiveLoadingOverlay,
-  pageNumber: state.logic.pageNumber,
-  is_mobile: state.logic.is_mobile,
-  selectedMobileTab: state.logic.selectedMobileTab,
-  hasMore: state.logic.chatRoomInfo.hasMore,
-  fetchingOlder: state.logic.fetchingOlder,
-});
-
-const mapDispatchToProps = {
-  getChatRoomInfo,
-  addChatLog,
-  getGameTypeList,
-  setCurRoomInfo,
-  loadRoomInfo,
-  getMyChat,
-  toggleDrawer,
-  loadOlderChatMessages,
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(ChatPage);
+export default ChatPage;

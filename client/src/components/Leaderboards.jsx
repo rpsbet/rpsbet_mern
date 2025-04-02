@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { connect } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { convertToCurrency } from '../util/conversion';
 import { Box, Table, TableHead, TableRow, TableCell, TableBody, LinearProgress, Typography, Tooltip } from '@mui/material';
 import Avatar from './Avatar';
@@ -7,24 +7,26 @@ import PlayerModal from '../game_panel/modal/PlayerModal';
 import { getRoomStatisticsData } from '../redux/Customer/customer.action';
 import ReactApexChart from 'react-apexcharts';
 
-const Leaderboards = ({
-  auth,
-  roomStatsLoaded,
-  actionList,
-  solPrice,
-  isDarkMode,
-  getRoomStatisticsData,
-  roomId
-}) => {
+const Leaderboards = ({ roomId }) => {
+  const dispatch = useDispatch();
+
+  // Access Redux state using hooks
+  const auth = useSelector((state) => state.auth.isAuthenticated);
+  const isDarkMode = useSelector((state) => state.auth.isDarkMode);
+  const actionList = useSelector((state) => state.customerReducer.actionList);
+  const roomStatsLoaded = useSelector((state) => state.customerReducer.roomStatsLoaded);
+  const solPrice = useSelector((state) => state.logic.solPrice);
+
+  // Local component state
   const [showPlayerModal, setShowPlayerModal] = useState(false);
   const [selectedCreator, setSelectedCreator] = useState('');
 
   useEffect(() => {
     const fetchRoomStatistics = async () => {
-      await getRoomStatisticsData(roomId, 30);
+      await dispatch(getRoomStatisticsData(roomId, 30));
     };
     fetchRoomStatistics();
-  }, [getRoomStatisticsData, roomId]);
+  }, [dispatch, roomId]);
 
   const handleOpenPlayerModal = (creatorId) => {
     setSelectedCreator(creatorId);
@@ -47,7 +49,7 @@ const Leaderboards = ({
         <Box className="leaderboards-content">
           {roomStatsLoaded ? (
             <>
-              {actionList && actionList.hostBetsValue.length > 0 ? (
+              {actionList && actionList.hostBetsValue && actionList.hostBetsValue.length > 0 ? (
                 <Table 
                   className="leaderboards-table" 
                   sx={{ 
@@ -193,7 +195,7 @@ const Leaderboards = ({
             </>
           ) : (
             <Box sx={{ width: '100%', mt: 4 }}>
-              <LinearProgress color='error' />
+              <LinearProgress color="error" />
             </Box>
           )}
         </Box>
@@ -202,18 +204,4 @@ const Leaderboards = ({
   );
 };
 
-const mapStateToProps = (state) => ({
-  auth: state.auth.isAuthenticated,
-  user_id: state.auth.user._id,
-  isDarkMode: state.auth.isDarkMode,
-  actionList: state.customerReducer.actionList,
-  roomStatsLoaded: state.customerReducer.roomStatsLoaded,
-  solPrice: state.logic.solPrice
-});
-
-const mapDispatchToProps = { getRoomStatisticsData };
-
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(Leaderboards);
+export default Leaderboards;

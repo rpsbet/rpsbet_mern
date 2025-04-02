@@ -1,16 +1,10 @@
 import React, { useState } from 'react';
 import Modal from 'react-modal';
-import { connect, useDispatch } from 'react-redux';
-import {
-  closeConfirmTradeModal,
-  errorMsgBar,
-} from '../../redux/Notification/notification.actions';
-import {
-  confirmTrade,
-  addNewTransaction,
-} from '../../redux/Logic/logic.actions';
-import { Button } from '@mui/material';
+import { useDispatch, useSelector } from 'react-redux';
+import { closeConfirmTradeModal, errorMsgBar } from '../../redux/Notification/notification.actions';
+import { confirmTrade, addNewTransaction } from '../../redux/Logic/logic.actions';
 import { acQueryItem } from '../../redux/Item/item.action';
+import { Button } from '@mui/material';
 import { convertToCurrency } from '../../util/conversion';
 import Lottie from 'react-lottie';
 import progress from '../LottieAnimations/progress.json';
@@ -34,25 +28,21 @@ const customStyles = {
   },
 };
 
-function ConfirmTradeModal(props) {
-  const {
-    isOpen,
-    isDarkMode,
-    productName,
-    price,
-    rentOption,
-    solPrice,
-    item,
-    owner,
-    closeConfirmTradeModal,
-    confirmTrade,
-    addNewTransaction,
-    acQueryItem,
-  } = props;
-
-  // Local state for loading
-  const [loading, setLoading] = useState(false);
+const ConfirmTradeModal = () => {
   const dispatch = useDispatch();
+
+  // Access redux state via hooks
+  const isDarkMode = useSelector(state => state.auth.isDarkMode);
+  const isOpen = useSelector(state => state.snackbar.showConfirmTradeModal);
+  const item = useSelector(state => state.itemReducer._id);
+  const owner = useSelector(state => state.itemReducer.data.owner);
+  const rentOption = useSelector(state => state.itemReducer.data.rentOption);
+  const price = useSelector(state => state.itemReducer.data.price);
+  const productName = useSelector(state => state.itemReducer.data.productName);
+  const solPrice = useSelector(state => state.logic.solPrice);
+
+  // Local loading state
+  const [loading, setLoading] = useState(false);
 
   const defaultOptions = {
     loop: true,
@@ -63,28 +53,23 @@ function ConfirmTradeModal(props) {
     },
   };
 
-  // Handler for the confirm (OK) button
   const onBtnOkClicked = async () => {
     setLoading(true); // start loading
-
-    const response = await confirmTrade({ item_id: item, owner });
-
+    const response = await dispatch(confirmTrade({ item_id: item, owner }));
     if (response.success) {
       const { newTransaction, message } = response;
-      addNewTransaction(newTransaction);
-      acQueryItem(40, 1, 'price', '653ee81117c9f5ee2124564b');
+      dispatch(addNewTransaction(newTransaction));
+      dispatch(acQueryItem(40, 1, 'price', '653ee81117c9f5ee2124564b'));
       dispatch(errorMsgBar(message));
     } else {
       dispatch(errorMsgBar(response.message));
     }
-
-    closeConfirmTradeModal();
+    dispatch(closeConfirmTradeModal());
     setLoading(false); // stop loading
   };
 
-  // Handler for the cancel button
   const onBtnCancelClicked = () => {
-    closeConfirmTradeModal();
+    dispatch(closeConfirmTradeModal());
   };
 
   return (
@@ -112,24 +97,18 @@ function ConfirmTradeModal(props) {
               </h6>
             </>
           ) : (
-            // Display Lottie animation while loading
             <div className="loading-animation-container">
               <Lottie options={defaultOptions} height={40} width={210} />
               <h5 style={{ color: '#ffd000' }}>PROCESSING TRADE...</h5>
             </div>
           )}
         </div>
-
         {!loading && (
           <div className="modal-footer">
             <Button variant="contained" color="error" onClick={onBtnOkClicked}>
               {rentOption ? 'RENT' : 'TRADE'}
             </Button>
-            <Button
-              variant="contained"
-              color="error"
-              onClick={onBtnCancelClicked}
-            >
+            <Button variant="contained" color="error" onClick={onBtnCancelClicked}>
               Cancel
             </Button>
           </div>
@@ -137,27 +116,6 @@ function ConfirmTradeModal(props) {
       </div>
     </Modal>
   );
-}
-
-const mapStateToProps = (state) => ({
-  isDarkMode: state.auth.isDarkMode,
-  isOpen: state.snackbar.showConfirmTradeModal,
-  title: state.snackbar.title,
-  item: state.itemReducer._id,
-  owner: state.itemReducer.data.owner,
-  rentOption: state.itemReducer.data.rentOption,
-  price: state.itemReducer.data.price,
-  productName: state.itemReducer.data.productName,
-  alertMessage: state.snackbar.alertMessage,
-  alertType: state.snackbar.alertType,
-  solPrice: state.logic.solPrice,
-});
-
-const mapDispatchToProps = {
-  closeConfirmTradeModal,
-  confirmTrade,
-  addNewTransaction,
-  acQueryItem,
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(ConfirmTradeModal);
+export default ConfirmTradeModal;

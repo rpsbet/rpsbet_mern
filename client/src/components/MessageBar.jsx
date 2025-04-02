@@ -1,40 +1,29 @@
-import React from 'react';
-import { Alert, AlertTitle } from '@mui/material';
+import React, { useEffect } from 'react';
 import { useSnackbar } from 'notistack';
-import { connect } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { closeMsgBar } from '../redux/Notification/notification.actions';
 
-function CustomizedSnackbar({ openSk, closeMsgBar, message, status }) {
+function CustomizedSnackbar() {
   const { enqueueSnackbar } = useSnackbar();
+  const dispatch = useDispatch();
 
-  React.useEffect(() => {
+  const openSk = useSelector((state) => state.snackbar.openSk);
+  const message = useSelector((state) => state.snackbar.message);
+  const status = useSelector((state) => state.snackbar.status);
+
+  useEffect(() => {
     if (openSk && message) {
-      // Fallback if 'status' is not recognized
-      const validVariants = ['default','error','success','warning','info'];
+      const validVariants = ['default', 'error', 'success', 'warning', 'info'];
       const finalVariant = validVariants.includes(status) ? status : 'default';
-
-      enqueueSnackbar(
-        message,
-        {
-          variant: finalVariant,
-          onClose: closeMsgBar,
-          autoHideDuration: 3000,
-        }
-      );
+      enqueueSnackbar(message, {
+        variant: finalVariant,
+        onClose: () => dispatch(closeMsgBar()),
+        autoHideDuration: 3000,
+      });
     }
-  }, [openSk, message, status, enqueueSnackbar, closeMsgBar]);
+  }, [openSk, message, status, enqueueSnackbar, dispatch]);
 
   return null;
 }
 
-const mapStateToProps = (state) => ({
-  openSk: state.snackbar.openSk,
-  message: state.snackbar.message,
-  status: state.snackbar.status,
-});
-
-const mapDispatchToProps = {
-  closeMsgBar,
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(CustomizedSnackbar);
+export default CustomizedSnackbar;

@@ -1,5 +1,4 @@
 import api from '../../util/Api';
-import history from '../history';
 
 import {
   MSG_ERROR,
@@ -322,21 +321,4 @@ export const getRoomStatisticsData = (room_id, limit) => async dispatch => {
     dispatch({ type: MSG_WARNING, payload: error });
   }
 };
-
-
-// Update Customer
-export const updateCustomer = customer => async dispatch => {
-  try {
-    const { data } = await api.post('user/updateCustomer', customer);
-    if (data.success) {
-      history.push(`/admin/customers/`);
-    } else {
-      dispatch({ type: MSG_ERROR, payload: data.error });
-    }
-  } catch (error) {
-    console.log('error', error);
-    dispatch({ type: MSG_WARNING, payload: error });
-  }
-};
-
 

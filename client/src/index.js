@@ -1,19 +1,16 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux';
-import { BrowserRouter, Router } from 'react-router-dom';
+import { BrowserRouter } from 'react-router-dom'; // Use v6
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { SnackbarProvider } from 'notistack';
 import store from './redux/store';
 import App from './App';
-import history from './redux/history';
 import MessageBar from './components/MessageBar';
-import Background from './background'; // Import the Background component
 import './index.css';
 import './dark.css';
 
-// Define a function to create theme based on mode
 const getTheme = (mode) =>
   createTheme({
     palette: {
@@ -30,28 +27,25 @@ const getTheme = (mode) =>
     },
   });
 
-const currentMode = 'dark'; // Change to 'light' as needed
+const currentMode = 'dark';
 const theme = getTheme(currentMode);
 
-ReactDOM.render(
-  <React.Fragment>
-    <Provider store={store}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <SnackbarProvider
-          maxSnack={10}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-          autoHideDuration={3000}
-        >
-          <BrowserRouter>
-            <Router history={history}>
-              <App />
-              <MessageBar />
-            </Router>
-          </BrowserRouter>
-        </SnackbarProvider>
-      </ThemeProvider>
-    </Provider>
-  </React.Fragment>,
-  document.getElementById('root')
+const container = document.getElementById('root');
+const root = createRoot(container);
+root.render(
+  <Provider store={store}>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <SnackbarProvider
+        maxSnack={10}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+        autoHideDuration={3000}
+      >
+        <BrowserRouter>
+          <App />
+          <MessageBar />
+        </BrowserRouter>
+      </SnackbarProvider>
+    </ThemeProvider>
+  </Provider>
 );

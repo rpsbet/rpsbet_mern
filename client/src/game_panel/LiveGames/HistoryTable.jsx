@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { connect, useDispatch } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import {
   setHighlightedRooms,
-  clearHighlightedRooms
+  clearHighlightedRooms,
 } from '../../redux/Logic/logic.actions';
 import { getSettings } from '../../redux/Setting/setting.action';
 import Moment from 'moment';
@@ -12,8 +12,6 @@ import FileCopyIcon from '@mui/icons-material/FileCopy';
 import { Tooltip, Skeleton, Box, Typography } from '@mui/material';
 import PlayerModal from '../modal/PlayerModal';
 import { convertToCurrency } from '../../util/conversion';
-
-// Import your Avatar component:
 import Avatar from '../../components/Avatar';
 
 // Helper function for "time ago"
@@ -34,23 +32,30 @@ const updateFromNow = (history) =>
   }));
 
 function HistoryTable({
-  socket,
-  getSettings,
-  // The initial logs from Redux
-  history: initialHistory,
-  userId,
-  solPrice,
-  setHighlightedRooms,
-  clearHighlightedRooms, // so we can un-highlight
+  socket: propSocket,
+  history: propHistory,
+  userId: propUserId,
+  solPrice: propSolPrice,
 }) {
   const dispatch = useDispatch();
 
-  // We store the "final" logs (with built messages) in local state
-  const [history, setHistory] = useState(updateFromNow(initialHistory));
+  // Map state from Redux using useSelector
+  const { socket, history, userId, solPrice } = useSelector((state) => ({
+    socket: state.auth.socket,
+    history: state.logic.history,
+    userId: state.auth.user?._id,
+    solPrice: state.logic.solPrice,
+  }));
 
-  // We also keep the "raw" logs as we receive them (socket, Redux, etc.).
-  const [rawLogs, setRawLogs] = useState(initialHistory);
+  // Use prop values if provided, otherwise fall back to Redux state
+  const effectiveSocket = propSocket !== undefined ? propSocket : socket;
+  const effectiveHistory = propHistory !== undefined ? propHistory : history;
+  const effectiveUserId = propUserId !== undefined ? propUserId : userId;
+  const effectiveSolPrice = propSolPrice !== undefined ? propSolPrice : solPrice;
 
+  // Local State
+  const [historyState, setHistory] = useState(updateFromNow(effectiveHistory));
+  const [rawLogs, setRawLogs] = useState(effectiveHistory);
   const [showPlayerModal, setShowPlayerModal] = useState(false);
   const [selectedCreator, setSelectedCreator] = useState(null);
   const [copiedRowId, setCopiedRowId] = useState(null);
@@ -58,27 +63,23 @@ function HistoryTable({
   // Fetch site settings
   const fetchSettings = useCallback(async () => {
     try {
-      await getSettings();
+      await dispatch(getSettings());
     } catch (error) {
       console.error('Error fetching settings:', error);
     }
-  }, [getSettings]);
+  }, [dispatch]);
 
-  // This function returns JSX rather than a string.
-  // We'll decide whether to show the "creator" or "joined_user" with an <Avatar>,
-  // depending on the action. You can customize further as needed.
+  // Build final message with JSX
   const buildFinalMessage = (logItem) => {
-    if (!solPrice) {
+    if (!effectiveSolPrice) {
       return 'Loading price...';
     }
 
-       // Convert numeric fields
-    const betAmt = convertToCurrency(logItem.bet_amount, solPrice);
-    const winnings = convertToCurrency(logItem.winnings, solPrice);
-    const userBet = convertToCurrency(logItem.user_bet, solPrice);
+    const betAmt = convertToCurrency(logItem.bet_amount, effectiveSolPrice);
+    const winnings = convertToCurrency(logItem.winnings, effectiveSolPrice);
+    const userBet = convertToCurrency(logItem.user_bet, effectiveSolPrice);
     const displayRoom = `(${logItem.room?.ticker})`;
 
-    // Grab references to joined_user or creator
     const joinedUser = logItem.joined_user || {};
     const creator = logItem.creator || {};
 
@@ -88,153 +89,232 @@ function HistoryTable({
         <Box
           component="a"
           href={`/join/${roomObj._id}`}
-          sx={{ cursor: 'pointer', display: 'flex',  flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
-          className='room'
+          sx={{
+            cursor: 'pointer',
+            display: 'flex',
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+          className="room"
         >
           <img
             src={roomObj.image}
             alt={roomObj.image}
-            className='game-type-icon'
+            className="game-type-icon"
             style={{ display: 'inline-block', marginLeft: 6, marginRight: 4 }}
           />
-          <Typography variant='body2' sx={{mr: 0.5}}>{displayRoom}</Typography>
+          <Typography variant="body2" sx={{ mr: 0.5 }}>
+            {displayRoom}
+          </Typography>
         </Box>
       );
     };
-    // Helper to render an <Avatar> for joined_user or creator
-    function renderAvatar(userObj) {
+
+    const renderAvatar = (userObj) => {
       if (!userObj?._id) return null;
       return (
         <Box
           component="a"
           onClick={() => handleOpenPlayerModal(userObj._id)}
           sx={{ cursor: 'pointer' }}
-          className=''
+          className=""
         >
           <Avatar
-          user_id={userObj._id}
+            user_id={userObj._id}
             src={userObj.avatar}
             username={userObj.username}
             rank={userObj.totalWagered}
             accessory={userObj.accessory}
             alt=""
             className="avatar"
-            // Add any additional props you want for styling:
             style={{
               display: 'inline-block',
               marginRight: 8,
               verticalAlign: 'middle',
             }}
           />
-
         </Box>
-
       );
-    }
+    };
 
     switch (logItem.action) {
       case 'won': {
-        const totalWin = convertToCurrency(
-          logItem.winnings,
-          solPrice
-        );
+        const totalWin = convertToCurrency(logItem.winnings, effectiveSolPrice);
         return (
-          <Box sx={{ fontSize: '0.7rem', fontWeight: 700, display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box
+            sx={{
+              fontSize: '0.7rem',
+              fontWeight: 700,
+              display: 'flex',
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
             {renderAvatar(joinedUser)} won {totalWin} in {renderRoomInfo(logItem.room)}
           </Box>
         );
       }
-
       case 'receivedAutoPayout': {
         return (
-          <Box sx={{ fontSize: '0.7rem', fontWeight: 700, display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box
+            sx={{
+              fontSize: '0.7rem',
+              fontWeight: 700,
+              display: 'flex',
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
             Raydium Pool seeded for {renderRoomInfo(logItem.room)}
           </Box>
         );
       }
-
       case 'created':
         return (
-          <Box sx={{ fontSize: '0.7rem', fontWeight: 700, display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box
+            sx={{
+              fontSize: '0.7rem',
+              fontWeight: 700,
+              display: 'flex',
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
             {renderAvatar(creator)} created {renderRoomInfo(logItem.room)} with {betAmt}
           </Box>
         );
       case 'rugged':
         return (
-          <Box sx={{ fontSize: '0.7rem', fontWeight: 700, display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box
+            sx={{
+              fontSize: '0.7rem',
+              fontWeight: 700,
+              display: 'flex',
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
             {renderAvatar(creator)} rugged {winnings} in {renderRoomInfo(logItem.room)}
           </Box>
         );
-
       case 'split': {
-        const splitAmt = convertToCurrency(logItem.bet_amount * 2, solPrice);
+        const splitAmt = convertToCurrency(logItem.bet_amount * 2, effectiveSolPrice);
         return (
-          <Box sx={{ fontSize: '0.7rem', fontWeight: 700, display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box
+            sx={{
+              fontSize: '0.7rem',
+              fontWeight: 700,
+              display: 'flex',
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
             {renderAvatar(joinedUser)} split {splitAmt} in {renderRoomInfo(logItem.room)}
           </Box>
         );
       }
-
       case 'lost':
         return (
-          <Box sx={{ fontSize: '0.7rem', fontWeight: 700, display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box
+            sx={{
+              fontSize: '0.7rem',
+              fontWeight: 700,
+              display: 'flex',
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
             {renderAvatar(joinedUser)} lost {betAmt} in {renderRoomInfo(logItem.room)}
           </Box>
         );
-
       case 'jeet':
         return (
-          <Box sx={{ fontSize: '0.7rem', fontWeight: 700, display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box
+            sx={{
+              fontSize: '0.7rem',
+              fontWeight: 700,
+              display: 'flex',
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
             {renderAvatar(creator)} Jeeted {betAmt} in {renderRoomInfo(logItem.room)}
           </Box>
         );
-
       case 'pumped':
         return (
-          <Box sx={{ fontSize: '0.7rem', fontWeight: 700, display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box
+            sx={{
+              fontSize: '0.7rem',
+              fontWeight: 700,
+              display: 'flex',
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
             {renderAvatar(creator)} Pumped {betAmt} in {renderRoomInfo(logItem.room)}
           </Box>
         );
-
       case 'withdrew':
         return (
-          <Box sx={{ fontSize: '0.7rem', fontWeight: 700, display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box
+            sx={{
+              fontSize: '0.7rem',
+              fontWeight: 700,
+              display: 'flex',
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
             {renderAvatar(creator)} withdrew {betAmt}
           </Box>
         );
-
       default:
-        // If there's an action that doesn't match the above
         return (
-          <Box sx={{ fontSize: '0.7rem', fontWeight: 700, display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box
+            sx={{
+              fontSize: '0.7rem',
+              fontWeight: 700,
+              display: 'flex',
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
             Action: {logItem.action || 'None'}, Amount: {renderRoomInfo(logItem.room)}
           </Box>
         );
     }
   };
 
-  // Whenever rawLogs or solPrice change, rebuild the final history
+  // Update history when rawLogs or solPrice changes
   useEffect(() => {
     if (!rawLogs || rawLogs.length === 0) {
       setHistory([]);
       return;
     }
-    // Build final messages
     const updated = rawLogs.map((item) => ({
       ...item,
       finalMsg: buildFinalMessage(item),
     }));
-
-    // Also update "from now" for times
     setHistory(updateFromNow(updated));
-  }, [rawLogs, solPrice]);
+  }, [rawLogs, effectiveSolPrice]);
 
   // Socket event handler
   const handleNewLog = (data) => {
     const newLogArray = data?.newLog;
     if (!newLogArray || !Array.isArray(newLogArray)) return;
 
-    // Replace entire history
     const [firstLog] = newLogArray;
     if (firstLog?.room?._id) {
       dispatch(setHighlightedRooms([firstLog.room._id]));
@@ -247,16 +327,16 @@ function HistoryTable({
   };
 
   const setupSocketConnection = useCallback(() => {
-    if (socket) {
-      socket.on('NEW_LOG', handleNewLog);
+    if (effectiveSocket) {
+      effectiveSocket.on('NEW_LOG', handleNewLog);
     }
-  }, [socket]);
+  }, [effectiveSocket]);
 
   const disconnectSocket = useCallback(() => {
-    if (socket) {
-      socket.off('NEW_LOG', handleNewLog);
+    if (effectiveSocket) {
+      effectiveSocket.off('NEW_LOG', handleNewLog);
     }
-  }, [socket]);
+  }, [effectiveSocket]);
 
   useEffect(() => {
     fetchSettings();
@@ -264,10 +344,10 @@ function HistoryTable({
     return () => disconnectSocket();
   }, [fetchSettings, setupSocketConnection, disconnectSocket]);
 
-  // If Redux updates `initialHistory`, store it as raw logs
+  // Sync rawLogs with initialHistory from props/Redux
   useEffect(() => {
-    setRawLogs(initialHistory);
-  }, [initialHistory]);
+    setRawLogs(effectiveHistory);
+  }, [effectiveHistory]);
 
   const handleOpenPlayerModal = (creatorId) => {
     setShowPlayerModal(true);
@@ -286,14 +366,14 @@ function HistoryTable({
     });
   };
 
-  const uniqueHistory = history.filter(
+  const uniqueHistory = historyState.filter(
     (row, index, self) => index === self.findIndex((t) => t._id === row._id)
   );
 
   return (
     <Box className="overflowX">
       <Box className="table main-history-table">
-        {history?.length === 0 && (
+        {historyState?.length === 0 && (
           <Box className="dont-have-game-msg" sx={{ width: '100%' }}>
             <Skeleton variant="rectangular" sx={{ width: '100%', height: 10 }} />
           </Box>
@@ -301,13 +381,14 @@ function HistoryTable({
 
         {uniqueHistory.map((row, key) => {
           const isUserInvolved =
-            row.creator?._id === userId || row.joined_user?._id === userId;
+            row.creator?._id === effectiveUserId || row.joined_user?._id === effectiveUserId;
 
           return (
             <Box
               key={row._id}
-              className={`table-row ${isUserInvolved ? 'history-background' : ''
-                } ${key < 50 ? 'slide-in' : ''}`}
+              className={`table-row ${isUserInvolved ? 'history-background' : ''} ${
+                key < 50 ? 'slide-in' : ''
+              }`}
               sx={{
                 animationDelay: `${key * 0.1}s`,
                 filter: row.status !== 'open' ? 'opacity(60%)' : 'none',
@@ -315,16 +396,10 @@ function HistoryTable({
             >
               <Box>
                 <Box className="table-cell" sx={{ padding: '10px' }}>
-                  {/* Render the finalMsg (which is now JSX) */}
-                  <div className="desktop-only">
-                    {row.finalMsg || '...'}
-                  </div>
-                  <div className="mobile-only">
-                    {row.finalMsg || '...'}
-                  </div>
+                  <div className="desktop-only">{row.finalMsg || '...'}</div>
+                  <div className="mobile-only">{row.finalMsg || '...'}</div>
                 </Box>
 
-                {/* Copy to Clipboard + from_now display */}
                 <Box className="table-cell row-copy" sx={{ p: '10px' }}>
                   <Tooltip
                     title={copiedRowId === row._id ? 'COPIED ID!' : 'COPY BET ID'}
@@ -338,7 +413,7 @@ function HistoryTable({
                       <FileCopyIcon sx={{ width: 12 }} />
                     </Box>
                   </Tooltip>
-                  &nbsp;
+                   
                   {row.from_now && row.from_now.split('').map((char, i) => (
                     <Box
                       component="span"
@@ -348,7 +423,7 @@ function HistoryTable({
                       {char}
                     </Box>
                   ))}
-                  &nbsp;
+                   
                   <FontAwesomeIcon icon={faStopwatch} />
                 </Box>
               </Box>
@@ -368,17 +443,4 @@ function HistoryTable({
   );
 }
 
-const mapStateToProps = (state) => ({
-  socket: state.auth.socket,
-  history: state.logic.history,
-  userId: state.auth.user._id,
-  solPrice: state.logic.solPrice,
-});
-
-const mapDispatchToProps = {
-  getSettings,
-  setHighlightedRooms,
-  clearHighlightedRooms,
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(HistoryTable);
+export default HistoryTable;

@@ -1,26 +1,19 @@
 import React, { useState } from 'react';
-import { connect } from 'react-redux';
-
+import { useSelector } from 'react-redux';
 import { Modal, Box, Typography, Button } from '@mui/material';
-import { useTheme, ThemeProvider } from '@mui/material/styles';
-
+import { ThemeProvider } from '@mui/material/styles';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faList, faStore } from '@fortawesome/free-solid-svg-icons';
-
+import { faList } from '@fortawesome/free-solid-svg-icons';
 import AttachMoney from '@mui/icons-material/AttachMoney';
 
 import ProductPage from '../../admin_panel/app/ProductPages/ProductSerchPage/ProductPage';
 import InventoryModal from '../modal/InventoryModal';
-
-import {
-  warningMsgBar,
-  infoMsgBar,
-} from '../../redux/Notification/notification.actions';
-
-// Theme
 import { getCustomTheme } from '../../config/theme';
 
-function MarketplaceModal({ modalIsOpen, closeModal, isDarkMode, createItem }) {
+function MarketplaceModal({ modalIsOpen, closeModal }) {
+  // Get isDarkMode from Redux store
+  const isDarkMode = useSelector((state) => state.auth.isDarkMode);
+
   const [showInventoryModal, setShowInventoryModal] = useState(false);
   const [sortCriteria] = useState('updated_at');
   const [itemType] = useState('653ee81117c9f5ee2124564b');
@@ -35,7 +28,7 @@ function MarketplaceModal({ modalIsOpen, closeModal, isDarkMode, createItem }) {
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    bgcolor: '#2D3A4B', // force the dark background color
+    bgcolor: '#2D3A4B', // Force dark background
     color: '#fff',
     boxShadow: 24,
     p: 3,
@@ -111,11 +104,4 @@ function MarketplaceModal({ modalIsOpen, closeModal, isDarkMode, createItem }) {
   );
 }
 
-const mapStateToProps = (state) => ({});
-
-const mapDispatchToProps = {
-  warningMsgBar,
-  infoMsgBar,
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(MarketplaceModal);
+export default MarketplaceModal;

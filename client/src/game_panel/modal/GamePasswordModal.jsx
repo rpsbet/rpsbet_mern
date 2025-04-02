@@ -1,9 +1,9 @@
 import React, { useState, useCallback } from 'react';
-import { connect, useDispatch } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import {
-  setPasswordCorrect,
   closeGamePasswordModal,
   errorMsgBar,
+  setPasswordCorrect,
 } from '../../redux/Notification/notification.actions';
 import { checkGamePassword } from '../../redux/Logic/logic.actions';
 import { Button, TextField, Box, Modal } from '@mui/material';
@@ -27,55 +27,39 @@ const customStyles = {
   },
 };
 
-function GamePasswordModal(props) {
-  const {
-    isDarkMode,
-    isOpen,
-    closeGamePasswordModal,
-    checkGamePassword,
-    setPasswordCorrect,
-    roomId,
-  } = props;
+function GamePasswordModal() {
+  const dispatch = useDispatch();
+  const isDarkMode = useSelector((state) => state.auth.isDarkMode);
+  const isOpen = useSelector((state) => state.snackbar.showGamePasswordModal);
+  const roomId = useSelector((state) => state.logic.curRoomInfo._id);
 
   const [password, setPassword] = useState('');
-  const dispatch = useDispatch();
   const theme = getCustomTheme(isDarkMode ? 'dark' : 'light');
 
   const handleOkClick = useCallback(async () => {
-    const response = await checkGamePassword({ room_id: roomId, password });
+    const response = await dispatch(checkGamePassword({ room_id: roomId, password }));
     if (response === true) {
       const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
       rooms[roomId] = true;
       localStorage.setItem('rooms', JSON.stringify(rooms));
 
-      closeGamePasswordModal();
-      setPasswordCorrect(true);
+      dispatch(closeGamePasswordModal());
+      dispatch(setPasswordCorrect(true));
     } else {
-      dispatch(errorMsgBar(`WRONG F*CKING PUSSWORD!`));
+      dispatch(errorMsgBar('WRONG F*CKING PUSSWORD!'));
     }
-  }, [
-    checkGamePassword,
-    roomId,
-    password,
-    closeGamePasswordModal,
-    setPasswordCorrect,
-    isDarkMode,
-  ]);
+  }, [dispatch, roomId, password]);
 
   const handleCancelClick = useCallback(() => {
-    closeGamePasswordModal();
-  }, [closeGamePasswordModal]);
+    dispatch(closeGamePasswordModal());
+  }, [dispatch]);
 
   return (
     <ThemeProvider theme={theme}>
-      <Modal
-        open={isOpen || false}
-        style={customStyles}
-        contentLabel="Password"
-      >
+      <Modal open={isOpen || false} style={customStyles} contentLabel="Password">
         <div className={isDarkMode ? 'dark_mode' : ''}>
           <div className="modal-body alert-body password-modal-body">
-            <div className={`modal-icon result-icon-password`} />
+            <div className="modal-icon result-icon-password" />
             <h5>PASSWORD REQUIRED</h5>
             <TextField
               color="error"
@@ -91,11 +75,7 @@ function GamePasswordModal(props) {
             <Button variant="contained" color="error" onClick={handleOkClick}>
               Continue Bet
             </Button>
-            <Button
-              variant="contained"
-              color="error"
-              onClick={handleCancelClick}
-            >
+            <Button variant="contained" color="error" onClick={handleCancelClick}>
               Cancel
             </Button>
           </Box>
@@ -105,16 +85,4 @@ function GamePasswordModal(props) {
   );
 }
 
-const mapStateToProps = (state) => ({
-  isDarkMode: state.auth.isDarkMode,
-  isOpen: state.snackbar.showGamePasswordModal,
-  roomId: state.logic.curRoomInfo._id,
-});
-
-const mapDispatchToProps = {
-  closeGamePasswordModal,
-  checkGamePassword,
-  setPasswordCorrect,
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(GamePasswordModal);
+export default GamePasswordModal;

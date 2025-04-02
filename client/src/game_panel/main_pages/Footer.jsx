@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { connect } from 'react-redux';
-import history from '../../redux/history';
+import { useSelector } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXTwitter, faTelegram, faYoutube, faTiktok } from '@fortawesome/free-brands-svg-icons';
 import sol from '../icons/sol.png';
@@ -78,8 +77,13 @@ const AvailableCurrency = styled('img')({
   marginRight: '10px',
 });
 
-const Footer = (props) => {
-  const { isDarkMode, open, style } = props;
+function Footer({ open, style }) { // Keep open and style as props
+  // Map state from Redux using useSelector
+  const { isDarkMode } = useSelector((state) => ({
+    auth: state.auth.isAuthenticated,
+    user_id: state.auth.user._id,
+    isDarkMode: state.auth.isDarkMode,
+  }));
 
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
@@ -109,17 +113,17 @@ const Footer = (props) => {
         <Box className="social-icons" sx={{ display: 'flex', alignItems: 'center' }}>
           <span>CHECK SOCIALS FOR UPDATES ►</span>
           <a href="https://x.com/RPSDG_SOL">
-              <FontAwesomeIcon icon={faXTwitter} />
-            </a>
-            <a href="https://t.me/RPSDOTGAMESOL">
-              <FontAwesomeIcon icon={faTelegram} />
-            </a>
-            <a href="https://www.youtube.com/@rpsdotgame">
-              <FontAwesomeIcon icon={faYoutube} />
-            </a>
-            <a href="https://www.tiktok.com/@rpsdotgames">
-              <FontAwesomeIcon icon={faTiktok} />
-            </a>
+            <FontAwesomeIcon icon={faXTwitter} />
+          </a>
+          <a href="https://t.me/RPSDOTGAMESOL">
+            <FontAwesomeIcon icon={faTelegram} />
+          </a>
+          <a href="https://www.youtube.com/@rpsdotgame">
+            <FontAwesomeIcon icon={faYoutube} />
+          </a>
+          <a href="https://www.tiktok.com/@rpsdotgames">
+            <FontAwesomeIcon icon={faTiktok} />
+          </a>
         </Box>
         {/* <Currencies>
           <AvailableCurrency src={sol} alt="SOL" />
@@ -140,19 +144,19 @@ const Footer = (props) => {
           >
             Leaderboards
           </StyledLink>
-          <span className="mobile-only">&nbsp;✗&nbsp;</span>
+          <span className="mobile-only"> ✗ </span>
           <StyledLink href="https://blog.rps.game/">Blog</StyledLink>
-          &nbsp;✗&nbsp;
+           ✗ 
           <StyledLink href="#terms" onClick={handleOpenTermsModal}>
             Terms
           </StyledLink>
-          &nbsp;✗&nbsp;
+           ✗ 
           <StyledLink href="#privacy" onClick={handleOpenPrivacyModal}>
             Privacy
           </StyledLink>
         </LinksContainer>
         <Address>
-          <Typography sx={{p: '30px'}}>
+          <Typography sx={{ p: '30px' }}>
             RPS.Game has absolutely no involvement with any third-party gambling
             provider software or 'provably-fair' algorithms.
           </Typography>
@@ -174,12 +178,6 @@ const Footer = (props) => {
       )}
     </div>
   );
-};
+}
 
-const mapStateToProps = (state) => ({
-  auth: state.auth.isAuthenticated,
-  user_id: state.auth.user._id,
-  isDarkMode: state.auth.isDarkMode,
-});
-
-export default connect(mapStateToProps)(Footer);
+export default Footer;

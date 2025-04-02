@@ -1,9 +1,17 @@
 import React, { useState, useCallback } from 'react';
-import { connect } from 'react-redux';
 import Dropzone from './AvatarDropzone';
 import uniqid from 'uniqid';
 
 function Upload(props) {
+  const {
+    darkMode,
+    avatar,
+    setImageFilename,
+    rank,
+    accessory,
+    username,
+  } = props;
+
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({});
@@ -15,7 +23,7 @@ function Upload(props) {
       setFile(file);
       uploadFiles(file);
     },
-    [] // No external dependencies besides uploadFiles
+    [], // No external dependencies besides uploadFiles
   );
 
   // Upload the file(s)
@@ -28,7 +36,7 @@ function Upload(props) {
       setUploading(false);
     } catch (err) {
       console.error('Error uploading files:', err);
-      setSuccessfullUploaded(true);
+      setSuccessfullUploaded(true); // Still sets to true despite error; consider changing if unintended
       setUploading(false);
     }
   }, []);
@@ -43,9 +51,7 @@ function Upload(props) {
         const formData = new FormData();
         formData.append('file', file, filename);
 
-        // You likely want to do something with { formData, filename } here
-        // such as sending it to the server with fetch/axios
-        // For now, we just resolve.
+        // Resolve with formData and filename for potential upload
         resolve({ formData, filename });
       } catch (error) {
         console.error('Error preparing FormData:', error);
@@ -60,14 +66,14 @@ function Upload(props) {
         <div style={{ margin: '20px auto auto auto' }}>
           <Dropzone
             onFileAdded={onFileAdded}
-            disabled={uploading && successfullUploaded}
-            darkMode={props.darkMode}
-            imageUrl={props.avatar}
-            setImageFilename={props.setImageFilename}
-            rank={props.rank}
-            accessory={props.accessory}
-            username={props.username}
-            avatar={props.avatar}
+            disabled={uploading && successfullUploaded} // Consider logic: should be || if disabling during either state
+            darkMode={darkMode}
+            imageUrl={avatar}
+            setImageFilename={setImageFilename}
+            rank={rank}
+            accessory={accessory}
+            username={username}
+            avatar={avatar}
           />
         </div>
       </div>
@@ -75,8 +81,4 @@ function Upload(props) {
   );
 }
 
-// If you need Redux state or actions, define them here:
-const mapStateToProps = (state) => ({});
-const mapDispatchToProps = {};
-
-export default connect(mapStateToProps, mapDispatchToProps)(Upload);
+export default Upload;

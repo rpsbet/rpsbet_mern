@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { connect } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import {
   TextField,
   Button,
@@ -21,28 +21,27 @@ import { setFocused } from '../redux/Auth/user.actions.js';
 import { ThemeProvider } from '@mui/material/styles';
 import { getCustomTheme } from '../config/theme.js';
 
+const Comments = ({ roomId }) => {
+  // Get Redux state via hooks
+  const commentsFromState = useSelector(state => state.logic.comments);
+  const loading = useSelector(state => state.logic.isActiveLoadingOverlay);
+  const currentUserId = useSelector(state => state.auth.user._id);
+  const currentUsername = useSelector(state => state.auth.user.username);
+  const currentUserAvatar = useSelector(state => state.auth.user.avatar);
+  const currentUserAccessory = useSelector(state => state.auth.user.accessory);
+  const currentUserTotalWagered = useSelector(state => state.auth.user.totalWagered);
+  const socket = useSelector(state => state.auth.socket);
+  const isDarkMode = useSelector(state => state.auth.isDarkMode);
 
-const Comments = ({
-  comments: initialComments,
-  loading,
-  roomId,
-  currentUserId,
-  currentUsername,
-  currentUserAvatar,
-  currentUserAccessory,
-  currentUserTotalWagered,
-  socket,
-  getCommentsForRoom,
-  createComment,
-  deleteComment,
-  setFocused,
-  isDarkMode,
-}) => {
+  const dispatch = useDispatch();
+
+  // Local state
   const [newComment, setNewComment] = useState('');
   const [comments, setComments] = useState([]);
   const [showPlayerModal, setShowPlayerModal] = useState(false);
   const [selectedCreator, setSelectedCreator] = useState('');
 
+  // On mount, fetch comments and set up socket connection
   useEffect(() => {
     fetchComments();
     setupSocketConnection();
@@ -52,12 +51,23 @@ const Comments = ({
     };
   }, [roomId]);
 
+  // When Redux comments update, update local state
   useEffect(() => {
-    setComments(initialComments);
-  }, [initialComments]);
+    setComments(commentsFromState);
+  }, [commentsFromState]);
 
   const fetchComments = async () => {
-    await getCommentsForRoom(roomId);
+    await dispatch(getCommentsForRoom(roomId));
+  };
+
+  const handleNewComment = (newCommentData) => {
+    if (newCommentData.user._id !== currentUserId) {
+      setComments(prevComments => [newCommentData, ...prevComments]);
+    }
+  };
+
+  const handleDeleteCommentFromSocket = ({ commentId }) => {
+    setComments(prevComments => prevComments.filter(comment => comment._id !== commentId));
   };
 
   const setupSocketConnection = () => {
@@ -86,18 +96,9 @@ const Comments = ({
     }, 1000);
   }, [socket]);
 
-  const handleNewComment = (newComment) => {
-    if (newComment.user._id !== currentUserId) {
-      setComments((prevComments) => [newComment, ...prevComments]);
-    }
-  };
-
-  const handleDeleteCommentFromSocket = ({ commentId }) => {
-    setComments((prevComments) => prevComments.filter((comment) => comment._id !== commentId));
-  };
-
   const handleCommentSubmit = async () => {
     if (newComment.trim() !== '') {
+      // Create a temporary comment to show immediately
       const tempComment = {
         _id: `temp-${Date.now()}`,
         content: newComment,
@@ -112,30 +113,33 @@ const Comments = ({
         created_at: new Date().toISOString(),
       };
 
-      setComments((prevComments) => [tempComment, ...prevComments]);
+      setComments(prevComments => [tempComment, ...prevComments]);
       setNewComment('');
 
       try {
-        const response = await createComment({ content: newComment, room_id: roomId });
-
+        const response = await dispatch(createComment({ content: newComment, room_id: roomId }));
         if (response && response.success) {
-          setComments((prevComments) =>
-            prevComments.map((comment) => (comment._id === tempComment._id ? response.comment : comment))
+          // Replace temp comment with the one returned from the server
+          setComments(prevComments =>
+            prevComments.map(comment =>
+              comment._id === tempComment._id ? response.comment : comment
+            )
           );
         } else {
-          setComments((prevComments) => prevComments.filter((comment) => comment._id !== tempComment._id));
+          // Remove temp comment on failure
+          setComments(prevComments => prevComments.filter(comment => comment._id !== tempComment._id));
         }
-      } catch {
-        setComments((prevComments) => prevComments.filter((comment) => comment._id !== tempComment._id));
+      } catch (error) {
+        setComments(prevComments => prevComments.filter(comment => comment._id !== tempComment._id));
       }
     }
   };
 
   const handleDeleteComment = async (commentId) => {
-    setComments((prevComments) => prevComments.filter((comment) => comment._id !== commentId));
+    setComments(prevComments => prevComments.filter(comment => comment._id !== commentId));
 
     try {
-      const response = await deleteComment(commentId);
+      const response = await dispatch(deleteComment(commentId));
       if (!response.success) {
         console.error('Failed to delete comment:', response.error || 'Unknown error');
       }
@@ -157,9 +161,7 @@ const Comments = ({
 
   return (
     <ThemeProvider theme={theme}>
-
       <Box sx={{ background: '#2D3A4A', borderRadius: '0.3em', p: '20px' }}>
-
         {showPlayerModal && (
           <PlayerModal
             selectedCreator={selectedCreator}
@@ -169,7 +171,7 @@ const Comments = ({
         )}
 
         {loading ? (
-          <LinearProgress color='error' />
+          <LinearProgress color="error" />
         ) : (
           <Box
             sx={{
@@ -198,7 +200,7 @@ const Comments = ({
               onClick={handleCommentSubmit}
               variant="contained"
               startIcon={<FontAwesomeIcon icon={faPenSquare} />}
-              color='error'
+              color="error"
             >
               <Typography variant="button">[&#x23CE;]</Typography>
             </Button>
@@ -248,7 +250,7 @@ const Comments = ({
                     component="a"
                     onClick={() => handleOpenPlayerModal(comment.user._id)}
                     sx={{ cursor: 'pointer' }}
-                    className='player'
+                    className="player"
                   >
                     <Avatar
                       src={comment.user.avatar}
@@ -258,21 +260,26 @@ const Comments = ({
                       accessory={comment.user.accessory}
                       alt=""
                       darkMode={isDarkMode}
-                      className='avatar'
+                      className="avatar"
                     />
                   </Box>
                 </Tooltip>
               </Box>
               <Box sx={{ flexGrow: 1 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 'bold',  fontSize: '0.8em' }}>
+                <Box
+                  sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                >
+                  <Typography
+                    variant="subtitle1"
+                    sx={{ fontWeight: 'bold', fontSize: '0.8em' }}
+                  >
                     {comment.user.username}
                   </Typography>
-                  <Typography variant="caption" sx={{ fontSize: '0.6em'}} color="text.secondary">
+                  <Typography variant="caption" sx={{ fontSize: '0.6em' }} color="text.secondary">
                     {Moment(comment.created_at).fromNow()}
                   </Typography>
                 </Box>
-                <Typography variant="body2" sx={{ mt: 1, fontSize: '0.7em'}}>
+                <Typography variant="body2" sx={{ mt: 1, fontSize: '0.7em' }}>
                   {comment.content}
                 </Typography>
               </Box>
@@ -282,7 +289,7 @@ const Comments = ({
                   aria-label="delete"
                   sx={{ ml: 1 }}
                 >
-                  <DeleteIcon sx={{fontSize: "18px"}} />
+                  <DeleteIcon sx={{ fontSize: '18px' }} />
                 </IconButton>
               )}
             </Box>
@@ -290,20 +297,7 @@ const Comments = ({
         )}
       </Box>
     </ThemeProvider>
-
   );
 };
 
-const mapStateToProps = (state) => ({
-  comments: state.logic.comments,
-  loading: state.logic.isActiveLoadingOverlay,
-  currentUserId: state.auth.user._id,
-  currentUsername: state.auth.user.username,
-  currentUserAvatar: state.auth.user.avatar,
-  currentUserAccessory: state.auth.user.accessory,
-  currentUserTotalWagered: state.auth.user.totalWagered,
-  socket: state.auth.socket,
-  isDarkMode: state.auth.isDarkMode,
-});
-
-export default connect(mapStateToProps, { getCommentsForRoom, createComment, deleteComment, setFocused })(Comments);
+export default Comments;

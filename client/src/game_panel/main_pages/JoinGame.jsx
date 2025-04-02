@@ -5,9 +5,9 @@ import React, {
   useCallback,
   useMemo,
 } from 'react';
-import { connect, useDispatch } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import Moment from 'moment';
-
+import { useParams } from 'react-router-dom'; 
 import TabbedContent from '../../components/TabbedContent';
 import { getRoomStatisticsData } from '../../redux/Customer/customer.action';
 import { Button, Drawer, Box, Tabs, Tab } from '@mui/material';
@@ -23,7 +23,6 @@ import AiPanel from '../../components/AiPanel';
 import RoomTokenDetails from '../../components/RoomTokenDetails';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { getRank } from '../../util/getRank';
-import { convertToCurrency } from '../../util/conversion';
 
 import {
   bet3,
@@ -47,16 +46,6 @@ import {
   successMsgBar,
   errorMsgBar,
 } from '../../redux/Notification/notification.actions';
-import {
-  predictNext,
-  reinforcementAI,
-  predictNextByGPT,
-} from '../../util/predictNext';
-import {
-  predictNextQs,
-  reinforcementAI_qs,
-  predictQuickNextByGPT,
-} from '../../util/predictNextQs';
 
 import ChatPanel from '../ChatPanel/ChatPanel';
 import MyGamesTable from '../MyGames/MyGamesTable';
@@ -80,9 +69,11 @@ function updateFromNow(history) {
   return result;
 }
 
-function JoinGame(props) {
+function JoinGame({ match }) { // Keep match as a prop since it’s from React Router
+  const dispatch = useDispatch();
+  const { id } = useParams();
+  // Map state from Redux using useSelector
   const {
-    // props from mapStateToProps
     auth,
     history: propsHistory,
     strategies,
@@ -110,48 +101,51 @@ function JoinGame(props) {
     is_betting,
     attached,
     solPrice,
-    // props from mapDispatchToProps
-    toggleDrawer,
-    updateTutorialCompleted,
-    getRoomInfo: getRoomInfoAction,
-    getStrategies,
-    getTransactionCandles,
-    bet3: bet3Action,
-    updateAttachment,
-    detachPlayerFromRoom,
-    updateUserStrategy,
-    updateUserPrompt,
-    addNewTransaction,
-    pumpGame: pumpGameAction,
-    getRoomList: getRoomListAction,
-    getRoomStatisticsData: getRoomStatisticsDataAction,
-    getAttachedRooms,
-    getGameTypeList,
-    getRpsBetItems,
-    getQsBetItems,
-    openGamePasswordModal,
+  } = useSelector((state) => ({
+    auth: state.auth.isAuthenticated,
+    history: state.logic.history,
+    strategies: state.logic.strategies,
+    roomInfo: state.logic.curRoomInfo,
+    rpsbetitems: state.logic.rpsbetitems,
+    qsbetitems: state.logic.qsbetitems,
+    user_id: state.auth.user._id,
+    user_range: state.auth.user.range,
+    total_wagered: state.auth.user.totalWagered,
+    rank: state.logic.curRoomInfo.rank,
+    user: state.auth.user,
+    connectedAccount: state.auth.connectedAccount,
+    creator_avatar: state.logic.curRoomInfo.creator_avatar,
+    creator_accessory: state.logic.curRoomInfo.accessory,
+    username: state.logic.curRoomInfo.username,
+    accessory: state.auth.user.accessory,
+    user_balance: state.auth.user.balance,
+    ai_mode: state.auth.user.ai_mode,
+    isMuted: state.auth.isMuted,
+    gameSounds: state.auth.gameSounds,
+    selectedMainTabIndex: state.logic.selectedMainTabIndex,
+    isDrawerOpen: state.auth.isDrawerOpen,
+    loading: state.logic.isActiveLoadingOverlay,
+    isDarkMode: state.auth.isDarkMode,
+    isLowGraphics: state.auth.isLowGraphics,
+    is_betting: state.logic.is_betting,
+    attached: state.logic.attached,
+    solPrice: state.logic.solPrice,
+  }));
 
-    match,
-  } = props;
-
-  // Check if on mobile
+  // Local State
   const [is_mobile, setIsMobile] = useState(window.innerWidth < 1024);
-
-  // State from original constructor
   const [actionList, setActionList] = useState(null);
   const [showPlayerModal, setShowPlayerModal] = useState(false);
   const [betting, setBetting] = useState(false);
   const [selectedCreator, setSelectedCreator] = useState('');
   const [selectedMobileTab, setSelectedMobileTab] = useState('live_games');
   const [hosts, setHosts] = useState(roomInfo.hosts ?? []);
-
   const [localRoomInfo, setLocalRoomInfo] = useState(roomInfo);
   const [bankroll, setBankroll] = useState(roomInfo.bankroll);
   const [battles, setBattles] = useState(roomInfo.battles);
-
   const [selected_rps, setSelected_rps] = useState('');
   const [selected_qs_position, setSelected_qs_position] = useState(0);
-  const [index, setIndex] = useState(0); // used in markov logic
+  const [index, setIndex] = useState(0);
   const [qs_game_type, setQsGameType] = useState(2);
   const [run, setRun] = useState(false);
   const [selected_id, setSelectedId] = useState('');
@@ -167,10 +161,10 @@ function JoinGame(props) {
   const [isMax, setIsMax] = useState(false);
   const [bet_amount, setBetAmount] = useState(0.001);
   const [predictedBetAmount, setPredictedBetAmount] = useState(0);
+  const [loading, setLoading] = useState(propsLoading);
   const [componentHistory, setComponentHistory] = useState(
     updateFromNow(propsHistory),
   );
-  const [loading, setLoading] = useState(propsLoading);
 
   // Audio references
   const soundsRef = useRef({
@@ -188,21 +182,17 @@ function JoinGame(props) {
     grunt: new Audio('/sounds/grunt.mp3'),
   });
   const [currentSound, setCurrentSound] = useState(null);
-  const dispatch = useDispatch();
   const isMountedRef = useRef(true);
   const rpsbetitemsRef = useRef(rpsbetitems);
   const qsbetitemsRef = useRef(qsbetitems);
 
-  // Replaces: componentDidMount
+  // Effects
   useEffect(() => {
     isMountedRef.current = true;
 
     const init = async () => {
       try {
-        const { id } = match.params;
-
-        // ------------------ FETCH CANDL
-        await getTransactionCandles({ roomId: id, timeFrame: '1m' });
+        await dispatch(getTransactionCandles({ roomId: id, timeFrame: '1m' }));
         await initializeRoomData();
       } catch (error) {
         console.error('Error in init useEffect:', error);
@@ -210,7 +200,6 @@ function JoinGame(props) {
     };
 
     init();
-    // event listener for unload => handleUnload
     window.addEventListener('unload', handleUnload);
 
     return () => {
@@ -218,7 +207,7 @@ function JoinGame(props) {
       window.removeEventListener('unload', handleUnload);
       clearInterval(intervalId);
     };
-  }, []);
+  }, [dispatch, id]);
 
   useEffect(() => {
     rpsbetitemsRef.current = rpsbetitems;
@@ -226,40 +215,34 @@ function JoinGame(props) {
   useEffect(() => {
     qsbetitemsRef.current = qsbetitems;
   }, [qsbetitems]);
-  // Replaces some logic from componentDidUpdate
-  // 1) If user changes & we haven't fetched qBot yet => set run
+
   useEffect(() => {
     if (user && !run) {
-      // if user not done tutorial #2 => set run
       setRun(!user.completedTutorials?.includes(2));
     }
   }, [user, run]);
 
-  // 2) If roomInfo changes => update bankroll, qBot status, etc.
   useEffect(() => {
     setLocalRoomInfo(roomInfo);
     setBankroll(roomInfo.user_bet);
     const gameType = roomInfo.game_type;
     if (gameType === 'Quick Shoot') {
-      getQsBetItems(roomInfo._id);
+      dispatch(getQsBetItems(roomInfo._id));
     } else if (gameType === 'RPS') {
-      getRpsBetItems(roomInfo._id);
-    } 
+      dispatch(getRpsBetItems(roomInfo._id));
+    }
 
     if (isMountedRef.current && attached) {
       setBetting(true);
     }
-  }, [roomInfo]);
+  }, [roomInfo, attached, dispatch]);
 
-  // 3) If user_balance changes & gameResult != -1 & isMax => handleMaxButtonClick
   useEffect(() => {
     if (gameResult !== -1 && isMax) {
       handleMaxButtonClick();
     }
-  }, [user_balance]);
+  }, [user_balance, gameResult, isMax]);
 
-  // Replaces: getDerivedStateFromProps
-  // If `propsHistory` changes or is empty => update our local state `componentHistory`
   useEffect(() => {
     if (
       componentHistory?.length === 0 ||
@@ -270,7 +253,6 @@ function JoinGame(props) {
     ) {
       setComponentHistory(updateFromNow(propsHistory));
     }
-    // Also if localRoomInfo changes
     if (localRoomInfo._id !== roomInfo._id) {
       setLocalRoomInfo(roomInfo);
       setBankroll(roomInfo.user_bet);
@@ -279,72 +261,67 @@ function JoinGame(props) {
     }
   }, [propsHistory, roomInfo]);
 
-  // keep local loading in sync with propsLoading
   useEffect(() => {
     setLoading(propsLoading);
   }, [propsLoading]);
 
-  // ---------- LIFECYCLE METHODS (Converted) ----------
+  // Helper Functions
   const initializeRoomData = async () => {
     try {
       await Promise.all([
         loadSounds(),
-        getStrategies(),
-        getRoomInfoAction(match.params.id, 10),
+        dispatch(getStrategies()),
+        dispatch(getRoomInfo(id, 10)),
       ]);
-      // Done: The room data, bet items, sounds, and strategies are all loaded
     } catch (error) {
       console.error('Error initializing room data:', error);
     }
   };
 
-  // ---------- EVENT HANDLERS / HELPER FUNCTIONS ----------
   const toggleDrawerHandler = useCallback(() => {
-    toggleDrawer(!isDrawerOpen);
-  }, [toggleDrawer, isDrawerOpen]);
+    dispatch(toggleDrawer(!isDrawerOpen));
+  }, [dispatch, isDrawerOpen]);
 
-  // Replacing "join" => manual bet
   const join = useCallback(
     async (betInfo) => {
-      console.log('betInfo:____', betInfo);
-      return await bet3Action({
-        _id: roomInfo._id,
-        user: user_id,
-        game_type: roomInfo.game_type,
-        ...betInfo,
-      });
+      return await dispatch(
+        bet3({
+          _id: roomInfo._id,
+          user: user_id,
+          game_type: roomInfo.game_type,
+          ...betInfo,
+        }),
+      );
     },
-    [bet3Action, roomInfo, user_id],
+    [dispatch, roomInfo, user_id],
   );
 
-  // Replacing "join2" => auto bet
   const join2 = useCallback(
     async (betInfo) => {
-      return await bet3Action({
-        _id: localRoomInfo._id,
-        user: user_id,
-        game_type: localRoomInfo.game_type,
-        ...betInfo,
-      });
+      return await dispatch(
+        bet3({
+          _id: localRoomInfo._id,
+          user: user_id,
+          game_type: localRoomInfo.game_type,
+          ...betInfo,
+        }),
+      );
     },
-    [bet3Action, localRoomInfo, user_id],
+    [dispatch, localRoomInfo, user_id],
   );
 
   const playSound = useCallback(
     (soundKey) => {
-      // Only play if user not muted
       if (!isMuted || !gameSounds) {
         const audio = soundsRef.current[soundKey];
         if (audio && audio.paused !== undefined) {
-          if (!audio.paused) {
-            return;
-          }
+          if (!audio.paused) return;
           audio.currentTime = 0;
           const playPromise = audio.play();
           if (playPromise !== undefined) {
-            playPromise.catch((error) => {
-              console.log(`Error playing sound "${soundKey}":`, error);
-            });
+            playPromise.catch((error) =>
+              console.log(`Error playing sound "${soundKey}":`, error),
+            );
           }
           setCurrentSound(audio);
         }
@@ -352,77 +329,6 @@ function JoinGame(props) {
     },
     [isMuted, gameSounds],
   );
-
-  // ---------- AI-Related Predict Logic ----------
-  function predictNextBetAmount(risk, user_range, user_balance, bankroll) {
-    if (risk === 1) {
-      const minFixed = 0.001;
-      const maxFixed = 0.001;
-      const randomBet = minFixed + Math.random() * (maxFixed - minFixed);
-      return parseFloat(randomBet.toFixed(6));
-    }
-
-    if (!user_range) {
-      // If user_balance is falsy => fallback to 0.1
-      const upperBound = user_balance && user_balance > 0 ? user_balance : 0.1;
-      user_range = [0.001, upperBound];
-    }
-
-    // 3) Decide final minVal/maxVal
-    //    - No more than user_balance
-    //    - Also check bankroll if provided
-    const minVal = Math.max(user_range[0], 0.001);
-    let maxVal = user_range[1];
-
-    // If user_balance is defined => clamp maxVal
-    if (typeof user_balance === 'number') {
-      maxVal = Math.min(maxVal, user_balance);
-    }
-    // Also clamp by bankroll if defined
-    if (typeof bankroll === 'number') {
-      maxVal = Math.min(maxVal, bankroll);
-    }
-
-    // If invalid data => fallback to minVal
-    if (isNaN(minVal) || isNaN(maxVal) || maxVal < minVal) {
-      return minVal;
-    }
-
-    // 4) Risk-based logic
-    let lowerFrac, upperFrac;
-    switch (risk) {
-      case 2:
-        // "Low" portion of range
-        lowerFrac = 0.025;
-        upperFrac = 0.2;
-        break;
-      case 3:
-        // "Medium" portion
-        lowerFrac = 0.2;
-        upperFrac = 0.4;
-        break;
-      case 4:
-        // "High" portion
-        lowerFrac = 0.4;
-        upperFrac = 1.0;
-        break;
-      default:
-        // Full range
-        lowerFrac = 0;
-        upperFrac = 1;
-        break;
-    }
-
-    // 5) Calculate numeric sub-range
-    const range = maxVal - minVal;
-    const chosenMin = minVal + range * lowerFrac;
-    const chosenMax = minVal + range * upperFrac;
-
-    // 6) Pick a random value in [chosenMin..chosenMax]
-    const randomBet = chosenMin + Math.random() * (chosenMax - chosenMin);
-    // 7) Round to 6 decimals
-    return parseFloat(randomBet.toFixed(6));
-  }
 
   const changeBgColor = useCallback(async (resultVal) => {
     setBetResult(resultVal);
@@ -448,7 +354,7 @@ function JoinGame(props) {
 
       switch (resultVal) {
         case 1:
-          newBorderColor = '#49ff08';
+          newBorderColor = '#00ff3a';
           break;
         case -1:
           newBorderColor = '#ffd000';
@@ -466,228 +372,9 @@ function JoinGame(props) {
     },
     [roomInfo],
   );
-  // Example Refactored joinGame2
-  const joinGame2 = useCallback(
-    async (randomItem, bet_amount) => {
-      const { game_type: gameType, _id: roomId, status: status } = roomInfo;
-      // 1) Early exits for basic conditions
-      // 2) Extract room info & determine game type
-      if (roomInfo.status !== 'open') return;
-      const isQuickShoot = gameType === 'Quick Shoot';
-      const isRps = gameType === 'RPS';
-
-      // Update local states before async call
-      setSelected_rps(randomItem);
-      setSelected_qs_position(randomItem);
-      setPredictedBetAmount(bet_amount || 0);
-
-      try {
-        // 4) Build payload & call `join2`
-        let joinResult = null;
-        const payload = { bet_amount };
-        if (isRps) {
-          payload.selected_rps = randomItem;
-          joinResult = await join2(payload);
-        } else if (isQuickShoot) {
-          payload.selected_qs_position = randomItem;
-          joinResult = await join2(payload);
-
-          // Play special SFX for Quick Shoot if success
-          if (joinResult?.status === 'success' && !isMuted) {
-            playSound('ballKick');
-          }
-        }
-
-        // 5) If join was not successful, stop
-        if (!joinResult || joinResult.status !== 'success') return;
-
-        // 7) Handle bet result
-        const { betResult, amount } = joinResult;
-        const absAmount = Math.abs(amount);
-        const currencyElement = convertToCurrency(absAmount, solPrice);
-
-        // Helper to set UI state after the bet result
-        const handleBetResult = (result) => {
-          if (isQuickShoot) {
-            changeBgColorQs(result);
-          } else {
-            changeBgColor(result);
-          }
-        };
-
-        switch (betResult) {
-          case 1: // Win
-            playSound('win');
-            handleBetResult(1);
-            setResult(
-              <span style={{ color: '#7ed321' }}>+ {currencyElement}</span>,
-            );
-            setGameResult(1);
-            break;
-
-          case 0: // Tie
-            playSound('split');
-            handleBetResult(0);
-            setResult(
-              <span style={{ color: 'grey' }}>- {currencyElement}</span>,
-            );
-            setGameResult(0);
-            break;
-
-          default: // Lose
-            playSound('lose');
-            handleBetResult(-1);
-            setResult(
-              <span style={{ color: '#f50000' }}>- {currencyElement}</span>,
-            );
-            setGameResult(-1);
-
-            // For Quick Shoot, refresh the QS bet items
-            if (isQuickShoot) {
-              await getQsBetItems(roomId);
-            }
-            break;
-        }
-
-        // 8) Refresh RPS items if game is RPS
-        if (isRps) {
-          await getRpsBetItems(roomId);
-        }
-      } catch (error) {
-        console.error('Error in joinGame2:', error);
-      }
-    },
-    [
-      betting,
-      roomInfo,
-      selected_rps,
-      selected_qs_position,
-      solPrice,
-      isMuted,
-      join2,
-      playSound,
-      changeBgColor,
-      changeBgColorQs,
-      setSelected_rps,
-      setSelected_qs_position,
-      setPredictedBetAmount,
-      setResult,
-      setGameResult,
-      getRpsBetItems,
-      getQsBetItems,
-    ],
-  );
-
-  async function getNextAIMove(aiMode, gameType, dataRef, qsGameType, roomId) {
-    const isQuickShoot = gameType === 'Quick Shoot';
-
-    // if (!dataRef.current || dataRef.current.length === 0) {
-    //   return { move: null, risk: 1 };
-    // }
-
-    if (isQuickShoot) {
-      if (aiMode === 'Adam') {
-        return await reinforcementAI_qs(dataRef.current, qsGameType);
-      } else if (aiMode === 'Markov') {
-        return await predictNextQs(dataRef.current, qsGameType);
-      } else if (aiMode === 'o3Mini') {
-        return await predictQuickNextByGPT(roomId, qsGameType, user_id);
-      }
-    } else {
-      // RPS logic
-      if (aiMode === 'Adam') {
-        return await reinforcementAI(dataRef.current);
-      } else if (aiMode === 'Markov') {
-        return await predictNext(dataRef.current, true);
-      } else if (aiMode === 'o3Mini') {
-        return await predictNextByGPT(roomId, user_id);
-      }
-    }
-
-    // fallback if none matched
-    return { move: null, risk: 1 };
-  }
-
-  const startBetting = useCallback(() => {
-    const executeBetting = async () => {
-      const {
-        game_type: gameType,
-        _id: roomId,
-        qs_game_type,
-        is_private,
-      } = roomInfo;
-
-      try {
-        let randomItem;
-        let nextBetAmount;
-
-        const isQuickShoot = gameType === 'Quick Shoot';
-        const dataRef = isQuickShoot ? qsbetitemsRef : rpsbetitemsRef;
-
-        // Get the next AI move + risk
-        const nextMove = await getNextAIMove(
-          ai_mode,
-          gameType,
-          dataRef,
-          qs_game_type,
-          roomId,
-        );
-
-        if (nextMove.move !== null) {
-          randomItem = nextMove.move;
-          nextBetAmount = await predictNextBetAmount(nextMove.risk);
-        }
-
-        const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
-        const passwordCorrect = rooms[roomId];
-        if (is_private && !passwordCorrect) {
-          openGamePasswordModal();
-        } else {
-          await joinGame2(randomItem, nextBetAmount);
-        }
-
-        const delay = ai_mode === 'Adam' || ai_mode === 'o3Mini' ? 6000 : 3300;
-
-        const timerId = setTimeout(executeBetting, delay);
-        setIntervalId(timerId);
-      } catch (error) {
-        console.error('Error in betting process:', error);
-      }
-    };
-
-    executeBetting();
-  }, [
-    ai_mode,
-    roomInfo,
-    qsbetitemsRef,
-    rpsbetitemsRef,
-    openGamePasswordModal,
-    joinGame2,
-    predictNextBetAmount,
-    getNextAIMove,
-  ]);
-
-  const stopBetting = useCallback(() => {
-    try {
-      clearTimeout(intervalId);
-      setIntervalId(null);
-      setBetting(false);
-    } catch (error) {
-      console.error('Error stopping betting:', error);
-    }
-  }, [intervalId, attached, playSound, roomInfo]);
-
-  useEffect(() => {
-    return () => {
-      if (betting) {
-        stopBetting();
-      }
-    };
-  }, []);
 
   const loadSounds = useCallback(async () => {
     const soundObjects = soundsRef.current;
-    // Just ensure .load() is called; many browsers do lazy loading anyway
     await Promise.all(Object.values(soundObjects).map((snd) => snd.load()));
   }, []);
 
@@ -700,38 +387,21 @@ function JoinGame(props) {
   }, [currentSound]);
 
   const handleUnload = useCallback(() => {
-    stopBetting();
     stopAllSounds();
-  }, []);
+  }, [stopAllSounds]);
 
-  // ---------- Betting Loop ----------
   const handleSwitchChange = useCallback(() => {
     if (!validateIsAuthenticated(auth, isDarkMode)) return;
     if (!validateCreatorId(roomInfo.creator_id, user_id, isDarkMode)) return;
 
-    // Toggle logic
-    if (!betting) {
-      // We are not betting; start now
-
-      setBetting(true);
-      startBetting();
-      dispatch(successMsgBar('Turn on Isocratic mode'));
-    } else {
-      setBetting(false);
-      stopBetting();
-      dispatch(successMsgBar('Turn off Isocratic mode'));
-    }
+   
   }, [
     auth,
     isDarkMode,
     roomInfo,
     user_id,
     betting,
-    playSound,
-    validateIsAuthenticated,
-    validateCreatorId,
-    startBetting,
-    stopBetting,
+    dispatch,
   ]);
 
   const handleOpenPlayerModal = useCallback((creator_id) => {
@@ -758,16 +428,12 @@ function JoinGame(props) {
     }
 
     try {
-      const result = await pumpGameAction(
-        coHostAmount,
-        roomInfo._id,
-        connectedAccount,
+      const result = await dispatch(
+        pumpGame(coHostAmount, roomInfo._id, connectedAccount),
       );
       if (result.success) {
-        addNewTransaction(result.newTransaction);
-        await getRoomListAction({
-          game_type: roomInfo.game_type,
-        });
+        dispatch(addNewTransaction(result.newTransaction));
+        await dispatch(getRoomList({ game_type: roomInfo.game_type }));
       } else {
         dispatch(errorMsgBar(result.message));
       }
@@ -777,30 +443,19 @@ function JoinGame(props) {
   }, [
     coHostAmount,
     user_balance,
-    isDarkMode,
     roomInfo,
-    pumpGameAction,
-    addNewTransaction,
-    getRoomListAction,
+    connectedAccount,
+    dispatch,
   ]);
 
   const onChangeState = useCallback((newState) => {
-    // For instance, if `bankroll` is included in newState:
-    if ('bankroll' in newState) {
-      setBankroll(newState.bankroll);
-    }
-    if ('hosts' in newState && Array.isArray(newState.hosts)) {
+    if ('bankroll' in newState) setBankroll(newState.bankroll);
+    if ('hosts' in newState && Array.isArray(newState.hosts))
       setHosts(newState.hosts);
-    }
-    if ('result' in newState) {
-      setResult(newState.result);
-    }
-    if ('bet_amount' in newState) {
-      setBetAmount(newState.bet_amount);
-    }
-    if ('battles' in newState) {
+    if ('result' in newState) setResult(newState.result);
+    if ('bet_amount' in newState) setBetAmount(newState.bet_amount);
+    if ('battles' in newState)
       setBattles((prevBattles) => prevBattles + newState.battles);
-    }
   }, []);
 
   const handleHalfXButtonClick = useCallback(() => {
@@ -824,8 +479,8 @@ function JoinGame(props) {
     setIsMax(true);
   }, [user_balance, bankroll]);
 
-  // ---------- RENDER ----------
-  const gameTypeList = []; // not explicitly in state, but you can fetch it
+  // Render Logic
+  const gameTypeList = [];
   const payoutPercentage = useMemo(() => {
     if (isNaN((bankroll / roomInfo.endgame_amount) * 100)) return 0;
     return Math.ceil((bankroll / roomInfo.endgame_amount) * 100);
@@ -846,6 +501,7 @@ function JoinGame(props) {
     (bankroll / maxBankroll) * 100,
     100,
   ).toFixed(2);
+
   return (
     <Box
       className="main-game join"
@@ -876,9 +532,9 @@ function JoinGame(props) {
           selectedCreator={selectedCreator}
         />
       )}
+
       {/* MAIN PANEL */}
       <Box className="main-panel" sx={{ margin: '8px' }}>
-        {/* PreSummaryPanel */}
         <PreSummaryPanel
           status={roomInfo.status}
           bankroll={bankroll}
@@ -906,7 +562,6 @@ function JoinGame(props) {
           bet_amount={bet_amount}
         />
 
-        {/* TabbedContent */}
         <TabbedContent
           changeBgColor={changeBgColor}
           changeBgColorQs={changeBgColorQs}
@@ -935,7 +590,6 @@ function JoinGame(props) {
             if (callback) callback();
           }}
           selected_rps={selected_rps}
-
           playSound={playSound}
           join={join}
           handleSwitchChange={handleSwitchChange}
@@ -957,10 +611,10 @@ function JoinGame(props) {
           is_private={roomInfo.is_private}
           isDarkMode={isDarkMode}
           actionList={actionList}
-          getRoomData={() => {}} // or remove if not needed
+          getRoomData={() => {}}
           user={user}
           coHostAmount={coHostAmount}
-          getRoomInfo={getRoomInfoAction}
+          getRoomInfo={getRoomInfo}
           balance={user_balance}
           isLowGraphics={isLowGraphics}
           handleCoHostAmountChange={handleCoHostAmountChange}
@@ -977,52 +631,16 @@ function JoinGame(props) {
         />
 
         <div>
-          {/* MyGamesTable / HistoryTable / MyHistoryTable based on your conditions */}
-          {/* Example logic: */}
           {!is_mobile && selectedMainTabIndex === 1 && (
             <MyGamesTable gameTypeList={gameTypeList} />
           )}
-
-          {/* {is_mobile && selectedMobileTab === 'my_games' && <MyHistoryTable />} */}
         </div>
       </Box>
 
       {/* SUB PANEL */}
       <Box className="sub-panel">
-        {/* AiPanel & CoHostModal & RoomTokenDetails, etc. */}
         {!is_mobile && selectedMainTabIndex === 0 && (
           <Box>
-            {/* <AiPanel
-              rpsbetitems={rpsbetitems}
-              qsbetitems={qsbetitems}
-              onChangeState={onChangeState}
-              updateUserStrategy={updateUserStrategy}
-              updateUserPrompt={updateUserPrompt}
-              updateAttachment={updateAttachment}
-              detachPlayerFromRoom={detachPlayerFromRoom}
-              strategies={strategies}
-              betting={betting}
-              playSound={playSound}
-              bet_amount={bet_amount}
-              handle2xButtonClick={handle2xButtonClick}
-              handleHalfXButtonClick={handleHalfXButtonClick}
-              handleMaxButtonClick={handleMaxButtonClick}
-              bankroll={bankroll}
-              is_betting={is_betting}
-              attached={attached}
-              creator_id={roomInfo.creator_id}
-              getAttachedRooms={getAttachedRooms}
-              predictedBetAmount={predictedBetAmount}
-              roomId={roomInfo._id}
-              handleSwitchChange={handleSwitchChange}
-              game_type={roomInfo.game_type}
-              rank={getRank(total_wagered)}
-              qs_game_type={roomInfo.qs_game_type}
-              user_id={user_id}
-              ai_mode={ai_mode}
-              user_balance={user_balance}
-              isDarkMode={isDarkMode}
-            /> */}
             <CoHostModal
               isDarkMode={isDarkMode}
               coHostAmount={coHostAmount}
@@ -1051,7 +669,6 @@ function JoinGame(props) {
         )}
 
         <DrawerButton open={isDrawerOpen} toggleDrawer={toggleDrawerHandler} />
-        {/* <SupportButton open={props.isSupportOpen} /> */}
 
         {/* {!is_mobile && selectedMainTabIndex === 1 && <MyHistoryTable />} */}
       </Box>
@@ -1090,59 +707,4 @@ function JoinGame(props) {
   );
 }
 
-// ------------------ REDUX CONNECT ------------------
-const mapStateToProps = (state) => ({
-  auth: state.auth.isAuthenticated,
-  history: state.logic.history,
-  strategies: state.logic.strategies,
-  roomInfo: state.logic.curRoomInfo,
-  rpsbetitems: state.logic.rpsbetitems,
-  qsbetitems: state.logic.qsbetitems,
-  user_id: state.auth.user._id,
-  user_range: state.auth.user.range,
-  total_wagered: state.auth.user.totalWagered,
-  rank: state.logic.curRoomInfo.rank,
-  user: state.auth.user,
-  connectedAccount: state.auth.connectedAccount,
-  creator_avatar: state.logic.curRoomInfo.creator_avatar,
-  creator_accessory: state.logic.curRoomInfo.accessory,
-  username: state.logic.curRoomInfo.username,
-  accessory: state.auth.user.accessory,
-  user_balance: state.auth.user.balance,
-  ai_mode: state.auth.user.ai_mode,
-  isMuted: state.auth.isMuted,
-  gameSounds: state.auth.gameSounds,
-  selectedMainTabIndex: state.logic.selectedMainTabIndex,
-  isDrawerOpen: state.auth.isDrawerOpen,
-  loading: state.logic.isActiveLoadingOverlay,
-  isDarkMode: state.auth.isDarkMode,
-  isLowGraphics: state.auth.isLowGraphics,
-  is_betting: state.logic.is_betting,
-  attached: state.logic.attached,
-  solPrice: state.logic.solPrice,
-});
-
-const mapDispatchToProps = {
-  getRoomInfo,
-  getStrategies,
-  bet3,
-  setCurRoomInfo,
-  detachPlayerFromRoom,
-  updateAttachment,
-  updateUserStrategy,
-  updateUserPrompt,
-  addNewTransaction,
-  pumpGame,
-  getRoomList,
-  getRoomStatisticsData,
-  getAttachedRooms,
-  toggleDrawer,
-  getGameTypeList,
-  getRpsBetItems,
-  getQsBetItems,
-  openGamePasswordModal,
-  getTransactionCandles,
-  updateTutorialCompleted,
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(JoinGame);
+export default JoinGame;

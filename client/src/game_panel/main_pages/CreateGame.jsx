@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { connect, useDispatch } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { useNavigate, useParams } from 'react-router-dom'; // Add useParams
 import {
   Button,
   Radio,
@@ -12,7 +13,7 @@ import {
   Checkbox,
   FormControlLabel,
   Box,
-  Tooltip
+  Tooltip,
 } from '@mui/material';
 import { Info } from '@mui/icons-material';
 import { getRank } from '../../util/getRank';
@@ -28,7 +29,6 @@ import animationData from '../LottieAnimations/cat-place-bet.json';
 import CoinInfo from '../CreateGame/CoinInfo';
 import GameSettingsPanel from '../CreateGame/GameSettingsPanel';
 import DefaultBetAmountPanel from '../CreateGame/DefaultBetAmountPanel';
-import history from '../../redux/history';
 import { toggleDrawer } from '../../redux/Auth/user.actions';
 import {
   createRoom,
@@ -52,7 +52,7 @@ const StyledRadioGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 12px;
-margin-bottom: 20px;
+  margin-bottom: 20px;
   width: 100%;
   max-width: 800px;
 
@@ -72,7 +72,6 @@ const StyledProductCard = styled.a`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-
   border-radius: 0.3em;
   padding: 12px;
   width: 150px;
@@ -119,28 +118,43 @@ const getRandomGifUrl = () => {
   return gifUrls[randomIndex];
 };
 
-function CreateGame(props) {
+function CreateGame() { // Remove match prop
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { game_type_name } = useParams(); // Get game_type_name from URL
+  // Map state from Redux using useSelector
   const {
     isAuthenticated,
-    getGameTypeList,
-    setGameMode: _setGameMode,
-    getStrategies,
-    match,
-    solPrice,
+    connectedAccount,
     balance: propBalance,
     user,
     gameTypeList,
+    solPrice,
     strategies,
     isDrawerOpen,
     isDarkMode,
     isLowGraphics,
-    connectedAccount,
-    toggleDrawer: _toggleDrawer,
-  } = props;
+  } = useSelector((state) => ({
+    isAuthenticated: state.auth.isAuthenticated,
+    connectedAccount: state.auth.connectedAccount,
+    history: state.logic.history,
+    pageNumber: state.logic.pageNumber,
+    balance: state.auth.balance,
+    user: state.auth.user,
+    gameTypeList: state.logic.gameTypeList,
+    solPrice: state.logic.solPrice,
+    selectedMainTabIndex: state.logic.selectedMainTabIndex,
+    auth: state.auth.isAuthenticated,
+    landingItemList: state.landingReducer.landingItemList,
+    game_mode: state.logic.game_mode,
+    strategies: state.logic.strategies,
+    socket: state.auth.socket,
+    isDarkMode: state.auth.isDarkMode,
+    isLowGraphics: state.auth.isLowGraphics,
+    isDrawerOpen: state.auth.isDrawerOpen,
+  }));
 
-  // -------------------------------
-  //    Local component state
-  // -------------------------------
+  // Local component state
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
   const [selectedMobileTab, setSelectedMobileTab] = useState('live_games');
   const [step, setStep] = useState(1);
@@ -151,20 +165,19 @@ function CreateGame(props) {
   const [rpsList, setRpsList] = useState([]);
   const [qsList, setQsList] = useState([]);
   const [tax, setTax] = useState(20);
-
   const [name, setName] = useState('');
   const [image, setImage] = useState('');
   const [xLink, setXLink] = useState('');
   const [websiteLink, setWebsiteLink] = useState('');
   const [telegramLink, setTelegramLink] = useState('');
-
   const [ticker, setTicker] = useState('');
   const [selectedStrategy, setSelectedStrategy] = useState('Markov');
   const [gameCode, setGameCode] = useState('');
-  const [prompt, setPrompt] = useState('Create a Wheel of Fortune game, display the numbers 1 through 10 on the wheel and use https://t4.ftcdn.net/jpg/02/66/72/41/360_F_266724172_Iy8gdKgMa7XmrhYYxLCxyhx6J7070Pr8.jpg  as the background and show a spin button. Add this https://cdn.freesound.org/previews/752/752225_15867640-lq.mp3 sound. Whichever number the wheel lands on is the multiplier.');
+  const [prompt, setPrompt] = useState(
+    'Create a Wheel of Fortune game, display the numbers 1 through 10 on the wheel and use https://t4.ftcdn.net/jpg/02/66/72/41/360_F_266724172_Iy8gdKgMa7XmrhYYxLCxyhx6J7070Pr8.jpg  as the background and show a spin button. Add this https://cdn.freesound.org/previews/752/752225_15867640-lq.mp3 sound. Whichever number the wheel lands on is the multiplier.',
+  );
   const [qsNation, setQsNation] = useState(0);
   const [selectedQsPosition, setSelectedQsPosition] = useState(0);
-
   const [betAmount, setBetAmount] = useState(0.25);
   const [endgameAmount, setEndgameAmount] = useState(20);
   const [maxReturn, setMaxReturn] = useState(0);
@@ -181,8 +194,6 @@ function CreateGame(props) {
   const [description, setDescription] = useState('');
   const [rpsGameType, setRpsGameType] = useState(0);
   const [qsGameType, setQsGameType] = useState(2);
-
-  // Local duplication of balance if needed
   const [localBalance, setLocalBalance] = useState(propBalance);
 
   // Confirmation dialog
@@ -190,60 +201,6 @@ function CreateGame(props) {
   const [skipConfirm, setSkipConfirm] = useState(
     localStorage.getItem('hideConfirmModal') === 'true',
   );
-  const dispatch = useDispatch();
-
-  // -------------------------------
-  //    Lifecycle & Setup
-  // -------------------------------
-  useEffect(() => {
-    // Mimic componentDidMount
-    const path = window.location.pathname;
-    if (path === '/create/rps') {
-      setSelectedGameType('RPS');
-      setGameModeLocal('RPS');
-    } else if (path === '/create/quick-shoot') {
-      setSelectedGameType('QS');
-      setGameModeLocal('QS');
-    } else if (path === '/create/custom') {
-      setSelectedGameType('Custom');
-      setGameMode('Custom');
-      setGameModeLocal('Custom');
-    }
-
-    const gameTypeName = match.params.game_type_name || 'RPS';
-    getGameTypeList();
-    _setGameMode(gameTypeName);
-    initializeGameType(gameTypeName);
-
-    getStrategies();
-
-    return () => {
-      // Mimic componentWillUnmount
-    };
-  }, []);
-
-  useEffect(() => {
-    if (gameCode.trim()) {
-      setGameModeLocal('Custom');  // Change game mode
-      setSelectedGameType('Custom'); // Change selected game type
-      setGameType(9); // Set game type to 0 (or whatever represents "Custom")
-    }
-  }, [gameCode]);
-
-  // Mimic componentDidUpdate when match.params.game_type_name changes
-  useEffect(() => {
-    const gameTypeName = match.params.game_type_name;
-    if (gameTypeName) {
-      initializeGameType(gameTypeName);
-    }
-  }, [match.params.game_type_name]);
-
-  // Mimic getDerivedStateFromProps
-  useEffect(() => {
-    if (localBalance !== propBalance) {
-      setLocalBalance(propBalance);
-    }
-  }, [propBalance, localBalance]);
 
   const initializeGameType = useCallback(
     async (gameTypeName) => {
@@ -269,9 +226,51 @@ function CreateGame(props) {
     [gameTypeList, solPrice],
   );
 
+  // Lifecycle & Setup
+  useEffect(() => {
+    const path = window.location.pathname;
+    if (path === '/create/rps') {
+      setSelectedGameType('RPS');
+      setGameModeLocal('RPS');
+    } else if (path === '/create/quick-shoot') {
+      setSelectedGameType('QS');
+      setGameModeLocal('QS');
+    } else if (path === '/create/custom') {
+      setSelectedGameType('Custom');
+      setGameModeLocal('Custom');
+    }
+
+    const gameTypeName = game_type_name || 'RPS'; // Use params instead of match
+    dispatch(getGameTypeList());
+    dispatch(setGameMode(gameTypeName));
+    initializeGameType(gameTypeName);
+
+    dispatch(getStrategies());
+
+    return () => {};
+  }, [dispatch, game_type_name, initializeGameType]); // Update dependency
+
+  useEffect(() => {
+    if (gameCode.trim()) {
+      setGameModeLocal('Custom');
+      setSelectedGameType('Custom');
+      setGameType(9);
+    }
+  }, [gameCode]);
+
+  useEffect(() => {
+    if (game_type_name) { // Use params instead of match
+      initializeGameType(game_type_name);
+    }
+  }, [game_type_name, initializeGameType]);
+
+  useEffect(() => {
+    if (localBalance !== propBalance) {
+      setLocalBalance(propBalance);
+    }
+  }, [propBalance, localBalance]);
+
   const onChangeState = async (newState) => {
-    // Imitate this.setState(newState) by individually setting
-    // For brevity, you can expand or adjust as needed
     if ('bet_amount' in newState) setBetAmount(newState.bet_amount);
     if ('name' in newState) setName(newState.name);
     if ('image' in newState) setImage(newState.image);
@@ -287,8 +286,7 @@ function CreateGame(props) {
     if ('endgame_type' in newState) setEndgameType(newState.endgame_type);
     if ('selectedStrategy' in newState)
       setSelectedStrategy(newState.selectedStrategy);
-    if ('gameCode' in newState)
-      setGameCode(newState.gameCode);
+    if ('gameCode' in newState) setGameCode(newState.gameCode);
     if ('prompt' in newState) setPrompt(newState.prompt);
     if ('winChance' in newState) setWinChance(newState.winChance);
     if ('rps_game_type' in newState) setRpsGameType(newState.rps_game_type);
@@ -298,8 +296,8 @@ function CreateGame(props) {
       setSelectedQsPosition(newState.selected_qs_position);
   };
 
-  const toggleDrawer = () => {
-    _toggleDrawer(!isDrawerOpen);
+  const toggleDrawerHandler = () => {
+    dispatch(toggleDrawer(!isDrawerOpen));
   };
 
   const handleDescriptionChange = (event) => {
@@ -312,7 +310,6 @@ function CreateGame(props) {
       setEndgameType(false);
       setStep(step + 1);
     }
-    return;
   };
 
   const onPrevButtonClicked = () => {
@@ -354,7 +351,7 @@ function CreateGame(props) {
   const onNextButtonClicked = () => {
     if (step === 1) {
       if (!connectedAccount) {
-        dispatch(errorMsgBar("CONNECT YOUR WALLET"));
+        dispatch(errorMsgBar('CONNECT YOUR WALLET'));
         return;
       }
       if (!gameMode) {
@@ -365,15 +362,13 @@ function CreateGame(props) {
         dispatch(errorMsgBar("YOU DIDN'T BET (CAT) SHIT!!!"));
         return;
       }
-      if (gameMode === "Custom" && gameCode === '') {
-        console.log("gameCode", gameCode);
+      if (gameMode === 'Custom' && gameCode === '') {
         dispatch(errorMsgBar("YOU DIDN'T GENERATE A GAME MOTHERFUCKER!"));
         return;
       }
       const parsedQsGameType = parseInt(qsGameType);
 
-      // ✅ Set tax based on `parsedQsGameType`
-      if (gameMode === "RPS") {
+      if (gameMode === 'RPS') {
         setTax(30);
       } else {
         switch (parsedQsGameType) {
@@ -390,53 +385,53 @@ function CreateGame(props) {
             setTax(18);
             break;
           default:
-            setTax(20); // Default value
+            setTax(20);
         }
       }
 
       if (parseFloat(betAmount) < 0.001) {
-        dispatch(errorMsgBar("MEOWNIMUM BUY-IN IS 0.001 SOL!"));
+        dispatch(errorMsgBar('MEOWNIMUM BUY-IN IS 0.001 SOL!'));
         return;
       }
 
       if (parseFloat(betAmount) >= parseFloat(endgameAmount)) {
-        dispatch(errorMsgBar("HARD-CAP MUST BE MORE THAN YOUR BUY-IN AMOUNT!"));
+        dispatch(errorMsgBar('HARD-CAP MUST BE MORE THAN YOUR BUY-IN AMOUNT!'));
         return;
       }
       if (!name.trim()) {
-        dispatch(errorMsgBar("ADD A NAME DUMBASS!"));
+        dispatch(errorMsgBar('ADD A NAME DUMBASS!'));
         return;
       }
       if (name.trim().length > 16) {
-        dispatch(errorMsgBar("Name cannot be longer than 20 characters!"));
+        dispatch(errorMsgBar('Name cannot be longer than 20 characters!'));
         return;
       }
       if (!ticker.trim()) {
-        dispatch(errorMsgBar("ADD A TICKER DUMBASS!"));
+        dispatch(errorMsgBar('ADD A TICKER DUMBASS!'));
         return;
       }
       if (!image.trim()) {
-        dispatch(errorMsgBar("ADD AN IMAGE DUMBASS!"));
+        dispatch(errorMsgBar('ADD AN IMAGE DUMBASS!'));
         return;
       }
       if (betAmount > localBalance) {
-        dispatch(errorMsgBar("NOT ENUFF FUNDS AT THIS MEOWMENT"));
+        dispatch(errorMsgBar('NOT ENUFF FUNDS AT THIS MEOWMENT'));
         return;
       }
 
       if (isNaN(endgameAmount)) {
-        dispatch(errorMsgBar("ENTER A VALID NUMBER!"));
+        dispatch(errorMsgBar('ENTER A VALID NUMBER!'));
         return;
       }
       if (endgameAmount < 10) {
-        dispatch(errorMsgBar("MINIMUM HARD CAP IS 10 SOL"));
+        dispatch(errorMsgBar('MINIMUM HARD CAP IS 10 SOL'));
         return;
       }
     }
 
     if (step === 2) {
       if (isPrivate && !roomPassword) {
-        dispatch(errorMsgBar("SET THE PASSWORD TO JOIN YOUR GAME!"));
+        dispatch(errorMsgBar('SET THE PASSWORD TO JOIN YOUR GAME!'));
         return;
       }
       if (endgameAmount === 0) {
@@ -457,11 +452,11 @@ function CreateGame(props) {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         const img = new Image();
-        img.crossOrigin = 'anonymous'; // Handle CORS issues
+        img.crossOrigin = 'anonymous';
         img.src = imageSrc;
 
         img.onload = () => {
-          const maxWidth = 250; // Adjust as needed
+          const maxWidth = 250;
           let width = img.width;
           let height = img.height;
 
@@ -478,7 +473,6 @@ function CreateGame(props) {
 
           canvas.toBlob((blob) => {
             if (blob) {
-              // We'll just resolve with the Blob
               resolve(blob);
             } else {
               reject('Failed to generate image Blob.');
@@ -493,7 +487,6 @@ function CreateGame(props) {
     };
 
     try {
-      // 1) Resize the original 'image' (URL) into a Blob
       const resizedBlob = await saveImage(image);
       const formData = new FormData();
       formData.append('file', resizedBlob, 'resized-image.png');
@@ -546,7 +539,7 @@ function CreateGame(props) {
         rps_game_type: rpsGameType,
       };
 
-      await props.createRoom(fullState);
+      await dispatch(createRoom(fullState, navigate));
     } catch (error) {
       console.error('[Front-end] Error uploading/resizing image:', error);
       dispatch(errorMsgBar('Failed to process image. Please try again.'));
@@ -590,14 +583,12 @@ function CreateGame(props) {
       setGameModeLocal(shortName);
       setStep(1);
 
-      _setGameMode(selectedGameName);
-      history.push(url);
+      dispatch(setGameMode(selectedGameName));
+      navigate(url);
     }
   };
 
-  // -------------------------------
-  //    Render sub-components
-  // -------------------------------
+  // Render sub-components
   const step1 = () => {
     const defaultBetAmounts = [0.25, 0.5, 1, 2.5, 10];
 
@@ -607,7 +598,7 @@ function CreateGame(props) {
           <Box>
             <RadioGroup value={selectedGameType} onChange={handleChange}>
               <h3 className="game-sub-title roll-tag">
-                Add Game&nbsp;
+                Add Game
                 <Tooltip
                   style={{ position: 'absolute', right: '20px' }}
                   title="Select a game-mode to use as collateral against your capital."
@@ -618,7 +609,7 @@ function CreateGame(props) {
               </h3>
               <StyledRadioGrid>
                 {gameTypeList
-                  .filter((gameType) => gameType.short_name !== "Custom")
+                  .filter((gameType) => gameType.short_name !== 'Custom')
                   .map((gameType, index) => (
                     <FormControlLabel
                       key={index}
@@ -633,8 +624,13 @@ function CreateGame(props) {
                         <StyledProductCard
                           id="rps-game-type-radio"
                           isDarkMode={isDarkMode}
-                          className={`btn-game-type title btn-icon ${gameTypeStyleClass[gameType.short_name]} ${selectedGameType === gameType.short_name ? 'active' : ''
-                            }`}
+                          className={`btn-game-type title btn-icon ${
+                            gameTypeStyleClass[gameType.short_name]
+                          } ${
+                            selectedGameType === gameType.short_name
+                              ? 'active'
+                              : ''
+                          }`}
                         >
                           <StyledProductImage
                             src={`/img/gametype/icons/${gameType.short_name}.svg`}
@@ -648,26 +644,23 @@ function CreateGame(props) {
                     />
                   ))}
 
-                {/* Custom Option */}
                 <FormControlLabel
                   value="Custom"
                   control={<Radio style={{ opacity: 0, position: 'absolute' }} />}
                   label={
                     <div
                       onClick={(e) => {
-                        // Prevent event bubbling if needed
                         e.stopPropagation();
-                        // Trigger handleChange with a synthetic event object
                         handleChange({ target: { value: 'Custom' } });
                       }}
                       style={{ cursor: 'pointer' }}
                     >
                       <GameSettingsPanel
-                        isCustomLabel={true}  // Display-only mode; no internal onClick
+                        isCustomLabel={true}
                         selectedStrategy={selectedStrategy}
                         setSelectedStrategy={setSelectedStrategy}
                         gameCode={gameCode}
-                        setGameMode={setGameMode}
+                        setGameMode={setGameModeLocal}
                         setGameModeLocal={setGameModeLocal}
                         setSelectedGameType={setSelectedGameType}
                         setGameCode={setGameCode}
@@ -688,11 +681,9 @@ function CreateGame(props) {
             </RadioGroup>
           </Box>
           {gameMode === 'QS' && (
-
             <Box sx={{ mt: '20px' }}>
-
               <h3 className="game-sub-title roll-tag">
-                Choose a Game Type&nbsp;
+                Choose a Game Type
                 <Tooltip
                   style={{ position: 'absolute', right: '20px' }}
                   title="Select the multiplier of the player, 5x is typically the safest option for the Host."
@@ -729,9 +720,7 @@ function CreateGame(props) {
                 ))}
               </Box>
             </Box>
-
           )}
-
 
           <CoinInfo
             onChangeState={onChangeState}
@@ -751,7 +740,7 @@ function CreateGame(props) {
           />
         </Box>
       </Box>
-    )
+    );
   };
 
   const actionPanel = () => {
@@ -809,9 +798,7 @@ function CreateGame(props) {
     );
   };
 
-  // -------------------------------
-  //    Main render
-  // -------------------------------
+  // Main render
   return (
     <LoadingOverlay
       className="custom-loading-overlay"
@@ -841,7 +828,6 @@ function CreateGame(props) {
             : '100%',
         }}
       >
-        {/* Mobile Chat Drawer (if needed) */}
         {isMobile && selectedMobileTab === 'chat' && (
           <Drawer
             className="mat-chat"
@@ -858,7 +844,6 @@ function CreateGame(props) {
           <Dialog open={openDialog} onClose={handleCancel}>
             <DialogTitle>CONFIRM GAME SETTINGS?</DialogTitle>
             <DialogContent>
-              {/* Additional summary/details about the room can go here */}
               <FormControlLabel
                 control={
                   <Checkbox
@@ -885,13 +870,13 @@ function CreateGame(props) {
               variant="text"
               color="error"
               onClick={() => {
-                history.push('/');
+                navigate('/');
               }}
               className="label"
               id="liveStakes"
             >
               <FontAwesomeIcon icon={faArrowLeft} />
-              &nbsp; Go Back
+              &nbsp;Go Back
             </Button>
           </Box>
           <Box className="create-game-panel">
@@ -919,8 +904,8 @@ function CreateGame(props) {
                     step={step}
                     child_step={childStep}
                     isPlaying={isPlaying}
-                    handleUrlChange={() => { }}
-                    handleSubmit={() => { }}
+                    handleUrlChange={() => {}}
+                    handleSubmit={() => {}}
                     handleDescriptionChange={handleDescriptionChange}
                   />
                 )}
@@ -928,40 +913,41 @@ function CreateGame(props) {
             </Box>
           </Box>
           {step !== 4 && actionPanel()}
-          <DrawerButton open={isDrawerOpen} toggleDrawer={toggleDrawer} />
-          {/* <SupportButton .../> If you have a separate support toggle */}
+          <DrawerButton open={isDrawerOpen} toggleDrawer={toggleDrawerHandler} />
         </Box>
 
-        {/* Example of a mobile bottom nav for switching tabs */}
         {!isMobile && (
           <div className="mobile-only main-page-nav-button-group">
             <Button
-              className={`mobile-tab-live ${selectedMobileTab === 'live_games' ? 'active' : ''}`}
+              className={`mobile-tab-live ${
+                selectedMobileTab === 'live_games' ? 'active' : ''
+              }`}
               onClick={() => setSelectedMobileTab('live_games')}
             >
-              {/* SVG ICON */}
               {selectedMobileTab === 'live_games' && 'LIVE GAMES'}
             </Button>
             <Button
-              className={`mobile-tab-my ${selectedMobileTab === 'my_games' ? 'active' : ''}`}
+              className={`mobile-tab-my ${
+                selectedMobileTab === 'my_games' ? 'active' : ''
+              }`}
               onClick={() => setSelectedMobileTab('my_games')}
             >
-              {/* SVG ICON */}
               {selectedMobileTab === 'my_games' && 'YOUR GAMES'}
             </Button>
             <Button
-              className={`mobile-tab-marketplace ${selectedMobileTab === 'marketplace' ? 'active' : ''
-                }`}
+              className={`mobile-tab-marketplace ${
+                selectedMobileTab === 'marketplace' ? 'active' : ''
+              }`}
               onClick={() => setSelectedMobileTab('marketplace')}
             >
-              {/* SVG ICON */}
               {selectedMobileTab === 'marketplace' && 'MARKETPLACE'}
             </Button>
             <Button
-              className={`mobile-tab-chat ${selectedMobileTab === 'chat' ? 'active' : ''}`}
+              className={`mobile-tab-chat ${
+                selectedMobileTab === 'chat' ? 'active' : ''
+              }`}
               onClick={() => setSelectedMobileTab('chat')}
             >
-              {/* SVG ICON */}
               {selectedMobileTab === 'chat' && 'CHAT'}
             </Button>
           </div>
@@ -973,36 +959,4 @@ function CreateGame(props) {
   );
 }
 
-// -------------------------------
-//    Redux Connection
-// -------------------------------
-const mapStateToProps = (state) => ({
-  isAuthenticated: state.auth.isAuthenticated,
-  connectedAccount: state.auth.connectedAccount,
-  history: state.logic.history,
-  pageNumber: state.logic.pageNumber,
-  balance: state.auth.balance,
-  user: state.auth.user,
-  gameTypeList: state.logic.gameTypeList,
-  solPrice: state.logic.solPrice,
-  selectedMainTabIndex: state.logic.selectedMainTabIndex,
-  auth: state.auth.isAuthenticated,
-  landingItemList: state.landingReducer.landingItemList,
-  game_mode: state.logic.game_mode,
-  strategies: state.logic.strategies,
-  socket: state.auth.socket,
-  isDarkMode: state.auth.isDarkMode,
-  isLowGraphics: state.auth.isLowGraphics,
-  isDrawerOpen: state.auth.isDrawerOpen,
-});
-
-const mapDispatchToProps = {
-  createRoom,
-  setGameMode,
-  getStrategies,
-  getGameTypeList,
-  uploadImageToPinata,
-  toggleDrawer,
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(CreateGame);
+export default CreateGame;

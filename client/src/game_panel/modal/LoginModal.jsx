@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { connect } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom'; // Replace history with useNavigate
 import { Button, TextField, Modal, Box, Typography } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faSignInAlt,
-  faExternalLinkAlt,
-} from '@fortawesome/free-solid-svg-icons';
+import { faSignInAlt, faExternalLinkAlt } from '@fortawesome/free-solid-svg-icons';
 import { ThemeProvider } from '@mui/material/styles';
 import { getCustomTheme } from '../../config/theme';
 import {
@@ -21,23 +19,27 @@ import {
   getNotifications,
 } from '../../redux/Logic/logic.actions';
 
-import history from '../../redux/history';
+function LoginModal({ modalIsOpen, closeModal }) {
+  const dispatch = useDispatch();
+  const navigate = useNavigate(); // Add useNavigate hook
 
-function LoginModal(props) {
-  const { email: initialEmail, password: initialPassword } = props;
+  // Retrieve values from Redux state
+  const isDarkMode = useSelector((state) => state.auth.isDarkMode);
+  const initialEmail = useSelector((state) => state.auth.user.email) || '';
+  const initialPassword = useSelector((state) => state.auth.user.password) || '';
 
   // ------------------ LOCAL STATE ------------------
   const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState(initialPassword);
   const [isInvestorsPage, setIsInvestorsPage] = useState(
-    window.location.pathname.startsWith('/investors'),
+    window.location.pathname.startsWith('/investors')
   );
 
-  const theme = getCustomTheme(props.isDarkMode);
+  const theme = getCustomTheme(isDarkMode);
 
   // ------------------ HANDLERS ------------------
-  const onFocusHandler = () => props.setFocused(true);
-  const onBlurHandler = () => props.setFocused(false);
+  const onFocusHandler = () => dispatch(setFocused(true));
+  const onBlurHandler = () => dispatch(setFocused(false));
 
   const onChangeEmail = (e) => setEmail(e.target.value);
   const onChangePassword = (e) => setPassword(e.target.value);
@@ -69,15 +71,10 @@ function LoginModal(props) {
         console.error('Phantom wallet not found');
         return;
       }
-
-      // Attempt to connect with Phantom
       await window.solana.connect();
       const walletAddress = window.solana.publicKey.toString();
-
-      // Dispatch a Redux action to authenticate with Phantom
-      const result = await props.authenticateWithPhantom({ walletAddress });
+      const result = await dispatch(authenticateWithPhantom({ walletAddress }));
       if (result.status === 'success') {
-        // If success, it returns {status:'success', user, token} etc.
         onSuccessfulLogin(result.user);
       } else {
         console.error('Phantom login failed:', result.error);
@@ -93,12 +90,10 @@ function LoginModal(props) {
       return;
     }
     const jwt = response.credential;
-
-    props
-      .authenticateWithGoogle({ token: jwt })
+    dispatch(authenticateWithGoogle({ token: jwt }))
       .then((result) => {
         if (result.status === 'success') {
-          props.closeModal();
+          closeModal();
           onSuccessfulLogin(result.user);
         } else {
           console.error('Login failed:', result.error);
@@ -111,32 +106,32 @@ function LoginModal(props) {
 
   const onSubmitForm = async (e) => {
     e.preventDefault();
-    const result = await props.userSignIn({ email, password });
+    const result = await dispatch(userSignIn({ email, password }));
     if (result.status === 'success') {
       onSuccessfulLogin(result.user);
     }
   };
 
   const onSuccessfulLogin = (user) => {
-    props.getNotifications();
-    props.getMyHistory();
-    props.getMyChat();
-    props.getUser();
+    dispatch(getNotifications());
+    dispatch(getMyHistory());
+    dispatch(getMyChat());
+    dispatch(getUser());
     const currentPath = window.location.pathname;
-    currentPath.startsWith('/investors')
-      ? history.push('/investors')
-      : history.push('/');
-    props.closeModal();
+    if (currentPath.startsWith('/investors')) {
+      navigate('/investors'); // Replace history.push with navigate
+    } else {
+      navigate('/'); // Replace history.push with navigate
+    }
+    closeModal();
   };
 
   // ------------------ EFFECTS ------------------
   useEffect(() => {
     initializeGoogleSignIn();
-
     setTimeout(() => {
       initializeGoogleSignIn();
     }, 100);
-
     setIsInvestorsPage(window.location.pathname.startsWith('/investors'));
   }, []);
 
@@ -146,8 +141,8 @@ function LoginModal(props) {
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    bgcolor: '#2D3A4B', // Custom background color
-    color: '#fff', // Text color for contrast
+    bgcolor: '#2D3A4B',
+    color: '#fff',
     boxShadow: 24,
     borderRadius: 1,
     p: 3,
@@ -159,8 +154,8 @@ function LoginModal(props) {
   return (
     <ThemeProvider theme={theme}>
       <Modal
-        open={props.modalIsOpen || false}
-        onClose={props.closeModal}
+        open={modalIsOpen || false}
+        onClose={closeModal}
         closeAfterTransition
         BackdropProps={{
           style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' },
@@ -170,14 +165,11 @@ function LoginModal(props) {
         <Box sx={modalBoxStyle}>
           {/* HEADER */}
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-            <Typography
-              variant="h6"
-              sx={{ display: 'flex', alignItems: 'center' }}
-            >
+            <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center' }}>
               <FontAwesomeIcon icon={faSignInAlt} style={{ marginRight: 8 }} />
               LOGIN
             </Typography>
-            <Button variant="text" color="error" onClick={props.closeModal}>
+            <Button variant="text" color="error" onClick={closeModal}>
               ×
             </Button>
           </Box>
@@ -218,7 +210,6 @@ function LoginModal(props) {
 
           {/* ACTIONS */}
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {/* Row with Login and Register Buttons */}
             <Box sx={{ display: 'flex', gap: 2 }}>
               <Button
                 variant="contained"
@@ -226,25 +217,12 @@ function LoginModal(props) {
                 onClick={onSubmitForm}
                 fullWidth
               >
-                Login&nbsp;
+                Login 
                 <Typography component="span" fontStyle="italic">
                   [↵]
                 </Typography>
               </Button>
-              {/* <Button
-                variant="text"
-                color="error"
-                onClick={() => {
-                  props.closeModal();
-                  props.openSignupModal();
-                }}
-                fullWidth
-              >
-                SIGN UP →
-              </Button> */}
             </Box>
-
-            {/* OR Separator */}
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <Box sx={{ flex: 1, borderBottom: 1, borderColor: 'divider' }} />
               <Typography variant="body2" sx={{ mx: 2 }}>
@@ -252,8 +230,6 @@ function LoginModal(props) {
               </Typography>
               <Box sx={{ flex: 1, borderBottom: 1, borderColor: 'divider' }} />
             </Box>
-
-            {/* New Connect Wallet Button */}
             <Button
               variant="contained"
               color="error"
@@ -262,8 +238,6 @@ function LoginModal(props) {
             >
               Connect Wallet
             </Button>
-
-            {/* Another OR Separator */}
             <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
               <Box sx={{ flex: 1, borderBottom: 1, borderColor: 'divider' }} />
               <Typography variant="body2" sx={{ mx: 2 }}>
@@ -271,8 +245,6 @@ function LoginModal(props) {
               </Typography>
               <Box sx={{ flex: 1, borderBottom: 1, borderColor: 'divider' }} />
             </Box>
-
-            {/* Google Sign-In */}
             <Box sx={{ display: 'flex', justifyContent: 'center' }}>
               <Box
                 id="googleSignInButton"
@@ -284,45 +256,6 @@ function LoginModal(props) {
                 }}
               />
             </Box>
-
-            {/* Conditional Links */}
-            {/* {!isInvestorsPage ? (
-              <Typography
-                component="a"
-                onClick={() => {
-                  props.closeModal();
-                  history.push('/investors');
-                }}
-                sx={{
-                  color: 'secondary.main',
-                  textDecoration: 'underline',
-                  textAlign: 'center',
-                  cursor: 'pointer',
-                  mt: 1,
-                }}
-              >
-                INVESTOR? ($RPS PORTAL)&nbsp;
-                <FontAwesomeIcon icon={faExternalLinkAlt} />
-              </Typography>
-            ) : (
-              <Typography
-                component="a"
-                onClick={() => {
-                  props.closeModal();
-                  history.push('/play');
-                }}
-                sx={{
-                  color: 'secondary.main',
-                  textDecoration: 'underline',
-                  textAlign: 'center',
-                  cursor: 'pointer',
-                  mt: 1,
-                }}
-              >
-                Play RPS.Game&nbsp;
-                <FontAwesomeIcon icon={faExternalLinkAlt} />
-              </Typography>
-            )} */}
           </Box>
         </Box>
       </Modal>
@@ -330,22 +263,4 @@ function LoginModal(props) {
   );
 }
 
-// ------------------ REDUX CONNECT ------------------
-const mapStateToProps = (state) => ({
-  isDarkMode: state.auth.isDarkMode,
-  email: state.auth.user.email,
-  password: state.auth.user.password,
-});
-
-const mapDispatchToProps = {
-  userSignIn,
-  getUser,
-  getMyHistory,
-  getMyChat,
-  getNotifications,
-  setFocused,
-  authenticateWithGoogle,
-  authenticateWithPhantom,
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(LoginModal);
+export default LoginModal;

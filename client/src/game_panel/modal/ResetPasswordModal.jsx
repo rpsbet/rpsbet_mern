@@ -1,7 +1,6 @@
-import React, { Component } from 'react';
+import React, { useState } from 'react';
 import Modal from 'react-modal';
-import { connect } from 'react-redux';
-
+import { useSelector, useDispatch } from 'react-redux';
 import { sendResetPasswordEmail } from '../../redux/Auth/user.actions';
 
 Modal.setAppElement('#root');
@@ -19,88 +18,73 @@ const customStyles = {
     transform: 'translate(-50%, -50%)',
     padding: 0,
     background: 'transparent',
-    border: 0,
     border: 'none',
   },
 };
 
-class ResetPasswordModal extends Component {
-  constructor(props) {
-    super(props);
+const ResetPasswordModal = (props) => {
+  const dispatch = useDispatch();
+  const isDarkMode = useSelector((state) => state.auth.isDarkMode);
+  // Destructure props from parent
+  const { modalIsOpen, title, closeModal, openLoginModal, email: initialEmail } = props;
 
-    this.state = {
-      email: props.email,
-      password: props.password,
-      showVerificationModal: false,
-    };
-  }
+  // Local state
+  const [email, setEmail] = useState(initialEmail || '');
+  const [showVerificationModal] = useState(false); // not used further in this example
 
-  onChangeEmail = (e) => {
-    this.setState({ email: e.target.value });
+  const onChangeEmail = (e) => {
+    setEmail(e.target.value);
   };
 
-  onSubmitForm = async (e) => {
+  const onSubmitForm = async (e) => {
     e.preventDefault();
-    const is_sent = await this.props.sendResetPasswordEmail(this.state.email);
-    if (is_sent) {
+    const isSent = await dispatch(sendResetPasswordEmail(email));
+    if (isSent) {
+      // Optionally, handle post-email-sent logic here
     }
   };
 
-  render() {
-    return (
-      <>
-        <Modal
-          isOpen={this.props.modalIsOpen || false}
-          style={customStyles}
-          contentLabel={this.props.title}
-        >
-          <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
-            <div className="modal-body">
+  return (
+    <Modal
+      isOpen={modalIsOpen || false}
+      style={customStyles}
+      contentLabel={title}
+    >
+      <div className={isDarkMode ? 'dark_mode' : ''}>
+        <div className="modal-body">
+          <button
+            className="btn-close"
+            onClick={closeModal}
+          >
+            ×
+          </button>
+          <h2>RECOVER PASSWORD</h2>
+          <form onSubmit={onSubmitForm}>
+            <p>YOUR EMAIL ADDRESS</p>
+            <input
+              type="text"
+              className="form-control"
+              value={email}
+              onChange={onChangeEmail}
+            />
+            <button type="submit">
+              Send Email
+            </button>
+            <p className="m-0 sm-text-center">
               <button
-                className="btn-close"
-                variant="text"
-                color="error"
-                onClick={this.props.closeModal}
+                onClick={(e) => {
+                  closeModal();
+                  openLoginModal();
+                }}
               >
-                ×
+                Back to Login →
               </button>
-              <h2>RECOVER PASSWORD</h2>
-              <form onSubmit={this.onSubmitForm}>
-                <p>YOUR EMAIL ADDRESS</p>
-                <input
-                  type="text"
-                  className="form-control"
-                  value={this.state.email}
-                  onChange={this.onChangeEmail}
-                />
-                <button variant="contained" color="error">
-                  Send Email
-                </button>
-                <p className="m-0 sm-text-center">
-                  <button
-                    onClick={(e) => {
-                      this.props.closeModal();
-                      this.props.openLoginModal();
-                    }}
-                  >
-                    Back to Login →
-                  </button>
-                </p>
-              </form>
-            </div>
-          </div>
-        </Modal>
-      </>
-    );
-  }
-}
-
-const mapStateToProps = (state) => ({
-  isDarkMode: state.auth.isDarkMode,
-});
-
-const mapDispatchToProps = {
-  sendResetPasswordEmail,
+            </p>
+          </form>
+        </div>
+      </div>
+    </Modal>
+  );
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(ResetPasswordModal);
+export default ResetPasswordModal;

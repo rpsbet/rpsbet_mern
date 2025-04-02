@@ -1776,7 +1776,7 @@ h6.score {
   box-shadow: unset !important;
   border-radius: 1em !important;
   position: absolute;
-  top: -15px;
+  top: -10px;
   border-color: #343a40 !important;
   color: #343a40 !important;
 }
@@ -2059,7 +2059,7 @@ svg#delete:hover {
 .result {
   white-space: nowrap;
   position: absolute;
-  top: -7px;
+  top: -20px;
   right:30px;
   display: flex;
   width: 130px;
@@ -2075,10 +2075,12 @@ svg#delete:hover {
 
 .result .lottie-progress,
 .result .lottie-pressHold {
-  animation: pulse 1.5s;
-  filter: grayscale(1);
   margin-left: 10px;
+  margin-top: -10px;
   display: inline;
+  height: 50px;
+  overflow: hidden;
+  filter: hue-rotate(90deg);
 }
 
 .result .lottie-pressHold {

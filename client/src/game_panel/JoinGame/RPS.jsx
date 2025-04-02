@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { connect, useDispatch } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { acQueryMyItem } from '../../redux/Item/item.action';
 import { setSpectateMode } from '../../redux/Auth/user.actions';
@@ -9,17 +9,14 @@ import {
   getRoomBotCount,
   updateRoomBot,
   kickBots,
-  detachPlayerFromRoom
+  detachPlayerFromRoom,
 } from '../../redux/Logic/logic.actions';
-
 import {
   validateIsAuthenticated,
   validateBetAmount,
-  validateBankroll
+  validateBankroll,
 } from '../modal/betValidations';
-
 import { convertToCurrency } from '../../util/conversion';
-
 import {
   Button,
   IconButton,
@@ -32,19 +29,16 @@ import {
   Checkbox,
   FormControlLabel,
   Box,
-  Stack
+  Stack,
 } from '@mui/material';
-
 import { Info } from '@mui/icons-material';
 import ViewIcon from '@mui/icons-material/Visibility';
 import SwordsIcon from '@mui/icons-material/VisibilityOff';
-
 import Lottie from 'react-lottie';
 import Avatar from '../../components/Avatar';
 import PlayerModal from '../modal/PlayerModal';
 import AiPanel from '../../components/AiPanel';
 import ImageResultModal from '../modal/ImageResultModal';
-
 import progress from '../LottieAnimations/progress.json';
 import pressHold from '../LottieAnimations/pressHold.json';
 import { faRobot, faBan, faBrain } from '@fortawesome/free-solid-svg-icons';
@@ -53,41 +47,51 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 const options = [
   { classname: 'rock', selection: 'R' },
   { classname: 'paper', selection: 'P' },
-  { classname: 'scissors', selection: 'S' }
+  { classname: 'scissors', selection: 'S' },
 ];
 
 function RPS(props) {
-  /**
-   * Destructure props
-   */
+  const dispatch = useDispatch();
+
+  // Map state from Redux using useSelector
   const {
-    // Redux
-    socket: socket,
+    socket,
     isAuthenticated,
     isPasswordCorrect: propIsPasswordCorrect,
     isDarkMode,
     isWatching,
     balance,
-    rank,
     rpsbetitems,
     solPrice,
-    updateUserStrategy,
+    data,
     isLowGraphics,
+    isMusicEnabled,
     is_betting,
-    openGamePasswordModal,
-    updateRoomBot,
-    kickBots,
-    setSpectateMode,
-    getRpsBetItems,
-    getRoomBotCount,
-    updateAttachment,
-    updateUserPrompt,
+    rank,
+  } = useSelector((state) => ({
+    socket: state.auth.socket,
+    isAuthenticated: state.auth.isAuthenticated,
+    isPasswordCorrect: state.snackbar.isPasswordCorrect,
+    isDarkMode: state.auth.isDarkMode,
+    isWatching: state.auth.isWatching,
+    balance: state.auth.balance,
+    rpsbetitems: state.logic.rpsbetitems,
+    solPrice: state.logic.solPrice,
+    data: state.itemReducer.myItemArray,
+    isLowGraphics: state.auth.isLowGraphics,
+    isMusicEnabled: state.auth.isMusicEnabled,
+    is_betting: state.logic.is_betting,
+    rank: state.logic.curRoomInfo.rank,
+  }));
+
+  // Destructure remaining props from parent component
+  const {
     roomInfo,
     creator_id,
     user_id,
     bet_amount,
     changeBgColor,
-    join, // function from parent: e.g. props.joinGame
+    join,
     selected_rps,
     onChangeState,
     playSound,
@@ -105,14 +109,15 @@ function RPS(props) {
     handle2xButtonClick,
     handleHalfXButtonClick,
     handleMaxButtonClick,
-    result, // from parent state
-    gameResult, // from parent state
-    bankroll, // if provided
+    result,
+    gameResult,
+    bankroll,
+    updateUserStrategy,
+    updateUserPrompt,
+    updateAttachment,
   } = props;
 
-  /**
-   * Local React state
-   */
+  // Local React state
   const [showImageModal, setShowImageModal] = useState(false);
   const [image, setImage] = useState('');
   const [productName, setProductName] = useState('');
@@ -124,49 +129,39 @@ function RPS(props) {
   const [status, setStatus] = useState(roomInfo.status);
   const [pool_id, setPoolId] = useState(roomInfo.pool_id);
   const [hostPr, setHostPr] = useState(roomInfo.host_pr);
-  const [rpsHistory, setRpsHistory] = useState([]); // current RPS array
+  const [rpsHistory, setRpsHistory] = useState([]);
   const [prevRps, setPrevRps] = useState([]);
   const [localIsPasswordCorrect, setLocalIsPasswordCorrect] = useState(propIsPasswordCorrect);
   const [localSelectedRps, setLocalSelectedRps] = useState(selected_rps);
   const [openConfirmBet, setOpenConfirmBet] = useState(false);
   const [confirmBetMessage, setConfirmBetMessage] = useState('');
   const [confirmBetCallback, setConfirmBetCallback] = useState(null);
-  const [skipConfirm, setSkipConfirm] = useState(localStorage.getItem('hideConfirmModal') === 'true');
-
-  const dispatch = useDispatch();
+  const [skipConfirm, setSkipConfirm] = useState(
+    localStorage.getItem('hideConfirmModal') === 'true',
+  );
 
   // Refs
   const intervalIdRef = useRef(null);
 
-  /**
-   * Effects
-   */
-
-  // On mount
+  // Effects
   useEffect(() => {
-    // Fetch botsCount initially
     (async () => {
       try {
-        const count = await getRoomBotCount(roomInfo._id);
+        const count = await dispatch(getRoomBotCount(roomInfo._id));
         setBotsCount(count);
       } catch (error) {
         console.error('Error fetching data:', error);
       }
     })();
 
-    // Cleanup
     return () => {
-      // "componentWillUnmount"
       clearInterval(intervalIdRef.current);
     };
-    // eslint-disable-next-line
-  }, []);
+  }, [dispatch, roomInfo._id]);
 
-  // Attach socket listeners whenever socket / roomInfo._id / isWatching changes
   useEffect(() => {
     if (!socket) return;
 
-    // --- LISTENERS ---
     const handleSocketData = (data) => {
       if (!data) {
         console.error('Error: Received undefined or null data from the socket.');
@@ -187,14 +182,12 @@ function RPS(props) {
       });
       setHostPr(data.host_pr);
 
-      // Set pool_id if it exists in the data
       if (data.pool_id) {
         setPoolId(data.pool_id);
       }
 
       if (!data.rps) return;
 
-      // Filter for user's RPS if isWatching
       const filteredRPS = data.rps.filter((game) => game.joiner === user_id);
       const rpsState = isWatching ? filteredRPS : data.rps;
       setRpsHistory(rpsState);
@@ -206,55 +199,31 @@ function RPS(props) {
       onChangeState({ bankroll: data.bankroll });
     };
 
-    // --- ATTACH ---
     const channel1 = `UPDATED_BANKROLL_${roomInfo._id}`;
     const channel2 = `UPDATED_BANKROLL2_${roomInfo._id}`;
 
     socket.on(channel1, handleSocketData);
     socket.on(channel2, handleSocketData2);
 
-    // --- CLEANUP ---
     return () => {
       socket.off(channel1, handleSocketData);
       socket.off(channel2, handleSocketData2);
     };
-  }, [socket, roomInfo._id, isWatching, onChangeState, user_id, playSound, setPoolId]);
+  }, [socket, roomInfo._id, isWatching, onChangeState, user_id, playSound]);
 
-  // Watch for host_pr changes
   useEffect(() => {
     setHostPr(parseFloat(roomInfo.host_pr));
   }, [roomInfo.host_pr]);
 
-  // If currently betting, do quick "flashing" effect
-  useEffect(() => {
-    if (is_betting) {
-      const id = setInterval(toggleBlueishHue, intervalDuration);
-      const flashingDuration = 2000;
-      setTimeout(() => {
-        clearInterval(id);
-        document.querySelectorAll('.rps-radio-host').forEach((element) => {
-          element.classList.remove('blueish-hue');
-        });
-      }, flashingDuration);
-    }
-  }, [is_betting, intervalDuration]);
 
-  // Interval for toggling "blueish hue" in the background
-  useEffect(() => {
-    intervalIdRef.current = setInterval(toggleBlueishHue, intervalDuration);
-    return () => clearInterval(intervalIdRef.current);
-  }, [intervalDuration]);
-
-  /**
-   * Join game (once user truly confirms or skipping confirm)
-   */
+  // Join game
   const joinGame = useCallback(
     async (chosenRps) => {
       if (!join) return;
       onChangeState({ result: '' });
       const resultData = await join({
         bet_amount: parseFloat(bet_amount),
-        selected_rps: chosenRps
+        selected_rps: chosenRps,
       });
 
       let text;
@@ -263,7 +232,7 @@ function RPS(props) {
       if (resultData.betResult === 1) {
         playSound && playSound('win');
         text = '+';
-        color = '#7ed321';
+        color = '#00ff3a';
         changeBgColor && changeBgColor(resultData.betResult);
       } else if (resultData.betResult === 0) {
         text = '-';
@@ -279,7 +248,7 @@ function RPS(props) {
 
       const currencyElement = convertToCurrency(
         Math.abs(resultData.amount),
-        solPrice
+        solPrice,
       );
 
       onChangeState({
@@ -290,32 +259,20 @@ function RPS(props) {
             </span>
           </>
         ),
-        gameResult: resultData.betResult
+        gameResult: resultData.betResult,
       });
     },
-    [
-      join,
-      bet_amount,
-      onChangeState,
-      playSound,
-      changeBgColor,
-      solPrice
-    ]
+    [join, bet_amount, onChangeState, playSound, changeBgColor, solPrice],
   );
 
-  // Watch for password correctness
   useEffect(() => {
     if (!localIsPasswordCorrect && propIsPasswordCorrect) {
-      // Just turned true
       joinGame(localSelectedRps);
     }
     setLocalIsPasswordCorrect(propIsPasswordCorrect);
-  }, [propIsPasswordCorrect, localIsPasswordCorrect, joinGame, selected_rps]);
+  }, [propIsPasswordCorrect, localIsPasswordCorrect, joinGame, localSelectedRps]);
 
-
-  /**
-   * MUI confirm dialog logic
-   */
+  // MUI confirm dialog logic
   const openConfirmBetDialog = (message, callback) => {
     if (localStorage.getItem('hideConfirmModal') === 'true') {
       callback();
@@ -345,13 +302,10 @@ function RPS(props) {
     localStorage.setItem('hideConfirmModal', checked ? 'true' : 'false');
   };
 
-  /**
-   * BOT
-   */
+  // Bot controls
   const handleBotClick = async () => {
     if (creator_id && user_id && creator_id.toString() === user_id.toString()) {
-      // Dispatch the action directly
-      const botAttached = await updateRoomBot(roomInfo._id);
+      const botAttached = await dispatch(updateRoomBot(roomInfo._id));
       if (botAttached) {
         setBotsCount((prev) => prev + 1);
       }
@@ -361,57 +315,41 @@ function RPS(props) {
   const bootBots = async () => {
     setBotsCount(0);
     if (creator_id && user_id && creator_id.toString() === user_id.toString()) {
-      await kickBots(roomInfo._id);
+      await dispatch(kickBots(roomInfo._id));
     }
   };
 
-  /**
-   * On user click: R, P, or S
-   */
+  // On user click: R, P, or S
   const onBtnBetClick = async (selection) => {
-    const {
-      is_private,
-      updateSelectedRps,
-      user_id,
-      creator_id,
-      balance,
-      bankroll
-    } = props;
+    const { is_private } = props;
     setLocalSelectedRps(selection);
-    updateSelectedRps(selection, async () => {
-      // 1) Auth check
+    props.updateSelectedRps(selection, async () => {
       if (!validateIsAuthenticated(isAuthenticated, dispatch)) {
         return;
       }
 
-      // 2) If host is the same user => call BOT
       if (creator_id && user_id && creator_id.toString() === user_id.toString()) {
-        // Dispatch the action directly
-        const botAttached = await updateRoomBot(roomInfo._id);
+        const botAttached = await dispatch(updateRoomBot(roomInfo._id));
         if (botAttached) {
           setBotsCount((prev) => prev + 1);
         }
         return;
       }
 
-      // 3) Validate bet amount
       if (!validateBetAmount(bet_amount, balance, dispatch)) {
         return;
       }
 
-      // 4) Validate bankroll
       if (!validateBankroll(bet_amount, bankroll, dispatch)) {
         return;
       }
 
-      // 5) Check room password
       const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
       const passwordCorrect = rooms[roomInfo._id];
 
-      // If skipConfirm is active or hideConfirmModal is true
       const callback = async () => {
         if (is_private === true && passwordCorrect !== true) {
-          openGamePasswordModal();
+          dispatch(openGamePasswordModal());
         } else {
           await joinGame(selection);
         }
@@ -425,26 +363,12 @@ function RPS(props) {
     });
   };
 
-  /**
-   * Toggling "blueish hue"
-   */
-  const toggleBlueishHue = () => {
-    const elements = document.querySelectorAll('.rps-radio-host');
-    elements.forEach((element) => {
-      element.classList.toggle('blueish-hue');
-    });
-  };
-
-  /**
-   * Spectate mode
-   */
+  // Spectate mode
   const handleSpectateMode = () => {
-    setSpectateMode(!isWatching);
+    dispatch(setSpectateMode(!isWatching));
   };
 
-  /**
-   * Modal controls
-   */
+  // Modal controls
   const toggleImageModal = () => {
     setShowImageModal(false);
   };
@@ -457,22 +381,17 @@ function RPS(props) {
     setModalOpen(false);
   };
 
-  /**
-   * Render
-   */
+  // Render
   const rpsValueAtLastIndex = rpsHistory[rpsHistory.length - 1]?.rps;
-  const joinerRpsValueAtLastIndex =
-    rpsHistory[rpsHistory.length - 1]?.joiner_rps;
-  const isCreator =
-    creator_id && user_id && creator_id.toString() === user_id.toString();
-  const subTitleText = isCreator ? "This is Your Own Room" : "Select: R - P - S!";
+  const joinerRpsValueAtLastIndex = rpsHistory[rpsHistory.length - 1]?.joiner_rps;
+  const isCreator = creator_id && user_id && creator_id.toString() === user_id.toString();
+  const subTitleText = isCreator ? 'This is Your Own Room' : 'Select: R - P - S!';
   const tooltipText = isCreator
-    ? "Betting is disabled in your own room."
-    : "Play against the AI, at the same time, train your AI.";
+    ? 'Betting is disabled in your own room.'
+    : 'Play against the AI, at the same time, train your AI.';
 
   return (
     <div className="game-page">
-      {/* MUI DIALOG for Confirmation */}
       <Dialog
         open={openConfirmBet}
         onClose={closeConfirmBetDialog}
@@ -487,7 +406,7 @@ function RPS(props) {
               <Checkbox
                 checked={skipConfirm}
                 onChange={handleSkipConfirmChange}
-                color='error'
+                color="error"
               />
             }
             label="Don’t show this again"
@@ -497,12 +416,11 @@ function RPS(props) {
           <Button onClick={closeConfirmBetDialog} color="error">
             Cancel
           </Button>
-          <Button onClick={handleConfirmBet} color='error' autoFocus>
+          <Button onClick={handleConfirmBet} color="error" autoFocus>
             Yes
           </Button>
         </DialogActions>
       </Dialog>
-      {/* END MUI DIALOG */}
 
       {showImageModal && (
         <ImageResultModal
@@ -523,7 +441,6 @@ function RPS(props) {
 
       <div className="game-contents title">
         <div className="game-info-panel" style={{ position: 'relative' }}>
-          {/* RPS history + players */}
           <GuessesSection
             prevRps={prevRps}
             players={players}
@@ -534,21 +451,17 @@ function RPS(props) {
           {status === 'open' ? (
             <>
               <Tooltip
-                title={
-                  !isWatching
-                    ? 'CLICK TO STOP WATCHING'
-                    : 'CLICK TO START WATCHING'
-                }
+                title={!isWatching ? 'CLICK TO STOP WATCHING' : 'CLICK TO START WATCHING'}
               >
                 <IconButton className="spectate title" onClick={handleSpectateMode}>
                   {isWatching ? (
                     <>
-                      PLAYING&nbsp;
+                      PLAYING 
                       <SwordsIcon />
                     </>
                   ) : (
                     <>
-                      SPECTATING&nbsp;
+                      SPECTATING 
                       <ViewIcon />
                     </>
                   )}
@@ -557,17 +470,13 @@ function RPS(props) {
 
               <div className="game-info-panel">
                 <div
-                  className={`rps-radio-host ${is_betting || betting ? 'blueish-hue' : ''
-                    }`}
+                  className={`rps-radio-host ${is_betting || betting ? 'blueish-hue' : ''}`}
                   style={{
                     top: '25px',
                     right: '25px',
-                    boxShadow: '0px 0 5px 0px #ffc107',
-                    background: 'radial-gradient(#ffd000, rgb(255, 0, 0, 0.2)',
                     position: 'absolute',
                     width: '12.5px',
                     height: '12.5px',
-                    borderRadius: '50%'
                   }}
                 >
                   <span
@@ -583,18 +492,19 @@ function RPS(props) {
                               options={{
                                 loop: isLowGraphics ? false : true,
                                 autoplay: isLowGraphics ? false : true,
-                                animationData: pressHold
+                                animationData: pressHold,
                               }}
                               style={{
                                 position: 'relative',
-                                filter: `hue-rotate(${gameResult === -1
-                                  ? 0
-                                  : gameResult === 0
+                                filter: `hue-rotate(${
+                                  gameResult === -1
+                                    ? 0
+                                    : gameResult === 0
                                     ? 195
                                     : gameResult === 1
-                                      ? 80
-                                      : 20
-                                  }deg)`
+                                    ? 80
+                                    : 20
+                                }deg)`,
                               }}
                             />
                           </div>
@@ -602,17 +512,12 @@ function RPS(props) {
                       </>
                     ) : (
                       <>
-                        <span>
-                          <FontAwesomeIcon icon={faBrain} />
-                          &nbsp;
-                          <span className="desktop-only">thinking...</span>
-                        </span>
                         <div className="lottie-progress">
                           <Lottie
                             options={{
                               loop: isLowGraphics ? false : true,
                               autoplay: isLowGraphics ? false : true,
-                              animationData: progress
+                              animationData: progress,
                             }}
                             style={{ position: 'relative' }}
                           />
@@ -623,74 +528,61 @@ function RPS(props) {
                 </div>
 
                 {startedPlaying && (
-                  <div
-                    id="rps-radio"
-                    className={ai_mode !== 'Skill-issue' ? '' : ''}
-                  >
+                  <div id="rps-radio" className={ai_mode !== 'Skill-issue' ? '' : ''}>
                     <div
-                      className={`rps-option ${rpsHistory[rpsHistory.length - 1]?.rps === 'R'
-                        ? 'rock'
-                        : ''
-                        }${rpsValueAtLastIndex === 'R' ? ' active' : ''}${props.bgColorChanged &&
-                          betResult === -1 &&
-                          rpsValueAtLastIndex === 'R'
+                      className={`rps-option ${
+                        rpsHistory[rpsHistory.length - 1]?.rps === 'R' ? 'rock' : ''
+                      }${rpsValueAtLastIndex === 'R' ? ' active' : ''}${
+                        props.bgColorChanged &&
+                        betResult === -1 &&
+                        rpsValueAtLastIndex === 'R'
                           ? ' win-bg'
                           : ''
-                        }${betResult === 0 && rpsValueAtLastIndex === 'R'
-                          ? ' draw-bg'
-                          : ''
-                        }${betResult === 1 && rpsValueAtLastIndex === 'R'
-                          ? ' lose-bg'
-                          : ''
-                        }`}
+                      }${betResult === 0 && rpsValueAtLastIndex === 'R' ? ' draw-bg' : ''}${
+                        betResult === 1 && rpsValueAtLastIndex === 'R' ? ' lose-bg' : ''
+                      }`}
                     ></div>
 
                     <div
-                      className={`rps-option ${rpsHistory[rpsHistory.length - 1]?.rps === 'P'
-                        ? 'paper'
-                        : ''
-                        }${rpsValueAtLastIndex === 'P' ? ' active' : ''}${props.bgColorChanged &&
-                          betResult === -1 &&
-                          rpsValueAtLastIndex === 'P'
+                      className={`rps-option ${
+                        rpsHistory[rpsHistory.length - 1]?.rps === 'P' ? 'paper' : ''
+                      }${rpsValueAtLastIndex === 'P' ? ' active' : ''}${
+                        props.bgColorChanged &&
+                        betResult === -1 &&
+                        rpsValueAtLastIndex === 'P'
                           ? ' win-bg'
                           : ''
-                        }${betResult === 0 && rpsValueAtLastIndex === 'P'
-                          ? ' draw-bg'
-                          : ''
-                        }${betResult === 1 && rpsValueAtLastIndex === 'P'
-                          ? ' lose-bg'
-                          : ''
-                        }`}
+                      }${betResult === 0 && rpsValueAtLastIndex === 'P' ? ' draw-bg' : ''}${
+                        betResult === 1 && rpsValueAtLastIndex === 'P' ? ' lose-bg' : ''
+                      }`}
                     ></div>
 
                     <div
-                      className={`rps-option ${rpsHistory[rpsHistory.length - 1]?.rps === 'S'
-                        ? 'scissors'
-                        : ''
-                        }${rpsValueAtLastIndex === 'S' ? ' active' : ''}${props.bgColorChanged &&
-                          betResult === -1 &&
-                          rpsValueAtLastIndex === 'S'
+                      className={`rps-option ${
+                        rpsHistory[rpsHistory.length - 1]?.rps === 'S'
+                          ? 'scissors'
+                          : ''
+                      }${rpsValueAtLastIndex === 'S' ? ' active' : ''}${
+                        props.bgColorChanged &&
+                        betResult === -1 &&
+                        rpsValueAtLastIndex === 'S'
                           ? ' win-bg'
                           : ''
-                        }${betResult === 0 && rpsValueAtLastIndex === 'S'
-                          ? ' draw-bg'
-                          : ''
-                        }${betResult === 1 && rpsValueAtLastIndex === 'S'
-                          ? ' lose-bg'
-                          : ''
-                        }`}
+                      }${betResult === 0 && rpsValueAtLastIndex === 'S' ? ' draw-bg' : ''}${
+                        betResult === 1 && rpsValueAtLastIndex === 'S' ? ' lose-bg' : ''
+                      }`}
                     ></div>
                   </div>
                 )}
 
                 {!startedPlaying ? (
                   <h3 className="game-sub-title roll-tag">
-                    {subTitleText} &nbsp;
+                    {subTitleText}  
                     <Tooltip
                       style={{
                         position: 'absolute',
                         right: '20px',
-                        marginBottom: '30px'
+                        marginBottom: '30px',
                       }}
                       title={tooltipText}
                       placement="top"
@@ -700,12 +592,12 @@ function RPS(props) {
                   </h3>
                 ) : (
                   <h3 className="game-sub-title roll-tag fade-out">
-                    {subTitleText} &nbsp;
+                    {subTitleText}  
                     <Tooltip
                       style={{
                         position: 'absolute',
                         right: '20px',
-                        marginBottom: '30px'
+                        marginBottom: '30px',
                       }}
                       title={tooltipText}
                       placement="top"
@@ -715,9 +607,8 @@ function RPS(props) {
                   </h3>
                 )}
 
-                <div id="rps-radio" style={{ marginTop: '45px' }}>
+                <div id="rps-radio" style={{ marginTop: '15px' }}>
                   {options.map(({ classname, selection }, index) => {
-                    // Condition to disable
                     const shouldDisable = is_betting || isCreator;
 
                     return (
@@ -726,66 +617,67 @@ function RPS(props) {
                         variant="contained"
                         color="error"
                         id={`rps-${classname}`}
-                        disabled={shouldDisable}  // MUI will style it as disabled
-                        className={`rps-option ${classname}${joinerRpsValueAtLastIndex === selection ? ' active' : ''
-                          }${props.bgColorChanged && betResult === -1 && joinerRpsValueAtLastIndex === selection
+                        disabled={shouldDisable}
+                        className={`rps-option ${classname}${
+                          joinerRpsValueAtLastIndex === selection ? ' active' : ''
+                        }${
+                          props.bgColorChanged &&
+                          betResult === -1 &&
+                          joinerRpsValueAtLastIndex === selection
                             ? ' lose-bg'
                             : ''
-                          }${betResult === 0 && joinerRpsValueAtLastIndex === selection
+                        }${
+                          betResult === 0 && joinerRpsValueAtLastIndex === selection
                             ? ' draw-bg'
                             : ''
-                          }${betResult === 1 && joinerRpsValueAtLastIndex === selection
+                        }${
+                          betResult === 1 && joinerRpsValueAtLastIndex === selection
                             ? ' win-bg'
                             : ''
-                          }${shouldDisable ? ' disabled' : ''}`}
+                        }${shouldDisable ? ' disabled' : ''}`}
                         onClick={() => {
                           if (!shouldDisable) {
                             onBtnBetClick(selection);
                             playSound && playSound('select');
                           }
                         }}
-                      >
-                      </Button>
+                      ></Button>
                     );
                   })}
                 </div>
 
-                {creator_id &&
-                  user_id &&
-                  creator_id.toString() === user_id.toString() ? (
+                {isCreator ? (
                   <></>
                 ) : (
-                  <>
-                     <AiPanel
-                     rpsbetitems={rpsbetitems}
-                     onChangeState={onChangeState}
-                     updateUserStrategy={updateUserStrategy}
-                     updateUserPrompt={updateUserPrompt}
-                     updateAttachment={updateAttachment}
-                     detachPlayerFromRoom={detachPlayerFromRoom}
-                     strategies={strategies}
-                     betting={betting}
-                     playSound={playSound}
-                     bet_amount={bet_amount}
-                     handle2xButtonClick={handle2xButtonClick}
-                     handleHalfXButtonClick={handleHalfXButtonClick}
-                     handleMaxButtonClick={handleMaxButtonClick}
-                     bankroll={bankroll}
-                     is_betting={is_betting}
-                     attached={attached}
-                     creator_id={roomInfo.creator_id}
-                     getAttachedRooms={getAttachedRooms}
-                     predictedBetAmount={predictedBetAmount}
-                     roomId={roomInfo._id}
-                     handleSwitchChange={handleSwitchChange}
-                     game_type={roomInfo.game_type}
-                     rank={rank}
-                     user_id={user_id}
-                     ai_mode={ai_mode}
-                     user_balance={balance}
-                     isDarkMode={isDarkMode}
-                   />
-                  </>
+                  <AiPanel
+                    rpsbetitems={rpsbetitems}
+                    onChangeState={onChangeState}
+                    updateUserStrategy={updateUserStrategy}
+                    updateUserPrompt={updateUserPrompt}
+                    updateAttachment={updateAttachment}
+                    detachPlayerFromRoom={detachPlayerFromRoom}
+                    strategies={strategies}
+                    betting={betting}
+                    playSound={playSound}
+                    bet_amount={bet_amount}
+                    handle2xButtonClick={handle2xButtonClick}
+                    handleHalfXButtonClick={handleHalfXButtonClick}
+                    handleMaxButtonClick={handleMaxButtonClick}
+                    bankroll={bankroll}
+                    is_betting={is_betting}
+                    attached={attached}
+                    creator_id={creator_id}
+                    getAttachedRooms={getAttachedRooms}
+                    predictedBetAmount={predictedBetAmount}
+                    roomId={roomInfo._id}
+                    handleSwitchChange={handleSwitchChange}
+                    game_type={roomInfo.game_type}
+                    rank={rank}
+                    user_id={user_id}
+                    ai_mode={ai_mode}
+                    user_balance={balance}
+                    isDarkMode={isDarkMode}
+                  />
                 )}
               </div>
             </>
@@ -795,7 +687,7 @@ function RPS(props) {
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'center',
-                alignItems: 'center'
+                alignItems: 'center',
               }}
             >
               <Typography variant="subtitle2" sx={{ color: '#D32F2F' }}>
@@ -828,33 +720,4 @@ function RPS(props) {
   );
 }
 
-/**
- * Redux mappings
- */
-const mapStateToProps = (state) => ({
-  socket: state.auth.socket,
-  isAuthenticated: state.auth.isAuthenticated,
-  isPasswordCorrect: state.snackbar.isPasswordCorrect,
-  isDarkMode: state.auth.isDarkMode,
-  isWatching: state.auth.isWatching,
-  balance: state.auth.balance,
-  rpsbetitems: state.logic.rpsbetitems,
-  solPrice: state.logic.solPrice,
-  data: state.itemReducer.myItemArray,
-  isLowGraphics: state.auth.isLowGraphics,
-  isMusicEnabled: state.auth.isMusicEnabled,
-  is_betting: state.logic.is_betting,
-  rank: state.logic.curRoomInfo.rank,
-});
-
-const mapDispatchToProps = {
-  openGamePasswordModal,
-  acQueryMyItem,
-  updateRoomBot,
-  kickBots,
-  setSpectateMode,
-  getRpsBetItems,
-  getRoomBotCount
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(RPS);
+export default RPS;

@@ -58,10 +58,9 @@ import {
   TRANSACTION_CANDLES_ERROR
 } from '../types';
 import axios from '../../util/Api';
-import history from '../history';
 
 // CreateRoom
-export const createRoom = room_info => async dispatch => {
+export const createRoom = (room_info, navigate) => async dispatch => {
   const body = JSON.stringify(room_info);
   try {
     dispatch({ type: START_LOADING });
@@ -75,27 +74,7 @@ export const createRoom = room_info => async dispatch => {
     } else {
       dispatch({ type: MSG_WARNING, payload: res.data.message });
     }
-    history.push('/portfolio');
-  } catch (err) {
-    dispatch({ type: MSG_WARNING, payload: err });
-  }
-};
-// reCreateRoom
-export const reCreateRoom = room_id => async dispatch => {
-  const body = JSON.stringify(room_id);
-  try {
-    dispatch({ type: START_LOADING });
-    const res = await axios.post('/game/reCreate', body);
-    dispatch({ type: END_LOADING });
-
-    if (res.data.success) {
-      dispatch({ type: MSG_CREATE_ROOM_SUCCESS, payload: res.data.message });
-      dispatch({ type: NEW_TRANSACTION, payload: res.data.newTransaction });
-      // dispatch({ type: SET_BALANCE, payload: res.data.newTransaction });
-    } else {
-      dispatch({ type: MSG_WARNING, payload: res.data.message });
-    }
-    history.push('/');
+    navigate('/portfolio');
   } catch (err) {
     dispatch({ type: MSG_WARNING, payload: err });
   }
@@ -169,8 +148,8 @@ export const proxyAsset = (key, url) => async (dispatch) => {
   }
 };
 
-
-export const generateGameFromPrompt = (
+// Add this to your existing logic.actions.js file
+export const generateReactGameFromPrompt = (
   user_id,
   gamePrompt,
   user_balance,
@@ -178,45 +157,56 @@ export const generateGameFromPrompt = (
   onChangeState,
   updateUserPrompt,
   setGameLoading,
-  preProxiedAssets = { images: [], audio: [] } // Add default parameter
+  preProxiedAssets = { images: [], audio: [] }
 ) => async (dispatch) => {
-  if (user_balance < 0.005) {
-    dispatch({ type: MSG_ERROR, payload: 'Insufficient balance. Each send costs 0.005 SOL.' });
+  if (user_balance < 0.01) {
+    dispatch({ type: 'MSG_ERROR', payload: 'Insufficient balance. Each send costs 0.01 SOL.' });
     return;
   }
 
   if (!gamePrompt.trim()) {
-    dispatch({ type: MSG_ERROR, payload: 'Please enter a valid game prompt.' });
+    dispatch({ type: 'MSG_ERROR', payload: 'Please enter a valid app prompt.' });
     return;
   }
 
-  dispatch({ type: START_LOADING });
+  dispatch({ type: 'START_LOADING' });
   setGameLoading(true);
 
   try {
-    const response = await axios.post('/game/openai/generate', {
+    const response = await axios.post('/game/openai/generate-react', {
       prompt: gamePrompt,
-      imageUrls: preProxiedAssets.images.map(asset => asset.proxiedUrl), // Send pre-proxied image URLs
+      imageUrls: preProxiedAssets.images.map(asset => asset.proxiedUrl),
     });
 
-    let generatedCode = response.data.finalGame || '// No game generated.';
+    const generatedCode = response.data.finalApp;
     setGameCode(generatedCode);
+
     if (typeof updateUserPrompt === 'function') {
       await updateUserPrompt(user_id, gamePrompt);
     } else {
       onChangeState({ prompt: gamePrompt });
     }
 
-    dispatch({ type: MSG_SUCCESS, payload: 'Game generated successfully!' });
+    dispatch({ type: 'MSG_SUCCESS', payload: 'React app generated successfully!' });
   } catch (error) {
-    console.error('❌ Error generating game:', error);
-    dispatch({ type: MSG_ERROR, payload: 'Failed to generate game. Please try again.' });
-    setGameCode('// Failed to generate game.');
+    console.error('Error generating React app:', error);
+    dispatch({
+      type: 'MSG_ERROR',
+      payload: error.response?.data?.message || 'Failed to generate React app.',
+    });
+    setGameCode(`
+      import React from 'react';
+      const App = () => {
+        return <div style={{ padding: '20px', color: 'red' }}>Failed to generate app: ${error.message}</div>;
+      };
+      export default App;
+    `);
   } finally {
-    dispatch({ type: END_LOADING });
+    dispatch({ type: 'END_LOADING' });
     setGameLoading(false);
   }
 };
+// Keep the existing proxyAsset function - it works for React components too
 
 // logic.actions.js
 export const uploadImageToPinata = (formData) => async (dispatch) => {
@@ -355,7 +345,6 @@ export const bet3 = bet_info => async dispatch => {
       };
     } else {
       if (res.data.betResult === -100) {
-        history.push('/');
         dispatch({ type: MSG_WARNING, payload: 'THIS GAME HAS NOW ENDED' });
 
         return {

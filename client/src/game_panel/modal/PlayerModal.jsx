@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { connect, useDispatch } from 'react-redux';
-
-// MUI v5 components
+import React, { useState, useEffect, useCallback } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import {
   Modal,
   Box,
@@ -15,15 +14,9 @@ import {
   Typography,
   ThemeProvider,
 } from '@mui/material';
-import {
-  FileCopy as FileCopyIcon,
-  Info as InfoIcon,
-  Link as LinkIcon,
-} from '@mui/icons-material';
-
+import { FileCopy as FileCopyIcon, Info as InfoIcon, Link as LinkIcon } from '@mui/icons-material';
 import LoadingOverlay from 'react-loading-overlay';
 import styled from 'styled-components';
-
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faMoneyBill,
@@ -33,26 +26,15 @@ import {
   faCoins,
   faRobot,
 } from '@fortawesome/free-solid-svg-icons';
-
 import TipModal from './TipModal';
-
 import axios from '../../util/Api';
-import history from '../../redux/history';
 
+// Redux actions
 import { setUserInfo } from '../../redux/Auth/user.actions';
 import { setCurrentOfferTargetInfo } from '../../redux/Loan/loan.action';
-import {
-  openOfferLoanModal,
-  errorMsgBar,
-} from '../../redux/Notification/notification.actions';
-import {
-  setChatRoomInfo,
-  addNewTransaction,
-} from '../../redux/Logic/logic.actions';
-import {
-  acGetCustomerInfo,
-  getSpendingHabit,
-} from '../../redux/Customer/customer.action';
+import { openOfferLoanModal, errorMsgBar } from '../../redux/Notification/notification.actions';
+import { setChatRoomInfo, addNewTransaction } from '../../redux/Logic/logic.actions';
+import { acGetCustomerInfo, getSpendingHabit } from '../../redux/Customer/customer.action';
 import { queryProducts } from '../../redux/Item/item.action';
 import { convertToCurrency } from '../../util/conversion';
 import { renderLottieAnimation } from '../../util/LottieAnimations';
@@ -86,7 +68,6 @@ const ProductCard = styled.div`
   justify-content: space-between;
   align-items: center;
   transition: transform 0.2s;
-
   &:hover {
     transform: scale(1.03);
   }
@@ -103,32 +84,19 @@ const ProductInfo = styled.div`
   text-align: center;
 `;
 
-// Main functional component
-function PlayerModal(props) {
-  const {
-    modalIsOpen,
-    closeModal,
-    selectedCreator,
-    isDarkMode,
-    userInfo,
-    balance,
-    solPrice,
-    isLowGraphics,
-    onlineUserList,
-    productArray = [],
-    // Redux actions
-    acGetCustomerInfo,
-    setChatRoomInfo,
-    queryProducts: _queryProducts,
-    getSpendingHabit: _getSpendingHabit,
-    addNewTransaction: _addNewTransaction,
-    openOfferLoanModal: _openOfferLoanModal,
-    setCurrentOfferTargetInfo: _setCurrentOfferTargetInfo,
-  } = props;
+function PlayerModal({ modalIsOpen, closeModal, selectedCreator }) {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  // Redux state
+  const isDarkMode = useSelector((state) => state.auth.isDarkMode);
+  const userInfo = useSelector((state) => state.auth.user);
+  const balance = useSelector((state) => state.auth.balance);
+  const solPrice = useSelector((state) => state.logic.solPrice);
+  const isLowGraphics = useSelector((state) => state.auth.isLowGraphics);
+  const onlineUserList = useSelector((state) => state.logic.onlineUserList);
+  const productArray = useSelector((state) => state.itemReducer.productArray) || [];
 
-  // -----------------------------
-  // Local State
-  // -----------------------------
+  // Local state
   const [creatorId, setCreatorId] = useState(selectedCreator || '');
   const [username, setUsername] = useState('');
   const [avatar, setAvatar] = useState('');
@@ -139,7 +107,6 @@ function PlayerModal(props) {
   const [dateJoined, setDateJoined] = useState('');
   const [creditScore, setCreditScore] = useState(0);
   const [lastSeen, setLastSeen] = useState('');
-
   const [status, setStatus] = useState('');
   const [gameLogList, setGameLogList] = useState([]);
   const [gameProfit, setGameProfit] = useState(0);
@@ -147,42 +114,33 @@ function PlayerModal(props) {
   const [totalWagered, setTotalWagered] = useState(0);
   const [totalTraded, setTotalTraded] = useState(0);
   const [tradingProfit, setTradingProfit] = useState(0);
-
   const [activeTab, setActiveTab] = useState(0);
-
   const [isTipModalOpen, setIsTipModalOpen] = useState(false);
   const [tipAmount, setTipAmount] = useState('');
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const dispatch = useDispatch();
 
-  // -----------------------------
   // Effects
-  // -----------------------------
   useEffect(() => {
     setCreatorId(selectedCreator);
-    // Load stats, user info, inventory
+    // Load user data when selected creator changes
     fetchUserData(selectedCreator);
   }, [selectedCreator]);
 
   useEffect(() => {
     if (creatorId) {
-      _queryProducts(127, 1, creatorId); // e.g. categoryId=127, page=1
+      dispatch(queryProducts(127, 1, creatorId));
     }
-  }, [creatorId]);
+  }, [creatorId, dispatch]);
 
-  // -----------------------------
-  // Async logic
-  // -----------------------------
   const fetchUserData = async (userId) => {
     if (!userId) return;
-    const data = await _getSpendingHabit(userId);
+    const data = await dispatch(getSpendingHabit(userId));
     if (data) {
       setStatus(data.status);
     }
-
     try {
-      const userData = await acGetCustomerInfo(userId);
+      const userData = await dispatch(acGetCustomerInfo(userId));
       if (userData) {
         setUsername(userData.username);
         setAvatar(userData.avatar);
@@ -193,115 +151,59 @@ function PlayerModal(props) {
         setDateJoined(userData.created_at);
         setCreditScore(userData.credit_score);
         setLastSeen(userData.last_seen);
-        // performance
         setGamePlayed(userData.gamePlayed || 0);
         setTotalWagered(userData.totalWagered || 0);
         setTotalTraded(userData.totalTraded || 0);
         setTradingProfit(userData.tradingProfit || 0);
         setGameProfit(userData.gameProfit || 0);
 
-        _setCurrentOfferTargetInfo({
-          avatar: userData.avatar,
-          _id: userId,
-          username: userData.username,
-          accessory: userData.accessory,
-          totalWagered: userData.totalWagered,
-          isLender: true,
-        });
+        dispatch(
+          setCurrentOfferTargetInfo({
+            avatar: userData.avatar,
+            _id: userId,
+            username: userData.username,
+            accessory: userData.accessory,
+            totalWagered: userData.totalWagered,
+            isLender: true,
+          })
+        );
       }
     } catch (err) {
       console.error('Error fetching user data:', err);
     }
   };
-  // -----------------------------
-  // Helpers
-  // -----------------------------
+
+  // Helper to get status details
   const getStatusDetails = (st) => {
     switch (st) {
       case 'very good':
-        return {
-          color: 'rgb(118 221 119)',
-          title: 'JEWISH DJEDI',
-          message: 'Greed is fueling their growth!',
-          progress: 100,
-        };
+        return { color: 'rgb(118 221 119)', title: 'JEWISH DJEDI', message: 'Greed is fueling their growth!', progress: 100 };
       case 'good':
-        return {
-          color: 'rgb(3 221 255)',
-          title: 'SEASONED CZAR',
-          message: 'Spending habits are commendable.',
-          progress: 80,
-        };
+        return { color: 'rgb(3 221 255)', title: 'SEASONED CZAR', message: 'Spending habits are commendable.', progress: 80 };
       case 'average':
-        return {
-          color: '#ffc107',
-          title: 'UNCONSCIOUS COMPETENT',
-          message: 'Doing fine, but the bitch is comfortable.',
-          progress: 60,
-        };
+        return { color: '#ffc107', title: 'UNCONSCIOUS COMPETENT', message: 'Doing fine, but the bitch is comfortable.', progress: 60 };
       case 'bad':
-        return {
-          color: '#fd7e14',
-          title: 'PEASANT PUPPET',
-          message: 'They need to revisit their spending strategy.',
-          progress: 40,
-        };
+        return { color: '#fd7e14', title: 'PEASANT PUPPET', message: 'They need to revisit their spending strategy.', progress: 40 };
       case 'very bad':
-        return {
-          color: '#dc3545',
-          title: 'MISERABLE MULE',
-          message: 'Spending habits make them miserable.',
-          progress: 20,
-        };
+        return { color: '#dc3545', title: 'MISERABLE MULE', message: 'Spending habits make them miserable.', progress: 20 };
       default:
-        return {
-          color: '#6c757d',
-          title: 'Unknown',
-          message: 'Unable to determine spending habits.',
-          progress: 0,
-        };
+        return { color: '#6c757d', title: 'Unknown', message: 'Unable to determine spending habits.', progress: 0 };
     }
   };
+
   const theme = getCustomTheme(isDarkMode ? 'dark' : 'light');
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-
-  const {
-    color,
-    title,
-    message: spendingMessage,
-    progress,
-  } = getStatusDetails(status);
-  const barStyle = {
-    width: `${progress}%`,
-    backgroundColor: progress <= 50 ? 'yellow' : 'red',
-  };
+  const { color, title, message: spendingMessage, progress: progressValue } = getStatusDetails(status);
+  const barStyle = { width: `${progressValue}%`, backgroundColor: progressValue <= 50 ? 'yellow' : 'red' };
 
   const isOnline = onlineUserList.includes(selectedCreator);
-
   const isBot = username.toUpperCase().includes('BOT');
-  const systemUsernames = [
-    'pimpedpistols',
-    'GIGACHAD',
-    'KEKW',
-    'smellyfingers',
-    'SUPPORT',
-    '69',
-    'OFFICIALRPSGAME',
-    'SYSTEM',
-    'WHALE WATCHERS',
-    'NO BROKIES',
-  ];
+  const systemUsernames = ['pimpedpistols', 'GIGACHAD', 'KEKW', 'smellyfingers', 'SUPPORT', '69', 'OFFICIALRPSGAME', 'SYSTEM', 'WHALE WATCHERS', 'NO BROKIES'];
   const isSystem = systemUsernames.includes(username);
-
   const isBioUrl = /^https?:\/\//.test(bio);
-  const shortenAddress = (address) => {
-    if (!address) return '';
-    return address.slice(0, 12) + '...' + address.slice(-12);
-  };
+  const shortenAddress = (address) => (address ? address.slice(0, 12) + '...' + address.slice(-12) : '');
 
-  // -----------------------------
   // Tip Modal Logic
-  // -----------------------------
   const handleTip = () => setIsTipModalOpen(true);
   const handleCloseTipModal = () => setIsTipModalOpen(false);
   const handleTipAmountChange = (e) => setTipAmount(e.target.value);
@@ -311,24 +213,22 @@ function PlayerModal(props) {
     try {
       const tipAmtNum = parseFloat(tipAmount || 0);
       if (tipAmtNum <= 0) {
-        dispatch(errorMsgBar(`R U FURR-REAL? TIP AMOUNT MUST BE MORE THAN 0!`));
+        dispatch(errorMsgBar('R U FURR-REAL? TIP AMOUNT MUST BE MORE THAN 0!'));
         return;
       }
       if (tipAmtNum > balance) {
-        dispatch(errorMsgBar(`NOT ENUFF FUNDS AT THIS MEOWMENT`));
+        dispatch(errorMsgBar('NOT ENUFF FUNDS AT THIS MEOWMENT'));
         return;
       }
       setIsLoading(true);
-
       const result = await axios.post('/game/tip/', {
         amount: tipAmtNum,
         addressTo: creatorId,
         message,
       });
-
       if (result.data.success) {
         dispatch(errorMsgBar(result.data.message));
-        _addNewTransaction(result.data.newTransaction);
+        dispatch(addNewTransaction(result.data.newTransaction));
         setIsLoading(false);
         closeModal();
       } else {
@@ -337,44 +237,28 @@ function PlayerModal(props) {
       }
     } catch (err) {
       setIsLoading(false);
-      dispatch(errorMsgBar(`FAILED TRANSACTION`));
+      dispatch(errorMsgBar('FAILED TRANSACTION'));
     }
   };
 
-  // -----------------------------
   // Lend Logic
-  // -----------------------------
   const handleOpenOfferModal = () => {
-    _openOfferLoanModal();
+    dispatch(openOfferLoanModal());
     closeModal();
   };
 
-  // -----------------------------
   // Chat Logic
-  // -----------------------------
   const handleOpenChat = () => {
-    const chatRoom = {
-      _id: creatorId,
-      username,
-      avatar,
-      accessory,
-      rank,
-      chatLogs: [],
-    };
-    setChatRoomInfo(chatRoom);
-    history.push(`/chat/${creatorId}`);
+    const chatRoom = { _id: creatorId, username, avatar, accessory, rank, chatLogs: [] };
+    dispatch(setChatRoomInfo(chatRoom));
+    navigate(`/chat/${creatorId}`);
   };
 
-  // -----------------------------
   // Tabs
-  // -----------------------------
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
   };
 
-  // -----------------------------
-  // Render
-  // -----------------------------
   return (
     <>
       {isLoading && (
@@ -383,18 +267,10 @@ function PlayerModal(props) {
           spinner
           text="Sending Tip..."
           styles={{
-            wrapper: {
-              position: 'fixed',
-              width: '100%',
-              top: '0',
-              left: '0',
-              height: '100vh',
-              zIndex: '99',
-            },
+            wrapper: { position: 'fixed', width: '100%', top: '0', left: '0', height: '100vh', zIndex: '99' },
           }}
         />
       )}
-
       <ThemeProvider theme={theme}>
         <Modal open={modalIsOpen || false} onClose={closeModal}>
           <Box
@@ -415,33 +291,16 @@ function PlayerModal(props) {
             }}
           >
             {/* Modal Header */}
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                mb: 2,
-              }}
-            >
-              <Typography
-                variant="h6"
-                component="h2"
-                className="modal-title title"
-              >
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography variant="h6" component="h2" className="modal-title title">
                 {isBot ? (
                   <>
-                    <FontAwesomeIcon
-                      icon={faRobot}
-                      style={{ color: 'red', marginRight: 8 }}
-                    />
+                    <FontAwesomeIcon icon={faRobot} style={{ color: 'red', marginRight: 8 }} />
                     Bot Card
                   </>
                 ) : isSystem ? (
                   <>
-                    <FontAwesomeIcon
-                      icon={faCog}
-                      style={{ color: 'grey', marginRight: 8 }}
-                    />
+                    <FontAwesomeIcon icon={faCog} style={{ color: 'grey', marginRight: 8 }} />
                     ADMIN
                   </>
                 ) : (
@@ -451,36 +310,21 @@ function PlayerModal(props) {
                   </>
                 )}
               </Typography>
-              <Button color="error" onClick={closeModal}>
-                ×
-              </Button>
+              <Button color="error" onClick={closeModal}>×</Button>
             </Box>
-
             {/* Tabs */}
             <Tabs
               value={activeTab}
               onChange={handleTabChange}
               textColor="error"
               indicatorColor="error"
-              sx={{
-                '& .MuiTabs-indicator': {
-                  backgroundColor: 'error.main', // uses theme's error color
-                  height: '3px', // adjust height to make it more prominent
-                },
-              }}
+              sx={{ '& .MuiTabs-indicator': { backgroundColor: 'error.main', height: '3px' } }}
             >
               <Tab label="Profile" />
               <Tab label="Stats" />
             </Tabs>
-
             {/* Tab 0: Profile & Inventory */}
-            <Box
-              sx={{
-                background: '#2D3A4A',
-                borderRadius: '0.3em',
-                p: '20px',
-              }}
-            >
+            <Box sx={{ background: '#2D3A4A', borderRadius: '0.3em', p: '20px' }}>
               {activeTab === 0 && (
                 <Box>
                   {/* Online/Offline */}
@@ -496,25 +340,15 @@ function PlayerModal(props) {
                   >
                     <Typography
                       variant="body2"
-                      sx={{
-                        display: 'flex',
-                        justifyContent: 'space-evenly',
-                        alignItems: 'center',
-                      }}
+                      sx={{ display: 'flex', justifyContent: 'space-evenly', alignItems: 'center' }}
                     >
                       {isOnline ? 'online' : 'offline'}&nbsp;
-                      <i
-                        className={`online-status${isOnline ? ' online' : ''}`}
-                      />
+                      <i className={`online-status${isOnline ? ' online' : ''}`} />
                     </Typography>
                   </Box>
-
                   {/* Avatar & Bio */}
                   <Box sx={{ textAlign: 'center' }}>
-                    <Box
-                      className="avatar-border"
-                      sx={{ display: 'inline-block' }}
-                    >
+                    <Box className="avatar-border" sx={{ display: 'inline-block' }}>
                       <Avatar
                         src={avatar || '/img/profile-thumbnail.svg'}
                         accessory={accessory}
@@ -529,47 +363,25 @@ function PlayerModal(props) {
                     </Typography>
                     <Box
                       id="user-bio"
-                      sx={{
-                        position: 'relative',
-                        mt: 2,
-                        borderBottom: '2px solid',
-                        borderTop: '2px solid',
-                      }}
+                      sx={{ position: 'relative', mt: 2, borderBottom: '2px solid', borderTop: '2px solid' }}
                     >
                       {isBioUrl ? (
                         <a
                           href={bio}
                           target="_blank"
                           rel="noopener noreferrer"
-                          style={{
-                            fontSize: '1.1em',
-                            color: isDarkMode ? '#e5e5e5' : '#333',
-                            textDecoration: 'none',
-                          }}
+                          style={{ fontSize: '1.1em', color: isDarkMode ? '#e5e5e5' : '#333', textDecoration: 'none' }}
                         >
                           {bio}
                         </a>
                       ) : (
-                        <Typography
-                          variant="body1"
-                          sx={{
-                            fontSize: '1.1em',
-                            color: isDarkMode ? '#e5e5e5' : '#333',
-                          }}
-                        >
+                        <Typography variant="body1" sx={{ fontSize: '1.1em', color: isDarkMode ? '#e5e5e5' : '#333' }}>
                           {bio}
                         </Typography>
                       )}
                     </Box>
                   </Box>
-                  <Box
-                    sx={{
-                      mb: 2,
-                      background: '#2D3A4A',
-                      borderRadius: '0.3em',
-                      p: '20px',
-                    }}
-                  >
+                  <Box sx={{ mb: 2, background: '#2D3A4A', borderRadius: '0.3em', p: '20px' }}>
                     <Typography variant="h6" gutterBottom>
                       A.K.A
                     </Typography>
@@ -578,24 +390,11 @@ function PlayerModal(props) {
                     ) : (
                       <Grid container spacing={1}>
                         {accounts.map((acc, index) => {
-                          // On mobile, show shortened version
-                          const displayed = isMobile
-                            ? shortenAddress(acc)
-                            : acc;
-
+                          const displayed = isMobile ? shortenAddress(acc) : acc;
                           return (
                             <Grid item xs={12} key={index}>
                               <Box display="flex" alignItems="center">
-                                {/* Chip to display the address */}
-                                <Chip
-                                  label={displayed}
-                                  variant="outlined"
-                                  // If you want a different color for the connected account:
-                                  // color={isConnected ? 'success' : 'default'}
-                                  sx={{ mr: 1 }}
-                                />
-
-                                {/* Link icon to Solscan.io/acc */}
+                                <Chip label={displayed} variant="outlined" sx={{ mr: 1 }} />
                                 <IconButton
                                   component="a"
                                   href={`https://solscan.io/account/${acc}`}
@@ -621,29 +420,15 @@ function PlayerModal(props) {
                       <ProductGrid>
                         {productArray.map((row) => (
                           <ProductCard key={row._id}>
-                            {row.image &&
-                            renderLottieAnimation(row.image, isLowGraphics) ? (
+                            {row.image && renderLottieAnimation(row.image, isLowGraphics) ? (
                               <Box sx={{ width: 80, height: 80 }}>
-                                {renderLottieAnimation(
-                                  row.image,
-                                  isLowGraphics,
-                                )}
+                                {renderLottieAnimation(row.image, isLowGraphics)}
                               </Box>
                             ) : (
-                              <ProductImage
-                                src={row.image}
-                                alt={row.productName}
-                              />
+                              <ProductImage src={row.image} alt={row.productName} />
                             )}
                             <ProductInfo>
-                              <Typography
-                                variant="h6"
-                                sx={{
-                                  fontSize: '1rem',
-                                  color: '#fff',
-                                  textAlign: 'center',
-                                }}
-                              >
+                              <Typography variant="h6" sx={{ fontSize: '1rem', color: '#fff', textAlign: 'center' }}>
                                 {row.productName}
                               </Typography>
                             </ProductInfo>
@@ -658,7 +443,6 @@ function PlayerModal(props) {
                   </MarketplaceContainer>
                 </Box>
               )}
-
               {/* Tab 1: Stats */}
               {activeTab === 1 && (
                 <Box sx={{ mt: 2 }}>
@@ -683,34 +467,14 @@ function PlayerModal(props) {
                 </Box>
               )}
             </Box>
-
             {/* Footer */}
             {userInfo._id !== creatorId && (
-              <Box
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'flex-end',
-                  gap: 1,
-                  mt: 3,
-                }}
-              >
-                {/* {isOnline && (
-                  <Button color="error" variant="contained" onClick={handleOpenOfferModal}>
-                    Lend&nbsp;
-                    <FontAwesomeIcon icon={faCoins} />
-                  </Button>
-                )} */}
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 3 }}>
                 <Button color="error" variant="contained" onClick={handleTip}>
-                  Tip&nbsp;
-                  <FontAwesomeIcon icon={faMoneyBill} />
+                  Tip&nbsp;<FontAwesomeIcon icon={faMoneyBill} />
                 </Button>
-                <Button
-                  color="error"
-                  variant="outlined"
-                  onClick={handleOpenChat}
-                >
-                  DM&nbsp;
-                  <FontAwesomeIcon icon={faEnvelope} />
+                <Button color="error" variant="outlined" onClick={handleOpenChat}>
+                  DM&nbsp;<FontAwesomeIcon icon={faEnvelope} />
                 </Button>
               </Box>
             )}
@@ -718,7 +482,6 @@ function PlayerModal(props) {
         </Modal>
       </ThemeProvider>
 
-      {/* TIP MODAL in separate file */}
       <TipModal
         isTipModalOpen={isTipModalOpen}
         handleCloseTipModal={handleCloseTipModal}
@@ -737,26 +500,4 @@ function PlayerModal(props) {
   );
 }
 
-// Redux connections
-const mapStateToProps = (state) => ({
-  isDarkMode: state.auth.isDarkMode,
-  userInfo: state.auth.user,
-  balance: state.auth.balance,
-  isLowGraphics: state.auth.isLowGraphics,
-  onlineUserList: state.logic.onlineUserList,
-  solPrice: state.logic.solPrice,
-  productArray: state.itemReducer.productArray,
-});
-
-const mapDispatchToProps = {
-  setUserInfo,
-  setChatRoomInfo,
-  addNewTransaction,
-  setCurrentOfferTargetInfo,
-  openOfferLoanModal,
-  getSpendingHabit,
-  acGetCustomerInfo,
-  queryProducts,
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(PlayerModal);
+export default PlayerModal;

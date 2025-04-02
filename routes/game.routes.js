@@ -10,6 +10,9 @@ const { OpenAI } = require('openai');
 const esprima = require('esprima');
 const vm = require('vm');
 const JavaScriptObfuscator = require('javascript-obfuscator');
+const { VM } = require('vm2');
+const React = require('react');
+const ReactDOMServer = require('react-dom/server');
 
 // Instead of Configuration/OpenAIApi, we create an instance of OpenAI directly:
 const openai = new OpenAI({
@@ -39,16 +42,14 @@ const executeBet3 = require('../helper/util/betExecutor3');
 const saveDocumentWithRetry = require('../helper/util/retrySave');
 const check_access_time = require('../helper/util/checkAccessTime');
 const getUserTokens = require('../helper/util/getUserToken');
-let semaphore2 = 1;
-let semaphore3 = 1;
+
 const roomLocks = {};
 const multer = require('multer');
 const FormData = require('form-data');
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 const axios = require('axios');
-const { predictNextOpenAI } = require('../helper/util/predictNext.js');
-const { openAIPredictionAI_qs } = require('../helper/util/predictNextQs.js');
+
 const {
   mintTokenWithMetadata,
 } = require('../helper/util/mintTokenWithMetadata');
@@ -253,11 +254,13 @@ router.get('/proxy-asset', async (req, res) => {
   }
 });
 
-
-router.post('/openai/generate', auth, async (req, res) => {
+router.post('/openai/generate-react', auth, async (req, res) => {
   try {
     const { prompt, imageUrls = [] } = req.body || {};
     const cost = 0.01;
+
+    console.log(`[React Generator] Starting generation with prompt: "${prompt.substring(0, 50)}..."`);
+    console.log(`[React Generator] User balance: ${req.user.balance}, Cost: ${cost}`);
 
     if (cost > req.user.balance) {
       throw new Error('NOT ENUFF FUNDS AT THIS MEOWMENT');
@@ -266,7 +269,7 @@ router.post('/openai/generate', auth, async (req, res) => {
     const newTransaction = new Transaction({
       user: req.user,
       amount: -cost,
-      description: 'Generated AI game',
+      description: 'Generated AI React app',
     });
 
     req.user.balance -= cost;
@@ -287,193 +290,130 @@ router.post('/openai/generate', auth, async (req, res) => {
       throw new Error('imageUrls must be an array');
     }
 
-    // Extract URLs from prompt as fallback
     const urlRegex = /https?:\/\/[^\s]+?\.(jpg|jpeg|png|mp3|wav|ogg)/gi;
     const promptUrls = (prompt.match(urlRegex) || []).filter(url => url.length < 500);
     const allImageUrls = imageUrls.length > 0 ? imageUrls : promptUrls.filter(url => /\.(jpg|jpeg|png)$/i.test(url));
     const audioUrls = promptUrls.filter(url => /\.(mp3|wav|ogg)$/i.test(url));
 
     const proxiedAssets = {
-      images: allImageUrls
-        .filter(url => /\.(jpg|jpeg|png)$/i.test(url))
-        .map((url, i) => ({ key: `image${i}`, proxiedUrl: url })),
-      audio: audioUrls
-        .map((url, i) => ({ key: `audio${i}`, proxiedUrl: url })),
+      images: allImageUrls.map((url, i) => ({ key: `image${i}`, proxiedUrl: url })),
+      audio: audioUrls.map((url, i) => ({ key: `audio${i}`, proxiedUrl: url })),
     };
 
-    let generatedGameCode = null;
-    const maxAttempts = 5;
-    const timeoutMs = 300000;
-    const maxCompletionTokens = 100000;
+    console.log(`[React Generator] Proxied assets prepared:`, JSON.stringify(proxiedAssets));
 
-    for (let attempts = 0; attempts < maxAttempts && !generatedGameCode; attempts++) {
-      const userPrompt = attempts > 0 ? `${prompt} (Ensure complete Phaser.Scene structure and accurate prompt interpretation)` : prompt;
+    const systemPrompt = `
+You are an elite React developer with a passion for cutting-edge design, inspired by the Web3 ecosystem (e.g., dApps, NFT marketplaces, DeFi platforms). Generate a complete, working React game component based on the user's prompt:
+- Interpret the prompt to create an interactive game with clear gameplay mechanics (e.g., clicker, puzzle, betting game). Every generation must be a game.
+- Use functional components and hooks (useState, useEffect, useRef) for state management and interactivity.
+- Accept two props: 'proxiedAssets' ({ images: [{ key, proxiedUrl }], audio: [{ key, proxiedUrl }] }) and 'logEvent' (a callback function to send events to the parent).
+- Safely handle proxiedAssets with checks (e.g., proxiedAssets?.images?.[0]?.proxiedUrl || 'https://via.placeholder.com/150').
+- Include the following import statements at the top:
+  import React, { useState, useEffect } from 'react';
+  import { Box, Typography, TextField, Button, CircularProgress } from '@mui/material';
+  import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+  import { faDice, faCoins, faRocket, faGem, faTrophy, faRedo, faBomb, faStar } from '@fortawesome/free-solid-svg-icons';
+- Use Material-UI (MUI) v5 components (e.g., Box, Typography, TextField, Button) and the 'sx' prop for inline styling with these Web3-inspired guidelines to ensure a clean, perfectly aligned design:
+  - **Container Layout**: 
+    - Use Box with 'width: "100%", height: "100%"' to take up the full width and height of the parent container.
+    - Set 'maxWidth: "100%", maxHeight: "100%"' and 'overflow: "auto"' to ensure all content fits without overflow, maintaining a clean look.
+    - Center content horizontally with 'mx: "auto"' and use 'display: "flex", flexDirection: "column", justifyContent: "space-between", alignItems: "center"' for a balanced, symmetrical layout.
+    - Set background color to '#2d3a4a' to make content pop against a subtle, dark backdrop.
+  - **Alignment & Spacing**: 
+    - Use 'gap: 2' consistently for spacing between elements to maintain uniformity.
+    - Apply 'p: 2' for padding on all sides of the container, ensuring content is neatly inset without touching edges.
+    - For buttons, use 'display: "flex", gap: 1' within a nested Box to align them horizontally or vertically with perfect spacing, ensuring they are centered and symmetrical.
+    - Ensure all elements (logo, buttons, text) are proportionally spaced and fit within the container’s height, adjusting dynamically with responsive props.
+  - **Color Palette**: 
+    - Unless specified in the prompt, choose a random color theme from a Web3-inspired palette for text, buttons, and accents.
+    - Icon, Text and font color should contrast the button background color to ensure readability.
+    - Use gradients (e.g., 'background: "linear-gradient(45deg, <randomColor1>, <randomColor2>)"') for buttons and visual flair, ensuring the gradient is smooth and professional.
+    - Add glow effects with 'boxShadow: "0 0 10px rgba(<randomColor>, 0.5)"' for a polished, futuristic touch.
+  - **Visual Polish**: 
+    - Apply 'borderRadius: 8' to buttons for a sleek, modern look.
+    - Use 'transition: "all 0.3s ease-out"' and '&:hover: { transform: "translateY(-4px)", boxShadow: "0 0 15px rgba(<randomColor>, 0.7)" }' for smooth, professional interactivity.
+  - **Web3 Aesthetics**: 
+    - Incorporate blockchain vibes with gradient buttons using a random color theme (e.g., 'background: "linear-gradient(to right, <randomColor1>, <randomColor2>)"') and glowing hover states.
+    - Use subtle animations (e.g., 'animation: "pulse 2s infinite"') via keyframes if needed, keeping them minimal to maintain cleanliness.
+  - **User Experience**: 
+    - Buttons must be bold and uniform (e.g., 'p: 2', 'fontSize: "1.125rem"', 'fontWeight: 500', 'minWidth: 120px') with glowing hover effects, ensuring they align perfectly in size and spacing.
+    - TextFields (if used) should have 'InputProps' with custom styles (e.g., 'bgcolor: "rgba(<randomColor>, 0.5)"', 'color: "white"', 'borderRadius: 8') for a clean, integrated look.
+    - Ensure contrast and hierarchy with 'color: "white"' on the neutral background or adjust based on random accent colors for readability.
+  - **Responsiveness**: 
+    - Use MUI’s responsive props (e.g., 'sx={{ width: { xs: "100%", sm: "90%" }, fontSize: { xs: "1rem", md: "1.25rem" } }}') to ensure the game is fully mobile-responsive.
+    - Scale all items (buttons, text, logo) to fit within the container’s height, maintaining perfect alignment across screen sizes.
+- **FontAwesome Icons**:
+  - Use only the following imported FontAwesome icons: faDice, faCoins, faRocket, faGem, faTrophy, faRedo. Do not use any other icons not explicitly imported.
+  - Match icons to the game theme:
+    - faDice for dice or rolling games.
+    - faCoins for betting or coin-based games.
+    - faRocket for speed or space-themed games.
+    - faGem for treasure or reward-based games.
+    - faTrophy for competitive or winning-focused games.
+    - faRedo for the Restart button (mandatory).
+  - Include an icon in buttons where appropriate (e.g., <FontAwesomeIcon icon={faDice} />) with 'mr: 1' for spacing.
+  - Optionally use an icon in the logo if it fits the theme, but only from the imported list.
+- **Game Events and Results**:
+  - Track game state and interactions:
+    - Use 'useState' to manage 'gameStarted' (boolean, initially false), 'gameEnded' (boolean, initially false), 'multiplier' (number, initially null), and 'result' (string, initially null, values: "win", "loss", or "other").
+    - When a new game starts (e.g., via a "Start Game" button), call 'logEvent("gameStarted", { timestamp: new Date().toISOString() })' and set 'gameStarted' to true.
+    - When the game ends (e.g., via an "End Game" button or game logic), determine the result ("win", "loss", or "other") based on the game’s mechanics:
+      - If "win", calculate a multiplier (e.g., increases by 0.1 per action, capped at 2.0, or based on prompt-specific logic) and set 'multiplier' accordingly.
+      - If "loss", set 'multiplier' to null (no multiplier for losses).
+      - If "other" (e.g., tie or draw), set 'multiplier' to null or a neutral value based on the game.
+    - Call 'logEvent("gameEnded", { timestamp: new Date().toISOString(), result, multiplier })' with the appropriate 'result' and 'multiplier' values, then set 'gameEnded' to true.
+  - Add a "Start Game" button to begin the game and an "End Game" button (or automatic end condition) to finish it, triggering the respective log events.
+  - Always include a "Restart" button with <FontAwesomeIcon icon={faRedo} /> that resets the game state (gameStarted: false, gameEnded: false, multiplier: null, result: null) and logs a new "gameStarted" event when clicked after a game ends.
+  - Display the game state (e.g., multiplier if won, result message) using Typography, ensuring it fits within the container and aligns perfectly with other elements.
+- **Logo**: 
+  - If no image is provided in 'proxiedAssets.images', generate a simple inline SVG logo (e.g., a futuristic geometric shape or emoji with random gradient colors).
+  - Place it in a centered 'Box' with 'display: "flex", alignItems: "center", gap: 2'.
+  - Use 'sx' for styling (e.g., 'width: { xs: 40, md: 50 }', 'height: { xs: 40, md: 50 }', 'filter: "drop-shadow(0 0 10px rgba(<randomColor>, 0.5))"') to keep it clean and proportional.
+  - If an image is provided, use it as the logo instead, scaling it similarly.
+- Return a single App component as a string of JavaScript code with 'export default App;' at the end.
+- For any prompt, infuse Web3 flair, futuristic polish, and delightful interactivity while ensuring a very clean, professional look with perfect alignment of buttons and elements. Keep functionality intact.
+- Ensure the code is error-free, matches the prompt as a game, takes up the full width and height of the container, and ensures all items (logo, buttons, text) fit within the container without overflow unless specified otherwise. Use MUI v5.
+`;
+    const apiCall = openai.chat.completions.create({
+      model: 'o3-mini',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        {
+          role: 'user',
+          content: `Create a React component for: "${prompt}". Use 'proxiedAssets' prop: ${JSON.stringify(proxiedAssets)}.`,
+        },
+      ],
+      max_completion_tokens: 100000,
+    });
 
-      try {
-        const apiCall = openai.chat.completions.create({
-          model: 'o3-mini',
-          messages: [
-            {
-              role: 'system',
-              content: `
-          You are an expert Phaser.js game developer using Phaser 3.60+. Generate a complete, working Phaser.js game based on the user's prompt:
-          - Carefully interpret the prompt to determine game type (e.g., platformer, clicker, puzzle), mechanics, win conditions, and multipliers.
-          - Support complex games with multiple scenes, physics (e.g., Arcade Physics), and advanced interactions if specified.
-          - Use pre-proxied assets from the global 'proxiedAssets' object ({ images: [{ key, proxiedUrl }], audio: [{ key, proxiedUrl }] }) when available.
-          - Safely handle proxiedAssets:
-            - Check if proxiedAssets exists and is an object.
-            - Check if proxiedAssets.images and proxiedAssets.audio are arrays with length > 0 before accessing elements.
-            - Verify each item (e.g., proxiedAssets.images[0]) exists and has key/proxiedUrl before using.
-          - For additional assets not in proxiedAssets:
-            - Send window.sendGameMessage('PROXY_IMAGE', { key: 'unique-key', url: 'image-url' }) for images.
-            - Send window.sendGameMessage('PROXY_AUDIO', { key: 'unique-key', url: 'audio-url' }) for audio.
-            - Store pending assets in Maps (pendingImages, pendingAudio) and load dynamically on PROXY_IMAGE_RESULT or PROXY_AUDIO_RESULT.
-          - Show multipliers on win using this.add.text().
-          - Use professional UI with glassy panels, animated transitions, and cyberpunk aesthetics.
-          - Ensure compatibility with Phaser 3.60+ using scale: { mode: Phaser.Scale.RESIZE, autoCenter: Phaser.Scale.CENTER_BOTH }.
-          - Include a restart button triggering scene.restart() and a window.sendGameMessage('GAME_RESULT', { result: 'restart' }).
-          - Track user inputs in an inputLog array ({ timestamp, action, details }) and send via window.sendGameMessage('INPUT_LOG', { inputLog }).
-          - Load pre-proxied assets in preload() and play audio in create() if available.
-          - Handle dynamic assets in create() or update() based on PROXY_IMAGE_RESULT or PROXY_AUDIO_RESULT messages.
-          - Handle VERIFY_RESULT messages from the parent to determine game outcome, sending window.sendGameMessage('GAME_RESULT', { result, multiplier }).
-          - Structure the code as:
-            - One or more classes extending Phaser.Scene with preload(), create(), and update() as needed.
-            - A const config object defining the game setup with scene: [Scene1, Scene2, ...] for multi-scene games.
-            - A new Phaser.Game(config) instantiation.
-          - If the prompt is vague, create a simple interactive scene with a clickable object and a 2x multiplier.
-          - Wrap in a self-executing function with try-catch, but do not include console.log statements in the try-catch or elsewhere.
-          - Do NOT include console.log, console.warn, or console.error statements anywhere in the code for debugging or otherwise; keep the code silent.
-          - Optimize for larger codebases by modularizing logic where possible and avoiding redundant code.
-          - Return only JavaScript code inside \`\`\`javascript and \`\`\`.
-        `,
-            },
-            {
-              role: 'user',
-              content: `Create a Phaser.js game based on: "${userPrompt}". Use pre-proxied assets from 'proxiedAssets': ${JSON.stringify(proxiedAssets)}. Ensure error-free, complete code that accurately reflects the prompt and supports complex game mechanics if specified.`,
-            },
-          ],
-          max_completion_tokens: maxCompletionTokens,
-        });
+    const aiResponse = await Promise.race([
+      apiCall,
+      new Promise((_, reject) => setTimeout(() => reject(new Error('API call timed out')), 300000)),
+    ]);
 
-        const aiResponse = await Promise.race([
-          apiCall,
-          new Promise((_, reject) => setTimeout(() => reject(new Error('API call timed out')), timeoutMs)),
-        ]);
-        const rawGameCode = aiResponse?.choices?.[0]?.message?.content?.trim() || '';
-        const extractedCodeMatch = rawGameCode.match(/```javascript([\s\S]*?)```/);
-        let candidateCode = extractedCodeMatch ? extractedCodeMatch[1].trim() : rawGameCode;
+    const rawCode = aiResponse?.choices?.[0]?.message?.content?.trim() || '';
+    const cleanedCode = rawCode.replace(/```(?:jsx?|javascript)?/g, '').trim();
 
-        if (!candidateCode) continue;
-
-        // Syntax Validation
-        try {
-          esprima.parseScript(candidateCode);
-        } catch (syntaxError) {
-          candidateCode = null;
-          continue;
-        }
-
-        // Structural Validation
-        const hasScene = candidateCode.match(/class\s+\w+\s+extends\s+Phaser\.Scene/);
-        const hasPreload = candidateCode.match(/preload\s*\(\s*\)/);
-        const hasCreate = candidateCode.match(/create\s*\(\s*\)/);
-        const hasConfig = candidateCode.match(/const\s+config\s*=/);
-        const hasGameInstantiation = candidateCode.match(/new\s+Phaser\.Game\s*\(/);
-        if (!hasScene || !hasPreload || !hasCreate || !hasConfig || !hasGameInstantiation) {
-          candidateCode = null;
-          continue;
-        }
-
-        // Enhanced Sandbox Validation
-        const sandbox = {
-          console: { log: () => {}, warn: () => {}, error: () => {} },
-          window: { addEventListener: () => {}, sendGameMessage: () => {} },
-          proxiedAssets: proxiedAssets,
-          Phaser: {
-            Scene: class MockScene {
-              constructor() {
-                this.load = {
-                  image: (key, url) => {
-                    if (!proxiedAssets.images.some(img => img?.key === key)) {
-                      throw new Error(`Image asset with key '${key}' not found in proxiedAssets.images`);
-                    }
-                  },
-                  audio: (key, url) => {
-                    if (!proxiedAssets.audio.some(aud => aud?.key === key)) {
-                      throw new Error(`Audio asset with key '${key}' not found in proxiedAssets.audio`);
-                    }
-                  },
-                  on: () => {},
-                  start: () => {},
-                };
-                this.add = {
-                  image: () => ({ setDisplaySize: () => {}, setInteractive: () => {} }),
-                  rectangle: () => ({ setInteractive: () => {}, setStrokeStyle: () => {} }),
-                  text: () => ({ setOrigin: () => {}, setInteractive: () => {} }),
-                };
-                this.sound = { play: () => {}, get: () => true, add: () => {} };
-                this.tweens = { add: () => {} };
-                this.scale = { width: 800, height: 600, on: () => {} };
-                this.time = { delayedCall: () => {} };
-                this.textures = { exists: key => proxiedAssets.images.some(img => img?.key === key) };
-              }
-            },
-            Game: function () {},
-            Scale: { RESIZE: 1, CENTER_BOTH: 1 },
-            AUTO: 1,
-            Math: { Between: () => 0 },
-          },
-        };
-        try {
-          vm.runInNewContext(candidateCode, sandbox, { timeout: 10000 });
-        } catch (runtimeError) {
-          candidateCode = null;
-          continue;
-        }
-
-        generatedGameCode = candidateCode;
-      } catch (apiError) {
-        if (attempts === maxAttempts - 1) throw new Error('All attempts failed');
-        await new Promise(resolve => setTimeout(resolve, 2000));
-      }
+    // Basic validation
+    if (!cleanedCode.includes('return (') || !cleanedCode.includes('App')) {
+      throw new Error('Generated code is invalid or incomplete');
     }
 
-    if (!generatedGameCode) {
-      throw new Error('Failed to generate valid game code after all attempts');
-    }
-
-    // Strip any remaining console.log statements
-    const cleanedCode = generatedGameCode.replace(/console\.(log|warn|error)\s*\(.*?\);?/g, '');
-
-    // Obfuscate the cleaned code
-    const obfuscatedCode = JavaScriptObfuscator.obfuscate(cleanedCode, {
-      compact: true,
-      controlFlowFlattening: true,
-      deadCodeInjection: true,
-      stringArray: true,
-      stringArrayRotate: true,
-      stringArrayShuffle: true,
-    }).getObfuscatedCode();
-
-    // Inject createScene message at the start of the game
-    const finalCode = `
-      window.sendGameMessage('INPUT_LOG', { 
-        inputLog: [{ timestamp: Date.now(), action: 'createScene', details: 'Game scene initialized' }] 
-      });
-      ${obfuscatedCode}
+    // Wrap the cleaned code with imports and export
+    const moduleCode = `
+      ${cleanedCode}
     `;
 
-    res.json({ finalGame: finalCode });
+    console.log(`[React Generator] Generated code length: ${moduleCode.length}`);
+    console.log(moduleCode);
+    res.json({ finalApp: moduleCode });
   } catch (error) {
-    console.error('Unexpected error in route handler:', error);
-    const statusCode = error.message === 'Prompt is required and must be a string' || error.message === 'imageUrls must be an array' ? 400 : 500;
-    res.status(statusCode).json({
-      error: statusCode === 400 ? 'Bad Request' : 'Internal server error',
-      message: error.message === 'NOT ENUFF FUNDS AT THIS MEOWMENT'
-        ? error.message
-        : error.message.includes('timed out')
-        ? 'Game generation timed out. Please try again or simplify your prompt.'
-        : 'Failed to generate game. Please try again.',
+    console.error('Error in route handler:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: error.message.includes('timed out')
+        ? 'App generation timed out. Please try again.'
+        : error.message,
     });
   }
 });
@@ -1099,69 +1039,6 @@ router.get('/rpsbetitems/:roomId', auth, async (req, res) => {
   }
 });
 
-router.get('/predictRPSNextByGPT/:roomId/:user_id', auth, async (req, res) => {
-  const { roomId, user_id } = req.params;
-  try {
-    const rpsBetItems = await RpsBetItem.find({
-      room: roomId,
-      joiner: req.user._id,
-      joiner_rps: { $ne: null },
-    }).sort({ created_at: -1 });
-
-    const user = await User.findOne({ _id: new ObjectId(user_id) });
-
-    const predictedMove = await predictNextOpenAI(
-      rpsBetItems,
-      user.prompt ?? 'You are an expert in Rock Paper Scissors.',
-    );
-    res.json({
-      success: true,
-      data: predictedMove,
-    });
-  } catch (err) {
-    res.json({
-      success: false,
-      err: err,
-    });
-  }
-});
-
-router.get(
-  '/predictQuickNextByGPT/:roomId/:user_id',
-  auth,
-  async (req, res) => {
-    const { roomId, user_id } = req.params;
-
-    try {
-      const rpsBetItems = await QsBetItem.find({
-        room: new ObjectId(roomId),
-        joiner: req.user._id,
-        joiner_qs: { $ne: null },
-      }).sort({ created_at: -1 });
-      const roomInfo = await Room.findOne({ _id: roomId }).select(
-        'name image ticker room_number updated_at battles selectedStrategy qs_game_type game_type rps_game_type joiners creator bet_amount user_bet pr host_pr endgame_type endgame_amount is_private room_password status hosts',
-      );
-      const user = await User.findOne({ _id: user_id });
-      const predictedMove = await openAIPredictionAI_qs(
-        rpsBetItems,
-        roomInfo['qs_game_type'],
-        user.prompt ?? 'You are an expert in Rock Paper Scissors.',
-        true,
-      );
-
-      return res.json({
-        success: true,
-        data: predictedMove,
-      });
-    } catch (err) {
-      console.log('--error:', err);
-      res.json({
-        success: false,
-        err: err,
-      });
-    }
-  },
-);
 router.get('/qsbetitems/:roomId', auth, async (req, res) => {
   const { roomId } = req.params;
   try {
@@ -3676,76 +3553,6 @@ router.post('/tip', auth, async (req, res) => {
     return res.json({
       success: false,
       message: 'Failed to initiate tip',
-    });
-  }
-});
-
-router.post('/reCreate', auth, async (req, res) => {
-  try {
-    const { room_id } = req.body;
-    const room = await Room.findOne({ _id: room_id });
-    const gameType = await GameType.findOne({ _id: room.game_type });
-    if (!room) {
-      return res.json({
-        success: false,
-        message: 'ROOM NOT FOUND',
-      });
-    }
-
-    const mostRecentRoom = await Room.findOne().sort({ _id: -1 });
-
-    let newRoomNumber;
-    if (mostRecentRoom) {
-      newRoomNumber = mostRecentRoom.room_number + 1;
-    } else {
-      newRoomNumber = 1;
-    }
-
-    // Duplicate the found room
-    const duplicatedRoom = new Room({
-      game_type: room.game_type,
-      endgame_amount: room.endgame_amount,
-      creator: room.creator,
-      qs_list: room.qs_list,
-      rps_list: room.rps_list,
-      bet_amount: room.bet_amount,
-      room_number: newRoomNumber, // Use the incremented room number
-      // Copy other fields as needed
-    });
-
-    // Create a default description
-    let description = `Re-Created Room ${gameType.short_name}-${room.room_number}`;
-
-    const newTransactionJ = new Transaction({
-      created_at: now,
-      user: req.user._id,
-      amount: betAmount,
-      description,
-    });
-
-    req.user.balance -= tipAmount;
-    req.user.updated_at = new Date();
-
-    try {
-      await Promise.all([
-        saveDocumentWithRetry(req.user),
-        saveDocumentWithRetry(duplicatedRoom),
-        saveDocumentWithRetry(newTransactionJ),
-      ]);
-    } catch (error) {
-      console.error('Error saving documents:', error);
-    }
-
-    return res.json({
-      success: true,
-      message: 'Room duplicated successfully',
-      newTransaction: newTransactionJ,
-    });
-  } catch (e) {
-    console.log('ERROR in re-create req', e);
-    return res.json({
-      success: false,
-      message: 'Failed to re-create room',
     });
   }
 });

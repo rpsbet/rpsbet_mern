@@ -1,10 +1,9 @@
 import React, { useEffect } from 'react';
-import { connect, useDispatch } from 'react-redux';
-import { Route, Switch } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { Routes, Route, useParams, useLocation } from 'react-router-dom'; // Add useLocation
 import { Box } from '@mui/material';
 
 import CreateGame from '../main_pages/CreateGame';
-
 import SiteWrapper from '../SiteWrapper';
 import MainPage from '../main_pages/MainPage';
 import JoinGame from '../main_pages/JoinGame';
@@ -14,14 +13,17 @@ import MyGames from '../MyGames/MyGamesTable';
 import ChatPanel from '../ChatPanel/ChatPanel';
 import { getSolToUsdPrice } from '../../redux/Logic/logic.actions';
 
-function GameMainRoute({ match, isDrawerOpen }) {
-  const isMobile = window.innerWidth < 1024; // Determine if the user is on mobile
+function GameMainRoute() {
+  const isDrawerOpen = useSelector((state) => state.auth.isDrawerOpen);
+  const isMobile = window.innerWidth < 1024;
   const dispatch = useDispatch();
+  const params = useParams();
+  const location = useLocation(); // Add useLocation for current path
 
   useEffect(() => {
     dispatch(getSolToUsdPrice());
   }, [dispatch]);
-  
+
   return (
     <Box
       sx={{
@@ -38,53 +40,32 @@ function GameMainRoute({ match, isDrawerOpen }) {
             overflowY: 'auto',
           }}
         >
-          {/*
-            Switch + Route on the LEFT column so that:
-              - If the path is /chat/:id, we extract match.params.id
-                and pass it to ChatPanel as highlightChatId.
-              - Otherwise (fallback), render a ChatPanel with no id.
-          */}
-          <Switch>
+          <Routes>
             <Route
-              path={`${match.path}chat/:id`}
-              render={({ match }) => (
-                <ChatPanel highlightChatId={match.params.id} />
-              )}
+              path="chat/:id"
+              element={<ChatPanel highlightChatId={params.id} />}
             />
-            {/* Fallback if the above route doesn't match */}
-            <Route render={() => <ChatPanel />} />
-          </Switch>
+            <Route path="*" element={<ChatPanel />} />
+          </Routes>
         </Box>
       )}
 
       {/* RIGHT COLUMN: SiteWrapper and Content Routes */}
       <Box sx={{ overflowY: 'auto' }}>
         <SiteWrapper>
-          <Switch>
-            <Route
-              exact
-              path={`${match.path}create/:game_type_name`}
-              component={CreateGame}
-            />
-            <Route exact path={`${match.path}create/`} component={CreateGame} />
-            <Route exact path={`${match.path}join/:id`} component={JoinGame} />
-            <Route exact path={`${match.path}chat/:id`} component={ChatPage} />
-            <Route
-              exact
-              path={`${match.path}leaderboards`}
-              component={LeaderboardsModal}
-            />
-            <Route exact path={`${match.path}portfolio`} component={MainPage} />
-            <Route path={`${match.path}`} component={MainPage} />
-          </Switch>
+          <Routes>
+            <Route path="create/:game_type_name" element={<CreateGame />} />
+            <Route path="create" element={<CreateGame />} /> {/* Remove trailing slash */}
+            <Route path="join/:id" element={<JoinGame />} />
+            <Route path="chat/:id" element={<ChatPage />} />
+            <Route path="leaderboards" element={<LeaderboardsModal />} />
+            <Route path="portfolio" element={<MainPage />} />
+            <Route path="/" element={<MainPage />} /> {/* Base route */}
+          </Routes>
         </SiteWrapper>
       </Box>
     </Box>
   );
 }
 
-const mapStateToProps = (state) => ({
-  isDrawerOpen: state.auth.isDrawerOpen,
-});
-
-export default connect(mapStateToProps)(GameMainRoute);
+export default GameMainRoute;

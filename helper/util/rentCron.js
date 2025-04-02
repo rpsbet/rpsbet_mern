@@ -213,7 +213,7 @@ async function checkRentalPayments(io) {
           }
         }
         const senderId = '629685058f368a1838372754'; // Replace with the actual sender ID
-        const message = 'Daily debt checks 💸 have been processed. 🎉';
+        const message = 'Daily debt checks 💸 have been processed 🎉';
         const messageType = 'text';
 
         // Fetch user information from the User model using the senderId
@@ -399,7 +399,7 @@ async function distributeHoldersPool() {
       await holdersPoolSetting.save();
       console.log("✅ Holders pool distributed and reset.");
 
-      const message = `${holdersPool} SOL 💰 distributed to $RPS holders ✅ 🌐.`;
+      const message = `${holdersPool} SOL 💰 distributed to $RPS holders ✅ 🌐`;
       const messageType = 'text';
 
       // Extract relevant user information

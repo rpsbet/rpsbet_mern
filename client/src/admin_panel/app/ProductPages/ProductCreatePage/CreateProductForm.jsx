@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { connect } from 'react-redux';
+import { useSelector } from 'react-redux';
 import {
   ThemeProvider,
   TextField,
@@ -11,29 +11,41 @@ import {
   Typography,
   InputAdornment,
   Tooltip,
-  Box
+  Box,
 } from '@mui/material';
 import InfoIcon from '@mui/icons-material/Info';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
-
 import { convertToCurrency } from '../../../../util/conversion';
 import { getCustomTheme } from '../../../../config/theme';
 
-function CreateProductForm({ 
-  updateTextField, 
-  user_balance, 
-  solPrice, 
-  isDarkMode 
+function CreateProductForm({
+  updateTextField,
+  user_balance: propUserBalance,
+  solPrice: propSolPrice,
+  isDarkMode: propIsDarkMode,
 }) {
+  // Map state from Redux using useSelector
+  const { user_balance, solPrice, isDarkMode } = useSelector((state) => ({
+    user_balance: state.auth.user.balance,
+    solPrice: state.logic.solPrice,
+    isDarkMode: state.auth.isDarkMode,
+  }));
+
+  // Use prop values if provided, otherwise fall back to Redux state
+  const effectiveUserBalance = propUserBalance !== undefined ? propUserBalance : user_balance;
+  const effectiveSolPrice = propSolPrice !== undefined ? propSolPrice : solPrice;
+  const effectiveIsDarkMode = propIsDarkMode !== undefined ? propIsDarkMode : isDarkMode;
+
+  // Local State
   const [formValues, setFormValues] = useState({
     loan_amount: '',
     loan_period: '',
-    apy: ''
+    apy: '',
   });
   const [expanded, setExpanded] = useState(false);
 
-  // ----------------- CALCULATIONS -----------------
+  // Calculations
   const calculateInterest = () => {
     const amount = parseFloat(formValues.loan_amount);
     const interestRate = parseFloat(formValues.apy);
@@ -42,8 +54,8 @@ function CreateProductForm({
   };
 
   const calculateNewBalance = () => {
-    const newBalance = user_balance - parseFloat(formValues.loan_amount);
-    return isNaN(newBalance) ? user_balance : newBalance;
+    const newBalance = effectiveUserBalance - parseFloat(formValues.loan_amount);
+    return isNaN(newBalance) ? effectiveUserBalance : newBalance;
   };
 
   const determineLoanType = () => {
@@ -51,9 +63,8 @@ function CreateProductForm({
     return newBalance < 0 ? 'FRACTIONAL' : 'FULL';
   };
 
-  // ----------------- INPUT HANDLERS -----------------
+  // Input Handlers
   const handleInputChange = (name, value, maxLength) => {
-    // Enforce maxLength if needed
     const trimmedValue = value.slice(0, maxLength);
     const updatedValues = { ...formValues, [name]: trimmedValue };
     setFormValues(updatedValues);
@@ -64,17 +75,16 @@ function CreateProductForm({
 
   const exceedsReservesLimit = () => {
     const loanAmount = parseFloat(formValues.loan_amount);
-    return loanAmount > user_balance * 10;
+    return loanAmount > effectiveUserBalance * 10;
   };
 
-  // ----------------- RENDER -----------------
-  const theme = getCustomTheme(isDarkMode);
+  // Render
+  const theme = getCustomTheme(effectiveIsDarkMode);
 
   return (
     <ThemeProvider theme={theme}>
       <Box sx={{ mt: 2 }}>
         <TableContainer>
-          {/* Use a dense (small) table for a more compact, professional look */}
           <Table size="small">
             <TableBody>
               {/* Loan Amount Row */}
@@ -82,7 +92,7 @@ function CreateProductForm({
                 <TableCell>
                   <TextField
                     autoFocus
-                    color='error'
+                    color="error"
                     variant="filled"
                     label="Loan Amount"
                     name="loan_amount"
@@ -92,7 +102,7 @@ function CreateProductForm({
                     autoComplete="off"
                     fullWidth
                     InputProps={{
-                      endAdornment: <InputAdornment position="end">SOL</InputAdornment>
+                      endAdornment: <InputAdornment position="end">SOL</InputAdornment>,
                     }}
                   />
                 </TableCell>
@@ -115,7 +125,7 @@ function CreateProductForm({
                         p: 1,
                         borderLeft: '2px solid #D32F2F',
                         borderRadius: 1,
-                        mt: 1
+                        mt: 1,
                       }}
                     >
                       <FontAwesomeIcon
@@ -134,7 +144,7 @@ function CreateProductForm({
               <TableRow>
                 <TableCell>
                   <TextField
-                    color='error'
+                    color="error"
                     variant="filled"
                     label="Loan Period"
                     name="loan_period"
@@ -144,7 +154,7 @@ function CreateProductForm({
                     autoComplete="off"
                     fullWidth
                     InputProps={{
-                      endAdornment: <InputAdornment position="end">DAYS</InputAdornment>
+                      endAdornment: <InputAdornment position="end">DAYS</InputAdornment>,
                     }}
                   />
                 </TableCell>
@@ -159,7 +169,7 @@ function CreateProductForm({
               <TableRow>
                 <TableCell sx={{ borderBottom: 'none' }}>
                   <TextField
-                    color='error'
+                    color="error"
                     variant="filled"
                     label="Interest Rate"
                     name="apy"
@@ -169,7 +179,7 @@ function CreateProductForm({
                     autoComplete="off"
                     fullWidth
                     InputProps={{
-                      endAdornment: <InputAdornment position="end">%</InputAdornment>
+                      endAdornment: <InputAdornment position="end">%</InputAdornment>,
                     }}
                   />
                 </TableCell>
@@ -189,7 +199,8 @@ function CreateProductForm({
                 </TableCell>
                 <TableCell>
                   <Typography variant="body2">
-                  {(user_balance).toFixed(6)} SOL / {convertToCurrency(user_balance, solPrice)}
+                    {(effectiveUserBalance).toFixed(6)} SOL /{' '}
+                    {convertToCurrency(effectiveUserBalance, effectiveSolPrice)}
                   </Typography>
                 </TableCell>
               </TableRow>
@@ -204,12 +215,13 @@ function CreateProductForm({
                 <TableCell>
                   {calculateNewBalance() < 0 ? (
                     <Typography variant="body2">
-                      {convertToCurrency(0, solPrice)} AND{' '}
-                      {Math.abs(calculateNewBalance()).toFixed(6)} SOL / {convertToCurrency(Math.abs(calculateNewBalance()), solPrice)} IN DEBT
+                      {convertToCurrency(0, effectiveSolPrice)} AND{' '}
+                      {Math.abs(calculateNewBalance()).toFixed(6)} SOL /{' '}
+                      {convertToCurrency(Math.abs(calculateNewBalance()), effectiveSolPrice)} IN DEBT
                     </Typography>
                   ) : (
                     <Typography variant="body2">
-                      {convertToCurrency(calculateNewBalance(), solPrice)}
+                      {convertToCurrency(calculateNewBalance(), effectiveSolPrice)}
                     </Typography>
                   )}
                 </TableCell>
@@ -228,10 +240,10 @@ function CreateProductForm({
                     isNaN(parseFloat(formValues.apy)) ||
                     parseFloat(formValues.loan_amount) <= 0 ||
                     parseFloat(formValues.apy) <= 0
-                      ? convertToCurrency(0, solPrice)
+                      ? convertToCurrency(0, effectiveSolPrice)
                       : convertToCurrency(
                           calculateInterest() + parseFloat(formValues.loan_amount),
-                          solPrice
+                          effectiveSolPrice,
                         )}
                   </Typography>
                 </TableCell>
@@ -246,7 +258,7 @@ function CreateProductForm({
                 </TableCell>
                 <TableCell>
                   <Typography variant="body2">
-                    (+{convertToCurrency(calculateInterest(), solPrice)})
+                    (+{convertToCurrency(calculateInterest(), effectiveSolPrice)})
                   </Typography>
                 </TableCell>
               </TableRow>
@@ -273,7 +285,7 @@ function CreateProductForm({
                         color: 'error.main',
                         fontWeight: 'bold',
                         textAlign: 'center',
-                        mt: 1
+                        mt: 1,
                       }}
                     >
                       Charging an interest rate above 6% may be considered usury and could increase
@@ -295,7 +307,7 @@ function CreateProductForm({
             sx={{
               color: '#D32F2F',
               textDecoration: 'underline',
-              cursor: 'pointer'
+              cursor: 'pointer',
             }}
           >
             terms and conditions:
@@ -309,19 +321,13 @@ function CreateProductForm({
               <TableBody>
                 {/* Term 1 */}
                 <TableRow>
-                  <TableCell
-                    sx={{
-                      width: '30px',
-                      fontWeight: 'bold',
-                      verticalAlign: 'top'
-                    }}
-                  >
+                  <TableCell sx={{ width: '30px', fontWeight: 'bold', verticalAlign: 'top' }}>
                     1.
                   </TableCell>
                   <TableCell>
                     The loan amount is{' '}
                     <Box component="span" sx={{ color: 'error.main' }}>
-                      [{convertToCurrency(formValues.loan_amount, solPrice)}]
+                      [{convertToCurrency(formValues.loan_amount, effectiveSolPrice)}]
                     </Box>
                     .
                   </TableCell>
@@ -329,13 +335,7 @@ function CreateProductForm({
 
                 {/* Term 2 */}
                 <TableRow>
-                  <TableCell
-                    sx={{
-                      width: '30px',
-                      fontWeight: 'bold',
-                      verticalAlign: 'top'
-                    }}
-                  >
+                  <TableCell sx={{ width: '30px', fontWeight: 'bold', verticalAlign: 'top' }}>
                     2.
                   </TableCell>
                   <TableCell>
@@ -402,15 +402,4 @@ function CreateProductForm({
   );
 }
 
-// -------------- REDUX CONNECT --------------
-const mapStateToProps = (state) => ({
-  user_balance: state.auth.user.balance,
-  solPrice: state.logic.solPrice,
-  isDarkMode: state.auth.isDarkMode
-});
-
-const mapDispatchToProps = {
-  // Add your dispatch actions if any
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(CreateProductForm);
+export default CreateProductForm;

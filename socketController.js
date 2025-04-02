@@ -1,7 +1,7 @@
 const ObjectId = require('mongoose').Types.ObjectId;
 const socket_io = require('socket.io');
 const Message = require('./model/Message');
-const Moment = require('moment');
+const moment = require('moment');
 const Chat = require('./model/Chat');
 const User = require('./model/User');
 

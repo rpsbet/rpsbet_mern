@@ -1,32 +1,25 @@
 import React, { useState } from 'react';
-import { connect } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { Modal, Box, Button, Typography } from '@mui/material';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBox } from '@fortawesome/free-solid-svg-icons';
 
 import MyProductPage from '../../admin_panel/app/ProductPages/ProductSerchPage/MyProductPage';
-import {
-  warningMsgBar,
-  infoMsgBar,
-} from '../../redux/Notification/notification.actions';
 import MarketplaceModal from './MarketplaceModal';
 
-function InventoryModal(props) {
-  const { modalIsOpen, closeModal, isDarkMode, solPrice } = props;
+function InventoryModal({ modalIsOpen, closeModal }) {
+  // Retrieve Redux state
+  const isDarkMode = useSelector((state) => state.auth.isDarkMode);
+  const solPrice = useSelector((state) => state.logic.solPrice);
 
   // Local state to track visibility of MarketplaceModal
   const [showMarketplaceModal, setShowMarketplaceModal] = useState(false);
 
-  const handleOpenMarketplaceModal = () => {
-    setShowMarketplaceModal(true);
-  };
+  const handleOpenMarketplaceModal = () => setShowMarketplaceModal(true);
+  const handleCloseMarketplaceModal = () => setShowMarketplaceModal(false);
 
-  const handleCloseMarketplaceModal = () => {
-    setShowMarketplaceModal(false);
-  };
-
-  // ------------------ STYLES ------------------
+  // Modal styling
   const modalBoxStyle = {
     position: 'absolute',
     top: '50%',
@@ -70,7 +63,6 @@ function InventoryModal(props) {
           </Box>
 
           {/* BODY */}
-
           <MyProductPage solPrice={solPrice} />
 
           {/* FOOTER */}
@@ -87,7 +79,7 @@ function InventoryModal(props) {
         </Box>
       </Modal>
 
-      {/* Marketplace Modal (still uses MUI or React Modal based on its own code) */}
+      {/* Marketplace Modal */}
       {showMarketplaceModal && (
         <MarketplaceModal
           modalIsOpen={showMarketplaceModal}
@@ -99,14 +91,4 @@ function InventoryModal(props) {
   );
 }
 
-const mapStateToProps = (state) => ({
-  isDarkMode: state.auth.isDarkMode,
-  solPrice: state.logic.solPrice,
-});
-
-const mapDispatchToProps = {
-  warningMsgBar,
-  infoMsgBar,
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(InventoryModal);
+export default InventoryModal;

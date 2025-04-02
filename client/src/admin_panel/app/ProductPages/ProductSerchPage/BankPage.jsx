@@ -1,26 +1,17 @@
 import React, { useEffect } from 'react';
-import { connect } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { warningMsgBar } from '../../../../redux/Notification/notification.actions';
 import { acQueryLoan } from '../../../../redux/Loan/loan.action';
 import BankTable from './BankTable';
 
-const BankPage = ({ acQueryLoan }) => {
+const BankPage = () => {
+  const dispatch = useDispatch();
+
   useEffect(() => {
-    acQueryLoan(30, 1, 'loan_amount', '');
-  }, [acQueryLoan]);
+    dispatch(acQueryLoan(30, 1, 'loan_amount', ''));
+  }, [dispatch]);
 
-  return (
-    <>
-      <BankTable />
-    </>
-  );
+  return <BankTable />;
 };
 
-const mapStateToProps = (state) => ({});
-
-const mapDispatchToProps = {
-  warningMsgBar,
-  acQueryLoan,
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(BankPage);
+export default BankPage;

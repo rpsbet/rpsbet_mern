@@ -1,4 +1,3 @@
-// theme.js
 import { createTheme } from '@mui/material/styles';
 
 export const getCustomTheme = (isDarkMode) =>
@@ -21,17 +20,34 @@ export const getCustomTheme = (isDarkMode) =>
           },
         },
       },
+      // Style for input labels
       MuiInputLabel: {
         styleOverrides: {
           root: {
-            color: isDarkMode ? 'white' : '#666',
+            color: 'white',
           },
         },
       },
+      // Style for filled variant (for input text)
+      MuiFilledInput: {
+        styleOverrides: {
+          input: {
+            color: 'white', // Input text color
+          },
+        },
+      },
+      // Style for InputAdornment (for "SOL")
+      MuiInputAdornment: {
+        styleOverrides: {
+          root: {
+            color: 'white', // Ensures "SOL" is white
+          },
+        },
+      },
+      // Optional: Keep MuiOutlinedInput if used elsewhere
       MuiOutlinedInput: {
         styleOverrides: {
           root: {
-            backgroundColor: isDarkMode ? '#2b2b2b' : '#fff',
             '& fieldset': {
               borderColor: isDarkMode ? 'white' : '#666',
             },
@@ -43,7 +59,7 @@ export const getCustomTheme = (isDarkMode) =>
             },
           },
           input: {
-            color: isDarkMode ? 'white' : 'black',
+            color: 'white',
           },
         },
       },

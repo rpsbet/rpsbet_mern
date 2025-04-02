@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { connect, useDispatch } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import {
   actionRoom,
   getRoomList,
@@ -9,10 +9,9 @@ import {
   addNewTransaction,
   pumpGame,
   endLoading,
-  startLoading
+  startLoading,
 } from '../../redux/Logic/logic.actions';
 import isEqual from 'lodash/isEqual';
-
 import {
   TrendingUpOutlined,
   TrendingDownOutlined,
@@ -48,52 +47,80 @@ import { getRoomStatisticsData } from '../../redux/Customer/customer.action';
 import Battle from '../icons/Battle';
 import { errorMsgBar } from '../../redux/Notification/notification.actions';
 import PlayerModal from '../modal/PlayerModal';
-import history from '../../redux/history';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { getCustomTheme } from '../../config/theme';
 
 function OpenGamesTable(props) {
   const {
     selectedGameType,
-    loading,
-    isDarkMode,
+    loading: propLoading,
+    isDarkMode: propIsDarkMode,
     showPlayerModal,
     selectedCreator,
     handleOpenPlayerModal,
     handleClosePlayerModal,
     onlineUserList,
-    balance,
-    connectedAccount,
-    user,
-    solPrice,
-    endLoading,
-    startLoading,
-    // Redux actions
-    getRoomList,
-    roomList,
-    setCurRoomInfo,
-    highlightedRooms,
-    getRecentlyClosed,
-    addNewTransaction,
-    pumpGame,
+    balance: propBalance,
+    connectedAccount: propConnectedAccount,
+    solPrice: propSolPrice,
   } = props;
-  // ------------------ LOCAL STATE ------------------
+
+  const dispatch = useDispatch();
+
+  // Map state from Redux using useSelector
+  const {
+    creator,
+    joiners,
+    isAuthenticated,
+    userName,
+    recentlyClosed,
+    user,
+    highlightedRooms,
+    isLowGraphics,
+    loading,
+    solPrice,
+    roomList,
+    connectedAccount,
+  } = useSelector((state) => ({
+    creator: state.logic.curRoomInfo.creator_name,
+    joiners: state.logic.curRoomInfo.joiners,
+    isAuthenticated: state.auth.isAuthenticated,
+    userName: state.auth.userName,
+    recentlyClosed: state.logic.recentlyClosed,
+    user: state.auth.user,
+    highlightedRooms: state.logic.highlightedRooms,
+    isLowGraphics: state.auth.isLowGraphics,
+    loading: state.logic.isActiveLoadingOverlay,
+    solPrice: state.logic.solPrice,
+    roomList: state.logic.roomList,
+    connectedAccount: state.auth.connectedAccount,
+  }));
+
+  // Use prop values if provided, otherwise fall back to Redux state
+  const effectiveLoading = propLoading !== undefined ? propLoading : loading;
+  const effectiveIsDarkMode = propIsDarkMode !== undefined ? propIsDarkMode : isDarkMode;
+  const effectiveBalance = propBalance !== undefined ? propBalance : balance;
+  const effectiveConnectedAccount = propConnectedAccount !== undefined ? propConnectedAccount : connectedAccount;
+  const effectiveSolPrice = propSolPrice !== undefined ? propSolPrice : solPrice;
+
+  // Local State
   const [localRoomList, setLocalRoomList] = useState(roomList);
   const [filter, setFilter] = useState('Live Games');
   const [isCoHostModalOpen, setIsCoHostModalOpen] = useState(false);
   const [coHostAmount, setCoHostAmount] = useState('');
   const [selectedRow, setSelectedRow] = useState(null);
-  const theme = getCustomTheme(isDarkMode);
   const [page, setPage] = useState(1);
-  const dispatch = useDispatch();
   const [loadingRecent, setLoadingRecent] = useState(true);
 
+  const theme = getCustomTheme(effectiveIsDarkMode);
+
   const pageSize = 30;
-  // total rooms from server, so we can calculate how many pages
   const startIndex = (page - 1) * pageSize;
   const endIndex = startIndex + pageSize;
   const displayedRooms = roomList.slice(startIndex, endIndex);
   const prevRoomListRef = useRef(roomList);
+
+  // Effects
   useEffect(() => {
     if (!isEqual(prevRoomListRef.current, roomList)) {
       prevRoomListRef.current = roomList;
@@ -105,7 +132,6 @@ function OpenGamesTable(props) {
       ),
     ];
 
-    // If localRoomList has extra rooms not in roomList, override
     const extraRoomsInState = localRoomList.some(
       (stateRoom) =>
         !roomList.some((propRoom) => propRoom._id === stateRoom._id),
@@ -115,25 +141,23 @@ function OpenGamesTable(props) {
       return;
     }
 
-    // If there's a highlighted room, bring it to the front
     const highlightId = Array.from(highlightedRooms)[0];
     if (highlightId) {
       const index = mergedRooms.findIndex((r) => r._id === highlightId);
       if (index !== -1 && index !== 0) {
         const [highlighted] = mergedRooms.splice(index, 1);
         mergedRooms.unshift(highlighted);
-
         dispatch(setRoomList(mergedRooms));
       }
     }
     setLocalRoomList(mergedRooms);
-  }, [roomList, highlightedRooms]);
+  }, [roomList, highlightedRooms, dispatch]);
 
+  // Handlers
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
 
-  // ------------------ CO-HOST LOGIC ------------------
   const handleCoHost = (row) => {
     setSelectedRow(row);
     setIsCoHostModalOpen(true);
@@ -152,21 +176,17 @@ function OpenGamesTable(props) {
       dispatch(errorMsgBar('R U FURR-REAL? AMOUNT MUST BE MORE THAN 0!'));
       return;
     }
-    if (coHostAmount > balance) {
+    if (coHostAmount > effectiveBalance) {
       dispatch(errorMsgBar('NOT ENUFF FUNDS AT THIS MEOWMENT'));
       return;
     }
     try {
-      const result = await pumpGame(
-        coHostAmount,
-        selectedRow._id,
-        connectedAccount,
+      const result = await dispatch(
+        pumpGame(coHostAmount, selectedRow._id, effectiveConnectedAccount),
       );
       if (result.success) {
-        addNewTransaction(result.newTransaction);
-        await getRoomList({
-          game_type: selectedGameType,
-        });
+        dispatch(addNewTransaction(result.newTransaction));
+        await dispatch(getRoomList({ game_type: selectedGameType }));
       } else {
         dispatch(errorMsgBar(result.message));
       }
@@ -175,7 +195,6 @@ function OpenGamesTable(props) {
     }
   };
 
-  // ------------------ UTILS ------------------
   const customFromNow = (date) => {
     const now = Moment();
     const duration = Moment.duration(now.diff(date));
@@ -212,7 +231,6 @@ function OpenGamesTable(props) {
     }
   };
 
-  // If we need to transform a recentlyClosed array, we can do so
   const updateFromNow = (historyArr) => {
     const result = JSON.parse(JSON.stringify(historyArr));
     for (let i = 0; i < result.length; i++) {
@@ -225,12 +243,12 @@ function OpenGamesTable(props) {
     async (option) => {
       setFilter(option);
       if (option === 'Recently Graduated') {
-        setLoadingRecent(true); // Start loading
-        await getRecentlyClosed();
-        setLoadingRecent(false); // Finished loading
+        setLoadingRecent(true);
+        await dispatch(getRecentlyClosed());
+        setLoadingRecent(false);
       }
     },
-    [getRecentlyClosed],
+    [dispatch],
   );
 
   const joinRoom = useCallback(
@@ -245,19 +263,14 @@ function OpenGamesTable(props) {
     [dispatch],
   );
 
-  // -------------- UI HELPERS --------------
   const getColorClass = (value) => {
     if (value > 0) return '#03ff3b';
     if (value === 0) return 'grey';
     return '#D32F2F';
   };
 
-  // Filter state
   const isLiveGames = filter === 'Live Games';
-
-  const recent = props.recentlyClosed
-    ? updateFromNow(props.recentlyClosed)
-    : [];
+  const recent = recentlyClosed ? updateFromNow(recentlyClosed) : [];
 
   return (
     <ThemeProvider theme={theme}>
@@ -291,19 +304,18 @@ function OpenGamesTable(props) {
 
       {isLiveGames ? (
         <div className="table main-game-table open-games">
-          {displayedRooms.length === 0 || loading ? (
-            // Skeleton loader while loading
+          {displayedRooms.length === 0 || effectiveLoading ? (
             <Grid container className="grid-container" spacing={1} style={{ padding: '20px' }}>
               {Array.from({ length: 9 }).map((_, index) => (
                 <Grid
                   item
-                  xs={12}  // Full width on extra small screens
-                  sm={6}   // Half width on small screens
-                  md={4}   // One-third width on medium and larger screens (3 columns)
+                  xs={12}
+                  sm={6}
+                  md={4}
                   key={index}
                   sx={{
-                    flexBasis: { xs: '100%', }, // Ensure 3x3 on medium+
-                    maxWidth: { xs: '100%', },
+                    flexBasis: { xs: '100%' },
+                    maxWidth: { xs: '100%' },
                     flexGrow: 1,
                   }}
                 >
@@ -314,8 +326,8 @@ function OpenGamesTable(props) {
                       flexDirection: 'column',
                       padding: '16px',
                       borderRadius: '8px',
-                      backgroundColor: isDarkMode ? '#1E2A38' : '#FFFFFF',
-                      boxShadow: isDarkMode
+                      backgroundColor: effectiveIsDarkMode ? '#1E2A38' : '#FFFFFF',
+                      boxShadow: effectiveIsDarkMode
                         ? '0 2px 8px rgba(0, 0, 0, 0.3)'
                         : '0 2px 8px rgba(0, 0, 0, 0.1)',
                     }}
@@ -342,7 +354,7 @@ function OpenGamesTable(props) {
                   </Card>
                 </Grid>
               ))}
-            </Grid> 
+            </Grid>
           ) : displayedRooms.length === 0 ? (
             <div className="dont-have-game-msg">
               <div>NO LIVE GAMES, GO TO 'CREATE A GAME' TO CREATE ONE</div>
@@ -354,8 +366,7 @@ function OpenGamesTable(props) {
               spacing={1}
               style={{ padding: '20px' }}
             >
-              {displayedRooms.map((row, key) => {
-                // Calculate progress percentage (ensure no division by zero)
+              {displayedRooms.map((row) => {
                 const progressPercentage = row.endgame_amount
                   ? Math.min((row.user_bet / row.endgame_amount) * 100, 100)
                   : 0;
@@ -387,17 +398,16 @@ function OpenGamesTable(props) {
                         flexDirection: 'column',
                         padding: '16px',
                         borderRadius: '8px',
-                        backgroundColor: isDarkMode ? '#1E2A38' : '#FFFFFF',
-                        boxShadow: isDarkMode ? '0 2px 8px rgba(0, 0, 0, 0.3)' : '0 2px 8px rgba(0, 0, 0, 0.1)',
+                        backgroundColor: effectiveIsDarkMode ? '#1E2A38' : '#FFFFFF',
+                        boxShadow: effectiveIsDarkMode ? '0 2px 8px rgba(0, 0, 0, 0.3)' : '0 2px 8px rgba(0, 0, 0, 0.1)',
                         transition: 'transform 0.2s ease, box-shadow 0.2s ease',
                         '&:hover': {
                           transform: 'translateY(-2px)',
-                          boxShadow: isDarkMode ? '0 4px 12px rgba(0, 0, 0, 0.4)' : '0 4px 12px rgba(0, 0, 0, 0.15)',
+                          boxShadow: effectiveIsDarkMode ? '0 4px 12px rgba(0, 0, 0, 0.4)' : '0 4px 12px rgba(0, 0, 0, 0.15)',
                           cursor: 'pointer',
                         },
                       }}
                     >
-                      {/* Header Section */}
                       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                         <img
                           src={row.image}
@@ -421,11 +431,9 @@ function OpenGamesTable(props) {
                             alt={row.game_type?.short_name}
                             style={{ width: 24, height: 24, marginRight: '8px' }}
                           />
-                          {/* Removed selectedStrategy */}
                         </Box>
                       </Box>
 
-                      {/* Hosts and Joiners Section */}
                       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
                         {row.hosts?.length > 0 && (
                           <AvatarGroup
@@ -456,7 +464,7 @@ function OpenGamesTable(props) {
                             ))}
                           </AvatarGroup>
                         )}
-                        <Battle sx={{ mx: 2, color: isDarkMode ? '#FFFFFF' : '#000000' }} />
+                        <Battle sx={{ mx: 2, color: effectiveIsDarkMode ? '#FFFFFF' : '#000000' }} />
                         {row.joiners?.length > 0 && (
                           <AvatarGroup
                             max={2}
@@ -488,7 +496,6 @@ function OpenGamesTable(props) {
                         )}
                       </Box>
 
-                      {/* Stats Section */}
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                         <Box sx={{ textAlign: 'center' }}>
                           <Typography variant="caption" color="text.secondary">
@@ -498,7 +505,7 @@ function OpenGamesTable(props) {
                             variant="body1"
                             sx={{ color: getColorClass(row.user_bet - row.bet_amount), fontWeight: 600 }}
                           >
-                            {convertToCurrency(row.user_bet, solPrice)}
+                            {convertToCurrency(row.user_bet, effectiveSolPrice)}
                             {row.user_bet !== row.bet_amount && (
                               <span style={{ fontSize: '0.75rem', marginLeft: '4px' }}>
                                 {row.user_bet > row.bet_amount ? (
@@ -529,12 +536,11 @@ function OpenGamesTable(props) {
                         </Box>
                       </Box>
 
-                      {/* Progress Bar */}
                       <Box
                         sx={{
                           width: '100%',
-                          height: '10px', // Adjust height as needed
-                          background: 'rgb(224, 224, 224)', // progress-bar-remaining style
+                          height: '10px',
+                          background: 'rgb(224, 224, 224)',
                           borderRadius: '4px',
                           overflow: 'hidden',
                           position: 'relative',
@@ -545,7 +551,7 @@ function OpenGamesTable(props) {
                           sx={{
                             width: `${progressPercentage}%`,
                             height: '100%',
-                            background: 'linear-gradient(#e1ff00, #fdb500)', // progress-bar-filled style
+                            background: 'linear-gradient(#e1ff00, #fdb500)',
                             position: 'relative',
                             zIndex: 2,
                             '&::after': {
@@ -557,20 +563,19 @@ function OpenGamesTable(props) {
                               height: 0,
                               borderStyle: 'solid',
                               borderWidth: '0 2px 20px 4px',
-                              borderColor: '#eeff0098', // progress-bar-filled::after style
+                              borderColor: '#eeff0098',
                               zIndex: 3,
                             },
                           }}
                         />
                       </Box>
 
-                      {/* Private Indicator */}
                       {row.is_private && (
                         <Tooltip title="A password is required to battle this room." arrow>
                           <LockOutlined
                             sx={{
                               fontSize: 18,
-                              color: isDarkMode ? '#808080' : '#666666',
+                              color: effectiveIsDarkMode ? '#808080' : '#666666',
                               position: 'absolute',
                               top: 8,
                               right: 8,
@@ -601,17 +606,16 @@ function OpenGamesTable(props) {
       ) : (
         <Grid container spacing={2} sx={{ p: 2 }}>
           {loadingRecent ? (
-            // While loading, show 4 skeleton placeholders.
             Array.from({ length: 4 }).map((_, index) => (
               <Grid item xs={6} sm={4} md={3} lg={3} xl={3} key={index}>
                 <Box
                   className="carousel-content table-row slide-in"
                   sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}
                 >
-                  <Skeleton variant="rectangular" sx={{ width: '100%', height: 200 }} />
-                  <Skeleton sx={{ width: '60%' }} />
-                  <Skeleton sx={{ width: '40%' }} />
-                  <Skeleton sx={{ width: '80%' }} />
+                  <Skeleton variant="rectangular" width="100%" height={200} />
+                  <Skeleton width="60%" />
+                  <Skeleton width="40%" />
+                  <Skeleton width="80%" />
                 </Box>
               </Grid>
             ))
@@ -622,7 +626,6 @@ function OpenGamesTable(props) {
               </Typography>
             </Grid>
           ) : (
-            // Otherwise, map through the "recent" data.
             recent.map((row) => {
               const hostPrizeMinusBetAmount = row.host_pr - row.bet_amount;
               return (
@@ -672,7 +675,6 @@ function OpenGamesTable(props) {
                       </Box>
                     </Box>
 
-                    {/* Middle Section: Time/Icons */}
                     <Box
                       sx={{
                         display: 'flex',
@@ -690,7 +692,6 @@ function OpenGamesTable(props) {
                       <FontAwesomeIcon icon={faHeartBroken} />
                     </Box>
 
-                    {/* Bottom Section: Currency Info */}
                     <Typography
                       variant="body2"
                       sx={{
@@ -698,7 +699,7 @@ function OpenGamesTable(props) {
                         color: getColorClass(hostPrizeMinusBetAmount),
                       }}
                     >
-                      {convertToCurrency(hostPrizeMinusBetAmount, solPrice)}
+                      {convertToCurrency(hostPrizeMinusBetAmount, effectiveSolPrice)}
                     </Typography>
                   </Card>
                 </Grid>
@@ -708,7 +709,6 @@ function OpenGamesTable(props) {
         </Grid>
       )}
 
-      {/* CoHost Modal */}
       <Modal
         open={isCoHostModalOpen}
         onClose={handleCloseCoHostModal}
@@ -728,23 +728,23 @@ function OpenGamesTable(props) {
             bgcolor: '#2D3A4B',
             borderRadius: 1,
             p: 3,
-            color: '#fff', // for readable text
+            color: '#fff',
           }}
         >
           <CoHostModal
-            isDarkMode={isDarkMode}
+            isDarkMode={effectiveIsDarkMode}
             coHostAmount={coHostAmount}
-            connectedAccount={connectedAccount}
+            connectedAccount={effectiveConnectedAccount}
             selectedRow={selectedRow}
-            balance={balance}
+            balance={effectiveBalance}
             user={user}
-            togglePopup={() => { }}
+            togglePopup={() => {}}
             handleClose={handleCloseCoHostModal}
             handleSendCoHost={handleSendCoHost}
             handleCoHostAmountChange={handleCoHostAmountChange}
             has_joined={false}
             input_only={false}
-            solPrice={solPrice}
+            solPrice={effectiveSolPrice}
           />
         </Box>
       </Modal>
@@ -752,33 +752,4 @@ function OpenGamesTable(props) {
   );
 }
 
-// -------------- REDUX CONNECT --------------
-const mapStateToProps = (state) => ({
-  creator: state.logic.curRoomInfo.creator_name,
-  joiners: state.logic.curRoomInfo.joiners,
-  isAuthenticated: state.auth.isAuthenticated,
-  userName: state.auth.userName,
-  recentlyClosed: state.logic.recentlyClosed,
-  user: state.auth.user,
-  highlightedRooms: state.logic.highlightedRooms,
-  isLowGraphics: state.auth.isLowGraphics,
-  loading: state.logic.isActiveLoadingOverlay,
-  solPrice: state.logic.solPrice,
-  roomList: state.logic.roomList,
-  connectedAccount: state.auth.connectedAccount,
-});
-
-const mapDispatchToProps = {
-  getRoomList,
-  setCurRoomInfo,
-  actionRoom,
-  getRoomStatisticsData,
-  getRecentlyClosed,
-  setRoomList,
-  addNewTransaction,
-  startLoading,
-  endLoading,
-  pumpGame,
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(OpenGamesTable);
+export default OpenGamesTable;

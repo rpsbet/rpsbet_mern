@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { connect } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import {
   setCurRoomInfo,
   getMyChat,
   getGameTypeList,
 } from '../../redux/Logic/logic.actions';
-import history from '../../redux/history.js';
+import { useNavigate, useLocation } from 'react-router-dom'; // Replace history with useNavigate
 import { toggleDrawer } from '../../redux/Auth/user.actions';
 import MyGamesTable from '../MyGames/MyGamesTable';
 import MyHistoryTable from '../MyGames/MyHistoryTable';
@@ -31,22 +31,40 @@ import Footer from './Footer';
 import ProductPage from '../../admin_panel/app/ProductPages/ProductSerchPage/ProductPage.jsx';
 import BankPage from '../../admin_panel/app/ProductPages/ProductSerchPage/BankPage.jsx';
 
-function MainPage(props) {
+function MainPage() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Map state from Redux using useSelector
   const {
     isAuthenticated,
-    getMyChat,
-    isDrawerOpen,
-    selectedMainTabIndex,
     roomList,
     balance,
     user,
-    toggleDrawer,
-    location,
+    isDrawerOpen,
+    selectedMainTabIndex,
     isDarkMode,
     onlineUserList,
     gameTypeList,
     pageNumber,
-  } = props;
+  } = useSelector((state) => ({
+    isAuthenticated: state.auth.isAuthenticated,
+    roomList: state.logic.roomList,
+    history: state.logic.history,
+    solPrice: state.logic.solPrice,
+    roomCount: state.logic.roomCount,
+    pageNumber: state.logic.pageNumber,
+    balance: state.auth.balance,
+    user: state.auth.user,
+    isMusicEnabled: state.auth.isMusicEnabled,
+    isLowGraphics: state.auth.isLowGraphics,
+    isDarkMode: state.auth.isDarkMode,
+    onlineUserList: state.logic.onlineUserList,
+    isDrawerOpen: state.auth.isDrawerOpen,
+    gameTypeList: state.logic.gameTypeList,
+    selectedMainTabIndex: state.logic.selectedMainTabIndex,
+  }));
 
   // ------------------- LOCAL STATE -------------------
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
@@ -60,12 +78,10 @@ function MainPage(props) {
   const [selectedCreator, setSelectedCreator] = useState('');
   const [showPlayerModal, setShowPlayerModal] = useState(false);
 
-  // For controlling whether the component is mounted
   const isMountedRef = useRef(false);
-  // We'll track the previous location to replicate componentDidUpdate location checks
   const prevLocationRef = useRef(location.pathname);
-  //responsive
   const isSmallScreen = useMediaQuery('(max-width:1024px)');
+
   // ------------------- LIFECYCLE (componentDidMount) -------------------
   useEffect(() => {
     isMountedRef.current = true;
@@ -76,10 +92,9 @@ function MainPage(props) {
     }
 
     if (isAuthenticated) {
-      getMyChat();
+      dispatch(getMyChat());
     }
 
-    // If on mobile and the drawer is not open, open it
     if (isMobile && !isDrawerOpen) {
       handleToggleDrawer();
     }
@@ -87,11 +102,10 @@ function MainPage(props) {
     return () => {
       isMountedRef.current = false;
     };
-  }, []);
+  }, [isAuthenticated, isMobile, isDrawerOpen, dispatch]);
 
   // ------------------- LIFECYCLE (componentDidUpdate) for location changes -------------------
   useEffect(() => {
-    // If route changes to /portfolio, set certain states
     if (
       location.pathname === '/portfolio' &&
       location.pathname !== prevLocationRef.current
@@ -99,13 +113,11 @@ function MainPage(props) {
       setSelectedMobileTab('my_games');
       setShowOpenGame(0);
     } else if (
-      location.pathname === '/portfolio' &&
-      location.pathname !== prevLocationRef.current &&
-      location.pathname === '/'
+      location.pathname === '/' &&
+      location.pathname !== prevLocationRef.current
     ) {
       setShowOpenGame(1);
     }
-    // update ref
     prevLocationRef.current = location.pathname;
   }, [location.pathname]);
 
@@ -130,11 +142,11 @@ function MainPage(props) {
   };
 
   const handleToggleDrawer = useCallback(() => {
-    toggleDrawer(!isDrawerOpen);
-  }, [toggleDrawer, isDrawerOpen]);
+    dispatch(toggleDrawer(!isDrawerOpen));
+  }, [dispatch, isDrawerOpen]);
 
   const handleCreateBtnClicked = () => {
-    history.push('/create');
+    navigate('/create');
   };
 
   // -------------- UI / RENDER HELPERS -------------
@@ -147,8 +159,6 @@ function MainPage(props) {
       return total + (room.user_bet || 0);
     }, 0);
 
-    // If user is on "live_games" tab and step is not 'History' => show Create Room button
-    // Otherwise show "Your Games"
     if (
       (isMobile && selectedMobileTab === 'live_games' && showOpenGame !== 1) ||
       (!isMobile && selectedMainTabIndex === 0)
@@ -173,7 +183,7 @@ function MainPage(props) {
   // ------------------- RENDER -------------------
   return (
     <Box className="main-game">
-      {/* If mobile & in chat tab, or if not mobile -> show Chat Drawer */}
+      {/* Chat Drawer */}
       {isMobile && selectedMobileTab === 'chat' ? (
         <Drawer
           className="mat-chat"
@@ -188,7 +198,7 @@ function MainPage(props) {
         </Drawer>
       ) : null}
 
-      {/* If mobile and in marketplace tab -> show p2p & marketplace toggles */}
+      {/* Marketplace and P2P Lending Toggles */}
       {isMobile && selectedMobileTab === 'marketplace' && (
         <Box sx={{ p: '30px' }}>
           {/* CENTRAL BANK */}
@@ -211,8 +221,7 @@ function MainPage(props) {
             </Button>
             {showP2PLending && (
               <Box sx={{ mt: 2 }}>
-                {/* Render your <BankPage /> content here */}
-                {showP2PLending && <BankPage />}
+                <BankPage />
               </Box>
             )}
           </Box>
@@ -237,8 +246,7 @@ function MainPage(props) {
             </Button>
             {showMarketplace && (
               <Box sx={{ mt: 2 }}>
-                {/* Render your <ProductPage /> content here */}
-                {showMarketplace && <ProductPage />}
+                <ProductPage />
               </Box>
             )}
           </Box>
@@ -248,7 +256,7 @@ function MainPage(props) {
       <Box className="main-panel" style={{ overflowX: 'hidden' }}>
         <h2 className="main-title">{getActiveTabText()}</h2>
 
-        {/* If not mobile & tab index = 0 OR if mobile & live_games tab & showOpenGame=0 => show open games */}
+        {/* Open Games */}
         {((!isMobile && selectedMainTabIndex === 0) ||
           (isMobile &&
             selectedMobileTab === 'live_games' &&
@@ -271,12 +279,12 @@ function MainPage(props) {
             />
           )}
 
-        {/* My Games -> if mobile & my_games & showOpenGame=0 */}
+        {/* My Games */}
         {selectedMobileTab === 'my_games' && showOpenGame === 0 && (
           <MyGamesTable />
         )}
 
-        {/* If mobile & live_games => show history, or if my_games => show MyHistory */}
+        {/* History */}
         {isMobile &&
           selectedMobileTab === 'live_games' &&
           showOpenGame === 1 && <HistoryTable userId={user._id} />}
@@ -284,7 +292,7 @@ function MainPage(props) {
           <MyHistoryTable />
         )} */}
 
-        {/* If not mobile & selectedMainTabIndex=1 => show MyHistory */}
+        {/* Uncomment for desktop history */}
         {/* {!isMobile && selectedMainTabIndex === 1 && (
           <div className="sub-panel">
             <h2 className="main-title desktop-only" style={{ marginBottom: '10px' }}>
@@ -297,7 +305,7 @@ function MainPage(props) {
         <DrawerButton open={isDrawerOpen} toggleDrawer={handleToggleDrawer} />
       </Box>
 
-      {/* Mobile bottom nav buttons */}
+      {/* Mobile Bottom Nav */}
       {isMobile && (
         <div className="mobile-only main-page-nav-button-group">
           <Button
@@ -448,30 +456,4 @@ function MainPage(props) {
   );
 }
 
-// --------------- REDUX CONNECT ---------------
-const mapStateToProps = (state) => ({
-  isAuthenticated: state.auth.isAuthenticated,
-  roomList: state.logic.roomList,
-  history: state.logic.history,
-  solPrice: state.logic.solPrice,
-  roomCount: state.logic.roomCount,
-  pageNumber: state.logic.pageNumber,
-  balance: state.auth.balance,
-  user: state.auth.user,
-  isMusicEnabled: state.auth.isMusicEnabled,
-  isLowGraphics: state.auth.isLowGraphics,
-  isDarkMode: state.auth.isDarkMode,
-  onlineUserList: state.logic.onlineUserList,
-  isDrawerOpen: state.auth.isDrawerOpen,
-  gameTypeList: state.logic.gameTypeList,
-  selectedMainTabIndex: state.logic.selectedMainTabIndex,
-});
-
-const mapDispatchToProps = {
-  setCurRoomInfo,
-  getGameTypeList,
-  getMyChat,
-  toggleDrawer,
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(MainPage);
+export default MainPage;

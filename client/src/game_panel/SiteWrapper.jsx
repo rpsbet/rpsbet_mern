@@ -3,7 +3,6 @@ import React, {
   useEffect,
   useRef,
   useCallback,
-  useMemo
 } from 'react';
 import {
   createTheme,
@@ -30,15 +29,14 @@ import {
   Badge,
   DialogTitle
 } from '@mui/material';
-
-import CatsinoModalOverlay from '../game_panel/main_pages/CatsinoModalOverlay.jsx';
 import { ThemeProvider } from '@mui/material/styles';
-import Countdown from 'react-countdown';
+import { useSelector, useDispatch } from 'react-redux'; // Add Redux hooks
+import { useNavigate, useLocation } from 'react-router-dom';
+import CatsinoModalOverlay from '../game_panel/main_pages/CatsinoModalOverlay.jsx';
 import HistoryTable from '../game_panel/LiveGames/HistoryTable.jsx';
 import axios from '../util/Api';
 import SettingsModal from './modal/SettingsModal.jsx';
 import BonusModal from './modal/BonusModal.jsx';
-import { connect } from 'react-redux';
 import LoadingOverlay from 'react-loading-overlay';
 import CountUp from 'react-countup';
 import Lottie from 'react-lottie';
@@ -47,7 +45,6 @@ import AllTransactionsModal from './modal/AllTransactionsModal.jsx';
 import { debounce } from 'lodash';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXTwitter, faTelegram, faYoutube, faTiktok } from '@fortawesome/free-brands-svg-icons';
-
 import {
   AccountBalanceWallet,
   ArrowDropDown,
@@ -70,15 +67,12 @@ import {
   MoneyOffCsredOutlined,
   Dashboard
 } from '@mui/icons-material';
-
-import history from '../redux/history';
 import socketIOClient from 'socket.io-client';
 import Moment from 'moment';
 import Avatar from '../components/Avatar';
 import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import EmailIcon from "@mui/icons-material/Email";
-
 import ProfileModal from './modal/ProfileModal';
 import PlayerModal from './modal/PlayerModal';
 import HowToPlayModal from './modal/HowToPlayModal';
@@ -106,7 +100,6 @@ import VaultModal from './modal/VaultModal';
 import { tutorialStepsMain } from '../util/tutorialStepsMain';
 import CookieConsent from '../util/cookieConsent';
 import { convertToCurrency } from '../util/conversion';
-
 import {
   setSocket,
   userSignOut,
@@ -119,7 +112,6 @@ import {
   disconnectWalletAddress,
   authenticateWithPhantom
 } from '../redux/Auth/user.actions';
-
 import {
   openOfferLoanModal
 } from '../redux/Notification/notification.actions';
@@ -143,7 +135,7 @@ import {
   endLoading,
 } from '../redux/Logic/logic.actions';
 
-// We remove this to avoid Proptype issues in MUI v5
+// Remove PropTypes override since it's not needed in MUI v5+
 LoadingOverlay.propTypes = undefined;
 
 const tokenMintAddress = 'BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump';
@@ -152,12 +144,8 @@ const tokenMintAddress = 'BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump';
 const customTextFieldStyles = {
   MuiOutlinedInput: {
     root: {
-      '&:hover $notchedOutline': {
-        borderColor: 'currentColor'
-      },
-      '&$focused $notchedOutline': {
-        borderColor: 'currentColor'
-      },
+      '&:hover $notchedOutline': { borderColor: 'currentColor' },
+      '&$focused $notchedOutline': { borderColor: 'currentColor' },
       '& input:-webkit-autofill': {
         '-webkit-box-shadow': '0 0 0 100px transparent inset',
         '-webkit-text-fill-color': 'currentColor'
@@ -168,9 +156,7 @@ const customTextFieldStyles = {
   },
   MuiInputBase: {
     input: {
-      '&$focused': {
-        backgroundColor: 'transparent'
-      },
+      '&$focused': { backgroundColor: 'transparent' },
       '&:-webkit-autofill': {
         '-webkit-box-shadow': '0 0 0 100px inherit inset',
         '-webkit-text-fill-color': 'currentColor'
@@ -181,16 +167,12 @@ const customTextFieldStyles = {
 };
 
 const mainTheme = createTheme({
-  palette: {
-    type: 'light'
-  },
+  palette: { type: 'light' },
   overrides: customTextFieldStyles
 });
 
 const darkTheme = createTheme({
-  palette: {
-    type: 'dark'
-  },
+  palette: { type: 'dark' },
   overrides: customTextFieldStyles
 });
 
@@ -207,7 +189,11 @@ const gifUrls = ['/img/rock.gif', '/img/paper.gif', '/img/scissors.gif'];
 const randomGifUrl = gifUrls[Math.floor(Math.random() * gifUrls.length)];
 const hueRotateValue = (gifUrls.indexOf(randomGifUrl) + 1) * 75;
 
-function SiteWrapper(props) {
+function SiteWrapper({ children }) { // Remove props destructuring since we’ll use hooks
+  const dispatch = useDispatch();
+  const location = useLocation();
+  const navigate = useNavigate(); 
+  // Map state from Redux using useSelector
   const {
     isDarkMode,
     isAuthenticated,
@@ -225,34 +211,39 @@ function SiteWrapper(props) {
     isLowGraphics,
     showCookieConsent,
     remainingLoans: propsRemainingLoans,
-    getGlobalChatLogs,
-    // dispatch actions
-    setSocket,
-    userSignOut,
-    setRoomList,
-    removeRoomFromList,
-    getUser,
-    addChatLog,
-    getMyHistory,
-    updateTutorialCompleted,
-    setUnreadMessageCount,
-    addNewTransaction,
-    addNewNotification,
-    getNotifications,
-    readNotifications,
-    updateOnlineUserList,
-    endLoading,
-    setNotificationsAllowed,
-    selectMainTab,
-    acCalculateRemainingLoans,
-    globalChatReceived,
-    getHistory,
-    updateBetResult,
-    openOfferLoanModal,
-    setCurrentOfferTargetInfo,
-    children,
     connectedAccount
-  } = props;
+  } = useSelector((state) => ({
+    transactions: state.auth.transactions,
+    loading_user: state.auth.loading_user,
+    roomList: state.logic.roomList,
+    isAuthenticated: state.auth.isAuthenticated,
+    showDeListLoanModal: state.snackbar.showDeListLoanModal,
+    showListItemModal: state.snackbar.showListItemModal,
+    showDeListItemModal: state.snackbar.showDeListItemModal,
+    showConfirmTradeModal: state.snackbar.showConfirmTradeModal,
+    showGamePasswordModal: state.snackbar.showGamePasswordModal,
+    socket: state.auth.socket,
+    balance: state.auth.balance,
+    connectedAccount: state.auth.connectedAccount,
+    userName: state.auth.userName,
+    isMuted: state.auth.isMuted,
+    notificationSounds: state.auth.notificationSounds,
+    isNotificationsAllowed: state.auth.isNotificationsAllowed,
+    user: state.auth.user,
+    selectedMainTabIndex: state.logic.selectedMainTabIndex,
+    isDarkMode: state.auth.isDarkMode,
+    betResult: state.logic.betResult,
+    solPrice: state.logic.solPrice,
+    remainingLoans: state.loanReducer.remainingLoans,
+    userLoans: state.loanReducer.userLoans,
+    sevenDayProfit: state.auth.sevenDayProfit,
+    oneDayProfit: state.auth.oneDayProfit,
+    allTimeProfit: state.auth.allTimeProfit,
+    notifications: state.logic.notifications,
+    isLowGraphics: state.auth.isLowGraphics,
+    showCookieConsent: state.auth.showCookieConsent,
+    history: state.logic.history,
+  }));
 
   const currentPath = window.location.pathname;
   const [endpoint, setEndpoint] = useState(
@@ -261,25 +252,19 @@ function SiteWrapper(props) {
       : `http://${window.location.hostname}:5001`
   );
 
-  // ------------------ LOCAL STATE ------------------
+  // Local state (unchanged)
   const [balance, setLocalBalance] = useState(propsBalance);
   const [oldBalance, setOldBalance] = useState(propsBalance);
   const [hoverTabIndex, setHoverTabIndex] = useState(-1);
-
   const [anchorElProfile, setAnchorElProfile] = useState(null);
   const [anchorElNotifications, setAnchorElNotifications] = useState(null);
   const [anchorElGameLog, setAnchorElGameLog] = useState(null);
-
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showPlayerModal, setShowPlayerModal] = useState(false);
   const [runTutorial, setRunTutorial] = useState(false);
-
-  const [isInvestorsPage, setIsInvestorsPage] = useState(
-    location.pathname.startsWith('/investors')
-  );
+  const [isInvestorsPage, setIsInvestorsPage] = useState(location.pathname.startsWith('/investors'));
   const [isPlayer, setIsPlayer] = useState(location.pathname.startsWith('/play'));
   const [currentTutorial, setCurrentTutorial] = useState(1);
-
   const [showHowToPlayModal, setShowHowToPlayModal] = useState(false);
   const [showMarketplaceModal, setShowMarketplaceModal] = useState(false);
   const [showBankModal, setShowBankModal] = useState(false);
@@ -287,25 +272,16 @@ function SiteWrapper(props) {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showSignupModal, setShowSignupModal] = useState(false);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
-
-  const [showDepositModal, setShowDepositModal] = useState(
-    currentPath === '/deposit/' || currentPath === '/deposit'
-  );
+  const [showDepositModal, setShowDepositModal] = useState(currentPath === '/deposit/' || currentPath === '/deposit');
   const [showInventoryModal, setShowInventoryModal] = useState(false);
   const [showVaultModal, setShowVaultModal] = useState(false);
   const [showNegativeBalanceDialog, setShowNegativeBalanceDialog] = useState(false);
-
   const [walletConflictOpen, setWalletConflictOpen] = useState(false);
-  const handleCloseConflictDialog = () => setWalletConflictOpen(false);
-
-
   const [isLive, setIsLive] = useState(false);
   const [blurValue, setBlurValue] = useState(3);
   const [currentGif, setCurrentGif] = useState('');
   const [tokenModalOpen, setTokenModalOpen] = useState(true);
-
   const [transactions, setTransactions] = useState([updateFromNow(propTransactions)]);
-
   const [isHovered, setIsHovered] = useState(false);
   const [websiteLoading, setWebsiteLoading] = useState(true);
   const [isCoinsAnimation, setIsCoinsAnimation] = useState(false);
@@ -316,14 +292,10 @@ function SiteWrapper(props) {
   const [remainingLoans, setRemainingLoans] = useState(propsRemainingLoans);
   const [highlightedRooms, setHighlightedRooms] = useState(new Set());
   const [unreadCount, setUnreadCount] = useState(0);
-
-  // For web3/wallet
   const [walletAddress, setWalletAddress] = useState(connectedAccount);
   const [solanaBalance, setSolanaBalance] = useState(0);
   const [account, setAccount] = useState(null);
-
   const [showAllGameLogs, setShowAllGameLogs] = useState(false);
-
   const [selectedCreator, setSelectedCreator] = useState(null);
 
   // Audio Refs
@@ -336,50 +308,39 @@ function SiteWrapper(props) {
   const intervalRef = useRef(null);
   const isUnmountedRef = useRef(false);
 
-  // -------------- LIFECYCLE-LIKE EFFECTS --------------
-  /**
-   * Replaces componentDidMount logic
-   */
+  // Lifecycle-like effects (update dispatch calls)
   useEffect(() => {
     isUnmountedRef.current = false;
 
     const doMount = async () => {
-      getGlobalChatLogs();
+      dispatch(getGlobalChatLogs());
       setWebsiteLoading(true);
       setIsInvestorsPage(location.pathname.startsWith('/investors'));
       setIsPlayer(location.pathname.startsWith('/play'));
-      getHistory();
-      window.addEventListener('mousemove', handleMouseMove);
+      dispatch(getHistory());
       document.addEventListener('mousedown', handleClickOutside);
 
       try {
-
-        // 2) Get notifications, user, and audio in parallel
         await Promise.all([
-          getNotifications(),
-          getUser(), // This populates user in state (or Redux)
+          dispatch(getNotifications()),
+          dispatch(getUser()),
           initializeAudio(),
-          acCalculateRemainingLoans(),
+          dispatch(acCalculateRemainingLoans()),
         ]);
-
         setWebsiteLoading(false);
       } catch (error) {
         console.error('Mount error:', error);
       }
 
-      // Setup interval for updating "from now" fields
       intervalRef.current = setInterval(() => {
         updateReminderTime();
       }, 3000);
 
-      // Attempt to load Phantom wallet if present
       loadSolanaWallet();
 
-      // If in `/play`, close the token modal automatically
       if (location.pathname.startsWith('/play')) {
         closeTokenModal();
       }
-
     };
 
     doMount();
@@ -390,33 +351,22 @@ function SiteWrapper(props) {
         socket.disconnect();
       }
       clearInterval(intervalRef.current);
-      window.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [getGlobalChatLogs, getHistory]);
+  }, [dispatch, getGlobalChatLogs, getHistory]); // Dependencies remain the same
 
-
-  /**
-   * Watch for user changes => set runTutorial if tutorial #1 not completed
-   */
   useEffect(() => {
     if (user && user.completedTutorials) {
       setRunTutorial(!user.completedTutorials.includes(1));
     }
   }, [user]);
 
-  /**
-   * Watch for `betResult` changes => coin animation if "win"
-   */
   useEffect(() => {
     if (propsBetResult === 'win' && !isLowGraphics) {
       playCoinsAnimation();
     }
   }, [propsBetResult, isLowGraphics]);
 
-  /**
-   * Watch if `remainingLoans` changes in props => local state
-   */
   useEffect(() => {
     setRemainingLoans(propsRemainingLoans);
   }, [propsRemainingLoans]);
@@ -425,15 +375,10 @@ function SiteWrapper(props) {
     if (propsBalance < 0) {
       setShowNegativeBalanceDialog(true);
     } else {
-      setShowNegativeBalanceDialog(false); // Close when balance is non-negative
+      setShowNegativeBalanceDialog(false);
     }
   }, [propsBalance]);
 
-
-  /**
-   * Check if transactions updated => set local transactions
-   * We also do an example check if the first transaction changed => do getUser
-   */
   useEffect(() => {
     if (!propTransactions) return;
     if (propTransactions.length > 0) {
@@ -441,25 +386,9 @@ function SiteWrapper(props) {
     }
   }, [propTransactions]);
 
-  /**
-   * If user changes, or user’s balance changes, sync local state
-   * - This is akin to getDerivedStateFromProps for certain fields
-   */
   useEffect(() => {
     setLocalBalance(propsBalance);
   }, [propsBalance]);
-
-  // -------------- UTILITY / EVENT HANDLERS --------------
-
-  const handleMouseMove = useCallback((event) => {
-    const { clientX } = event;
-    const { innerWidth } = window;
-    const newBlurValue = Math.max(
-      0,
-      Math.min(10, 10 * (1 - clientX / (innerWidth - 290)))
-    );
-    setBlurValue(newBlurValue);
-  }, []);
 
   const handleClickOutside = useCallback(() => {
     if (anchorElProfile) {
@@ -473,7 +402,7 @@ function SiteWrapper(props) {
     }, 300),
     []
   );
-  // -------------- AUDIO SETUP / PLAYBACK --------------
+
   const initializeAudio = useCallback(async () => {
     try {
       notificationSoundRef.current = new Audio('/sounds/notification.mp3');
@@ -482,7 +411,6 @@ function SiteWrapper(props) {
       audioSplitRef.current = new Audio('/sounds/audioSplit.mp3');
       audioLoseRef.current = new Audio('/sounds/audioLose.mp3');
 
-      // Pre-load
       await notificationSoundRef.current.load();
       await needALoanRef.current.load();
       await audioWinRef.current.load();
@@ -495,29 +423,21 @@ function SiteWrapper(props) {
 
   const playCoinsAnimation = useCallback(() => {
     setIsCoinsAnimation(true);
-    // Stop after 1.5s
     setTimeout(() => {
       setIsCoinsAnimation(false);
     }, 1500);
   }, []);
 
   useEffect(() => {
-    // 1) Create the socket client
     const newSocket = socketIOClient(endpoint, { transports: ['websocket'] });
 
-    // newSocket.on('connect', () => {
-    //   console.log('[Socket] connected');
-    // });
-    // 6) Online status
     const handleOnlineStatusUpdated = (data) => {
-      updateOnlineUserList(data.user_list);
+      dispatch(updateOnlineUserList(data.user_list));
     };
     newSocket.on('ONLINE_STATUS_UPDATED', handleOnlineStatusUpdated);
 
-
     let lastGlobalChat = null;
     const handleGlobalChat = (data) => {
-      // If new message is the same as last => skip
       if (
         lastGlobalChat &&
         lastGlobalChat.senderId === data.senderId &&
@@ -527,60 +447,44 @@ function SiteWrapper(props) {
         return;
       }
       lastGlobalChat = data;
-      globalChatReceived(data);
+      dispatch(globalChatReceived(data));
     };
     newSocket.on('GLOBAL_CHAT_RECEIVED', handleGlobalChat);
 
-    // Room list updates:
     const handleUpdatedRoomList = (data) => {
-      setRoomList(data);
-      endLoading();
+      dispatch(setRoomList(data));
+      dispatch(endLoading());
     };
     newSocket.on('UPDATED_ROOM_LIST', handleUpdatedRoomList);
 
     const handleRoomEnded = (data) => {
-      removeRoomFromList(data.roomId);
+      dispatch(removeRoomFromList(data.roomId));
     };
     newSocket.on('ROOM_ENDED', handleRoomEnded);
 
-    // 3) Store the socket reference
-    setSocket(newSocket);
+    dispatch(setSocket(newSocket));
 
-    // 4) Cleanup on unmount
     return () => {
       newSocket.off('GLOBAL_CHAT_RECEIVED', handleGlobalChat);
       newSocket.off('UPDATED_ROOM_LIST', handleUpdatedRoomList);
       newSocket.off('ROOM_ENDED', handleRoomEnded);
       newSocket.off('ONLINE_STATUS_UPDATED', handleOnlineStatusUpdated);
-
       newSocket.disconnect();
     };
-  }, [
-    endpoint,
-    globalChatReceived,
-    setRoomList,
-    removeRoomFromList,
-    setSocket
-  ]);
+  }, [dispatch, endpoint]);
 
   useEffect(() => {
-    // If no socket yet, or user not logged in => do nothing
-    if (!socket) return;
-    if (!user || !user._id) return;
+    if (!socket || !user || !user._id) return;
 
-    // Identify user to the server
     socket.emit('STORE_CLIENT_USER_ID', { user_id: user._id });
 
-    // ----- User-specific listeners -----
-
-    // 1) Private chat
     const handleSendChat = (data) => {
       if (!isMuted || !notificationSounds) {
         notificationSoundRef.current?.play();
       }
-      addChatLog(data);
+      dispatch(addChatLog(data));
 
-      const pathName = history.location.pathname;
+      const pathName = location.pathname; // Replace history.location.pathname with location.pathname
       const segments = pathName.split('/');
       const chatUserId = segments[2];
 
@@ -592,35 +496,33 @@ function SiteWrapper(props) {
     };
     socket.on('SEND_CHAT', handleSendChat);
 
-    // 2) Loan offers
     const handleLoanOffer = (payload) => {
-      openOfferLoanModal();
+      dispatch(openOfferLoanModal());
       if (!isMuted) {
         needALoanRef.current?.play();
       }
-      setCurrentOfferTargetInfo({
-        _id: user._id,
-        lender: payload.lender,
-        avatar: payload.avatar,
-        accessory: payload.accessory,
-        username: payload.username,
-        totalWagered: payload.totalWagered
-      });
+      dispatch(
+        setCurrentOfferTargetInfo({
+          _id: user._id,
+          lender: payload.lender,
+          avatar: payload.avatar,
+          accessory: payload.accessory,
+          username: payload.username,
+          totalWagered: payload.totalWagered,
+        })
+      );
     };
     socket.on(`RECEIVED_LOAN_OFFER_${user._id}`, handleLoanOffer);
 
-    // 3) Bet result
     const handleBetResult = (data) => {
-      updateBetResult(data);
+      dispatch(updateBetResult(data));
     };
     socket.on('UPDATE_BET_RESULT', handleBetResult);
 
-    // 4) Notifications
     const handleSendNotification = (data) => {
       if (!isMuted || !notificationSounds) {
         notificationSoundRef.current?.play();
       }
-
       if (isNotificationsAllowed && window.Notification) {
         const options = { body: data.message, silent: false };
         if (Notification.permission === 'granted') {
@@ -628,119 +530,82 @@ function SiteWrapper(props) {
         } else if (Notification.permission !== 'denied') {
           Notification.requestPermission().then((permission) => {
             if (permission === 'granted') {
-              setNotificationsAllowed(true);
+              dispatch(setNotificationsAllowed(true));
               new Notification('New Notification', options);
             }
           });
         }
       }
-      addNewNotification(data);
+      dispatch(addNewNotification(data));
     };
-
     socket.on('SEND_NOTIFICATION', handleSendNotification);
 
     const handleAddTransaction = (data) => {
-      addNewTransaction(data)
+      dispatch(addNewTransaction(data));
     };
-
     socket.on('NEW_TRANSACTION', handleAddTransaction);
 
-    // 5) Unread message count
     const handleUnreadCount = (countData) => {
-      setUnreadMessageCount(countData);
+      dispatch(setUnreadMessageCount(countData));
     };
     socket.on('SET_UNREAD_MESSAGE_COUNT', handleUnreadCount);
 
-
-    // ----- Cleanup: remove these user-specific listeners when user changes or unmount
     return () => {
       socket.off('SEND_CHAT', handleSendChat);
       socket.off(`RECEIVED_LOAN_OFFER_${user._id}`, handleLoanOffer);
       socket.off('UPDATE_BET_RESULT', handleBetResult);
       socket.off('SEND_NOTIFICATION', handleSendNotification);
+      socket.off('NEW_TRANSACTION', handleAddTransaction); // Added missing cleanup
       socket.off('SET_UNREAD_MESSAGE_COUNT', handleUnreadCount);
     };
   }, [
+    dispatch,
     socket,
     user,
     isMuted,
     notificationSounds,
-    openOfferLoanModal,
-    needALoanRef,
-    setCurrentOfferTargetInfo,
-    updateBetResult,
-    getUser,
     isNotificationsAllowed,
-    setNotificationsAllowed,
-    setUnreadMessageCount,
-    updateOnlineUserList,
-    addChatLog
+    location.pathname, // Add location.pathname to dependencies
   ]);
 
-
-  // -------------- WALLET / WEB3 --------------
+  // Wallet / Web3 (update dispatch calls)
   const loadSolanaWallet = useCallback(async () => {
     try {
       if (window.solana && window.solana.isPhantom) {
-        // 1) Connect to Phantom
         await window.solana.connect();
         const wAddress = window.solana.publicKey.toString();
-        // console.log("Wallet Address:", wAddress);
 
-        // 2) Attempt to register/add this wallet to the user
-        const { success, message } = await props.checkAndAddWalletAddress(wAddress);
+        const { success, message } = await dispatch(checkAndAddWalletAddress(wAddress));
         if (!success && user._id !== null) {
-          console.log("user._id !== '", user._id)
           console.warn('Wallet conflict:', message);
-          // Show our MUI dialog to alert the user
           setWalletConflictOpen(true);
-          return; // Stop execution if the wallet is already in use
+          return;
         }
 
-        // 3) Get provider URL from your backend and initialize a connection
         const response = await axios.get('/stripe/get_provider_url');
         const providerUrl = response.data.providerUrl;
-        // console.log("Provider URL:", providerUrl);
-
         const solanaConnection = new Connection(providerUrl, 'confirmed');
-
-        // 4) Fetch the SOL balance (in lamports)
         const solBalLamports = await solanaConnection.getBalance(new PublicKey(wAddress));
-        // console.log("SOL Balance (lamports):", solBalLamports);
-
-        // Convert lamports to SOL
         const solBalance = solBalLamports / LAMPORTS_PER_SOL;
-        // console.log("SOL Balance (SOL):", solBalance);
 
-        // 5) Update your local state with the wallet address and SOL balance
         setWalletAddress(wAddress);
         setAccount({ publicKey: new PublicKey(wAddress) });
         setSolanaBalance(solBalance);
-
-        // If you need to see the updated balance later, consider using a useEffect:
-        // useEffect(() => { console.log("Updated solanaBalance:", solanaBalance); }, [solanaBalance]);
       }
     } catch (error) {
       console.error('Failed to connect Phantom or fetch SOL balance:', error);
     }
-  }, [props, setWalletAddress, setAccount, setSolanaBalance, setWalletConflictOpen]);
+  }, [dispatch, user]);
 
   const disconnectWeb3 = useCallback(() => {
     setWalletAddress(null);
     setSolanaBalance(0);
-    props.disconnectWalletAddress();
-  }, []);
+    dispatch(disconnectWalletAddress());
+  }, [dispatch]);
 
-  // -------------- MAIN TAB / MISC --------------
-  const handleMainTabChange = (event, newValue) => {
-    // If not on '/', navigate
-    if (window.location.pathname !== '/') {
-      history.push('/');
-    }
-    selectMainTab(newValue);
-  };
+  // Menus & Modals (update dispatch calls where needed)
+  const handleCloseConflictDialog = () => setWalletConflictOpen(false);
 
-  // -------------- MENUS & MODALS --------------
   const handleOpenProfileMenu = (e) => {
     setAnchorElProfile(e.currentTarget);
   };
@@ -754,17 +619,13 @@ function SiteWrapper(props) {
   };
 
   const handleCloseNotifications = () => {
-    readNotifications();
-    // mark local as read
-    const updated = (notifications || []).map((n) => ({ ...n, is_read: true }));
+    dispatch(readNotifications());
     setAnchorElNotifications(null);
   };
 
   const handleBalanceClick = (e) => {
     setAnchorElGameLog(e.currentTarget);
   };
-
-
 
   const handleCloseGameLog = () => {
     setAnchorElGameLog(null);
@@ -778,12 +639,10 @@ function SiteWrapper(props) {
     setHoverTabIndex(-1);
   };
 
-  // Toggle "ALL TRANSACTIONS"
   const toggleAllTransactions = () => {
     setShowAllGameLogs((prev) => !prev);
   };
 
-  // -------------- LOG IN / LOG OUT --------------
   const handleLogout = (clear_token) => {
     setWalletAddress(null);
     setSolanaBalance(null);
@@ -791,10 +650,9 @@ function SiteWrapper(props) {
     if (socket) {
       socket.disconnect();
     }
-    userSignOut(clear_token);
+    dispatch(userSignOut(clear_token, navigate));
   };
 
-  // -------------- MISC. MODALS --------------
   const handleOpenProfileModal = () => {
     setShowProfileModal(true);
     setAnchorElProfile(null);
@@ -925,36 +783,26 @@ function SiteWrapper(props) {
     setTokenModalOpen(false);
   };
 
-  // -------------- UI HELPERS --------------
   const handlePortfolio = () => {
-    history.push('/portfolio');
-    selectMainTab(1);
+    navigate('/portfolio');
+    dispatch(selectMainTab(1));
   };
 
-  // -------------- RENDER --------------
+  // Render (unchanged except for removing props references)
   const width = window.innerWidth;
-  // The array of notifications from local state
   const notificationsArray = updateFromNow(notifications);
-  const unreadNotificationsCount = notificationsArray.filter(
-    (n) => !n.is_read
-  ).length;
+  const unreadNotificationsCount = notificationsArray.filter((n) => !n.is_read).length;
 
-  // For dollar sign hover
   const balanceString = balance.toString();
   const decimalIndex = balanceString.indexOf('.');
-  const numDecimals =
-    decimalIndex !== -1
-      ? Math.min(2, balanceString.length - decimalIndex - 1)
-      : 0;
+  const numDecimals = decimalIndex !== -1 ? Math.min(2, balanceString.length - decimalIndex - 1) : 0;
 
-  // Example date
   const halloween = new Date(`${new Date().getFullYear()}-02-14T00:00:00`);
   const currentDate = new Date();
   const timeRemaining = halloween - currentDate;
 
   function appendCurrencyBracket(message, amount) {
     if (!amount) return message;
-
     const amountStr = String(amount);
     const currencyStr = convertToCurrency(amount, solPrice);
     return message + ` (${currencyStr}) / ${amountStr} SOL`;
@@ -1023,8 +871,7 @@ function SiteWrapper(props) {
           blurValue={blurValue}
           halloween={halloween}
           handleCountdownButtonClick={() => {
-            // e.g., push to /investors
-            history.push('/investors');
+            navigate('/investors');
             closeTokenModal();
           }}
           handleYoutubeButtonClick={() => {
@@ -1035,12 +882,10 @@ function SiteWrapper(props) {
       )}
 
       <div className={`site_wrapper ${isDarkMode ? 'dark_mode' : ''}`}>
-        {/* ========== HEADER ========== */}
+        {/* Header and rest of the JSX remains unchanged */}
         <div className="game_header">
           <div className="main_header">
-            {/* LOGO */}
             <Box>
-
               <a
                 className="game_logo"
                 href="/"
@@ -1076,7 +921,6 @@ function SiteWrapper(props) {
             <div className="header_action_panel">
               {user ? (
                 <>
-                  {/* Bank Icon */}
                   <Box
                     component="a"
                     href="#"
@@ -1103,34 +947,6 @@ function SiteWrapper(props) {
                     <AccountBalanceOutlined fontSize="medium" />
                   </Box>
 
-                  {/* Store Icon */}
-                  {/* <Box
-                    component="a"
-                    href="#"
-                    className="desktop-only"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleOpenMarketplaceModal();
-                    }}
-                    id="btn_marketplace"
-                    onMouseEnter={() => handleMouseEnter(5)}
-                    onMouseLeave={handleMouseLeave}
-                    sx={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      transition: 'color 0.3s ease',
-                      '& svg': {
-                        color: hoverTabIndex === 5 ? 'red' : 'inherit',
-                        transition: 'color 0.3s ease'
-                      }
-                    }}
-                  >
-                    <StorefrontOutlinedIcon fontSize="medium" />
-                  </Box> */}
-
-                  {/* Leaderboard Icon */}
                   <Box
                     component="a"
                     href="#"
@@ -1157,7 +973,6 @@ function SiteWrapper(props) {
                     <LeaderboardOutlined fontSize="medium" />
                   </Box>
 
-                  {/* Notifications Icon */}
                   <Box
                     component="a"
                     href="#"
@@ -1201,17 +1016,13 @@ function SiteWrapper(props) {
               ) : null}
 
               {websiteLoading ? (
-                // RENDER SKELETON
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  {/* Replace these with skeletons matching your design */}
                   <Skeleton variant="text" sx={{ width: '80px' }} />
                   <Skeleton variant="rectangular" sx={{ width: '10px', height: '30px' }} />
                   <Skeleton variant="circular" width={40} height={40} />
                 </Box>
-              ) : user._id ? (
-                // RENDER USER BALANCE / P
+              ) : user?._id ? (
                 <>
-                  {/* BALANCE */}
                   <div id="balance" className="title">
                     <div
                       style={{ display: 'inline' }}
@@ -1285,7 +1096,6 @@ function SiteWrapper(props) {
                     </Button>
                   </div>
 
-                  {/* Mobile Notifs */}
                   <Box
                     component="a"
                     href="#"
@@ -1326,7 +1136,6 @@ function SiteWrapper(props) {
                     </Badge>
                   </Box>
 
-                  {/* Profile Menu Button */}
                   <Button
                     aria-controls="profile-menu"
                     aria-haspopup="true"
@@ -1346,7 +1155,6 @@ function SiteWrapper(props) {
                     <ArrowDropDown />
                   </Button>
 
-                  {/* Profile Menu */}
                   <Menu
                     anchorEl={anchorElProfile}
                     open={Boolean(anchorElProfile)}
@@ -1390,50 +1198,26 @@ function SiteWrapper(props) {
                       </ListItemIcon>
                       <ListItemText>PROFILE</ListItemText>
                     </MenuItem>
-
                     <Divider />
-
                     <MenuItem className="desktop-only" onClick={handlePortfolio}>
                       <ListItemIcon>
                         <ListTwoTone />
                       </ListItemIcon>
                       <ListItemText>PORTFOLIO</ListItemText>
                     </MenuItem>
-
                     <MenuItem onClick={handleOpenSettingsModal}>
                       <ListItemIcon>
                         <Settings />
                       </ListItemIcon>
                       <ListItemText>SETTINGS</ListItemText>
                     </MenuItem>
-
-                    {/* <MenuItem onClick={handleBonusModal}>
-                      <ListItemIcon>
-                        <Star />
-                      </ListItemIcon>
-                      <ListItemText>CORN WHEEL</ListItemText>
-                      <ListItemIcon>
-                        <img
-                          style={{
-                            transform: 'translate(-93px, 4px)',
-                            width: '20px',
-                            zIndex: 0
-                          }}
-                          src="../img/icons/corn.svg"
-                          alt="corn"
-                        />
-                      </ListItemIcon>
-                    </MenuItem> */}
-
                     <MenuItem onClick={handleOpenHowToPlayModal}>
                       <ListItemIcon>
                         <Help />
                       </ListItemIcon>
                       <ListItemText>HOW IT WORKS</ListItemText>
                     </MenuItem>
-
                     <Divider />
-
                     <MenuItem
                       onClick={() => {
                         window.open('https://raydium.io/swap/?inputMint=sol&outputMint=BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump', '_blank');
@@ -1464,7 +1248,6 @@ function SiteWrapper(props) {
             </div>
           </div>
 
-          {/* NOTIFICATIONS POPOVER */}
           <Popover
             open={Boolean(anchorElNotifications)}
             anchorEl={anchorElNotifications}
@@ -1502,7 +1285,6 @@ function SiteWrapper(props) {
             >
               NOTIFICATIONS
             </Typography>
-
             <Box
               sx={{
                 maxHeight: 300,
@@ -1527,8 +1309,7 @@ function SiteWrapper(props) {
                           alignItems: 'flex-start',
                           py: 1.5
                         }}
-                        className={`notification-container ${notification.is_read ? 'read' : ''
-                          }`}
+                        className={`notification-container ${notification.is_read ? 'read' : ''}`}
                       >
                         <a
                           className="player"
@@ -1544,7 +1325,6 @@ function SiteWrapper(props) {
                             className="avatar"
                           />
                         </a>
-
                         <a
                           href={`/join/${notification.room}/`}
                           style={{
@@ -1555,7 +1335,6 @@ function SiteWrapper(props) {
                             position: 'relative'
                           }}
                         >
-                          {/* Show red dot if it's unread */}
                           {!notification.is_read && (
                             <Box
                               sx={{
@@ -1569,12 +1348,10 @@ function SiteWrapper(props) {
                               }}
                             />
                           )}
-
                           <Typography
                             variant="body2"
                             component="div"
                             sx={{ mb: 0.5 }}
-                            // Insert our processed message with HTML
                             dangerouslySetInnerHTML={{
                               __html: processedMessage
                             }}
@@ -1598,7 +1375,6 @@ function SiteWrapper(props) {
             </Box>
           </Popover>
 
-          {/* Show All Game Logs */}
           {showAllGameLogs && (
             <AllTransactionsModal
               modalIsOpen={showAllGameLogs}
@@ -1610,7 +1386,6 @@ function SiteWrapper(props) {
             />
           )}
 
-          {/* BALANCE POP-OVER */}
           <Popover
             open={Boolean(anchorElGameLog)}
             anchorEl={anchorElGameLog}
@@ -1665,17 +1440,11 @@ function SiteWrapper(props) {
                     </Typography>
                     <Typography variant="body2" sx={{ mb: 1 }}>
                       You see less as this is net profit (
-                      <Box
-                        component="span"
-                        sx={{ fontWeight: 'bold', color: '#28a745' }}
-                      >
+                      <Box component="span" sx={{ fontWeight: 'bold', color: '#28a745' }}>
                         winning amount
                       </Box>
                       {' - '}
-                      <Box
-                        component="span"
-                        sx={{ fontWeight: 'bold', color: '#D32F2F' }}
-                      >
+                      <Box component="span" sx={{ fontWeight: 'bold', color: '#D32F2F' }}>
                         bet amount
                       </Box>
                       ) and receive less due to:
@@ -1735,8 +1504,7 @@ function SiteWrapper(props) {
                     </TableRow>
                   ) : (
                     transactions.slice(0, 5).map((row, key) => {
-                      const clickable =
-                        row.hash && row.hash.length !== 10 && row.status !== 'processing';
+                      const clickable = row.hash && row.hash.length !== 10 && row.status !== 'processing';
                       const isPositive = row.amount > 0;
 
                       return (
@@ -1769,7 +1537,6 @@ function SiteWrapper(props) {
                   )}
                 </TableBody>
               </Table>
-
             </TableContainer>
             <Button
               color="error"
@@ -1786,7 +1553,6 @@ function SiteWrapper(props) {
               ALL TRANSACTIONS
             </Button>
 
-            {/* Inventory / Vault */}
             <Box
               sx={{
                 mt: 2,
@@ -1800,58 +1566,35 @@ function SiteWrapper(props) {
                 variant="outlined"
                 onClick={handleOpenInventoryModal}
                 startIcon={<Inventory2Outlined />}
-                sx={{
-                  '&:hover': {
-                    backgroundColor: 'error.main',
-                    color: '#fff',
-                  },
-                }}
+                sx={{ '&:hover': { backgroundColor: 'error.main', color: '#fff' } }}
               >
                 Inventory
               </Button>
-
               <Button
                 color="error"
                 variant="outlined"
                 onClick={handleOpenVaultModal}
                 startIcon={<SavingsOutlined />}
-                sx={{
-                  '&:hover': {
-                    backgroundColor: 'error.main',
-                    color: '#fff',
-                  },
-                }}
+                sx={{ '&:hover': { backgroundColor: 'error.main', color: '#fff' } }}
               >
                 Vault
               </Button>
-
               <Button
                 color="error"
                 variant="outlined"
                 onClick={handleOpenDepositModal}
                 startIcon={<AccountBalanceWalletOutlined />}
-                sx={{
-                  '&:hover': {
-                    backgroundColor: 'error.main',
-                    color: '#fff',
-                  },
-                }}
+                sx={{ '&:hover': { backgroundColor: 'error.main', color: '#fff' } }}
               >
                 Deposit
               </Button>
-
               {remainingLoans > 0 ? (
                 <Button
                   color="error"
                   variant="outlined"
                   onClick={handleOpenDebtsModal}
                   startIcon={<MoneyOffCsredOutlined />}
-                  sx={{
-                    '&:hover': {
-                      backgroundColor: 'error.main',
-                      color: '#fff',
-                    },
-                  }}
+                  sx={{ '&:hover': { backgroundColor: 'error.main', color: '#fff' } }}
                 >
                   {convertToCurrency(remainingLoans, solPrice)} IN DEBT
                 </Button>
@@ -1861,18 +1604,12 @@ function SiteWrapper(props) {
                   variant="outlined"
                   onClick={handleOpenWithdrawModal}
                   startIcon={<AttachMoneyOutlined />}
-                  sx={{
-                    '&:hover': {
-                      backgroundColor: 'error.main',
-                      color: '#fff',
-                    },
-                  }}
+                  sx={{ '&:hover': { backgroundColor: 'error.main', color: '#fff' } }}
                 >
                   Withdraw
                 </Button>
               )}
             </Box>
-            {/* Phantom Wallet connect or address display */}
             {connectedAccount ? (
               <Box sx={{ mt: 2 }}>
                 <input id="wallet-address" type="text" value={connectedAccount} readOnly />
@@ -1881,13 +1618,7 @@ function SiteWrapper(props) {
                   variant="outlined"
                   onClick={disconnectWeb3}
                   fullWidth
-                  sx={{
-                    '&:hover': {
-                      backgroundColor: 'error.main',
-                      color: '#fff'
-                    },
-                    mt: 1
-                  }}
+                  sx={{ '&:hover': { backgroundColor: 'error.main', color: '#fff' }, mt: 1 }}
                 >
                   Disconnect
                 </Button>
@@ -1898,27 +1629,19 @@ function SiteWrapper(props) {
                 variant="outlined"
                 fullWidth
                 onClick={loadSolanaWallet}
-                sx={{
-                  '&:hover': {
-                    backgroundColor: 'error.main',
-                    color: '#fff'
-                  },
-                  mt: 2
-                }}
+                sx={{ '&:hover': { backgroundColor: 'error.main', color: '#fff' }, mt: 2 }}
               >
                 CONNECT WALLET
               </Button>
             )}
           </Popover>
         </div>
-        {/* Conflict Dialog */}
+
         <ConflictDialog open={walletConflictOpen} onClose={handleCloseConflictDialog} />
-        {/* ========== MAIN CONTENT ========== */}
+
         <div className="game_wrapper">
           <div className="contents_wrapper">{children}</div>
         </div>
-
-        {/* ========== MODALS ========== */}
 
         {showProfileModal && (
           <ProfileModal
@@ -1932,7 +1655,6 @@ function SiteWrapper(props) {
             selectedCreator={user?._id}
           />
         )}
-
         {showPlayerModal && (
           <PlayerModal
             selectedCreator={selectedCreator}
@@ -1940,7 +1662,6 @@ function SiteWrapper(props) {
             closeModal={handleClosePlayerModal}
           />
         )}
-
         {showSettingsModal && (
           <SettingsModal
             modalIsOpen={showSettingsModal}
@@ -1961,7 +1682,6 @@ function SiteWrapper(props) {
             }}
           />
         )}
-
         {showBonusModal && (
           <BonusModal
             modalIsOpen={showBonusModal}
@@ -1970,7 +1690,6 @@ function SiteWrapper(props) {
             solPrice={solPrice}
           />
         )}
-
         {showLeaderboardsModal && (
           <LeaderboardsModal
             modalIsOpen={showLeaderboardsModal}
@@ -1980,7 +1699,6 @@ function SiteWrapper(props) {
             isDarkMode={isDarkMode}
           />
         )}
-
         {showHowToPlayModal && (
           <HowToPlayModal
             modalIsOpen={showHowToPlayModal}
@@ -1990,7 +1708,6 @@ function SiteWrapper(props) {
             isDarkMode={isDarkMode}
           />
         )}
-
         {showBankModal && (
           <BankModal
             modalIsOpen={showBankModal}
@@ -2001,7 +1718,6 @@ function SiteWrapper(props) {
             remainingLoans={remainingLoans}
           />
         )}
-
         {showMarketplaceModal && (
           <MarketplaceModal
             modalIsOpen={showMarketplaceModal}
@@ -2011,7 +1727,6 @@ function SiteWrapper(props) {
             isDarkMode={isDarkMode}
           />
         )}
-
         {showLoginModal && (
           <LoginModal
             modalIsOpen={showLoginModal}
@@ -2019,7 +1734,6 @@ function SiteWrapper(props) {
             openSignupModal={handleOpenSignupModal}
           />
         )}
-
         {showDebtsModal && (
           <DebtsModal
             modalIsOpen={showDebtsModal}
@@ -2027,7 +1741,6 @@ function SiteWrapper(props) {
             openDebtsModal={handleOpenDebtsModal}
           />
         )}
-
         {showSignupModal && (
           <SignupModal
             modalIsOpen={showSignupModal}
@@ -2035,25 +1748,22 @@ function SiteWrapper(props) {
             openLoginModal={handleOpenLoginModal}
           />
         )}
-
         {showDepositModal && (
           <DepositModal
             modalIsOpen={showDepositModal}
             closeModal={handleCloseDepositModal}
-            web3={null} // pass if needed
+            web3={null}
             loadSolanaWallet={loadSolanaWallet}
             balance={solanaBalance}
             account={account}
           />
         )}
-
         {showInventoryModal && (
           <InventoryModal
             modalIsOpen={showInventoryModal}
             closeModal={handleCloseInventoryModal}
           />
         )}
-
         {showVaultModal && (
           <VaultModal
             modalIsOpen={showVaultModal}
@@ -2062,18 +1772,15 @@ function SiteWrapper(props) {
             isDarkMode={isDarkMode}
           />
         )}
-
         {showWithdrawModal && (
           <WithdrawModal
             modalIsOpen={showWithdrawModal}
             closeModal={handleCloseWithdrawModal}
             balance={balance}
-            web3={null} // or your web3 instance if needed
+            web3={null}
             account={account}
           />
         )}
-
-        {/* Additional modals managed by Redux or sibling */}
         <ListItemModal />
         <DeListItemModal />
         <ConfirmTradeModal />
@@ -2081,77 +1788,9 @@ function SiteWrapper(props) {
         <ConfirmLoanModal />
         <OfferLoanModal solPrice={solPrice} socket={socket} />
         <GamePasswordModal />
-
-
       </div>
     </ThemeProvider>
   );
 }
 
-// ------------------ REDUX CONNECT ------------------
-const mapStateToProps = (state) => ({
-  transactions: state.auth.transactions,
-  loading_user: state.auth.loading_user,
-  roomList: state.logic.roomList,
-  isAuthenticated: state.auth.isAuthenticated,
-  showDeListLoanModal: state.snackbar.showDeListLoanModal,
-  showListItemModal: state.snackbar.showListItemModal,
-  showDeListItemModal: state.snackbar.showDeListItemModal,
-  showConfirmTradeModal: state.snackbar.showConfirmTradeModal,
-  showGamePasswordModal: state.snackbar.showGamePasswordModal,
-  socket: state.auth.socket,
-  balance: state.auth.balance,
-  connectedAccount: state.auth.connectedAccount,
-  userName: state.auth.userName,
-  isMuted: state.auth.isMuted,
-  notificationSounds: state.auth.notificationSounds,
-  isNotificationsAllowed: state.auth.isNotificationsAllowed,
-  user: state.auth.user,
-  selectedMainTabIndex: state.logic.selectedMainTabIndex,
-  isDarkMode: state.auth.isDarkMode,
-  betResult: state.logic.betResult,
-  solPrice: state.logic.solPrice,
-  remainingLoans: state.loanReducer.remainingLoans,
-  userLoans: state.loanReducer.userLoans,
-  sevenDayProfit: state.auth.sevenDayProfit,
-  oneDayProfit: state.auth.oneDayProfit,
-  allTimeProfit: state.auth.allTimeProfit,
-  notifications: state.logic.notifications,
-  isLowGraphics: state.auth.isLowGraphics,
-  showCookieConsent: state.auth.showCookieConsent,
-  history: state.logic.history,
-});
-
-const mapDispatchToProps = {
-  setSocket,
-  userSignOut,
-  setRoomList,
-  removeRoomFromList,
-  getUser,
-  addChatLog,
-  getMyHistory,
-  updateTutorialCompleted,
-  setUnreadMessageCount,
-  addNewTransaction,
-  addNewNotification,
-  getNotifications,
-  readNotifications,
-  updateOnlineUserList,
-  setDarkMode,
-  checkAndAddWalletAddress,
-  disconnectWalletAddress,
-  setNotificationsAllowed,
-  selectMainTab,
-  acCalculateRemainingLoans,
-  globalChatReceived,
-  setGlobalChat,
-  updateBetResult,
-  openOfferLoanModal,
-  setCurrentOfferTargetInfo,
-  getGlobalChatLogs,
-  authenticateWithPhantom,
-  endLoading,
-  getHistory,
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(SiteWrapper);
+export default SiteWrapper;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { connect, useDispatch } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import {
   Box,
   Tooltip,
@@ -30,9 +30,6 @@ import { Info } from '@mui/icons-material';
 
 import {
   getMyGames,
-  jeetGame,
-  createRoom,
-  reCreateRoom,
   getStrategies,
   updateRoomStrategy,
   editPayout,
@@ -56,30 +53,33 @@ import Battle from '../icons/Battle';
 import pressHold from '../LottieAnimations/pressHold.json';
 import animationData from '../LottieAnimations/add';
 
-function MyGamesTable(props) {
+function MyGamesTable() { // Remove props destructuring since we’ll use hooks
+  const dispatch = useDispatch();
+
+  // Map state from Redux using useSelector
   const {
     balance,
     user,
     myGames: propsMyGames,
-    getMyGames,
     socket,
-    getStrategies,
     isDarkMode,
     isLowGraphics,
     solPrice,
-    updateTutorialCompleted,
-    // Redux dispatch actions:
-    jeetGame,
-    createRoom,
-    endGame,
-    addNewTransaction,
-    getRoomList,
-    pumpGame,
-    editPayout,
-    updateUserPrompt,
-    updateRoomStrategy,
+    strategies,
     loading,
-  } = props;
+  } = useSelector((state) => ({
+    isDarkMode: state.auth.isDarkMode,
+    isLowGraphics: state.auth.isLowGraphics,
+    myGames: state.logic.myGames,
+    pageNumber: state.logic.myGamesPageNumber,
+    game_mode: state.logic.game_mode,
+    socket: state.auth.socket,
+    balance: state.auth.balance,
+    user: state.auth.user,
+    strategies: state.logic.strategies,
+    solPrice: state.logic.solPrice,
+    loading: state.logic.isActiveLoadingOverlay,
+  }));
 
   // ---------- State ----------
   const [selectedGameType, setSelectedGameType] = useState('All');
@@ -110,9 +110,28 @@ function MyGamesTable(props) {
   const settingsRef = useRef(null);
 
   const [pressState, setPressState] = useState({});
-  const dispatch = useDispatch();
 
   // ---------- Effects ----------
+
+  const fetchData = useCallback(() => {
+    setMyGames(propsMyGames || []);
+    dispatch(getStrategies());
+
+    setIsLoading(true);
+    dispatch(
+      getMyGames(
+        {
+          game_type: selectedGameType,
+          status: selectedFilter === 'open' ? 'open' : 'finished',
+          sort: selectedSort,
+        },
+        (updated) => {
+          setMyGames(updated);
+          setIsLoading(false);
+        },
+      ),
+    );
+  }, [dispatch, propsMyGames, selectedGameType, selectedFilter, selectedSort]);
 
   useEffect(() => {
     async function fetchInitialData() {
@@ -124,7 +143,7 @@ function MyGamesTable(props) {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
+  }, [fetchData]); // Add fetchData to dependencies
 
   const handleBankrollUpdate = useCallback(
     (data) => {
@@ -161,38 +180,13 @@ function MyGamesTable(props) {
 
   useEffect(() => {
     fetchData();
-  }, [selectedFilter, selectedSort]);
+  }, [selectedFilter, selectedSort, fetchData]); // Add fetchData to dependencies
 
   useEffect(() => {
     setMyGames(propsMyGames || []);
     setIsLoading(false);
   }, [propsMyGames]);
 
-  // ---------- Data fetching ----------
-  const fetchData = useCallback(() => {
-    setMyGames(propsMyGames || []);
-    getStrategies();
-
-    setIsLoading(true);
-    getMyGames(
-      {
-        game_type: selectedGameType,
-        status: selectedFilter === 'open' ? 'open' : 'finished',
-        sort: selectedSort,
-      },
-      (updated) => {
-        setMyGames(updated);
-        setIsLoading(false);
-      },
-    );
-  }, [
-    getMyGames,
-    getStrategies,
-    propsMyGames,
-    selectedGameType,
-    selectedFilter,
-    selectedSort,
-  ]);
 
   // ---------- CoHost ----------
   const handleCoHost = (row) => {
@@ -215,10 +209,10 @@ function MyGamesTable(props) {
       return;
     }
     try {
-      const result = await pumpGame(coHostAmount, selectedRow._id);
+      const result = await dispatch(pumpGame(coHostAmount, selectedRow._id));
       if (result.success) {
-        addNewTransaction(result.newTransaction);
-        await getRoomList({ game_type: 'All' });
+        dispatch(addNewTransaction(result.newTransaction));
+        await dispatch(getRoomList({ game_type: 'All' }));
       } else {
         dispatch(errorMsgBar(result.message));
       }
@@ -228,9 +222,9 @@ function MyGamesTable(props) {
   }, [
     coHostAmount,
     balance,
-    isDarkMode,
-    pumpGame,
     selectedRow,
+    dispatch,
+    pumpGame,
     addNewTransaction,
     getRoomList,
   ]);
@@ -270,7 +264,7 @@ function MyGamesTable(props) {
 
     try {
       setIsLoading(true);
-      const result = await editPayout(payoutAmount, selectedRow._id);
+      const result = await dispatch(editPayout(payoutAmount, selectedRow._id));
       if (result.success) {
         await fetchData();
         dispatch(errorMsgBar(result.message));
@@ -283,19 +277,18 @@ function MyGamesTable(props) {
     } finally {
       setIsLoading(false);
     }
-  }, [payoutAmount, selectedRow, isDarkMode, editPayout, fetchData]);
+  }, [payoutAmount, selectedRow, dispatch, editPayout, fetchData]);
 
   // ---------- RUG logic ----------
   const endRoom = useCallback(
     async (winnings, room_id) => {
-      // Toggle local pressState to show "closing..."
       setPressState((prev) => ({
         ...prev,
         [room_id]: { ...prev[room_id], closing: true },
       }));
 
       try {
-        await endGame(room_id);
+        await dispatch(endGame(room_id));
         setMyGames((prevGames) => prevGames.filter((g) => g._id !== room_id));
       } catch (error) {
         console.error('Error ending game:', error);
@@ -306,7 +299,7 @@ function MyGamesTable(props) {
         }));
       }
     },
-    [endGame, setMyGames],
+    [dispatch],
   );
 
   const handleButtonClick = useCallback(
@@ -365,8 +358,6 @@ function MyGamesTable(props) {
     });
   }, []);
 
-
-
   // ---------- SETTINGS ----------
   const handleSettingsIconClick = (event, row) => {
     event.preventDefault();
@@ -403,15 +394,14 @@ function MyGamesTable(props) {
     <Box className="my-open-games">
       {/* Filter/Tutorial Container */}
       <Box className="filter-container overflowX">
-       
         {selectedRow && (
           <SettingsRef
             ref={settingsRef}
-            strategies={props.strategies}
+            strategies={strategies}
             ai_mode={selectedRow.selectedStrategy}
             user_id={selectedRow._id}
-            prompt={user.prompt}
-            rank={getRank(user.totalWagered)}
+            prompt={user?.prompt}
+            rank={getRank(user?.totalWagered)}
             settings_panel_opened={settingsPanelOpened}
             setSelectedStrategy={setSelectedStrategy}
             selectedStrategy={selectedStrategy}
@@ -477,7 +467,7 @@ function MyGamesTable(props) {
                   HARD CAP
                 </Box>
                 <Box className="table-cell bet-info" sx={{ width: '17%' }}>
-                  PROGRESS&nbsp;
+                  PROGRESS 
                   <Tooltip title="TO REACH RAYDIUM">
                     <Info sx={{ width: 18, cursor: 'pointer' }} />
                   </Tooltip>
@@ -518,17 +508,14 @@ function MyGamesTable(props) {
                       <Box className="table-cell room-id" sx={{ width: '17%' }}>
                         <img
                           src={`/img/gametype/icons/${row.game_type.short_name}.svg`}
-                          // src={row.image}
                           alt=""
                           className="game-type-icon"
                         />
                         <img
-                          // src={`/img/gametype/icons/${row.game_type.short_name}.svg`}
                           src={row.image}
                           alt=""
                           className="game-type-icon"
                         />
-                        {/* {row.game_type.short_name + '-' + row.index} */}
                         {row.name + ' (' + row.ticker + ')'}
                         {row.is_private && (
                           <img
@@ -549,7 +536,7 @@ function MyGamesTable(props) {
                               {convertToCurrency(row.user_bet, solPrice)}
                               <br className="mobile-only" />
                               <Box component="span" sx={{ fontSize: '10px' }}>
-                                &nbsp;/ {row.share?.toFixed(2)}%
+                                 / {row.share?.toFixed(2)}%
                               </Box>
                             </Typography>
                           }
@@ -591,9 +578,7 @@ function MyGamesTable(props) {
                               e.stopPropagation();
                               handlePayout(row);
                             }}
-                          >
-                            {/* <EditOutline sx={{ p: '2.5px', width: 22 }} /> */}
-                          </Box>
+                          />
                         )}
                       </Box>
                       {/* Net Profit Chip */}
@@ -621,7 +606,7 @@ function MyGamesTable(props) {
                         }}
                       >
                         <Battle width="24px" />
-                        &nbsp;
+                         
                         <span>{row.battles}</span>
                       </Box>
                       {/* AI Model */}
@@ -657,16 +642,6 @@ function MyGamesTable(props) {
                             ) : (
                               <Box>
                                 {!row.coHost ? (
-                                  // <Button
-                                  //   className="btn_withdraw btn_end"
-                                  //   onClick={(e) => {
-                                  //     e.preventDefault();
-                                  //     e.stopPropagation();
-                                  //     handleCoHost(row);
-                                  //   }}
-                                  // >
-                                  //   TRADE
-                                  // </Button>
                                   <></>
                                 ) : (
                                   <Button
@@ -797,16 +772,6 @@ function MyGamesTable(props) {
                             ) : (
                               <Box>
                                 {!row.coHost ? (
-                                  // <Button
-                                  //   className="btn_withdraw btn_end"
-                                  //   onClick={(e) => {
-                                  //     e.preventDefault();
-                                  //     e.stopPropagation();
-                                  //     handleCoHost(row);
-                                  //   }}
-                                  // >
-                                  //   TRADE
-                                  // </Button>
                                   <></>
                                 ) : (
                                   <Button
@@ -1004,36 +969,4 @@ function MyGamesTable(props) {
   );
 }
 
-// ---------- Redux Connection ----------
-const mapStateToProps = (state) => ({
-  isDarkMode: state.auth.isDarkMode,
-  isLowGraphics: state.auth.isLowGraphics,
-  myGames: state.logic.myGames,
-  pageNumber: state.logic.myGamesPageNumber,
-  game_mode: state.logic.game_mode,
-  socket: state.auth.socket,
-  balance: state.auth.balance,
-  user: state.auth.user,
-  strategies: state.logic.strategies,
-  solPrice: state.logic.solPrice,
-  loading: state.logic.isActiveLoadingOverlay,
-});
-
-const mapDispatchToProps = {
-  jeetGame,
-  createRoom,
-  getMyGames,
-  getStrategies,
-  pumpGame,
-  addNewTransaction,
-  setGameMode,
-  updateRoomStrategy,
-  reCreateRoom,
-  editPayout,
-  updateUserPrompt,
-  endGame,
-  getRoomList,
-  updateTutorialCompleted,
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(MyGamesTable);
+export default MyGamesTable;

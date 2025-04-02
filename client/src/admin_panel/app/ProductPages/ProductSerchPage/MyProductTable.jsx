@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
-import { connect, useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
 // MUI v5
-import { 
+import {
   ThemeProvider,
   Box,
   Button,
@@ -18,7 +18,7 @@ import {
   Tooltip,
   Skeleton,
   Pagination,
-  Typography
+  Typography,
 } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTag, faCubes, faGem, faFilter } from '@fortawesome/free-solid-svg-icons';
@@ -29,23 +29,19 @@ import {
   acQueryMyItem,
   setCurrentProductId,
   setCurrentProductInfo,
-  returnItem
+  returnItem,
 } from '../../../../redux/Item/item.action';
-import {
-  equipItem,
-  fetchAccessory,
-} from '../../../../redux/Logic/logic.actions';
+import { equipItem, fetchAccessory } from '../../../../redux/Logic/logic.actions';
 import {
   openListItemModal,
   openDeListItemModal,
-  errorMsgBar
+  errorMsgBar,
 } from '../../../../redux/Notification/notification.actions';
 import { acGetCustomerInfo } from '../../../../redux/Customer/customer.action';
 
 // Local
 import PlayerModal from '../../../../game_panel/modal/PlayerModal';
-import history from '../../../../redux/history';
-import Avatar from '../../../../components/Avatar';
+
 import { convertToCurrency } from '../../../../util/conversion';
 import { renderLottieAnimation } from '../../../../util/LottieAnimations';
 import { getCustomTheme } from '../../../../config/theme';
@@ -68,13 +64,11 @@ const FilterSortContainer = styled.div`
 
 const ProductGrid = styled.div`
   display: grid;
-  /* Default to 1 column (or however many you want) */
   grid-template-columns: repeat(1, 1fr);
   gap: 16px;
   width: 100%;
   margin: 20px 0;
 
-  /* On large screens (≥900px), force 2 columns max */
   @media (min-width: 900px) {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -87,7 +81,6 @@ const PaginationContainer = styled.div`
   margin-top: 20px;
 `;
 
-// Each card 320px high, split top/bottom
 const ProductCard = styled.div`
   background-color: #2e2e2e;
   border-radius: 8px;
@@ -109,23 +102,27 @@ function areOwnersEqual(prevOwners, currentOwners) {
 }
 
 // -------------- Functional Component --------------
-function MyProductTable(props) {
+function MyProductTable() {
+  const dispatch = useDispatch();
   const {
     data,
     pages,
     page,
     loading,
-    acQueryMyItem,
-    setCurrentProductId,
-    setCurrentProductInfo,
-    openListItemModal,
-    openDeListItemModal,
-    equipItem,
-    userInfo,
-    returnItem,
+    accessory,
     isDarkMode,
-    isLowGraphics
-  } = props;
+    userInfo,
+    isLowGraphics,
+  } = useSelector((state) => ({
+    data: state.itemReducer.myItemArray,
+    pages: state.itemReducer.pages,
+    page: state.itemReducer.page,
+    loading: state.itemReducer.loading,
+    accessory: state.itemReducer.accessory,
+    isDarkMode: state.auth.isDarkMode,
+    userInfo: state.auth.user,
+    isLowGraphics: state.auth.isLowGraphics,
+  }));
 
   // Local state
   const [customerInfo, setCustomerInfo] = useState({});
@@ -134,50 +131,37 @@ function MyProductTable(props) {
   const [anchorEl, setAnchorEl] = useState(null);
   const [sortCriteria, setSortCriteria] = useState('updated_at');
   const [itemType, setItemType] = useState('653ee81117c9f5ee2124564b');
-  const dispatch = useDispatch();
 
   // Compare owners from previous
-  const prevOwnersRef = useRef(JSON.stringify(data?.owners || []));
+  const prevOwnersRef = useRef();
 
   // MUI theme
   const theme = getCustomTheme(isDarkMode ? 'dark' : 'light');
-  // -------------- Effects --------------
-  // On mount
-  useEffect(() => {
-    fetchAccessory(userInfo._id);
-    fetchItems();
-    // no dependencies => no hooking
-  }, []);
 
-  // If data changes => re-check owners
+  // -------------- Effects --------------
+  useEffect(() => {
+    if (userInfo?._id) {
+      dispatch(fetchAccessory(userInfo._id));
+      dispatch(acQueryMyItem(100, page, sortCriteria, itemType));
+    }
+  }, [dispatch, userInfo?._id, page, sortCriteria, itemType]);
+
   useEffect(() => {
     const prevOwners = prevOwnersRef.current;
     const currentOwners = JSON.stringify(data?.owners || []);
-    if (prevOwners !== currentOwners) {
-      fetchItems();
-      prevOwnersRef.current = currentOwners;
+    if (prevOwners && prevOwners !== currentOwners) {
+      dispatch(acQueryMyItem(100, page, sortCriteria, itemType));
     }
-    // no dependencies
-  });
+    prevOwnersRef.current = currentOwners;
+  }, [data, dispatch, page, sortCriteria, itemType]);
 
-  // Each time data changes => fetch user info for owners
   useEffect(() => {
     fetchCustomerData();
-    // no dependencies
-  });
+  }, [data]);
 
   // -------------- Functions --------------
   const fetchItems = async () => {
-    const { page } = props;
-    await acQueryMyItem(100, page, sortCriteria, itemType);
-  };
-
-  const fetchAccessory = async (_id) => {
-    try {
-      await props.fetchAccessory({ _id });
-    } catch (error) {
-      console.error('Error fetching accessory:', error);
-    }
+    await dispatch(acQueryMyItem(100, page, sortCriteria, itemType));
   };
 
   const fetchCustomerData = async () => {
@@ -187,10 +171,10 @@ function MyProductTable(props) {
         for (const owner of product.owners) {
           if (!customerInfo[owner.user]) {
             try {
-              const info = await props.acGetCustomerInfo(owner.user);
-              setCustomerInfo(prev => ({
+              const info = await dispatch(acGetCustomerInfo(owner.user));
+              setCustomerInfo((prev) => ({
                 ...prev,
-                [owner.user]: info || { username: 'Anon', avatar: 'default-avatar-url' }
+                [owner.user]: info.payload || { username: 'Anon', avatar: 'default-avatar-url' },
               }));
             } catch (error) {
               console.error(`Error fetching customer info for ${owner.user}:`, error);
@@ -202,7 +186,7 @@ function MyProductTable(props) {
   };
 
   const handleModalClose = () => {
-    fetchAccessory(userInfo._id);
+    dispatch(fetchAccessory(userInfo._id));
     fetchItems();
   };
 
@@ -224,37 +208,37 @@ function MyProductTable(props) {
   const handleClosePlayerModal = () => setShowPlayerModal(false);
 
   const handleEquip = async (itemId, itemImage) => {
-    const response = await equipItem({ item_id: itemId });
-    if (response.success) {
+    const response = await dispatch(equipItem({ item_id: itemId }));
+    if (response.payload?.success) {
       handleModalClose();
-      // Dispatch the error message (or notification) for success with the optional '-cat' parameter
-      dispatch(errorMsgBar(response.message, '-cat'));
+      dispatch(errorMsgBar(response.payload.message, '-cat'));
     } else {
-      // Dispatch the error message for failure
       dispatch(errorMsgBar('Unable to Equip item. De-List item first.'));
     }
   };
 
   const handleReturnItem = (rowId) => {
-    setCurrentProductId(rowId);
-    returnItem(rowId);
+    dispatch(setCurrentProductId(rowId));
+    dispatch(returnItem(rowId));
   };
 
   const handleListItem = (row) => {
-    setCurrentProductId(row._id);
-    setCurrentProductInfo({
-      item_type: row.item_type,
-      productName: row.productName,
-      rentOption: row.rentOption,
-      price: row.price,
-      onSale: row.onSale
-    });
-    openListItemModal();
+    dispatch(setCurrentProductId(row._id));
+    dispatch(
+      setCurrentProductInfo({
+        item_type: row.item_type,
+        productName: row.productName,
+        rentOption: row.rentOption,
+        price: row.price,
+        onSale: row.onSale,
+      })
+    );
+    dispatch(openListItemModal());
   };
 
   const handleDeListItem = (row) => {
-    setCurrentProductId(row._id);
-    openDeListItemModal();
+    dispatch(setCurrentProductId(row._id));
+    dispatch(openDeListItemModal());
   };
 
   // -------------- Render --------------
@@ -265,14 +249,9 @@ function MyProductTable(props) {
           <FilterSortContainer>
             <div className="filters">
               <Button color="error" variant="outlined" onClick={handleFilterClick}>
-                Filter&nbsp;
-                <FontAwesomeIcon icon={faFilter} />
+                Filter <FontAwesomeIcon icon={faFilter} />
               </Button>
-              <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={() => handleFilterClose(null)}
-              >
+              <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => handleFilterClose(null)}>
                 <MenuItem
                   onClick={() => handleFilterClose('653ee81117c9f5ee2124564b')}
                   selected={itemType === '653ee81117c9f5ee2124564b'}
@@ -283,8 +262,7 @@ function MyProductTable(props) {
             </div>
           </FilterSortContainer>
 
-          {props.loading ? (
-            // SKELETONS
+          {loading ? (
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, justifyContent: 'center', mt: 2 }}>
               {Array.from(new Array(6)).map((_, i) => (
                 <Box key={i}>
@@ -296,248 +274,194 @@ function MyProductTable(props) {
             </Box>
           ) : (
             <ProductGrid>
-              {showPlayerModal && (
-                <PlayerModal
-                  selectedCreator={selectedCreator}
-                  modalIsOpen={showPlayerModal}
-                  closeModal={handleClosePlayerModal}
-                />
-              )}
-
-              {data.map((row) => {
-
-                return (
-                  <Box
-                    key={row._id}
-                    sx={{
-                      backgroundColor: '#2e2e2e',
-                      borderRadius: 2,
-                      height: 320,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      overflow: 'hidden',
-                      cursor: 'pointer',
-                      transition: 'transform 0.2s',
-                      '&:hover': { transform: 'scale(1.03)' }
-                    }}
-                    onClick={() => {
-                      setCurrentProductId(row._id);
+              {data?.map((row) => (
+                <Box
+                  key={row._id}
+                  sx={{
+                    backgroundColor: '#2e2e2e',
+                    borderRadius: 2,
+                    height: 320,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    overflow: 'hidden',
+                    cursor: 'pointer',
+                    transition: 'transform 0.2s',
+                    '&:hover': { transform: 'scale(1.03)' },
+                  }}
+                  onClick={() => {
+                    dispatch(setCurrentProductId(row._id));
+                    dispatch(
                       setCurrentProductInfo({
                         item_type: row.item_type,
                         productName: row.productName,
                         rentOption: row.rentOption,
                         price: row.price,
-                        onSale: row.onSale
-                      });
-                      history.push(`/product/${row._id}`);
+                        onSale: row.onSale,
+                      })
+                    );
+                    // history.push(`/product/${row._id}`);
+                  }}
+                >
+                  {/* Top half => avatar + lottie */}
+                  <Box
+                    sx={{
+                      flex: 1,
+                      position: 'relative',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
                     }}
                   >
-                    {/* Top half => avatar + lottie */}
-                    <Box
-                      sx={{
-                        flex: 1,
-                        position: 'relative',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      }}
-                    >
+                    {row.image && renderLottieAnimation(row.image, isLowGraphics) ? (
+                      <Box sx={{ width: 80, height: 80 }}>{renderLottieAnimation(row.image, isLowGraphics)}</Box>
+                    ) : (
+                      <Box
+                        component="img"
+                        src={row.image}
+                        alt={row.productName}
+                        sx={{ maxWidth: 80, maxHeight: 80, borderRadius: 2 }}
+                      />
+                    )}
+                  </Box>
 
-                      {/* Lottie or image => center */}
-                      {row.image && renderLottieAnimation(row.image, isLowGraphics) ? (
-                        <Box sx={{ width: 80, height: 80 }}>
-                          {renderLottieAnimation(row.image, isLowGraphics)}
-                        </Box>
+                  {/* Bottom => details + action buttons */}
+                  <Box
+                    sx={{
+                      flex: 1,
+                      p: 1,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                    }}
+                  >
+                    <Box>
+                      <Typography variant="h6" sx={{ fontSize: '1rem', color: '#fff', textAlign: 'center' }}>
+                        {row.productName}
+                      </Typography>
+                      <TableContainer>
+                        <Table className="product-detail">
+                          <TableBody>
+                            {row.rentOption && row.onSale === 0 ? (
+                              <TableRow>
+                                <TableCell sx={{ color: '#bbb' }}>
+                                  <FontAwesomeIcon icon={faTag} /> Cost Per Month:
+                                </TableCell>
+                                <TableCell sx={{ color: '#ff8500' }}>{convertToCurrency(row.price)}</TableCell>
+                              </TableRow>
+                            ) : (
+                              <TableRow>
+                                <TableCell sx={{ color: '#bbb' }}>
+                                  <FontAwesomeIcon icon={faTag} />{' '}
+                                  {row.rentOption ? 'Price Per Month:' : 'Price Per Unit:'}
+                                </TableCell>
+                                <TableCell sx={{ color: '#ff8500' }}>{convertToCurrency(row.price)}</TableCell>
+                              </TableRow>
+                            )}
+                            {row.rentOption && row.onSale === 0 ? null : (
+                              <TableRow>
+                                <TableCell sx={{ color: '#bbb' }}>
+                                  {row.rentOption ? 'Renting Out:' : 'On Sale:'}
+                                </TableCell>
+                                <TableCell sx={{ color: '#ff8500' }}>{row.onSale}</TableCell>
+                              </TableRow>
+                            )}
+                            <TableRow>
+                              <TableCell sx={{ color: '#bbb' }}>
+                                <FontAwesomeIcon icon={faCubes} /> Total:
+                              </TableCell>
+                              <TableCell sx={{ color: '#ff8500' }}>{row.total_count}</TableCell>
+                            </TableRow>
+                            <TableRow>
+                              <TableCell sx={{ color: '#bbb' }}>
+                                <FontAwesomeIcon icon={faGem} /> Type:
+                              </TableCell>
+                              <TableCell sx={{ color: '#ff8500' }}>Accessory</TableCell>
+                            </TableRow>
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    </Box>
+
+                    <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', mt: 1 }}>
+                      {row.onSale === 0 && row.rentOption ? (
+                        <Tooltip title="Discontinue Renting">
+                          <Button
+                            variant="contained"
+                            color="error"
+                            startIcon={<Cancel />}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleReturnItem(row._id);
+                            }}
+                          >
+                            RETURN
+                          </Button>
+                        </Tooltip>
                       ) : (
-                        <Box
-                          component="img"
-                          src={row.image}
-                          alt={row.productName}
-                          sx={{
-                            maxWidth: 80,
-                            maxHeight: 80,
-                            borderRadius: 2
-                          }}
-                        />
+                        <>
+                          {row.onSale !== row.total_count && (
+                            <Tooltip title="List Item">
+                              <Button
+                                variant="contained"
+                                color="error"
+                                startIcon={<SwapHoriz />}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleListItem(row);
+                                }}
+                              >
+                                LIST
+                              </Button>
+                            </Tooltip>
+                          )}
+                          {row.onSale > 0 && (
+                            <Tooltip title="De-List Item">
+                              <Button
+                                variant="contained"
+                                color="error"
+                                startIcon={<SwapHoriz />}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeListItem(row);
+                                }}
+                              >
+                                DE-LIST
+                              </Button>
+                            </Tooltip>
+                          )}
+                        </>
+                      )}
+                      {row.item_type === '653ee81117c9f5ee2124564b' && row.onSale === 0 && (
+                        <Tooltip title={accessory && accessory === row.image ? 'Unequip Item' : 'Equip Item'}>
+                          <Button
+                            variant="contained"
+                            color="error"
+                            startIcon={<SwapHoriz />}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEquip(row._id, row.image);
+                            }}
+                          >
+                            {accessory && accessory === row.image ? 'UNEQUIP' : 'EQUIP'}
+                          </Button>
+                        </Tooltip>
                       )}
                     </Box>
-
-                    {/* Bottom => details + action buttons */}
-                    <Box
-                      sx={{
-                        flex: 1,
-                        p: 1,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'space-between'
-                      }}
-                    >
-                      {/* Info */}
-                      <Box>
-                        <Typography
-                          variant="h6"
-                          sx={{ fontSize: '1rem', color: '#fff', textAlign: 'center' }}
-                        >
-                          {row.productName}
-                        </Typography>
-                        <TableContainer>
-                          <Table className="product-detail">
-                            <TableBody>
-                              {row.rentOption && row.onSale === 0 ? (
-                                <TableRow>
-                                  <TableCell sx={{ color: '#bbb' }}>
-                                    <FontAwesomeIcon icon={faTag} /> Cost Per Month:
-                                  </TableCell>
-                                  <TableCell sx={{ color: '#ff8500' }}>
-                                    {convertToCurrency(row.price)}
-                                  </TableCell>
-                                </TableRow>
-                              ) : (
-                                <TableRow>
-                                  <TableCell sx={{ color: '#bbb' }}>
-                                    <FontAwesomeIcon icon={faTag} />{' '}
-                                    {row.rentOption ? 'Price Per Month:' : 'Price Per Unit:'}
-                                  </TableCell>
-                                  <TableCell sx={{ color: '#ff8500' }}>
-                                    {convertToCurrency(row.price)}
-                                  </TableCell>
-                                </TableRow>
-                              )}
-
-                              {/* OnSale row */}
-                              {row.rentOption && row.onSale === 0 ? null : (
-                                <TableRow>
-                                  <TableCell sx={{ color: '#bbb' }}>
-                                    {row.rentOption ? 'Renting Out:' : 'On Sale:'}
-                                  </TableCell>
-                                  <TableCell sx={{ color: '#ff8500' }}>
-                                    {row.onSale}
-                                  </TableCell>
-                                </TableRow>
-                              )}
-
-                              {/* Total count */}
-                              <TableRow>
-                                <TableCell sx={{ color: '#bbb' }}>
-                                  <FontAwesomeIcon icon={faCubes} /> Total:
-                                </TableCell>
-                                <TableCell sx={{ color: '#ff8500' }}>
-                                  {row.total_count}
-                                </TableCell>
-                              </TableRow>
-                              {/* item_type */}
-                              <TableRow>
-                                <TableCell sx={{ color: '#bbb' }}>
-                                  <FontAwesomeIcon icon={faGem} /> Type:
-                                </TableCell>
-                                <TableCell sx={{ color: '#ff8500' }}>
-                                  Accessory
-                                </TableCell>
-                              </TableRow>
-                            </TableBody>
-                          </Table>
-                        </TableContainer>
-                      </Box>
-
-                      {/* Action Buttons at bottom row */}
-                      <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', mt: 1 }}>
-                        {/* If onSale=0 + rentOption => discontinue */}
-                        {row.onSale === 0 && row.rentOption ? (
-                          <Tooltip title="Discontinue Renting">
-                            <Button
-                              variant="contained"
-                              color="error"
-                              startIcon={<Cancel />}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleReturnItem(row._id);
-                              }}
-                            >
-                              RETURN
-                            </Button>
-                          </Tooltip>
-                        ) : (
-                          // Otherwise show "List" & "De-List" if needed
-                          <>
-                            {row.onSale !== row.total_count && (
-                              <Tooltip title="List Item">
-                                <Button
-                                  variant="contained"
-                                  color="error"
-                                  startIcon={<SwapHoriz />}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleListItem(row);
-                                  }}
-                                >
-                                  LIST
-                                </Button>
-                              </Tooltip>
-                            )}
-                            {row.onSale > 0 && (
-                              <Tooltip title="De-List Item">
-                                <Button
-                                  variant="contained"
-                                  color="error"
-                                  startIcon={<SwapHoriz />}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeListItem(row);
-                                  }}
-                                >
-                                  DE-LIST
-                                </Button>
-                              </Tooltip>
-                            )}
-                          </>
-                        )}
-
-                        {/* If item is accessory => Equip / Unequip */}
-                        {row.item_type === '653ee81117c9f5ee2124564b' && row.onSale === 0 && (
-                          <Tooltip
-                            title={
-                              props.accessory && props.accessory === row.image
-                                ? 'Unequip Item'
-                                : 'Equip Item'
-                            }
-                          >
-                            <Button
-                              variant="contained"
-                              color="error"
-                              startIcon={<SwapHoriz />}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleEquip(row._id, row.image);
-                              }}
-                            >
-                              {props.accessory && props.accessory === row.image
-                                ? 'UNEQUIP'
-                                : 'EQUIP'}
-                            </Button>
-                          </Tooltip>
-                        )}
-                      </Box>
-                    </Box>
                   </Box>
-                );
-              })}
+                </Box>
+              ))}
             </ProductGrid>
           )}
 
-          {/* Pagination => if not loading */}
           {!loading && (
             <PaginationContainer>
               <Pagination
                 page={page}
                 count={pages}
                 color="error"
-                sx={{
-                  '& .MuiPaginationItem-root': {
-                    borderRadius: '4px'
-                  }
-                }}
+                sx={{ '& .MuiPaginationItem-root': { borderRadius: '4px' } }}
                 onChange={(event, newPage) => {
-                  acQueryMyItem(100, newPage, sortCriteria, itemType);
+                  dispatch(acQueryMyItem(100, newPage, sortCriteria, itemType));
                 }}
               />
             </PaginationContainer>
@@ -556,31 +480,4 @@ function MyProductTable(props) {
   );
 }
 
-// ----------- Redux Connections -----------
-const mapStateToProps = (state) => ({
-  data: state.itemReducer.myItemArray,
-  pages: state.itemReducer.pages,
-  page: state.itemReducer.page,
-  loading: state.itemReducer.loading,
-  total: state.itemReducer.totalResults,
-  accessory: state.itemReducer.accessory,
-  showListItemModal: state.snackbar.showListItemModal,
-  showDeListItemModal: state.snackbar.showDeListItemModal,
-  isDarkMode: state.auth.isDarkMode,
-  userInfo: state.auth.user,
-  isLowGraphics: state.auth.isLowGraphics
-});
-
-const mapDispatchToProps = {
-  acQueryMyItem,
-  setCurrentProductId,
-  setCurrentProductInfo,
-  openListItemModal,
-  openDeListItemModal,
-  acGetCustomerInfo,
-  equipItem,
-  fetchAccessory,
-  returnItem
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(MyProductTable);
+export default MyProductTable;

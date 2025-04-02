@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { connect, useDispatch } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { Info } from '@mui/icons-material';
 import GuessesSection from '../../components/GuessesSection';
@@ -10,11 +10,11 @@ import AiPanel from '../../components/AiPanel';
 import ViewIcon from '@mui/icons-material/Visibility';
 import SwordsIcon from '@mui/icons-material/VisibilityOff';
 import { getQsLottieAnimation } from '../../util/helper';
-import { updateRoomBot, kickBots, getQsBetItems, getRoomBotCount, detachPlayerFromRoom } from '../../redux/Logic/logic.actions';
+import {
+  getQsBetItems,
+  detachPlayerFromRoom,
+} from '../../redux/Logic/logic.actions';
 import { setSpectateMode } from '../../redux/Auth/user.actions';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-
-import { faRobot, faBrain, faBan } from '@fortawesome/free-solid-svg-icons';
 import {
   Button,
   IconButton,
@@ -26,71 +26,79 @@ import {
   DialogContent,
   DialogActions,
   Typography,
-  Box
+  Box,
 } from '@mui/material';
 import {
   validateIsAuthenticated,
   validateBetAmount,
-  validateBankroll
+  validateBankroll,
 } from '../modal/betValidations';
-
 import Lottie from 'react-lottie';
 import ImageResultModal from '../modal/ImageResultModal';
-
 import { convertToCurrency } from '../../util/conversion';
 import football from '../LottieAnimations/football.json';
 
 function QuickShoot(props) {
-  // Extract props
+  const dispatch = useDispatch();
+
+  // Map state from Redux using useSelector
   const {
-    socket: socket, //  <-- Directly use this instead of local state
+    socket,
     isAuthenticated,
     isPasswordCorrect: propIsPasswordCorrect,
     balance,
+    isDarkMode,
+    isWatching,
+    is_betting,
+    solPrice,
+    rank,
+    isLowGraphics,
+  } = useSelector((state) => ({
+    socket: state.auth.socket,
+    isAuthenticated: state.auth.isAuthenticated,
+    isPasswordCorrect: state.snackbar.isPasswordCorrect,
+    balance: state.auth.balance,
+    isDarkMode: state.auth.isDarkMode,
+    isWatching: state.auth.isWatching,
+    is_betting: state.logic.is_betting,
+    solPrice: state.logic.solPrice,
+    creator: state.logic.curRoomInfo.creator_name,
+    creator_avatar: state.logic.curRoomInfo.creator_avatar,
+    rank: state.logic.curRoomInfo.rank,
+    accessory: state.logic.curRoomInfo.accessory,
+    username: state.logic.curRoomInfo.username,
+    isLowGraphics: state.auth.isLowGraphics,
+  }));
+
+  // Extract remaining props from parent component
+  const {
     bankroll,
     user_id,
     creator_id,
     roomInfo,
     qs_game_type,
-    isDarkMode,
     updateUserStrategy,
-    isWatching,
-    is_betting,
     bet_amount,
     selected_qs_position,
     updateAttachment,
-    // Additional props
     onChangeState,
     playSound,
     changeBgColor,
-    solPrice,
-    openGamePasswordModal,
-    updateRoomBot,
-    kickBots,
-    getRoomBotCount,
-    setSpectateMode,
     join,
     updateSelectedQs,
-
-    // UI logic / other props
-    actionList,
     handleOpenPlayerModal,
     handleClosePlayerModal,
     showPlayerModal,
     selectedCreator,
-    isLowGraphics,
     borderColor,
     handleSwitchChange,
     updateUserPrompt,
-    rank,
     ai_mode,
     attached,
     getAttachedRooms,
     strategies,
     betting,
     predictedBetAmount,
-
-    // Possibly for RPS-like logic
     gameResult,
     betResult,
     bgColorChanged,
@@ -105,15 +113,12 @@ function QuickShoot(props) {
   const [animation, setAnimation] = useState(<div />);
   const [qsHistory, setQsHistory] = useState([]);
   const [localSelectedQs, setLocalSelectedQs] = useState(selected_qs_position);
-
   const [poolId, setPoolId] = useState(roomInfo.pool_id);
   const [joinerQsValueAtLastIndex, setJoinerQsValueAtLastIndex] = useState('');
   const [qsValueAtLastIndex, setQsValueAtLastIndex] = useState('');
   const [startedPlaying, setStartedPlaying] = useState(false);
   const [prev_qs, setPrevQs] = useState([]);
-  const [isQbot, setIsQbot] = useState(false);
   const [players, setPlayers] = useState([]);
-  const [botsCount, setBotsCount] = useState(0);
   const [host_pr, setHostPr] = useState(roomInfo.host_pr);
   const [productName, setProductName] = useState('');
   const [status, setStatus] = useState(roomInfo.status);
@@ -126,31 +131,27 @@ function QuickShoot(props) {
   const [confirmBetMessage, setConfirmBetMessage] = useState('');
   const [confirmBetCallback, setConfirmBetCallback] = useState(null);
   const [skipConfirm, setSkipConfirm] = useState(
-    localStorage.getItem('hideConfirmModal') === 'true'
+    localStorage.getItem('hideConfirmModal') === 'true',
   );
-  const dispatch = useDispatch();
 
-  // We track mounted status to avoid setting state after unmount
   const isComponentMountedRef = useRef(false);
 
   const updateAnimation = useCallback(
     async (qsHistoryArg, lastIndexVal) => {
-
       if (!qsHistoryArg?.length) return;
       if (!lastIndexVal) return;
 
       let qsIndex = parseInt(lastIndexVal, 10);
       if (Number.isNaN(qsIndex)) return;
 
-      let position_short_name = ["center", "tl", "tr", "bl", "br"];
+      let position_short_name = ['center', 'tl', 'tr', 'bl', 'br'];
 
-      // Example game type checks
       if (qs_game_type === 2) {
-        position_short_name = ["bl", "br"];
+        position_short_name = ['bl', 'br'];
       } else if (qs_game_type === 3) {
-        position_short_name = ["bl", "center", "br"];
+        position_short_name = ['bl', 'center', 'br'];
       } else if (qs_game_type === 4) {
-        position_short_name = ["tl", "tr", "bl", "br"];
+        position_short_name = ['tl', 'tr', 'bl', 'br'];
       }
 
       if (qsIndex < 0 || qsIndex >= position_short_name.length) {
@@ -159,221 +160,141 @@ function QuickShoot(props) {
 
       const animData = await getQsLottieAnimation(
         roomInfo.qs_nation,
-        position_short_name[qsIndex]
+        position_short_name[qsIndex],
       );
 
       setAnimation(
         <div className="qs-image-panel" id="quickShoot_lottie">
           <Lottie
             options={{ loop: false, autoplay: true, animationData: animData }}
-            style={{ maxWidth: "100%", width: "600px", borderRadius: "10px" }}
+            style={{ maxWidth: '100%', width: '600px', borderRadius: '10px' }}
           />
-        </div>
+        </div>,
       );
     },
-    [qs_game_type, roomInfo] // dependencies, but note we no longer rely on qsHistory state
+    [qs_game_type, roomInfo.user_bet],
   );
 
-  // =========== Socket Handlers ===========
+  // Socket Handlers
+  const handleSocketData = useCallback(
+    (data) => {
+      setPlayers((prev) => {
+        const updated = [...prev, data.user].slice(-5);
+        return updated;
+      });
 
-  const handleSocketData = useCallback((data) => {
-    // Update players
-    setPlayers((prevPlayers) => {
-      const updated = [...prevPlayers, data.user];
-      if (updated.length > 5) updated.shift();
-      return updated;
-    });
+      if (playSound) playSound('blip');
 
-    // Play sound if defined
-    if (playSound) {
-      playSound('blip');
-    }
+      onChangeState({
+        bankroll: data.bankroll,
+        battles: 1,
+        hosts: data.hosts,
+      });
+      setHostPr(data.host_pr);
+      if (!data.qs) return;
 
-    onChangeState({
-      bankroll: data.bankroll,
-      battles: 1,
-      hosts: data.hosts,
-    });
-    setHostPr(data.host_pr);
-    if (!data.qs) return;
-    // Filter or use entire array
-    const filtered = data.qs.filter((game) => game.joiner === user_id);
-    const newQsHistory = isWatching ? filtered : data.qs;
+      const filtered = data.qs.filter((game) => game.joiner === user_id);
+      const newQsHistory = isWatching ? filtered : data.qs;
 
-    // Update your state
-    setQsHistory(newQsHistory);
+      setQsHistory(newQsHistory);
+      setJoinerQsValueAtLastIndex(parseFloat(newQsHistory[newQsHistory.length - 1]?.joiner_qs ?? ''));
+      setQsValueAtLastIndex(parseFloat(newQsHistory[newQsHistory.length - 1]?.qs ?? ''));
+      setStartedPlaying(true);
+      setPrevQs(data.qs);
 
-    // Compute the last shot
-    const newPlayerShot = newQsHistory?.[newQsHistory.length - 1]?.joiner_qs ?? null;
-    const newLastShot = newQsHistory?.[newQsHistory.length - 1]?.qs ?? null;
-    setJoinerQsValueAtLastIndex(parseFloat(newPlayerShot));
-    setQsValueAtLastIndex(parseFloat(newLastShot));
-
-    setStartedPlaying(true);
-    setPrevQs(data.qs);
-
-    updateAnimation(newQsHistory, newLastShot);
-
-  }, [playSound, user_id, isWatching, onChangeState, updateAnimation]);
+      updateAnimation(newQsHistory, newQsHistory[newQsHistory.length - 1]?.qs);
+    },
+    [playSound, user_id, isWatching, onChangeState, updateAnimation]
+  );
 
   const handleSocketData2 = useCallback(
     (data) => {
       onChangeState({ bankroll: data.bankroll });
     },
-    [onChangeState]
+    [onChangeState],
   );
 
-  const removeSocketListeners = useCallback(() => {
-    // If you want an explicit cleanup that runs on unmount or socket changes:
-    if (socket) {
-      socket.off(`UPDATED_BANKROLL_${roomInfo._id}`, handleSocketData);
-      socket.off(`UPDATED_BANKROLL2_${roomInfo._id}`, handleSocketData2);
-    }
-  }, [socket, roomInfo._id, handleSocketData, handleSocketData2]);
-
-
-  // =========== Effect Hooks ===========
-
-  // Simulate componentDidMount
-  useEffect(() => {
-    isComponentMountedRef.current = true;
-    const intervalDuration = 3000; // Or any logic to get this from your old code
-    const id = setInterval(() => {
-      toggleBlueishHue();
-    }, intervalDuration);
-    setIntervalId(id);
-
-    // Socket setup is now in a separate effect below
-
-    // Fetch initial bots count
-    (async () => {
-      try {
-        const count = await getRoomBotCount(roomInfo._id);
-        if (isComponentMountedRef.current) {
-          setBotsCount(count);
-        }
-      } catch (error) {
-        console.error('Error fetching botsCount:', error);
-      }
-    })();
-
-    return () => {
-      isComponentMountedRef.current = false;
-      clearInterval(id);
-      removeSocketListeners(); // clean up
-    };
-  }, []);
-
-  // Set up and remove socket listeners whenever socket changes
   useEffect(() => {
     if (!socket) return;
 
-    // Attach listeners
     socket.on(`UPDATED_BANKROLL_${roomInfo._id}`, handleSocketData);
     socket.on(`UPDATED_BANKROLL2_${roomInfo._id}`, handleSocketData2);
 
     return () => {
-      // Remove listeners on unmount or when socket changes
       socket.off(`UPDATED_BANKROLL_${roomInfo._id}`, handleSocketData);
       socket.off(`UPDATED_BANKROLL2_${roomInfo._id}`, handleSocketData2);
     };
   }, [socket, roomInfo._id, handleSocketData, handleSocketData2]);
 
-  // =============== Main Methods ===============
+  // Main Methods
+  const joinGame = useCallback(
+    async (position) => {
+      onChangeState({ result: '' });
 
-  const joinGame = useCallback(async (position) => {
-    onChangeState({ result: '' });
+      const resultData = await join({
+        bet_amount: parseFloat(bet_amount),
+        selected_qs_position: position,
+      });
 
-    const resultData = await join({
-      bet_amount: parseFloat(bet_amount),
-      selected_qs_position: position
-    });
+      playSound('ballKick');
 
-    playSound('ballKick');
+      let text;
+      let color;
 
-    let sign;
-    if (resultData.betResult === 1) {
-      playSound('win');
-      sign = '+';
-      changeBgColor(resultData.betResult);
-    } else {
-      playSound('lose');
-      sign = '-';
-      changeBgColor(resultData.betResult);
-    }
-    const currencyElement = convertToCurrency(
-      Math.abs(resultData.amount),
-      solPrice
-    );
+      if (resultData.betResult === 1) {
+        playSound && playSound('win');
+        text = '+';
+        color = '#00ff3a';
+        changeBgColor && changeBgColor(resultData.betResult);
+      } else {
+        text = '-';
+        color = '#f50000';
+        playSound && playSound('lose');
+        changeBgColor && changeBgColor(resultData.betResult);
+      }
+      const currencyElement = convertToCurrency(
+        Math.abs(resultData.amount),
+        solPrice,
+      );
 
-    onChangeState({
-      result: (
-        <span style={{ color: '' }}>
-          {sign} {currencyElement}
-        </span>
-      ),
-      gameResult: resultData.betResult
-    });
-  }, [
-    bet_amount,
-    join,
-    onChangeState,
-    playSound,
-    changeBgColor,
-    solPrice
-  ]);
+      onChangeState({
+        result: (
+          <>
+            <span style={{ color }}>
+              {text} {currencyElement}
+            </span>
+          </>
+        ),
+        gameResult: resultData.betResult,
+      });
+      
+    },
+    [bet_amount, join, onChangeState, playSound, changeBgColor, solPrice],
+  );
 
-  useEffect(() => {
-    // Some code if needed, or skip entirely if your logic is handled in the main effect
-  }, [isWatching]);
-
-  // Simulate getDerivedStateFromProps for password correctness
   useEffect(() => {
     if (isPasswordCorrect !== propIsPasswordCorrect) {
       setIsPasswordCorrect(propIsPasswordCorrect);
     }
   }, [propIsPasswordCorrect, isPasswordCorrect]);
 
-  // If newly correct password => auto join
   useEffect(() => {
-    if (isPasswordCorrect) {
+    if (isPasswordCorrect && !startedPlaying) { // Add condition to prevent re-running
       joinGame(localSelectedQs);
     }
-  }, [isPasswordCorrect, joinGame]);
+  }, [isPasswordCorrect, joinGame, localSelectedQs, startedPlaying]);
 
-  // Watch for changes to roomInfo (host_pr, status)
   useEffect(() => {
     if (roomInfo) {
-      if (roomInfo.host_pr !== undefined) {
-        setHostPr(parseFloat(roomInfo.host_pr));
-      }
-      if (roomInfo.status !== undefined) {
-        setStatus(roomInfo.status);
-      }
-      if (roomInfo.pool_id !== undefined && roomInfo.pool_id) {
-        setPoolId(roomInfo.pool_id);
-      }
+      if (roomInfo.host_pr !== undefined) setHostPr(parseFloat(roomInfo.host_pr));
+      if (roomInfo.status !== undefined) setStatus(roomInfo.status);
+      if (roomInfo.pool_id !== undefined && roomInfo.pool_id) setPoolId(roomInfo.pool_id);
     }
   }, [roomInfo]);
 
-  // Watch changes to is_betting or actionList if needed
-  useEffect(() => {
-    if (props.actionList !== actionList) {
-      // Example: handle changes to the actionList
-    }
-  }, [props.actionList, actionList]);
-
-  // =============== Event Handlers ===============
-
-
-  const toggleBlueishHue = useCallback(() => {
-    // Placeholder from original snippet
-  }, []);
-
   const handleSpectateMode = () => {
-    setSpectateMode(!isWatching);
+    dispatch(setSpectateMode(!isWatching));
   };
-
 
   const openConfirmBetDialog = (message, callback) => {
     if (localStorage.getItem('hideConfirmModal') === 'true') {
@@ -408,16 +329,7 @@ function QuickShoot(props) {
     setLocalSelectedQs(position);
     if (!validateIsAuthenticated(isAuthenticated, dispatch)) return;
 
-    // If the room creator is the same as the current user, try attaching a bot
-    if (creator_id && user_id && creator_id.toString() === user_id.toString()) {
-      const botAttached = await updateRoomBot(roomInfo._id);
-      if (botAttached) {
-        setBotsCount((prev) => prev + 1);
-      }
-      return;
-    }
 
-    // Otherwise, proceed with normal bet validations
     if (!validateBetAmount(bet_amount, balance, dispatch)) return;
 
     const costPerSide = bet_amount / (qs_game_type - 1);
@@ -425,7 +337,7 @@ function QuickShoot(props) {
       !validateBankroll(
         costPerSide + parseFloat(bet_amount) - bankroll * (qs_game_type - 1),
         bankroll,
-        dispatch
+        dispatch,
       )
     ) {
       return;
@@ -436,16 +348,15 @@ function QuickShoot(props) {
 
     updateSelectedQs(position, () => {
       if (localStorage.getItem('hideConfirmModal') === 'true') {
-        // If private room but password not verified yet, ask for password
         if (roomInfo.is_private && passwordCorrect !== true) {
-          openGamePasswordModal();
+          dispatch(openGamePasswordModal());
         } else {
           joinGame(position);
         }
       } else {
         openConfirmBetDialog('ARE YOU SURE YOU WANT TO PLACE THIS BET?', async () => {
           if (roomInfo.is_private && passwordCorrect !== true) {
-            openGamePasswordModal();
+            dispatch(openGamePasswordModal());
           } else {
             await joinGame(position);
           }
@@ -454,33 +365,13 @@ function QuickShoot(props) {
     });
   };
 
-  const handleBotClick = async () => {
-    if (creator_id && user_id && creator_id.toString() === user_id.toString()) {
-      // Dispatch the action directly
-      const botAttached = await updateRoomBot(roomInfo._id);
-      if (botAttached) {
-        setBotsCount((prev) => prev + 1);
-      }
-    }
-  };
-
-  const bootBots = async () => {
-    setBotsCount(0);
-    if (creator_id && user_id && creator_id.toString() === user_id.toString()) {
-      await kickBots(roomInfo._id);
-    }
-  };
-
   // Render each shot button
   const renderButton = (id, position) => {
     const classes = [];
     let showBall = false;
 
-    // Check if the current user is the creator.
     const isCreator =
       creator_id && user_id && creator_id.toString() === user_id.toString();
-
-    // Disable the button if betting is in progress or if the user is the creator.
     const isDisabled = is_betting || isCreator;
 
     if (joinerQsValueAtLastIndex === position) {
@@ -500,7 +391,6 @@ function QuickShoot(props) {
       }
     }
 
-    // Add the disabled class if the button should be disabled.
     if (isDisabled) classes.push('disabled');
 
     return (
@@ -525,7 +415,7 @@ function QuickShoot(props) {
               left: '50%',
               transform: 'translate(-50%, -50%)',
               width: '30px',
-              height: '30px'
+              height: '30px',
             }}
           />
         )}
@@ -572,9 +462,7 @@ function QuickShoot(props) {
     }
   };
 
-
-  // =============== Render ===============
-
+  // Render Logic
   let position_name = ['Center', 'Top-Left', 'Top-Right', 'Bottom-Left', 'Bottom-Right'];
   let position_short_name = ['c', 'tl', 'tr', 'bl', 'br'];
 
@@ -588,18 +476,15 @@ function QuickShoot(props) {
     position_name = ['Top-Left', 'Top-Right', 'Bottom-Left', 'Bottom-Right'];
     position_short_name = ['tl', 'tr', 'bl', 'br'];
   }
-  // Determine if the current user is the creator
-  const isCreator = creator_id && user_id && creator_id.toString() === user_id.toString();
 
-  // Set the subtitle and tooltip texts based on whether the user is the creator
-  const subTitleText = isCreator ? "This is Your Own Room" : "Choose WHERE TO SHOOT";
+  const isCreator = creator_id && user_id && creator_id.toString() === user_id.toString();
+  const subTitleText = isCreator ? 'This is Your Own Room' : 'Choose WHERE TO SHOOT';
   const tooltipText = isCreator
-    ? "Shooting is disabled in your own room."
-    : "Play against the AI; at the same time, train your AI.";
+    ? 'Shooting is disabled in your own room.'
+    : 'Play against the AI; at the same time, train your AI.';
 
   return (
     <div className="game-page">
-      {/* Confirm Dialog */}
       <Dialog
         open={openConfirmBet}
         onClose={closeConfirmBetDialog}
@@ -614,7 +499,7 @@ function QuickShoot(props) {
               <Checkbox
                 checked={skipConfirm}
                 onChange={handleSkipConfirmChange}
-                color='error'
+                color="error"
               />
             }
             label="Don’t show this again"
@@ -624,13 +509,12 @@ function QuickShoot(props) {
           <Button onClick={closeConfirmBetDialog} color="error">
             Cancel
           </Button>
-          <Button onClick={handleConfirmBet} color='error' autoFocus>
+          <Button onClick={handleConfirmBet} color="error" autoFocus>
             Yes
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Image Result Modal */}
       {showImageModal && (
         <ImageResultModal
           modalIsOpen={showImageModal}
@@ -641,7 +525,6 @@ function QuickShoot(props) {
         />
       )}
 
-      {/* Player Modal */}
       {showPlayerModal && (
         <PlayerModal
           selectedCreator={selectedCreator}
@@ -652,7 +535,6 @@ function QuickShoot(props) {
 
       <div className="game-contents title">
         <div className="game-info-panel" style={{ position: 'relative' }}>
-          {/* Example guesses panel */}
           <GuessesSection
             prevRps={prev_qs}
             players={players}
@@ -668,12 +550,12 @@ function QuickShoot(props) {
                 <IconButton className="spectate title" onClick={handleSpectateMode}>
                   {isWatching ? (
                     <>
-                      PLAYING&nbsp;
+                      PLAYING
                       <SwordsIcon />
                     </>
                   ) : (
                     <>
-                      SPECTATING&nbsp;
+                      SPECTATING
                       <ViewIcon />
                     </>
                   )}
@@ -689,7 +571,6 @@ function QuickShoot(props) {
                     position: 'absolute',
                     width: '12.5px',
                     height: '12.5px',
-                    borderRadius: '50%'
                   }}
                 >
                   <span
@@ -705,18 +586,18 @@ function QuickShoot(props) {
                               options={{
                                 loop: isLowGraphics ? false : true,
                                 autoplay: isLowGraphics ? false : true,
-                                animationData: pressHold
+                                animationData: pressHold,
                               }}
                               style={{
                                 position: 'relative',
                                 filter: `hue-rotate(${gameResult === -1
-                                  ? 0
-                                  : gameResult === 0
-                                    ? 195
-                                    : gameResult === 1
-                                      ? 80
-                                      : 20
-                                  }deg)`
+                                    ? 0
+                                    : gameResult === 0
+                                      ? 195
+                                      : gameResult === 1
+                                        ? 80
+                                        : 20
+                                  }deg)`,
                               }}
                             />
                           </div>
@@ -724,16 +605,12 @@ function QuickShoot(props) {
                       </>
                     ) : (
                       <>
-                        <span>
-                          <FontAwesomeIcon icon={faBrain} />
-                          &nbsp;<span className="desktop-only">thinking...</span>
-                        </span>
                         <div className="lottie-progress">
                           <Lottie
                             options={{
                               loop: isLowGraphics ? false : true,
                               autoplay: isLowGraphics ? false : true,
-                              animationData: progress
+                              animationData: progress,
                             }}
                             style={{ position: 'relative' }}
                           />
@@ -743,10 +620,9 @@ function QuickShoot(props) {
                   </span>
                 </div>
 
-
                 {!startedPlaying && (
                   <h3 className="game-sub-title roll-tag">
-                    {subTitleText} &nbsp;
+                    {subTitleText}
                     <Tooltip
                       style={{ position: 'absolute', right: '20px', marginBottom: '30px' }}
                       title={tooltipText}
@@ -757,18 +633,16 @@ function QuickShoot(props) {
                   </h3>
                 )}
 
-
                 <div className="qs-image-panel">
                   <img
-                    src={`/img/gametype/quick_shoot/gametype${qs_game_type}/type${qs_game_type}-${position_short_name[selected_qs_position]
-                      }.png`}
+                    src={`/img/gametype/quick_shoot/gametype${qs_game_type}/type${qs_game_type}-${position_short_name[selected_qs_position]}.png`}
                     alt=""
                     style={{
                       width: '600px',
                       maxWidth: '100%',
                       borderRadius: '10px',
                       border: `3px solid ${borderColor}`,
-                      height: '238px'
+                      height: '238px',
                     }}
                   />
 
@@ -778,7 +652,7 @@ function QuickShoot(props) {
                         options={{
                           loop: true,
                           autoplay: true,
-                          animationData: football
+                          animationData: football,
                         }}
                         style={{ transform: 'translate(15px, 60px)', width: '100px' }}
                       />
@@ -789,58 +663,38 @@ function QuickShoot(props) {
                   {renderButtons()}
                 </div>
 
-                {creator_id && user_id && creator_id.toString() === user_id.toString() ? (
-                  // <div className="host-controls">
-                  //   <Button
-                  //     variant="outlined"
-                  //     color='error'
-                  //     onClick={handleBotClick}
-                  //     className="hover-text-button"
-                  //   >
-                  //     <FontAwesomeIcon className="button-icon" icon={faRobot} />
-                  //     <span className="button-text">&nbsp;CAT CALL x{botsCount}</span>
-                  //   </Button>
-                  //   {botsCount > 0 && (
-                  //     <Button sx={{ ml: 1 }} variant="outlined"
-                  //       color='warning' onClick={bootBots} className="hover-text-button">
-                  //       <FontAwesomeIcon className="button-icon" icon={faBan} />
-                  //       <span className="button-text">&nbsp;KICK BOTS?</span>
-                  //     </Button>
-                  //   )}
-                  // </div>
+                {isCreator ? (
                   <></>
                 ) : (
-                  <>
-                      <AiPanel
-                        qsbetitems={props.qsbetitems}
-                        updateUserStrategy={props.updateUserStrategy}
-                        updateUserPrompt={props.updateUserPrompt}
-                        strategies={strategies}
-                        betting={betting}
-                        is_betting={is_betting}
-                        detachPlayerFromRoom={detachPlayerFromRoom}
-                        handle2xButtonClick={handle2xButtonClick}
-                        handleHalfXButtonClick={handleHalfXButtonClick}
-                        handleMaxButtonClick={handleMaxButtonClick}
-                        playSound={playSound}
-                        predictedBetAmount={predictedBetAmount}
-                        roomId={roomInfo._id}
-                        handleSwitchChange={handleSwitchChange}
-                        game_type={roomInfo.game_type}
-                        rank={rank}
-                        updateAttachment={updateAttachment}
-                        user_id={user_id}
-                        ai_mode={ai_mode}
-                        bankroll={bankroll}
-                        user_balance={balance}
-                        bet_amount={bet_amount}
-                        attached={attached}
-                        creator_id={roomInfo.creator_id}
-                        getAttachedRooms={getAttachedRooms}
-                        qs_game_type={roomInfo.qs_game_type}
-                        isDarkMode={isDarkMode}
-                      />
-                  </>
+                  <AiPanel
+                    qsbetitems={props.qsbetitems}
+                    updateUserStrategy={updateUserStrategy}
+                    updateUserPrompt={updateUserPrompt}
+                    strategies={strategies}
+                    betting={betting}
+                    is_betting={is_betting}
+                    detachPlayerFromRoom={detachPlayerFromRoom}
+                    handle2xButtonClick={handle2xButtonClick}
+                    handleHalfXButtonClick={handleHalfXButtonClick}
+                    handleMaxButtonClick={handleMaxButtonClick}
+                    playSound={playSound}
+                    predictedBetAmount={predictedBetAmount}
+                    roomId={roomInfo._id}
+                    handleSwitchChange={handleSwitchChange}
+                    game_type={roomInfo.game_type}
+                    rank={rank}
+                    updateAttachment={updateAttachment}
+                    user_id={user_id}
+                    ai_mode={ai_mode}
+                    bankroll={bankroll}
+                    user_balance={balance}
+                    bet_amount={bet_amount}
+                    attached={attached}
+                    creator_id={creator_id}
+                    getAttachedRooms={getAttachedRooms}
+                    qs_game_type={qs_game_type}
+                    isDarkMode={isDarkMode}
+                  />
                 )}
               </div>
             </>
@@ -850,7 +704,7 @@ function QuickShoot(props) {
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'center',
-                alignItems: 'center'
+                alignItems: 'center',
               }}
             >
               <Typography variant="subtitle2" sx={{ color: '#D32F2F' }}>
@@ -883,31 +737,4 @@ function QuickShoot(props) {
   );
 }
 
-// Redux connection
-const mapStateToProps = (state) => ({
-  socket: state.auth.socket,
-  isAuthenticated: state.auth.isAuthenticated,
-  isPasswordCorrect: state.snackbar.isPasswordCorrect,
-  balance: state.auth.balance,
-  isDarkMode: state.auth.isDarkMode,
-  isWatching: state.auth.isWatching,
-  is_betting: state.logic.is_betting,
-  solPrice: state.logic.solPrice,
-  creator: state.logic.curRoomInfo.creator_name,
-  creator_avatar: state.logic.curRoomInfo.creator_avatar,
-  rank: state.logic.curRoomInfo.rank,
-  accessory: state.logic.curRoomInfo.accessory,
-  username: state.logic.curRoomInfo.username,
-  isLowGraphics: state.auth.isLowGraphics,
-});
-
-const mapDispatchToProps = {
-  openGamePasswordModal,
-  getRoomBotCount,
-  getQsBetItems,
-  updateRoomBot,
-  kickBots,
-  setSpectateMode
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(QuickShoot);
+export default QuickShoot;

@@ -1,10 +1,5 @@
 import React, { useState } from 'react';
-import { connect, useDispatch } from 'react-redux';
-import {
-  closeListItemModal,
-  errorMsgBar,
-} from '../../redux/Notification/notification.actions';
-import { listItem } from '../../redux/Logic/logic.actions';
+import { useSelector, useDispatch } from 'react-redux';
 import {
   Button,
   TextField,
@@ -18,28 +13,40 @@ import {
 } from '@mui/material';
 import { ThemeProvider } from '@mui/material/styles';
 import { getCustomTheme } from '../../config/theme';
+import { errorMsgBar } from '../../redux/Notification/notification.actions';
+import { listItem } from '../../redux/Logic/logic.actions';
 
-function ListItemModal(props) {
+function ListItemModal({ modalIsOpen, closeModal }) {
+  const dispatch = useDispatch();
+  // Retrieve Redux state if needed (e.g., isDarkMode)
+  const isDarkMode = useSelector((state) => state.auth.isDarkMode);
+  const theme = getCustomTheme(isDarkMode ? 'dark' : 'light');
+
+  // The following props are assumed to be stored in Redux;
+  // you can retrieve them via useSelector if necessary.
+  // For this example, we assume these values are passed in from parent via Redux,
+  // so we mimic them via destructuring from a local object.
+  // Replace these with actual useSelector calls if needed.
   const {
-    isOpen,
-    isDarkMode,
     onSale,
     oldPrice,
     oldRentOption,
     productName,
     itemType,
     item,
-    closeListItemModal,
-    listItem, // from mapDispatchToProps
-  } = props;
+  } = {
+    onSale: 0,
+    oldPrice: 0,
+    oldRentOption: false,
+    productName: 'Example Product',
+    itemType: '653ee81117c9f5ee2124564b',
+    item: 'item_id_example',
+  };
 
+  // Local state
   const [price, setPrice] = useState(0);
   const [rentOption, setRentOption] = useState(false);
-  const [showOverrideConfirmation, setShowOverrideConfirmation] =
-    useState(false);
-  const dispatch = useDispatch();
-
-  const theme = getCustomTheme(isDarkMode ? 'dark' : 'light');
+  const [showOverrideConfirmation, setShowOverrideConfirmation] = useState(false);
 
   // ------------------------------
   // MUI Modal Styles
@@ -61,26 +68,28 @@ function ListItemModal(props) {
   };
 
   const onBtnOkClicked = () => {
-    // If item is already on sale and the user changes the price or rent option
+    // If the item is already on sale and the user changes price or rent option,
+    // show an override confirmation modal.
     if (onSale > 0 && (price !== oldPrice || rentOption !== oldRentOption)) {
       setShowOverrideConfirmation(true);
     } else {
-      // Otherwise, proceed directly
+      // Otherwise, proceed directly.
       handleListItem();
     }
   };
 
   const handleListItem = async () => {
     try {
-      const response = await listItem({
-        item_id: item,
-        price: price,
-        rentOption: rentOption,
-      });
-
+      const response = await dispatch(
+        listItem({
+          item_id: item,
+          price: price,
+          rentOption: rentOption,
+        })
+      );
       if (response.success) {
         dispatch(errorMsgBar(response.message));
-        closeListItemModal();
+        closeModal();
         setShowOverrideConfirmation(false);
       } else {
         dispatch(errorMsgBar(response.message));
@@ -92,12 +101,12 @@ function ListItemModal(props) {
   };
 
   const handleOverrideConfirmation = () => {
-    closeListItemModal();
+    closeModal();
     handleListItem();
   };
 
   const onBtnCancelClicked = () => {
-    closeListItemModal();
+    closeModal();
   };
 
   const handleRentOptionChange = (event) => {
@@ -107,8 +116,8 @@ function ListItemModal(props) {
   return (
     <ThemeProvider theme={theme}>
       <Modal
-        open={isOpen || false}
-        onClose={closeListItemModal}
+        open={modalIsOpen || false}
+        onClose={closeModal}
         sx={{ zIndex: 1300 }}
         BackdropProps={{
           style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' },
@@ -119,8 +128,7 @@ function ListItemModal(props) {
             variant="h6"
             sx={{ textAlign: 'center', mb: 2, fontWeight: 'bold' }}
           >
-            CONFIRM <span style={{ color: '#ffd000' }}>{productName}</span>{' '}
-            LISTING
+            CONFIRM <span style={{ color: '#ffd000' }}>{productName}</span> LISTING
           </Typography>
 
           {/* If itemType matches, show RENT vs. SELL radio options */}
@@ -155,15 +163,10 @@ function ListItemModal(props) {
               value={price}
               onChange={(e) => setPrice(e.target.value)}
               placeholder="0.0002"
-              inputProps={{
-                pattern: '^\\d*\\.?\\d*$',
-                maxLength: 9,
-              }}
+              inputProps={{ pattern: '^\\d*\\.?\\d*$', maxLength: 9 }}
               InputProps={{
                 endAdornment: (
-                  <InputAdornment position="end">
-                    &nbsp;SOL / MONTH
-                  </InputAdornment>
+                  <InputAdornment position="end">SOL / MONTH</InputAdornment>
                 ),
               }}
               sx={{ width: '100%', mb: 2 }}
@@ -177,14 +180,9 @@ function ListItemModal(props) {
               value={price}
               onChange={(e) => setPrice(e.target.value)}
               placeholder="0.0002"
-              inputProps={{
-                pattern: '^\\d*\\.?\\d*$',
-                maxLength: 9,
-              }}
+              inputProps={{ pattern: '^\\d*\\.?\\d*$', maxLength: 9 }}
               InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">&nbsp;SOL</InputAdornment>
-                ),
+                endAdornment: <InputAdornment position="end">SOL</InputAdornment>,
               }}
               sx={{ width: '100%', mb: 2 }}
             />
@@ -194,11 +192,7 @@ function ListItemModal(props) {
             <Button variant="contained" color="error" onClick={onBtnOkClicked}>
               Confirm
             </Button>
-            <Button
-              variant="contained"
-              color="error"
-              onClick={onBtnCancelClicked}
-            >
+            <Button variant="contained" color="error" onClick={onBtnCancelClicked}>
               Cancel
             </Button>
           </Box>
@@ -215,25 +209,17 @@ function ListItemModal(props) {
         }}
       >
         <Box sx={modalBoxStyle}>
-          <Typography
-            variant="h6"
-            sx={{ textAlign: 'center', mb: 2, fontWeight: 'bold' }}
-          >
+          <Typography variant="h6" sx={{ textAlign: 'center', mb: 2, fontWeight: 'bold' }}>
             OVERRIDE PREVIOUS LISTING?
           </Typography>
           <Typography variant="body2" sx={{ mb: 3 }}>
-            You already have this item listed with different settings. Click
-            "Confirm" to override the previous listing.
+            You already have this item listed with different settings. Click "Confirm" to override the previous listing.
           </Typography>
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
             <Button variant="contained" onClick={handleOverrideConfirmation}>
               Confirm
             </Button>
-            <Button
-              variant="contained"
-              color="error"
-              onClick={() => setShowOverrideConfirmation(false)}
-            >
+            <Button variant="contained" color="error" onClick={() => setShowOverrideConfirmation(false)}>
               Cancel
             </Button>
           </Box>
@@ -243,22 +229,4 @@ function ListItemModal(props) {
   );
 }
 
-// -------------- REDUX --------------
-const mapStateToProps = (state) => ({
-  isDarkMode: state.auth.isDarkMode,
-  title: state.snackbar.title,
-  item: state.itemReducer._id,
-  itemType: state.itemReducer.data.item_type,
-  isOpen: state.snackbar.showListItemModal,
-  oldPrice: state.itemReducer.data.price,
-  productName: state.itemReducer.data.productName,
-  onSale: state.itemReducer.data.onSale,
-  oldRentOption: state.itemReducer.data.rentOption,
-});
-
-const mapDispatchToProps = {
-  closeListItemModal,
-  listItem,
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(ListItemModal);
+export default ListItemModal;

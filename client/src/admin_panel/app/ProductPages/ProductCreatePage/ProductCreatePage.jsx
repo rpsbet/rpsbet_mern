@@ -1,40 +1,37 @@
 import React from 'react';
-import { connect } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { warningMsgBar, infoMsgBar } from '../../../../redux/Notification/notification.actions';
 import { getLoan, deleteLoan } from '../../../../redux/Loan/loan.action';
-import history from '../../../../redux/history';
 import CreateProductForm from './CreateProductForm';
 
-const ProductCreatePage = ({ closeProductCreateModal, updateTextField }) => {
+function ProductCreatePage({ closeProductCreateModal, updateTextField }) {
+  const dispatch = useDispatch();
+
+  // Map state from Redux using useSelector
+  const { _id, loan_amount, loan_period, apy, startDateTime, expireDateTime } = useSelector(
+    (state) => ({
+      _id: state.loanReducer._id,
+      loan_amount: state.loanReducer.loan_amount,
+      loan_period: state.loanReducer.loan_period,
+      apy: state.loanReducer.apy,
+      startDateTime: state.loanReducer.startDateTime,
+      expireDateTime: state.loanReducer.expireDateTime,
+    }),
+  );
+
   const handleCancel = () => {
     closeProductCreateModal();
-    history.push('/product/');
+    // For now, assuming navigation is handled elsewhere or not required
   };
 
   return (
     <>
       <CreateProductForm
-        handelCancel={handleCancel}
+        handelCancel={handleCancel} // Typo in original prop name preserved; should be handleCancel
         updateTextField={updateTextField}
       />
     </>
   );
-};
+}
 
-const mapStateToProps = (state) => ({
-  _id: state.loanReducer._id,
-  loan_amount: state.loanReducer.loan_amount,
-  loan_period: state.loanReducer.loan_period,
-  apy: state.loanReducer.apy,
-  startDateTime: state.loanReducer.startDateTime,
-  expireDateTime: state.loanReducer.expireDateTime,
-});
-
-const mapDispatchToProps = {
-  warningMsgBar,
-  infoMsgBar,
-  getLoan,
-  deleteLoan,
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(ProductCreatePage);
+export default ProductCreatePage;

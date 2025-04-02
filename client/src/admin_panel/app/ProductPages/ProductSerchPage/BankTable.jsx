@@ -25,7 +25,7 @@ import {
   setCurrentLoanInfo,
 } from '../../../../redux/Loan/loan.action';
 import { openConfirmLoanModal } from '../../../../redux/Notification/notification.actions';
-import history from '../../../../redux/history';
+
 import { errorMsgBar } from '../../../../redux/Notification/notification.actions';
 import {
   Button,
@@ -456,7 +456,7 @@ const BankTable = (props) => {
                       loan_period: row.loan_period,
                       apy: row.apy,
                     });
-                    history.push(`/loan/${row._id}`);
+                    // history.push(`/loan/${row._id}`);
                   }}
                 >
                   {/* APY badge in top-right corner */}

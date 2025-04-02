@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { connect } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import {
   Box,
   Tooltip,
@@ -34,7 +34,7 @@ function HeartIcon({ isOpen }) {
 
 /**
  * Build a final message for one log item using numeric fields.
- * Adjust this to match the fields your new backend provides 
+ * Adjust this to match the fields your backend provides 
  * (e.g. `action`, `bet_amount`, `winnings`, etc.).
  */
 function buildMyHistoryMessage(log, solPrice) {
@@ -52,35 +52,36 @@ function buildMyHistoryMessage(log, solPrice) {
   // Example usage if you have `log.action`:
   switch (log.action) {
     case 'won':
-      return `User ${log.joined_user?._id} won ${winningsStr} from ${betAmtStr}`;
+      return `User ${log.joined_user?._id || 'Unknown'} won ${winningsStr} from ${betAmtStr}`;
     case 'lost':
-      return `User ${log.joined_user?._id} lost ${betAmtStr}`;
+      return `User ${log.joined_user?._id || 'Unknown'} lost ${betAmtStr}`;
     default:
-      // fallback if no recognized action
+      // Fallback if no recognized action
       return `Action: ${log.action || 'None'}, bet: ${betAmtStr}`;
   }
 }
 
-function MyHistoryTable(props) {
+function MyHistoryTable() { // Remove props destructuring since we’ll use hooks
+  const dispatch = useDispatch();
+
+  // Map state from Redux using useSelector
   const {
-    // Redux props
     myHistory: propsMyHistory = [],
-    getMyHistory,
-    getSettings,
     isAuthenticated,
     isLowGraphics,
     socket,
     solPrice
-  } = props;
+  } = useSelector((state) => ({
+    socket: state.auth.socket,
+    isAuthenticated: state.auth.isAuthenticated,
+    isLowGraphics: state.auth.isLowGraphics,
+    myHistory: state.logic.myHistory,
+    solPrice: state.logic.solPrice,
+  }));
 
-  // ----- 1) "Raw" logs from Redux -----
-  // We store these exactly as the server provides them (no HTML).
+  // Local state
   const [rawMyHistory, setRawMyHistory] = useState(propsMyHistory);
-
-  // ----- 2) "Display" logs, with final messages & fromNow times -----
   const [displayMyHistory, setDisplayMyHistory] = useState([]);
-
-  // Other local states
   const [showPlayerModal, setShowPlayerModal] = useState(false);
   const [selectedCreator, setSelectedCreator] = useState(null);
   const [copiedRowId, setCopiedRowId] = useState(null);
@@ -98,18 +99,17 @@ function MyHistoryTable(props) {
     async function init() {
       if (isAuthenticated) {
         setIsLoading(true);
-        await getMyHistory();
+        await dispatch(getMyHistory());
       }
       if (!isUnmountedRef.current) {
-        // If needed, fetch settings
-        const settings = await getSettings();
-        // handle settings if needed...
+        const settings = await dispatch(getSettings());
+        // Handle settings if needed...
         setIsLoading(false);
       }
     }
     init();
 
-    // Re-run "time ago" updates every few seconds if desired
+    // Re-run "time ago" updates every few seconds
     intervalRef.current = setInterval(() => {
       if (!isUnmountedRef.current) {
         setDisplayMyHistory((prev) =>
@@ -127,7 +127,7 @@ function MyHistoryTable(props) {
         clearInterval(intervalRef.current);
       }
     };
-  }, [isAuthenticated, getMyHistory, getSettings]);
+  }, [isAuthenticated, dispatch]); // Dependencies updated to use dispatch
 
   /**
    * Whenever `propsMyHistory` from Redux changes,
@@ -158,8 +158,7 @@ function MyHistoryTable(props) {
   }, [rawMyHistory, solPrice]);
 
   /**
-   * Optional: If you also get real-time updates from `socket`, 
-   * you could listen for `NEW_LOG` events here:
+   * Listen for real-time updates from `socket` if available
    */
   useEffect(() => {
     if (socket) {
@@ -180,7 +179,7 @@ function MyHistoryTable(props) {
     setRawMyHistory((prev) => [...newLogArray, ...prev]);
   }
 
-  // ----- UTILS / HANDLERS -----
+  // Utils / Handlers
   const handleOpenPlayerModal = useCallback((creatorId) => {
     setSelectedCreator(creatorId);
     setShowPlayerModal(true);
@@ -203,14 +202,13 @@ function MyHistoryTable(props) {
       });
   }, []);
 
-  // Event listener attachments for user links or Lottie accessories (if needed)
+  // Event listener attachments for user links or Lottie accessories
   useEffect(() => {
     attachUserLinkListeners();
-    // Optionally attach Lottie accessories
+    // Optionally attach Lottie accessories if needed
   }, [displayMyHistory]);
 
   const attachUserLinkListeners = useCallback(() => {
-    // If you have .user-link elements, attach click handlers
     const userLinks = document.querySelectorAll('.user-link');
     userLinks.forEach((link) => {
       link.addEventListener('click', (event) => {
@@ -220,10 +218,9 @@ function MyHistoryTable(props) {
     });
   }, [handleOpenPlayerModal]);
 
-  // ---------- RENDER ----------
+  // Render
   return (
     <Box className="overflowX">
-      {/* Optionally show Skeleton if isLoading */}
       {isLoading ? (
         <Box>
           {[...Array(3)].map((_, i) => (
@@ -249,15 +246,11 @@ function MyHistoryTable(props) {
                   mb: 1
                 }}
               >
-                {/* Top Row */}
                 <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
                   <Box className="table-cell" sx={{ flex: 1 }}>
-                    {/* Use finalMsg instead of row.history */}
                     <Typography variant="body2" sx={{ mb: 0.5 }}>
                       {row.finalMsg}
                     </Typography>
-
-                    {/* Example status + heart icon (if you have row.status) */}
                     {row.status && (
                       <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
                         <span>{row.status}</span>
@@ -269,14 +262,10 @@ function MyHistoryTable(props) {
                       </Box>
                     )}
                   </Box>
-
-                  {/* Time & Stopwatch icon */}
                   <Box className="table-cell" sx={{ whiteSpace: 'nowrap' }}>
-                    {row.from_now} &nbsp;
+                    {row.from_now}  
                     <FontAwesomeIcon icon={faStopwatch} />
                   </Box>
-
-                  {/* Copy ID */}
                   <Box className="table-cell row-copy">
                     <Tooltip
                       title={copiedRowId === row._id ? 'COPIED ID!' : 'COPY BET ID'}
@@ -298,7 +287,6 @@ function MyHistoryTable(props) {
         </Box>
       )}
 
-      {/* Player Modal */}
       {showPlayerModal && (
         <PlayerModal
           modalIsOpen={showPlayerModal}
@@ -310,18 +298,4 @@ function MyHistoryTable(props) {
   );
 }
 
-// ---------- REDUX CONNECTION ----------
-const mapStateToProps = (state) => ({
-  socket: state.auth.socket,
-  isAuthenticated: state.auth.isAuthenticated,
-  isLowGraphics: state.auth.isLowGraphics,
-  myHistory: state.logic.myHistory,
-  solPrice: state.logic.solPrice,
-});
-
-const mapDispatchToProps = {
-  getMyHistory,
-  getSettings,
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(MyHistoryTable);
+export default MyHistoryTable;

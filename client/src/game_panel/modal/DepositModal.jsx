@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { connect, useDispatch } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import LoadingOverlay from 'react-loading-overlay';
 import axios from '../../util/Api';
 import { setGasfee } from '../../redux/Auth/user.actions';
@@ -7,10 +7,7 @@ import { addNewTransaction } from '../../redux/Logic/logic.actions';
 import { ThemeProvider } from '@mui/material/styles';
 import { getCustomTheme } from '../../config/theme';
 import Summary from '../CreateGame/Summary';
-import {
-  errorMsgBar,
-  successMsgBar,
-} from '../../redux/Notification/notification.actions';
+import { errorMsgBar, successMsgBar } from '../../redux/Notification/notification.actions';
 
 // FIX #1: Import and set Buffer for browser usage
 import { Buffer } from 'buffer';
@@ -45,12 +42,10 @@ import {
 } from '@mui/material';
 
 import { Warning, Info, AccountBalanceWallet } from '@mui/icons-material';
-
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBolt, faGasPump } from '@fortawesome/free-solid-svg-icons';
 import { convertToCurrency } from '../../util/conversion';
 
-// -------------------- STYLES (MUI) --------------------
 const modalBoxStyle = {
   position: 'absolute',
   top: '50%',
@@ -70,59 +65,49 @@ const modalBoxStyle = {
   gap: 2,
 };
 
-function DepositModal(props) {
-  const {
-    isDarkMode,
-    gasfee,
-    solPrice,
-    user_id,
-    modalIsOpen,
-    closeModal,
-    balance, // User's SOL balance
-    account, // { publicKey: ... }
-    setGasfee, // Redux action to fetch and store gas fee
-    addNewTransaction,
-    connectedAccount,
-  } = props;
+function DepositModal({ modalIsOpen, closeModal, balance, account }) {
+  const dispatch = useDispatch();
 
-  // -------------------- Local State --------------------
-  const [amount, setAmount] = useState(''); // user-entered SOL amount (string for easy input)
+  // Redux state via hooks
+  const isDarkMode = useSelector((state) => state.auth.isDarkMode);
+  const gasfee = useSelector((state) => state.auth.gasfee);
+  const solPrice = useSelector((state) => state.logic.solPrice);
+  const user_id = useSelector((state) => state.auth.user._id);
+  const connectedAccount = useSelector((state) => state.auth.connectedAccount);
+
+  // Local state
+  const [amount, setAmount] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   // Preset SOL amounts for quick selection
   const presetSolAmounts = [0.1, 0.2, 0.5, 1, 2, 5, 10];
 
-  const dispatch = useDispatch();
-
-  // -------------------- Debounce Logic for Gas Fee --------------------
+  // Debounce logic for gas fee updates
   const debounceTimer = useRef(null);
   useEffect(() => {
-    // If no connected wallet or no amount, skip
     if (!account?.publicKey) return;
     if (!amount || parseFloat(amount) <= 0) return;
 
-    // Clear any existing timer
     if (debounceTimer.current) {
       clearTimeout(debounceTimer.current);
     }
 
-    // Start a new debounce
     debounceTimer.current = setTimeout(async () => {
       const params = {
-        amount: parseFloat(amount), // ensure numeric
+        amount: parseFloat(amount),
         addressTo: account.publicKey.toString(),
       };
       try {
-        await setGasfee(params);
+        await dispatch(setGasfee(params));
       } catch (err) {
         console.error('Error fetching gas fee:', err);
       }
     }, 500);
 
     return () => clearTimeout(debounceTimer.current);
-  }, [account, amount, setGasfee]);
+  }, [account, amount, dispatch]);
 
-  // -------------------- Handlers --------------------
+  // Handlers
   const handleAmountChange = (e) => {
     setAmount(e.target.value);
   };
@@ -131,9 +116,8 @@ function DepositModal(props) {
     setAmount(String(val));
   };
 
-  // -------------------- Solana Transfer --------------------
+  // Solana Transfer Handler
   const sendSOL = async () => {
-    // 1) Basic validation
     const numAmount = parseFloat(amount);
     if (isNaN(numAmount) || numAmount <= 0) {
       dispatch(errorMsgBar('Please enter a valid SOL amount.'));
@@ -145,44 +129,42 @@ function DepositModal(props) {
     }
 
     try {
-      // 2) Fetch RPC provider
+      // 1) Fetch provider URL
       const getProviderUrl = await axios.get('/stripe/get_provider_url');
       const providerUrl = getProviderUrl.data.providerUrl;
       const connection = new Connection(providerUrl, 'confirmed');
 
-      // 3) Build a SystemProgram transfer from user's wallet => admin wallet
+      // 2) Get user's wallet and admin wallet details
       const fromWallet = account;
       if (!fromWallet?.publicKey) {
         console.error('No fromWallet publicKey found.');
         return;
       }
-
-      // We'll need the admin's public key
       const getAdminWallet = await axios.get('/stripe/get_admin_wallet');
       const adminWalletPubkey = new PublicKey(getAdminWallet.data.adminWallet);
 
       setIsLoading(true);
 
-      // 4) Construct the transaction
+      // 3) Construct transaction
       const lamports = Math.floor(numAmount * LAMPORTS_PER_SOL);
       const transaction = new Transaction().add(
         SystemProgram.transfer({
           fromPubkey: fromWallet.publicKey,
           toPubkey: adminWalletPubkey,
           lamports,
-        }),
+        })
       );
 
-      // 5) Get blockhash & set feePayer
+      // 4) Set recent blockhash & fee payer
       const { blockhash } = await connection.getLatestBlockhash();
       transaction.recentBlockhash = blockhash;
       transaction.feePayer = fromWallet.publicKey;
 
-      // 6) Sign & Send via Phantom
+      // 5) Sign and send transaction via Phantom
       const signature = await window.solana.signAndSendTransaction(transaction);
       await connection.confirmTransaction(signature);
 
-      // 7) Notify your backend
+      // 6) Notify backend of successful deposit
       const result = await axios.post('/stripe/deposit_successed', {
         account,
         amount: numAmount,
@@ -191,7 +173,7 @@ function DepositModal(props) {
 
       if (result.data.success) {
         dispatch(successMsgBar(result.data.message));
-        addNewTransaction(result.data.newTransaction);
+        dispatch(addNewTransaction(result.data.newTransaction));
         setIsLoading(false);
         closeModal();
       } else {
@@ -205,8 +187,8 @@ function DepositModal(props) {
     }
   };
 
-  // -------------------- Render --------------------
-  const isConnected = !user_id || !connectedAccount; // If user not logged in, blur everything
+  // Determine if user is connected
+  const isConnected = !user_id || !connectedAccount;
 
   return (
     <ThemeProvider theme={getCustomTheme(isDarkMode ? 'dark' : 'light')}>
@@ -247,7 +229,7 @@ function DepositModal(props) {
             </Button>
           </Box>
 
-          {/* If user not logged in */}
+          {/* Connection Warning */}
           {isConnected && (
             <Box
               sx={{
@@ -280,10 +262,7 @@ function DepositModal(props) {
               <Box sx={{ display: 'flex', justifyContent: 'center', my: 2 }}>
                 <ButtonGroup variant="outlined" color="error" sx={{ mb: 1 }}>
                   {presetSolAmounts.map((preset) => (
-                    <Button
-                      key={preset}
-                      onClick={() => handlePresetClick(preset)}
-                    >
+                    <Button key={preset} onClick={() => handlePresetClick(preset)}>
                       {preset}
                     </Button>
                   ))}
@@ -297,7 +276,7 @@ function DepositModal(props) {
                 type="number"
                 value={amount}
                 onChange={handleAmountChange}
-                error={parseFloat(amount) > balance} // Mark red if user typed > balance
+                error={parseFloat(amount) > balance}
                 helperText={
                   parseFloat(amount) > balance
                     ? 'You do not have enough SOL in your wallet.'
@@ -336,10 +315,7 @@ function DepositModal(props) {
                       {gasfee} SOL
                     </TableCell>
                     <TableCell>
-                      <Tooltip
-                        title="Network processing & validation fee"
-                        arrow
-                      >
+                      <Tooltip title="Network processing & validation fee" arrow>
                         <IconButton size="small">
                           <Info />
                         </IconButton>
@@ -372,7 +348,6 @@ function DepositModal(props) {
               disabled={isConnected || isLoading}
             >
               {isLoading ? (
-                // Show MUI spinner in the button
                 <CircularProgress color="inherit" size={24} />
               ) : (
                 'DEPOSIT'
@@ -385,18 +360,4 @@ function DepositModal(props) {
   );
 }
 
-// -------------------- REDUX --------------------
-const mapStateToProps = (state) => ({
-  isDarkMode: state.auth.isDarkMode,
-  gasfee: state.auth.gasfee, // Numeric gas fee in SOL
-  solPrice: state.logic.solPrice,
-  user_id: state.auth.user._id,
-  connectedAccount: state.auth.connectedAccount,
-});
-
-const mapDispatchToProps = {
-  setGasfee,
-  addNewTransaction,
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(DepositModal);
+export default DepositModal;

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { connect, useDispatch } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import {
   Modal,
   Box,
@@ -28,15 +28,10 @@ import { getCustomTheme } from '../../config/theme';
 import { userSignUp, setFocused } from '../../redux/Auth/user.actions';
 import { errorMsgBar } from '../../redux/Notification/notification.actions';
 
-function SignupModal(props) {
-  const {
-    modalIsOpen,
-    closeModal,
-    openLoginModal,
-    isDarkMode,
-    userSignUp,
-    setFocused,
-  } = props;
+function SignupModal({ modalIsOpen, closeModal, openLoginModal }) {
+  const dispatch = useDispatch();
+  const isDarkMode = useSelector((state) => state.auth.isDarkMode);
+  const theme = getCustomTheme(isDarkMode);
 
   // -------------------- LOCAL STATE --------------------
   const [userName, setUserName] = useState('');
@@ -49,61 +44,38 @@ function SignupModal(props) {
   const [termsChecked, setTermsChecked] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [recaptchaToken, setRecaptchaToken] = useState('');
-  const dispatch = useDispatch();
 
   // -------------------- HANDLERS --------------------
-  const handleCheckboxChange = () => {
-    setTermsChecked((prev) => !prev);
-  };
-
-  const handleOpenTermsModal = () => {
-    setShowTermsModal(true);
-  };
-
-  const handleCloseTermsModal = () => {
-    setShowTermsModal(false);
-  };
-
-  const onChangeAvatarMethod = (value) => {
-    setAvatarMethod(value);
-  };
+  const handleCheckboxChange = () => setTermsChecked((prev) => !prev);
+  const handleOpenTermsModal = () => setShowTermsModal(true);
+  const handleCloseTermsModal = () => setShowTermsModal(false);
+  const onChangeAvatarMethod = (value) => setAvatarMethod(value);
 
   const onChangeUserName = (e) => {
     const username = e.target.value;
     const allowedCharsRegex = /^[a-zA-Z0-9_]+$/;
-
     if (username === '') {
       setUserName('');
       return;
     }
-
     if (allowedCharsRegex.test(username)) {
       setUserName(username);
     } else {
       dispatch(
         errorMsgBar(
-          'Invalid characters in username. Only alphanumeric characters and underscores are allowed.',
-        ),
+          'Invalid characters in username. Only alphanumeric characters and underscores are allowed.'
+        )
       );
     }
   };
 
-  const onFocusHandler = () => setFocused(true);
-  const onBlurHandler = () => setFocused(false);
+  const onFocusHandler = () => dispatch(setFocused(true));
+  const onBlurHandler = () => dispatch(setFocused(false));
+  const onChangePassword = (e) => setPassword(e.target.value);
+  const togglePasswordVisibility = () => setShowPassword((prev) => !prev);
+  const onChangeReferralCode = (e) => setReferralCode(e.target.value);
 
-  const onChangePassword = (e) => {
-    setPassword(e.target.value);
-  };
-
-  const togglePasswordVisibility = () => {
-    setShowPassword((prev) => !prev);
-  };
-
-  const onChangeReferralCode = (e) => {
-    setReferralCode(e.target.value);
-  };
-
-  // Runs the reCAPTCHA in React (instead of attaching a native form listener).
+  // Runs reCAPTCHA and returns token as a Promise
   const executeRecaptcha = () => {
     return new Promise((resolve) => {
       window.grecaptcha.ready(() => {
@@ -118,27 +90,20 @@ function SignupModal(props) {
     });
   };
 
-  // -------------------- REACT onSubmit Handler --------------------
+  // React onSubmit handler
   const onSubmitForm = async (e) => {
-    e.preventDefault(); // Prevents page reload
+    e.preventDefault();
     console.log('Called onSubmitForm!');
-
-    // 1) reCAPTCHA
     const token = await executeRecaptcha();
     setRecaptchaToken(token);
-
     if (!token) {
       dispatch(errorMsgBar('reCAPTCHA verification failed. Please try again.'));
       return;
     }
-
-    // 2) Terms check
     if (!termsChecked) {
       dispatch(errorMsgBar('Please agree to the Terms and Conditions.'));
       return;
     }
-
-    // 3) Gather form data
     const newUser = {
       userName,
       password,
@@ -150,27 +115,17 @@ function SignupModal(props) {
       showPassword,
       recaptchaToken: token,
     };
-
     console.log('newUser', newUser);
-
-    // 4) Submit to redux action
-    const result = await userSignUp(newUser);
+    const result = await dispatch(userSignUp(newUser));
     if (result.status === 'success') {
       confirmAlert({
         customUI: ({ onClose }) => {
           return (
-            <Box
-              sx={{
-                bgcolor: isDarkMode ? 'grey.900' : 'background.paper',
-                p: 3,
-              }}
-            >
+            <Box sx={{ bgcolor: isDarkMode ? 'grey.900' : 'background.paper', p: 3 }}>
               <Typography variant="h6" sx={{ mb: 2 }}>
                 WELCOME TO RPS.GAME TIGER! 🐯⚔
               </Typography>
-              <Typography sx={{ mb: 2 }}>
-                CLICK YOUR BALANCE TO MAKE A DEPOSIT
-              </Typography>
+              <Typography sx={{ mb: 2 }}>CLICK YOUR BALANCE TO MAKE A DEPOSIT</Typography>
               <Button
                 variant="contained"
                 color="error"
@@ -189,13 +144,13 @@ function SignupModal(props) {
     }
   };
 
-  // ------------------ MUI STYLES ------------------
+  // -------------------- MUI STYLES --------------------
   const modalBoxStyle = {
     position: 'absolute',
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    bgcolor: '#2D3A4B', // Same background color as login
+    bgcolor: '#2D3A4B',
     color: '#fff',
     boxShadow: 24,
     borderRadius: 1,
@@ -203,26 +158,19 @@ function SignupModal(props) {
     width: 400,
     maxWidth: '90vw',
   };
-  const theme = getCustomTheme(isDarkMode);
 
-  // -------------------- RENDER --------------------
   return (
     <ThemeProvider theme={theme}>
       <Modal
         open={modalIsOpen || false}
         onClose={closeModal}
         closeAfterTransition
-        BackdropProps={{
-          style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' },
-        }}
+        BackdropProps={{ style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' } }}
       >
         <Box sx={modalBoxStyle}>
           {/* HEADER */}
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-            <Typography
-              variant="h6"
-              sx={{ display: 'flex', alignItems: 'center' }}
-            >
+            <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center' }}>
               <FontAwesomeIcon icon={faUserPlus} style={{ marginRight: 8 }} />
               REGISTER
             </Typography>
@@ -230,8 +178,7 @@ function SignupModal(props) {
               ×
             </Button>
           </Box>
-
-          {/* FORM (React submission only) */}
+          {/* FORM */}
           <Box
             component="form"
             onSubmit={onSubmitForm}
@@ -250,7 +197,6 @@ function SignupModal(props) {
               placeholder="e.g. PU55YD35TROY3R"
               fullWidth
             />
-
             {/* AVATAR SELECT */}
             <Box>
               <Typography variant="subtitle1" sx={{ mb: 1 }}>
@@ -260,24 +206,17 @@ function SignupModal(props) {
                 <ButtonBase
                   onClick={() => onChangeAvatarMethod('robohash')}
                   sx={{
-                    border:
-                      avatarMethod === 'robohash'
-                        ? '2px solid #fff'
-                        : '2px solid transparent',
+                    border: avatarMethod === 'robohash' ? '2px solid #fff' : '2px solid transparent',
                     borderRadius: 1,
                     p: 0.5,
                   }}
                 >
                   <Typography>[ CAT ]</Typography>
                 </ButtonBase>
-
                 <ButtonBase
                   onClick={() => onChangeAvatarMethod('jdenticon')}
                   sx={{
-                    border:
-                      avatarMethod === 'jdenticon'
-                        ? '2px solid #fff'
-                        : '2px solid transparent',
+                    border: avatarMethod === 'jdenticon' ? '2px solid #fff' : '2px solid transparent',
                     borderRadius: 1,
                     p: 0.5,
                   }}
@@ -286,7 +225,6 @@ function SignupModal(props) {
                 </ButtonBase>
               </Box>
             </Box>
-
             <TextField
               variant="filled"
               color="error"
@@ -314,7 +252,6 @@ function SignupModal(props) {
                 ),
               }}
             />
-
             <TextField
               variant="filled"
               color="error"
@@ -326,7 +263,6 @@ function SignupModal(props) {
               onBlur={onBlurHandler}
               fullWidth
             />
-
             <FormControlLabel
               control={
                 <Checkbox
@@ -352,15 +288,7 @@ function SignupModal(props) {
                 </Typography>
               }
             />
-
-            <input
-              type="hidden"
-              name="recaptchaToken"
-              value={recaptchaToken}
-              readOnly
-            />
-
-            {/* REGISTER BUTTON */}
+            <input type="hidden" name="recaptchaToken" value={recaptchaToken} readOnly />
             <Button variant="contained" color="error" type="submit" fullWidth>
               Register{' '}
               <Typography component="span" fontStyle="italic">
@@ -368,8 +296,6 @@ function SignupModal(props) {
               </Typography>
             </Button>
           </Box>
-
-          {/* FOOTER - "Already have account?" */}
           <Box sx={{ mt: 2, textAlign: 'center' }}>
             <Typography variant="body2" component="span">
               GOT ACCOUNT?{' '}
@@ -385,8 +311,6 @@ function SignupModal(props) {
               LOGIN HERE →
             </Button>
           </Box>
-
-          {/* Terms & Conditions Modal */}
           {showTermsModal && (
             <TermsModal
               modalIsOpen={showTermsModal}
@@ -400,15 +324,4 @@ function SignupModal(props) {
   );
 }
 
-// ------------------ REDUX CONNECT ------------------
-const mapStateToProps = (state) => ({
-  isDarkMode: state.auth.isDarkMode,
-  isActiveLoadingOverlay: state.logic.isActiveLoadingOverlay,
-});
-
-const mapDispatchToProps = {
-  userSignUp,
-  setFocused,
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(SignupModal);
+export default SignupModal;

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { connect } from 'react-redux';
-import chroma from 'chroma-js';
 import verified from '../game_panel/LottieAnimations/verified.json';
 import { Box, Avatar as MUIAvatar, Badge } from '@mui/material';
 import Lottie from 'react-lottie';

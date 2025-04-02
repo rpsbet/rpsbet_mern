@@ -1,31 +1,15 @@
-import React, { Component } from 'react';
-import { connect } from 'react-redux';
-import { Route, Switch } from 'react-router-dom';
-import CountdownPage from '../CountdownPage'
+import React from 'react';
+import { Routes, Route } from 'react-router-dom'; // Updated to v6
+import { useSelector } from 'react-redux';
+import CountdownPage from '../CountdownPage';
 
-export class AppMainRoute extends Component {
-  render() {
-    const { match } = this.props;
-    return (
-        <Switch>
-          <Route 
-            path={`/investors`}
-            component={CountdownPage}
-            />
-      
-          
-        </Switch>
-    );
-  }
-}
+const AppMainRoute = () => {
+  const auth = useSelector((state) => state.auth);
+  return (
+    <Routes>
+      <Route path="/investors" element={<CountdownPage />} />
+    </Routes>
+  );
+};
 
-const mapStateToProps = state => ({
-  auth: state.auth
-});
-
-const mapDispatchToProps = {};
-
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(AppMainRoute);
+export default AppMainRoute;
