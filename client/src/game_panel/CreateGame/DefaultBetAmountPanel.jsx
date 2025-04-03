@@ -38,14 +38,11 @@ function DefaultBetAmountPanel({
   const [showTable, setShowTable] = useState(false);
 
   // Map state from Redux using useSelector
-  const { auth, socket, balance, isDarkMode, solPrice } = useSelector((state) => ({
-    auth: state.auth.isAuthenticated,
-    socket: state.auth.socket,
-    balance: state.auth.balance,
-    isDarkMode: state.auth.isDarkMode,
-    solPrice: state.logic.solPrice,
-  }));
-
+  const auth = useSelector((state) => state.auth.isAuthenticated);
+  const socket = useSelector((state) => state.auth.socket);
+  const balance = useSelector((state) => state.auth.balance);
+  const isDarkMode = useSelector((state) => state.auth.isDarkMode);
+  const solPrice = useSelector((state) => state.logic.solPrice);
   // Use prop values if provided, otherwise fall back to Redux state
   const effectiveBalance = propBalance !== undefined ? propBalance : balance;
   const effectiveIsDarkMode = propIsDarkMode !== undefined ? propIsDarkMode : isDarkMode;

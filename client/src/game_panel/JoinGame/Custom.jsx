@@ -5,7 +5,7 @@ import progress from '../LottieAnimations/progress.json';
 import PlayerModal from '../modal/PlayerModal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import AiPanel from '../../components/AiPanel';
-import { faDice, faCoins, faRocket, faGem, faTrophy, faRedo, faBomb, faStar } from '@fortawesome/free-solid-svg-icons';
+import { faDice, faCoins, faRocket, faGem, faTrophy, faRedo, faBomb, faStar, faCogs, faExchangeAlt } from '@fortawesome/free-solid-svg-icons';
 import {
   Button,
   Paper,
@@ -101,7 +101,7 @@ function Custom(props) {
   const [GameComponent, setGameComponent] = useState(null);
   const [componentError, setComponentError] = useState(null);
   const [proxiedAssets, setProxiedAssets] = useState({ images: [], audio: [] });
-
+  const [isGameActive, setIsGameActive] = useState(false);
   // Confirm dialog state
   const [openConfirmBet, setOpenConfirmBet] = useState(false);
   const [confirmBetMessage, setConfirmBetMessage] = useState('');
@@ -232,8 +232,10 @@ function Custom(props) {
   
     if (eventType === 'gameStarted') {
       setGameStartedCount((prev) => prev + 1);
+      setIsGameActive(true);
       console.log('Game started, resetting interaction state. Count:', gameStartedCount + 1);
     } else if (eventType === 'gameEnded') {
+      setIsGameActive(false);
       const { result, multiplier } = data;
       const validResults = ['win', 'loss', 'other'];
       if (validResults.includes(result) && gameStartedCount > 0) {
@@ -279,6 +281,8 @@ function Custom(props) {
           'faGem',
           'faTrophy',
           'faRedo',
+          'faCogs',
+          'faExchangeAlt',
           'faBomb',
           'faStar',
           'Matter', // Add Matter.js to the factory function
@@ -303,6 +307,8 @@ function Custom(props) {
           faGem,
           faTrophy,
           faRedo,
+          faCogs,
+          faExchangeAlt,
           faBomb,
           faStar,
           Matter // Pass Matter.js to the generated component
@@ -572,7 +578,7 @@ function Custom(props) {
                         left: 0,
                         right: 0,
                         bottom: 0,
-                        zIndex: 1,
+                        zIndex: 4,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -594,7 +600,7 @@ function Custom(props) {
                   )}
                 </Box>
               </Paper>
-              {!isCreator && (
+              {!isCreator && !isGameActive && (
                 <AiPanel
                   onChangeState={onChangeState}
                   betting={betting}

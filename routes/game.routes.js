@@ -257,26 +257,36 @@ router.get('/proxy-asset', async (req, res) => {
 router.post('/openai/generate-react', auth, async (req, res) => {
   try {
     const { prompt, imageUrls = [] } = req.body || {};
-    const cost = 0.01;
+    const cost = 0.005;
+
+    if (!req.user?._id) {
+      throw new Error('User not authenticated');
+    }
+
+    // Fetch the latest user data from the database
+    const currentUser = await User.findOne({ _id: req.user._id });
+    if (!currentUser) {
+      throw new Error('User not found');
+    }
 
     console.log(`[React Generator] Starting generation with prompt: "${prompt.substring(0, 50)}..."`);
-    console.log(`[React Generator] User balance: ${req.user.balance}, Cost: ${cost}`);
+    console.log(`[React Generator] User balance: ${currentUser.balance}, Cost: ${cost}`);
 
-    if (cost > req.user.balance) {
+    if (cost > currentUser.balance) {
       throw new Error('NOT ENUFF FUNDS AT THIS MEOWMENT');
     }
 
     const newTransaction = new Transaction({
-      user: req.user,
+      user: currentUser,
       amount: -cost,
       description: 'Generated AI React app',
     });
 
-    req.user.balance -= cost;
-    req.user.updated_at = new Date();
+    currentUser.balance -= cost;
+    currentUser.updated_at = new Date();
 
     await Promise.all([
-      saveDocumentWithRetry(req.user),
+      saveDocumentWithRetry(currentUser),
       saveDocumentWithRetry(newTransaction),
     ]);
 
@@ -305,11 +315,11 @@ router.post('/openai/generate-react', auth, async (req, res) => {
     const systemPrompt = `
 You are an elite React developer with a passion for cutting-edge design, inspired by the Web3 ecosystem (e.g., dApps, NFT marketplaces, DeFi platforms). Generate a complete, working React game component based on the user's prompt:
 - Interpret the prompt to create an interactive game with clear gameplay mechanics (e.g., clicker, puzzle, betting game, physics-based game). Every generation must be a game.
-- Use functional components and hooks (useState, useEffect, useRef) for state management and interactivity.
+- Use functional components and hooks (useState, useEffect, useRef, useCallback) for state management and interactivity.
 - Accept two props: 'proxiedAssets' ({ images: [{ key, proxiedUrl }], audio: [{ key, proxiedUrl }] }) and 'logEvent' (a callback function to send events to the parent).
-- Safely handle proxiedAssets with checks (e.g., proxiedAssets?.images?.[0]?.proxiedUrl || 'https://via.placeholder.com/150').
+- Safely handle proxiedAssets with checks (e.g., proxiedAssets?.images?.[0]?.proxiedUrl).
 - Include the following import statements at the top:
-  import React, { useState, useEffect, useRef } from 'react';
+  import React, { useState, useEffect, useRef, useCallback } from 'react';
   import { Box, Typography, TextField, Button, CircularProgress, Slider, Switch } from '@mui/material';
   import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
   import { faDice, faCoins, faRocket, faGem, faTrophy, faRedo, faBomb, faStar } from '@fortawesome/free-solid-svg-icons';
@@ -329,13 +339,14 @@ You are an elite React developer with a passion for cutting-edge design, inspire
     - For buttons, use 'display: "flex", gap: 1' within a nested Box.
     - Ensure elements fit within the container, adjusting dynamically.
   - **Color Palette**: 
-    - Choose a random Web3-inspired theme (e.g., neon blues, purples, greens) unless specified.
+    - Choose a random Web3-inspired theme unless specified.
     - Ensure text/icons contrast (e.g., 'color: "white"').
     - Use gradients (e.g., 'background: "linear-gradient(45deg, <randomColor1>, <randomColor2>)"') for buttons.
     - Add glow with 'boxShadow: "0 0 10px rgba(<randomColor>, 0.5)"'.
   - **Visual Polish**: 
     - Apply 'borderRadius: 6' to buttons.
     - Use 'transition: "all 0.3s ease-out"' and '&:hover: { transform: "translateY(-4px)", boxShadow: "0 0 15px rgba(<randomColor>, 0.7)" }'.
+    - Add glassmorphism effects using 'backdropFilter: "blur(10px)"', 'background: "rgba(255, 255, 255, 0.1)"', 'border: "1px solid rgba(255, 255, 255, 0.2)"' to create translucent, frosted glass effects on UI elements.
   - **Web3 Aesthetics**: 
     - Use gradient buttons and glowing hover states.
     - Add subtle animations (e.g., 'animation: "pulse 2s infinite"') minimally.
@@ -343,6 +354,7 @@ You are an elite React developer with a passion for cutting-edge design, inspire
     - Buttons: 'p: 1', 'color: "white"', 'fontSize: "1.125rem"', 'fontWeight: 500', 'minWidth: 120px' with glowing effects.
     - TextFields: Custom 'InputProps' (e.g., 'bgcolor: "rgba(<randomColor>, 0.5)"', 'color: "white"', 'borderRadius: 6').
     - Ensure contrast with 'color: "white"' on dark backgrounds.
+    - Apply glassmorphism to cards, panels, and UI containers with 'backdropFilter: "blur(8px)"', 'background: "rgba(255, 255, 255, 0.1)"'.
   - **Responsiveness**: 
     - Use responsive props (e.g., 'sx={{ width: { xs: "100%", sm: "90%" }, fontSize: { xs: "1rem", md: "1.25rem" } }}').
     - Scale items to fit across screen sizes.
@@ -351,10 +363,17 @@ You are an elite React developer with a passion for cutting-edge design, inspire
   - Match icons to the theme (e.g., faDice for dice games, faRedo for Restart).
   - Include in buttons with 'mr: 1'.
   - Optionally use in the logo if thematic.
-  - If the prompt mentions objects like "rocket," "moon," "star," "ship," or implies a central interactive element, include an inline SVG:
-    - Examples: Rocket (gradient body, glowing trail), Moon (gradient fill, craters), Star (glowing points).
-    - Style with Web3 flair: 'linearGradient' or 'radialGradient' (e.g., '#f43f5e' to '#7c3aed'), 'filter: "drop-shadow(0 0 10px rgba(<randomColor>, 0.5))"'.
-    - Size responsively (e.g., 'width: { xs: 50, md: 100 }', 'height: { xs: 50, md: 100 }').
+  - IMPORTANT: Instead of SVG graphics for interactive elements, use appropriate emoji combinations. For example:
+    - Rocket: 🚀
+    - Moon: 🌕 or 🌙
+    - Star: ⭐ or 🌟
+    - Ship: 🚢
+    - Bomb: 💣
+    - Dice: 🎲
+    - Coins: 💰 or 🪙
+    - Trophy: 🏆
+    - Gems: 💎
+    - Pick relevant emoji combinations based on the game theme.
 - **Particle Background System**: 
   - IMPORTANT: Include particle effects in EVERY game as a visual enhancement. Use the following implementation:
     - Create a Canvas element with useRef: const canvasRef = useRef(null);
@@ -378,25 +397,37 @@ You are an elite React developer with a passion for cutting-edge design, inspire
   - Control particle count (20-200), size (1-5px), color palette (game-specific), and behavior (drift, explode, rain, float)
   - Add glow effects with 'filter: "blur(1px)"' for more vibrant particles
   - Position the canvas with 'position: "absolute", top: 0, left: 0, width: "100%", height: "100%", pointerEvents: "none", zIndex: 1' to overlay the game
-  - **Dynamic SVG Graphics**:
-  - Expand theme-specific SVG elements based on game keywords:
-    - Mines: Include bomb SVGs with gradient fills (black to red) and fuse details
-    - Crash: Rocket or aircraft with flame trail that grows with multiplier
-    - Slots: Spinning wheel with gradient segments
-    - Dice: 3D-style dice with gradient faces and shadow effects
-  - Animate SVGs based on game state:
-    - Scale/rotate on hover
-    - Pulse when active
-    - Explode/transform on win/loss
-  - Use 'transform-origin', 'animation', and keyframes for smooth motion
-  - Ensure SVGs are responsive with percentage-based viewBox
-  - Add interactive elements to SVGs (e.g., clickable parts that trigger game actions)
+  - **Dynamic Graphics**:
+  - Instead of SVG elements, use emojis styled with CSS for theme-specific visual elements:
+    - Mines: Use the bomb emoji 💣 with shadow and glow effects
+    - Crash: Rocket emoji 🚀 with size increase as multiplier grows
+    - Slots: Slotmachine emoji 🎰 or combinations like 7️⃣🍒💰
+    - Dice: Use dice emoji 🎲 with rotation animations
+  - Style emoji elements with:
+    - 'fontSize: "2rem"' (or responsive sizing)
+    - 'filter: "drop-shadow(0 0 10px rgba(<randomColor>, 0.5))"'
+    - 'transition: "transform 0.3s"'
+    - Hover effects: '&:hover: { transform: "scale(1.2)" }'
+  - Create animated containers for emojis with glassmorphism:
+    - 'backdropFilter: "blur(8px)"'
+    - 'background: "rgba(255, 255, 255, 0.1)"'
+    - 'borderRadius: "50%"' (for circular containers)
+    - 'border: "1px solid rgba(255, 255, 255, 0.2)"'
+    - 'boxShadow: "0 0 15px rgba(<randomColor>, 0.5)"'
+  - Add subtle animations to emojis:
+    - Pulse: '@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }'
+    - Rotate: '@keyframes rotate { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }'
+    - Bounce: '@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }'
 - **Dynamic Chart/Graph System**: 
-  - If the prompt implies a rising value, progression, or time-based mechanic (e.g., "increases until," "flies higher," "grows over time"), include a line chart:
-    - Use a canvas via useRef (e.g., <canvas ref={chartRef} width={500} height={200} />).
-    - Plot x-axis as time or actions, y-axis as a key value (e.g., multiplier, score), scaled to canvas height.
-    - Style with a neon gradient (e.g., 'linearGradient' from '#ff6ec4' to '#00ffcc'), 'shadowBlur: 10'.
-    - Update in real-time with requestAnimationFrame, clearing and redrawing each frame, tied to gameplay state.
+  - If the prompt implies a "crash" game, include a line chart to visualize a fixed, hardcoded multiplier progression for display purposes only:
+    - Use a canvas via useRef (e.g., "<canvas ref={chartRef} width={500} height={200} />").
+    - Plot x-axis as a fixed number of points (e.g., 100 points representing a consistent time scale), y-axis as a hardcoded exponential curve from 1.0 to a visual maximum of 10x, scaled to canvas height.
+    - Use a static, predetermined formula for the chart: "displayMultiplier = 1 * Math.exp(0.05 * (x / 100) * 100)", where "x" is the point index (0 to 100), hardcoding a smooth rise from 1.0 to ~10x over 100 points. This curve remains constant across all games.
+    - Style with a neon gradient (e.g., "linearGradient" from "#ff6ec4" to "#00ffcc"), "shadowBlur: 10".
+    - Animate the chart with "requestAnimationFrame" to draw the full hardcoded curve (1.0 to 10x) progressively, using a fixed animation duration (e.g., 10 seconds total). Calculate the current point to draw based on elapsed animation time (e.g., "currentPoint = Math.min((elapsedTime / 10000) * 100, 100)"), where "elapsedTime" is in milliseconds, starting from game start and stopping at game end (crash or cash out).
+    - The chart's progression speed and shape must remain identical in every game, unaffected by the actual game "multiplier", "timeElapsedRef.current", or crash point. It is purely a visual overlay with a hardcoded 10-second rise to 10x.
+    - When the game ends (crash or cash out), freeze the chart at the current animation point along the hardcoded curve, showing the fixed progression up to that moment.
+    - Ensure the chart is a cosmetic element only and does not reflect or interact with the actual crash point, real-time multiplier, or gameplay logic.
 
 - **Game Events and Results**:
   - Track game state:
@@ -409,6 +440,7 @@ You are an elite React developer with a passion for cutting-edge design, inspire
       - When a game ends, add the result to history: setGameHistory(prev => [...prev, { id: Date.now(), result, multiplier, timestamp: new Date().toISOString() }]);
       - Display the history in a scrollable table at the bottom of the game:
       - Limit history to most recent 10-20 games to avoid performance issues
+      - Positive values should have color: #48ff00 and negative values should have color: #ff0000
   - **Dynamic Multiplier Calculation**:
     - Calculate 'multiplier' dynamically based on odds and user settings:
       - Initial multiplier = 1.0.
@@ -421,23 +453,22 @@ You are an elite React developer with a passion for cutting-edge design, inspire
           - 25 options, 10 mines (15 safe): 1st click → 1.22, 2nd → 1.56, 3rd → 2.03.
           - 25 options, 1 mine (24 safe): 1st click → 1.03, 2nd → 1.06, 3rd → 1.09.
       - For crash games or games with exponential progression (e.g., prompt includes "crash," "rocket," "flies higher"):
-  - MANDATORY CRASH FORMULA: 
-    Generate the crash point at game start using multiplier = 1 / (1 - Math.random() * 0.99).
+  - CRASH FORMULA: 
+    Generate the crash point at game start using multiplier = 1 / (1 - Math.pow(Math.random(), 1.5) * 0.95).
     - Store this value (e.g., in a ref) for comparison during the game.
     - This formula creates a distribution where lower crash points are more probable, incorporating a 1% house edge for fairness.
   - In-Game Progression: 
     Use an exponential growth model for the displayed multiplier:
-    - Formula: multiplier = 1 * Math.exp(k * timeElapsed), where k is a growth rate constant (e.g., k = 0.1 yields ~2.72× in 30 seconds).
+    - Formula: multiplier = 1 * Math.exp(k * timeElapsed), where k is a growth rate constant (e.g., k = 0.03 yields ~2.72× in 90 seconds).
     - Update the multiplier in real-time using requestAnimationFrame, starting from 1.0 and increasing until it reaches or exceeds the crash point.
-    - Adjust k to balance game speed (e.g., k = 0.05 for slower growth, k = 0.2 for faster).
   - Game ends when multiplier >= crash point (result: "loss") or user cashes out (result: "win").
-  - Example: Crash point = 1.11×, k = 0.1, reaches 1.11× in ~1s; Crash point = 2×, reaches in ~7s.
+  - Example: Crash point = 1.11×, k = 0.03, reaches 1.11× in ~11s; Crash point = 2×, reaches in ~35s.
 - Don't display the final crash point to the user until the round is over.
     - Add "Start Game" and "Cash Out" buttons, triggering log events.
     - Include a "Restart" button with <FontAwesomeIcon icon={faRedo} /> to reset state (gameStarted: false, gameEnded: false, multiplier: 1.0, result: null, safeOptions: totalOptions - totalMines, actionsTaken: 0) and log "gameStarted".
 - **Visible Multiplier(s)**:
   - Display 'multiplier' (or multiple multipliers) prominently during gameplay (when 'gameStarted' is true and 'gameEnded' is false) using Typography:
-    - Place inside a Box with 'p: 2', 'borderRadius: 8', 'background: "linear-gradient(45deg, #ff6ec4, #7873f5, #00ffcc)"'
+    - Place inside a Box with 'p: 2', 'borderRadius: 8'
     - Use 'color: "white"', 'fontWeight: "bold"', 'fontSize: "1.5rem"' for readability
     - Add 'boxShadow: "0 0 15px rgba(<randomColor>, 0.7)"' for a glowing effect
     - Include an emoji based on game type (e.g., "🚀" for rocket games, "💎" for gem games, "💰" for betting games)
@@ -470,14 +501,33 @@ You are an elite React developer with a passion for cutting-edge design, inspire
     - Use Matter.Events for updates.
     - Clean up on unmount (e.g., Matter.Engine.clear(engine)).
   - Ensure canvas scales within the Box.
-- **Logo**: 
-  - If no image in 'proxiedAssets.images', use an inline SVG logo with gradient colors.
-  - Center in a Box with 'display: "flex", alignItems: "center", gap: 2'.
-  - Style with 'sx={{ width: { xs: 40, md: 50 }, height: { xs: 40, md: 50 }, filter: "drop-shadow(0 0 10px rgba(<randomColor>, 0.5))" }}'.
-  - Use provided image if available.
   - IMPORTANT: Do NOT include any title or header text in the app. The logo/icon should be the only visual identifier.
+- **logEvent for Score-Based Games**:
+  - IMPORTANT: For any score-based games where you would normally send a log event with score info (e.g., score, playerScore, points), convert these to multiplier values using the following approach:
+    - Create a score-to-multiplier conversion function:
+      \`\`\`javascript
+      const calculateMultiplierFromScore = (score) => {
+        // Base conversion with logarithmic scaling
+        let multiplier = 1 + Math.log10(1 + score/100);
+        
+        // Cap extremely high scores at 5x
+        return Math.min(multiplier, 5).toFixed(2);
+      }
+      \`\`\`
+    - This function ensures most scores result in multipliers between 1-2x
+    - Replace any score-related log events:
+      \`\`\`javascript
+      // Instead of: logEvent("gameEnded", { score: playerScore })
+      // Use: logEvent("gameEnded", { multiplier: calculateMultiplierFromScore(playerScore) })
+      \`\`\`
+  - For non-score games that would send other values (e.g., time, distance):
+    - Convert these to multiplier: 2x by default:
+      \`\`\`javascript
+      // Instead of: logEvent("gameEnded", { distance: playerDistance })
+      // Use: logEvent("gameEnded", { multiplier: 2.00 })
+      \`\`\`
 - Return a single App component as a string with 'export default App;'.
-- Infuse Web3 flair, futuristic polish, and interactivity with perfect alignment. Ensure error-free code, full container usage, and no overflow unless specified. Use MUI v5.
+- Infuse Web3 flair, futuristic polish, and interactivity with perfect alignment. Ensure error-free code, full container usage, and no overflow unless specified. Use MUI v5 and incorporate glassmorphism in UI elements.
 `;
     const apiCall = openai.chat.completions.create({
       model: 'o3-mini',
@@ -518,6 +568,134 @@ You are an elite React developer with a passion for cutting-edge design, inspire
       error: 'Internal server error',
       message: error.message.includes('timed out')
         ? 'App generation timed out. Please try again.'
+        : error.message,
+    });
+  }
+});
+
+router.post('/openai/update-react', auth, async (req, res) => {
+  try {
+    const { prompt, currentCode, imageUrls = [] } = req.body || {};
+    const cost = 0.005;
+
+    if (!req.user?._id) {
+      throw new Error('User not authenticated');
+    }
+
+    // Fetch the latest user data from the database
+    const currentUser = await User.findOne({ _id: req.user._id });
+    if (!currentUser) {
+      throw new Error('User not found');
+    }
+
+    console.log(`[React Update] Starting update with prompt: "${prompt.substring(0, 50)}..."`);
+    console.log(`[React Update] User balance: ${currentUser.balance}, Cost: ${cost}`);
+
+    if (cost > currentUser.balance) {
+      throw new Error('NOT ENUFF FUNDS AT THIS MEOWMENT');
+    }
+
+    const newTransaction = new Transaction({
+      user: currentUser,
+      amount: -cost,
+      description: 'Updated AI React app',
+    });
+
+    currentUser.balance -= cost;
+    currentUser.updated_at = new Date();
+
+    await Promise.all([
+      saveDocumentWithRetry(currentUser),
+      saveDocumentWithRetry(newTransaction),
+    ]);
+    socket.newTransaction(newTransaction);
+
+
+    if (!prompt || typeof prompt !== 'string') {
+      throw new Error('Prompt is required and must be a string');
+    }
+
+    if (!currentCode || typeof currentCode !== 'string') {
+      throw new Error('Current code is required and must be a string');
+    }
+
+    if (!Array.isArray(imageUrls)) {
+      throw new Error('imageUrls must be an array');
+    }
+
+    const urlRegex = /https?:\/\/[^\s]+?\.(jpg|jpeg|png|mp3|wav|ogg)/gi;
+    const promptUrls = (prompt.match(urlRegex) || []).filter(url => url.length < 500);
+    const allImageUrls = imageUrls.length > 0 ? imageUrls : promptUrls.filter(url => /\.(jpg|jpeg|png)$/i.test(url));
+    const audioUrls = promptUrls.filter(url => /\.(mp3|wav|ogg)$/i.test(url));
+
+    const proxiedAssets = {
+      images: allImageUrls.map((url, i) => ({ key: `image${i}`, proxiedUrl: url })),
+      audio: audioUrls.map((url, i) => ({ key: `audio${i}`, proxiedUrl: url })),
+    };
+
+    console.log(`[React Update] Proxied assets prepared:`, JSON.stringify(proxiedAssets));
+
+    // Extract the main component code and any important elements from the current code
+    // Strip out imports and export statements
+    const cleanedCurrentCode = currentCode
+      .replace(/import [^;]+;/g, '')
+      .replace(/export default App;/g, '')
+      .trim();
+
+    const systemPrompt = `
+You are an expert React developer skilled at modifying existing React components. You will be given a current React game component and a user request for modifications. Your task is to update the component based on the user's request.
+
+IMPORTANT:
+1. Maintain the core structure and functionality of the original component
+2. Add or modify features as requested by the user
+3. Ensure all existing hooks (useState, useEffect, useRef) are properly preserved
+4. Keep all existing event handlers and callbacks
+5. Preserve any physics systems, particle effects, or other complex systems
+6. Make sure the component accepts the same props: 'proxiedAssets' and 'logEvent'
+7. Return the complete updated component, not just the changed parts
+8. Do not include import statements or export statements in your response
+
+Please analyze the existing code carefully before making changes to ensure you understand the game's mechanics and structure.
+`;
+
+    const apiCall = openai.chat.completions.create({
+      model: 'o3-mini',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        {
+          role: 'user',
+          content: `Here is the current React game component:\n\n${cleanedCurrentCode}\n\nUser's modification request: "${prompt}". Please update the component accordingly. Use 'proxiedAssets' prop: ${JSON.stringify(proxiedAssets)}.`,
+        },
+      ],
+      max_completion_tokens: 100000,
+    });
+
+    const aiResponse = await Promise.race([
+      apiCall,
+      new Promise((_, reject) => setTimeout(() => reject(new Error('API call timed out')), 300000)),
+    ]);
+
+    const rawCode = aiResponse?.choices?.[0]?.message?.content?.trim() || '';
+    const cleanedCode = rawCode.replace(/```(?:jsx?|javascript)?/g, '').trim();
+
+    // Basic validation
+    if (!cleanedCode.includes('return (') || !cleanedCode.includes('App')) {
+      throw new Error('Generated code is invalid or incomplete');
+    }
+
+    // Wrap the cleaned code with imports and export
+    const moduleCode = `
+      ${cleanedCode}
+    `;
+
+    console.log(`[React Update] Updated code length: ${moduleCode.length}`);
+    res.json({ finalApp: moduleCode });
+  } catch (error) {
+    console.error('Error in update route handler:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: error.message.includes('timed out')
+        ? 'App update timed out. Please try again.'
         : error.message,
     });
   }

@@ -14,6 +14,7 @@ import {
   FormControlLabel,
   Box,
   Tooltip,
+  Typography
 } from '@mui/material';
 import { Info } from '@mui/icons-material';
 import { getRank } from '../../util/getRank';
@@ -203,11 +204,11 @@ function CreateGame() { // Remove match prop
   );
 
   const initializeGameType = useCallback(
-    async (gameTypeName) => {
+    async (gameTypeName, isInitial = true) => {
       const selectedGameTypeObj = gameTypeList.find(
         (g) => g.game_type_name === gameTypeName,
       );
-
+  
       if (selectedGameTypeObj && selectedGameTypeObj.short_name) {
         setSelectedGameType(selectedGameTypeObj.short_name);
       }
@@ -219,14 +220,11 @@ function CreateGame() { // Remove match prop
       } else {
         setGameType(9);
       }
-
-      setStep(1);
-      setChildStep(1);
+  
     },
     [gameTypeList, solPrice],
   );
 
-  // Lifecycle & Setup
   useEffect(() => {
     const path = window.location.pathname;
     if (path === '/create/rps') {
@@ -239,16 +237,22 @@ function CreateGame() { // Remove match prop
       setSelectedGameType('Custom');
       setGameModeLocal('Custom');
     }
-
-    const gameTypeName = game_type_name || 'RPS'; // Use params instead of match
+  
+    const gameTypeName = game_type_name || 'RPS';
     dispatch(getGameTypeList());
     dispatch(setGameMode(gameTypeName));
-    initializeGameType(gameTypeName);
-
+    initializeGameType(gameTypeName, true); // Initial setup
+  
     dispatch(getStrategies());
-
+  
     return () => {};
-  }, [dispatch, game_type_name, initializeGameType]); // Update dependency
+  }, [dispatch, game_type_name, initializeGameType]);
+  
+  useEffect(() => {
+    if (game_type_name) {
+      initializeGameType(game_type_name, false); // Subsequent calls, no step reset
+    }
+  }, [game_type_name, initializeGameType]);
 
   useEffect(() => {
     if (gameCode.trim()) {
@@ -257,12 +261,6 @@ function CreateGame() { // Remove match prop
       setGameType(9);
     }
   }, [gameCode]);
-
-  useEffect(() => {
-    if (game_type_name) { // Use params instead of match
-      initializeGameType(game_type_name);
-    }
-  }, [game_type_name, initializeGameType]);
 
   useEffect(() => {
     if (localBalance !== propBalance) {
@@ -367,10 +365,9 @@ function CreateGame() { // Remove match prop
         return;
       }
       const parsedQsGameType = parseInt(qsGameType);
-
       if (gameMode === 'RPS') {
         setTax(30);
-      } else {
+      } else if (gameMode === 'QS') {
         switch (parsedQsGameType) {
           case 5:
             setTax(12);
@@ -387,6 +384,8 @@ function CreateGame() { // Remove match prop
           default:
             setTax(20);
         }
+      } else {
+        setTax(5);
       }
 
       if (parseFloat(betAmount) < 0.001) {
@@ -556,6 +555,40 @@ function CreateGame() { // Remove match prop
     }
   };
 
+  function RoomTaxInfo({ gameMode }) {
+    const getTaxMessage = (mode) => {
+      switch (mode) {
+        case 'RPS':
+          return 'You will receive 30% back from player winnings';
+        case 'QS':
+          return 'You will receive 12% - 20% back from player winnings';
+        case 'Custom':
+          return 'You will receive 5% back from player winnings';
+        default:
+          return 'Not specified';
+      }
+    };
+  
+    return (
+      <Box
+        sx={{
+          color: 'orange',
+          backgroundColor: '#ffd00011',
+          borderLeft: '4px solid orange',
+          padding: '8px',
+          fontSize: '0.8rem',
+          textTransform: 'uppercase',
+          marginTop: '15px',
+        }}
+      >
+        <Typography variant="body2" component="span">
+          {getTaxMessage(gameMode)}
+        </Typography>
+      </Box>
+    );
+  }
+
+  
   const handleConfirm = async () => {
     if (skipConfirm) {
       localStorage.setItem('hideConfirmModal', 'true');
@@ -679,6 +712,7 @@ function CreateGame() { // Remove match prop
                 />
               </StyledRadioGrid>
             </RadioGroup>
+            <RoomTaxInfo gameMode={gameMode} />
           </Box>
           {gameMode === 'QS' && (
             <Box sx={{ mt: '20px' }}>

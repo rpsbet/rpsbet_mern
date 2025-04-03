@@ -207,17 +207,17 @@ export default function (state = initialState, action) {
       };
     }
     case NEW_TRANSACTION: {
-      // See if this transaction already exists
+      console.log("payload", payload);
       const existingIndex = state.transactions.findIndex(tx => tx._id === payload._id);
-
+    
       if (existingIndex !== -1) {
         // 1) It's an existing transaction; replace it
         const newTransactions = [...state.transactions];
         const oldTx = newTransactions[existingIndex];
-
+    
         // Replace old transaction with new payload
         newTransactions[existingIndex] = payload;
-
+    
         // 2) Skip balance update if new tx is 'pending'
         if (payload.status === 'pending') {
           return {
@@ -226,17 +226,16 @@ export default function (state = initialState, action) {
             // balance remains unchanged
           };
         } else {
-          // If new status is *not* pending, find how much we need to add/subtract
+          // If new status is *not* pending, find how much we need to adjust from payload.user.balance
           const oldAmount = oldTx.status === 'pending' ? 0 : oldTx.amount;
           const newAmount = payload.amount;
-
-          // Adjust balance based on whether the transaction has a room
-          const baseBalance = payload.room ? payload.user.balance : state.user.balance;
+    
+          // Always use payload.user.balance as the base
+          const baseBalance = payload.user.balance;
           const updatedBalance = oldTx.status === 'pending'
             ? baseBalance + newAmount // Add the new amount directly if the old transaction was pending
             : baseBalance + (newAmount - oldAmount); // Adjust the balance if the old transaction was completed
-
-     
+    
           return {
             ...state,
             transactions: newTransactions,
@@ -248,11 +247,11 @@ export default function (state = initialState, action) {
         const newTransactions = [payload]
           .concat(JSON.parse(JSON.stringify(state.transactions)))
           .slice(0, 4);
-
-        // Adjust balance based on whether the transaction has a room
-        const baseBalance = payload.room ? payload.user.balance : state.user.balance;
+    
+        // Always use payload.user.balance as the base
+        const baseBalance = payload.user.balance;
         const updatedBalance = baseBalance + payload.amount; // Deducting because `payload.amount` is negative
-   
+    
         return {
           ...state,
           transactions: newTransactions,

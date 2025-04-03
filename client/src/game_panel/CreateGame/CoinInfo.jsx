@@ -83,16 +83,18 @@ const CoinInfo = ({
         }}
       >
         {/* Title + Tooltip */}
-        <h3 className="game-sub-title roll-tag" style={{ marginBottom: '5px' }}>
-          Room Information
-          &nbsp;
-          <Tooltip
-            title="For when room hits 69K, liquidity will be moved to a pool."
-            placement="top"
-          >
-            <Info style={{ cursor: 'pointer', color: isDarkMode ? 'white' : '#666' }} />
-          </Tooltip>
-        </h3>
+        <Box sx={{ mt: "20px" }}>
+          <h3 className="game-sub-title roll-tag" style={{ marginBottom: '5px' }}>
+            Room Information
+            &nbsp;
+            <Tooltip
+              title="For when room hits 69K, liquidity will be moved to a pool."
+              placement="top"
+            >
+              <Info style={{ cursor: 'pointer', color: isDarkMode ? 'white' : '#666' }} />
+            </Tooltip>
+          </h3>
+        </Box>
 
         {/* NAME Field */}
         <TextField
@@ -110,7 +112,7 @@ const CoinInfo = ({
           onBlur={() => {
             dispatch(setFocused(false));
             if ((name || '').length > 16) {
-              setNameError('16 character limit'); 
+              setNameError('16 character limit');
             }
           }}
           error={!!nameError}

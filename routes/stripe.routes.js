@@ -595,7 +595,17 @@ router.post('/deposit_successed', auth, async (req, res) => {
   try {
     let { amount, txtHash, account } = req.body;
 
-    if (req.user.isWithdrawing) {
+    if (!req.user?._id) {
+      throw new Error('User not authenticated');
+    }
+
+    // Fetch the latest user data
+    const currentUser = await User.findOne({ _id: req.user._id });
+    if (!currentUser) {
+      throw new Error('User not found');
+    }
+
+    if (currentUser.isWithdrawing) {
       return res.json({
         success: false,
         error: 'WITHDRAWAL IN PROGRESS. Please wait until it completes.'
@@ -628,7 +638,7 @@ router.post('/deposit_successed', auth, async (req, res) => {
 
     // Create a new transaction record
     const newTransaction = new gameTransaction({
-      user: req.user._id,
+      user: currentUser._id,
       amount: numericAmount,
       description: 'SOL deposit',
       hash: txtHash,
@@ -638,7 +648,7 @@ router.post('/deposit_successed', auth, async (req, res) => {
 
     // Create a receipt
     const receipt = new Receipt({
-      user_id: req.user._id,
+      user_id: currentUser._id,
       payment_method: 'Web3',
       payment_type: 'Deposit',
       amount: numericAmount
@@ -646,17 +656,16 @@ router.post('/deposit_successed', auth, async (req, res) => {
     await receipt.save();
 
     // If user has not used this wallet address, add it
-    if (!req.user.accounts.includes(account.publicKey)) {
-      req.user.accounts.push(account.publicKey);
-      await req.user.save();
+    if (!currentUser.accounts.includes(account.publicKey)) {
+      currentUser.accounts.push(account.publicKey);
+      await saveDocumentWithRetry(currentUser);
       console.log("Added new wallet address to user:", account);
     }
-    
 
     // Return success
     return res.json({
       success: true,
-      balance: req.user.balance,
+      balance: currentUser.balance,
       newTransaction,
       message: `Deposit received! Confirmation is pending.`
     });
@@ -670,25 +679,34 @@ router.post('/deposit_successed', auth, async (req, res) => {
 });
 
 router.post('/withdraw_request', auth, async (req, res) => {
-  // We define user outside the try so we can reference it in the finally block
-  const user = req.user;
-  
+  let currentUser;
+
   try {
-    if (user.isWithdrawing) {
+    if (!req.user?._id) {
+      throw new Error('User not authenticated');
+    }
+
+    // Fetch the latest user data
+    currentUser = await User.findOne({ _id: req.user._id });
+    if (!currentUser) {
+      throw new Error('User not found');
+    }
+
+    if (currentUser.isWithdrawing) {
       return res.json({
         success: false,
         error: 'WITHDRAWAL IN PROGRESS. Please wait until it completes.'
       });
     }
-    
-    // Turn on the flag
-    user.isWithdrawing = true;
-    await user.save();
 
-    const username = user.username;
-    const totalWagered = user.totalWagered;
-    const balance = user.balance;
-    const withdrawalLimit = user.dailyWithdrawals;
+    // Turn on the flag
+    currentUser.isWithdrawing = true;
+    await saveDocumentWithRetry(currentUser);
+
+    const username = currentUser.username;
+    const totalWagered = currentUser.totalWagered;
+    const balance = currentUser.balance;
+    const withdrawalLimit = currentUser.dailyWithdrawals;
 
     // Basic permission checks
     if (username.includes('BOT')) {
@@ -711,7 +729,7 @@ router.post('/withdraw_request', auth, async (req, res) => {
 
     // Check daily limit
     if (withdrawalLimit > 4.269) {
-      console.log('Exceeded Daily Withdrawal Limit', user);
+      console.log('Exceeded Daily Withdrawal Limit', currentUser);
       return res.json({
         success: false,
         message: 'EXCEEDED DAILY WITHDRAWAL LIMIT (DURING LAUNCH PHASE)!'
@@ -725,7 +743,7 @@ router.post('/withdraw_request', auth, async (req, res) => {
     }
 
     // Check loans
-    const remainingLoanAmount = await calculateRemainingLoans(user);
+    const remainingLoanAmount = await calculateRemainingLoans(currentUser);
     if (remainingLoanAmount > 0) {
       return res.json({
         success: false,
@@ -741,7 +759,7 @@ router.post('/withdraw_request', auth, async (req, res) => {
     }
 
     // Load admin wallet secret from environment
-    let walletKey = process.env.wk; // base58-encoded
+    let walletKey = process.env.wk;
     if (!walletKey) {
       return res.json({ success: false, message: 'Admin wallet secret not set in env' });
     }
@@ -754,7 +772,6 @@ router.post('/withdraw_request', auth, async (req, res) => {
       return res.json({ success: false, message: 'Failed to decode wallet key' });
     }
 
-    // Must be 64 bytes for Ed25519 secret
     if (secretKey.length !== 64) {
       return res.json({
         success: false,
@@ -762,16 +779,16 @@ router.post('/withdraw_request', auth, async (req, res) => {
       });
     }
 
-    if (!user.accounts.includes(toAddress)) {
-      user.accounts.push(toAddress);
+    if (!currentUser.accounts.includes(toAddress)) {
+      currentUser.accounts.push(toAddress);
     }
-    user.balance -= requestedAmount;
-    user.dailyWithdrawals += requestedAmount;
-    await saveDocumentWithRetry(user);
+    currentUser.balance -= requestedAmount;
+    currentUser.dailyWithdrawals += requestedAmount;
+    await saveDocumentWithRetry(currentUser);
 
     // Create a receipt
     const receipt = new Receipt({
-      user_id: user._id,
+      user_id: currentUser._id,
       payment_method: 'Web3',
       payment_type: 'Withdraw',
       amount: requestedAmount
@@ -790,7 +807,7 @@ router.post('/withdraw_request', auth, async (req, res) => {
     // Get a fresh blockhash
     const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
 
-    // Build the transaction: admin => user
+    // Build the transaction
     const transaction = new Transaction({
       recentBlockhash: blockhash,
       feePayer: walletKeyPair.publicKey
@@ -802,12 +819,10 @@ router.post('/withdraw_request', auth, async (req, res) => {
       })
     );
 
-    // -- Attempt the Solana send + confirm once --
+    // Attempt the Solana send + confirm
     let signature;
     try {
-      // Send
       signature = await connection.sendTransaction(transaction, [walletKeyPair]);
-      // Confirm
       await connection.confirmTransaction({
         signature,
         blockhash,
@@ -823,7 +838,7 @@ router.post('/withdraw_request', auth, async (req, res) => {
 
     // Create a gameTransaction
     const newTransaction = new gameTransaction({
-      user: user._id,
+      user: currentUser._id,
       amount: -requestedAmount,
       description: 'SOL withdraw',
       status: 'completed',
@@ -834,7 +849,7 @@ router.post('/withdraw_request', auth, async (req, res) => {
     // Log the withdrawal in GameLog
     const newGameLog = new GameLog({
       room: null,
-      creator: user._id,
+      creator: currentUser._id,
       joined_user: null,
       game_type: null,
       bet_amount: requestedAmount,
@@ -856,7 +871,7 @@ router.post('/withdraw_request', auth, async (req, res) => {
 
     return res.json({
       success: true,
-      balance: user.balance,
+      balance: currentUser.balance,
       newTransaction,
       message: `Withdrawal request completed. 🤑`
     });
@@ -864,9 +879,11 @@ router.post('/withdraw_request', auth, async (req, res) => {
     console.log('ERROR in /withdraw_request route:', e);
     return res.json({ success: false, message: 'Failed to initiate withdrawal' });
   } finally {
-    // Always turn the flag off, whether succeeded or failed
-    user.isWithdrawing = false;
-    await user.save();
+    // Always turn the flag off
+    if (currentUser) {
+      currentUser.isWithdrawing = false;
+      await saveDocumentWithRetry(currentUser);
+    }
   }
 });
 

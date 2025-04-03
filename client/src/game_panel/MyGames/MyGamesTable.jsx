@@ -65,20 +65,20 @@ function MyGamesTable() { // Remove props destructuring since we’ll use hooks
     isDarkMode,
     isLowGraphics,
     solPrice,
+    my_games_loading,
     strategies,
-    loading,
   } = useSelector((state) => ({
     isDarkMode: state.auth.isDarkMode,
     isLowGraphics: state.auth.isLowGraphics,
     myGames: state.logic.myGames,
     pageNumber: state.logic.myGamesPageNumber,
     game_mode: state.logic.game_mode,
+    my_games_loading: state.logic.my_games_loading,
     socket: state.auth.socket,
     balance: state.auth.balance,
     user: state.auth.user,
     strategies: state.logic.strategies,
     solPrice: state.logic.solPrice,
-    loading: state.logic.isActiveLoadingOverlay,
   }));
 
   // ---------- State ----------
@@ -86,8 +86,7 @@ function MyGamesTable() { // Remove props destructuring since we’ll use hooks
   const [selectedFilter, setSelectedFilter] = useState('open');
   const [selectedSort, setSelectedSort] = useState('desc');
 
-  const [myGames, setMyGames] = useState(propsMyGames || []);
-  const [isLoading, setIsLoading] = useState(true);
+  const [myGames, setMyGames] = useState(propsMyGames);
 
   const [runTutorial, setRunTutorial] = useState(
     !user?.completedTutorials?.includes(3),
@@ -114,10 +113,6 @@ function MyGamesTable() { // Remove props destructuring since we’ll use hooks
   // ---------- Effects ----------
 
   const fetchData = useCallback(() => {
-    setMyGames(propsMyGames || []);
-    dispatch(getStrategies());
-
-    setIsLoading(true);
     dispatch(
       getMyGames(
         {
@@ -127,13 +122,15 @@ function MyGamesTable() { // Remove props destructuring since we’ll use hooks
         },
         (updated) => {
           setMyGames(updated);
-          setIsLoading(false);
         },
       ),
     );
-  }, [dispatch, propsMyGames, selectedGameType, selectedFilter, selectedSort]);
+    dispatch(getStrategies());
+  }, [dispatch, selectedGameType, selectedFilter, selectedSort]);
 
   useEffect(() => {
+    console.log("3")
+
     async function fetchInitialData() {
       await fetchData();
       document.addEventListener('mousedown', handleClickOutside);
@@ -168,6 +165,7 @@ function MyGamesTable() { // Remove props destructuring since we’ll use hooks
     if (!socket) return;
 
     myGames.forEach((game) => {
+      console.log("called", game)
       socket.on(`UPDATED_BANKROLL_${game._id}`, handleBankrollUpdate);
     });
 
@@ -179,12 +177,14 @@ function MyGamesTable() { // Remove props destructuring since we’ll use hooks
   }, [socket, myGames, handleBankrollUpdate]);
 
   useEffect(() => {
+    console.log("1")
     fetchData();
   }, [selectedFilter, selectedSort, fetchData]); // Add fetchData to dependencies
 
   useEffect(() => {
-    setMyGames(propsMyGames || []);
-    setIsLoading(false);
+    console.log("2")
+
+    setMyGames(propsMyGames );
   }, [propsMyGames]);
 
 
@@ -263,7 +263,6 @@ function MyGamesTable() { // Remove props destructuring since we’ll use hooks
     if (!selectedRow) return;
 
     try {
-      setIsLoading(true);
       const result = await dispatch(editPayout(payoutAmount, selectedRow._id));
       if (result.success) {
         await fetchData();
@@ -274,9 +273,7 @@ function MyGamesTable() { // Remove props destructuring since we’ll use hooks
       }
     } catch (error) {
       dispatch(errorMsgBar('Failed to adjust hard cap.'));
-    } finally {
-      setIsLoading(false);
-    }
+    } 
   }, [payoutAmount, selectedRow, dispatch, editPayout, fetchData]);
 
   // ---------- RUG logic ----------
@@ -411,8 +408,7 @@ function MyGamesTable() { // Remove props destructuring since we’ll use hooks
         )}
       </Box>
 
-      {/* Loading Skeleton if either local isLoading or Redux's loading */}
-      {isLoading || loading ? (
+      {my_games_loading ? (
         <Box sx={{ p: 2 }}>
           {[...Array(5)].map((_, i) => (
             <Box
@@ -434,7 +430,7 @@ function MyGamesTable() { // Remove props destructuring since we’ll use hooks
       ) : (
         <Box className="table my-open-game-table" sx={{ p: 2 }}>
           {/* No games => show message */}
-          {!myGames || myGames.length === 0 ? (
+          {myGames.length === 0 ? (
             <Box
               className="dont-have-game-msg"
               sx={{ textAlign: 'center', mt: 2 }}

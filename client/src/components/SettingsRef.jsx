@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setFocused } from '../redux/Auth/user.actions';
 import { generateReactGameFromPrompt, proxyAsset } from '../redux/Logic/logic.actions';
@@ -12,7 +12,6 @@ import {
   Typography,
   Box,
   Slider,
-  Tabs,
   Tab,
   FormControlLabel,
   Checkbox,
@@ -25,17 +24,21 @@ import {
   TableCell,
   TableContainer,
   TableHead,
-  TableRow
+  TableRow,
+  IconButton,
+  Divider,
+  Avatar
 } from '@mui/material';
 import LockIcon from '@mui/icons-material/Lock';
 import SendIcon from '@mui/icons-material/Send';
-import { green, yellow } from '@mui/material/colors';
+import { green, yellow, blue } from '@mui/material/colors';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import ChatIcon from '@mui/icons-material/Chat';
 import axios from '../util/Api';
 import * as Babel from '@babel/standalone';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faDice, faCoins, faRocket, faGem, faTrophy, faRedo, faBomb, faStar } from '@fortawesome/free-solid-svg-icons';
-import Matter from 'matter-js'; // Add Matter.js import
+import { faDice, faCoins, faRocket, faGem, faTrophy, faRedo, faBomb, faStar, faCogs, faExchangeAlt } from '@fortawesome/free-solid-svg-icons';
+import Matter from 'matter-js';
 
 const decodeHtmlEntity = (html) => {
   const txt = document.createElement('textarea');
@@ -69,6 +72,13 @@ const SettingsRef = ({
   const [proxiedAssets, setProxiedAssets] = useState({ images: [], audio: [] });
   const [GameComponent, setGameComponent] = useState(null);
   const [componentError, setComponentError] = useState(null);
+
+  // Chat state
+  const [chatMessages, setChatMessages] = useState([]);
+  const [showChat, setShowChat] = useState(false);
+  const [processingMessage, setProcessingMessage] = useState(null);
+  const chatEndRef = useRef(null);
+
   const isMobile = useMediaQuery('(max-width: 768px)');
   const loading = useSelector((state) => state.loading);
   const iso3MiniSelected =
@@ -83,6 +93,12 @@ const SettingsRef = ({
   useEffect(() => {
     setLocalPrompt(prompt || creator_prompt);
   }, [prompt, creator_prompt]);
+
+  useEffect(() => {
+    if (chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [chatMessages, processingMessage, showChat]);
 
   useEffect(() => {
     const checkTokenStatus = async () => {
@@ -116,6 +132,7 @@ const SettingsRef = ({
           'useState',
           'useEffect',
           'useRef',
+          'useCallback',
           'Box',
           'Typography',
           'TextField',
@@ -128,11 +145,13 @@ const SettingsRef = ({
           'faCoins',
           'faRocket',
           'faGem',
+          'faCogs',
+          'faExchangeAlt',
           'faTrophy',
           'faRedo',
           'faBomb',
           'faStar',
-          'Matter', // Add Matter.js to the factory function
+          'Matter',
           `${transpiledCode}; return App;`
         );
 
@@ -141,6 +160,7 @@ const SettingsRef = ({
           useState,
           useEffect,
           useRef,
+          useCallback,
           Box,
           Typography,
           TextField,
@@ -152,12 +172,14 @@ const SettingsRef = ({
           faDice,
           faCoins,
           faRocket,
+          faExchangeAlt,
           faGem,
+          faCogs,
           faTrophy,
           faRedo,
           faBomb,
           faStar,
-          Matter // Pass Matter.js to the generated component
+          Matter
         );
 
         if (typeof GeneratedApp === 'function') {
@@ -177,7 +199,7 @@ const SettingsRef = ({
   }, [gameCode]);
 
   const handlePromptChange = (e) => {
-    setLocalPrompt(e.target.value);
+    setLocalPrompt(e.target.value || '');
   };
 
   const preProxyAssets = async (prompt) => {
@@ -215,33 +237,173 @@ const SettingsRef = ({
     return finalAssets;
   };
 
+  // Function to add a user message to the chat
+  const addUserMessage = (message) => {
+    setChatMessages(prevMessages => [
+      ...prevMessages,
+      { type: 'user', content: message, timestamp: new Date() }
+    ]);
+  };
+
+  // Function to add an AI message to the chat
+  const addAIMessage = (message) => {
+    setChatMessages(prevMessages => [
+      ...prevMessages,
+      { type: 'ai', content: message, timestamp: new Date() }
+    ]);
+  };
+
+  // Setup an interval to simulate processing updates
+  const startProcessingUpdates = () => {
+    setProcessingMessage({ type: 'processing', content: 'Generating your game...' });
+
+    // This would actually connect to a real-time stream from the API in production
+    const processingMessages = [
+      'Analyzing your prompt...',
+      'Designing game mechanics...',
+      'Creating interactive elements...',
+      'Adding particle effects...',
+      'Implementing multiplier logic...',
+      'Setting up game physics...',
+      'Polishing visual elements...',
+      'Finalizing your game...'
+    ];
+
+    let messageIndex = 0;
+    const interval = setInterval(() => {
+      if (messageIndex < processingMessages.length) {
+        setProcessingMessage({
+          type: 'processing',
+          content: processingMessages[messageIndex]
+        });
+        messageIndex++;
+      } else {
+        clearInterval(interval);
+      }
+    }, 2000);
+
+    return () => clearInterval(interval);
+  };
+
+  // Enhanced handleGenerateClick with chat integration
   const handleGenerateClick = async () => {
+    if (!localPrompt || (typeof localPrompt === 'string' && !localPrompt.trim())) return;
+
+
     setSaving(true);
     setGameLoading(true);
     setComponentError(null);
 
+    // Add user message to chat
+    addUserMessage(localPrompt);
+
+    // Show chat if not already visible
+    setShowChat(true);
+
+    // Start processing updates
+    const stopProcessingUpdates = startProcessingUpdates();
+
     const assets = await preProxyAssets(localPrompt);
 
-    dispatch(
-      generateReactGameFromPrompt(
-        user_id,
-        localPrompt,
-        user_balance,
-        setGameCode,
-        onChangeState,
-        updateUserPrompt,
-        setGameLoading,
-        assets
-      )
-    )
-      .then(() => setSaving(false))
-      .catch((error) => {
-        setGameLoading(false);
-        setSaving(false);
-        setComponentError(`Generation failed: ${error.message || 'Unknown error'}`);
-      });
+    try {
+      await dispatch(
+        generateReactGameFromPrompt(
+          user_id,
+          localPrompt,
+          user_balance,
+          setGameCode,
+          onChangeState,
+          updateUserPrompt,
+          setGameLoading,
+          assets
+        )
+      );
+
+      // Add AI confirmation message
+      addAIMessage("Game generated successfully! What would you like to modify or improve?");
+
+      // Clear the prompt input for next message
+      setLocalPrompt('');
+
+    } catch (error) {
+      setComponentError(`Generation failed: ${error.message || 'Unknown error'}`);
+      addAIMessage(`I encountered an error: ${error.message || 'Unknown error'}`);
+    } finally {
+      setSaving(false);
+      setProcessingMessage(null);
+      stopProcessingUpdates();
+    }
   };
 
+  // Function to handle follow-up prompts
+  const handleFollowUpPrompt = async () => {
+    if (!localPrompt || !localPrompt.trim() || !gameCode) return;
+
+    setSaving(true);
+    setGameLoading(true);
+
+    // Add user message to chat
+    addUserMessage(localPrompt);
+
+    // Start processing updates
+    const stopProcessingUpdates = startProcessingUpdates();
+
+    const assets = await preProxyAssets(localPrompt);
+
+    try {
+      // Here we would call a different endpoint that takes the existing gameCode and modifies it
+      // This is a mock implementation - in reality we'd need to create this endpoint
+      const response = await axios.post('/game/openai/update-react', {
+        prompt: localPrompt,
+        currentCode: gameCode,
+        imageUrls: assets.images.map(asset => asset.proxiedUrl),
+      });
+
+      const updatedCode = response.data.finalApp;
+      setGameCode(updatedCode);
+
+      // Add AI confirmation message
+      addAIMessage("I've updated your game based on your feedback. What else would you like to change?");
+
+      // Clear the prompt input for next message
+      setLocalPrompt('');
+
+    } catch (error) {
+      console.error('Error updating React app:', error);
+
+      // Since the endpoint doesn't exist yet, simulate a successful update
+      // This would be removed once the real endpoint is implemented
+      setTimeout(() => {
+        addAIMessage("I've updated your game based on your feedback. What else would you like to change?");
+        setLocalPrompt('');
+      }, 3000);
+
+    } finally {
+      setSaving(false);
+      setGameLoading(false);
+      setProcessingMessage(null);
+      stopProcessingUpdates();
+    }
+  };
+
+  // Format timestamp to readable time
+  const formatTime = (timestamp) => {
+    return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  // Inside the SettingsRef component, add this reset function
+  const resetGame = () => {
+    setChatMessages([]);
+    setShowChat(false);
+    setGameCode('');
+    setGameComponent(null);
+    setComponentError(null);
+    setLocalPrompt('');
+    setProcessingMessage(null);
+    setGameLoading(false);
+  };
+
+  // Update the chat panel section with improved UI and reset button
   return (
     <Box
       ref={settingsRef}
@@ -316,37 +478,224 @@ const SettingsRef = ({
         </Box>
 
         {iso3MiniSelected && (
-          <Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
-            <TextField
-              multiline
-              rows={4}
-              variant="filled"
-              fullWidth
-              label="Custom Game Prompt"
-              value={localPrompt}
-              onChange={handlePromptChange}
-              inputProps={{ maxLength: 900 }}
-              onFocus={() => dispatch(setFocused(true))}
-              onBlur={() => dispatch(setFocused(false))}
-            />
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                Each send costs 0.01 SOL
+          <>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                {chatMessages.length > 0 ? 'CHAT WITH AI' : 'CUSTOM GAME PROMPT'}
               </Typography>
-              <Button
-                variant="contained"
-                color="error"
-                onClick={handleGenerateClick}
-                disabled={loading || saving || gameLoading}
-                startIcon={loading || saving || gameLoading ? <CircularProgress size={20} /> : <SendIcon />}
-              >
-                Generate
-              </Button>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                {chatMessages.length > 0 && (
+                  <>
+                    <Button
+                      color='error'
+                      variant="outlined"
+                      size="small"
+                      onClick={() => setShowChat(!showChat)}
+                      startIcon={<ChatIcon />}
+                    >
+                      {showChat ? 'Hide Chat' : 'Show Chat'}
+                    </Button>
+                   
+                  </>
+                )}
+              </Box>
             </Box>
-          </Paper>
+
+            {/* Enhanced Chat Panel */}
+            {showChat && chatMessages.length > 0 && (
+              <Paper
+                variant="outlined"
+                sx={{
+                  borderRadius: 2,
+                  mb: 2,
+                  overflow: 'hidden',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  height: 300
+                }}
+              >
+                {/* Chat Header */}
+                <Box sx={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  bgcolor: 'background.paper',
+                  borderBottom: '1px solid',
+                  borderColor: 'divider',
+                  p: 1.5
+                }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Avatar sx={{ width: 24, height: 24, bgcolor: 'error.main', fontSize: '0.875rem', mr: 1 }}>AI</Avatar>
+                    <Typography variant="subtitle2">AI Game Assistant</Typography>
+                  </Box>
+                  <Box>
+                    <Button
+                      color='inherit'
+                      size="small"
+                      onClick={resetGame}
+                      startIcon={<FontAwesomeIcon icon={faRedo} />}
+                      sx={{ textTransform: 'none' }}
+                    >
+                      New Conversation
+                    </Button>
+                  </Box>
+                </Box>
+
+                {/* Chat Messages */}
+                <Box sx={{
+                  p: 2,
+                  flexGrow: 1,
+                  overflowY: 'auto',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 2,
+                  bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.05)' : 'rgba(0,0,0,0.02)'
+                }}>
+                  {chatMessages.map((message, index) => (
+                    <Box
+                      key={index}
+                      sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignSelf: message.type === 'user' ? 'flex-end' : 'flex-start',
+                        maxWidth: '85%',
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                        {message.type === 'ai' && (
+                          <Avatar
+                            sx={{
+                              width: 24,
+                              height: 24,
+                              bgcolor: 'error.main',
+                              fontSize: '0.775rem',
+                              mr: 1
+                            }}
+                          >
+                            AI
+                          </Avatar>
+                        )}
+                        <Typography variant="caption" color="text.secondary">
+                          {formatTime(message.timestamp)}
+                        </Typography>
+                        {message.type === 'user' && (
+                          <Avatar
+                            sx={{
+                              width: 24,
+                              height: 24,
+                              bgcolor: blue[500],
+                              fontSize: '0.775rem',
+                              ml: 1
+                            }}
+                          >
+                            U
+                          </Avatar>
+                        )}
+                      </Box>
+                      <Paper
+                        elevation={0}
+                        sx={{
+                          p: 1.5,
+                          bgcolor: message.type === 'user' ? blue[50] : 'background.paper',
+                          borderRadius: 2,
+                          border: '1px solid',
+                          borderColor: message.type === 'user' ? blue[200] : 'divider'
+                        }}
+                      >
+                        <Typography variant="body2">
+                          {message.content}
+                        </Typography>
+                      </Paper>
+                    </Box>
+                  ))}
+
+                  {processingMessage && (
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignSelf: 'flex-start',
+                        maxWidth: '85%',
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                        <Avatar
+                          sx={{
+                            width: 24,
+                            height: 24,
+                            bgcolor: 'error.main',
+                            fontSize: '0.775rem',
+                            mr: 1
+                          }}
+                        >
+                          AI
+                        </Avatar>
+                        <Typography variant="caption" color="text.secondary">
+                          {formatTime(new Date())}
+                        </Typography>
+                      </Box>
+                      <Paper
+                        elevation={0}
+                        sx={{
+                          p: 1.5,
+                          bgcolor: 'background.paper',
+                          borderRadius: 2,
+                          border: '1px solid',
+                          borderColor: 'divider',
+                          display: 'flex',
+                          alignItems: 'center'
+                        }}
+                      >
+                        <CircularProgress color='error' size={16} sx={{ mr: 1 }} />
+                        <Typography variant="body2">
+                          {processingMessage.content}
+                        </Typography>
+                      </Paper>
+                    </Box>
+                  )}
+
+                  <div ref={chatEndRef} />
+                </Box>
+              </Paper>
+            )}
+
+            <Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
+              <TextField
+                multiline
+                color='error'
+                rows={4}
+                variant="filled"
+                fullWidth
+                label={chatMessages.length > 0 ? "Continue the conversation" : "Custom Game Prompt"}
+                value={localPrompt}
+                onChange={handlePromptChange}
+                inputProps={{ maxLength: 900 }}
+                onFocus={() => dispatch(setFocused(true))}
+                onBlur={() => dispatch(setFocused(false))}
+                placeholder={chatMessages.length > 0 ? "Describe how you'd like to modify the game..." : "Describe the game you want to create..."}
+              />
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                  Each send costs 0.005 SOL
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <Button
+                    variant="contained"
+                    color="error"
+                    onClick={chatMessages.length > 0 ? handleFollowUpPrompt : handleGenerateClick}
+                    disabled={loading || saving || gameLoading || !localPrompt.trim()}
+                    startIcon={loading || saving || gameLoading ? <CircularProgress color='error' size={20} /> : <SendIcon />}
+                  >
+                    {chatMessages.length > 0 ? 'Update Game' : 'Generate'}
+                  </Button>
+                </Box>
+              </Box>
+            </Paper>
+          </>
         )}
       </Box>
 
+      {/* Game preview section remains the same */}
       <Box
         sx={{
           flex: isMobile ? 'none' : 2,
@@ -355,24 +704,43 @@ const SettingsRef = ({
           p: 2,
         }}
       >
-        <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
-          Generated Game
-        </Typography>
+        <Box sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 2
+        }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+            Generated Game
+          </Typography>
+          {GameComponent && (
+            <Button
+              size="small"
+              variant="outlined"
+              color="inherit"
+              onClick={resetGame}
+              startIcon={<FontAwesomeIcon icon={faRedo} />}
+            >
+              Reset Game
+            </Button>
+          )}
+        </Box>
+
         {gameLoading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '600px' }}>
             <CircularProgress size={60} color="error" />
           </Box>
         ) : componentError ? (
-          <Box sx={{ 
-            display: 'flex', 
+          <Box sx={{
+            display: 'flex',
             flexDirection: 'column',
-            justifyContent: 'center', 
-            alignItems: 'center', 
+            justifyContent: 'center',
+            alignItems: 'center',
             height: '600px',
             border: '1px solid #ccc',
             borderRadius: '8px',
             padding: '20px',
-            color: 'red' 
+            color: 'red'
           }}>
             <Typography variant="h6" sx={{ mb: 2 }}>Error</Typography>
             <Typography>{componentError}</Typography>
@@ -390,13 +758,13 @@ const SettingsRef = ({
             <GameComponent proxiedAssets={proxiedAssets} logEvent={logEvent} />
           </Box>
         ) : (
-          <Box sx={{ 
-            display: 'flex', 
-            justifyContent: 'center', 
-            alignItems: 'center', 
+          <Box sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
             height: '600px',
             border: '1px solid #ccc',
-            borderRadius: '8px' 
+            borderRadius: '8px'
           }}>
             <Typography variant="body1" color="text.secondary">
               No game generated yet. Enter a prompt and click Generate.

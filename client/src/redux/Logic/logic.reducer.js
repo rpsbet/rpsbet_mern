@@ -12,6 +12,7 @@ import {
   START_BET,
   END_BET,
   ROOMS_LOADED,
+  MY_GAMES_LOADING,
   TRADE_LOADING,
   PREPEND_OLDER_CHAT_MESSAGES,
   SET_FETCHING_OLDER_MESSAGES,
@@ -76,6 +77,7 @@ const initialState = {
   bangs: [],
   trade_loading: false,
   is_betting: false,
+  my_games_loading: false,
   rolls: [],
   comments: [],
   strategies: [],
@@ -451,6 +453,11 @@ export default function (state = initialState, action) {
         ...state,
         myHistory: payload.history,
         myHistoryPageNumber: payload.page
+      };
+    case MY_GAMES_LOADING:
+      return {
+        ...state,
+        my_games_loading: payload
       };
     case MY_CHAT_LOADED:
       return {

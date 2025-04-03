@@ -9,7 +9,7 @@ import {
   END_LOADING,
   START_BET,
   END_BET,
-  ATTACHED,
+  MY_GAMES_LOADING,
   TNX_COMPLETE,
   TNX_INCOMPLETE,
   SET_TOKEN_PRICE,
@@ -148,7 +148,6 @@ export const proxyAsset = (key, url) => async (dispatch) => {
   }
 };
 
-// Add this to your existing logic.actions.js file
 export const generateReactGameFromPrompt = (
   user_id,
   gamePrompt,
@@ -159,8 +158,8 @@ export const generateReactGameFromPrompt = (
   setGameLoading,
   preProxiedAssets = { images: [], audio: [] }
 ) => async (dispatch) => {
-  if (user_balance < 0.01) {
-    dispatch({ type: 'MSG_ERROR', payload: 'Insufficient balance. Each send costs 0.01 SOL.' });
+  if (user_balance < 0.005) {
+    dispatch({ type: 'MSG_ERROR', payload: 'Insufficient balance. Each send costs 0.005 SOL.' });
     return;
   }
 
@@ -945,7 +944,7 @@ export const getGameTypeList = () => async dispatch => {
 
 export const getMyGames = (search_condition, callback) => async (dispatch) => {
   try {
-    dispatch({ type: START_LOADING });
+    dispatch({ type: MY_GAMES_LOADING, payload: true });
 
     // Fetch data from the backend
     const res = await axios.get('/game/my_games', {
@@ -969,7 +968,7 @@ export const getMyGames = (search_condition, callback) => async (dispatch) => {
     console.error('Error while fetching games:', err);
     dispatch({ type: MSG_GAMETYPE_LOAD_FAILED, payload: err });
   } finally {
-    dispatch({ type: END_LOADING });
+    dispatch({ type: MY_GAMES_LOADING, payload: false });
   }
 };
 

@@ -44,7 +44,7 @@ const globalChatSend = (io, data) => {
           accessory: replyTo.accessory,
           message: replyTo.message,
           messageType: replyTo.messageType,
-          time: Moment(replyTo.created_at).format('hh:mm'),
+          time: moment(replyTo.created_at).format('hh:mm'),
         }
       : null,
   });
@@ -82,10 +82,10 @@ const globalChatSend = (io, data) => {
                   rank: replyTo.rank,
                   message: replyTo.message,
                   messageType: replyTo.messageType,
-                  time: Moment(replyTo.created_at).format('hh:mm'),
+                  time: moment(replyTo.created_at).format('hh:mm'),
                 }
               : null, // Include the replyTo message details if it exists
-            time: Moment(savedChat.created_at).format('hh:mm'),
+            time: moment(savedChat.created_at).format('hh:mm'),
           });
         })
         .catch((error) => {

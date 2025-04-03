@@ -265,7 +265,7 @@ router.post('/create', auth, async (req, res) => {
     }
 
     const newTransaction = new Transaction({
-      user: currentUser._id,
+      user: currentUser,
       amount: -parsedLoanAmount,
       description: 'Loan created',
     });
@@ -1021,7 +1021,7 @@ router.post('/withdraw-loan', auth, async (req, res) => {
     currentUser.balance += amount;
 
     const newTransaction = new Transaction({
-      user: currentUser._id,
+      user: currentUser,
       amount: amount,
       description: `Loan withdrawal`,
     });

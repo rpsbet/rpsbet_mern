@@ -18,9 +18,7 @@ function AdvancedSettings(props) {
   const dispatch = useDispatch();
 
   // Map state from Redux using useSelector
-  const { data } = useSelector((state) => ({
-    data: state.itemReducer.myItemArray,
-  }));
+  const data = useSelector((state) => state.itemReducer.myItemArray);
 
   const theme = getCustomTheme(props.isDarkMode);
 
