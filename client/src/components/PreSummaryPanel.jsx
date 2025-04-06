@@ -63,7 +63,7 @@ const PreSummaryPanel = (props) => {
     if (qs_game_type && bet_amount) {
       return (
         (bet_amount / (qs_game_type - 1) + parseFloat(bet_amount)) *
-          (1 - (roomInfo.tax + 5) / 100) -
+        (1 - (roomInfo.tax + 5) / 100) -
         bet_amount
       );
     }
@@ -172,81 +172,83 @@ const PreSummaryPanel = (props) => {
           </Tooltip>
         </Box>
 
-        {/* YOUR RETURN (already has a tooltip) */}
-        <Box className="data-item">
-          <Typography variant="body2" className="label your-max-return">
-            <FontAwesomeIcon icon={faDollarSign} style={{ marginRight: 8 }} />
-            Your Return
-          </Typography>
-          <Tooltip
-            title={
-              roomInfo.game_type === 'Quick Shoot' ? (
-                <div>
-                  <span>EXPLANATION: </span>
-                  <p>
-                    Quick Shoot logic: (Bet Amount / (QS Game Type - 1) + Bet
-                    Amount), minus commission ({roomInfo.tax}%) and platform tax
-                    (1%).
-                  </p>
-                  <span>CALCULATION: </span>
+        {roomInfo.game_type !== 'Custom' && (
+
+          < Box className="data-item">
+            <Typography variant="body2" className="label your-max-return">
+              <FontAwesomeIcon icon={faDollarSign} style={{ marginRight: 8 }} />
+              Your Return
+            </Typography>
+            <Tooltip
+              title={
+                roomInfo.game_type === 'Quick Shoot' ? (
                   <div>
-                    {convertToCurrency(bet_amount, solPrice)} / (
-                    {qs_game_type - 1}) +{' '}
-                    {convertToCurrency(bet_amount, solPrice)} =
-                    {convertToCurrency(
-                      bet_amount / (qs_game_type - 1) + bet_amount,
-                      solPrice,
-                    )}
+                    <span>EXPLANATION: </span>
+                    <p>
+                      Quick Shoot logic: (Bet Amount / (QS Game Type - 1) + Bet
+                      Amount), minus commission ({roomInfo.tax}%) and platform tax
+                      (1%).
+                    </p>
+                    <span>CALCULATION: </span>
+                    <div>
+                      {convertToCurrency(bet_amount, solPrice)} / (
+                      {qs_game_type - 1}) +{' '}
+                      {convertToCurrency(bet_amount, solPrice)} =
+                      {convertToCurrency(
+                        bet_amount / (qs_game_type - 1) + bet_amount,
+                        solPrice,
+                      )}
+                    </div>
+                    <div>
+                      -({roomInfo.tax} + 1)% ={' '}
+                      {convertToCurrency(calculateQuickShootReturn(), solPrice)}
+                    </div>
                   </div>
+                ) : (
                   <div>
-                    -({roomInfo.tax} + 1)% ={' '}
-                    {convertToCurrency(calculateQuickShootReturn(), solPrice)}
+                    <span>EXPLANATION: </span>
+                    <p>
+                      2x your Bet Amount, then deduct Host(s)'s(') commission
+                      (RTB), finally 1% platform tax.
+                    </p>
+                    <span>CALCULATION: </span>
+                    <div>
+                      {convertToCurrency(bet_amount, solPrice)} x 2 ={' '}
+                      {convertToCurrency(bet_amount * 2, solPrice)}
+                    </div>
+                    <div>
+                      -({roomInfo.tax} + 1)% ={' '}
+                      {convertToCurrency(calculateRPSReturn(), solPrice)}
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <div>
-                  <span>EXPLANATION: </span>
-                  <p>
-                    2x your Bet Amount, then deduct Host(s)'s(') commission
-                    (RTB), finally 1% platform tax.
-                  </p>
-                  <span>CALCULATION: </span>
-                  <div>
-                    {convertToCurrency(bet_amount, solPrice)} x 2 ={' '}
-                    {convertToCurrency(bet_amount * 2, solPrice)}
-                  </div>
-                  <div>
-                    -({roomInfo.tax} + 1)% ={' '}
-                    {convertToCurrency(calculateRPSReturn(), solPrice)}
-                  </div>
-                </div>
-              )
-            }
-          >
-            <Box
-              className="value"
-              sx={{
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                color:
-                  (roomInfo.game_type === 'Quick Shoot'
-                    ? calculateQuickShootReturn()
-                    : calculateRPSReturn()) > 0
-                    ? '#00ff3a'
-                    : 'red',
-              }}
+                )
+              }
             >
-              {convertToCurrency(
-                roomInfo.game_type === 'Quick Shoot'
-                  ? calculateQuickShootReturn()
-                  : calculateRPSReturn(),
-                solPrice,
-              )}
-              <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
-            </Box>
-          </Tooltip>
-        </Box>
+              <Box
+                className="value"
+                sx={{
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  color:
+                    (roomInfo.game_type === 'Quick Shoot'
+                      ? calculateQuickShootReturn()
+                      : calculateRPSReturn()) > 0
+                      ? '#00ff3a'
+                      : 'red',
+                }}
+              >
+                {convertToCurrency(
+                  roomInfo.game_type === 'Quick Shoot'
+                    ? calculateQuickShootReturn()
+                    : calculateRPSReturn(),
+                  solPrice,
+                )}
+                <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
+              </Box>
+            </Tooltip>
+          </Box>
+        )}
 
         {/* ROOM PROFIT (already has a tooltip) */}
         <Box className="data-item">
@@ -366,23 +368,23 @@ const PreSummaryPanel = (props) => {
 
         {/* WIN CHANCE */}
         {roomInfo.game_type !== 'Custom' && (
-        <Box className="data-item">
-          <Typography variant="body2" className="label chance">
-            <FontAwesomeIcon icon={faDice} style={{ marginRight: 8 }} />
-            Win Chance
-          </Typography>
-          {/* Add a tooltip + info icon for the value */}
-          <Tooltip title="Probability of winning each battle, based on your strategy or random factors.">
-            <Box
-              sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-            >
-              <Typography variant="body1" className="value">
-                {winChance}%
-              </Typography>
-              <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
-            </Box>
-          </Tooltip>
-        </Box>
+          <Box className="data-item">
+            <Typography variant="body2" className="label chance">
+              <FontAwesomeIcon icon={faDice} style={{ marginRight: 8 }} />
+              Win Chance
+            </Typography>
+            {/* Add a tooltip + info icon for the value */}
+            <Tooltip title="Probability of winning each battle, based on your strategy or random factors.">
+              <Box
+                sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+              >
+                <Typography variant="body1" className="value">
+                  {winChance}%
+                </Typography>
+                <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
+              </Box>
+            </Tooltip>
+          </Box>
         )}
 
         {/* INTEREST RECEIVED (already has a tooltip) */}
@@ -516,7 +518,7 @@ const PreSummaryPanel = (props) => {
           </Tooltip>
         </Box>
       </Box>
-    </Stack>
+    </Stack >
   );
 };
 

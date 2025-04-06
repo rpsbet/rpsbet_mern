@@ -109,7 +109,7 @@ export const verifyGameResult = (
 
     const { hasUserInteraction, status, result, multiplier, reason } = response.data;
 
-    console.log('🎮 Verification Response:', { hasUserInteraction, status, result, multiplier, reason });
+    // console.log('🎮 Verification Response:', { hasUserInteraction, status, result, multiplier, reason });
 
     if (!hasUserInteraction) {
       dispatch({ type: MSG_ERROR, payload: 'Game verification failed: No user interaction detected.' });
