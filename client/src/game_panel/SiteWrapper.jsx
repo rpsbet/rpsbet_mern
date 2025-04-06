@@ -138,7 +138,7 @@ import {
 // Remove PropTypes override since it's not needed in MUI v5+
 LoadingOverlay.propTypes = undefined;
 
-const tokenMintAddress = 'ConTraCtaDDreSS__COmmInngG__SooNNNpump';
+const tokenMintAddress = '74YCHZz5VWSCcXvopnS33nS3Z5kLSCJzy3nm1sfSpump';
 
 // Theming
 const customTextFieldStyles = {
@@ -1220,7 +1220,7 @@ function SiteWrapper({ children }) { // Remove props destructuring since we’ll
                     <Divider />
                     <MenuItem
                       onClick={() => {
-                        window.open('https://raydium.io/swap/?inputMint=sol&outputMint=ConTraCtaDDreSS__COmmInngG__SooNNNpump', '_blank');
+                        window.open('https://raydium.io/swap/?inputMint=sol&outputMint=74YCHZz5VWSCcXvopnS33nS3Z5kLSCJzy3nm1sfSpump', '_blank');
                       }}
                     >
                       <ListItemIcon>

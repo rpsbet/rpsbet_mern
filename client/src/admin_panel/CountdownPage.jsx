@@ -176,7 +176,7 @@ const Gravestone = styled(Box)(() => ({
 }));
 
 // -------------- SHORTENING & CONTRACT INFO --------------
-const CONTRACT_ADDRESS = 'ConTraCtaDDreSS__COmmInngG__SooNNNpump';
+const CONTRACT_ADDRESS = '74YCHZz5VWSCcXvopnS33nS3Z5kLSCJzy3nm1sfSpump';
 const shortenAddress = (address, startLength = 9, endLength = 9) => {
   if (address.length <= startLength + endLength) return address;
   return `${address.slice(0, startLength)}...${address.slice(-endLength)}`;

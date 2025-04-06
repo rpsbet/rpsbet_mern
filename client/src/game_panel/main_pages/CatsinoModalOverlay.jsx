@@ -51,7 +51,7 @@ function CatsinoModalOverlay({
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   // The full CA
-  const fullCA = 'ConTraCtaDDreSS__COmmInngG__SooNNNpump';
+  const fullCA = '74YCHZz5VWSCcXvopnS33nS3Z5kLSCJzy3nm1sfSpump';
   const displayedCA = formatAddress(fullCA, isMobile);
 
   // State to show "Copied!" animation

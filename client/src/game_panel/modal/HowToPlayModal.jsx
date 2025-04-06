@@ -50,7 +50,7 @@ function HowToPlayModal({ modalIsOpen, closeModal }) {
     maxHeight: '90vh',
     overflowY: 'auto',
   };
-  const CONTRACT_ADDRESS = 'ConTraCtaDDreSS__COmmInngG__SooNNNpump';
+  const CONTRACT_ADDRESS = '74YCHZz5VWSCcXvopnS33nS3Z5kLSCJzy3nm1sfSpump';
   const [copiedTooltipOpen, setCopiedTooltipOpen] = useState(false);
   const isMobile = useMediaQuery("(max-width: 768px)");
   const isTablet = useMediaQuery("(max-width: 1024px)");
