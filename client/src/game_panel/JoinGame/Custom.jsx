@@ -20,7 +20,7 @@ import {
   Typography,
   Box,
   useMediaQuery,
-  Drawer
+  Slider
 } from '@mui/material';
 import {
   validateIsAuthenticated,
@@ -252,26 +252,28 @@ function Custom(props) {
     if (roomInfo.gameCode) {
       try {
         setComponentError(null);
-
+  
         const cleanedCode = roomInfo.gameCode
           .replace(/import .*? from .+?;/g, '')
           .replace('export default App;', '')
           .trim();
-
+  
         const transpiledCode = Babel.transform(cleanedCode, {
           presets: ['react'],
           filename: 'app.jsx',
         }).code;
-
+  
         const componentFactory = new Function(
           'React',
           'useState',
           'useEffect',
           'useRef',
+          'useCallback',
           'Box',
           'Typography',
           'TextField',
           'Button',
+          'Slider',
           'CircularProgress',
           'logEvent',
           'FontAwesomeIcon',
@@ -285,19 +287,21 @@ function Custom(props) {
           'faExchangeAlt',
           'faBomb',
           'faStar',
-          'Matter', // Add Matter.js to the factory function
+          'Matter',
           `${transpiledCode}; return App;`
         );
-
+  
         const GeneratedApp = componentFactory(
           React,
           useState,
           useEffect,
           useRef,
+          useCallback,
           Box,
           Typography,
           TextField,
           Button,
+          Slider,
           CircularProgress,
           logEvent,
           FontAwesomeIcon,
@@ -311,14 +315,24 @@ function Custom(props) {
           faExchangeAlt,
           faBomb,
           faStar,
-          Matter // Pass Matter.js to the generated component
+          Matter
         );
-
-        if (typeof GeneratedApp === 'function') {
-          setGameComponent(() => GeneratedApp);
-        } else {
+  
+        if (typeof GeneratedApp !== 'function') {
           throw new Error('Generated code did not return a valid React component');
         }
+  
+        const WrappedGameComponent = (props) => {
+          console.log('Rendering GameComponent with props:', props);
+          try {
+            return <GeneratedApp {...props} />;
+          } catch (error) {
+            console.error('GameComponent runtime error:', error);
+            return <div>Error rendering game: {error.message}</div>;
+          }
+        };
+  
+        setGameComponent(() => WrappedGameComponent);
       } catch (error) {
         console.error('Error creating component:', error);
         setComponentError(`Failed to create component: ${error.message}`);
