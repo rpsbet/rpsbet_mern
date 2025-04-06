@@ -138,7 +138,7 @@ import {
 // Remove PropTypes override since it's not needed in MUI v5+
 LoadingOverlay.propTypes = undefined;
 
-const tokenMintAddress = '74YCHZz5VWSCcXvopnS33nS3Z5kLSCJzy3nm1sfSpump';
+const tokenMintAddress = 'BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump';
 
 // Theming
 const customTextFieldStyles = {
@@ -277,7 +277,7 @@ function SiteWrapper({ children }) { // Remove props destructuring since we’ll
   const [showVaultModal, setShowVaultModal] = useState(false);
   const [showNegativeBalanceDialog, setShowNegativeBalanceDialog] = useState(false);
   const [walletConflictOpen, setWalletConflictOpen] = useState(false);
-  const [isLive, setIsLive] = useState(true);
+  const [isLive, setIsLive] = useState(false);
   const [blurValue, setBlurValue] = useState(3);
   const [currentGif, setCurrentGif] = useState('');
   const [tokenModalOpen, setTokenModalOpen] = useState(true);
@@ -1220,7 +1220,7 @@ function SiteWrapper({ children }) { // Remove props destructuring since we’ll
                     <Divider />
                     <MenuItem
                       onClick={() => {
-                        window.open('https://raydium.io/swap/?inputMint=sol&outputMint=74YCHZz5VWSCcXvopnS33nS3Z5kLSCJzy3nm1sfSpump', '_blank');
+                        window.open('https://raydium.io/swap/?inputMint=sol&outputMint=BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump', '_blank');
                       }}
                     >
                       <ListItemIcon>

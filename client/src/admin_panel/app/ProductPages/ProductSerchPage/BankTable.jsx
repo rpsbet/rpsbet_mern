@@ -55,7 +55,7 @@ import PlayerModal from '../../../../game_panel/modal/PlayerModal';
 import { ThemeProvider } from '@mui/material/styles';
 import { getCustomTheme } from '../../../../config/theme';
 
-const token = '74YCHZz5VWSCcXvopnS33nS3Z5kLSCJzy3nm1sfSpump';
+const token = 'BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump';
 
 // ---------------- STYLED COMPONENTS (layout wrappers) ----------------
 

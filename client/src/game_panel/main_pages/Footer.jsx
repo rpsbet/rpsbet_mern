@@ -160,14 +160,14 @@ function Footer({ open, style }) { // Keep open and style as props
         </LinksContainer>
         <Address
           onClick={() => {
-            navigator.clipboard.writeText('74YCHZz5VWSCcXvopnS33nS3Z5kLSCJzy3nm1sfSpump');
+            navigator.clipboard.writeText('BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump');
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
           }}
           sx={{ cursor: 'pointer' }}
         >
           <Typography sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            74YCHZz5VWSCcXvopnS33nS3Z5kLSCJzy3nm1sfSpump
+            BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump
             {copied ? <CheckIcon fontSize="small" color="success" /> : <ContentCopyIcon fontSize="small" />}
           </Typography>
           <Typography variant="caption" sx={{ mt: 1 }}>
