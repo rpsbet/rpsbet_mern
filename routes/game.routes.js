@@ -1865,7 +1865,7 @@ router.post('/rooms', auth, async (req, res) => {
 
     // get gameType doc & compute room_number
     const roomCount = await Room.countDocuments({});
-    console.log("game_type", game_type)
+
     const gameTypeDoc = await GameType.findOne({
       game_type_id: parseInt(game_type),
     });

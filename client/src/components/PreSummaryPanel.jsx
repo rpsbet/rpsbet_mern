@@ -365,6 +365,7 @@ const PreSummaryPanel = (props) => {
         </Box>
 
         {/* WIN CHANCE */}
+        {roomInfo.game_type !== 'Custom' && (
         <Box className="data-item">
           <Typography variant="body2" className="label chance">
             <FontAwesomeIcon icon={faDice} style={{ marginRight: 8 }} />
@@ -382,6 +383,7 @@ const PreSummaryPanel = (props) => {
             </Box>
           </Tooltip>
         </Box>
+        )}
 
         {/* INTEREST RECEIVED (already has a tooltip) */}
         <Box className="data-item">

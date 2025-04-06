@@ -344,11 +344,11 @@ export const bet3 = bet_info => async dispatch => {
       };
     } else {
       if (res.data.betResult === -100) {
-        dispatch({ type: MSG_WARNING, payload: 'THIS GAME HAS NOW ENDED' });
+        dispatch({ type: MSG_WARNING, payload: 'SLOW DOWN!' });
 
         return {
           status: 'failed',
-          message: 'THIS GAME HAS NOW ENDED'
+          message: 'SLOW DOWN!'
         };
       } else if (res.data.betResult === -102) {
         dispatch({ type: MSG_WARNING, payload: 'THIS ROOM IS BUSY' });
