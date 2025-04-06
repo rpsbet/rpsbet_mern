@@ -351,7 +351,7 @@ function DepositModal({ modalIsOpen, closeModal, balance, account }) {
               {isLoading ? (
                 <CircularProgress color="inherit" size={24} />
               ) : (
-                'OPEN TO ALL USERS ON 3RD APRIL'
+                'OPEN TO ALL USERS ON 6TH APRIL'
               )}
             </Button>
           </Box>
