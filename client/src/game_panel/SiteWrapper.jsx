@@ -138,7 +138,7 @@ import {
 // Remove PropTypes override since it's not needed in MUI v5+
 LoadingOverlay.propTypes = undefined;
 
-const tokenMintAddress = 'BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump';
+const tokenMintAddress = 'ConTraCtaDDreSS__COmmInngG__SooNNNpump';
 
 // Theming
 const customTextFieldStyles = {
@@ -277,7 +277,7 @@ function SiteWrapper({ children }) { // Remove props destructuring since we’ll
   const [showVaultModal, setShowVaultModal] = useState(false);
   const [showNegativeBalanceDialog, setShowNegativeBalanceDialog] = useState(false);
   const [walletConflictOpen, setWalletConflictOpen] = useState(false);
-  const [isLive, setIsLive] = useState(false);
+  const [isLive, setIsLive] = useState(true);
   const [blurValue, setBlurValue] = useState(3);
   const [currentGif, setCurrentGif] = useState('');
   const [tokenModalOpen, setTokenModalOpen] = useState(true);
@@ -842,7 +842,7 @@ function SiteWrapper({ children }) { // Remove props destructuring since we’ll
               variant="contained"
               color="primary"
               startIcon={<FontAwesomeIcon icon={faXTwitter} />}
-              onClick={() => window.open("https://x.com/RPSDG_SOL", "_blank")}
+              onClick={() => window.open("https://x.com/rpsdotgame", "_blank")}
             >
               X
             </Button>
@@ -850,7 +850,7 @@ function SiteWrapper({ children }) { // Remove props destructuring since we’ll
               variant="contained"
               color="info"
               startIcon={<FontAwesomeIcon icon={faTelegram} />}
-              onClick={() => window.open("https://t.me/RPSDOTGAMESOL", "_blank")}
+              onClick={() => window.open("https://t.me/rpsgamesol", "_blank")}
             >
               Telegram
             </Button>
@@ -1220,7 +1220,7 @@ function SiteWrapper({ children }) { // Remove props destructuring since we’ll
                     <Divider />
                     <MenuItem
                       onClick={() => {
-                        window.open('https://raydium.io/swap/?inputMint=sol&outputMint=BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump', '_blank');
+                        window.open('https://raydium.io/swap/?inputMint=sol&outputMint=ConTraCtaDDreSS__COmmInngG__SooNNNpump', '_blank');
                       }}
                     >
                       <ListItemIcon>

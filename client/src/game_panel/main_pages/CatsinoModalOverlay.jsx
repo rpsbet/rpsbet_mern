@@ -51,7 +51,7 @@ function CatsinoModalOverlay({
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   // The full CA
-  const fullCA = 'BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump';
+  const fullCA = 'ConTraCtaDDreSS__COmmInngG__SooNNNpump';
   const displayedCA = formatAddress(fullCA, isMobile);
 
   // State to show "Copied!" animation
@@ -190,7 +190,7 @@ function CatsinoModalOverlay({
                 zIndex: 999,      // ensure on top
               }}
             >
-              STEALTH LAUNCH • 2ND APRIL 2025!
+              STEALTH LAUNCH • 6TH APRIL 2025!
             </Box>
 
             <Box

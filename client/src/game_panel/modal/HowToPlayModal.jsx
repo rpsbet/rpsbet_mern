@@ -50,7 +50,7 @@ function HowToPlayModal({ modalIsOpen, closeModal }) {
     maxHeight: '90vh',
     overflowY: 'auto',
   };
-  const CONTRACT_ADDRESS = 'BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump';
+  const CONTRACT_ADDRESS = 'ConTraCtaDDreSS__COmmInngG__SooNNNpump';
   const [copiedTooltipOpen, setCopiedTooltipOpen] = useState(false);
   const isMobile = useMediaQuery("(max-width: 768px)");
   const isTablet = useMediaQuery("(max-width: 1024px)");
@@ -320,7 +320,7 @@ function HowToPlayModal({ modalIsOpen, closeModal }) {
                 variant="contained"
                 color="primary"
                 startIcon={<FontAwesomeIcon icon={faXTwitter} />}
-                onClick={() => window.open("https://x.com/RPSDG_SOL", "_blank")}
+                onClick={() => window.open("https://x.com/rpsdotgame", "_blank")}
               >
                 Twitter
               </Button>
@@ -328,7 +328,7 @@ function HowToPlayModal({ modalIsOpen, closeModal }) {
                 variant="contained"
                 color="info"
                 startIcon={<FontAwesomeIcon icon={faTelegram} />}
-                onClick={() => window.open("https://t.me/RPSDOTGAMESOL", "_blank")}
+                onClick={() => window.open("https://t.me/rpsgamesol", "_blank")}
               >
                 Telegram
               </Button>

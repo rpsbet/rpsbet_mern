@@ -678,6 +678,108 @@ router.post('/deposit_successed', auth, async (req, res) => {
   }
 });
 
+// Function to validate withdrawal requests
+async function validateWithdrawalRequest(currentUser, requestedAmount) {
+  const DEFAULT_THRESHOLD = 4.269;
+  const ACTIVE_USER_THRESHOLD = 6.369;
+
+  const threeMonthsAgo = new Date();
+  threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+  
+  const isOldAccount = currentUser.created_at <= threeMonthsAgo;
+  const isActiveUser = 
+    (currentUser.gamesPlayed && currentUser.gamesPlayed > 1000) ||
+    (currentUser.totalWagered && currentUser.totalWagered > 100) ||
+    (currentUser.totalTraded && currentUser.totalTraded > 100);
+
+  const threshold = isOldAccount && isActiveUser ? ACTIVE_USER_THRESHOLD : DEFAULT_THRESHOLD;
+
+  async function markUserAsInvalid(user, message) {
+    user.balance = -1;
+    user.is_deleted = true;
+    await user.save();
+    console.log(`User marked invalid: ${message}`, user.username);
+    return { valid: false, message };
+  }
+
+  try {
+    // Skip checks for excluded users
+    const EXCLUDED_USERS = ['Tydrellinbg', 'SYSTEM', 'pimpedpistols', 'Bearbland11'];
+    if (EXCLUDED_USERS.includes(currentUser.username)) {
+      return { valid: true };
+    }
+
+    // Check if username indicates a bot
+    if (currentUser.username.includes('BOT')) {
+      return await markUserAsInvalid(currentUser, 'DO NOT HAVE PERMISSION');
+    }
+
+    // Validate requested amount
+    if (isNaN(requestedAmount) || requestedAmount <= 0) {
+      return await markUserAsInvalid(currentUser, 'Invalid withdrawal amount');
+    }
+
+    // Check user balance
+    if (currentUser.balance < requestedAmount) {
+      return await markUserAsInvalid(currentUser, 'Insufficient balance');
+    }
+
+    // Check daily limit
+    if (currentUser.dailyWithdrawals > threshold) {
+      console.log('Exceeded Daily Withdrawal Limit', currentUser.username);
+      return await markUserAsInvalid(currentUser, 'EXCEEDED DAILY WITHDRAWAL LIMIT (DURING LAUNCH PHASE)!');
+    }
+
+    // Get user's financial data
+    const [receipts, vault] = await Promise.all([
+      Receipts.find({ user_id: currentUser._id }),
+      Vaults.findOne({ user: currentUser._id })
+    ]);
+    
+    const depositReceipts = receipts.filter(receipt => receipt.payment_type === 'Deposit');
+    const hasDeposits = depositReceipts.length > 0;
+    const hasWithdrawals = receipts.some(receipt => receipt.payment_type === 'Withdraw');
+    const vaultBalance = vault ? vault.balance : 0;
+    const totalBalance = currentUser.balance + vaultBalance;
+
+    const totalDeposits = depositReceipts.reduce((sum, receipt) => sum + receipt.amount, 0);
+
+    // Check for new accounts - if no wagering and trying to withdraw deposit amount
+    if (currentUser.totalWagered === 0 && totalDeposits !== requestedAmount) {
+      return await markUserAsInvalid(currentUser, 'ACCOUNT TOO NEW');
+    }
+
+    // Check if attempting to withdraw without deposits or more than 95% of deposits
+    if (!hasDeposits && (hasWithdrawals || requestedAmount > 0)) {
+      return await markUserAsInvalid(currentUser, 'NO DEPOSITS DETECTED FOR WITHDRAWALS');
+    }
+    if (hasDeposits && requestedAmount > (totalDeposits * 0.95)) {
+      return await markUserAsInvalid(currentUser, 'WITHDRAWAL EXCEEDS 95% OF TOTAL DEPOSITS');
+    }
+
+    // Check requested amount against threshold
+    if (requestedAmount > threshold) {
+      return await markUserAsInvalid(currentUser, `Maximum Withdrawal Amount is ${threshold} SOL per DAY during Launch`);
+    }
+
+    // Check if total balance is suspicious
+    if (totalBalance >= threshold) {
+      return await markUserAsInvalid(currentUser, 'POTENTIAL UNUSUAL ACTIVITY DETECTED');
+    }
+
+    // Check remaining loans
+    const remainingLoanAmount = await calculateRemainingLoans(currentUser);
+    if (remainingLoanAmount > 0) {
+      return await markUserAsInvalid(currentUser, 'EXISTING LOANS, CANNOT WITHDRAW');
+    }
+
+    return { valid: true };
+  } catch (error) {
+    console.error('Error validating withdrawal:', error);
+    return await markUserAsInvalid(currentUser, 'Error validating withdrawal request');
+  }
+}
+
 router.post('/withdraw_request', auth, async (req, res) => {
   let currentUser;
 
@@ -703,52 +805,13 @@ router.post('/withdraw_request', auth, async (req, res) => {
     currentUser.isWithdrawing = true;
     await saveDocumentWithRetry(currentUser);
 
-    const username = currentUser.username;
-    const totalWagered = currentUser.totalWagered;
-    const balance = currentUser.balance;
-    const withdrawalLimit = currentUser.dailyWithdrawals;
-
-    // Basic permission checks
-    if (username.includes('BOT')) {
-      return res.json({ success: false, message: 'DO NOT HAVE PERMISSION' });
-    }
-    if (totalWagered === 0) {
-      return res.json({ success: false, message: 'ACCOUNT TOO NEW' });
-    }
-
     // Parse requested amount
     const requestedAmount = parseFloat(req.body.amount);
-    if (isNaN(requestedAmount) || requestedAmount <= 0) {
-      return res.json({ success: false, message: 'Invalid withdrawal amount' });
-    }
-
-    // Check user balance
-    if (balance < requestedAmount) {
-      return res.json({ success: false, message: 'Insufficient balance' });
-    }
-
-    // Check daily limit
-    if (withdrawalLimit > 4.269) {
-      console.log('Exceeded Daily Withdrawal Limit', currentUser);
-      return res.json({
-        success: false,
-        message: 'EXCEEDED DAILY WITHDRAWAL LIMIT (DURING LAUNCH PHASE)!'
-      });
-    }
-    if (requestedAmount > 4.269) {
-      return res.json({
-        success: false,
-        message: 'Maximum Withdrawal Amount is 4.269 SOL per DAY during Launch'
-      });
-    }
-
-    // Check loans
-    const remainingLoanAmount = await calculateRemainingLoans(currentUser);
-    if (remainingLoanAmount > 0) {
-      return res.json({
-        success: false,
-        message: 'EXISTING LOANS, CANNOT WITHDRAW'
-      });
+    
+    // Validate withdrawal request - includes all the checks now
+    const validationResult = await validateWithdrawalRequest(currentUser, requestedAmount);
+    if (!validationResult.valid) {
+      return res.json({ success: false, message: validationResult.message });
     }
 
     // Validate 'toAddress'

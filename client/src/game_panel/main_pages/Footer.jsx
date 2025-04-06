@@ -11,6 +11,8 @@ import PrivacyModal from '../modal/PrivacyModal';
 import TermsModal from '../modal/TermsModal';
 import LeaderboardsModal from '../modal/LeaderboardsModal';
 import { Box, Typography, Link, styled } from '@mui/material';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy'; // Add this at the top if not imported
+import CheckIcon from '@mui/icons-material/Check'; // For copy success feedback
 
 const FooterContainer = styled(Box)(({ theme, open }) => ({
   display: 'flex',
@@ -88,6 +90,7 @@ function Footer({ open, style }) { // Keep open and style as props
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [showLeaderboardsModal, setShowLeaderboardsModal] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const handleOpenLeaderboardsModal = () => setShowLeaderboardsModal(true);
   const handleCloseLeaderboardsModal = () => setShowLeaderboardsModal(false);
@@ -112,16 +115,16 @@ function Footer({ open, style }) { // Keep open and style as props
         )}
         <Box className="social-icons" sx={{ display: 'flex', alignItems: 'center' }}>
           <span>CHECK SOCIALS FOR UPDATES ►</span>
-          <a href="https://x.com/RPSDG_SOL">
+          <a href="https://x.com/rpsdotgame">
             <FontAwesomeIcon icon={faXTwitter} />
           </a>
-          <a href="https://t.me/RPSDOTGAMESOL">
+          <a href="https://t.me/rpsgamesol">
             <FontAwesomeIcon icon={faTelegram} />
           </a>
           <a href="https://www.youtube.com/@rpsdotgame">
             <FontAwesomeIcon icon={faYoutube} />
           </a>
-          <a href="https://www.tiktok.com/@rpsdotgames">
+          <a href="https://www.tiktok.com/@rpsdotgame">
             <FontAwesomeIcon icon={faTiktok} />
           </a>
         </Box>
@@ -146,19 +149,29 @@ function Footer({ open, style }) { // Keep open and style as props
           </StyledLink>
           <span className="mobile-only"> ✗ </span>
           <StyledLink href="https://blog.rps.game/">Blog</StyledLink>
-           ✗ 
+          ✗
           <StyledLink href="#terms" onClick={handleOpenTermsModal}>
             Terms
           </StyledLink>
-           ✗ 
+          ✗
           <StyledLink href="#privacy" onClick={handleOpenPrivacyModal}>
             Privacy
           </StyledLink>
         </LinksContainer>
-        <Address>
-          <Typography sx={{ p: '30px' }}>
-            RPS.Game has absolutely no involvement with any third-party gambling
-            provider software or 'provably-fair' algorithms.
+        <Address
+          onClick={() => {
+            navigator.clipboard.writeText('ConTraCtaDDreSS__COmmInngG__SooNNNpump');
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+          }}
+          sx={{ cursor: 'pointer' }}
+        >
+          <Typography sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            ConTraCtaDDreSS__COmmInngG__SooNNNpump
+            {copied ? <CheckIcon fontSize="small" color="success" /> : <ContentCopyIcon fontSize="small" />}
+          </Typography>
+          <Typography variant="caption" sx={{ mt: 1 }}>
+            Click to copy!
           </Typography>
         </Address>
       </FooterContainer>

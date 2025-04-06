@@ -176,7 +176,7 @@ const Gravestone = styled(Box)(() => ({
 }));
 
 // -------------- SHORTENING & CONTRACT INFO --------------
-const CONTRACT_ADDRESS = 'BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump';
+const CONTRACT_ADDRESS = 'ConTraCtaDDreSS__COmmInngG__SooNNNpump';
 const shortenAddress = (address, startLength = 9, endLength = 9) => {
   if (address.length <= startLength + endLength) return address;
   return `${address.slice(0, startLength)}...${address.slice(-endLength)}`;
@@ -720,16 +720,16 @@ const CountdownPage = () => {
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <span>FOLLOW US ►</span>
-            <a href="https://x.com/RPSDG_SOL">
+            <a href="https://x.com/rpsdotgame">
               <FontAwesomeIcon icon={faXTwitter} />
             </a>
-            <a href="https://t.me/RPSDOTGAMESOL">
+            <a href="https://t.me/rpsgamesol">
               <FontAwesomeIcon icon={faTelegram} />
             </a>
             <a href="https://www.youtube.com/@rpsdotgame">
               <FontAwesomeIcon icon={faYoutube} />
             </a>
-            <a href="https://www.tiktok.com/@rpsdotgames">
+            <a href="https://www.tiktok.com/@rpsdotgame">
               <FontAwesomeIcon icon={faTiktok} />
             </a>
           </Box>
