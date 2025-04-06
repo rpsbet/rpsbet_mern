@@ -345,13 +345,12 @@ function DepositModal({ modalIsOpen, closeModal, balance, account }) {
               color="error"
               fullWidth
               onClick={sendSOL}
-              // disabled={isConnected || isLoading}
-              disabled
+              disabled={isConnected || isLoading}
             >
               {isLoading ? (
                 <CircularProgress color="inherit" size={24} />
               ) : (
-                'OPEN TO ALL USERS ON 6TH APRIL'
+                'DEPOSIT'
               )}
             </Button>
           </Box>
