@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setFocused } from '../redux/Auth/user.actions';
 import { generateReactGameFromPrompt, proxyAsset } from '../redux/Logic/logic.actions';
@@ -12,21 +12,6 @@ import {
   Typography,
   Box,
   Slider,
-  Tab,
-  FormControlLabel,
-  Checkbox,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  IconButton,
-  Divider,
   Avatar
 } from '@mui/material';
 import LockIcon from '@mui/icons-material/Lock';
@@ -37,7 +22,7 @@ import ChatIcon from '@mui/icons-material/Chat';
 import axios from '../util/Api';
 import * as Babel from '@babel/standalone';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faDice, faCoins, faRocket, faGem, faTrophy, faRedo, faBomb, faStar, faCogs, faExchangeAlt } from '@fortawesome/free-solid-svg-icons';
+import { faDice, faCoins, faRocket, faHome, faSpinner, faGem, faTrophy, faRedo, faBomb, faStar, faCogs, faExchangeAlt } from '@fortawesome/free-solid-svg-icons';
 import Matter from 'matter-js';
 
 const decodeHtmlEntity = (html) => {
@@ -133,6 +118,7 @@ const SettingsRef = ({
           'useEffect',
           'useRef',
           'useCallback',
+          'useMemo',
           'Box',
           'Typography',
           'TextField',
@@ -145,12 +131,14 @@ const SettingsRef = ({
           'faCoins',
           'faRocket',
           'faGem',
+          'faSpinner',
           'faCogs',
           'faExchangeAlt',
           'faTrophy',
           'faRedo',
           'faBomb',
           'faStar',
+          'faHome',
           'Matter',
           `${transpiledCode}; return App;`
         );
@@ -161,6 +149,7 @@ const SettingsRef = ({
           useEffect,
           useRef,
           useCallback,
+          useMemo,
           Box,
           Typography,
           TextField,
@@ -174,11 +163,13 @@ const SettingsRef = ({
           faRocket,
           faExchangeAlt,
           faGem,
+          faSpinner,
           faCogs,
           faTrophy,
           faRedo,
           faBomb,
           faStar,
+          faHome,
           Matter
         );
 

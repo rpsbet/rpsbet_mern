@@ -5,7 +5,7 @@ import progress from '../LottieAnimations/progress.json';
 import PlayerModal from '../modal/PlayerModal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import AiPanel from '../../components/AiPanel';
-import { faDice, faCoins, faRocket, faGem, faTrophy, faRedo, faBomb, faStar, faCogs, faExchangeAlt } from '@fortawesome/free-solid-svg-icons';
+import { faDice, faCoins, faRocket, faGem, faSpinner, faTrophy, faRedo, faBomb, faStar, faCogs, faExchangeAlt } from '@fortawesome/free-solid-svg-icons';
 import {
   Button,
   Paper,
@@ -281,6 +281,7 @@ function Custom(props) {
           'faCoins',
           'faRocket',
           'faGem',
+          'faSpinner',
           'faTrophy',
           'faRedo',
           'faCogs',
@@ -308,6 +309,7 @@ function Custom(props) {
           faDice,
           faCoins,
           faRocket,
+          faSpinner,
           faGem,
           faTrophy,
           faRedo,

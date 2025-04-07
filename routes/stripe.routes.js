@@ -3,7 +3,10 @@ const router = express.Router();
 const axios = require('axios');
 const auth = require('../middleware/auth');
 const Receipt = require('../model/Receipt');
+const Vault = require('../model/Vault');
+const User = require('../model/User');
 const GameLog = require('../model/GameLog');
+const Loan = require('../model/Loan');
 const gameTransaction = require('../model/Transaction');
 const { newTransaction } = require('../socketController');
 const { Connection, Keypair, Transaction, PublicKey, SystemProgram, LAMPORTS_PER_SOL } = require('@solana/web3.js');
@@ -599,7 +602,6 @@ router.post('/deposit_successed', auth, async (req, res) => {
       throw new Error('User not authenticated');
     }
 
-    // Fetch the latest user data
     const currentUser = await User.findOne({ _id: req.user._id });
     if (!currentUser) {
       throw new Error('User not found');
@@ -685,9 +687,9 @@ async function validateWithdrawalRequest(currentUser, requestedAmount) {
 
   const threeMonthsAgo = new Date();
   threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
-  
+
   const isOldAccount = currentUser.created_at <= threeMonthsAgo;
-  const isActiveUser = 
+  const isActiveUser =
     (currentUser.gamesPlayed && currentUser.gamesPlayed > 1000) ||
     (currentUser.totalWagered && currentUser.totalWagered > 100) ||
     (currentUser.totalTraded && currentUser.totalTraded > 100);
@@ -732,10 +734,10 @@ async function validateWithdrawalRequest(currentUser, requestedAmount) {
 
     // Get user's financial data
     const [receipts, vault] = await Promise.all([
-      Receipts.find({ user_id: currentUser._id }),
-      Vaults.findOne({ user: currentUser._id })
+      Receipt.find({ user_id: currentUser._id }),
+      Vault.findOne({ user: currentUser._id })
     ]);
-    
+
     const depositReceipts = receipts.filter(receipt => receipt.payment_type === 'Deposit');
     const hasDeposits = depositReceipts.length > 0;
     const hasWithdrawals = receipts.some(receipt => receipt.payment_type === 'Withdraw');
@@ -807,7 +809,7 @@ router.post('/withdraw_request', auth, async (req, res) => {
 
     // Parse requested amount
     const requestedAmount = parseFloat(req.body.amount);
-    
+
     // Validate withdrawal request - includes all the checks now
     const validationResult = await validateWithdrawalRequest(currentUser, requestedAmount);
     if (!validationResult.valid) {
@@ -1012,7 +1014,7 @@ router.post('/get_gasfee', auth, async (req, res) => {
     if (feeResponse === null) {
       throw new Error("Unable to fetch fee. The blockhash might be expired or invalid.");
     }
-    
+
     // feeResponse can be a number or an object with a `value` property.
     const feeLamports = (typeof feeResponse === 'object' && feeResponse !== null && feeResponse.value !== undefined)
       ? feeResponse.value

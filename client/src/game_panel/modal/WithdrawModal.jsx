@@ -323,11 +323,11 @@ function WithdrawModal(props) {
               variant="contained"
               color="error"
               onClick={send}
-              disabled={isConnected || isLoading || getRank(userInfo.totalWagered) < 7}
+              disabled={isConnected || isLoading || getRank(userInfo.totalWagered) <= 1}
               fullWidth
             >
-              {getRank(userInfo.totalWagered) < 3 ? (
-                'LVL 3 REQUIRED'
+              {getRank(userInfo.totalWagered) < 1 ? (
+                'LVL 1 REQUIRED'
               ) : isLoading ? (
                 <CircularProgress color="inherit" size={24} />
               ) : (
