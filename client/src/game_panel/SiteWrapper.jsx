@@ -749,7 +749,7 @@ function SiteWrapper({ children }) {
         </DialogContent>
       </Dialog>
       {isLive && tokenModalOpen && (
-        <Suspense fallback={<Typography>Loading...</Typography>}>
+        <Suspense fallback={''}>
           <CatsinoModalOverlay
             currentGif={currentGif}
             blurValue={blurValue}
@@ -1678,25 +1678,25 @@ function SiteWrapper({ children }) {
             />
           </Suspense>
         )}
-        <Suspense fallback={<Typography>Loading...</Typography>}>
+        <Suspense fallback={''}>
           <ListItemModal />
         </Suspense>
-        <Suspense fallback={<Typography>Loading...</Typography>}>
+        <Suspense fallback={''}>
           <DeListItemModal />
         </Suspense>
-        <Suspense fallback={<Typography>Loading...</Typography>}>
+        <Suspense fallback={''}>
           <ConfirmTradeModal />
         </Suspense>
-        <Suspense fallback={<Typography>Loading...</Typography>}>
+        <Suspense fallback={''}>
           <DeListLoanModal />
         </Suspense>
-        <Suspense fallback={<Typography>Loading...</Typography>}>
+        <Suspense fallback={''}>
           <ConfirmLoanModal />
         </Suspense>
-        <Suspense fallback={<Typography>Loading...</Typography>}>
+        <Suspense fallback={''}>
           <OfferLoanModal solPrice={solPrice} socket={socket} />
         </Suspense>
-        <Suspense fallback={<Typography>Loading...</Typography>}>
+        <Suspense fallback={''}>
           <GamePasswordModal />
         </Suspense>
       </div>
