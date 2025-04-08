@@ -10,9 +10,9 @@ import setAuthToken from './util/setAuthToken';
 
 const currentMode = 'dark';
 
-const App = () => {
-  const auth = useSelector(state => state.auth);
-  const admin_auth = useSelector(state => state.admin_auth);
+const App = React.memo(() => {
+  const auth = useSelector(state => state.auth, (prev, next) => prev === next);
+  const admin_auth = useSelector(state => state.admin_auth, (prev, next) => prev === next);
   const dispatch = useDispatch();
   const location = useLocation();
 
@@ -23,7 +23,10 @@ const App = () => {
     }
   }, [dispatch]);
 
-  console.log('App rendered, location:', location.pathname);
+  // Log location changes in useEffect to avoid logging on every render
+  useEffect(() => {
+    console.log('Location changed:', location.pathname);
+  }, [location.pathname]);
 
   return (
     <>
@@ -38,11 +41,11 @@ const App = () => {
             </>
           }
         />
-        <Route path="/*" element={<GameMainRoute />} /> {/* Change to /* */}
+        <Route path="/*" element={<GameMainRoute />} /> {/* Explicitly match "/" */}
         <Route path="*" element={<Error404Page />} />
       </Routes>
     </>
   );
-};
+});
 
 export default App;

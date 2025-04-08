@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/static/css/main.31c24b2f.css",
-    "main.js": "/static/js/main.d974b7d7.js",
+    "main.js": "/static/js/main.5bffef30.js",
     "static/js/540.52506a3f.chunk.js": "/static/js/540.52506a3f.chunk.js",
     "static/js/7093.63af21c3.chunk.js": "/static/js/7093.63af21c3.chunk.js",
     "static/js/3041.7d80a7d5.chunk.js": "/static/js/3041.7d80a7d5.chunk.js",
@@ -74,8 +74,8 @@
     "static/media/modal-house-edge.svg": "/static/media/modal-house-edge.ca01c901a467f797f760.svg",
     "static/media/modal-support.svg": "/static/media/modal-support.1ac4fe0aae50bcf6ad6c.svg",
     "static/media/result-icon-trade.svg": "/static/media/result-icon-trade.5f3c041bfb8998c3bbb8.svg",
-    "static/media/modal-house-edge-dark-mode.svg": "/static/media/modal-house-edge-dark-mode.859177f656628dd863b0.svg",
     "index.html": "/index.html",
+    "static/media/modal-house-edge-dark-mode.svg": "/static/media/modal-house-edge-dark-mode.859177f656628dd863b0.svg",
     "static/media/dark-alert-prize-icon.svg": "/static/media/dark-alert-prize-icon.0446232552809aef09b3.svg",
     "static/media/game.svg": "/static/media/game.9babdd9a82d848d4a830.svg",
     "static/media/alert-prize-icon.svg": "/static/media/alert-prize-icon.b802a035ae07af05a68b.svg",
@@ -94,10 +94,10 @@
     "static/media/rps-logo-white.svg": "/static/media/rps-logo-white.032a6ce6f40118f58669.svg",
     "static/media/profile-thumbnail-dark.svg": "/static/media/profile-thumbnail-dark.2a9fc745fcffc9fc2053.svg",
     "main.31c24b2f.css.map": "/static/css/main.31c24b2f.css.map",
-    "main.d974b7d7.js.map": "/static/js/main.d974b7d7.js.map"
+    "main.5bffef30.js.map": "/static/js/main.5bffef30.js.map"
   },
   "entrypoints": [
     "static/css/main.31c24b2f.css",
-    "static/js/main.d974b7d7.js"
+    "static/js/main.5bffef30.js"
   ]
 }

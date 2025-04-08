@@ -1,15 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import {
-  actionRoom,
   getRoomList,
   setCurRoomInfo,
   setRoomList,
   getRecentlyClosed,
-  addNewTransaction,
-  pumpGame,
-  endLoading,
-  startLoading,
 } from '../../redux/Logic/logic.actions';
 import isEqual from 'lodash/isEqual';
 import {
@@ -40,7 +35,6 @@ import {
   faStopwatch,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import CoHostModal from '../modal/CoHostModal';
 import Avatar from '../../components/Avatar';
 import { convertToCurrency } from '../../util/conversion';
 import { getRoomStatisticsData } from '../../redux/Customer/customer.action';
@@ -67,48 +61,23 @@ function OpenGamesTable(props) {
 
   const dispatch = useDispatch();
 
-  // Map state from Redux using useSelector
-  const {
-    creator,
-    joiners,
-    isAuthenticated,
-    userName,
-    recentlyClosed,
-    user,
-    highlightedRooms,
-    isLowGraphics,
-    loading,
-    solPrice,
-    roomList,
-    connectedAccount,
-  } = useSelector((state) => ({
-    creator: state.logic.curRoomInfo.creator_name,
-    joiners: state.logic.curRoomInfo.joiners,
-    isAuthenticated: state.auth.isAuthenticated,
-    userName: state.auth.userName,
-    recentlyClosed: state.logic.recentlyClosed,
-    user: state.auth.user,
-    highlightedRooms: state.logic.highlightedRooms,
-    isLowGraphics: state.auth.isLowGraphics,
-    loading: state.logic.isActiveLoadingOverlay,
-    solPrice: state.logic.solPrice,
-    roomList: state.logic.roomList,
-    connectedAccount: state.auth.connectedAccount,
-  }));
+const recentlyClosed = useSelector(state => state.logic.recentlyClosed, isEqual);
+const user = useSelector(state => state.auth.user, isEqual);
+const highlightedRooms = useSelector(state => state.logic.highlightedRooms, isEqual);
+const loading = useSelector(state => state.logic.isActiveLoadingOverlay);
+const solPrice = useSelector(state => state.logic.solPrice);
+const roomList = useSelector(state => state.logic.roomList, isEqual);
+const connectedAccount = useSelector(state => state.auth.connectedAccount);
 
   // Use prop values if provided, otherwise fall back to Redux state
   const effectiveLoading = propLoading !== undefined ? propLoading : loading;
   const effectiveIsDarkMode = propIsDarkMode !== undefined ? propIsDarkMode : isDarkMode;
-  const effectiveBalance = propBalance !== undefined ? propBalance : balance;
-  const effectiveConnectedAccount = propConnectedAccount !== undefined ? propConnectedAccount : connectedAccount;
+
   const effectiveSolPrice = propSolPrice !== undefined ? propSolPrice : solPrice;
 
   // Local State
   const [localRoomList, setLocalRoomList] = useState(roomList);
   const [filter, setFilter] = useState('Live Games');
-  const [isCoHostModalOpen, setIsCoHostModalOpen] = useState(false);
-  const [coHostAmount, setCoHostAmount] = useState('');
-  const [selectedRow, setSelectedRow] = useState(null);
   const [page, setPage] = useState(1);
   const [loadingRecent, setLoadingRecent] = useState(true);
 
@@ -152,47 +121,11 @@ function OpenGamesTable(props) {
     }
     setLocalRoomList(mergedRooms);
   }, [roomList, highlightedRooms, dispatch]);
+  
 
   // Handlers
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
-  };
-
-  const handleCoHost = (row) => {
-    setSelectedRow(row);
-    setIsCoHostModalOpen(true);
-  };
-
-  const handleCloseCoHostModal = () => {
-    setIsCoHostModalOpen(false);
-  };
-
-  const handleCoHostAmountChange = (event) => {
-    setCoHostAmount(event.target.value);
-  };
-
-  const handleSendCoHost = async () => {
-    if (coHostAmount <= 0) {
-      dispatch(errorMsgBar('R U FURR-REAL? AMOUNT MUST BE MORE THAN 0!'));
-      return;
-    }
-    if (coHostAmount > effectiveBalance) {
-      dispatch(errorMsgBar('NOT ENUFF FUNDS AT THIS MEOWMENT'));
-      return;
-    }
-    try {
-      const result = await dispatch(
-        pumpGame(coHostAmount, selectedRow._id, effectiveConnectedAccount),
-      );
-      if (result.success) {
-        dispatch(addNewTransaction(result.newTransaction));
-        await dispatch(getRoomList({ game_type: selectedGameType }));
-      } else {
-        dispatch(errorMsgBar(result.message));
-      }
-    } catch (e) {
-      dispatch(errorMsgBar('ROOM TOO BUSY, TRY AGAIN LATER'));
-    }
   };
 
   const customFromNow = (date) => {
@@ -1009,45 +942,7 @@ function OpenGamesTable(props) {
         </Grid>
       )}
 
-      <Modal
-        open={isCoHostModalOpen}
-        onClose={handleCloseCoHostModal}
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-        closeAfterTransition
-      >
-        <Box
-          sx={{
-            width: '95%',
-            maxWidth: 1000,
-            maxHeight: '90vh',
-            overflowY: 'auto',
-            bgcolor: '#2D3A4B',
-            borderRadius: 1,
-            p: 3,
-            color: '#fff',
-          }}
-        >
-          <CoHostModal
-            isDarkMode={effectiveIsDarkMode}
-            coHostAmount={coHostAmount}
-            connectedAccount={effectiveConnectedAccount}
-            selectedRow={selectedRow}
-            balance={effectiveBalance}
-            user={user}
-            togglePopup={() => { }}
-            handleClose={handleCloseCoHostModal}
-            handleSendCoHost={handleSendCoHost}
-            handleCoHostAmountChange={handleCoHostAmountChange}
-            has_joined={false}
-            input_only={false}
-            solPrice={effectiveSolPrice}
-          />
-        </Box>
-      </Modal>
+     
     </ThemeProvider>
   );
 }

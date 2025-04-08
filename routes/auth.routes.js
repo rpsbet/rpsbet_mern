@@ -387,15 +387,15 @@ router.get('/user', auth, async (req, res) => {
       .sort({ created_at: -1 })
       .limit(5);
 
-    const unread_message_count = await Message.countDocuments({
-      to: userId,
-      is_read: false,
-    });
+    // const unread_message_count = await Message.countDocuments({
+    //   to: userId,
+    //   is_read: false,
+    // });
 
     res.json({
       success: true,
       user: req.user,
-      unread_message_count,
+      // unread_message_count,
       transactions,
     });
   } catch (error) {
