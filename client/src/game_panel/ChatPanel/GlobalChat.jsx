@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import PlayerModal from '../modal/PlayerModal';
+const PlayerModal = React.lazy(() => import('../modal/PlayerModal'));
 import Avatar from '../../components/Avatar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHandPointDown } from '@fortawesome/free-solid-svg-icons';
@@ -13,12 +13,8 @@ function GlobalChat(props) {
     selectedMessage,
     setSelectedMessage,
     isDarkMode: propIsDarkMode,
-    isDrawerOpen,
-    onlineUserList,
     emojis,
   } = props;
-
-  const dispatch = useDispatch();
 
   // Map state from Redux using useSelector
   const { user, isDarkMode, globalChatList } = useSelector((state) => ({
@@ -43,13 +39,15 @@ function GlobalChat(props) {
   // Refs
   const chatBoxRef = useRef(null);
   const prevGlobalChatListLength = useRef(effectiveGlobalChatList.length);
+  const dispatch = useDispatch();
 
   // Effects
   useEffect(() => {
-    if (effectiveGlobalChatList.length !== chatList.length) {
-      setChatList(effectiveGlobalChatList);
+    if (!effectiveGlobalChatList.length) {
+      dispatch(fetchId());
     }
-  }, [effectiveGlobalChatList, chatList.length]);
+    setChatList(effectiveGlobalChatList);
+  }, [dispatch, effectiveGlobalChatList]);
 
   useEffect(() => {
     const oldLen = prevGlobalChatListLength.current;
@@ -187,17 +185,19 @@ function GlobalChat(props) {
           }}
           className="msgtooltip"
         >
-          {newMessages} new chat(s) 
+          {newMessages} new chat(s)
           <FontAwesomeIcon icon={faHandPointDown} />
         </ButtonBase>
       )}
 
       {showPlayerModal && (
-        <PlayerModal
-          selectedCreator={selectedCreator}
-          modalIsOpen={showPlayerModal}
-          closeModal={handleClosePlayerModal}
-        />
+        <Suspense fallback={<Skeleton variant="rectangular" width="100%" height={200} />}>
+          <PlayerModal
+            selectedCreator={selectedCreator}
+            modalIsOpen={showPlayerModal}
+            closeModal={handleClosePlayerModal}
+          />
+        </Suspense>
       )}
 
       {chatList && chatList.length > 0 ? (
@@ -223,11 +223,10 @@ function GlobalChat(props) {
             return (
               <div
                 key={index}
-                className={`chat-line ${chat.sender === 'SYSTEM' ? 'special-message' : ''} ${
-                  chat.sender === 'SYSTEM' && chat.message.includes('debt')
+                className={`chat-line ${chat.sender === 'SYSTEM' ? 'special-message' : ''} ${chat.sender === 'SYSTEM' && chat.message.includes('debt')
                     ? 'special-message-rent'
                     : ''
-                }`}
+                  }`}
                 onClick={() => handleMessageClick(chat)}
               >
                 {chat.replyTo && chat.replyTo.message && (

@@ -1,14 +1,10 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, lazy, Suspense } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import {
-  setCurRoomInfo,
   getMyChat,
-  getGameTypeList,
 } from '../../redux/Logic/logic.actions';
-import { useNavigate, useLocation } from 'react-router-dom'; // Replace history with useNavigate
+import { useNavigate, useLocation } from 'react-router-dom';
 import { toggleDrawer } from '../../redux/Auth/user.actions';
-import MyGamesTable from '../MyGames/MyGamesTable';
-import MyHistoryTable from '../MyGames/MyHistoryTable';
 import { Add, Remove } from '@mui/icons-material';
 import {
   Button,
@@ -24,19 +20,22 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCoins, faStore, faLink } from '@fortawesome/free-solid-svg-icons';
 import DrawerButton from './DrawerButton';
 import SupportButton from './SupportButton';
-import ChatPanel from '../ChatPanel/ChatPanel';
-import OpenGamesTable from '../LiveGames/OpenGamesTable';
-import HistoryTable from '../LiveGames/HistoryTable';
 import Footer from './Footer';
-import ProductPage from '../../admin_panel/app/ProductPages/ProductSerchPage/ProductPage.jsx';
-import BankPage from '../../admin_panel/app/ProductPages/ProductSerchPage/BankPage.jsx';
+
+// Lazy-load components
+const MyGamesTable = lazy(() => import('../MyGames/MyGamesTable'));
+const OpenGamesTable = lazy(() => import('../LiveGames/OpenGamesTable'));
+const HistoryTable = lazy(() => import('../LiveGames/HistoryTable'));
+const ProductPage = lazy(() => import('../../admin_panel/app/ProductPages/ProductSerchPage/ProductPage.jsx'));
+const BankPage = lazy(() => import('../../admin_panel/app/ProductPages/ProductSerchPage/BankPage.jsx'));
+const ChatPanel = lazy(() => import('../ChatPanel/ChatPanel'));
 
 function MainPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Map state from Redux using useSelector
+  // Redux state
   const {
     isAuthenticated,
     roomList,
@@ -51,29 +50,23 @@ function MainPage() {
   } = useSelector((state) => ({
     isAuthenticated: state.auth.isAuthenticated,
     roomList: state.logic.roomList,
-    history: state.logic.history,
-    solPrice: state.logic.solPrice,
-    roomCount: state.logic.roomCount,
-    pageNumber: state.logic.pageNumber,
     balance: state.auth.balance,
     user: state.auth.user,
-    isMusicEnabled: state.auth.isMusicEnabled,
-    isLowGraphics: state.auth.isLowGraphics,
     isDarkMode: state.auth.isDarkMode,
     onlineUserList: state.logic.onlineUserList,
     isDrawerOpen: state.auth.isDrawerOpen,
     gameTypeList: state.logic.gameTypeList,
     selectedMainTabIndex: state.logic.selectedMainTabIndex,
+    pageNumber: state.logic.pageNumber,
   }));
 
-  // ------------------- LOCAL STATE -------------------
+  // Local state
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
   const [selectedMobileTab, setSelectedMobileTab] = useState('live_games');
   const [showOpenGame, setShowOpenGame] = useState(0);
   const [selectedGameType, setSelectedGameType] = useState('All');
   const [showP2PLending, setShowP2PLending] = useState(false);
   const [showMarketplace, setShowMarketplace] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedCreator, setSelectedCreator] = useState('');
   const [showPlayerModal, setShowPlayerModal] = useState(false);
@@ -82,7 +75,7 @@ function MainPage() {
   const prevLocationRef = useRef(location.pathname);
   const isSmallScreen = useMediaQuery('(max-width:1024px)');
 
-  // ------------------- LIFECYCLE (componentDidMount) -------------------
+  // Lifecycle effects
   useEffect(() => {
     isMountedRef.current = true;
 
@@ -104,7 +97,6 @@ function MainPage() {
     };
   }, [isAuthenticated, isMobile, isDrawerOpen, dispatch]);
 
-  // ------------------- LIFECYCLE (componentDidUpdate) for location changes -------------------
   useEffect(() => {
     if (
       location.pathname === '/portfolio' &&
@@ -121,7 +113,7 @@ function MainPage() {
     prevLocationRef.current = location.pathname;
   }, [location.pathname]);
 
-  // ------------------- HANDLERS -------------------
+  // Handlers
   const toggleP2PLending = () => {
     setShowP2PLending((prev) => !prev);
     setShowMarketplace(false);
@@ -149,7 +141,7 @@ function MainPage() {
     navigate('/create');
   };
 
-  // -------------- UI / RENDER HELPERS -------------
+  // UI Helpers
   const getActiveTabText = () => {
     if (selectedMobileTab === 'marketplace') {
       return null;
@@ -180,11 +172,11 @@ function MainPage() {
     return 'Your Games';
   };
 
-  // ------------------- RENDER -------------------
+  // Render
   return (
     <Box className="main-game">
       {/* Chat Drawer */}
-      {isMobile && selectedMobileTab === 'chat' ? (
+      {isMobile && selectedMobileTab === 'chat' && (
         <Drawer
           className="mat-chat"
           style={{ display: isDrawerOpen && isSmallScreen ? 'flex' : 'none' }}
@@ -193,10 +185,12 @@ function MainPage() {
           open={isSmallScreen && isDrawerOpen}
         >
           {isSmallScreen && (
-            <ChatPanel toggleDrawer={handleToggleDrawer} is_mobile={isMobile} />
+            <Suspense fallback={<Typography>Loading Chat...</Typography>}>
+              <ChatPanel toggleDrawer={handleToggleDrawer} is_mobile={isMobile} />
+            </Suspense>
           )}
         </Drawer>
-      ) : null}
+      )}
 
       {/* Marketplace and P2P Lending Toggles */}
       {isMobile && selectedMobileTab === 'marketplace' && (
@@ -220,9 +214,9 @@ function MainPage() {
               </Typography>
             </Button>
             {showP2PLending && (
-              <Box sx={{ mt: 2 }}>
+              <Suspense fallback={<Typography>Loading Bank...</Typography>}>
                 <BankPage />
-              </Box>
+              </Suspense>
             )}
           </Box>
 
@@ -245,9 +239,9 @@ function MainPage() {
               </Typography>
             </Button>
             {showMarketplace && (
-              <Box sx={{ mt: 2 }}>
+              <Suspense fallback={<Typography>Loading Marketplace...</Typography>}>
                 <ProductPage />
-              </Box>
+              </Suspense>
             )}
           </Box>
         </Box>
@@ -262,45 +256,40 @@ function MainPage() {
             selectedMobileTab === 'live_games' &&
             showOpenGame === 0)) &&
           location.pathname !== '/portfolio' && (
-            <OpenGamesTable
-              selectedCreator={selectedCreator}
-              refreshing={refreshing}
-              showPlayerModal={showPlayerModal}
-              handleOpenPlayerModal={handleOpenPlayerModal}
-              handleClosePlayerModal={handleClosePlayerModal}
-              roomList={roomList}
-              isAuthenticated={isAuthenticated}
-              pageNumber={pageNumber}
-              balance={balance}
-              isDarkMode={isDarkMode}
-              selectedGameType={selectedGameType}
-              onlineUserList={onlineUserList}
-              gameTypeList={gameTypeList}
-            />
+            <Suspense fallback={<Typography>Loading Games...</Typography>}>
+              <OpenGamesTable
+                selectedCreator={selectedCreator}
+                refreshing={refreshing}
+                showPlayerModal={showPlayerModal}
+                handleOpenPlayerModal={handleOpenPlayerModal}
+                handleClosePlayerModal={handleClosePlayerModal}
+                roomList={roomList}
+                isAuthenticated={isAuthenticated}
+                pageNumber={pageNumber}
+                balance={balance}
+                isDarkMode={isDarkMode}
+                selectedGameType={selectedGameType}
+                onlineUserList={onlineUserList}
+                gameTypeList={gameTypeList}
+              />
+            </Suspense>
           )}
 
         {/* My Games */}
         {selectedMobileTab === 'my_games' && showOpenGame === 0 && (
-          <MyGamesTable />
+          <Suspense fallback={<Typography>Loading Your Games...</Typography>}>
+            <MyGamesTable />
+          </Suspense>
         )}
 
         {/* History */}
         {isMobile &&
           selectedMobileTab === 'live_games' &&
-          showOpenGame === 1 && <HistoryTable userId={user._id} />}
-        {/* {isMobile && selectedMobileTab === 'my_games' && showOpenGame === 1 && (
-          <MyHistoryTable />
-        )} */}
-
-        {/* Uncomment for desktop history */}
-        {/* {!isMobile && selectedMainTabIndex === 1 && (
-          <div className="sub-panel">
-            <h2 className="main-title desktop-only" style={{ marginBottom: '10px' }}>
-              YOUR HISTORY
-            </h2>
-            <MyHistoryTable />
-          </div>
-        )} */}
+          showOpenGame === 1 && (
+            <Suspense fallback={<Typography>Loading History...</Typography>}>
+              <HistoryTable userId={user._id} />
+            </Suspense>
+          )}
 
         <DrawerButton open={isDrawerOpen} toggleDrawer={handleToggleDrawer} />
       </Box>
@@ -346,7 +335,7 @@ function MainPage() {
               />
               <path
                 fill={selectedMobileTab === 'my_games' ? '#fff' : '#8E9297'}
-                d="M18.651 12.702l-.674.33.674-.33zm-.294-.602l.674-.33c-.126-.257-.387-.42-.674-.42v.75zm-3.714 0v-.75c-.287 0-.548.163-.674.42l.674.33zm7.607-4.75v4.302h1.5V7.35h-1.5zm-2.925 5.022l-.294-.601-1.348.658.294.602 1.348-.659zm-.968-1.022h-3.714v1.5h3.714v-1.5zm-4.388.42l-.294.602 1.348.66.294-.603-1.348-.658zm-3.219-.118V7.35h-1.5v4.302h1.5zm2.036-6.402h7.428v-1.5h-7.428v1.5zm-.49 8c-.838 0-1.546-.7-1.546-1.598h-1.5c0 1.695 1.348 3.098 3.046 3.098v-1.5zm8.408 0c-.576 0-1.113-.333-1.379-.878l-1.348.66c.512 1.046 1.565 1.718 2.727 1.718v-1.5zm1.546-1.598c0 .899-.708 1.598-1.546 1.598v1.5c1.698 0 3.046-1.403 3.046-3.098h-1.5zm-8.575.72c-.266.545-.803.878-1.38.878v1.5c1.163 0 2.216-.672 2.728-1.719l-1.348-.659zM23.75 7.35c0-1.972-1.567-3.6-3.536-3.6v1.5c1.109 0 2.036.924 2.036 2.1h1.5zm-13 0c0-1.176.928-2.1 2.036-2.1v-1.5c-1.969 0-3.536 1.628-3.536 3.6h1.5zm1.571 1.7h2.786v-1.5h-2.786v1.5zm.643-2.175v2.85h1.5v-2.85h-1.5zM19.75 8.1h.929V6.6h-.929v1.5zM17.893 10h.928V8.5h-.928V10z"
+                d="M18.651 12.702l-.674.33.674-.33zm-.294-.602l.674-.33c-.126-.257-.387-.42-.674-.42v.75zm-3.714 0v-.75c-.287 0-.548.163-.674.42l.674.33zm7.607-4.75v4.302h1.5V7.35h-1.5zm-2.925 5.022l-.294-.601-1.348.658.294.602 1.348-.659zm-.968-1.022h-3.714v-1.5h3.714v-1.5zm-4.388.42l-.294.602 1.348.66.294-.603-1.348-.658zm-3.219-.118V7.35h-1.5v4.302h1.5zm2.036-6.402h7.428v-1.5h-7.428v1.5zm-.49 8c-.838 0-1.546-.7-1.546-1.598h-1.5c0 1.695 1.348 3.098 3.046 3.098v-1.5zm8.408 0c-.576 0-1.113-.333-1.379-.878l-1.348.66c.512 1.046 1.565 1.718 2.727 1.718v-1.5zm1.546-1.598c0 .899-.708 1.598-1.546 1.598v1.5c1.698 0 3.046-1.403 3.046-3.098h-1.5zm-8.575.72c-.266.545-.803.878-1.38.878v1.5c1.163 0 2.216-.672 2.728-1.719l-1.348-.659zM23.75 7.35c0-1.972-1.567-3.6-3.536-3.6v1.5c1.109 0 2.036.924 2.036 2.1h1.5zm-13 0c0-1.176.928-2.1 2.036-2.1v-1.5c-1.969 0-3.536 1.628-3.536 3.6h1.5zm1.571 1.7h2.786v-1.5h-2.786v1.5zm.643-2.175v2.85h1.5v-2.85h-1.5zM19.75 8.1h.929V6.6h-.929v1.5zM17.893 10h.928V8.5h-.928V10z"
               />
             </svg>
             {selectedMobileTab === 'my_games' && 'YOUR GAMES'}

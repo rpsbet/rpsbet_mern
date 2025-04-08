@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import {
   Tabs,
   Tab,
@@ -7,16 +7,18 @@ import {
   Chip,
   Paper,
 } from '@mui/material';
-import Leaderboards from './Leaderboards';
-import RoomHistory from './RoomHistory';
-import Comments from './Comments';
 import Moment from 'moment';
 import { tutorialStepsGame } from '../util/tutorialStepsGame';
+
+// Statically import the most common game component (assuming RPS is default)
 import RPS from '../game_panel/JoinGame/RPS';
-import QuickShoot from '../game_panel/JoinGame/QuickShoot';
-import Custom from '../game_panel/JoinGame/Custom';
-import CoHostModal from '../game_panel/modal/CoHostModal';
-import { getRank } from '../util/getRank';
+
+// Lazy-load other components
+const QuickShoot = lazy(() => import('../game_panel/JoinGame/QuickShoot'));
+const Custom = lazy(() => import('../game_panel/JoinGame/Custom'));
+const RoomHistory = lazy(() => import('./RoomHistory'));
+const Comments = lazy(() => import('./Comments'));
+const CoHostModal = lazy(() => import('../game_panel/modal/CoHostModal'));
 
 function updateFromNow(history) {
   if (!history) return [];
@@ -45,7 +47,6 @@ function TabbedContent(props) {
     handleCloseCoHostModal,
     togglePopup,
     run,
-    // RPS / QuickShoot shared props:
     strategies,
     betting,
     result,
@@ -83,18 +84,17 @@ function TabbedContent(props) {
     changeBgColorQs,
   } = props;
 
-  // ------------------ LOCAL STATE ------------------
+  // Local state (unchanged)
   const [selectedTab, setSelectedTab] = useState(0);
   const [numToShow, setNumToShow] = useState(10);
   const [showPlayerModal, setShowPlayerModal] = useState(false);
   const [roomHistory, setRoomHistory] = useState(
     updateFromNow(roomInfo?.room_history || []),
   );
-  // activeTabs for desktop view
-  const [activeTabs, setActiveTabs] = useState([0, 1]); // e.g. 0="Play", 1="Chart"
+  const [activeTabs, setActiveTabs] = useState([0, 1]);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 767);
 
-  // Replicate getDerivedStateFromProps
+  // Effects (unchanged)
   useEffect(() => {
     if (
       !roomHistory ||
@@ -110,14 +110,13 @@ function TabbedContent(props) {
     attachUserLinkListeners();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-    // eslint-disable-next-line
   }, []);
 
   useEffect(() => {
     attachUserLinkListeners();
   }, [roomInfo?.room_history]);
 
-  // ------------------ HANDLERS ------------------
+  // Handlers (unchanged)
   const handleResize = useCallback(() => {
     setIsMobile(window.innerWidth < 767);
   }, []);
@@ -145,8 +144,7 @@ function TabbedContent(props) {
   }, []);
 
   const handleChipClick = useCallback((index) => {
-    // If it's Insights => skip or show "coming soon"
-    if (index === 4) return; // skip
+    if (index === 4) return;
     setActiveTabs((prevActiveTabs) => {
       const isActive = prevActiveTabs.includes(index);
       if (isActive) {
@@ -156,7 +154,8 @@ function TabbedContent(props) {
       }
     });
   }, []);
-  // ------------------ RENDERERS ------------------
+
+  // Renderers
   const renderTabContent = (tabIndex) => {
     switch (tabIndex) {
       case 0: {
@@ -168,7 +167,6 @@ function TabbedContent(props) {
                 className="game-page loading-skeleton"
                 sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
               >
-                {/* Skeleton placeholders */}
                 <Box
                   className="game-contents"
                   sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
@@ -225,7 +223,6 @@ function TabbedContent(props) {
             sx={{ backgroundColor: 'transparent' }}
             className="join-game-panel"
           >
-
             {roomInfo.game_type === 'RPS' ? (
               <RPS
                 changeBgColor={changeBgColor}
@@ -252,7 +249,7 @@ function TabbedContent(props) {
                 roomInfo={roomInfo}
                 rps_game_type={roomInfo.rps_game_type}
                 user_id={user_id}
-                rank={getRank(total_wagered)}
+                rank={props.getRank(total_wagered)}
                 handleOpenPlayerModal={handleOpenPlayerModal}
                 handleClosePlayerModal={handleClosePlayerModal}
                 showPlayerModal={showPlayerModal}
@@ -269,83 +266,87 @@ function TabbedContent(props) {
                 getRoomData={getRoomData}
               />
             ) : roomInfo.game_type === 'Quick Shoot' ? (
-              <QuickShoot
-                changeBgColor={changeBgColorQs}
-                onChangeState={onChangeState}
-                handleOpenPlayerModal={handleOpenPlayerModal}
-                handleClosePlayerModal={handleClosePlayerModal}
-                showPlayerModal={showPlayerModal}
-                handle2xButtonClick={handle2xButtonClick}
-                handleHalfXButtonClick={handleHalfXButtonClick}
-                handleMaxButtonClick={handleMaxButtonClick}
-                join={join}
-                result={result}
-                gameResult={gameResult}
-                updateAttachment={updateAttachment}
-                getAttachedRooms={getAttachedRooms}
-                attached={attached}
-                updateUserStrategy={updateUserStrategy}
-                updateUserPrompt={updateUserPrompt}
-                borderColor={borderColor}
-                bgColorChanged={bgColorChanged}
-                updateSelectedQs={updateSelectedQs}
-                user_id={user_id}
-                betResult={betResult}
-                is_mobile={is_mobile}
-                qsbetitems={qsbetitems}
-                creator_id={roomInfo.creator_id}
-                qs_game_type={roomInfo.qs_game_type}
-                bankroll={bankroll}
-                bet_amount={bet_amount}
-                is_private={roomInfo.is_private}
-                selected_qs_position={selected_qs_position}
-                roomInfo={roomInfo}
-                playSound={playSound}
-                ai_mode={ai_mode}
-                betting={betting}
-                strategies={strategies}
-                handleSwitchChange={handleSwitchChange}
-                pr={roomInfo.pr}
-                actionList={actionList}
-                getRoomData={getRoomData}
-              />
+              <Suspense fallback={<Skeleton variant="rectangular" width="100%" height={300} />}>
+                <QuickShoot
+                  changeBgColor={changeBgColorQs}
+                  onChangeState={onChangeState}
+                  handleOpenPlayerModal={handleOpenPlayerModal}
+                  handleClosePlayerModal={handleClosePlayerModal}
+                  showPlayerModal={showPlayerModal}
+                  handle2xButtonClick={handle2xButtonClick}
+                  handleHalfXButtonClick={handleHalfXButtonClick}
+                  handleMaxButtonClick={handleMaxButtonClick}
+                  join={join}
+                  result={result}
+                  gameResult={gameResult}
+                  updateAttachment={updateAttachment}
+                  getAttachedRooms={getAttachedRooms}
+                  attached={attached}
+                  updateUserStrategy={updateUserStrategy}
+                  updateUserPrompt={updateUserPrompt}
+                  borderColor={borderColor}
+                  bgColorChanged={bgColorChanged}
+                  updateSelectedQs={updateSelectedQs}
+                  user_id={user_id}
+                  betResult={betResult}
+                  is_mobile={is_mobile}
+                  qsbetitems={qsbetitems}
+                  creator_id={roomInfo.creator_id}
+                  qs_game_type={roomInfo.qs_game_type}
+                  bankroll={bankroll}
+                  bet_amount={bet_amount}
+                  is_private={roomInfo.is_private}
+                  selected_qs_position={selected_qs_position}
+                  roomInfo={roomInfo}
+                  playSound={playSound}
+                  ai_mode={ai_mode}
+                  betting={betting}
+                  strategies={strategies}
+                  handleSwitchChange={handleSwitchChange}
+                  pr={roomInfo.pr}
+                  actionList={actionList}
+                  getRoomData={getRoomData}
+                />
+              </Suspense>
             ) : (
-              <Custom
-                onChangeState={onChangeState}
-                handleOpenPlayerModal={handleOpenPlayerModal}
-                handleClosePlayerModal={handleClosePlayerModal}
-                showPlayerModal={showPlayerModal}
-                handle2xButtonClick={handle2xButtonClick}
-                handleHalfXButtonClick={handleHalfXButtonClick}
-                handleMaxButtonClick={handleMaxButtonClick}
-                join={join}
-                result={result}
-                gameResult={gameResult}
-                updateAttachment={updateAttachment}
-                getAttachedRooms={getAttachedRooms}
-                attached={attached}
-                updateUserStrategy={updateUserStrategy}
-                updateUserPrompt={updateUserPrompt}
-                borderColor={borderColor}
-                bgColorChanged={bgColorChanged}
-                updateSelectedQs={updateSelectedQs}
-                user_id={user_id}
-                betResult={betResult}
-                is_mobile={is_mobile}
-                creator_id={roomInfo.creator_id}
-                bankroll={bankroll}
-                bet_amount={bet_amount}
-                is_private={roomInfo.is_private}
-                roomInfo={roomInfo}
-                playSound={playSound}
-                ai_mode={ai_mode}
-                betting={betting}
-                strategies={strategies}
-                handleSwitchChange={handleSwitchChange}
-                pr={roomInfo.pr}
-                actionList={actionList}
-                getRoomData={getRoomData}
-              />
+              <Suspense fallback={<Skeleton variant="rectangular" width="100%" height={300} />}>
+                <Custom
+                  onChangeState={onChangeState}
+                  handleOpenPlayerModal={handleOpenPlayerModal}
+                  handleClosePlayerModal={handleClosePlayerModal}
+                  showPlayerModal={showPlayerModal}
+                  handle2xButtonClick={handle2xButtonClick}
+                  handleHalfXButtonClick={handleHalfXButtonClick}
+                  handleMaxButtonClick={handleMaxButtonClick}
+                  join={join}
+                  result={result}
+                  gameResult={gameResult}
+                  updateAttachment={updateAttachment}
+                  getAttachedRooms={getAttachedRooms}
+                  attached={attached}
+                  updateUserStrategy={updateUserStrategy}
+                  updateUserPrompt={updateUserPrompt}
+                  borderColor={borderColor}
+                  bgColorChanged={bgColorChanged}
+                  updateSelectedQs={updateSelectedQs}
+                  user_id={user_id}
+                  betResult={betResult}
+                  is_mobile={is_mobile}
+                  creator_id={roomInfo.creator_id}
+                  bankroll={bankroll}
+                  bet_amount={bet_amount}
+                  is_private={roomInfo.is_private}
+                  roomInfo={roomInfo}
+                  playSound={playSound}
+                  ai_mode={ai_mode}
+                  betting={betting}
+                  strategies={strategies}
+                  handleSwitchChange={handleSwitchChange}
+                  pr={roomInfo.pr}
+                  actionList={actionList}
+                  getRoomData={getRoomData}
+                />
+              </Suspense>
             )}
           </Paper>
         );
@@ -354,61 +355,54 @@ function TabbedContent(props) {
       case 1: {
         // "Chart" / CoHost
         return (
-          <CoHostModal
-            isDarkMode={isDarkMode}
-            coHostAmount={coHostAmount}
-            selectedRow={roomInfo}
-            balance={balance}
-            user={user}
-            togglePopup={togglePopup}
-            handleClose={handleCloseCoHostModal}
-            handleSendCoHost={handleSendCoHost}
-            handleCoHostAmountChange={handleCoHostAmountChange}
-            has_joined={has_joined}
-            solPrice={solPrice}
-            input_only={false}
-          />
+          <Suspense fallback={<Skeleton variant="rectangular" width="100%" height={200} />}>
+            <CoHostModal
+              isDarkMode={isDarkMode}
+              coHostAmount={coHostAmount}
+              selectedRow={roomInfo}
+              balance={balance}
+              user={user}
+              togglePopup={togglePopup}
+              handleClose={handleCloseCoHostModal}
+              handleSendCoHost={handleSendCoHost}
+              handleCoHostAmountChange={handleCoHostAmountChange}
+              has_joined={has_joined}
+              solPrice={solPrice}
+              input_only={false}
+            />
+          </Suspense>
         );
       }
 
       case 2: {
         // "History"
         return (
-          <RoomHistory
-            roomId={roomInfo._id}
-            getRoomInfo={props.getRoomInfo}
-            roomInfo={roomInfo}
-            isLowGraphics={isLowGraphics}
-          />
+          <Suspense fallback={<Skeleton variant="rectangular" width="100%" height={200} />}>
+            <RoomHistory
+              roomId={roomInfo._id}
+              getRoomInfo={props.getRoomInfo}
+              roomInfo={roomInfo}
+              isLowGraphics={isLowGraphics}
+            />
+          </Suspense>
         );
       }
 
       case 3: {
         // "Thread"
         return (
-          <Box>
+          <Suspense fallback={<Skeleton variant="rectangular" width="100%" height={200} />}>
             <Comments roomId={roomInfo._id} />
-          </Box>
+          </Suspense>
         );
       }
-
-      // case 4: {
-      //   // "Insights" -> COMING SOON
-      //   return (
-      //     <Box textAlign="center" p={2}>
-      //       <Typography variant="h6" color="error">
-      //         Insights Coming Soon
-      //       </Typography>
-      //     </Box>
-      //   );
-      // }
 
       default:
         return null;
     }
   };
 
-  // ------------------ MOBILE LAYOUT ------------------
+  // Mobile Layout (unchanged except for Suspense wrapping)
   if (isMobile) {
     return (
       <div className="tabs-container">
@@ -419,13 +413,9 @@ function TabbedContent(props) {
           textColor="inherit"
           indicatorColor="error"
         >
-          {/* 0: "Play" */}
           <Tab label="Play" />
-          {/* 1: "Chart" */}
           <Tab label="Chart" />
-          {/* 2: "History" */}
           <Tab label="History" />
-          {/* 3: "Thread" */}
           <Tab label="Comments" />
         </Tabs>
 
@@ -434,19 +424,12 @@ function TabbedContent(props) {
           {selectedTab === 1 && renderTabContent(1)}
           {selectedTab === 2 && renderTabContent(2)}
           {selectedTab === 3 && renderTabContent(3)}
-          {/* {selectedTab === 4 && (
-            <Box textAlign="center" p={2}>
-              <Typography variant="h6" color="error">
-                Insights Coming Soon
-              </Typography>
-            </Box>
-          )} */}
         </div>
       </div>
     );
   }
 
-  // ------------------ DESKTOP LAYOUT ------------------
+  // Desktop Layout (unchanged except for Suspense wrapping)
   return (
     <div>
       <Box
@@ -463,25 +446,19 @@ function TabbedContent(props) {
           flexWrap: 'wrap',
         }}
       >
-        {['Play', 'Chart', 'History', 'Comments'].map(
-          (label, index) => {
-            const isInsights = index === 4;
-            return (
-              <Chip
-                key={index}
-                label={isInsights ? `${label} (Coming Soon)` : label}
-                // disable the onClick if it's Insights
-                onClick={isInsights ? undefined : () => handleChipClick(index)}
-                clickable={!isInsights}
-                color={
-                  // if it's active, highlight; else default
-                  activeTabs.includes(index) ? 'error' : 'error'
-                }
-                variant={activeTabs.includes(index) ? 'filled' : 'outlined'}
-              />
-            );
-          },
-        )}
+        {['Play', 'Chart', 'History', 'Comments'].map((label, index) => {
+          const isInsights = index === 4;
+          return (
+            <Chip
+              key={index}
+              label={isInsights ? `${label} (Coming Soon)` : label}
+              onClick={isInsights ? undefined : () => handleChipClick(index)}
+              clickable={!isInsights}
+              color={activeTabs.includes(index) ? 'error' : 'error'}
+              variant={activeTabs.includes(index) ? 'filled' : 'outlined'}
+            />
+          );
+        })}
       </Box>
 
       <Box>

@@ -9,12 +9,10 @@ import { useSelector, useDispatch } from 'react-redux';
 import Moment from 'moment';
 import { useParams } from 'react-router-dom'; 
 import TabbedContent from '../../components/TabbedContent';
-import { getRoomStatisticsData } from '../../redux/Customer/customer.action';
 import { Button, Drawer, Box, Tabs, Tab } from '@mui/material';
 
 import {
   toggleDrawer,
-  updateTutorialCompleted,
 } from '../../redux/Auth/user.actions';
 
 import PreSummaryPanel from '../../components/PreSummaryPanel';
@@ -27,8 +25,6 @@ import { getRank } from '../../util/getRank';
 import {
   bet3,
   getRoomInfo,
-  setCurRoomInfo,
-  getGameTypeList,
   updateUserStrategy,
   updateUserPrompt,
   getRpsBetItems,
@@ -49,8 +45,6 @@ import {
 
 import ChatPanel from '../ChatPanel/ChatPanel';
 import MyGamesTable from '../MyGames/MyGamesTable';
-import MyHistoryTable from '../MyGames/MyHistoryTable';
-import HistoryTable from '../LiveGames/HistoryTable';
 import DrawerButton from './DrawerButton';
 import SupportButton from './SupportButton';
 import Footer from './Footer';
@@ -145,17 +139,12 @@ function JoinGame({ match }) { // Keep match as a prop since it’s from React R
   const [battles, setBattles] = useState(roomInfo.battles);
   const [selected_rps, setSelected_rps] = useState('');
   const [selected_qs_position, setSelected_qs_position] = useState(0);
-  const [index, setIndex] = useState(0);
-  const [qs_game_type, setQsGameType] = useState(2);
   const [run, setRun] = useState(false);
-  const [selected_id, setSelectedId] = useState('');
-  const [image, setImage] = useState('');
   const [bgColorChanged, setBgColorChanged] = useState(false);
   const [borderColor, setBorderColor] = useState('');
   const [gameResult, setGameResult] = useState(-100);
   const [betResult, setBetResult] = useState(null);
   const [result, setResult] = useState(0);
-  const [productName, setProductName] = useState('');
   const [coHostAmount, setCoHostAmount] = useState(0.01);
   const [intervalId, setIntervalId] = useState(null);
   const [isMax, setIsMax] = useState(false);
@@ -294,20 +283,6 @@ function JoinGame({ match }) { // Keep match as a prop since it’s from React R
       );
     },
     [dispatch, roomInfo, user_id],
-  );
-
-  const join2 = useCallback(
-    async (betInfo) => {
-      return await dispatch(
-        bet3({
-          _id: localRoomInfo._id,
-          user: user_id,
-          game_type: localRoomInfo.game_type,
-          ...betInfo,
-        }),
-      );
-    },
-    [dispatch, localRoomInfo, user_id],
   );
 
   const playSound = useCallback(
@@ -670,7 +645,6 @@ function JoinGame({ match }) { // Keep match as a prop since it’s from React R
 
         <DrawerButton open={isDrawerOpen} toggleDrawer={toggleDrawerHandler} />
 
-        {/* {!is_mobile && selectedMainTabIndex === 1 && <MyHistoryTable />} */}
       </Box>
 
       {!is_mobile && (

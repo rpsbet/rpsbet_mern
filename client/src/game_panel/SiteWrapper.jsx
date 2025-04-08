@@ -3,6 +3,8 @@ import React, {
   useEffect,
   useRef,
   useCallback,
+  lazy,
+  Suspense,
 } from 'react';
 import {
   createTheme,
@@ -32,16 +34,9 @@ import {
 import { ThemeProvider } from '@mui/material/styles';
 import { useSelector, useDispatch } from 'react-redux'; // Add Redux hooks
 import { useNavigate, useLocation } from 'react-router-dom';
-import CatsinoModalOverlay from '../game_panel/main_pages/CatsinoModalOverlay.jsx';
-import HistoryTable from '../game_panel/LiveGames/HistoryTable.jsx';
 import axios from '../util/Api';
-import SettingsModal from './modal/SettingsModal.jsx';
-import BonusModal from './modal/BonusModal.jsx';
 import LoadingOverlay from 'react-loading-overlay';
 import CountUp from 'react-countup';
-import Lottie from 'react-lottie';
-import coins from './LottieAnimations/coins.json';
-import AllTransactionsModal from './modal/AllTransactionsModal.jsx';
 import { debounce } from 'lodash';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXTwitter, faTelegram, faYoutube, faTiktok } from '@fortawesome/free-brands-svg-icons';
@@ -73,30 +68,12 @@ import Avatar from '../components/Avatar';
 import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import EmailIcon from "@mui/icons-material/Email";
-import ProfileModal from './modal/ProfileModal';
-import PlayerModal from './modal/PlayerModal';
-import HowToPlayModal from './modal/HowToPlayModal';
-import MarketplaceModal from './modal/MarketplaceModal';
-import BankModal from './modal/BankModal';
-import DebtsModal from './modal/DebtsModal';
-import LeaderboardsModal from './modal/LeaderboardsModal';
+
 import {
   acCalculateRemainingLoans,
   setCurrentOfferTargetInfo
 } from '../redux/Loan/loan.action';
-import ConfirmTradeModal from './modal/ConfirmTradeModal';
-import ConfirmLoanModal from './modal/ConfirmLoanModal';
-import OfferLoanModal from './modal/OfferLoanModal';
-import ListItemModal from './modal/ListItemModal';
-import DeListItemModal from './modal/DeListItemModal';
-import DeListLoanModal from './modal/DeListLoanModal';
-import GamePasswordModal from './modal/GamePasswordModal';
-import LoginModal from './modal/LoginModal';
-import SignupModal from './modal/SignupModal';
-import DepositModal from './modal/DepositModal';
-import WithdrawModal from './modal/WithdrawModal';
-import InventoryModal from './modal/InventoryModal';
-import VaultModal from './modal/VaultModal';
+
 import { tutorialStepsMain } from '../util/tutorialStepsMain';
 import CookieConsent from '../util/cookieConsent';
 import { convertToCurrency } from '../util/conversion';
@@ -135,10 +112,35 @@ import {
   endLoading,
 } from '../redux/Logic/logic.actions';
 
+// Lazy-loaded components
+const CatsinoModalOverlay = lazy(() => import('../game_panel/main_pages/CatsinoModalOverlay.jsx'));
+const HistoryTable = lazy(() => import('../game_panel/LiveGames/HistoryTable.jsx'));
+const SettingsModal = lazy(() => import('./modal/SettingsModal.jsx'));
+const BonusModal = lazy(() => import('./modal/BonusModal.jsx'));
+const AllTransactionsModal = lazy(() => import('./modal/AllTransactionsModal.jsx'));
+const ProfileModal = lazy(() => import('./modal/ProfileModal'));
+const PlayerModal = lazy(() => import('./modal/PlayerModal'));
+const HowToPlayModal = lazy(() => import('./modal/HowToPlayModal'));
+const MarketplaceModal = lazy(() => import('./modal/MarketplaceModal'));
+const BankModal = lazy(() => import('./modal/BankModal'));
+const DebtsModal = lazy(() => import('./modal/DebtsModal'));
+const LeaderboardsModal = lazy(() => import('./modal/LeaderboardsModal'));
+const ConfirmTradeModal = lazy(() => import('./modal/ConfirmTradeModal'));
+const ConfirmLoanModal = lazy(() => import('./modal/ConfirmLoanModal'));
+const OfferLoanModal = lazy(() => import('./modal/OfferLoanModal'));
+const ListItemModal = lazy(() => import('./modal/ListItemModal'));
+const DeListItemModal = lazy(() => import('./modal/DeListItemModal'));
+const DeListLoanModal = lazy(() => import('./modal/DeListLoanModal'));
+const GamePasswordModal = lazy(() => import('./modal/GamePasswordModal'));
+const LoginModal = lazy(() => import('./modal/LoginModal'));
+const SignupModal = lazy(() => import('./modal/SignupModal'));
+const DepositModal = lazy(() => import('./modal/DepositModal'));
+const WithdrawModal = lazy(() => import('./modal/WithdrawModal'));
+const InventoryModal = lazy(() => import('./modal/InventoryModal'));
+const VaultModal = lazy(() => import('./modal/VaultModal'));
+
 // Remove PropTypes override
 LoadingOverlay.propTypes = undefined;
-
-const tokenMintAddress = 'BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump';
 
 // Create theme configurations
 const customTextFieldStyles = {
@@ -195,7 +197,7 @@ function SiteWrapper({ children }) {
   const dispatch = useDispatch();
   const location = useLocation();
   const navigate = useNavigate();
-  
+
   // Redux state
   const {
     isDarkMode,
@@ -255,7 +257,7 @@ function SiteWrapper({ children }) {
       ? 'https://rps.game'
       : `http://${window.location.hostname}:5001`
   );
-  
+
   const [balance, setLocalBalance] = useState(propsBalance);
   const [oldBalance, setOldBalance] = useState(propsBalance);
   const [hoverTabIndex, setHoverTabIndex] = useState(-1);
@@ -267,7 +269,6 @@ function SiteWrapper({ children }) {
   const [runTutorial, setRunTutorial] = useState(false);
   const [isInvestorsPage, setIsInvestorsPage] = useState(location.pathname.startsWith('/investors'));
   const [isPlayer, setIsPlayer] = useState(location.pathname.startsWith('/play'));
-  const [currentTutorial, setCurrentTutorial] = useState(1);
   const [showHowToPlayModal, setShowHowToPlayModal] = useState(false);
   const [showMarketplaceModal, setShowMarketplaceModal] = useState(false);
   const [showBankModal, setShowBankModal] = useState(false);
@@ -304,9 +305,6 @@ function SiteWrapper({ children }) {
   // Audio Refs
   const notificationSoundRef = useRef(null);
   const needALoanRef = useRef(null);
-  const audioWinRef = useRef(null);
-  const audioSplitRef = useRef(null);
-  const audioLoseRef = useRef(null);
 
   const intervalRef = useRef(null);
   const isUnmountedRef = useRef(false);
@@ -364,13 +362,6 @@ function SiteWrapper({ children }) {
       setRunTutorial(!user.completedTutorials.includes(1));
     }
   }, [user]);
-
-  // Handle bet result animations
-  useEffect(() => {
-    if (propsBetResult === 'win' && !isLowGraphics) {
-      playCoinsAnimation();
-    }
-  }, [propsBetResult, isLowGraphics]);
 
   // Update remaining loans
   useEffect(() => {
@@ -543,25 +534,13 @@ function SiteWrapper({ children }) {
     try {
       notificationSoundRef.current = new Audio('/sounds/notification.mp3');
       needALoanRef.current = new Audio('/sounds/need_a_loan.mp3');
-      audioWinRef.current = new Audio('/sounds/audioWin.mp3');
-      audioSplitRef.current = new Audio('/sounds/audioSplit.mp3');
-      audioLoseRef.current = new Audio('/sounds/audioLose.mp3');
 
       await notificationSoundRef.current.load();
       await needALoanRef.current.load();
-      await audioWinRef.current.load();
-      await audioSplitRef.current.load();
-      await audioLoseRef.current.load();
+
     } catch (error) {
       console.log('Audio initialization error:', error);
     }
-  }, []);
-
-  const playCoinsAnimation = useCallback(() => {
-    setIsCoinsAnimation(true);
-    setTimeout(() => {
-      setIsCoinsAnimation(false);
-    }, 1500);
   }, []);
 
   // Wallet functionality
@@ -604,18 +583,18 @@ function SiteWrapper({ children }) {
   const handleOpenProfileMenu = e => setAnchorElProfile(e.currentTarget);
   const handleCloseProfileMenu = () => setAnchorElProfile(null);
   const handleNotificationsClick = e => setAnchorElNotifications(e.currentTarget);
-  
+
   const handleCloseNotifications = () => {
     dispatch(readNotifications());
     setAnchorElNotifications(null);
   };
-  
+
   const handleBalanceClick = e => setAnchorElGameLog(e.currentTarget);
   const handleCloseGameLog = () => setAnchorElGameLog(null);
   const handleMouseEnter = index => setHoverTabIndex(index);
   const handleMouseLeave = () => setHoverTabIndex(-1);
   const toggleAllTransactions = () => setShowAllGameLogs(prev => !prev);
-  
+
   const handleLogout = clearToken => {
     setWalletAddress(null);
     setSolanaBalance(null);
@@ -626,19 +605,19 @@ function SiteWrapper({ children }) {
 
   // Modal toggle handlers
   const toggleModal = (setter, value = null) => setter(value === null ? prev => !prev : value);
-  
+
   const handleOpenProfileModal = () => {
     setShowProfileModal(true);
     setAnchorElProfile(null);
   };
-  
+
   const handleCloseProfileModal = () => setShowProfileModal(false);
-  
+
   const handleOpenPlayerModal = creatorId => {
     setShowPlayerModal(true);
     setSelectedCreator(creatorId);
   };
-  
+
   const handleClosePlayerModal = () => setShowPlayerModal(false);
   const handleOpenHowToPlayModal = () => setShowHowToPlayModal(true);
   const handleCloseHowToPlayModal = () => setShowHowToPlayModal(false);
@@ -652,33 +631,33 @@ function SiteWrapper({ children }) {
   const handleCloseLoginModal = () => setShowLoginModal(false);
   const handleOpenSignupModal = () => setShowSignupModal(true);
   const handleCloseSignupModal = () => setShowSignupModal(false);
-  
+
   const handleOpenDepositModal = () => {
     setShowDepositModal(true);
     setAnchorElProfile(null);
   };
-  
+
   const handleCloseDepositModal = () => setShowDepositModal(false);
-  
+
   const handleOpenWithdrawModal = () => {
     setShowWithdrawModal(true);
     setAnchorElProfile(null);
   };
-  
+
   const handleCloseWithdrawModal = () => setShowWithdrawModal(false);
-  
+
   const handleOpenInventoryModal = () => {
     setShowInventoryModal(true);
     setAnchorElProfile(null);
   };
-  
+
   const handleCloseInventoryModal = () => setShowInventoryModal(false);
-  
+
   const handleOpenVaultModal = () => {
     setShowVaultModal(true);
     setAnchorElProfile(null);
   };
-  
+
   const handleCloseVaultModal = () => setShowVaultModal(false);
   const handleOpenDebtsModal = () => setShowDebtsModal(true);
   const handleCloseDebtsModal = () => setShowDebtsModal(false);
@@ -687,7 +666,7 @@ function SiteWrapper({ children }) {
   const handleBonusModal = () => setShowBonusModal(true);
   const handleCloseBonusModal = () => setShowBonusModal(false);
   const closeTokenModal = () => setTokenModalOpen(false);
-  
+
   const handlePortfolio = () => {
     navigate('/portfolio');
     dispatch(selectMainTab(1));
@@ -770,19 +749,21 @@ function SiteWrapper({ children }) {
         </DialogContent>
       </Dialog>
       {isLive && tokenModalOpen && (
-        <CatsinoModalOverlay
-          currentGif={currentGif}
-          blurValue={blurValue}
-          halloween={halloween}
-          handleCountdownButtonClick={() => {
-            navigate('/investors');
-            closeTokenModal();
-          }}
-          handleYoutubeButtonClick={() => {
-            handleOpenLoginModal();
-            closeTokenModal();
-          }}
-        />
+        <Suspense fallback={<Typography>Loading...</Typography>}>
+          <CatsinoModalOverlay
+            currentGif={currentGif}
+            blurValue={blurValue}
+            halloween={halloween}
+            handleCountdownButtonClick={() => {
+              navigate('/investors');
+              closeTokenModal();
+            }}
+            handleYoutubeButtonClick={() => {
+              handleOpenLoginModal();
+              closeTokenModal();
+            }}
+          />
+        </Suspense>
       )}
 
       <div className={`site_wrapper ${isDarkMode ? 'dark_mode' : ''}`}>
@@ -816,8 +797,11 @@ function SiteWrapper({ children }) {
               </a>
             </Box>
 
+
             {!isInvestorsPage ? (
-              <HistoryTable userId={user?._id} />
+              <Suspense fallback={<Typography>Loading History...</Typography>}>
+                <HistoryTable userId={user?._id} />
+              </Suspense>
             ) : (
               <div style={{ padding: width < 600 ? '0' : '48px' }} />
             )}
@@ -949,25 +933,6 @@ function SiteWrapper({ children }) {
                           />
                         )}
                     </div>
-
-                    {isCoinsAnimation && !isLowGraphics && (
-                      <Lottie
-                        options={{
-                          loop: isLowGraphics ? false : true,
-                          autoplay: isCoinsAnimation,
-                          animationData: coins,
-                          rendererSettings: {
-                            preserveAspectRatio: 'xMidYMid slice'
-                          }
-                        }}
-                        style={{
-                          marginTop: '-0px',
-                          position: 'absolute',
-                          width: '100px',
-                          height: '100px'
-                        }}
-                      />
-                    )}
 
                     <Button
                       id="wallet-btn"
@@ -1280,14 +1245,16 @@ function SiteWrapper({ children }) {
           </Popover>
 
           {showAllGameLogs && (
-            <AllTransactionsModal
-              modalIsOpen={showAllGameLogs}
-              isDarkMode={isDarkMode}
-              close={toggleAllTransactions}
-              user={user?._id}
-              solPrice={solPrice}
-              transactions={transactions}
-            />
+            <Suspense fallback={<Typography>Loading Transactions...</Typography>}>
+              <AllTransactionsModal
+                modalIsOpen={showAllGameLogs}
+                isDarkMode={isDarkMode}
+                close={toggleAllTransactions}
+                user={user?._id}
+                solPrice={solPrice}
+                transactions={transactions}
+              />
+            </Suspense>
           )}
 
           <Popover
@@ -1548,150 +1515,190 @@ function SiteWrapper({ children }) {
         </div>
 
         {showProfileModal && (
-          <ProfileModal
-            modalIsOpen={showProfileModal}
-            closeModal={handleCloseProfileModal}
-            player_name={userName}
-            balance={balance}
-            accessory={user?.accessory}
-            avatar={user?.avatar}
-            totalWagered={user?.totalWagered}
-            selectedCreator={user?._id}
-          />
+          <Suspense fallback={<Typography>Loading Profile...</Typography>}>
+            <ProfileModal
+              modalIsOpen={showProfileModal}
+              closeModal={handleCloseProfileModal}
+              player_name={userName}
+              balance={balance}
+              accessory={user?.accessory}
+              avatar={user?.avatar}
+              totalWagered={user?.totalWagered}
+              selectedCreator={user?._id}
+            />
+          </Suspense>
         )}
         {showPlayerModal && (
-          <PlayerModal
-            selectedCreator={selectedCreator}
-            modalIsOpen={showPlayerModal}
-            closeModal={handleClosePlayerModal}
-          />
+          <Suspense fallback={<Typography>Loading Player...</Typography>}>
+            <PlayerModal
+              selectedCreator={selectedCreator}
+              modalIsOpen={showPlayerModal}
+              closeModal={handleClosePlayerModal}
+            />
+          </Suspense>
         )}
         {showSettingsModal && (
-          <SettingsModal
-            modalIsOpen={showSettingsModal}
-            closeModal={handleCloseSettingsModal}
-            handleMute={() => {
-              audioWinRef.current.muted = true;
-              audioLoseRef.current.muted = true;
-              audioSplitRef.current.muted = true;
-              needALoanRef.current.muted = true;
-              notificationSoundRef.current.muted = true;
-            }}
-            handleUnmute={() => {
-              audioWinRef.current.muted = false;
-              audioLoseRef.current.muted = false;
-              audioSplitRef.current.muted = false;
-              needALoanRef.current.muted = false;
-              notificationSoundRef.current.muted = false;
-            }}
-          />
+          <Suspense fallback={<Typography>Loading Settings...</Typography>}>
+            <SettingsModal
+              modalIsOpen={showSettingsModal}
+              closeModal={handleCloseSettingsModal}
+              handleMute={() => {
+
+                needALoanRef.current.muted = true;
+                notificationSoundRef.current.muted = true;
+              }}
+              handleUnmute={() => {
+
+                needALoanRef.current.muted = false;
+                notificationSoundRef.current.muted = false;
+              }}
+            />
+          </Suspense>
         )}
         {showBonusModal && (
-          <BonusModal
-            modalIsOpen={showBonusModal}
-            closeModal={handleCloseBonusModal}
-            user={user}
-            solPrice={solPrice}
-          />
+          <Suspense fallback={<Typography>Loading Bonus...</Typography>}>
+            <BonusModal
+              modalIsOpen={showBonusModal}
+              closeModal={handleCloseBonusModal}
+              user={user}
+              solPrice={solPrice}
+            />
+          </Suspense>
         )}
         {showLeaderboardsModal && (
-          <LeaderboardsModal
-            modalIsOpen={showLeaderboardsModal}
-            closeModal={handleCloseLeaderboardsModal}
-            player_name={userName}
-            balance={balance}
-            isDarkMode={isDarkMode}
-          />
+          <Suspense fallback={<Typography>Loading Leaderboards...</Typography>}>
+            <LeaderboardsModal
+              modalIsOpen={showLeaderboardsModal}
+              closeModal={handleCloseLeaderboardsModal}
+              player_name={userName}
+              balance={balance}
+              isDarkMode={isDarkMode}
+            />
+          </Suspense>
         )}
         {showHowToPlayModal && (
-          <HowToPlayModal
-            modalIsOpen={showHowToPlayModal}
-            closeModal={handleCloseHowToPlayModal}
-            player_name={userName}
-            balance={balance}
-            isDarkMode={isDarkMode}
-          />
+          <Suspense fallback={<Typography>Loading How To Play...</Typography>}>
+            <HowToPlayModal
+              modalIsOpen={showHowToPlayModal}
+              closeModal={handleCloseHowToPlayModal}
+              player_name={userName}
+              balance={balance}
+              isDarkMode={isDarkMode}
+            />
+          </Suspense>
         )}
         {showBankModal && (
-          <BankModal
-            modalIsOpen={showBankModal}
-            closeModal={handleCloseBankModal}
-            player_name={userName}
-            balance={balance}
-            isDarkMode={isDarkMode}
-            remainingLoans={remainingLoans}
-          />
+          <Suspense fallback={<Typography>Loading Bank...</Typography>}>
+            <BankModal
+              modalIsOpen={showBankModal}
+              closeModal={handleCloseBankModal}
+              player_name={userName}
+              balance={balance}
+              isDarkMode={isDarkMode}
+              remainingLoans={remainingLoans}
+            />
+          </Suspense>
         )}
         {showMarketplaceModal && (
-          <MarketplaceModal
-            modalIsOpen={showMarketplaceModal}
-            closeModal={handleCloseMarketplaceModal}
-            player_name={userName}
-            balance={balance}
-            isDarkMode={isDarkMode}
-          />
+          <Suspense fallback={<Typography>Loading Marketplace...</Typography>}>
+            <MarketplaceModal
+              modalIsOpen={showMarketplaceModal}
+              closeModal={handleCloseMarketplaceModal}
+              player_name={userName}
+              balance={balance}
+              isDarkMode={isDarkMode}
+            />
+          </Suspense>
         )}
         {showLoginModal && (
-          <LoginModal
-            modalIsOpen={showLoginModal}
-            closeModal={handleCloseLoginModal}
-            openSignupModal={handleOpenSignupModal}
-          />
+          <Suspense fallback={<Typography>Loading Login...</Typography>}>
+            <LoginModal
+              modalIsOpen={showLoginModal}
+              closeModal={handleCloseLoginModal}
+              openSignupModal={handleOpenSignupModal}
+            />
+          </Suspense>
         )}
         {showDebtsModal && (
-          <DebtsModal
-            modalIsOpen={showDebtsModal}
-            closeModal={handleCloseDebtsModal}
-            openDebtsModal={handleOpenDebtsModal}
-          />
+          <Suspense fallback={<Typography>Loading Debts...</Typography>}>
+            <DebtsModal
+              modalIsOpen={showDebtsModal}
+              closeModal={handleCloseDebtsModal}
+              openDebtsModal={handleOpenDebtsModal}
+            />
+          </Suspense>
         )}
         {showSignupModal && (
-          <SignupModal
-            modalIsOpen={showSignupModal}
-            closeModal={handleCloseSignupModal}
-            openLoginModal={handleOpenLoginModal}
-          />
+          <Suspense fallback={<Typography>Loading Signup...</Typography>}>
+            <SignupModal
+              modalIsOpen={showSignupModal}
+              closeModal={handleCloseSignupModal}
+              openLoginModal={handleOpenLoginModal}
+            />
+          </Suspense>
         )}
         {showDepositModal && (
-          <DepositModal
-            modalIsOpen={showDepositModal}
-            closeModal={handleCloseDepositModal}
-            web3={null}
-            loadSolanaWallet={loadSolanaWallet}
-            balance={solanaBalance}
-            account={account}
-          />
+          <Suspense fallback={<Typography>Loading Deposit...</Typography>}>
+            <DepositModal
+              modalIsOpen={showDepositModal}
+              closeModal={handleCloseDepositModal}
+              web3={null}
+              loadSolanaWallet={loadSolanaWallet}
+              balance={solanaBalance}
+              account={account}
+            />
+          </Suspense>
         )}
         {showInventoryModal && (
-          <InventoryModal
-            modalIsOpen={showInventoryModal}
-            closeModal={handleCloseInventoryModal}
-          />
+          <Suspense fallback={<Typography>Loading Inventory...</Typography>}>
+            <InventoryModal
+              modalIsOpen={showInventoryModal}
+              closeModal={handleCloseInventoryModal}
+            />
+          </Suspense>
         )}
         {showVaultModal && (
-          <VaultModal
-            modalIsOpen={showVaultModal}
-            closeModal={handleCloseVaultModal}
-            conversionRate={solPrice}
-            isDarkMode={isDarkMode}
-          />
+          <Suspense fallback={<Typography>Loading Vault...</Typography>}>
+            <VaultModal
+              modalIsOpen={showVaultModal}
+              closeModal={handleCloseVaultModal}
+              conversionRate={solPrice}
+              isDarkMode={isDarkMode}
+            />
+          </Suspense>
         )}
         {showWithdrawModal && (
-          <WithdrawModal
-            modalIsOpen={showWithdrawModal}
-            closeModal={handleCloseWithdrawModal}
-            balance={balance}
-            web3={null}
-            account={account}
-          />
+          <Suspense fallback={<Typography>Loading Withdraw...</Typography>}>
+            <WithdrawModal
+              modalIsOpen={showWithdrawModal}
+              closeModal={handleCloseWithdrawModal}
+              balance={balance}
+              web3={null}
+              account={account}
+            />
+          </Suspense>
         )}
-        <ListItemModal />
-        <DeListItemModal />
-        <ConfirmTradeModal />
-        <DeListLoanModal />
-        <ConfirmLoanModal />
-        <OfferLoanModal solPrice={solPrice} socket={socket} />
-        <GamePasswordModal />
+        <Suspense fallback={<Typography>Loading...</Typography>}>
+          <ListItemModal />
+        </Suspense>
+        <Suspense fallback={<Typography>Loading...</Typography>}>
+          <DeListItemModal />
+        </Suspense>
+        <Suspense fallback={<Typography>Loading...</Typography>}>
+          <ConfirmTradeModal />
+        </Suspense>
+        <Suspense fallback={<Typography>Loading...</Typography>}>
+          <DeListLoanModal />
+        </Suspense>
+        <Suspense fallback={<Typography>Loading...</Typography>}>
+          <ConfirmLoanModal />
+        </Suspense>
+        <Suspense fallback={<Typography>Loading...</Typography>}>
+          <OfferLoanModal solPrice={solPrice} socket={socket} />
+        </Suspense>
+        <Suspense fallback={<Typography>Loading...</Typography>}>
+          <GamePasswordModal />
+        </Suspense>
       </div>
     </ThemeProvider>
   );

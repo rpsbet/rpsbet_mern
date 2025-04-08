@@ -1,18 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import { useSelector } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXTwitter, faTelegram, faYoutube, faTiktok } from '@fortawesome/free-brands-svg-icons';
-import sol from '../icons/sol.png';
-import bnb from '../icons/bnb.png';
-import btc from '../icons/btc.png';
-import eth from '../icons/eth.png';
-import ltc from '../icons/ltc.png';
-import PrivacyModal from '../modal/PrivacyModal';
-import TermsModal from '../modal/TermsModal';
-import LeaderboardsModal from '../modal/LeaderboardsModal';
 import { Box, Typography, Link, styled } from '@mui/material';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy'; // Add this at the top if not imported
-import CheckIcon from '@mui/icons-material/Check'; // For copy success feedback
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import CheckIcon from '@mui/icons-material/Check';
+
+// Lazy-load modals
+const PrivacyModal = lazy(() => import('../modal/PrivacyModal'));
+const TermsModal = lazy(() => import('../modal/TermsModal'));
+const LeaderboardsModal = lazy(() => import('../modal/LeaderboardsModal'));
 
 const FooterContainer = styled(Box)(({ theme, open }) => ({
   display: 'flex',
@@ -79,8 +76,7 @@ const AvailableCurrency = styled('img')({
   marginRight: '10px',
 });
 
-function Footer({ open, style }) { // Keep open and style as props
-  // Map state from Redux using useSelector
+function Footer({ open, style }) {
   const { isDarkMode } = useSelector((state) => ({
     auth: state.auth.isAuthenticated,
     user_id: state.auth.user._id,
@@ -107,11 +103,13 @@ function Footer({ open, style }) { // Keep open and style as props
     <div className={bottomFooterClasses} style={style}>
       <FooterContainer id="footer-container" open={open}>
         {showLeaderboardsModal && (
-          <LeaderboardsModal
-            modalIsOpen={showLeaderboardsModal}
-            closeModal={handleCloseLeaderboardsModal}
-            isDarkMode={isDarkMode}
-          />
+          <Suspense fallback={<Typography>Loading Leaderboards...</Typography>}>
+            <LeaderboardsModal
+              modalIsOpen={showLeaderboardsModal}
+              closeModal={handleCloseLeaderboardsModal}
+              isDarkMode={isDarkMode}
+            />
+          </Suspense>
         )}
         <Box className="social-icons" sx={{ display: 'flex', alignItems: 'center' }}>
           <span>CHECK SOCIALS FOR UPDATES ►</span>
@@ -128,13 +126,6 @@ function Footer({ open, style }) { // Keep open and style as props
             <FontAwesomeIcon icon={faTiktok} />
           </a>
         </Box>
-        {/* <Currencies>
-          <AvailableCurrency src={sol} alt="SOL" />
-          <AvailableCurrency src={btc} alt="BTC" />
-          <AvailableCurrency src={eth} alt="ETH" />
-          <AvailableCurrency src={ltc} alt="LTC" />
-          <span>+ 50 MORE!</span>
-        </Currencies> */}
 
         <LinksContainer>
           <StyledLink
@@ -160,14 +151,14 @@ function Footer({ open, style }) { // Keep open and style as props
         </LinksContainer>
         <Address
           onClick={() => {
-            navigator.clipboard.writeText('BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump');
+            navigator.clipboard.writeText('74YCHZz5VWSCcXvopnS33nS3Z5kLSCJzy3nm1sfSpump');
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
           }}
           sx={{ cursor: 'pointer' }}
         >
           <Typography sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump
+            74YCHZz5VWSCcXvopnS33nS3Z5kLSCJzy3nm1sfSpump
             {copied ? <CheckIcon fontSize="small" color="success" /> : <ContentCopyIcon fontSize="small" />}
           </Typography>
           <Typography variant="caption" sx={{ mt: 1 }}>
@@ -176,18 +167,22 @@ function Footer({ open, style }) { // Keep open and style as props
         </Address>
       </FooterContainer>
       {showTermsModal && (
-        <TermsModal
-          modalIsOpen={showTermsModal}
-          closeModal={handleCloseTermsModal}
-          isDarkMode={isDarkMode}
-        />
+        <Suspense fallback={<Typography>Loading Terms...</Typography>}>
+          <TermsModal
+            modalIsOpen={showTermsModal}
+            closeModal={handleCloseTermsModal}
+            isDarkMode={isDarkMode}
+          />
+        </Suspense>
       )}
       {showPrivacyModal && (
-        <PrivacyModal
-          modalIsOpen={showPrivacyModal}
-          closeModal={handleClosePrivacyModal}
-          isDarkMode={isDarkMode}
-        />
+        <Suspense fallback={<Typography>Loading Privacy...</Typography>}>
+          <PrivacyModal
+            modalIsOpen={showPrivacyModal}
+            closeModal={handleClosePrivacyModal}
+            isDarkMode={isDarkMode}
+          />
+        </Suspense>
       )}
     </div>
   );
