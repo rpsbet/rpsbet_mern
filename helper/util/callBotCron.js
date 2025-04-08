@@ -2,7 +2,6 @@ const Room = require('../../model/Room.js');
 const cron = require('node-cron');
 
 let socketio = null;
-
 async function callCronJobs(io) {
   if (io) {
     socketio = io;
@@ -12,6 +11,7 @@ async function callCronJobs(io) {
     const updatedRooms = await Room.aggregate([
       { $match: { status: 'open' } },
       { $sort: { updated_at: -1 } },
+      // Lookup for creator
       {
         $lookup: {
           from: 'rps_users',
@@ -21,6 +21,7 @@ async function callCronJobs(io) {
         },
       },
       { $unwind: { path: '$creator', preserveNullAndEmptyArrays: true } },
+      // Lookup for joiners
       {
         $lookup: {
           from: 'rps_users',
@@ -29,6 +30,52 @@ async function callCronJobs(io) {
           as: 'joiners',
         },
       },
+      // Unwind hosts array to process each host individually
+      { $unwind: { path: '$hosts', preserveNullAndEmptyArrays: true } },
+      // Lookup for hosts based on hosts.host field
+      {
+        $lookup: {
+          from: 'rps_users',
+          localField: 'hosts.host',
+          foreignField: '_id',
+          as: 'hostData',
+        },
+      },
+      // Unwind hostData to merge it (optional, depending on whether you expect single matches)
+      { $unwind: { path: '$hostData', preserveNullAndEmptyArrays: true } },
+      // Group back to reconstruct the hosts array
+      {
+        $group: {
+          _id: '$_id',
+          name: { $first: '$name' },
+          ticker: { $first: '$ticker' },
+          image: { $first: '$image' },
+          description: { $first: '$description' },
+          room_number: { $first: '$room_number' },
+          creator: { $first: '$creator' },
+          joiners: { $first: '$joiners' },
+          hosts: {
+            $push: {
+              _id: '$hostData._id',
+              avatar: { $ifNull: ['$hosts.avatar', '$hostData.avatar'] }, // Prefer embedded avatar if present
+              username: { $ifNull: ['$hosts.username', '$hostData.username'] }, // Prefer embedded username
+              rank: { $ifNull: ['$hosts.rank', '$hostData.totalWagered'] }, // Prefer embedded rank
+              accessory: { $ifNull: ['$hosts.accessory', '$hostData.accessory'] }, // Prefer embedded accessory
+              walletAddress: '$hosts.walletAddress', // Only from embedded data
+              share: '$hosts.share', // Only from embedded data
+            },
+          },
+          game_type: { $first: '$game_type' },
+          bet_amount: { $first: '$bet_amount' },
+          user_bet: { $first: '$user_bet' },
+          endgame_amount: { $first: '$endgame_amount' },
+          is_private: { $first: '$is_private' },
+          status: { $first: '$status' },
+          created_at: { $first: '$created_at' },
+          battles: { $first: '$battles' },
+        },
+      },
+      // Lookup for game_type
       {
         $lookup: {
           from: 'rps_game_types',
@@ -38,6 +85,7 @@ async function callCronJobs(io) {
         },
       },
       { $unwind: { path: '$game_type', preserveNullAndEmptyArrays: true } },
+      // Final projection
       {
         $project: {
           _id: 1,
@@ -67,6 +115,7 @@ async function callCronJobs(io) {
               },
             },
           },
+          hosts: 1, // Already structured in $group
           game_type: {
             _id: '$game_type._id',
             short_name: '$game_type.short_name',
@@ -98,7 +147,7 @@ async function callCronJobs(io) {
         status: room.creator.status,
       },
       joiners: room.joiners,
-      hosts: room.hosts,
+      hosts: room.hosts, // Now properly populated
       game_type: room.game_type,
       bet_amount: room.bet_amount,
       user_bet: room.user_bet,

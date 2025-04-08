@@ -12,7 +12,7 @@ module.exports = async function(req, res, next) {
   if (!token) {
     return res.json({
       success: false,
-      message: 'FURR-SST LOG IN!'
+      // message: 'FURR-SST LOG IN!'
     });
   }
   
