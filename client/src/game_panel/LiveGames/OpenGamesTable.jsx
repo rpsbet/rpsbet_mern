@@ -380,6 +380,7 @@ function OpenGamesTable(props) {
                       flexBasis: '100% !important',
                       maxWidth: '100% !important',
                       flexGrow: 1,
+                      padding: '8px',
                     }}
                   >
                     <Card
@@ -396,191 +397,490 @@ function OpenGamesTable(props) {
                         width: '100%',
                         display: 'flex',
                         flexDirection: 'column',
-                        padding: '16px',
-                        borderRadius: '8px',
-                        backgroundColor: effectiveIsDarkMode ? '#1E2A38' : '#FFFFFF',
-                        boxShadow: effectiveIsDarkMode ? '0 2px 8px rgba(0, 0, 0, 0.3)' : '0 2px 8px rgba(0, 0, 0, 0.1)',
-                        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                        padding: '20px',
+                        borderRadius: '16px',
+                        background: effectiveIsDarkMode
+                          ? 'linear-gradient(135deg, rgba(30, 42, 56, 0.8), rgba(22, 32, 46, 0.9))'
+                          : 'linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.5))',
+                        backdropFilter: 'blur(12px)',
+                        border: effectiveIsDarkMode
+                          ? '1px solid rgba(255, 255, 255, 0.1)'
+                          : '1px solid rgba(255, 255, 255, 0.7)',
+                        boxShadow: effectiveIsDarkMode
+                          ? '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.07)'
+                          : '0 8px 32px rgba(31, 38, 135, 0.15), inset 0 0 0 1px rgba(255, 255, 255, 0.4)',
+                        transition: 'all 0.3s ease',
+                        position: 'relative',
+                        overflow: 'hidden',
                         '&:hover': {
-                          transform: 'translateY(-2px)',
-                          boxShadow: effectiveIsDarkMode ? '0 4px 12px rgba(0, 0, 0, 0.4)' : '0 4px 12px rgba(0, 0, 0, 0.15)',
+                          transform: 'translateY(-4px)',
+                          boxShadow: effectiveIsDarkMode
+                            ? '0 12px 40px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.1)'
+                            : '0 12px 40px rgba(31, 38, 135, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.6)',
                           cursor: 'pointer',
+                        },
+                        '&:before': {
+                          content: '""',
+                          position: 'absolute',
+                          top: '-50%',
+                          left: '-50%',
+                          width: '200%',
+                          height: '200%',
+                          background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%)',
+                          opacity: 0,
+                          transition: 'opacity 0.3s ease',
+                          transform: 'rotate(30deg)',
+                          pointerEvents: 'none',
+                        },
+                        '&:hover:before': {
+                          opacity: 1,
                         },
                       }}
                     >
-                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                        <img
-                          src={row.image}
-                          alt={row.name}
-                          style={{ width: 40, height: 40, borderRadius: '4px', marginRight: '12px' }}
-                        />
-                        <Box>
-                          <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                      {/* Top section with image and name */}
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2.5 }}>
+                        <Box
+                          sx={{
+                            borderRadius: '8px',
+                            overflow: 'hidden',
+                            marginRight: '16px',
+                            border: effectiveIsDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)',
+                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                            width: 48,
+                            height: 48,
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            background: effectiveIsDarkMode ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.5)',
+                          }}
+                        >
+                          <img
+                            src={row.image}
+                            alt={row.name}
+                            style={{ width: 40, height: 40, objectFit: 'cover' }}
+                          />
+                        </Box>
+                        <Box sx={{ flex: 1 }}>
+                          <Typography
+                            variant="h6"
+                            sx={{
+                              fontWeight: 700,
+                              fontSize: '1.1rem',
+                              lineHeight: 1.2,
+                              display: 'flex',
+                              alignItems: 'center'
+                            }}
+                          >
                             {row.name}{' '}
-                            <Typography component="span" color="text.secondary" variant="body2">
+                            <Typography
+                              component="span"
+                              color="text.secondary"
+                              variant="body2"
+                              sx={{
+                                ml: 0.75,
+                                fontWeight: 500,
+                                opacity: 0.7,
+                                letterSpacing: '0.5px'
+                              }}
+                            >
                               ({row.ticker})
                             </Typography>
                           </Typography>
-                          <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
-                            {row.description.length > 16 ? `${row.description.slice(0, 16)}...` : row.description}
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{
+                              fontSize: '0.85rem',
+                              opacity: 0.8,
+                              maxWidth: '300px',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap'
+                            }}
+                          >
+                            {row.description.length > 24 ? `${row.description.slice(0, 24)}...` : row.description}
                           </Typography>
                         </Box>
-                        <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center' }}>
+                        <Box
+                          sx={{
+                            ml: 'auto',
+                            display: 'flex',
+                            alignItems: 'center',
+                            background: effectiveIsDarkMode ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.05)',
+                            backdropFilter: 'blur(5px)',
+                            padding: '6px 10px',
+                            borderRadius: '8px',
+                            border: effectiveIsDarkMode ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.03)',
+                          }}
+                        >
                           <img
                             src={`/img/gametype/icons/${row.game_type?.short_name}.svg`}
                             alt={row.game_type?.short_name}
-                            style={{ width: 24, height: 24, marginRight: '8px' }}
+                            style={{ width: 20, height: 20 }}
                           />
                         </Box>
                       </Box>
 
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
+                      {/* Players section */}
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          mb: 3,
+                          mt: 1,
+                          position: 'relative',
+                          '&:before': {
+                            content: '""',
+                            position: 'absolute',
+                            left: '50%',
+                            top: '50%',
+                            transform: 'translate(-50%, -50%)',
+                            width: '40%',
+                            height: '1px',
+                            background: effectiveIsDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                            zIndex: 0
+                          }
+                        }}
+                      >
                         {row.hosts?.length > 0 && (
-                          <AvatarGroup
-                            max={2}
-                            sx={{
-                              '& .MuiAvatar-root': {
-                                width: 32,
-                                height: 32,
-                                borderRadius: '6px',
-                                border: 'none',
-                              },
-                              '& .MuiAvatarGroup-avatar:not(:first-of-type)': {
-                                marginLeft: '-8px',
-                              },
-                            }}
-                          >
-                            {row.hosts.map((host, index) => (
-                              <Avatar
-                                key={index}
-                                alt={host.username}
-                                src={host.avatar}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleOpenPlayerModal(row.hosts[index]);
-                                }}
-                                sx={{ cursor: 'pointer' }}
-                              />
-                            ))}
-                          </AvatarGroup>
+                          <Box sx={{ display: 'flex', alignItems: 'center', zIndex: 1 }}>
+                            <AvatarGroup
+                              max={2}
+                              sx={{
+                                '& .MuiAvatar-root': {
+                                  width: 36,
+                                  height: 36,
+                                  borderRadius: '10px',
+                                  border: 'none',
+                                  boxShadow: '0 2px 10px rgba(0,0,0,0.15)',
+                                  background: effectiveIsDarkMode ? '#2A3A4D' : '#f0f0f0',
+                                },
+                                '& .MuiAvatarGroup-avatar:not(:first-of-type)': {
+                                  marginLeft: '-10px',
+                                },
+                              }}
+                            >
+                              {row.hosts.map((host, index) => (
+                                <Avatar
+                                  key={index}
+                                  alt={host.username}
+                                  src={host.avatar}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleOpenPlayerModal(row.hosts[index]);
+                                  }}
+                                  sx={{
+                                    cursor: 'pointer',
+                                    transition: 'transform 0.2s',
+                                    '&:hover': {
+                                      transform: 'scale(1.1)',
+                                      zIndex: 10
+                                    }
+                                  }}
+                                />
+                              ))}
+                            </AvatarGroup>
+                          </Box>
                         )}
-                        <Battle sx={{ mx: 2, color: effectiveIsDarkMode ? '#FFFFFF' : '#000000' }} />
+
+                        <Box
+                          sx={{
+                            mx: 3,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: 40,
+                            height: 40,
+                            borderRadius: '50%',
+                            background: effectiveIsDarkMode
+                              ? 'linear-gradient(135deg, rgba(40, 52, 66, 0.8), rgba(32, 42, 56, 0.9))'
+                              : 'linear-gradient(135deg, rgba(245, 245, 245, 0.8), rgba(255, 255, 255, 0.9))',
+                            backdropFilter: 'blur(5px)',
+                            boxShadow: effectiveIsDarkMode
+                              ? '0 4px 15px rgba(0, 0, 0, 0.2)'
+                              : '0 4px 15px rgba(0, 0, 0, 0.05)',
+                            border: effectiveIsDarkMode
+                              ? '1px solid rgba(255, 255, 255, 0.05)'
+                              : '1px solid rgba(255, 255, 255, 0.7)',
+                            zIndex: 2
+                          }}
+                        >
+                          <Battle sx={{
+                            fontSize: 22,
+                            color: effectiveIsDarkMode
+                              ? 'rgba(255, 255, 255, 0.85)'
+                              : 'rgba(0, 0, 0, 0.7)'
+                          }} />
+                        </Box>
+
                         {row.joiners?.length > 0 && (
-                          <AvatarGroup
-                            max={2}
-                            sx={{
-                              '& .MuiAvatar-root': {
-                                width: 32,
-                                height: 32,
-                                borderRadius: '6px',
-                                border: 'none',
-                              },
-                              '& .MuiAvatarGroup-avatar:not(:first-of-type)': {
-                                marginLeft: '-8px',
-                              },
-                            }}
-                          >
-                            {row.joiners.map((joiner, index) => (
-                              <Avatar
-                                key={index}
-                                alt={joiner.username}
-                                src={joiner.avatar}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleOpenPlayerModal(row.joiners[index]);
-                                }}
-                                sx={{ cursor: 'pointer' }}
-                              />
-                            ))}
-                          </AvatarGroup>
+                          <Box sx={{ display: 'flex', alignItems: 'center', zIndex: 1 }}>
+                            <AvatarGroup
+                              max={2}
+                              sx={{
+                                '& .MuiAvatar-root': {
+                                  width: 36,
+                                  height: 36,
+                                  borderRadius: '10px',
+                                  border: 'none',
+                                  boxShadow: '0 2px 10px rgba(0,0,0,0.15)',
+                                  background: effectiveIsDarkMode ? '#2A3A4D' : '#f0f0f0',
+                                },
+                                '& .MuiAvatarGroup-avatar:not(:first-of-type)': {
+                                  marginLeft: '-10px',
+                                },
+                              }}
+                            >
+                              {row.joiners.map((joiner, index) => (
+                                <Avatar
+                                  key={index}
+                                  alt={joiner.username}
+                                  src={joiner.avatar}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleOpenPlayerModal(row.joiners[index]);
+                                  }}
+                                  sx={{
+                                    cursor: 'pointer',
+                                    transition: 'transform 0.2s',
+                                    '&:hover': {
+                                      transform: 'scale(1.1)',
+                                      zIndex: 10
+                                    }
+                                  }}
+                                />
+                              ))}
+                            </AvatarGroup>
+                          </Box>
                         )}
                       </Box>
 
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                        <Box sx={{ textAlign: 'center' }}>
-                          <Typography variant="caption" color="text.secondary">
+                      {/* Stats section */}
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          mb: 3,
+                          px: 1
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            textAlign: 'center',
+                            padding: '10px 16px',
+                            borderRadius: '12px',
+                            background: effectiveIsDarkMode
+                              ? 'rgba(0, 0, 0, 0.15)'
+                              : 'rgba(0, 0, 0, 0.03)',
+                            backdropFilter: 'blur(5px)',
+                            border: effectiveIsDarkMode
+                              ? '1px solid rgba(255, 255, 255, 0.05)'
+                              : '1px solid rgba(0, 0, 0, 0.03)',
+                          }}
+                        >
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{
+                              fontSize: '0.7rem',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.5px',
+                              fontWeight: 500,
+                              opacity: 0.7
+                            }}
+                          >
                             Liquidity
                           </Typography>
                           <Typography
                             variant="body1"
-                            sx={{ color: getColorClass(row.user_bet - row.bet_amount), fontWeight: 600 }}
+                            sx={{
+                              color: getColorClass(row.user_bet - row.bet_amount),
+                              fontWeight: 700,
+                              fontSize: '0.95rem'
+                            }}
                           >
                             {convertToCurrency(row.user_bet, effectiveSolPrice)}
                             {row.user_bet !== row.bet_amount && (
-                              <span style={{ fontSize: '0.75rem', marginLeft: '4px' }}>
+                              <span style={{
+                                fontSize: '0.75rem',
+                                marginLeft: '4px',
+                                display: 'inline-flex',
+                                alignItems: 'center'
+                              }}>
                                 {row.user_bet > row.bet_amount ? (
-                                  <TrendingUpOutlined fontSize="small" />
+                                  <TrendingUpOutlined sx={{ fontSize: 14 }} />
                                 ) : (
-                                  <TrendingDownOutlined fontSize="small" />
+                                  <TrendingDownOutlined sx={{ fontSize: 14 }} />
                                 )}
-                                {` (${(((row.user_bet - row.bet_amount) / row.bet_amount) * 100).toFixed(2)}%)`}
+                                {` (${(((row.user_bet - row.bet_amount) / row.bet_amount) * 100).toFixed(1)}%)`}
                               </span>
                             )}
                           </Typography>
                         </Box>
-                        <Box sx={{ textAlign: 'center' }}>
-                          <Typography variant="caption" color="text.secondary">
+
+                        <Box
+                          sx={{
+                            textAlign: 'center',
+                            padding: '10px 16px',
+                            borderRadius: '12px',
+                            background: effectiveIsDarkMode
+                              ? 'rgba(0, 0, 0, 0.15)'
+                              : 'rgba(0, 0, 0, 0.03)',
+                            backdropFilter: 'blur(5px)',
+                            border: effectiveIsDarkMode
+                              ? '1px solid rgba(255, 255, 255, 0.05)'
+                              : '1px solid rgba(0, 0, 0, 0.03)',
+                          }}
+                        >
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{
+                              fontSize: '0.7rem',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.5px',
+                              fontWeight: 500,
+                              opacity: 0.7
+                            }}
+                          >
                             Battles
                           </Typography>
-                          <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                          <Typography
+                            variant="body1"
+                            sx={{
+                              fontWeight: 700,
+                              fontSize: '0.95rem'
+                            }}
+                          >
                             {row.battles}
                           </Typography>
                         </Box>
-                        <Box sx={{ textAlign: 'center' }}>
-                          <Typography variant="caption" color="text.secondary">
+
+                        <Box
+                          sx={{
+                            textAlign: 'center',
+                            padding: '10px 16px',
+                            borderRadius: '12px',
+                            background: effectiveIsDarkMode
+                              ? 'rgba(0, 0, 0, 0.15)'
+                              : 'rgba(0, 0, 0, 0.03)',
+                            backdropFilter: 'blur(5px)',
+                            border: effectiveIsDarkMode
+                              ? '1px solid rgba(255, 255, 255, 0.05)'
+                              : '1px solid rgba(0, 0, 0, 0.03)',
+                          }}
+                        >
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{
+                              fontSize: '0.7rem',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.5px',
+                              fontWeight: 500,
+                              opacity: 0.7
+                            }}
+                          >
                             Age
                           </Typography>
-                          <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                          <Typography
+                            variant="body1"
+                            sx={{
+                              fontWeight: 700,
+                              fontSize: '0.95rem'
+                            }}
+                          >
                             {customFromNow(Moment(row.created_at))}
                           </Typography>
                         </Box>
                       </Box>
 
-                      <Box
-                        sx={{
-                          width: '100%',
-                          height: '10px',
-                          background: 'rgb(224, 224, 224)',
-                          borderRadius: '4px',
-                          overflow: 'hidden',
-                          position: 'relative',
-                        }}
-                      >
-                        <Box
-                          className="progress-bar-filled"
+                      {/* Progress bar */}
+                      <Box sx={{ position: 'relative', mb: 0.5 }}>
+                        <Typography
+                          variant="caption"
                           sx={{
-                            width: `${progressPercentage}%`,
-                            height: '100%',
-                            background: 'linear-gradient(#e1ff00, #fdb500)',
-                            position: 'relative',
-                            zIndex: 2,
-                            '&::after': {
-                              content: '""',
-                              position: 'absolute',
-                              top: 0,
-                              right: 0,
-                              width: 0,
-                              height: 0,
-                              borderStyle: 'solid',
-                              borderWidth: '0 2px 20px 4px',
-                              borderColor: '#eeff0098',
-                              zIndex: 3,
-                            },
+                            position: 'absolute',
+                            top: '-20px',
+                            right: '0',
+                            fontSize: '0.7rem',
+                            opacity: 0.7
                           }}
-                        />
-                      </Box>
-
-                      {row.is_private && (
-                        <Tooltip title="A password is required to battle this room." arrow>
-                          <LockOutlined
+                        >
+                          {progressPercentage.toFixed(0)}%
+                        </Typography>
+                        <Box
+                          sx={{
+                            width: '100%',
+                            height: '8px',
+                            background: effectiveIsDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
+                            borderRadius: '20px',
+                            overflow: 'hidden',
+                            position: 'relative',
+                          }}
+                        >
+                          <Box
+                            className="progress-bar-filled"
                             sx={{
-                              fontSize: 18,
-                              color: effectiveIsDarkMode ? '#808080' : '#666666',
-                              position: 'absolute',
-                              top: 8,
-                              right: 8,
+                              width: `${progressPercentage}%`,
+                              height: '100%',
+                              background: 'linear-gradient(90deg, rgba(227, 255, 0, 0.8), rgba(253, 181, 0, 0.9))',
+                              borderRadius: '20px',
+                              position: 'relative',
+                              zIndex: 2,
+                              boxShadow: '0 0 10px rgba(227, 255, 0, 0.4)',
+                              '&::after': {
+                                content: '""',
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                background: 'linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.4) 50%, rgba(255, 255, 255, 0) 100%)',
+                                animation: 'shimmer 2s infinite',
+                                zIndex: 3,
+                              },
+                              '@keyframes shimmer': {
+                                '0%': { transform: 'translateX(-100%)' },
+                                '100%': { transform: 'translateX(100%)' }
+                              }
                             }}
                           />
+                        </Box>
+                      </Box>
+
+                      {/* Private room lock icon */}
+                      {row.is_private && (
+                        <Tooltip title="A password is required to battle this room." arrow>
+                          <Box
+                            sx={{
+                              position: 'absolute',
+                              top: 10,
+                              right: 10,
+                              width: 32,
+                              height: 32,
+                              borderRadius: '50%',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              background: effectiveIsDarkMode
+                                ? 'rgba(0, 0, 0, 0.3)'
+                                : 'rgba(255, 255, 255, 0.7)',
+                              backdropFilter: 'blur(5px)',
+                              border: effectiveIsDarkMode
+                                ? '1px solid rgba(255, 255, 255, 0.1)'
+                                : '1px solid rgba(0, 0, 0, 0.05)',
+                            }}
+                          >
+                            <LockOutlined
+                              sx={{
+                                fontSize: 16,
+                                color: effectiveIsDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+                              }}
+                            />
+                          </Box>
                         </Tooltip>
                       )}
                     </Card>
@@ -738,7 +1038,7 @@ function OpenGamesTable(props) {
             selectedRow={selectedRow}
             balance={effectiveBalance}
             user={user}
-            togglePopup={() => {}}
+            togglePopup={() => { }}
             handleClose={handleCloseCoHostModal}
             handleSendCoHost={handleSendCoHost}
             handleCoHostAmountChange={handleCoHostAmountChange}

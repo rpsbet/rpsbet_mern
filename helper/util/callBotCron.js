@@ -116,7 +116,7 @@ async function callCronJobs(io) {
   }
 }
 
-cron.schedule('*/7 * * * * *', async () => {
+cron.schedule('*/5 * * * * *', async () => {
   await callCronJobs(socketio);
 });
 
