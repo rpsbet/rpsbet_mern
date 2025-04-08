@@ -56,13 +56,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 const compression = require('compression');
-app.use(compression({ level: 6, filter: (req, res) => {
-  if (req.headers['accept-encoding'].includes('br')) {
-    res.setHeader('Content-Encoding', 'br');
-    return true;
-  }
-  return compression.filter(req, res);
-}}));
+app.use(compression());
 
 // -------------------- Middleware --------------------
 app.use(helmet({
