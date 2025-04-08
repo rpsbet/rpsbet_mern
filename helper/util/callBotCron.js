@@ -10,7 +10,7 @@ async function callCronJobs(io) {
   try {
     const updatedRooms = await Room.aggregate([
       { $match: { status: 'open' } },
-      { $sort: { updated_at: -1 } },
+      { $sort: { updated_at: -1 } }, // Initial sort by updated_at
       // Lookup for creator
       {
         $lookup: {
@@ -41,7 +41,7 @@ async function callCronJobs(io) {
           as: 'hostData',
         },
       },
-      // Unwind hostData to merge it (optional, depending on whether you expect single matches)
+      // Unwind hostData to merge it
       { $unwind: { path: '$hostData', preserveNullAndEmptyArrays: true } },
       // Group back to reconstruct the hosts array
       {
@@ -57,12 +57,12 @@ async function callCronJobs(io) {
           hosts: {
             $push: {
               _id: '$hostData._id',
-              avatar: { $ifNull: ['$hosts.avatar', '$hostData.avatar'] }, // Prefer embedded avatar if present
-              username: { $ifNull: ['$hosts.username', '$hostData.username'] }, // Prefer embedded username
-              rank: { $ifNull: ['$hosts.rank', '$hostData.totalWagered'] }, // Prefer embedded rank
-              accessory: { $ifNull: ['$hosts.accessory', '$hostData.accessory'] }, // Prefer embedded accessory
-              walletAddress: '$hosts.walletAddress', // Only from embedded data
-              share: '$hosts.share', // Only from embedded data
+              avatar: { $ifNull: ['$hosts.avatar', '$hostData.avatar'] },
+              username: { $ifNull: ['$hosts.username', '$hostData.username'] },
+              rank: { $ifNull: ['$hosts.rank', '$hostData.totalWagered'] },
+              accessory: { $ifNull: ['$hosts.accessory', '$hostData.accessory'] },
+              walletAddress: '$hosts.walletAddress',
+              share: '$hosts.share',
             },
           },
           game_type: { $first: '$game_type' },
@@ -72,6 +72,7 @@ async function callCronJobs(io) {
           is_private: { $first: '$is_private' },
           status: { $first: '$status' },
           created_at: { $first: '$created_at' },
+          updated_at: { $first: '$updated_at' }, // Preserve updated_at for sorting
           battles: { $first: '$battles' },
         },
       },
@@ -85,6 +86,8 @@ async function callCronJobs(io) {
         },
       },
       { $unwind: { path: '$game_type', preserveNullAndEmptyArrays: true } },
+      // Reapply sort to ensure original order
+      { $sort: { updated_at: -1 } },
       // Final projection
       {
         $project: {
@@ -147,7 +150,7 @@ async function callCronJobs(io) {
         status: room.creator.status,
       },
       joiners: room.joiners,
-      hosts: room.hosts, // Now properly populated
+      hosts: room.hosts,
       game_type: room.game_type,
       bet_amount: room.bet_amount,
       user_bet: room.user_bet,
