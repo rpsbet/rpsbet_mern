@@ -28,16 +28,17 @@ const io = socketController.socketio(server, {
   cors: {
     origin: 'http://localhost:3000', // Allow requests from your frontend
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Allowed HTTP methods
-    credentials: true, // Enable cookies for cross-origin
+    credentials: true,
   },
+  transports: ['websocket'],
 });
 
-creditScoreCron.checkOutstandingLoans(io);
-rentCron.checkRentalPayments(io);
-cronJob.checkConfirmations();
-callCronJob.callCronJobs(io);
-withdrawalCron.resetWithdrawalLimits();
-interestCron.updateRoomInterests(io);
+setTimeout(() => callCronJob.callCronJobs(io), 500);
+setTimeout(() => rentCron.checkRentalPayments(io), 3000);
+setTimeout(() => cronJob.checkConfirmations(), 5000);
+setTimeout(() => creditScoreCron.checkOutstandingLoans(io), 7000); 
+setTimeout(() => withdrawalCron.resetWithdrawalLimits(), 9000);
+setTimeout(() => interestCron.updateRoomInterests(io), 11000);
 
 // Attach io instance to each request for easy access
 app.use((req, res, next) => {
@@ -58,7 +59,9 @@ const compression = require('compression');
 app.use(compression());
 
 // -------------------- Middleware --------------------
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: process.env.NODE_ENV === 'production' ? undefined : false,
+}));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 // app.use(fileUpload());
@@ -83,7 +86,8 @@ const connectWithRetry = async () => {
     await mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      maxPoolSize: 50,
+      maxPoolSize: 20,
+      serverSelectionTimeoutMS: 5000, 
     });
     console.log('*** MongoDB connected');
   } catch (error) {

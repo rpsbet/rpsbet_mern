@@ -3449,80 +3449,58 @@ const getTimeBucket = (timeRange) => {
 
 router.post('/getGlobalChatLogs', async (req, res) => {
   try {
-    // 1) Fetch last 15 messages from Chat, sorted descending
     const results = await Chat.find({})
-      .sort({ created_at: -1 })
+      .sort({ created_at: -1 }) // Change to ascending to avoid extra sort later
       .limit(15)
+      .select('sender message messageType messageContent created_at replyTo')
       .populate({
         path: 'sender',
-        model: User,
-        select: 'username avatar accessory totalWagered',
+        select: 'username avatar accessory totalWagered _id',
+        options: { lean: true }
       })
       .populate({
         path: 'replyTo',
-        model: 'Chat',
+        select: 'sender message messageType created_at',
         populate: {
           path: 'sender',
-          model: User,
-          select: 'username avatar accessory totalWagered',
+          select: 'username avatar accessory totalWagered _id',
+          options: { lean: true }
         },
+        options: { lean: true }
       })
-      .lean();
+      .lean()
+     
 
-    // 2) Transform the results (like in your socket code)
-    const transformedResults = results.map(
-      ({
-        created_at,
-        message,
-        messageType,
-        messageContent,
-        sender,
-        replyTo,
-      }) => {
-        const extractedReplyTo =
-          replyTo && replyTo.length > 0 ? replyTo[0] : null;
-        const transformedReplyTo = extractedReplyTo
-          ? {
-            username: extractedReplyTo.sender?.username ?? '',
-            senderId: extractedReplyTo.sender?._id ?? '',
-            avatar: extractedReplyTo.sender?.avatar ?? '',
-            rank: extractedReplyTo.sender?.totalWagered ?? '',
-            accessory: extractedReplyTo.sender?.accessory ?? '',
-            message: extractedReplyTo.message,
-            messageType: extractedReplyTo.messageType,
-            time: moment(extractedReplyTo.created_at).format('hh:mm'),
-          }
-          : null;
-
-        return {
-          sender: sender?.username ?? '',
-          senderId: sender?._id ?? '',
-          message,
-          messageType,
-          messageContent,
-          avatar: sender?.avatar ?? '',
-          accessory: sender?.accessory ?? '',
-          replyTo: transformedReplyTo,
-          rank: sender?.totalWagered ?? '',
-          time: moment(created_at).format('hh:mm'),
-        };
-      },
-    );
-
-    // 3) Sort so oldest -> newest if needed
-    const sortedResults = transformedResults.sort((a, b) =>
-      a.created_at > b.created_at ? 1 : -1,
-    );
-    // 4) Return to client
-    return res.json({
-      success: true,
-      chatLogs: sortedResults,
+    const chatLogs = results.map(chat => ({
+      sender: chat.sender?.username || '',
+      senderId: chat.sender?._id || '',
+      message: chat.message,
+      messageType: chat.messageType,
+      messageContent: chat.messageContent,
+      avatar: chat.sender?.avatar || '',
+      accessory: chat.sender?.accessory || '',
+      rank: chat.sender?.totalWagered || '',
+      time: moment(chat.created_at).format('hh:mm'),
+      replyTo: chat.replyTo?.[0] ? {
+        username: chat.replyTo[0].sender?.username || '',
+        senderId: chat.replyTo[0].sender?._id || '',
+        avatar: chat.replyTo[0].sender?.avatar || '',
+        rank: chat.replyTo[0].sender?.totalWagered || '',
+        accessory: chat.replyTo[0].sender?.accessory || '',
+        message: chat.replyTo[0].message,
+        messageType: chat.replyTo[0].messageType,
+        time: moment(chat.replyTo[0].created_at).format('hh:mm')
+      } : null
+    }));
+    return res.json({ 
+      success: true, 
+      chatLogs: chatLogs.reverse() // Simply add .reverse() here
     });
   } catch (error) {
     console.error('Error fetching global chat:', error);
-    return res.json({
+    return res.status(500).json({
       success: false,
-      message: 'Error fetching global chat',
+      message: 'Error fetching global chat'
     });
   }
 });

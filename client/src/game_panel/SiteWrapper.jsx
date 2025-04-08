@@ -135,12 +135,12 @@ import {
   endLoading,
 } from '../redux/Logic/logic.actions';
 
-// Remove PropTypes override since it's not needed in MUI v5+
+// Remove PropTypes override
 LoadingOverlay.propTypes = undefined;
 
 const tokenMintAddress = 'BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump';
 
-// Theming
+// Create theme configurations
 const customTextFieldStyles = {
   MuiOutlinedInput: {
     root: {
@@ -176,6 +176,7 @@ const darkTheme = createTheme({
   overrides: customTextFieldStyles
 });
 
+// Helper function to format timestamps
 function updateFromNow(items) {
   if (!items) return [];
   const result = JSON.parse(JSON.stringify(items));
@@ -185,15 +186,17 @@ function updateFromNow(items) {
   return result;
 }
 
+// Random gif selection for game animations
 const gifUrls = ['/img/rock.gif', '/img/paper.gif', '/img/scissors.gif'];
 const randomGifUrl = gifUrls[Math.floor(Math.random() * gifUrls.length)];
 const hueRotateValue = (gifUrls.indexOf(randomGifUrl) + 1) * 75;
 
-function SiteWrapper({ children }) { // Remove props destructuring since we’ll use hooks
+function SiteWrapper({ children }) {
   const dispatch = useDispatch();
   const location = useLocation();
-  const navigate = useNavigate(); 
-  // Map state from Redux using useSelector
+  const navigate = useNavigate();
+  
+  // Redux state
   const {
     isDarkMode,
     isAuthenticated,
@@ -245,14 +248,14 @@ function SiteWrapper({ children }) { // Remove props destructuring since we’ll
     history: state.logic.history,
   }));
 
+  // Local state
   const currentPath = window.location.pathname;
   const [endpoint, setEndpoint] = useState(
     process.env.NODE_ENV === 'production'
       ? 'https://rps.game'
       : `http://${window.location.hostname}:5001`
   );
-
-  // Local state (unchanged)
+  
   const [balance, setLocalBalance] = useState(propsBalance);
   const [oldBalance, setOldBalance] = useState(propsBalance);
   const [hoverTabIndex, setHoverTabIndex] = useState(-1);
@@ -281,7 +284,7 @@ function SiteWrapper({ children }) { // Remove props destructuring since we’ll
   const [blurValue, setBlurValue] = useState(3);
   const [currentGif, setCurrentGif] = useState('');
   const [tokenModalOpen, setTokenModalOpen] = useState(true);
-  const [transactions, setTransactions] = useState([updateFromNow(propTransactions)]);
+  const [transactions, setTransactions] = useState([]);
   const [isHovered, setIsHovered] = useState(false);
   const [websiteLoading, setWebsiteLoading] = useState(true);
   const [isCoinsAnimation, setIsCoinsAnimation] = useState(false);
@@ -308,7 +311,7 @@ function SiteWrapper({ children }) { // Remove props destructuring since we’ll
   const intervalRef = useRef(null);
   const isUnmountedRef = useRef(false);
 
-  // Lifecycle-like effects (update dispatch calls)
+  // Initialize app on mount
   useEffect(() => {
     isUnmountedRef.current = false;
 
@@ -353,43 +356,176 @@ function SiteWrapper({ children }) { // Remove props destructuring since we’ll
       clearInterval(intervalRef.current);
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [dispatch, getGlobalChatLogs, getHistory]); // Dependencies remain the same
+  }, [dispatch]);
 
+  // Check for tutorial completion
   useEffect(() => {
     if (user && user.completedTutorials) {
       setRunTutorial(!user.completedTutorials.includes(1));
     }
   }, [user]);
 
+  // Handle bet result animations
   useEffect(() => {
     if (propsBetResult === 'win' && !isLowGraphics) {
       playCoinsAnimation();
     }
   }, [propsBetResult, isLowGraphics]);
 
+  // Update remaining loans
   useEffect(() => {
     setRemainingLoans(propsRemainingLoans);
   }, [propsRemainingLoans]);
 
+  // Check for negative balance
   useEffect(() => {
-    if (propsBalance < 0) {
-      setShowNegativeBalanceDialog(true);
-    } else {
-      setShowNegativeBalanceDialog(false);
-    }
+    setShowNegativeBalanceDialog(propsBalance < 0);
   }, [propsBalance]);
 
+  // Update transactions
   useEffect(() => {
-    if (!propTransactions) return;
-    if (propTransactions.length > 0) {
+    if (propTransactions?.length > 0) {
       setTransactions(updateFromNow(propTransactions));
     }
   }, [propTransactions]);
 
+  // Update local balance
   useEffect(() => {
     setLocalBalance(propsBalance);
   }, [propsBalance]);
 
+  // Initialize socket connection
+  useEffect(() => {
+    const newSocket = socketIOClient(endpoint, { transports: ['websocket'] });
+
+    // Socket event handlers
+    const handleOnlineStatusUpdated = data => dispatch(updateOnlineUserList(data.user_list));
+    newSocket.on('ONLINE_STATUS_UPDATED', handleOnlineStatusUpdated);
+
+    let lastGlobalChat = null;
+    const handleGlobalChat = data => {
+      if (
+        lastGlobalChat &&
+        lastGlobalChat.senderId === data.senderId &&
+        lastGlobalChat.time === data.time &&
+        lastGlobalChat.message === data.message
+      ) {
+        return;
+      }
+      lastGlobalChat = data;
+      dispatch(globalChatReceived(data));
+    };
+    newSocket.on('GLOBAL_CHAT_RECEIVED', handleGlobalChat);
+
+    const handleUpdatedRoomList = data => {
+      dispatch(setRoomList(data));
+      dispatch(endLoading());
+    };
+    newSocket.on('UPDATED_ROOM_LIST', handleUpdatedRoomList);
+
+    const handleRoomEnded = data => dispatch(removeRoomFromList(data.roomId));
+    newSocket.on('ROOM_ENDED', handleRoomEnded);
+
+    dispatch(setSocket(newSocket));
+
+    return () => {
+      newSocket.off('GLOBAL_CHAT_RECEIVED', handleGlobalChat);
+      newSocket.off('UPDATED_ROOM_LIST', handleUpdatedRoomList);
+      newSocket.off('ROOM_ENDED', handleRoomEnded);
+      newSocket.off('ONLINE_STATUS_UPDATED', handleOnlineStatusUpdated);
+      newSocket.disconnect();
+    };
+  }, [dispatch, endpoint]);
+
+  // Handle user-specific socket events
+  useEffect(() => {
+    if (!socket || !user || !user._id) return;
+
+    socket.emit('STORE_CLIENT_USER_ID', { user_id: user._id });
+
+    // Chat events
+    const handleSendChat = data => {
+      if (!isMuted || !notificationSounds) {
+        notificationSoundRef.current?.play();
+      }
+      dispatch(addChatLog(data));
+
+      const pathName = location.pathname;
+      const segments = pathName.split('/');
+      const chatUserId = segments[2];
+
+      if (pathName.startsWith('/chat/') && chatUserId === data.from) {
+        socket.emit('READ_MESSAGE', { to: user._id, from: data.from });
+      } else {
+        socket.emit('REQUEST_UNREAD_MESSAGE_COUNT', { to: user._id });
+      }
+    };
+    socket.on('SEND_CHAT', handleSendChat);
+
+    // Loan events
+    const handleLoanOffer = payload => {
+      dispatch(openOfferLoanModal());
+      if (!isMuted) {
+        needALoanRef.current?.play();
+      }
+      dispatch(
+        setCurrentOfferTargetInfo({
+          _id: user._id,
+          lender: payload.lender,
+          avatar: payload.avatar,
+          accessory: payload.accessory,
+          username: payload.username,
+          totalWagered: payload.totalWagered,
+        })
+      );
+    };
+    socket.on(`RECEIVED_LOAN_OFFER_${user._id}`, handleLoanOffer);
+
+    // Bet events
+    const handleBetResult = data => dispatch(updateBetResult(data));
+    socket.on('UPDATE_BET_RESULT', handleBetResult);
+
+    // Notification events
+    const handleSendNotification = data => {
+      if (!isMuted || !notificationSounds) {
+        notificationSoundRef.current?.play();
+      }
+      if (isNotificationsAllowed && window.Notification) {
+        const options = { body: data.message, silent: false };
+        if (Notification.permission === 'granted') {
+          new Notification('New Notification', options);
+        } else if (Notification.permission !== 'denied') {
+          Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+              dispatch(setNotificationsAllowed(true));
+              new Notification('New Notification', options);
+            }
+          });
+        }
+      }
+      dispatch(addNewNotification(data));
+    };
+    socket.on('SEND_NOTIFICATION', handleSendNotification);
+
+    // Transaction events
+    const handleAddTransaction = data => dispatch(addNewTransaction(data));
+    socket.on('NEW_TRANSACTION', handleAddTransaction);
+
+    // Unread message count
+    const handleUnreadCount = countData => dispatch(setUnreadMessageCount(countData));
+    socket.on('SET_UNREAD_MESSAGE_COUNT', handleUnreadCount);
+
+    return () => {
+      socket.off('SEND_CHAT', handleSendChat);
+      socket.off(`RECEIVED_LOAN_OFFER_${user._id}`, handleLoanOffer);
+      socket.off('UPDATE_BET_RESULT', handleBetResult);
+      socket.off('SEND_NOTIFICATION', handleSendNotification);
+      socket.off('NEW_TRANSACTION', handleAddTransaction);
+      socket.off('SET_UNREAD_MESSAGE_COUNT', handleUnreadCount);
+    };
+  }, [dispatch, socket, user, isMuted, notificationSounds, isNotificationsAllowed, location.pathname]);
+
+  // Utility functions
   const handleClickOutside = useCallback(() => {
     if (anchorElProfile) {
       setAnchorElProfile(null);
@@ -398,7 +534,7 @@ function SiteWrapper({ children }) { // Remove props destructuring since we’ll
 
   const updateReminderTime = useCallback(
     debounce(() => {
-      setTransactions((prev) => updateFromNow(prev));
+      setTransactions(prev => updateFromNow(prev));
     }, 300),
     []
   );
@@ -428,147 +564,7 @@ function SiteWrapper({ children }) { // Remove props destructuring since we’ll
     }, 1500);
   }, []);
 
-  useEffect(() => {
-    const newSocket = socketIOClient(endpoint, { transports: ['websocket'] });
-
-    const handleOnlineStatusUpdated = (data) => {
-      dispatch(updateOnlineUserList(data.user_list));
-    };
-    newSocket.on('ONLINE_STATUS_UPDATED', handleOnlineStatusUpdated);
-
-    let lastGlobalChat = null;
-    const handleGlobalChat = (data) => {
-      if (
-        lastGlobalChat &&
-        lastGlobalChat.senderId === data.senderId &&
-        lastGlobalChat.time === data.time &&
-        lastGlobalChat.message === data.message
-      ) {
-        return;
-      }
-      lastGlobalChat = data;
-      dispatch(globalChatReceived(data));
-    };
-    newSocket.on('GLOBAL_CHAT_RECEIVED', handleGlobalChat);
-
-    const handleUpdatedRoomList = (data) => {
-      dispatch(setRoomList(data));
-      dispatch(endLoading());
-    };
-    newSocket.on('UPDATED_ROOM_LIST', handleUpdatedRoomList);
-
-    const handleRoomEnded = (data) => {
-      dispatch(removeRoomFromList(data.roomId));
-    };
-    newSocket.on('ROOM_ENDED', handleRoomEnded);
-
-    dispatch(setSocket(newSocket));
-
-    return () => {
-      newSocket.off('GLOBAL_CHAT_RECEIVED', handleGlobalChat);
-      newSocket.off('UPDATED_ROOM_LIST', handleUpdatedRoomList);
-      newSocket.off('ROOM_ENDED', handleRoomEnded);
-      newSocket.off('ONLINE_STATUS_UPDATED', handleOnlineStatusUpdated);
-      newSocket.disconnect();
-    };
-  }, [dispatch, endpoint]);
-
-  useEffect(() => {
-    if (!socket || !user || !user._id) return;
-
-    socket.emit('STORE_CLIENT_USER_ID', { user_id: user._id });
-
-    const handleSendChat = (data) => {
-      if (!isMuted || !notificationSounds) {
-        notificationSoundRef.current?.play();
-      }
-      dispatch(addChatLog(data));
-
-      const pathName = location.pathname; // Replace history.location.pathname with location.pathname
-      const segments = pathName.split('/');
-      const chatUserId = segments[2];
-
-      if (pathName.startsWith('/chat/') && chatUserId === data.from) {
-        socket.emit('READ_MESSAGE', { to: user._id, from: data.from });
-      } else {
-        socket.emit('REQUEST_UNREAD_MESSAGE_COUNT', { to: user._id });
-      }
-    };
-    socket.on('SEND_CHAT', handleSendChat);
-
-    const handleLoanOffer = (payload) => {
-      dispatch(openOfferLoanModal());
-      if (!isMuted) {
-        needALoanRef.current?.play();
-      }
-      dispatch(
-        setCurrentOfferTargetInfo({
-          _id: user._id,
-          lender: payload.lender,
-          avatar: payload.avatar,
-          accessory: payload.accessory,
-          username: payload.username,
-          totalWagered: payload.totalWagered,
-        })
-      );
-    };
-    socket.on(`RECEIVED_LOAN_OFFER_${user._id}`, handleLoanOffer);
-
-    const handleBetResult = (data) => {
-      dispatch(updateBetResult(data));
-    };
-    socket.on('UPDATE_BET_RESULT', handleBetResult);
-
-    const handleSendNotification = (data) => {
-      if (!isMuted || !notificationSounds) {
-        notificationSoundRef.current?.play();
-      }
-      if (isNotificationsAllowed && window.Notification) {
-        const options = { body: data.message, silent: false };
-        if (Notification.permission === 'granted') {
-          new Notification('New Notification', options);
-        } else if (Notification.permission !== 'denied') {
-          Notification.requestPermission().then((permission) => {
-            if (permission === 'granted') {
-              dispatch(setNotificationsAllowed(true));
-              new Notification('New Notification', options);
-            }
-          });
-        }
-      }
-      dispatch(addNewNotification(data));
-    };
-    socket.on('SEND_NOTIFICATION', handleSendNotification);
-
-    const handleAddTransaction = (data) => {
-      dispatch(addNewTransaction(data));
-    };
-    socket.on('NEW_TRANSACTION', handleAddTransaction);
-
-    const handleUnreadCount = (countData) => {
-      dispatch(setUnreadMessageCount(countData));
-    };
-    socket.on('SET_UNREAD_MESSAGE_COUNT', handleUnreadCount);
-
-    return () => {
-      socket.off('SEND_CHAT', handleSendChat);
-      socket.off(`RECEIVED_LOAN_OFFER_${user._id}`, handleLoanOffer);
-      socket.off('UPDATE_BET_RESULT', handleBetResult);
-      socket.off('SEND_NOTIFICATION', handleSendNotification);
-      socket.off('NEW_TRANSACTION', handleAddTransaction); // Added missing cleanup
-      socket.off('SET_UNREAD_MESSAGE_COUNT', handleUnreadCount);
-    };
-  }, [
-    dispatch,
-    socket,
-    user,
-    isMuted,
-    notificationSounds,
-    isNotificationsAllowed,
-    location.pathname, // Add location.pathname to dependencies
-  ]);
-
-  // Wallet / Web3 (update dispatch calls)
+  // Wallet functionality
   const loadSolanaWallet = useCallback(async () => {
     try {
       if (window.solana && window.solana.isPhantom) {
@@ -576,7 +572,7 @@ function SiteWrapper({ children }) { // Remove props destructuring since we’ll
         const wAddress = window.solana.publicKey.toString();
 
         const { success, message } = await dispatch(checkAndAddWalletAddress(wAddress));
-        if (!success && user._id !== null) {
+        if (!success && user?._id !== null) {
           console.warn('Wallet conflict:', message);
           setWalletConflictOpen(true);
           return;
@@ -603,204 +599,101 @@ function SiteWrapper({ children }) { // Remove props destructuring since we’ll
     dispatch(disconnectWalletAddress());
   }, [dispatch]);
 
-  // Menus & Modals (update dispatch calls where needed)
+  // Modal handlers
   const handleCloseConflictDialog = () => setWalletConflictOpen(false);
-
-  const handleOpenProfileMenu = (e) => {
-    setAnchorElProfile(e.currentTarget);
-  };
-
-  const handleCloseProfileMenu = () => {
-    setAnchorElProfile(null);
-  };
-
-  const handleNotificationsClick = (e) => {
-    setAnchorElNotifications(e.currentTarget);
-  };
-
+  const handleOpenProfileMenu = e => setAnchorElProfile(e.currentTarget);
+  const handleCloseProfileMenu = () => setAnchorElProfile(null);
+  const handleNotificationsClick = e => setAnchorElNotifications(e.currentTarget);
+  
   const handleCloseNotifications = () => {
     dispatch(readNotifications());
     setAnchorElNotifications(null);
   };
-
-  const handleBalanceClick = (e) => {
-    setAnchorElGameLog(e.currentTarget);
-  };
-
-  const handleCloseGameLog = () => {
-    setAnchorElGameLog(null);
-  };
-
-  const handleMouseEnter = (index) => {
-    setHoverTabIndex(index);
-  };
-
-  const handleMouseLeave = () => {
-    setHoverTabIndex(-1);
-  };
-
-  const toggleAllTransactions = () => {
-    setShowAllGameLogs((prev) => !prev);
-  };
-
-  const handleLogout = (clear_token) => {
+  
+  const handleBalanceClick = e => setAnchorElGameLog(e.currentTarget);
+  const handleCloseGameLog = () => setAnchorElGameLog(null);
+  const handleMouseEnter = index => setHoverTabIndex(index);
+  const handleMouseLeave = () => setHoverTabIndex(-1);
+  const toggleAllTransactions = () => setShowAllGameLogs(prev => !prev);
+  
+  const handleLogout = clearToken => {
     setWalletAddress(null);
     setSolanaBalance(null);
     setAnchorElProfile(null);
-    if (socket) {
-      socket.disconnect();
-    }
-    dispatch(userSignOut(clear_token, navigate));
+    if (socket) socket.disconnect();
+    dispatch(userSignOut(clearToken, navigate));
   };
 
+  // Modal toggle handlers
+  const toggleModal = (setter, value = null) => setter(value === null ? prev => !prev : value);
+  
   const handleOpenProfileModal = () => {
     setShowProfileModal(true);
     setAnchorElProfile(null);
   };
-
-  const handleCloseProfileModal = () => {
-    setShowProfileModal(false);
-  };
-
-  const handleOpenPlayerModal = (creatorId) => {
+  
+  const handleCloseProfileModal = () => setShowProfileModal(false);
+  
+  const handleOpenPlayerModal = creatorId => {
     setShowPlayerModal(true);
     setSelectedCreator(creatorId);
   };
-
-  const handleClosePlayerModal = () => {
-    setShowPlayerModal(false);
-  };
-
-  const handleOpenHowToPlayModal = () => {
-    setShowHowToPlayModal(true);
-  };
-
-  const handleCloseHowToPlayModal = () => {
-    setShowHowToPlayModal(false);
-  };
-
-  const handleOpenMarketplaceModal = () => {
-    setShowMarketplaceModal(true);
-  };
-
-  const handleCloseMarketplaceModal = () => {
-    setShowMarketplaceModal(false);
-  };
-
-  const handleOpenBankModal = () => {
-    setShowBankModal(true);
-  };
-
-  const handleCloseBankModal = () => {
-    setShowBankModal(false);
-  };
-
-  const handleOpenLeaderboardsModal = () => {
-    setShowLeaderboardsModal(true);
-  };
-
-  const handleCloseLeaderboardsModal = () => {
-    setShowLeaderboardsModal(false);
-  };
-
-  const handleOpenLoginModal = () => {
-    setShowLoginModal(true);
-  };
-
-  const handleCloseLoginModal = () => {
-    setShowLoginModal(false);
-  };
-
-  const handleOpenSignupModal = () => {
-    setShowSignupModal(true);
-  };
-
-  const handleCloseSignupModal = () => {
-    setShowSignupModal(false);
-  };
-
+  
+  const handleClosePlayerModal = () => setShowPlayerModal(false);
+  const handleOpenHowToPlayModal = () => setShowHowToPlayModal(true);
+  const handleCloseHowToPlayModal = () => setShowHowToPlayModal(false);
+  const handleOpenMarketplaceModal = () => setShowMarketplaceModal(true);
+  const handleCloseMarketplaceModal = () => setShowMarketplaceModal(false);
+  const handleOpenBankModal = () => setShowBankModal(true);
+  const handleCloseBankModal = () => setShowBankModal(false);
+  const handleOpenLeaderboardsModal = () => setShowLeaderboardsModal(true);
+  const handleCloseLeaderboardsModal = () => setShowLeaderboardsModal(false);
+  const handleOpenLoginModal = () => setShowLoginModal(true);
+  const handleCloseLoginModal = () => setShowLoginModal(false);
+  const handleOpenSignupModal = () => setShowSignupModal(true);
+  const handleCloseSignupModal = () => setShowSignupModal(false);
+  
   const handleOpenDepositModal = () => {
     setShowDepositModal(true);
     setAnchorElProfile(null);
   };
-
-  const handleCloseDepositModal = () => {
-    setShowDepositModal(false);
-  };
-
+  
+  const handleCloseDepositModal = () => setShowDepositModal(false);
+  
   const handleOpenWithdrawModal = () => {
     setShowWithdrawModal(true);
     setAnchorElProfile(null);
   };
-
-  const handleCloseWithdrawModal = () => {
-    setShowWithdrawModal(false);
-  };
-
+  
+  const handleCloseWithdrawModal = () => setShowWithdrawModal(false);
+  
   const handleOpenInventoryModal = () => {
     setShowInventoryModal(true);
     setAnchorElProfile(null);
   };
-
-  const handleCloseInventoryModal = () => {
-    setShowInventoryModal(false);
-  };
-
+  
+  const handleCloseInventoryModal = () => setShowInventoryModal(false);
+  
   const handleOpenVaultModal = () => {
     setShowVaultModal(true);
     setAnchorElProfile(null);
   };
-
-  const handleCloseVaultModal = () => {
-    setShowVaultModal(false);
-  };
-
-  const handleOpenDebtsModal = () => {
-    setShowDebtsModal(true);
-  };
-
-  const handleCloseDebtsModal = () => {
-    setShowDebtsModal(false);
-  };
-
-  const handleOpenSettingsModal = () => {
-    setShowSettingsModal(true);
-  };
-
-  const handleCloseSettingsModal = () => {
-    setShowSettingsModal(false);
-  };
-
-  const handleBonusModal = () => {
-    setShowBonusModal(true);
-  };
-
-  const handleCloseBonusModal = () => {
-    setShowBonusModal(false);
-  };
-
-  const closeTokenModal = () => {
-    setTokenModalOpen(false);
-  };
-
+  
+  const handleCloseVaultModal = () => setShowVaultModal(false);
+  const handleOpenDebtsModal = () => setShowDebtsModal(true);
+  const handleCloseDebtsModal = () => setShowDebtsModal(false);
+  const handleOpenSettingsModal = () => setShowSettingsModal(true);
+  const handleCloseSettingsModal = () => setShowSettingsModal(false);
+  const handleBonusModal = () => setShowBonusModal(true);
+  const handleCloseBonusModal = () => setShowBonusModal(false);
+  const closeTokenModal = () => setTokenModalOpen(false);
+  
   const handlePortfolio = () => {
     navigate('/portfolio');
     dispatch(selectMainTab(1));
   };
 
-  // Render (unchanged except for removing props references)
-  const width = window.innerWidth;
-  const notificationsArray = updateFromNow(notifications);
-  const unreadNotificationsCount = notificationsArray.filter((n) => !n.is_read).length;
-
-  const balanceString = balance.toString();
-  const decimalIndex = balanceString.indexOf('.');
-  const numDecimals = decimalIndex !== -1 ? Math.min(2, balanceString.length - decimalIndex - 1) : 0;
-
-  const halloween = new Date(`${new Date().getFullYear()}-02-14T00:00:00`);
-  const currentDate = new Date();
-  const timeRemaining = halloween - currentDate;
-
+  // Helper function for notification messages
   function appendCurrencyBracket(message, amount) {
     if (!amount) return message;
     const amountStr = String(amount);
@@ -808,6 +701,17 @@ function SiteWrapper({ children }) { // Remove props destructuring since we’ll
     return message + ` (${currencyStr}) / ${amountStr} SOL`;
   }
 
+  // UI helpers
+  const width = window.innerWidth;
+  const notificationsArray = updateFromNow(notifications);
+  const unreadNotificationsCount = notificationsArray?.filter(n => !n.is_read).length || 0;
+
+  const balanceString = balance?.toString() || '0';
+  const decimalIndex = balanceString.indexOf('.');
+  const numDecimals = decimalIndex !== -1 ? Math.min(2, balanceString.length - decimalIndex - 1) : 0;
+
+  const halloween = new Date(`${new Date().getFullYear()}-02-14T00:00:00`);
+  const currentDate = new Date();
   return (
     <ThemeProvider theme={isDarkMode ? darkTheme : mainTheme}>
       {showCookieConsent && <CookieConsent />}
