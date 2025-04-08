@@ -89,6 +89,10 @@ const connectedAccount = useSelector(state => state.auth.connectedAccount);
   const displayedRooms = roomList.slice(startIndex, endIndex);
   const prevRoomListRef = useRef(roomList);
 
+  useEffect(() => {
+    dispatch(getRoomList()); // Dispatch the getRoomList action
+  }, [dispatch]);
+  
   // Effects
   useEffect(() => {
     if (!isEqual(prevRoomListRef.current, roomList)) {

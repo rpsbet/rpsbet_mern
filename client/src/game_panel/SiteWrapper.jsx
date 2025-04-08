@@ -201,7 +201,6 @@ function SiteWrapper({ children }) {
   // Redux state
   const {
     isDarkMode,
-    isAuthenticated,
     user,
     userName,
     balance: propsBalance,
@@ -221,7 +220,6 @@ function SiteWrapper({ children }) {
     transactions: state.auth.transactions,
     loading_user: state.auth.loading_user,
     roomList: state.logic.roomList,
-    isAuthenticated: state.auth.isAuthenticated,
     showDeListLoanModal: state.snackbar.showDeListLoanModal,
     showListItemModal: state.snackbar.showListItemModal,
     showDeListItemModal: state.snackbar.showDeListItemModal,
@@ -267,8 +265,6 @@ function SiteWrapper({ children }) {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showPlayerModal, setShowPlayerModal] = useState(false);
   const [runTutorial, setRunTutorial] = useState(false);
-  const [isInvestorsPage, setIsInvestorsPage] = useState(location.pathname.startsWith('/investors'));
-  const [isPlayer, setIsPlayer] = useState(location.pathname.startsWith('/play'));
   const [showHowToPlayModal, setShowHowToPlayModal] = useState(false);
   const [showMarketplaceModal, setShowMarketplaceModal] = useState(false);
   const [showBankModal, setShowBankModal] = useState(false);
@@ -316,15 +312,13 @@ function SiteWrapper({ children }) {
     const doMount = async () => {
       dispatch(getGlobalChatLogs());
       setWebsiteLoading(true);
-      setIsInvestorsPage(location.pathname.startsWith('/investors'));
-      setIsPlayer(location.pathname.startsWith('/play'));
       dispatch(getHistory());
       document.addEventListener('mousedown', handleClickOutside);
 
       try {
         await Promise.all([
-          dispatch(getNotifications()),
           dispatch(getUser()),
+          dispatch(getNotifications()),
           initializeAudio(),
           dispatch(acCalculateRemainingLoans()),
         ]);
@@ -798,13 +792,10 @@ function SiteWrapper({ children }) {
             </Box>
 
 
-            {!isInvestorsPage ? (
-              <Suspense fallback={<Typography>Loading History...</Typography>}>
-                <HistoryTable userId={user?._id} />
-              </Suspense>
-            ) : (
-              <div style={{ padding: width < 600 ? '0' : '48px' }} />
-            )}
+            <Suspense fallback={<Typography>Loading History...</Typography>}>
+              <HistoryTable userId={user?._id} />
+            </Suspense>
+
 
             <div className="header_action_panel">
               {user ? (

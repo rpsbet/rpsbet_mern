@@ -98,6 +98,7 @@ async function callCronJobs(io) {
         status: room.creator.status,
       },
       joiners: room.joiners,
+      hosts: room.hosts,
       game_type: room.game_type,
       bet_amount: room.bet_amount,
       user_bet: room.user_bet,

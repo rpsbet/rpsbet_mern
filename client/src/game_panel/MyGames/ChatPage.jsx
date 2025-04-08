@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import {
   getChatRoomInfo,
@@ -39,7 +39,7 @@ import {
 
 const moment = require('moment');
 
-function ChatPage({ match }) { // Keep match as a prop since it’s from React Router
+function ChatPage() { // Keep match as a prop since it’s from React Router
   const dispatch = useDispatch();
   const navigate = useNavigate();
   // Map state from Redux using useSelector
@@ -93,7 +93,7 @@ function ChatPage({ match }) { // Keep match as a prop since it’s from React R
   const [selectedCreator, setSelectedCreator] = useState(null);
   const [userScrollAtBottom, setUserScrollAtBottom] = useState(true);
 
-  const { id: routeId } = match.params;
+  const { id: routeId } = useParams();
 
   // ---------- REFS ----------
   const chatLogPanelRef = useRef(null);
@@ -267,7 +267,7 @@ function ChatPage({ match }) { // Keep match as a prop since it’s from React R
                 sx={{ position: 'absolute', left: '15px' }}
               >
                 <FontAwesomeIcon icon={faArrowLeft} />
-                  Go Back
+                  &nbsp;Go Back
               </Button>
               <Box
                 component="a"

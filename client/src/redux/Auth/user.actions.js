@@ -197,8 +197,6 @@ export const getProfitData = () => async dispatch => {
       return {
         status: 'success'
       };
-    } else {
-      dispatch({ type: AUTH_ERROR });
     }
   } catch (err) {
     console.error(err);
@@ -332,7 +330,7 @@ export const authenticateWithPhantom = ({ walletAddress }) => async (dispatch) =
 // Login User
 export const userSignIn = body => async dispatch => {
   try {
-    dispatch({ type: START_LOADING });
+    // dispatch({ type: START_LOADING });
     const res = await axios.post('/auth', body);
     dispatch({ type: END_LOADING });
 
@@ -343,7 +341,7 @@ export const userSignIn = body => async dispatch => {
       return { status: 'success', user: res.data.user };
     } else {
       dispatch({ type: LOGIN_FAIL });
-      dispatch({ type: MSG_ERROR, payload: res.data.error });
+      // dispatch({ type: MSG_ERROR, payload: res.data.error });
     }
   } catch (err) {
     console.log('err', err);

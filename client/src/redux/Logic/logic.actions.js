@@ -656,10 +656,7 @@ export const equipItem = data => async dispatch => {
 export const getRoomList = (params) => async (dispatch) => {
   dispatch({ type: START_LOADING });
   try {
-    console.time('getRoomList');
-    // Call the EC2 backend, which will proxy to CloudFront
     const res = await axios.get('/game/rooms', { params });
-    console.timeEnd('getRoomList');
     if (res.data.success) {
       dispatch({
         type: ROOMS_LOADED,
@@ -1162,12 +1159,10 @@ export const markChatAsRead = (fromId) => async dispatch => {
 
 export const getMyChat = () => async dispatch => {
   try {
-    dispatch({ type: START_LOADING });
 
     const res = await axios.get('/game/my_chat');
     if (res.data.success) {
       dispatch({ type: MY_CHAT_LOADED, payload: res.data.myChat });
-      dispatch({ type: END_LOADING });
 
     }
   } catch (err) {

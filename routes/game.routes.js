@@ -1655,7 +1655,6 @@ router.get('/rooms', async (req, res) => {
   try {
     // We no longer pass "page" or do skip/limit
     const rooms = await getRoomList(game_type);
-
     res.json({
       success: true,
       query: req.query,
