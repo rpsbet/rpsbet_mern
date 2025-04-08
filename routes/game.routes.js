@@ -1774,7 +1774,6 @@ const getRoomList = async (game_type) => {
     return { rooms: [] };
   }
 };
-
 router.post('/rooms', auth, async (req, res) => {
   try {
     const {
@@ -1808,9 +1807,14 @@ router.post('/rooms', auth, async (req, res) => {
       totalWagered,
       username,
       dailyWithdrawals,
-      isWithdrawing
+      isWithdrawing,
+      balance
     } = req.user;
 
+    // Consolidate validations
+    const user_bet = parseFloat(bet_amount);
+    
+    // Validation checks - return early if any fail
     if (isWithdrawing) {
       return res.json({
         success: false,
@@ -1818,8 +1822,7 @@ router.post('/rooms', auth, async (req, res) => {
       });
     }
 
-    // validations:
-    if (bet_amount <= 0) {
+    if (user_bet <= 0) {
       return res.json({
         success: false,
         message: 'IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!',
@@ -1833,57 +1836,74 @@ router.post('/rooms', auth, async (req, res) => {
       });
     }
 
-    if (bet_amount < 0.001) {
+    if (user_bet < 0.001) {
       return res.json({
         success: false,
         message: 'MEOWNIMUM BUY-IN IS 0.001 SOL!',
       });
     }
-    if (endgame_type && parseFloat(endgame_amount) < bet_amount) {
+
+    if (endgame_type && parseFloat(endgame_amount) < user_bet) {
       return res.json({
         success: false,
         message: 'MINIMUM AUTO-PAYOUT MUST BE EQUAL TO BANKROLL',
       });
     }
+
     if (username.includes('BOT')) {
-      return res.json({ success: false, message: 'DO NOT HAVE PURRMISSION' });
+      return res.json({ 
+        success: false, 
+        message: 'DO NOT HAVE PURRMISSION' 
+      });
     }
-    if (bet_amount > req.user.balance) {
+
+    if (user_bet > balance) {
       return res.json({
         success: false,
         message: 'NOT ENUFF FUNDS AT THIS MEOWMENT',
       });
     }
+
     if (dailyWithdrawals > 4.269) {
       return res.json({
         success: false,
-        message:
-          'Exceeded Daily Withdrawal Limit. Unable to Create a room. Please try again tomorrow! (During Launch Phase only)',
+        message: 'Exceeded Daily Withdrawal Limit. Unable to Create a room. Please try again tomorrow! (During Launch Phase only)',
       });
     }
 
-    // get gameType doc & compute room_number
-    const roomCount = await Room.countDocuments({});
+    // Fetch necessary data in parallel
+    const [roomCount, gameTypeDoc, commissionDoc] = await Promise.all([
+      Room.countDocuments({}),
+      GameType.findOne({ game_type_id: parseInt(game_type) }),
+      System.findOne({ name: 'commission' })
+    ]);
 
-    const gameTypeDoc = await GameType.findOne({
-      game_type_id: parseInt(game_type),
-    });
-    const user_bet = parseFloat(bet_amount);
+    if (!gameTypeDoc) {
+      return res.json({
+        success: false,
+        message: 'Invalid game type',
+      });
+    }
 
-    const commissionDoc = await System.findOne({ name: 'commission' });
+    // Calculate fees
     const commissionPercentage = commissionDoc.value;
-
     const fee = user_bet * (commissionPercentage / 100);
     const amountAfterFee = user_bet - fee;
-
-    await System.findOneAndUpdate(
-      { name: 'platform_trading' },
-      { $inc: { value: fee } },
-    );
-
     const room_number = roomCount + 1;
 
-    // create new Room
+    // Prepare the host object
+    const hostObj = {
+      host: _id,
+      avatar,
+      username,
+      accessory,
+      rank: totalWagered,
+      share: 100,
+      stake: amountAfterFee,
+      walletAddress: connectedAccount,
+    };
+
+    // Create objects for all models that need to be saved
     const newRoom = new Room({
       creator: _id,
       room_password: room_password || '',
@@ -1891,18 +1911,7 @@ router.post('/rooms', auth, async (req, res) => {
       is_private,
       qs_nation,
       battles: 0,
-      hosts: [
-        {
-          host: _id,
-          avatar: avatar,
-          username: username,
-          accessory: accessory,
-          rank: totalWagered,
-          share: 100,
-          stake: amountAfterFee,
-          walletAddress: connectedAccount,
-        },
-      ],
+      hosts: [hostObj],
       game_type: gameTypeDoc,
       qs_game_type: qs_game_type ? qs_game_type : 2,
       user_bet: amountAfterFee,
@@ -1916,61 +1925,63 @@ router.post('/rooms', auth, async (req, res) => {
       telegram_link,
       website_link,
       selectedStrategy,
-      battles: 0,
       pr: 0,
       total_stakes: amountAfterFee,
       endgame_amount: endgame_type ? endgame_amount : amountAfterFee,
       endgame_type,
       host_pr: amountAfterFee,
       room_name: gameTypeDoc.short_name + '-' + room_number,
-      room_number: room_number,
+      room_number,
       index: room_number,
       status: 'open',
       description,
     });
 
-    // create new Transaction
-    const newTransaction = new Transaction({
-      user: req.user,
-      amount: 0,
-      description: 'created ' + newRoom.name,
-      room: newRoom._id,
-    });
-
-    // adjust user’s balance
-    req.user.balance -= amountAfterFee;
-    newTransaction.amount -= amountAfterFee;
-    req.user.updated_at = new Date();
-    req.user.totalTraded += Math.abs(user_bet);
-    req.user.tradingProfit -= amountAfterFee;
-    // create a new GameLog referencing this room
     const newGameLog = new GameLog({
       room: newRoom._id,
-      creator: newRoom.creator, // same as `_id`
-      joined_user: newRoom.creator, // same as `_id`
-      game_type: gameTypeDoc._id, // the doc's _id
-      bet_amount: newRoom.host_pr,
-      hosts: newRoom.hosts,
+      creator: _id,
+      joined_user: _id,
+      game_type: gameTypeDoc._id,
+      bet_amount: amountAfterFee,
+      hosts: [hostObj],
       game_result: -3000,
     });
 
-    // Save everything in parallel
+    const newTransaction = new Transaction({
+      user: req.user,
+      amount: -amountAfterFee,
+      description: 'created ' + (name || `${gameTypeDoc.short_name}-${room_number}`),
+      room: newRoom._id,
+    });
+
+    // Update user
+    const updatedUser = {
+      balance: balance - amountAfterFee,
+      updated_at: new Date(),
+      totalTraded: req.user.totalTraded + Math.abs(user_bet),
+      tradingProfit: req.user.tradingProfit - amountAfterFee
+    };
+
+    // Execute all database operations in parallel
     await Promise.all([
       saveDocumentWithRetry(newGameLog),
-      saveDocumentWithRetry(req.user),
+      User.findByIdAndUpdate(_id, updatedUser),
       saveDocumentWithRetry(newRoom),
       saveDocumentWithRetry(newTransaction),
+      System.findOneAndUpdate(
+        { name: 'platform_trading' },
+        { $inc: { value: fee } }
+      )
     ]);
 
-    // Now query the newly saved log for a final “history style” array
-    let gameLogQuery = GameLog.find({ room: newRoom._id })
+    // Query for emitting events
+    const gameLogList = await GameLog.find({ room: newRoom._id })
       .sort({ created_at: 'desc' })
       .limit(1)
       .populate({
         path: 'room',
         model: Room,
-        select:
-          '_id winnings ticker image commission username creator status hosts room_number game_type bet_amount user_bet host_pr created_at',
+        select: '_id winnings ticker image commission username creator status hosts room_number game_type bet_amount user_bet host_pr created_at',
       })
       .populate({
         path: 'game_type',
@@ -1988,17 +1999,10 @@ router.post('/rooms', auth, async (req, res) => {
         select: '_id avatar username accessory totalWagered',
       });
 
-    const gameLogList = await gameLogQuery;
+    // Process and emit events
     const newLog = await convertGameLogToHistoryStyle(gameLogList);
-
-    // Emit the new log to clients
-    req.io.sockets.emit('NEW_LOG', { newLog });
-    // ---------------------------------------------
-
-    // The “ROOM LIST” emit
-    const temp = newRoom.toObject();
-    const emitRoomObj = {
-      ...temp,
+    const roomObj = {
+      ...newRoom.toObject(),
       creator_id: _id,
       creator_avatar: avatar,
       creator_status: status,
@@ -2008,18 +2012,24 @@ router.post('/rooms', auth, async (req, res) => {
       rank: totalWagered,
       joiners: [],
     };
-    req.io.sockets.emit('UPDATED_ROOM_LIST', emitRoomObj);
+
+    // Emit events in non-blocking way
+    setImmediate(() => {
+      req.io.sockets.emit('NEW_LOG', { newLog });
+      req.io.sockets.emit('UPDATED_ROOM_LIST', roomObj);
+    });
 
     res.json({
       success: true,
-      message: 'room create',
+      message: 'room created',
       newTransaction,
     });
   } catch (err) {
-    console.error('Error saving room:', err);
-    res.json({
+    console.error('Error creating room:', err);
+    res.status(500).json({
       success: false,
-      message: 'something went wrong',
+      message: 'Something went wrong',
+      error: process.env.NODE_ENV === 'development' ? err.message : undefined
     });
   }
 });

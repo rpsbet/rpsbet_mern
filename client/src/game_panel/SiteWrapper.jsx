@@ -403,7 +403,6 @@ function SiteWrapper({ children }) {
     newSocket.on('GLOBAL_CHAT_RECEIVED', handleGlobalChat);
 
     const handleUpdatedRoomList = data => {
-      console.log("data", data)
       dispatch(setRoomList(data));
       dispatch(endLoading());
     };
