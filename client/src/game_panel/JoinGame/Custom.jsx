@@ -113,10 +113,37 @@ function Custom(props) {
 
   const isMobile = useMediaQuery('(max-width: 768px)');
   const isComponentMountedRef = useRef(false);
+  const gameContainerRef = useRef(null);
 
   useEffect(() => {
     bankrollRef.current = bankroll;
   }, [bankroll]);
+
+  // Add event handler for keyboard controls
+  const handleKeyDown = useCallback((event) => {
+    // Prevent default scrolling for specific keys used in games
+    if (['Space', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' '].includes(event.key) || 
+        event.keyCode === 32 || // Space
+        event.keyCode === 37 || // Left
+        event.keyCode === 38 || // Up 
+        event.keyCode === 39 || // Right
+        event.keyCode === 40) { // Down
+      if (isGameActive) {
+        event.preventDefault();
+      }
+    }
+  }, [isGameActive]);
+
+  // Set up key event listeners
+  useEffect(() => {
+    // Add event listener when the component mounts
+    window.addEventListener('keydown', handleKeyDown);
+    
+    // Clean up the event listener when the component unmounts
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleKeyDown]);
 
   // Socket Handlers
   const handleSocketData = useCallback(
@@ -463,7 +490,7 @@ function Custom(props) {
                 color="error"
               />
             }
-            label="Don’t show this again"
+            label="Don't show this again"
           />
         </DialogContent>
         <DialogActions>
@@ -544,7 +571,11 @@ function Custom(props) {
                 }}
                 className="join-game-panel"
               >
-                <Box sx={{ p: 2, width: '100%', position: 'relative' }}>
+                <Box 
+                  ref={gameContainerRef}
+                  sx={{ p: 2, width: '100%', maxWidth: '100vw', overflow: 'hidden', position: 'relative' }}
+                  tabIndex="0" // Make the container focusable
+                >
                   {componentError ? (
                     <Box
                       sx={{
@@ -561,12 +592,15 @@ function Custom(props) {
                     </Box>
                   ) : GameComponent ? (
                     <Box
-                      sx={{
-                        width: '100%',
-                        height: '600px',
-                        overflow: 'auto',
-                        backgroundColor: '#1E2525', // Match the neutral color from systemPrompt
-                      }}
+                    sx={{
+                      width: '100%',
+                      overflow: 'auto',  // Changed from 'auto' to prevent scrollbars
+                      backgroundColor: '#1E2525',
+                      '& canvas': {  // Target any canvas elements within the game
+                        maxWidth: '100%',
+                        objectFit: 'contain'  // Maintains aspect ratio
+                      }
+                    }}
                     >
                       <GameComponent proxiedAssets={proxiedAssets} logEvent={logEvent} />
                     </Box>

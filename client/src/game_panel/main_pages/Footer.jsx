@@ -2,7 +2,7 @@ import React, { useState, lazy, Suspense } from 'react';
 import { useSelector } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXTwitter, faTelegram, faYoutube, faTiktok } from '@fortawesome/free-brands-svg-icons';
-import { Box, Typography, Link, styled } from '@mui/material';
+import { Box, Typography, Link, styled, useMediaQuery, useTheme } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CheckIcon from '@mui/icons-material/Check';
 
@@ -47,34 +47,6 @@ const StyledLink = styled(Link)({
   },
 });
 
-const ProofContainer = styled(Box)({
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  margin: '30px',
-  lineHeight: '0',
-  textAlign: 'center',
-});
-
-const Currencies = styled(Box)({
-  display: 'flex',
-  flexDirection: 'row',
-  justifyContent: 'space-between',
-  width: '210px',
-  margin: '15px 0 0',
-});
-
-const CurrencyIcon = styled('img')({
-  width: '42px',
-  opacity: '0.2',
-  filter: 'grayscale(100%)',
-});
-
-const AvailableCurrency = styled('img')({
-  width: '42px',
-  filter: 'none',
-  marginRight: '10px',
-});
 
 function Footer({ open, style }) {
   const { isDarkMode } = useSelector((state) => ({
@@ -96,6 +68,13 @@ function Footer({ open, style }) {
 
   const handleOpenPrivacyModal = () => setShowPrivacyModal(true);
   const handleClosePrivacyModal = () => setShowPrivacyModal(false);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm')); // 'sm' is 600px by default
+
+  const fullAddress = '74YCHZz5VWSCcXvopnS33nS3Z5kLSCJzy3nm1sfSpump';
+  const truncatedAddress = isMobile
+    ? `${fullAddress.slice(0, 6)}...${fullAddress.slice(-4)}`
+    : fullAddress;
 
   const bottomFooterClasses = `bottom-footer ${isDarkMode ? 'dark_mode' : ''}`;
 
@@ -113,10 +92,10 @@ function Footer({ open, style }) {
         )}
         <Box className="social-icons" sx={{ display: 'flex', alignItems: 'center' }}>
           <span>CHECK SOCIALS FOR UPDATES ►</span>
-          <a href="https://x.com/rpsdotgame">
+          <a href="https://x.com/RPSDG_SOL">
             <FontAwesomeIcon icon={faXTwitter} />
           </a>
-          <a href="https://t.me/rpsgamesol">
+          <a href="https://t.me/RPSDOTGAMESOL">
             <FontAwesomeIcon icon={faTelegram} />
           </a>
           <a href="https://www.youtube.com/@rpsdotgame">
@@ -136,17 +115,17 @@ function Footer({ open, style }) {
               handleOpenLeaderboardsModal();
             }}
           >
-            Leaderboards
+            Leaderboards&nbsp;
           </StyledLink>
-          <span className="mobile-only"> ✗ </span>
-          <StyledLink href="https://blog.rps.game/">Blog</StyledLink>
+          <span className="mobile-only"> ✗ </span>&nbsp;
+          <StyledLink href="https://blog.rps.game/">Blog&nbsp;</StyledLink>
           ✗
           <StyledLink href="#terms" onClick={handleOpenTermsModal}>
-            Terms
+            &nbsp;Terms
           </StyledLink>
-          ✗
+          &nbsp;✗
           <StyledLink href="#privacy" onClick={handleOpenPrivacyModal}>
-            Privacy
+          &nbsp;Privacy
           </StyledLink>
         </LinksContainer>
         <Address
@@ -158,7 +137,7 @@ function Footer({ open, style }) {
           sx={{ cursor: 'pointer' }}
         >
           <Typography sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            74YCHZz5VWSCcXvopnS33nS3Z5kLSCJzy3nm1sfSpump
+          {truncatedAddress}
             {copied ? <CheckIcon fontSize="small" color="success" /> : <ContentCopyIcon fontSize="small" />}
           </Typography>
           <Typography variant="caption" sx={{ mt: 1 }}>
