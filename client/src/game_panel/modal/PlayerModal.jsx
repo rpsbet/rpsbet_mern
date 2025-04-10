@@ -279,7 +279,7 @@ function PlayerModal({ modalIsOpen, closeModal, selectedCreator }) {
               top: '50%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
-              bgcolor: isDarkMode ? '#2D3A4B' : '#fff',
+              bgcolor: isDarkMode ? '#1c1c1c' : '#fff',
               color: isDarkMode ? '#fff' : '#000',
               width: '90vw',
               maxWidth: '700px',
@@ -324,7 +324,7 @@ function PlayerModal({ modalIsOpen, closeModal, selectedCreator }) {
               <Tab label="Stats" />
             </Tabs>
             {/* Tab 0: Profile & Inventory */}
-            <Box sx={{ background: '#2D3A4A', borderRadius: '0.3em', p: '20px' }}>
+            <Box sx={{ background: '#080808', borderRadius: '0.3em', p: '20px' }}>
               {activeTab === 0 && (
                 <Box>
                   {/* Online/Offline */}
@@ -381,7 +381,7 @@ function PlayerModal({ modalIsOpen, closeModal, selectedCreator }) {
                       )}
                     </Box>
                   </Box>
-                  <Box sx={{ mb: 2, background: '#2D3A4A', borderRadius: '0.3em', p: '20px' }}>
+                  <Box sx={{ mb: 2, background: '#080808', borderRadius: '0.3em', p: '20px' }}>
                     <Typography variant="h6" gutterBottom>
                       A.K.A
                     </Typography>

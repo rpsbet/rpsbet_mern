@@ -239,7 +239,7 @@ function ChatPage() { // Keep match as a prop since it’s from React Router
         <Box
           sx={{
             mb: 2,
-            background: '#2D3A4A',
+            background: '#080808',
             borderRadius: '0.3em',
           }}
         >

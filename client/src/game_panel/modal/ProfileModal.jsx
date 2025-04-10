@@ -410,7 +410,7 @@ function ProfileModal({ modalIsOpen, closeModal }) {
               top: '50%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
-              bgcolor: isDarkMode ? '#2D3A4B' : '#fff',
+              bgcolor: isDarkMode ? '#1c1c1c' : '#fff',
               color: isDarkMode ? '#fff' : '#000',
               width: '80vw',
               maxWidth: 600,
@@ -456,7 +456,7 @@ function ProfileModal({ modalIsOpen, closeModal }) {
                 } />
               </Tabs>
               {activeTab === 0 && (
-                <Box sx={{ background: '#2D3A4A', borderRadius: '0.3em', p: '20px' }}>
+                <Box sx={{ background: '#080808', borderRadius: '0.3em', p: '20px' }}>
                   {loadingState ? (
                     <CircularProgress color="error" />
                   ) : (
@@ -494,7 +494,7 @@ function ProfileModal({ modalIsOpen, closeModal }) {
                     </Box>
                   )}
                   <Box className="modal-edit-panel" sx={{ mt: 2 }}>
-                    <Box sx={{ mb: 2, background: '#2D3A4A', borderRadius: '0.3em', p: '20px' }}>
+                    <Box sx={{ mb: 2, background: '#080808', borderRadius: '0.3em', p: '20px' }}>
                       <Typography variant="h6" gutterBottom>A.K.A</Typography>
                       {accounts.length === 0 ? (
                         <p>No associated accounts found.</p>
@@ -668,7 +668,7 @@ function ProfileModal({ modalIsOpen, closeModal }) {
               {activeTab === 1 && (
                 <Box
                   className="user-statistics"
-                  sx={{ background: '#2D3A4A', borderRadius: '0.3em', p: '20px' }}
+                  sx={{ background: '#080808', borderRadius: '0.3em', p: '20px' }}
                 >
                   <StatisticsForm
                     onDropdownChange={handleDropdownChange}
@@ -707,7 +707,7 @@ function ProfileModal({ modalIsOpen, closeModal }) {
               top: '50%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
-              bgcolor: isDarkMode ? '#2D3A4B' : '#fff',
+              bgcolor: isDarkMode ? '#1c1c1c' : '#fff',
               color: isDarkMode ? '#fff' : '#000',
               width: '80vw',
               maxWidth: 600,
@@ -759,7 +759,7 @@ function ProfileModal({ modalIsOpen, closeModal }) {
               top: '50%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
-              bgcolor: isDarkMode ? '#2D3A4B' : '#fff',
+              bgcolor: isDarkMode ? '#1c1c1c' : '#fff',
               color: isDarkMode ? '#fff' : '#000',
               width: '80vw',
               maxWidth: 600,
@@ -811,7 +811,7 @@ function ProfileModal({ modalIsOpen, closeModal }) {
               top: '50%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
-              bgcolor: isDarkMode ? '#2D3A4B' : '#fff',
+              bgcolor: isDarkMode ? '#1c1c1c' : '#fff',
               color: isDarkMode ? '#fff' : '#000',
               width: '80vw',
               maxWidth: 600,
@@ -836,7 +836,7 @@ function ProfileModal({ modalIsOpen, closeModal }) {
                   ×
                 </Button>
               </Box>
-              <Box sx={{ mb: 2, background: '#2D3A4A', borderRadius: '0.3em', p: '20px' }}>
+              <Box sx={{ mb: 2, background: '#080808', borderRadius: '0.3em', p: '20px' }}>
                 <Grid container spacing={2}>
                   {rewardsState.map((reward, index) => (
                     <Grid item xs={12} sm={6} md={4} key={index}>

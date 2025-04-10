@@ -393,7 +393,7 @@ div.table .table-cell button.btn_join img {
 
 .roll-tag,
 h4.game_header {
-  background: #2F4050;
+  background: #080808;
   padding: 4px;
   border-radius: 0.3em;
 }
@@ -586,7 +586,7 @@ div.table.my-chat-table .table-cell button.btn_join {
   margin-top: 20px;
   padding: 16px;
   border-radius: 0.3em;
-  background: #2D3A4A;
+  background: #080808;
 }
 
 .room-header {
@@ -641,7 +641,7 @@ div.table .table-row {
   background: linear-gradient(109deg, #e9e9e9, #dcdcdc);
   color: #86868b;
   overflow: hidden;
-  border-radius: 0.3em;
+  border-radius: 0.9em;
 }
 
 .sub-panel div.table .table-row div.desktop-only {
@@ -1510,7 +1510,7 @@ table td.amount.red {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #2D3A4A;
+  background-color: #080808;
   margin-top: 0.25rem;
   color: #4f5660;
   padding: 1.5em;
@@ -2219,9 +2219,7 @@ svg#delete:hover {
 }
 
 .chat-msg {
-  background: #2D3A4A;
   padding: 1.75rem 0.4rem 0.75rem 1rem;
-  border-radius: 0.3em;
   margin-bottom: 20px;
 }
 
@@ -2370,10 +2368,22 @@ svg#delete:hover {
   box-shadow:
     inset 1px 1px 0px #686868,
     inset -6px -3px 0px #313131;
-  border-radius: 0 0.3em 0 0.3em;
+  border-radius: 0.3em;
   width: 38px;
 
   text-align: center;
+}
+
+@keyframes textPulse {
+  0% {
+    transform: rotate(-10deg) scale(1);
+  }
+  50% {
+    transform: rotate(-10deg) scale(1.05);
+  }
+  100% {
+    transform: rotate(-10deg) scale(1);
+  }
 }
 
 #support-btn {

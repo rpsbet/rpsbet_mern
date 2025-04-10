@@ -169,7 +169,7 @@ function AllTransactionsModal({
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    bgcolor: '#2D3A4B', // Purple background
+    bgcolor: '#1c1c1c', // Purple background
     color: '#fff',
     boxShadow: 24,
     borderRadius: 1,
@@ -197,7 +197,7 @@ function AllTransactionsModal({
   const tableContainerStyle = {
     height: 280,
     overflowY: 'auto',
-    background: '#2D3A4A',
+    background: '#080808',
   };
 
   const theme = getCustomTheme(isDarkMode ? 'dark' : 'light');
@@ -262,7 +262,7 @@ function AllTransactionsModal({
               <Box>
                 <Box
                   sx={{
-                    background: '#2D3A4A',
+                    background: '#080808',
                     borderRadius: '0.3em',
                     p: '20px',
                   }}

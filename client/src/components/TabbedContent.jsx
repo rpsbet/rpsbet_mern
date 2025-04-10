@@ -8,7 +8,6 @@ import {
   Paper,
 } from '@mui/material';
 import Moment from 'moment';
-import { tutorialStepsGame } from '../util/tutorialStepsGame';
 
 // Statically import the most common game component (assuming RPS is default)
 import RPS from '../game_panel/JoinGame/RPS';
@@ -438,7 +437,7 @@ function TabbedContent(props) {
         square
         variant="filled"
         sx={{
-          background: '#2D3A4A',
+          background: '#080808',
           padding: '20px 10px',
           marginTop: '5px',
           display: 'flex',

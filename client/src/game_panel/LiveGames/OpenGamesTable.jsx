@@ -61,13 +61,13 @@ function OpenGamesTable(props) {
 
   const dispatch = useDispatch();
 
-const recentlyClosed = useSelector(state => state.logic.recentlyClosed, isEqual);
-const user = useSelector(state => state.auth.user, isEqual);
-const highlightedRooms = useSelector(state => state.logic.highlightedRooms, isEqual);
-const loading = useSelector(state => state.logic.isActiveLoadingOverlay);
-const solPrice = useSelector(state => state.logic.solPrice);
-const roomList = useSelector(state => state.logic.roomList, isEqual);
-const connectedAccount = useSelector(state => state.auth.connectedAccount);
+  const recentlyClosed = useSelector(state => state.logic.recentlyClosed, isEqual);
+  const user = useSelector(state => state.auth.user, isEqual);
+  const highlightedRooms = useSelector(state => state.logic.highlightedRooms, isEqual);
+  const loading = useSelector(state => state.logic.isActiveLoadingOverlay);
+  const solPrice = useSelector(state => state.logic.solPrice);
+  const roomList = useSelector(state => state.logic.roomList, isEqual);
+  const connectedAccount = useSelector(state => state.auth.connectedAccount);
 
   // Use prop values if provided, otherwise fall back to Redux state
   const effectiveLoading = propLoading !== undefined ? propLoading : loading;
@@ -77,7 +77,7 @@ const connectedAccount = useSelector(state => state.auth.connectedAccount);
 
   // Local State
   const [localRoomList, setLocalRoomList] = useState(roomList);
-  const [filter, setFilter] = useState('Live Games');
+  const [filter, setFilter] = useState('BEAT THE HOUSE');
   const [page, setPage] = useState(1);
   const [loadingRecent, setLoadingRecent] = useState(true);
 
@@ -92,7 +92,7 @@ const connectedAccount = useSelector(state => state.auth.connectedAccount);
   useEffect(() => {
     dispatch(getRoomList()); // Dispatch the getRoomList action
   }, [dispatch]);
-  
+
   // Effects
   useEffect(() => {
     if (!isEqual(prevRoomListRef.current, roomList)) {
@@ -125,7 +125,7 @@ const connectedAccount = useSelector(state => state.auth.connectedAccount);
     }
     setLocalRoomList(mergedRooms);
   }, [roomList, highlightedRooms, dispatch]);
-  
+
 
   // Handlers
   const handleChangePage = (event, newPage) => {
@@ -206,7 +206,7 @@ const connectedAccount = useSelector(state => state.auth.connectedAccount);
     return '#D32F2F';
   };
 
-  const isLiveGames = filter === 'Live Games';
+  const isLiveGames = filter === 'BEAT THE HOUSE';
   const recent = recentlyClosed ? updateFromNow(recentlyClosed) : [];
 
   return (
@@ -231,7 +231,7 @@ const connectedAccount = useSelector(state => state.auth.connectedAccount);
           className="filter-container"
           style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
           onClick={() =>
-            handleFilterChange(isLiveGames ? 'Recently Graduated' : 'Live Games')
+            handleFilterChange(isLiveGames ? 'Recently Graduated' : 'BEAT THE HOUSE')
           }
         >
           <FilterListIcon style={{ marginRight: '5px' }} />
@@ -263,7 +263,7 @@ const connectedAccount = useSelector(state => state.auth.connectedAccount);
                       flexDirection: 'column',
                       padding: '16px',
                       borderRadius: '8px',
-                      backgroundColor: effectiveIsDarkMode ? '#1E2A38' : '#FFFFFF',
+                      backgroundColor: effectiveIsDarkMode ? '#080808' : '#FFFFFF',
                       boxShadow: effectiveIsDarkMode
                         ? '0 2px 8px rgba(0, 0, 0, 0.3)'
                         : '0 2px 8px rgba(0, 0, 0, 0.1)',
@@ -294,7 +294,7 @@ const connectedAccount = useSelector(state => state.auth.connectedAccount);
             </Grid>
           ) : displayedRooms.length === 0 ? (
             <div className="dont-have-game-msg">
-              <div>NO LIVE GAMES, GO TO 'CREATE A GAME' TO CREATE ONE</div>
+              <div>NO LIVE GAMES, GO TO 'BE THE HOUSE' TO CREATE ONE</div>
             </div>
           ) : (
             <Grid
@@ -303,10 +303,13 @@ const connectedAccount = useSelector(state => state.auth.connectedAccount);
               spacing={1}
               style={{ padding: '20px' }}
             >
-              {displayedRooms.map((row) => {
+              {displayedRooms.map((row, index) => {
                 const progressPercentage = row.endgame_amount
                   ? Math.min((row.user_bet / row.endgame_amount) * 100, 100)
                   : 0;
+
+                // Check if this is the first item
+                const isFirstItem = index === 0;
 
                 return (
                   <Grid
@@ -318,509 +321,621 @@ const connectedAccount = useSelector(state => state.auth.connectedAccount);
                       maxWidth: '100% !important',
                       flexGrow: 1,
                       padding: '8px',
+                      position: 'relative',
                     }}
                   >
-                    <Card
-                      className={`table-row ${highlightedRooms.includes(row._id) ? 'highlighted-row' : ''}`}
-                      onClick={(event) => {
-                        if (!event.defaultPrevented) {
-                          joinRoom({
-                            id: row._id,
-                            roomStatus: row.status,
-                          });
-                        }
-                      }}
+                    {/* Crown image for the first item */}
+                    {isFirstItem && (
+                      <>
+                        {/* Crown image */}
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            top: '-15px',
+                            left: '20px',
+                            width: '50px',
+                            height: '50px',
+                            zIndex: 10,
+                            transform: 'rotate(-35deg)',
+                            filter: 'drop-shadow(0 2px 5px rgba(0,0,0,0.3))',
+                          }}
+                        >
+                          <img
+                            src="/img/crown.webp"
+                            alt="Crown"
+                            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                          />
+                        </Box>
+
+                      </>
+                    )}
+
+                    {/* Animated border wrapper for the first item */}
+                    <Box
                       sx={{
-                        width: '100%',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        padding: '20px',
-                        borderRadius: '16px',
-                        background: effectiveIsDarkMode
-                          ? 'linear-gradient(135deg, rgba(30, 42, 56, 0.8), rgba(22, 32, 46, 0.9))'
-                          : 'linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.5))',
-                        backdropFilter: 'blur(12px)',
-                        border: effectiveIsDarkMode
-                          ? '1px solid rgba(255, 255, 255, 0.1)'
-                          : '1px solid rgba(255, 255, 255, 0.7)',
-                        boxShadow: effectiveIsDarkMode
-                          ? '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.07)'
-                          : '0 8px 32px rgba(31, 38, 135, 0.15), inset 0 0 0 1px rgba(255, 255, 255, 0.4)',
-                        transition: 'all 0.3s ease',
                         position: 'relative',
-                        overflow: 'hidden',
-                        '&:hover': {
-                          transform: 'translateY(-4px)',
-                          boxShadow: effectiveIsDarkMode
-                            ? '0 12px 40px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.1)'
-                            : '0 12px 40px rgba(31, 38, 135, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.6)',
-                          cursor: 'pointer',
-                        },
-                        '&:before': {
-                          content: '""',
-                          position: 'absolute',
-                          top: '-50%',
-                          left: '-50%',
-                          width: '200%',
-                          height: '200%',
-                          background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%)',
-                          opacity: 0,
-                          transition: 'opacity 0.3s ease',
-                          transform: 'rotate(30deg)',
-                          pointerEvents: 'none',
-                        },
-                        '&:hover:before': {
-                          opacity: 1,
-                        },
+                        borderRadius: '16px',
+                        ...(isFirstItem && {
+                          '&::before': {
+                            content: '""',
+                            position: 'absolute',
+                            top: '-4px', // Base thickness
+                            left: '-4px',
+                            right: '-4px',
+                            bottom: '-4px',
+                            borderRadius: '18px',
+                            background: 'linear-gradient(45deg, #ff0000, #ff7300, #fffb00, #ff7300, #ff0000)', // Vibrant gradient
+                            backgroundSize: '300% 300%', // Large size for movement
+                            animation: 'gradientBorder 6s ease infinite', // Slightly slower for clarity
+                            zIndex: 0,
+                            boxShadow: '0 0 2px rgba(255, 115, 0, 0.7)', // Subtle glow
+                          },
+                          '&:hover::before': {
+                            animation: 'gradientBorder 2s ease infinite', // Speed up on hover
+                            boxShadow: '0 0 4px rgba(255, 115, 0, 0.9)', // Enhanced glow
+                          },
+                          '@keyframes gradientBorder': {
+                            '0%': {
+                              backgroundPosition: '0% 0%',
+                              top: '-3px', // Thicker on top
+                              left: '-3px',
+                              right: '-3px',
+                              bottom: '-3px',
+                            },
+                            '25%': {
+                              backgroundPosition: '100% 0%',
+                              top: '-3px',
+                              left: '-3px',
+                              right: '-3px', // Thicker on right
+                              bottom: '-3px',
+                            },
+                            '50%': {
+                              backgroundPosition: '100% 100%',
+                              top: '-3px',
+                              left: '-3px',
+                              right: '-3px',
+                              bottom: '-3px', // Thicker on bottom
+                            },
+                            '75%': {
+                              backgroundPosition: '0% 100%',
+                              top: '-3px',
+                              left: '-3px', // Thicker on left
+                              right: '-3px',
+                              bottom: '-3px',
+                            },
+                            '100%': {
+                              backgroundPosition: '0% 0%',
+                              top: '-3px', // Back to thicker on top
+                              left: '-3px',
+                              right: '-3px',
+                              bottom: '-3px',
+                            },
+                          },
+                        }),
                       }}
                     >
-                      {/* Top section with image and name */}
-                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2.5 }}>
-                        <Box
-                          sx={{
-                            borderRadius: '8px',
-                            overflow: 'hidden',
-                            marginRight: '16px',
-                            border: effectiveIsDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)',
-                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                            width: 48,
-                            height: 48,
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            background: effectiveIsDarkMode ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.5)',
-                          }}
-                        >
-                          <img
-                            src={row.image}
-                            alt={row.name}
-                            style={{ width: 40, height: 40, objectFit: 'cover' }}
-                          />
-                        </Box>
-                        <Box sx={{ flex: 1 }}>
-                          <Typography
-                            variant="h6"
-                            sx={{
-                              fontWeight: 700,
-                              fontSize: '1.1rem',
-                              lineHeight: 1.2,
-                              display: 'flex',
-                              alignItems: 'center'
-                            }}
-                          >
-                            {row.name}{' '}
-                            <Typography
-                              component="span"
-                              color="text.secondary"
-                              variant="body2"
-                              sx={{
-                                ml: 0.75,
-                                fontWeight: 500,
-                                opacity: 0.7,
-                                letterSpacing: '0.5px'
-                              }}
-                            >
-                              ({row.ticker})
-                            </Typography>
-                          </Typography>
-                          <Typography
-                            variant="body2"
-                            color="text.secondary"
-                            sx={{
-                              fontSize: '0.85rem',
-                              opacity: 0.8,
-                              maxWidth: '300px',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap'
-                            }}
-                          >
-                            {row.description.length > 24 ? `${row.description.slice(0, 24)}...` : row.description}
-                          </Typography>
-                        </Box>
-                        <Box
-                          sx={{
-                            ml: 'auto',
-                            display: 'flex',
-                            alignItems: 'center',
-                            background: effectiveIsDarkMode ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.05)',
-                            backdropFilter: 'blur(5px)',
-                            padding: '6px 10px',
-                            borderRadius: '8px',
-                            border: effectiveIsDarkMode ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.03)',
-                          }}
-                        >
-                          <img
-                            src={`/img/gametype/icons/${row.game_type?.short_name}.svg`}
-                            alt={row.game_type?.short_name}
-                            style={{ width: 20, height: 20 }}
-                          />
-                        </Box>
-                      </Box>
-
-                      {/* Players section */}
-                      <Box
+                      <Card
+                        className={`table-row ${highlightedRooms.includes(row._id) ? 'highlighted-row' : ''}`}
+                        onClick={(event) => {
+                          if (!event.defaultPrevented) {
+                            joinRoom({
+                              id: row._id,
+                              roomStatus: row.status,
+                            });
+                          }
+                        }}
                         sx={{
+                          width: '100%',
                           display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          mb: 3,
-                          mt: 1,
+                          flexDirection: 'column',
+                          padding: '20px',
+                          borderRadius: '16px',
+                          background: effectiveIsDarkMode
+                            ? 'linear-gradient(135deg, rgba(30, 42, 56, 0.8), rgba(22, 32, 46, 0.9))'
+                            : 'linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.5))',
+                          backdropFilter: 'blur(12px)',
+                          border: effectiveIsDarkMode
+                            ? '1px solid rgba(255, 255, 255, 0.1)'
+                            : '1px solid rgba(255, 255, 255, 0.7)',
+                          boxShadow: effectiveIsDarkMode
+                            ? '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.07)'
+                            : '0 8px 32px rgba(31, 38, 135, 0.15), inset 0 0 0 1px rgba(255, 255, 255, 0.4)',
+                          transition: 'all 0.1s ease',
                           position: 'relative',
+                          overflow: 'hidden',
+                          zIndex: 1,
+                          '&:hover': {
+                            boxShadow: effectiveIsDarkMode
+                              ? '0 12px 40px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.1)'
+                              : '0 12px 40px rgba(31, 38, 135, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.6)',
+                            cursor: 'pointer',
+                          },
                           '&:before': {
                             content: '""',
                             position: 'absolute',
-                            left: '50%',
-                            top: '50%',
-                            transform: 'translate(-50%, -50%)',
-                            width: '40%',
-                            height: '1px',
-                            background: effectiveIsDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
-                            zIndex: 0
-                          }
+                            top: '-50%',
+                            left: '-50%',
+                            width: '200%',
+                            height: '200%',
+                            background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%)',
+                            opacity: 0,
+                            transition: 'opacity 0.1s ease',
+                            transform: 'rotate(30deg)',
+                            pointerEvents: 'none',
+                          },
+                          '&:hover:before': {
+                            opacity: 1,
+                          },
                         }}
                       >
-                        {row.hosts?.length > 0 && (
-                          <Box sx={{ display: 'flex', alignItems: 'center', zIndex: 1 }}>
-                            <AvatarGroup
-                              max={2}
+                        {/* Top section with image and name */}
+                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2.5 }}>
+                          <Box
+                            sx={{
+                              borderRadius: '8px',
+                              overflow: 'hidden',
+                              marginRight: '16px',
+                              border: effectiveIsDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)',
+                              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                              width: 48,
+                              height: 48,
+                              display: 'flex',
+                              justifyContent: 'center',
+                              alignItems: 'center',
+                              background: effectiveIsDarkMode ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.5)',
+                            }}
+                          >
+                            <img
+                              src={row.image}
+                              alt={row.name}
+                              style={{ width: 40, height: 40, objectFit: 'cover' }}
+                            />
+                          </Box>
+                          <Box sx={{ flex: 1 }}>
+                            <Typography
+                              variant="h6"
                               sx={{
-                                '& .MuiAvatar-root': {
-                                  width: 36,
-                                  height: 36,
-                                  borderRadius: '10px',
-                                  border: 'none',
-                                  boxShadow: '0 2px 10px rgba(0,0,0,0.15)',
-                                  background: effectiveIsDarkMode ? '#2A3A4D' : '#f0f0f0',
-                                },
-                                '& .MuiAvatarGroup-avatar:not(:first-of-type)': {
-                                  marginLeft: '-10px',
-                                },
+                                fontWeight: 700,
+                                fontSize: '1.1rem',
+                                lineHeight: 1.2,
+                                display: 'flex',
+                                alignItems: 'center'
                               }}
                             >
-                              {row.hosts.map((host, index) => (
-                                <Avatar
-                                  key={index}
-                                  alt={host.username}
-                                  src={host.avatar}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleOpenPlayerModal(row.hosts[index]);
-                                  }}
-                                  sx={{
-                                    cursor: 'pointer',
-                                    transition: 'transform 0.2s',
-                                    '&:hover': {
-                                      transform: 'scale(1.1)',
-                                      zIndex: 10
-                                    }
-                                  }}
-                                />
-                              ))}
-                            </AvatarGroup>
+                              {row.name}{' '}
+                              <Typography
+                                component="span"
+                                color="text.secondary"
+                                variant="body2"
+                                sx={{
+                                  ml: 0.75,
+                                  fontWeight: 500,
+                                  opacity: 0.7,
+                                  letterSpacing: '0.5px'
+                                }}
+                              >
+                                ({row.ticker})
+                              </Typography>
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              color="text.secondary"
+                              sx={{
+                                fontSize: '0.85rem',
+                                opacity: 0.8,
+                                maxWidth: '300px',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap'
+                              }}
+                            >
+                              {row.description.length > 24 ? `${row.description.slice(0, 24)}...` : row.description}
+                            </Typography>
                           </Box>
-                        )}
+                          <Box
+                            sx={{
+                              ml: 'auto',
+                              display: 'flex',
+                              alignItems: 'center',
+                              background: effectiveIsDarkMode ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.05)',
+                              backdropFilter: 'blur(5px)',
+                              padding: '6px 10px',
+                              borderRadius: '8px',
+                              border: effectiveIsDarkMode ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.03)',
+                            }}
+                          >
+                            <img
+                              src={`/img/gametype/icons/${row.game_type?.short_name}.svg`}
+                              alt={row.game_type?.short_name}
+                              style={{ width: 20, height: 20 }}
+                            />
+                          </Box>
+                        </Box>
 
+                        {/* Players section - Modified Code */}
                         <Box
                           sx={{
-                            mx: 3,
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            width: 40,
-                            height: 40,
-                            borderRadius: '50%',
-                            background: effectiveIsDarkMode
-                              ? 'linear-gradient(135deg, rgba(40, 52, 66, 0.8), rgba(32, 42, 56, 0.9))'
-                              : 'linear-gradient(135deg, rgba(245, 245, 245, 0.8), rgba(255, 255, 255, 0.9))',
-                            backdropFilter: 'blur(5px)',
-                            boxShadow: effectiveIsDarkMode
-                              ? '0 4px 15px rgba(0, 0, 0, 0.2)'
-                              : '0 4px 15px rgba(0, 0, 0, 0.05)',
-                            border: effectiveIsDarkMode
-                              ? '1px solid rgba(255, 255, 255, 0.05)'
-                              : '1px solid rgba(255, 255, 255, 0.7)',
-                            zIndex: 2
-                          }}
-                        >
-                          <Battle sx={{
-                            fontSize: 22,
-                            color: effectiveIsDarkMode
-                              ? 'rgba(255, 255, 255, 0.85)'
-                              : 'rgba(0, 0, 0, 0.7)'
-                          }} />
-                        </Box>
-
-                        {row.joiners?.length > 0 && (
-                          <Box sx={{ display: 'flex', alignItems: 'center', zIndex: 1 }}>
-                            <AvatarGroup
-                              max={2}
-                              sx={{
-                                '& .MuiAvatar-root': {
-                                  width: 36,
-                                  height: 36,
-                                  borderRadius: '10px',
-                                  border: 'none',
-                                  boxShadow: '0 2px 10px rgba(0,0,0,0.15)',
-                                  background: effectiveIsDarkMode ? '#2A3A4D' : '#f0f0f0',
-                                },
-                                '& .MuiAvatarGroup-avatar:not(:first-of-type)': {
-                                  marginLeft: '-10px',
-                                },
-                              }}
-                            >
-                              {row.joiners.map((joiner, index) => (
-                                <Avatar
-                                  key={index}
-                                  alt={joiner.username}
-                                  src={joiner.avatar}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleOpenPlayerModal(row.joiners[index]);
-                                  }}
-                                  sx={{
-                                    cursor: 'pointer',
-                                    transition: 'transform 0.2s',
-                                    '&:hover': {
-                                      transform: 'scale(1.1)',
-                                      zIndex: 10
-                                    }
-                                  }}
-                                />
-                              ))}
-                            </AvatarGroup>
-                          </Box>
-                        )}
-                      </Box>
-
-                      {/* Stats section */}
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          mb: 3,
-                          px: 1
-                        }}
-                      >
-                        <Box
-                          sx={{
-                            textAlign: 'center',
-                            padding: '10px 16px',
-                            borderRadius: '12px',
-                            background: effectiveIsDarkMode
-                              ? 'rgba(0, 0, 0, 0.15)'
-                              : 'rgba(0, 0, 0, 0.03)',
-                            backdropFilter: 'blur(5px)',
-                            border: effectiveIsDarkMode
-                              ? '1px solid rgba(255, 255, 255, 0.05)'
-                              : '1px solid rgba(0, 0, 0, 0.03)',
-                          }}
-                        >
-                          <Typography
-                            variant="caption"
-                            color="text.secondary"
-                            sx={{
-                              fontSize: '0.7rem',
-                              textTransform: 'uppercase',
-                              letterSpacing: '0.5px',
-                              fontWeight: 500,
-                              opacity: 0.7
-                            }}
-                          >
-                            Liquidity
-                          </Typography>
-                          <Typography
-                            variant="body1"
-                            sx={{
-                              color: getColorClass(row.user_bet - row.bet_amount),
-                              fontWeight: 700,
-                              fontSize: '0.95rem'
-                            }}
-                          >
-                            {convertToCurrency(row.user_bet, effectiveSolPrice)}
-                            {row.user_bet !== row.bet_amount && (
-                              <span style={{
-                                fontSize: '0.75rem',
-                                marginLeft: '4px',
-                                display: 'inline-flex',
-                                alignItems: 'center'
-                              }}>
-                                {row.user_bet > row.bet_amount ? (
-                                  <TrendingUpOutlined sx={{ fontSize: 14 }} />
-                                ) : (
-                                  <TrendingDownOutlined sx={{ fontSize: 14 }} />
-                                )}
-                                {` (${(((row.user_bet - row.bet_amount) / row.bet_amount) * 100).toFixed(1)}%)`}
-                              </span>
-                            )}
-                          </Typography>
-                        </Box>
-
-                        <Box
-                          sx={{
-                            textAlign: 'center',
-                            padding: '10px 16px',
-                            borderRadius: '12px',
-                            background: effectiveIsDarkMode
-                              ? 'rgba(0, 0, 0, 0.15)'
-                              : 'rgba(0, 0, 0, 0.03)',
-                            backdropFilter: 'blur(5px)',
-                            border: effectiveIsDarkMode
-                              ? '1px solid rgba(255, 255, 255, 0.05)'
-                              : '1px solid rgba(0, 0, 0, 0.03)',
-                          }}
-                        >
-                          <Typography
-                            variant="caption"
-                            color="text.secondary"
-                            sx={{
-                              fontSize: '0.7rem',
-                              textTransform: 'uppercase',
-                              letterSpacing: '0.5px',
-                              fontWeight: 500,
-                              opacity: 0.7
-                            }}
-                          >
-                            Battles
-                          </Typography>
-                          <Typography
-                            variant="body1"
-                            sx={{
-                              fontWeight: 700,
-                              fontSize: '0.95rem'
-                            }}
-                          >
-                            {row.battles}
-                          </Typography>
-                        </Box>
-
-                        <Box
-                          sx={{
-                            textAlign: 'center',
-                            padding: '10px 16px',
-                            borderRadius: '12px',
-                            background: effectiveIsDarkMode
-                              ? 'rgba(0, 0, 0, 0.15)'
-                              : 'rgba(0, 0, 0, 0.03)',
-                            backdropFilter: 'blur(5px)',
-                            border: effectiveIsDarkMode
-                              ? '1px solid rgba(255, 255, 255, 0.05)'
-                              : '1px solid rgba(0, 0, 0, 0.03)',
-                          }}
-                        >
-                          <Typography
-                            variant="caption"
-                            color="text.secondary"
-                            sx={{
-                              fontSize: '0.7rem',
-                              textTransform: 'uppercase',
-                              letterSpacing: '0.5px',
-                              fontWeight: 500,
-                              opacity: 0.7
-                            }}
-                          >
-                            Age
-                          </Typography>
-                          <Typography
-                            variant="body1"
-                            sx={{
-                              fontWeight: 700,
-                              fontSize: '0.95rem'
-                            }}
-                          >
-                            {customFromNow(Moment(row.created_at))}
-                          </Typography>
-                        </Box>
-                      </Box>
-
-                      {/* Progress bar */}
-                      <Box sx={{ position: 'relative', mb: 0.5 }}>
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            position: 'absolute',
-                            top: '-20px',
-                            right: '0',
-                            fontSize: '0.7rem',
-                            opacity: 0.7
-                          }}
-                        >
-                          {progressPercentage.toFixed(0)}%
-                        </Typography>
-                        <Box
-                          sx={{
-                            width: '100%',
-                            height: '8px',
-                            background: effectiveIsDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
-                            borderRadius: '20px',
-                            overflow: 'hidden',
+                            mb: 3,
+                            mt: 1,
                             position: 'relative',
+                            '&:before': {
+                              content: '""',
+                              position: 'absolute',
+                              left: '0',
+                              right: '0',
+                              top: '50%',
+                              transform: 'translateY(-50%)',
+                              height: '3px', // Thicker line
+                              background: row.joiners?.length === 0
+                                ? 'rgba(255, 50, 50, 0.9)' // Solid red if no joiners
+                                : `linear-gradient(90deg, rgba(255, 50, 50, 0.9) 0%, rgba(255, 50, 50, 0.9) ${row.hosts?.length > row.joiners?.length
+                                  ? Math.max(0, 50 - (row.hosts?.length - row.joiners?.length) * 15)
+                                  : row.joiners?.length > row.hosts?.length
+                                    ? Math.min(100, 50 + (row.joiners?.length - row.hosts?.length) * 15)
+                                    : 50
+                                }%, rgba(253, 181, 0, 0.9) ${row.hosts?.length > row.joiners?.length
+                                  ? Math.max(0, 50 - (row.hosts?.length - row.joiners?.length) * 15) + 1
+                                  : row.joiners?.length > row.hosts?.length
+                                    ? Math.min(100, 50 + (row.joiners?.length - row.hosts?.length) * 15) + 1
+                                    : 51
+                                }%, rgba(253, 181, 0, 0.9) 100%)`,
+                              zIndex: 0,
+                            },
                           }}
                         >
-                          <Box
-                            className="progress-bar-filled"
-                            sx={{
-                              width: `${progressPercentage}%`,
-                              height: '100%',
-                              background: 'linear-gradient(90deg, rgba(227, 255, 0, 0.8), rgba(253, 181, 0, 0.9))',
-                              borderRadius: '20px',
-                              position: 'relative',
-                              zIndex: 2,
-                              boxShadow: '0 0 10px rgba(227, 255, 0, 0.4)',
-                              '&::after': {
-                                content: '""',
-                                position: 'absolute',
-                                top: 0,
-                                left: 0,
-                                right: 0,
-                                bottom: 0,
-                                background: 'linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.4) 50%, rgba(255, 255, 255, 0) 100%)',
-                                animation: 'shimmer 2s infinite',
-                                zIndex: 3,
-                              },
-                              '@keyframes shimmer': {
-                                '0%': { transform: 'translateX(-100%)' },
-                                '100%': { transform: 'translateX(100%)' }
-                              }
-                            }}
-                          />
-                        </Box>
-                      </Box>
+                          {row.hosts?.length > 0 && (
+                            <Box sx={{ display: 'flex', alignItems: 'center', zIndex: 1 }}>
+                              <AvatarGroup
+                                max={2}
+                                sx={{
+                                  '& .MuiAvatar-root': {
+                                    width: 36,
+                                    height: 36,
+                                    borderRadius: '10px',
+                                    border: 'none',
+                                    boxShadow: '0 2px 10px rgba(0,0,0,0.15)',
+                                    background: effectiveIsDarkMode ? '#ffffffe6' : '#f0f0f0',
+                                  },
+                                  '& .MuiAvatarGroup-avatar:not(:first-of-type)': {
+                                    marginLeft: '-10px',
+                                  },
+                                }}
+                              >
+                                {row.hosts.map((host, index) => (
+                                  <Avatar
+                                    key={index}
+                                    alt={host.username}
+                                    src={host.avatar}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleOpenPlayerModal(row.hosts[index]);
+                                    }}
+                                    sx={{
+                                      cursor: 'pointer',
+                                      transition: 'transform 0.1s',
+                                      '&:hover': {
+                                        transform: 'scale(1.1)',
+                                        zIndex: 10,
+                                      },
+                                    }}
+                                  />
+                                ))}
+                              </AvatarGroup>
+                            </Box>
+                          )}
 
-                      {/* Private room lock icon */}
-                      {row.is_private && (
-                        <Tooltip title="A password is required to battle this room." arrow>
+                          {/* Battle icon with max limit on left/right movement */}
                           <Box
                             sx={{
-                              position: 'absolute',
-                              top: 10,
-                              right: 10,
-                              width: 32,
-                              height: 32,
-                              borderRadius: '50%',
+                              mx: 3,
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
+                              width: 40,
+                              height: 40,
+                              borderRadius: '50%',
                               background: effectiveIsDarkMode
-                                ? 'rgba(0, 0, 0, 0.3)'
-                                : 'rgba(255, 255, 255, 0.7)',
+                                ? 'linear-gradient(135deg, rgba(40, 52, 66, 0.8), rgba(32, 42, 56, 0.9))'
+                                : 'linear-gradient(135deg, rgba(245, 245, 245, 0.8), rgba(255, 255, 255, 0.9))',
                               backdropFilter: 'blur(5px)',
+                              boxShadow: effectiveIsDarkMode
+                                ? '0 4px 15px rgba(0, 0, 0, 0.2)'
+                                : '0 4px 15px rgba(0, 0, 0, 0.05)',
                               border: effectiveIsDarkMode
-                                ? '1px solid rgba(255, 255, 255, 0.1)'
-                                : '1px solid rgba(0, 0, 0, 0.05)',
+                                ? '1px solid rgba(255, 255, 255, 0.05)'
+                                : '1px solid rgba(255, 255, 255, 0.7)',
+                              zIndex: 2,
+                              position: 'relative',
+                              left: `${row.hosts?.length > row.joiners?.length
+                                ? Math.max(-40, (50 - Math.max(0, 50 - (row.hosts?.length - row.joiners?.length) * 15)) * -1) // Max left: -40%
+                                : row.joiners?.length > row.hosts?.length
+                                  ? Math.min(40, (Math.min(100, 50 + (row.joiners?.length - row.hosts?.length) * 15) - 50)) // Max right: 40%
+                                  : 0
+                                }%`, // Sync with gradient cutoff, capped at ±40%
                             }}
                           >
-                            <LockOutlined
+                            <Battle
                               sx={{
-                                fontSize: 16,
-                                color: effectiveIsDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+                                fontSize: 22,
+                                color: effectiveIsDarkMode ? 'rgba(255, 255, 255, 0.85)' : 'rgba(0, 0, 0, 0.7)',
                               }}
                             />
                           </Box>
-                        </Tooltip>
-                      )}
-                    </Card>
+
+                          {row.joiners?.length > 0 && (
+                            <Box sx={{ display: 'flex', alignItems: 'center', zIndex: 1 }}>
+                              <AvatarGroup
+                                max={2}
+                                sx={{
+                                  '& .MuiAvatar-root': {
+                                    width: 36,
+                                    height: 36,
+                                    borderRadius: '10px',
+                                    border: 'none',
+                                    boxShadow: '0 2px 10px rgba(0,0,0,0.15)',
+                                    background: effectiveIsDarkMode ? '#ffffffe6' : '#f0f0f0',
+                                  },
+                                  '& .MuiAvatarGroup-avatar:not(:first-of-type)': {
+                                    marginLeft: '-10px',
+                                  },
+                                }}
+                              >
+                                {row.joiners.map((joiner, index) => (
+                                  <Avatar
+                                    key={index}
+                                    alt={joiner.username}
+                                    src={joiner.avatar}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleOpenPlayerModal(row.joiners[index]);
+                                    }}
+                                    sx={{
+                                      cursor: 'pointer',
+                                      transition: 'transform 0.1s',
+                                      '&:hover': {
+                                        transform: 'scale(1.1)',
+                                        zIndex: 10,
+                                      },
+                                    }}
+                                  />
+                                ))}
+                              </AvatarGroup>
+                            </Box>
+                          )}
+                        </Box>
+
+                        {/* Stats section */}
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            mb: 3,
+                            px: 1
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              textAlign: 'center',
+                              padding: '10px 16px',
+                              borderRadius: '12px',
+                              background: effectiveIsDarkMode
+                                ? 'rgba(0, 0, 0, 0.15)'
+                                : 'rgba(0, 0, 0, 0.03)',
+                              backdropFilter: 'blur(5px)',
+                              border: effectiveIsDarkMode
+                                ? '1px solid rgba(255, 255, 255, 0.05)'
+                                : '1px solid rgba(0, 0, 0, 0.03)',
+                            }}
+                          >
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              sx={{
+                                fontSize: '0.7rem',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.5px',
+                                fontWeight: 500,
+                                opacity: 0.7
+                              }}
+                            >
+                              Liquidity
+                            </Typography>
+                            <Typography
+                              variant="body1"
+                              sx={{
+                                color: getColorClass(row.user_bet - row.bet_amount),
+                                fontWeight: 700,
+                                fontSize: '0.95rem'
+                              }}
+                            >
+                              {convertToCurrency(row.user_bet, effectiveSolPrice)}
+                              {row.user_bet !== row.bet_amount && (
+                                <span style={{
+                                  fontSize: '0.75rem',
+                                  marginLeft: '4px',
+                                  display: 'inline-flex',
+                                  alignItems: 'center'
+                                }}>
+                                  {row.user_bet > row.bet_amount ? (
+                                    <TrendingUpOutlined sx={{ fontSize: 14 }} />
+                                  ) : (
+                                    <TrendingDownOutlined sx={{ fontSize: 14 }} />
+                                  )}
+                                  {` (${(((row.user_bet - row.bet_amount) / row.bet_amount) * 100).toFixed(1)}%)`}
+                                </span>
+                              )}
+                            </Typography>
+                          </Box>
+
+                          <Box
+                            sx={{
+                              textAlign: 'center',
+                              padding: '10px 16px',
+                              borderRadius: '12px',
+                              background: effectiveIsDarkMode
+                                ? 'rgba(0, 0, 0, 0.15)'
+                                : 'rgba(0, 0, 0, 0.03)',
+                              backdropFilter: 'blur(5px)',
+                              border: effectiveIsDarkMode
+                                ? '1px solid rgba(255, 255, 255, 0.05)'
+                                : '1px solid rgba(0, 0, 0, 0.03)',
+                            }}
+                          >
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              sx={{
+                                fontSize: '0.7rem',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.5px',
+                                fontWeight: 500,
+                                opacity: 0.7
+                              }}
+                            >
+                              Battles
+                            </Typography>
+                            <Typography
+                              variant="body1"
+                              sx={{
+                                fontWeight: 700,
+                                fontSize: '0.95rem'
+                              }}
+                            >
+                              {row.battles}
+                            </Typography>
+                          </Box>
+
+                          <Box
+                            sx={{
+                              textAlign: 'center',
+                              padding: '10px 16px',
+                              borderRadius: '12px',
+                              background: effectiveIsDarkMode
+                                ? 'rgba(0, 0, 0, 0.15)'
+                                : 'rgba(0, 0, 0, 0.03)',
+                              backdropFilter: 'blur(5px)',
+                              border: effectiveIsDarkMode
+                                ? '1px solid rgba(255, 255, 255, 0.05)'
+                                : '1px solid rgba(0, 0, 0, 0.03)',
+                            }}
+                          >
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              sx={{
+                                fontSize: '0.7rem',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.5px',
+                                fontWeight: 500,
+                                opacity: 0.7
+                              }}
+                            >
+                              Age
+                            </Typography>
+                            <Typography
+                              variant="body1"
+                              sx={{
+                                fontWeight: 700,
+                                fontSize: '0.95rem'
+                              }}
+                            >
+                              {customFromNow(Moment(row.created_at))}
+                            </Typography>
+                          </Box>
+                        </Box>
+
+                        {/* Progress bar */}
+                        <Box sx={{ position: 'relative', mb: 0.5 }}>
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              position: 'absolute',
+                              top: '-20px',
+                              right: '0',
+                              fontSize: '0.7rem',
+                              opacity: 0.7
+                            }}
+                          >
+                            {progressPercentage.toFixed(0)}%
+                          </Typography>
+                          <Box
+                            sx={{
+                              width: '100%',
+                              height: '8px',
+                              background: effectiveIsDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
+                              borderRadius: '20px',
+                              overflow: 'hidden',
+                              position: 'relative',
+                            }}
+                          >
+                            <Box
+                              className="progress-bar-filled"
+                              sx={{
+                                width: `${progressPercentage}%`,
+                                height: '100%',
+                                background: 'linear-gradient(90deg, rgba(227, 255, 0, 0.8), rgba(253, 181, 0, 0.9))',
+                                borderRadius: '20px',
+                                position: 'relative',
+                                zIndex: 2,
+                                boxShadow: '0 0 10px rgba(227, 255, 0, 0.4)',
+                                '&::after': {
+                                  content: '""',
+                                  position: 'absolute',
+                                  top: 0,
+                                  left: 0,
+                                  right: 0,
+                                  bottom: 0,
+                                  background: 'linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.4) 50%, rgba(255, 255, 255, 0) 100%)',
+                                  animation: 'shimmer 2s infinite',
+                                  zIndex: 3,
+                                },
+                                '@keyframes shimmer': {
+                                  '0%': { transform: 'translateX(-100%)' },
+                                  '100%': { transform: 'translateX(100%)' }
+                                }
+                              }}
+                            />
+                          </Box>
+                        </Box>
+
+                        {/* Private room lock icon */}
+                        {row.is_private && (
+                          <Tooltip title="A password is required to battle this room." arrow>
+                            <Box
+                              sx={{
+                                position: 'absolute',
+                                top: 10,
+                                right: 10,
+                                width: 32,
+                                height: 32,
+                                borderRadius: '50%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                background: effectiveIsDarkMode
+                                  ? 'rgba(0, 0, 0, 0.3)'
+                                  : 'rgba(255, 255, 255, 0.7)',
+                                backdropFilter: 'blur(5px)',
+                                border: effectiveIsDarkMode
+                                  ? '1px solid rgba(255, 255, 255, 0.1)'
+                                  : '1px solid rgba(0, 0, 0, 0.05)',
+                              }}
+                            >
+                              <LockOutlined
+                                sx={{
+                                  fontSize: 16,
+                                  color: effectiveIsDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+                                }}
+                              />
+                            </Box>
+                          </Tooltip>
+                        )}
+                      </Card>
+                    </Box>
                   </Grid>
                 );
               })}
@@ -876,9 +991,8 @@ const connectedAccount = useSelector(state => state.auth.connectedAccount);
                       alignItems: 'center',
                       background: '#3a2d41',
                       cursor: 'pointer',
-                      transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                      transition: 'box-shadow 0.1s ease',
                       '&:hover': {
-                        transform: 'translateY(-4px)',
                         boxShadow: 4,
                       },
                     }}
@@ -946,7 +1060,7 @@ const connectedAccount = useSelector(state => state.auth.connectedAccount);
         </Grid>
       )}
 
-     
+
     </ThemeProvider>
   );
 }

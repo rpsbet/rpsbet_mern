@@ -19,11 +19,11 @@ const getTheme = (mode) =>
       secondary: { main: '#f50057' },
       error: { main: '#D32F2F' },
       background: {
-        default: mode === 'dark' ? '#1E272E' : '#f4f6f8',
+        default: mode === 'dark' ? '#151718' : '#f4f6f8',
       },
     },
     typography: {
-      fontFamily: "'Roboto Mono', monospace",
+      fontFamily: "'Staatliches', cursive",
     },
   });
 

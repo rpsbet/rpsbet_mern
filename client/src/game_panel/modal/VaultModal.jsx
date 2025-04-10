@@ -138,7 +138,7 @@ function VaultModal({ modalIsOpen, closeModal }) {
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    bgcolor: '#2D3A4B',
+    bgcolor: '#1c1c1c',
     color: '#fff',
     boxShadow: 24,
     borderRadius: 1,
@@ -174,7 +174,7 @@ function VaultModal({ modalIsOpen, closeModal }) {
           {/* BODY */}
           <Box
             sx={{
-              background: '#2D3A4A',
+              background: '#080808',
               borderRadius: '0.3em',
               p: '20px',
               display: 'flex',

@@ -808,7 +808,7 @@ function JoinGame() {
             className={`mobile-tab-live ${selectedMobileTab === 'live_games' ? 'active' : ''}`}
             onClick={() => setSelectedMobileTab('live_games')}
           >
-            LIVE GAMES
+            BEAT THE HOUSE
           </Button>
           <Button
             className={`mobile-tab-my ${selectedMobileTab === 'my_games' ? 'active' : ''}`}

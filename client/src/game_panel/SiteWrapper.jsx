@@ -74,7 +74,6 @@ import {
   setCurrentOfferTargetInfo
 } from '../redux/Loan/loan.action';
 
-import { tutorialStepsMain } from '../util/tutorialStepsMain';
 import CookieConsent from '../util/cookieConsent';
 import { convertToCurrency } from '../util/conversion';
 import {
@@ -697,7 +696,7 @@ function SiteWrapper({ children }) {
         }}
         PaperProps={{
           sx: {
-            backgroundColor: '#2D3A4B',
+            backgroundColor: '#1c1c1c',
             color: '#fff',
           },
         }}
@@ -1030,7 +1029,7 @@ function SiteWrapper({ children }) {
                     }}
                     PaperProps={{
                       sx: {
-                        backgroundColor: '#2D3A4B',
+                        backgroundColor: '#1c1c1c',
                         color: '#fff',
                         '& .MuiMenuItem-root': {
                           textTransform: 'none',
@@ -1123,7 +1122,7 @@ function SiteWrapper({ children }) {
             }}
             PaperProps={{
               sx: {
-                backgroundColor: '#2D3A4B',
+                backgroundColor: '#1c1c1c',
                 color: '#fff',
                 width: 320,
                 maxWidth: '90vw',
@@ -1137,7 +1136,7 @@ function SiteWrapper({ children }) {
               sx={{
                 position: 'sticky',
                 top: 0,
-                backgroundColor: '#2D3A4B',
+                backgroundColor: '#1c1c1c',
                 color: '#fff',
                 p: 2,
                 zIndex: 2
@@ -1263,7 +1262,7 @@ function SiteWrapper({ children }) {
             }}
             PaperProps={{
               sx: {
-                backgroundColor: '#2D3A4B',
+                backgroundColor: '#1c1c1c',
                 color: '#fff',
                 p: 2,
                 '& .MuiPaper-root': {
@@ -1279,7 +1278,7 @@ function SiteWrapper({ children }) {
                   borderColor: '#607D8B'
                 },
                 '& #wallet-address': {
-                  backgroundColor: '#2D3A4B',
+                  backgroundColor: '#1c1c1c',
                   color: '#fff',
                   border: '1px solid #607D8B',
                   borderRadius: '4px',
@@ -1357,7 +1356,7 @@ function SiteWrapper({ children }) {
               BALANCE HISTORY
             </Typography>
 
-            <TableContainer component={Paper} style={{ backgroundColor: '#2D3A4A', marginBottom: '15px' }} elevation={0}>
+            <TableContainer component={Paper} style={{ backgroundColor: '#080808', marginBottom: '15px' }} elevation={0}>
               <Table aria-label="a dense table" size="small">
                 <TableBody>
                   {transactions.length === 0 ? (

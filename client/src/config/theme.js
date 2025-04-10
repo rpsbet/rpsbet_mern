@@ -5,18 +5,18 @@ export const getCustomTheme = (isDarkMode) =>
     palette: {
       mode: isDarkMode ? 'dark' : 'light',
       background: {
-        paper: '#2F4050',
+        paper: '#080808',
       },
     },
     typography: {
-      fontFamily: "'Roboto Mono', monospace",
+      fontFamily: "'Staatliches', cursive",
     },
     components: {
       // Apply global styles with CssBaseline
       MuiCssBaseline: {
         styleOverrides: {
           body: {
-            fontFamily: "'Roboto Mono', monospace",
+            fontFamily: "'Staatliches', cursive",
           },
         },
       },

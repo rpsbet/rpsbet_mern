@@ -123,7 +123,7 @@
 
 .progress-bar-remaining {
   height: 100%;
-  background: linear-gradient(#4A5A6A, #2D3A4A) !important; /* Gray-blue to background */
+  background: linear-gradient(#4A5A6A, #080808) !important; /* Gray-blue to background */
   position: relative;
   z-index: 1;
   float: right;

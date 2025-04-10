@@ -197,7 +197,7 @@ const MyLoansModal = ({ modalIsOpen, closeModal }) => {
             top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
-            bgcolor: isDarkMode ? '#2D3A4B' : '#fff',
+            bgcolor: isDarkMode ? '#1c1c1c' : '#fff',
             color: isDarkMode ? '#fff' : '#000',
             width: '80vw',
             maxWidth: 700,
@@ -283,7 +283,7 @@ const MyLoansModal = ({ modalIsOpen, closeModal }) => {
         fullWidth
         PaperProps={{
           sx: {
-            backgroundColor: '#2D3A4B',
+            backgroundColor: '#1c1c1c',
             color: '#fff',
             borderRadius: 2,
             boxShadow: 24,

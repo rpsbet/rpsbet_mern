@@ -12,10 +12,15 @@
   <!-- Inline critical CSS -->
   <style>
     html, body, * {
-      font-family: 'Roboto Mono', monospace !important;
+      font-family: 'Staatliches', cursive !important; /* Ultra-compact, readable battling font */
       margin: 0;
     }
     .container { width: 100%; max-width: 1140px; margin: 0 auto; }
+    button, .btn {
+      /* No font-weight needed; Staatliches is bold by default */
+      letter-spacing: '0.3px'; /* Tight spacing for compactness */
+      text-transform: 'uppercase'; /* Reinforce the battle vibe */
+    }
   </style>
 
   <!-- Preload Bootstrap CSS -->
@@ -24,10 +29,10 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
   </noscript>
 
-  <!-- Preload Google Fonts (only 400 weight) -->
-  <link rel="preload" href="https://fonts.googleapis.com/css?family=Roboto+Mono:400&display=swap" as="style" onload="this.rel='stylesheet'">
+  <!-- Preload Google Fonts - Staatliches -->
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Staatliches&display=swap" as="style" onload="this.rel='stylesheet'">
   <noscript>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto+Mono:400&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Staatliches&display=swap">
   </noscript>
 
   <link rel="apple-touch-icon" href="logo192.png" />

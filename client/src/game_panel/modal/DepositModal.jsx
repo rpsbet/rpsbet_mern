@@ -51,7 +51,7 @@ const modalBoxStyle = {
   top: '50%',
   left: '50%',
   transform: 'translate(-50%, -50%)',
-  bgcolor: '#2D3A4B', // Purple background
+  bgcolor: '#1c1c1c', // Purple background
   color: '#fff',
   boxShadow: 24,
   borderRadius: 1,
@@ -246,7 +246,7 @@ function DepositModal({ modalIsOpen, closeModal, balance, account }) {
           {/* BODY */}
           <Box
             sx={{
-              background: '#2D3A4A',
+              background: '#080808',
               p: 2,
               borderRadius: 1,
             }}

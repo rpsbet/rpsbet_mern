@@ -207,7 +207,7 @@ const ConfirmLoanModal = () => {
 
               <Box
                 sx={{
-                  background: '#2D3A4A',
+                  background: '#080808',
                   p: 2,
                   borderRadius: 1,
                 }}

@@ -154,7 +154,7 @@ function WithdrawModal(props) {
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    bgcolor: '#2D3A4B',
+    bgcolor: '#1c1c1c',
     color: '#fff',
     boxShadow: 24,
     borderRadius: 1,
@@ -221,7 +221,7 @@ function WithdrawModal(props) {
           )}
           <Box
             sx={{
-              background: '#2D3A4A',
+              background: '#080808',
               p: 2,
               borderRadius: 1,
             }}

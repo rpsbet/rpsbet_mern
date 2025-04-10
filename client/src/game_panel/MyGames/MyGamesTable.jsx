@@ -45,7 +45,6 @@ import { updateTutorialCompleted } from '../../redux/Auth/user.actions';
 import { getRank } from '../../util/getRank';
 import { convertToCurrency } from '../../util/conversion';
 import { confirmModalCreate } from '../modal/ConfirmAlerts';
-import { tutorialStepsCreate } from '../../util/tutorialStepsCreate';
 
 import CoHostModal from '../modal/CoHostModal';
 import SettingsRef from '../../components/SettingsRef';

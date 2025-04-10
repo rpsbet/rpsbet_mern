@@ -958,7 +958,7 @@ function CreateGame() { // Remove match prop
               }`}
               onClick={() => setSelectedMobileTab('live_games')}
             >
-              {selectedMobileTab === 'live_games' && 'LIVE GAMES'}
+              {selectedMobileTab === 'live_games' && 'BEAT THE HOUSE'}
             </Button>
             <Button
               className={`mobile-tab-my ${

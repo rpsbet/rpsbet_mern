@@ -123,7 +123,7 @@ function CoHostModal({
         width: container.clientWidth, // <-- Use container's width
         height: 350,
         layout: {
-          background: { type: 'solid', color: isDarkMode ? '#2D3A4A' : '#ffffff' },
+          background: { type: 'solid', color: isDarkMode ? '#080808' : '#ffffff' },
           textColor: isDarkMode ? '#ffffff' : '#000000',
         },
         grid: {
@@ -511,7 +511,7 @@ function CoHostModal({
 
         {/* Info Box */}
         {!input_only && !has_joined && (
-          <Box sx={{ background: '#2D3A4A', p: 2, borderRadius: 1 }}>
+          <Box sx={{ background: '#080808', p: 2, borderRadius: 1 }}>
             <Box
               sx={{
                 display: 'grid',
@@ -649,7 +649,7 @@ function CoHostModal({
         {((!input_only && !has_joined) || input_only || isSmallScreen) && (
           <Box
             sx={{
-              background: '#2D3A4A',
+              background: '#080808',
               p: 2,
               borderRadius: 1,
               display: 'flex',
@@ -921,7 +921,7 @@ function CoHostModal({
 
         {/* Transactions Table */}
         {!has_joined && !input_only && (
-          <Box sx={{ background: '#2D3A4A', p: 2, borderRadius: 1 }}>
+          <Box sx={{ background: '#080808', p: 2, borderRadius: 1 }}>
             <TableContainer component={Paper} sx={{ maxHeight: 300, mt: 1 }}>
               <Table stickyHeader>
                 <TableHead>

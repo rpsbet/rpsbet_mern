@@ -70,6 +70,7 @@ function MainPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedCreator, setSelectedCreator] = useState('');
   const [showPlayerModal, setShowPlayerModal] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
 
   const isMountedRef = useRef(false);
   const prevLocationRef = useRef(location.pathname);
@@ -158,12 +159,61 @@ function MainPage() {
       return (
         <div className="create-room-btn-panel">
           <Button
-            variant="text"
-            color="error"
+            variant="contained"
             className="btn-create-room"
             onClick={handleCreateBtnClicked}
+            sx={{
+              background: '#d8171922',
+              backdropFilter: 'blur(12px)',
+              border: '1px solid #d8171933',
+              borderRadius: '8px',
+              padding: '12px 24px',
+              color: '#d81719',
+              fontWeight: 'bold',
+              fontSize: '16px',
+              textTransform: 'uppercase',
+              boxShadow: '0 4px 15px #d8171922',
+              transition: 'all 0.3s ease',
+              overflow: 'hidden',
+              '&:hover': {
+                background: '#d8171944',
+                boxShadow: '0 6px 20px #d8171922',
+                transform: 'translateY(-2px)',
+                '& .cool-cat': {  // Target the custom class on hover
+                  opacity: 1,
+                },
+              },
+            }}
           >
-            CREATE A GAME +
+            BE THE HOUSE 
+            <Box
+              component="span"
+              sx={{
+                marginLeft: '8px',
+                display: 'inline-block',
+                width: '68px',
+                height: '46px',
+                overflow: 'hidden',
+                filter: 'hue-rotate(130deg)',
+              }}
+            >
+              <Box
+                component="img"
+                src="/img/coolCat.svg"
+                alt="cool cat"
+                className="cool-cat"  // Add a class to target the image
+                sx={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  filter: 'invert(1)',
+                  objectPosition: 'top',
+                  marginRight: '-18px',
+                  opacity: '0.3',  // Initial opacity
+                  transition: 'opacity 0.3s ease',  // Specific transition for opacity
+                }}
+              />
+            </Box>
           </Button>
         </div>
       );
@@ -314,7 +364,7 @@ function MainPage() {
                 d="M24.9 25.945c2.625-2.578 4.1-6.076 4.1-9.722 0-3.647-1.475-7.144-4.1-9.723M7.1 25.945C4.476 23.367 3 19.87 3 16.223 3 12.576 4.475 9.079 7.1 6.5M21 22.5c1.92-1.658 3-3.906 3-6.25s-1.08-4.592-3-6.25M14 17.678v-3.356c0-.79.871-1.268 1.537-.844l2.637 1.678c.618.393.618 1.295 0 1.688l-2.637 1.678c-.666.424-1.537-.055-1.537-.844zM11 22.5c-1.92-1.658-3-3.906-3-6.25s1.08-4.592 3-6.25"
               />
             </svg>
-            {selectedMobileTab === 'live_games' && 'LIVE GAMES'}
+            {selectedMobileTab === 'live_games' && 'BEAT THE HOUSE'}
           </Button>
 
           <Button

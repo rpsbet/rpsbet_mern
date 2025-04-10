@@ -244,7 +244,7 @@ function MyProductTable() {
   // -------------- Render --------------
   return (
     <ThemeProvider theme={theme}>
-      <Box sx={{ background: '#2D3A4A', borderRadius: '0.3em', p: '20px' }}>
+      <Box sx={{ background: '#080808', borderRadius: '0.3em', p: '20px' }}>
         <MarketplaceContainer>
           <FilterSortContainer>
             <div className="filters">

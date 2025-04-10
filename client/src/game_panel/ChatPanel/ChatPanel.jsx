@@ -377,7 +377,7 @@ function ChatPanel(props) {
           flexDirection: 'column',
           height: '100%',
           p: 1,
-          bgcolor: '#1E272E',
+          bgcolor: '#080808',
           color: 'white',
           border: '0',
         }}

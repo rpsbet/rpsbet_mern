@@ -151,7 +151,7 @@
 }
 
 .dark_mode .game-page .game-contents {
-	background: #2D3A4A;
+	background: #080808;
 }
 
 .dark_mode .avatar-square {
@@ -171,7 +171,7 @@
 }
 
 .dark_mode div.table .table-row {
-	background: #2D3A4A	!important;
+	background: #080808	!important;
 	color: #8e9297;
 }
 
@@ -288,10 +288,6 @@
 
 .dark_mode #balance {
 	background: linear-gradient(39deg, #590000, #D32F2F);
-}
-
-.dark_mode .main-panel div.table .table-row:hover {
-	border: 2px solid #fff;
 }
 
 .dark_mode .main-panel div.table.main-history-table .table-row:hover {

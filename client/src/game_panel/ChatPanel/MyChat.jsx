@@ -91,7 +91,7 @@ function MyChat({ highlightChatId }) {
 
   return (
     <ThemeProvider theme={theme}>
-      <Box sx={{ background: '#2D3A4A', borderRadius: '0.3em', p: '20px' }}>
+      <Box sx={{ background: '#080808', borderRadius: '0.3em', p: '20px' }}>
         {Object.keys(myChat).length === 0 && loading ? (
           <Box>
             {[...Array(5)].map((_, index) => (

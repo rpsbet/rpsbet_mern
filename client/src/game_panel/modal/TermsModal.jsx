@@ -8,7 +8,7 @@ function TermsModal({ modalIsOpen, closeModal }) {
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    bgcolor: '#2D3A4B', // Purple background
+    bgcolor: '#1c1c1c', // Purple background
     color: '#fff',
     boxShadow: 24,
     borderRadius: 1,

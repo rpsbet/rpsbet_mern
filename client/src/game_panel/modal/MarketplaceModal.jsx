@@ -28,7 +28,7 @@ function MarketplaceModal({ modalIsOpen, closeModal }) {
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    bgcolor: '#2D3A4B', // Force dark background
+    bgcolor: '#1c1c1c', // Force dark background
     color: '#fff',
     boxShadow: 24,
     p: 3,

@@ -565,7 +565,7 @@ function Custom(props) {
                 square
                 variant="inherit"
                 sx={{
-                  background: '#2D3A4A',
+                  background: '#080808',
                   position: 'relative',
                   width: '100%',
                 }}
@@ -595,7 +595,7 @@ function Custom(props) {
                     sx={{
                       width: '100%',
                       overflow: 'auto',  // Changed from 'auto' to prevent scrollbars
-                      backgroundColor: '#1E2525',
+                      backgroundColor: '#080808',
                       '& canvas': {  // Target any canvas elements within the game
                         maxWidth: '100%',
                         objectFit: 'contain'  // Maintains aspect ratio

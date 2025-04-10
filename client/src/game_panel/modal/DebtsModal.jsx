@@ -47,7 +47,7 @@ const customStyles = {
     right: 'auto',
     bottom: 'auto',
     transform: 'translate(-50%, -50%)',
-    background: '#2D3A4B',
+    background: '#1c1c1c',
     padding: '16px',
     border: 'none',
   },
@@ -181,7 +181,7 @@ const DebtsModal = ({ modalIsOpen, closeModal }) => {
           {/* Outer Container for loans, with background & radius */}
           <Box
             sx={{
-              background: '#2D3A4A',
+              background: '#080808',
               p: 2,
               borderRadius: 1,
             }}

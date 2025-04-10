@@ -147,7 +147,7 @@ const MyBankTable = () => {
     : [];
 
   return (
-    <Box sx={{ background: '#2D3A4A', borderRadius: '0.3em', p: '20px' }}>
+    <Box sx={{ background: '#080808', borderRadius: '0.3em', p: '20px' }}>
       {/* Filter & Sort UI */}
       <FilterSortContainer>
         <div className="filters">

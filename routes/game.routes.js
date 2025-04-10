@@ -332,7 +332,7 @@ You are an elite React developer with a passion for cutting-edge design, inspire
     - Use Box with 'width: "100%", height: "100%"' to take up the full width and height of the parent container.
     - Set 'maxWidth: "100%", maxHeight: "100%"' and 'overflow: "auto"' to ensure content fits.
     - Center content with 'mx: "auto"' and 'display: "flex", flexDirection: "column", justifyContent: "space-between", alignItems: "center"'.
-    - Set background color to '#2d3a4a' for a dark backdrop.
+    - Set background color to '#080808' for a dark backdrop.
   - **Alignment & Spacing**: 
     - Use 'gap: 2' for consistent spacing.
     - Apply 'p: 2' for padding.

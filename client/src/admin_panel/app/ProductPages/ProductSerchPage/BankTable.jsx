@@ -367,7 +367,7 @@ const BankTable = (props) => {
     <ThemeProvider theme={theme}>
       <Box
         sx={{
-          background: '#2D3A4A',
+          background: '#080808',
           borderRadius: '0.3em',
           p: '20px',
         }}

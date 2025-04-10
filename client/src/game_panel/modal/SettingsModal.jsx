@@ -46,7 +46,7 @@ const modalBoxStyle = {
   top: '50%',
   left: '50%',
   transform: 'translate(-50%, -50%)',
-  bgcolor: '#2D3A4B', // Purple background
+  bgcolor: '#1c1c1c', // Purple background
   color: '#fff',
   boxShadow: 24,
   borderRadius: 1,
@@ -111,7 +111,7 @@ const SettingsModal = ({ modalIsOpen, closeModal }) => {
         {/* BODY */}
         <Box
           sx={{
-            background: '#2D3A4A',
+            background: '#080808',
             borderRadius: '0.3em',
             p: '20px',
           }}
