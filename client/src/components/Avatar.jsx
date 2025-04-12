@@ -3,7 +3,6 @@ import { connect } from 'react-redux';
 import verified from '../game_panel/LottieAnimations/verified.json';
 import { Box, Avatar as MUIAvatar, Badge } from '@mui/material';
 import Lottie from 'react-lottie';
-import { renderLottieAvatarAnimation } from '../util/LottieAvatarAnimations';
 import { getRank } from '../util/getRank';
 
 function Avatar(props) {
@@ -167,11 +166,6 @@ function Avatar(props) {
                 : '/img/profile-thumbnail.svg';
             }}
           />
-
-          {/* Lottie Accessory */}
-          {renderLottieAvatarAnimation(accessory, isLowGraphics)}
-
- 
 
           {/* Verified Badge (top-right) */}
           {isVerified && (

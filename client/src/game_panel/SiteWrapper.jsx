@@ -197,55 +197,24 @@ function SiteWrapper({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Redux state
-  const {
-    isDarkMode,
-    user,
-    userName,
-    balance: propsBalance,
-    betResult: propsBetResult,
-    solPrice,
-    socket,
-    transactions: propTransactions,
-    notifications,
-    isNotificationsAllowed,
-    isMuted,
-    notificationSounds,
-    isLowGraphics,
-    showCookieConsent,
-    remainingLoans: propsRemainingLoans,
-    connectedAccount
-  } = useSelector((state) => ({
-    transactions: state.auth.transactions,
-    loading_user: state.auth.loading_user,
-    roomList: state.logic.roomList,
-    showDeListLoanModal: state.snackbar.showDeListLoanModal,
-    showListItemModal: state.snackbar.showListItemModal,
-    showDeListItemModal: state.snackbar.showDeListItemModal,
-    showConfirmTradeModal: state.snackbar.showConfirmTradeModal,
-    showGamePasswordModal: state.snackbar.showGamePasswordModal,
-    socket: state.auth.socket,
-    balance: state.auth.balance,
-    connectedAccount: state.auth.connectedAccount,
-    userName: state.auth.userName,
-    isMuted: state.auth.isMuted,
-    notificationSounds: state.auth.notificationSounds,
-    isNotificationsAllowed: state.auth.isNotificationsAllowed,
-    user: state.auth.user,
-    selectedMainTabIndex: state.logic.selectedMainTabIndex,
-    isDarkMode: state.auth.isDarkMode,
-    betResult: state.logic.betResult,
-    solPrice: state.logic.solPrice,
-    remainingLoans: state.loanReducer.remainingLoans,
-    userLoans: state.loanReducer.userLoans,
-    sevenDayProfit: state.auth.sevenDayProfit,
-    oneDayProfit: state.auth.oneDayProfit,
-    allTimeProfit: state.auth.allTimeProfit,
-    notifications: state.logic.notifications,
-    isLowGraphics: state.auth.isLowGraphics,
-    showCookieConsent: state.auth.showCookieConsent,
-    history: state.logic.history,
-  }));
+  // Split useSelector calls
+  const isDarkMode = useSelector((state) => state.auth.isDarkMode);
+  const user = useSelector((state) => state.auth.user);
+  const userName = useSelector((state) => state.auth.userName);
+  const balance = useSelector((state) => state.auth.balance);
+  const betResult = useSelector((state) => state.logic.betResult);
+  const solPrice = useSelector((state) => state.logic.solPrice);
+  const socket = useSelector((state) => state.auth.socket);
+  const transactions = useSelector((state) => state.auth.transactions);
+  const notifications = useSelector((state) => state.logic.notifications);
+  const isNotificationsAllowed = useSelector((state) => state.auth.isNotificationsAllowed);
+  const isMuted = useSelector((state) => state.auth.isMuted);
+  const notificationSounds = useSelector((state) => state.auth.notificationSounds);
+  const isLowGraphics = useSelector((state) => state.auth.isLowGraphics);
+  const showCookieConsent = useSelector((state) => state.auth.showCookieConsent);
+  const remainingLoans = useSelector((state) => state.loanReducer.remainingLoans);
+  const connectedAccount = useSelector((state) => state.auth.connectedAccount);
+
 
   // Local state
   const currentPath = window.location.pathname;
@@ -255,8 +224,7 @@ function SiteWrapper({ children }) {
       : `http://${window.location.hostname}:5001`
   );
 
-  const [balance, setLocalBalance] = useState(propsBalance);
-  const [oldBalance, setOldBalance] = useState(propsBalance);
+  const [oldBalance, setOldBalance] = useState(balance);
   const [hoverTabIndex, setHoverTabIndex] = useState(-1);
   const [anchorElProfile, setAnchorElProfile] = useState(null);
   const [anchorElNotifications, setAnchorElNotifications] = useState(null);
@@ -280,15 +248,12 @@ function SiteWrapper({ children }) {
   const [blurValue, setBlurValue] = useState(3);
   const [currentGif, setCurrentGif] = useState('');
   const [tokenModalOpen, setTokenModalOpen] = useState(true);
-  const [transactions, setTransactions] = useState([]);
   const [isHovered, setIsHovered] = useState(false);
   const [websiteLoading, setWebsiteLoading] = useState(true);
-  const [isCoinsAnimation, setIsCoinsAnimation] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showBonusModal, setShowBonusModal] = useState(false);
   const [showDebtsModal, setShowDebtsModal] = useState(false);
   const [bonusCheck, setBonusCheck] = useState(false);
-  const [remainingLoans, setRemainingLoans] = useState(propsRemainingLoans);
   const [highlightedRooms, setHighlightedRooms] = useState(new Set());
   const [unreadCount, setUnreadCount] = useState(0);
   const [walletAddress, setWalletAddress] = useState(connectedAccount);
@@ -326,9 +291,9 @@ function SiteWrapper({ children }) {
         console.error('Mount error:', error);
       }
 
-      intervalRef.current = setInterval(() => {
-        updateReminderTime();
-      }, 3000);
+      // intervalRef.current = setInterval(() => {
+      //   updateReminderTime();
+      // }, 3000);
 
       loadSolanaWallet();
 
@@ -356,27 +321,11 @@ function SiteWrapper({ children }) {
     }
   }, [user]);
 
-  // Update remaining loans
-  useEffect(() => {
-    setRemainingLoans(propsRemainingLoans);
-  }, [propsRemainingLoans]);
-
   // Check for negative balance
   useEffect(() => {
-    setShowNegativeBalanceDialog(propsBalance < 0);
-  }, [propsBalance]);
+    setShowNegativeBalanceDialog(balance < 0);
+  }, [balance]);
 
-  // Update transactions
-  useEffect(() => {
-    if (propTransactions?.length > 0) {
-      setTransactions(updateFromNow(propTransactions));
-    }
-  }, [propTransactions]);
-
-  // Update local balance
-  useEffect(() => {
-    setLocalBalance(propsBalance);
-  }, [propsBalance]);
 
   // Initialize socket connection
   useEffect(() => {
@@ -516,12 +465,12 @@ function SiteWrapper({ children }) {
     }
   }, [anchorElProfile]);
 
-  const updateReminderTime = useCallback(
-    debounce(() => {
-      setTransactions(prev => updateFromNow(prev));
-    }, 300),
-    []
-  );
+  // const updateReminderTime = useCallback(
+  //   debounce(() => {
+  //     setTransactions(prev => updateFromNow(prev));
+  //   }, 300),
+  //   []
+  // );
 
   const initializeAudio = useCallback(async () => {
     try {

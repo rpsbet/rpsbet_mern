@@ -15,7 +15,6 @@ import Moment from 'moment';
 import { getMyHistory } from '../../redux/Logic/logic.actions';
 import { getSettings } from '../../redux/Setting/setting.action';
 import PlayerModal from '../modal/PlayerModal';
-import { renderLottieAvatarAnimation } from '../../util/LottieAvatarAnimations';
 import { convertToCurrency } from '../../util/conversion';
 
 /** 

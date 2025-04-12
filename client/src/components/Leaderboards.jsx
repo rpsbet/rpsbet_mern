@@ -5,7 +5,6 @@ import { Box, Table, TableHead, TableRow, TableCell, TableBody, LinearProgress, 
 import Avatar from './Avatar';
 import PlayerModal from '../game_panel/modal/PlayerModal';
 import { getRoomStatisticsData } from '../redux/Customer/customer.action';
-import ReactApexChart from 'react-apexcharts';
 
 const Leaderboards = ({ roomId }) => {
   const dispatch = useDispatch();
@@ -124,57 +123,7 @@ const Leaderboards = ({ roomId }) => {
                         <TableCell>
                           {playerData.bets >= 10 ? '10+' : playerData.bets}
                         </TableCell>
-                        <TableCell>
-                          <ReactApexChart
-                            options={{
-                              chart: {
-                                animations: { enabled: false },
-                                toolbar: { show: false },
-                                zoom: { enabled: false }
-                              },
-                              grid: { show: false },
-                              tooltip: { enabled: false },
-                              fill: {
-                                type: 'gradient',
-                                gradient: {
-                                  shade: 'light',
-                                  gradientToColors:
-                                    playerData.net_profit > 0
-                                      ? ['#00FF00']
-                                      : playerData.net_profit < 0
-                                      ? ['#D32F2F']
-                                      : ['#808080'],
-                                  shadeIntensity: 1,
-                                  opacityFrom: 0.7,
-                                  opacityTo: 0.9,
-                                  stops: [0, 100, 100]
-                                }
-                              },
-                              stroke: { curve: 'smooth' },
-                              xaxis: {
-                                labels: { show: false },
-                                axisTicks: { show: false },
-                                axisBorder: { show: false }
-                              },
-                              yaxis: {
-                                labels: { show: false },
-                                axisTicks: { show: false },
-                                axisBorder: { show: false }
-                              }
-                            }}
-                            type="line"
-                            width={120}
-                            height={100}
-                            series={[
-                              {
-                                data: playerData.net_profit_values.map((value, idx) => [
-                                  playerData.bets_values[idx],
-                                  value
-                                ])
-                              }
-                            ]}
-                          />
-                        </TableCell>
+                        
                       </TableRow>
                     ))}
                   </TableBody>

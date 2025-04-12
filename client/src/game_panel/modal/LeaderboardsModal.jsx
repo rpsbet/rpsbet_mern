@@ -21,8 +21,6 @@ import { Sort as SortIcon } from '@mui/icons-material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faList } from '@fortawesome/free-solid-svg-icons';
 
-import Chart from 'react-apexcharts';
-
 // Custom components
 import PlayerModal from '../modal/PlayerModal';
 import Avatar from '../../components/Avatar';

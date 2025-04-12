@@ -32,7 +32,6 @@ import { openConfirmTradeModal, errorMsgBar } from '../../../../redux/Notificati
 import Avatar from '../../../../components/Avatar';
 import PlayerModal from '../../../../game_panel/modal/PlayerModal';
 import { convertToCurrency } from '../../../../util/conversion';
-import { renderLottieAnimation } from '../../../../util/LottieAnimations';
 import { ThemeProvider } from '@mui/material/styles';
 import { getCustomTheme } from '../../../../config/theme';
 
@@ -348,7 +347,7 @@ const ProductTable = () => {
                           )}
                         </Box>
                       ))}
-                      {row.image && renderLottieAnimation(row.image, isLowGraphics) ? (
+                      {/* {row.image && renderLottieAnimation(row.image, isLowGraphics) ? (
                         <Box sx={{ width: 80, height: 80 }}>
                           {renderLottieAnimation(row.image, isLowGraphics)}
                         </Box>
@@ -359,7 +358,7 @@ const ProductTable = () => {
                           alt={row.productName}
                           sx={{ maxWidth: 80, maxHeight: 80, borderRadius: 2 }}
                         />
-                      )}
+                      )} */}
                     </Box>
                     {/* Bottom half: product details and trade button */}
                     <Box

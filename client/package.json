@@ -19,7 +19,6 @@
     "@solana/web3.js": "^1.95.4",
     "ajv": "^8.17.1",
     "ajv-keywords": "^5.1.0",
-    "apexcharts": "^4.3.0",
     "axios": "^1.6.2",
     "cross-env": "^7.0.3",
     "lightweight-charts": "^4.2.3",

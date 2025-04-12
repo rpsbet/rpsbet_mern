@@ -43,7 +43,6 @@ import { acGetCustomerInfo } from '../../../../redux/Customer/customer.action';
 import PlayerModal from '../../../../game_panel/modal/PlayerModal';
 
 import { convertToCurrency } from '../../../../util/conversion';
-import { renderLottieAnimation } from '../../../../util/LottieAnimations';
 import { getCustomTheme } from '../../../../config/theme';
 
 // -------------- Styled Containers ----------------
@@ -312,7 +311,7 @@ function MyProductTable() {
                       justifyContent: 'center',
                     }}
                   >
-                    {row.image && renderLottieAnimation(row.image, isLowGraphics) ? (
+                    {/* {row.image && renderLottieAnimation(row.image, isLowGraphics) ? (
                       <Box sx={{ width: 80, height: 80 }}>{renderLottieAnimation(row.image, isLowGraphics)}</Box>
                     ) : (
                       <Box
@@ -321,7 +320,7 @@ function MyProductTable() {
                         alt={row.productName}
                         sx={{ maxWidth: 80, maxHeight: 80, borderRadius: 2 }}
                       />
-                    )}
+                    )} */}
                   </Box>
 
                   {/* Bottom => details + action buttons */}

@@ -26,7 +26,6 @@ import Summary from '../CreateGame/Summary';
 import AdvancedSettings from '../CreateGame/AdvancedSettings';
 import ChatPanel from '../ChatPanel/ChatPanel';
 import DrawerButton from './DrawerButton';
-import animationData from '../LottieAnimations/cat-place-bet.json';
 import CoinInfo from '../CreateGame/CoinInfo';
 import GameSettingsPanel from '../CreateGame/GameSettingsPanel';
 import DefaultBetAmountPanel from '../CreateGame/DefaultBetAmountPanel';
@@ -123,37 +122,19 @@ function CreateGame() { // Remove match prop
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { game_type_name } = useParams(); // Get game_type_name from URL
-  // Map state from Redux using useSelector
-  const {
-    isAuthenticated,
-    connectedAccount,
-    balance: propBalance,
-    user,
-    gameTypeList,
-    solPrice,
-    strategies,
-    isDrawerOpen,
-    isDarkMode,
-    isLowGraphics,
-  } = useSelector((state) => ({
-    isAuthenticated: state.auth.isAuthenticated,
-    connectedAccount: state.auth.connectedAccount,
-    history: state.logic.history,
-    pageNumber: state.logic.pageNumber,
-    balance: state.auth.balance,
-    user: state.auth.user,
-    gameTypeList: state.logic.gameTypeList,
-    solPrice: state.logic.solPrice,
-    selectedMainTabIndex: state.logic.selectedMainTabIndex,
-    auth: state.auth.isAuthenticated,
-    landingItemList: state.landingReducer.landingItemList,
-    game_mode: state.logic.game_mode,
-    strategies: state.logic.strategies,
-    socket: state.auth.socket,
-    isDarkMode: state.auth.isDarkMode,
-    isLowGraphics: state.auth.isLowGraphics,
-    isDrawerOpen: state.auth.isDrawerOpen,
-  }));
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+  const connectedAccount = useSelector((state) => state.auth.connectedAccount);
+  const balance = useSelector((state) => state.auth.balance);
+  const user = useSelector((state) => state.auth.user);
+  const gameTypeList = useSelector((state) => state.logic.gameTypeList);
+  const solPrice = useSelector((state) => state.logic.solPrice);
+  const strategies = useSelector((state) => state.logic.strategies);
+  const isDrawerOpen = useSelector((state) => state.auth.isDrawerOpen);
+  const isDarkMode = useSelector((state) => state.auth.isDarkMode);
+  const isLowGraphics = useSelector((state) => state.auth.isLowGraphics);
+
+  // Rename to avoid conflict with prop
+  const propBalance = balance;
 
   // Local component state
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
@@ -807,20 +788,7 @@ function CreateGame() { // Remove match prop
             <Button id="btn_bet" color="error" onClick={onCreateRoom}>
               Place Bet
             </Button>
-            <div className="lottie-container-btn_bet">
-              <Lottie
-                options={{
-                  loop: isLowGraphics ? false : true,
-                  autoplay: isLowGraphics ? false : true,
-                  animationData: animationData,
-                }}
-                style={{
-                  width: '62px',
-                  position: 'absolute',
-                  filter: 'grayscale(1)',
-                }}
-              />
-            </div>
+            
           </div>
         )}
         {step < 2 && (

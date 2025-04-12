@@ -84,8 +84,6 @@ app.use(
 const connectWithRetry = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
       maxPoolSize: 20,
       serverSelectionTimeoutMS: 5000, 
     });

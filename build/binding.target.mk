@@ -7,8 +7,6 @@ DEFS_Debug := \
 	'-DUSING_UV_SHARED=1' \
 	'-DUSING_V8_SHARED=1' \
 	'-DV8_DEPRECATION_WARNINGS=1' \
-	'-DV8_DEPRECATION_WARNINGS' \
-	'-DV8_IMMINENT_DEPRECATION_WARNINGS' \
 	'-D_GLIBCXX_USE_CXX11_ABI=1' \
 	'-D_DARWIN_USE_64_BIT_INODE=1' \
 	'-D_LARGEFILE_SOURCE' \
@@ -17,31 +15,30 @@ DEFS_Debug := \
 	'-DOPENSSL_THREADS' \
 	'-DBUILDING_NODE_EXTENSION' \
 	'-DDEBUG' \
-	'-D_DEBUG' \
-	'-DV8_ENABLE_CHECKS'
+	'-D_DEBUG'
 
 # Flags passed to all source files.
 CFLAGS_Debug := \
 	-O0 \
 	-gdwarf-2 \
-	-mmacosx-version-min=10.15 \
-	-arch arm64 \
+	-fno-strict-aliasing \
+	-mmacosx-version-min=11.0 \
+	-arch \
+	arm64 \
 	-Wall \
 	-Wendif-labels \
 	-W \
 	-Wno-unused-parameter
 
 # Flags passed to only C files.
-CFLAGS_C_Debug := \
-	-fno-strict-aliasing
+CFLAGS_C_Debug :=
 
 # Flags passed to only C++ files.
 CFLAGS_CC_Debug := \
 	-std=gnu++17 \
 	-stdlib=libc++ \
 	-fno-rtti \
-	-fno-exceptions \
-	-fno-strict-aliasing
+	-fno-exceptions
 
 # Flags passed to only ObjC files.
 CFLAGS_OBJC_Debug :=
@@ -50,21 +47,19 @@ CFLAGS_OBJC_Debug :=
 CFLAGS_OBJCC_Debug :=
 
 INCS_Debug := \
-	-I/Users/lennybeadle/Library/Caches/node-gyp/18.20.7/include/node \
-	-I/Users/lennybeadle/Library/Caches/node-gyp/18.20.7/src \
-	-I/Users/lennybeadle/Library/Caches/node-gyp/18.20.7/deps/openssl/config \
-	-I/Users/lennybeadle/Library/Caches/node-gyp/18.20.7/deps/openssl/openssl/include \
-	-I/Users/lennybeadle/Library/Caches/node-gyp/18.20.7/deps/uv/include \
-	-I/Users/lennybeadle/Library/Caches/node-gyp/18.20.7/deps/zlib \
-	-I/Users/lennybeadle/Library/Caches/node-gyp/18.20.7/deps/v8/include
+	-I/Users/lennybeadle/Library/Caches/node-gyp/22.13.0/include/node \
+	-I/Users/lennybeadle/Library/Caches/node-gyp/22.13.0/src \
+	-I/Users/lennybeadle/Library/Caches/node-gyp/22.13.0/deps/openssl/config \
+	-I/Users/lennybeadle/Library/Caches/node-gyp/22.13.0/deps/openssl/openssl/include \
+	-I/Users/lennybeadle/Library/Caches/node-gyp/22.13.0/deps/uv/include \
+	-I/Users/lennybeadle/Library/Caches/node-gyp/22.13.0/deps/zlib \
+	-I/Users/lennybeadle/Library/Caches/node-gyp/22.13.0/deps/v8/include
 
 DEFS_Release := \
 	'-DNODE_GYP_MODULE_NAME=binding' \
 	'-DUSING_UV_SHARED=1' \
 	'-DUSING_V8_SHARED=1' \
 	'-DV8_DEPRECATION_WARNINGS=1' \
-	'-DV8_DEPRECATION_WARNINGS' \
-	'-DV8_IMMINENT_DEPRECATION_WARNINGS' \
 	'-D_GLIBCXX_USE_CXX11_ABI=1' \
 	'-D_DARWIN_USE_64_BIT_INODE=1' \
 	'-D_LARGEFILE_SOURCE' \
@@ -77,24 +72,24 @@ DEFS_Release := \
 CFLAGS_Release := \
 	-O3 \
 	-gdwarf-2 \
-	-mmacosx-version-min=10.15 \
-	-arch arm64 \
+	-fno-strict-aliasing \
+	-mmacosx-version-min=11.0 \
+	-arch \
+	arm64 \
 	-Wall \
 	-Wendif-labels \
 	-W \
 	-Wno-unused-parameter
 
 # Flags passed to only C files.
-CFLAGS_C_Release := \
-	-fno-strict-aliasing
+CFLAGS_C_Release :=
 
 # Flags passed to only C++ files.
 CFLAGS_CC_Release := \
 	-std=gnu++17 \
 	-stdlib=libc++ \
 	-fno-rtti \
-	-fno-exceptions \
-	-fno-strict-aliasing
+	-fno-exceptions
 
 # Flags passed to only ObjC files.
 CFLAGS_OBJC_Release :=
@@ -103,13 +98,13 @@ CFLAGS_OBJC_Release :=
 CFLAGS_OBJCC_Release :=
 
 INCS_Release := \
-	-I/Users/lennybeadle/Library/Caches/node-gyp/18.20.7/include/node \
-	-I/Users/lennybeadle/Library/Caches/node-gyp/18.20.7/src \
-	-I/Users/lennybeadle/Library/Caches/node-gyp/18.20.7/deps/openssl/config \
-	-I/Users/lennybeadle/Library/Caches/node-gyp/18.20.7/deps/openssl/openssl/include \
-	-I/Users/lennybeadle/Library/Caches/node-gyp/18.20.7/deps/uv/include \
-	-I/Users/lennybeadle/Library/Caches/node-gyp/18.20.7/deps/zlib \
-	-I/Users/lennybeadle/Library/Caches/node-gyp/18.20.7/deps/v8/include
+	-I/Users/lennybeadle/Library/Caches/node-gyp/22.13.0/include/node \
+	-I/Users/lennybeadle/Library/Caches/node-gyp/22.13.0/src \
+	-I/Users/lennybeadle/Library/Caches/node-gyp/22.13.0/deps/openssl/config \
+	-I/Users/lennybeadle/Library/Caches/node-gyp/22.13.0/deps/openssl/openssl/include \
+	-I/Users/lennybeadle/Library/Caches/node-gyp/22.13.0/deps/uv/include \
+	-I/Users/lennybeadle/Library/Caches/node-gyp/22.13.0/deps/zlib \
+	-I/Users/lennybeadle/Library/Caches/node-gyp/22.13.0/deps/v8/include
 
 OBJS :=
 
@@ -121,8 +116,9 @@ all_deps += $(OBJS)
 LDFLAGS_Debug := \
 	-undefined dynamic_lookup \
 	-Wl,-search_paths_first \
-	-mmacosx-version-min=10.15 \
-	-arch arm64 \
+	-mmacosx-version-min=11.0 \
+	-arch \
+	arm64 \
 	-L$(builddir) \
 	-stdlib=libc++
 
@@ -133,8 +129,9 @@ LIBTOOLFLAGS_Debug := \
 LDFLAGS_Release := \
 	-undefined dynamic_lookup \
 	-Wl,-search_paths_first \
-	-mmacosx-version-min=10.15 \
-	-arch arm64 \
+	-mmacosx-version-min=11.0 \
+	-arch \
+	arm64 \
 	-L$(builddir) \
 	-stdlib=libc++
 

@@ -170,21 +170,3 @@
 .statistics-panel div {
   margin: 5px;
 }
-
-
-.apexcharts-tooltip {
-  padding: 10px;
-}
-
-.step-10 .apexcharts-xaxis-label,
-.step-5 .apexcharts-xaxis-label {
-  display: none;
-}
-
-.step-10 .apexcharts-xaxis-label:nth-child(10n) {
-  display: revert;
-}
-
-.step-5 .apexcharts-xaxis-label:nth-child(5n) {
-  display: revert;
-}

@@ -115,9 +115,6 @@
 	border-bottom: 1px solid #fff3;
   }
 
-.dark_mode .modal-body .modal-content-wrapper.provably-fair h4 {
-	background-image: url("../public/img/icons/modal-provably-fair-dark-mode.svg");
-}
 
 .dark_mode .modal-body .modal-content-wrapper.house-edge h4 {
 	background-image: url("../public/img/icons/modal-house-edge-dark-mode.svg");

@@ -37,7 +37,6 @@ import { setChatRoomInfo, addNewTransaction } from '../../redux/Logic/logic.acti
 import { acGetCustomerInfo, getSpendingHabit } from '../../redux/Customer/customer.action';
 import { queryProducts } from '../../redux/Item/item.action';
 import { convertToCurrency } from '../../util/conversion';
-import { renderLottieAnimation } from '../../util/LottieAnimations';
 
 import Avatar from '../../components/Avatar';
 import StatisticsForm from '../../admin_panel/app/Customer/EditCustomerPage/StatisticsForm';
@@ -420,13 +419,13 @@ function PlayerModal({ modalIsOpen, closeModal, selectedCreator }) {
                       <ProductGrid>
                         {productArray.map((row) => (
                           <ProductCard key={row._id}>
-                            {row.image && renderLottieAnimation(row.image, isLowGraphics) ? (
+                            {/* {row.image && renderLottieAnimation(row.image, isLowGraphics) ? (
                               <Box sx={{ width: 80, height: 80 }}>
                                 {renderLottieAnimation(row.image, isLowGraphics)}
                               </Box>
                             ) : (
                               <ProductImage src={row.image} alt={row.productName} />
-                            )}
+                            )} */}
                             <ProductInfo>
                               <Typography variant="h6" sx={{ fontSize: '1rem', color: '#fff', textAlign: 'center' }}>
                                 {row.productName}

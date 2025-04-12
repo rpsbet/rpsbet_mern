@@ -16,16 +16,14 @@ function GlobalChat(props) {
     emojis,
   } = props;
 
-  // Map state from Redux using useSelector
-  const { user, isDarkMode, globalChatList } = useSelector((state) => ({
-    user: state.auth.user,
-    isDarkMode: state.auth.isDarkMode,
-    globalChatList: state.logic.globalChatList,
-  }));
+  const user = useSelector((state) => state.auth.user);
+  const isDarkMode = useSelector((state) => state.auth.isDarkMode);
+  const globalChatList = useSelector((state) => state.logic.globalChatList);
 
   // Use prop values if provided, otherwise fall back to Redux state
   const effectiveIsDarkMode = propIsDarkMode !== undefined ? propIsDarkMode : isDarkMode;
   const effectiveGlobalChatList = propGlobalChatList.length > 0 ? propGlobalChatList : globalChatList;
+
 
   // State
   const [chatList, setChatList] = useState(effectiveGlobalChatList || []);

@@ -7,10 +7,6 @@ const auth = require('../middleware/auth');
 const { v4: uuidv4 } = require('uuid');
 const Comment = require('../model/Comment');
 const { OpenAI } = require('openai');
-const esprima = require('esprima');
-const vm = require('vm');
-const JavaScriptObfuscator = require('javascript-obfuscator');
-const { VM } = require('vm2');
 const React = require('react');
 const ReactDOMServer = require('react-dom/server');
 

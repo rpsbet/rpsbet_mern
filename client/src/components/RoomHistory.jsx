@@ -9,7 +9,6 @@ import {
   Typography,
 } from '@mui/material';
 import PlayerModal from '../game_panel/modal/PlayerModal';
-import { renderLottieAvatarAnimation } from '../util/LottieAvatarAnimations';
 import { convertToCurrency } from '../util/conversion';
 import Avatar from './Avatar';
 
@@ -425,7 +424,6 @@ function RoomHistory({
   // Accessory & User Link Logic
   useEffect(() => {
     attachUserLinkListeners();
-    attachAccessories();
   }, [displayHistory, effectiveIsLowGraphics]);
 
   const attachUserLinkListeners = () => {
@@ -438,26 +436,6 @@ function RoomHistory({
     });
   };
 
-  const attachAccessories = () => {
-    const userLinks = document.querySelectorAll('.user-link');
-    let counter = 0;
-    userLinks.forEach((element) => {
-      if (counter < 3) {
-        const userId = element.getAttribute('data-userid');
-        const accessory = element.getAttribute('accessory');
-        const lottieAnimation = renderLottieAvatarAnimation(accessory, effectiveIsLowGraphics);
-        const portalContainer = document.createElement('div');
-        ReactDOM.render(lottieAnimation, portalContainer);
-        element.parentNode.insertBefore(portalContainer, element);
-
-        portalContainer.addEventListener('click', () => {
-          handleOpenPlayerModal(userId);
-        });
-        portalContainer.style.cursor = 'pointer';
-        counter++;
-      }
-    });
-  };
 
   const handleOpenPlayerModal = (creator_id) => {
     setShowPlayerModal(true);

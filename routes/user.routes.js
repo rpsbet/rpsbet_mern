@@ -3,9 +3,7 @@ const fetch = require('node-fetch');
 
 const router = express.Router();
 const bcrypt = require('bcryptjs');
-const jdenticon = require('jdenticon');
 const crypto = require('crypto');
-const robohashAvatars = require("robohash-avatars");
 const jwt = require('jsonwebtoken');
 const moment = require('moment');
 const auth = require('../middleware/auth');
@@ -171,24 +169,6 @@ router.post('/', async (req, res) => {
       referralOwner = await User.findOne({ referralCode });
     }
 
-    function generateAvatar(userId, avatarMethod) {
-      if (avatarMethod === 'robohash') {
-        // if robohash avatar style is chosen with a random background
-        const avatarURL = robohashAvatars.generateAvatar({
-          username: userId,
-          background: robohashAvatars.BackgroundSets.RandomBackground1,
-          characters: robohashAvatars.CharacterSets.Kittens,
-        });
-        return avatarURL;
-      } else {
-        // if jdenticon is chosen
-        const hash = crypto.createHash('sha256').update(userId).digest('hex');
-        const svg = jdenticon.toSvg(hash, 64, { padding: 0 });
-        const encodedSvg = encodeURIComponent(svg);
-        return `data:image/svg+xml,${encodedSvg}`;
-      }
-    }
-
     const newUser = new User({
       username,
       password,
@@ -200,13 +180,10 @@ router.post('/', async (req, res) => {
       credit_score: 1000,
       ai_mode: 'Markov',
       status: 'off',
-      avatar,
+      avatar: '',
       referralCode: generateReferralCode(),
       referralUsername: referralOwner ? referralOwner._id : null
     });
-
-    // Generate avatar based on the chosen method
-    newUser.avatar = generateAvatar(username, avatarMethod);
 
     // Create salt & hash
     bcrypt.genSalt(10, (err, salt) => {

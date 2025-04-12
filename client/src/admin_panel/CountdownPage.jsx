@@ -21,11 +21,6 @@ import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import DescriptionIcon from '@mui/icons-material/Description';
 import { faXTwitter, faTelegram, faYoutube, faTiktok } from '@fortawesome/free-brands-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import Chart from 'react-apexcharts';
-import Lottie from 'react-lottie';
-import animationData from '../game_panel/LottieAnimations/quantum-goal.json';
-import catBack from '../game_panel/LottieAnimations/cat-back.json';
-import ApexCharts from 'react-apexcharts';
 import SiteWrapper from '../game_panel/SiteWrapper';
 import busd from '../game_panel/JoinGame/busd.svg';
 import PrivacyModal from '../game_panel/modal/PrivacyModal';
@@ -470,19 +465,6 @@ const CountdownPage = () => {
     setTimeout(() => setShowImageBackground(false), randomDuration);
   };
 
-  // Lottie animation options
-  const defaultOptions = {
-    loop: true,
-    autoplay: true,
-    animationData: animationData,
-    rendererSettings: { preserveAspectRatio: 'xMidYMid slice' },
-  };
-  const catOptions = {
-    loop: true,
-    autoplay: true,
-    animationData: catBack,
-    rendererSettings: { preserveAspectRatio: 'xMidYMid slice' },
-  };
 
   return (
     <Root>
@@ -502,7 +484,7 @@ const CountdownPage = () => {
           filter: 'opacity(0.3)',
         }}
       >
-        {showImageBackground ? (
+        {/* {showImageBackground ? (
           <Box
             sx={{
               backgroundImage: `url(${randomGif})`,
@@ -514,7 +496,7 @@ const CountdownPage = () => {
           />
         ) : (
           <Lottie options={defaultOptions} height="100%" width="100%" isClickToPauseDisabled={true} />
-        )}
+        )} */}
       </Box>
 
       {/* Main Content */}
@@ -567,9 +549,7 @@ const CountdownPage = () => {
               <Typography variant="body1">
                 Explore our customer-centric & focused simple distribution. This is literally it—no need to complicate it. You see? Beautiful.
               </Typography>
-              <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: '30px' }}>
-                <ApexCharts options={chartData.options} series={chartData.series} type="donut" height={320} />
-              </Box>
+           
             </Section>
           </Zoom>
 
@@ -653,7 +633,7 @@ const CountdownPage = () => {
               src={remote}
               alt="Remote Control"
             />
-            <Lottie
+            {/* <Lottie
               options={catOptions}
               style={{
                 position: 'absolute',
@@ -664,7 +644,7 @@ const CountdownPage = () => {
               height="auto"
               width="300px"
               isClickToPauseDisabled
-            />
+            /> */}
           </Box>
 
           {/* Gravestone Buttons */}
