@@ -9,6 +9,7 @@ import {
   ROOMINFO_LOADED,
   START_LOADING,
   END_LOADING,
+  UPDATE_GAME_STATE,
   START_BET,
   END_BET,
   ROOMS_LOADED,
@@ -24,6 +25,7 @@ import {
   SET_GAME_MODE,
   SET_CUR_ROOM_INFO,
   SET_URL,
+  UPDATE_CREATOR_PROMPT,
   TOP_WINS,
   MY_GAMES_LOADED,
   MY_HISTORY_LOADED,
@@ -158,6 +160,7 @@ const initialState = {
     notificationsLogs: []
   },
   onlineUserList: [],
+  creator_prompt: '',
   selectedMainTabIndex: 0,
   globalChatList: []
 };
@@ -212,6 +215,11 @@ export default function (state = initialState, action) {
       return {
         ...state,
         highlightedRooms: action.payload,
+      };
+    case UPDATE_CREATOR_PROMPT:
+      return {
+        ...state,
+        creator_prompt: action.payload,
       };
 
     case CLEAR_HIGHLIGHTED_ROOMS:
@@ -291,6 +299,7 @@ export default function (state = initialState, action) {
         ...state,
         isActiveLoadingOverlay: true
       };
+
     case TRADE_LOADING:
       return {
         ...state,

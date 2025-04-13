@@ -8,18 +8,19 @@ import { toggleDrawer } from '../../redux/Auth/user.actions';
 import { Add, Remove } from '@mui/icons-material';
 import {
   Button,
-  Tabs,
-  Tab,
+  Chip,
+  TextField,
   Drawer,
   Box,
-  Tooltip,
+  InputAdornment,
   Typography,
   useMediaQuery,
 } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCoins, faStore, faLink } from '@fortawesome/free-solid-svg-icons';
+import { Add as AddIcon, AutoAwesome as AutoAwesomeIcon } from '@mui/icons-material';
+import { faCoins, faStore, faHome } from '@fortawesome/free-solid-svg-icons';
 import DrawerButton from './DrawerButton';
-import SupportButton from './SupportButton';
+import { submitAiPrompt, goToCreate } from '../../redux/Logic/logic.actions';
 import Footer from './Footer';
 
 // Lazy-load components
@@ -70,7 +71,7 @@ function MainPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedCreator, setSelectedCreator] = useState('');
   const [showPlayerModal, setShowPlayerModal] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState('');
 
   const isMountedRef = useRef(false);
   const prevLocationRef = useRef(location.pathname);
@@ -142,79 +143,186 @@ function MainPage() {
     navigate('/create');
   };
 
-  // UI Helpers
+  const handleAiPromptSubmit = async () => {
+    if (aiPrompt.trim()) {
+      dispatch(submitAiPrompt(aiPrompt, navigate));
+
+    }
+  };
+
   const getActiveTabText = () => {
     if (selectedMobileTab === 'marketplace') {
       return null;
     }
 
-    const totalUserBet = roomList.reduce((total, room) => {
-      return total + (room.user_bet || 0);
-    }, 0);
-
     if (
       (isMobile && selectedMobileTab === 'live_games' && showOpenGame !== 1) ||
       (!isMobile && selectedMainTabIndex === 0)
     ) {
+      // Suggested prompts that will pre-fill the input
+      const suggestedPrompts = [
+        "Create a dice roll game",
+        "Create a pokemon-battling game where player wins 2x if they beat the house",
+        "Make a stock-simulator game where user starts with $50k balance and add 3 stocks to choose from that fluctuate in price, user has to select one and sell at the right time, whatever they win compared to original is their multiplier.",
+        "Rig a game of chance",
+      ];
+
+      const handleSuggestedPromptClick = (prompt) => {
+        setAiPrompt(prompt);
+        // Optional: Automatically submit the prompt when clicked
+        setTimeout(() => handleAiPromptSubmit(), 100);
+      };
+
+      const handleCreatePreMadeGame = () => {
+        dispatch(goToCreate(navigate));
+
+      };
+
       return (
         <div className="create-room-btn-panel">
-          <Button
-            variant="contained"
+            <img src="/img/slyCat.svg" width={200} style={{position: 'absolute', left: '20px', filter: 'invert(1) hue-rotate(130deg)', opacity: 0.2, transform: 'scaleX(-1) rotate(-30deg)'}} alt="Cat" className="cat-image" />
+
+          <Box
             className="btn-create-room"
-            onClick={handleCreateBtnClicked}
+
             sx={{
-              background: '#d8171922',
-              backdropFilter: 'blur(12px)',
-              border: '1px solid #d8171933',
-              borderRadius: '8px',
-              padding: '12px 24px',
-              color: '#d81719',
-              fontWeight: 'bold',
-              fontSize: '16px',
-              textTransform: 'uppercase',
-              boxShadow: '0 4px 15px #d8171922',
-              transition: 'all 0.3s ease',
-              overflow: 'hidden',
-              '&:hover': {
-                background: '#d8171944',
-                boxShadow: '0 6px 20px #d8171922',
-                transform: 'translateY(-2px)',
-                '& .cool-cat': {  // Target the custom class on hover
-                  opacity: 1,
-                },
-              },
+              position: 'relative',
+              width: '100%',
+              maxWidth: '400px',
             }}
           >
-            BE THE HOUSE 
+            <Typography variant="h6" className="title" sx={{ mb: 1 }}>
+              <FontAwesomeIcon icon={faHome} className="mr-2" />Be The House 👇😼</Typography>
             <Box
-              component="span"
               sx={{
-                marginLeft: '8px',
-                display: 'inline-block',
-                width: '68px',
-                height: '46px',
-                overflow: 'hidden',
-                filter: 'hue-rotate(130deg)',
+                display: 'flex',
+                alignItems: 'center',
+                background: '#d8171922',
+                backdropFilter: 'blur(12px)',
+                border: '1px solid #d8171933',
+                borderRadius: '8px',
+                padding: '8px 12px',
+                boxShadow: '0 4px 15px #d8171922',
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  background: '#d8171944',
+                  boxShadow: '0 6px 20px #d8171922',
+                  transform: 'translateY(-2px)',
+                },
+                width: '100%',
+                marginBottom: '12px',
               }}
             >
-              <Box
-                component="img"
-                src="/img/coolCat.svg"
-                alt="cool cat"
-                className="cool-cat"  // Add a class to target the image
+              <TextField
+                variant="outlined"
+                placeholder="Create a crash-style game..."
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                size="small"
                 sx={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                  filter: 'invert(1)',
-                  objectPosition: 'top',
-                  marginRight: '-18px',
-                  opacity: '0.3',  // Initial opacity
-                  transition: 'opacity 0.3s ease',  // Specific transition for opacity
+                  flexGrow: 1,
+                  '& .MuiOutlinedInput-root': {
+                    background: 'transparent',
+                    border: 'none',
+                    '& fieldset': {
+                      border: 'none',
+                    },
+                    '&:hover fieldset': {
+                      border: 'none',
+                    },
+                    '&.Mui-focused fieldset': {
+                      border: 'none',
+                    },
+                  },
+                  '& .MuiInputBase-input': {
+                    color: '#d81719',
+                    fontWeight: 'bold',
+                  },
+                }}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <Button
+                        variant="contained"
+                        onClick={handleAiPromptSubmit}
+                        sx={{
+                          minWidth: 'auto',
+                          padding: '6px',
+                          background: '#d8171933',
+                          color: '#d81719',
+                          '&:hover': {
+                            background: '#d8171966',
+                          },
+                        }}
+                      >
+                        <AutoAwesomeIcon />
+                      </Button>
+                    </InputAdornment>
+                  ),
                 }}
               />
             </Box>
-          </Button>
+
+            {/* Always visible suggested prompts */}
+            <Box
+              sx={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '8px',
+                marginBottom: '12px',
+                width: '100%',
+              }}
+            >
+              {suggestedPrompts.map((prompt, index) => (
+                <Chip
+                  key={index}
+                  label={prompt}
+                  onClick={() => handleSuggestedPromptClick(prompt)}
+                  sx={{
+                    background: '#d8171915',
+                    border: '1px solid #d8171922',
+                    color: '#d81719',
+                    fontWeight: '500',
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    maxWidth: '180px',
+                    '& .MuiChip-label': {
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    },
+                    '&:hover': {
+                      background: '#d8171933',
+                      transform: 'translateY(-1px)',
+                    },
+                  }}
+                />
+              ))}
+            </Box>
+
+            {/* Smaller, less conspicuous pre-made game button */}
+            <Button
+              variant="text"
+              onClick={handleCreatePreMadeGame}
+              size="small"
+              sx={{
+                color: '#d81719',
+                fontSize: '13px',
+                padding: '4px 8px',
+                textTransform: 'none',
+                opacity: 0.8,
+                '&:hover': {
+                  background: '#d8171910',
+                },
+              }}
+              startIcon={<AddIcon sx={{ fontSize: '16px' }} />}
+            >
+              Use template
+            </Button>
+          </Box>
+          <img src="/img/coolCat.svg" width={200} style={{position: 'absolute', right: '20px', filter: 'invert(1) hue-rotate(180deg)', opacity: 0.2, transform: 'rotate(-30deg)'}} alt="Cat" className="cat-image" />
+
         </div>
       );
     }

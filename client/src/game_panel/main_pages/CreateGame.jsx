@@ -122,7 +122,7 @@ function CreateGame() { // Remove match prop
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { game_type_name } = useParams(); // Get game_type_name from URL
-  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+    const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
   const connectedAccount = useSelector((state) => state.auth.connectedAccount);
   const balance = useSelector((state) => state.auth.balance);
   const user = useSelector((state) => state.auth.user);
@@ -153,7 +153,7 @@ function CreateGame() { // Remove match prop
   const [websiteLink, setWebsiteLink] = useState('');
   const [telegramLink, setTelegramLink] = useState('');
   const [ticker, setTicker] = useState('');
-  const [selectedStrategy, setSelectedStrategy] = useState('Markov');
+  const [selectedStrategy, setSelectedStrategy] = useState('o3Mini');
   const [gameCode, setGameCode] = useState('');
   const [prompt, setPrompt] = useState(
     'Create a Wheel of Fortune game, display the numbers 1 through 10 on the wheel and use https://t4.ftcdn.net/jpg/02/66/72/41/360_F_266724172_Iy8gdKgMa7XmrhYYxLCxyhx6J7070Pr8.jpg  as the background and show a spin button. Add this https://cdn.freesound.org/previews/752/752225_15867640-lq.mp3 sound. Whichever number the wheel lands on is the multiplier.',
@@ -227,7 +227,7 @@ function CreateGame() { // Remove match prop
     dispatch(getStrategies());
   
     return () => {};
-  }, [dispatch, game_type_name, initializeGameType]);
+  }, [dispatch, game_type_name,]);
   
   useEffect(() => {
     if (game_type_name) {

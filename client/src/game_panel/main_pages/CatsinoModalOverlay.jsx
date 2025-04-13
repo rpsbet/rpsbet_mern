@@ -95,7 +95,6 @@ function CatsinoModalOverlay({
       >
         <Box
           component="img"
-          src="../img/dark-game-logo.svg"
           alt="dark-game-logo"
           sx={{
             display: 'inline-block',

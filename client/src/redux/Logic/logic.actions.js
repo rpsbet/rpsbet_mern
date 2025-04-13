@@ -1,5 +1,5 @@
 import {
-  ACTION_ROOM,
+  UPDATE_CREATOR_PROMPT,
   GAMETYPE_LOADED,
   STRATEGIES_LOADED,
   RECENTLY_CLOSED_LOADED,
@@ -147,7 +147,6 @@ export const proxyAsset = (key, url) => async (dispatch) => {
     return { key, proxiedUrl: null };
   }
 };
-
 export const generateReactGameFromPrompt = (
   user_id,
   gamePrompt,
@@ -159,16 +158,16 @@ export const generateReactGameFromPrompt = (
   preProxiedAssets = { images: [], audio: [] }
 ) => async (dispatch) => {
   if (user_balance < 0.005) {
-    dispatch({ type: 'MSG_ERROR', payload: 'Insufficient balance. Each send costs 0.005 SOL.' });
+    dispatch({ type: MSG_ERROR, payload: 'Insufficient balance. Each send costs 0.005 SOL.' });
     return;
   }
 
   if (!gamePrompt.trim()) {
-    dispatch({ type: 'MSG_ERROR', payload: 'Please enter a valid app prompt.' });
+    dispatch({ type: MSG_ERROR, payload: 'Please enter a valid app prompt.' });
     return;
   }
 
-  dispatch({ type: 'START_LOADING' });
+  dispatch({ type: START_LOADING });
   setGameLoading(true);
 
   try {
@@ -186,11 +185,11 @@ export const generateReactGameFromPrompt = (
       onChangeState({ prompt: gamePrompt });
     }
 
-    dispatch({ type: 'MSG_SUCCESS', payload: 'React app generated successfully!' });
+    dispatch({ type: MSG_SUCCESS, payload: 'Game generated successfully!' });
   } catch (error) {
     console.error('Error generating React app:', error);
     dispatch({
-      type: 'MSG_ERROR',
+      type: MSG_ERROR,
       payload: error.response?.data?.message || 'Failed to generate React app.',
     });
     setGameCode(`
@@ -201,11 +200,54 @@ export const generateReactGameFromPrompt = (
       export default App;
     `);
   } finally {
-    dispatch({ type: 'END_LOADING' });
+    dispatch({ type: END_LOADING });
     setGameLoading(false);
   }
 };
-// Keep the existing proxyAsset function - it works for React components too
+
+export const submitAiPrompt = (aiPrompt, navigate) => async (dispatch) => {
+
+  try {
+    if (!aiPrompt.trim()) {
+      dispatch({
+        type: MSG_ERROR,
+        payload: 'Please enter a valid prompt.',
+      });
+      return;
+    }
+
+    dispatch({
+      type: UPDATE_CREATOR_PROMPT,
+      payload: aiPrompt,
+    });
+
+    navigate('/create');
+
+  } catch (error) {
+    console.error('Error in submitAiPrompt:', error);
+    dispatch({
+      type: MSG_ERROR,
+      payload: 'Failed to submit prompt.',
+    });
+  }
+};
+export const goToCreate = (navigate) => async (dispatch) => {
+  try {
+
+    dispatch({
+      type: UPDATE_CREATOR_PROMPT,
+      payload: '',
+    });
+
+    navigate('/create');
+
+  } catch (error) {
+    dispatch({
+      type: MSG_ERROR,
+      payload: 'Failed to clear prompt.',
+    });
+  }
+};
 
 // logic.actions.js
 export const uploadImageToPinata = (formData) => async (dispatch) => {

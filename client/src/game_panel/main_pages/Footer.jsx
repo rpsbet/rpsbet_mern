@@ -144,6 +144,7 @@ function Footer({ open, style }) {
             Click to copy!
           </Typography>
         </Address>
+        <img src="/img/bottom-bg.svg" alt="bottom footer" style={{ width: '100vw', height: 'auto', filter: 'grayscale(1)', position: 'absolute', zIndex: '-1' }} />
       </FooterContainer>
       {showTermsModal && (
         <Suspense fallback={<Typography>Loading Terms...</Typography>}>

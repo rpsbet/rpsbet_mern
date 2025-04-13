@@ -384,7 +384,7 @@ div.table .table-cell button.btn_join img {
   color: #72767d;
 }
 
-.create-room-btn-panel button.btn-create-room {
+.create-room-btn-panel .btn-create-room {
   margin: 15px auto;
   overflow: hidden;
   font-size: 1.4em;
@@ -550,8 +550,8 @@ div.table.my-chat-table .table-cell button.btn_join {
   align-items: baseline;
 }
 
-.create-room-btn-panel button.btn-create-room:active,
-.create-room-btn-panel button.btn-create-room.active {
+.create-room-btn-panel .btn-create-room:active,
+.create-room-btn-panel .btn-create-room.active {
   box-shadow: none !important;
   transition: 0.1s;
   transform: translateY(0);

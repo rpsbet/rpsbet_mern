@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Box, ButtonBase } from '@mui/material';
-import { Info } from '@mui/icons-material';
+import { useSelector } from 'react-redux';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import SettingsRef from '../../components/SettingsRef';
 
@@ -24,8 +24,10 @@ const GameSettingsPanel = ({
 }) => {
   // State to manage the visibility of the settings panel
   const [settingsPanelOpened, setSettingsPanelOpened] = useState(false);
-  // Ref to detect clicks outside the settings panel
+  const [hasManuallyClosed, setHasManuallyClosed] = useState(false);
+
   const settingsRef = useRef(null);
+  const creator_prompt = useSelector((state) => state.logic.creator_prompt);
 
   // Toggle the settings panel visibility
   const handleSettingsIconClick = () => {
@@ -34,16 +36,29 @@ const GameSettingsPanel = ({
     setGameModeLocal('Custom');
     initializeGameType('custom');
     setSettingsPanelOpened((prev) => !prev);
+    // Reset manual close state when user explicitly toggles the panel
+    setHasManuallyClosed(false);
   };
 
-  // Close the settings panel if clicked outside
+  useEffect(() => {
+    console.log('creator_prompt', creator_prompt);
+    if (creator_prompt && !hasManuallyClosed) {
+      setSettingsPanelOpened(true);
+      setGameMode('Custom');
+      setSelectedGameType(9);
+      setGameModeLocal('Custom');
+      initializeGameType('custom');
+    }
+  }, [creator_prompt, hasManuallyClosed, setGameMode, setSelectedGameType, setGameModeLocal, initializeGameType]);
+
+
   const handleClickOutside = (e) => {
     if (settingsRef.current && !settingsRef.current.contains(e.target)) {
       setSettingsPanelOpened(false);
+      setHasManuallyClosed(true); // Mark that the user manually closed the panel
     }
   };
 
-  // Add event listener for clicks outside when the panel is open
   useEffect(() => {
     if (settingsPanelOpened) {
       document.addEventListener('mousedown', handleClickOutside);
@@ -51,7 +66,6 @@ const GameSettingsPanel = ({
       document.removeEventListener('mousedown', handleClickOutside);
     }
 
-    // Cleanup the event listener on component unmount
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
@@ -68,7 +82,8 @@ const GameSettingsPanel = ({
         setGameCode={setGameCode}
         settings_panel_opened={settingsPanelOpened}
         ai_mode={ai_mode}
-        creator_prompt={prompt}
+        creator_prompt={creator_prompt}
+        prompt={prompt}
         onChangeState={onChangeState}
         user_id={user._id}
         user_balance={user.balance}

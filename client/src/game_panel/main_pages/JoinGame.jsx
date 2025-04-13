@@ -34,7 +34,6 @@ import {
   updateUserPrompt,
   getRpsBetItems,
   getQsBetItems,
-  getStrategies,
   updateAttachment,
   detachPlayerFromRoom,
   getAttachedRooms,
@@ -84,7 +83,6 @@ function JoinGame() {
   const {
     auth,
     history: propsHistory,
-    strategies,
     roomInfo,
     rpsbetitems,
     qsbetitems,
@@ -112,7 +110,6 @@ function JoinGame() {
   } = useSelector((state) => ({
     auth: state.auth.isAuthenticated,
     history: state.logic.history,
-    strategies: state.logic.strategies,
     roomInfo: state.logic.curRoomInfo,
     rpsbetitems: state.logic.rpsbetitems,
     qsbetitems: state.logic.qsbetitems,
@@ -409,7 +406,6 @@ function JoinGame() {
     try {
       await Promise.all([
         loadSounds(),
-        dispatch(getStrategies()),
         dispatch(getRoomInfo(id, 10)),
       ]);
     } catch (error) {
@@ -698,7 +694,6 @@ function JoinGame() {
             bgColorChanged={gameState.bgColorChanged}
             betting={gameState.betting}
             connectedAccount={connectedAccount}
-            strategies={strategies}
             result={gameState.result}
             detachPlayerFromRoom={detachPlayerFromRoom}
             updateAttachment={updateAttachment}

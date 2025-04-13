@@ -35,41 +35,48 @@ const SettingsRef = ({
   strategies,
   rank,
   user_id,
-  ai_mode,
   user_balance,
   prompt,
   onChangeState,
-  creator_prompt,
   gameCode,
   setGameCode,
   setSelectedStrategy,
   settings_panel_opened,
   settingsRef,
   selectedStrategy,
+  creator_prompt,
   updateUserStrategy,
   updateUserPrompt,
 }) => {
   const dispatch = useDispatch();
   const [gameLoading, setGameLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [localPrompt, setLocalPrompt] = useState(prompt || creator_prompt);
   const [tokenStatus, setTokenStatus] = useState(false);
   const [proxiedAssets, setProxiedAssets] = useState({ images: [], audio: [] });
   const [GameComponent, setGameComponent] = useState(null);
   const [componentError, setComponentError] = useState(null);
-
+  
   // Chat state
   const [chatMessages, setChatMessages] = useState([]);
   const [showChat, setShowChat] = useState(false);
   const [processingMessage, setProcessingMessage] = useState(null);
-  const chatEndRef = useRef(null);
+  const [hasGenerated, setHasGenerated] = useState(false); // New state
 
+  const chatEndRef = useRef(null);
+  
   const isMobile = useMediaQuery('(max-width: 768px)');
   const loading = useSelector((state) => state.loading);
-  const iso3MiniSelected =
-    selectedStrategy === 'o3Mini' || (ai_mode === 'o3Mini' && !selectedStrategy);
+  const [localPrompt, setLocalPrompt] = useState(creator_prompt || prompt);
+  
+  const sortedStrategies = useMemo(
+    () => strategies?.slice().sort((a, b) => a.levelToUnlock - b.levelToUnlock) || [],
+    [strategies]
+  );
+  // Auto-select 'o3Mini' or first unlocked strategy
+  // Auto-select 'o3Mini' or first unlocked strategy
 
-  const sortedStrategies = strategies.slice().sort((a, b) => a.levelToUnlock - b.levelToUnlock);
+
+  const iso3MiniSelected = selectedStrategy === 'o3Mini' || (!selectedStrategy);
 
   const logEvent = (eventType, data) => {
     console.log(`Game Event: ${eventType}`, data);
@@ -78,6 +85,15 @@ const SettingsRef = ({
   useEffect(() => {
     setLocalPrompt(prompt || creator_prompt);
   }, [prompt, creator_prompt]);
+
+  useEffect(() => {
+    console.log('creator_prompt_____', creator_prompt);
+    if (creator_prompt && !hasGenerated && !gameLoading && !saving) {
+      setLocalPrompt(creator_prompt);
+      handleGenerateClick();
+      setHasGenerated(true);
+    }
+  }, [creator_prompt, hasGenerated, gameLoading, saving]);
 
   useEffect(() => {
     if (chatEndRef.current) {
@@ -431,7 +447,7 @@ const SettingsRef = ({
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
             {sortedStrategies.map((strategy, index) => {
               const isUnlocked = tokenStatus || rank >= strategy.levelToUnlock;
-              const isActive = (selectedStrategy || ai_mode) === strategy.name;
+              const isActive = (selectedStrategy) === strategy.name;
 
               return (
                 <Tooltip
@@ -674,7 +690,7 @@ const SettingsRef = ({
                     variant="contained"
                     color="error"
                     onClick={chatMessages.length > 0 ? handleFollowUpPrompt : handleGenerateClick}
-                    disabled={loading || saving || gameLoading || !localPrompt.trim()}
+                    disabled={loading || saving || gameLoading}
                     startIcon={loading || saving || gameLoading ? <CircularProgress color='error' size={20} /> : <SendIcon />}
                   >
                     {chatMessages.length > 0 ? 'Update Game' : 'Generate'}
