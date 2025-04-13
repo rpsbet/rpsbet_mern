@@ -45,7 +45,7 @@ function TabbedContent(props) {
     handleSendCoHost,
     handleCloseCoHostModal,
     togglePopup,
-    run,
+    rank,
     strategies,
     betting,
     result,
@@ -248,7 +248,7 @@ function TabbedContent(props) {
                 roomInfo={roomInfo}
                 rps_game_type={roomInfo.rps_game_type}
                 user_id={user_id}
-                rank={props.getRank(total_wagered)}
+                rank={rank}
                 handleOpenPlayerModal={handleOpenPlayerModal}
                 handleClosePlayerModal={handleClosePlayerModal}
                 showPlayerModal={showPlayerModal}

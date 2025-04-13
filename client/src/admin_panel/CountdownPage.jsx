@@ -11,7 +11,6 @@ import {
   Link,
   useMediaQuery,
 } from '@mui/material';
-import { styled, keyframes } from '@mui/system';
 import { useTheme } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom'; // Replace useHistory with useNavigate
 import GamepadIcon from '@mui/icons-material/Gamepad';
@@ -21,154 +20,84 @@ import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import DescriptionIcon from '@mui/icons-material/Description';
 import { faXTwitter, faTelegram, faYoutube, faTiktok } from '@fortawesome/free-brands-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import SiteWrapper from '../game_panel/SiteWrapper';
 import busd from '../game_panel/JoinGame/busd.svg';
-import PrivacyModal from '../game_panel/modal/PrivacyModal';
-import TermsModal from '../game_panel/modal/TermsModal';
-import MerchModal from '../game_panel/modal/MerchModal';
-import sol from '../game_panel/icons/sol.png';
-import bnb from '../game_panel/icons/bnb.png';
-import btc from '../game_panel/icons/btc.png';
-import eth from '../game_panel/icons/eth.png';
-import ltc from '../game_panel/icons/ltc.png';
 
 // Redux hooks
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchLeaderboardsData, fetchEquityDistribution } from '../redux/Customer/customer.action';
 
-// -------------- KEYFRAMES --------------
-const pulse = keyframes`
-  0% {
-    transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(255,255,255,0.7);
-  }
-  70% {
-    transform: scale(1.1);
-    box-shadow: 0 0 0 10px rgba(255,255,255,0);
-  }
-  100% {
-    transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(255,255,255,0);
-  }
-`;
-
-const throwAndFall = keyframes`
-  0% {
-    transform: translate(-50%, -67%) rotateX(0deg);
-  }
-  50% {
-    transform: translate(-50%, -99%) rotateX(360deg);
-  }
-  100% {
-    transform: translate(-50%, -67%) rotateX(0deg);
-  }
-`;
 
 // -------------- STYLED COMPONENTS --------------
-const Root = styled(Box)(({ theme }) => ({
-  color: '#FFF',
-  minHeight: '100vh',
-  display: 'flex',
-  flexDirection: 'column',
-  position: 'relative',
-  overflow: 'hidden',
-  backgroundColor: theme.palette.mode === 'dark' ? '#121212' : '#ffffff',
-}));
+// const Root = styled(Box)(({ theme }) => ({
+//   color: '#FFF',
+//   minHeight: '100vh',
+//   display: 'flex',
+//   flexDirection: 'column',
+//   position: 'relative',
+//   overflow: 'hidden',
+//   backgroundColor: theme.palette.mode === 'dark' ? '#121212' : '#ffffff',
+// }));
 
-const SectionContainer = styled(Box)(() => ({
-  width: '100%',
-  zIndex: 1,
-  position: 'relative',
-  marginBottom: '50vh',
-}));
+// const SectionContainer = styled(Box)(() => ({
+//   width: '100%',
+//   zIndex: 1,
+//   position: 'relative',
+//   marginBottom: '50vh',
+// }));
 
-const Section = styled(Box)(({ theme }) => ({
-  padding: '100px 20px',
-  textAlign: 'center',
-  display: 'none',
-  [theme.breakpoints.down('sm')]: {
-    padding: '60px 15px',
-  },
-}));
+// const Section = styled(Box)(({ theme }) => ({
+//   padding: '100px 20px',
+//   textAlign: 'center',
+//   display: 'none',
+//   [theme.breakpoints.down('sm')]: {
+//     padding: '60px 15px',
+//   },
+// }));
 
-const ActiveSection = styled(Box)(() => ({
-  display: 'block',
-  transition: 'opacity 0.5s',
-}));
 
-const Title = styled(Typography)(({ theme }) => ({
-  fontSize: '2.5rem',
-  [theme.breakpoints.down('sm')]: {
-    fontSize: '1.6rem',
-  },
-  textShadow: '0 0 6px rgba(255,255,255,0.15)',
-}));
+// const BottomBackground = styled(Box)(({ width, height }) => ({
+//   backgroundImage: `url('/img/bottom-bg.svg')`,
+//   backgroundSize: width < 768 && height > 800 ? '800vw' : '175vw',
+//   backgroundPosition: width > 768 ? '94% 110%' : '84% 120%',
+//   backgroundRepeat: 'no-repeat',
+//   height: '100%',
+//   width: '100%',
+//   position: 'fixed',
+//   bottom: 0,
+//   left: 0,
+//   zIndex: 2,
+// }));
 
-const BottomBackground = styled(Box)(({ width, height }) => ({
-  backgroundImage: `url('/img/bottom-bg.svg')`,
-  backgroundSize: width < 768 && height > 800 ? '800vw' : '175vw',
-  backgroundPosition: width > 768 ? '94% 110%' : '84% 120%',
-  backgroundRepeat: 'no-repeat',
-  height: '100%',
-  width: '100%',
-  position: 'fixed',
-  bottom: 0,
-  left: 0,
-  zIndex: 2,
-}));
 
-const Currencies = styled(Box)(() => ({
-  display: 'flex',
-  flexDirection: 'row',
-  justifyContent: 'space-between',
-  width: '210px',
-  margin: '30px auto',
-}));
+// const Nav = styled(Box)(({ width }) => ({
+//   position: 'absolute',
+//   display: 'flex',
+//   flexWrap: 'wrap',
+//   justifyContent: 'center',
+//   width: '100%',
+//   padding: '20px',
+//   zIndex: 9,
+//   top: width < 600 ? '150px' : '220px',
+//   left: width < 600 ? '-100px' : '-50px',
+// }));
 
-const Currency = styled('img')(({ width }) => ({
-  width: width < 600 ? '32px' : '52px',
-  height: width < 600 ? '32px' : '52px',
-  opacity: '0.2',
-  filter: 'grayscale(100%)',
-}));
-
-const AvailableCurrency = styled('img')(({ width }) => ({
-  width: width < 600 ? '32px' : '52px',
-  height: width < 600 ? '32px' : '52px',
-  filter: 'none',
-  marginRight: '10px',
-}));
-
-const Nav = styled(Box)(({ width }) => ({
-  position: 'absolute',
-  display: 'flex',
-  flexWrap: 'wrap',
-  justifyContent: 'center',
-  width: '100%',
-  padding: '20px',
-  zIndex: 9,
-  top: width < 600 ? '150px' : '220px',
-  left: width < 600 ? '-100px' : '-50px',
-}));
-
-const Gravestone = styled(Box)(() => ({
-  backgroundImage: `url('/img/grave.svg')`,
-  backgroundSize: 'contain',
-  backgroundPosition: 'center',
-  backgroundRepeat: 'no-repeat',
-  padding: '33px',
-  textAlign: 'center',
-  cursor: 'pointer',
-  transition: 'transform 0.3s, box-shadow 0.3s, z-index 0.3s',
-  margin: '10px',
-  position: 'absolute',
-  zIndex: 1,
-  '&:hover': {
-    filter: 'sepia(1)',
-    zIndex: 3,
-    animation: `${pulse} 0.5s`,
-  },
-}));
+// const Gravestone = styled(Box)(() => ({
+//   backgroundImage: `url('/img/grave.svg')`,
+//   backgroundSize: 'contain',
+//   backgroundPosition: 'center',
+//   backgroundRepeat: 'no-repeat',
+//   padding: '33px',
+//   textAlign: 'center',
+//   cursor: 'pointer',
+//   transition: 'transform 0.3s, box-shadow 0.3s, z-index 0.3s',
+//   margin: '10px',
+//   position: 'absolute',
+//   zIndex: 1,
+//   '&:hover': {
+//     filter: 'sepia(1)',
+//     zIndex: 3,
+//   },
+// }));
 
 // -------------- SHORTENING & CONTRACT INFO --------------
 const CONTRACT_ADDRESS = 'BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump';

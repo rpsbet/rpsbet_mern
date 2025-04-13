@@ -37,7 +37,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import axios from '../util/Api';
 import LoadingOverlay from 'react-loading-overlay';
 import CountUp from 'react-countup';
-import { debounce } from 'lodash';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXTwitter, faTelegram, faYoutube, faTiktok } from '@fortawesome/free-brands-svg-icons';
 import {
