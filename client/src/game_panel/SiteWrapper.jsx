@@ -465,8 +465,6 @@ function SiteWrapper({ children }) {
     }
   }, [anchorElProfile]);
 
-c
-
   const initializeAudio = useCallback(async () => {
     try {
       notificationSoundRef.current = new Audio('/sounds/notification.mp3');
