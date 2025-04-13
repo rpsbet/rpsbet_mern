@@ -1645,12 +1645,14 @@ router.get('/count', async (req, res) => {
 });
 
 router.get('/rooms', async (req, res) => {
+  console.log('Query:', req.query);
   // game_type can still be used as a filter, default to 'All'
   const game_type = req.query.game_type || 'All';
 
   try {
     // We no longer pass "page" or do skip/limit
     const rooms = await getRoomList(game_type);
+    console.log('Rooms:', rooms.rooms.length);
     res.json({
       success: true,
       query: req.query,

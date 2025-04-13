@@ -123,7 +123,7 @@ function SignupModal({ modalIsOpen, closeModal, openLoginModal }) {
           return (
             <Box sx={{ bgcolor: isDarkMode ? 'grey.900' : 'background.paper', p: 3 }}>
               <Typography variant="h6" sx={{ mb: 2 }}>
-                WELCOME TO RPS.GAME TIGER! 🐯⚔
+                WELCOME TO CATSINO.FUN TIGER! 🐯⚔
               </Typography>
               <Typography sx={{ mb: 2 }}>CLICK YOUR BALANCE TO MAKE A DEPOSIT</Typography>
               <Button

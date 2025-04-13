@@ -115,7 +115,7 @@ function HowToPlayModal({ modalIsOpen, closeModal }) {
                   borderRadius: 1,
                 }}
               >
-                RPS.Game
+                Catsino.fun
               </span>{" "}
               lets **creators** raise funds with games! 🎮
             </Typography>

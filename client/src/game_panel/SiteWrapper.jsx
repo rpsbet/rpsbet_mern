@@ -220,7 +220,7 @@ function SiteWrapper({ children }) {
   const currentPath = window.location.pathname;
   const [endpoint, setEndpoint] = useState(
     process.env.NODE_ENV === 'production'
-      ? 'https://rps.game'
+      ? 'http://catsino.fun'
       : `http://${window.location.hostname}:5001`
   );
 
@@ -465,12 +465,7 @@ function SiteWrapper({ children }) {
     }
   }, [anchorElProfile]);
 
-  // const updateReminderTime = useCallback(
-  //   debounce(() => {
-  //     setTransactions(prev => updateFromNow(prev));
-  //   }, 300),
-  //   []
-  // );
+c
 
   const initializeAudio = useCallback(async () => {
     try {
