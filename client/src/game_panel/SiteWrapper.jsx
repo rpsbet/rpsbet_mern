@@ -220,7 +220,7 @@ function SiteWrapper({ children }) {
   const currentPath = window.location.pathname;
   const [endpoint, setEndpoint] = useState(
     process.env.NODE_ENV === 'production'
-      ? 'http://catsino.fun'
+      ? 'https://catsino.fun'
       : `http://${window.location.hostname}:5001`
   );
 
