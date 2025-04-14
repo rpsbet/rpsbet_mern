@@ -324,7 +324,7 @@ function ProfileModal({ modalIsOpen, closeModal }) {
       'admin',
       'ADMIN',
       'RPSGAME',
-      'rps.game',
+      'catsino.fun',
       'rpsdotgame',
       'system',
       'support',

@@ -675,7 +675,7 @@ function SiteWrapper({ children }) {
               variant="contained"
               color="secondary"
               startIcon={<EmailIcon />}
-              onClick={() => window.open("mailto:inv_inquiries@rps.game")}
+              onClick={() => window.open("mailto:inv_inquiries@catsino.fun")}
             >
               Email
             </Button>

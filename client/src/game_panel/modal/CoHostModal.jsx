@@ -626,7 +626,7 @@ function CoHostModal({
           <DialogTitle sx={{ display: 'flex', alignItems: 'center' }}>
             Slippage — coming soon
             <Tooltip
-              title="Tired of waiting for rooms to be less busy? Slippage comes soon to RPS.Game allowing you to trade seamlessly"
+              title="Tired of waiting for rooms to be less busy? Slippage comes soon to catsino.fun allowing you to trade seamlessly"
               arrow
             >
               <IconButton size="small" sx={{ ml: 1 }}>
@@ -659,7 +659,7 @@ function CoHostModal({
           >
             <Summary shortVersion={!has_joined ? false : true} />
             <Tooltip
-              title="Tired of waiting for rooms to be less busy? Slippage comes soon to RPS.Game allowing you to trade seamlessly"
+              title="Tired of waiting for rooms to be less busy? Slippage comes soon to catsino.fun allowing you to trade seamlessly"
               arrow
             >
               <IconButton size="small" sx={{ color: 'white', position: 'absolute', right: '35px', }} onClick={handleDialogOpen}>

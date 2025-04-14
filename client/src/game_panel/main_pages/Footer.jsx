@@ -118,7 +118,7 @@ function Footer({ open, style }) {
             Leaderboards&nbsp;
           </StyledLink>
           <span className="mobile-only"> ✗ </span>&nbsp;
-          <StyledLink href="https://blog.rps.game/">Blog&nbsp;</StyledLink>
+          <StyledLink href="https://blog.catsino.fun/">Blog&nbsp;</StyledLink>
           ✗
           <StyledLink href="#terms" onClick={handleOpenTermsModal}>
             &nbsp;Terms

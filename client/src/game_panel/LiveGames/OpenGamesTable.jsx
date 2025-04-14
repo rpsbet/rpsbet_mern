@@ -855,12 +855,24 @@ function OpenGamesTable(props) {
                             sx={{
                               position: 'absolute',
                               top: '-20px',
+                              left: '0', // Changed from right to left
+                              fontSize: '0.7rem',
+                              opacity: 0.7
+                            }}
+                          >
+                            Health
+                          </Typography>
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              position: 'absolute',
+                              top: '-20px',
                               right: '0',
                               fontSize: '0.7rem',
                               opacity: 0.7
                             }}
                           >
-                            {progressPercentage.toFixed(0)}%
+                            {(100 - progressPercentage).toFixed(0)}% {/* Inverted the percentage */}
                           </Typography>
                           <Box
                             sx={{
@@ -875,7 +887,7 @@ function OpenGamesTable(props) {
                             <Box
                               className="progress-bar-filled"
                               sx={{
-                                width: `${progressPercentage}%`,
+                                width: `${100 - progressPercentage}%`, // Inverted the percentage
                                 height: '100%',
                                 background: 'linear-gradient(90deg, rgba(227, 255, 0, 0.8), rgba(253, 181, 0, 0.9))',
                                 borderRadius: '20px',
@@ -901,7 +913,6 @@ function OpenGamesTable(props) {
                             />
                           </Box>
                         </Box>
-
                         {/* Private room lock icon */}
                         {row.is_private && (
                           <Tooltip title="A password is required to battle this room." arrow>

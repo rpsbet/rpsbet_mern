@@ -62,16 +62,16 @@ function PrivacyModal({ modalIsOpen, closeModal }) {
           </Typography>
 
           <Typography variant="body2" paragraph>
-            “RPS GAME,” ("us", "we", or "our") operates https://rps.game (the
+            “Catsino.Fun,” ("us", "we", or "our") operates https://catsino.fun (the
             "Site"). This page informs you of our policies regarding the
             collection, use and disclosure of Personal Information we receive
             from users of the Site. We use your Personal Information only for
             providing and improving the Site. By using the Site, you agree to
             the collection and use of information in accordance with this
-            policy. If you do not want RPS Game to collect, store, use, or share
+            policy. If you do not want Catsino.Fun to collect, store, use, or share
             your information in the ways described in this Privacy Policy, you
-            may not play RPS Game games or use RPS Game’s other Services. For
-            purposes of data protection laws, RPS Game is the “data controller”
+            may not play Catsino.Fun games or use Catsino.Fun’s other Services. For
+            purposes of data protection laws, Catsino.Fun is the “data controller”
             of your personal information.
           </Typography>
 
@@ -93,11 +93,11 @@ function PrivacyModal({ modalIsOpen, closeModal }) {
           </Typography>
           <Typography variant="body2" paragraph>
             We’ll collect information related to any bets you make. For all bets
-            on rps.game, our third-party payment processor will collect the
+            on catsino.fun, our third-party payment processor will collect the
             billing and financial information it needs to process your charges.
             This may include your postal address, email address, and financial
-            information. RPS Game’s payment processors do not share your
-            financial information, like credit card numbers, with RPS Game, but
+            information. Catsino.Fun’s payment processors do not share your
+            financial information, like credit card numbers, with Catsino.Fun, but
             they may share non-financial information with us related to your
             purchases, like your billing address, and the amount paid. For
             outgoing payments (‘Winnings’), we may collect your account-specific
@@ -112,7 +112,7 @@ function PrivacyModal({ modalIsOpen, closeModal }) {
             for help from our Customer Support team, we will collect and store
             the contact information you give them (generally just your email
             address), information about your game play or activity on our
-            Services, and your RPS Game username and/or social network ID
+            Services, and your Catsino.Fun username and/or social network ID
             number. We will also store the communications you have with our
             Customer Service team and any additional information in those
             communications in order to provide support and improve the Services.
@@ -124,10 +124,10 @@ function PrivacyModal({ modalIsOpen, closeModal }) {
             information from other companies, including social networks, if you
             access our games through your accounts with those companies or you
             choose to connect your accounts with those companies to our games.
-            If you play RPS Game or access any of our other Services on
+            If you play Catsino.Fun or access any of our other Services on
             connected third-party applications or connect our Services to any
             third-party applications, including social networks like Facebook,
-            RPS Game may receive certain information about you from the provider
+            Catsino.Fun may receive certain information about you from the provider
             of the third-party application.
           </Typography>
 
@@ -156,7 +156,7 @@ function PrivacyModal({ modalIsOpen, closeModal }) {
           </Typography>
           <Typography variant="body2" paragraph>
             If you have any questions about this Privacy Policy, please contact{' '}
-            <strong>support@rps.game</strong>.
+            <strong>support@catsino.fun</strong>.
           </Typography>
         </Box>
       </Box>

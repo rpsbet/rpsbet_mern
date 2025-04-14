@@ -301,7 +301,7 @@ function DefaultBetAmountPanel({
 
         {/* ---------------- HARD CAP (SOL) ---------------- */}
         <h3 className="game-sub-title roll-tag" style={{ marginTop: '30px' }}>
-          Hard Cap (SOL) 
+          HEALTH (SOL) 
           <Tooltip
             style={{ position: 'absolute', right: '20px' }}
             title={'The maximum sum allowed for this pool.'}

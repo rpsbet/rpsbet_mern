@@ -321,9 +321,9 @@ const PreSummaryPanel = (props) => {
               icon={faHandHoldingUsd}
               style={{ marginRight: 8 }}
             />
-            Hard Cap
+            HEALTH
           </Typography>
-          <Tooltip title="Automatic dividends paid to Hosts & CoHosts upon reaching the payout threshold.">
+          <Tooltip title="WHEN THIS GOES TO 0% THE GAME DIES AND IS CONVERTED TO A TRADEABLE TOKEN">
             <Box
               sx={{
                 cursor: 'pointer',
@@ -337,7 +337,7 @@ const PreSummaryPanel = (props) => {
               <Box position="relative" display="inline-flex">
                 <CircularProgress
                   variant="determinate"
-                  value={payoutPercentage}
+                  value={100 - payoutPercentage}
                   color="error"
                   size={35}
                   thickness={4}
@@ -357,7 +357,7 @@ const PreSummaryPanel = (props) => {
                     component="div"
                     sx={{ fontSize: '0.6em', fontWeight: 'bold' }}
                   >
-                    {`${payoutPercentage}%`}
+                    {`${100 - payoutPercentage}%`}
                   </Typography>
                 </Box>
               </Box>

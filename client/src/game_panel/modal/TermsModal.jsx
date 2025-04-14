@@ -64,27 +64,27 @@ function TermsModal({ modalIsOpen, closeModal }) {
             <strong>Last updated:</strong> 3rd January 2025
           </Typography>
           <Typography variant="h6" sx={{ mt: 1 }}>
-            Welcome to RPS GAME!
+            Welcome to Catsino.Fun!
           </Typography>
           <Typography variant="body2" paragraph>
             These terms and conditions outline the rules and regulations for the
-            use of RPS Game's site, located at rps.game. By accessing this site
+            use of Catsino.Fun's site, located at catsino.fun. By accessing this site
             we assume you accept these terms and conditions. Do not continue to
-            use RPS Game if you do not agree to take all of the terms and
+            use Catsino.Fun if you do not agree to take all of the terms and
             conditions stated on this page.
           </Typography>
 
           <Typography variant="h6">1.0 General</Typography>
           <Typography variant="h6">1.1 Cookies</Typography>
           <Typography variant="body2" paragraph>
-            We employ the use of cookies. By accessing RPS Game, you agreed to
-            use cookies in agreement with the RPS Game's Privacy Policy.
+            We employ the use of cookies. By accessing Catsino.Fun, you agreed to
+            use cookies in agreement with the Catsino.Fun's Privacy Policy.
           </Typography>
 
           <Typography variant="h6">1.2 License</Typography>
           <Typography variant="body2" paragraph>
-            Unless otherwise stated, RPS Game and/or its licensors own the
-            intellectual property rights for all material on RPS Game.
+            Unless otherwise stated, Catsino.Fun and/or its licensors own the
+            intellectual property rights for all material on Catsino.Fun.
           </Typography>
 
           <Typography variant="h6">1.3 Hyperlinking to our Content</Typography>
@@ -112,7 +112,7 @@ function TermsModal({ modalIsOpen, closeModal }) {
           </Typography>
           <Typography variant="body2" paragraph>
             You are responsible for your interactions with other players. If you
-            have a dispute with another player, you release RPS Game from
+            have a dispute with another player, you release Catsino.Fun from
             responsibility, claims, demands, and/or damages.
           </Typography>
 
@@ -125,7 +125,7 @@ function TermsModal({ modalIsOpen, closeModal }) {
           <Typography variant="h6">Contact Us</Typography>
           <Typography variant="body2" paragraph>
             If you have any questions about this Terms Policy, please contact
-            <strong> support@rps.game</strong>.
+            <strong> support@catsino.fun</strong>.
           </Typography>
 
           <Typography variant="h6" sx={{ mt: 2 }}>
@@ -137,7 +137,7 @@ function TermsModal({ modalIsOpen, closeModal }) {
               component="span"
               sx={{ color: '#f5b22d', textDecoration: 'underline' }}
             >
-              support@rps.game
+              support@catsino.fun
             </Typography>
             . We thank you for playing!
           </Typography>

@@ -84,7 +84,7 @@ const RoomTokenDetails = ({ roomInfo, hosts, solPrice, isDarkMode, handleOpenPla
 
             <Box className="bonding-curve" style={{ marginBottom: "30px" }}>
                 <h4 className='roll-tag label' style={{ display: 'block', fontWeight: 'bold', marginBottom: '8px' }}>
-                    HARD CAP: {progressPercentage}%
+                    HEALTH: {(100 - progressPercentage).toFixed(0)}% {/* Inverted percentage */}
                 </h4>
                 <Box
                     className='progress-bar'
@@ -99,9 +99,9 @@ const RoomTokenDetails = ({ roomInfo, hosts, solPrice, isDarkMode, handleOpenPla
                     <Box
                         className='value'
                         style={{
-                            width: `${progressPercentage}%`,
+                            width: `${100 - progressPercentage}%`, /* Inverted percentage */
                             height: '100%',
-                            backgroundColor: '#4caf50',
+                            backgroundColor: '#ff0000',
                         }}
                     ></Box>
                 </Box>

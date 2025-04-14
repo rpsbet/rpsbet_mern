@@ -459,10 +459,10 @@ function MyGamesTable() { // Remove props destructuring since we’ll use hooks
                   LIQUIDITY / SHARE
                 </Box>
                 <Box className="table-cell payout" sx={{ width: '17%' }}>
-                  HARD CAP
+                  HEALTH CAP
                 </Box>
                 <Box className="table-cell bet-info" sx={{ width: '17%' }}>
-                  PROGRESS 
+                  HEALTH 
                   <Tooltip title="TO REACH RAYDIUM">
                     <Info sx={{ width: 18, cursor: 'pointer' }} />
                   </Tooltip>
@@ -582,7 +582,7 @@ function MyGamesTable() { // Remove props destructuring since we’ll use hooks
                         sx={{ width: '17%' }}
                       >
                         <Chip
-                          label={`${bondingProgress.toFixed(2)}%`}
+                          label={`${100 - bondingProgress.toFixed(2)}%`}
                           color="success"
                           size="small"
                           variant="outlined"

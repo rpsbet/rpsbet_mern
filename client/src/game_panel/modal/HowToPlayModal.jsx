@@ -336,7 +336,7 @@ function HowToPlayModal({ modalIsOpen, closeModal }) {
                 variant="contained"
                 color="secondary"
                 startIcon={<EmailIcon />}
-                onClick={() => window.open("mailto:inv_inquiries@rps.game")}
+                onClick={() => window.open("mailto:inv_inquiries@catsino.fun")}
               >
                 Email
               </Button>

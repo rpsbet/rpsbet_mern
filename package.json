@@ -20,6 +20,7 @@
   "license": "ISC",
   "dependencies": {
     "@babel/parser": "^7.27.0",
+    "@magicblock-labs/ephemeral-rollups-sdk": "^0.2.4",
     "@metaplex-foundation/mpl-token-metadata": "^3.3.0",
     "@metaplex-foundation/umi": "^1.0.0",
     "@metaplex-foundation/umi-bundle-defaults": "^1.0.0",

@@ -404,7 +404,7 @@ function CreateGame() { // Remove match prop
         return;
       }
       if (endgameAmount < 10) {
-        dispatch(errorMsgBar('MINIMUM HARD CAP IS 10 SOL'));
+        dispatch(errorMsgBar('MINIMUM HEALTH IS 10 SOL'));
         return;
       }
     }

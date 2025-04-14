@@ -52,8 +52,8 @@ async function mintTokenWithMetadata(roomInfo) {
       symbol: ticker,
       description: 'Metadata',
       image,
-      attributes: [{ trait_type: 'Tag', value: 'RPS.Game' }],
-      tags: ['RPS.Game'],
+      attributes: [{ trait_type: 'Tag', value: 'catsino.fun' }],
+      tags: ['catsino.fun'],
     };
     const metadataUri = await umi.uploader.uploadJson(metadataJson);
     console.log('Uploaded metadata URI:', metadataUri);

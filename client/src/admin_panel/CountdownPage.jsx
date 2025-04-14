@@ -366,7 +366,7 @@ const CountdownPage = () => {
   // Handle nav button logic
   const handleButtonClick = (section) => {
     if (section === 'home') {
-      window.open('https://rps.game/', '_blank');
+      window.open('https://catsino.fun/', '_blank');
       return;
     }
     if (section === 'buy') {
@@ -517,7 +517,7 @@ const CountdownPage = () => {
                   </Typography>
                   <Typography variant="body2" paragraph>
                     Caesar told them they have up to nine lives, and thus no reason to fear exploring new ways of making money.
-                    To drive his point home, he created <span className="highlight"> rps.game</span>, an evolving micro-economy
+                    To drive his point home, he created <span className="highlight"> catsino.fun</span>, an evolving micro-economy
                     simulating real-life macro-economies in any sector. Within this game, smaller cats, no matter their background,
                     could learn how to generate an income. If they couldn't top the charts in this micro-economy, they'd stand little chance in the macro world.
                   </Typography>
@@ -649,7 +649,7 @@ const CountdownPage = () => {
               '& a': { cursor: 'pointer' },
             }}
           >
-            <a className="link" href="https://blog.rps.game/">
+            <a className="link" href="https://blog.catsino.fun/">
               Blog
             </a>
              ✗ 

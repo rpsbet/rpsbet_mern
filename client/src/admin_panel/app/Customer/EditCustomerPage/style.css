@@ -105,7 +105,7 @@
   position: relative;
   z-index: 2;
   height: 100%;
-  background: linear-gradient(#34C759, #00A8CC) !important; /* Green to teal */
+  background: linear-gradient(#c73434, #9e0000) !important; /* Green to teal */
 }
 
 .progress-bar-filled::after {
@@ -117,7 +117,7 @@
   height: 0;
   border-style: solid;
   border-width: 0px 2px 20px 4px;
-  border-color: #34C75980; /* Green with 50% opacity */
+  border-color: #c7343480; /* Green with 50% opacity */
   z-index: 3;
 }
 

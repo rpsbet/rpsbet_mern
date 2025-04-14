@@ -255,7 +255,7 @@ verifyRecaptcha = async (token) => {
 
 
 function containsBadLanguage(username) {
-  const explicitWords = ['admin', 'ADMIN', 'RPSGAME', 'rps.game', 'rpsdotgame', 'system', 'support', 'BOT', 'B0T', 'bot', 'BoT'];
+  const explicitWords = ['admin', 'ADMIN', 'RPSGAME', 'catsino.fun', 'rpsdotgame', 'system', 'support', 'BOT', 'B0T', 'bot', 'BoT'];
   const lowercasedUsername = username.toLowerCase();
 
   return explicitWords.some((word) => lowercasedUsername.includes(word));

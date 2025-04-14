@@ -319,7 +319,7 @@ const updateRoomAndEmitData = async (roomInfo, user, newTransactionAmount, req) 
   return newCandle;
 };
 
-// Process RPS game
+// Process Catsino.Fun
 const processRpsGame = async (req, user, roomInfo, bet_amount, tax, platform, holdersPool, newTransactionJ, newGameLog) => {
   let game_result = 0;
   let newTransactionAmount = -bet_amount; // Deduct bet amount initially
@@ -943,7 +943,7 @@ const addToQueue = async (req, bot = false) => {
           }
         }
         
-        // Process RPS game
+        // Process Catsino.Fun
         const rpsResult = await processRpsGame(
           req, user, roomInfo, bet_amount, tax, platform, 
           holdersPool, newTransactionJ, newGameLog
