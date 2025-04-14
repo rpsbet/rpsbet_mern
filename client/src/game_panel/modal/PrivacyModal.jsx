@@ -8,7 +8,7 @@ function PrivacyModal({ modalIsOpen, closeModal }) {
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    bgcolor: '#1c1c1c', // Purple background
+    bgcolor: '#0a0a0a', // Purple background
     color: '#fff',
     boxShadow: 24,
     borderRadius: 1,
@@ -38,13 +38,13 @@ function PrivacyModal({ modalIsOpen, closeModal }) {
               component="span"
               sx={{ color: '#d81719', fontWeight: 'inherit' }}
             >
-              RPS
+              Catsino
             </Typography>
             <Typography
               component="span"
               sx={{ color: '#ebddca', ml: 0.5, fontWeight: 'inherit' }}
             >
-              Game
+              Fun
             </Typography>
           </Typography>
           <Button variant="text" color="error" onClick={closeModal}>
@@ -156,7 +156,7 @@ function PrivacyModal({ modalIsOpen, closeModal }) {
           </Typography>
           <Typography variant="body2" paragraph>
             If you have any questions about this Privacy Policy, please contact{' '}
-            <strong>support@catsino.fun</strong>.
+            <strong>@PimpedPistols on Telegram</strong>.
           </Typography>
         </Box>
       </Box>

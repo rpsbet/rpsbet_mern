@@ -414,7 +414,7 @@ function HistoryTable({
                     </Box>
                   </Tooltip>
                    
-                  {row.from_now && row.from_now.split('').map((char, i) => (
+                  {/* {row.from_now && row.from_now.split('').map((char, i) => (
                     <Box
                       component="span"
                       key={i}
@@ -424,7 +424,7 @@ function HistoryTable({
                     </Box>
                   ))}
                    
-                  <FontAwesomeIcon icon={faStopwatch} />
+                  <FontAwesomeIcon icon={faStopwatch} /> */}
                 </Box>
               </Box>
             </Box>

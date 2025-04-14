@@ -70,7 +70,7 @@
 }
 
 .dark_mode div.main-page-nav-button-group {
-	background: #28333f;
+	background: #111315;
 }
 
 .dark_mode .tooltip.reply .tooltip-content {
@@ -79,7 +79,7 @@
 
 
 .dark_mode .history-background {
-	background: linear-gradient(#515151, #2a202f) !important
+	background: linear-gradient(#515151, #0f0f0f) !important
 }
 
 .dark_mode .chat-wrapper .chat-panel .chat-line .sender-name {
@@ -148,13 +148,13 @@
 }
 
 .dark_mode .game-page .game-contents {
-	background: #080808;
+	background: #222222;
 }
 
 .dark_mode .avatar-square {
 
 	background: #222e;
-	border: 3px solid #607D8B;
+	border: 3px solid #2c2c2c;
 	color: #c4c4c4;
 }
 
@@ -227,7 +227,7 @@
 .dark_mode .modal-body,
 .dark_mode .modal-header {
 	color: #fff;
-	background: linear-gradient(52deg, #372e3b, #2a202f);
+	background: linear-gradient(52deg, #372e3b, #0f0f0f);
 }
 
 /* .dark_mode .modal-body p button,

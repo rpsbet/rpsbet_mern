@@ -253,7 +253,6 @@ router.get('/proxy-asset', async (req, res) => {
 router.post('/openai/generate-react', auth, async (req, res) => {
   try {
     const { prompt, imageUrls = [] } = req.body || {};
-    const cost = 0.005;
 
     if (!req.user?._id) {
       throw new Error('User not authenticated');
@@ -268,14 +267,10 @@ router.post('/openai/generate-react', auth, async (req, res) => {
     console.log(`[React Generator] Starting generation with prompt: "${prompt.substring(0, 50)}..."`);
     console.log(`[React Generator] User balance: ${currentUser.balance}, Cost: ${cost}`);
 
-    if (cost > currentUser.balance) {
-      throw new Error('NOT ENUFF FUNDS AT THIS MEOWMENT');
-    }
-
     const newTransaction = new Transaction({
       user: currentUser,
       amount: -cost,
-      description: 'Generated AI React app',
+      description: 'Generated Game',
     });
 
     currentUser.balance -= cost;
@@ -1645,14 +1640,12 @@ router.get('/count', async (req, res) => {
 });
 
 router.get('/rooms', async (req, res) => {
-  console.log('Query:', req.query);
   // game_type can still be used as a filter, default to 'All'
   const game_type = req.query.game_type || 'All';
 
   try {
     // We no longer pass "page" or do skip/limit
     const rooms = await getRoomList(game_type);
-    console.log('Rooms:', rooms.rooms.length);
     res.json({
       success: true,
       query: req.query,

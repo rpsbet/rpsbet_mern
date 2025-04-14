@@ -169,7 +169,7 @@ function AllTransactionsModal({
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    bgcolor: '#1c1c1c', // Purple background
+    bgcolor: '#0a0a0a', // Purple background
     color: '#fff',
     boxShadow: 24,
     borderRadius: 1,

@@ -40,7 +40,7 @@ function HowToPlayModal({ modalIsOpen, closeModal }) {
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    bgcolor: '#1c1c1c', // Same background color as login
+    bgcolor: '#0a0a0a', // Same background color as login
     color: '#fff',
     boxShadow: 24,
     borderRadius: 1,
@@ -332,14 +332,14 @@ function HowToPlayModal({ modalIsOpen, closeModal }) {
               >
                 Telegram
               </Button>
-              <Button
+              {/* <Button
                 variant="contained"
                 color="secondary"
                 startIcon={<EmailIcon />}
                 onClick={() => window.open("mailto:inv_inquiries@catsino.fun")}
               >
                 Email
-              </Button>
+              </Button> */}
             </Box>
           </AccordionDetails>
         </Accordion>

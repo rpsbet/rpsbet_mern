@@ -157,10 +157,7 @@ export const generateReactGameFromPrompt = (
   setGameLoading,
   preProxiedAssets = { images: [], audio: [] }
 ) => async (dispatch) => {
-  if (user_balance < 0.005) {
-    dispatch({ type: MSG_ERROR, payload: 'Insufficient balance. Each send costs 0.005 SOL.' });
-    return;
-  }
+
 
   if (!gamePrompt.trim()) {
     dispatch({ type: MSG_ERROR, payload: 'Please enter a valid app prompt.' });

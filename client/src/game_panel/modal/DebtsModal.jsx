@@ -47,7 +47,7 @@ const customStyles = {
     right: 'auto',
     bottom: 'auto',
     transform: 'translate(-50%, -50%)',
-    background: '#1c1c1c',
+    background: '#0a0a0a',
     padding: '16px',
     border: 'none',
   },

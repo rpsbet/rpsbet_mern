@@ -637,7 +637,7 @@ function SiteWrapper({ children }) {
         }}
         PaperProps={{
           sx: {
-            backgroundColor: '#1c1c1c',
+            backgroundColor: '#0a0a0a',
             color: '#fff',
           },
         }}
@@ -671,14 +671,14 @@ function SiteWrapper({ children }) {
             >
               Telegram
             </Button>
-            <Button
+            {/* <Button
               variant="contained"
               color="secondary"
               startIcon={<EmailIcon />}
               onClick={() => window.open("mailto:inv_inquiries@catsino.fun")}
             >
               Email
-            </Button>
+            </Button> */}
           </Box>
         </DialogContent>
       </Dialog>
@@ -705,16 +705,32 @@ function SiteWrapper({ children }) {
         <div className="game_header">
           <div className="main_header">
             <Box>
-              <a
-                className="game_logo"
-                href="/"
-                onClick={(e) => {
-                  e.preventDefault();
-                  window.location.href = '/';
-                }}
-              >
-                <img src="/img/game-logo.svg" alt="Game Logo" width="25" height="25" />
-              </a>
+            <a
+  className="game_logo"
+  href="/"
+  onClick={(e) => {
+    e.preventDefault();
+    window.location.href = '/';
+  }}
+>
+  <img src="/img/game-logo.svg" alt="Game Logo" width="25" height="25" />
+  <span
+    className="title desktop-only"
+    style={{
+      backgroundImage: 'linear-gradient(45deg,rgb(182, 182, 182) 0%,rgb(253, 253, 253) 55%,rgb(255, 0, 0) 77%)',
+      WebkitBackgroundClip: 'text',
+      backgroundClip: 'text', // Standard property for broader support
+      color: 'transparent', // Fallback for unsupported browsers
+      display: 'inline-block',
+      // Fallback color for browsers that don’t support text clipping
+      WebkitTextFillColor: 'transparent',
+      textFillColor: 'transparent', // Standard property (future-proofing)
+      fallbackColor: '#ff6b6b' // Custom property for fallback logic (optional)
+    }}
+  >
+    CATSINO.FUN
+  </span>
+</a>
               <a
                 href="#"
                 style={{
@@ -970,7 +986,7 @@ function SiteWrapper({ children }) {
                     }}
                     PaperProps={{
                       sx: {
-                        backgroundColor: '#1c1c1c',
+                        backgroundColor: '#0a0a0a',
                         color: '#fff',
                         '& .MuiMenuItem-root': {
                           textTransform: 'none',
@@ -1063,7 +1079,7 @@ function SiteWrapper({ children }) {
             }}
             PaperProps={{
               sx: {
-                backgroundColor: '#1c1c1c',
+                backgroundColor: '#0a0a0a',
                 color: '#fff',
                 width: 320,
                 maxWidth: '90vw',
@@ -1077,7 +1093,7 @@ function SiteWrapper({ children }) {
               sx={{
                 position: 'sticky',
                 top: 0,
-                backgroundColor: '#1c1c1c',
+                backgroundColor: '#0a0a0a',
                 color: '#fff',
                 p: 2,
                 zIndex: 2
@@ -1203,7 +1219,7 @@ function SiteWrapper({ children }) {
             }}
             PaperProps={{
               sx: {
-                backgroundColor: '#1c1c1c',
+                backgroundColor: '#0a0a0a',
                 color: '#fff',
                 p: 2,
                 '& .MuiPaper-root': {
@@ -1216,12 +1232,12 @@ function SiteWrapper({ children }) {
                 },
                 '& .MuiTableCell-root': {
                   color: '#fff',
-                  borderColor: '#607D8B'
+                  borderColor: '#2c2c2c'
                 },
                 '& #wallet-address': {
-                  backgroundColor: '#1c1c1c',
+                  backgroundColor: '#0a0a0a',
                   color: '#fff',
-                  border: '1px solid #607D8B',
+                  border: '1px solid #2c2c2c',
                   borderRadius: '4px',
                   width: '100%',
                   padding: '0.5rem',

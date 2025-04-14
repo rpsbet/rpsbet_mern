@@ -77,7 +77,7 @@ const StyledProductCard = styled.a`
   width: 150px;
   text-align: center;
   text-decoration: none;
-  color: ${({ isDarkMode }) => (isDarkMode ? '#ddd' : '#607D8B')};
+  color: ${({ isDarkMode }) => (isDarkMode ? '#ddd' : '#2c2c2c')};
   box-shadow: none;
   transition: background 0.2s ease;
 
@@ -85,7 +85,7 @@ const StyledProductCard = styled.a`
     margin-top: 8px;
     font-size: 0.9rem;
     font-weight: 400;
-    color: ${({ isDarkMode }) => (isDarkMode ? '#ddd' : '#607D8B')};
+    color: ${({ isDarkMode }) => (isDarkMode ? '#ddd' : '#2c2c2c')};
   }
 
   @media (max-width: 768px) {

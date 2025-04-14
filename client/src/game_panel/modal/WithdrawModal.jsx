@@ -154,7 +154,7 @@ function WithdrawModal(props) {
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    bgcolor: '#1c1c1c',
+    bgcolor: '#0a0a0a',
     color: '#fff',
     boxShadow: 24,
     borderRadius: 1,

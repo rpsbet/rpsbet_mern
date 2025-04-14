@@ -278,7 +278,7 @@ function PlayerModal({ modalIsOpen, closeModal, selectedCreator }) {
               top: '50%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
-              bgcolor: isDarkMode ? '#1c1c1c' : '#fff',
+              bgcolor: isDarkMode ? '#0a0a0a' : '#fff',
               color: isDarkMode ? '#fff' : '#000',
               width: '90vw',
               maxWidth: '700px',
@@ -410,8 +410,7 @@ function PlayerModal({ modalIsOpen, closeModal, selectedCreator }) {
                       </Grid>
                     )}
                   </Box>
-                  {/* Inventory */}
-                  <MarketplaceContainer>
+                  {/* <MarketplaceContainer>
                     <Typography variant="h6" sx={{ mt: 2 }}>
                       INVENTORY
                     </Typography>
@@ -419,13 +418,13 @@ function PlayerModal({ modalIsOpen, closeModal, selectedCreator }) {
                       <ProductGrid>
                         {productArray.map((row) => (
                           <ProductCard key={row._id}>
-                            {/* {row.image && renderLottieAnimation(row.image, isLowGraphics) ? (
+                            {row.image && renderLottieAnimation(row.image, isLowGraphics) ? (
                               <Box sx={{ width: 80, height: 80 }}>
                                 {renderLottieAnimation(row.image, isLowGraphics)}
                               </Box>
                             ) : (
                               <ProductImage src={row.image} alt={row.productName} />
-                            )} */}
+                            )}
                             <ProductInfo>
                               <Typography variant="h6" sx={{ fontSize: '1rem', color: '#fff', textAlign: 'center' }}>
                                 {row.productName}
@@ -439,7 +438,7 @@ function PlayerModal({ modalIsOpen, closeModal, selectedCreator }) {
                         <Typography variant="body2">No items found.</Typography>
                       </ProductGrid>
                     )}
-                  </MarketplaceContainer>
+                  </MarketplaceContainer> */}
                 </Box>
               )}
               {/* Tab 1: Stats */}

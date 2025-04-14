@@ -270,7 +270,7 @@ function LeaderboardsModal({
             top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
-            bgcolor: isDarkMode ? '#1c1c1c' : '#fff',
+            bgcolor: isDarkMode ? '#0a0a0a' : '#fff',
             color: isDarkMode ? '#fff' : '#000',
             width: isMobile ? '95vw' : '80vw',
             height: isMobile ? '95vh' : '80vh',

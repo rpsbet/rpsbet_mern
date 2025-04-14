@@ -165,7 +165,7 @@ function GlobalChat(props) {
       className="chat-panel global-chat"
       ref={chatBoxRef}
       sx={{
-        height: '100%',
+        height: 'calc(100% - 120px)',
         overflowY: 'auto',
         '&::-webkit-scrollbar': {
           display: 'none',

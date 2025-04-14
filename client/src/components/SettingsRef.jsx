@@ -683,7 +683,7 @@ const SettingsRef = ({
               />
               <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
                 <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                  Each send costs 0.005 SOL
+                  Follow-up prompts cost 0.005 SOL
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 1 }}>
                   <Button

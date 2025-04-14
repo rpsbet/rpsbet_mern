@@ -180,7 +180,7 @@ function MainPage() {
 
       return (
         <div className="create-room-btn-panel">
-            <img src="/img/slyCat.svg" width={200} style={{position: 'absolute', left: '20px', filter: 'invert(1) hue-rotate(130deg)', opacity: 0.2, transform: 'scaleX(-1) rotate(-30deg)'}} alt="Cat" className="cat-image" />
+            <img src="/img/slyCat.svg" width={200} style={{zIndex: '-1', position: 'absolute', left: '20px', filter: 'invert(1) hue-rotate(130deg)', opacity: 0.2, transform: 'scaleX(-1) rotate(-30deg)'}} alt="Cat" className="cat-image" />
 
           <Box
             className="btn-create-room"
@@ -321,7 +321,7 @@ function MainPage() {
               Use template
             </Button>
           </Box>
-          <img src="/img/coolCat.svg" width={200} style={{position: 'absolute', right: '20px', filter: 'invert(1) hue-rotate(180deg)', opacity: 0.2, transform: 'rotate(-30deg)'}} alt="Cat" className="cat-image" />
+          <img src="/img/coolCat.svg" width={200} style={{zIndex: '-1', position: 'absolute', right: '20px', filter: 'invert(1) hue-rotate(180deg)', opacity: 0.2, transform: 'rotate(-30deg)'}} alt="Cat" className="cat-image" />
 
         </div>
       );
@@ -378,30 +378,6 @@ function MainPage() {
             )}
           </Box>
 
-          {/* MARKETPLACE */}
-          <Box sx={{ textAlign: 'center' }}>
-            <Button
-              color="error"
-              sx={{
-                width: '100%',
-                py: '60px',
-                display: 'flex',
-                flexDirection: 'column',
-              }}
-              onClick={toggleMarketplace}
-            >
-              {showMarketplace ? <Remove /> : <Add />}
-              <Typography variant="h6" className="title" sx={{ mt: 1 }}>
-                <FontAwesomeIcon icon={faStore} className="mr-2" />
-                Marketplace
-              </Typography>
-            </Button>
-            {showMarketplace && (
-              <Suspense fallback={<Typography>Loading Marketplace...</Typography>}>
-                <ProductPage />
-              </Suspense>
-            )}
-          </Box>
         </Box>
       )}
 
@@ -552,7 +528,7 @@ function MainPage() {
                 strokeLinecap="round"
               />
             </svg>
-            {selectedMobileTab === 'marketplace' && 'ASSETS'}
+            {selectedMobileTab === 'marketplace' && 'BANK'}
           </Button>
 
           <Button

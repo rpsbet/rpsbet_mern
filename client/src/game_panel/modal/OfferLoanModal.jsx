@@ -740,7 +740,7 @@ function OfferLoanModal() {
             <Box
               sx={{
                 border: '1px solid',
-                borderColor: isDarkMode ? '#607D8B' : '#ccc',
+                borderColor: isDarkMode ? '#2c2c2c' : '#ccc',
                 p: 2,
                 borderRadius: 1,
                 mb: 1,

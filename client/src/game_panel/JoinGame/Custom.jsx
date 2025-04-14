@@ -251,7 +251,7 @@ function Custom(props) {
   };
 
   const logEvent = useCallback((eventType, data) => {
-    console.log(`Game Event: ${eventType}`, data);
+    // console.log(`Game Event: ${eventType}`, data);
   
     if (playSound) {
       playSound('select');
@@ -260,16 +260,14 @@ function Custom(props) {
     if (eventType === 'gameStarted') {
       setGameStartedCount((prev) => prev + 1);
       setIsGameActive(true);
-      console.log('Game started, resetting interaction state. Count:', gameStartedCount + 1);
+      // console.log('Game started, resetting interaction state. Count:', gameStartedCount + 1);
     } else if (eventType === 'gameEnded') {
       setIsGameActive(false);
       const { result, multiplier } = data;
       const validResults = ['win', 'loss', 'other'];
       if (validResults.includes(result) && gameStartedCount > 0) {
-        console.log('Processing game result:', result, 'Multiplier:', multiplier);
+        // console.log('Processing game result:', result, 'Multiplier:', multiplier);
         onBtnBetClick(result, result === 'win' ? multiplier : undefined);
-      } else {
-        console.log('Ignoring game result: Game has not started.');
       }
     }
   }, [gameStartedCount, onBtnBetClick, playSound]);
@@ -352,7 +350,6 @@ function Custom(props) {
         }
   
         const WrappedGameComponent = (props) => {
-          console.log('Rendering GameComponent with props:', props);
           try {
             return <GeneratedApp {...props} />;
           } catch (error) {
