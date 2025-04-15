@@ -31,8 +31,8 @@ const CoinInfo = ({
 
   // NAME field logic
   const handleNameChange = (value) => {
-    if (value.length > 10) {
-      setNameError('10 character limit');
+    if (value.length > 20) {
+      setNameError('20 character limit');
     } else {
       setNameError('');
     }
@@ -111,8 +111,8 @@ const CoinInfo = ({
           }}
           onBlur={() => {
             dispatch(setFocused(false));
-            if ((name || '').length > 16) {
-              setNameError('16 character limit');
+            if ((name || '').length > 20) {
+              setNameError('20 character limit');
             }
           }}
           error={!!nameError}

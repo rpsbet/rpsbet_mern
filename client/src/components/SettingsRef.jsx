@@ -676,7 +676,7 @@ const SettingsRef = ({
                 label={chatMessages.length > 0 ? "Continue the conversation" : "Custom Game Prompt"}
                 value={localPrompt}
                 onChange={handlePromptChange}
-                inputProps={{ maxLength: 900 }}
+                inputProps={{ maxLength: 1800 }}
                 onFocus={() => dispatch(setFocused(true))}
                 onBlur={() => dispatch(setFocused(false))}
                 placeholder={chatMessages.length > 0 ? "Describe how you'd like to modify the game..." : "Describe the game you want to create..."}

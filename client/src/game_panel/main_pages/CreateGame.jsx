@@ -382,7 +382,7 @@ function CreateGame() { // Remove match prop
         dispatch(errorMsgBar('ADD A NAME DUMBASS!'));
         return;
       }
-      if (name.trim().length > 16) {
+      if (name.trim().length > 20) {
         dispatch(errorMsgBar('Name cannot be longer than 20 characters!'));
         return;
       }
