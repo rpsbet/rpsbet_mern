@@ -44,26 +44,26 @@ function LoginModal({ modalIsOpen, closeModal }) {
   const onChangeEmail = (e) => setEmail(e.target.value);
   const onChangePassword = (e) => setPassword(e.target.value);
 
-  // const initializeGoogleSignIn = () => {
-  //   setTimeout(() => {
-  //     const buttonElement = document.getElementById('googleSignInButton');
-  //     if (buttonElement) {
-  //       /* global google */
-  //       google.accounts.id.initialize({
-  //         client_id:
-  //           '565609210873-2ajd0detnt4h6q8ufhrl5nvlv4h01ol0.apps.googleusercontent.com',
-  //         callback: handleGoogleCredentialResponse,
-  //       });
+  const initializeGoogleSignIn = () => {
+    setTimeout(() => {
+      const buttonElement = document.getElementById('googleSignInButton');
+      if (buttonElement) {
+        /* global google */
+        google.accounts.id.initialize({
+          client_id:
+            '565609210873-2ajd0detnt4h6q8ufhrl5nvlv4h01ol0.apps.googleusercontent.com',
+          callback: handleGoogleCredentialResponse,
+        });
 
-  //       google.accounts.id.renderButton(buttonElement, {
-  //         theme: 'outline',
-  //         size: 'large',
-  //       });
+        google.accounts.id.renderButton(buttonElement, {
+          theme: 'outline',
+          size: 'large',
+        });
 
-  //       google.accounts.id.prompt();
-  //     }
-  //   }, 100);
-  // };
+        google.accounts.id.prompt();
+      }
+    }, 100);
+  };
 
   const handlePhantomConnect = async () => {
     try {
@@ -117,23 +117,16 @@ function LoginModal({ modalIsOpen, closeModal }) {
     dispatch(getMyHistory());
     dispatch(getMyChat());
     dispatch(getUser());
-    const currentPath = window.location.pathname;
-    if (currentPath.startsWith('/investors')) {
-      navigate('/investors'); // Replace history.push with navigate
-    } else {
-      navigate('/'); // Replace history.push with navigate
-    }
+    navigate('/');
     closeModal();
   };
 
   // ------------------ EFFECTS ------------------
-  // useEffect(() => {
-  //   initializeGoogleSignIn();
-  //   setTimeout(() => {
-  //     initializeGoogleSignIn();
-  //   }, 100);
-  //   setIsInvestorsPage(window.location.pathname.startsWith('/investors'));
-  // }, []);
+  useEffect(() => {
+    setTimeout(() => {
+      initializeGoogleSignIn();
+    }, 100);
+  }, []);
 
   // ------------------ STYLES ------------------
   const modalBoxStyle = {
@@ -238,7 +231,7 @@ function LoginModal({ modalIsOpen, closeModal }) {
             >
               Connect Wallet
             </Button>
-            {/* <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
               <Box sx={{ flex: 1, borderBottom: 1, borderColor: 'divider' }} />
               <Typography variant="body2" sx={{ mx: 2 }}>
                 OR
@@ -255,7 +248,7 @@ function LoginModal({ modalIsOpen, closeModal }) {
                   justifyContent: 'center',
                 }}
               />
-            </Box> */}
+            </Box>
           </Box>
         </Box>
       </Modal>

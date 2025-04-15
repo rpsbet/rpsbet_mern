@@ -40,6 +40,7 @@ root.render(
         maxSnack={10}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
         autoHideDuration={3000}
+        style={{ zIndex: 1500 }}
       >
         <BrowserRouter>
           <App />
