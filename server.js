@@ -16,6 +16,11 @@ const withdrawalCron = require('./helper/util/withdrawalCron.js');
 const interestCron = require('./helper/util/interestCron.js');
 
 const app = express();
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://catsino.fun',
+];
+
 
 // -------------------- Server Setup --------------------
 const PORT = process.env.PORT || 5001;
@@ -26,7 +31,7 @@ const server = app.listen(PORT, () => {
 // -------------------- Socket.io Setup --------------------
 const io = socketController.socketio(server, {
   cors: {
-    origin: 'http://localhost:3000', // Allow requests from your frontend
+    origin: allowedOrigins, // Allow requests from your frontend
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Allowed HTTP methods
     credentials: true,
   },
@@ -48,12 +53,17 @@ app.use((req, res, next) => {
 
 // -------------------- CORS Configuration --------------------
 const corsOptions = {
-  origin: 'http://localhost:3000', // Frontend URL
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], // Allowed HTTP methods
-  credentials: true, // Allow cookies and credentials
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  credentials: true,
 };
-
-app.use(cors(corsOptions));
+app.use(cors(corsOptions))
 
 const compression = require('compression');
 app.use(compression());
