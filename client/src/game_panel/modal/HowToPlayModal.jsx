@@ -320,7 +320,7 @@ function HowToPlayModal({ modalIsOpen, closeModal }) {
                 variant="contained"
                 color="primary"
                 startIcon={<FontAwesomeIcon icon={faXTwitter} />}
-                onClick={() => window.open("https://x.com/rpsdotgame", "_blank")}
+                onClick={() => window.open("https://x.com/catsinofun", "_blank")}
               >
                 Twitter
               </Button>
@@ -328,7 +328,7 @@ function HowToPlayModal({ modalIsOpen, closeModal }) {
                 variant="contained"
                 color="info"
                 startIcon={<FontAwesomeIcon icon={faTelegram} />}
-                onClick={() => window.open("https://t.me/rpsgamesol", "_blank")}
+                onClick={() => window.open("https://t.me/catsinofun", "_blank")}
               >
                 Telegram
               </Button>

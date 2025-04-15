@@ -659,7 +659,7 @@ function SiteWrapper({ children }) {
               variant="contained"
               color="primary"
               startIcon={<FontAwesomeIcon icon={faXTwitter} />}
-              onClick={() => window.open("https://x.com/RPSDG_SOL", "_blank")}
+              onClick={() => window.open("https://x.com/catsinofun", "_blank")}
             >
               X
             </Button>
@@ -667,7 +667,7 @@ function SiteWrapper({ children }) {
               variant="contained"
               color="info"
               startIcon={<FontAwesomeIcon icon={faTelegram} />}
-              onClick={() => window.open("https://t.me/RPSDOTGAMESOL", "_blank")}
+              onClick={() => window.open("https://t.me/catsinofun", "_blank")}
             >
               Telegram
             </Button>

@@ -1,7 +1,7 @@
 import React, { useState, lazy, Suspense } from 'react';
 import { useSelector } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faXTwitter, faTelegram, faYoutube, faTiktok } from '@fortawesome/free-brands-svg-icons';
+import { faXTwitter, faTelegram, faYoutube, faTiktok, faInstagram } from '@fortawesome/free-brands-svg-icons';
 import { Box, Typography, Link, styled, useMediaQuery, useTheme } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CheckIcon from '@mui/icons-material/Check';
@@ -92,17 +92,20 @@ function Footer({ open, style }) {
         )}
         <Box className="social-icons" sx={{ display: 'flex', alignItems: 'center' }}>
           <span>CHECK SOCIALS FOR UPDATES ►</span>
-          <a href="https://x.com/RPSDG_SOL">
+          <a href="https://x.com/catsinofun">
             <FontAwesomeIcon icon={faXTwitter} />
           </a>
-          <a href="https://t.me/RPSDOTGAMESOL">
+          <a href="https://t.me/catsinofun">
             <FontAwesomeIcon icon={faTelegram} />
           </a>
-          <a href="https://www.youtube.com/@rpsdotgame">
+          <a href="https://www.youtube.com/@catsinofun">
             <FontAwesomeIcon icon={faYoutube} />
           </a>
-          <a href="https://www.tiktok.com/@rpsdotgame">
+          <a href="https://www.tiktok.com/@catsinofun">
             <FontAwesomeIcon icon={faTiktok} />
+          </a>
+          <a href="https://www.instagram.com/catsinofun/">
+            <FontAwesomeIcon icon={faInstagram} />
           </a>
         </Box>
 
