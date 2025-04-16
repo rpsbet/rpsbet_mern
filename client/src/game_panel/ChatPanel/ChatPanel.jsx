@@ -178,6 +178,7 @@ function ChatPanel(props) {
     avatar: null,
     rank: null,
     accessory: null,
+    elite: null,
     message: null,
     messageType: null,
     time: null,
@@ -207,6 +208,7 @@ function ChatPanel(props) {
             message: trimmedText,
             avatar: user.avatar,
             accessory: user.accessory,
+            elite: user.elite,
             replyTo: selectedMessage,
             rank: user.totalWagered,
           });
@@ -296,6 +298,7 @@ function ChatPanel(props) {
           rank: user.totalWagered,
           avatar: user.avatar,
           accessory: user.accessory,
+          elite: user.elite,
           messageType: 'gif',
         });
         handleCloseGifPopover();
@@ -510,6 +513,7 @@ function ChatPanel(props) {
                     <Avatar
                       rank={selectedMessage.rank}
                       accessory={selectedMessage.accessory}
+                      elite={selectedMessage.elite}
                       src={selectedMessage.avatar}
                       username={selectedMessage.sender}
                       user_id={selectedMessage.senderId}

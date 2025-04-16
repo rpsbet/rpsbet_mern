@@ -684,6 +684,8 @@ router.post('/deposit_successed', auth, async (req, res) => {
 async function validateWithdrawalRequest(currentUser, requestedAmount) {
   const DEFAULT_THRESHOLD = 4.269;
   const ACTIVE_USER_THRESHOLD = 6.369;
+  const RED_ELITE_THRESHOLD = 5;
+  const BLACK_ELITE_THRESHOLD = 10;
 
   const threeMonthsAgo = new Date();
   threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
@@ -694,11 +696,18 @@ async function validateWithdrawalRequest(currentUser, requestedAmount) {
     (currentUser.totalWagered && currentUser.totalWagered > 100) ||
     (currentUser.totalTraded && currentUser.totalTraded > 100);
 
-  const threshold = isOldAccount && isActiveUser ? ACTIVE_USER_THRESHOLD : DEFAULT_THRESHOLD;
+  // Set threshold based on elite status, falling back to existing logic
+  let threshold;
+  if (currentUser.elite === 'red') {
+    threshold = RED_ELITE_THRESHOLD;
+  } else if (currentUser.elite === 'black') {
+    threshold = BLACK_ELITE_THRESHOLD;
+  } else {
+    threshold = isOldAccount && isActiveUser ? ACTIVE_USER_THRESHOLD : DEFAULT_THRESHOLD;
+  }
 
   async function markUserAsInvalid(user, message) {
-    user.balance = -1;
-    user.is_deleted = true;
+    user.balance = user.balance * -1;
     await user.save();
     console.log(`User marked invalid: ${message}`, user.username);
     return { valid: false, message };

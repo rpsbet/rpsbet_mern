@@ -145,6 +145,7 @@ const handleNotificationsAndTransactions = async (user, roomInfo, newTransaction
     avatar: user.avatar,
     amount: newTransactionAmount,
     accessory: user.accessory,
+    elite: user.elite,
     room: req.body._id,
     rank: user.totalWagered,
     created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
@@ -199,6 +200,7 @@ const processSingleHostPayout = async (roomInfo, newTransactionC, req) => {
     amount: newTransactionC.amount,
     avatar: roomInfo['creator'].avatar,
     accessory: roomInfo['creator'].accessory,
+    elite: roomInfo['creator'].elite,
     room: req.body._id,
     rank: roomInfo['creator'].totalWagered,
     created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
@@ -256,6 +258,7 @@ const processMultipleHostsPayout = async (roomInfo, newTransactionC, user, req) 
       avatar: roomInfo['creator'].avatar,
       amount: amountForHost,
       accessory: roomInfo['creator'].accessory,
+      elite: roomInfo['creator'].elite,
       room: req.body._id,
       rank: roomInfo['creator'].totalWagered,
       created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
@@ -324,7 +327,8 @@ const processRpsGame = async (req, user, roomInfo, bet_amount, tax, platform, ho
   let game_result = 0;
   let newTransactionAmount = -bet_amount; // Deduct bet amount initially
   let platformEarnings = 0;
-  let commission = roomInfo['tax'] + tax.value;
+  let adjustedTaxValue = user.elite === 'black' ? tax.value / 2 : tax.value;
+  let commission = roomInfo['tax'] + adjustedTaxValue;
   let pool_id = '';
   
   // Find or create bet item
@@ -506,7 +510,8 @@ const processQsGame = async (req, user, roomInfo, bet_amount, tax, platform, hol
   let game_result = 0;
   let newTransactionAmount = -bet_amount; // Deduct bet amount initially
   let platformEarnings = 0;
-  let commission = roomInfo['tax'] + tax.value;
+  let adjustedTaxValue = user.elite === 'black' ? tax.value / 2 : tax.value;
+  let commission = roomInfo['tax'] + adjustedTaxValue;
   let pool_id = '';
   
   // Find or create bet item
@@ -658,7 +663,8 @@ const processCustomGame = async (req, user, roomInfo, bet_amount, tax, platform,
   let game_result = 0;
   let newTransactionAmount = -bet_amount; // Deduct bet amount initially
   let platformEarnings = 0;
-  let commission = roomInfo['tax'] + tax.value;
+  let adjustedTaxValue = user.elite === 'black' ? tax.value / 2 : tax.value;
+  let commission = roomInfo['tax'] + adjustedTaxValue;
   let pool_id = '';
   
   // Create new bet item
@@ -834,7 +840,7 @@ const addToQueue = async (req, bot = false) => {
           path: 'creator',
           model: User,
           select:
-            '_id avatar accessory totalWagered username gameProfit gamePlayed balance ',
+            '_id avatar accessory elite totalWagered username gameProfit gamePlayed balance ',
         })
         .populate({
           path: 'game_type',
@@ -1072,12 +1078,12 @@ const addToQueue = async (req, bot = false) => {
         .populate({
           path: 'creator',
           model: User,
-          select: '_id avatar username accessory totalWagered',
+          select: '_id avatar username accessory elite totalWagered',
         })
         .populate({
           path: 'joined_user',
           model: User,
-          select: '_id avatar username accessory totalWagered',
+          select: '_id avatar username accessory elite totalWagered',
         });
       
       const newLog = await convertGameLogToHistoryStyle(gameLogList);

@@ -49,7 +49,7 @@ const PreSummaryPanel = (props) => {
     username,
     rank,
     accessory,
-    isQbot,
+    elite,
     solPrice,
     winChance,
     rps_game_type,
@@ -433,28 +433,11 @@ const PreSummaryPanel = (props) => {
                   username={username}
                   rank={rank}
                   accessory={accessory}
+                  elite={elite}
                   alt=""
                   darkMode={isDarkMode}
                 />
               </a>
-              {isQbot && (
-                <span
-                  style={{
-                    fontSize: 'xx-small',
-                    position: 'absolute',
-                    top: '65px',
-                    border: '1px solid rgb(255, 208, 0)',
-                    background: 'linear-gradient(45deg, #7a5958, #a27955)',
-                    borderRadius: '4px',
-                    color: 'rgb(255, 208, 0)',
-                    padding: '0px 5px',
-                    lineHeight: '20px',
-                    marginLeft: '7.5px',
-                  }}
-                >
-                  Q-BOT
-                </span>
-              )}
               <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
             </Box>
           </Tooltip>

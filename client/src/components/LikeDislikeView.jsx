@@ -1,57 +1,76 @@
-// LikeDislikeView.js
-import React from 'react';
-import { Box, IconButton, Typography } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Box, IconButton, Typography, Tooltip } from '@mui/material';
 import ThumbUpIcon from '@mui/icons-material/ThumbUp';
 import ThumbDownIcon from '@mui/icons-material/ThumbDown';
-import VisibilityIcon from '@mui/icons-material/Visibility';
 
-export const LikeDislikeView = ({ row, user, handleLike, handleDislike, handleView }) => {
+export const LikeDislikeView = ({ row, user, handleLike, handleDislike }) => {
+  // Local state for optimistic updates
+  const [localLikes, setLocalLikes] = useState(row.likes || []);
+  const [localDislikes, setLocalDislikes] = useState(row.dislikes || []);
+
+  // Sync local state with row props when they change (e.g., Redux update)
+  useEffect(() => {
+    setLocalLikes(row.likes || []);
+    setLocalDislikes(row.dislikes || []);
+  }, [row.likes, row.dislikes]);
+
+  // Handle like with optimistic update
+  const onLike = (event) => {
+    event.stopPropagation();
+    const userId = user._id;
+    const isLiked = localLikes.includes(userId);
+
+    // Optimistic update
+    setLocalLikes(
+      isLiked
+        ? localLikes.filter(id => id !== userId) // Unlike
+        : [...localLikes, userId] // Like
+    );
+    setLocalDislikes(localDislikes.filter(id => id !== userId)); // Remove from dislikes
+
+    // Dispatch backend request and revert on failure
+    handleLike(row).catch(() => {
+      setLocalLikes(row.likes || []);
+      setLocalDislikes(row.dislikes || []);
+    });
+  };
+
+  // Handle dislike with optimistic update
+  const onDislike = (event) => {
+    event.stopPropagation();
+    const userId = user._id;
+    const isDisliked = localDislikes.includes(userId);
+
+    // Optimistic update
+    setLocalDislikes(
+      isDisliked
+        ? localDislikes.filter(id => id !== userId) // Undislike
+        : [...localDislikes, userId] // Dislike
+    );
+    setLocalLikes(localLikes.filter(id => id !== userId)); // Remove from likes
+
+    // Dispatch backend request and revert on failure
+    handleDislike(row).catch(() => {
+      setLocalLikes(row.likes || []);
+      setLocalDislikes(row.dislikes || []);
+    });
+  };
+
+  // Calculate percentages for progress bar
+  const totalVotes = localLikes.length + localDislikes.length;
+  const likesPercentage = totalVotes > 0 ? (localLikes.length / totalVotes) * 100 : 0;
+  const dislikesPercentage = totalVotes > 0 ? (localDislikes.length / totalVotes) * 100 : 0;
+
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 2, // Space between each section
-      }}
-    >
-      {/* Views Section */}
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          cursor: 'pointer',
-        }}
-        onClick={() => handleView(row)} // Assuming handleView is triggered on click
-      >
-        <VisibilityIcon sx={{ fontSize: '1rem', mr: 0.5 }} />
-        <Typography variant="body1">
-          {row.views?.length || 0}
-        </Typography>
-      </Box>
-
-      {/* Battles Section */}
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          cursor: 'pointer',
-        }}
-        onClick={() => handleView(row)} // Assuming handleView is triggered on click
-      >
-        <VisibilityIcon sx={{ fontSize: '1rem', mr: 0.5 }} />
-        <Typography variant="body1">
-          {row.battles?.length || 0}
-        </Typography>
-      </Box>
-
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
       {/* Likes Section */}
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
         <IconButton
-          onClick={() => handleLike(row)}
+          onClick={onLike}
           size="small"
           aria-label="like"
         >
-          {row.likes?.includes(user.id) ? (
+          {localLikes.includes(user._id) ? (
             <Typography
               variant="body2"
               component="span"
@@ -64,19 +83,51 @@ export const LikeDislikeView = ({ row, user, handleLike, handleDislike, handleVi
             <ThumbUpIcon sx={{ fontSize: '1rem' }} />
           )}
         </IconButton>
-        <Typography variant="body1">
-          {row.likes?.length || 0}
-        </Typography>
+        <Typography variant="body1">{localLikes.length}</Typography>
       </Box>
+
+      {/* Progress Bar */}
+      {totalVotes > 0 && (
+        <Tooltip title={`${likesPercentage.toFixed(1)}% likes, ${dislikesPercentage.toFixed(1)}% dislikes`}>
+          <Box sx={{ 
+            display: 'flex', 
+            width: '40px', 
+            height: '4px', 
+            borderRadius: '2px',
+            overflow: 'hidden',
+            bgcolor: '#e0e0e0', // Light gray background for empty state
+            alignSelf: 'center'
+          }}>
+            {/* Likes portion */}
+            <Box 
+              sx={{ 
+                width: `${likesPercentage}%`, 
+                bgcolor: '#4CAF50', // Green for likes
+                height: '100%',
+                transition: 'width 0.3s ease'
+              }} 
+            />
+            {/* Dislikes portion */}
+            <Box 
+              sx={{ 
+                width: `${dislikesPercentage}%`, 
+                bgcolor: '#F44336', // Red for dislikes
+                height: '100%',
+                transition: 'width 0.3s ease'
+              }} 
+            />
+          </Box>
+        </Tooltip>
+      )}
 
       {/* Dislikes Section */}
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
         <IconButton
-          onClick={() => handleDislike(row)}
+          onClick={onDislike}
           size="small"
           aria-label="dislike"
         >
-          {row.dislikes?.includes(user.id) ? (
+          {localDislikes.includes(user._id) ? (
             <Typography
               variant="body2"
               component="span"
@@ -89,10 +140,10 @@ export const LikeDislikeView = ({ row, user, handleLike, handleDislike, handleVi
             <ThumbDownIcon sx={{ fontSize: '1rem' }} />
           )}
         </IconButton>
-        <Typography variant="body1">
-          {row.dislikes?.length || 0}
-        </Typography>
+        <Typography variant="body1">{localDislikes.length}</Typography>
       </Box>
     </Box>
   );
 };
+
+export default LikeDislikeView;

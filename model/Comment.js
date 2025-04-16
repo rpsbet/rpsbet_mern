@@ -14,6 +14,10 @@ const CommentSchema = new Schema({
         type: String,
         ref: 'rps_users.accessory'
     },
+    elite: {
+        type: String,
+        ref: 'rps_users.elite'
+    },
     totalWagered: {
         type: Number,
         ref: 'rps_users.totalWagered'

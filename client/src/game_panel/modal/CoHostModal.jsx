@@ -612,6 +612,7 @@ function CoHostModal({
                       username={selectedRow.username}
                       rank={selectedRow.rank}
                       accessory={selectedRow.accessory}
+                      elite={selectedRow.elite}
                       alt="Player Avatar"
                       sx={{ width: 40, height: 40, margin: '0 auto' }}
                     />

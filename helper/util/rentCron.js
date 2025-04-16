@@ -88,6 +88,7 @@ async function checkRentalPayments(io) {
                     message: notification.message,
                     username: currentUser.username,
                     avatar: currentUser.avatar,
+                    elite: currentUser.elite,
                     accessory: currentUser.accessory,
                     rank: currentUser.totalWagered,
                     created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
@@ -110,6 +111,7 @@ async function checkRentalPayments(io) {
                     avatar: currentUser.avatar,
                     amount: 0,
                     accessory: currentUser.accessory,
+                    elite: currentUser.elite,
                     rank: currentUser.totalWagered,
                     created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
                     created_at_str: moment(new Date()).format('LLL'),
@@ -162,6 +164,7 @@ async function checkRentalPayments(io) {
                     username: currentUser.username,
                     avatar: currentUser.avatar,
                     accessory: currentUser.accessory,
+                    elite: currentUser.elite,
                     rank: currentUser.totalWagered,
                     created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
                     created_at_str: moment(new Date()).format('LLL'),
@@ -182,6 +185,7 @@ async function checkRentalPayments(io) {
                     username: currentUser.username,
                     avatar: currentUser.avatar,
                     accessory: currentUser.accessory,
+                    elite: currentUser.elite,
                     amount: -amountToDeduct,
                     rank: currentUser.totalWagered,
                     created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
@@ -222,7 +226,8 @@ async function checkRentalPayments(io) {
         // Extract relevant user information
         const avatar = senderUser.avatar || ''; // Replace with the actual avatar URL
         const accessory = senderUser.accessory || ''; // Replace with the actual accessory URL
-        const rank = senderUser.totalWagered || 0; // Replace with the actual rank
+        const rank = senderUser.totalWagered || 0;
+        const elite = senderUser.elite || ''; // Replace with the actual elite status
 
         const replyTo = null; // No need for a reply in this case
 
@@ -233,6 +238,7 @@ async function checkRentalPayments(io) {
           messageType: messageType,
           avatar: avatar,
           accessory: accessory,
+          elite: elite,
           rank: rank,
           replyTo: replyTo,
         };
@@ -405,7 +411,8 @@ async function distributeHoldersPool() {
       // Extract relevant user information
       const avatar = senderUser.avatar || ''; // Replace with the actual avatar URL
       const accessory = senderUser.accessory || ''; // Replace with the actual accessory URL
-      const rank = senderUser.totalWagered || 0; // Replace with the actual rank
+      const rank = senderUser.totalWagered || 0;
+      const elite = senderUser.elite || '';
 
       const replyTo = null; // No need for a reply in this case
 
@@ -416,6 +423,7 @@ async function distributeHoldersPool() {
         messageType: messageType,
         avatar: avatar,
         accessory: accessory,
+        elite: elite,
         rank: rank,
         replyTo: replyTo,
       };

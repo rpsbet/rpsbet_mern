@@ -491,6 +491,7 @@ const BankTable = (props) => {
                               src={customerInfo[row.lender].avatar}
                               rank={customerInfo[row.lender].totalWagered}
                               accessory={customerInfo[row.lender].accessory}
+                              elite={customerInfo[row.lender].elite}
                               username={customerInfo[row.lender].username}
                               user_id={customerInfo[row.lender]._id}
                               alt=""
@@ -594,6 +595,7 @@ const BankTable = (props) => {
                                               src={loaner.avatar}
                                               rank={loaner.totalWagered || 0}
                                               accessory={loaner.accessory || ''}
+                                              elite={loaner.elite || ''}
                                               user_id={loaner._id || ''}
                                               username={loaner.username || ''}
                                               darkMode={isDarkMode}
@@ -828,6 +830,7 @@ const BankTable = (props) => {
                                       src={loan.customerInfo?.avatar}
                                       rank={loan.customerInfo?.totalWagered}
                                       accessory={loan.customerInfo?.accessory}
+                                      elite={loan.customerInfo?.elite}
                                       username={loan.customerInfo?.username}
                                       alt=""
                                       className="avatar"
@@ -885,6 +888,7 @@ const BankTable = (props) => {
                                         user_id={loaner.customerInfo?._id}
                                         src={loaner.customerInfo?.avatar}
                                         rank={loaner.customerInfo?.totalWagered}
+                                        elite={loaner.customerInfo?.elite}
                                         accessory={loaner.customerInfo?.accessory}
                                         username={loaner.customerInfo?.username}
                                         alt=""

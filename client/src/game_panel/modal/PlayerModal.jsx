@@ -97,6 +97,7 @@ function PlayerModal({ modalIsOpen, closeModal, selectedCreator }) {
 
   // Local state
   const [creatorId, setCreatorId] = useState(selectedCreator || '');
+  const [elite, setElite] = useState('');
   const [username, setUsername] = useState('');
   const [avatar, setAvatar] = useState('');
   const [accessory, setAccessory] = useState('');
@@ -143,6 +144,7 @@ function PlayerModal({ modalIsOpen, closeModal, selectedCreator }) {
       if (userData) {
         setUsername(userData.username);
         setAvatar(userData.avatar);
+        setElite(userData.elite);
         setAccounts(userData.accounts);
         setAccessory(userData.accessory);
         setBio(userData.bio || '');
@@ -161,6 +163,7 @@ function PlayerModal({ modalIsOpen, closeModal, selectedCreator }) {
             avatar: userData.avatar,
             _id: userId,
             username: userData.username,
+            elite: userData.elite,
             accessory: userData.accessory,
             totalWagered: userData.totalWagered,
             isLender: true,
@@ -353,6 +356,7 @@ function PlayerModal({ modalIsOpen, closeModal, selectedCreator }) {
                         accessory={accessory}
                         user_id={creatorId}
                         username={username}
+                        elite={elite}
                         rank={rank}
                         alt=""
                       />

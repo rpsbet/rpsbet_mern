@@ -2,6 +2,7 @@ import {
   SET_SOCKET,
   REGISTER_FAIL,
   USER_LOADED,
+  UPDATED_USER,
   AUTH_ERROR,
   LOGIN_SUCCESS,
   LOADING_USER,
@@ -39,7 +40,8 @@ import {
   TOGGLE_MUSIC_ENABLED,
   START_LOADING,
   END_LOADING,
-  SET_REFERRAL_CODE
+  TNX_INCOMPLETE,
+  TNX_COMPLETE,
 } from '../types';
 import axios from '../../util/Api';
 import setAuthToken from '../../util/setAuthToken';
@@ -285,8 +287,68 @@ export const setReferralCode = (referralCode) => async (dispatch) => {
   }
 };
 
+export const cancelEliteSubscription = () => async (dispatch) => {
+  try {
+    dispatch({ type: TNX_INCOMPLETE });
 
-// Just like authenticateWithGoogle, but for Phantom
+    const res = await axios.post('/auth/cancel-elite');
+
+    if (res.data.success) {
+      dispatch({ type: UPDATED_USER, payload: res.data.user });
+      dispatch({
+        type: MSG_SUCCESS,
+        payload: 'Successfully cancelled Elite membership!',
+      });
+      return res.data;
+    } else {
+      dispatch({
+        type: MSG_ERROR,
+        payload: res.data.message || 'Failed to cancel subscription',
+      });
+    }
+  } catch (err) {
+    console.error('Cancel subscription error:', err.response?.data);
+    dispatch({
+      type: MSG_ERROR,
+      payload: err.response?.data?.message || 'Error cancelling your subscription',
+    });
+  } finally {
+    dispatch({ type: TNX_COMPLETE });
+  }
+  return false;
+};
+
+export const purchaseEliteSubscription = (type) => async (dispatch) => {
+  try {
+    dispatch({ type: TNX_INCOMPLETE });
+
+    const res = await axios.post('/auth/purchase-elite', { type });
+
+    if (res.data.success) {
+      dispatch({ type: UPDATED_USER, payload: res.data.user });
+      dispatch({
+        type: MSG_SUCCESS,
+        payload: `Successfully subscribed to ${type.toUpperCase()} Elite membership!`,
+      });
+      return res.data;
+    } else {
+      dispatch({
+        type: MSG_ERROR,
+        payload: res.data.message || 'Failed to purchase subscription',
+      });
+    }
+  } catch (err) {
+    console.error('Purchase error:', err.response?.data);
+    dispatch({
+      type: MSG_ERROR,
+      payload: err.response?.data?.message || 'Error processing your subscription',
+    });
+  } finally {
+    dispatch({ type: TNX_COMPLETE });
+  }
+  return false;
+};
+
 export const authenticateWithPhantom = ({ walletAddress }) => async (dispatch) => {
   try {
     // Show loading spinner
@@ -518,26 +580,6 @@ export const changeUserName = (newUsername) => async (dispatch) => {
   }
   return { status: 'failed' };
 };
-
-// Tutorial Passed
-export const updateTutorialCompleted = (tutorialNumber) => async (dispatch) => {
-  try {
-    const { data } = await axios.patch('/user/tutorial', { tutorialNumber });
-
-    if (data.success) {
-      dispatch({ type: MSG_SUCCESS, payload: `Completed Tutorial ${tutorialNumber} / 3!` });
-      return data;
-    } else {
-      dispatch({ type: MSG_ERROR, payload: data.error });
-      return data;
-    }
-  } catch (error) {
-    console.log('error', error);
-    dispatch({ type: MSG_WARNING, payload: error.message });
-  }
-  return { status: 'failed' };
-};
-
 
 export const vaultDeposit = (amount) => async (dispatch) => {
   try {

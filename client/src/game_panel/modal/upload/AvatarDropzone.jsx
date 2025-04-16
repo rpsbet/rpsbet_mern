@@ -18,6 +18,7 @@ function AvatarDropzone({
   rank,
   username,
   accessory,
+  elite,
   setImageFilename,
   onFileAdded,
   disabled,
@@ -212,6 +213,7 @@ function AvatarDropzone({
         alt=""
         rank={rank}
         username={username}
+        elite={elite}
         accessory={accessory}
         src={imageUrl}
         darkMode={darkMode}

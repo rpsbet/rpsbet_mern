@@ -1,31 +1,24 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import Lottie from 'react-lottie';
 import {
   Modal,
   Box,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Button,
-  TextField,
   Typography,
   Skeleton,
   CircularProgress,
   Dialog,
   DialogContent,
+  Tooltip,
 } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCoins, faPlus } from '@fortawesome/free-solid-svg-icons';
 import AttachMoney from '@mui/icons-material/AttachMoney';
-import RankAllowancesTable from '../../components/RankAllowancesTable';
-import LottieRankIcon from '../LottieAnimations/rankIcon.json';
+import verified from '../LottieAnimations/verified.json';
 import MyBankPage from '../../admin_panel/app/ProductPages/ProductSerchPage/MyBankPage';
 import ProductCreatePage from '../../admin_panel/app/ProductPages/ProductCreatePage/ProductCreatePage';
-import { convertToCurrency } from '../../util/conversion';
+import EliteSubscriptionModal from '../modal/EliteSubscriptionModal';
 import { getRank } from '../../util/getRank';
 
 // Redux Actions
@@ -39,49 +32,10 @@ import { getUser } from '../../redux/Auth/user.actions';
 import { errorMsgBar, successMsgBar } from '../../redux/Notification/notification.actions';
 
 // ------------------ CONSTANTS & HELPERS ------------------
-const categories = [
-  { creditScoreThreshold: 700, rankThreshold: 1, accountAgeThresholdInDays: 30, maxAllowance: 0.25 },
-  { creditScoreThreshold: 700, rankThreshold: 2, accountAgeThresholdInDays: 30, maxAllowance: 0.5 },
-  { creditScoreThreshold: 700, rankThreshold: 3, accountAgeThresholdInDays: 30, maxAllowance: 0.75 },
-  { creditScoreThreshold: 700, rankThreshold: 4, accountAgeThresholdInDays: 30, maxAllowance: 1 },
-  { creditScoreThreshold: 700, rankThreshold: 5, accountAgeThresholdInDays: 30, maxAllowance: 1.3 },
-  { creditScoreThreshold: 700, rankThreshold: 6, accountAgeThresholdInDays: 30, maxAllowance: 1.6 },
-  { creditScoreThreshold: 700, rankThreshold: 7, accountAgeThresholdInDays: 30, maxAllowance: 2.2 },
-  { creditScoreThreshold: 700, rankThreshold: 8, accountAgeThresholdInDays: 30, maxAllowance: 3.5 },
-  { creditScoreThreshold: 700, rankThreshold: 9, accountAgeThresholdInDays: 30, maxAllowance: 4 },
-  { creditScoreThreshold: 700, rankThreshold: 10, accountAgeThresholdInDays: 30, maxAllowance: 5 },
-  { creditScoreThreshold: 700, rankThreshold: 11, accountAgeThresholdInDays: 30, maxAllowance: 6 },
-  { creditScoreThreshold: 700, rankThreshold: 12, accountAgeThresholdInDays: 30, maxAllowance: 7 },
-  { creditScoreThreshold: 700, rankThreshold: 14, accountAgeThresholdInDays: 30, maxAllowance: 8 },
-  { creditScoreThreshold: 700, rankThreshold: 15, accountAgeThresholdInDays: 30, maxAllowance: 9 },
-  { creditScoreThreshold: 700, rankThreshold: 16, accountAgeThresholdInDays: 30, maxAllowance: 10 },
-  { creditScoreThreshold: 700, rankThreshold: 17, accountAgeThresholdInDays: 30, maxAllowance: 11 },
-  { creditScoreThreshold: 700, rankThreshold: 18, accountAgeThresholdInDays: 30, maxAllowance: 12 },
-  { creditScoreThreshold: 700, rankThreshold: 19, accountAgeThresholdInDays: 30, maxAllowance: 13 },
-  { creditScoreThreshold: 700, rankThreshold: 20, accountAgeThresholdInDays: 30, maxAllowance: 14 },
-  { creditScoreThreshold: 700, rankThreshold: 21, accountAgeThresholdInDays: 30, maxAllowance: 15 },
-];
-
-const getAccountAgeInDays = (createdAtDate) => {
-  const accountCreatedAt = new Date(createdAtDate);
-  const currentDate = new Date();
-  const accountAgeInMilliseconds = currentDate - accountCreatedAt;
-  return Math.floor(accountAgeInMilliseconds / (24 * 60 * 60 * 1000));
-};
-
-const getHighlightedRowIndex = (categoriesArr, rankValue, accountAgeInDays) => {
-  const currentRank = getRank(rankValue);
-  let bestCategoryIndex = -1;
-  for (let i = 0; i < categoriesArr.length; i++) {
-    const category = categoriesArr[i];
-    if (
-      currentRank >= category.rankThreshold &&
-      accountAgeInDays >= category.accountAgeThresholdInDays
-    ) {
-      bestCategoryIndex = i - 1;
-    }
-  }
-  return bestCategoryIndex;
+const getMaxAllowance = (elite) => {
+  if (elite === 'black') return 10;
+  if (elite === 'red') return 1;
+  return 0;
 };
 
 // ------------------ COMPONENT ------------------
@@ -90,12 +44,13 @@ const MyLoansModal = ({ modalIsOpen, closeModal }) => {
 
   // Redux state
   const _id = useSelector((state) => state.auth.user._id);
-  const created_at = useSelector((state) => state.auth.user.created_at);
   const remainingLoans = useSelector((state) => state.loanReducer.remainingLoans);
   const totalWagered = useSelector((state) => state.auth.totalWagered);
+  const elite = useSelector((state) => state.auth.user.elite);
+  const user = useSelector((state) => state.auth.user);
   const isDarkMode = useSelector((state) => state.auth.isDarkMode);
   const loading = useSelector((state) => state.loanReducer.loading);
-  const solPrice = useSelector((state) => state.logic.solPrice);
+  const isLowGraphics = useSelector((state) => state.auth.isLowGraphics);
   const myLoans = useSelector((state) => state.loanReducer.myLoanArray || []);
 
   // Local state
@@ -103,6 +58,7 @@ const MyLoansModal = ({ modalIsOpen, closeModal }) => {
   const [loanPeriod, setLoanPeriod] = useState('');
   const [apy, setApy] = useState('');
   const [productCreateModalIsOpen, setProductCreateModalIsOpen] = useState(false);
+  const [eliteSubscriptionModalIsOpen, setEliteSubscriptionModalIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // On mount, fetch my loans data
@@ -127,9 +83,36 @@ const MyLoansModal = ({ modalIsOpen, closeModal }) => {
     }
   }, []);
 
+  const openEliteSubscriptionModal = useCallback(() => {
+    setEliteSubscriptionModalIsOpen(true);
+  }, []);
+
+  const closeEliteSubscriptionModal = useCallback(() => {
+    setEliteSubscriptionModalIsOpen(false);
+  }, []);
+
+  const handleCreateLoanClick = useCallback(() => {
+    if (elite === '') {
+      openEliteSubscriptionModal();
+    } else {
+      openProductCreateModal();
+    }
+  }, [elite, openEliteSubscriptionModal, openProductCreateModal]);
+
   const onSubmitForm = useCallback(async () => {
     if (!loanAmount || !apy || !loanPeriod) {
       dispatch(errorMsgBar('Please fill in all required fields.'));
+      return;
+    }
+
+    const maxAllowance = getMaxAllowance(elite);
+    if (parseFloat(loanAmount) > maxAllowance) {
+      dispatch(errorMsgBar(`Loan amount exceeds your maximum allowance of ${maxAllowance}.`));
+      return;
+    }
+
+    if (remainingLoans > 0) {
+      dispatch(errorMsgBar('Please clear existing debt before creating a new loan.'));
       return;
     }
 
@@ -167,6 +150,8 @@ const MyLoansModal = ({ modalIsOpen, closeModal }) => {
     apy,
     loanPeriod,
     _id,
+    elite,
+    remainingLoans,
     dispatch,
     closeProductCreateModal,
   ]);
@@ -176,9 +161,8 @@ const MyLoansModal = ({ modalIsOpen, closeModal }) => {
   }, [closeModal]);
 
   // Derived values
-  const accountAgeInDays = getAccountAgeInDays(created_at);
-  const highlightedRowIndex = getHighlightedRowIndex(categories, totalWagered, accountAgeInDays);
-  const tableCellStyle = { textAlign: 'center' };
+  const maxAllowance = getMaxAllowance(elite);
+  const currentRank = getRank(totalWagered);
 
   return (
     <>
@@ -256,20 +240,57 @@ const MyLoansModal = ({ modalIsOpen, closeModal }) => {
           </Box>
 
           {/* FOOTER */}
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Box
+                sx={{
+                  width: '22px',
+                  height: 'auto',
+                  position: 'relative',
+                  transform: 'scale(0.6)',
+                  filter: 'hue-rotate(132deg)',
+                }}
+              >
+                <Lottie
+                  options={{
+                    loop: !isLowGraphics,
+                    autoplay: !isLowGraphics,
+                    animationData: verified,
+                  }}
+                  style={{ width: '100%', height: '100%' }}
+                />
+              </Box>
+              <span
+                style={{
+                  color: elite === 'red' ? '#ff0000' : elite === 'black' ? '#000000' : '#ff0000',
+                  fontSize: '0.9rem',
+                  fontWeight: 600,
+                }}
+              >
+                {elite === 'red' || elite === 'black'
+                  ? `${elite.toUpperCase()} ELITE USER`
+                  : 'ELITE USERS ONLY'}
+              </span>
+            </Box>
             {remainingLoans > 0 ? (
               <Typography sx={{ color: 'error.main', fontWeight: 600 }}>
                 CLEAR DEBT FIRST TO CREATE A LOAN
               </Typography>
             ) : (
-              <Button
-                variant="contained"
-                color="error"
-                onClick={openProductCreateModal}
-                startIcon={<AttachMoney />}
-              >
-                CREATE A LOAN
-              </Button>
+              <Tooltip title="Loan creation requires an Elite subscription">
+                <Box sx={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+                  <Button
+                    variant="contained"
+                    color="error"
+                    onClick={handleCreateLoanClick}
+                    startIcon={<AttachMoney />}
+                    sx={{ position: 'relative' }}
+                    aria-label="Create a loan (Elite members only)"
+                  >
+                    CREATE A LOAN
+                  </Button>
+                </Box>
+              </Tooltip>
             )}
           </Box>
         </Box>
@@ -301,7 +322,7 @@ const MyLoansModal = ({ modalIsOpen, closeModal }) => {
             }}
           >
             <Typography variant="h6" sx={{ fontWeight: 600 }}>
-              <FontAwesomeIcon icon={faPlus} /> &nbsp;NEW LOAN
+              <FontAwesomeIcon icon={faPlus} /> NEW LOAN
             </Typography>
             <Button
               variant="text"
@@ -313,8 +334,24 @@ const MyLoansModal = ({ modalIsOpen, closeModal }) => {
             </Button>
           </Box>
 
-          {/* TABLE: RANK ALLOWANCES */}
-          <RankAllowancesTable categories={categories} />
+          {/* ALLOWANCE DISPLAY */}
+          <Box sx={{ mb: 3, p: 2, bgcolor: '#1a1a1a', borderRadius: 2 }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
+              Your Loan Allowance
+            </Typography>
+            <Typography
+              sx={{
+                color: elite === 'black' ? '#000' : '#ff0000',
+                fontWeight: 600,
+                p: 1,
+                bgcolor: '#333',
+                borderRadius: 1,
+                border: `2px solid ${elite === 'black' ? '#000' : '#ff0000'}`,
+              }}
+            >
+              {elite.toUpperCase()} ELITE: Maximum Loan Allowance - {maxAllowance} SOL
+            </Typography>
+          </Box>
 
           {/* PRODUCT CREATE PAGE FORM */}
           <Box sx={{ mb: 3 }}>
@@ -335,6 +372,14 @@ const MyLoansModal = ({ modalIsOpen, closeModal }) => {
           </Box>
         </DialogContent>
       </Dialog>
+
+      {/* ELITE SUBSCRIPTION MODAL */}
+      <EliteSubscriptionModal
+        modalIsOpen={eliteSubscriptionModalIsOpen}
+        closeModal={closeEliteSubscriptionModal}
+        user={user}
+        isLowGraphics={isLowGraphics}
+      />
     </>
   );
 };

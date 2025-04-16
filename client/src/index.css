@@ -154,8 +154,10 @@ button.btn {
   width: 100%;
 }
 
-.data-item,
-.roll-tag,
+.notistack-SnackbarContainer {
+  transform: translateY(-50px);
+}
+
 #notistack-snackbar {
   text-transform: uppercase;
 }
@@ -689,18 +691,6 @@ td {
   font-size: 0.5em !important;
   padding: 2px 4px;
   background: linear-gradient(45deg, #a341a28c, #6a18ff87);
-}
-
-span.room-id.qbot {
-  white-space: nowrap;
-  margin-left: 5px;
-  margin-right: 10px;
-  border: 1px solid #dab200;
-  border-radius: 0.3em;
-  color: #f1c100;
-  font-size: 0.5em !important;
-  padding: 2px 4px;
-  background: linear-gradient(45deg, #a391418c, #ffe01887);
 }
 
 div.table.main-history-table .table-row .table-cell .avatar div {
@@ -4073,7 +4063,7 @@ circle {
 /*******************/
 
 .modal-footer {
-  background: #362c3a;
+  background: #110c0c;
   border: none;
 }
 
@@ -4654,11 +4644,6 @@ circle {
     width: unset;
   }
 
-  .table.main-game-table.open-games div:first-child {
-    width: unset !important;
-    margin-left: unset !important;
-  }
-
   #cat-football {
     transform: translateY(-10px) !important;
   }
@@ -5109,8 +5094,10 @@ circle {
   }
 
   .transaction-settings.active {
+    overflow: auto;
     min-width: 90vw;
     max-width: 300px;
+    max-height: 90vh;
   }
 
   .carousel-item {

@@ -19,47 +19,6 @@ const Notification = require('../model/Notification');
 const GameLog = require('../model/GameLog');
 const Room = require('../model/Room');
 
-router.get('/', admin, async (req, res) => {
-  const pagination = req.query.pagination ? parseInt(req.query.pagination) : 10;
-  const page = req.query.page ? parseInt(req.query.page) : 1;
-  const is_banned = req.query.is_banned;
-  try {
-    const users = await User.find(
-      { is_deleted: is_banned },
-      { _id: 1, username: 1, created_at: 1, rewards: 1 }
-    )
-      .sort({ created_at: 'desc' })
-      .skip(pagination * page - pagination)
-      .limit(pagination);
-    const count = await User.countDocuments({ is_deleted: is_banned });
-
-    let result = [];
-    users.forEach((user, index) => {
-      let temp = {
-        _id: user['_id'],
-        username: user['username'],
-        // email: user['email'],
-        rewards: user['rewards'],
-        date: moment(user['created_at']).format('YYYY-MM-DD')
-      };
-      result.push(temp);
-    });
-    res.json({
-      success: true,
-      query: req.query,
-      total: count,
-      users: result,
-      pages: Math.ceil(count / pagination)
-    });
-  } catch (err) {
-    console.error(err);
-    res.json({
-      success: false,
-      err: message
-    });
-  }
-});
-
 router.get('/activity', admin, async (req, res) => {
   const pagination = req.query.pagination ? parseInt(req.query.pagination) : 10;
   const page = req.query.page ? parseInt(req.query.page) : 1;
@@ -204,6 +163,7 @@ router.post('/', async (req, res) => {
             username: newUser.username,
             avatar: newUser.avatar,
             accessory: '',
+            elite: '',
             room: '',
             rank: 0,
             created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
@@ -314,45 +274,6 @@ router.post('/username', auth, async (req, res) => {
   }
 });
 
-router.patch('/tutorial', auth, async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const { tutorialNumber } = req.body;
-
-    if (!tutorialNumber || !userId) {
-      return res.json({
-        success: false,
-        error: 'Tutorial number is required.'
-      });
-    }
-
-    const user = await User.findByIdAndUpdate(
-      userId,
-      { $addToSet: { completedTutorials: tutorialNumber } },
-      { new: true }
-    );
-
-    if (!user) {
-      return res.json({
-        success: false,
-        error: 'User not found.'
-      });
-    }
-
-    res.json({
-      success: true,
-      user
-    });
-  } catch (err) {
-    console.error(err);
-    res.json({
-      success: false,
-      error: err.message
-    });
-  }
-});
-
-
 router.get('/vault-transactions', auth, async (req, res) => {
   try {
     const userId = req.user.id;
@@ -377,7 +298,6 @@ router.get('/vault-transactions', auth, async (req, res) => {
     res.json({ success: false, error: err.message });
   }
 });
-
 
 router.post('/deposit', auth, async (req, res) => {
   try {
@@ -449,6 +369,7 @@ router.post('/deposit', auth, async (req, res) => {
       avatar: req.user.avatar,
       amount: -parsedAmount,
       accessory: req.user.accessory,
+      elite: req.user.elite,
       rank: req.user.totalWagered,
       created_at: new Date(),
       created_at_str: new Date().toISOString(),
@@ -541,6 +462,7 @@ router.post('/withdraw', auth, async (req, res) => {
       username: req.user.username,
       avatar: req.user.avatar,
       accessory: req.user.accessory,
+      elite: req.user.elite,
       amount: parsedAmount,
       rank: req.user.totalWagered,
       created_at: new Date(),
@@ -579,7 +501,6 @@ router.post('/withdraw', auth, async (req, res) => {
       return res.json({ success: false, error: 'NO USER FOUND' });
     }
 
-    // 2. Check if user is already in the middle of a withdrawal
     if (req.user.isWithdrawing) {
       return res.json({
         success: false,
@@ -633,6 +554,7 @@ router.post('/withdraw', auth, async (req, res) => {
       username: req.user.username,
       avatar: req.user.avatar,
       accessory: req.user.accessory,
+      elite: req.user.elite,
       amount: parsedAmount,
       rank: req.user.totalWagered,
       created_at: new Date(),
@@ -681,8 +603,6 @@ router.get('/vault', auth, async (req, res) => {
   }
 });
 
-
-
 router.post('/bio', auth, async (req, res) => {
   try {
     const userId = req.user.id; // Assuming you have a user object in req from the auth middleware
@@ -713,12 +633,11 @@ router.post('/bio', auth, async (req, res) => {
     });
   }
 });
+
 router.post('/get-info', async (req, res) => {
   try {
-    // Find the user based on _id
     const user = await User.findOne({ _id: req.body._id });
 
-    // Check if user is found
     if (!user) {
       return res.json({
         success: false,
@@ -726,15 +645,12 @@ router.post('/get-info', async (req, res) => {
       });
     }
 
-    // Create a copy of the user object to avoid mutating the original
     const userCopy = user.toObject();
 
-    // Remove sensitive fields from the userCopy object
     delete userCopy.email;
     delete userCopy.password;
     delete userCopy.balance;
 
-    // Send the response with the filtered user data
     res.json({
       success: true,
       query: req.query,
@@ -859,6 +775,7 @@ router.post('/add-bonus', auth, async (req, res) => {
       username: user.username,
       avatar: user.avatar,
       accessory: user.accessory,
+      elite: user.elite,
       amount: number,
       rank: user.totalWagered,
       created_at: new Date(),

@@ -508,12 +508,12 @@ export const deleteComment = (comment_id) => async (dispatch) => {
 
 export const actionRoom = ({ roomId, type }) => async dispatch => {
   // dispatch({ type: START_LOADING });
-
+console.log("actionRoom", roomId, type)
   try {
     const res = await axios.patch(`/game/room/${roomId}/${type}`);
 
     if (res.data.success) {
-      // Handle success case if needed
+console.log("actionRoom res", res.data)
     } else {
       dispatch({ type: MSG_WARNING, payload: res.data.message });
     }
@@ -822,18 +822,6 @@ export const updateUserPrompt = (user_id, prompt) => async dispatch => {
   }
 };
 
-export const updateBetRangeFunction = (user_id, newValue) => async dispatch => {
-  try {
-    const res = await axios.patch(`/game/range/${user_id}`, { newValue });
-    if (res.data.success) {
-
-      dispatch({ type: MSG_SUCCESS, payload: "BETTING RANGE UPDATED" });
-    }
-  } catch (err) {
-    // Handle errors
-  }
-};
-
 export const updateRoomStrategy = (room_id, strategy) => async dispatch => {
   try {
     const res = await axios.patch(`/game/room/strategies/${room_id}`, { strategy });
@@ -898,52 +886,6 @@ export const updateRoomBot = (room_id) => async dispatch => {
     return true;
   } catch (err) {
     dispatch({ type: MSG_ERROR, payload: 'NO MORE BOTS OR ROOM HAS ENDED' });
-    return false;
-  }
-};
-
-export const updateAttachment = (room_id) => async dispatch => {
-  try {
-    const res = await axios.patch(`/game/updateAttachment/${room_id}`);
-    if (res.data.success) {
-      dispatch({ type: MSG_SUCCESS, payload: "Turned on Rake mode" });
-    } else {
-      dispatch({ type: MSG_ERROR, payload: 'Failed to update RA' });
-
-    }
-  } catch (err) {
-    console.error("API Error:", err);
-    dispatch({ type: MSG_ERROR, payload: 'API request failed' });
-  }
-};
-
-export const getAttachedRooms = () => async dispatch => {
-  try {
-    const res = await axios.get(`/game/getattachedrooms`);
-
-    if (res.data.success) {
-      return res.data.attachments;
-    } else {
-      dispatch({ type: MSG_ERROR, payload: 'Failed to get attachments' });
-    }
-  } catch (err) {
-    console.error("API Error:", err);
-    dispatch({ type: MSG_ERROR, payload: 'API request failed' });
-  }
-};
-
-export const detachPlayerFromRoom = (room_id) => async dispatch => {
-  try {
-    const res = await axios.post(`/game/detachPlayer/${room_id}`);
-    if (res.data.success) {
-      dispatch({ type: MSG_SUCCESS, payload: "Turned off Rake mode" });
-      return true;
-    } else {
-      dispatch({ type: MSG_ERROR, payload: res.data.message || 'Failed to detach player from the room' });
-      return false;
-    }
-  } catch (err) {
-    dispatch({ type: MSG_ERROR, payload: 'Internal server error or room not found' });
     return false;
   }
 };
@@ -1124,59 +1066,6 @@ export const getTransactionCandles = ({ roomId, timeFrame }) => async (dispatch)
       type: 'TRANSACTION_CANDLES_ERROR',
       payload: err.message || 'Error fetching candles data.',
     });
-  }
-};
-
-export const getQbotStatuses = (creatorIds) => async (dispatch) => {
-  try {
-    const res = await axios.get('/game/qbotStatuses', { params: { userIds: creatorIds.join(',') } });
-    if (res.data.success) {
-      const qBotStatuses = res.data.statuses;
-
-      localStorage.setItem('qBotStatuses', JSON.stringify({
-        data: qBotStatuses,
-        timestamp: Date.now(),
-      }));
-
-      dispatch({
-        type: 'SET_QBOT_STATUSES',
-        payload: qBotStatuses,
-      });
-
-      return qBotStatuses;
-    }
-  } catch (error) {
-    console.error('Error fetching QBot statuses:', error);
-    return null;
-  }
-};
-
-export const getQbot = (userId) => async dispatch => {
-  try {
-    const res = await axios.get('/game/qbotStatus', { params: { userId } }); // Use `params` for query
-
-    if (res.data.success) {
-      return res.data.isActive;
-    }
-  } catch (err) {
-    console.log(err);
-    return false;
-  }
-};
-
-export const updateQbot = (userId, isActive) => async dispatch => {
-  try {
-    const res = await axios.patch('/game/qbotStatus', { userId, isActive });
-
-    if (res.data.success) {
-      let message = isActive ? "Turned on Elevated mode" : "Turned off Elevated mode";
-      dispatch({ type: MSG_SUCCESS, payload: message });
-
-      return res.data.isActive; // Return updated isActive value
-    }
-  } catch (err) {
-    console.error(err);
-    return false;
   }
 };
 

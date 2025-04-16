@@ -49,7 +49,6 @@ function TabbedContent(props) {
     strategies,
     betting,
     result,
-    attached,
     ai_mode,
     user_id,
     bankroll,
@@ -57,8 +56,6 @@ function TabbedContent(props) {
     bgColorChanged,
     playSound,
     changeBgColor,
-    getAttachedRooms,
-    updateAttachment,
     onChangeState,
     is_mobile,
     gameResult,
@@ -230,7 +227,6 @@ function TabbedContent(props) {
                 strategies={strategies}
                 result={result}
                 ai_mode={ai_mode}
-                getAttachedRooms={getAttachedRooms}
                 handle2xButtonClick={handle2xButtonClick}
                 handleHalfXButtonClick={handleHalfXButtonClick}
                 handleMaxButtonClick={handleMaxButtonClick}
@@ -238,7 +234,6 @@ function TabbedContent(props) {
                 is_mobile={is_mobile}
                 gameResult={gameResult}
                 rpsbetitems={rpsbetitems}
-                attached={attached}
                 updateSelectedRps={updateSelectedRps}
                 selected_rps={selected_rps}
                 playSound={playSound}
@@ -254,7 +249,6 @@ function TabbedContent(props) {
                 showPlayerModal={showPlayerModal}
                 creator_id={roomInfo.creator_id}
                 bet_amount={bet_amount}
-                updateAttachment={updateAttachment}
                 pr={roomInfo.pr}
                 updateUserStrategy={updateUserStrategy}
                 updateUserPrompt={updateUserPrompt}
@@ -278,9 +272,6 @@ function TabbedContent(props) {
                   join={join}
                   result={result}
                   gameResult={gameResult}
-                  updateAttachment={updateAttachment}
-                  getAttachedRooms={getAttachedRooms}
-                  attached={attached}
                   updateUserStrategy={updateUserStrategy}
                   updateUserPrompt={updateUserPrompt}
                   borderColor={borderColor}
@@ -320,9 +311,6 @@ function TabbedContent(props) {
                   join={join}
                   result={result}
                   gameResult={gameResult}
-                  updateAttachment={updateAttachment}
-                  getAttachedRooms={getAttachedRooms}
-                  attached={attached}
                   updateUserStrategy={updateUserStrategy}
                   updateUserPrompt={updateUserPrompt}
                   borderColor={borderColor}

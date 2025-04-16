@@ -169,6 +169,7 @@ router.post('/create-and-lend', auth, async (req, res) => {
       amount: newTransactionJ.amount,
       avatar: originalLender.avatar,
       accessory: originalLender.accessory,
+      elite: originalLender.elite,
       rank: originalLender.totalWagered,
       created_at: moment().format('YYYY-MM-DD HH:mm'),
       created_at_str: moment().format('LLL'),
@@ -181,6 +182,7 @@ router.post('/create-and-lend', auth, async (req, res) => {
       username: currentUser.username,
       avatar: currentUser.avatar,
       accessory: currentUser.accessory,
+      elite: currentUser.elite,
       rank: currentUser.totalWagered,
       created_at: moment().format('YYYY-MM-DD HH:mm'),
       created_at_str: moment().format('LLL'),
@@ -224,11 +226,23 @@ router.post('/create', auth, async (req, res) => {
         betResult: -1000
       });
     }
-    const isEligible = await checkLoanEligibility(currentUser, loan_amount);
-    if (!isEligible) {
+    const elite = currentUser.elite; // Assuming elite is a field in the user object
+    let maxAllowance = 0;
+    if (elite === 'black') {
+      maxAllowance = 10;
+    } else if (elite === 'red') {
+      maxAllowance = 1;
+    } else {
       return res.json({
         success: false,
-        message: 'This account is currently not eligible for loaning this amount. Try again another time or another amount.',
+        message: 'Only Elite users (Red or Black) are eligible for loans.'
+      });
+    }
+
+    if (loan_amount > maxAllowance) {
+      return res.json({
+        success: false,
+        message: `Loan amount exceeds your maximum allowance of ${maxAllowance} SOL.`
       });
     }
 
@@ -301,6 +315,7 @@ router.post('/create', auth, async (req, res) => {
       amount: -parsedLoanAmount,
       avatar: currentUser.avatar,
       accessory: currentUser.accessory,
+      elite: currentUser.elite,
       rank: currentUser.totalWagered,
       created_at: moment().format('YYYY-MM-DD HH:mm'),
       created_at_str: moment().format('LLL'),
@@ -461,6 +476,7 @@ router.post('/payback', auth, async (req, res) => {
         amount: -amount,
         avatar: lender.avatar,
         accessory: lender.accessory,
+        elite: lender.elite,
         rank: lender.totalWagered,
         created_at: moment().format('YYYY-MM-DD HH:mm'),
         created_at_str: moment().format('LLL'),
@@ -573,7 +589,7 @@ router.get('/calculate-remaining-loans', auth, async (req, res) => {
 
 router.post('/emit-offer-loan', auth, async (req, res) => {
   try {
-    const { _id, lender, avatar, totalWagered, accessory, username } = req.body;
+    const { _id, lender, avatar, totalWagered, accessory, elite, username } = req.body;
 
     if (req.user.isWithdrawing) {
       return res.json({
@@ -586,6 +602,7 @@ router.post('/emit-offer-loan', auth, async (req, res) => {
       lender,
       avatar,
       accessory,
+      elite,
       username,
       totalWagered
     });
@@ -1041,6 +1058,7 @@ router.post('/withdraw-loan', auth, async (req, res) => {
       avatar: currentUser.avatar,
       amount: amount,
       accessory: currentUser.accessory,
+      elite: currentUser.elite,
       rank: currentUser.totalWagered,
       created_at: moment().format('YYYY-MM-DD HH:mm'),
       created_at_str: moment().format('LLL'),
@@ -1197,7 +1215,7 @@ router.get('/', async (req, res) => {
     for (const loan of loans) {
       const loaners = await Promise.all(
         loan.loaners.map(async (loaner) => {
-          const user = await User.findById(loaner.user, 'avatar _id username totalWagered accessory');
+          const user = await User.findById(loaner.user, 'avatar _id username totalWagered accessory elite');
           return user;
         })
       );

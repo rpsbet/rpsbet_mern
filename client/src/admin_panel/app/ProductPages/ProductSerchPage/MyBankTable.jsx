@@ -292,6 +292,7 @@ const MyBankTable = () => {
                                           rank={loaner.totalWagered || 0}
                                           user_id={loaner._id}
                                           accessory={loaner.accessory || ''}
+                                          elite={loaner.elite}
                                           alt={loaner.username || 'Unknown'}
                                           darkMode={isDarkMode}
                                           style={{ width: 32, height: 32 }}

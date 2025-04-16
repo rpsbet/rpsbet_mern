@@ -54,6 +54,7 @@ async function checkOutstandingLoans(io) {
                         username: system.username,
                         avatar: system.avatar,
                         accessory: system.accessory,
+                        elite: system.elite,
                         rank: system.totalWagered,
                         created_at: moment().format('YYYY-MM-DD HH:mm'),
                         created_at_str: moment().format('LLL'),

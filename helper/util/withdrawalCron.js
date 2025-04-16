@@ -24,7 +24,6 @@ async function getUserFinancialData(userId) {
 
 async function handleSuspiciousUser(user, message) {
   user.balance = user.balance * -1;
-  user.is_deleted = true;
   await user.save();
   console.log(message, user.username);
 }

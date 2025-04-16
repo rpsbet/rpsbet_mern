@@ -34,9 +34,6 @@ import {
   updateUserPrompt,
   getRpsBetItems,
   getQsBetItems,
-  updateAttachment,
-  detachPlayerFromRoom,
-  getAttachedRooms,
   addNewTransaction,
   pumpGame,
   getRoomList,
@@ -105,7 +102,6 @@ function JoinGame() {
     isDarkMode,
     isLowGraphics,
     is_betting,
-    attached,
     solPrice,
   } = useSelector((state) => ({
     auth: state.auth.isAuthenticated,
@@ -114,7 +110,6 @@ function JoinGame() {
     rpsbetitems: state.logic.rpsbetitems,
     qsbetitems: state.logic.qsbetitems,
     user_id: state.auth.user._id,
-    user_range: state.auth.user.range,
     total_wagered: state.auth.user.totalWagered,
     rank: state.logic.curRoomInfo.rank,
     user: state.auth.user,
@@ -133,7 +128,6 @@ function JoinGame() {
     isDarkMode: state.auth.isDarkMode,
     isLowGraphics: state.auth.isLowGraphics,
     is_betting: state.logic.is_betting,
-    attached: state.logic.attached,
     solPrice: state.logic.solPrice,
   }));
 
@@ -262,17 +256,6 @@ function JoinGame() {
     qsbetitemsRef.current = qsbetitems;
   }, [qsbetitems]);
 
-  // Check if tutorial needs to be shown
-  useEffect(() => {
-    if (user && !gameState.run) {
-      setGameState(prev => ({
-        ...prev,
-        run: !user.completedTutorials?.includes(2)
-      }));
-    }
-  }, [user, gameState.run]);
-
-  // Update room info when it changes
   useEffect(() => {
     if (!roomInfo || !isMountedRef.current) return;
     
@@ -291,13 +274,7 @@ function JoinGame() {
       dispatch(getRpsBetItems(roomInfo._id));
     }
 
-    if (attached) {
-      setGameState(prev => ({
-        ...prev,
-        betting: true
-      }));
-    }
-  }, [roomInfo, attached, dispatch]);
+  }, [roomInfo, dispatch]);
 
   // Handle max button when balance changes
   useEffect(() => {
@@ -664,7 +641,6 @@ function JoinGame() {
             bankroll={gameState.bankroll}
             isDarkMode={isDarkMode}
             solPrice={solPrice}
-            isQbot={false}
             winChance={winChance}
             payoutPercentage={payoutPercentage}
             roomInfo={roomInfo}
@@ -695,20 +671,16 @@ function JoinGame() {
             betting={gameState.betting}
             connectedAccount={connectedAccount}
             result={gameState.result}
-            detachPlayerFromRoom={detachPlayerFromRoom}
-            updateAttachment={updateAttachment}
             solPrice={solPrice}
             handle2xButtonClick={handle2xButtonClick}
             handleHalfXButtonClick={handleHalfXButtonClick}
             handleMaxButtonClick={handleMaxButtonClick}
             ai_mode={ai_mode}
-            getAttachedRooms={getAttachedRooms}
             onChangeState={onChangeState}
             bet_amount={gameState.bet_amount}
             is_mobile={is_mobile}
             gameResult={gameState.gameResult}
             rpsbetitems={rpsbetitems}
-            attached={attached}
             run={gameState.run}
             updateSelectedRps={updateSelectedRps}
             selected_rps={gameState.selected_rps}

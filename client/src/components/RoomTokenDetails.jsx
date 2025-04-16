@@ -144,6 +144,7 @@ const RoomTokenDetails = ({ roomInfo, hosts, solPrice, isDarkMode, handleOpenPla
                                         rank={host.rank}
                                         username={host.username}
                                         accessory={host.accessory}
+                                        elite={host.elite}
                                         alt=""
                                         darkMode={isDarkMode}
                                     />

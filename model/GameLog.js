@@ -66,10 +66,6 @@ const GameLogSchema = new Schema({
         type: String,
         default: ''
     },
-    qbot: {
-        type: Boolean,
-        defalut: ''
-    },
     created_at: {
         type: Date,
         default: Date.now
@@ -92,6 +88,10 @@ const GameLogSchema = new Schema({
             default: ''
         },
         accessory: {
+            type: String,
+            default: ''
+        },
+        elite: {
             type: String,
             default: ''
         },

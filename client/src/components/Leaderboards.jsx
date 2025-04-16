@@ -97,6 +97,7 @@ const Leaderboards = ({ roomId }) => {
                               username={playerData.actor}
                               rank={playerData.rank}
                               accessory={playerData.accessory}
+                              elite={playerData.elite}
                               alt={`${playerData.actor}'s avatar`}
                               darkMode={isDarkMode}
                             />

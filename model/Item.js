@@ -19,6 +19,10 @@ const OwnerSchema = new Schema({
         type: String,
         default: ''
     },
+    elite: {
+        type: String,
+        default: ''
+    },
     count: {
         type: Number,
         default: 0

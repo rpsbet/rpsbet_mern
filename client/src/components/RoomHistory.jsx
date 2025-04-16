@@ -263,6 +263,7 @@ function RoomHistory({
             rank={userObj.totalWagered}
             user_id={userObj._id}
             accessory={userObj.accessory}
+            elite={userObj.elite}
             alt=""
             className="avatar"
             style={{ display: 'inline-block', marginRight: 6 }}
@@ -496,7 +497,6 @@ function RoomHistory({
                         <span className="room-id" id="ai_mode">
                           {row.ai_mode}
                         </span>
-                        {row.qbot && <span className="room-id qbot">Q-BOT</span>}
                       </div>
                     )}
 

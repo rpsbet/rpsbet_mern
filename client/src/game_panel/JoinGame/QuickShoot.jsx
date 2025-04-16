@@ -10,10 +10,6 @@ import AiPanel from '../../components/AiPanel';
 import ViewIcon from '@mui/icons-material/Visibility';
 import SwordsIcon from '@mui/icons-material/VisibilityOff';
 import { getQsLottieAnimation } from '../../util/helper';
-import {
-  getQsBetItems,
-  detachPlayerFromRoom,
-} from '../../redux/Logic/logic.actions';
 import { setSpectateMode } from '../../redux/Auth/user.actions';
 import {
   Button,
@@ -66,6 +62,7 @@ function QuickShoot(props) {
     creator_avatar: state.logic.curRoomInfo.creator_avatar,
     rank: state.logic.curRoomInfo.rank,
     accessory: state.logic.curRoomInfo.accessory,
+    elite: state.logic.curRoomInfo.elite,
     username: state.logic.curRoomInfo.username,
     isLowGraphics: state.auth.isLowGraphics,
   }));
@@ -80,7 +77,6 @@ function QuickShoot(props) {
     updateUserStrategy,
     bet_amount,
     selected_qs_position,
-    updateAttachment,
     onChangeState,
     playSound,
     changeBgColor,
@@ -94,8 +90,6 @@ function QuickShoot(props) {
     handleSwitchChange,
     updateUserPrompt,
     ai_mode,
-    attached,
-    getAttachedRooms,
     strategies,
     betting,
     predictedBetAmount,
@@ -673,7 +667,6 @@ function QuickShoot(props) {
                     strategies={strategies}
                     betting={betting}
                     is_betting={is_betting}
-                    detachPlayerFromRoom={detachPlayerFromRoom}
                     handle2xButtonClick={handle2xButtonClick}
                     handleHalfXButtonClick={handleHalfXButtonClick}
                     handleMaxButtonClick={handleMaxButtonClick}
@@ -683,15 +676,12 @@ function QuickShoot(props) {
                     handleSwitchChange={handleSwitchChange}
                     game_type={roomInfo.game_type}
                     rank={rank}
-                    updateAttachment={updateAttachment}
                     user_id={user_id}
                     ai_mode={ai_mode}
                     bankroll={bankroll}
                     user_balance={balance}
                     bet_amount={bet_amount}
-                    attached={attached}
                     creator_id={creator_id}
-                    getAttachedRooms={getAttachedRooms}
                     qs_game_type={qs_game_type}
                     isDarkMode={isDarkMode}
                   />

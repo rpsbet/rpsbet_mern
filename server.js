@@ -31,8 +31,11 @@ const server = app.listen(PORT, () => {
 // -------------------- Socket.io Setup --------------------
 const io = socketController.socketio(server, {
   cors: {
-    origin: allowedOrigins, // Allow requests from your frontend
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Allowed HTTP methods
+    origin: [
+      'http://localhost:3000', // Development
+      'https://catsino.fun',   // Production
+    ],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     credentials: true,
   },
   transports: ['websocket'],
@@ -54,6 +57,7 @@ app.use((req, res, next) => {
 // -------------------- CORS Configuration --------------------
 const corsOptions = {
   origin: (origin, callback) => {
+    const allowedOrigins = ['http://localhost:3000', 'https://catsino.fun'];
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {

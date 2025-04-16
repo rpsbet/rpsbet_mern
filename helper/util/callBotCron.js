@@ -2,11 +2,17 @@ const Room = require('../../model/Room.js');
 const cron = require('node-cron');
 
 let socketio = null;
+let lastExecutionTime = 0; // Track when the last execution started
+
 async function callCronJobs(io) {
   if (io) {
     socketio = io;
   }
 
+  // Record the exact timestamp of this execution
+  const executionTime = Date.now();
+  lastExecutionTime = executionTime;
+  
   try {
     const updatedRooms = await Room.aggregate([
       { $match: { status: 'open' } },
@@ -61,6 +67,7 @@ async function callCronJobs(io) {
               username: { $ifNull: ['$hosts.username', '$hostData.username'] },
               rank: { $ifNull: ['$hosts.rank', '$hostData.totalWagered'] },
               accessory: { $ifNull: ['$hosts.accessory', '$hostData.accessory'] },
+              elite: { $ifNull: ['$hosts.elite', '$hostData.elite'] },
               walletAddress: '$hosts.walletAddress',
               share: '$hosts.share',
             },
@@ -74,6 +81,8 @@ async function callCronJobs(io) {
           created_at: { $first: '$created_at' },
           updated_at: { $first: '$updated_at' }, // Preserve updated_at for sorting
           battles: { $first: '$battles' },
+          likes: { $first: '$likes' },
+          dislikes: { $first: '$dislikes' },
         },
       },
       // Lookup for game_type
@@ -103,6 +112,7 @@ async function callCronJobs(io) {
             username: '$creator.username',
             rank: '$creator.totalWagered',
             accessory: '$creator.accessory',
+            elite: '$creator.elite',
             status: '$creator.status',
           },
           joiners: {
@@ -115,6 +125,7 @@ async function callCronJobs(io) {
                 username: '$$joiner.username',
                 rank: '$$joiner.totalWagered',
                 accessory: '$$joiner.accessory',
+                elite: '$$joiner.elite',
               },
             },
           },
@@ -131,9 +142,16 @@ async function callCronJobs(io) {
           status: 1,
           created_at: 1,
           battles: 1,
+          likes: 1,
+          dislikes: 1,
         },
       },
     ]);
+
+    // Check if this is still the most recent execution
+    if (lastExecutionTime !== executionTime) {
+      return; // Exit without emitting if a newer execution has started
+    }
 
     const result = updatedRooms.map((room) => ({
       _id: room._id,
@@ -147,6 +165,7 @@ async function callCronJobs(io) {
         username: room.creator.username,
         rank: room.creator.rank,
         accessory: room.creator.accessory,
+        elite: room.creator.elite,
         status: room.creator.status,
       },
       joiners: room.joiners,
@@ -159,20 +178,29 @@ async function callCronJobs(io) {
       status: room.status,
       created_at: room.created_at,
       battles: room.battles,
+      likes: room.likes,
+      dislikes: room.dislikes,
     }));
 
-    if (socketio) {
-      socketio.emit('UPDATED_ROOM_LIST', result);
+    if (socketio && lastExecutionTime === executionTime) {
+      socketio.emit('ROOMS_UPDATED', result);
     }
   } catch (err) {
-    console.error('Error fetching or emitting updated room list:', err);
+    // Only log errors for current execution
+    if (lastExecutionTime === executionTime) {
+      console.error(`[${executionTime}] Error fetching or emitting updated room list:`, err);
+    }
   }
 }
 
-cron.schedule('*/5 * * * * *', async () => {
+// Schedule the cron job to run every 5 seconds
+const cronJob = cron.schedule('*/5 * * * * *', async () => {
   await callCronJobs(socketio);
 });
 
 module.exports = {
   callCronJobs,
+  // Expose methods to control the cron job if needed
+  pauseCronJob: () => cronJob.stop(),
+  resumeCronJob: () => cronJob.start()
 };

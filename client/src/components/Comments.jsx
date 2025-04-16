@@ -29,6 +29,7 @@ const Comments = ({ roomId }) => {
   const currentUsername = useSelector(state => state.auth.user.username);
   const currentUserAvatar = useSelector(state => state.auth.user.avatar);
   const currentUserAccessory = useSelector(state => state.auth.user.accessory);
+  const currentUserElite = useSelector(state => state.auth.user.elite);
   const currentUserTotalWagered = useSelector(state => state.auth.user.totalWagered);
   const socket = useSelector(state => state.auth.socket);
   const isDarkMode = useSelector(state => state.auth.isDarkMode);
@@ -108,6 +109,7 @@ const Comments = ({ roomId }) => {
           username: currentUsername,
           avatar: currentUserAvatar,
           accessory: currentUserAccessory,
+          elite: currentUserElite,
           totalWagered: currentUserTotalWagered,
         },
         created_at: new Date().toISOString(),
@@ -258,6 +260,7 @@ const Comments = ({ roomId }) => {
                       username={comment.user.username}
                       rank={comment.user.totalWagered}
                       accessory={comment.user.accessory}
+                      elite={comment.user.elite}
                       alt=""
                       darkMode={isDarkMode}
                       className="avatar"

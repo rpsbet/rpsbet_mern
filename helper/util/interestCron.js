@@ -62,6 +62,7 @@ async function updateRoomInterests(io) {
             username: system.username,
             avatar: system.avatar,
             accessory: system.accessory,
+            elite: system.elite,
             amount: userBet * 0.0001,
             rank: system.totalWagered,
             created_at: moment().format('YYYY-MM-DD HH:mm'),

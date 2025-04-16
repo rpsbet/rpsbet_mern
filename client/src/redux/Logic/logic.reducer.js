@@ -33,7 +33,6 @@ import {
   UPDATE_BET_RESULT,
   UPDATE_BANKROLL,
   UPDATE_BANKROLL_QS,
-  ATTACHED,
   HISTORY_LOADED,
   ONLINE_USER_LIST_UPDATED,
   SELECT_MAIN_TAB,
@@ -118,7 +117,6 @@ const initialState = {
     selectedStrategy: '',
     room_history: [],
     posted: false,
-    attached: false,
     is_private: false,
     rps_game_type: 0,
     qs_game_type: 2,
@@ -133,7 +131,6 @@ const initialState = {
   bankroll: 0,
   accessories: [],
   roomStatus: '',
-  qBotStatuses: {},
   myGames: [],
   myGamesTotalPage: 0,
   myGamesPageNumber: 1,
@@ -146,6 +143,7 @@ const initialState = {
     avatar: '',
     rank: 0,
     accessory: '',
+    elite:  '',
     username: '',
     chatLogs: [],
     hasMore: true,
@@ -353,12 +351,6 @@ export default function (state = initialState, action) {
         ...state,
         error: action.payload
       };
-    case ATTACHED:
-      return {
-        ...state,
-        attached: payload,
-        error: null
-      };
     case COMMENT_DELETED:
       return {
         ...state,
@@ -427,12 +419,9 @@ export default function (state = initialState, action) {
       };
     case ROOMS_LOADED:
       const { roomList } = payload;
-      const accessories = roomList.map(room => room.accessory);
       return {
         ...state,
         roomList,
-        accessories,
-
       };
     case HISTORY_LOADED:
       return {

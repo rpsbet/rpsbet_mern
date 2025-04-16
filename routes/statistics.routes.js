@@ -115,7 +115,7 @@ router.get('/get-customer-statistics', async (req, res) => {
     const tax = await SystemSetting.findOne({ name: 'commission' }).select('value');
     const userIds = gameLogs.map(log => log.creator);
     const users = await User.find({ _id: { $in: userIds } }).select(
-      'accessory username avatar'
+      'accessory elite username avatar'
     );
     const accessoryMap = new Map(
       users.map(user => [user._id.toString(), user.accessory])
@@ -712,6 +712,7 @@ router.get('/get-equity-distribution', async (req, res) => {
           username: user.username,
           avatar: user.avatar,
           accessory: user.accessory,
+          elite: user.elite,
           totalWagered: user.totalWagered,
           totalBalance: userBalance
         };
@@ -733,6 +734,7 @@ router.get('/get-equity-distribution', async (req, res) => {
         username: user.username,
         avatar: user.avatar,
         accessory: user.accessory,
+        elite: user.elite,
         totalWagered: user.totalWagered,
         equityPercentage: (user.totalBalance / totalBalance) * 100
       }))
@@ -1013,14 +1015,14 @@ router.get('/get-room-statistics', async (req, res) => {
       }
 
       // Fetch the joiner user data
-      const joiner = await User.findOne({ _id: joined_user }).select('_id avatar accessory username totalWagered');
+      const joiner = await User.findOne({ _id: joined_user }).select('_id avatar accessory elite username totalWagered');
 
       // Skip if the joiner does not exist
       if (!joiner) {
         continue;
       }
 
-      const { _id, avatar, accessory, username, totalWagered } = joiner;
+      const { _id, avatar, accessory, elite, username, totalWagered } = joiner;
 
       const commission = accessory
         ? (await Item.findOne({ image: accessory }).select('CP')).CP
@@ -1031,6 +1033,7 @@ router.get('/get-room-statistics', async (req, res) => {
       playerStats[username] = playerStats[username] || {
         avatar,
         accessory,
+        elite,
         _id,
         actor: username,
         wagered: 0,
@@ -1056,6 +1059,7 @@ router.get('/get-room-statistics', async (req, res) => {
       avatar: player.avatar,
       username: player.username,
       accessory: player.accessory,
+      elite: player.elite,
       rank: player.rank,
       actor: player.actor,
       wagered: player.wagered,

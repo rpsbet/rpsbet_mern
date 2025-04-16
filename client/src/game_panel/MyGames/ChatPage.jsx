@@ -55,6 +55,7 @@ function ChatPage() { // Keep match as a prop since it’s from React Router
     selectedMainTabIndex,
     rank,
     accessory,
+    elite,
     avatar,
     username,
     loading,
@@ -70,6 +71,7 @@ function ChatPage() { // Keep match as a prop since it’s from React Router
     avatar: state.logic.chatRoomInfo.avatar,
     rank: state.logic.chatRoomInfo.rank,
     accessory: state.logic.chatRoomInfo.accessory,
+    elite: state.logic.chatRoomInfo.elite,
     username: state.logic.chatRoomInfo.username,
     chatLogs: state.logic.chatRoomInfo.chatLogs,
     gameTypeList: state.logic.gameTypeList,
@@ -288,6 +290,7 @@ function ChatPage() { // Keep match as a prop since it’s from React Router
                   rank={rank}
                   username={username}
                   accessory={accessory}
+                  elite={elite}
                   user_id={user_id}
                   className="avatar"
                 />

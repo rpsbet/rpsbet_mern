@@ -126,6 +126,7 @@ function HistoryTable({
             username={userObj.username}
             rank={userObj.totalWagered}
             accessory={userObj.accessory}
+            elite={userObj.elite}
             alt=""
             className="avatar"
             style={{

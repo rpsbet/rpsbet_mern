@@ -63,6 +63,7 @@ function ProfileModal({ modalIsOpen, closeModal }) {
     bio: initialLink,
     avatar: initialAvatar,
     accessory,
+    elite,
     totalWagered,
     referralCode,
     referralUsername,
@@ -467,6 +468,7 @@ function ProfileModal({ modalIsOpen, closeModal }) {
                         rank={rank}
                         username={username}
                         accessory={accessory}
+                        elite={elite}
                         avatar={avatar}
                         user_id={_id}
                       />
@@ -853,6 +855,7 @@ function ProfileModal({ modalIsOpen, closeModal }) {
                                 user_id={customerInfo[reward.user]._id}
                                 alt="User Avatar"
                                 rank={customerInfo[reward.user].totalWagered}
+                                elite={customerInfo[reward.user].elite}
                                 accessory={customerInfo[reward.user].accessory}
                                 username={customerInfo[reward.user].username}
                               />

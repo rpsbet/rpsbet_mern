@@ -29,6 +29,10 @@ const ChatSchema = new Schema({
     type: String,
     ref: 'rps_users.accessory'
   },
+  elite: {
+    type: String,
+    ref: 'rps_users.elite'
+  },
   rank: {
     type: Number,
     ref: 'rps_users.totalWagered'
@@ -53,6 +57,10 @@ const ChatSchema = new Schema({
       accessory: {
         type: String,
         ref: 'rps_users.accessory'
+      },
+      elite: {
+        type: String,
+        ref: 'rps_users.elite'
       },
       message: {
         type: String

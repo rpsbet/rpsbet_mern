@@ -10,6 +10,7 @@ function Avatar(props) {
     src: initialSrc,
     alt: initialAlt,
     accessory: initialAccessory,
+    elite: initialElite,
     username: initialUsername,
     rank: initialRank,
     darkMode: initialDarkMode,
@@ -24,6 +25,7 @@ function Avatar(props) {
   const [alt, setAlt] = useState(initialAlt);
   const [accessory, setAccessory] = useState(initialAccessory);
   const [username, setUsername] = useState(initialUsername);
+  const [elite, setElite] = useState(initialElite);
   const [rank, setRank] = useState(initialRank);
   const [darkMode, setDarkMode] = useState(initialDarkMode);
   const [dominantColor, setDominantColor] = useState(null);
@@ -34,7 +36,7 @@ function Avatar(props) {
     setAlt(initialAlt);
     setAccessory(initialAccessory);
     setUsername(initialUsername);
-    setRank(initialRank);
+    setElite(initialElite);
     setDarkMode(initialDarkMode);
     setDominantColor(null); // If you compute a color from the avatar, do it here
   }, [
@@ -42,6 +44,7 @@ function Avatar(props) {
     initialAlt,
     initialAccessory,
     initialUsername,
+    initialElite,
     initialRank,
     initialDarkMode,
   ]);
@@ -78,36 +81,9 @@ function Avatar(props) {
   const usernameString = username || '';
 
   const isBot = usernameString.toUpperCase().includes('BOT');
-  const systemUsernames = [
-    'pimpedpistols',
-    'GIGACHAD',
-    'KEKW',
-    'smellyfingers',
-    'SUPPORT',
-    'OFFICIALRPSGAME',
-    '69',
-    'SYSTEM',
-    'WHALE WATCHERS',
-    'NO BROKIES',
-  ];
-  const verifiedUsernames = [
-    'pimpedpistols',
-    'KEKW',
-    'GIGACHAD',
-    'smellyfingers',
-    'SUPPORT',
-    'OFFICIALRPSGAME',
-    'SYSTEM',
-    'WHALE WATCHERS',
-    'NO BROKIES',
-    'Tydrellinbg',
-    'Bearbland11',
-    'Sachin5512',
-    'jimbobjocorn',
-  ];
-
-  const isSystem = systemUsernames.includes(usernameString);
-  const isVerified = verifiedUsernames.includes(usernameString);
+  
+  const isBlack = elite === 'black';
+  const isRed = elite === 'red';
 
   // ---------------- BADGES SETUP ----------------
   // Outer badge = rank (bottom-right)
@@ -117,7 +93,7 @@ function Avatar(props) {
     <Badge
       anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       badgeContent={
-        (!isBot && !isSystem && adjustedRank) ? adjustedRank : null
+        (!isBot && !isBlack && adjustedRank) ? adjustedRank : null
       }
       slotProps={{
         badge: {
@@ -168,7 +144,7 @@ function Avatar(props) {
           />
 
           {/* Verified Badge (top-right) */}
-          {isVerified && (
+          {isRed && (
             <Box
               sx={{
                 width: '32px',
@@ -177,7 +153,7 @@ function Avatar(props) {
                 top: 0,
                 right: 0,
                 transform: 'translate(13px, -15px) scale(0.6)',
-                filter: isSystem ? 'grayscale(1)' : 'none',
+                filter: isBlack ? 'grayscale(1)' : 'hue-rotate(132deg)',
               }}
             >
               <Lottie

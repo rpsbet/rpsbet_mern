@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import {
   getRoomList,
-  setCurRoomInfo,
+  actionRoom,
   setRoomList,
   getRecentlyClosed,
 } from '../../redux/Logic/logic.actions';
@@ -43,6 +43,7 @@ import { errorMsgBar } from '../../redux/Notification/notification.actions';
 import PlayerModal from '../modal/PlayerModal';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { getCustomTheme } from '../../config/theme';
+import { LikeDislikeView } from '../../components/LikeDislikeView';
 
 function OpenGamesTable(props) {
   const {
@@ -89,9 +90,9 @@ function OpenGamesTable(props) {
   const displayedRooms = roomList.slice(startIndex, endIndex);
   const prevRoomListRef = useRef(roomList);
 
-  useEffect(() => {
-    dispatch(getRoomList()); // Dispatch the getRoomList action
-  }, [dispatch]);
+  // useEffect(() => {
+  //   dispatch(getRoomList()); // Dispatch the getRoomList action
+  // }, [dispatch]);
 
   // Effects
   useEffect(() => {
@@ -301,7 +302,7 @@ function OpenGamesTable(props) {
               container
               className="grid-container"
               spacing={1}
-              style={{ padding: '20px' }}
+              style={{  }}
             >
               {displayedRooms.map((row, index) => {
                 const progressPercentage = row.endgame_amount
@@ -608,6 +609,8 @@ function OpenGamesTable(props) {
                                   <Avatar
                                     key={index}
                                     alt={host.username}
+                                    username={host.username}
+                                    elite={host.elite}
                                     src={host.avatar}
                                     onClick={(e) => {
                                       e.stopPropagation();
@@ -687,6 +690,8 @@ function OpenGamesTable(props) {
                                   <Avatar
                                     key={index}
                                     alt={joiner.username}
+                                    elite={joiner.elite}
+                                    username={joiner.username}
                                     src={joiner.avatar}
                                     onClick={(e) => {
                                       e.stopPropagation();
@@ -848,68 +853,100 @@ function OpenGamesTable(props) {
                           </Box>
                         </Box>
 
-                        {/* Progress bar */}
-                        <Box sx={{ position: 'relative', mb: 0.5 }}>
-                          <Typography
-                            variant="caption"
-                            sx={{
-                              position: 'absolute',
-                              top: '-20px',
-                              left: '0', // Changed from right to left
-                              fontSize: '0.7rem',
-                              opacity: 0.7
-                            }}
-                          >
-                            Health
-                          </Typography>
-                          <Typography
-                            variant="caption"
-                            sx={{
-                              position: 'absolute',
-                              top: '-20px',
-                              right: '0',
-                              fontSize: '0.7rem',
-                              opacity: 0.7
-                            }}
-                          >
-                            {(100 - progressPercentage).toFixed(0)}% {/* Inverted the percentage */}
-                          </Typography>
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            mb: 0.5,
+                          }}
+                        >
+                          {/* Health bar */}
+                          <Box sx={{ position: 'relative', width: '60%' }}>
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                position: 'absolute',
+                                top: '-20px',
+                                left: '0',
+                                fontSize: '0.7rem',
+                                opacity: 0.7,
+                              }}
+                            >
+                              Health
+                            </Typography>
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                position: 'absolute',
+                                top: '-20px',
+                                right: '0',
+                                fontSize: '0.7rem',
+                                opacity: 0.7,
+                              }}
+                            >
+                              {(100 - progressPercentage).toFixed(0)}%
+                            </Typography>
+                            <Box
+                              sx={{
+                                width: '100%',
+                                height: '8px',
+                                background: effectiveIsDarkMode
+                                  ? 'rgba(255, 255, 255, 0.1)'
+                                  : 'rgba(0, 0, 0, 0.08)',
+                                borderRadius: '20px',
+                                overflow: 'hidden',
+                                position: 'relative',
+                              }}
+                            >
+                              <Box
+                                className="progress-bar-filled"
+                                sx={{
+                                  width: `${100 - progressPercentage}%`,
+                                  height: '100%',
+                                  background:
+                                    'linear-gradient(90deg, rgba(227, 255, 0, 0.8), rgba(253, 181, 0, 0.9))',
+                                  borderRadius: '20px',
+                                  position: 'relative',
+                                  zIndex: 2,
+                                  boxShadow: '0 0 10px rgba(227, 255, 0, 0.4)',
+                                  '&::after': {
+                                    content: '""',
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                    right: 0,
+                                    bottom: 0,
+                                    background:
+                                      'linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.4) 50%, rgba(255, 255, 255, 0) 100%)',
+                                    animation: 'shimmer 2s infinite',
+                                    zIndex: 3,
+                                  },
+                                  '@keyframes shimmer': {
+                                    '0%': { transform: 'translateX(-100%)' },
+                                    '100%': { transform: 'translateX(100%)' },
+                                  },
+                                }}
+                              />
+                            </Box>
+                          </Box>
+
+                          {/* LikeDislikeView */}
                           <Box
                             sx={{
-                              width: '100%',
-                              height: '8px',
-                              background: effectiveIsDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
-                              borderRadius: '20px',
-                              overflow: 'hidden',
-                              position: 'relative',
+                              width: '35%',
+                              display: 'flex',
+                              justifyContent: 'flex-end',
                             }}
                           >
-                            <Box
-                              className="progress-bar-filled"
-                              sx={{
-                                width: `${100 - progressPercentage}%`, // Inverted the percentage
-                                height: '100%',
-                                background: 'linear-gradient(90deg, rgba(227, 255, 0, 0.8), rgba(253, 181, 0, 0.9))',
-                                borderRadius: '20px',
-                                position: 'relative',
-                                zIndex: 2,
-                                boxShadow: '0 0 10px rgba(227, 255, 0, 0.4)',
-                                '&::after': {
-                                  content: '""',
-                                  position: 'absolute',
-                                  top: 0,
-                                  left: 0,
-                                  right: 0,
-                                  bottom: 0,
-                                  background: 'linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.4) 50%, rgba(255, 255, 255, 0) 100%)',
-                                  animation: 'shimmer 2s infinite',
-                                  zIndex: 3,
-                                },
-                                '@keyframes shimmer': {
-                                  '0%': { transform: 'translateX(-100%)' },
-                                  '100%': { transform: 'translateX(100%)' }
-                                }
-                              }}
+                            <LikeDislikeView
+                              row={row}
+                              user={user} // Pass the current user object
+                              handleLike={() => dispatch(actionRoom({ roomId: row._id, type: 'like' }))}
+                              handleDislike={() =>
+                                dispatch(actionRoom({ roomId: row._id, type: 'dislike' }))
+                              }
+                              handleView={() => dispatch(actionRoom({ roomId: row._id, type: 'view' }))}
                             />
                           </Box>
                         </Box>

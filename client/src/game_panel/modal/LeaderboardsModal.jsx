@@ -461,6 +461,7 @@ function LeaderboardsModal({
                               rank={entry.totalWagered}
                               user_id={entry._id}
                               accessory={entry.accessory}
+                              elite={entry.elite}
                               username={entry.username}
                               alt={entry.username}
                               darkMode={isDarkMode}

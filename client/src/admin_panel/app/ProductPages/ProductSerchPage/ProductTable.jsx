@@ -337,6 +337,7 @@ const ProductTable = () => {
                                 src={customerInfo[owner.user].avatar}
                                 rank={customerInfo[owner.user].totalWagered}
                                 accessory={customerInfo[owner.user].accessory}
+                                elite={customerInfo[owner.user].elite}
                                 alt=""
                                 username={customerInfo[owner.user].username}
                                 darkMode={isDarkMode}

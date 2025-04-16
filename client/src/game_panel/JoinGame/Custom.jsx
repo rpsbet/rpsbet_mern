@@ -60,6 +60,7 @@ function Custom(props) {
     creator_avatar: state.logic.curRoomInfo.creator_avatar,
     rank: state.logic.curRoomInfo.rank,
     accessory: state.logic.curRoomInfo.accessory,
+    elite: state.logic.curRoomInfo.elite,
     username: state.logic.curRoomInfo.username,
     isLowGraphics: state.auth.isLowGraphics,
   }));
@@ -570,7 +571,7 @@ function Custom(props) {
               >
                 <Box 
                   ref={gameContainerRef}
-                  sx={{ p: 2, width: '100%', maxWidth: '100vw', overflow: 'hidden', position: 'relative' }}
+                  sx={{ width: '100%', overflow: 'hidden', position: 'relative' }}
                   tabIndex="0" // Make the container focusable
                 >
                   {componentError ? (

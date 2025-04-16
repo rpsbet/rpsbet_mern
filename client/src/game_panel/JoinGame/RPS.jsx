@@ -9,7 +9,6 @@ import {
   getRoomBotCount,
   updateRoomBot,
   kickBots,
-  detachPlayerFromRoom,
 } from '../../redux/Logic/logic.actions';
 import {
   validateIsAuthenticated,
@@ -98,8 +97,6 @@ function RPS(props) {
     handleClosePlayerModal,
     showPlayerModal,
     ai_mode,
-    attached,
-    getAttachedRooms,
     betting,
     predictedBetAmount,
     betResult,
@@ -114,7 +111,6 @@ function RPS(props) {
     bankroll,
     updateUserStrategy,
     updateUserPrompt,
-    updateAttachment,
   } = props;
 
   // Local React state
@@ -302,22 +298,6 @@ function RPS(props) {
     localStorage.setItem('hideConfirmModal', checked ? 'true' : 'false');
   };
 
-  // Bot controls
-  const handleBotClick = async () => {
-    if (creator_id && user_id && creator_id.toString() === user_id.toString()) {
-      const botAttached = await dispatch(updateRoomBot(roomInfo._id));
-      if (botAttached) {
-        setBotsCount((prev) => prev + 1);
-      }
-    }
-  };
-
-  const bootBots = async () => {
-    setBotsCount(0);
-    if (creator_id && user_id && creator_id.toString() === user_id.toString()) {
-      await dispatch(kickBots(roomInfo._id));
-    }
-  };
 
   // On user click: R, P, or S
   const onBtnBetClick = async (selection) => {
@@ -654,8 +634,6 @@ function RPS(props) {
                     onChangeState={onChangeState}
                     updateUserStrategy={updateUserStrategy}
                     updateUserPrompt={updateUserPrompt}
-                    updateAttachment={updateAttachment}
-                    detachPlayerFromRoom={detachPlayerFromRoom}
                     strategies={strategies}
                     betting={betting}
                     playSound={playSound}
@@ -667,7 +645,6 @@ function RPS(props) {
                     is_betting={is_betting}
                     attached={attached}
                     creator_id={creator_id}
-                    getAttachedRooms={getAttachedRooms}
                     predictedBetAmount={predictedBetAmount}
                     roomId={roomInfo._id}
                     handleSwitchChange={handleSwitchChange}

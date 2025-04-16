@@ -155,8 +155,6 @@ export const createLoan = body => async (dispatch, getState) => {
     if (data.success) {
       dispatch({ type: MSG_SUCCESS, payload: "NEW LOAN CREATED" });
       return data;
-    } else {
-      dispatch({ type: MSG_ERROR, payload: "UNABLE TO CREATE THE LOAN, TRY AGAIN LATER" });
     }
   } catch (error) {
     console.log('error***', error);

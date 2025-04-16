@@ -2,7 +2,6 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const UserSchema = new Schema({
-  
   username: {
     type: String,
     required: true,
@@ -12,6 +11,14 @@ const UserSchema = new Schema({
     type: [String],
     default: [],
   },
+  elite: {
+    type: String,
+    default: ''
+  },
+  last_elite_payment: {
+    type: Date,
+    default: Date.now
+  },
   isWithdrawing: {
     type: Boolean,
     default: false
@@ -20,10 +27,6 @@ const UserSchema = new Schema({
     type: String,
     required: false,
     unique: true
-  },
-  completedTutorials: {
-    type: [Number],
-    default: []
   },
   password: {
     type: String,
@@ -39,22 +42,6 @@ const UserSchema = new Schema({
       ref: 'rps_users'
     }
   ],
-  ai_mode: {
-    type: String,
-    default: 'Markov'
-  },
-  prompt: {
-    type: String,
-    default: 'You are an expert in Rock Paper Scissors.'
-  },
-  ai_mode: {
-    type: String,
-    default: 'Markov'
-  },
-  range: {
-    type: [Number],
-    default: [0.001, 0.002],
-  },
   referralCode: {
     type: String,
     required: true,
@@ -115,10 +102,6 @@ const UserSchema = new Schema({
     default: 0
   },
   status: { type: String },
-  is_deleted: {
-    type: Boolean,
-    default: false
-  },
   created_at: {
     type: Date,
     default: Date.now

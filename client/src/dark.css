@@ -227,7 +227,7 @@
 .dark_mode .modal-body,
 .dark_mode .modal-header {
 	color: #fff;
-	background: linear-gradient(52deg, #372e3b, #0f0f0f);
+	background: linear-gradient(52deg, #110c0c, #0f0f0f);
 }
 
 /* .dark_mode .modal-body p button,

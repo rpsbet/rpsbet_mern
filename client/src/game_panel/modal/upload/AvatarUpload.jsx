@@ -10,6 +10,7 @@ function Upload(props) {
     rank,
     accessory,
     username,
+    elite,
   } = props;
 
   const [file, setFile] = useState(null);
@@ -72,6 +73,7 @@ function Upload(props) {
             setImageFilename={setImageFilename}
             rank={rank}
             accessory={accessory}
+            elite={elite}
             username={username}
             avatar={avatar}
           />

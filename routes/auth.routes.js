@@ -7,7 +7,9 @@ const {
   calculateAllTimeProfit
 } = require('../helper/util/profitCalculation');
 const saveDocumentWithRetry = require('../helper/util/retrySave');
-
+const moment = require('moment');
+const socket = require('../socketController.js');
+const Notification = require('../model/Notification');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 // User Model
@@ -200,7 +202,6 @@ router.post('/', (req, res) => {
 
   // Check for existing user (case-insensitive)
   User.findOne({
-    is_deleted: false,
     $or: [
       { email: { $regex: new RegExp('^' + lowerCaseEmail, 'i') } },
       { username: { $regex: new RegExp('^' + lowerCaseEmail, 'i') } }
@@ -273,6 +274,215 @@ router.post('/users/add-wallet', auth, async (req, res) => {
   }
 });
 
+// routes/auth.js
+router.post('/cancel-elite', auth, async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+    // Find the user
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+
+    if (!user.elite) {
+      return res.status(400).json({
+        success: false,
+        message: 'No active Elite subscription to cancel',
+      });
+    }
+
+    // Update user's elite status
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      {
+        elite: null,
+        last_elite_payment: null,
+      },
+      { new: true }
+    );
+
+    // Create new transaction
+    const newTransaction = new Transaction({
+      user: userId,
+      amount: 0,
+      description: 'Elite Subscription Cancellation',
+    });
+
+    await saveDocumentWithRetry(newTransaction);
+
+    // Create notification
+    const notification = new Notification({
+      from: userId,
+      to: userId,
+      room: null,
+      message: 'Cancelled Elite subscription',
+      amount: 0,
+      is_read: false,
+    });
+
+    const notificationData = {
+      message: notification.message,
+      username: user.username,
+      avatar: user.avatar,
+      accessory: user.accessory,
+      elite: null,
+      room: null,
+      amount: 0,
+      rank: user.totalWagered || 0,
+      created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+      created_at_str: moment(new Date()).format('LLL'),
+      updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+      is_read: false,
+    };
+
+    // Save notification
+    await saveDocumentWithRetry(notification);
+
+    // Emit events
+    socket.newTransaction(newTransaction);
+    socket.sendNotification(userId, notificationData);
+
+    // Return success response
+    return res.json({
+      success: true,
+      message: 'Successfully cancelled Elite subscription',
+      user: {
+        balance: updatedUser.balance,
+        elite: updatedUser.elite,
+        last_elite_payment: updatedUser.last_elite_payment,
+      },
+    });
+  } catch (err) {
+    console.error('Cancel elite subscription error:', err);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error while cancelling subscription',
+      error: err.message,
+    });
+  }
+});
+
+router.post('/purchase-elite', auth, async (req, res) => {
+  const { type } = req.body;
+  const userId = req.user.id;
+
+  // Define subscription amounts
+  const subscriptionAmounts = {
+    red: 0.1,
+    black: 1.0,
+  };
+
+  if (!['red', 'black'].includes(type)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid subscription type',
+    });
+  }
+
+  const amount = subscriptionAmounts[type];
+
+  try {
+    // Find the user and check balance
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+
+    if (user.elite === type) {
+      return res.status(400).json({
+        success: false,
+        message: `You are already subscribed to ${type} elite membership`,
+      });
+    }
+
+    // Check if user has enough balance
+    if (user.balance < amount) {
+      return res.status(400).json({
+        success: false,
+        message: 'Insufficient balance to purchase subscription',
+      });
+    }
+
+    // Update user's balance, elite status, and subscription date
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      {
+        $inc: { balance: -amount },
+        elite: type,
+        last_elite_payment: new Date(),
+      },
+      { new: true }
+    );
+
+    // Create new transaction
+    const newTransaction = new Transaction({
+      user: userId,
+      amount: -amount,
+      description: `${type.charAt(0).toUpperCase() + type.slice(1)} Elite Subscription Purchase`,
+    });
+
+    await saveDocumentWithRetry(newTransaction);
+
+    // Create notification
+    const notification = new Notification({
+      from: userId,
+      to: userId, // Notify the same user, or change to admin user ID if needed
+      room: null,
+      message: `Purchased ${type} elite subscription`,
+      amount: amount,
+      is_read: false,
+    });
+
+    const notificationData = {
+      message: notification.message,
+      username: user.username,
+      avatar: user.avatar,
+      accessory: user.accessory,
+      elite: type,
+      room: null,
+      amount: amount,
+      rank: user.totalWagered || 0,
+      created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+      created_at_str: moment(new Date()).format('LLL'),
+      updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+      is_read: false,
+    };
+
+    // Save notification
+    await saveDocumentWithRetry(notification);
+
+    // Emit events
+    socket.newTransaction(newTransaction);
+    socket.sendNotification(userId, notificationData);
+
+    // Return success response
+    return res.json({
+      success: true,
+      message: `Successfully subscribed to ${type} elite membership`,
+      user: {
+        balance: updatedUser.balance,
+        elite: updatedUser.elite,
+        last_elite_payment: updatedUser.last_elite_payment,
+      },
+    });
+  } catch (err) {
+    console.error('Elite subscription error:', err);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error while processing subscription',
+      error: err.message,
+    });
+  }
+});
 
 // Forgot Password
 router.post('/resetPassword', async (req, res) => {
@@ -494,29 +704,29 @@ router.post('/changePasswordAndAvatar', auth, async (req, res) => {
 });
 
 // Delete Account
-router.post('/deleteAccount', auth, async (req, res) => {
-  try {
-    if (req.user.balance > 0) {
-      return res.json({
-        success: false,
-        error: 'Oops! Please withdraw all funds first.'
-      });
-    }
+// router.post('/deleteAccount', auth, async (req, res) => {
+//   try {
+//     if (req.user.balance > 0) {
+//       return res.json({
+//         success: false,
+//         error: 'Oops! Please withdraw all funds first.'
+//       });
+//     }
 
-    req.user.is_deleted = true;
-    try {
-      await saveDocumentWithRetry(req.user);
-    } catch (error) {
-      console.error("Error saving req.user:", error);
-    }
+//     req.user.is_deleted = true;
+//     try {
+//       await saveDocumentWithRetry(req.user);
+//     } catch (error) {
+//       console.error("Error saving req.user:", error);
+//     }
 
-    return res.json({
-      success: true
-    });
-  } catch (error) {
-    res.json({ success: false, error });
-  }
-});
+//     return res.json({
+//       success: true
+//     });
+//   } catch (error) {
+//     res.json({ success: false, error });
+//   }
+// });
 
 // @route   GET api/auth/logout
 // @desc    logout

@@ -75,6 +75,7 @@ async function globalChatSend(io, data) {
       avatar,
       accessory,
       username,
+      elite,
       rank,
       replyTo,
     } = data;
@@ -88,6 +89,7 @@ async function globalChatSend(io, data) {
         rank: replyTo.rank,
         avatar: replyTo.avatar,
         accessory: replyTo.accessory,
+        elite: replyTo.elite,
         message: replyTo.message,
         messageType: replyTo.messageType,
         time: moment(replyTo.created_at).format('HH:mm'), // Using 24-hour format for consistency
@@ -104,6 +106,7 @@ async function globalChatSend(io, data) {
       rank,
       username,
       accessory,
+      elite,
       replyTo: formattedReplyTo
     });
     

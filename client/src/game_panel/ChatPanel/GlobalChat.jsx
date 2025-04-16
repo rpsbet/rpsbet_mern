@@ -121,6 +121,7 @@ function GlobalChat(props) {
         sender: null,
         senderId: null,
         avatar: null,
+        elite: null,
         accessory: null,
         rank: null,
         message: null,
@@ -134,6 +135,7 @@ function GlobalChat(props) {
         rank: message.rank,
         username: message.sender,
         accessory: message.accessory,
+        elite: message.elite,
         senderId: message.senderId,
         avatar: message.avatar,
         message: message.message,
@@ -241,6 +243,7 @@ function GlobalChat(props) {
                         username={chat.replyTo.username}
                         rank={chat.replyTo.rank}
                         accessory={chat.replyTo.accessory}
+                        elite={chat.replyTo.elite}
                         user_id={chat.replyTo.senderId}
                         darkMode={effectiveIsDarkMode}
                       />
@@ -269,6 +272,7 @@ function GlobalChat(props) {
                     <Avatar
                       className="avatar"
                       src={chat.avatar}
+                      elite={chat.elite}
                       accessory={chat.accessory}
                       alt=""
                       user_id={chat.senderId}

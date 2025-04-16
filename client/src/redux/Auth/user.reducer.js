@@ -2,6 +2,7 @@ import {
   SET_SOCKET,
   REGISTER_FAIL,
   USER_LOADED,
+  UPDATED_USER,
   SET_UNREAD_MESSAGE_COUNT,
   AUTH_ERROR,
   LOGIN_SUCCESS,
@@ -64,7 +65,6 @@ const initialState = {
   gasfee: 0,
   connectedAccount: '',
   ai_mode: '',
-  completedTutorials: [],
   isFocused: false,
   userName: '',
   liveUrl: null,
@@ -209,15 +209,15 @@ export default function (state = initialState, action) {
     case NEW_TRANSACTION: {
       console.log("payload", payload);
       const existingIndex = state.transactions.findIndex(tx => tx._id === payload._id);
-    
+
       if (existingIndex !== -1) {
         // 1) It's an existing transaction; replace it
         const newTransactions = [...state.transactions];
         const oldTx = newTransactions[existingIndex];
-    
+
         // Replace old transaction with new payload
         newTransactions[existingIndex] = payload;
-    
+
         // 2) Skip balance update if new tx is 'pending'
         if (payload.status === 'pending') {
           return {
@@ -229,13 +229,13 @@ export default function (state = initialState, action) {
           // If new status is *not* pending, find how much we need to adjust from payload.user.balance
           const oldAmount = oldTx.status === 'pending' ? 0 : oldTx.amount;
           const newAmount = payload.amount;
-    
+
           // Always use payload.user.balance as the base
           const baseBalance = payload.user.balance;
           const updatedBalance = oldTx.status === 'pending'
             ? baseBalance + newAmount // Add the new amount directly if the old transaction was pending
             : baseBalance + (newAmount - oldAmount); // Adjust the balance if the old transaction was completed
-    
+
           return {
             ...state,
             transactions: newTransactions,
@@ -247,11 +247,11 @@ export default function (state = initialState, action) {
         const newTransactions = [payload]
           .concat(JSON.parse(JSON.stringify(state.transactions)))
           .slice(0, 4);
-    
+
         // Always use payload.user.balance as the base
         const baseBalance = payload.user.balance;
         const updatedBalance = baseBalance + payload.amount; // Deducting because `payload.amount` is negative
-    
+
         return {
           ...state,
           transactions: newTransactions,
@@ -297,10 +297,22 @@ export default function (state = initialState, action) {
         userName: payload.username,
         isAuthenticated: true,
         totalWagered: payload.totalWagered,
-        completedTutorials: payload.completedTutorials,
         loading: false,
         user: { ...payload, password: '' },
         balance: payload.balance
+      };
+    case UPDATED_USER:
+      return {
+        ...state,
+        userName: action.payload.username,
+        balance: action.payload.balance,
+        user: {
+          ...state.user, // Preserve existing user fields
+          balance: action.payload.balance,
+          elite: action.payload.elite,
+          last_elite_payment: action.payload.last_elite_payment,
+        },
+        loading: false,
       };
     case LOGIN_SUCCESS:
       localStorage.setItem('token', payload.token);
@@ -312,7 +324,6 @@ export default function (state = initialState, action) {
         balance: payload.user.balance,
         isAdmin: 0,
         userName: payload.user.username,
-        completedTutorials: payload.user.completedTutorials,
         token: payload.token,
         isAuthenticated: true,
         loading: false

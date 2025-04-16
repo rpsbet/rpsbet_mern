@@ -3,6 +3,9 @@ const Schema = mongoose.Schema;
 
 const RoomSchema = new Schema({
   name: { type: String, default: '' },
+  likes: [{ type: Schema.Types.ObjectId, ref: 'rps_users', default: [] }],
+  dislikes: [{ type: Schema.Types.ObjectId, ref: 'rps_users', default: [] }],
+  views: [{ type: Schema.Types.ObjectId, ref: 'rps_users', default: [] }],
   room_number: { type: String, default: '' },
   image: { type: String, default: '' },
   ticker: { type: String, default: '' },
@@ -32,9 +35,6 @@ const RoomSchema = new Schema({
     type: String,
     default: 'Create a Wheel of Fortune game, display the numbers 1 through 10 on the wheel and use https://t4.ftcdn.net/jpg/02/66/72/41/360_F_266724172_Iy8gdKgMa7XmrhYYxLCxyhx6J7070Pr8.jpg as the background and show a spin button. Add this https://cdn.freesound.org/previews/752/752225_15867640-lq.mp3 sound. Whichever number the wheel lands on is the multiplier.'
   },
-  likes: [{ type: Schema.Types.ObjectId, ref: 'rps_users', default: [] }],
-  dislikes: [{ type: Schema.Types.ObjectId, ref: 'rps_users', default: [] }],
-  views: [{ type: Schema.Types.ObjectId, ref: 'rps_users', default: [] }],
   gameCode: { type: String, default: '' },
   battles: { type: Number, default: 0 },
   status: { type: String },
@@ -47,6 +47,7 @@ const RoomSchema = new Schema({
     username: { type: String, default: '' },
     walletAddress: { type: String, default: '' },
     accessory: { type: String, default: '' },
+    elite: { type: String, default: '' },
     share: { type: Number, default: 0.0 },
   }],
 });

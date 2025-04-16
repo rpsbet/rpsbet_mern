@@ -21,11 +21,9 @@ const Room = require('../model/Room');
 const GameType = require('../model/GameType');
 const Strategy = require('../model/Strategy');
 const GameLog = require('../model/GameLog');
-const AttachedPlayer = require('../model/AttachedPlayer');
 const Receipt = require('../model/Receipt');
 const Message = require('../model/Message');
 const Notification = require('../model/Notification');
-const QBot = require('../model/QBot');
 const Transaction = require('../model/Transaction');
 const System = require('../model/SystemSetting');
 const RpsBetItem = require('../model/RpsBetItem');
@@ -204,34 +202,6 @@ router.post('/upload-to-pinata', upload.single('file'), async (req, res) => {
   }
 });
 
-router.patch('/range/:user_id', async (req, res) => {
-  const { user_id } = req.params;
-  const { newValue } = req.body;
-
-  try {
-    const user = await User.findByIdAndUpdate(
-      user_id,
-      { range: newValue },
-      { new: true },
-    );
-    if (!user) {
-      return res
-        .status(404)
-        .json({ success: false, message: 'user not found' });
-    }
-    res.json({
-      success: true,
-      message: 'Successful!',
-    });
-  } catch (err) {
-    res.json({
-      success: false,
-      err: err.message,
-    });
-  }
-});
-
-
 router.get('/proxy-asset', async (req, res) => {
   const { url } = req.query;
   if (!url) {
@@ -257,31 +227,6 @@ router.post('/openai/generate-react', auth, async (req, res) => {
     if (!req.user?._id) {
       throw new Error('User not authenticated');
     }
-
-    // Fetch the latest user data from the database
-    const currentUser = await User.findOne({ _id: req.user._id });
-    if (!currentUser) {
-      throw new Error('User not found');
-    }
-
-    console.log(`[React Generator] Starting generation with prompt: "${prompt.substring(0, 50)}..."`);
-    console.log(`[React Generator] User balance: ${currentUser.balance}, Cost: ${cost}`);
-
-    const newTransaction = new Transaction({
-      user: currentUser,
-      amount: -cost,
-      description: 'Generated Game',
-    });
-
-    currentUser.balance -= cost;
-    currentUser.updated_at = new Date();
-
-    await Promise.all([
-      saveDocumentWithRetry(currentUser),
-      saveDocumentWithRetry(newTransaction),
-    ]);
-
-    socket.newTransaction(newTransaction);
 
     if (!prompt || typeof prompt !== 'string') {
       throw new Error('Prompt is required and must be a string');
@@ -567,40 +512,10 @@ You are an elite React developer with a passion for cutting-edge design, inspire
 router.post('/openai/update-react', auth, async (req, res) => {
   try {
     const { prompt, currentCode, imageUrls = [] } = req.body || {};
-    const cost = 0.005;
 
     if (!req.user?._id) {
       throw new Error('User not authenticated');
     }
-
-    // Fetch the latest user data from the database
-    const currentUser = await User.findOne({ _id: req.user._id });
-    if (!currentUser) {
-      throw new Error('User not found');
-    }
-
-    console.log(`[React Update] Starting update with prompt: "${prompt.substring(0, 50)}..."`);
-    console.log(`[React Update] User balance: ${currentUser.balance}, Cost: ${cost}`);
-
-    if (cost > currentUser.balance) {
-      throw new Error('NOT ENUFF FUNDS AT THIS MEOWMENT');
-    }
-
-    const newTransaction = new Transaction({
-      user: currentUser,
-      amount: -cost,
-      description: 'Updated AI React app',
-    });
-
-    currentUser.balance -= cost;
-    currentUser.updated_at = new Date();
-
-    await Promise.all([
-      saveDocumentWithRetry(currentUser),
-      saveDocumentWithRetry(newTransaction),
-    ]);
-    socket.newTransaction(newTransaction);
-
 
     if (!prompt || typeof prompt !== 'string') {
       throw new Error('Prompt is required and must be a string');
@@ -717,179 +632,6 @@ router.patch('/strategies/:user_id', async (req, res) => {
     res.json({
       success: false,
       err: err.message,
-    });
-  }
-});
-
-router.patch('/prompt/:user_id', async (req, res) => {
-  const { user_id } = req.params;
-  const { prompt } = req.body;
-
-  try {
-    const user = await User.findByIdAndUpdate(
-      user_id,
-      { prompt: prompt },
-      { new: true },
-    );
-
-    if (!user) {
-      return res
-        .status(404)
-        .json({ success: false, message: 'user not found' });
-    }
-
-    res.json({
-      success: true,
-      message: 'Successful!',
-    });
-  } catch (err) {
-    res.json({
-      success: false,
-      err: err.message,
-    });
-  }
-});
-
-router.post('/detachPlayer/:room_id', auth, async (req, res) => {
-  const { room_id } = req.params;
-  const user_id = req.user._id;
-  try {
-    const room = await Room.findById(room_id);
-    if (!room) {
-      console.log('Room not found');
-      return res
-        .status(404)
-        .json({ success: false, message: 'Room not found' });
-    }
-
-    const attachedPlayer = await AttachedPlayer.findOne({
-      room: room_id,
-      user: user_id,
-    });
-    if (!attachedPlayer) {
-      console.log('Attached player not found');
-      return res
-        .status(404)
-        .json({ success: false, message: 'Attached player not found' });
-    }
-
-    await AttachedPlayer.deleteOne({ _id: attachedPlayer._id });
-
-    res.json({
-      success: true,
-      message: 'Successfully detached from the room',
-    });
-  } catch (err) {
-    console.error('Error detaching player from room:', err.message);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error',
-      error: err.message,
-    });
-  }
-});
-
-router.patch('/updateAttachment/:room_id', auth, async (req, res) => {
-  const { room_id } = req.params;
-  const { _id, range, ai_mode } = req.user;
-  const selected_strategy = ai_mode;
-  const bet_amounts = range;
-
-  try {
-    // Retrieve the room and populate its game_type field
-    const room = await Room.findById(room_id).populate({
-      path: 'game_type',
-      model: 'rps_game_types',
-    });
-
-    // Build the room_name string using the populated data
-    let room_name = '';
-    if (room && room.game_type && room.room_number) {
-      room_name = `${room.game_type.short_name}-${room.room_number}`;
-    }
-
-    // Update (or create if none exists) the AttachedPlayer document.
-    const updatedAttachment = await AttachedPlayer.findOneAndUpdate(
-      { user: _id, room: room_id }, // Filter using user_id and room_id
-      {
-        $set: {
-          bet_amounts,
-          selected_strategy,
-          updated_at: Date.now(),
-          room_name, // Add the newly built room_name field
-        },
-      },
-      {
-        new: true,
-        runValidators: true,
-        upsert: true,
-        setDefaultsOnInsert: true, // Applies default values on insert if defined in the schema
-      },
-    );
-
-    return res.json({
-      success: true,
-      message: 'Attachment updated successfully',
-      updatedAttachment,
-    });
-  } catch (err) {
-    console.error('Error updating attachment:', err.message);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error',
-      error: err.message,
-    });
-  }
-});
-
-router.get('/getattachedrooms', auth, async (req, res) => {
-  const user_id = req.user._id;
-  try {
-    const attachments = await AttachedPlayer.find({ user: user_id });
-    return res.json({
-      success: true,
-      attachments: attachments || [],
-    });
-  } catch (err) {
-    console.error('Error finding attachments:', err.message);
-
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error',
-      error: err.message,
-    });
-  }
-});
-
-router.get('/checkAttachment/:room_id', auth, async (req, res) => {
-  const { room_id } = req.params;
-  const user_id = req.user._id;
-  try {
-    const existingAttachment = await AttachedPlayer.findOne({
-      user: user_id,
-      room: room_id,
-    });
-
-    if (existingAttachment) {
-      return res.json({
-        success: true,
-        attached: true,
-        message: 'User is already attached to this room',
-        attachedPlayer: existingAttachment,
-      });
-    } else {
-      return res.json({
-        success: true,
-        attached: false,
-        message: 'User is not attached to this room',
-      });
-    }
-  } catch (err) {
-    console.error('Error checking attachment:', err.message);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error',
-      error: err.message,
     });
   }
 });
@@ -1153,38 +895,70 @@ router.post('/checkGamePassword', async (req, res) => {
 
 router.patch('/room/:id/:type', auth, async (req, res) => {
   const { id, type } = req.params;
+
+  // Validate type
   if (!['like', 'dislike', 'view'].includes(type)) {
     return res.status(400).json({ success: false, message: 'Invalid type' });
   }
-  const updateQuery =
-    type === 'view'
-      ? {
-        $set: {
-          views: { $concatArrays: ['$views', [req.user._id]] },
-        },
-      }
-      : {
-        $set: {
-          [`${type}s`]: {
-            $cond: [
-              { $in: [req.user._id, `$${type}s`] },
-              { $setDifference: [`$${type}s`, [req.user._id]] },
-              { $concatArrays: [`$${type}s`, [req.user._id]] },
-            ],
+
+  try {
+    // Define the update query
+    let updateQuery;
+
+    if (type === 'view') {
+      // Views: Append user ID to views array (no toggle or conflict)
+      updateQuery = [
+        {
+          $set: {
+            views: {
+              $cond: [
+                { $in: [req.user._id, '$views'] },
+                '$views', // Already viewed, no change
+                { $concatArrays: ['$views', [req.user._id]] }, // Add user ID
+              ],
+            },
           },
         },
-      };
-  try {
-    const room = await Room.findOneAndUpdate({ _id: id }, [updateQuery], {
+      ];
+    } else {
+      // Likes or Dislikes: Toggle the action and remove from opposite array
+      const oppositeType = type === 'like' ? 'dislike' : 'like';
+      updateQuery = [
+        {
+          $set: {
+            // Toggle the current action (like/dislike)
+            [`${type}s`]: {
+              $cond: [
+                { $in: [req.user._id, `$${type}s`] },
+                { $setDifference: [`$${type}s`, [req.user._id]] }, // Remove user ID (unlike/undislike)
+                { $concatArrays: [`$${type}s`, [req.user._id]] }, // Add user ID (like/dislike)
+              ],
+            },
+            // Remove user from opposite array (dislikes/likes)
+            [`${oppositeType}s`]: {
+              $setDifference: [`$${oppositeType}s`, [req.user._id]],
+            },
+          },
+        },
+      ];
+    }
+
+    // Perform the update
+    const room = await Room.findOneAndUpdate({ _id: id }, updateQuery, {
       new: true,
     });
+
+    // Check if room exists
     if (!room) {
-      return res
-        .status(404)
-        .json({ success: false, message: 'Room not found' });
+      return res.status(404).json({ success: false, message: 'Room not found' });
     }
-    res.json({ success: true, message: 'Successful!' });
+    req.io.sockets.emit('ROOMS_UPDATED', room);
+    res.json({
+      success: true,
+      message: 'Successful!',
+    });
   } catch (error) {
+    console.error('Error updating room action:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 });
@@ -1210,12 +984,12 @@ router.get('/room/:id', async (req, res) => {
       .populate({
         path: 'creator',
         model: User,
-        select: '_id avatar username accessory totalWagered',
+        select: '_id avatar username accessory elite totalWagered',
       })
       .populate({
         path: 'joined_user',
         model: User,
-        select: '_id avatar username accessory totalWagered',
+        select: '_id avatar username accessory elite totalWagered',
       })
       .limit(req.query.limit ? req.query.limit : 10);
 
@@ -1247,12 +1021,14 @@ router.get('/room/:id', async (req, res) => {
         creator_avatar: creator['avatar'],
         rank: creator['totalWagered'],
         accessory: creator['accessory'],
+        elite: creator['elite'],
         hosts: room.hosts.map((host) => ({
           host: host['host'],
           username: host['username'],
           avatar: host['avatar'],
           rank: host['rank'],
           accessory: host['accessory'],
+          elite: host['elite'],
           share: host['share'],
           walletAddress: host['walletAddress'],
         })),
@@ -1342,7 +1118,7 @@ router.get('/comments/:room_id', async (req, res) => {
     const room_id = req.params.room_id;
     const comments = await Comment.find({ room: room_id })
       .populate({ path: 'user', model: User })
-      .select('_id accessory avatar username totalWagered content created_at')
+      .select('_id accessory elite avatar username totalWagered content created_at')
       .sort({ created_at: -1 });
     res.json({
       success: true,
@@ -1378,6 +1154,7 @@ router.post('/comments', auth, async (req, res) => {
       user: req.user._id,
       avatar: req.user.avatar,
       accessory: req.user.accessory,
+      elite: req.user.elite,
       totalWagered: req.user.totalWagered,
       room: room_id,
       content: content,
@@ -1392,6 +1169,7 @@ router.post('/comments', auth, async (req, res) => {
         username: req.user.username,
         avatar: req.user.avatar,
         accessory: req.user.accessory,
+        elite: req.user.elite,
         totalWagered: req.user.totalWagered,
       },
       content: comment.content,
@@ -1405,6 +1183,7 @@ router.post('/comments', auth, async (req, res) => {
       username: req.user.username,
       avatar: req.user.avatar,
       accessory: req.user.accessory,
+      elite: req.user.elite,
       room: room_id,
       amount: 0,
       rank: req.user.totalWagered,
@@ -1679,14 +1458,14 @@ const getRoomList = async (game_type) => {
     // Return all matching rooms with no skip/limit
     const preRooms = await Room.find(search_condition)
       .select(
-        '_id name ticker image description room_number ' +
+        '_id name ticker image description room_number likes dislikes' +
         'creator battles username joiners game_type qs_game_type is_private ' +
         'bet_amount user_bet pr host_pr endgame_amount status created_at updated_at hosts',
       )
       .populate({
         path: 'creator',
         model: 'rps_users',
-        select: 'avatar totalWagered username accessory status',
+        select: 'avatar totalWagered username accessory elite status',
       })
       .populate({ path: 'game_type', model: 'rps_game_types' })
       .sort({ updated_at: -1 })
@@ -1698,13 +1477,14 @@ const getRoomList = async (game_type) => {
           const joinerData = await Promise.all(
             room.joiners.map(async (joinedUserId) => {
               const user = await User.findOne({ _id: joinedUserId }).select(
-                'avatar totalWagered _id username accessory status',
+                'avatar totalWagered _id username accessory elite status',
               );
               return {
                 user_id: user._id,
                 avatar: user.avatar,
                 totalWagered: user.totalWagered,
                 accessory: user.accessory,
+                elite: user.elite,
                 username: user.username,
                 rank: user.totalWagered,
               };
@@ -1721,11 +1501,13 @@ const getRoomList = async (game_type) => {
               rank: joiner.totalWagered,
               username: joiner.username,
               accessory: joiner.accessory,
+              elite: joiner.elite,
               _id: joiner._id,
             })),
             rank: room.creator?.totalWagered || 0,
             creator_avatar: room.creator?.avatar || '',
             accessory: room.creator?.accessory || '',
+            elite: room.creator?.elite || '',
             username: room.creator?.username || '',
             creator_status: room.creator?.status || '',
             game_type: room.game_type,
@@ -1746,6 +1528,8 @@ const getRoomList = async (game_type) => {
             created_at: moment(room.created_at).format('YYYY-MM-DD HH:mm'),
             updated_at: room.updated_at,
             battles: room.battles,
+            likes: room.likes,
+            dislikes: room.dislikes,
             hosts: room.hosts,
             winnings: parseFloat(room.user_bet),
           };
@@ -1765,6 +1549,7 @@ const getRoomList = async (game_type) => {
     return { rooms: [] };
   }
 };
+
 router.post('/rooms', auth, async (req, res) => {
   try {
     const {
@@ -1795,11 +1580,12 @@ router.post('/rooms', auth, async (req, res) => {
       avatar,
       status,
       accessory,
+      elite,
       totalWagered,
       username,
       dailyWithdrawals,
       isWithdrawing,
-      balance
+      balance,
     } = req.user;
 
     // Consolidate validations
@@ -1817,6 +1603,13 @@ router.post('/rooms', auth, async (req, res) => {
       return res.json({
         success: false,
         message: 'IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!',
+      });
+    }
+
+    if (elite === '') {
+      return res.json({
+        success: false,
+        message: 'GAME CREATION IS ONLY FOR ELITE MEMBERS!',
       });
     }
 
@@ -1888,6 +1681,7 @@ router.post('/rooms', auth, async (req, res) => {
       avatar,
       username,
       accessory,
+      elite,
       rank: totalWagered,
       share: 100,
       stake: amountAfterFee,
@@ -1982,12 +1776,12 @@ router.post('/rooms', auth, async (req, res) => {
       .populate({
         path: 'creator',
         model: User,
-        select: '_id avatar username accessory totalWagered',
+        select: '_id avatar username accessory elite totalWagered',
       })
       .populate({
         path: 'joined_user',
         model: User,
-        select: '_id avatar username accessory totalWagered',
+        select: '_id avatar username accessory elite totalWagered',
       });
 
     // Process and emit events
@@ -1998,6 +1792,7 @@ router.post('/rooms', auth, async (req, res) => {
       creator_avatar: avatar,
       creator_status: status,
       accessory: accessory || '',
+      elite: elite,
       username,
       winnings: amountAfterFee,
       rank: totalWagered,
@@ -2007,7 +1802,7 @@ router.post('/rooms', auth, async (req, res) => {
     // Emit events in non-blocking way
     setImmediate(() => {
       req.io.sockets.emit('NEW_LOG', { newLog });
-      req.io.sockets.emit('UPDATED_ROOM_LIST', roomObj);
+      req.io.sockets.emit('ROOMS_UPDATED', roomObj);
     });
 
     res.json({
@@ -2096,6 +1891,7 @@ const getMyRooms = async (
       const creatorAvatar = creatorDetails?.avatar || '';
       const creatorTotalWagered = creatorDetails?.totalWagered || 0;
       const creatorAccessory = creatorDetails?.accessory || '';
+      const creatorElite = creatorDetails?.elite || '';
 
       let temp = {
         _id: room._id,
@@ -2106,6 +1902,7 @@ const getMyRooms = async (
         creator_avatar: creatorAvatar,
         rank: creatorTotalWagered,
         accessory: creatorAccessory,
+        elite: creatorElite,
         game_type: room.game_type,
         bet_amount: room.bet_amount,
         rps_list: room.rps_list,
@@ -2189,6 +1986,7 @@ router.post('/end_game', auth, async (req, res) => {
       username,
       avatar,
       accessory,
+      elite,
       totalWagered,
     } = req.user;
     const { room_id: roomId } = req.body;
@@ -2260,17 +2058,6 @@ router.post('/end_game', auth, async (req, res) => {
       host.updated_at = new Date();
       hostUpdates.push(saveDocumentWithRetry(host));
 
-      let qbotHost =
-        (await QBot.findOne({ user: req.user._id }).select(
-          'hosting updated_at',
-        )) || new QBot({ user: roomInfo.creator._id });
-      qbotHost.hosting = qbotHost.hosting || {};
-      qbotHost.hosting[strategyKey] =
-        (qbotHost.hosting[strategyKey] || 0) +
-        (roomInfo.host_pr + roomInfo.pr - roomInfo.bet_amount);
-      qbotHost.updated_at = new Date();
-      hostUpdates.push(saveDocumentWithRetry(qbotHost));
-
       const message = `Rugged ${roomInfo.name}`;
       const notificationData = {
         _id: userId,
@@ -2279,6 +2066,7 @@ router.post('/end_game', auth, async (req, res) => {
         avatar,
         amount,
         accessory,
+        elite,
         room: roomInfo._id,
         rank: totalWagered,
         created_at: moment().format('YYYY-MM-DD HH:mm'),
@@ -2330,12 +2118,12 @@ router.post('/end_game', auth, async (req, res) => {
       .populate({
         path: 'creator',
         model: User,
-        select: '_id avatar username accessory totalWagered',
+        select: '_id avatar username accessory elite totalWagered',
       })
       .populate({
         path: 'joined_user',
         model: User,
-        select: '_id avatar username accessory totalWagered',
+        select: '_id avatar username accessory elite totalWagered',
       });
 
     const gameLogList = await gameLogQuery;
@@ -2509,6 +2297,7 @@ router.post('/pump', auth, async (req, res) => {
       oldHosts.push({
         host: req.user._id,
         accessory: req.user.accessory,
+        elite: req.user.elite,
         username: req.user.username,
         avatar: req.user.avatar,
         rank: req.user.totalWagered,
@@ -2546,6 +2335,7 @@ router.post('/pump', auth, async (req, res) => {
       host: h.host,
       share: h.share,
       accessory: h.accessory,
+      elite: h.elite,
       username: h.username,
       avatar: h.avatar,
       rank: h.rank,
@@ -2645,6 +2435,7 @@ router.post('/pump', auth, async (req, res) => {
       username: req.user.username,
       avatar: req.user.avatar,
       accessory: req.user.accessory,
+      elite: req.user.elite,
       room: room._id,
       rank: req.user.totalWagered,
       amount: -amountAfterFee,
@@ -2713,12 +2504,12 @@ router.post('/pump', auth, async (req, res) => {
         .populate({
           path: 'creator',
           model: User,
-          select: '_id avatar username accessory totalWagered',
+          select: '_id avatar username accessory elite totalWagered',
         })
         .populate({
           path: 'joined_user',
           model: User,
-          select: '_id avatar username accessory totalWagered',
+          select: '_id avatar username accessory elite totalWagered',
         });
 
       const gameLogList = await gameLogQuery;
@@ -2938,6 +2729,7 @@ router.post('/jeet', auth, async (req, res) => {
       host: host.host,
       share: host.share,
       accessory: host.accessory,
+      elite: host.elite,
       username: host.username,
       avatar: host.avatar,
       rank: host.rank,
@@ -3016,12 +2808,12 @@ router.post('/jeet', auth, async (req, res) => {
       .populate({
         path: 'creator',
         model: User,
-        select: '_id avatar username accessory totalWagered',
+        select: '_id avatar username accessory elite totalWagered',
       })
       .populate({
         path: 'joined_user',
         model: User,
-        select: '_id avatar username accessory totalWagered',
+        select: '_id avatar username accessory elite totalWagered',
       });
 
     const gameLogList = await gameLogQuery;
@@ -3047,6 +2839,7 @@ router.post('/jeet', auth, async (req, res) => {
       avatar: req.user.avatar,
       amount: amountAfterFee,
       accessory: req.user.accessory,
+      elite: req.user.elite,
       room: roomInfo._id,
       rank: req.user.totalWagered,
       created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
@@ -3127,6 +2920,7 @@ router.get('/my_chat', auth, async (req, res) => {
           username: message.to.username,
           avatar: message.to.avatar,
           accessory: message.to.accessory,
+          elite: message.to.elite,
           rank: message.to.totalWagered,
           created_at: message.created_at,
           created_at_str: moment(message.created_at).format('LLL'),
@@ -3153,6 +2947,7 @@ router.get('/my_chat', auth, async (req, res) => {
           username: message.from.username,
           avatar: message.from.avatar,
           accessory: message.from.accessory,
+          elite: message.from.elite,
           rank: message.from.totalWagered,
           created_at: message.created_at,
           created_at_str: moment(message.created_at).format('LLL'),
@@ -3207,101 +3002,6 @@ router.post('/mark_chat_as_read', auth, async (req, res) => {
   }
 });
 
-router.patch('/qbotStatus', auth, async (req, res) => {
-  try {
-    const { userId, isActive } = req.body;
-    if (!userId || typeof isActive !== 'boolean') {
-      return res.status(400).json({
-        success: false,
-        message: 'User ID and isActive status are required',
-      });
-    }
-
-    const qbot = await QBot.findOneAndUpdate(
-      { user: userId },
-      { active: isActive },
-      { new: true, upsert: true },
-    ).select('user _id active');
-    if (req.io.sockets) {
-      const socketName = 'QBOT_STATUS';
-      req.io.sockets.emit(socketName, qbot);
-    }
-
-    res.json({
-      success: true,
-      isActive: qbot.active,
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    });
-  }
-});
-
-router.get('/qbotStatuses', auth, async (req, res) => {
-  try {
-    const { userIds } = req.query;
-    if (!userIds) {
-      return res.status(400).json({
-        success: false,
-        message: 'User IDs are required',
-      });
-    }
-
-    const userIdsArray = userIds.split(',');
-    const statuses = await QBot.find(
-      { user: { $in: userIdsArray }, active: true },
-      'user active',
-    );
-
-    // Transform statuses into a lookup object
-    const statusesMap = userIdsArray.reduce((acc, id) => {
-      acc[id] = !!statuses.find((status) => status.user.toString() === id);
-      return acc;
-    }, {});
-
-    res.json({
-      success: true,
-      statuses: statusesMap,
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    });
-  }
-});
-
-router.get('/qbotStatus', auth, async (req, res) => {
-  try {
-    const user_id = req.user._id;
-    if (!user_id) {
-      return res.status(400).json({
-        success: false,
-        message: 'User ID is required',
-      });
-    }
-    const isActive = await QBot.findOne(
-      { user: user_id, active: true },
-      'active',
-    );
-
-    return res.json({
-      success: true,
-      isActive: !!isActive,
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    });
-  }
-});
-
 router.get('/notifications', auth, async (req, res) => {
   try {
     const userId = req.user._id;
@@ -3310,7 +3010,7 @@ router.get('/notifications', auth, async (req, res) => {
         {
           path: 'from',
           model: User,
-          select: 'username avatar accessory totalWagered',
+          select: 'username avatar accessory elite totalWagered',
         },
       ])
       .sort({ created_at: -1 })
@@ -3325,6 +3025,7 @@ router.get('/notifications', auth, async (req, res) => {
         username: notification.from.username,
         avatar: notification.from.avatar,
         accessory: notification.from.accessory,
+        elite: notification.from.elite,
         room: notification.room,
         rank: notification.from.totalWagered,
         created_at: notification.created_at,
@@ -3416,6 +3117,7 @@ router.post('/get_chat_room_info', auth, async (req, res) => {
       chatRoomInfo: {
         user_id: user._id,
         accessory: user.accessory,
+        elite: user.elite,
         avatar: user.avatar,
         rank: user.totalWagered,
         username: user.username,
@@ -3455,7 +3157,7 @@ router.post('/getGlobalChatLogs', async (req, res) => {
       .select('sender message messageType messageContent created_at replyTo')
       .populate({
         path: 'sender',
-        select: 'username avatar accessory totalWagered _id',
+        select: 'username avatar accessory elite totalWagered _id',
         options: { lean: true }
       })
       .populate({
@@ -3463,7 +3165,7 @@ router.post('/getGlobalChatLogs', async (req, res) => {
         select: 'sender message messageType created_at',
         populate: {
           path: 'sender',
-          select: 'username avatar accessory totalWagered _id',
+          select: 'username avatar accessory elite totalWagered _id',
           options: { lean: true }
         },
         options: { lean: true }
@@ -3479,6 +3181,7 @@ router.post('/getGlobalChatLogs', async (req, res) => {
       messageContent: chat.messageContent,
       avatar: chat.sender?.avatar || '',
       accessory: chat.sender?.accessory || '',
+      elite: chat.sender?.elite || false,
       rank: chat.sender?.totalWagered || '',
       time: moment(chat.created_at).format('hh:mm'),
       replyTo: chat.replyTo?.[0] ? {
@@ -3487,6 +3190,7 @@ router.post('/getGlobalChatLogs', async (req, res) => {
         avatar: chat.replyTo[0].sender?.avatar || '',
         rank: chat.replyTo[0].sender?.totalWagered || '',
         accessory: chat.replyTo[0].sender?.accessory || '',
+        elite: chat.replyTo[0].sender?.elite || false,
         message: chat.replyTo[0].message,
         messageType: chat.replyTo[0].messageType,
         time: moment(chat.replyTo[0].created_at).format('hh:mm')
@@ -3762,6 +3466,7 @@ router.post('/tip', auth, async (req, res) => {
       username: req.user.username,
       avatar: req.user.avatar,
       accessory: req.user.accessory,
+      elite: req.user.elite,
       rank: req.user.totalWagered,
       created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
       created_at_str: moment(new Date()).format('LLL'),
@@ -3773,6 +3478,7 @@ router.post('/tip', auth, async (req, res) => {
       username: userToTip.username,
       avatar: userToTip.avatar,
       accessory: userToTip.accessory,
+      elite: userToTip.elite,
       rank: userToTip.totalWagered,
       created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
       created_at_str: moment(new Date()).format('LLL'),

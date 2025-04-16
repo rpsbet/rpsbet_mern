@@ -20,7 +20,6 @@ async function convertGameLogToHistoryStyle(gameLogList) {
       created_at: gameLog.created_at || null,
       ai_mode: gameLog.ai_mode || '',
       hosts: gameLog.hosts || [],
-      qbot: gameLog.qbot || '',
       commission: gameLog.commission ?? 0,
       endgame_amount: gameLog.endgame_amount ?? 0,
       host_pr: gameLog.host_pr ?? 0,
@@ -52,6 +51,7 @@ async function convertGameLogToHistoryStyle(gameLogList) {
           avatar: gameLog.creator.avatar,
           totalWagered: gameLog.creator.totalWagered,
           accessory: gameLog.creator.accessory || '',
+          elite: gameLog.creator.elite || '',
           username: gameLog.creator.username || '',
 
         }
@@ -64,6 +64,7 @@ async function convertGameLogToHistoryStyle(gameLogList) {
           avatar: gameLog.joined_user.avatar,
           totalWagered: gameLog.joined_user.totalWagered,
           accessory: gameLog.joined_user.accessory || '',
+          elite: gameLog.joined_user.elite || '',
           username: gameLog.joined_user.username || '',
         }
         : null,

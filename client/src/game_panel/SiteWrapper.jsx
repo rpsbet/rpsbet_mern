@@ -82,7 +82,6 @@ import {
   setUnreadMessageCount,
   setDarkMode,
   setNotificationsAllowed,
-  updateTutorialCompleted,
   checkAndAddWalletAddress,
   disconnectWalletAddress,
   authenticateWithPhantom
@@ -136,6 +135,7 @@ const DepositModal = lazy(() => import('./modal/DepositModal'));
 const WithdrawModal = lazy(() => import('./modal/WithdrawModal'));
 const InventoryModal = lazy(() => import('./modal/InventoryModal'));
 const VaultModal = lazy(() => import('./modal/VaultModal'));
+const EliteSubscriptionModal = lazy(() => import('./modal/EliteSubscriptionModal'));
 
 // Remove PropTypes override
 LoadingOverlay.propTypes = undefined;
@@ -254,7 +254,7 @@ function SiteWrapper({ children }) {
   const [showDebtsModal, setShowDebtsModal] = useState(false);
   const [bonusCheck, setBonusCheck] = useState(false);
   const [highlightedRooms, setHighlightedRooms] = useState(new Set());
-  const [unreadCount, setUnreadCount] = useState(0);
+const [eliteModalOpen, setEliteModalOpen] = useState(false);
   const [walletAddress, setWalletAddress] = useState(connectedAccount);
   const [solanaBalance, setSolanaBalance] = useState(0);
   const [account, setAccount] = useState(null);
@@ -313,22 +313,15 @@ function SiteWrapper({ children }) {
     };
   }, [dispatch]);
 
-  // Check for tutorial completion
-  useEffect(() => {
-    if (user && user.completedTutorials) {
-      setRunTutorial(!user.completedTutorials.includes(1));
-    }
-  }, [user]);
-
-  // Check for negative balance
   useEffect(() => {
     setShowNegativeBalanceDialog(balance < 0);
   }, [balance]);
 
-
-  // Initialize socket connection
   useEffect(() => {
-    const newSocket = socketIOClient(endpoint, { transports: ['websocket'] });
+    const newSocket = socketIOClient(endpoint, {
+      transports: ['websocket'],
+      withCredentials: true, // Required for CORS with credentials
+    });
 
     // Socket event handlers
     const handleOnlineStatusUpdated = data => dispatch(updateOnlineUserList(data.user_list));
@@ -353,7 +346,7 @@ function SiteWrapper({ children }) {
       dispatch(setRoomList(data));
       dispatch(endLoading());
     };
-    newSocket.on('UPDATED_ROOM_LIST', handleUpdatedRoomList);
+    newSocket.on('ROOMS_UPDATED', handleUpdatedRoomList);
 
     const handleRoomEnded = data => dispatch(removeRoomFromList(data.roomId));
     newSocket.on('ROOM_ENDED', handleRoomEnded);
@@ -362,7 +355,7 @@ function SiteWrapper({ children }) {
 
     return () => {
       newSocket.off('GLOBAL_CHAT_RECEIVED', handleGlobalChat);
-      newSocket.off('UPDATED_ROOM_LIST', handleUpdatedRoomList);
+      newSocket.off('ROOMS_UPDATED', handleUpdatedRoomList);
       newSocket.off('ROOM_ENDED', handleRoomEnded);
       newSocket.off('ONLINE_STATUS_UPDATED', handleOnlineStatusUpdated);
       newSocket.disconnect();
@@ -406,6 +399,7 @@ function SiteWrapper({ children }) {
           lender: payload.lender,
           avatar: payload.avatar,
           accessory: payload.accessory,
+          elite: payload.elite,
           username: payload.username,
           totalWagered: payload.totalWagered,
         })
@@ -565,7 +559,12 @@ function SiteWrapper({ children }) {
   const handleCloseLoginModal = () => setShowLoginModal(false);
   const handleOpenSignupModal = () => setShowSignupModal(true);
   const handleCloseSignupModal = () => setShowSignupModal(false);
-
+  const handleOpenEliteSubscriptionModal = () => {
+    setEliteModalOpen(true);
+  };
+  const handleCloseEliteSubscriptionModal = () => {
+    setEliteModalOpen(false);
+  };
   const handleOpenDepositModal = () => {
     setShowDepositModal(true);
     setAnchorElProfile(null);
@@ -699,38 +698,45 @@ function SiteWrapper({ children }) {
           />
         </Suspense>
       )}
-
+      <Suspense fallback={''}>
+        <EliteSubscriptionModal
+          user={user}
+          open={eliteModalOpen}
+          onClose={handleCloseEliteSubscriptionModal}
+          isLowGraphics={isLowGraphics}
+        />
+      </Suspense>
       <div className={`site_wrapper ${isDarkMode ? 'dark_mode' : ''}`}>
         {/* Header and rest of the JSX remains unchanged */}
         <div className="game_header">
           <div className="main_header">
             <Box>
-            <a
-  className="game_logo"
-  href="/"
-  onClick={(e) => {
-    e.preventDefault();
-    window.location.href = '/';
-  }}
->
-  <img src="/img/game-logo.svg" alt="Game Logo" width="25" height="25" />
-  <span
-    className="title desktop-only"
-    style={{
-      backgroundImage: 'linear-gradient(45deg,rgb(182, 182, 182) 0%,rgb(253, 253, 253) 55%,rgb(255, 0, 0) 77%)',
-      WebkitBackgroundClip: 'text',
-      backgroundClip: 'text', // Standard property for broader support
-      color: 'transparent', // Fallback for unsupported browsers
-      display: 'inline-block',
-      // Fallback color for browsers that don’t support text clipping
-      WebkitTextFillColor: 'transparent',
-      textFillColor: 'transparent', // Standard property (future-proofing)
-      fallbackColor: '#ff6b6b' // Custom property for fallback logic (optional)
-    }}
-  >
-    CATSINO.FUN
-  </span>
-</a>
+              <a
+                className="game_logo"
+                href="/"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.location.href = '/';
+                }}
+              >
+                <img src="/img/game-logo.svg" alt="Game Logo" width="25" height="25" />
+                <span
+                  className="title desktop-only"
+                  style={{
+                    backgroundImage: 'linear-gradient(45deg,rgb(182, 182, 182) 0%,rgb(253, 253, 253) 55%,rgb(255, 0, 0) 77%)',
+                    WebkitBackgroundClip: 'text',
+                    backgroundClip: 'text', // Standard property for broader support
+                    color: 'transparent', // Fallback for unsupported browsers
+                    display: 'inline-block',
+                    // Fallback color for browsers that don’t support text clipping
+                    WebkitTextFillColor: 'transparent',
+                    textFillColor: 'transparent', // Standard property (future-proofing)
+                    fallbackColor: '#ff6b6b' // Custom property for fallback logic (optional)
+                  }}
+                >
+                  CATSINO.FUN
+                </span>
+              </a>
               <a
                 href="#"
                 style={{
@@ -963,6 +969,7 @@ function SiteWrapper({ children }) {
                       user_id={user._id}
                       rank={user.totalWagered}
                       accessory={user.accessory}
+                      elite={user.elite}
                       alt=""
                       username={user.username}
                       className="avatar"
@@ -978,11 +985,11 @@ function SiteWrapper({ children }) {
                     transitionDuration={0}
                     anchorOrigin={{
                       vertical: 'bottom',
-                      horizontal: 'center'
+                      horizontal: 'center',
                     }}
                     transformOrigin={{
                       vertical: 'top',
-                      horizontal: 'center'
+                      horizontal: 'center',
                     }}
                     PaperProps={{
                       sx: {
@@ -993,19 +1000,19 @@ function SiteWrapper({ children }) {
                           color: 'inherit',
                           '&:hover': {
                             backgroundColor: '#D32F2F',
-                            color: '#fff'
-                          }
+                            color: '#fff',
+                          },
                         },
                         '& .MuiListItemIcon-root': {
-                          color: 'inherit'
+                          color: 'inherit',
                         },
                         '& .MuiDivider-root': {
-                          borderColor: 'rgba(255,255,255,0.2)'
-                        }
-                      }
+                          borderColor: 'rgba(255,255,255,0.2)',
+                        },
+                      },
                     }}
                     BackdropProps={{
-                      invisible: true
+                      invisible: true,
                     }}
                   >
                     <MenuItem onClick={handleOpenProfileModal}>
@@ -1032,6 +1039,12 @@ function SiteWrapper({ children }) {
                         <Help />
                       </ListItemIcon>
                       <ListItemText>HOW IT WORKS</ListItemText>
+                    </MenuItem>
+                    <MenuItem onClick={handleOpenEliteSubscriptionModal}>
+                      <ListItemIcon>
+                        <Star fontSize="small" />
+                      </ListItemIcon>
+                      <ListItemText>ELITE</ListItemText>
                     </MenuItem>
                     <Divider />
                     <MenuItem
@@ -1137,6 +1150,7 @@ function SiteWrapper({ children }) {
                             src={notification.avatar}
                             rank={notification.rank}
                             accessory={notification.accessory}
+                            elite={notification.elite}
                             username={notification.username}
                             className="avatar"
                           />
@@ -1375,19 +1389,11 @@ function SiteWrapper({ children }) {
               sx={{
                 mt: 2,
                 display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
+                gridTemplateColumns: '1fr', // Single column for the first row (Vault)
                 gap: 1,
               }}
             >
-              <Button
-                color="error"
-                variant="outlined"
-                onClick={handleOpenInventoryModal}
-                startIcon={<Inventory2Outlined />}
-                sx={{ '&:hover': { backgroundColor: 'error.main', color: '#fff' } }}
-              >
-                Inventory
-              </Button>
+              {/* Vault Button - Full Width */}
               <Button
                 color="error"
                 variant="outlined"
@@ -1397,36 +1403,46 @@ function SiteWrapper({ children }) {
               >
                 Vault
               </Button>
-              <Button
-                color="error"
-                variant="outlined"
-                onClick={handleOpenDepositModal}
-                startIcon={<AccountBalanceWalletOutlined />}
-                sx={{ '&:hover': { backgroundColor: 'error.main', color: '#fff' } }}
+
+              {/* Second Row: Deposit and Debts/Withdraw */}
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)', // Two columns for Deposit and Debts/Withdraw
+                  gap: 1,
+                }}
               >
-                Deposit
-              </Button>
-              {remainingLoans > 0 ? (
                 <Button
                   color="error"
                   variant="outlined"
-                  onClick={handleOpenDebtsModal}
-                  startIcon={<MoneyOffCsredOutlined />}
+                  onClick={handleOpenDepositModal}
+                  startIcon={<AccountBalanceWalletOutlined />}
                   sx={{ '&:hover': { backgroundColor: 'error.main', color: '#fff' } }}
                 >
-                  {convertToCurrency(remainingLoans, solPrice)} IN DEBT
+                  Deposit
                 </Button>
-              ) : (
-                <Button
-                  color="error"
-                  variant="outlined"
-                  onClick={handleOpenWithdrawModal}
-                  startIcon={<AttachMoneyOutlined />}
-                  sx={{ '&:hover': { backgroundColor: 'error.main', color: '#fff' } }}
-                >
-                  Withdraw
-                </Button>
-              )}
+                {remainingLoans > 0 ? (
+                  <Button
+                    color="error"
+                    variant="outlined"
+                    onClick={handleOpenDebtsModal}
+                    startIcon={<MoneyOffCsredOutlined />}
+                    sx={{ '&:hover': { backgroundColor: 'error.main', color: '#fff' } }}
+                  >
+                    {convertToCurrency(remainingLoans, solPrice)} IN DEBT
+                  </Button>
+                ) : (
+                  <Button
+                    color="error"
+                    variant="outlined"
+                    onClick={handleOpenWithdrawModal}
+                    startIcon={<AttachMoneyOutlined />}
+                    sx={{ '&:hover': { backgroundColor: 'error.main', color: '#fff' } }}
+                  >
+                    Withdraw
+                  </Button>
+                )}
+              </Box>
             </Box>
             {connectedAccount ? (
               <Box sx={{ mt: 2 }}>
@@ -1469,6 +1485,7 @@ function SiteWrapper({ children }) {
               player_name={userName}
               balance={balance}
               accessory={user?.accessory}
+              elite={user?.elite}
               avatar={user?.avatar}
               totalWagered={user?.totalWagered}
               selectedCreator={user?._id}

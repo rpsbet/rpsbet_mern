@@ -17,12 +17,18 @@ import {
   useMediaQuery,
 } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Add as AddIcon, AutoAwesome as AutoAwesomeIcon } from '@mui/icons-material';
 import { faCoins, faStore, faHome } from '@fortawesome/free-solid-svg-icons';
 import DrawerButton from './DrawerButton';
 import { submitAiPrompt, goToCreate } from '../../redux/Logic/logic.actions';
 import Footer from './Footer';
-
+import {
+  AutoAwesome as AutoAwesomeIcon,
+  Add as AddIcon,
+  Close as CloseIcon,
+  CheckCircle as CheckCircleIcon
+} from '@mui/icons-material';
+import Lottie from 'react-lottie';
+import verified from '../LottieAnimations/verified.json';
 // Lazy-load components
 const MyGamesTable = lazy(() => import('../MyGames/MyGamesTable'));
 const OpenGamesTable = lazy(() => import('../LiveGames/OpenGamesTable'));
@@ -30,6 +36,7 @@ const HistoryTable = lazy(() => import('../LiveGames/HistoryTable'));
 const ProductPage = lazy(() => import('../../admin_panel/app/ProductPages/ProductSerchPage/ProductPage.jsx'));
 const BankPage = lazy(() => import('../../admin_panel/app/ProductPages/ProductSerchPage/BankPage.jsx'));
 const ChatPanel = lazy(() => import('../ChatPanel/ChatPanel'));
+const EliteSubscriptionModal = lazy(() => import('../modal/EliteSubscriptionModal'));
 
 function MainPage() {
   const dispatch = useDispatch();
@@ -48,6 +55,7 @@ function MainPage() {
     onlineUserList,
     gameTypeList,
     pageNumber,
+    isLowGraphics
   } = useSelector((state) => ({
     isAuthenticated: state.auth.isAuthenticated,
     roomList: state.logic.roomList,
@@ -59,6 +67,7 @@ function MainPage() {
     gameTypeList: state.logic.gameTypeList,
     selectedMainTabIndex: state.logic.selectedMainTabIndex,
     pageNumber: state.logic.pageNumber,
+    isLowGraphics: state.auth.isLowGraphics,
   }));
 
   // Local state
@@ -72,6 +81,7 @@ function MainPage() {
   const [selectedCreator, setSelectedCreator] = useState('');
   const [showPlayerModal, setShowPlayerModal] = useState(false);
   const [aiPrompt, setAiPrompt] = useState('');
+  const [openModal, setOpenModal] = useState(false);
 
   const isMountedRef = useRef(false);
   const prevLocationRef = useRef(location.pathname);
@@ -139,21 +149,17 @@ function MainPage() {
     dispatch(toggleDrawer(!isDrawerOpen));
   }, [dispatch, isDrawerOpen]);
 
-  const handleCreateBtnClicked = () => {
-    navigate('/create');
-  };
-
   const handleAiPromptSubmit = async () => {
     if (aiPrompt.trim()) {
-      dispatch(submitAiPrompt(aiPrompt, navigate));
-
+      if (user?.elite === 'red' || user?.elite === 'black') {
+        dispatch(submitAiPrompt(aiPrompt, navigate));
+      } else {
+        setOpenModal(true);
+      }
     }
   };
 
   const getActiveTabText = () => {
-    if (selectedMobileTab === 'marketplace') {
-      return null;
-    }
 
     if (
       (isMobile && selectedMobileTab === 'live_games' && showOpenGame !== 1) ||
@@ -174,25 +180,52 @@ function MainPage() {
       };
 
       const handleCreatePreMadeGame = () => {
-        dispatch(goToCreate(navigate));
-
+        if (user?.elite === 'red' || user?.elite === 'black') {
+          dispatch(goToCreate(navigate));
+        } else {
+          setOpenModal(true);
+        }
       };
 
       return (
         <div className="create-room-btn-panel">
-            <img src="/img/slyCat.svg" width={200} style={{zIndex: '-1', position: 'absolute', left: '20px', filter: 'invert(1) hue-rotate(130deg)', opacity: 0.2, transform: 'scaleX(-1) rotate(-30deg)'}} alt="Cat" className="cat-image" />
+          <img src="/img/slyCat.svg" width={200} style={{ zIndex: '-1', position: 'absolute', left: '20px', filter: 'invert(1) hue-rotate(130deg)', opacity: 0.2, transform: 'scaleX(-1) rotate(-30deg)' }} alt="Cat" className="cat-image" />
 
           <Box
             className="btn-create-room"
-
             sx={{
               position: 'relative',
               width: '100%',
               maxWidth: '400px',
             }}
           >
-            <Typography variant="h6" className="title" sx={{ mb: 1 }}>
-              <FontAwesomeIcon icon={faHome} className="mr-2" />Be The House 👇😼</Typography>
+            <Typography variant="h6" className="title" sx={{ mb: 1, display: 'flex', alignItems: 'center' }}>
+              <FontAwesomeIcon icon={faHome} className="mr-2" />
+              Be The House👇😼
+              <Box sx={{ display: 'flex', alignItems: 'center', ml: 1 }}>
+                <Box
+                  sx={{
+                    width: '22px',
+                    height: 'auto',
+                    position: 'relative',
+                    transform: 'scale(0.6)',
+                    filter: 'hue-rotate(132deg)',
+                  }}
+                >
+                  <Lottie
+                    options={{
+                      loop: !isLowGraphics,
+                      autoplay: !isLowGraphics,
+                      animationData: verified,
+                    }}
+                    style={{ width: '100%', height: '100%' }}
+                  />
+                </Box>
+                <span style={{ color: user?.elite === 'red' ? '#ff0000' : user?.elite === 'black' ? '#000000' : '#ff0000' }}>
+                  {user?.elite === 'red' || user?.elite === 'black' ? `${user.elite.toUpperCase()} ELITE USER` : 'ELITE USERS ONLY'}
+                </span>
+              </Box>
+            </Typography>
             <Box
               sx={{
                 display: 'flex',
@@ -262,8 +295,6 @@ function MainPage() {
                 }}
               />
             </Box>
-
-            {/* Always visible suggested prompts */}
             <Box
               sx={{
                 display: 'flex',
@@ -300,8 +331,6 @@ function MainPage() {
                 />
               ))}
             </Box>
-
-            {/* Smaller, less conspicuous pre-made game button */}
             <Button
               variant="text"
               onClick={handleCreatePreMadeGame}
@@ -321,8 +350,10 @@ function MainPage() {
               Use template
             </Button>
           </Box>
-          <img src="/img/coolCat.svg" width={200} style={{zIndex: '-1', position: 'absolute', right: '20px', filter: 'invert(1) hue-rotate(180deg)', opacity: 0.2, transform: 'rotate(-30deg)'}} alt="Cat" className="cat-image" />
-
+          <img src="/img/coolCat.svg" width={200} style={{ zIndex: '-1', position: 'absolute', right: '20px', filter: 'invert(1) hue-rotate(180deg)', opacity: 0.2, transform: 'rotate(-30deg)' }} alt="Cat" className="cat-image" />
+          <Suspense fallback={<Typography>Loading Elite Subscriptions...</Typography>}>
+            <EliteSubscriptionModal isLowGraphics={isLowGraphics} open={openModal} onClose={() => setOpenModal(false)} />
+          </Suspense>
         </div>
       );
     }

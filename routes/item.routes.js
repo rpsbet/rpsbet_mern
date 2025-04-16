@@ -126,6 +126,7 @@ router.post('/return', auth, async (req, res) => {
       username: req.user.username,
       avatar: req.user.avatar,
       accessory: req.user.accessory,
+      elite: req.user.elite,
       rank: req.user.totalWagered,
       created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
       created_at_str: moment(new Date()).format('LLL'),

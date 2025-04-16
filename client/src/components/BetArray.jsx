@@ -33,17 +33,13 @@ const BetArray = ({
   // Access Redux state with useSelector
   const user_balance  = useSelector(state => state.auth.user.balance) || propUserBalance;
   const user_id       = useSelector(state => state.auth.user._id) || propUserId;
-  const user_range    = useSelector(state => state.auth.user.range);
   const totalWagered  = useSelector(state => state.auth.user.totalWagered);
 
   // Local component states
-  const [range, setRange] = useState([1, 100]);
   const [rank, setRank] = useState(propRank || null);
 
-  // Refs for mounted state
   const isMounted = useRef(true);
 
-  // Update rank on mount if not provided
   useEffect(() => {
     isMounted.current = true;
     (async () => {
@@ -61,14 +57,6 @@ const BetArray = ({
       isMounted.current = false;
     };
   }, [totalWagered, propRank]);
-
-  // Update range if user_range changes
-  useEffect(() => {
-    if (user_range && user_range.length === 2) {
-      const [min, max] = user_range;
-      setRange([min, max]);
-    }
-  }, [user_range]);
 
   return (
     <Box sx={{ position: 'relative', width: '100%', mt: 4 }}>

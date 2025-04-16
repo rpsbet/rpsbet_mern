@@ -304,6 +304,7 @@ function OfferLoanModal() {
           _id: offerInfo._id,
           username: '',
           accessory: '',
+          elite: '',
           totalWagered: '',
           isLender: '',
         }),
@@ -356,6 +357,7 @@ function OfferLoanModal() {
                           className="avatar"
                           src={userInfo?.avatar}
                           rank={userInfo?.totalWagered}
+                          elite={userInfo?.elite}
                           user_id={userInfo?._id}
                           username={userInfo?.username}
                           accessory={userInfo?.accessory}
@@ -389,6 +391,7 @@ function OfferLoanModal() {
                             src={offerInfo?.avatar}
                             rank={offerInfo?.totalWagered}
                             user_id={offerInfo?._id}
+                            elite={offerInfo?.elite}
                             accessory={offerInfo?.accessory}
                             username={offerInfo?.username}
                             alt=""
@@ -403,6 +406,7 @@ function OfferLoanModal() {
                             src={offerInfo?.avatar}
                             rank={offerInfo?.totalWagered}
                             accessory={offerInfo?.accessory}
+                            elite={offerInfo?.elite}
                             user_id={offerInfo?._id}
                             username={offerInfo?.username}
                             alt=""

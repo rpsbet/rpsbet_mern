@@ -41,7 +41,6 @@ import {
   updateUserPrompt,
 } from '../../redux/Logic/logic.actions';
 import { errorMsgBar } from '../../redux/Notification/notification.actions';
-import { updateTutorialCompleted } from '../../redux/Auth/user.actions';
 import { getRank } from '../../util/getRank';
 import { convertToCurrency } from '../../util/conversion';
 import { confirmModalCreate } from '../modal/ConfirmAlerts';
@@ -84,15 +83,7 @@ function MyGamesTable() { // Remove props destructuring since we’ll use hooks
   const [selectedGameType, setSelectedGameType] = useState('All');
   const [selectedFilter, setSelectedFilter] = useState('open');
   const [selectedSort, setSelectedSort] = useState('desc');
-
   const [myGames, setMyGames] = useState(propsMyGames);
-
-  const [runTutorial, setRunTutorial] = useState(
-    !user?.completedTutorials?.includes(3),
-  );
-  const currentTutorial = 3;
-
-  // Co-host
   const [isCoHostModalOpen, setIsCoHostModalOpen] = useState(false);
   const [coHostAmount, setCoHostAmount] = useState(0);
   const [selectedRow, setSelectedRow] = useState(null);
@@ -388,7 +379,6 @@ function MyGamesTable() { // Remove props destructuring since we’ll use hooks
   // ---------- Render ----------
   return (
     <Box className="my-open-games">
-      {/* Filter/Tutorial Container */}
       <Box className="filter-container overflowX">
         {selectedRow && (
           <SettingsRef
