@@ -77,11 +77,6 @@
 	background: #212529;
 }
 
-
-.dark_mode .history-background {
-	background: linear-gradient(#515151, #0f0f0f) !important
-}
-
 .dark_mode .chat-wrapper .chat-panel .chat-line .sender-name {
 	color: #b9bbbe;
 }
@@ -147,9 +142,6 @@
 	color: #8e9297;
 }
 
-.dark_mode .game-page .game-contents {
-	background: #222222;
-}
 
 .dark_mode .avatar-square {
 
@@ -166,12 +158,6 @@
 .dark_mode div.table .dont-have-game-msg span {
 	font-size: 14px;
 }
-
-.dark_mode div.table .table-row {
-	background: #080808	!important;
-	color: #8e9297;
-}
-
 
 .dark_mode div.table.my-open-game-table .table-row .table-cell.room-id {
 	color: #dee2e6;

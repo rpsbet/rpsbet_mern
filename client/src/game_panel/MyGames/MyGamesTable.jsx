@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import {
   Box,
@@ -23,14 +23,12 @@ import {
 } from '@mui/material';
 import Lottie from 'react-lottie';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMoneyCheckAlt } from '@fortawesome/free-solid-svg-icons';
+import { faMoneyCheckAlt, faThumbsUp, faThumbsDown } from '@fortawesome/free-solid-svg-icons';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
-import EditOutline from '@mui/icons-material/EditOutlined';
 import { Info } from '@mui/icons-material';
 
 import {
   getMyGames,
-  getStrategies,
   updateRoomStrategy,
   editPayout,
   setGameMode,
@@ -51,7 +49,7 @@ import Battle from '../icons/Battle';
 import pressHold from '../LottieAnimations/pressHold.json';
 import animationData from '../LottieAnimations/add';
 
-function MyGamesTable() { // Remove props destructuring since we’ll use hooks
+function MyGamesTable() {
   const dispatch = useDispatch();
 
   // Map state from Redux using useSelector
@@ -84,6 +82,7 @@ function MyGamesTable() { // Remove props destructuring since we’ll use hooks
   const [selectedFilter, setSelectedFilter] = useState('open');
   const [selectedSort, setSelectedSort] = useState('desc');
   const [myGames, setMyGames] = useState(propsMyGames);
+  const [gameCode, setGameCode] = useState('');
   const [isCoHostModalOpen, setIsCoHostModalOpen] = useState(false);
   const [coHostAmount, setCoHostAmount] = useState(0);
   const [selectedRow, setSelectedRow] = useState(null);
@@ -115,12 +114,9 @@ function MyGamesTable() { // Remove props destructuring since we’ll use hooks
         },
       ),
     );
-    dispatch(getStrategies());
   }, [dispatch, selectedGameType, selectedFilter, selectedSort]);
 
   useEffect(() => {
-    console.log("3")
-
     async function fetchInitialData() {
       await fetchData();
       document.addEventListener('mousedown', handleClickOutside);
@@ -130,7 +126,7 @@ function MyGamesTable() { // Remove props destructuring since we’ll use hooks
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [fetchData]); // Add fetchData to dependencies
+  }, []);
 
   const handleBankrollUpdate = useCallback(
     (data) => {
@@ -155,7 +151,6 @@ function MyGamesTable() { // Remove props destructuring since we’ll use hooks
     if (!socket) return;
 
     myGames.forEach((game) => {
-      console.log("called", game)
       socket.on(`UPDATED_BANKROLL_${game._id}`, handleBankrollUpdate);
     });
 
@@ -167,16 +162,23 @@ function MyGamesTable() { // Remove props destructuring since we’ll use hooks
   }, [socket, myGames, handleBankrollUpdate]);
 
   useEffect(() => {
-    console.log("1")
     fetchData();
-  }, [selectedFilter, selectedSort, fetchData]); // Add fetchData to dependencies
+  }, [selectedFilter, selectedSort, fetchData]);
 
   useEffect(() => {
-    console.log("2")
-
-    setMyGames(propsMyGames );
+    setMyGames(propsMyGames);
   }, [propsMyGames]);
 
+  // Update myGames when gameCode changes to keep selectedRow.gameCode in sync
+  useEffect(() => {
+    if (selectedRow && gameCode && selectedRow.gameCode !== gameCode) {
+      setMyGames((prevMyGames) =>
+        prevMyGames.map((game) =>
+          game._id === selectedRow._id ? { ...game, gameCode } : game
+        )
+      );
+    }
+  }, [gameCode, selectedRow]);
 
   // ---------- CoHost ----------
   const handleCoHost = (row) => {
@@ -263,7 +265,7 @@ function MyGamesTable() { // Remove props destructuring since we’ll use hooks
       }
     } catch (error) {
       dispatch(errorMsgBar('Failed to adjust hard cap.'));
-    } 
+    }
   }, [payoutAmount, selectedRow, dispatch, editPayout, fetchData]);
 
   // ---------- RUG logic ----------
@@ -351,6 +353,7 @@ function MyGamesTable() { // Remove props destructuring since we’ll use hooks
     event.stopPropagation();
     if (row.coHost) {
       setSelectedRow(row);
+      setGameCode(row.gameCode || ''); // Initialize gameCode with row's gameCode
       setSettingsPanelOpened(!settingsPanelOpened);
     } else {
       dispatch(errorMsgBar('YOU MUST OWN 100% TO CHANGE MODEL.'));
@@ -362,6 +365,44 @@ function MyGamesTable() { // Remove props destructuring since we’ll use hooks
       setSettingsPanelOpened(false);
     }
   };
+
+  // ---------- Memoized SettingsRef ----------
+  const settingsRefComponent = useMemo(() => {
+    return selectedRow ? (
+      <SettingsRef
+        ref={settingsRef}
+        strategies={strategies}
+        ai_mode={selectedRow.selectedStrategy}
+        room_id={selectedRow._id}
+        prompt={user?.prompt}
+        setGameCode={setGameCode}
+        rank={getRank(user?.totalWagered)}
+        settings_panel_opened={settingsPanelOpened}
+        setSelectedStrategy={setSelectedStrategy}
+        selectedStrategy={selectedStrategy}
+        updateUserStrategy={updateRoomStrategy}
+        updateUserPrompt={updateUserPrompt}
+        gameCode={gameCode} // Pass gameCode state instead of selectedRow.gameCode
+        rowName={selectedRow.name}
+        onClose={() => setSettingsPanelOpened(false)}
+        user_id={user?._id} // Pass user_id if required by SettingsRef
+        user_balance={balance} // Pass user_balance if required
+        creator_prompt={user?.prompt} // Pass creator_prompt if required
+      />
+    ) : null;
+  }, [
+    selectedRow,
+    strategies,
+    user,
+    settingsPanelOpened,
+    selectedStrategy,
+    setGameCode,
+    setSelectedStrategy,
+    updateRoomStrategy,
+    updateUserPrompt,
+    gameCode, // Add gameCode to dependencies
+    balance,
+  ]);
 
   // ---------- Lottie config ----------
   const defaultOptions = {
@@ -380,21 +421,7 @@ function MyGamesTable() { // Remove props destructuring since we’ll use hooks
   return (
     <Box className="my-open-games">
       <Box className="filter-container overflowX">
-        {selectedRow && (
-          <SettingsRef
-            ref={settingsRef}
-            strategies={strategies}
-            ai_mode={selectedRow.selectedStrategy}
-            user_id={selectedRow._id}
-            prompt={user?.prompt}
-            rank={getRank(user?.totalWagered)}
-            settings_panel_opened={settingsPanelOpened}
-            setSelectedStrategy={setSelectedStrategy}
-            selectedStrategy={selectedStrategy}
-            updateUserStrategy={updateRoomStrategy}
-            updateUserPrompt={updateUserPrompt}
-          />
-        )}
+        {settingsRefComponent}
       </Box>
 
       {my_games_loading ? (
@@ -418,7 +445,6 @@ function MyGamesTable() { // Remove props destructuring since we’ll use hooks
         </Box>
       ) : (
         <Box className="table my-open-game-table" sx={{ p: 2 }}>
-          {/* No games => show message */}
           {myGames.length === 0 ? (
             <Box
               className="dont-have-game-msg"
@@ -431,39 +457,46 @@ function MyGamesTable() { // Remove props destructuring since we’ll use hooks
             </Box>
           ) : (
             <>
-              {/* Table Header */}
               <Box
                 className="table-header"
                 sx={{
                   width: '100%',
                   alignItems: 'center',
                   p: '10px 20px',
+                  mb: 2,
                   fontWeight: 'bold',
                   textAlign: 'center',
+                  // Optional: Apply glassmorphism to header for consistency
+                  background: isDarkMode
+                    ? 'rgba(0, 0, 0, 0.2)'
+                    : 'rgba(255, 255, 255, 0.1)',
+                  backdropFilter: 'blur(10px)',
+                  WebkitBackdropFilter: 'blur(10px)', // For Safari
+                  border: isDarkMode
+                    ? '1px solid rgba(255, 255, 255, 0.2)'
+                    : '1px solid rgba(0, 0, 0, 0.2)',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
                 }}
               >
                 <Box className="table-cell room-id" sx={{ width: '17%' }}>
                   ROOM
                 </Box>
                 <Box className="table-cell winnings" sx={{ width: '17%' }}>
-                  LIQUIDITY / SHARE
-                </Box>
-                <Box className="table-cell payout" sx={{ width: '17%' }}>
-                  HEALTH CAP
+                  LIQUIDITY / PROGRESS
                 </Box>
                 <Box className="table-cell bet-info" sx={{ width: '17%' }}>
-                  HEALTH 
+                  EQUITY
                   <Tooltip title="TO REACH RAYDIUM">
                     <Info sx={{ width: 18, cursor: 'pointer' }} />
                   </Tooltip>
                 </Box>
                 <Box className="table-cell winnings" sx={{ width: '17%' }}>
-                  BATTLES
+                  LIKES / BATTLES
                 </Box>
                 <Box className="table-cell" sx={{ width: '15%' }} />
               </Box>
 
-              {/* Games Rows */}
               {myGames.map((row, idx) => {
                 const rowPress = pressState[row._id] || {};
                 const isClosing = rowPress.closing || false;
@@ -485,11 +518,34 @@ function MyGamesTable() { // Remove props destructuring since we’ll use hooks
                       mb: 1,
                       display: 'flex',
                       flexDirection: 'row',
+                      // Glassmorphism styles
+                      background: isDarkMode
+                        ? 'rgba(0, 0, 0, 0.2)'
+                        : 'rgba(255, 255, 255, 0.1)',
+                      backdropFilter: 'blur(10px)',
+                      WebkitBackdropFilter: 'blur(10px)', // For Safari
+                      border: isDarkMode
+                        ? '1px solid rgba(255, 255, 255, 0.2)'
+                        : '1px solid rgba(0, 0, 0, 0.2)',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                      // Fallback for browsers without backdrop-filter
+                      '@supports not (backdrop-filter: blur(10px))': {
+                        background: isDarkMode
+                          ? 'rgba(0, 0, 0, 0.4)'
+                          : 'rgba(255, 255, 255, 0.3)',
+                      },
+                      // Hover effect for interactivity
+                      '&:hover': {
+                        background: isDarkMode
+                          ? 'rgba(0, 0, 0, 0.3)'
+                          : 'rgba(255, 255, 255, 0.2)',
+                        boxShadow: '0 6px 12px rgba(0, 0, 0, 0.15)',
+                      },
                     }}
                     onClick={() => (window.location.href = `/join/${row._id}`)}
                   >
                     <Box sx={{ width: '100%' }}>
-                      {/* Room ID */}
                       <Box className="table-cell room-id" sx={{ width: '17%' }}>
                         <img
                           src={`/img/gametype/icons/${row.game_type.short_name}.svg`}
@@ -510,7 +566,6 @@ function MyGamesTable() { // Remove props destructuring since we’ll use hooks
                           />
                         )}
                       </Box>
-                      {/* LQY / SHARE */}
                       <Box
                         className="table-cell bet-info"
                         sx={{ justifyContent: 'center', width: '17%' }}
@@ -521,7 +576,10 @@ function MyGamesTable() { // Remove props destructuring since we’ll use hooks
                               {convertToCurrency(row.user_bet, solPrice)}
                               <br className="mobile-only" />
                               <Box component="span" sx={{ fontSize: '10px' }}>
-                                 / {row.share?.toFixed(2)}%
+                                / {
+                                  !row.endgame_type
+                                    ? 'M'
+                                    : convertToCurrency(row.endgame_amount, solPrice)}
                               </Box>
                             </Typography>
                           }
@@ -531,20 +589,13 @@ function MyGamesTable() { // Remove props destructuring since we’ll use hooks
                           variant="outlined"
                           sx={{ fontWeight: 'bold' }}
                         />
-                      </Box>
-                      {/* Hard Cap (endgame_amount) */}
-                      <Box className="table-cell endgame" sx={{ width: '17%' }}>
                         <Chip
-                          label={
-                            !row.endgame_type
-                              ? 'M'
-                              : convertToCurrency(row.endgame_amount, solPrice)
-                          }
+                          label={`${100 - bondingProgress.toFixed(2)}%`}
                           color="error"
                           className="end-amount"
                           size="small"
                           variant="outlined"
-                          sx={{ fontWeight: 'bold' }}
+                          sx={{ fontWeight: 'bold', ml: 1 }}
                         />
                         {row.coHost && selectedFilter === 'open' && (
                           <Box
@@ -566,46 +617,78 @@ function MyGamesTable() { // Remove props destructuring since we’ll use hooks
                           />
                         )}
                       </Box>
-                      {/* Net Profit Chip */}
                       <Box
                         className="table-cell winnings"
                         sx={{ width: '17%' }}
                       >
                         <Chip
-                          label={`${100 - bondingProgress.toFixed(2)}%`}
+                          label={`${row.share?.toFixed(2)}%`}
                           color="success"
                           size="small"
                           variant="outlined"
                           sx={{ fontWeight: 'bold' }}
                         />
                       </Box>
-                      {/* Battles */}
                       <Box
-                        className="table-cell bets"
+                        className="table-cell likes-dislikes-battles"
                         sx={{
                           display: 'flex',
-                          flexDirection: 'row',
-                          alignItems: 'center',
                           justifyContent: 'center',
+                          alignItems: 'center',
+                          gap: 2,
                           width: '17%',
                         }}
                       >
-                        <Battle width="24px" />
-                         
-                        <span>{row.battles}</span>
-                      </Box>
-                      {/* AI Model */}
-                      <Box
-                        className="table-cell winnings desktop-only"
-                      >
-                        <Tooltip title="AI MODEL">
-                          <Typography id="ai_mode" sx={{ p: 4, fontSize: 1 }}>
-                            {row.selectedStrategy}
-                            <AutoAwesomeIcon sx={{ p: '6px' }} />
-                          </Typography>
+                        <Tooltip title="Likes">
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                            <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#fff' }}>
+                              {Array.isArray(row.likes) ? row.likes.length : 0}
+                            </Typography>
+                            <FontAwesomeIcon icon={faThumbsUp} />
+                          </Box>
+                        </Tooltip>
+                        <Tooltip title="Dislikes">
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                            <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#fff' }}>
+                              {Array.isArray(row.dislikes) ? row.dislikes.length : 0}
+                            </Typography>
+                            <FontAwesomeIcon icon={faThumbsDown} />
+                          </Box>
+                        </Tooltip>
+                        <Tooltip title="Battles">
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                            <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#fff' }}>
+                              {row.battles || 0}
+                            </Typography>
+                            <Battle width="20px" />
+                          </Box>
                         </Tooltip>
                       </Box>
-                      {/* Action (Desktop) */}
+                      {row.game_type.short_name === 'Custom' && (
+                        <Box
+                          id='ai_mode'
+                          className="table-cell winnings desktop-only">
+                          <Tooltip title="UPGRADE GAME">
+                            <Box
+                              component="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleSettingsIconClick(e, row);
+                              }}
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                              }}
+                            >
+                              <AutoAwesomeIcon sx={{ p: '6px' }} />
+                            </Box>
+                          </Tooltip>
+                        </Box>
+                      )}
                       <Box className="table-cell action desktop-only">
                         {row.status === 'finished' ? (
                           <Button
@@ -613,7 +696,8 @@ function MyGamesTable() { // Remove props destructuring since we’ll use hooks
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
-                              openRecreateModal(row);
+                              // Note: openRecreateModal is undefined; implement or remove
+                              // openRecreateModal(row);
                             }}
                           >
                             RE-CREATE
@@ -630,7 +714,7 @@ function MyGamesTable() { // Remove props destructuring since we’ll use hooks
                                   <></>
                                 ) : (
                                   <Button
-                                    variant="contained"
+                                    variant="outlined"
                                     color="error"
                                     disableElevation
                                     onMouseDown={(e) => {
@@ -702,8 +786,6 @@ function MyGamesTable() { // Remove props destructuring since we’ll use hooks
                         )}
                       </Box>
                     </Box>
-
-                    {/* Mobile-only Actions */}
                     <Box
                       className="mobile-only"
                       sx={{
@@ -723,6 +805,7 @@ function MyGamesTable() { // Remove props destructuring since we’ll use hooks
                       >
                         <Tooltip title="CHANGE AI MODEL">
                           <Box
+                            id="ai_mode"
                             component="a"
                             sx={{
                               borderRadius: '200px',
@@ -743,7 +826,8 @@ function MyGamesTable() { // Remove props destructuring since we’ll use hooks
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
-                              openRecreateModal(row);
+                              // Note: openRecreateModal is undefined; implement or remove
+                              // openRecreateModal(row);
                             }}
                           >
                             RE-CREATE
@@ -760,7 +844,7 @@ function MyGamesTable() { // Remove props destructuring since we’ll use hooks
                                   <></>
                                 ) : (
                                   <Button
-                                    variant="contained"
+                                    variant="outlined"
                                     color="error"
                                     disableElevation
                                     onMouseDown={(e) => {
@@ -839,8 +923,6 @@ function MyGamesTable() { // Remove props destructuring since we’ll use hooks
           )}
         </Box>
       )}
-
-      {/* Co-Host Dialog */}
       <Dialog open={isCoHostModalOpen} onClose={handleCloseCoHostModal}>
         <CoHostModal
           isDarkMode={isDarkMode}
@@ -857,8 +939,6 @@ function MyGamesTable() { // Remove props destructuring since we’ll use hooks
           solPrice={solPrice}
         />
       </Dialog>
-
-      {/* Payout Dialog */}
       <Dialog
         open={isPayoutModalOpen}
         onClose={handleClosePayoutModal}
@@ -896,7 +976,6 @@ function MyGamesTable() { // Remove props destructuring since we’ll use hooks
               </TableBody>
             </Table>
           </Box>
-
           <RadioGroup
             aria-label="paymentMethod"
             name="paymentMethod"
@@ -917,7 +996,6 @@ function MyGamesTable() { // Remove props destructuring since we’ll use hooks
               label="AUTOMATIC"
             />
           </RadioGroup>
-
           <Box sx={{ mt: 2 }}>
             <TextField
               color="error"
@@ -938,11 +1016,11 @@ function MyGamesTable() { // Remove props destructuring since we’ll use hooks
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button variant="contained" color="error" onClick={handleSendPayout}>
+          <Button variant="outlined" color="error" onClick={handleSendPayout}>
             Update
           </Button>
           <Button
-            variant="contained"
+            variant="outlined"
             color="error"
             onClick={handleClosePayoutModal}
           >

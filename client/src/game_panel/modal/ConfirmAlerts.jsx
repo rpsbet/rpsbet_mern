@@ -102,7 +102,7 @@ export const ConflictDialog = ({ open, onClose }) => (
       </Typography>
     </DialogContent>
     <DialogActions>
-      <Button onClick={onClose} color="error" variant="contained">
+      <Button onClick={onClose} color="error" variant="outlined">
         Close
       </Button>
     </DialogActions>

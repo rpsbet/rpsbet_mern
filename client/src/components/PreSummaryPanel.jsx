@@ -74,22 +74,93 @@ const PreSummaryPanel = (props) => {
     return bet_amount * 2 * ((100 - (roomInfo.tax + 5)) / 100) - bet_amount;
   };
 
+  const LikeDislikeBar = ({ likes = 0, dislikes = 0 }) => {
+    // Calculate total and percentages
+    const total = likes + dislikes;
+    const likePercentage = total > 0 ? (likes / total) * 100 : 50; // Default to 50% if no votes
+    const dislikePercentage = total > 0 ? (dislikes / total) * 100 : 50;
+  
+    return (
+      <Box className="data-item" >
+        {/* Label (unchanged) */}
+        <Typography variant="h6" className="label likes-dislikes" sx={{ mb: 1 }}>
+          <FontAwesomeIcon icon={faBalanceScale} style={{ marginRight: 8 }} />
+          Likes / Dislikes
+        </Typography>
+  
+        {/* Like/Dislike Bar with Info Icon and Tooltip */}
+        <Tooltip
+          title={`Likes: ${likes} | Dislikes: ${dislikes} | Total votes: ${total}`}
+        >
+          <Box
+            sx={{
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1, // Space between bar and icon
+            }}
+          >
+            {/* Bar Container */}
+            <Box
+              className="like-dislike-bar"
+              sx={{
+                width: '100%',
+                maxWidth: 300, // Adjust as needed
+                height: 10,
+                display: 'flex',
+                overflow: 'hidden',
+                borderRadius: '0.3em',
+              }}
+            >
+              {/* Likes Segment */}
+              <Box
+                sx={{
+                  width: `${likePercentage}%`,
+                  background: 'rgba(0, 255, 0, 0.5)', // Green for likes
+                  transition: 'width 0.3s ease',
+                }}
+              />
+              {/* Dislikes Segment */}
+              <Box
+                sx={{
+                  width: `${dislikePercentage}%`,
+                  background: 'rgba(255, 0, 0, 0.5)', // Red for dislikes
+                  transition: 'width 0.3s ease',
+                }}
+              />
+            </Box>
+            {/* Info Icon */}
+            <InfoIcon sx={{ fontSize: 16 }} />
+          </Box>
+        </Tooltip>
+      </Box>
+    );
+  };
+  
+
   return (
     <Stack direction="row" spacing={2}>
       <Box
         className="pre-summary-panel title"
         sx={{
+          background: 'rgba(0, 0, 0, 0.2)',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          '@supports not (backdrop-filter: blur(10px))': {
+            background: 'rgba(0, 0, 0, 0.4)',
+          },
           '&::-webkit-scrollbar': {
             display: 'none',
           },
-          scrollbarWidth: 'none', // For Firefox
-          msOverflowStyle: 'none', // For IE and Edge
-          overflow: 'hidden', // This will prevent content from being scrollable at all
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
+          overflow: 'hidden',
         }}
       >
         {/* ROOM NAME */}
         <Box className="data-item">
-          <Typography variant="body2" className="label room-name">
+          <Typography variant="h6" className="label room-name">
             <FontAwesomeIcon icon={faCat} style={{ marginRight: 8 }} /> Name /
             Ticker
           </Typography>
@@ -110,7 +181,7 @@ const PreSummaryPanel = (props) => {
         </Box>
         {/* STRATEGY */}
         <Box className="data-item">
-          <Typography variant="body2" className="label room-name">
+          <Typography variant="h6" className="label room-name">
             <FontAwesomeIcon icon={faRobot} style={{ marginRight: 8 }} /> Game-Type
           </Typography>
           {/* Tooltip + info icon for the value */}
@@ -126,28 +197,9 @@ const PreSummaryPanel = (props) => {
           </Tooltip>
         </Box>
 
-        {/* BATTLES */}
-        <Box className="data-item">
-          <Typography variant="body2" className="label room-name">
-            <FontAwesomeIcon icon={faShieldAlt} style={{ marginRight: 8 }} />{' '}
-            BATTLES
-          </Typography>
-          {/* Tooltip + info icon for the value */}
-          <Tooltip title="This is the number of battles of this room.">
-            <Box
-              sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-            >
-              <Typography variant="body1" className="value">
-                {battles}
-              </Typography>
-              <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
-            </Box>
-          </Tooltip>
-        </Box>
-
         {/* LIQUIDITY (already has a tooltip + icon logic) */}
         <Box className="data-item">
-          <Typography variant="body2" className="label">
+          <Typography variant="h6" className="label">
             <FontAwesomeIcon icon={faWater} style={{ marginRight: 8 }} />
             LIQUIDITY
           </Typography>
@@ -175,7 +227,7 @@ const PreSummaryPanel = (props) => {
         {roomInfo.game_type !== 'Custom' && (
 
           < Box className="data-item">
-            <Typography variant="body2" className="label your-max-return">
+            <Typography variant="h6" className="label your-max-return">
               <FontAwesomeIcon icon={faDollarSign} style={{ marginRight: 8 }} />
               Your Return
             </Typography>
@@ -252,7 +304,7 @@ const PreSummaryPanel = (props) => {
 
         {/* ROOM PROFIT (already has a tooltip) */}
         <Box className="data-item">
-          <Typography variant="body2" className="label net-profit">
+          <Typography variant="h6" className="label net-profit">
             <FontAwesomeIcon icon={faBalanceScale} style={{ marginRight: 8 }} />
             Room Profit
           </Typography>
@@ -286,7 +338,7 @@ const PreSummaryPanel = (props) => {
 
         {/* TAX (already has a tooltip) */}
         <Box className="data-item">
-          <Typography variant="body2" className="label commission">
+          <Typography variant="h6" className="label commission">
             <FontAwesomeIcon icon={faPercentage} style={{ marginRight: 8 }} />
             Tax
           </Typography>
@@ -316,7 +368,7 @@ const PreSummaryPanel = (props) => {
         </Box>
 
         <Box className="data-item">
-          <Typography variant="body2" className="label created">
+          <Typography variant="h6" className="label created">
             <FontAwesomeIcon
               icon={faHandHoldingUsd}
               style={{ marginRight: 8 }}
@@ -366,10 +418,35 @@ const PreSummaryPanel = (props) => {
           </Tooltip>
         </Box>
 
+        {/* BATTLES */}
+        <Box className="data-item">
+          <Typography variant="h6" className="label room-name">
+            <FontAwesomeIcon icon={faShieldAlt} style={{ marginRight: 8 }} />{' '}
+            BATTLES
+          </Typography>
+          {/* Tooltip + info icon for the value */}
+          <Tooltip title="This is the number of battles of this room.">
+            <Box
+              sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+            >
+              <Typography variant="body1" className="value">
+                {battles}
+              </Typography>
+              <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
+            </Box>
+          </Tooltip>
+        </Box>
+
+        {/* LIKES / DISLIKES */}
+        <LikeDislikeBar
+          likes={roomInfo?.likes?.length || 0}
+          dislikes={roomInfo?.dislikes?.length || 0}
+        />
+
         {/* WIN CHANCE */}
         {roomInfo.game_type !== 'Custom' && (
           <Box className="data-item">
-            <Typography variant="body2" className="label chance">
+            <Typography variant="h6" className="label chance">
               <FontAwesomeIcon icon={faDice} style={{ marginRight: 8 }} />
               Win Chance
             </Typography>
@@ -389,7 +466,7 @@ const PreSummaryPanel = (props) => {
 
         {/* INTEREST RECEIVED (already has a tooltip) */}
         <Box className="data-item">
-          <Typography variant="body2" className="label public-interest">
+          <Typography variant="h6" className="label public-interest">
             <FontAwesomeIcon icon={faCoins} style={{ marginRight: 8 }} />
             Staking Rewards
           </Typography>
@@ -413,7 +490,7 @@ const PreSummaryPanel = (props) => {
 
         {/* CREATOR */}
         <Box className="data-item">
-          <Typography variant="body2" className="label host-display-name">
+          <Typography variant="h6" className="label host-display-name">
             <FontAwesomeIcon icon={faUser} style={{ marginRight: 8 }} />
             Dev
           </Typography>
@@ -445,7 +522,7 @@ const PreSummaryPanel = (props) => {
 
         {/* STATUS */}
         <Box className="data-item">
-          <Typography variant="body2" className="label room-id">
+          <Typography variant="h6" className="label room-id">
             <FontAwesomeIcon icon={faInfoCircle} style={{ marginRight: 8 }} />
             STATUS
           </Typography>
@@ -463,7 +540,7 @@ const PreSummaryPanel = (props) => {
 
         {/* CREATED */}
         <Box className="data-item">
-          <Typography variant="body2" className="label public-max-return">
+          <Typography variant="h6" className="label public-max-return">
             <FontAwesomeIcon icon={faCalendarAlt} style={{ marginRight: 8 }} />
             Created
           </Typography>
@@ -481,7 +558,7 @@ const PreSummaryPanel = (props) => {
 
         {/* ROOM ID */}
         <Box className="data-item">
-          <Typography variant="body2" className="label room-name">
+          <Typography variant="h6" className="label room-name">
             <FontAwesomeIcon
               icon={faSortNumericUp}
               style={{ marginRight: 8 }}

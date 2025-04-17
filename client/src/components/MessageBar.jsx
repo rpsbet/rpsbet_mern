@@ -18,7 +18,7 @@ function CustomizedSnackbar() {
       enqueueSnackbar(message, {
         variant: finalVariant,
         onClose: () => dispatch(closeMsgBar()),
-        autoHideDuration: 30000,
+        autoHideDuration: 5000,
       });
     }
   }, [openSk, message, status, enqueueSnackbar, dispatch]);

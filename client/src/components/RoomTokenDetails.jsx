@@ -17,7 +17,19 @@ const RoomTokenDetails = ({ roomInfo, hosts, solPrice, isDarkMode, handleOpenPla
         return address.slice(0, 4) + '...' + address.slice(-4);
     }
     return (
-        <Box className="room-details">
+        <Box
+            className="room-details"
+            sx={{
+                background: 'rgba(0, 0, 0, 0.2)',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+                borderRadius: 1,
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                '@supports not (backdrop-filter: blur(10px))': {
+                    background: 'rgba(0, 0, 0, 0.4)',
+                },
+            }}
+        >
             {/* Room Header: Image on the Left, Name/Ticker and Description on the Right */}
             <Box className="room-header">
                 <img

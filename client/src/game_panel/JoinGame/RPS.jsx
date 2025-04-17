@@ -4,12 +4,7 @@ import { openGamePasswordModal } from '../../redux/Notification/notification.act
 import { acQueryMyItem } from '../../redux/Item/item.action';
 import { setSpectateMode } from '../../redux/Auth/user.actions';
 import GuessesSection from '../../components/GuessesSection';
-import {
-  getRpsBetItems,
-  getRoomBotCount,
-  updateRoomBot,
-  kickBots,
-} from '../../redux/Logic/logic.actions';
+
 import {
   validateIsAuthenticated,
   validateBetAmount,
@@ -138,22 +133,6 @@ function RPS(props) {
 
   // Refs
   const intervalIdRef = useRef(null);
-
-  // Effects
-  useEffect(() => {
-    (async () => {
-      try {
-        const count = await dispatch(getRoomBotCount(roomInfo._id));
-        setBotsCount(count);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    })();
-
-    return () => {
-      clearInterval(intervalIdRef.current);
-    };
-  }, [dispatch, roomInfo._id]);
 
   useEffect(() => {
     if (!socket) return;
@@ -308,14 +287,6 @@ function RPS(props) {
         return;
       }
 
-      if (creator_id && user_id && creator_id.toString() === user_id.toString()) {
-        const botAttached = await dispatch(updateRoomBot(roomInfo._id));
-        if (botAttached) {
-          setBotsCount((prev) => prev + 1);
-        }
-        return;
-      }
-
       if (!validateBetAmount(bet_amount, balance, dispatch)) {
         return;
       }
@@ -353,14 +324,6 @@ function RPS(props) {
     setShowImageModal(false);
   };
 
-  const handleOpenModal = () => {
-    setModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setModalOpen(false);
-  };
-
   // Render
   const rpsValueAtLastIndex = rpsHistory[rpsHistory.length - 1]?.rps;
   const joinerRpsValueAtLastIndex = rpsHistory[rpsHistory.length - 1]?.joiner_rps;
@@ -371,7 +334,7 @@ function RPS(props) {
     : 'Play against the AI, at the same time, train your AI.';
 
   return (
-    <div className="game-page">
+    <div className="game-page" style={{ padding: '30px'}}>
       <Dialog
         open={openConfirmBet}
         onClose={closeConfirmBetDialog}
@@ -594,7 +557,7 @@ function RPS(props) {
                     return (
                       <Button
                         key={index}
-                        variant="contained"
+                        variant="outlined"
                         color="error"
                         id={`rps-${classname}`}
                         disabled={shouldDisable}
@@ -643,7 +606,6 @@ function RPS(props) {
                     handleMaxButtonClick={handleMaxButtonClick}
                     bankroll={bankroll}
                     is_betting={is_betting}
-                    attached={attached}
                     creator_id={creator_id}
                     predictedBetAmount={predictedBetAmount}
                     roomId={roomInfo._id}

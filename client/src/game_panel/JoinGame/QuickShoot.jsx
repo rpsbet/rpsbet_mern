@@ -478,7 +478,7 @@ function QuickShoot(props) {
     : 'Play against the AI; at the same time, train your AI.';
 
   return (
-    <div className="game-page">
+    <div className="game-page" style={{ paddingTop: "30px" }}>
       <Dialog
         open={openConfirmBet}
         onClose={closeConfirmBetDialog}
@@ -556,7 +556,7 @@ function QuickShoot(props) {
                 </IconButton>
               </Tooltip>
 
-              <div className="game-info-panel">
+              <div className="game-info-panel" >
                 <div
                   className={`rps-radio-host ${is_betting || betting ? 'blueish-hue' : ''}`}
                   style={{
@@ -627,7 +627,7 @@ function QuickShoot(props) {
                   </h3>
                 )}
 
-                <div className="qs-image-panel">
+                <div className="qs-image-panel" style={{ marginTop: '20px' }}>
                   <img
                     src={`/img/gametype/quick_shoot/gametype${qs_game_type}/type${qs_game_type}-${position_short_name[selected_qs_position]}.png`}
                     alt=""

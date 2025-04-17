@@ -46,25 +46,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBolt, faGasPump } from '@fortawesome/free-solid-svg-icons';
 import { convertToCurrency } from '../../util/conversion';
 
-const modalBoxStyle = {
-  position: 'absolute',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  bgcolor: '#0a0a0a', // Purple background
-  color: '#fff',
-  boxShadow: 24,
-  borderRadius: 1,
-  p: 3,
-  width: 600,
-  maxWidth: '90vw',
-  maxHeight: '90vh',
-  overflowY: 'auto',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 2,
-};
-
 function DepositModal({ modalIsOpen, closeModal, balance, account }) {
   const dispatch = useDispatch();
 
@@ -214,7 +195,30 @@ function DepositModal({ modalIsOpen, closeModal, balance, account }) {
           style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' },
         }}
       >
-        <Box sx={modalBoxStyle}>
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            color: isDarkMode ? '#fff' : '#000', // Preserve text color conditional
+            width: '90vw',
+            maxHeight: '80vh',
+            overflowY: 'auto',
+            borderRadius: 2,
+            boxShadow: 24,
+            p: 3,
+            // Glassmorphism styles (default dark mode colors)
+            background: 'rgba(0, 0, 0, 0.2)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)', // For Safari
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            // Fallback for browsers without backdrop-filter
+            '@supports not (backdrop-filter: blur(10px))': {
+              background: 'rgba(0, 0, 0, 0.4)',
+            },
+          }}
+        >
           {/* HEADER */}
           <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
             <Typography
@@ -245,11 +249,6 @@ function DepositModal({ modalIsOpen, closeModal, balance, account }) {
 
           {/* BODY */}
           <Box
-            sx={{
-              background: '#080808',
-              p: 2,
-              borderRadius: 1,
-            }}
           >
             <Summary />
 
@@ -341,7 +340,7 @@ function DepositModal({ modalIsOpen, closeModal, balance, account }) {
           {/* FOOTER */}
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
             <Button
-              variant="contained"
+              variant="outlined"
               color="error"
               fullWidth
               onClick={sendSOL}

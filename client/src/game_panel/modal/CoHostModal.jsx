@@ -120,11 +120,11 @@ function CoHostModal({
       const container = chartContainerRef.current;
 
       chartInstanceRef.current = createChart(container, {
-        width: container.clientWidth, // <-- Use container's width
+        width: container.clientWidth,
         height: 350,
         layout: {
-          background: { type: 'solid', color: isDarkMode ? '#080808' : '#ffffff' },
-          textColor: isDarkMode ? '#ffffff' : '#000000',
+          background: { type: 'solid', color: 'rgba(0, 0, 0, 0.2)' },
+          textColor: '#ffffff',
         },
         grid: {
           vertLines: { color: 'rgba(197, 203, 206, 0.3)' },
@@ -486,7 +486,22 @@ function CoHostModal({
   // ------------------ Render ------------------
   return (
     <ThemeProvider theme={theme}>
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, width: '100%' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 2,
+          width: '100%',
+          background: 'rgba(0, 0, 0, 0.2)',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          borderRadius: 1,
+          '@supports not (backdrop-filter: blur(10px))': {
+            background: 'rgba(0, 0, 0, 0.4)',
+          },
+        }}
+      >
         {/* Header */}
         {!input_only && !has_joined && (
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -511,7 +526,7 @@ function CoHostModal({
 
         {/* Info Box */}
         {!input_only && !has_joined && (
-          <Box sx={{ background: '#080808', p: 2, borderRadius: 1 }}>
+          <Box sx={{  p: 2, }}>
             <Box
               sx={{
                 display: 'grid',
@@ -650,9 +665,7 @@ function CoHostModal({
         {((!input_only && !has_joined) || input_only || isSmallScreen) && (
           <Box
             sx={{
-              background: '#080808',
               p: 2,
-              borderRadius: 1,
               display: 'flex',
               flexDirection: 'column',
               gap: 2
@@ -730,7 +743,7 @@ function CoHostModal({
               <Box sx={{ mt: 2 }}>
                 {selectedTab === 'PUMP' ? (
                   <Button
-                    variant="contained"
+                    variant="outlined"
                     color="error"
                     onClick={() => {
                       if (trade_loading) {
@@ -750,7 +763,7 @@ function CoHostModal({
                   </Button>
                 ) : (
                   <Button
-                    variant="contained"
+                    variant="outlined"
                     color="error"
                     onClick={() => {
                       if (trade_loading) {

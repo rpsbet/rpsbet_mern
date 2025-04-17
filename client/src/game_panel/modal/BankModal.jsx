@@ -48,15 +48,22 @@ const BankModal = ({ modalIsOpen, closeModal, remainingLoans }) => {
             top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
-            bgcolor: isDarkMode ? '#0a0a0a' : '#fff',
-            color: isDarkMode ? '#fff' : '#000',
-            width: '80vw',
-            maxWidth: 600,
+            color: isDarkMode ? '#fff' : '#000', // Preserve text color conditional
+            width: '90vw',
             maxHeight: '80vh',
             overflowY: 'auto',
-            borderRadius: 1,
-            p: 3,
+            borderRadius: 2,
             boxShadow: 24,
+            p: 3,
+            // Glassmorphism styles (default dark mode colors)
+            background: 'rgba(0, 0, 0, 0.2)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)', // For Safari
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            // Fallback for browsers without backdrop-filter
+            '@supports not (backdrop-filter: blur(10px))': {
+              background: 'rgba(0, 0, 0, 0.4)',
+            },
           }}
         >
           {/* Header */}
@@ -107,7 +114,7 @@ const BankModal = ({ modalIsOpen, closeModal, remainingLoans }) => {
           {/* Footer */}
           <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
             <Button
-              variant="contained"
+              variant="outlined"
               color="error"
               onClick={() => setShowMyLoansModal(true)}
               fullWidth
@@ -136,7 +143,13 @@ const BankModal = ({ modalIsOpen, closeModal, remainingLoans }) => {
         fullWidth
         PaperProps={{
           sx: {
-            backgroundColor: '#0a0a0a',
+            background: 'rgba(0, 0, 0, 0.2)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            '@supports not (backdrop-filter: blur(10px))': {
+              background: 'rgba(0, 0, 0, 0.4)',
+            },
             color: '#fff',
             borderRadius: 2,
             boxShadow: 24,
@@ -314,7 +327,7 @@ const BankModal = ({ modalIsOpen, closeModal, remainingLoans }) => {
           {/* Footer Button */}
           <Box sx={{ textAlign: 'center' }}>
             <Button
-              variant="contained"
+              variant="outlined"
               color="error"
               onClick={handleToggleHelp}
               sx={{ px: 4, py: 1.2 }}

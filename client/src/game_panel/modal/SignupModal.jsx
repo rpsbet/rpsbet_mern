@@ -127,7 +127,7 @@ function SignupModal({ modalIsOpen, closeModal, openLoginModal }) {
               </Typography>
               <Typography sx={{ mb: 2 }}>CLICK YOUR BALANCE TO MAKE A DEPOSIT</Typography>
               <Button
-                variant="contained"
+                variant="outlined"
                 color="error"
                 onClick={() => {
                   onClose();
@@ -289,7 +289,7 @@ function SignupModal({ modalIsOpen, closeModal, openLoginModal }) {
               }
             />
             <input type="hidden" name="recaptchaToken" value={recaptchaToken} readOnly />
-            <Button variant="contained" color="error" type="submit" fullWidth>
+            <Button variant="outlined" color="error" type="submit" fullWidth>
               Register{' '}
               <Typography component="span" fontStyle="italic">
                 [↵]

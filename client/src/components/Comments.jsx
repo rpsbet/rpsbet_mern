@@ -8,7 +8,8 @@ import {
   Box,
   Typography,
   IconButton,
-  Tooltip
+  Tooltip,
+  FormHelperText,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { getCommentsForRoom, createComment, deleteComment } from '../redux/Logic/logic.actions';
@@ -22,17 +23,17 @@ import { ThemeProvider } from '@mui/material/styles';
 import { getCustomTheme } from '../config/theme.js';
 
 const Comments = ({ roomId }) => {
-  // Get Redux state via hooks
-  const commentsFromState = useSelector(state => state.logic.comments);
-  const loading = useSelector(state => state.logic.isActiveLoadingOverlay);
-  const currentUserId = useSelector(state => state.auth.user._id);
-  const currentUsername = useSelector(state => state.auth.user.username);
-  const currentUserAvatar = useSelector(state => state.auth.user.avatar);
-  const currentUserAccessory = useSelector(state => state.auth.user.accessory);
-  const currentUserElite = useSelector(state => state.auth.user.elite);
-  const currentUserTotalWagered = useSelector(state => state.auth.user.totalWagered);
-  const socket = useSelector(state => state.auth.socket);
-  const isDarkMode = useSelector(state => state.auth.isDarkMode);
+  // Redux state
+  const commentsFromState = useSelector((state) => state.logic.comments);
+  const loading = useSelector((state) => state.logic.isActiveLoadingOverlay);
+  const currentUserId = useSelector((state) => state.auth.user._id);
+  const currentUsername = useSelector((state) => state.auth.user.username);
+  const currentUserAvatar = useSelector((state) => state.auth.user.avatar);
+  const currentUserAccessory = useSelector((state) => state.auth.user.accessory);
+  const currentUserElite = useSelector((state) => state.auth.user.elite);
+  const currentUserTotalWagered = useSelector((state) => state.auth.user.totalWagered);
+  const socket = useSelector((state) => state.auth.socket);
+  const isDarkMode = useSelector((state) => state.auth.isDarkMode);
 
   const dispatch = useDispatch();
 
@@ -42,7 +43,7 @@ const Comments = ({ roomId }) => {
   const [showPlayerModal, setShowPlayerModal] = useState(false);
   const [selectedCreator, setSelectedCreator] = useState('');
 
-  // On mount, fetch comments and set up socket connection
+  // Fetch comments and set up socket on mount
   useEffect(() => {
     fetchComments();
     setupSocketConnection();
@@ -52,7 +53,7 @@ const Comments = ({ roomId }) => {
     };
   }, [roomId]);
 
-  // When Redux comments update, update local state
+  // Update local comments when Redux state changes
   useEffect(() => {
     setComments(commentsFromState);
   }, [commentsFromState]);
@@ -63,12 +64,12 @@ const Comments = ({ roomId }) => {
 
   const handleNewComment = (newCommentData) => {
     if (newCommentData.user._id !== currentUserId) {
-      setComments(prevComments => [newCommentData, ...prevComments]);
+      setComments((prevComments) => [newCommentData, ...prevComments]);
     }
   };
 
   const handleDeleteCommentFromSocket = ({ commentId }) => {
-    setComments(prevComments => prevComments.filter(comment => comment._id !== commentId));
+    setComments((prevComments) => prevComments.filter((comment) => comment._id !== commentId));
   };
 
   const setupSocketConnection = () => {
@@ -99,7 +100,6 @@ const Comments = ({ roomId }) => {
 
   const handleCommentSubmit = async () => {
     if (newComment.trim() !== '') {
-      // Create a temporary comment to show immediately
       const tempComment = {
         _id: `temp-${Date.now()}`,
         content: newComment,
@@ -115,30 +115,32 @@ const Comments = ({ roomId }) => {
         created_at: new Date().toISOString(),
       };
 
-      setComments(prevComments => [tempComment, ...prevComments]);
+      setComments((prevComments) => [tempComment, ...prevComments]);
       setNewComment('');
 
       try {
         const response = await dispatch(createComment({ content: newComment, room_id: roomId }));
         if (response && response.success) {
-          // Replace temp comment with the one returned from the server
-          setComments(prevComments =>
-            prevComments.map(comment =>
+          setComments((prevComments) =>
+            prevComments.map((comment) =>
               comment._id === tempComment._id ? response.comment : comment
             )
           );
         } else {
-          // Remove temp comment on failure
-          setComments(prevComments => prevComments.filter(comment => comment._id !== tempComment._id));
+          setComments((prevComments) =>
+            prevComments.filter((comment) => comment._id !== tempComment._id)
+          );
         }
       } catch (error) {
-        setComments(prevComments => prevComments.filter(comment => comment._id !== tempComment._id));
+        setComments((prevComments) =>
+          prevComments.filter((comment) => comment._id !== tempComment._id)
+        );
       }
     }
   };
 
   const handleDeleteComment = async (commentId) => {
-    setComments(prevComments => prevComments.filter(comment => comment._id !== commentId));
+    setComments((prevComments) => prevComments.filter((comment) => comment._id !== commentId));
 
     try {
       const response = await dispatch(deleteComment(commentId));
@@ -163,7 +165,21 @@ const Comments = ({ roomId }) => {
 
   return (
     <ThemeProvider theme={theme}>
-      <Box sx={{ background: '#080808', borderRadius: '0.3em', p: '20px' }}>
+      <Box
+        sx={{
+          mt: 2,
+          background: 'rgba(30, 30, 30, 0.3)', // Glassmorphism semi-transparent background
+          backdropFilter: 'blur(15px)', // Blur effect
+          WebkitBackdropFilter: 'blur(15px)', // Safari support
+          border: '1px solid rgba(255, 255, 255, 0.1)', // Subtle border
+          borderRadius: '0.3em', // Original border radius
+          p: '20px', // Original padding
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)', // Depth shadow
+          '@supports not (backdrop-filter: blur(15px))': {
+            background: 'rgba(30, 30, 30, 0.6)', // Fallback
+          },
+        }}
+      >
         {showPlayerModal && (
           <PlayerModal
             selectedCreator={selectedCreator}
@@ -172,40 +188,92 @@ const Comments = ({ roomId }) => {
           />
         )}
 
+        <Typography
+          variant="h6"
+          sx={{
+            fontWeight: 600,
+            color: '#ffffff',
+            mb: 2,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+          }}
+        >
+          <FontAwesomeIcon icon={faPenSquare} />
+          Share Your Feedback
+        </Typography>
+
         {loading ? (
           <LinearProgress color="error" />
         ) : (
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'flex-start',
-              mb: 2
-            }}
-          >
-            <TextField
-              color="error"
-              label="Reply"
-              variant="filled"
-              fullWidth
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  handleCommentSubmit();
-                }
+          <Box sx={{ mb: 3 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'flex-start',
+                mb: 2,
               }}
-              sx={{ mr: 2 }}
-            />
-            <Button
-              onClick={handleCommentSubmit}
-              variant="contained"
-              startIcon={<FontAwesomeIcon icon={faPenSquare} />}
-              color="error"
             >
-              <Typography variant="button">[&#x23CE;]</Typography>
-            </Button>
+              <TextField
+                color="error"
+                label="Share your thoughts or suggestions!"
+                variant="filled"
+                fullWidth
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleCommentSubmit();
+                  }
+                }}
+                sx={{
+                  mr: 2,
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  borderRadius: 1,
+                  '& .MuiFilledInput-root': {
+                    color: '#ffffff',
+                    '&:before': {
+                      borderBottomColor: 'rgba(255, 255, 255, 0.2)',
+                    },
+                    '&:hover:before': {
+                      borderBottomColor: 'rgba(255, 255, 255, 0.3)',
+                    },
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: 'rgba(255, 255, 255, 0.7)',
+                  },
+                }}
+              />
+              <Button
+                onClick={handleCommentSubmit}
+                variant="contained"
+                startIcon={<FontAwesomeIcon icon={faPenSquare} />}
+                color="error"
+                sx={{
+                  textTransform: 'none',
+                  borderRadius: 1,
+                  '&:hover': {
+                    background: '#d32f2f',
+                    boxShadow: '0 4px 16px rgba(211, 47, 47, 0.3)',
+                  },
+                }}
+              >
+                <Typography variant="button">Post</Typography>
+              </Button>
+            </Box>
+            <FormHelperText sx={{ color: '#e0e0e0', mb: 2 }}>
+              Hosts can use our AI tools to improve their games based your feedback!
+            </FormHelperText>
+            <Typography variant="body2" sx={{ color: '#b0b0b0', fontStyle: 'italic' }}>
+              Example prompts:
+              <ul style={{ margin: '8px 0 0 16px', padding: 0 }}>
+                <li>"Could we add more levels?"</li>
+                <li>"The UI is great, but the text is hard to read."</li>
+                <li>"Can we reduce the odds and increase multipliers?"</li>
+              </ul>
+            </Typography>
           </Box>
         )}
 
@@ -217,7 +285,7 @@ const Comments = ({ roomId }) => {
                 variant="rectangular"
                 width="100%"
                 height={50}
-                sx={{ mb: 1 }}
+                sx={{ mb: 1, borderRadius: 1 }}
               />
             ))}
           </Box>
@@ -228,10 +296,10 @@ const Comments = ({ roomId }) => {
               textAlign: 'center',
               mt: 2,
               fontSize: '16px',
-              color: '#999'
+              color: '#999',
             }}
           >
-            NO REPLIES
+            Be the first to share your feedback!
           </Typography>
         ) : (
           comments.map((comment) => (
@@ -242,8 +310,14 @@ const Comments = ({ roomId }) => {
                 alignItems: 'flex-start',
                 mb: 2,
                 p: 2,
-                bgcolor: isDarkMode ? '#3b3140' : '#f5f5f5',
-                borderRadius: 1
+                bgcolor: 'rgba(255, 255, 255, 0.05)', // Glassmorphic comment background
+                borderRadius: 1,
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  bgcolor: 'rgba(255, 255, 255, 0.1)',
+                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.3)',
+                },
               }}
             >
               <Box sx={{ mr: 2 }}>
@@ -274,15 +348,18 @@ const Comments = ({ roomId }) => {
                 >
                   <Typography
                     variant="subtitle1"
-                    sx={{ fontWeight: 'bold', fontSize: '0.8em' }}
+                    sx={{ fontWeight: 'bold', fontSize: '0.8em', color: '#ffffff' }}
                   >
                     {comment.user.username}
                   </Typography>
-                  <Typography variant="caption" sx={{ fontSize: '0.6em' }} color="text.secondary">
+                  <Typography
+                    variant="caption"
+                    sx={{ fontSize: '0.6em', color: 'rgba(255, 255, 255, 0.7)' }}
+                  >
                     {Moment(comment.created_at).fromNow()}
                   </Typography>
                 </Box>
-                <Typography variant="body2" sx={{ mt: 1, fontSize: '0.7em' }}>
+                <Typography variant="body2" sx={{ mt: 1, fontSize: '0.7em', color: '#e0e0e0' }}>
                   {comment.content}
                 </Typography>
               </Box>
@@ -290,7 +367,13 @@ const Comments = ({ roomId }) => {
                 <IconButton
                   onClick={() => handleDeleteComment(comment._id)}
                   aria-label="delete"
-                  sx={{ ml: 1 }}
+                  sx={{
+                    ml: 1,
+                    color: '#ff4d4d',
+                    '&:hover': {
+                      background: 'rgba(255, 77, 77, 0.1)',
+                    },
+                  }}
                 >
                   <DeleteIcon sx={{ fontSize: '18px' }} />
                 </IconButton>

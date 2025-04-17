@@ -249,10 +249,10 @@ function LeaderboardsModal({
   // -------------------- Sort Leaderboards --------------------
   const sortedLeaderboards = leaderboards
     ? [...leaderboards].sort((a, b) => {
-        const aValue = a[sortField];
-        const bValue = b[sortField];
-        return sortOrder === 'asc' ? aValue - bValue : bValue - aValue;
-      })
+      const aValue = a[sortField];
+      const bValue = b[sortField];
+      return sortOrder === 'asc' ? aValue - bValue : bValue - aValue;
+    })
     : [];
 
   // -------------------- Render --------------------
@@ -270,14 +270,22 @@ function LeaderboardsModal({
             top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
-            bgcolor: isDarkMode ? '#0a0a0a' : '#fff',
-            color: isDarkMode ? '#fff' : '#000',
-            width: isMobile ? '95vw' : '80vw',
+            color: isDarkMode ? '#fff' : '#000', // Preserve text color conditional
+            width: isMobile ? '95vw' : '90vw',
             height: isMobile ? '95vh' : '80vh',
             overflowY: 'auto',
             borderRadius: 2,
             boxShadow: 24,
             p: 3,
+            // Glassmorphism styles (default dark mode colors)
+            background: 'rgba(0, 0, 0, 0.2)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)', // For Safari
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            // Fallback for browsers without backdrop-filter
+            '@supports not (backdrop-filter: blur(10px))': {
+              background: 'rgba(0, 0, 0, 0.4)',
+            },
           }}
         >
           {/* HEADER */}
@@ -306,11 +314,7 @@ function LeaderboardsModal({
             </Button>
           </Box>
           <Box
-            sx={{
-              background: '#080808',
-              borderRadius: '0.3em',
-              p: '20px',
-            }}
+
           >
             {/* CHARTS SECTION */}
             {/* <Box

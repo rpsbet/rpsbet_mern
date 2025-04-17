@@ -286,7 +286,7 @@ function CatsinoModalOverlay({
 
             <a href="https://www.youtube.com/@rpsdotgame" target="_blank" rel="noopener noreferrer">
               <Button
-                variant="contained"
+                variant="outlined"
                 sx={{
                   backgroundColor: 'rgb(98, 3, 172)',
                   color: '#fff',
@@ -346,7 +346,7 @@ function CatsinoModalOverlay({
             />
 
             <Button
-              variant="contained"
+              variant="outlined"
               sx={{
                 backgroundColor: 'rgb(98, 3, 172)',
                 color: '#fff',

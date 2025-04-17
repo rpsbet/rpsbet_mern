@@ -277,6 +277,7 @@ function MainPage() {
                     <InputAdornment position="end">
                       <Button
                         variant="contained"
+                        disableElevation
                         onClick={handleAiPromptSubmit}
                         sx={{
                           minWidth: 'auto',
@@ -351,14 +352,12 @@ function MainPage() {
             </Button>
           </Box>
           <img src="/img/coolCat.svg" width={200} style={{ zIndex: '-1', position: 'absolute', right: '20px', filter: 'invert(1) hue-rotate(180deg)', opacity: 0.2, transform: 'rotate(-30deg)' }} alt="Cat" className="cat-image" />
-          <Suspense fallback={<Typography>Loading Elite Subscriptions...</Typography>}>
-            <EliteSubscriptionModal isLowGraphics={isLowGraphics} open={openModal} onClose={() => setOpenModal(false)} />
-          </Suspense>
+
         </div>
       );
     }
 
-    return 'Your Games';
+    return '';
   };
 
   // Render
@@ -380,7 +379,9 @@ function MainPage() {
           )}
         </Drawer>
       )}
-
+          <Suspense fallback={<Typography></Typography>}>
+            <EliteSubscriptionModal user={user} isLowGraphics={isLowGraphics} open={openModal} onClose={() => setOpenModal(false)} />
+          </Suspense>
       {/* Marketplace and P2P Lending Toggles */}
       {isMobile && selectedMobileTab === 'marketplace' && (
         <Box sx={{ p: '30px' }}>

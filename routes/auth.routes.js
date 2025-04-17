@@ -370,7 +370,7 @@ router.post('/cancel-elite', auth, async (req, res) => {
 router.post('/purchase-elite', auth, async (req, res) => {
   const { type } = req.body;
   const userId = req.user.id;
-
+  const clientIp = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
   // Define subscription amounts
   const subscriptionAmounts = {
     red: 0.1,
@@ -384,10 +384,8 @@ router.post('/purchase-elite', auth, async (req, res) => {
     });
   }
 
-  const amount = subscriptionAmounts[type];
-
   try {
-    // Find the user and check balance
+    // Find the user
     const user = await User.findById(userId);
 
     if (!user) {
@@ -404,8 +402,35 @@ router.post('/purchase-elite', auth, async (req, res) => {
       });
     }
 
-    // Check if user has enough balance
-    if (user.balance < amount) {
+    // Add IP to user's IP history if not already present
+    if (!user.ip_addresses.includes(clientIp)) {
+      user.ip_addresses.push(clientIp);
+      await user.save();
+    }
+
+    // Check for free trial eligibility (only for red tier)
+    let amount = subscriptionAmounts[type];
+    let isFreeMonth = false;
+    let message = `Successfully subscribed to ${type.charAt(0).toUpperCase() + type.slice(1)} Elite membership`;
+
+    if (type === 'red' && !user.elite_free_used) {
+      // Check if any other accounts with this IP have used the free trial
+      const ipMatch = await User.findOne({
+        ip_addresses: clientIp,
+        elite_free_used: true,
+        _id: { $ne: userId } // Not the current user
+      });
+
+      if (!ipMatch) {
+        // User is eligible for free month
+        amount = 0;
+        isFreeMonth = true;
+        message = 'Successfully activated your FREE first month of Red Elite membership!';
+      }
+    }
+
+    // Check if user has enough balance when not free
+    if (!isFreeMonth && user.balance < amount) {
       return res.status(400).json({
         success: false,
         message: 'Insufficient balance to purchase subscription',
@@ -413,32 +438,49 @@ router.post('/purchase-elite', auth, async (req, res) => {
     }
 
     // Update user's balance, elite status, and subscription date
+    const updateData = {
+      elite: type,
+      last_elite_payment: new Date()
+    };
+
+    // Only deduct balance if not free
+    if (!isFreeMonth) {
+      updateData.$inc = { balance: -amount };
+    }
+
+    // Mark free trial as used if applicable
+    if (isFreeMonth) {
+      updateData.elite_free_used = true;
+    }
+
     const updatedUser = await User.findByIdAndUpdate(
       userId,
-      {
-        $inc: { balance: -amount },
-        elite: type,
-        last_elite_payment: new Date(),
-      },
+      updateData,
       { new: true }
     );
 
-    // Create new transaction
-    const newTransaction = new Transaction({
-      user: userId,
-      amount: -amount,
-      description: `${type.charAt(0).toUpperCase() + type.slice(1)} Elite Subscription Purchase`,
-    });
+    // Create new transaction (only if not free)
+    if (!isFreeMonth) {
+      const newTransaction = new Transaction({
+        user: userId,
+        amount: -amount,
+        description: `${type.charAt(0).toUpperCase() + type.slice(1)} Elite Subscription Purchase`,
+      });
+      await saveDocumentWithRetry(newTransaction);
+      socket.newTransaction(newTransaction);
+    }
 
-    await saveDocumentWithRetry(newTransaction);
+    // Create notification with appropriate message
+    const notificationText = isFreeMonth 
+      ? `Activated FREE first month of Red Elite subscription` 
+      : `Purchased ${type} elite subscription`;
 
-    // Create notification
     const notification = new Notification({
       from: userId,
-      to: userId, // Notify the same user, or change to admin user ID if needed
+      to: userId,
       room: null,
-      message: `Purchased ${type} elite subscription`,
-      amount: amount,
+      message: notificationText,
+      amount: isFreeMonth ? 0 : amount,
       is_read: false,
     });
 
@@ -449,7 +491,7 @@ router.post('/purchase-elite', auth, async (req, res) => {
       accessory: user.accessory,
       elite: type,
       room: null,
-      amount: amount,
+      amount: isFreeMonth ? 0 : amount,
       rank: user.totalWagered || 0,
       created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
       created_at_str: moment(new Date()).format('LLL'),
@@ -459,18 +501,16 @@ router.post('/purchase-elite', auth, async (req, res) => {
 
     // Save notification
     await saveDocumentWithRetry(notification);
-
-    // Emit events
-    socket.newTransaction(newTransaction);
     socket.sendNotification(userId, notificationData);
 
     // Return success response
     return res.json({
       success: true,
-      message: `Successfully subscribed to ${type} elite membership`,
+      message: message,
       user: {
         balance: updatedUser.balance,
         elite: updatedUser.elite,
+        elite_free_used: updatedUser.elite_free_used,
         last_elite_payment: updatedUser.last_elite_payment,
       },
     });

@@ -82,7 +82,7 @@ function MarketplaceModal({ modalIsOpen, closeModal }) {
           {/* Footer actions */}
           <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
             <Button
-              variant="contained"
+              variant="outlined"
               color="error"
               onClick={handleOpenInventoryModal}
               startIcon={<AttachMoney />}

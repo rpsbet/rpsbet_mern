@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setFocused } from '../redux/Auth/user.actions';
-import { generateReactGameFromPrompt, proxyAsset } from '../redux/Logic/logic.actions';
+import { generateReactGameFromPrompt, proxyAsset, getCommentsForRoom, updateRoomGameCode } from '../redux/Logic/logic.actions';
 import {
   Paper,
   Button,
@@ -12,10 +12,12 @@ import {
   Typography,
   Box,
   Slider,
-  Avatar
+  Avatar,
+  Chip,
 } from '@mui/material';
 import LockIcon from '@mui/icons-material/Lock';
 import SendIcon from '@mui/icons-material/Send';
+import SaveIcon from '@mui/icons-material/Save';
 import { green, yellow, blue } from '@mui/material/colors';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import ChatIcon from '@mui/icons-material/Chat';
@@ -31,6 +33,17 @@ const decodeHtmlEntity = (html) => {
   return txt.value;
 };
 
+// Helper function to pre-filter comments for relevance based on content only
+const filterRelevantComments = (comments) => {
+  return comments
+    .filter((comment) => comment.content && comment.content.length >= 10) // Basic pre-filtering for non-empty, non-trivial comments
+    .map((comment) => ({
+      content: comment.content,
+      relevanceScore: 0, // Placeholder, will be updated by AI
+      category: null, // Placeholder, will be updated by AI
+    }));
+};
+
 const SettingsRef = ({
   strategies,
   rank,
@@ -38,7 +51,8 @@ const SettingsRef = ({
   user_balance,
   prompt,
   onChangeState,
-  gameCode,
+  gameCode: initialGameCode,
+  rowName,
   setGameCode,
   setSelectedStrategy,
   settings_panel_opened,
@@ -47,6 +61,8 @@ const SettingsRef = ({
   creator_prompt,
   updateUserStrategy,
   updateUserPrompt,
+  onClose,
+  room_id,
 }) => {
   const dispatch = useDispatch();
   const [gameLoading, setGameLoading] = useState(false);
@@ -55,45 +71,162 @@ const SettingsRef = ({
   const [proxiedAssets, setProxiedAssets] = useState({ images: [], audio: [] });
   const [GameComponent, setGameComponent] = useState(null);
   const [componentError, setComponentError] = useState(null);
-  
-  // Chat state
   const [chatMessages, setChatMessages] = useState([]);
   const [showChat, setShowChat] = useState(false);
   const [processingMessage, setProcessingMessage] = useState(null);
-  const [hasGenerated, setHasGenerated] = useState(false); // New state
+  const [hasGenerated, setHasGenerated] = useState(false);
+  const [localPrompt, setLocalPrompt] = useState(creator_prompt || prompt || '');
+  const [suggestedPrompts, setSuggestedPrompts] = useState([]);
+  const [hasGeneratedSuggestions, setHasGeneratedSuggestions] = useState(false);
+  const [commentsFetched, setCommentsFetched] = useState(false); // Track if comments have been fetched
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
 
   const chatEndRef = useRef(null);
-  
+  const prevGameCodeRef = useRef(null);
   const isMobile = useMediaQuery('(max-width: 768px)');
   const loading = useSelector((state) => state.loading);
-  const [localPrompt, setLocalPrompt] = useState(creator_prompt || prompt);
-  
+  const comments = useSelector((state) => state.logic.comments);
+
   const sortedStrategies = useMemo(
     () => strategies?.slice().sort((a, b) => a.levelToUnlock - b.levelToUnlock) || [],
     [strategies]
   );
-  // Auto-select 'o3Mini' or first unlocked strategy
-  // Auto-select 'o3Mini' or first unlocked strategy
 
-
-  const iso3MiniSelected = selectedStrategy === 'o3Mini' || (!selectedStrategy);
+  const iso3MiniSelected = selectedStrategy === 'o3Mini' || !selectedStrategy;
 
   const logEvent = (eventType, data) => {
     console.log(`Game Event: ${eventType}`, data);
   };
 
   useEffect(() => {
-    setLocalPrompt(prompt || creator_prompt);
-  }, [prompt, creator_prompt]);
+    const fetchComments = async () => {
+      try {
+        await dispatch(getCommentsForRoom(room_id));
+        setCommentsFetched(true);
+      } catch (error) {
+        console.error('Error fetching comments:', error);
+        setCommentsFetched(true); // Allow suggestion generation even on error
+      }
+    };
+
+    fetchComments();
+  }, [room_id]);
 
   useEffect(() => {
-    console.log('creator_prompt_____', creator_prompt);
-    if (creator_prompt && !hasGenerated && !gameLoading && !saving) {
+    const generateSuggestedPrompts = async () => {
+      if (!initialGameCode || !commentsFetched || hasGeneratedSuggestions) {
+        return;
+      }
+      setIsLoadingSuggestions(true);
+      try {
+        const rawComments = filterRelevantComments(comments);
+
+        const systemPrompt = `
+          You are an expert game designer specializing in UI, game logic, and feature analysis. Your task is to:
+          1. Filter user comments to identify actionable feedback related to UI, game logic, or game features.
+          2. Generate 3-5 concise, actionable prompts for improving a React game based on the filtered feedback.
+  
+          ### Step 1: Filter Comments
+          - **Feedback Definition**: A comment is feedback if it suggests a specific change, improvement, or issue related to UI (e.g., colors, layout, visuals), game logic (e.g., rules, mechanics, scoring), or game features (e.g., new modes, characters, levels).
+          - **Exclude Irrelevant Comments**: Ignore vague, off-topic, or purely emotional comments (e.g., "Great game!", "This sucks") unless they contain actionable suggestions.
+          - **Exclude Code Improvements**: Do not include comments about code quality, performance optimizations, or technical refactoring (e.g., "Optimize the rendering loop").
+          - **Assign Relevance Score**: For each feedback comment, assign a relevance score (0-1) based on specificity and impact on UI/logic/features.
+          - **Categorize Feedback**: Label each feedback comment as "UI", "Logic", or "Feature".
+          - **Output Filtered Comments**: Include only the top 10 most relevant feedback comments, sorted by relevance score.
+  
+          ### Step 2: Generate Prompts
+          - **Prompt Requirements**: Generate 3-5 prompts (20-50 words each) for improving the game, prioritizing filtered feedback.
+          - **Prompt Focus**: Prompts must address UI, game logic, or game features, not code improvements.
+          - **Label Feedback-Based Prompts**: Prefix prompts derived from comments with "[User Feedback]".
+          - **Supplement if Needed**: If fewer than 3 actionable comments are available, generate additional prompts by analyzing the game code for UI/logic/feature improvements (not code optimizations).
+          - **Prompt Feasibility**: Ensure prompts are specific, feasible for the /game/openai/update-react endpoint, and avoid technical code changes.
+  
+          ### Input
+          **Game Code**:
+          ${initialGameCode}
+  
+          **Comments**:
+          ${rawComments.map((c) => `- ${c.content}`).join('\n') || 'No comments provided'}
+  
+          ### Output Format
+          Return a JSON object with two properties:
+          {
+            "filteredComments": [
+              { "content": "string", "relevanceScore": number, "category": "UI|Logic|Feature" },
+              ...
+            ],
+            "suggestions": ["string", ...]
+          }
+        `;
+
+        const response = await axios.post('/game/openai/generate-suggestions', {
+          systemPrompt,
+          userPrompt: 'Filter comments and generate suggested prompts based on the provided game code and comments.',
+        });
+
+        const { filteredComments = [], suggestions = [] } = response.data || {};
+
+        // Update state with filtered comments and suggestions
+        setSuggestedPrompts(suggestions);
+        setHasGeneratedSuggestions(true);
+
+        // Optionally store filtered comments if needed for display or further processing
+        // For now, we only use them indirectly via suggestions
+      } catch (error) {
+        console.error('Error generating suggested prompts:', error);
+        setSuggestedPrompts([]);
+        setHasGeneratedSuggestions(true); // Prevent retry on error
+      } finally {
+        setIsLoadingSuggestions(false); // Stop loading
+      }
+    };
+
+    generateSuggestedPrompts();
+  }, [comments, commentsFetched, initialGameCode, hasGeneratedSuggestions]);
+
+  const handleSaveAndClose = async () => {
+    if (!initialGameCode || !rowName || !room_id) return;
+
+    setSaving(true);
+    setProcessingMessage({ type: 'processing', content: 'Saving your game...' });
+
+    try {
+      await dispatch(
+        updateRoomGameCode({
+          roomId: room_id,
+          gameCode: initialGameCode,
+        })
+      );
+
+      addAIMessage(`Game "${rowName}" has been successfully updated!`);
+      onClose(); // Close the settings panel
+    } catch (error) {
+      console.error('Error saving game:', error);
+      addAIMessage(`Failed to save game: ${error.message || 'Unknown error'}`);
+    } finally {
+      setSaving(false);
+      setProcessingMessage(null);
+    }
+  };
+
+  useEffect(() => {
+    if (initialGameCode && rowName) {
+      setGameCode(initialGameCode);
+      setLocalPrompt('');
+      setHasGenerated(true);
+
+    } else {
+      setLocalPrompt(creator_prompt || prompt || '');
+    }
+  }, [initialGameCode, rowName, creator_prompt, prompt, setGameCode]);
+
+  useEffect(() => {
+    if (creator_prompt && !hasGenerated && !gameLoading && !saving && !initialGameCode) {
       setLocalPrompt(creator_prompt);
       handleGenerateClick();
       setHasGenerated(true);
     }
-  }, [creator_prompt, hasGenerated, gameLoading, saving]);
+  }, [creator_prompt, hasGenerated, gameLoading, saving, initialGameCode]);
 
   useEffect(() => {
     if (chatEndRef.current) {
@@ -114,12 +247,11 @@ const SettingsRef = ({
   }, []);
 
   useEffect(() => {
-    if (gameCode) {
+    if (initialGameCode) {
       try {
         setComponentError(null);
-
-        const cleanedCode = gameCode
-          .replace(/import .*? from .+?;/g, '') // Remove all imports
+        const cleanedCode = initialGameCode
+          .replace(/import .*? from .+?;/g, '')
           .replace('export default App;', '')
           .trim();
 
@@ -203,7 +335,7 @@ const SettingsRef = ({
       setGameComponent(null);
       setComponentError(null);
     }
-  }, [gameCode]);
+  }, [initialGameCode]);
 
   const handlePromptChange = (e) => {
     setLocalPrompt(e.target.value || '');
@@ -216,9 +348,6 @@ const SettingsRef = ({
 
     const imageUrlsFromPrompt = promptUrls.filter((url) => /\.(jpg|jpeg|png)$/i.test(url));
     const audioUrlsFromPrompt = promptUrls.filter((url) => /\.(mp3|wav|ogg)$/i.test(url));
-
-    console.log('Detected image URLs in prompt:', imageUrlsFromPrompt);
-    console.log('Detected audio URLs in prompt:', audioUrlsFromPrompt);
 
     const assets = {
       images: imageUrlsFromPrompt.map((url, i) => ({ key: `image${i}`, url })),
@@ -244,27 +373,23 @@ const SettingsRef = ({
     return finalAssets;
   };
 
-  // Function to add a user message to the chat
   const addUserMessage = (message) => {
-    setChatMessages(prevMessages => [
+    setChatMessages((prevMessages) => [
       ...prevMessages,
-      { type: 'user', content: message, timestamp: new Date() }
+      { type: 'user', content: message, timestamp: new Date() },
     ]);
   };
 
-  // Function to add an AI message to the chat
   const addAIMessage = (message) => {
-    setChatMessages(prevMessages => [
+    setChatMessages((prevMessages) => [
       ...prevMessages,
-      { type: 'ai', content: message, timestamp: new Date() }
+      { type: 'ai', content: message, timestamp: new Date() },
     ]);
   };
 
-  // Setup an interval to simulate processing updates
   const startProcessingUpdates = () => {
     setProcessingMessage({ type: 'processing', content: 'Generating your game...' });
 
-    // This would actually connect to a real-time stream from the API in production
     const processingMessages = [
       'Analyzing your prompt...',
       'Designing game mechanics...',
@@ -273,7 +398,7 @@ const SettingsRef = ({
       'Implementing multiplier logic...',
       'Setting up game physics...',
       'Polishing visual elements...',
-      'Finalizing your game...'
+      'Finalizing your game...',
     ];
 
     let messageIndex = 0;
@@ -281,7 +406,7 @@ const SettingsRef = ({
       if (messageIndex < processingMessages.length) {
         setProcessingMessage({
           type: 'processing',
-          content: processingMessages[messageIndex]
+          content: processingMessages[messageIndex],
         });
         messageIndex++;
       } else {
@@ -292,22 +417,20 @@ const SettingsRef = ({
     return () => clearInterval(interval);
   };
 
-  // Enhanced handleGenerateClick with chat integration
   const handleGenerateClick = async () => {
     if (!localPrompt || (typeof localPrompt === 'string' && !localPrompt.trim())) return;
 
+    if (room_id && initialGameCode) {
+      await handleFollowUpPrompt();
+      return;
+    }
 
     setSaving(true);
     setGameLoading(true);
     setComponentError(null);
 
-    // Add user message to chat
     addUserMessage(localPrompt);
-
-    // Show chat if not already visible
     setShowChat(true);
-
-    // Start processing updates
     const stopProcessingUpdates = startProcessingUpdates();
 
     const assets = await preProxyAssets(localPrompt);
@@ -326,12 +449,8 @@ const SettingsRef = ({
         )
       );
 
-      // Add AI confirmation message
-      addAIMessage("Game generated successfully! What would you like to modify or improve?");
-
-      // Clear the prompt input for next message
+      addAIMessage('Game generated successfully! What would you like to modify or improve?');
       setLocalPrompt('');
-
     } catch (error) {
       setComponentError(`Generation failed: ${error.message || 'Unknown error'}`);
       addAIMessage(`I encountered an error: ${error.message || 'Unknown error'}`);
@@ -342,49 +461,37 @@ const SettingsRef = ({
     }
   };
 
-  // Function to handle follow-up prompts
-  const handleFollowUpPrompt = async () => {
-    if (!localPrompt || !localPrompt.trim() || !gameCode) return;
+  const handleFollowUpPrompt = async (suggestedPrompt = null) => {
+    let promptToUse = localPrompt;
+
+    // Use suggestedPrompt only if it's a non-empty string
+    if (typeof suggestedPrompt === 'string' && suggestedPrompt.trim()) {
+      promptToUse = suggestedPrompt;
+    }
 
     setSaving(true);
     setGameLoading(true);
 
-    // Add user message to chat
-    addUserMessage(localPrompt);
-
-    // Start processing updates
+    addUserMessage(promptToUse);
     const stopProcessingUpdates = startProcessingUpdates();
 
-    const assets = await preProxyAssets(localPrompt);
+    const assets = await preProxyAssets(promptToUse);
 
     try {
-      // Here we would call a different endpoint that takes the existing gameCode and modifies it
-      // This is a mock implementation - in reality we'd need to create this endpoint
       const response = await axios.post('/game/openai/update-react', {
-        prompt: localPrompt,
-        currentCode: gameCode,
-        imageUrls: assets.images.map(asset => asset.proxiedUrl),
+        prompt: promptToUse,
+        currentCode: initialGameCode,
+        imageUrls: assets.images.map((asset) => asset.proxiedUrl),
       });
 
       const updatedCode = response.data.finalApp;
       setGameCode(updatedCode);
 
-      // Add AI confirmation message
-      addAIMessage("I've updated your game based on your feedback. What else would you like to change?");
-
-      // Clear the prompt input for next message
-      setLocalPrompt('');
-
+      addAIMessage('Game updated successfully! What else would you like to change?');
+      if (!suggestedPrompt) setLocalPrompt('');
     } catch (error) {
       console.error('Error updating React app:', error);
-
-      // Since the endpoint doesn't exist yet, simulate a successful update
-      // This would be removed once the real endpoint is implemented
-      setTimeout(() => {
-        addAIMessage("I've updated your game based on your feedback. What else would you like to change?");
-        setLocalPrompt('');
-      }, 3000);
-
+      addAIMessage(`Failed to update game: ${error.message || 'Unknown error'}`);
     } finally {
       setSaving(false);
       setGameLoading(false);
@@ -393,12 +500,33 @@ const SettingsRef = ({
     }
   };
 
-  // Format timestamp to readable time
+  const handleSaveGame = async () => {
+    if (!initialGameCode || !rowName) return;
+
+    setSaving(true);
+    setProcessingMessage({ type: 'processing', content: 'Saving your game...' });
+
+    try {
+      const response = await axios.post('/game/update', {
+        gameId: user_id,
+        gameCode: initialGameCode,
+        gameName: rowName,
+      });
+
+      addAIMessage(`Game "${rowName}" has been successfully updated!`);
+    } catch (error) {
+      console.error('Error saving game:', error);
+      addAIMessage(`Failed to save game: ${error.message || 'Unknown error'}`);
+    } finally {
+      setSaving(false);
+      setProcessingMessage(null);
+    }
+  };
+
   const formatTime = (timestamp) => {
     return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  // Inside the SettingsRef component, add this reset function
   const resetGame = () => {
     setChatMessages([]);
     setShowChat(false);
@@ -408,9 +536,11 @@ const SettingsRef = ({
     setLocalPrompt('');
     setProcessingMessage(null);
     setGameLoading(false);
+    setSuggestedPrompts([]);
+    setHasGeneratedSuggestions(false);
+    setCommentsFetched(false); // Reset commentsFetched for new fetch
   };
 
-  // Update the chat panel section with improved UI and reset button
   return (
     <Box
       ref={settingsRef}
@@ -425,6 +555,20 @@ const SettingsRef = ({
         backgroundColor: (theme) => (theme.palette.mode === 'dark' ? '#2a2a2a' : '#f9f9f9'),
       }}
     >
+      <Button
+        onClick={onClose}
+        sx={{
+          position: 'absolute',
+          top: 8,
+          right: 8,
+          padding: 0.5,
+          fontSize: '1.5rem',
+          pointer: 'cursor',
+        }}
+        color="error"
+      >
+        ✕
+      </Button>
       <Box
         sx={{
           flex: isMobile ? 'none' : 1,
@@ -436,18 +580,18 @@ const SettingsRef = ({
         }}
       >
         <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', fontWeight: 600 }}>
-          AI Game Generator
+          {rowName ? `Updating ${rowName}` : 'AI Game Generator'}
           <AutoAwesomeIcon sx={{ ml: 1, fontSize: '1.25rem', color: 'error.main' }} />
         </Typography>
 
-        <Box>
+        {/* <Box>
           <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
             MODEL SELECTION
           </Typography>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
             {sortedStrategies.map((strategy, index) => {
               const isUnlocked = tokenStatus || rank >= strategy.levelToUnlock;
-              const isActive = (selectedStrategy) === strategy.name;
+              const isActive = selectedStrategy === strategy.name;
 
               return (
                 <Tooltip
@@ -482,7 +626,7 @@ const SettingsRef = ({
               );
             })}
           </Box>
-        </Box>
+        </Box> */}
 
         {iso3MiniSelected && (
           <>
@@ -492,23 +636,61 @@ const SettingsRef = ({
               </Typography>
               <Box sx={{ display: 'flex', gap: 1 }}>
                 {chatMessages.length > 0 && (
-                  <>
-                    <Button
-                      color='error'
-                      variant="outlined"
-                      size="small"
-                      onClick={() => setShowChat(!showChat)}
-                      startIcon={<ChatIcon />}
-                    >
-                      {showChat ? 'Hide Chat' : 'Show Chat'}
-                    </Button>
-                   
-                  </>
+                  <Button
+                    color="error"
+                    variant="outlined"
+                    size="small"
+                    onClick={() => setShowChat(!showChat)}
+                    startIcon={<ChatIcon />}
+                  >
+                    {showChat ? 'Hide Chat' : 'Show Chat'}
+                  </Button>
+                )}
+                {rowName && (
+                  <Button
+                    variant="outlined"
+                    color="success"
+                    onClick={handleSaveAndClose}
+                    disabled={saving || gameLoading}
+                    startIcon={
+                      gameLoading ? null : saving ? <CircularProgress color="inherit" size={20} /> : <SaveIcon />
+                    }
+                    sx={{ minWidth: gameLoading ? 'auto' : 'fit-content' }}
+                  >
+                    {gameLoading ? <CircularProgress color="inherit" size={20} /> : 'Save and Close'}
+                  </Button>
                 )}
               </Box>
             </Box>
 
-            {/* Enhanced Chat Panel */}
+            {isLoadingSuggestions ? (
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <CircularProgress color="error" size={20} sx={{ mr: 1 }} />
+                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                  Generating Suggested Prompts...
+                </Typography>
+              </Box>
+            ) : suggestedPrompts.length > 0 ? (
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
+                  SUGGESTED PROMPTS
+                </Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {suggestedPrompts.map((prompt, index) => (
+                    <Chip
+                      key={index}
+                      label={prompt}
+                      onClick={() => handleFollowUpPrompt(prompt)}
+                      color={prompt.startsWith('[User Feedback]') ? 'error' : 'warning'}
+                      variant="outlined"
+                      sx={{ maxWidth: '100%', cursor: 'pointer' }}
+                      disabled={saving || gameLoading}
+                    />
+                  ))}
+                </Box>
+              </Box>
+            ) : null}
+
             {showChat && chatMessages.length > 0 && (
               <Paper
                 variant="outlined"
@@ -518,26 +700,29 @@ const SettingsRef = ({
                   overflow: 'hidden',
                   display: 'flex',
                   flexDirection: 'column',
-                  height: 300
+                  height: 300,
                 }}
               >
-                {/* Chat Header */}
-                <Box sx={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  bgcolor: 'background.paper',
-                  borderBottom: '1px solid',
-                  borderColor: 'divider',
-                  p: 1.5
-                }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    bgcolor: 'background.paper',
+                    borderBottom: '1px solid',
+                    borderColor: 'divider',
+                    p: 1.5,
+                  }}
+                >
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Avatar sx={{ width: 24, height: 24, bgcolor: 'error.main', fontSize: '0.875rem', mr: 1 }}>AI</Avatar>
+                    <Avatar sx={{ width: 24, height: 24, bgcolor: 'error.main', fontSize: '0.875rem', mr: 1 }}>
+                      AI
+                    </Avatar>
                     <Typography variant="subtitle2">AI Game Assistant</Typography>
                   </Box>
                   <Box>
                     <Button
-                      color='inherit'
+                      color="inherit"
                       size="small"
                       onClick={resetGame}
                       startIcon={<FontAwesomeIcon icon={faRedo} />}
@@ -548,16 +733,17 @@ const SettingsRef = ({
                   </Box>
                 </Box>
 
-                {/* Chat Messages */}
-                <Box sx={{
-                  p: 2,
-                  flexGrow: 1,
-                  overflowY: 'auto',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 2,
-                  bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.05)' : 'rgba(0,0,0,0.02)'
-                }}>
+                <Box
+                  sx={{
+                    p: 2,
+                    flexGrow: 1,
+                    overflowY: 'auto',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 2,
+                    bgcolor: (theme) => (theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.05)' : 'rgba(0,0,0,0.02)'),
+                  }}
+                >
                   {chatMessages.map((message, index) => (
                     <Box
                       key={index}
@@ -576,7 +762,7 @@ const SettingsRef = ({
                               height: 24,
                               bgcolor: 'error.main',
                               fontSize: '0.775rem',
-                              mr: 1
+                              mr: 1,
                             }}
                           >
                             AI
@@ -592,7 +778,7 @@ const SettingsRef = ({
                               height: 24,
                               bgcolor: blue[500],
                               fontSize: '0.775rem',
-                              ml: 1
+                              ml: 1,
                             }}
                           >
                             U
@@ -606,12 +792,10 @@ const SettingsRef = ({
                           bgcolor: message.type === 'user' ? blue[50] : 'background.paper',
                           borderRadius: 2,
                           border: '1px solid',
-                          borderColor: message.type === 'user' ? blue[200] : 'divider'
+                          borderColor: message.type === 'user' ? blue[200] : 'divider',
                         }}
                       >
-                        <Typography variant="body2">
-                          {message.content}
-                        </Typography>
+                        <Typography variant="body2">{message.content}</Typography>
                       </Paper>
                     </Box>
                   ))}
@@ -632,7 +816,7 @@ const SettingsRef = ({
                             height: 24,
                             bgcolor: 'error.main',
                             fontSize: '0.775rem',
-                            mr: 1
+                            mr: 1,
                           }}
                         >
                           AI
@@ -650,13 +834,11 @@ const SettingsRef = ({
                           border: '1px solid',
                           borderColor: 'divider',
                           display: 'flex',
-                          alignItems: 'center'
+                          alignItems: 'center',
                         }}
                       >
-                        <CircularProgress color='error' size={16} sx={{ mr: 1 }} />
-                        <Typography variant="body2">
-                          {processingMessage.content}
-                        </Typography>
+                        <CircularProgress color="error" size={16} sx={{ mr: 1 }} />
+                        <Typography variant="body2">{processingMessage.content}</Typography>
                       </Paper>
                     </Box>
                   )}
@@ -669,31 +851,32 @@ const SettingsRef = ({
             <Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
               <TextField
                 multiline
-                color='error'
+                color="error"
                 rows={4}
                 variant="filled"
                 fullWidth
-                label={chatMessages.length > 0 ? "Continue the conversation" : "Custom Game Prompt"}
+                label={chatMessages.length > 0 ? 'Continue the conversation' : 'Custom Game Prompt'}
                 value={localPrompt}
                 onChange={handlePromptChange}
                 inputProps={{ maxLength: 1800 }}
                 onFocus={() => dispatch(setFocused(true))}
                 onBlur={() => dispatch(setFocused(false))}
-                placeholder={chatMessages.length > 0 ? "Describe how you'd like to modify the game..." : "Describe the game you want to create..."}
+                placeholder={
+                  chatMessages.length > 0
+                    ? "Describe how you'd like to modify the game..."
+                    : 'Describe the game you want to create...'
+                }
               />
               <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
-                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                  Follow-up prompts cost 0.005 SOL
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 1 }}>
+                <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', width: '100%' }}>
                   <Button
-                    variant="contained"
+                    variant="outlined"
                     color="error"
-                    onClick={chatMessages.length > 0 ? handleFollowUpPrompt : handleGenerateClick}
+                    onClick={room_id ? handleFollowUpPrompt : handleGenerateClick}
                     disabled={loading || saving || gameLoading}
-                    startIcon={loading || saving || gameLoading ? <CircularProgress color='error' size={20} /> : <SendIcon />}
+                    startIcon={loading || saving || gameLoading ? <CircularProgress color="error" size={20} /> : <SendIcon />}
                   >
-                    {chatMessages.length > 0 ? 'Update Game' : 'Generate'}
+                    {room_id || chatMessages.length > 0 ? 'Update Game' : 'Generate'}
                   </Button>
                 </Box>
               </Box>
@@ -702,7 +885,6 @@ const SettingsRef = ({
         )}
       </Box>
 
-      {/* Game preview section remains the same */}
       <Box
         sx={{
           flex: isMobile ? 'none' : 2,
@@ -711,26 +893,10 @@ const SettingsRef = ({
           p: 2,
         }}
       >
-        <Box sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          mb: 2
-        }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
           <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
             Generated Game
           </Typography>
-          {GameComponent && (
-            <Button
-              size="small"
-              variant="outlined"
-              color="inherit"
-              onClick={resetGame}
-              startIcon={<FontAwesomeIcon icon={faRedo} />}
-            >
-              Reset Game
-            </Button>
-          )}
         </Box>
 
         {gameLoading ? (
@@ -738,18 +904,22 @@ const SettingsRef = ({
             <CircularProgress size={60} color="error" />
           </Box>
         ) : componentError ? (
-          <Box sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
-            height: '600px',
-            border: '1px solid #ccc',
-            borderRadius: '8px',
-            padding: '20px',
-            color: 'red'
-          }}>
-            <Typography variant="h6" sx={{ mb: 2 }}>Error</Typography>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+              height: '600px',
+              border: '1px solid #ccc',
+              borderRadius: '8px',
+              padding: '20px',
+              color: 'red',
+            }}
+          >
+            <Typography variant="h6" sx={{ mb: 2 }}>
+              Error
+            </Typography>
             <Typography>{componentError}</Typography>
           </Box>
         ) : GameComponent ? (
@@ -765,14 +935,16 @@ const SettingsRef = ({
             <GameComponent proxiedAssets={proxiedAssets} logEvent={logEvent} />
           </Box>
         ) : (
-          <Box sx={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            height: '600px',
-            border: '1px solid #ccc',
-            borderRadius: '8px'
-          }}>
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              height: '600px',
+              border: '1px solid #ccc',
+              borderRadius: '8px',
+            }}
+          >
             <Typography variant="body1" color="text.secondary">
               No game generated yet. Enter a prompt and click Generate.
             </Typography>

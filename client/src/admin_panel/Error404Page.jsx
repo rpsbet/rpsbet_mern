@@ -83,7 +83,7 @@ function Error404Page() {
       </Slide>
       <Grow in={openPage}>
         <Button
-          variant="contained"
+          variant="outlined"
           color="error"
           component={Link} // Use Link from react-router-dom for navigation
           to="/"

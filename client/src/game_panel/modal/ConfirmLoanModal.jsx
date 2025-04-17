@@ -190,12 +190,20 @@ const ConfirmLoanModal = () => {
             top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
-            color: '#fff',
-            borderRadius: 1,
-            minWidth: 360,
-            maxWidth: '90vw',
-            maxHeight: '90vh',
+            color: '#fff', // Preserve text color conditional
             overflowY: 'auto',
+            borderRadius: 2,
+            boxShadow: 24,
+            p: 3,
+            // Glassmorphism styles (default dark mode colors)
+            background: 'rgba(0, 0, 0, 0.2)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)', // For Safari
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            // Fallback for browsers without backdrop-filter
+            '@supports not (backdrop-filter: blur(10px))': {
+              background: 'rgba(0, 0, 0, 0.4)',
+            },
           }}
         >
           <Box className={isDarkMode ? 'dark_mode' : ''}>
@@ -224,9 +232,8 @@ const ConfirmLoanModal = () => {
                           <span style={{ whiteSpace: 'nowrap' }}>AVAILABLE FUNDS:</span>
                         </TableCell>
                         <TableCell
-                          className={`label ${
-                            parseFloat(responseText) > loan_amount ? 'red-text' : 'green-text'
-                          }`}
+                          className={`label ${parseFloat(responseText) > loan_amount ? 'red-text' : 'green-text'
+                            }`}
                           style={{ borderBottom: 'none' }}
                         >
                           {loan_amount} SOL ({convertToCurrency(loan_amount, solPrice)})
@@ -416,7 +423,7 @@ const ConfirmLoanModal = () => {
 
             <Box className="modal-footer" sx={{ display: 'flex', gap: 2 }}>
               <Button
-                variant="contained"
+                variant="outlined"
                 color="success"
                 onClick={onBtnOkClicked}
                 disabled={loading}
@@ -424,7 +431,7 @@ const ConfirmLoanModal = () => {
                 {loading ? <CircularProgress size={24} sx={{ color: '#fff' }} /> : 'ACCEPT'}
               </Button>
               <Button
-                variant="contained"
+                variant="outlined"
                 color="error"
                 onClick={onBtnCancelClicked}
                 disabled={loading}

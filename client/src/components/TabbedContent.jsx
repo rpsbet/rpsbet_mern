@@ -425,7 +425,13 @@ function TabbedContent(props) {
         square
         variant="filled"
         sx={{
-          background: '#080808',
+          background: 'rgba(0, 0, 0, 0.2)',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          '@supports not (backdrop-filter: blur(10px))': {
+            background: 'rgba(0, 0, 0, 0.4)',
+          },
           padding: '20px 10px',
           marginTop: '5px',
           display: 'flex',

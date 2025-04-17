@@ -180,7 +180,7 @@ function OpenGamesTable(props) {
   const handleFilterChange = useCallback(
     async (option) => {
       setFilter(option);
-      if (option === 'Recently Graduated') {
+      if (option === 'RECENTLY GRADUATED') {
         setLoadingRecent(true);
         await dispatch(getRecentlyClosed());
         setLoadingRecent(false);
@@ -232,7 +232,7 @@ function OpenGamesTable(props) {
           className="filter-container"
           style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
           onClick={() =>
-            handleFilterChange(isLiveGames ? 'Recently Graduated' : 'BEAT THE HOUSE')
+            handleFilterChange(isLiveGames ? 'RECENTLY GRADUATED' : 'BEAT THE HOUSE')
           }
         >
           <FilterListIcon style={{ marginRight: '5px' }} />
@@ -302,7 +302,7 @@ function OpenGamesTable(props) {
               container
               className="grid-container"
               spacing={1}
-              style={{  }}
+              style={{}}
             >
               {displayedRooms.map((row, index) => {
                 const progressPercentage = row.endgame_amount
@@ -365,7 +365,7 @@ function OpenGamesTable(props) {
                             right: '-4px',
                             bottom: '-4px',
                             borderRadius: '18px',
-                            background: 'linear-gradient(45deg, #ff0000, #ff7300, #fffb00, #ff7300, #ff0000)', // Vibrant gradient
+                            background: 'linear-gradient(45deg, #ff0000, #ff7300,rgb(255, 0, 93), #ff7300, #ff0000)', // Vibrant gradient
                             backgroundSize: '300% 300%', // Large size for movement
                             animation: 'gradientBorder 6s ease infinite', // Slightly slower for clarity
                             zIndex: 0,
@@ -431,26 +431,34 @@ function OpenGamesTable(props) {
                           flexDirection: 'column',
                           padding: '20px',
                           borderRadius: '16px',
-                          background: effectiveIsDarkMode
-                            ? 'linear-gradient(135deg, rgba(30, 42, 56, 0.8), rgba(22, 32, 46, 0.9))'
-                            : 'linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.5))',
-                          backdropFilter: 'blur(12px)',
-                          border: effectiveIsDarkMode
-                            ? '1px solid rgba(255, 255, 255, 0.1)'
-                            : '1px solid rgba(255, 255, 255, 0.7)',
-                          boxShadow: effectiveIsDarkMode
-                            ? '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.07)'
-                            : '0 8px 32px rgba(31, 38, 135, 0.15), inset 0 0 0 1px rgba(255, 255, 255, 0.4)',
-                          transition: 'all 0.1s ease',
+                          // Glassmorphism styles (default dark mode colors)
+                          background: 'rgba(0, 0, 0, 0.2)',
+                          backdropFilter: 'blur(10px)',
+                          WebkitBackdropFilter: 'blur(10px)', // For Safari
+                          border: '1px solid rgba(255, 255, 255, 0.2)',
+                          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                          transition: 'all 0.3s ease', // Smooth transition for hover
                           position: 'relative',
                           overflow: 'hidden',
                           zIndex: 1,
+                          // Fallback for browsers without backdrop-filter
+                          '@supports not (backdrop-filter: blur(10px))': {
+                            background: 'rgba(0, 0, 0, 0.4)',
+                          },
+                          // Hover effect
                           '&:hover': {
-                            boxShadow: effectiveIsDarkMode
-                              ? '0 12px 40px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.1)'
-                              : '0 12px 40px rgba(31, 38, 135, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.6)',
+                            background: 'rgba(0, 0, 0, 0.3)',
+                            boxShadow: '0 6px 12px rgba(0, 0, 0, 0.15)',
                             cursor: 'pointer',
                           },
+                          // Adjust highlighted-row for slight differentiation
+                          '&.highlighted-row': {
+                            background: 'rgba(0, 0, 0, 0.25)',
+                            '@supports not (backdrop-filter: blur(10px))': {
+                              background: 'rgba(0, 0, 0, 0.45)',
+                            },
+                          },
+                          // Preserve pseudo-element for flair
                           '&:before': {
                             content: '""',
                             position: 'absolute',
@@ -460,7 +468,7 @@ function OpenGamesTable(props) {
                             height: '200%',
                             background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%)',
                             opacity: 0,
-                            transition: 'opacity 0.1s ease',
+                            transition: 'opacity 0.3s ease',
                             transform: 'rotate(30deg)',
                             pointerEvents: 'none',
                           },
@@ -991,6 +999,7 @@ function OpenGamesTable(props) {
           )}
           <Pagination
             color="error"
+            variant='outlined'
             sx={{
               display: 'flex',
               justifyContent: 'center',

@@ -2,22 +2,6 @@ import React from 'react';
 import { Modal, Box, Typography, Button } from '@mui/material';
 
 function TermsModal({ modalIsOpen, closeModal }) {
-  // MUI styles
-  const modalBoxStyle = {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    bgcolor: '#0a0a0a', // Purple background
-    color: '#fff',
-    boxShadow: 24,
-    borderRadius: 1,
-    p: 3,
-    width: 600,
-    maxWidth: '90vw',
-    maxHeight: '90vh',
-    overflowY: 'auto',
-  };
 
   return (
     <Modal
@@ -28,7 +12,30 @@ function TermsModal({ modalIsOpen, closeModal }) {
         style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' },
       }}
     >
-      <Box sx={modalBoxStyle}>
+      <Box
+        sx={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          color: '#fff', // Preserve text color conditional
+          width: '90vw',
+          height: '80vh',
+          overflowY: 'auto',
+          borderRadius: 2,
+          boxShadow: 24,
+          p: 3,
+          // Glassmorphism styles (default dark mode colors)
+          background: 'rgba(0, 0, 0, 0.2)',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)', // For Safari
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          // Fallback for browsers without backdrop-filter
+          '@supports not (backdrop-filter: blur(10px))': {
+            background: 'rgba(0, 0, 0, 0.4)',
+          },
+        }}
+      >
         {/* HEADER */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
           <Typography

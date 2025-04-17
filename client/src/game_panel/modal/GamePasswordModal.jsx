@@ -72,10 +72,10 @@ function GamePasswordModal() {
             />
           </div>
           <Box className="modal-footer">
-            <Button variant="contained" color="error" onClick={handleOkClick}>
+            <Button variant="outlined" color="error" onClick={handleOkClick}>
               Continue Bet
             </Button>
-            <Button variant="contained" color="error" onClick={handleCancelClick}>
+            <Button variant="outlined" color="error" onClick={handleCancelClick}>
               Cancel
             </Button>
           </Box>

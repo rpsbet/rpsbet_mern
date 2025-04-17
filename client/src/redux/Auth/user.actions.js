@@ -171,12 +171,14 @@ export const addBonus = () => async (dispatch) => {
       dispatch({ type: MSG_SUCCESS, payload: 'Bonus has been added successfully.' });
       return data;
     } else {
-      dispatch({ type: MSG_ERROR, payload: data.message });
+      dispatch({ type: MSG_ERROR, payload: data.message || 'Failed to claim bonus.' });
+      return { success: false, message: data.message };
     }
   } catch (error) {
-    dispatch({ type: MSG_WARNING, payload: 'An error occurred while adding the bonus.' });
+    console.error('Error in addBonus action:', error);
+    dispatch({ type: MSG_WARNING, payload: 'An error occurred while claiming the bonus.' });
+    return { success: false, message: error.message };
   }
-  return false;
 };
 
 export const getProfitData = () => async dispatch => {
@@ -328,7 +330,7 @@ export const purchaseEliteSubscription = (type) => async (dispatch) => {
       dispatch({ type: UPDATED_USER, payload: res.data.user });
       dispatch({
         type: MSG_SUCCESS,
-        payload: `Successfully subscribed to ${type.toUpperCase()} Elite membership!`,
+        payload: res.data.message || `Successfully subscribed to ${type.toUpperCase()} Elite membership!`,
       });
       return res.data;
     } else {

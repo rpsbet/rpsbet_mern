@@ -16,7 +16,7 @@ const RoomSchema = new Schema({
   creator: { type: Schema.Types.ObjectId, ref: 'rps_users' },
   joiners: [{ type: Schema.Types.ObjectId, ref: 'rps_users', default: [] }],
   game_type: { type: Schema.Types.ObjectId, ref: 'rps_game_types' },
-  selectedStrategy: { type: String, default: 'Markov' },
+  selectedStrategy: { type: String, default: 'o3Mini' },
   last_updated_strat: { type: Date },
   qs_game_type: { type: Number, default: 2 },
   qs_nation: { type: Number, default: 0 },

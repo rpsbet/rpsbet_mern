@@ -151,7 +151,30 @@ const DebtsModal = ({ modalIsOpen, closeModal }) => {
         style={customStyles}
         contentLabel="Debts Modal"
       >
-        <Box className={isDarkMode ? 'dark_mode' : ''}>
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            color: isDarkMode ? '#fff' : '#000', // Preserve text color conditional
+            width: '90vw',
+            height: '80vh',
+            overflowY: 'auto',
+            borderRadius: 2,
+            boxShadow: 24,
+            p: 3,
+            // Glassmorphism styles (default dark mode colors)
+            background: 'rgba(0, 0, 0, 0.2)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)', // For Safari
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            // Fallback for browsers without backdrop-filter
+            '@supports not (backdrop-filter: blur(10px))': {
+              background: 'rgba(0, 0, 0, 0.4)',
+            },
+          }}
+        >
           {/* Header */}
           <Box
             sx={{
@@ -180,11 +203,6 @@ const DebtsModal = ({ modalIsOpen, closeModal }) => {
 
           {/* Outer Container for loans, with background & radius */}
           <Box
-            sx={{
-              background: '#080808',
-              p: 2,
-              borderRadius: 1,
-            }}
           >
             <Grid container spacing={2}>
               {/* If no debts */}
@@ -281,7 +299,7 @@ const DebtsModal = ({ modalIsOpen, closeModal }) => {
           {/* Close the main Debts modal */}
           <Button
             fullWidth
-            variant="contained"
+            variant="outlined"
             sx={{ mt: 2 }}
             color="error"
             onClick={closeModal}
@@ -353,7 +371,7 @@ const DebtsModal = ({ modalIsOpen, closeModal }) => {
             {/* Payback Modal Footer */}
             <Box className="modal-footer" sx={{ textAlign: 'right' }}>
               <Button
-                variant="contained"
+                variant="outlined"
                 color="error"
                 onClick={handlePaybackLoan}
                 disabled={loading} // Disable button when loading

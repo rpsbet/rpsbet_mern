@@ -41,7 +41,6 @@ const GameSettingsPanel = ({
   };
 
   useEffect(() => {
-    console.log('creator_prompt', creator_prompt);
     if (creator_prompt && !hasManuallyClosed) {
       setSettingsPanelOpened(true);
       setGameMode('Custom');
@@ -90,6 +89,10 @@ const GameSettingsPanel = ({
         rank={rank}
         settingsRef={settingsRef}
         isDarkMode={isDarkMode}
+        onClose={() => {
+          setSettingsPanelOpened(false);
+          setHasManuallyClosed(true); // Mark that the user manually closed the panel
+        } }
       />
       <ButtonBase
         onClick={handleSettingsIconClick}

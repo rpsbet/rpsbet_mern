@@ -189,10 +189,10 @@ function ListItemModal({ modalIsOpen, closeModal }) {
           )}
 
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-            <Button variant="contained" color="error" onClick={onBtnOkClicked}>
+            <Button variant="outlined" color="error" onClick={onBtnOkClicked}>
               Confirm
             </Button>
-            <Button variant="contained" color="error" onClick={onBtnCancelClicked}>
+            <Button variant="outlined" color="error" onClick={onBtnCancelClicked}>
               Cancel
             </Button>
           </Box>
@@ -216,10 +216,10 @@ function ListItemModal({ modalIsOpen, closeModal }) {
             You already have this item listed with different settings. Click "Confirm" to override the previous listing.
           </Typography>
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-            <Button variant="contained" onClick={handleOverrideConfirmation}>
+            <Button variant="outlined" onClick={handleOverrideConfirmation}>
               Confirm
             </Button>
-            <Button variant="contained" color="error" onClick={() => setShowOverrideConfirmation(false)}>
+            <Button variant="outlined" color="error" onClick={() => setShowOverrideConfirmation(false)}>
               Cancel
             </Button>
           </Box>

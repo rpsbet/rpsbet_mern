@@ -371,24 +371,14 @@ function Custom(props) {
     }
   }, [roomInfo.gameCode]);
 
-  const toggleBlueishHue = useCallback(() => {
-    const elements = document.querySelectorAll('.rps-radio-host');
-    elements.forEach((element) => {
-      element.classList.toggle('blueish-hue');
-    });
-  }, []);
 
   useEffect(() => {
     isComponentMountedRef.current = true;
     const intervalDuration = 3000;
-    const id = setInterval(() => {
-      toggleBlueishHue();
-    }, intervalDuration);
-    setIntervalId(id);
+  
 
     return () => {
       isComponentMountedRef.current = false;
-      clearInterval(id);
       removeSocketListeners();
     };
   }, [removeSocketListeners]);
@@ -538,7 +528,7 @@ function Custom(props) {
                   className="result"
                   style={{
                     display: 'flex',
-                    top: isMobile ? '15px' : '0',
+                    top: isMobile ? '15px' : '-5px',
                     width: isMobile ? '100%' : '130px',
                     right: isMobile ? 'unset' : '0',
                   }}

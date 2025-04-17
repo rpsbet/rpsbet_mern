@@ -819,7 +819,7 @@ function OfferLoanModal() {
             <>
               {/* “OFFER” button */}
               <Button
-                variant="contained"
+                variant="outlined"
                 color="success"
                 disabled={!waiting && !cancelled}
                 onClick={waiting && cancelled ? nudge : onBtnOkClicked}
@@ -832,7 +832,7 @@ function OfferLoanModal() {
               </Button>
               {/* “Cancel” button */}
               <Button
-                variant="contained"
+                variant="outlined"
                 color="error"
                 onClick={onBtnCancelClicked}
               >
@@ -843,7 +843,7 @@ function OfferLoanModal() {
             <>
               {/* “ACCEPT” button for borrower */}
               <Button
-                variant="contained"
+                variant="outlined"
                 color="success"
                 disabled={waiting}
                 onClick={createAndLendHandler}
@@ -855,7 +855,7 @@ function OfferLoanModal() {
               </Button>
               {/* “Reject” button */}
               <Button
-                variant="contained"
+                variant="outlined"
                 color="error"
                 onClick={onBtnCancelClicked}
               >

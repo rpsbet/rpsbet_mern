@@ -241,8 +241,16 @@ function ChatPage() { // Keep match as a prop since it’s from React Router
         <Box
           sx={{
             mb: 2,
-            background: '#080808',
             borderRadius: '0.3em',
+            // Glassmorphism styles (default dark mode colors)
+            background: 'rgba(0, 0, 0, 0.2)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)', // For Safari
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            // Fallback for browsers without backdrop-filter
+            '@supports not (backdrop-filter: blur(10px))': {
+              background: 'rgba(0, 0, 0, 0.4)',
+            },
           }}
         >
           {/* Main Chat Layout */}
@@ -269,7 +277,7 @@ function ChatPage() { // Keep match as a prop since it’s from React Router
                 sx={{ position: 'absolute', left: '15px' }}
               >
                 <FontAwesomeIcon icon={faArrowLeft} />
-                  &nbsp;Go Back
+                &nbsp;Go Back
               </Button>
               <Box
                 component="a"

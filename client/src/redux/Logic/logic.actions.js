@@ -470,7 +470,6 @@ export const getCommentsForRoom = (room_id) => async dispatch => {
   try {
     dispatch({ type: START_LOADING });
     const res = await axios.get(`/game/comments/${room_id}`);
-
     if (res.data.success) {
       dispatch({ type: COMMENTS_LOADED, payload: res.data.comments });
     } else {
@@ -505,15 +504,40 @@ export const deleteComment = (comment_id) => async (dispatch) => {
   }
 };
 
+export const updateRoomGameCode = ({ roomId, gameCode }) => async (dispatch) => {
+  try {
+    const res = await axios.post('/game/room/update-gamecode', {
+      roomId,
+      gameCode,
+    });
+
+    if (res.data.success) {
+      // Optionally dispatch a success message or update state
+      dispatch({
+        type: MSG_SUCCESS,
+        payload: 'Room game code updated successfully!',
+      });
+    } else {
+      dispatch({
+        type: MSG_WARNING,
+        payload: res.data.message,
+      });
+    }
+  } catch (err) {
+    dispatch({
+      type: MSG_WARNING,
+      payload: err.response?.data?.message || 'Failed to update room game code',
+    });
+  }
+};
+
+
 
 export const actionRoom = ({ roomId, type }) => async dispatch => {
-  // dispatch({ type: START_LOADING });
-console.log("actionRoom", roomId, type)
   try {
     const res = await axios.patch(`/game/room/${roomId}/${type}`);
 
     if (res.data.success) {
-console.log("actionRoom res", res.data)
     } else {
       dispatch({ type: MSG_WARNING, payload: res.data.message });
     }
@@ -832,78 +856,6 @@ export const updateRoomStrategy = (room_id, strategy) => async dispatch => {
   } catch (err) {
     dispatch({ type: MSG_ERROR, payload: 'UNABLE TO UPDATE ROOM MODEL' });
 
-  }
-};
-
-export const kickBots = (room_id) => async (dispatch) => {
-  try {
-    let botRemoved = false;
-    let loopCount = 0;
-    while (!botRemoved && loopCount < 4) {
-      const res = await axios.patch(`/game/rooms/${room_id}/remove-bots`);
-      if (res.data.success) {
-        dispatch({ type: MSG_SUCCESS, payload: 'BOOTED All CATS!' });
-
-        botRemoved = true;
-      }
-
-      loopCount++;
-    }
-
-    if (!botRemoved) {
-      dispatch({ type: MSG_ERROR, payload: 'Failed to remove bots from the room' });
-      throw new Error('Could not remove bots from the room after 4 attempts');
-    }
-
-    return true; // Bots successfully removed
-  } catch (err) {
-    dispatch({ type: 'MSG_ERROR', payload: 'Failed to remove bots from the room or room has ended' });
-    return false;
-  }
-};
-
-export const updateRoomBot = (room_id) => async dispatch => {
-  try {
-    let botAttached = false;
-    let loopCount = 0;
-
-    while (!botAttached && loopCount < 4) {
-      const res = await axios.patch(`/game/rooms/${room_id}`);
-
-      if (res.data.success) {
-        dispatch({ type: MSG_SUCCESS, payload: "YOU CAT CALLED A BOT TO YOUR ROOM!" });
-        botAttached = true;
-      }
-
-      loopCount++;
-    }
-
-    if (!botAttached) {
-      throw new Error('Could not attach bot to the room after 4 attempts');
-      dispatch({ type: MSG_ERROR, payload: 'NO BOTS AVAILABLE' });
-    }
-
-    return true;
-  } catch (err) {
-    dispatch({ type: MSG_ERROR, payload: 'NO MORE BOTS OR ROOM HAS ENDED' });
-    return false;
-  }
-};
-
-export const getRoomBotCount = (room_id) => async (dispatch) => {
-  try {
-    const res = await axios.get(`/game/rooms/${room_id}/bots-count`);
-
-    if (res.data.success) {
-      const botCount = res.data.botCount;
-      // You can dispatch an action here to handle the bot count
-      // For example:
-      // dispatch({ type: SET_BOT_COUNT, payload: botCount });
-      return botCount;
-    }
-  } catch (err) {
-    console.error('Error fetching bot count:', err.message);
-    dispatch({ type: MSG_ERROR, payload: 'Error fetching bot count' });
   }
 };
 

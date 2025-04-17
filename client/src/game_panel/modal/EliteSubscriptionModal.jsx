@@ -1,5 +1,4 @@
-// ActiveTabText.jsx
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { purchaseEliteSubscription, cancelEliteSubscription } from '../../redux/Auth/user.actions';
 import {
@@ -32,7 +31,6 @@ import {
   CheckCircle as CheckCircleIcon,
   Cancel as CancelIcon,
   Warning as WarningIcon
-
 } from '@mui/icons-material';
 import Lottie from 'react-lottie';
 import verified from '../LottieAnimations/verified.json';
@@ -42,26 +40,41 @@ function EliteSubscriptionModal({ open, onClose, isLowGraphics, user }) {
   const [loading, setLoading] = useState({ red: false, black: false, cancel: false });
   const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
 
-  const getButtonText = (type) => {
+
+  const getButtonText = useCallback((type) => {
+    if (type === 'red' && !user?.elite && !user?.elite_free_used) return 'Start Free Month';
     if (!user?.elite) return 'Subscribe Now';
     if (type === user.elite) return 'Current Plan';
     if (type === 'red' && user.elite === 'black') return 'Downgrade';
     if (type === 'black' && user.elite === 'red') return 'Upgrade';
     return 'Subscribe Now';
-  };
-  const hasSufficientBalance = (type) => {
+  }, [user]);
+
+  // Memoize hasSufficientBalance results
+  const sufficientBalance = useMemo(() => {
     const subscriptionAmounts = { red: 0.1, black: 1.0 };
-    return user?.balance >= subscriptionAmounts[type];
-  };
+    return {
+      red: user?.balance >= subscriptionAmounts.red,
+      black: user?.balance >= subscriptionAmounts.black,
+    };
+  }, [user?.balance]);
 
   const handlePurchaseSubscription = async (type) => {
-    if (!hasSufficientBalance(type)) return;
+    if (type === 'red' && !user?.elite_free_used) {
+      setLoading((prev) => ({ ...prev, [type]: true }));
+      await dispatch(purchaseEliteSubscription(type));
+      setLoading((prev) => ({ ...prev, [type]: false }));
+      onClose();
+      return;
+    }
+
+    if (!sufficientBalance[type]) return;
     setLoading((prev) => ({ ...prev, [type]: true }));
     await dispatch(purchaseEliteSubscription(type));
     setLoading((prev) => ({ ...prev, [type]: false }));
     onClose();
   };
-  
+
   const openCancelConfirmation = () => {
     setCancelConfirmOpen(true);
   };
@@ -77,7 +90,30 @@ function EliteSubscriptionModal({ open, onClose, isLowGraphics, user }) {
     setCancelConfirmOpen(false);
     onClose();
   };
-  
+
+  const getSubscriptionPrice = useCallback((type) => {
+    if (type === 'red' && !user?.elite && !user?.elite_free_used) {
+      return (
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <Typography variant="h4" component="div" sx={{ fontWeight: 'bold', display: 'flex', alignItems: 'center', textDecoration: 'line-through' }}>
+            0.1 <Typography component="span" sx={{ fontSize: '1rem', ml: 0.5 }}>SOL</Typography>
+          </Typography>
+          <Typography variant="h4" component="div" sx={{ fontWeight: 'bold', color: '#d81719' }}>
+            FREE 1st MONTH
+          </Typography>
+        </Box>
+      );
+    }
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+        <Typography variant="h4" component="div" sx={{ fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>
+          {type === 'red' ? '0.1' : '1.0'} <Typography component="span" sx={{ fontSize: '1rem', ml: 0.5 }}>SOL</Typography>
+        </Typography>
+        <Typography sx={{ alignSelf: 'flex-end', ml: 1, color: 'text.secondary' }}>/month</Typography>
+      </Box>
+    );
+  }, [user?.elite, user?.elite_free_used]);
+
   // ------------------ RENDER ------------------
   return (
     <>
@@ -97,7 +133,7 @@ function EliteSubscriptionModal({ open, onClose, isLowGraphics, user }) {
             top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
-            bgcolor: '#0a0a0a', // Dark background color
+            bgcolor: '#0a0a0a',
             color: '#fff',
             boxShadow: 24,
             borderRadius: 1,
@@ -141,20 +177,20 @@ function EliteSubscriptionModal({ open, onClose, isLowGraphics, user }) {
               mb: 1,
               fontWeight: 'bold',
               background: `
-        linear-gradient(45deg, #ff0000 0%, #ff6b6b 50%, #ff0000 100%),
-        linear-gradient(45deg, #d81719 0%, #ff9999 50%, #d81719 100%),
-        linear-gradient(45deg, #ffffff 0%, #ffffff 50%, #ffffff 100%)
-      `,
+                linear-gradient(45deg, #ff0000 0%, #ff6b6b 50%, #ff0000 100%),
+                linear-gradient(45deg, #d81719 0%, #ff9999 50%, #d81719 100%),
+                linear-gradient(45deg, #ffffff 0%, #ffffff 50%, #ffffff 100%)
+              `,
               backgroundSize: '100% 33.33%, 100% 33.33%, 100% 33.33%',
               backgroundPosition: '0 0, 0 33.33%, 0 66.66%',
               backgroundClip: 'text',
               WebkitBackgroundClip: 'text',
-              color: 'transparent', // Make text transparent to show gradient
+              color: 'transparent',
               textShadow: `
-        0 0 5px rgba(255, 0, 0, 0.5),
-        0 0 10px rgba(255, 0, 0, 0.3),
-        0 0 15px rgba(255, 0, 0, 0.2)
-      `, // Add layered glow effect
+                0 0 5px rgba(255, 0, 0, 0.5),
+                0 0 10px rgba(255, 0, 0, 0.3),
+                0 0 15px rgba(255, 0, 0, 0.2)
+              `,
               position: 'relative',
               '&:before': {
                 content: '""',
@@ -171,7 +207,7 @@ function EliteSubscriptionModal({ open, onClose, isLowGraphics, user }) {
           >
             Upgrade to Elite
           </Typography>
-          <Typography variant="body1" align="center" sx={{ mb: 3, px: 3, }}>
+          <Typography variant="body1" align="center" sx={{ mb: 3, px: 3 }}>
             Unlock gate-kept financial tools and take your profits to the next level
           </Typography>
 
@@ -203,7 +239,6 @@ function EliteSubscriptionModal({ open, onClose, isLowGraphics, user }) {
                     textAlign: 'center'
                   }}
                 >
-
                   <Typography variant="h5" fontWeight="bold">
                     <Box
                       sx={{
@@ -227,12 +262,7 @@ function EliteSubscriptionModal({ open, onClose, isLowGraphics, user }) {
                   </Typography>
                 </Box>
                 <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
-                    <Typography variant="h4" component="div" sx={{ fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>
-                      0.1 <Typography component="span" sx={{ fontSize: '1rem', ml: 0.5 }}>SOL</Typography>
-                    </Typography>
-                    <Typography sx={{ alignSelf: 'flex-end', ml: 1, color: 'text.secondary' }}>/month</Typography>
-                  </Box>
+                  {getSubscriptionPrice('red')}
 
                   <Divider sx={{ my: 2 }} />
 
@@ -258,11 +288,10 @@ function EliteSubscriptionModal({ open, onClose, isLowGraphics, user }) {
                   </List>
                 </CardContent>
                 <CardActions sx={{ justifyContent: 'center', pb: 3 }}>
-                  
                   <Button
-                    variant="contained"
+                    variant="outlined"
                     onClick={() => handlePurchaseSubscription('red')}
-                    disabled={loading.red || !hasSufficientBalance('red') || user?.elite === 'red'}
+                    disabled={loading.red || !sufficientBalance.red || user?.elite === 'red'}
                     sx={{
                       bgcolor: '#d81719',
                       px: 4,
@@ -270,18 +299,17 @@ function EliteSubscriptionModal({ open, onClose, isLowGraphics, user }) {
                       '&:hover': { bgcolor: '#b01416' },
                       '&.Mui-disabled': {
                         bgcolor: '#d81719',
-                        color: '#ffffff', // Ensure text color is white
-                        opacity: 0.6, // Overall button opacity
+                        color: '#ffffff',
+                        opacity: 0.6,
                         '& .MuiButton-label': {
-                          opacity: 1, // Increase text opacity (optional, if needed)
+                          opacity: 1,
                         },
                       },
                     }}
-
                   >
                     {loading.red ? (
                       <CircularProgress size={24} color="inherit" />
-                    ) : !hasSufficientBalance('red') ? (
+                    ) : !sufficientBalance.red ? (
                       'Not Enough Balance'
                     ) : (
                       getButtonText('red')
@@ -289,25 +317,25 @@ function EliteSubscriptionModal({ open, onClose, isLowGraphics, user }) {
                   </Button>
                 </CardActions>
                 {user?.elite === 'red' && (
-                    <Box sx={{ textAlign: 'center', mb: 2 }}>
-                      <Button
-                        variant="text"
-                        onClick={openCancelConfirmation}
-                        startIcon={<CancelIcon />}
-                        sx={{
-                          borderColor: '#d81719',
-                          color: '#d81719',
-                          '&:hover': {
-                            borderColor: '#b01416',
-                            color: '#b01416',
-                            bgcolor: 'rgba(216, 23, 25, 0.04)',
-                          },
-                        }}
-                      >
-                        Cancel Subscription
-                      </Button>
-                    </Box>
-                  )}
+                  <Box sx={{ textAlign: 'center', mb: 2 }}>
+                    <Button
+                      variant="text"
+                      onClick={openCancelConfirmation}
+                      startIcon={<CancelIcon />}
+                      sx={{
+                        borderColor: '#d81719',
+                        color: '#d81719',
+                        '&:hover': {
+                          borderColor: '#b01416',
+                          color: '#b01416',
+                          bgcolor: 'rgba(216, 23, 25, 0.04)',
+                        },
+                      }}
+                    >
+                      Cancel Subscription
+                    </Button>
+                  </Box>
+                )}
               </Card>
             </Grid>
 
@@ -357,15 +385,11 @@ function EliteSubscriptionModal({ open, onClose, isLowGraphics, user }) {
                         }}
                       />
                     </Box>
-                    Black Elite</Typography>
+                    Black Elite
+                  </Typography>
                 </Box>
                 <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
-                    <Typography variant="h4" component="div" sx={{ fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>
-                      1.0 <Typography component="span" sx={{ fontSize: '1rem', ml: 0.5 }}>SOL</Typography>
-                    </Typography>
-                    <Typography sx={{ alignSelf: 'flex-end', ml: 1, color: 'text.secondary' }}>/month</Typography>
-                  </Box>
+                  {getSubscriptionPrice('black')}
 
                   <Divider sx={{ my: 2 }} />
 
@@ -403,7 +427,6 @@ function EliteSubscriptionModal({ open, onClose, isLowGraphics, user }) {
                         variant="text"
                         onClick={openCancelConfirmation}
                         startIcon={<CancelIcon />}
-                        
                         sx={{
                           borderColor: '#d81719',
                           color: '#d81719',
@@ -419,9 +442,9 @@ function EliteSubscriptionModal({ open, onClose, isLowGraphics, user }) {
                     </Box>
                   )}
                   <Button
-                    variant="contained"
+                    variant="outlined"
                     onClick={() => handlePurchaseSubscription('black')}
-                    disabled={loading.black || !hasSufficientBalance('black') || user?.elite === 'black'}
+                    disabled={loading.black || !sufficientBalance.black || user?.elite === 'black'}
                     sx={{
                       bgcolor: '#000000',
                       px: 4,
@@ -429,18 +452,17 @@ function EliteSubscriptionModal({ open, onClose, isLowGraphics, user }) {
                       '&:hover': { bgcolor: '#333333' },
                       '&.Mui-disabled': {
                         bgcolor: '#000000',
-                        color: '#ffffff', // Ensure text color is white
-                        opacity: 0.6, // Overall button opacity
+                        color: '#ffffff',
+                        opacity: 0.6,
                         '& .MuiButton-label': {
-                          opacity: 1, // Increase text opacity (optional, if needed)
+                          opacity: 1,
                         },
                       },
                     }}
-
                   >
                     {loading.black ? (
                       <CircularProgress size={24} color="inherit" />
-                    ) : !hasSufficientBalance('black') ? (
+                    ) : !sufficientBalance.black ? (
                       'Not Enough Balance'
                     ) : (
                       getButtonText('black')
@@ -448,7 +470,6 @@ function EliteSubscriptionModal({ open, onClose, isLowGraphics, user }) {
                   </Button>
                 </CardActions>
               </Card>
-
             </Grid>
           </Grid>
         </Box>
@@ -469,33 +490,33 @@ function EliteSubscriptionModal({ open, onClose, isLowGraphics, user }) {
           }
         }}
       >
-        <DialogTitle sx={{ 
-          display: 'flex', 
-          alignItems: 'center', 
+        <DialogTitle sx={{
+          display: 'flex',
+          alignItems: 'center',
           justifyContent: 'center',
           pt: 3,
           flexDirection: 'column'
         }}>
-          <WarningIcon 
-            sx={{ 
-              fontSize: '54px', 
+          <WarningIcon
+            sx={{
+              fontSize: '54px',
               color: '#d81719',
               mb: 2
-            }} 
+            }}
           />
           <Typography variant="h5" fontWeight="bold">
             Cancel Elite Subscription?
           </Typography>
         </DialogTitle>
-        
+
         <DialogContent>
-          <Alert 
-            severity="warning" 
+          <Alert
+            severity="warning"
             variant="outlined"
             icon={false}
-            sx={{ 
-              mb: 3, 
-              bgcolor: 'rgba(216, 23, 25, 0.05)', 
+            sx={{
+              mb: 3,
+              bgcolor: 'rgba(216, 23, 25, 0.05)',
               borderColor: 'rgba(216, 23, 25, 0.3)',
               color: '#fff'
             }}
@@ -527,21 +548,21 @@ function EliteSubscriptionModal({ open, onClose, isLowGraphics, user }) {
               </List>
             </Typography>
           </Alert>
-          
+
           <Typography variant="body1" sx={{ mb: 2 }}>
             These services will remain paused until you renew your Elite subscription.
           </Typography>
-          
+
           <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
             Your subscription will be cancelled immediately and you will lose access to Elite features.
           </Typography>
         </DialogContent>
-        
+
         <DialogActions sx={{ p: 3, justifyContent: 'space-between' }}>
-          <Button 
+          <Button
             onClick={closeCancelConfirmation}
             variant="outlined"
-            sx={{ 
+            sx={{
               color: '#fff',
               borderColor: 'rgba(255,255,255,0.3)',
               '&:hover': {
@@ -552,10 +573,10 @@ function EliteSubscriptionModal({ open, onClose, isLowGraphics, user }) {
           >
             Keep Subscription
           </Button>
-          <Button 
-            onClick={handleCancelSubscription} 
+          <Button
+            onClick={handleCancelSubscription}
             disabled={loading.cancel}
-            variant="contained"
+            variant="outlined"
             sx={{
               bgcolor: '#d81719',
               '&:hover': { bgcolor: '#b01416' },
@@ -573,4 +594,4 @@ function EliteSubscriptionModal({ open, onClose, isLowGraphics, user }) {
   );
 }
 
-export default EliteSubscriptionModal;
+export default React.memo(EliteSubscriptionModal);

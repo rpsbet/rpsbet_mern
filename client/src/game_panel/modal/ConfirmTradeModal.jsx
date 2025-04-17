@@ -105,10 +105,10 @@ const ConfirmTradeModal = () => {
         </div>
         {!loading && (
           <div className="modal-footer">
-            <Button variant="contained" color="error" onClick={onBtnOkClicked}>
+            <Button variant="outlined" color="error" onClick={onBtnOkClicked}>
               {rentOption ? 'RENT' : 'TRADE'}
             </Button>
-            <Button variant="contained" color="error" onClick={onBtnCancelClicked}>
+            <Button variant="outlined" color="error" onClick={onBtnCancelClicked}>
               Cancel
             </Button>
           </div>

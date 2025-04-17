@@ -1,5 +1,5 @@
 const express = require('express');
-const fetch = require('node-fetch');
+const axios = require('axios');
 
 const router = express.Router();
 const bcrypt = require('bcryptjs');
@@ -690,6 +690,7 @@ router.post('/getId', admin, async (req, res) => {
   }
 });
 
+
 const bonusNumbers = [0.04, 0, 0.01, 0.03, 0.3, 0, 0.2, 0.1, 0.05, 0.02];
 
 router.post('/add-bonus', auth, async (req, res) => {
@@ -698,28 +699,46 @@ router.post('/add-bonus', auth, async (req, res) => {
     const lastBonus = user.last_bonus ? new Date(user.last_bonus) : null;
     const now = new Date();
 
+    // Check if a withdrawal is in progress
     if (req.user.isWithdrawing) {
-      return res.json({
+      console.error('Bonus claim failed: Withdrawal in progress.');
+      return res.status(400).json({
         success: false,
-        error: 'WITHDRAWAL IN PROGRESS. Please wait until it completes.'
+        message: 'WITHDRAWAL IN PROGRESS. Please wait until it completes.',
       });
     }
 
+    // Check if the bonus cooldown period has passed
     if (lastBonus && now - lastBonus <= 6 * 60 * 60 * 1000) {
-      return res.status(400).json({ message: 'Bonus can only be claimed once every 6 hours.' });
+      console.error('Bonus claim failed: Cooldown period not over.');
+      return res.status(400).json({
+        success: false,
+        message: 'Bonus can only be claimed once every 6 hours.',
+      });
     }
 
-    if (user.totalWagered <= 9410) {
-      return res.status(400).json({ message: 'Total wagered must be more than 20000 to claim bonus.' });
+    // Check if the user has wagered enough
+    if (user.totalWagered <= 0.01) {
+      console.error('Bonus claim failed: Insufficient total wagered.');
+      return res.status(400).json({
+        success: false,
+        message: 'Total wagered must be more than 20000 to claim bonus.',
+      });
     }
 
+    // Check if the user has enough balance for the deduction
     const deduction = 0.01;
     if (user.balance < deduction) {
-      return res.status(400).json({ message: 'Insufficient balance to claim the bonus.' });
+      console.error('Bonus claim failed: Insufficient balance.');
+      return res.status(400).json({
+        success: false,
+        message: 'Insufficient balance to claim the bonus.',
+      });
     }
 
+    // Deduct balance and update last bonus timestamp
     user.balance -= deduction;
-    user.last_bonus = Date.now(); // Update last_bonus timestamp
+    user.last_bonus = Date.now();
 
     const deductionTransaction = new Transaction({
       user: user._id,
@@ -730,22 +749,32 @@ router.post('/add-bonus', auth, async (req, res) => {
 
     await saveDocumentWithRetry(deductionTransaction);
 
-    let randomIndex = Math.floor(Math.random() * bonusNumbers.length);
-    let attempts = 0;
-    console.log(`Initial randomIndex: ${randomIndex}, bonus: ${bonusNumbers[randomIndex]}`);
+    // Define weights inversely proportional to the bonus values (higher weight for smaller numbers)
+    const weights = bonusNumbers.map(num => {
+      if (num === 0) return 10; // High weight for 0
+      return 1 / (num + 0.01); // Inverse weight for non-zero numbers, add 0.01 to avoid division by zero
+    });
 
-    while (bonusNumbers[randomIndex] > 0.09 && attempts < 1) {
-      randomIndex = Math.floor(Math.random() * bonusNumbers.length);
-      attempts++;
-      console.log(`Retry ${attempts}: randomIndex: ${randomIndex}, bonus: ${bonusNumbers[randomIndex]}`);
+    // Normalize weights to sum to 1
+    const totalWeight = weights.reduce((sum, w) => sum + w, 0);
+    const normalizedWeights = weights.map(w => w / totalWeight);
+
+    // Select a random bonus amount using weighted random selection
+    let randomValue = Math.random();
+    let cumulativeWeight = 0;
+    let randomIndex = 0;
+
+    for (let i = 0; i < normalizedWeights.length; i++) {
+      cumulativeWeight += normalizedWeights[i];
+      if (randomValue <= cumulativeWeight) {
+        randomIndex = i;
+        break;
+      }
     }
 
-    let number = bonusNumbers[randomIndex];
-    console.log(`Final selected bonus: ${number}`);
-
+    const number = bonusNumbers[randomIndex];
     if (number === 0) {
-      console.log(`Bonus is 0, skipping bonus-specific transaction and notification.`);
-      await saveDocumentWithRetry(user); // Save the updated user object
+      await saveDocumentWithRetry(user);
       return res.json({
         success: true,
         amount: 0,
@@ -753,6 +782,7 @@ router.post('/add-bonus', auth, async (req, res) => {
       });
     }
 
+    // Add bonus to user balance
     user.balance += number;
 
     const newTransaction = new Transaction({
@@ -795,11 +825,21 @@ router.post('/add-bonus', auth, async (req, res) => {
       amount: number,
     });
   } catch (err) {
-    console.error(err);
+    console.error('Error in /add-bonus route:', err);
     res.status(500).json({
       success: false,
       message: 'An error occurred while processing your request.',
     });
+  }
+});
+
+router.get('/location', async (req, res) => {
+  try {
+    const response = await axios.get('https://ipapi.co/json/');
+    res.json({ success: true, location: response.data });
+  } catch (error) {
+    console.error('Error fetching location:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch location' });
   }
 });
 

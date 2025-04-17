@@ -39,6 +39,8 @@ import LoadingOverlay from 'react-loading-overlay';
 import CountUp from 'react-countup';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXTwitter, faTelegram, faYoutube, faTiktok } from '@fortawesome/free-brands-svg-icons';
+import { faCoins } from '@fortawesome/free-solid-svg-icons';
+
 import {
   AccountBalanceWallet,
   ArrowDropDown,
@@ -177,11 +179,13 @@ const darkTheme = createTheme({
 });
 
 // Helper function to format timestamps
-function updateFromNow(items) {
+function updateFromNow(items, timestampField = 'created_at') {
   if (!items) return [];
   const result = JSON.parse(JSON.stringify(items));
   for (let i = 0; i < result.length; i++) {
-    result[i]['from_now'] = Moment(result[i]['created_at']).fromNow();
+    if (result[i][timestampField]) {
+      result[i]['from_now'] = Moment(result[i][timestampField]).fromNow();
+    }
   }
   return result;
 }
@@ -254,12 +258,13 @@ function SiteWrapper({ children }) {
   const [showDebtsModal, setShowDebtsModal] = useState(false);
   const [bonusCheck, setBonusCheck] = useState(false);
   const [highlightedRooms, setHighlightedRooms] = useState(new Set());
-const [eliteModalOpen, setEliteModalOpen] = useState(false);
+  const [eliteModalOpen, setEliteModalOpen] = useState(false);
   const [walletAddress, setWalletAddress] = useState(connectedAccount);
   const [solanaBalance, setSolanaBalance] = useState(0);
   const [account, setAccount] = useState(null);
   const [showAllGameLogs, setShowAllGameLogs] = useState(false);
   const [selectedCreator, setSelectedCreator] = useState(null);
+  const [isRestrictedCountry, setIsRestrictedCountry] = useState(false);
 
   // Audio Refs
   const notificationSoundRef = useRef(null);
@@ -557,8 +562,6 @@ const [eliteModalOpen, setEliteModalOpen] = useState(false);
   const handleCloseLeaderboardsModal = () => setShowLeaderboardsModal(false);
   const handleOpenLoginModal = () => setShowLoginModal(true);
   const handleCloseLoginModal = () => setShowLoginModal(false);
-  const handleOpenSignupModal = () => setShowSignupModal(true);
-  const handleCloseSignupModal = () => setShowSignupModal(false);
   const handleOpenEliteSubscriptionModal = () => {
     setEliteModalOpen(true);
   };
@@ -579,18 +582,10 @@ const [eliteModalOpen, setEliteModalOpen] = useState(false);
 
   const handleCloseWithdrawModal = () => setShowWithdrawModal(false);
 
-  const handleOpenInventoryModal = () => {
-    setShowInventoryModal(true);
-    setAnchorElProfile(null);
-  };
-
+  const handleOpenInventoryModal = () => setShowInventoryModal(true);
   const handleCloseInventoryModal = () => setShowInventoryModal(false);
 
-  const handleOpenVaultModal = () => {
-    setShowVaultModal(true);
-    setAnchorElProfile(null);
-  };
-
+  const handleOpenVaultModal = () => setShowVaultModal(true);
   const handleCloseVaultModal = () => setShowVaultModal(false);
   const handleOpenDebtsModal = () => setShowDebtsModal(true);
   const handleCloseDebtsModal = () => setShowDebtsModal(false);
@@ -616,6 +611,7 @@ const [eliteModalOpen, setEliteModalOpen] = useState(false);
   // UI helpers
   const width = window.innerWidth;
   const notificationsArray = updateFromNow(notifications);
+  const transactionsArray = updateFromNow(transactions, 'created_at'); // Replace 'created_at' with the correct field if needed
   const unreadNotificationsCount = notificationsArray?.filter(n => !n.is_read).length || 0;
 
   const balanceString = balance?.toString() || '0';
@@ -624,6 +620,23 @@ const [eliteModalOpen, setEliteModalOpen] = useState(false);
 
   const halloween = new Date(`${new Date().getFullYear()}-02-14T00:00:00`);
   const currentDate = new Date();
+
+  useEffect(() => {
+    const checkRestrictedCountry = async () => {
+      try {
+        const { data } = await axios.get('/user/location');
+        const restrictedCountries = ['UK',]; // Add restricted country codes
+        if (restrictedCountries.includes(data.location.country_code)) {
+          setIsRestrictedCountry(true);
+        }
+      } catch (error) {
+        console.error('Error fetching location:', error);
+      }
+    };
+
+    checkRestrictedCountry();
+  }, []);
+
   return (
     <ThemeProvider theme={isDarkMode ? darkTheme : mainTheme}>
       {showCookieConsent && <CookieConsent />}
@@ -655,32 +668,129 @@ const [eliteModalOpen, setEliteModalOpen] = useState(false);
           </Typography>
           <Box sx={{ mt: 2, display: "flex", gap: 1, flexWrap: "wrap" }}>
             <Button
-              variant="contained"
-              color="primary"
+              variant="outlined"
+              color="error"
               startIcon={<FontAwesomeIcon icon={faXTwitter} />}
               onClick={() => window.open("https://x.com/catsinofun", "_blank")}
             >
               X
             </Button>
             <Button
-              variant="contained"
-              color="info"
+              variant="outlined"
+              color="error"
               startIcon={<FontAwesomeIcon icon={faTelegram} />}
               onClick={() => window.open("https://t.me/catsinofun", "_blank")}
             >
               Telegram
             </Button>
-            {/* <Button
-              variant="contained"
-              color="secondary"
-              startIcon={<EmailIcon />}
-              onClick={() => window.open("mailto:inv_inquiries@catsino.fun")}
-            >
-              Email
-            </Button> */}
           </Box>
         </DialogContent>
       </Dialog>
+      {isRestrictedCountry && (
+        <Dialog
+          open={true}
+          disableEscapeKeyDown
+          fullScreen
+          BackdropProps={{
+            style: { backgroundColor: 'rgba(0, 0, 0, 0.9)' },
+            onClick: (e) => e.stopPropagation(),
+          }}
+          PaperProps={{
+            sx: {
+              background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)',
+              color: '#fff',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              p: 4,
+            },
+          }}
+        >
+          <DialogTitle sx={{
+            fontSize: { xs: '1.8rem', md: '2.5rem' },
+            fontWeight: 700,
+            textAlign: 'center',
+            color: '#ff4d4d',
+            mb: 2,
+          }}>
+            Region Restriction Notice
+          </DialogTitle>
+          <DialogContent sx={{
+            maxWidth: '600px',
+            textAlign: 'center',
+            px: { xs: 2, md: 4 },
+          }}>
+            <Typography
+              variant="body1"
+              sx={{
+                color: '#f0f0f0',
+                fontSize: { xs: '1rem', md: '1.2rem' },
+                lineHeight: 1.6,
+                mb: 2,
+              }}
+            >
+              We're sorry, but our services are currently unavailable in your region due to regulatory restrictions.
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{
+                color: '#b0b0b0',
+                fontSize: { xs: '0.9rem', md: '1rem' },
+                lineHeight: 1.5,
+                mb: 4,
+              }}
+            >
+              If you believe this is an error or have any questions, please reach out to our support team through our official channels.
+            </Typography>
+            <Box sx={{
+              display: 'flex',
+              gap: 2,
+              flexWrap: 'wrap',
+              justifyContent: 'center',
+            }}>
+              <Button
+                variant="contained"
+                color="error"
+                startIcon={<FontAwesomeIcon icon={faXTwitter} />}
+                onClick={() => window.open("https://x.com/catsinofun", "_blank")}
+                sx={{
+                  borderRadius: '20px',
+                  px: 3,
+                  py: 1,
+                  fontWeight: 600,
+                  '&:hover': {
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 4px 12px rgba(255, 77, 77, 0.3)',
+                  },
+                  transition: 'all 0.3s ease',
+                }}
+              >
+                Follow on X
+              </Button>
+              <Button
+                variant="contained"
+                color="error"
+                startIcon={<FontAwesomeIcon icon={faTelegram} />}
+                onClick={() => window.open("https://t.me/catsinofun", "_blank")}
+                sx={{
+                  borderRadius: '20px',
+                  px: 3,
+                  py: 1,
+                  fontWeight: 600,
+                  '&:hover': {
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 4px 12px rgba(255, 77, 77, 0.3)',
+                  },
+                  transition: 'all 0.3s ease',
+                }}
+              >
+                Join Telegram
+              </Button>
+            </Box>
+          </DialogContent>
+        </Dialog>
+      )}
       {isLive && tokenModalOpen && (
         <Suspense fallback={''}>
           <CatsinoModalOverlay
@@ -993,7 +1103,13 @@ const [eliteModalOpen, setEliteModalOpen] = useState(false);
                     }}
                     PaperProps={{
                       sx: {
-                        backgroundColor: '#0a0a0a',
+                        background: 'rgba(0, 0, 0, 0.2)',
+                        backdropFilter: 'blur(10px)',
+                        WebkitBackdropFilter: 'blur(10px)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        '@supports not (backdrop-filter: blur(10px))': {
+                          background: 'rgba(0, 0, 0, 0.4)',
+                        },
                         color: '#fff',
                         '& .MuiMenuItem-root': {
                           textTransform: 'none',
@@ -1046,6 +1162,13 @@ const [eliteModalOpen, setEliteModalOpen] = useState(false);
                       </ListItemIcon>
                       <ListItemText>ELITE</ListItemText>
                     </MenuItem>
+                    <MenuItem onClick={() => setShowBonusModal(true)}>
+                      <ListItemIcon>
+                        <FontAwesomeIcon icon={faCoins} style={{ color: '#ffd700' }} />
+
+                      </ListItemIcon>
+                      <ListItemText>BONUS</ListItemText>
+                    </MenuItem>
                     <Divider />
                     <MenuItem
                       onClick={() => {
@@ -1084,21 +1207,27 @@ const [eliteModalOpen, setEliteModalOpen] = useState(false);
             transitionDuration={0}
             anchorOrigin={{
               vertical: 'bottom',
-              horizontal: 'center'
+              horizontal: 'center',
             }}
             transformOrigin={{
               vertical: 'top',
-              horizontal: 'center'
+              horizontal: 'center',
             }}
             PaperProps={{
               sx: {
-                backgroundColor: '#0a0a0a',
+                background: 'rgba(0, 0, 0, 0.2)',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                '@supports not (backdrop-filter: blur(10px))': {
+                  background: 'rgba(0, 0, 0, 0.4)',
+                },
                 color: '#fff',
                 width: 320,
                 maxWidth: '90vw',
                 display: 'flex',
-                flexDirection: 'column'
-              }
+                flexDirection: 'column',
+              },
             }}
           >
             <Typography
@@ -1106,7 +1235,6 @@ const [eliteModalOpen, setEliteModalOpen] = useState(false);
               sx={{
                 position: 'sticky',
                 top: 0,
-                backgroundColor: '#0a0a0a',
                 color: '#fff',
                 p: 2,
                 zIndex: 2
@@ -1225,31 +1353,39 @@ const [eliteModalOpen, setEliteModalOpen] = useState(false);
             transitionDuration={0}
             anchorOrigin={{
               vertical: 'bottom',
-              horizontal: 'center'
+              horizontal: 'center',
             }}
             transformOrigin={{
               vertical: 'top',
-              horizontal: 'center'
+              horizontal: 'center',
             }}
             PaperProps={{
               sx: {
-                backgroundColor: '#0a0a0a',
-                color: '#fff',
-                p: 2,
+                // Glassmorphism styles (default dark mode colors)
+                background: 'rgba(0, 0, 0, 0.2)',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)', // For Safari
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                // Fallback for browsers without backdrop-filter
+                '@supports not (backdrop-filter: blur(10px))': {
+                  background: 'rgba(0, 0, 0, 0.4)',
+                },
+                color: '#fff', // Preserve text color
+                p: 2, // Preserve padding
                 '& .MuiPaper-root': {
-                  backgroundColor: 'inherit',
-                  color: 'inherit'
+                  background: 'inherit', // Inherit glassmorphic background
+                  color: 'inherit',
                 },
                 '& .MuiTableContainer-root': {
-                  backgroundColor: 'inherit',
-                  color: 'inherit'
+                  background: 'inherit', // Inherit glassmorphic background
+                  color: 'inherit',
                 },
                 '& .MuiTableCell-root': {
-                  color: '#fff',
-                  borderColor: '#2c2c2c'
+                  color: '#fff', // Preserve cell text color
+                  borderColor: '#2c2c2c', // Preserve cell border color
                 },
                 '& #wallet-address': {
-                  backgroundColor: '#0a0a0a',
+                  background: 'rgba(0, 0, 0, 0.3)', // Glassmorphic background for wallet-address
                   color: '#fff',
                   border: '1px solid #2c2c2c',
                   borderRadius: '4px',
@@ -1257,9 +1393,12 @@ const [eliteModalOpen, setEliteModalOpen] = useState(false);
                   padding: '0.5rem',
                   marginTop: '0.5rem',
                   marginBottom: '0.5rem',
-                  fontSize: '0.9rem'
-                }
-              }
+                  fontSize: '0.9rem',
+                  '@supports not (backdrop-filter: blur(10px))': {
+                    background: 'rgba(0, 0, 0, 0.5)', // Fallback for wallet-address
+                  },
+                },
+              },
             }}
           >
             <Box sx={{ position: 'relative' }}>
@@ -1327,15 +1466,15 @@ const [eliteModalOpen, setEliteModalOpen] = useState(false);
               BALANCE HISTORY
             </Typography>
 
-            <TableContainer component={Paper} style={{ backgroundColor: '#080808', marginBottom: '15px' }} elevation={0}>
+            <TableContainer component={Paper} style={{ marginBottom: '15px' }} elevation={0}>
               <Table aria-label="a dense table" size="small">
                 <TableBody>
-                  {transactions.length === 0 ? (
+                  {transactionsArray.length === 0 ? (
                     <TableRow>
                       <TableCell>...</TableCell>
                     </TableRow>
                   ) : (
-                    transactions.slice(0, 5).map((row, key) => {
+                    transactionsArray.slice(0, 5).map((row, key) => {
                       const clickable = row.hash && row.hash.length !== 10 && row.status !== 'processing';
                       const isPositive = row.amount > 0;
 
@@ -1362,7 +1501,10 @@ const [eliteModalOpen, setEliteModalOpen] = useState(false);
                               ? `+ ${convertToCurrency(row.amount, solPrice)}`
                               : `- ${convertToCurrency(Math.abs(row.amount), solPrice)}`}
                           </TableCell>
-                          <TableCell sx={{ color: '#fff' }}>{row.from_now}</TableCell>
+                          <TableCell sx={{ color: '#fff' }}>{row.description}</TableCell>
+                          <TableCell sx={{ color: '#fff' }}>
+                            {row.from_now || 'Invalid Date'}
+                          </TableCell>
                         </TableRow>
                       );
                     })

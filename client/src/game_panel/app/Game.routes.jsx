@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Routes, Route, useParams, useLocation } from 'react-router-dom'; // Add useLocation
-import { Box } from '@mui/material';
+import { Routes, Route, useParams, useLocation } from 'react-router-dom';
+import { Box, LinearProgress } from '@mui/material';
 
 import CreateGame from '../main_pages/CreateGame';
 import SiteWrapper from '../SiteWrapper';
@@ -18,11 +18,17 @@ function GameMainRoute() {
   const isMobile = window.innerWidth < 1024;
   const dispatch = useDispatch();
   const params = useParams();
-  const location = useLocation(); // Add useLocation for current path
+  const location = useLocation();
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    dispatch(getSolToUsdPrice());
-  }, [dispatch]);
+    setIsLoading(true);
+    dispatch(getSolToUsdPrice()).then(() => {
+      setTimeout(() => setIsLoading(false), 500);
+    });
+
+    return () => setIsLoading(true);
+  }, [dispatch, location.pathname]);
 
   return (
     <Box
@@ -32,7 +38,34 @@ function GameMainRoute() {
         height: '100vh',
       }}
     >
-      {/* LEFT COLUMN: ChatPanel */}
+      {isLoading && (
+        <Box
+          sx={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '4px',
+            background: 'rgba(0, 0, 0, 0.2)',
+            zIndex: 2000,
+            overflow: 'hidden',
+          }}
+        >
+          <Box
+            sx={{
+              width: '100vw',
+              height: '100%',
+              background: 'linear-gradient(to right,rgb(210, 25, 25),rgb(245, 66, 66))',
+              animation: 'progress 1.2s ease-in-out infinite',
+              '@keyframes progress': {
+                '0%': { transform: 'translateX(-100%)' },
+                '100%': { transform: 'translateX(100%)' },
+              },
+            }}
+          />
+        </Box>
+      )}
+
       {isDrawerOpen && !isMobile && (
         <Box
           sx={{
@@ -50,17 +83,16 @@ function GameMainRoute() {
         </Box>
       )}
 
-      {/* RIGHT COLUMN: SiteWrapper and Content Routes */}
       <Box sx={{ overflowY: 'auto' }}>
         <SiteWrapper>
           <Routes>
             <Route path="create/:game_type_name" element={<CreateGame />} />
-            <Route path="create" element={<CreateGame />} /> {/* Remove trailing slash */}
+            <Route path="create" element={<CreateGame />} />
             <Route path="join/:id" element={<JoinGame />} />
             <Route path="chat/:id" element={<ChatPage />} />
             <Route path="leaderboards" element={<LeaderboardsModal />} />
             <Route path="portfolio" element={<MainPage />} />
-            <Route path="/" element={<MainPage />} /> {/* Base route */}
+            <Route path="/" element={<MainPage />} />
           </Routes>
         </SiteWrapper>
       </Box>

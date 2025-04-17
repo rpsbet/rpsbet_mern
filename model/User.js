@@ -66,6 +66,13 @@ const UserSchema = new Schema({
     type: Number,
     default: 0
   },
+  elite_free_used: {
+    type: Boolean,
+    default: false
+  },
+  ip_addresses: [{
+    type: String
+  }],
   accessory: {
     type: String,
     ref: 'Item',

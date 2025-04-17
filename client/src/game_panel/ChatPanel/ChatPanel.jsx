@@ -193,6 +193,12 @@ function ChatPanel(props) {
 
   // ------------------ EVENT HANDLERS ------------------
 
+  const handleSendMessage = (message) => {
+    if (socket) {
+      socket.emit('GLOBAL_CHAT_SEND', message);
+    }
+  };
+
   const onTextAreaKeyDown = (e) => {
     e.stopPropagation();
     if (!socket) return;
@@ -202,7 +208,7 @@ function ChatPanel(props) {
         e.preventDefault();
         const trimmedText = text.trim();
         if (trimmedText !== '') {
-          socket.emit('GLOBAL_CHAT_SEND', {
+          const message = {
             sender: userName,
             senderId: user._id,
             message: trimmedText,
@@ -211,7 +217,9 @@ function ChatPanel(props) {
             elite: user.elite,
             replyTo: selectedMessage,
             rank: user.totalWagered,
-          });
+          };
+
+          handleSendMessage(message); // Call the new function
           handleClearTooltip();
           handleCloseEmojiPopover();
           handleCloseGifPopover();
@@ -380,7 +388,6 @@ function ChatPanel(props) {
           flexDirection: 'column',
           height: '100%',
           p: 1,
-          bgcolor: '#080808',
           color: 'white',
           border: '0',
         }}

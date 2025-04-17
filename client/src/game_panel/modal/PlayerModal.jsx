@@ -281,15 +281,21 @@ function PlayerModal({ modalIsOpen, closeModal, selectedCreator }) {
               top: '50%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
-              bgcolor: isDarkMode ? '#0a0a0a' : '#fff',
-              color: isDarkMode ? '#fff' : '#000',
-              width: '90vw',
-              maxWidth: '700px',
-              maxHeight: '85vh',
+              color: '#fff', // Preserve text color conditional
+              maxHeight: '90vh',
               overflowY: 'auto',
-              borderRadius: 1,
-              p: 3,
+              borderRadius: 2,
               boxShadow: 24,
+              p: 3,
+              // Glassmorphism styles (default dark mode colors)
+              background: 'rgba(0, 0, 0, 0.2)',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)', // For Safari
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              // Fallback for browsers without backdrop-filter
+              '@supports not (backdrop-filter: blur(10px))': {
+                background: 'rgba(0, 0, 0, 0.4)',
+              },
             }}
           >
             {/* Modal Header */}
@@ -326,7 +332,7 @@ function PlayerModal({ modalIsOpen, closeModal, selectedCreator }) {
               <Tab label="Stats" />
             </Tabs>
             {/* Tab 0: Profile & Inventory */}
-            <Box sx={{ background: '#080808', borderRadius: '0.3em', p: '20px' }}>
+            <Box sx={{ borderRadius: '0.3em', p: '20px' }}>
               {activeTab === 0 && (
                 <Box>
                   {/* Online/Offline */}
@@ -384,7 +390,7 @@ function PlayerModal({ modalIsOpen, closeModal, selectedCreator }) {
                       )}
                     </Box>
                   </Box>
-                  <Box sx={{ mb: 2, background: '#080808', borderRadius: '0.3em', p: '20px' }}>
+                  <Box sx={{ borderRadius: '0.3em', p: '20px' }}>
                     <Typography variant="h6" gutterBottom>
                       A.K.A
                     </Typography>
@@ -472,7 +478,7 @@ function PlayerModal({ modalIsOpen, closeModal, selectedCreator }) {
             {/* Footer */}
             {userInfo._id !== creatorId && (
               <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 3 }}>
-                <Button color="error" variant="contained" onClick={handleTip}>
+                <Button color="error" variant="outlined" onClick={handleTip}>
                   Tip&nbsp;<FontAwesomeIcon icon={faMoneyBill} />
                 </Button>
                 <Button color="error" variant="outlined" onClick={handleOpenChat}>

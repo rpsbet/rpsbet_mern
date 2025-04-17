@@ -409,7 +409,7 @@ const ProductTable = () => {
                       <Box sx={{ textAlign: 'right', mt: 1 }}>
                         <Tooltip title={firstOwner.rentOption ? 'Rent' : 'Trade'}>
                           <Button
-                            variant="contained"
+                            variant="outlined"
                             color="error"
                             startIcon={<SwapHoriz />}
                             onClick={(e) => {

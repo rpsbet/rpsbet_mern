@@ -20,7 +20,7 @@ const CookieConsent = ({ showCookieConsent }) => {
           <p>We use cookies to give you a better experience. Accept cookies to unlock smooth browsing!</p>
 
           <Button
-            variant="contained"
+            variant="outlined"
             color='error'
             onClick={handleAccept}
           >
@@ -28,7 +28,7 @@ const CookieConsent = ({ showCookieConsent }) => {
           </Button>
           &nbsp;
           <Button
-            variant="contained"
+            variant="outlined"
             onClick={handleAccept}
           >
             DECLINE

@@ -10,6 +10,10 @@ const LoanerSchema = new Schema({
         type: Number,
         default: 0
     },
+    active: {
+        type: Boolean,
+        default: true
+    },
     paidBack: {
         type: Number,
         default: 0

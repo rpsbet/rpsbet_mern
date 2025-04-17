@@ -2,22 +2,21 @@ const Room = require('../../model/Room.js');
 const cron = require('node-cron');
 
 let socketio = null;
-let lastExecutionTime = 0; // Track when the last execution started
+let lastExecutionTime = 0;
 
 async function callCronJobs(io) {
   if (io) {
     socketio = io;
   }
 
-  // Record the exact timestamp of this execution
   const executionTime = Date.now();
   lastExecutionTime = executionTime;
-  
+
   try {
-    const updatedRooms = await Room.aggregate([
+    // Use aggregation cursor to stream documents
+    const cursor = Room.aggregate([
       { $match: { status: 'open' } },
-      { $sort: { updated_at: -1 } }, // Initial sort by updated_at
-      // Lookup for creator
+      { $sort: { updated_at: 1 } },
       {
         $lookup: {
           from: 'rps_users',
@@ -27,7 +26,6 @@ async function callCronJobs(io) {
         },
       },
       { $unwind: { path: '$creator', preserveNullAndEmptyArrays: true } },
-      // Lookup for joiners
       {
         $lookup: {
           from: 'rps_users',
@@ -36,9 +34,7 @@ async function callCronJobs(io) {
           as: 'joiners',
         },
       },
-      // Unwind hosts array to process each host individually
       { $unwind: { path: '$hosts', preserveNullAndEmptyArrays: true } },
-      // Lookup for hosts based on hosts.host field
       {
         $lookup: {
           from: 'rps_users',
@@ -47,9 +43,7 @@ async function callCronJobs(io) {
           as: 'hostData',
         },
       },
-      // Unwind hostData to merge it
       { $unwind: { path: '$hostData', preserveNullAndEmptyArrays: true } },
-      // Group back to reconstruct the hosts array
       {
         $group: {
           _id: '$_id',
@@ -79,13 +73,12 @@ async function callCronJobs(io) {
           is_private: { $first: '$is_private' },
           status: { $first: '$status' },
           created_at: { $first: '$created_at' },
-          updated_at: { $first: '$updated_at' }, // Preserve updated_at for sorting
+          updated_at: { $first: '$updated_at' },
           battles: { $first: '$battles' },
           likes: { $first: '$likes' },
           dislikes: { $first: '$dislikes' },
         },
       },
-      // Lookup for game_type
       {
         $lookup: {
           from: 'rps_game_types',
@@ -95,9 +88,7 @@ async function callCronJobs(io) {
         },
       },
       { $unwind: { path: '$game_type', preserveNullAndEmptyArrays: true } },
-      // Reapply sort to ensure original order
-      { $sort: { updated_at: -1 } },
-      // Final projection
+      { $sort: { updated_at: 1 } },
       {
         $project: {
           _id: 1,
@@ -129,7 +120,7 @@ async function callCronJobs(io) {
               },
             },
           },
-          hosts: 1, // Already structured in $group
+          hosts: 1,
           game_type: {
             _id: '$game_type._id',
             short_name: '$game_type.short_name',
@@ -146,61 +137,65 @@ async function callCronJobs(io) {
           dislikes: 1,
         },
       },
-    ]);
+    ]).cursor();
 
-    // Check if this is still the most recent execution
-    if (lastExecutionTime !== executionTime) {
-      return; // Exit without emitting if a newer execution has started
-    }
+    let index = 0;
+    for await (const room of cursor) {
+      // Check if this is still the most recent execution
+      if (lastExecutionTime !== executionTime) {
+        return; // Exit if a newer execution has started
+      }
 
-    const result = updatedRooms.map((room) => ({
-      _id: room._id,
-      name: room.name,
-      ticker: room.ticker || room.room_number,
-      image: room.image,
-      description: room.description,
-      creator: {
-        _id: room.creator._id,
-        avatar: room.creator.avatar,
-        username: room.creator.username,
-        rank: room.creator.rank,
-        accessory: room.creator.accessory,
-        elite: room.creator.elite,
-        status: room.creator.status,
-      },
-      joiners: room.joiners,
-      hosts: room.hosts,
-      game_type: room.game_type,
-      bet_amount: room.bet_amount,
-      user_bet: room.user_bet,
-      endgame_amount: room.endgame_amount,
-      is_private: room.is_private,
-      status: room.status,
-      created_at: room.created_at,
-      battles: room.battles,
-      likes: room.likes,
-      dislikes: room.dislikes,
-    }));
+      const formattedRoom = {
+        _id: room._id,
+        name: room.name,
+        ticker: room.ticker || room.room_number,
+        image: room.image,
+        description: room.description,
+        creator: {
+          _id: room.creator._id,
+          avatar: room.creator.avatar,
+          username: room.creator.username,
+          rank: room.creator.rank,
+          accessory: room.creator.accessory,
+          elite: room.creator.elite,
+          status: room.creator.status,
+        },
+        joiners: room.joiners,
+        hosts: room.hosts,
+        game_type: room.game_type,
+        bet_amount: room.bet_amount,
+        user_bet: room.user_bet,
+        endgame_amount: room.endgame_amount,
+        is_private: room.is_private,
+        status: room.status,
+        created_at: room.created_at,
+        battles: room.battles,
+        likes: room.likes,
+        dislikes: room.dislikes,
+        index, // Include index for client-side positioning
+      };
 
-    if (socketio && lastExecutionTime === executionTime) {
-      socketio.emit('ROOMS_UPDATED', result);
+      // Emit each room individually with its index
+      if (socketio && lastExecutionTime === executionTime) {
+        socketio.emit('ROOMS_UPDATED', formattedRoom);
+      }
+
+      index++;
     }
   } catch (err) {
-    // Only log errors for current execution
     if (lastExecutionTime === executionTime) {
-      console.error(`[${executionTime}] Error fetching or emitting updated room list:`, err);
+      console.error(`[${executionTime}] Error fetching or emitting room:`, err);
     }
   }
 }
 
-// Schedule the cron job to run every 5 seconds
 const cronJob = cron.schedule('*/5 * * * * *', async () => {
   await callCronJobs(socketio);
 });
 
 module.exports = {
   callCronJobs,
-  // Expose methods to control the cron job if needed
   pauseCronJob: () => cronJob.stop(),
-  resumeCronJob: () => cronJob.start()
+  resumeCronJob: () => cronJob.start(),
 };

@@ -202,6 +202,104 @@ router.post('/upload-to-pinata', upload.single('file'), async (req, res) => {
   }
 });
 
+router.post('/room/update-gamecode', auth, async (req, res) => {
+  const { roomId, gameCode } = req.body;
+
+  // Validate input
+  if (!roomId || !gameCode) {
+    return res.status(400).json({ success: false, message: 'Missing required fields' });
+  }
+
+  try {
+    // Find the room
+    const room = await Room.findById(roomId);
+
+    // Check if room exists
+    if (!room) {
+      return res.status(404).json({ success: false, message: 'Room not found' });
+    }
+
+    // Check if the user is the room's creator
+    if (room.creator.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ success: false, message: 'Unauthorized: Only the room creator can update the game code' });
+    }
+
+    // Update the room
+    const updatedRoom = await Room.findOneAndUpdate(
+      { _id: roomId },
+      { gameCode }, // Update gameCode and gameName
+      { new: true }
+    );
+
+    // Emit socket event to update clients (if using Socket.IO)
+    req.io.sockets.emit('ROOMS_UPDATED', updatedRoom);
+
+    res.json({
+      success: true,
+      message: 'Room game code updated successfully!',
+      room: updatedRoom,
+    });
+  } catch (error) {
+    console.error('Error updating room game code:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+router.post('/openai/generate-suggestions', auth, async (req, res) => {
+  try {
+    const { systemPrompt, userPrompt } = req.body;
+    if (!req.user?._id) {
+      throw new Error('User not authenticated');
+    }
+
+    if (!systemPrompt || !userPrompt) {
+      throw new Error('System prompt and user prompt are required');
+    }
+
+    const apiCall = openai.chat.completions.create({
+      model: 'o3-mini',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
+      max_completion_tokens: 5000,
+    });
+
+    const aiResponse = await Promise.race([
+      apiCall,
+      new Promise((_, reject) => setTimeout(() => reject(new Error('API call timed out')), 60000)),
+    ]);
+
+    const rawResponse = aiResponse?.choices?.[0]?.message?.content?.trim() || '{}';
+
+    let responseData;
+    try {
+      responseData = JSON.parse(rawResponse);
+      if (
+        !responseData ||
+        typeof responseData !== 'object' ||
+        !Array.isArray(responseData.filteredComments) ||
+        !Array.isArray(responseData.suggestions)
+      ) {
+        throw new Error('Response must be a JSON object with filteredComments and suggestions arrays');
+      }
+    } catch (error) {
+      console.error('Invalid response format:', error.message, rawResponse);
+      throw new Error('Invalid suggestions format');
+    }
+
+    res.json(responseData); // Return { filteredComments, suggestions }
+  } catch (error) {
+    console.error('Error generating suggestions:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: error.message.includes('timed out')
+        ? 'Suggestions generation timed out. Please try again.'
+        : error.message,
+    });
+  }
+});
+
 router.get('/proxy-asset', async (req, res) => {
   const { url } = req.query;
   if (!url) {
@@ -495,8 +593,6 @@ You are an elite React developer with a passion for cutting-edge design, inspire
       ${cleanedCode}
     `;
 
-    console.log(`[React Generator] Generated code length: ${moduleCode.length}`);
-    console.log(moduleCode);
     res.json({ finalApp: moduleCode });
   } catch (error) {
     console.error('Error in route handler:', error);
@@ -512,7 +608,6 @@ You are an elite React developer with a passion for cutting-edge design, inspire
 router.post('/openai/update-react', auth, async (req, res) => {
   try {
     const { prompt, currentCode, imageUrls = [] } = req.body || {};
-
     if (!req.user?._id) {
       throw new Error('User not authenticated');
     }
@@ -594,7 +689,6 @@ Please analyze the existing code carefully before making changes to ensure you u
       ${cleanedCode}
     `;
 
-    console.log(`[React Update] Updated code length: ${moduleCode.length}`);
     res.json({ finalApp: moduleCode });
   } catch (error) {
     console.error('Error in update route handler:', error);
@@ -603,272 +697,6 @@ Please analyze the existing code carefully before making changes to ensure you u
       message: error.message.includes('timed out')
         ? 'App update timed out. Please try again.'
         : error.message,
-    });
-  }
-});
-
-router.patch('/strategies/:user_id', async (req, res) => {
-  const { user_id } = req.params;
-  const { strategy } = req.body;
-
-  try {
-    const user = await User.findByIdAndUpdate(
-      user_id,
-      { ai_mode: strategy },
-      { new: true },
-    );
-
-    if (!user) {
-      return res
-        .status(404)
-        .json({ success: false, message: 'user not found' });
-    }
-
-    res.json({
-      success: true,
-      message: 'Successful!',
-    });
-  } catch (err) {
-    res.json({
-      success: false,
-      err: err.message,
-    });
-  }
-});
-
-router.patch('/rooms/:room_id', async (req, res) => {
-  const { room_id } = req.params;
-
-  try {
-    if (roomLocks[room_id]) {
-      return res
-        .status(409)
-        .json({ success: false, message: 'Room is currently being updated' });
-    }
-
-    roomLocks[room_id] = true;
-
-    const room = await Room.findById(room_id);
-    if (!room) {
-      console.log('Room not found');
-      delete roomLocks[room_id];
-      return res
-        .status(404)
-        .json({ success: false, message: 'Room not found' });
-    }
-
-    if (room.status === 'finished') {
-      return res.json({
-        success: false,
-        already_finished: true,
-        message: 'THIS GAME HAS ENDED ALREADY',
-      });
-    }
-    const findRandomBot = async () => {
-      let attempts = 0;
-      while (attempts < 6) {
-        const randomBot = await User.aggregate([
-          { $match: { username: { $regex: /BOT/i } } },
-          { $sample: { size: 1 } },
-        ]);
-        const botId = randomBot[0]._id;
-
-        if (!room.joiners.includes(botId)) {
-          return botId;
-        }
-        attempts++;
-      }
-      throw new Error('No available bots found');
-    };
-
-    const botId = await findRandomBot();
-
-    if (room.joiners.includes(botId)) {
-      delete roomLocks[room_id];
-      return res.status(400).json({
-        success: false,
-        message: 'Bot is already in the room',
-      });
-    }
-
-    const updatedRoom = await Room.findByIdAndUpdate(
-      room_id,
-      { $push: { joiners: botId } },
-      { new: true },
-    );
-
-    delete roomLocks[room_id];
-
-    res.json({
-      success: true,
-      message: 'Bot joined the room successfully!',
-      room: updatedRoom,
-    });
-  } catch (err) {
-    console.error('Error updating room:', err.message);
-    delete roomLocks[room_id];
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error',
-      error: err.message,
-    });
-  }
-});
-
-router.patch('/rooms/:room_id/remove-bots', async (req, res) => {
-  const { room_id } = req.params;
-  const bots = [
-    '65eafc72aea25957ac8ea60d',
-    '65eafa5caea25957ac8ea60b',
-    '62b9ef88a5409449f63f7ccb',
-    '65eafb7daea25957ac8ea60c',
-  ];
-
-  try {
-    roomLocks[room_id] = true;
-
-    let room = await Room.findById(room_id);
-
-    if (!room) {
-      delete roomLocks[room_id];
-      return res
-        .status(404)
-        .json({ success: false, message: 'Room not found' });
-    }
-
-    room.status = 'waiting';
-    await saveDocumentWithRetry(room);
-
-    const removeAllMatchingBots = async () => {
-      try {
-        room = await Room.findById(room_id);
-
-        if (!room) {
-          throw new Error('Room not found');
-        }
-
-        const matchingBots = room.joiners.filter((joiner) =>
-          bots.includes(joiner.toString()),
-        );
-
-        if (matchingBots.length === 0) {
-          if (room.status !== 'open') {
-            room.status = 'open';
-            await saveDocumentWithRetry(room);
-          }
-          return room;
-        }
-
-        room.joiners = room.joiners.filter(
-          (joiner) => !bots.includes(joiner.toString()),
-        );
-
-        room.status = 'open';
-        await saveDocumentWithRetry(room);
-
-        return room;
-      } catch (err) {
-        throw err;
-      }
-    };
-
-    const updatedRoom = await removeAllMatchingBots();
-
-    delete roomLocks[room_id];
-
-    if (updatedRoom) {
-      res.json({
-        success: true,
-        message:
-          'All matching bots removed from the room and room status updated!',
-        room: updatedRoom,
-      });
-    } else {
-      res.json({
-        success: true,
-        message: 'No matching bots found in the room',
-        room: room,
-      });
-    }
-  } catch (err) {
-    console.error('Error removing bots from room:', err.message);
-    delete roomLocks[room_id];
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error',
-      error: err.message,
-    });
-  }
-});
-
-router.get('/rooms/:room_id/bots-count', async (req, res) => {
-  const { room_id } = req.params;
-  try {
-    const room = await Room.findById(room_id);
-    if (!room) {
-      return res
-        .status(404)
-        .json({ success: false, message: 'Room not found' });
-    }
-
-    const findBots = async () => {
-      const bots = await User.aggregate([
-        { $match: { username: { $regex: /BOT/i } } },
-        { $project: { _id: { $toString: '$_id' } } },
-      ]);
-      return bots.map((bot) => bot._id);
-    };
-
-    const botIds = await findBots();
-    const joinerIds = room.joiners.map((joiner) => joiner.toString());
-    const botCount = joinerIds.reduce((count, joinerId) => {
-      if (botIds.includes(joinerId)) {
-        count++;
-      }
-      return count;
-    }, 0);
-
-    res.json({
-      success: true,
-      botCount,
-    });
-  } catch (err) {
-    console.error('Error retrieving bot count:', err.message);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error',
-      error: err.message,
-    });
-  }
-});
-
-router.patch('/room/strategies/:room_id', async (req, res) => {
-  const { room_id } = req.params;
-  const { strategy } = req.body;
-
-  try {
-    const room = await Room.findByIdAndUpdate(
-      room_id,
-      { selectedStrategy: strategy },
-      { new: true },
-    );
-
-    if (!room) {
-      return res
-        .status(404)
-        .json({ success: false, message: 'Room not found' });
-    }
-
-    res.json({
-      success: true,
-      message: 'Room strategy updated successfully!',
-      room: room,
-    });
-  } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error',
-      error: err.message,
     });
   }
 });
@@ -974,7 +802,7 @@ router.get('/room/:id', async (req, res) => {
         path: 'room',
         model: Room,
         select:
-          '_id winnings gameCode pool_id ticker battles image tax website_link x_link telegram_link selectedStrategy commission username creator status hosts room_number game_type bet_amount user_bet host_pr created_at',
+          '_id winnings gameCode pool_id ticker battles image tax website_link x_link telegram_link selectedStrategy commission username creator status hosts room_number likes dislikes game_type bet_amount user_bet host_pr created_at',
       })
       .populate({
         path: 'game_type',
@@ -1016,6 +844,8 @@ router.get('/room/:id', async (req, res) => {
         website_link: room['website_link'],
         telegram_link: room['telegram_link'],
         created_at: room['created_at'],
+        likes: room['likes'],
+        dislikes: room['dislikes'],
         creator_id: room['creator'],
         username: creator['username'],
         creator_avatar: creator['avatar'],
@@ -1591,7 +1421,7 @@ router.post('/rooms', auth, async (req, res) => {
     // Consolidate validations
     const user_bet = parseFloat(bet_amount);
     
-    // Validation checks - return early if any fail
+    // Existing validation checks
     if (isWithdrawing) {
       return res.json({
         success: false,
@@ -1653,6 +1483,26 @@ router.post('/rooms', auth, async (req, res) => {
         success: false,
         message: 'Exceeded Daily Withdrawal Limit. Unable to Create a room. Please try again tomorrow! (During Launch Phase only)',
       });
+    }
+
+    // New elite room limit check
+    const eliteRoomLimits = {
+      red: 2,
+      black: 20
+    };
+
+    if (elite in eliteRoomLimits) {
+      const userOpenRooms = await Room.countDocuments({
+        creator: _id,
+        status: 'open'
+      });
+
+      if (userOpenRooms >= eliteRoomLimits[elite]) {
+        return res.json({
+          success: false,
+          message: `Room limit reached for ${elite} elite status (${eliteRoomLimits[elite]} rooms). Close existing rooms to create new ones.`
+        });
+      }
     }
 
     // Fetch necessary data in parallel
@@ -1931,6 +1781,9 @@ const getMyRooms = async (
         // statistics: '',
         net_profit: '',
         battles: gameLogCount,
+        likes: room.likes,
+        dislikes: room.dislikes,
+        gameCode: room.gameCode,
         hosts: room.hosts,
       };
 

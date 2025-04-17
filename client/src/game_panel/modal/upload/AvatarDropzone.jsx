@@ -226,7 +226,7 @@ function AvatarDropzone({
           <Grid item>
             <Button
               color="error"
-              variant="contained"
+              variant="outlined"
               onClick={openFileDialog}
               fullWidth
             >
@@ -267,7 +267,7 @@ function AvatarDropzone({
                   <Grid item xs={6}>
                     <Button
                       color="error"
-                      variant="contained"
+                      variant="outlined"
                       onClick={handleGenerateAIImage}
                       fullWidth
                     >
@@ -279,7 +279,7 @@ function AvatarDropzone({
             ) : (
               <Button
                 color="error"
-                variant="contained"
+                variant="outlined"
                 onClick={() => setShowAIText(true)}
                 fullWidth
               >

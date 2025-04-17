@@ -122,7 +122,7 @@ function CreateGame() { // Remove match prop
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { game_type_name } = useParams(); // Get game_type_name from URL
-    const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
   const connectedAccount = useSelector((state) => state.auth.connectedAccount);
   const balance = useSelector((state) => state.auth.balance);
   const user = useSelector((state) => state.auth.user);
@@ -189,7 +189,7 @@ function CreateGame() { // Remove match prop
       const selectedGameTypeObj = gameTypeList.find(
         (g) => g.game_type_name === gameTypeName,
       );
-  
+
       if (selectedGameTypeObj && selectedGameTypeObj.short_name) {
         setSelectedGameType(selectedGameTypeObj.short_name);
       }
@@ -201,7 +201,7 @@ function CreateGame() { // Remove match prop
       } else {
         setGameType(9);
       }
-  
+
     },
     [gameTypeList, solPrice],
   );
@@ -218,17 +218,17 @@ function CreateGame() { // Remove match prop
       setSelectedGameType('Custom');
       setGameModeLocal('Custom');
     }
-  
+
     const gameTypeName = game_type_name || 'RPS';
     dispatch(getGameTypeList());
     dispatch(setGameMode(gameTypeName));
     initializeGameType(gameTypeName, true); // Initial setup
-  
-    dispatch(getStrategies());
-  
-    return () => {};
+
+    // dispatch(getStrategies());
+
+    return () => { };
   }, [dispatch, game_type_name,]);
-  
+
   useEffect(() => {
     if (game_type_name) {
       initializeGameType(game_type_name, false); // Subsequent calls, no step reset
@@ -549,7 +549,7 @@ function CreateGame() { // Remove match prop
           return 'Not specified';
       }
     };
-  
+
     return (
       <Box
         sx={{
@@ -569,7 +569,7 @@ function CreateGame() { // Remove match prop
     );
   }
 
-  
+
   const handleConfirm = async () => {
     if (skipConfirm) {
       localStorage.setItem('hideConfirmModal', 'true');
@@ -638,13 +638,11 @@ function CreateGame() { // Remove match prop
                         <StyledProductCard
                           id="rps-game-type-radio"
                           isDarkMode={isDarkMode}
-                          className={`btn-game-type title btn-icon ${
-                            gameTypeStyleClass[gameType.short_name]
-                          } ${
-                            selectedGameType === gameType.short_name
+                          className={`btn-game-type title btn-icon ${gameTypeStyleClass[gameType.short_name]
+                            } ${selectedGameType === gameType.short_name
                               ? 'active'
                               : ''
-                          }`}
+                            }`}
                         >
                           <StyledProductImage
                             src={`/img/gametype/icons/${gameType.short_name}.svg`}
@@ -788,7 +786,7 @@ function CreateGame() { // Remove match prop
             <Button id="btn_bet" color="error" onClick={onCreateRoom}>
               Place Bet
             </Button>
-            
+
           </div>
         )}
         {step < 2 && (
@@ -858,7 +856,7 @@ function CreateGame() { // Remove match prop
             </DialogContent>
             <DialogActions>
               <Button onClick={handleCancel}>Cancel</Button>
-              <Button onClick={handleConfirm} variant="contained" color="error">
+              <Button onClick={handleConfirm} variant="outlined" color="error">
                 LFG
               </Button>
             </DialogActions>
@@ -881,7 +879,20 @@ function CreateGame() { // Remove match prop
               &nbsp;Go Back
             </Button>
           </Box>
-          <Box className="create-game-panel">
+          <Box
+            className="create-game-panel"
+            sx={{
+              // Glassmorphism styles (default dark mode colors)
+              background: 'rgba(0, 0, 0, 0.2)',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)', // For Safari
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+borderRadius: '10px',
+              '@supports not (backdrop-filter: blur(10px))': {
+                background: 'rgba(0, 0, 0, 0.4)',
+              },
+            }}
+          >
             <Box className="game-page">
               <Box className="game-contents title" sx={{ p: 2 }}>
                 <Summary shortVersion={false} />
@@ -906,8 +917,8 @@ function CreateGame() { // Remove match prop
                     step={step}
                     child_step={childStep}
                     isPlaying={isPlaying}
-                    handleUrlChange={() => {}}
-                    handleSubmit={() => {}}
+                    handleUrlChange={() => { }}
+                    handleSubmit={() => { }}
                     handleDescriptionChange={handleDescriptionChange}
                   />
                 )}
@@ -921,33 +932,29 @@ function CreateGame() { // Remove match prop
         {!isMobile && (
           <div className="mobile-only main-page-nav-button-group">
             <Button
-              className={`mobile-tab-live ${
-                selectedMobileTab === 'live_games' ? 'active' : ''
-              }`}
+              className={`mobile-tab-live ${selectedMobileTab === 'live_games' ? 'active' : ''
+                }`}
               onClick={() => setSelectedMobileTab('live_games')}
             >
               {selectedMobileTab === 'live_games' && 'BEAT THE HOUSE'}
             </Button>
             <Button
-              className={`mobile-tab-my ${
-                selectedMobileTab === 'my_games' ? 'active' : ''
-              }`}
+              className={`mobile-tab-my ${selectedMobileTab === 'my_games' ? 'active' : ''
+                }`}
               onClick={() => setSelectedMobileTab('my_games')}
             >
               {selectedMobileTab === 'my_games' && 'YOUR GAMES'}
             </Button>
             <Button
-              className={`mobile-tab-marketplace ${
-                selectedMobileTab === 'marketplace' ? 'active' : ''
-              }`}
+              className={`mobile-tab-marketplace ${selectedMobileTab === 'marketplace' ? 'active' : ''
+                }`}
               onClick={() => setSelectedMobileTab('marketplace')}
             >
               {selectedMobileTab === 'marketplace' && 'MARKETPLACE'}
             </Button>
             <Button
-              className={`mobile-tab-chat ${
-                selectedMobileTab === 'chat' ? 'active' : ''
-              }`}
+              className={`mobile-tab-chat ${selectedMobileTab === 'chat' ? 'active' : ''
+                }`}
               onClick={() => setSelectedMobileTab('chat')}
             >
               {selectedMobileTab === 'chat' && 'CHAT'}

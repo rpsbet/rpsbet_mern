@@ -91,7 +91,7 @@ function MyChat({ highlightChatId }) {
 
   return (
     <ThemeProvider theme={theme}>
-      <Box sx={{ background: '#080808', borderRadius: '0.3em' }}>
+      <Box sx={{ borderRadius: '0.3em' }}>
         {Object.keys(myChat).length === 0 && loading ? (
           <Box>
             {[...Array(5)].map((_, index) => (
@@ -119,7 +119,7 @@ function MyChat({ highlightChatId }) {
             ))}
           </Box>
         ) : (
-          <Box sx={{height: 'calc(100% - 130px)', overflowY: 'scroll'}}>
+          <Box sx={{height: 'calc(100% - 130px)', minHeight: '600px', overflowY: 'scroll'}}>
             {historyKeys.length === 0 && !loading ? (
               <Typography variant="body2" sx={{ p: 2 }} color="text.secondary">
                 Your inbox is dry, find some friends?

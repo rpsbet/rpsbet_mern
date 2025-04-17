@@ -353,7 +353,7 @@ const MyBankTable = () => {
                   {row.onSale === 0 ? null : (
                     <Tooltip title="Withdraw Funds">
                       <Button
-                        variant="contained"
+                        variant="outlined"
                         color="error"
                         onClick={(e) => {
                           e.stopPropagation();

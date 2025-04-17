@@ -59,7 +59,7 @@ const BetArray = ({
   }, [totalWagered, propRank]);
 
   return (
-    <Box sx={{ position: 'relative', width: '100%', mt: 4 }}>
+    <Box sx={{ position: 'relative', width: '100%', mt: 2, mb: 4 }}>
       <BetAmountInput 
         bankroll={bankroll}
         handle2xButtonClick={handle2xButtonClick}

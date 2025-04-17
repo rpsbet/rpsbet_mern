@@ -42,11 +42,7 @@ const Summary = ({ shortVersion }) => {
         const result = await dispatch(
           authenticateWithPhantom({ walletAddress }),
         );
-        if (result.status === 'success') {
-          console.log('Phantom login successful');
-        } else {
-          console.error('Phantom login failed:', result.error);
-        }
+    
       } catch (error) {
         console.error('Error connecting Phantom wallet:', error);
       }

@@ -10,7 +10,8 @@ const helmet = require('helmet'); // Security headers middleware
 const bodyParser = require('body-parser');
 const cronJob = require('./helper/util/createCronJob.js');
 const creditScoreCron = require('./helper/util/creditScoreCron.js');
-const rentCron = require('./helper/util/rentCron.js');
+// const rentCron = require('./helper/util/rentCron.js');
+const eliteCron = require('./helper/util/eliteCron.js');
 const callCronJob = require('./helper/util/callBotCron.js');
 const withdrawalCron = require('./helper/util/withdrawalCron.js');
 const interestCron = require('./helper/util/interestCron.js');
@@ -42,7 +43,8 @@ const io = socketController.socketio(server, {
 });
 
 setTimeout(() => callCronJob.callCronJobs(io), 500);
-setTimeout(() => rentCron.checkRentalPayments(io), 3000);
+// setTimeout(() => rentCron.checkRentalPayments(io), 3000);
+setTimeout(() => eliteCron.checkSubscriptionPayments(io), 3000);
 setTimeout(() => cronJob.checkConfirmations(), 5000);
 setTimeout(() => creditScoreCron.checkOutstandingLoans(io), 7000); 
 setTimeout(() => withdrawalCron.resetWithdrawalLimits(), 9000);

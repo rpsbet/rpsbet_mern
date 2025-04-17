@@ -4,8 +4,9 @@ const PlayerModal = React.lazy(() => import('../modal/PlayerModal'));
 import Avatar from '../../components/Avatar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHandPointDown } from '@fortawesome/free-solid-svg-icons';
-import { Skeleton, Box, ButtonBase } from '@mui/material';
+import { Skeleton, Box, ButtonBase, CircularProgress } from '@mui/material';
 import { fetchId } from '../../redux/Customer/customer.action';
+import Moment from 'moment';
 
 function GlobalChat(props) {
   const {
@@ -24,7 +25,6 @@ function GlobalChat(props) {
   const effectiveIsDarkMode = propIsDarkMode !== undefined ? propIsDarkMode : isDarkMode;
   const effectiveGlobalChatList = propGlobalChatList.length > 0 ? propGlobalChatList : globalChatList;
 
-
   // State
   const [chatList, setChatList] = useState(effectiveGlobalChatList || []);
   const [newMessages, setNewMessages] = useState(0);
@@ -33,6 +33,7 @@ function GlobalChat(props) {
   const [selectedCreator, setSelectedCreator] = useState('');
   const [hasScrolledOnce, setHasScrolledOnce] = useState(false);
   const [userIsAtBottom, setUserIsAtBottom] = useState(false);
+  const [pendingMessages, setPendingMessages] = useState([]); // Track messages being sent
 
   // Refs
   const chatBoxRef = useRef(null);
@@ -159,6 +160,37 @@ function GlobalChat(props) {
     });
   };
 
+  const handleSendMessage = async (message) => {
+    const tempMessage = {
+      ...message,
+      senderId: user?._id,
+      time: Moment().format('HH:mm'),
+      isPending: true, // Mark as pending
+    };
+
+    // Add the message to the chat list optimistically
+    setChatList((prev) => [...prev, tempMessage]);
+    setPendingMessages((prev) => [...prev, tempMessage]);
+
+    try {
+      // Send the message to the backend
+      await socket.emit('GLOBAL_CHAT_SEND', message);
+
+      // Remove the pending flag once the message is sent
+      setPendingMessages((prev) =>
+        prev.filter((pending) => pending !== tempMessage)
+      );
+    } catch (error) {
+      console.error('Error sending message:', error);
+
+      // Remove the message from the chat list if sending fails
+      setChatList((prev) => prev.filter((chat) => chat !== tempMessage));
+      setPendingMessages((prev) =>
+        prev.filter((pending) => pending !== tempMessage)
+      );
+    }
+  };
+
   // Rendering
   const uniqueMessages = new Set();
 
@@ -220,13 +252,12 @@ function GlobalChat(props) {
                   : wrapEmojis(chat.replyTo.message);
             }
 
+            const isPending = pendingMessages.includes(chat);
+
             return (
               <div
                 key={index}
-                className={`chat-line ${chat.sender === 'SYSTEM' ? 'special-message' : ''} ${chat.sender === 'SYSTEM' && chat.message.includes('debt')
-                    ? 'special-message-rent'
-                    : ''
-                  }`}
+                className={`chat-line ${chat.sender === 'SYSTEM' ? 'special-message' : ''} ${chat.sender === 'SYSTEM' && chat.message.includes('debt') ? 'special-message-rent' : ''} ${isPending ? 'pending-message' : ''}`}
                 onClick={() => handleMessageClick(chat)}
               >
                 {chat.replyTo && chat.replyTo.message && (
@@ -245,18 +276,13 @@ function GlobalChat(props) {
                         accessory={chat.replyTo.accessory}
                         elite={chat.replyTo.elite}
                         user_id={chat.replyTo.senderId}
-                        darkMode={effectiveIsDarkMode}
+                        darkMode={true} // Set to true for dark mode Avatar styling
                       />
                     </a>
-                    <span className="reply-sender sender-name">
-                      {chat.replyTo.username}
-                    </span>
+                    <span className="reply-sender sender-name">{chat.replyTo.username}</span>
                     <span className="reply-message chat-text title">
                       {chat.replyTo.messageType === 'gif' ? (
-                        <img
-                          src={JSON.parse(chat.replyTo.message).content}
-                          alt="gif"
-                        />
+                        <img src={JSON.parse(chat.replyTo.message).content} alt="gif" />
                       ) : (
                         wrappedReplyMessage
                       )}
@@ -265,10 +291,7 @@ function GlobalChat(props) {
                 )}
 
                 <div className="chat-content">
-                  <a
-                    className="chat-player"
-                    onClick={() => handleOpenPlayerModal(chat.senderId)}
-                  >
+                  <a className="chat-player" style={{ zIndex: 1 }} onClick={() => handleOpenPlayerModal(chat.senderId)}>
                     <Avatar
                       className="avatar"
                       src={chat.avatar}
@@ -278,17 +301,27 @@ function GlobalChat(props) {
                       user_id={chat.senderId}
                       username={chat.sender}
                       rank={chat.rank}
-                      darkMode={effectiveIsDarkMode}
+                      darkMode={true} // Set to true for dark mode Avatar styling
                     />
                   </a>
-                  <div className="chat-msg">
+                  <div className="chat-msg"
+                    style={{
+                      // Glassmorphism styles (default dark mode colors)
+                      background: 'rgba(144, 142, 142, 0.2)',
+                      backdropFilter: 'blur(10px)',
+                      WebkitBackdropFilter: 'blur(10px)', // For Safari
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      borderRadius: '4px',
+                      '@supports not (backdrop-filter: blur(10px))': {
+                        background: 'rgba(0, 0, 0, 0.4)',
+                      },
+                    }}>
                     <span className="sender-name">{chat.sender}</span>
                     <span className="chat-text title">
-                      {chat.messageType === 'gif' ? (
-                        <img
-                          src={JSON.parse(chat.message).content}
-                          alt="gif"
-                        />
+                      {isPending ? (
+                        <CircularProgress size={16} color="inherit" />
+                      ) : chat.messageType === 'gif' ? (
+                        <img src={JSON.parse(chat.message).content} alt="gif" />
                       ) : (
                         wrappedMessage
                       )}

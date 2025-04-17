@@ -128,21 +128,6 @@ function LoginModal({ modalIsOpen, closeModal }) {
     }, 100);
   }, []);
 
-  // ------------------ STYLES ------------------
-  const modalBoxStyle = {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    bgcolor: '#0a0a0a',
-    color: '#fff',
-    boxShadow: 24,
-    borderRadius: 1,
-    p: 3,
-    width: 360,
-    maxWidth: '90vw',
-  };
-
   // ------------------ RENDER ------------------
   return (
     <ThemeProvider theme={theme}>
@@ -155,7 +140,28 @@ function LoginModal({ modalIsOpen, closeModal }) {
         }}
         sx={{ zIndex: 1300 }}
       >
-        <Box sx={modalBoxStyle}>
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            color: '#fff', // Preserve text color conditional
+            overflowY: 'auto',
+            borderRadius: 2,
+            boxShadow: 24,
+            p: 3,
+            // Glassmorphism styles (default dark mode colors)
+            background: 'rgba(0, 0, 0, 0.2)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)', // For Safari
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            // Fallback for browsers without backdrop-filter
+            '@supports not (backdrop-filter: blur(10px))': {
+              background: 'rgba(0, 0, 0, 0.4)',
+            },
+          }}
+        >
           {/* HEADER */}
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
             <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center' }}>
@@ -205,12 +211,12 @@ function LoginModal({ modalIsOpen, closeModal }) {
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <Box sx={{ display: 'flex', gap: 2 }}>
               <Button
-                variant="contained"
+                variant="outlined"
                 color="error"
                 onClick={onSubmitForm}
                 fullWidth
               >
-                Login 
+                Login
                 <Typography component="span" fontStyle="italic">
                   [↵]
                 </Typography>
@@ -224,7 +230,7 @@ function LoginModal({ modalIsOpen, closeModal }) {
               <Box sx={{ flex: 1, borderBottom: 1, borderColor: 'divider' }} />
             </Box>
             <Button
-              variant="contained"
+              variant="outlined"
               color="error"
               onClick={handlePhantomConnect}
               fullWidth

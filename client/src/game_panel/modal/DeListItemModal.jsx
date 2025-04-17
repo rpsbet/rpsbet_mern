@@ -60,10 +60,10 @@ const DeListItemModal = () => {
           <br />
         </div>
         <div className="modal-footer">
-          <Button variant="contained" color="error" onClick={handleConfirm}>
+          <Button variant="outlined" color="error" onClick={handleConfirm}>
             CONFIRM
           </Button>
-          <Button variant="contained" color="error" onClick={handleCancel}>
+          <Button variant="outlined" color="error" onClick={handleCancel}>
             CANCEL
           </Button>
         </div>

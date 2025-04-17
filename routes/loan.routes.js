@@ -940,7 +940,7 @@ router.get('/my-loans', auth, async (req, res) => {
   const loanTypeFilter = req.query.loanType;
   const userId = req.user._id;
   try {
-    let query = { lender: userId, loan_amount: { $gt: 0 } };
+    let query = { lender: userId, loan_amount: { $gt: 0 }, active: true };
     if (loanTypeFilter) {
       query['loan_type'] = loanTypeFilter;
     }
@@ -1194,13 +1194,12 @@ router.get('/', async (req, res) => {
   const pagination = req.query.pagination ? parseInt(req.query.pagination) : 10;
   const page = req.query.page ? parseInt(req.query.page) : 1;
 
-  // const sort = req.query.sortBy === 'price' ? 'loaners.price' : 'created_at';
   const sort = 'loan_amount';
 
   const loanTypeFilter = req.query.loanType;
 
   try {
-    let query = { loan_amount: { $gt: 0 } };
+    let query = { loan_amount: { $gt: 0 }, active: true }; // Added active: true
     if (loanTypeFilter) {
       query['loan_type'] = loanTypeFilter;
     }

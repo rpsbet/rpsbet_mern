@@ -207,7 +207,6 @@ export default function (state = initialState, action) {
       };
     }
     case NEW_TRANSACTION: {
-      console.log("payload", payload);
       const existingIndex = state.transactions.findIndex(tx => tx._id === payload._id);
 
       if (existingIndex !== -1) {

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, lazy, Suspense } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import Lottie from 'react-lottie';
 import {
@@ -18,8 +18,9 @@ import AttachMoney from '@mui/icons-material/AttachMoney';
 import verified from '../LottieAnimations/verified.json';
 import MyBankPage from '../../admin_panel/app/ProductPages/ProductSerchPage/MyBankPage';
 import ProductCreatePage from '../../admin_panel/app/ProductPages/ProductCreatePage/ProductCreatePage';
-import EliteSubscriptionModal from '../modal/EliteSubscriptionModal';
 import { getRank } from '../../util/getRank';
+
+const EliteSubscriptionModal = lazy(() => import('../modal/EliteSubscriptionModal'));
 
 // Redux Actions
 import {
@@ -181,15 +182,21 @@ const MyLoansModal = ({ modalIsOpen, closeModal }) => {
             top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
-            bgcolor: isDarkMode ? '#0a0a0a' : '#fff',
-            color: isDarkMode ? '#fff' : '#000',
-            width: '80vw',
-            maxWidth: 700,
-            maxHeight: '80vh',
+            color: '#fff',
+            width: '90%',
             overflowY: 'auto',
             borderRadius: 2,
-            p: 3,
             boxShadow: 24,
+            p: 3,
+            // Glassmorphism styles (default dark mode colors)
+            background: 'rgba(0, 0, 0, 0.2)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)', // For Safari
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            // Fallback for browsers without backdrop-filter
+            '@supports not (backdrop-filter: blur(10px))': {
+              background: 'rgba(0, 0, 0, 0.4)',
+            },
           }}
         >
           {/* HEADER */}
@@ -280,7 +287,7 @@ const MyLoansModal = ({ modalIsOpen, closeModal }) => {
               <Tooltip title="Loan creation requires an Elite subscription">
                 <Box sx={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
                   <Button
-                    variant="contained"
+                    variant="outlined"
                     color="error"
                     onClick={handleCreateLoanClick}
                     startIcon={<AttachMoney />}
@@ -304,7 +311,13 @@ const MyLoansModal = ({ modalIsOpen, closeModal }) => {
         fullWidth
         PaperProps={{
           sx: {
-            backgroundColor: '#0a0a0a',
+            background: 'rgba(0, 0, 0, 0.2)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            '@supports not (backdrop-filter: blur(10px))': {
+              background: 'rgba(0, 0, 0, 0.4)',
+            },
             color: '#fff',
             borderRadius: 2,
             boxShadow: 24,
@@ -335,7 +348,7 @@ const MyLoansModal = ({ modalIsOpen, closeModal }) => {
           </Box>
 
           {/* ALLOWANCE DISPLAY */}
-          <Box sx={{ mb: 3, p: 2, bgcolor: '#1a1a1a', borderRadius: 2 }}>
+          <Box sx={{ mb: 3, }}>
             <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
               Your Loan Allowance
             </Typography>
@@ -362,7 +375,7 @@ const MyLoansModal = ({ modalIsOpen, closeModal }) => {
           <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
             <Button
               fullWidth
-              variant="contained"
+              variant="outlined"
               color="error"
               onClick={onSubmitForm}
               disabled={isSubmitting}
@@ -373,13 +386,15 @@ const MyLoansModal = ({ modalIsOpen, closeModal }) => {
         </DialogContent>
       </Dialog>
 
-      {/* ELITE SUBSCRIPTION MODAL */}
-      <EliteSubscriptionModal
-        modalIsOpen={eliteSubscriptionModalIsOpen}
-        closeModal={closeEliteSubscriptionModal}
-        user={user}
-        isLowGraphics={isLowGraphics}
-      />
+      <Suspense fallback={<Typography></Typography>}>
+
+        <EliteSubscriptionModal
+          modalIsOpen={eliteSubscriptionModalIsOpen}
+          closeModal={closeEliteSubscriptionModal}
+          user={user}
+          isLowGraphics={isLowGraphics}
+        />
+      </Suspense>
     </>
   );
 };

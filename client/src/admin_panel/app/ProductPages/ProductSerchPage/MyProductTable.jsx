@@ -385,7 +385,7 @@ function MyProductTable() {
                       {row.onSale === 0 && row.rentOption ? (
                         <Tooltip title="Discontinue Renting">
                           <Button
-                            variant="contained"
+                            variant="outlined"
                             color="error"
                             startIcon={<Cancel />}
                             onClick={(e) => {
@@ -401,7 +401,7 @@ function MyProductTable() {
                           {row.onSale !== row.total_count && (
                             <Tooltip title="List Item">
                               <Button
-                                variant="contained"
+                                variant="outlined"
                                 color="error"
                                 startIcon={<SwapHoriz />}
                                 onClick={(e) => {
@@ -416,7 +416,7 @@ function MyProductTable() {
                           {row.onSale > 0 && (
                             <Tooltip title="De-List Item">
                               <Button
-                                variant="contained"
+                                variant="outlined"
                                 color="error"
                                 startIcon={<SwapHoriz />}
                                 onClick={(e) => {
@@ -433,7 +433,7 @@ function MyProductTable() {
                       {row.item_type === '653ee81117c9f5ee2124564b' && row.onSale === 0 && (
                         <Tooltip title={accessory && accessory === row.image ? 'Unequip Item' : 'Equip Item'}>
                           <Button
-                            variant="contained"
+                            variant="outlined"
                             color="error"
                             startIcon={<SwapHoriz />}
                             onClick={(e) => {
