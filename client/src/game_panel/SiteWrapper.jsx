@@ -1721,7 +1721,6 @@ function SiteWrapper({ children }) {
             <LoginModal
               modalIsOpen={showLoginModal}
               closeModal={handleCloseLoginModal}
-              openSignupModal={handleOpenSignupModal}
             />
           </Suspense>
         )}
