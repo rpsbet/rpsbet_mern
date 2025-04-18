@@ -132,6 +132,7 @@ router.get('/recently-closed', async (req, res) => {
       });
     } else {
       res.json({
+        
         success: true,
         message: 'No recently closed rooms found.',
       });
@@ -437,7 +438,7 @@ You are an elite React developer with a passion for cutting-edge design, inspire
     - Crash: Rocket emoji 🚀 with size increase as multiplier grows
     - Slots: Slotmachine emoji 🎰 or combinations like 7️⃣🍒💰
     - Dice: Use dice emoji 🎲 with rotation animations
-  - Style emoji elements with:
+    - Style emoji elements with:
     - 'fontSize: "2rem"' (or responsive sizing)
     - 'filter: "drop-shadow(0 0 10px rgba(<randomColor>, 0.5))"'
     - 'transition: "transform 0.3s"'
@@ -3436,6 +3437,34 @@ router.post('/checkTokens', auth, async (req, res) => {
   return res.json({
     status: available,
   });
+});
+
+router.get('/transactions', async (req, res) => {
+  try {
+    const { descriptionPrefix } = req.query;
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const transactions = await Transaction.find({
+      description: { $regex: `^${descriptionPrefix}`, $options: 'i' },
+      created_at: { $gte: thirtyDaysAgo },
+    })
+      .sort({ created_at: -1 })
+      .limit(20)
+      .populate({
+        path: 'user',
+        model: User,
+        select: 'avatar username totalWagered accessory elite _id',
+      });
+
+    res.json({
+      success: true,
+      transactions,
+    });
+  } catch (err) {
+    console.error('Error fetching transactions:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 module.exports = router;

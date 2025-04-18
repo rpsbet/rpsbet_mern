@@ -1282,3 +1282,17 @@ export const selectMainTab = index => dispatch => {
 export const globalChatReceived = data => dispatch => {
   dispatch({ type: GLOBAL_CHAT_RECEIVED, payload: data });
 };
+
+export const getTransactions = ({ descriptionPrefix }) => async (dispatch) => {
+  try {
+    const res = await axios.get('/game/transactions', {
+      params: { descriptionPrefix },
+    });
+    if (res.data.success) {
+      return res.data.transactions;
+    }
+  } catch (err) {
+    console.error('Error fetching transactions:', err);
+    return [];
+  }
+};

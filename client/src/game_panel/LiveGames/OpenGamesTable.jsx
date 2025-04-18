@@ -5,6 +5,7 @@ import {
   actionRoom,
   setRoomList,
   getRecentlyClosed,
+  getTransactions,
 } from '../../redux/Logic/logic.actions';
 import isEqual from 'lodash/isEqual';
 import {
@@ -26,6 +27,7 @@ import {
   Button,
   Card,
   Modal,
+  Link,
 } from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import Moment from 'moment';
@@ -70,17 +72,16 @@ function OpenGamesTable(props) {
   const roomList = useSelector(state => state.logic.roomList, isEqual);
   const connectedAccount = useSelector(state => state.auth.connectedAccount);
 
-  // Use prop values if provided, otherwise fall back to Redux state
   const effectiveLoading = propLoading !== undefined ? propLoading : loading;
   const effectiveIsDarkMode = propIsDarkMode !== undefined ? propIsDarkMode : isDarkMode;
-
   const effectiveSolPrice = propSolPrice !== undefined ? propSolPrice : solPrice;
 
-  // Local State
   const [localRoomList, setLocalRoomList] = useState(roomList);
   const [filter, setFilter] = useState('BEAT THE HOUSE');
   const [page, setPage] = useState(1);
   const [loadingRecent, setLoadingRecent] = useState(true);
+  const [recentTransactions, setRecentTransactions] = useState([]);
+  const [loadingTransactions, setLoadingTransactions] = useState(false);
 
   const theme = getCustomTheme(effectiveIsDarkMode);
 
@@ -90,11 +91,6 @@ function OpenGamesTable(props) {
   const displayedRooms = roomList.slice(startIndex, endIndex);
   const prevRoomListRef = useRef(roomList);
 
-  // useEffect(() => {
-  //   dispatch(getRoomList()); // Dispatch the getRoomList action
-  // }, [dispatch]);
-
-  // Effects
   useEffect(() => {
     if (!isEqual(prevRoomListRef.current, roomList)) {
       prevRoomListRef.current = roomList;
@@ -127,8 +123,6 @@ function OpenGamesTable(props) {
     setLocalRoomList(mergedRooms);
   }, [roomList, highlightedRooms, dispatch]);
 
-
-  // Handlers
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
@@ -184,6 +178,14 @@ function OpenGamesTable(props) {
         setLoadingRecent(true);
         await dispatch(getRecentlyClosed());
         setLoadingRecent(false);
+      } else if (option === 'RECENTLY WD / DP') {
+        setLoadingTransactions(true);
+        const transactions = await dispatch(getTransactions({ descriptionPrefix: 'SOL ' }));
+        const filteredTransactions = transactions.filter((transaction) =>
+          Moment(transaction.created_at).isAfter(Moment().subtract(30, 'days'))
+        );
+        setRecentTransactions(filteredTransactions);
+        setLoadingTransactions(false);
       }
     },
     [dispatch],
@@ -202,9 +204,9 @@ function OpenGamesTable(props) {
   );
 
   const getColorClass = (value) => {
-    if (value > 0) return '#03ff3b';
-    if (value === 0) return 'grey';
-    return '#D32F2F';
+    if (value > 0) return { bg: 'rgba(211, 47, 47, 0.15)', border: 'rgba(211, 47, 47, 0.4)', text: '#D32F2F' }; // Red for deposit
+    if (value === 0) return { bg: 'rgba(128, 128, 128, 0.15)', border: 'rgba(128, 128, 128, 0.4)', text: '#808080' }; // Grey for zero
+    return { bg: 'rgba(3, 255, 59, 0.15)', border: 'rgba(3, 255, 59, 0.4)', text: '#03ff3b' }; // Green for withdrawal
   };
 
   const isLiveGames = filter === 'BEAT THE HOUSE';
@@ -232,7 +234,13 @@ function OpenGamesTable(props) {
           className="filter-container"
           style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
           onClick={() =>
-            handleFilterChange(isLiveGames ? 'RECENTLY GRADUATED' : 'BEAT THE HOUSE')
+            handleFilterChange(
+              filter === 'BEAT THE HOUSE'
+                ? 'RECENTLY GRADUATED'
+                : filter === 'RECENTLY GRADUATED'
+                  ? 'RECENTLY WD / DP'
+                  : 'BEAT THE HOUSE'
+            )
           }
         >
           <FilterListIcon style={{ marginRight: '5px' }} />
@@ -240,7 +248,142 @@ function OpenGamesTable(props) {
         </div>
       </div>
 
-      {isLiveGames ? (
+      {filter === 'RECENTLY WD / DP' ? (
+        <Grid container spacing={2} sx={{ p: 2 }}>
+          {loadingTransactions ? (
+            Array.from({ length: 4 }).map((_, index) => (
+              <Grid item xs={6} sm={4} md={3} lg={3} xl={3} key={index}>
+                <Box
+                  className="carousel-content table-row slide-in"
+                  sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}
+                >
+                  <Skeleton variant="rectangular" width="100%" height={200} />
+                  <Skeleton width="60%" />
+                  <Skeleton width="40%" />
+                  <Skeleton width="80%" />
+                </Box>
+              </Grid>
+            ))
+          ) : recentTransactions.length === 0 ? (
+            <Grid item xs={12}>
+              <Typography variant="body1" align="center">
+                NO RECENT TRANSACTIONS
+              </Typography>
+            </Grid>
+          ) : (
+            recentTransactions.map((transaction) => (
+              <Grid item xs={6} sm={4} md={3} lg={3} xl={3} key={transaction._id}>
+                <Box
+                  sx={{
+                    p: 3,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    background: getColorClass(transaction.amount).bg, // Colored background
+                    backdropFilter: 'blur(12px) saturate(120%)',
+                    borderRadius: '16px',
+                    border: `1px solid ${getColorClass(transaction.amount).border}`, // Colored border
+                    boxShadow: `0 8px 32px rgba(0, 0, 0, 0.2), 0 0 10px ${getColorClass(transaction.amount).border}`, // Colored shadow
+                    transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    '&:before': {
+                      content: '""',
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      background: `linear-gradient(135deg, ${getColorClass(transaction.amount).bg}, rgba(255,255,255,0.05))`,
+                      pointerEvents: 'none',
+                    },
+                    '&:hover': {
+                      transform: 'translateY(-8px)',
+                      boxShadow: `0 12px 40px rgba(0, 0, 0, 0.3), 0 0 15px ${getColorClass(transaction.amount).border}`,
+                      background: `${getColorClass(transaction.amount).bg.replace('0.15', '0.2')}`, // Slightly stronger on hover
+                    },
+                  }}
+                >
+                  <a style={{cursor: 'pointer',}} onClick={(e) => {
+                    e.stopPropagation();
+                    handleOpenPlayerModal(transaction.user?._id);
+                  }}>
+
+                    <Avatar
+                      alt={transaction.user?.username}
+                      username={transaction.user?.username}
+                      elite={transaction.user?.elite}
+                      src={transaction.user?.avatar}
+
+                      sx={{
+                        cursor: 'pointer',
+                        width: 48,
+                        height: 48,
+                        border: `2px solid ${getColorClass(transaction.amount).border}`, // Colored avatar border
+                        transition: 'all 0.2s ease',
+                        '&:hover': {
+                          transform: 'scale(1.15) rotate(5deg)',
+                          borderColor: getColorClass(transaction.amount).text,
+                          boxShadow: `0 0 15px ${getColorClass(transaction.amount).border}`,
+                        },
+                      }}
+                    />
+                  </a>
+
+                  <Typography
+                    component="span"
+                    sx={{
+                      mt: 1.5,
+                      fontWeight: 'bold',
+                      fontSize: '1.1rem',
+                      color: '#ffffff', // White for readability
+                      textShadow: `0 2px 4px rgba(0,0,0,0.3), 0 0 8px ${getColorClass(transaction.amount).text}`, // Colored glow
+                    }}
+                  >
+                    {transaction.amount > 0
+                      ? `DEPOSITED ${convertToCurrency(transaction.amount, effectiveSolPrice)}`
+                      : `WITHDREW ${convertToCurrency(Math.abs(transaction.amount), effectiveSolPrice)}`}
+                  </Typography>
+                  <Typography
+                    component="span"
+                    sx={{
+                      fontSize: '0.75rem',
+                      color: 'rgba(255, 255, 255, 0.8)', // Slightly off-white for contrast
+                      mt: 0.5,
+                    }}
+                  >
+                    {customFromNow(Moment(transaction.created_at))}
+                  </Typography>
+                  <Link
+                    href={`https://solscan.io/tx/${transaction.hash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    sx={{
+                      mt: 1.5,
+                      fontSize: '0.85rem',
+                      color: '#ffffff', // White for readability
+                      textDecoration: 'none',
+                      padding: '6px 12px',
+                      borderRadius: '8px',
+                      background: `${getColorClass(transaction.amount).bg.replace('0.15', '0.25')}`, // Slightly stronger bg
+                      border: `1px solid ${getColorClass(transaction.amount).border}`,
+                      transition: 'all 0.2s ease',
+                      '&:hover': {
+                        background: getColorClass(transaction.amount).text,
+                        color: '#ffffff',
+                        transform: 'scale(1.05)',
+                        boxShadow: `0 0 10px ${getColorClass(transaction.amount).text}`,
+                      },
+                    }}
+                  >
+                    View on Solscan
+                  </Link>
+                </Box>
+              </Grid>
+            ))
+          )}
+        </Grid>
+      ) : isLiveGames ? (
         <div className="table main-game-table open-games">
           {displayedRooms.length === 0 || effectiveLoading ? (
             <Grid container className="grid-container" spacing={1} style={{ padding: '20px' }}>
@@ -309,7 +452,6 @@ function OpenGamesTable(props) {
                   ? Math.min((row.user_bet / row.endgame_amount) * 100, 100)
                   : 0;
 
-                // Check if this is the first item
                 const isFirstItem = index === 0;
 
                 return (
@@ -325,10 +467,8 @@ function OpenGamesTable(props) {
                       position: 'relative',
                     }}
                   >
-                    {/* Crown image for the first item */}
                     {isFirstItem && (
                       <>
-                        {/* Crown image */}
                         <Box
                           sx={{
                             position: 'absolute',
@@ -347,11 +487,9 @@ function OpenGamesTable(props) {
                             style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                           />
                         </Box>
-
                       </>
                     )}
 
-                    {/* Animated border wrapper for the first item */}
                     <Box
                       sx={{
                         position: 'relative',
@@ -360,25 +498,25 @@ function OpenGamesTable(props) {
                           '&::before': {
                             content: '""',
                             position: 'absolute',
-                            top: '-4px', // Base thickness
+                            top: '-4px',
                             left: '-4px',
                             right: '-4px',
                             bottom: '-4px',
                             borderRadius: '18px',
-                            background: 'linear-gradient(45deg, #ff0000, #ff7300,rgb(255, 0, 93), #ff7300, #ff0000)', // Vibrant gradient
-                            backgroundSize: '300% 300%', // Large size for movement
-                            animation: 'gradientBorder 6s ease infinite', // Slightly slower for clarity
+                            background: 'linear-gradient(45deg, #ff0000, #ff7300,rgb(255, 0, 93), #ff7300, #ff0000)',
+                            backgroundSize: '300% 300%',
+                            animation: 'gradientBorder 6s ease infinite',
                             zIndex: 0,
-                            boxShadow: '0 0 2px rgba(255, 115, 0, 0.7)', // Subtle glow
+                            boxShadow: '0 0 2px rgba(255, 115, 0, 0.7)',
                           },
                           '&:hover::before': {
-                            animation: 'gradientBorder 2s ease infinite', // Speed up on hover
-                            boxShadow: '0 0 4px rgba(255, 115, 0, 0.9)', // Enhanced glow
+                            animation: 'gradientBorder 2s ease infinite',
+                            boxShadow: '0 0 4px rgba(255, 115, 0, 0.9)',
                           },
                           '@keyframes gradientBorder': {
                             '0%': {
                               backgroundPosition: '0% 0%',
-                              top: '-3px', // Thicker on top
+                              top: '-3px',
                               left: '-3px',
                               right: '-3px',
                               bottom: '-3px',
@@ -387,7 +525,7 @@ function OpenGamesTable(props) {
                               backgroundPosition: '100% 0%',
                               top: '-3px',
                               left: '-3px',
-                              right: '-3px', // Thicker on right
+                              right: '-3px',
                               bottom: '-3px',
                             },
                             '50%': {
@@ -395,18 +533,18 @@ function OpenGamesTable(props) {
                               top: '-3px',
                               left: '-3px',
                               right: '-3px',
-                              bottom: '-3px', // Thicker on bottom
+                              bottom: '-3px',
                             },
                             '75%': {
                               backgroundPosition: '0% 100%',
                               top: '-3px',
-                              left: '-3px', // Thicker on left
+                              left: '-3px',
                               right: '-3px',
                               bottom: '-3px',
                             },
                             '100%': {
                               backgroundPosition: '0% 0%',
-                              top: '-3px', // Back to thicker on top
+                              top: '-3px',
                               left: '-3px',
                               right: '-3px',
                               bottom: '-3px',
@@ -431,34 +569,29 @@ function OpenGamesTable(props) {
                           flexDirection: 'column',
                           padding: '20px',
                           borderRadius: '16px',
-                          // Glassmorphism styles (default dark mode colors)
                           background: 'rgba(0, 0, 0, 0.2)',
                           backdropFilter: 'blur(10px)',
-                          WebkitBackdropFilter: 'blur(10px)', // For Safari
+                          WebkitBackdropFilter: 'blur(10px)',
                           border: '1px solid rgba(255, 255, 255, 0.2)',
                           boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                          transition: 'all 0.3s ease', // Smooth transition for hover
+                          transition: 'all 0.3s ease',
                           position: 'relative',
                           overflow: 'hidden',
                           zIndex: 1,
-                          // Fallback for browsers without backdrop-filter
                           '@supports not (backdrop-filter: blur(10px))': {
                             background: 'rgba(0, 0, 0, 0.4)',
                           },
-                          // Hover effect
                           '&:hover': {
                             background: 'rgba(0, 0, 0, 0.3)',
                             boxShadow: '0 6px 12px rgba(0, 0, 0, 0.15)',
                             cursor: 'pointer',
                           },
-                          // Adjust highlighted-row for slight differentiation
                           '&.highlighted-row': {
                             background: 'rgba(0, 0, 0, 0.25)',
                             '@supports not (backdrop-filter: blur(10px))': {
                               background: 'rgba(0, 0, 0, 0.45)',
                             },
                           },
-                          // Preserve pseudo-element for flair
                           '&:before': {
                             content: '""',
                             position: 'absolute',
@@ -477,7 +610,6 @@ function OpenGamesTable(props) {
                           },
                         }}
                       >
-                        {/* Top section with image and name */}
                         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2.5 }}>
                           <Box
                             sx={{
@@ -561,7 +693,6 @@ function OpenGamesTable(props) {
                           </Box>
                         </Box>
 
-                        {/* Players section - Modified Code */}
                         <Box
                           sx={{
                             display: 'flex',
@@ -577,9 +708,9 @@ function OpenGamesTable(props) {
                               right: '0',
                               top: '50%',
                               transform: 'translateY(-50%)',
-                              height: '3px', // Thicker line
+                              height: '3px',
                               background: row.joiners?.length === 0
-                                ? 'rgba(255, 50, 50, 0.9)' // Solid red if no joiners
+                                ? 'rgba(255, 50, 50, 0.9)'
                                 : `linear-gradient(90deg, rgba(255, 50, 50, 0.9) 0%, rgba(255, 50, 50, 0.9) ${row.hosts?.length > row.joiners?.length
                                   ? Math.max(0, 50 - (row.hosts?.length - row.joiners?.length) * 15)
                                   : row.joiners?.length > row.hosts?.length
@@ -638,7 +769,6 @@ function OpenGamesTable(props) {
                             </Box>
                           )}
 
-                          {/* Battle icon with max limit on left/right movement */}
                           <Box
                             sx={{
                               mx: 3,
@@ -661,11 +791,11 @@ function OpenGamesTable(props) {
                               zIndex: 2,
                               position: 'relative',
                               left: `${row.hosts?.length > row.joiners?.length
-                                ? Math.max(-40, (50 - Math.max(0, 50 - (row.hosts?.length - row.joiners?.length) * 15)) * -1) // Max left: -40%
+                                ? Math.max(-40, (50 - Math.max(0, 50 - (row.hosts?.length - row.joiners?.length) * 15)) * -1)
                                 : row.joiners?.length > row.hosts?.length
-                                  ? Math.min(40, (Math.min(100, 50 + (row.joiners?.length - row.hosts?.length) * 15) - 50)) // Max right: 40%
+                                  ? Math.min(40, (Math.min(100, 50 + (row.joiners?.length - row.hosts?.length) * 15) - 50))
                                   : 0
-                                }%`, // Sync with gradient cutoff, capped at ±40%
+                                }%`,
                             }}
                           >
                             <Battle
@@ -720,7 +850,6 @@ function OpenGamesTable(props) {
                           )}
                         </Box>
 
-                        {/* Stats section */}
                         <Box
                           sx={{
                             display: 'flex',
@@ -869,7 +998,6 @@ function OpenGamesTable(props) {
                             mb: 0.5,
                           }}
                         >
-                          {/* Health bar */}
                           <Box sx={{ position: 'relative', width: '60%' }}>
                             <Typography
                               variant="caption"
@@ -939,7 +1067,6 @@ function OpenGamesTable(props) {
                             </Box>
                           </Box>
 
-                          {/* LikeDislikeView */}
                           <Box
                             sx={{
                               width: '35%',
@@ -949,7 +1076,7 @@ function OpenGamesTable(props) {
                           >
                             <LikeDislikeView
                               row={row}
-                              user={user} // Pass the current user object
+                              user={user}
                               handleLike={() => dispatch(actionRoom({ roomId: row._id, type: 'like' }))}
                               handleDislike={() =>
                                 dispatch(actionRoom({ roomId: row._id, type: 'dislike' }))
@@ -958,7 +1085,6 @@ function OpenGamesTable(props) {
                             />
                           </Box>
                         </Box>
-                        {/* Private room lock icon */}
                         {row.is_private && (
                           <Tooltip title="A password is required to battle this room." arrow>
                             <Box
@@ -1116,8 +1242,6 @@ function OpenGamesTable(props) {
           )}
         </Grid>
       )}
-
-
     </ThemeProvider>
   );
 }

@@ -167,14 +167,14 @@ const StatisticsForm = (props) => {
               </TableCell>
             </TableRow>
             <TableRow>
-              <TableCell>
+              {/* <TableCell>
                 <b style={{ opacity: '0.6', fontSize: '0.9em', fontWeight: '500' }}>
                   JOINED
                 </b>
               </TableCell>
               <TableCell align="right" sx={{ color: '#ff8500' }}>
                 {joinedAgo}
-              </TableCell>
+              </TableCell> */}
             </TableRow>
             <TableRow>
               <TableCell>
