@@ -209,7 +209,7 @@ function MainPage() {
                     height: 'auto',
                     position: 'relative',
                     transform: 'scale(0.6)',
-                    filter: 'hue-rotate(132deg)',
+                    filter: user?.elite === 'black' ? 'grayscale(1)' : 'hue-rotate(132deg)',
                   }}
                 >
                   <Lottie
@@ -221,7 +221,7 @@ function MainPage() {
                     style={{ width: '100%', height: '100%' }}
                   />
                 </Box>
-                <span style={{ color: user?.elite === 'red' ? '#ff0000' : user?.elite === 'black' ? '#000000' : '#ff0000' }}>
+                <span style={{ color: user?.elite === 'red' ? '#ff0000' : user?.elite === 'black' ? '#e5e5e5' : '#ff0000' }}>
                   {user?.elite === 'red' || user?.elite === 'black' ? `${user.elite.toUpperCase()} ELITE USER` : 'ELITE USERS ONLY'}
                 </span>
               </Box>

@@ -68,7 +68,7 @@ function Avatar(props) {
     13: '#DA70D6', // Orchid (replacing Hot Pink)
     14: '#FFD700'  // Gold
   };
-  
+
 
   let adjustedRank = rank;
   if (adjustedRank !== null && !isNaN(adjustedRank)) {
@@ -81,7 +81,7 @@ function Avatar(props) {
   const usernameString = username || '';
 
   const isBot = usernameString.toUpperCase().includes('BOT');
-  
+
   const isBlack = elite === 'black';
   const isRed = elite === 'red';
 
@@ -144,7 +144,7 @@ function Avatar(props) {
           />
 
           {/* Verified Badge (top-right) */}
-          {isRed && (
+          {(isRed || isBlack) && (
             <Box
               sx={{
                 width: '32px',
