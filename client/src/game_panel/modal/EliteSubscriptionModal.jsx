@@ -133,15 +133,33 @@ function EliteSubscriptionModal({ open, onClose, isLowGraphics, user }) {
             top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
-            bgcolor: '#0a0a0a',
-            color: '#fff',
-            boxShadow: 24,
-            borderRadius: 1,
-            p: 3,
-            maxWidth: '90vw',
-            minWidth: '400px',
+            width: { xs: '90vw', sm: '80vw', md: '60vw', lg: '50vw' },
             maxHeight: '90vh',
             overflowY: 'auto',
+            borderRadius: 3,
+            p: { xs: 2, sm: 3, md: 4 },
+            // Glassmorphism
+            background: 'rgba(30, 30, 30, 0.3)',
+            backdropFilter: 'blur(15px)',
+            WebkitBackdropFilter: 'blur(15px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
+            // Fallback
+            '@supports not (backdrop-filter: blur(15px))': {
+              background: 'rgba(30, 30, 30, 0.6)',
+            },
+            scrollbarWidth: 'thin',
+            scrollbarColor: 'rgba(255,255,255,0.2) transparent',
+            '&::-webkit-scrollbar': {
+              width: '8px',
+            },
+            '&::-webkit-scrollbar-track': {
+              background: 'transparent',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: 'rgba(255,255,255,0.2)',
+              borderRadius: '4px',
+            },
           }}
         >
           <Box sx={{ position: 'relative' }}>
@@ -289,7 +307,7 @@ function EliteSubscriptionModal({ open, onClose, isLowGraphics, user }) {
                 </CardContent>
                 <CardActions sx={{ justifyContent: 'center', pb: 3 }}>
                   <Button
-                    variant="outlined"
+                    variant="contained"
                     onClick={() => handlePurchaseSubscription('red')}
                     disabled={loading.red || !sufficientBalance.red || user?.elite === 'red'}
                     sx={{
@@ -442,7 +460,7 @@ function EliteSubscriptionModal({ open, onClose, isLowGraphics, user }) {
                     </Box>
                   )}
                   <Button
-                    variant="outlined"
+                    variant="contained"
                     onClick={() => handlePurchaseSubscription('black')}
                     disabled={loading.black || !sufficientBalance.black || user?.elite === 'black'}
                     sx={{
@@ -576,7 +594,7 @@ function EliteSubscriptionModal({ open, onClose, isLowGraphics, user }) {
           <Button
             onClick={handleCancelSubscription}
             disabled={loading.cancel}
-            variant="outlined"
+            variant="contained"
             sx={{
               bgcolor: '#d81719',
               '&:hover': { bgcolor: '#b01416' },
