@@ -31,9 +31,11 @@ const RoomSchema = new Schema({
   room_password: { type: String, default: '' },
   description: { type: String, default: '' },
   pool_id: { type: String, default: '' },
-  prompt: {
-    type: String,
-    default: 'Create a Wheel of Fortune game, display the numbers 1 through 10 on the wheel and use https://t4.ftcdn.net/jpg/02/66/72/41/360_F_266724172_Iy8gdKgMa7XmrhYYxLCxyhx6J7070Pr8.jpg as the background and show a spin button. Add this https://cdn.freesound.org/previews/752/752225_15867640-lq.mp3 sound. Whichever number the wheel lands on is the multiplier.'
+  proxiedAssets: {
+    images: [{ type: String, default: '' }], // Array of strings for image URLs
+    audio: [{ type: String, default: '' }],  // Array of strings for audio URLs
+    theme: { type: Schema.Types.Mixed, default: {} }, // Object for theme data
+    background: { type: Schema.Types.Mixed, default: {} } // Object for background data
   },
   gameCode: { type: String, default: '' },
   battles: { type: Number, default: 0 },

@@ -1,37 +1,101 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+// Custom.jsx
+import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
-import progress from '../LottieAnimations/progress.json';
 import PlayerModal from '../modal/PlayerModal';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import AiPanel from '../../components/AiPanel';
-import { faDice, faCoins, faRocket, faGem, faSpinner, faTrophy, faRedo, faBomb, faStar, faCogs, faExchangeAlt } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  Button,
+  faDice,
+  faCoins,
+  faChevronDown,
+  faRocket,
+  faHome,
+  faSpinner,
+  faGem,
+  faTrophy,
+  faRedo,
+  faBomb,
+  faStar,
+  faCogs,
+  faExchangeAlt,
+  faInfoCircle,
+  faChevronUp,
+  faArrowUp,
+  faArrowDown,
+  faVolumeUp,
+  faVolumeMute,
+  faCog,
+  faExclamationTriangle,
+  faCheck,
+  faTimes,
+  faPlay,
+  faHistory,
+  faChartLine,
+  faWallet,
+  faShieldAlt,
+  faHeart,
+  faSkull,
+  faClock,
+  faBolt,
+} from '@fortawesome/free-solid-svg-icons';
+import {
   Paper,
-  FormControlLabel,
-  Checkbox,
-  Dialog,
-  TextField,
+  Button,
+  Tooltip,
   CircularProgress,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
+  TextField,
+  useMediaQuery,
   Typography,
   Box,
-  useMediaQuery,
-  Slider
+  Slider,
+  Avatar,
+  Chip,
+  Modal,
+  Card,
+  Fade,
+  Dialog,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  DialogTitle,
+  Grid,
+  Divider,
+  Collapse,
+  IconButton,
+  Container,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  Badge,
+  Snackbar,
+  Alert,
+  Zoom,
+  Grow,
+  CardContent,
+  CardActions,
+  TableContainer,
+  Checkbox,
+  FormControlLabel,
 } from '@mui/material';
+import styled from 'styled-components';
+import SendIcon from '@mui/icons-material/Send';
+import SaveIcon from '@mui/icons-material/Save';
+import LockIcon from '@mui/icons-material/Lock';
+import { green, yellow, blue, grey } from '@mui/material/colors';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import ChatIcon from '@mui/icons-material/Chat';
+import * as Babel from '@babel/standalone';
+import ImageResultModal from '../modal/ImageResultModal';
+import { convertToCurrency } from '../../util/conversion';
+import { motion, AnimatePresence, useAnimation } from 'framer-motion';
 import {
   validateIsAuthenticated,
   validateBetAmount,
   validateBankroll,
 } from '../modal/betValidations';
-import Lottie from 'react-lottie';
-import ImageResultModal from '../modal/ImageResultModal';
-import { convertToCurrency } from '../../util/conversion';
-import * as Babel from '@babel/standalone';
-import Matter from 'matter-js'; // Add Matter.js import
 
 function Custom(props) {
   const dispatch = useDispatch();
@@ -85,6 +149,7 @@ function Custom(props) {
     selectedCreator,
     betting,
     result,
+    onResultChange, // New callback prop
   } = props;
 
   // Local state
@@ -101,17 +166,15 @@ function Custom(props) {
   const [gameResult, setGameResult] = useState(null);
   const [GameComponent, setGameComponent] = useState(null);
   const [componentError, setComponentError] = useState(null);
-  const [proxiedAssets, setProxiedAssets] = useState({ images: [], audio: [] });
+  const [proxiedAssets, setProxiedAssets] = useState({ images: [], audio: [], theme: {}, background: {} });
   const [isGameActive, setIsGameActive] = useState(false);
-  // Confirm dialog state
   const [openConfirmBet, setOpenConfirmBet] = useState(false);
   const [confirmBetMessage, setConfirmBetMessage] = useState('');
   const [confirmBetCallback, setConfirmBetCallback] = useState(null);
-  const [skipConfirm, setSkipConfirm] = useState(
-    localStorage.getItem('hideConfirmModal') === 'true',
-  );
+  const [skipConfirm, setSkipConfirm] = useState(localStorage.getItem('hideConfirmModal') === 'true');
+  const [Physics, setPhysics] = useState(null);
+  const [isPhysicsLoading, setIsPhysicsLoading] = useState(true);
   const bankrollRef = useRef(bankroll);
-
   const isMobile = useMediaQuery('(max-width: 768px)');
   const isComponentMountedRef = useRef(false);
   const gameContainerRef = useRef(null);
@@ -120,27 +183,89 @@ function Custom(props) {
     bankrollRef.current = bankroll;
   }, [bankroll]);
 
-  // Add event handler for keyboard controls
-  const handleKeyDown = useCallback((event) => {
-    // Prevent default scrolling for specific keys used in games
-    if (['Space', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' '].includes(event.key) || 
-        event.keyCode === 32 || // Space
-        event.keyCode === 37 || // Left
-        event.keyCode === 38 || // Up 
-        event.keyCode === 39 || // Right
-        event.keyCode === 40) { // Down
-      if (isGameActive) {
-        event.preventDefault();
+  const loadPhysics = async () => {
+    try {
+      if (window.Matter && window.Matter.World && typeof window.Matter.World === 'function') {
+        console.log('[Custom] Using cached Matter.js');
+        return window.Matter;
+      }
+      console.log('[Custom] Attempting to load Matter.js dynamically');
+      const matterModule = await import('matter-js');
+      if (!matterModule || !matterModule.World || !matterModule.Engine) {
+        throw new Error('Matter.js module loaded but missing required properties');
+      }
+      console.log('[Custom] Successfully loaded Matter.js:', matterModule);
+      window.Matter = matterModule;
+      return matterModule;
+    } catch (error) {
+      console.error('[Custom] Local import failed:', error.message);
+      console.log('[Custom] Falling back to CDN');
+      try {
+        const matterModule = await new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = 'https://cdn.jsdelivr.net/npm/matter-js@0.19.0/build/matter.min.js';
+          script.onload = () => {
+            if (window.Matter && window.Matter.World && window.Matter.Engine) {
+              console.log('[Custom] Loaded via CDN');
+              resolve(window.Matter);
+            } else {
+              reject(new Error('Matter.js CDN loaded but missing required properties'));
+            }
+          };
+          script.onerror = () => reject(new Error('Failed to load Matter.js from CDN'));
+          document.head.appendChild(script);
+        });
+        return matterModule;
+      } catch (cdnError) {
+        console.error('[Custom] CDN fallback failed:', cdnError.message);
+        throw new Error(`Failed to load Matter.js: ${cdnError.message}`);
       }
     }
-  }, [isGameActive]);
+  };
 
-  // Set up key event listeners
   useEffect(() => {
-    // Add event listener when the component mounts
+    const loadPhysicsOnMount = async () => {
+      setIsPhysicsLoading(true);
+      try {
+        console.log('[Custom] Loading Matter.js on page load');
+        const matterModule = await loadPhysics();
+        if (!matterModule || !matterModule.World || !matterModule.Engine) {
+          throw new Error('Matter.js loaded but missing required properties');
+        }
+        console.log('[Custom] Matter.js loaded successfully:', matterModule);
+        setPhysics(matterModule);
+      } catch (error) {
+        console.error('[Custom] Failed to load Matter.js:', error.message, error.stack);
+        setComponentError(`Failed to load physics engine: ${error.message}`);
+      } finally {
+        setIsPhysicsLoading(false);
+      }
+    };
+
+    loadPhysicsOnMount();
+  }, []);
+
+  // Add event handler for keyboard controls
+  const handleKeyDown = useCallback(
+    (event) => {
+      if (
+        ['Space', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' '].includes(event.key) ||
+        event.keyCode === 32 ||
+        event.keyCode === 37 ||
+        event.keyCode === 38 ||
+        event.keyCode === 39 ||
+        event.keyCode === 40
+      ) {
+        if (isGameActive) {
+          event.preventDefault();
+        }
+      }
+    },
+    [isGameActive]
+  );
+
+  useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
-    
-    // Clean up the event listener when the component unmounts
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
@@ -166,14 +291,14 @@ function Custom(props) {
       });
       setHostPr(data.host_pr);
     },
-    [playSound, user_id, isWatching, onChangeState],
+    [playSound, user_id, isWatching, onChangeState]
   );
 
   const handleSocketData2 = useCallback(
     (data) => {
       onChangeState({ bankroll: data.bankroll });
     },
-    [onChangeState],
+    [onChangeState]
   );
 
   const removeSocketListeners = useCallback(() => {
@@ -190,9 +315,7 @@ function Custom(props) {
         bet_amount: parseFloat(bet_amount),
         result: result || null,
         multiplier:
-          result === 'win' && multiplier !== undefined
-            ? parseFloat(multiplier)
-            : undefined,
+          result === 'win' && multiplier !== undefined ? parseFloat(multiplier) : undefined,
       });
 
       const amount = resultData.amount || 0;
@@ -212,18 +335,24 @@ function Custom(props) {
         playSound(soundToPlay);
       }
 
+      const formattedResult = (
+        <span style={{ color: amount >= 0 ? '#00ff3a' : '#ff0000', fontSize: '1.2rem', // Updated font size to match QuickShoot
+          fontWeight: 'bold',
+          textShadow: '0 0 10px rgba(0,0,0,0.5)', }}>
+          {sign} {currencyElement}
+        </span>
+      );
+
+      // Update result via callback
+      onResultChange(formattedResult, false);
       onChangeState({
-        result: (
-          <span style={{ color: amount >= 0 ? '#00ff3a' : '#D32F2F' }}>
-            {sign} {currencyElement}
-          </span>
-        ),
+        // Remove result from onChangeState
         gameResult: resultData.betResult,
       });
 
       setGameStartedCount((prev) => prev + 1);
     },
-    [bet_amount, join, onChangeState, solPrice, playSound]
+    [bet_amount, join, onChangeState, solPrice, playSound, onResultChange]
   );
 
   const onBtnBetClick = async (result, multiplier) => {
@@ -251,132 +380,339 @@ function Custom(props) {
     }
   };
 
-  const logEvent = useCallback((eventType, data) => {
-    // console.log(`Game Event: ${eventType}`, data);
-  
-    if (playSound) {
-      playSound('select');
-    }
-  
-    if (eventType === 'gameStarted') {
-      setGameStartedCount((prev) => prev + 1);
-      setIsGameActive(true);
-      // console.log('Game started, resetting interaction state. Count:', gameStartedCount + 1);
-    } else if (eventType === 'gameEnded') {
-      setIsGameActive(false);
-      const { result, multiplier } = data;
-      const validResults = ['win', 'loss', 'other'];
-      if (validResults.includes(result) && gameStartedCount > 0) {
-        // console.log('Processing game result:', result, 'Multiplier:', multiplier);
-        onBtnBetClick(result, result === 'win' ? multiplier : undefined);
+  const logEvent = useCallback(
+    (eventType, data) => {
+      console.log(`Game Event: ${eventType}`, data);
+
+      if (playSound) {
+        playSound('select');
       }
-    }
-  }, [gameStartedCount, onBtnBetClick, playSound]);
+
+      if (eventType === 'gameStarted') {
+        setGameStartedCount((prev) => prev + 1);
+        setIsGameActive(true);
+        console.log('Game started, resetting interaction state. Count:', gameStartedCount + 1);
+        onResultChange('', true); // Set betting state
+      } else if (eventType === 'gameEnded') {
+        setIsGameActive(false);
+        const { result, multiplier } = data;
+        const validResults = ['win', 'loss', 'other'];
+        if (validResults.includes(result) && gameStartedCount > 0) {
+          console.log('Processing game result:', result, 'Multiplier:', multiplier);
+          onBtnBetClick(result, result === 'win' ? multiplier : undefined);
+        }
+      }
+    },
+    [gameStartedCount, onBtnBetClick, playSound, onResultChange]
+  );
 
   // Load and transpile the gameCode
   useEffect(() => {
-    if (roomInfo.gameCode) {
-      try {
-        setComponentError(null);
-  
-        const cleanedCode = roomInfo.gameCode
-          .replace(/import .*? from .+?;/g, '')
-          .replace('export default App;', '')
-          .trim();
-  
-        const transpiledCode = Babel.transform(cleanedCode, {
-          presets: ['react'],
-          filename: 'app.jsx',
-        }).code;
-  
-        const componentFactory = new Function(
-          'React',
-          'useState',
-          'useEffect',
-          'useRef',
-          'useCallback',
-          'Box',
-          'Typography',
-          'TextField',
-          'Button',
-          'Slider',
-          'CircularProgress',
-          'logEvent',
-          'FontAwesomeIcon',
-          'faDice',
-          'faCoins',
-          'faRocket',
-          'faGem',
-          'faSpinner',
-          'faTrophy',
-          'faRedo',
-          'faCogs',
-          'faExchangeAlt',
-          'faBomb',
-          'faStar',
-          'Matter',
-          `${transpiledCode}; return App;`
-        );
-  
-        const GeneratedApp = componentFactory(
-          React,
-          useState,
-          useEffect,
-          useRef,
-          useCallback,
-          Box,
-          Typography,
-          TextField,
-          Button,
-          Slider,
-          CircularProgress,
-          logEvent,
-          FontAwesomeIcon,
-          faDice,
-          faCoins,
-          faRocket,
-          faSpinner,
-          faGem,
-          faTrophy,
-          faRedo,
-          faCogs,
-          faExchangeAlt,
-          faBomb,
-          faStar,
-          Matter
-        );
-  
-        if (typeof GeneratedApp !== 'function') {
-          throw new Error('Generated code did not return a valid React component');
-        }
-  
-        const WrappedGameComponent = (props) => {
-          try {
-            return <GeneratedApp {...props} />;
-          } catch (error) {
-            console.error('GameComponent runtime error:', error);
-            return <div>Error rendering game: {error.message}</div>;
+    if (roomInfo.gameCode && Physics && !isPhysicsLoading) {
+      let isMounted = true;
+      setComponentError(null);
+      console.log('[Custom] Raw gameCode:', roomInfo.gameCode);
+
+      const processGameCode = async () => {
+        try {
+          if (!Physics || !Physics.World) {
+            throw new Error('Matter.js not loaded or missing World property');
           }
-        };
-  
-        setGameComponent(() => WrappedGameComponent);
-      } catch (error) {
-        console.error('Error creating component:', error);
-        setComponentError(`Failed to create component: ${error.message}`);
-        setGameComponent(null);
-      }
+
+          let cleanedCode = roomInfo.gameCode
+            .replace(/import\s+[\s\S]*?from\s+['"][^'"]+['"]\s*;?/g, '')
+            .replace(/require\s*\(\s*['"][^'"]+['"]\s*\)\s*;?/g, '')
+            .replace(/export\s+default\s+[\w\s]*?\s*;?/g, '')
+            .replace(/export\s+[\w\s]*?\s*;?/g, '')
+            .replace(/import\s*\(\s*['"][^'"]+['"]\s*\)\s*;?/g, '')
+            .trim();
+          console.log('[Custom] Cleaned Code:', cleanedCode);
+
+          const babelHelpers = `
+            function _defineProperty(obj, key, value) {
+              if (key in obj) {
+                Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });
+              } else {
+                obj[key] = value;
+              }
+              return obj;
+            }
+            function _slicedToArray(arr, i) {
+              return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest();
+            }
+            function _arrayWithHoles(arr) {
+              if (Array.isArray(arr)) return arr;
+            }
+            function _iterableToArrayLimit(arr, i) {
+              var _i = arr == null ? null : typeof Symbol !== "undefined" && arr[Symbol.iterator] || arr["@@iterator"];
+              if (_i == null) return;
+              var _arr = [];
+              var _n = true;
+              var _d = false;
+              var _s, _e;
+              try {
+                for (_i = _i.call(arr); !(_n = (_s = _i.next()).done); _n = true) {
+                  _arr.push(_s.value);
+                  if (i && _arr.length === i) break;
+                }
+              } catch (err) {
+                _d = true;
+                _e = err;
+              } finally {
+                try {
+                  if (!_n && _i["return"] != null) _i["return"]();
+                } finally {
+                  if (_d) throw _e;
+                }
+              }
+              return _arr;
+            }
+            function _unsupportedIterableToArray(o, minLen) {
+              if (!o) return;
+              if (typeof o === "string") return _arrayLikeToArray(o, minLen);
+              var n = Object.prototype.toString.call(o).slice(8, -1);
+              if (n === "Object" && o.constructor) n = o.constructor.name;
+              if (n === "Map" || n === "Set") return Array.from(o);
+              if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
+            }
+            function _arrayLikeToArray(arr, len) {
+              if (len == null || len > arr.length) len = arr.length;
+              for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];
+              return arr2;
+            }
+            function _nonIterableRest() {
+              throw new TypeError("Invalid attempt to destructure non-iterable instance.\\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+            }
+            function _objectSpread(target) {
+              for (var i = 1; i < arguments.length; i++) {
+                var source = arguments[i] != null ? arguments[i] : {};
+                var ownKeys = Object.keys(source);
+                if (typeof Object.getOwnPropertySymbols === 'function') {
+                  ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) {
+                    return Object.getOwnPropertyDescriptor(source, sym).enumerable;
+                  }));
+                }
+                ownKeys.forEach(function (key) {
+                  _defineProperty(target, key, source[key]);
+                });
+              }
+              return target;
+            }
+          `;
+
+          let transpiledCode;
+          try {
+            transpiledCode = Babel.transform(cleanedCode, {
+              presets: ['react', ['env', { modules: false, targets: { browsers: ['last 2 versions'] } }]],
+              filename: 'app.jsx',
+            }).code;
+            transpiledCode = `${babelHelpers}\n${transpiledCode}`;
+            console.log('[Custom] Transpiled Code:', transpiledCode);
+          } catch (babelError) {
+            console.error('[Custom] Babel Transpile Error:', babelError);
+            throw new Error(`Babel transpilation failed: ${babelError.message}`);
+          }
+
+          const componentFactory = new Function(
+            'React',
+            'useState',
+            'useEffect',
+            'useRef',
+            'useMemo',
+            'useCallback',
+            'useAnimation',
+            'Grid',
+            'Box',
+            'Typography',
+            'TextField',
+            'Button',
+            'Slider',
+            'Dialog',
+            'Divider',
+            'Paper',
+            'Chip',
+            'Collapse',
+            'DialogContent',
+            'DialogTitle',
+            'CircularProgress',
+            'logEvent',
+            'FontAwesomeIcon',
+            'TableContainer',
+            'Table',
+            'TableBody',
+            'TableRow',
+            'TableCell',
+            'TableHead',
+            'faDice',
+            'faCoins',
+            'faPlay',
+            'faRocket',
+            'faChevronDown',
+            'faGem',
+            'faSpinner',
+            'faCogs',
+            'faExchangeAlt',
+            'faTrophy',
+            'faArrowUp',
+            'faArrowDown',
+            'faRedo',
+            'faBomb',
+            'faStar',
+            'faHome',
+            'Physics',
+            'Card',
+            'CardContent',
+            'CardActions',
+            'Tooltip',
+            'motion',
+            'styled',
+            'AnimatePresence',
+            'IconButton',
+            'Container',
+            'Badge',
+            'Snackbar',
+            'Alert',
+            'DialogContentText',
+            'DialogActions',
+            'Zoom',
+            'Grow',
+            'faInfoCircle',
+            'faChevronUp',
+            'faVolumeUp',
+            'faVolumeMute',
+            'faCog',
+            'faExclamationTriangle',
+            'faCheck',
+            'faTimes',
+            'faHistory',
+            'faChartLine',
+            'faWallet',
+            'faShieldAlt',
+            'faHeart',
+            'faSkull',
+            'faClock',
+            'faBolt',
+            'proxiedAssets',
+            `
+              return function App(props) {
+                ${transpiledCode}
+                return App(props);
+              };
+            `
+          );
+
+          const GeneratedApp = componentFactory(
+            React,
+            useState,
+            useEffect,
+            useRef,
+            useMemo,
+            useCallback,
+            useAnimation,
+            Grid,
+            Box,
+            Typography,
+            TextField,
+            Button,
+            Slider,
+            Dialog,
+            Divider,
+            Paper,
+            Chip,
+            Collapse,
+            DialogContent,
+            DialogTitle,
+            CircularProgress,
+            logEvent,
+            FontAwesomeIcon,
+            TableContainer,
+            Table,
+            TableBody,
+            TableRow,
+            TableCell,
+            TableHead,
+            faDice,
+            faCoins,
+            faPlay,
+            faRocket,
+            faChevronDown,
+            faGem,
+            faSpinner,
+            faCogs,
+            faExchangeAlt,
+            faTrophy,
+            faArrowUp,
+            faArrowDown,
+            faRedo,
+            faBomb,
+            faStar,
+            faHome,
+            Physics,
+            Card,
+            CardContent,
+            CardActions,
+            Tooltip,
+            motion,
+            styled,
+            AnimatePresence,
+            IconButton,
+            Container,
+            Badge,
+            Snackbar,
+            Alert,
+            DialogContentText,
+            DialogActions,
+            Zoom,
+            Grow,
+            faInfoCircle,
+            faChevronUp,
+            faVolumeUp,
+            faVolumeMute,
+            faCog,
+            faExclamationTriangle,
+            faCheck,
+            faTimes,
+            faHistory,
+            faChartLine,
+            faWallet,
+            faShieldAlt,
+            faHeart,
+            faSkull,
+            faClock,
+            faBolt,
+            proxiedAssets
+          );
+
+          if (typeof GeneratedApp === 'function') {
+            if (isMounted) {
+              setGameComponent(() => (props) => <GeneratedApp {...props} Physics={Physics} proxiedAssets={proxiedAssets} />);
+            }
+          } else {
+            throw new Error('Generated code did not return a valid React component');
+          }
+        } catch (error) {
+          console.error('[Custom] Error creating component:', error);
+          if (isMounted) {
+            setComponentError(`Failed to create component: ${error.message}`);
+            setGameComponent(null);
+          }
+        }
+      };
+
+      processGameCode();
+      return () => {
+        isMounted = false;
+      };
+    } else if (roomInfo.gameCode && isPhysicsLoading) {
+      console.log('[Custom] Waiting for Matter.js to load before processing game code');
     } else {
       setGameComponent(null);
       setComponentError(null);
     }
-  }, [roomInfo.gameCode]);
-
+  }, [roomInfo.gameCode, Physics, isPhysicsLoading, proxiedAssets]);
 
   useEffect(() => {
     isComponentMountedRef.current = true;
-    const intervalDuration = 3000;
-  
-
     return () => {
       isComponentMountedRef.current = false;
       removeSocketListeners();
@@ -513,42 +849,6 @@ function Custom(props) {
         {status === 'open' ? (
           <>
             <div className="game-info-panel">
-              <div
-                className={`rps-radio-host ${is_betting || betting ? 'blueish-hue' : ''}`}
-                style={{
-                  top: '150px',
-                  right: isMobile ? 'unset' : '10px',
-                  position: 'absolute',
-                  width: '12.5px',
-                  height: '12.5px',
-                  borderRadius: '50%',
-                }}
-              >
-                <span
-                  className="result"
-                  style={{
-                    display: 'flex',
-                    top: isMobile ? '15px' : '-5px',
-                    width: isMobile ? '100%' : '130px',
-                    right: isMobile ? 'unset' : '0',
-                  }}
-                >
-                  {result !== '' ? (
-                    <>{result}</>
-                  ) : (
-                    <div className="lottie-progress" style={{ position: 'absolute', right: '30px', top: '0px' }}>
-                      <Lottie
-                        options={{
-                          loop: isLowGraphics ? false : true,
-                          autoplay: isLowGraphics ? false : true,
-                          animationData: progress,
-                        }}
-                      />
-                    </div>
-                  )}
-                </span>
-              </div>
-
               <Paper
                 square
                 variant="inherit"
@@ -559,10 +859,10 @@ function Custom(props) {
                 }}
                 className="join-game-panel"
               >
-                <Box 
+                <Box
                   ref={gameContainerRef}
                   sx={{ width: '100%', overflow: 'hidden', position: 'relative' }}
-                  tabIndex="0" // Make the container focusable
+                  tabIndex="0"
                 >
                   {componentError ? (
                     <Box
@@ -575,22 +875,24 @@ function Custom(props) {
                         color: 'red',
                       }}
                     >
-                      <Typography variant="h6" sx={{ mb: 2 }}>Error</Typography>
+                      <Typography variant="h6" sx={{ mb: 2 }}>
+                        Error
+                      </Typography>
                       <Typography>{componentError}</Typography>
                     </Box>
                   ) : GameComponent ? (
                     <Box
-                    sx={{
-                      width: '100%',
-                      overflow: 'auto',  // Changed from 'auto' to prevent scrollbars
-                      backgroundColor: '#080808',
-                      '& canvas': {  // Target any canvas elements within the game
-                        maxWidth: '100%',
-                        objectFit: 'contain'  // Maintains aspect ratio
-                      }
-                    }}
+                      sx={{
+                        width: '100%',
+                        overflow: 'auto',
+                        backgroundColor: '#080808',
+                        '& canvas': {
+                          maxWidth: '100%',
+                          objectFit: 'contain',
+                        },
+                      }}
                     >
-                      <GameComponent proxiedAssets={proxiedAssets} logEvent={logEvent} />
+                      <GameComponent proxiedAssets={proxiedAssets} logEvent={logEvent} Physics={Physics} />
                     </Box>
                   ) : (
                     <Box

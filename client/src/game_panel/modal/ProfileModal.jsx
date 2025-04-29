@@ -16,7 +16,7 @@ import {
   ThemeProvider,
   useMediaQuery,
 } from '@mui/material';
-import { FileCopy as FileCopyIcon, Info as InfoIcon } from '@mui/icons-material';
+import { FileCopy as FileCopyIcon, Info as InfoIcon, Close as CloseIcon } from '@mui/icons-material';
 import CircleIcon from '@mui/icons-material/Circle';
 import LinkIcon from '@mui/icons-material/Link';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -435,8 +435,21 @@ function ProfileModal({ modalIsOpen, closeModal }) {
                   <FontAwesomeIcon icon={faUser} style={{ marginRight: 8 }} />
                   Your Profile
                 </Typography>
-                <Button color="error" onClick={closeModal}>
-                  ×
+                <Button
+                  onClick={closeModal}
+                  sx={{
+                    position: 'absolute',
+                    top: 10,
+                    right: 10,
+                    minWidth: 'auto',
+                    p: 1,
+                    bgcolor: 'rgba(0,0,0,0.5)',
+                    color: 'white',
+                    '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' },
+                    borderRadius: '50%',
+                  }}
+                >
+                  <CloseIcon />
                 </Button>
               </Box>
               {/* Tabs */}

@@ -15,6 +15,8 @@ const GameSettingsPanel = ({
   setSelectedStrategy,
   gameCode,
   setGameCode,
+  proxiedAssets,
+  setProxiedAssets,
   gameMode,
   setGameMode,
   initializeGameType,
@@ -79,12 +81,15 @@ const GameSettingsPanel = ({
         setSelectedStrategy={setSelectedStrategy}
         gameCode={gameCode}
         setGameCode={setGameCode}
+        proxiedAssets={proxiedAssets}
+        setProxiedAssets={setProxiedAssets}
         settings_panel_opened={settingsPanelOpened}
         ai_mode={ai_mode}
         creator_prompt={creator_prompt}
         prompt={prompt}
         onChangeState={onChangeState}
         user_id={user._id}
+        user_credits={ user.credits}
         user_balance={user.balance}
         rank={rank}
         settingsRef={settingsRef}
@@ -98,7 +103,6 @@ const GameSettingsPanel = ({
         onClick={handleSettingsIconClick}
         style={{
           position: "relative",
-          border: gameMode === "Custom" ? "3px solid #ffd000" : `none`,
           borderRadius: "4px",
           padding: "10px 15px",
           display: "flex",
@@ -116,7 +120,7 @@ const GameSettingsPanel = ({
             flexGrow: 1,
           }}
         >
-          {gameMode === "Custom" ? "Custom" : "Generate"}
+          {gameMode === "Custom" ? "Generate" : "Custom"}
         </span>
 
         <AutoAwesomeIcon

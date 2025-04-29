@@ -23,7 +23,7 @@ const RoomTokenDetails = ({ roomInfo, hosts, solPrice, isDarkMode, handleOpenPla
                 background: 'rgba(0, 0, 0, 0.2)',
                 backdropFilter: 'blur(10px)',
                 WebkitBackdropFilter: 'blur(10px)',
-                borderRadius: 1,
+                borderRadius: '16px',
                 border: '1px solid rgba(255, 255, 255, 0.2)',
                 '@supports not (backdrop-filter: blur(10px))': {
                     background: 'rgba(0, 0, 0, 0.4)',
@@ -96,7 +96,7 @@ const RoomTokenDetails = ({ roomInfo, hosts, solPrice, isDarkMode, handleOpenPla
 
             <Box className="bonding-curve" style={{ marginBottom: "30px" }}>
                 <h4 className='roll-tag label' style={{ display: 'block', fontWeight: 'bold', marginBottom: '8px' }}>
-                    HEALTH: {(100 - progressPercentage).toFixed(0)}% {/* Inverted percentage */}
+                    Health: {(100 - progressPercentage).toFixed(0)}% {/* Inverted percentage */}
                 </h4>
                 <Box
                     className='progress-bar'

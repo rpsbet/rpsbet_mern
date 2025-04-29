@@ -26,10 +26,12 @@ import {
   Box,
   Button,
   Card,
-  Modal,
+  Chip,
   Link,
 } from '@mui/material';
-import FilterListIcon from '@mui/icons-material/FilterList';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import SchoolIcon from '@mui/icons-material/School';
+import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import Moment from 'moment';
 import {
   faHeart,
@@ -90,6 +92,10 @@ function OpenGamesTable(props) {
   const endIndex = startIndex + pageSize;
   const displayedRooms = roomList.slice(startIndex, endIndex);
   const prevRoomListRef = useRef(roomList);
+
+  useEffect(() => {
+    dispatch(getRoomList());
+  }, [dispatch]);
 
   useEffect(() => {
     if (!isEqual(prevRoomListRef.current, roomList)) {
@@ -213,6 +219,7 @@ function OpenGamesTable(props) {
   const recent = recentlyClosed ? updateFromNow(recentlyClosed) : [];
 
   return (
+
     <ThemeProvider theme={theme}>
       {showPlayerModal && (
         <PlayerModal
@@ -222,46 +229,116 @@ function OpenGamesTable(props) {
         />
       )}
 
-      <div
-        style={{
-          marginLeft: '10px',
+      <Box
+        sx={{
+          ml: 3,
+          mr: 3,
           display: 'flex',
-          justifyContent: 'space-between',
+          justifyContent: 'flex-start',
           marginBottom: '10px',
+          gap: '8px',
+          // Enable horizontal scrolling on mobile
+          overflowX: { xs: 'auto', sm: 'visible' }, // Scroll on xs, no scroll on sm+
+          flexWrap: { xs: 'nowrap', sm: 'wrap' }, // No wrap on xs, wrap on sm+
+          whiteSpace: { xs: 'nowrap', sm: 'normal' }, // Prevent text wrapping on xs
+          WebkitOverflowScrolling: 'touch', // Smooth scrolling on iOS
+          scrollbarWidth: { xs: 'thin', sm: 'none' }, // Optional: Thin scrollbar on Firefox
+          '&::-webkit-scrollbar': {
+            height: { xs: '8px', sm: '0px' }, // Optional: Custom scrollbar height
+          },
+          '&::-webkit-scrollbar-thumb': {
+            backgroundColor: { xs: 'rgba(0, 0, 0, 0.2)', sm: 'transparent' }, // Optional: Scrollbar color
+            borderRadius: '4px',
+          },
         }}
       >
-        <div
-          className="filter-container"
-          style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
-          onClick={() =>
-            handleFilterChange(
-              filter === 'BEAT THE HOUSE'
-                ? 'RECENTLY GRADUATED'
-                : filter === 'RECENTLY GRADUATED'
-                  ? 'RECENTLY WD / DP'
-                  : 'BEAT THE HOUSE'
-            )
-          }
-        >
-          <FilterListIcon style={{ marginRight: '5px' }} />
-          <span>{filter}</span>
-        </div>
-      </div>
+        <Chip
+          icon={<TrendingUpIcon sx={{ p: 0.5 }} />}
+          label="BEAT THE HOUSE"
+          onClick={() => handleFilterChange('BEAT THE HOUSE')}
+          color={filter === 'BEAT THE HOUSE' ? 'error' : 'default'}
+          variant={filter === 'BEAT THE HOUSE' ? 'filled' : 'outlined'}
+          clickable
+        />
+        <Chip
+          icon={<SchoolIcon sx={{ p: 0.5 }} />}
+          label="RECENTLY GRADUATED"
+          onClick={() => handleFilterChange('RECENTLY GRADUATED')}
+          color={filter === 'RECENTLY GRADUATED' ? 'error' : 'default'}
+          variant={filter === 'RECENTLY GRADUATED' ? 'filled' : 'outlined'}
+          clickable
+        />
+        <Chip
+          icon={<ExitToAppIcon sx={{ p: 0.5 }} />}
+          label="RECENTLY WD / DP"
+          onClick={() => handleFilterChange('RECENTLY WD / DP')}
+          color={filter === 'RECENTLY WD / DP' ? 'error' : 'default'}
+          variant={filter === 'RECENTLY WD / DP' ? 'filled' : 'outlined'}
+          clickable
+        />
+      </Box>
 
       {filter === 'RECENTLY WD / DP' ? (
         <Grid container spacing={2} sx={{ p: 2 }}>
           {loadingTransactions ? (
             Array.from({ length: 4 }).map((_, index) => (
               <Grid item xs={6} sm={4} md={3} lg={3} xl={3} key={index}>
-                <Box
-                  className="carousel-content table-row slide-in"
-                  sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}
+                <Card
+                  sx={{
+                    p: 3,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    backgroundColor: effectiveIsDarkMode ? '#121212' : 'rgba(0, 0, 0, 0.05)',
+                    borderRadius: '16px',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    height: '100%',
+                  }}
                 >
-                  <Skeleton variant="rectangular" width="100%" height={200} />
-                  <Skeleton width="60%" />
-                  <Skeleton width="40%" />
-                  <Skeleton width="80%" />
-                </Box>
+                  {/* Avatar */}
+                  <Skeleton
+                    variant="circular"
+                    width={48}
+                    height={48}
+                    sx={{
+                      mb: 2,
+                      backgroundColor: effectiveIsDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                    }}
+                  />
+
+                  {/* Deposit/Withdraw amount */}
+                  <Skeleton
+                    variant="text"
+                    width="80%"
+                    height={24}
+                    sx={{
+                      mb: 1,
+                      backgroundColor: effectiveIsDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                    }}
+                  />
+
+                  {/* Time */}
+                  <Skeleton
+                    variant="text"
+                    width="40%"
+                    height={16}
+                    sx={{
+                      mb: 2,
+                      backgroundColor: effectiveIsDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                    }}
+                  />
+
+                  {/* View on Solscan button */}
+                  <Skeleton
+                    variant="rounded"
+                    width="80%"
+                    height={36}
+                    sx={{
+                      borderRadius: '8px',
+                      backgroundColor: effectiveIsDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                    }}
+                  />
+                </Card>
               </Grid>
             ))
           ) : recentTransactions.length === 0 ? (
@@ -304,7 +381,7 @@ function OpenGamesTable(props) {
                     },
                   }}
                 >
-                  <a style={{cursor: 'pointer',}} onClick={(e) => {
+                  <a style={{ cursor: 'pointer', }} onClick={(e) => {
                     e.stopPropagation();
                     handleOpenPlayerModal(transaction.user?._id);
                   }}>
@@ -386,56 +463,98 @@ function OpenGamesTable(props) {
       ) : isLiveGames ? (
         <div className="table main-game-table open-games">
           {displayedRooms.length === 0 || effectiveLoading ? (
-            <Grid container className="grid-container" spacing={1} style={{ padding: '20px' }}>
-              {Array.from({ length: 9 }).map((_, index) => (
-                <Grid
-                  item
-                  xs={12}
-                  sm={6}
-                  md={4}
-                  key={index}
-                  sx={{
-                    flexBasis: { xs: '100%' },
-                    maxWidth: { xs: '100%' },
-                    flexGrow: 1,
-                  }}
-                >
-                  <Card
+              <Grid container className="grid-container" spacing={1} style={{ padding: '20px' }}>
+                {Array.from({ length: 9 }).map((_, index) => (
+                  <Grid
+                    item
+                    xs={12}
+                    sm={6}
+                    md={4}
+                    key={index}
                     sx={{
-                      width: '100%',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      padding: '16px',
-                      borderRadius: '8px',
-                      backgroundColor: effectiveIsDarkMode ? '#080808' : '#FFFFFF',
-                      boxShadow: effectiveIsDarkMode
-                        ? '0 2px 8px rgba(0, 0, 0, 0.3)'
-                        : '0 2px 8px rgba(0, 0, 0, 0.1)',
+                      flexBasis: { xs: '100%' },
+                      maxWidth: { xs: '100%' },
+                      flexGrow: 1,
                     }}
                   >
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                      <Skeleton variant="rectangular" width={40} height={40} sx={{ borderRadius: '4px', mr: 2 }} />
-                      <Box sx={{ flexGrow: 1 }}>
-                        <Skeleton variant="text" width="60%" />
-                        <Skeleton variant="text" width="40%" />
+                    <Card
+                      sx={{
+                        width: '100%',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        padding: '16px',
+                        borderRadius: '16px',
+                        backgroundColor: effectiveIsDarkMode ? '#121212' : '#FFFFFF',
+                        boxShadow: effectiveIsDarkMode
+                          ? '0 2px 8px rgba(0, 0, 0, 0.5)'
+                          : '0 2px 8px rgba(0, 0, 0, 0.1)',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      {/* Header section with image and title */}
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                        <Skeleton variant="rounded" width={48} height={48} sx={{ borderRadius: '8px', mr: 2 }} />
+                        <Box sx={{ flexGrow: 1 }}>
+                          <Skeleton variant="text" width="70%" height={24} sx={{ mb: 0.5 }} />
+                          <Skeleton variant="text" width="50%" height={16} />
+                        </Box>
+                        <Skeleton variant="rounded" width={40} height={40} sx={{ borderRadius: '8px' }} />
                       </Box>
-                      <Skeleton variant="circular" width={24} height={24} />
-                    </Box>
-                    <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
-                      <Skeleton variant="circular" width={32} height={32} sx={{ mr: 2 }} />
-                      <Skeleton variant="rectangular" width={24} height={24} sx={{ mx: 2 }} />
-                      <Skeleton variant="circular" width={32} height={32} sx={{ ml: 2 }} />
-                    </Box>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                      <Skeleton variant="text" width="30%" />
-                      <Skeleton variant="text" width="20%" />
-                      <Skeleton variant="text" width="20%" />
-                    </Box>
-                    <Skeleton variant="rectangular" width="100%" height={10} sx={{ borderRadius: '4px' }} />
-                  </Card>
-                </Grid>
-              ))}
-            </Grid>
+
+                      {/* Battle section with avatars and center icon */}
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, mt: 1 }}>
+                        <Box sx={{ display: 'flex' }}>
+                          <Skeleton variant="rounded" width={36} height={36} sx={{ borderRadius: '10px' }} />
+                          <Skeleton variant="rounded" width={36} height={36} sx={{ borderRadius: '10px', ml: -1 }} />
+                        </Box>
+                        <Skeleton variant="circular" width={40} height={40} />
+                        <Box sx={{ display: 'flex' }}>
+                          <Skeleton variant="rounded" width={36} height={36} sx={{ borderRadius: '10px', mr: -1 }} />
+                          <Skeleton variant="rounded" width={36} height={36} sx={{ borderRadius: '10px' }} />
+                        </Box>
+                      </Box>
+
+                      {/* Stats section */}
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                        <Skeleton
+                          variant="rounded"
+                          width="30%"
+                          height={60}
+                          sx={{ borderRadius: '12px' }}
+                        />
+                        <Skeleton
+                          variant="rounded"
+                          width="30%"
+                          height={60}
+                          sx={{ borderRadius: '12px' }}
+                        />
+                        <Skeleton
+                          variant="rounded"
+                          width="30%"
+                          height={60}
+                          sx={{ borderRadius: '12px' }}
+                        />
+                      </Box>
+
+                      {/* Health bar and likes section */}
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Box sx={{ width: '60%' }}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                            <Skeleton variant="text" width="20%" height={14} />
+                            <Skeleton variant="text" width="15%" height={14} />
+                          </Box>
+                          <Skeleton variant="rounded" width="100%" height={8} sx={{ borderRadius: '20px' }} />
+                        </Box>
+                        <Box sx={{ width: '35%', display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+                          <Skeleton variant="circular" width={24} height={24} />
+                          <Skeleton variant="circular" width={24} height={24} />
+                          <Skeleton variant="circular" width={24} height={24} />
+                        </Box>
+                      </Box>
+                    </Card>
+                  </Grid>
+                ))}
+              </Grid>
           ) : displayedRooms.length === 0 ? (
             <div className="dont-have-game-msg">
               <div>NO LIVE GAMES, GO TO 'BE THE HOUSE' TO CREATE ONE</div>
@@ -481,11 +600,7 @@ function OpenGamesTable(props) {
                             filter: 'drop-shadow(0 2px 5px rgba(0,0,0,0.3))',
                           }}
                         >
-                          <img
-                            src="/img/crown.webp"
-                            alt="Crown"
-                            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                          />
+
                         </Box>
                       </>
                     )}
@@ -505,12 +620,10 @@ function OpenGamesTable(props) {
                             borderRadius: '18px',
                             background: 'linear-gradient(45deg, #ff0000, #ff7300,rgb(255, 0, 93), #ff7300, #ff0000)',
                             backgroundSize: '300% 300%',
-                            animation: 'gradientBorder 6s ease infinite',
                             zIndex: 0,
                             boxShadow: '0 0 2px rgba(255, 115, 0, 0.7)',
                           },
                           '&:hover::before': {
-                            animation: 'gradientBorder 2s ease infinite',
                             boxShadow: '0 0 4px rgba(255, 115, 0, 0.9)',
                           },
                           '@keyframes gradientBorder': {
@@ -791,9 +904,9 @@ function OpenGamesTable(props) {
                               zIndex: 2,
                               position: 'relative',
                               left: `${row.hosts?.length > row.joiners?.length
-                                ? Math.max(-40, (50 - Math.max(0, 50 - (row.hosts?.length - row.joiners?.length) * 15)) * -1)
+                                ? Math.max(-40, (50 - Math.min(50, (row.hosts?.length - row.joiners?.length) * 10)) * -1)
                                 : row.joiners?.length > row.hosts?.length
-                                  ? Math.min(40, (Math.min(100, 50 + (row.joiners?.length - row.hosts?.length) * 15) - 50))
+                                  ? Math.min(40, Math.min(50, (row.joiners?.length - row.hosts?.length) * 10) - 50)
                                   : 0
                                 }%`,
                             }}
@@ -1055,7 +1168,6 @@ function OpenGamesTable(props) {
                                     bottom: 0,
                                     background:
                                       'linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.4) 50%, rgba(255, 255, 255, 0) 100%)',
-                                    animation: 'shimmer 2s infinite',
                                     zIndex: 3,
                                   },
                                   '@keyframes shimmer': {
@@ -1143,15 +1255,40 @@ function OpenGamesTable(props) {
           {loadingRecent ? (
             Array.from({ length: 4 }).map((_, index) => (
               <Grid item xs={6} sm={4} md={3} lg={3} xl={3} key={index}>
-                <Box
-                  className="carousel-content table-row slide-in"
-                  sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}
+                <Card
+                  sx={{
+                    p: 3,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    height: '100%',
+                    borderRadius: '16px',
+                    backgroundColor: effectiveIsDarkMode ? '#121212' : '#FFFFFF',
+                    boxShadow: effectiveIsDarkMode
+                      ? '0 2px 8px rgba(0, 0, 0, 0.3)'
+                      : '0 2px 8px rgba(0, 0, 0, 0.1)',
+                  }}
                 >
-                  <Skeleton variant="rectangular" width="100%" height={200} />
-                  <Skeleton width="60%" />
-                  <Skeleton width="40%" />
-                  <Skeleton width="80%" />
-                </Box>
+                  {/* Header with icon and name */}
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                    <Skeleton variant="rounded" width={32} height={32} sx={{ mr: 1.25 }} />
+                    <Box sx={{ flexGrow: 1 }}>
+                      <Skeleton variant="text" width="80%" height={20} sx={{ mb: 0.5 }} />
+                      <Skeleton variant="text" width="60%" height={12} />
+                    </Box>
+                  </Box>
+
+                  {/* Icons and timestamp row */}
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                    <Skeleton variant="circular" width={16} height={16} />
+                    <Skeleton variant="text" width={30} height={16} />
+                    <Skeleton variant="circular" width={16} height={16} />
+                  </Box>
+
+                  {/* Currency amount */}
+                  <Box sx={{ mt: 'auto', display: 'flex', justifyContent: 'center' }}>
+                    <Skeleton variant="text" width="70%" height={24} />
+                  </Box>
+                </Card>
               </Grid>
             ))
           ) : recent.length === 0 ? (
@@ -1172,7 +1309,7 @@ function OpenGamesTable(props) {
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
-                      background: '#3a2d41',
+                      background: '#121212',
                       cursor: 'pointer',
                       transition: 'box-shadow 0.1s ease',
                       '&:hover': {

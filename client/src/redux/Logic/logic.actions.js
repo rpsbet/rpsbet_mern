@@ -132,7 +132,6 @@ export const verifyGameResult = (
 
 export const proxyAsset = (key, url) => async (dispatch) => {
   try {
-    // Proxy all external URLs through the backend
     const response = await axios.get('/game/proxy-asset', {
       params: { url },
       responseType: 'blob',
@@ -147,20 +146,28 @@ export const proxyAsset = (key, url) => async (dispatch) => {
     return { key, proxiedUrl: null };
   }
 };
+
 export const generateReactGameFromPrompt = (
   user_id,
+  user_credits,
   gamePrompt,
   user_balance,
   setGameCode,
+  setProxiedAssets,
   onChangeState,
   updateUserPrompt,
   setGameLoading,
-  preProxiedAssets = { images: [], audio: [] }
+  preProxiedAssets = { images: [], audio: [] },
+  model = 'o3-mini'
 ) => async (dispatch) => {
-
-
   if (!gamePrompt.trim()) {
     dispatch({ type: MSG_ERROR, payload: 'Please enter a valid app prompt.' });
+    return;
+  }
+
+  const cost = model === 'o4' ? 12 : 8; // Adjust cost based on model
+  if (user_credits < cost) {
+    dispatch({ type: MSG_ERROR, payload: `Not enough credits, need ${cost} credits to use ${model}.` });
     return;
   }
 
@@ -171,10 +178,12 @@ export const generateReactGameFromPrompt = (
     const response = await axios.post('/game/openai/generate-react', {
       prompt: gamePrompt,
       imageUrls: preProxiedAssets.images.map(asset => asset.proxiedUrl),
+      model, // Include the model parameter
     });
 
-    const generatedCode = response.data.finalApp;
-    setGameCode(generatedCode);
+    const { finalApp, proxiedAssets } = response.data;
+    setGameCode(finalApp);
+    setProxiedAssets(proxiedAssets);
 
     if (typeof updateUserPrompt === 'function') {
       await updateUserPrompt(user_id, gamePrompt);
@@ -182,7 +191,8 @@ export const generateReactGameFromPrompt = (
       onChangeState({ prompt: gamePrompt });
     }
 
-    dispatch({ type: MSG_SUCCESS, payload: 'Game generated successfully!' });
+    dispatch({ type: MSG_SUCCESS, payload: `Game generated successfully using ${model}!` });
+    return { payload: { finalApp, proxiedAssets } }; // Return proxiedAssets
   } catch (error) {
     console.error('Error generating React app:', error);
     dispatch({
@@ -196,6 +206,7 @@ export const generateReactGameFromPrompt = (
       };
       export default App;
     `);
+    throw error;
   } finally {
     dispatch({ type: END_LOADING });
     setGameLoading(false);
@@ -504,11 +515,12 @@ export const deleteComment = (comment_id) => async (dispatch) => {
   }
 };
 
-export const updateRoomGameCode = ({ roomId, gameCode }) => async (dispatch) => {
+export const updateRoomGameCode = ({ roomId, gameCode, proxiedAssets }) => async (dispatch) => {
   try {
     const res = await axios.post('/game/room/update-gamecode', {
       roomId,
       gameCode,
+      proxiedAssets
     });
 
     if (res.data.success) {

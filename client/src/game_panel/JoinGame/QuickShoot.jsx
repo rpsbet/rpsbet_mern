@@ -1,10 +1,8 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { Info } from '@mui/icons-material';
 import GuessesSection from '../../components/GuessesSection';
-import progress from '../LottieAnimations/progress.json';
-import pressHold from '../LottieAnimations/pressHold.json';
 import PlayerModal from '../modal/PlayerModal';
 import AiPanel from '../../components/AiPanel';
 import ViewIcon from '@mui/icons-material/Visibility';
@@ -23,6 +21,9 @@ import {
   DialogActions,
   Typography,
   Box,
+  CircularProgress,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import {
   validateIsAuthenticated,
@@ -33,9 +34,189 @@ import Lottie from 'react-lottie';
 import ImageResultModal from '../modal/ImageResultModal';
 import { convertToCurrency } from '../../util/conversion';
 import football from '../LottieAnimations/football.json';
+import progress from '../LottieAnimations/progress.json';
 
+// Custom hook for socket management
+const useGameSocket = (socket, roomId, user_id, isWatching, onBankrollUpdate, onGameDataUpdate) => {
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleBankrollUpdate = (data) => {
+      onBankrollUpdate(data);
+    };
+
+    const handleGameData = (data) => {
+      onGameDataUpdate(data);
+
+      if (!data.qs) return;
+
+      const filtered = data.qs.filter((game) => game.joiner === user_id);
+      const newQsHistory = isWatching ? filtered : data.qs;
+
+      return {
+        qsHistory: newQsHistory,
+        fullHistory: data.qs,
+      };
+    };
+
+    socket.on(`UPDATED_BANKROLL_${roomId}`, handleGameData);
+    socket.on(`UPDATED_BANKROLL2_${roomId}`, handleBankrollUpdate);
+
+    return () => {
+      socket.off(`UPDATED_BANKROLL_${roomId}`, handleGameData);
+      socket.off(`UPDATED_BANKROLL2_${roomId}`, handleBankrollUpdate);
+    };
+  }, [socket, roomId, user_id, isWatching, onBankrollUpdate, onGameDataUpdate]);
+};
+
+// Custom hook for confirmation dialog
+const useConfirmationDialog = () => {
+  const [dialogState, setDialogState] = useState({
+    open: false,
+    message: '',
+    callback: null,
+    skipConfirm: localStorage.getItem('hideConfirmModal') === 'true',
+  });
+
+  const openDialog = useCallback((message, callback) => {
+    if (dialogState.skipConfirm) {
+      callback();
+      return;
+    }
+    setDialogState((prev) => ({ ...prev, open: true, message, callback }));
+  }, [dialogState.skipConfirm]);
+
+  const closeDialog = useCallback(() => {
+    setDialogState((prev) => ({ ...prev, open: false, message: '', callback: null }));
+  }, []);
+
+  const handleConfirm = useCallback(() => {
+    if (dialogState.callback) {
+      dialogState.callback();
+    }
+    closeDialog();
+  }, [dialogState.callback, closeDialog]);
+
+  const handleSkipChange = useCallback((event) => {
+    const checked = event.target.checked;
+    setDialogState((prev) => ({ ...prev, skipConfirm: checked }));
+    localStorage.setItem('hideConfirmModal', checked ? 'true' : 'false');
+  }, []);
+
+  return {
+    dialogState,
+    openDialog,
+    closeDialog,
+    handleConfirm,
+    handleSkipChange,
+  };
+};
+
+// Game button component
+const GameButton = React.memo(
+  ({ id, position, isActive, bgColorChanged, joinerQsValueAtLastIndex, betResult, isBetting, isDisabled, onClick, ariaLabel }) => {
+    const classes = [];
+    let showBall = false;
+
+    if (isActive) {
+      classes.push('active');
+    }
+
+    if (bgColorChanged && joinerQsValueAtLastIndex === position && !isBetting) {
+      if (betResult === -1) {
+        showBall = true;
+        classes.push('lose-bg');
+      } else if (betResult === 0) {
+        showBall = true;
+        classes.push('draw-bg');
+      } else if (betResult === 1) {
+        showBall = true;
+        classes.push('win-bg');
+      }
+    }
+
+    if (isDisabled) classes.push('disabled');
+
+    return (
+      <IconButton
+        id={id}
+        onClick={onClick}
+        className={classes.join(' ')}
+        sx={{
+          position: 'relative',
+          transition: 'all 0.2s ease-in-out',
+          '&:hover': {
+            transform: 'scale(1.05)',
+            opacity: 0.9,
+          },
+          '&:active': {
+            transform: 'scale(0.95)',
+          },
+        }}
+        disabled={isDisabled}
+        aria-label={ariaLabel}
+      >
+        {showBall && (
+          <img
+            src="/img/football.svg"
+            alt="ball"
+            className="ball-kicked"
+            style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: '30px',
+              height: '30px',
+              animation: 'bounce 0.5s ease-in-out infinite alternate',
+            }}
+          />
+        )}
+      </IconButton>
+    );
+  }
+);
+
+// Confirmation dialog component
+const ConfirmBetDialog = React.memo(({ open, message, skipConfirm, onClose, onConfirm, onSkipChange }) => {
+  return (
+    <Dialog
+      open={open}
+      onClose={onClose}
+      aria-labelledby="confirm-dialog-title"
+      aria-describedby="confirm-dialog-description"
+      sx={{
+        '& .MuiPaper-root': {
+          borderRadius: 2,
+          boxShadow: '0 8px 16px rgba(0, 0, 0, 0.2)',
+        },
+      }}
+    >
+      <DialogTitle id="confirm-dialog-title">Confirmation</DialogTitle>
+      <DialogContent>
+        <Typography>{message}</Typography>
+        <FormControlLabel
+          control={<Checkbox checked={skipConfirm} onChange={onSkipChange} color="error" />}
+          label="Don't show this again"
+        />
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose} color="error" variant="outlined" sx={{ borderRadius: 2 }}>
+          Cancel
+        </Button>
+        <Button onClick={onConfirm} color="error" variant="contained" autoFocus sx={{ borderRadius: 2 }}>
+          Yes
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+});
+
+// Main QuickShoot Component
 function QuickShoot(props) {
   const dispatch = useDispatch();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   // Map state from Redux using useSelector
   const {
@@ -58,12 +239,7 @@ function QuickShoot(props) {
     isWatching: state.auth.isWatching,
     is_betting: state.logic.is_betting,
     solPrice: state.logic.solPrice,
-    creator: state.logic.curRoomInfo.creator_name,
-    creator_avatar: state.logic.curRoomInfo.creator_avatar,
     rank: state.logic.curRoomInfo.rank,
-    accessory: state.logic.curRoomInfo.accessory,
-    elite: state.logic.curRoomInfo.elite,
-    username: state.logic.curRoomInfo.username,
     isLowGraphics: state.auth.isLowGraphics,
   }));
 
@@ -86,7 +262,6 @@ function QuickShoot(props) {
     handleClosePlayerModal,
     showPlayerModal,
     selectedCreator,
-    borderColor,
     handleSwitchChange,
     updateUserPrompt,
     ai_mode,
@@ -102,80 +277,120 @@ function QuickShoot(props) {
     handleMaxButtonClick,
   } = props;
 
-  // Local state
-  const [intervalId, setIntervalId] = useState(null);
-  const [animation, setAnimation] = useState(<div />);
+  // Local state (using useState for all state management)
   const [qsHistory, setQsHistory] = useState([]);
-  const [localSelectedQs, setLocalSelectedQs] = useState(selected_qs_position);
-  const [poolId, setPoolId] = useState(roomInfo.pool_id);
   const [joinerQsValueAtLastIndex, setJoinerQsValueAtLastIndex] = useState('');
   const [qsValueAtLastIndex, setQsValueAtLastIndex] = useState('');
   const [startedPlaying, setStartedPlaying] = useState(false);
   const [prev_qs, setPrevQs] = useState([]);
   const [players, setPlayers] = useState([]);
   const [host_pr, setHostPr] = useState(roomInfo.host_pr);
-  const [productName, setProductName] = useState('');
   const [status, setStatus] = useState(roomInfo.status);
-  const [image, setImage] = useState('');
-  const [showImageModal, setShowImageModal] = useState(false);
+  const [poolId, setPoolId] = useState(roomInfo.pool_id);
+  const [animation, setAnimation] = useState(<div />);
+  const [localSelectedQs, setLocalSelectedQs] = useState(selected_qs_position);
   const [isPasswordCorrect, setIsPasswordCorrect] = useState(propIsPasswordCorrect);
-
-  // Confirm dialog state
-  const [openConfirmBet, setOpenConfirmBet] = useState(false);
-  const [confirmBetMessage, setConfirmBetMessage] = useState('');
-  const [confirmBetCallback, setConfirmBetCallback] = useState(null);
-  const [skipConfirm, setSkipConfirm] = useState(
-    localStorage.getItem('hideConfirmModal') === 'true',
-  );
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [image, setImage] = useState('');
+  const [productName, setProductName] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const isComponentMountedRef = useRef(false);
 
+  // Use custom confirmation dialog hook
+  const { dialogState, openDialog, closeDialog, handleConfirm, handleSkipChange } = useConfirmationDialog();
+
+  // Memoized position information
+  const positionInfo = useMemo(() => {
+    let position_name, position_short_name;
+
+    if (qs_game_type === 2) {
+      position_name = ['Left', 'Right'];
+      position_short_name = ['bl', 'br'];
+    } else if (qs_game_type === 3) {
+      position_name = ['Bottom-Left', 'Center', 'Bottom-Right'];
+      position_short_name = ['bl', 'c', 'br'];
+    } else if (qs_game_type === 4) {
+      position_name = ['Top-Left', 'Top-Right', 'Bottom-Left', 'Bottom-Right'];
+      position_short_name = ['tl', 'tr', 'bl', 'br'];
+    } else {
+      position_name = ['Center', 'Top-Left', 'Top-Right', 'Bottom-Left', 'Bottom-Right'];
+      position_short_name = ['c', 'tl', 'tr', 'bl', 'br'];
+    }
+
+    return { position_name, position_short_name };
+  }, [qs_game_type]);
+
+  const isCreator = creator_id && user_id && creator_id.toString() === user_id.toString();
+  const subTitleText = isCreator ? 'This is Your Own Room' : 'Choose WHERE TO SHOOT';
+  const tooltipText = isCreator ? 'Shooting is disabled in your own room.' : 'Play against the AI; at the same time, train your AI.';
+
+  // Animation update logic
   const updateAnimation = useCallback(
     async (qsHistoryArg, lastIndexVal) => {
-      if (!qsHistoryArg?.length) return;
-      if (!lastIndexVal) return;
+      if (!qsHistoryArg?.length || !lastIndexVal) {
+        console.warn('updateAnimation: Missing qsHistory or lastIndexVal', { qsHistoryArg, lastIndexVal });
+        return;
+      }
 
       let qsIndex = parseInt(lastIndexVal, 10);
-      if (Number.isNaN(qsIndex)) return;
-
-      let position_short_name = ['center', 'tl', 'tr', 'bl', 'br'];
-
-      if (qs_game_type === 2) {
-        position_short_name = ['bl', 'br'];
-      } else if (qs_game_type === 3) {
-        position_short_name = ['bl', 'center', 'br'];
-      } else if (qs_game_type === 4) {
-        position_short_name = ['tl', 'tr', 'bl', 'br'];
+      if (Number.isNaN(qsIndex)) {
+        console.warn('updateAnimation: Invalid qsIndex', lastIndexVal);
+        return;
       }
 
-      if (qsIndex < 0 || qsIndex >= position_short_name.length) {
-        qsIndex = 0;
+      try {
+        setIsLoading(true);
+
+        const position_short_name = positionInfo.position_short_name;
+
+        if (qsIndex < 0 || qsIndex >= position_short_name.length) {
+          console.warn('updateAnimation: qsIndex out of bounds', qsIndex, position_short_name);
+          qsIndex = 0;
+        }
+
+        const animData = await getQsLottieAnimation(roomInfo.qs_nation, position_short_name[qsIndex]);
+
+        setAnimation(
+          <div className="qs-image-panel" id="quickShoot_lottie">
+            <Lottie
+              options={{
+                loop: false,
+                autoplay: true,
+                animationData: animData,
+                rendererSettings: {
+                  preserveAspectRatio: 'xMidYMid slice',
+                },
+              }}
+              style={{
+                maxWidth: '100%',
+                width: '600px',
+                borderRadius: '10px',
+                boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+              }}
+            />
+          </div>
+        );
+      } catch (error) {
+        console.error('Error updating animation:', error);
+      } finally {
+        setIsLoading(false);
       }
-
-      const animData = await getQsLottieAnimation(
-        roomInfo.qs_nation,
-        position_short_name[qsIndex],
-      );
-
-      setAnimation(
-        <div className="qs-image-panel" id="quickShoot_lottie">
-          <Lottie
-            options={{ loop: false, autoplay: true, animationData: animData }}
-            style={{ maxWidth: '100%', width: '600px', borderRadius: '10px' }}
-          />
-        </div>,
-      );
     },
-    [qs_game_type, roomInfo.user_bet],
+    [positionInfo.position_short_name, roomInfo.qs_nation]
   );
 
-  // Socket Handlers
-  const handleSocketData = useCallback(
+  // Socket event handlers
+  const handleBankrollUpdate = useCallback(
     (data) => {
-      setPlayers((prev) => {
-        const updated = [...prev, data.user].slice(-5);
-        return updated;
-      });
+      onChangeState({ bankroll: data.bankroll });
+    },
+    [onChangeState]
+  );
+
+  const handleGameData = useCallback(
+    (data) => {
+      setPlayers((prev) => [...prev, data.user].slice(-5));
 
       if (playSound) playSound('blip');
 
@@ -184,100 +399,33 @@ function QuickShoot(props) {
         battles: 1,
         hosts: data.hosts,
       });
-      setHostPr(data.host_pr);
-      if (!data.qs) return;
 
-      const filtered = data.qs.filter((game) => game.joiner === user_id);
-      const newQsHistory = isWatching ? filtered : data.qs;
+      if (data.host_pr !== undefined) setHostPr(parseFloat(data.host_pr));
 
-      setQsHistory(newQsHistory);
-      setJoinerQsValueAtLastIndex(parseFloat(newQsHistory[newQsHistory.length - 1]?.joiner_qs ?? ''));
-      setQsValueAtLastIndex(parseFloat(newQsHistory[newQsHistory.length - 1]?.qs ?? ''));
-      setStartedPlaying(true);
-      setPrevQs(data.qs);
+      // Handle game data updates
+      if (data.qs) {
+        const filtered = data.qs.filter((game) => game.joiner === user_id);
+        const newQsHistory = isWatching ? filtered : data.qs;
 
-      updateAnimation(newQsHistory, newQsHistory[newQsHistory.length - 1]?.qs);
+        setQsHistory(newQsHistory);
+        setJoinerQsValueAtLastIndex(parseFloat(newQsHistory[newQsHistory.length - 1]?.joiner_qs ?? ''));
+        setQsValueAtLastIndex(parseFloat(newQsHistory[newQsHistory.length - 1]?.qs ?? ''));
+        setStartedPlaying(true);
+        setPrevQs(data.qs);
+
+        const lastItem = newQsHistory[newQsHistory.length - 1];
+        if (lastItem) {
+          updateAnimation(newQsHistory, lastItem.qs);
+        }
+      }
     },
     [playSound, user_id, isWatching, onChangeState, updateAnimation]
   );
 
-  const handleSocketData2 = useCallback(
-    (data) => {
-      onChangeState({ bankroll: data.bankroll });
-    },
-    [onChangeState],
-  );
+  // Use custom socket hook
+  useGameSocket(socket, roomInfo._id, user_id, isWatching, handleBankrollUpdate, handleGameData);
 
-  useEffect(() => {
-    if (!socket) return;
-
-    socket.on(`UPDATED_BANKROLL_${roomInfo._id}`, handleSocketData);
-    socket.on(`UPDATED_BANKROLL2_${roomInfo._id}`, handleSocketData2);
-
-    return () => {
-      socket.off(`UPDATED_BANKROLL_${roomInfo._id}`, handleSocketData);
-      socket.off(`UPDATED_BANKROLL2_${roomInfo._id}`, handleSocketData2);
-    };
-  }, [socket, roomInfo._id, handleSocketData, handleSocketData2]);
-
-  // Main Methods
-  const joinGame = useCallback(
-    async (position) => {
-      onChangeState({ result: '' });
-
-      const resultData = await join({
-        bet_amount: parseFloat(bet_amount),
-        selected_qs_position: position,
-      });
-
-      playSound('ballKick');
-
-      let text;
-      let color;
-
-      if (resultData.betResult === 1) {
-        playSound && playSound('win');
-        text = '+';
-        color = '#00ff3a';
-        changeBgColor && changeBgColor(resultData.betResult);
-      } else {
-        text = '-';
-        color = '#f50000';
-        playSound && playSound('lose');
-        changeBgColor && changeBgColor(resultData.betResult);
-      }
-      const currencyElement = convertToCurrency(
-        Math.abs(resultData.amount),
-        solPrice,
-      );
-
-      onChangeState({
-        result: (
-          <>
-            <span style={{ color }}>
-              {text} {currencyElement}
-            </span>
-          </>
-        ),
-        gameResult: resultData.betResult,
-      });
-      
-    },
-    [bet_amount, join, onChangeState, playSound, changeBgColor, solPrice],
-  );
-
-  useEffect(() => {
-    if (isPasswordCorrect !== propIsPasswordCorrect) {
-      setIsPasswordCorrect(propIsPasswordCorrect);
-    }
-  }, [propIsPasswordCorrect, isPasswordCorrect]);
-
-  useEffect(() => {
-    if (isPasswordCorrect && !startedPlaying) { // Add condition to prevent re-running
-      joinGame(localSelectedQs);
-    }
-  }, [isPasswordCorrect, joinGame, localSelectedQs, startedPlaying]);
-
+  // Effect for room info updates
   useEffect(() => {
     if (roomInfo) {
       if (roomInfo.host_pr !== undefined) setHostPr(parseFloat(roomInfo.host_pr));
@@ -286,229 +434,196 @@ function QuickShoot(props) {
     }
   }, [roomInfo]);
 
-  const handleSpectateMode = () => {
-    dispatch(setSpectateMode(!isWatching));
-  };
-
-  const openConfirmBetDialog = (message, callback) => {
-    if (localStorage.getItem('hideConfirmModal') === 'true') {
-      callback();
-      return;
+  // Effect for password validation
+  useEffect(() => {
+    if (isPasswordCorrect !== propIsPasswordCorrect) {
+      setIsPasswordCorrect(propIsPasswordCorrect);
     }
-    setOpenConfirmBet(true);
-    setConfirmBetMessage(message);
-    setConfirmBetCallback(() => callback);
-  };
+  }, [propIsPasswordCorrect, isPasswordCorrect]);
 
-  const closeConfirmBetDialog = () => {
-    setOpenConfirmBet(false);
-    setConfirmBetMessage('');
-    setConfirmBetCallback(null);
-  };
-
-  const handleConfirmBet = useCallback(async () => {
-    if (confirmBetCallback) {
-      await confirmBetCallback();
+  // Effect to join game when password is correct
+  useEffect(() => {
+    if (isPasswordCorrect && !startedPlaying) {
+      joinGame(localSelectedQs);
     }
-    closeConfirmBetDialog();
-  }, [confirmBetCallback]);
+  }, [isPasswordCorrect, localSelectedQs, startedPlaying]);
 
-  const handleSkipConfirmChange = (event) => {
-    const checked = event.target.checked;
-    setSkipConfirm(checked);
-    localStorage.setItem('hideConfirmModal', checked ? 'true' : 'false');
-  };
+  // Join game function
+  const joinGame = useCallback(
+    async (position) => {
+      onChangeState({ result: '' });
+      setIsLoading(true);
 
-  const onBtnBetClick = async (position) => {
-    setLocalSelectedQs(position);
-    if (!validateIsAuthenticated(isAuthenticated, dispatch)) return;
+      try {
+        const resultData = await join({
+          bet_amount: parseFloat(bet_amount),
+          selected_qs_position: position,
+        });
 
+        playSound && playSound('ballKick');
 
-    if (!validateBetAmount(bet_amount, balance, dispatch)) return;
+        let text;
+        let color;
 
-    const costPerSide = bet_amount / (qs_game_type - 1);
-    if (
-      !validateBankroll(
-        costPerSide + parseFloat(bet_amount) - bankroll * (qs_game_type - 1),
-        bankroll,
-        dispatch,
-      )
-    ) {
-      return;
-    }
-
-    const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
-    const passwordCorrect = rooms[roomInfo._id];
-
-    updateSelectedQs(position, () => {
-      if (localStorage.getItem('hideConfirmModal') === 'true') {
-        if (roomInfo.is_private && passwordCorrect !== true) {
-          dispatch(openGamePasswordModal());
+        if (resultData.betResult === 1) {
+          playSound && playSound('win');
+          text = '+';
+          color = '#00ff3a';
+          changeBgColor && changeBgColor(resultData.betResult);
         } else {
-          joinGame(position);
+          text = '-';
+          color = '#f50000';
+          playSound && playSound('lose');
+          changeBgColor && changeBgColor(resultData.betResult);
         }
-      } else {
-        openConfirmBetDialog('ARE YOU SURE YOU WANT TO PLACE THIS BET?', async () => {
+
+        const currencyElement = convertToCurrency(Math.abs(resultData.amount), solPrice);
+
+        onChangeState({
+          result: (
+            <>
+              <span
+                style={{
+                  color,
+                  fontSize: '1.2rem', // Updated font size to match QuickShoot
+                  fontWeight: 'bold',
+                  textShadow: '0 0 10px rgba(0,0,0,0.5)',
+                }}
+              >
+                {text} {currencyElement}
+              </span>
+            </>
+          ),
+          gameResult: resultData.betResult,
+        });
+      } catch (error) {
+        console.error('Error joining game:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [bet_amount, join, playSound, changeBgColor, solPrice, onChangeState]
+  );
+
+  // Button click handler
+  const onBtnBetClick = useCallback(
+    async (position) => {
+      setLocalSelectedQs(position);
+      if (!validateIsAuthenticated(isAuthenticated, dispatch)) return;
+      if (!validateBetAmount(bet_amount, balance, dispatch)) return;
+
+      const costPerSide = bet_amount / (qs_game_type - 1);
+      if (!validateBankroll(costPerSide + parseFloat(bet_amount) - bankroll * (qs_game_type - 1), bankroll, dispatch)) {
+        return;
+      }
+
+      const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
+      const passwordCorrect = rooms[roomInfo._id];
+
+      updateSelectedQs(position, () => {
+        if (localStorage.getItem('hideConfirmModal') === 'true') {
           if (roomInfo.is_private && passwordCorrect !== true) {
             dispatch(openGamePasswordModal());
           } else {
-            await joinGame(position);
+            joinGame(position);
           }
-        });
-      }
-    });
-  };
+        } else {
+          openDialog('ARE YOU SURE YOU WANT TO PLACE THIS BET?', async () => {
+            if (roomInfo.is_private && passwordCorrect !== true) {
+              dispatch(openGamePasswordModal());
+            } else {
+              await joinGame(position);
+            }
+          });
+        }
+      });
 
-  // Render each shot button
-  const renderButton = (id, position) => {
-    const classes = [];
-    let showBall = false;
+      playSound && playSound('select');
+    },
+    [bet_amount, balance, bankroll, dispatch, isAuthenticated, joinGame, openDialog, playSound, qs_game_type, roomInfo._id, roomInfo.is_private, updateSelectedQs]
+  );
 
-    const isCreator =
-      creator_id && user_id && creator_id.toString() === user_id.toString();
+  // Spectate mode toggle
+  const handleSpectateMode = useCallback(() => {
+    dispatch(setSpectateMode(!isWatching));
+  }, [dispatch, isWatching]);
+
+  // Render game buttons
+  const renderButtons = useCallback(() => {
+    const buttons = [];
+    const numButtons = qs_game_type;
     const isDisabled = is_betting || isCreator;
 
-    if (joinerQsValueAtLastIndex === position) {
-      classes.push('active');
+    for (let i = 0; i < numButtons; i++) {
+      const buttonId = positionInfo.position_short_name[i];
+      const position = i;
+      const isActive = joinerQsValueAtLastIndex === position;
+
+      buttons.push(
+        <GameButton
+          key={buttonId}
+          id={buttonId}
+          position={position}
+          isActive={isActive}
+          bgColorChanged={bgColorChanged}
+          joinerQsValueAtLastIndex={joinerQsValueAtLastIndex}
+          betResult={betResult}
+          isBetting={is_betting}
+          isDisabled={isDisabled}
+          onClick={() => onBtnBetClick(position)}
+          ariaLabel={`Shoot to ${positionInfo.position_name[i]}`}
+        />
+      );
     }
 
-    if (bgColorChanged && joinerQsValueAtLastIndex === position && !is_betting) {
-      if (betResult === -1) {
-        showBall = true;
-        classes.push('lose-bg');
-      } else if (betResult === 0) {
-        showBall = true;
-        classes.push('draw-bg');
-      } else if (betResult === 1) {
-        showBall = true;
-        classes.push('win-bg');
-      }
-    }
-
-    if (isDisabled) classes.push('disabled');
-
-    return (
-      <IconButton
-        id={id}
-        onClick={() => {
-          onBtnBetClick(position);
-          playSound('select');
-        }}
-        className={classes.join(' ')}
-        sx={{ position: 'relative' }}
-        disabled={isDisabled}
-      >
-        {showBall && (
-          <img
-            src="/img/football.svg"
-            alt="ball"
-            className="ball-kicked"
-            style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              width: '30px',
-              height: '30px',
-            }}
-          />
-        )}
-      </IconButton>
-    );
-  };
-
-  // Return the set of buttons based on qs_game_type
-  const renderButtons = () => {
+    // Group buttons based on game type
     if (qs_game_type === 2) {
-      return (
-        <div className="qs-buttons">
-          {renderButton('l', 0)}
-          {renderButton('r', 1)}
-        </div>
-      );
+      return <div className="qs-buttons">{buttons}</div>;
     } else if (qs_game_type === 3) {
-      return (
-        <div className="qs-buttons">
-          {renderButton('l', 0)}
-          {renderButton('cc', 1)}
-          {renderButton('r', 2)}
-        </div>
-      );
+      return <div className="qs-buttons">{buttons}</div>;
     } else if (qs_game_type === 4) {
-      return (
-        <div className="qs-buttons">
-          {renderButton('tl', 0)}
-          {renderButton('tr', 1)}
-          {renderButton('bl', 2)}
-          {renderButton('br', 3)}
-        </div>
-      );
+      return <div className="qs-buttons">{buttons}</div>;
     } else if (qs_game_type === 5) {
+      // Center button is special for 5-button layout
       return (
         <div className="qs-buttons">
-          {renderButton('tl', 1)}
-          {renderButton('tr', 2)}
-          {renderButton('bl', 3)}
-          {renderButton('br', 4)}
-          {renderButton('c', 0)}
+          <div className="outer-buttons">{buttons.slice(1, 5)}</div>
+          <div className="center-button">{buttons[0]}</div>
         </div>
       );
     }
-  };
 
-  // Render Logic
-  let position_name = ['Center', 'Top-Left', 'Top-Right', 'Bottom-Left', 'Bottom-Right'];
-  let position_short_name = ['c', 'tl', 'tr', 'bl', 'br'];
-
-  if (qs_game_type === 2) {
-    position_name = ['Left', 'Right'];
-    position_short_name = ['bl', 'br'];
-  } else if (qs_game_type === 3) {
-    position_name = ['Bottom-Left', 'Center', 'Bottom-Right'];
-    position_short_name = ['bl', 'c', 'br'];
-  } else if (qs_game_type === 4) {
-    position_name = ['Top-Left', 'Top-Right', 'Bottom-Left', 'Bottom-Right'];
-    position_short_name = ['tl', 'tr', 'bl', 'br'];
-  }
-
-  const isCreator = creator_id && user_id && creator_id.toString() === user_id.toString();
-  const subTitleText = isCreator ? 'This is Your Own Room' : 'Choose WHERE TO SHOOT';
-  const tooltipText = isCreator
-    ? 'Shooting is disabled in your own room.'
-    : 'Play against the AI; at the same time, train your AI.';
+    return <div className="qs-buttons">{buttons}</div>;
+  }, [
+    bgColorChanged,
+    betResult,
+    joinerQsValueAtLastIndex,
+    is_betting,
+    isCreator,
+    onBtnBetClick,
+    positionInfo.position_name,
+    positionInfo.position_short_name,
+    qs_game_type,
+  ]);
 
   return (
-    <div className="game-page" style={{ paddingTop: "30px" }}>
-      <Dialog
-        open={openConfirmBet}
-        onClose={closeConfirmBetDialog}
-        aria-labelledby="confirm-dialog-title"
-        aria-describedby="confirm-dialog-description"
-      >
-        <DialogTitle id="confirm-dialog-title">Confirmation</DialogTitle>
-        <DialogContent>
-          <Typography>{confirmBetMessage}</Typography>
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={skipConfirm}
-                onChange={handleSkipConfirmChange}
-                color="error"
-              />
-            }
-            label="Don’t show this again"
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={closeConfirmBetDialog} color="error">
-            Cancel
-          </Button>
-          <Button onClick={handleConfirmBet} color="error" autoFocus>
-            Yes
-          </Button>
-        </DialogActions>
-      </Dialog>
+    <Box
+      className="game-page"
+      sx={{
+        position: 'relative',
+      }}
+    >
+      {/* Confirmation Dialog */}
+      <ConfirmBetDialog
+        open={dialogState.open}
+        message={dialogState.message}
+        skipConfirm={dialogState.skipConfirm}
+        onClose={closeDialog}
+        onConfirm={handleConfirm}
+        onSkipChange={handleSkipChange}
+      />
 
+      {/* Image Result Modal */}
       {showImageModal && (
         <ImageResultModal
           modalIsOpen={showImageModal}
@@ -519,147 +634,132 @@ function QuickShoot(props) {
         />
       )}
 
+      {/* Player Modal */}
       {showPlayerModal && (
-        <PlayerModal
-          selectedCreator={selectedCreator}
-          modalIsOpen={showPlayerModal}
-          closeModal={handleClosePlayerModal}
-        />
+        <PlayerModal selectedCreator={selectedCreator} modalIsOpen={showPlayerModal} closeModal={handleClosePlayerModal} />
       )}
 
-      <div className="game-contents title">
-        <div className="game-info-panel" style={{ position: 'relative' }}>
-          <GuessesSection
-            prevRps={prev_qs}
-            players={players}
-            isDarkMode={isDarkMode}
-            handleOpenPlayerModal={handleOpenPlayerModal}
-          />
+      <Box
+        className="game-contents title"
+        sx={{
+          position: 'relative',
+          overflow: 'hidden',
+          transition: 'all 0.3s ease-in-out',
+        }}
+      >
+        <Box
+          className="game-info-panel"
+          sx={{
+            position: 'relative',
+            pt: 4,
+            px: { xs: 1, sm: 2, md: 3 },
+          }}
+        >
+          <GuessesSection prevRps={prev_qs} players={players} isDarkMode={isDarkMode} handleOpenPlayerModal={handleOpenPlayerModal} />
 
           {status === 'open' ? (
             <>
-              <Tooltip
-                title={!isWatching ? 'CLICK TO STOP WATCHING' : 'CLICK TO START WATCHING'}
-              >
-                <IconButton className="spectate title" onClick={handleSpectateMode}>
-                  {isWatching ? (
-                    <>
-                      PLAYING
-                      <SwordsIcon />
-                    </>
-                  ) : (
-                    <>
-                      SPECTATING
-                      <ViewIcon />
-                    </>
-                  )}
-                </IconButton>
+              <Tooltip title={!isWatching ? 'CLICK TO STOP WATCHING' : 'CLICK TO START WATCHING'} placement="left">
+                <Button
+                  color="error"
+                  variant='text'
+                  startIcon={isWatching ? <ViewIcon /> : <SwordsIcon />}
+                  sx={{
+                    position: 'absolute',
+                    right: '15px',
+                    top: { xs: 0, sm: '20px' },
+                    borderRadius: 2,
+                    transition: 'all 0.2s ease-in-out',
+                    '&:hover': {
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+                    },
+                  }}
+                  onClick={handleSpectateMode}
+                >
+                  {isWatching ? 'PLAYING' : 'SPECTATING'}
+                </Button>
               </Tooltip>
 
-              <div className="game-info-panel" >
-                <div
-                  className={`rps-radio-host ${is_betting || betting ? 'blueish-hue' : ''}`}
-                  style={{
-                    top: '25px',
-                    right: '25px',
-                    position: 'absolute',
-                    width: '12.5px',
-                    height: '12.5px',
-                  }}
-                >
-                  <span
-                    className="result"
-                    style={{ display: !startedPlaying ? 'none' : 'flex' }}
-                  >
-                    {result !== '' ? (
-                      <>
-                        {result}
-                        {betting && (
-                          <div className="lottie-pressHold">
-                            <Lottie
-                              options={{
-                                loop: isLowGraphics ? false : true,
-                                autoplay: isLowGraphics ? false : true,
-                                animationData: pressHold,
-                              }}
-                              style={{
-                                position: 'relative',
-                                filter: `hue-rotate(${gameResult === -1
-                                    ? 0
-                                    : gameResult === 0
-                                      ? 195
-                                      : gameResult === 1
-                                        ? 80
-                                        : 20
-                                  }deg)`,
-                              }}
-                            />
-                          </div>
-                        )}
-                      </>
-                    ) : (
-                      <>
-                        <div className="lottie-progress">
-                          <Lottie
-                            options={{
-                              loop: isLowGraphics ? false : true,
-                              autoplay: isLowGraphics ? false : true,
-                              animationData: progress,
-                            }}
-                            style={{ position: 'relative' }}
-                          />
-                        </div>
-                      </>
-                    )}
-                  </span>
-                </div>
-
+              <Box className="game-info-panel" sx={{ mt: 3 }}>
                 {!startedPlaying && (
-                  <h3 className="game-sub-title roll-tag">
+                  <Typography
+                    variant="h6"
+                    className="game-sub-title roll-tag"
+                    sx={{
+                      mt: 2,
+                      mb: 2,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      fontWeight: 'bold',
+                      color: isDarkMode ? '#f0f0f0' : '#333',
+                    }}
+                  >
                     {subTitleText}
-                    <Tooltip
-                      style={{ position: 'absolute', right: '20px', marginBottom: '30px' }}
-                      title={tooltipText}
-                      placement="top"
-                    >
-                      <Info style={{ cursor: 'pointer', float: 'right' }} />
+                    <Tooltip title={tooltipText} placement="top">
+                      <Info
+                        sx={{
+                          cursor: 'pointer',
+                          ml: 1,
+                        }}
+                      />
                     </Tooltip>
-                  </h3>
+                  </Typography>
                 )}
 
-                <div className="qs-image-panel" style={{ marginTop: '20px' }}>
+                <Box
+                  className="qs-image-panel"
+                  sx={{
+                    m: { xs: '30px 0' },
+                    position: 'relative',
+                    borderRadius: 2,
+                    overflow: 'hidden',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
+                    },
+                  }}
+                >
+                  {/* Game Field Image */}
                   <img
-                    src={`/img/gametype/quick_shoot/gametype${qs_game_type}/type${qs_game_type}-${position_short_name[selected_qs_position]}.png`}
-                    alt=""
+                    src={`/img/gametype/quick_shoot/gametype${qs_game_type}/type${qs_game_type}-${positionInfo.position_short_name[selected_qs_position]}.png`}
+                    alt={`Football field with ${qs_game_type} shooting positions`}
                     style={{
                       width: '600px',
                       maxWidth: '100%',
                       borderRadius: '10px',
-                      border: `3px solid ${borderColor}`,
                       height: '238px',
+                      objectFit: 'cover',
+                      transition: 'all 0.3s ease',
+                      filter: isLoading ? 'blur(3px)' : 'none',
                     }}
                   />
 
+                  {/* Football Animation and Game Animation */}
                   {result !== '' && (
-                    <div id="cat-football">
-                      <Lottie
-                        options={{
-                          loop: true,
-                          autoplay: true,
-                          animationData: football,
-                        }}
-                        style={{ transform: 'translate(15px, 60px)', width: '100px' }}
-                      />
-                    </div>
+                    <>
+                      <div id="cat-football">
+                        <Lottie
+                          options={{
+                            loop: true,
+                            autoplay: true,
+                            animationData: football,
+                          }}
+                          style={{ transform: 'translate(15px, 60px)', width: '100px' }}
+                        />
+                      </div>
+                      {animation}
+                    </>
                   )}
-                  {result !== '' && <>{animation}</>}
 
+                  {/* Game Buttons */}
                   {renderButtons()}
-                </div>
+                </Box>
 
-                {isCreator ? (
-                  <></>
-                ) : (
+                {/* AI Panel for non-creators */}
+                {!isCreator && (
                   <AiPanel
                     qsbetitems={props.qsbetitems}
                     updateUserStrategy={updateUserStrategy}
@@ -686,7 +786,7 @@ function QuickShoot(props) {
                     isDarkMode={isDarkMode}
                   />
                 )}
-              </div>
+              </Box>
             </>
           ) : (
             <Box
@@ -695,36 +795,56 @@ function QuickShoot(props) {
                 flexDirection: 'column',
                 justifyContent: 'center',
                 alignItems: 'center',
+                p: 4,
+                borderRadius: 2,
+                backgroundColor: isDarkMode ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.8)',
+                backdropFilter: 'blur(8px)',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
               }}
             >
-              <Typography variant="subtitle2" sx={{ color: '#D32F2F' }}>
-                GAME ENDED
+              <Typography variant="h5" sx={{ color: '#D32F2F', fontWeight: 'bold', mb: 2, textTransform: 'uppercase' }}>
+                Game Ended
               </Typography>
-              <br />
-              {roomInfo.pool_id && roomInfo.pool_id ? (
-                <Typography>
-                  Pool seeded! SEE{' '}
-                  <Box
+
+              {poolId ? (
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <Typography variant="body1" sx={{ mb: 2 }}>
+                    Pool seeded successfully!
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    color="error"
                     component="a"
-                    href={`https://www.geckoterminal.com/solana/pools/${roomInfo.pool_id}`}
-                    sx={{ ml: 0.5, cursor: 'pointer', textDecoration: 'underline' }}
+                    href={`https://www.geckoterminal.com/solana/pools/${poolId}`}
                     target="_blank"
                     rel="noopener noreferrer"
+                    startIcon={<Box component="span" sx={{ fontSize: 20 }}>
+                      🚀
+                    </Box>}
+                    sx={{
+                      borderRadius: 2,
+                      textTransform: 'none',
+                      transition: 'all 0.2s ease',
+                      '&:hover': {
+                        transform: 'translateY(-2px)',
+                        boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+                      },
+                    }}
                   >
-                    DEX 🚀
-                  </Box>
-                </Typography>
+                    View on DEX
+                  </Button>
+                </Box>
               ) : (
-                <Typography>
+                <Typography variant="body1" sx={{ textAlign: 'center' }}>
                   Pool is either being seeded, or the room has ended.
                 </Typography>
               )}
             </Box>
           )}
-        </div>
-      </div>
-    </div>
+        </Box>
+      </Box>
+    </Box>
   );
 }
 
-export default QuickShoot;
+export default React.memo(QuickShoot);

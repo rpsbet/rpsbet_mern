@@ -1,6 +1,6 @@
 import React from 'react';
 import { Modal, Box, Typography, Button } from '@mui/material';
-
+import { Close as CloseIcon } from '@mui/icons-material';
 function PrivacyModal({ modalIsOpen, closeModal }) {
 
 
@@ -17,21 +17,32 @@ function PrivacyModal({ modalIsOpen, closeModal }) {
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
-          color: '#fff', // Preserve text color conditional
-          width: '90vw',
-          height: '80vh',
+          width: { xs: '90vw', sm: '80vw', md: '60vw', lg: '50vw' },
+          maxHeight: '90vh',
           overflowY: 'auto',
-          borderRadius: 2,
-          boxShadow: 24,
-          p: 3,
-          // Glassmorphism styles (default dark mode colors)
-          background: 'rgba(0, 0, 0, 0.2)',
-          backdropFilter: 'blur(10px)',
-          WebkitBackdropFilter: 'blur(10px)', // For Safari
-          border: '1px solid rgba(255, 255, 255, 0.2)',
-          // Fallback for browsers without backdrop-filter
-          '@supports not (backdrop-filter: blur(10px))': {
-            background: 'rgba(0, 0, 0, 0.4)',
+          borderRadius: 3,
+          p: { xs: 2, sm: 3, md: 4 },
+          // Glassmorphism
+          background: 'rgba(30, 30, 30, 0.3)',
+          backdropFilter: 'blur(15px)',
+          WebkitBackdropFilter: 'blur(15px)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
+          // Fallback
+          '@supports not (backdrop-filter: blur(15px))': {
+            background: 'rgba(30, 30, 30, 0.6)',
+          },
+          scrollbarWidth: 'thin',
+          scrollbarColor: 'rgba(255,255,255,0.2) transparent',
+          '&::-webkit-scrollbar': {
+            width: '8px',
+          },
+          '&::-webkit-scrollbar-track': {
+            background: 'transparent',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            background: 'rgba(255,255,255,0.2)',
+            borderRadius: '4px',
           },
         }}
       >
@@ -55,8 +66,21 @@ function PrivacyModal({ modalIsOpen, closeModal }) {
               Fun
             </Typography>
           </Typography>
-          <Button variant="text" color="error" onClick={closeModal}>
-            ×
+          <Button
+            onClick={closeModal}
+            sx={{
+              position: 'absolute',
+              top: 10,
+              right: 10,
+              minWidth: 'auto',
+              p: 1,
+              bgcolor: 'rgba(0,0,0,0.5)',
+              color: 'white',
+              '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' },
+              borderRadius: '50%',
+            }}
+          >
+            <CloseIcon />
           </Button>
         </Box>
 

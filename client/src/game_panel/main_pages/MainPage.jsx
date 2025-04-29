@@ -16,6 +16,9 @@ import {
   Typography,
   useMediaQuery,
 } from '@mui/material';
+import { ThemeProvider } from '@mui/material/styles';
+import { getCustomTheme } from '../../config/theme';
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCoins, faStore, faHome } from '@fortawesome/free-solid-svg-icons';
 import DrawerButton from './DrawerButton';
@@ -33,10 +36,10 @@ import verified from '../LottieAnimations/verified.json';
 const MyGamesTable = lazy(() => import('../MyGames/MyGamesTable'));
 const OpenGamesTable = lazy(() => import('../LiveGames/OpenGamesTable'));
 const HistoryTable = lazy(() => import('../LiveGames/HistoryTable'));
-const ProductPage = lazy(() => import('../../admin_panel/app/ProductPages/ProductSerchPage/ProductPage.jsx'));
 const BankPage = lazy(() => import('../../admin_panel/app/ProductPages/ProductSerchPage/BankPage.jsx'));
 const ChatPanel = lazy(() => import('../ChatPanel/ChatPanel'));
 const EliteSubscriptionModal = lazy(() => import('../modal/EliteSubscriptionModal'));
+
 
 function MainPage() {
   const dispatch = useDispatch();
@@ -359,9 +362,11 @@ function MainPage() {
 
     return '';
   };
-
+  const theme = getCustomTheme(isDarkMode ? 'dark' : 'light');
   // Render
   return (
+    <ThemeProvider theme={theme}>
+      
     <Box className="main-game">
       {/* Chat Drawer */}
       {isMobile && selectedMobileTab === 'chat' && (
@@ -608,6 +613,8 @@ function MainPage() {
 
       <Footer className="footer" open={isDrawerOpen} />
     </Box>
+    
+    </ThemeProvider>
   );
 }
 

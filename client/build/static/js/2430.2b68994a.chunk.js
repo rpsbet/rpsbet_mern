@@ -1,2 +1,0 @@
-"use strict";(self.webpackChunkclient=self.webpackChunkclient||[]).push([[2430],{52430:(e,t,n)=>{n.r(t),n.d(t,{default:()=>f});var s=n(65043),c=n(22166),u=n(68462),a=n(19891),l=n(70579);const f=()=>{const e=(0,c.wA)();return(0,s.useEffect)((()=>{e((0,u.X$)(30,1,"loan_amount",""))}),[e]),(0,l.jsx)(a.A,{})}}}]);
-//# sourceMappingURL=2430.2b68994a.chunk.js.map

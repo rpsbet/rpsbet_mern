@@ -48,7 +48,7 @@ async function checkSubscriptionPayments(io) {
 
         if (lastPaymentDate <= oneMonthAgo) {
 
-          const subscriptionAmount = user.elite === 'red' ? 0.1 : 1.0;
+          const subscriptionAmount = user.elite === 'red' ? 0.1 : 0.4;
 
           if (user.balance >= subscriptionAmount) {
             user.balance -= subscriptionAmount;
@@ -406,9 +406,9 @@ cron.schedule('0 0 * * *', async () => {
   console.log('Running elite subscription check...');
   await checkSubscriptionPayments();
 
-  if (typeof distributeHoldersPool === 'function') {
-    await distributeHoldersPool();
-  }
+  // if (typeof distributeHoldersPool === 'function') {
+  //   await distributeHoldersPool();
+  // }
 });
 
 module.exports = {

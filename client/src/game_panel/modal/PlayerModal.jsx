@@ -14,7 +14,7 @@ import {
   Typography,
   ThemeProvider,
 } from '@mui/material';
-import { FileCopy as FileCopyIcon, Info as InfoIcon, Link as LinkIcon } from '@mui/icons-material';
+import { FileCopy as FileCopyIcon, Info as InfoIcon, Link as LinkIcon, Close as CloseIcon } from '@mui/icons-material';
 import LoadingOverlay from 'react-loading-overlay';
 import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -41,47 +41,6 @@ import { convertToCurrency } from '../../util/conversion';
 import Avatar from '../../components/Avatar';
 import StatisticsForm from '../../admin_panel/app/Customer/EditCustomerPage/StatisticsForm';
 import { getCustomTheme } from '../../config/theme';
-
-// Styled components for Inventory
-const MarketplaceContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-`;
-const ProductGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
-  gap: 20px;
-  max-width: 100%;
-  margin: 20px 0;
-`;
-const ProductCard = styled.div`
-  background-color: #2e2e2e;
-  border-radius: 8px;
-  overflow: hidden;
-  cursor: pointer;
-  height: 175px;
-  padding: 30px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: center;
-  transition: transform 0.2s;
-  &:hover {
-    transform: scale(1.03);
-  }
-`;
-const ProductImage = styled.img`
-  max-width: 50%;
-  height: auto;
-  background: #fff;
-  border: 1px solid #f9f9;
-  box-shadow: 0 1px 17px #333;
-  border-radius: 10px;
-`;
-const ProductInfo = styled.div`
-  text-align: center;
-`;
 
 function PlayerModal({ modalIsOpen, closeModal, selectedCreator }) {
   const dispatch = useDispatch();

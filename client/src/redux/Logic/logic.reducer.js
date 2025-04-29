@@ -125,7 +125,13 @@ const initialState = {
     likes: 0,
     dislikes: 0,
     views: 0,
-    battles: 0
+    battles: 0,
+    proxiedAssets: {
+      images: [],
+      audio: [],
+      theme: {},
+      background: {}
+    },
   },
   betResult: -1,
   bankroll: 0,

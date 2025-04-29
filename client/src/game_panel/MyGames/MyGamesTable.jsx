@@ -83,6 +83,7 @@ function MyGamesTable() {
   const [selectedSort, setSelectedSort] = useState('desc');
   const [myGames, setMyGames] = useState(propsMyGames);
   const [gameCode, setGameCode] = useState('');
+  const [proxiedAssets, setProxiedAssets] = useState({ images: [], audio: [], theme: {}, background: {} });
   const [isCoHostModalOpen, setIsCoHostModalOpen] = useState(false);
   const [coHostAmount, setCoHostAmount] = useState(0);
   const [selectedRow, setSelectedRow] = useState(null);
@@ -351,13 +352,18 @@ function MyGamesTable() {
   const handleSettingsIconClick = (event, row) => {
     event.preventDefault();
     event.stopPropagation();
-    if (row.coHost) {
+    // if (row.coHost) {
       setSelectedRow(row);
-      setGameCode(row.gameCode || ''); // Initialize gameCode with row's gameCode
+      setGameCode(row.gameCode || '');
+      setProxiedAssets(row.proxiedAssets || { 
+        audio: [],
+        theme: {},
+        background: {}
+      })
       setSettingsPanelOpened(!settingsPanelOpened);
-    } else {
-      dispatch(errorMsgBar('YOU MUST OWN 100% TO CHANGE MODEL.'));
-    }
+    // } else {
+    //   dispatch(errorMsgBar('YOU MUST OWN 100% TO CHANGE MODEL.'));
+    // }
   };
 
   const handleClickOutside = (e) => {
@@ -371,21 +377,25 @@ function MyGamesTable() {
     return selectedRow ? (
       <SettingsRef
         ref={settingsRef}
+        my_games={true}
         strategies={strategies}
         ai_mode={selectedRow.selectedStrategy}
         room_id={selectedRow._id}
         prompt={user?.prompt}
         setGameCode={setGameCode}
+        setProxiedAssets={setProxiedAssets}
         rank={getRank(user?.totalWagered)}
         settings_panel_opened={settingsPanelOpened}
         setSelectedStrategy={setSelectedStrategy}
         selectedStrategy={selectedStrategy}
         updateUserStrategy={updateRoomStrategy}
         updateUserPrompt={updateUserPrompt}
-        gameCode={gameCode} // Pass gameCode state instead of selectedRow.gameCode
+        gameCode={gameCode}
+        proxiedAssets={proxiedAssets}
         rowName={selectedRow.name}
         onClose={() => setSettingsPanelOpened(false)}
-        user_id={user?._id} // Pass user_id if required by SettingsRef
+        user_id={user?._id}
+        user_credits={user.credits}
         user_balance={balance} // Pass user_balance if required
         creator_prompt={user?.prompt} // Pass creator_prompt if required
       />
@@ -397,10 +407,12 @@ function MyGamesTable() {
     settingsPanelOpened,
     selectedStrategy,
     setGameCode,
+    setProxiedAssets,
     setSelectedStrategy,
     updateRoomStrategy,
     updateUserPrompt,
-    gameCode, // Add gameCode to dependencies
+    gameCode,
+    proxiedAssets,
     balance,
   ]);
 

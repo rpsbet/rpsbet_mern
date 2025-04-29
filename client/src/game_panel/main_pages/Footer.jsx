@@ -91,7 +91,6 @@ function Footer({ open, style }) {
           </Suspense>
         )}
         <Box className="social-icons" sx={{ display: 'flex', alignItems: 'center' }}>
-          <span>CHECK SOCIALS FOR UPDATES ►</span>
           <a href="https://x.com/catsinofun">
             <FontAwesomeIcon icon={faXTwitter} />
           </a>
@@ -129,7 +128,7 @@ function Footer({ open, style }) {
           &nbsp;Privacy
           </StyledLink>
         </LinksContainer>
-        <Address
+        {/* <Address
           onClick={() => {
             navigator.clipboard.writeText('74YCHZz5VWSCcXvopnS33nS3Z5kLSCJzy3nm1sfSpump');
             setCopied(true);
@@ -144,7 +143,7 @@ function Footer({ open, style }) {
           <Typography variant="caption" sx={{ mt: 1 }}>
             Click to copy!
           </Typography>
-        </Address>
+        </Address> */}
         <img src="/img/bottom-bg.svg" alt="bottom footer" style={{ width: '100%', height: 'auto', filter: 'grayscale(1)', position: 'absolute', zIndex: '-1' }} />
       </FooterContainer>
       {showTermsModal && (

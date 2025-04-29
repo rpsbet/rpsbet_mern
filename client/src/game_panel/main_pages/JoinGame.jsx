@@ -599,6 +599,7 @@ function JoinGame() {
 
   // Render
   return (
+    <>
     <Box
       className="main-game join"
       sx={{
@@ -798,8 +799,10 @@ function JoinGame() {
         </div>
       )}
 
-      <Footer className="footer" open={isDrawerOpen} />
     </Box>
+      <Footer className="footer" open={isDrawerOpen} />
+    </>
+
   );
 }
 

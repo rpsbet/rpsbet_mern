@@ -179,29 +179,13 @@ const PreSummaryPanel = (props) => {
             </Box>
           </Tooltip>
         </Box>
-        {/* STRATEGY */}
-        <Box className="data-item">
-          <Typography variant="h6" className="label room-name">
-            <FontAwesomeIcon icon={faRobot} style={{ marginRight: 8 }} /> Game-Type
-          </Typography>
-          {/* Tooltip + info icon for the value */}
-          <Tooltip title="This is the Game-Type of the room.">
-            <Box
-              sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-            >
-              <Typography id="ai_mode" variant="body1" className="value">
-                {roomInfo?.game_type}
-              </Typography>
-              <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
-            </Box>
-          </Tooltip>
-        </Box>
+        
 
         {/* LIQUIDITY (already has a tooltip + icon logic) */}
         <Box className="data-item">
           <Typography variant="h6" className="label">
             <FontAwesomeIcon icon={faWater} style={{ marginRight: 8 }} />
-            LIQUIDITY
+            Liquidity
           </Typography>
           <Tooltip
             title={
@@ -373,7 +357,7 @@ const PreSummaryPanel = (props) => {
               icon={faHandHoldingUsd}
               style={{ marginRight: 8 }}
             />
-            HEALTH
+            Health
           </Typography>
           <Tooltip title="WHEN THIS GOES TO 0% THE GAME DIES AND IS CONVERTED TO A TRADEABLE TOKEN">
             <Box
@@ -422,7 +406,7 @@ const PreSummaryPanel = (props) => {
         <Box className="data-item">
           <Typography variant="h6" className="label room-name">
             <FontAwesomeIcon icon={faShieldAlt} style={{ marginRight: 8 }} />{' '}
-            BATTLES
+            Battles
           </Typography>
           {/* Tooltip + info icon for the value */}
           <Tooltip title="This is the number of battles of this room.">
@@ -524,7 +508,7 @@ const PreSummaryPanel = (props) => {
         <Box className="data-item">
           <Typography variant="h6" className="label room-id">
             <FontAwesomeIcon icon={faInfoCircle} style={{ marginRight: 8 }} />
-            STATUS
+            Status
           </Typography>
           <Tooltip title="The current status of this room (e.g., open, finished, etc.)">
             <Box
@@ -550,6 +534,24 @@ const PreSummaryPanel = (props) => {
             >
               <Typography variant="body1" className="value">
                 {Moment(roomInfo?.created_at).fromNow()}
+              </Typography>
+              <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
+            </Box>
+          </Tooltip>
+        </Box>
+
+        {/* STRATEGY */}
+        <Box className="data-item">
+          <Typography variant="h6" className="label room-name">
+            <FontAwesomeIcon icon={faRobot} style={{ marginRight: 8 }} /> Game-Type
+          </Typography>
+          {/* Tooltip + info icon for the value */}
+          <Tooltip title="This is the Game-Type of the room.">
+            <Box
+              sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+            >
+              <Typography id="ai_mode" variant="body1" className="value">
+                {roomInfo?.game_type}
               </Typography>
               <InfoIcon sx={{ fontSize: 16, ml: 1 }} />
             </Box>

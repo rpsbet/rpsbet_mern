@@ -12,6 +12,7 @@ import {
   DialogContent,
   Tooltip,
 } from '@mui/material';
+import { Close as CloseIcon } from '@mui/icons-material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCoins, faPlus } from '@fortawesome/free-solid-svg-icons';
 import AttachMoney from '@mui/icons-material/AttachMoney';
@@ -182,20 +183,32 @@ const MyLoansModal = ({ modalIsOpen, closeModal }) => {
             top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
-            color: '#fff',
-            width: '90%',
+            width: { xs: '90vw', sm: '80vw', md: '60vw', lg: '50vw' },
+            maxHeight: '90vh',
             overflowY: 'auto',
-            borderRadius: 2,
-            boxShadow: 24,
-            p: 3,
-            // Glassmorphism styles (default dark mode colors)
-            background: 'rgba(0, 0, 0, 0.2)',
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)', // For Safari
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            // Fallback for browsers without backdrop-filter
-            '@supports not (backdrop-filter: blur(10px))': {
-              background: 'rgba(0, 0, 0, 0.4)',
+            borderRadius: 3,
+            p: { xs: 2, sm: 3, md: 4 },
+            // Glassmorphism
+            background: 'rgba(30, 30, 30, 0.3)',
+            backdropFilter: 'blur(15px)',
+            WebkitBackdropFilter: 'blur(15px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
+            // Fallback
+            '@supports not (backdrop-filter: blur(15px))': {
+              background: 'rgba(30, 30, 30, 0.6)',
+            },
+            scrollbarWidth: 'thin',
+            scrollbarColor: 'rgba(255,255,255,0.2) transparent',
+            '&::-webkit-scrollbar': {
+              width: '8px',
+            },
+            '&::-webkit-scrollbar-track': {
+              background: 'transparent',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: 'rgba(255,255,255,0.2)',
+              borderRadius: '4px',
             },
           }}
         >
@@ -220,8 +233,22 @@ const MyLoansModal = ({ modalIsOpen, closeModal }) => {
               <FontAwesomeIcon icon={faCoins} />
               YOUR LOANS
             </Typography>
-            <Button variant="text" color="error" onClick={onBtnCancelClicked} sx={{ fontSize: '1.25rem' }}>
-              ×
+
+            <Button
+              onClick={onBtnCancelClicked}
+              sx={{
+                position: 'absolute',
+                top: 10,
+                right: 10,
+                minWidth: 'auto',
+                p: 1,
+                bgcolor: 'rgba(0,0,0,0.5)',
+                color: 'white',
+                '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' },
+                borderRadius: '50%',
+              }}
+            >
+              <CloseIcon />
             </Button>
           </Box>
 
@@ -286,7 +313,7 @@ const MyLoansModal = ({ modalIsOpen, closeModal }) => {
                     sx={{ position: 'relative' }}
                     aria-label="Create a loan (Elite members only)"
                   >
-                    CREATE A LOAN
+                    Create a Loan
                   </Button>
                 </Box>
               </Tooltip>
@@ -294,6 +321,7 @@ const MyLoansModal = ({ modalIsOpen, closeModal }) => {
           </Box>
         </Box>
       </Modal>
+ 
 
       {/* PRODUCT CREATE DIALOG */}
       <Dialog
@@ -303,17 +331,37 @@ const MyLoansModal = ({ modalIsOpen, closeModal }) => {
         fullWidth
         PaperProps={{
           sx: {
-            background: 'rgba(0, 0, 0, 0.2)',
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            '@supports not (backdrop-filter: blur(10px))': {
-              background: 'rgba(0, 0, 0, 0.4)',
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: { xs: '90vw', sm: '80vw', md: '60vw', lg: '50vw' },
+            maxHeight: '90vh',
+            overflowY: 'auto',
+            borderRadius: 3,
+            // Glassmorphism
+            background: 'rgba(30, 30, 30, 0.3)',
+            backdropFilter: 'blur(15px)',
+            WebkitBackdropFilter: 'blur(15px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
+            // Fallback
+            '@supports not (backdrop-filter: blur(15px))': {
+              background: 'rgba(30, 30, 30, 0.6)',
             },
-            color: '#fff',
-            borderRadius: 2,
-            boxShadow: 24,
-          },
+            scrollbarWidth: 'thin',
+            scrollbarColor: 'rgba(255,255,255,0.2) transparent',
+            '&::-webkit-scrollbar': {
+              width: '8px',
+            },
+            '&::-webkit-scrollbar-track': {
+              background: 'transparent',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: 'rgba(255,255,255,0.2)',
+              borderRadius: '4px',
+            },
+          }
         }}
       >
         <DialogContent sx={{ p: 4 }}>
@@ -329,13 +377,22 @@ const MyLoansModal = ({ modalIsOpen, closeModal }) => {
             <Typography variant="h6" sx={{ fontWeight: 600 }}>
               <FontAwesomeIcon icon={faPlus} /> NEW LOAN
             </Typography>
+
             <Button
-              variant="text"
-              color="error"
               onClick={closeProductCreateModal}
-              sx={{ fontSize: '1.25rem', minWidth: 'auto' }}
+              sx={{
+                position: 'absolute',
+                top: 10,
+                right: 10,
+                minWidth: 'auto',
+                p: 1,
+                bgcolor: 'rgba(0,0,0,0.5)',
+                color: 'white',
+                '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' },
+                borderRadius: '50%',
+              }}
             >
-              ×
+              <CloseIcon />
             </Button>
           </Box>
 

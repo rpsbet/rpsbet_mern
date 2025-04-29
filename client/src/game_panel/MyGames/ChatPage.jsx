@@ -6,9 +6,6 @@ import {
   getChatRoomInfo,
   addChatLog,
   getMyChat,
-  getGameTypeList,
-  loadRoomInfo,
-  setCurRoomInfo,
   loadOlderChatMessages,
 } from '../../redux/Logic/logic.actions';
 import { toggleDrawer } from '../../redux/Auth/user.actions';
@@ -21,7 +18,7 @@ import { getCustomTheme } from '../../config/theme';
 
 import Avatar from '../../components/Avatar';
 import PlayerModal from '../modal/PlayerModal';
-import DrawerButton from '../main_pages/DrawerButton';
+
 import Footer from '../main_pages/Footer';
 import ChatPanel from '../ChatPanel/ChatPanel';
 import { InsertEmoticon } from '@mui/icons-material';
@@ -37,7 +34,6 @@ import {
   CircularProgress,
 } from '@mui/material';
 
-const moment = require('moment');
 
 function ChatPage() { // Keep match as a prop since it’s from React Router
   const dispatch = useDispatch();
@@ -195,17 +191,6 @@ function ChatPage() { // Keep match as a prop since it’s from React Router
     setShowPlayerModal(false);
   };
 
-  function formatCustomDate(dateString) {
-    const date = moment(dateString, 'MM-DD-YYYY HH:mm:ss');
-    if (date.isSame(moment(), 'day')) {
-      return `Today, ${date.format('h:mm a')}`;
-    } else if (date.isSame(moment().subtract(1, 'day'), 'day')) {
-      return `Yesterday, ${date.format('h:mm a')}`;
-    } else {
-      return date.format('D MMM YYYY, h:mm a');
-    }
-  }
-
   // ---------- STYLING ----------
   const theme = getCustomTheme(isDarkMode ? 'dark' : 'light');
   const openPopover = Boolean(anchorEl);
@@ -241,16 +226,7 @@ function ChatPage() { // Keep match as a prop since it’s from React Router
         <Box
           sx={{
             mb: 2,
-            borderRadius: '0.3em',
-            // Glassmorphism styles (default dark mode colors)
-            background: 'rgba(0, 0, 0, 0.2)',
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)', // For Safari
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            // Fallback for browsers without backdrop-filter
-            '@supports not (backdrop-filter: blur(10px))': {
-              background: 'rgba(0, 0, 0, 0.4)',
-            },
+            
           }}
         >
           {/* Main Chat Layout */}

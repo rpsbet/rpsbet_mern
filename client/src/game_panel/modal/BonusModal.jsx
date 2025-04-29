@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Modal, Box, Typography, Button, Fade } from '@mui/material';
+import { Close as CloseIcon } from '@mui/icons-material'
 import Moment from 'moment';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCoins, faClock, faSyncAlt } from '@fortawesome/free-solid-svg-icons';
@@ -63,7 +64,7 @@ function BonusModal({ modalIsOpen, closeModal }) {
     setLandedNumber(null);
     setShowFlash(false);
 
-   if (!isMuted || !gameSounds) {
+    if (!isMuted || !gameSounds) {
       const audio = new Audio('/sounds/wheel.mp3');
       audio.play().catch(() => {
         // Catch promise rejections if user hasn't interacted with the page
@@ -122,28 +123,38 @@ function BonusModal({ modalIsOpen, closeModal }) {
       sx={{ zIndex: 1300 }}
       BackdropProps={{ style: { backgroundColor: 'rgba(0, 0, 0, 0.85)' } }}
     >
-      <Fade in={modalIsOpen}>
         <Box
           sx={{
             position: 'absolute',
             top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
-            color: '#fff',
-            width: '90vw',
-            height: '80vh',
+            width: { xs: '90vw', sm: '80vw', md: '60vw', lg: '50vw' },
+            maxHeight: '90vh',
             overflowY: 'auto',
-            borderRadius: 2,
-            boxShadow: 24,
-            p: 3,
-            // Glassmorphism styles (default dark mode colors)
-            background: 'rgba(0, 0, 0, 0.2)',
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)', // For Safari
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            // Fallback for browsers without backdrop-filter
-            '@supports not (backdrop-filter: blur(10px))': {
-              background: 'rgba(0, 0, 0, 0.4)',
+            borderRadius: 3,
+            p: { xs: 2, sm: 3, md: 4 },
+            // Glassmorphism
+            background: 'rgba(30, 30, 30, 0.3)',
+            backdropFilter: 'blur(15px)',
+            WebkitBackdropFilter: 'blur(15px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
+            // Fallback
+            '@supports not (backdrop-filter: blur(15px))': {
+              background: 'rgba(30, 30, 30, 0.6)',
+            },
+            scrollbarWidth: 'thin',
+            scrollbarColor: 'rgba(255,255,255,0.2) transparent',
+            '&::-webkit-scrollbar': {
+              width: '8px',
+            },
+            '&::-webkit-scrollbar-track': {
+              background: 'transparent',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: 'rgba(255,255,255,0.2)',
+              borderRadius: '4px',
             },
           }}
         >
@@ -168,16 +179,22 @@ function BonusModal({ modalIsOpen, closeModal }) {
               <FontAwesomeIcon icon={faCoins} style={{ color: '#ffd700' }} />
               CORN WHEEL
             </Typography>
+
             <Button
               onClick={closeModal}
               sx={{
-                color: '#ff6b6b',
-                fontSize: '1.5rem',
-                minWidth: 'unset',
-                '&:hover': { color: '#ff8e53' },
+                position: 'absolute',
+                top: 10,
+                right: 10,
+                minWidth: 'auto',
+                p: 1,
+                bgcolor: 'rgba(0,0,0,0.5)',
+                color: 'white',
+                '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' },
+                borderRadius: '50%',
               }}
             >
-              ×
+              <CloseIcon />
             </Button>
           </Box>
 
@@ -301,7 +318,6 @@ function BonusModal({ modalIsOpen, closeModal }) {
             )}
           </Box>
         </Box>
-      </Fade>
     </Modal>
   );
 }

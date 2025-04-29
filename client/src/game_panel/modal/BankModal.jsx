@@ -9,7 +9,8 @@ import {
   Dialog,
   DialogContent,
 } from '@mui/material';
-import { Help, AttachMoney } from '@mui/icons-material';
+
+import { Help, AttachMoney, Close as CloseIcon } from '@mui/icons-material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCoins, faAdjust, faInfo } from '@fortawesome/free-solid-svg-icons';
 
@@ -48,21 +49,32 @@ const BankModal = ({ modalIsOpen, closeModal, remainingLoans }) => {
             top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
-            color: isDarkMode ? '#fff' : '#000', // Preserve text color conditional
-            width: '90vw',
-            maxHeight: '80vh',
+            width: { xs: '90vw', sm: '80vw', md: '60vw', lg: '50vw' },
+            maxHeight: '90vh',
             overflowY: 'auto',
-            borderRadius: 2,
-            boxShadow: 24,
-            p: 3,
-            // Glassmorphism styles (default dark mode colors)
-            background: 'rgba(0, 0, 0, 0.2)',
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)', // For Safari
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            // Fallback for browsers without backdrop-filter
-            '@supports not (backdrop-filter: blur(10px))': {
-              background: 'rgba(0, 0, 0, 0.4)',
+            borderRadius: 3,
+            p: { xs: 2, sm: 3, md: 4 },
+            // Glassmorphism
+            background: 'rgba(30, 30, 30, 0.3)',
+            backdropFilter: 'blur(15px)',
+            WebkitBackdropFilter: 'blur(15px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
+            // Fallback
+            '@supports not (backdrop-filter: blur(15px))': {
+              background: 'rgba(30, 30, 30, 0.6)',
+            },
+            scrollbarWidth: 'thin',
+            scrollbarColor: 'rgba(255,255,255,0.2) transparent',
+            '&::-webkit-scrollbar': {
+              width: '8px',
+            },
+            '&::-webkit-scrollbar-track': {
+              background: 'transparent',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: 'rgba(255,255,255,0.2)',
+              borderRadius: '4px',
             },
           }}
         >
@@ -83,12 +95,20 @@ const BankModal = ({ modalIsOpen, closeModal, remainingLoans }) => {
               CENTRAL BANK
             </Typography>
             <Button
-              variant="text"
-              color="error"
               onClick={closeModal}
-              sx={{ fontSize: '1.25rem' }}
+              sx={{
+                position: 'absolute',
+                top: 10,
+                right: 10,
+                minWidth: 'auto',
+                p: 1,
+                bgcolor: 'rgba(0,0,0,0.5)',
+                color: 'white',
+                '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' },
+                borderRadius: '50%',
+              }}
             >
-              ×
+              <CloseIcon />
             </Button>
           </Box>
 
@@ -143,17 +163,37 @@ const BankModal = ({ modalIsOpen, closeModal, remainingLoans }) => {
         fullWidth
         PaperProps={{
           sx: {
-            background: 'rgba(0, 0, 0, 0.2)',
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            '@supports not (backdrop-filter: blur(10px))': {
-              background: 'rgba(0, 0, 0, 0.4)',
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: { xs: '90vw', sm: '80vw', md: '60vw', lg: '50vw' },
+            maxHeight: '90vh',
+            overflowY: 'auto',
+            borderRadius: 3,
+            // Glassmorphism
+            background: 'rgba(30, 30, 30, 0.3)',
+            backdropFilter: 'blur(15px)',
+            WebkitBackdropFilter: 'blur(15px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
+            // Fallback
+            '@supports not (backdrop-filter: blur(15px))': {
+              background: 'rgba(30, 30, 30, 0.6)',
             },
-            color: '#fff',
-            borderRadius: 2,
-            boxShadow: 24,
-          },
+            scrollbarWidth: 'thin',
+            scrollbarColor: 'rgba(255,255,255,0.2) transparent',
+            '&::-webkit-scrollbar': {
+              width: '8px',
+            },
+            '&::-webkit-scrollbar-track': {
+              background: 'transparent',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: 'rgba(255,255,255,0.2)',
+              borderRadius: '4px',
+            },
+          }
         }}
       >
         <DialogContent sx={{ p: 4 }}>
@@ -171,13 +211,22 @@ const BankModal = ({ modalIsOpen, closeModal, remainingLoans }) => {
               <FontAwesomeIcon icon={faInfo} />
               &nbsp; LOAN INFORMATION
             </Typography>
+        
             <Button
-              variant="text"
-              color="error"
               onClick={handleToggleHelp}
-              sx={{ fontSize: '1.5rem', minWidth: 'auto' }}
+              sx={{
+                position: 'absolute',
+                top: 10,
+                right: 10,
+                minWidth: 'auto',
+                p: 1,
+                bgcolor: 'rgba(0,0,0,0.5)',
+                color: 'white',
+                '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' },
+                borderRadius: '50%',
+              }}
             >
-              &times;
+              <CloseIcon />
             </Button>
           </Box>
 

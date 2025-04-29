@@ -53,7 +53,7 @@ export default function BetAmountInput(props) {
         <TextField
           color="error"
           type="number"
-          variant="filled"
+          variant="outlined"
           ref={betAmountRef}
           disabled={disabledButtons || false}
           value={localBetAmount}
@@ -64,14 +64,13 @@ export default function BetAmountInput(props) {
             step: '0.01',
             min: '0',
             style: {
-              padding: '12px 14px',
               fontSize: '1.1rem',
             },
           }}
           InputProps={{
             startAdornment: (
-              <InputAdornment position="start" sx={{ mr: 1, pb: 2 }}>
-                <img src={sol} width="24" alt="SOL" style={{ verticalAlign: 'middle' }} />
+              <InputAdornment position="start" sx={{ mr: 1, fontWeight: 300}}>
+                SOL
               </InputAdornment>
             ),
           }}
@@ -111,7 +110,7 @@ export default function BetAmountInput(props) {
               sx={{
                 flex: 1,
                 fontSize: '1rem',
-                fontWeight: 500,
+                fontWeight: 600,
                 borderRadius: '4px',
                 textTransform: 'none', // Prevent uppercase transformation
               }}

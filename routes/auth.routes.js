@@ -373,7 +373,7 @@ router.post('/purchase-elite', auth, async (req, res) => {
   const clientIp = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
   // Define subscription amounts
   const subscriptionAmounts = {
-    red: 0.1,
+    red: 0.2,
     black: 1.0,
   };
 

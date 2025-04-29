@@ -76,6 +76,7 @@ const Summary = ({ shortVersion }) => {
         color: 'white', // sets text color for children
         textAlign: 'center',
         mt: isMobile ? 0 : 2,
+        mb: 2
       }}
     >
       <Tooltip title="Tokens will be distributed to this address when bonded">

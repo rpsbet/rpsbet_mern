@@ -390,6 +390,11 @@ function ChatPanel(props) {
           p: 1,
           color: 'white',
           border: '0',
+          background: 'rgba(25, 25, 25, 0.6)', // Darker translucent background
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
+          borderRight: '1px solid rgba(255, 255, 255, 0.08)'
         }}
       >
         {/* Tabs Section */}
@@ -427,11 +432,7 @@ function ChatPanel(props) {
         >
           <Tab
             className="custom-tab"
-            label={
-              <span style={{ marginBottom: '8px', display: 'inline-block' }}>
-                Inbox
-              </span>
-            }
+           
             icon={
               <ChatOutlined
                 sx={{
@@ -450,11 +451,6 @@ function ChatPanel(props) {
           />
           <Tab
             className="custom-tab"
-            label={
-              <span style={{ marginBottom: '8px', display: 'inline-block' }}>
-                Chat
-              </span>
-            }
             icon={
               <ChatBubbleOutlineOutlined
                 sx={{
@@ -547,7 +543,7 @@ function ChatPanel(props) {
               color="error"
               type="text"
               className="form-control"
-              variant="filled"
+              variant="outlined"
               onFocus={onFocusHandler}
               onBlur={onBlurHandler}
               onKeyDown={onTextAreaKeyDown}
@@ -557,6 +553,7 @@ function ChatPanel(props) {
               inputRef={textareaRef}
               disabled={!isChatEnabled}
               fullWidth
+             
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end" sx={{ minWidth: '80px' }}>
@@ -599,10 +596,14 @@ function ChatPanel(props) {
               PaperProps={{
                 sx: {
                   p: 1,
-                  borderRadius: 1,
+                  borderRadius: '12px',
                   maxWidth: '200px',
                   overflowY: 'auto',
-                  bgcolor: 'background.default',
+                  bgcolor: 'rgba(25, 25, 25, 0.85)',
+                  backdropFilter: 'blur(12px)',
+                  WebkitBackdropFilter: 'blur(12px)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
                 },
               }}
             >
@@ -650,11 +651,15 @@ function ChatPanel(props) {
               transitionDuration={0}
               PaperProps={{
                 sx: {
-                  p: 2,
-                  borderRadius: 1,
-                  bgcolor: 'background.default',
-                  minWidth: '300px',
-                  maxWidth: '378px',
+                  p: 1,
+                  borderRadius: '12px',
+                  maxWidth: '200px',
+                  overflowY: 'auto',
+                  bgcolor: 'rgba(25, 25, 25, 0.85)',
+                  backdropFilter: 'blur(12px)',
+                  WebkitBackdropFilter: 'blur(12px)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
                 },
               }}
             >
@@ -663,7 +668,7 @@ function ChatPanel(props) {
                   color="error"
                   type="text"
                   placeholder="SEARCH GIFS..."
-                  variant="filled"
+                  variant="outlined"
                   onKeyDown={onTextAreaKeyDown}
                   onChange={handleSearchInputChange}
                   fullWidth

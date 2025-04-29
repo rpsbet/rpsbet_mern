@@ -96,6 +96,9 @@ app.use(
   })
 );
 
+app.use('/img', express.static(path.join(__dirname, 'public/img')));
+
+
 // -------------------- MongoDB Connection --------------------
 const connectWithRetry = async () => {
   try {

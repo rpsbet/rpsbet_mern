@@ -115,13 +115,6 @@ button.btn {
   justify-content: center;
 }
 
-#wallet-btn::before {
-  opacity: 0 !important;
-}
-
-#wallet-btn:hover::before {
-  opacity: 0.4 !important;
-}
 
 .grid-container {
   display: grid !important;
@@ -187,22 +180,6 @@ a:hover {
   color: #333;
 }
 
-.game_header .main_header .header_action_panel button#btn-login:before,
-#wallet-btn::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  z-index: 0;
-  opacity: 0.4;
-  filter: brightness(0.15);
-  height: 200%;
-  background-image: url('../public/img/rock-bg.png');
-  background-size: 100% auto;
-  animation: move-diagonal 10s linear infinite;
-}
-
 .cell-joiners {
   display: inline-flex !important;
   vertical-align: middle;
@@ -226,7 +203,7 @@ a:hover {
   background-image: url('../public/img/rps-logo-white.svg');
   background-repeat: no-repeat;
   background-position: center;
-  border-radius: 0.3em;
+  border-radius: 8px;
   background-color: #d81719;
   box-shadow:
     0 10px 27px rgb(255 0 0 / 10%),
@@ -278,11 +255,10 @@ a:hover {
   left: auto;
 }
 
-div.table .table-row .table-cell button.active,
-#balance button:active,
-.game_header .main_header .header_action_panel button#btn-login:active,
 #rps-radio div.active {
-  background-color: var(--secondary-color);
+  background-color: transparent;
+  border-radius: 8px;
+  border: 2px solid #ff0000;
   box-shadow: none !important;
 }
 
@@ -433,9 +409,6 @@ h4.game_header {
   transform: translateX(-50%) rotate(15deg);
 }
 
-.btn-game-type.active {
-  border: 3px solid #ffd000 !important;
-}
 
 .lottie-container div {
   width: 100%;
@@ -483,7 +456,7 @@ h4.game_header {
 }
 
 .contents_wrapper .main-game .sub-panel {
-  padding: 10px 15px 0px 0;
+  padding: 7.5px 7.5px 0 0;
   position: initial;
 }
 
@@ -504,15 +477,6 @@ h4.game_header {
   border-radius: 1em !important;
 }
 
-.main-game h2.main-title {
-  font-size: 13px;
-  font-weight: 400;
-  color: var(--black-color);
-  padding-top: 15px;
-  text-transform: uppercase;
-  padding-bottom: 5px;
-  margin: 0;
-}
 
 /*********************************/
 /********* GAME PANEL ***********/
@@ -595,7 +559,6 @@ div.table.my-chat-table .table-cell button.btn_join {
 
 .room-header {
   display: flex;
-  color: #333;
   justify-content: space-between;
   margin-bottom: 20px;
 }
@@ -667,7 +630,6 @@ div.table .table-row > div {
 
 div.table.main-history-table .table-row > div {
   align-items: center;
-  color: #777;
   font-size: 12px;
   letter-spacing: 1px;
 }
@@ -908,10 +870,6 @@ div.table.my-chat-table .table-row .table-cell.message-date {
 
 .dont-have-game-msg {
   font-weight: 700;
-}
-
-.table {
-  color: #666666;
 }
 
 img.game-type-icon {
@@ -1236,15 +1194,10 @@ input[type='number'] {
   color: unset !important;
 }
 
-input,
-span, p, div, button, a  {
-font-family: 'Days One', sans-serif !important;
-}
 
 .value {
   font-size: 0.9rem !important;
   text-align: right !important;
-  font-family: 'Days One', sans-serif !important;
 }
 
 #my-products .value,
@@ -1457,29 +1410,6 @@ table td.amount.red {
   margin-top: 40px;
 }
 
-.page-title {
-  margin-bottom: -30px;
-  margin-top: 20px;
-}
-
-.contents_wrapper .game-page .page-title h2 {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' fill='none' viewBox='0 0 40 40'%3E%3Cpath fill='%23060607' fill-rule='evenodd' d='M2.25 14.821c0-3.905 3.166-7.071 7.071-7.071H30.18c3.905 0 7.071 3.166 7.071 7.071v6.143c.58.504 1.085 1.09 1.5 1.74v-7.883c0-4.733-3.838-8.571-8.571-8.571H9.32C4.588 6.25.75 10.088.75 14.821v11.805c0 3.974 3.221 7.195 7.195 7.195 2.726 0 5.217-1.54 6.436-3.977l.618-1.237h9.162c-.099-.485-.154-.987-.16-1.5h-9.465c-.284 0-.544.16-.671.415l-.826 1.651c-.965 1.93-2.937 3.148-5.094 3.148-3.145 0-5.695-2.55-5.695-5.695V14.821zm8.929-1.303v3.16H8.018v1.5h3.16v3.161h1.5v-3.16h3.161v-1.5h-3.16v-3.161h-1.5zm12.482 7.268h2.607v-1.5H23.66v1.5zm5.214-5.215h2.607v-1.5h-2.607v1.5z' clip-rule='evenodd'/%3E%3Cpath stroke='%23060607' stroke-width='1.5' d='M32.75 25L29.75 34M28 29.25L38 29.25'/%3E%3C/svg%3E%0A");
-  background-repeat: no-repeat;
-  background-position: left center;
-  padding-left: 56px;
-  font-size: 1.1em;
-  height: 30px;
-  line-height: 30px;
-  font-weight: bold;
-  color: #343a40;
-}
-
-.contents_wrapper .game-page .page-title span {
-  font-size: 16px;
-  font-weight: 500;
-  color: #747f8d;
-}
-
 .game-page.reset-password-page {
   padding: 60px;
 }
@@ -1505,10 +1435,9 @@ table td.amount.red {
   align-items: center;
   background-color: #080808;
   margin-top: 0.25rem;
-  color: #4f5660;
   padding: 1.5em;
-  border-top-left-radius: 0.3em;
-  border-top-right-radius: 0.3em;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
   width: 100%;
   position: relative;
 }
@@ -1523,11 +1452,6 @@ table td.amount.red {
 
 .game-page .pre-summary-panel > div ~ div {
   margin: 0 45px;
-}
-
-.game-page .page-title > .pre-summary-panel {
-  background-color: var(--white-color);
-  padding: 8px 16px;
 }
 
 .pre-summary-panel.title {
@@ -1700,14 +1624,14 @@ h6.score {
 
 .game-page .game-contents h3.game-sub-title {
   font-size: 16px;
-  color: #343a40;
+  color: #fff;
   line-height: 5px;
   margin: 0 0 15px;
   display: flex;
   justify-content: center;
   align-items: center;
   font-weight: 700;
-  /* padding-top: 15px; */
+  padding: 5px 10px;
 }
 
 .game-page .game-contents .game-info-panel {
@@ -1722,15 +1646,6 @@ h6.score {
 .bet-amount button.active,
 .game-page .game-contents .game-info-panel #rps-radio button.active {
   color: var(--white-color);
-  box-shadow: none !important;
-  border: 3px solid var(--yellow-color);
-}
-
-.game-page .game-contents .game-info-panel #rps-radio button:focus,
-.create-game-panel .game-page .game-contents .game-info-panel button:focus,
-.bet-amount button:focus,
-.spectate:focus {
-  transform: translateY(0px);
   box-shadow: none !important;
   border: 3px solid var(--yellow-color);
 }
@@ -1763,13 +1678,10 @@ h6.score {
   box-shadow: unset !important;
   border-radius: 1em !important;
   position: absolute;
-  top: -10px;
-  border-color: #343a40 !important;
-  color: #343a40 !important;
 }
 
-.guesses div:last-child,
-.guesses p:last-child {
+.MuiStack-root .MuiStack-root:last-child div,
+.MuiStack-root .MuiStack-root:last-child p {
   opacity: 1 !important;
 }
 
@@ -1834,15 +1746,15 @@ svg#delete:hover {
 }
 
 #rps-radio .rock {
-  background-image: url('../public/img/rock-weapon.gif') !important;
+  background-image: url('../public/img/rock.gif') !important;
 }
 
 #rps-radio .paper {
-  background-image: url('../public/img/paper-weapon.gif') !important;
+  background-image: url('../public/img/paper.gif') !important;
 }
 
 #rps-radio .scissors {
-  background-image: url('../public/img/scissors-weapon.gif') !important;
+  background-image: url('../public/img/scissors.gif') !important;
 }
 
 .create-game-panel .game-page .game-contents .action-panel {
@@ -2018,10 +1930,6 @@ svg#delete:hover {
   align-items: center;
 }
 
-.join-game-panel .game-page .game-contents p {
-  font-weight: 600;
-}
-
 .msgtooltip {
   cursor: pointer;
   width: 100%;
@@ -2078,9 +1986,7 @@ svg#delete:hover {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 32px;
   width: 420px;
-  margin: auto;
 }
 
 /*** GLOBAL CHAT ***/
@@ -2562,28 +2468,6 @@ div.table.my-chat-table .table-row .table-cell:last-child {
   height: 24px;
 }
 
-.leaderboards-page .page-title {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: var(--white-color);
-}
-
-.leaderboards-page .page-title h3 {
-  font-size: 18px;
-  font-weight: 600;
-}
-
-.leaderboards-page .page-title button {
-  background: #191a1d;
-  border-radius: 1em;
-  width: 36px;
-  height: 36px;
-  margin-left: 16px;
-  padding: 0;
-  font-size: 16px;
-}
-
 .leaderboards-page table {
   margin-top: 16px;
 }
@@ -2709,10 +2593,6 @@ svg {
   height: 230px;
 }
 
-.qs-image-panel img {
-  position: absolute;
-  box-shadow: 0 0 20px #49ff08;
-}
 
 #cat-football {
   position: absolute;
@@ -3122,7 +3002,6 @@ circle {
 
 .label {
   font-size: x-small;
-  color: #555555;
 }
 
 .progress-hexagon {
@@ -3245,7 +3124,6 @@ circle {
   padding-right: 5px;
   padding-bottom: 5px;
   margin-bottom: 10px;
-  font-family: 'Days One', sans-serif !important;
 }
 
 .hexagon .payout-bar {
@@ -3418,12 +3296,6 @@ circle {
   display: inline-block;
 }
 
-.game_header .main_header #btn_notifications.desktop-only,
-.game_header .main_header #btn_leaderboards.desktop-only,
-.game_header .main_header #btn_marketplace.desktop-only,
-.game_header .main_header #btn_bank.desktop-only {
-  margin-right: 10px;
-}
 
 .game_header .main_header #btn_notifications.mobile-only {
   margin-right: -10px;
@@ -3471,14 +3343,6 @@ circle {
   }
 }
 
-#wallet-btn {
-  margin-top: -1px;
-  border-radius: 0 0 0.2em !important;
-}
-
-#wallet-btn:hover {
-  transform: unset !important;
-}
 
 #wallet-address {
   text-overflow: ellipsis;
@@ -3513,7 +3377,6 @@ circle {
 #balance {
   height: 32px;
   padding: 0px 0px 32px 8px;
-  color: #212529;
   line-height: 28px;
   cursor: pointer;
   background: #cbcbcb;
@@ -3733,9 +3596,6 @@ circle {
   background: unset !important;
 }
 
-.btn-close {
-  font-size: 2.87em !important;
-}
 
 .modal-body .modal-icon {
   height: 72px;
@@ -4290,10 +4150,6 @@ circle {
   padding: 10px;
 }
 
-.modal-body .modal-content-wrapper div.modal-content-panel {
-  padding: 20px 24px;
-}
-
 .modal-body.how-to-play-modal-body
   .modal-content-wrapper
   div.modal-content-panel
@@ -4468,9 +4324,7 @@ circle {
   }
 
   #quickShoot_lottie div {
-    width: 278px !important;
     height: 156px !important;
-    border-radius: 1em !important;
   }
   .bet-info .end-amount {
     padding: 20px 6px;
@@ -4597,24 +4451,6 @@ circle {
   .header_panel_contents {
     right: 50%;
     transform: translate(50%, 0);
-  }
-
-  .contents_wrapper .game-page .page-title {
-    display: block;
-  }
-
-  .contents_wrapper .game-page .page-title h2 {
-    font-size: 16px;
-    padding-left: 44px;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='none' viewBox='0 0 24 24'%3E%3Cpath fill='%23060607' d='M15.474 17.705l-.67.336.67-.336zm-.495-.99l.67-.336c-.127-.254-.386-.415-.67-.415v.75zm-6.258 0v-.75c-.284 0-.543.16-.67.414l.67.335zM22.05 8.892v7.083h1.5V8.893h-1.5zm-5.905 8.477l-.496-.991-1.341.67.495.992 1.342-.671zm-1.166-1.406H8.72v1.5h6.258v-1.5zm-6.928.415l-.496.99 1.342.672.495-.991-1.341-.671zm-6.401-.403V8.893H.15v7.083h1.5zM5.593 4.95h12.514v-1.5H5.593v1.5zm-.826 14.143c-1.722 0-3.117-1.396-3.117-3.117H.15c0 2.55 2.067 4.617 4.617 4.617v-1.5zm14.166 0c-1.18 0-2.26-.667-2.788-1.723l-1.342.67c.782 1.565 2.38 2.553 4.13 2.553v-1.5zm3.117-3.117c0 1.721-1.396 3.117-3.117 3.117v1.5c2.55 0 4.617-2.067 4.617-4.617h-1.5zM7.555 17.37c-.528 1.056-1.607 1.723-2.788 1.723v1.5c1.749 0 3.348-.988 4.13-2.552l-1.342-.671zM23.55 8.893c0-3.006-2.437-5.443-5.443-5.443v1.5c2.178 0 3.943 1.765 3.943 3.943h1.5zm-21.9 0c0-2.178 1.765-3.943 3.943-3.943v-1.5C2.587 3.45.15 5.887.15 8.893h1.5zm3.16 2.314h4.693v-1.5H4.811v1.5zm1.597-3.096v4.692h1.5V8.111h-1.5zm10.918 1.532h1.564v-1.5h-1.564v1.5zm-3.129 3.128h1.565v-1.5h-1.565v1.5z'/%3E%3C/svg%3E%0A");
-  }
-
-  .contents_wrapper .game-page .page-title span {
-    font-size: 12px;
-  }
-
-  .game-page .game-contents {
-    padding-top: 24px;
   }
 
   .summary-panel {
@@ -5065,18 +4901,15 @@ circle {
   }
 
   .game-info-panel .qs-image-panel {
-    border-radius: 44px !important;
     width: 286px;
   }
 
   .join-game-panel .qs-image-panel {
     height: 180px;
-    margin-bottom: 0 !important;
   }
 
   .game-info-panel .qs-image-panel img {
     height: unset !important;
-    border-radius: 14px !important;
   }
 
   .pre-summary-panel .data-item {
@@ -5174,9 +5007,6 @@ circle {
     width: 260px !important;
   }
 
-  .page-title {
-    margin-bottom: 0px;
-  }
 
   #x {
     top: 100px !important;

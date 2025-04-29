@@ -5,13 +5,92 @@ import {
   Tooltip,
   Box,
   Typography,
-  InputAdornment
+  InputAdornment,
+  alpha,
 } from '@mui/material';
 import { CloudUpload as UploadIcon, Info } from '@mui/icons-material';
 import { useDispatch } from 'react-redux';
 import { setFocused } from '../../redux/Auth/user.actions';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { ThemeProvider } from '@mui/material/styles';
 import { getCustomTheme } from '../../config/theme';
+import styled from 'styled-components';
+
+// Styled components for glassmorphism effect
+const GlassContainer = styled(Box)`
+  background: ${({ isDarkMode }) =>
+    isDarkMode ? 'rgba(30, 30, 30, 0.3)' : 'rgba(255, 255, 255, 0.65)'};
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 16px;
+  border: 1px solid ${({ isDarkMode }) =>
+    isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.5)'};
+  box-shadow: ${({ isDarkMode }) =>
+    isDarkMode
+      ? '0 8px 32px rgba(0, 0, 0, 0.3)'
+      : '0 8px 32px rgba(31, 38, 135, 0.1)'};
+  padding: 24px;
+  transition: all 0.3s ease;
+`;
+
+const GlassButton = styled.button`
+  background: ${({ isDarkMode, isActive }) =>
+    isActive
+      ? isDarkMode
+        ? 'rgba(211, 47, 47, 0.8)'
+        : 'rgba(211, 47, 47, 0.8)'
+      : isDarkMode
+      ? 'rgba(255, 255, 255, 0.12)'
+      : 'rgba(255, 255, 255, 0.5)'};
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid ${({ isActive, isDarkMode }) =>
+    isActive
+      ? 'rgba(211, 47, 47, 0.8)'
+      : isDarkMode
+      ? 'rgba(255, 255, 255, 0.08)'
+      : 'rgba(255, 255, 255, 0.5)'};
+  color: ${({ isActive, isDarkMode }) =>
+    isActive
+      ? 'white'
+      : isDarkMode
+      ? 'rgba(255, 255, 255, 0.9)'
+      : 'rgba(0, 0, 0, 0.8)'};
+  font-weight: ${({ isActive }) => (isActive ? '600' : '400')};
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: ${({ isDarkMode }) =>
+      isDarkMode ? 'rgba(211, 47, 47, 0.6)' : 'rgba(211, 47, 47, 0.6)'};
+    color: white;
+  }
+`;
+
+const GlassDropzone = styled(Box)`
+  border: 2px dashed ${({ isDragging, isDarkMode }) =>
+    isDragging
+      ? '#D32F2F'
+      : isDarkMode
+      ? 'rgba(255, 255, 255, 0.2)'
+      : 'rgba(0, 0, 0, 0.2)'};
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  margin: 20px 0;
+  transition: all 0.2s ease;
+  background: ${({ isDragging, isDarkMode }) =>
+    isDragging
+      ? isDarkMode
+        ? 'rgba(211, 47, 47, 0.08)'
+        : 'rgba(211, 47, 47, 0.05)'
+      : isDarkMode
+      ? 'rgba(255, 255, 255, 0.05)'
+      : 'rgba(255, 255, 255, 0.3)'};
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+`;
 
 const CoinInfo = ({
   onChangeState,
@@ -20,16 +99,13 @@ const CoinInfo = ({
   image,
   isDarkMode,
 }) => {
-  // Separate error states for each field
   const [nameError, setNameError] = useState('');
   const [tickerError, setTickerError] = useState('');
+  const [isDragging, setIsDragging] = useState(false);
 
-  // MUI theme
   const theme = getCustomTheme(isDarkMode);
-
   const dispatch = useDispatch();
 
-  // NAME field logic
   const handleNameChange = (value) => {
     if (value.length > 20) {
       setNameError('20 character limit');
@@ -39,7 +115,6 @@ const CoinInfo = ({
     onChangeState({ name: value });
   };
 
-  // TICKER field logic (with '$' prefix)
   const handleTickerChange = (value) => {
     if (value.length > 10) {
       setTickerError('10 character limit');
@@ -49,9 +124,9 @@ const CoinInfo = ({
     onChangeState({ ticker: value });
   };
 
-  // Image processing (drag/drop & file upload)
   const handleImageDrop = (event) => {
     event.preventDefault();
+    setIsDragging(false);
     const file = event.dataTransfer.files[0];
     if (file) {
       processFile(file);
@@ -68,46 +143,67 @@ const CoinInfo = ({
   const processFile = (file) => {
     const reader = new FileReader();
     reader.onloadend = () => {
-      onChangeState({ image: reader.result }); // base64 string
+      onChangeState({ image: reader.result });
     };
     reader.readAsDataURL(file);
   };
 
   return (
     <ThemeProvider theme={theme}>
-      <div
-        className="coin-info-panel"
-        style={{
-          marginBottom: '10px',
-          color: isDarkMode ? 'white' : 'black',
-        }}
-      >
+      <GlassContainer isDarkMode={isDarkMode} className="coin-info-panel" sx={{ marginBottom: '24px' }}>
         {/* Title + Tooltip */}
-        <Box sx={{ mt: "20px" }}>
-          <h3 className="game-sub-title roll-tag" style={{ marginBottom: '5px' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+          <Typography
+            variant="h6"
+            component="h3"
+            className="game-sub-title"
+            sx={{
+              fontWeight: 600,
+              position: 'relative',
+              color: isDarkMode ? '#fff' : '#000',
+              '&:after': {
+                content: '""',
+                position: 'absolute',
+                bottom: -6,
+                left: 0,
+                width: '40px',
+                height: '3px',
+                background: theme.palette.error.main,
+                borderRadius: '2px',
+              },
+            }}
+          >
             Room Information
-            &nbsp;
-            <Tooltip
-              title="For when room hits 69K, liquidity will be moved to a pool."
-              placement="top"
-            >
-              <Info style={{ cursor: 'pointer', color: isDarkMode ? 'white' : '#666' }} />
-            </Tooltip>
-          </h3>
+          </Typography>
+          <Tooltip
+            title="For when room hits 69K, liquidity will be moved to a pool."
+            placement="top"
+          >
+            <Info
+              sx={{
+                cursor: 'pointer',
+                color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+                '&:hover': {
+                  color: theme.palette.error.main,
+                },
+                transition: 'color 0.2s ease',
+              }}
+            />
+          </Tooltip>
         </Box>
 
         {/* NAME Field */}
         <TextField
-          color={nameError ? 'error' : 'error'}
+          color="error"
           label="Name"
-          variant="filled"
+          variant="outlined"
           fullWidth
           margin="normal"
           value={name || ''}
           onChange={(e) => handleNameChange(e.target.value)}
           onFocus={() => {
             dispatch(setFocused(true));
-            setNameError(''); // Optionally clear error on focus
+            setNameError('');
           }}
           onBlur={() => {
             dispatch(setFocused(false));
@@ -117,13 +213,39 @@ const CoinInfo = ({
           }}
           error={!!nameError}
           helperText={nameError}
+          sx={{
+            mb: 2,
+            '& .MuiOutlinedInput-root': {
+              background: isDarkMode ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.8)',
+              backdropFilter: 'blur(4px)',
+              borderRadius: '8px',
+              '&:hover .MuiOutlinedInput-notchedOutline': {
+                borderColor: alpha(theme.palette.error.main, 0.7),
+              },
+              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                borderColor: theme.palette.error.main,
+              },
+              '& fieldset': {
+                borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
+              },
+            },
+            '& .MuiInputLabel-root': {
+              color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+              '&.Mui-focused': {
+                color: theme.palette.error.main,
+              },
+            },
+            '& .MuiFormHelperText-root': {
+              color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+            },
+          }}
         />
 
         {/* TICKER Field (with '$' prefix) */}
         <TextField
-          color={tickerError ? 'error' : 'error'}
+          color="error"
           label="Ticker"
-          variant="filled"
+          variant="outlined"
           fullWidth
           margin="normal"
           value={ticker || ''}
@@ -142,39 +264,81 @@ const CoinInfo = ({
           helperText={tickerError}
           InputProps={{
             startAdornment: (
-              <InputAdornment position="start">
-                $
-              </InputAdornment>
+              <InputAdornment position="start">$</InputAdornment>
             ),
+          }}
+          sx={{
+            mb: 2,
+            '& .MuiOutlinedInput-root': {
+              background: isDarkMode ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.8)',
+              backdropFilter: 'blur(4px)',
+              borderRadius: '8px',
+              '&:hover .MuiOutlinedInput-notchedOutline': {
+                borderColor: alpha(theme.palette.error.main, 0.7),
+              },
+              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                borderColor: theme.palette.error.main,
+              },
+              '& fieldset': {
+                borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
+              },
+            },
+            '& .MuiInputLabel-root': {
+              color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+              '&.Mui-focused': {
+                color: theme.palette.error.main,
+              },
+            },
+            '& .MuiFormHelperText-root': {
+              color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+            },
           }}
         />
 
         {/* Dropzone for Image Upload */}
-        <Box
-          sx={{
-            border: '2px dashed #666',
-            borderRadius: '0.3em',
-            padding: '20px',
-            textAlign: 'center',
-            margin: '20px 0',
-            fontSize: '12px',
-            color: isDarkMode ? 'white' : '#666',
+        <GlassDropzone
+          isDragging={isDragging}
+          isDarkMode={isDarkMode}
+          sx={{ mt: 3 }}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setIsDragging(true);
           }}
-          onDragOver={(e) => e.preventDefault()}
+          onDragEnter={() => setIsDragging(true)}
+          onDragLeave={() => setIsDragging(false)}
           onDrop={handleImageDrop}
         >
           {!image ? (
-            <Box>
-              <Typography variant="subtitle2" sx={{ display: 'block' }}>
+            <Box sx={{ py: 2 }}>
+              <Typography
+                variant="subtitle2"
+                sx={{
+                  display: 'block',
+                  mb: 2,
+                  color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+                }}
+              >
                 Drag or drop an image
               </Typography>
               <Tooltip title="Upload an image for the coin" placement="top">
                 <Button
-                  variant="outlined"
+                  variant="contained"
                   color="error"
                   startIcon={<UploadIcon />}
                   component="label"
-                  sx={{ mt: 1 }}
+                  sx={{
+                    mt: 1,
+                    background: alpha(theme.palette.error.main, 0.9),
+                    backdropFilter: 'blur(4px)',
+                    boxShadow: '0 4px 12px rgba(211, 47, 47, 0.2)',
+                    '&:hover': {
+                      background: theme.palette.error.main,
+                      boxShadow: '0 6px 16px rgba(211, 47, 47, 0.3)',
+                    },
+                    borderRadius: '8px',
+                    textTransform: 'none',
+                    fontWeight: 500,
+                  }}
                 >
                   Upload Image
                   <input
@@ -187,22 +351,47 @@ const CoinInfo = ({
               </Tooltip>
             </Box>
           ) : (
-            <a
-              href="#!"
-              onClick={(e) => {
-                e.preventDefault();
-                document.getElementById('image-input').click();
-              }}
-              style={{
-                fontSize: '12px',
-                color: '#D32F2F',
-                textDecoration: 'underline',
-                padding: '0 5px',
-                cursor: 'pointer',
-              }}
-            >
-              Change Image
-            </a>
+            <Box sx={{ position: 'relative' }}>
+              <GlassButton
+                isDarkMode={isDarkMode}
+                isActive={false}
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.getElementById('image-input').click();
+                }}
+                style={{
+                  position: 'absolute',
+                  top: '8px',
+                  right: '8px',
+                  fontSize: '12px',
+                  padding: '4px 12px',
+                  zIndex: 2,
+                }}
+              >
+                Change Image
+              </GlassButton>
+
+              <Box
+                sx={{
+                  mt: 1,
+                  position: 'relative',
+                  display: 'flex',
+                  justifyContent: 'center',
+                }}
+              >
+                <Box
+                  component="img"
+                  src={image}
+                  alt="Uploaded"
+                  sx={{
+                    maxWidth: '250px',
+                    height: 'auto',
+                    borderRadius: '10px',
+                    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
+                  }}
+                />
+              </Box>
+            </Box>
           )}
 
           <input
@@ -212,22 +401,8 @@ const CoinInfo = ({
             hidden
             onChange={handleImageUpload}
           />
-
-          {image && (
-            <Box sx={{ mt: 1 }}>
-              <img
-                src={image}
-                alt="Uploaded"
-                style={{
-                  maxWidth: '250px',
-                  height: 'auto',
-                  borderRadius: '10px',
-                }}
-              />
-            </Box>
-          )}
-        </Box>
-      </div>
+        </GlassDropzone>
+      </GlassContainer>
     </ThemeProvider>
   );
 };

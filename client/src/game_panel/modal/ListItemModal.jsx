@@ -11,6 +11,7 @@ import {
   Box,
   Typography,
 } from '@mui/material';
+
 import { ThemeProvider } from '@mui/material/styles';
 import { getCustomTheme } from '../../config/theme';
 import { errorMsgBar } from '../../redux/Notification/notification.actions';

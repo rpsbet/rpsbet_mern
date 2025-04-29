@@ -307,9 +307,14 @@ function GlobalChat(props) {
                   <div className="chat-msg"
                     style={{
                       // Glassmorphism styles (default dark mode colors)
-                      background: 'rgba(144, 142, 142, 0.2)',
-                      backdropFilter: 'blur(10px)',
-                      WebkitBackdropFilter: 'blur(10px)', // For Safari
+                      background: effectiveIsDarkMode 
+                      ? 'rgba(20, 20, 20, 0.65)' 
+                      : 'rgba(255, 255, 255, 0.25)',
+                    backdropFilter: 'blur(12px)',
+                    WebkitBackdropFilter: 'blur(12px)',
+                    border: effectiveIsDarkMode 
+                      ? '1px solid rgba(255, 255, 255, 0.1)' 
+                      : '1px solid rgba(255, 255, 255, 0.4)',
                       border: '1px solid rgba(255, 255, 255, 0.2)',
                       borderRadius: '4px',
                       '@supports not (backdrop-filter: blur(10px))': {

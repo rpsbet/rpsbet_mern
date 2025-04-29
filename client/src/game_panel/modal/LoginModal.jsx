@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom'; // Replace history with useNavigate
 import { Button, TextField, Modal, Box, Typography } from '@mui/material';
+import { Close as CloseIcon } from '@mui/icons-material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSignInAlt, faExternalLinkAlt } from '@fortawesome/free-solid-svg-icons';
 import { ThemeProvider } from '@mui/material/styles';
@@ -168,8 +169,21 @@ function LoginModal({ modalIsOpen, closeModal }) {
               <FontAwesomeIcon icon={faSignInAlt} style={{ marginRight: 8 }} />
               LOGIN
             </Typography>
-            <Button variant="text" color="error" onClick={closeModal}>
-              ×
+            <Button
+              onClick={closeModal}
+              sx={{
+                position: 'absolute',
+                top: 10,
+                right: 10,
+                minWidth: 'auto',
+                p: 1,
+                bgcolor: 'rgba(0,0,0,0.5)',
+                color: 'white',
+                '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' },
+                borderRadius: '50%',
+              }}
+            >
+              <CloseIcon />
             </Button>
           </Box>
 

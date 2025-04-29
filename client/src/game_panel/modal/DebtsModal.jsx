@@ -17,7 +17,7 @@ import {
   CardContent,
   CircularProgress,
 } from '@mui/material';
-
+import { Close as CloseIcon } from '@mui/icons-material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faMoneyBillWave,
@@ -192,12 +192,20 @@ const DebtsModal = ({ modalIsOpen, closeModal }) => {
               YOUR DEBTS
             </Typography>
             <Button
-              variant="text"
-              color="error"
               onClick={closeModal}
-              sx={{ fontSize: '1.25rem' }}
+              sx={{
+                position: 'absolute',
+                top: 10,
+                right: 10,
+                minWidth: 'auto',
+                p: 1,
+                bgcolor: 'rgba(0,0,0,0.5)',
+                color: 'white',
+                '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' },
+                borderRadius: '50%',
+              }}
             >
-              ×
+              <CloseIcon />
             </Button>
           </Box>
 

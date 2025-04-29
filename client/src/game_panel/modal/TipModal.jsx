@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMoneyBill } from '@fortawesome/free-solid-svg-icons';
-import { Warning as WarningIcon } from '@mui/icons-material';
+import { Warning as WarningIcon, Close as CloseIcon } from '@mui/icons-material';
 import { convertToCurrency } from '../../util/conversion'; // Adjust path if needed
 
 export default function TipModal({
@@ -76,8 +76,21 @@ export default function TipModal({
                 />
                 ENTER TIP AMOUNT
               </Typography>
-              <Button color="error" onClick={closeModal}>
-                ×
+              <Button
+                onClick={closeModal}
+                sx={{
+                  position: 'absolute',
+                  top: 10,
+                  right: 10,
+                  minWidth: 'auto',
+                  p: 1,
+                  bgcolor: 'rgba(0,0,0,0.5)',
+                  color: 'white',
+                  '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' },
+                  borderRadius: '50%',
+                }}
+              >
+                <CloseIcon />
               </Button>
             </Box>
 

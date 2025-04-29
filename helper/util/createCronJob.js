@@ -54,8 +54,6 @@ async function checkConfirmations(io) {
         continue;
       }
 
-      console.log('ADMIN_WALLET from env ->', process.env.adminWallet);
-
       const adminWallet = process.env.adminWallet; // e.g. "A4cwo8Q7rm..."
       const adminPubkey = new PublicKey(adminWallet);
 
@@ -194,10 +192,6 @@ async function checkConfirmations(io) {
         }
 
         
-      } else {
-        console.log(
-          `Deposit mismatch. On-chain deposit: ${depositSOL}, expected: ${transaction.amount}`
-        );
       }
     }
 

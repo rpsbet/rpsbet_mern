@@ -14,7 +14,7 @@ import {
   ListItemIcon,
   Box,
   Dialog,
-  DialogActions,
+  Chip,
   DialogContent,
   Skeleton,
   ListItemText,
@@ -82,11 +82,9 @@ import {
   userSignOut,
   getUser,
   setUnreadMessageCount,
-  setDarkMode,
   setNotificationsAllowed,
   checkAndAddWalletAddress,
   disconnectWalletAddress,
-  authenticateWithPhantom
 } from '../redux/Auth/user.actions';
 import {
   openOfferLoanModal
@@ -832,19 +830,9 @@ function SiteWrapper({ children }) {
                 <img src="/img/game-logo.svg" alt="Game Logo" width="25" height="25" />
                 <span
                   className="title desktop-only"
-                  style={{
-                    backgroundImage: 'linear-gradient(45deg,rgb(182, 182, 182) 0%,rgb(253, 253, 253) 55%,rgb(255, 0, 0) 77%)',
-                    WebkitBackgroundClip: 'text',
-                    backgroundClip: 'text', // Standard property for broader support
-                    color: 'transparent', // Fallback for unsupported browsers
-                    display: 'inline-block',
-                    // Fallback color for browsers that don’t support text clipping
-                    WebkitTextFillColor: 'transparent',
-                    textFillColor: 'transparent', // Standard property (future-proofing)
-                    fallbackColor: '#ff6b6b' // Custom property for fallback logic (optional)
-                  }}
+
                 >
-                  CATSINO.FUN
+                  CATSINO
                 </span>
               </a>
               <a
@@ -875,23 +863,21 @@ function SiteWrapper({ children }) {
                   <Box
                     component="a"
                     href="#"
-                    className="desktop-only"
+                    className="desktop-only action-icon"
                     onClick={(e) => {
                       e.preventDefault();
                       handleOpenBankModal();
                     }}
                     id="btn_bank"
-                    onMouseEnter={() => handleMouseEnter(6)}
-                    onMouseLeave={handleMouseLeave}
                     sx={{
                       display: 'inline-flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       cursor: 'pointer',
-                      transition: 'color 0.3s ease',
-                      '& svg': {
-                        color: hoverTabIndex === 6 ? 'red' : 'inherit',
-                        transition: 'color 0.3s ease'
+                      color: '#ffffff',
+                      mx: 1.5,
+                      '&:hover': {
+                        color: '#ff3030',
                       }
                     }}
                   >
@@ -901,23 +887,21 @@ function SiteWrapper({ children }) {
                   <Box
                     component="a"
                     href="#"
-                    className="desktop-only"
+                    className="desktop-only action-icon"
                     onClick={(e) => {
                       e.preventDefault();
                       handleOpenLeaderboardsModal();
                     }}
                     id="btn_leaderboards"
-                    onMouseEnter={() => handleMouseEnter(4)}
-                    onMouseLeave={handleMouseLeave}
                     sx={{
                       display: 'inline-flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       cursor: 'pointer',
-                      transition: 'color 0.3s ease',
-                      '& svg': {
-                        color: hoverTabIndex === 4 ? 'red' : 'inherit',
-                        transition: 'color 0.3s ease'
+                      color: '#ffffff',
+                      mx: 1.5,
+                      '&:hover': {
+                        color: '#ff3030',
                       }
                     }}
                   >
@@ -927,36 +911,33 @@ function SiteWrapper({ children }) {
                   <Box
                     component="a"
                     href="#"
-                    className="desktop-only"
+                    className="desktop-only action-icon"
                     onClick={(e) => {
                       e.preventDefault();
                       handleNotificationsClick(e);
                     }}
                     id="btn_notifications"
-                    onMouseEnter={() => handleMouseEnter(3)}
-                    onMouseLeave={handleMouseLeave}
                     sx={{
                       display: 'inline-flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       cursor: 'pointer',
-                      transition: 'color 0.3s ease',
-                      '& svg': {
-                        color: hoverTabIndex === 3 ? 'red' : 'inherit',
-                        transition: 'color 0.3s ease'
+                      color: '#ffffff',
+                      mx: 1.5,
+                      '&:hover': {
+                        color: '#ff3030',
                       }
                     }}
                   >
                     <Badge
-                      badgeContent={
-                        unreadNotificationsCount > 10 ? '9+' : unreadNotificationsCount
-                      }
+                      badgeContent={unreadNotificationsCount > 10 ? '9+' : unreadNotificationsCount}
                       color="error"
                       sx={{
                         '& .MuiBadge-badge': {
                           fontSize: '10px',
                           height: '16px',
-                          minWidth: '16px'
+                          minWidth: '16px',
+                          backgroundColor: '#ff3030'
                         }
                       }}
                     >
@@ -968,65 +949,66 @@ function SiteWrapper({ children }) {
 
               {websiteLoading ? (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Skeleton variant="text" sx={{ width: '80px' }} />
-                  <Skeleton variant="rectangular" sx={{ width: '10px', height: '30px' }} />
-                  <Skeleton variant="circular" width={40} height={40} />
+                  <Skeleton variant="text" sx={{ width: '80px', backgroundColor: 'rgba(255, 255, 255, 0.1)' }} />
+                  <Skeleton variant="rectangular" sx={{ width: '10px', height: '30px', backgroundColor: 'rgba(255, 255, 255, 0.1)' }} />
+                  <Skeleton variant="circular" width={40} height={40} sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }} />
                 </Box>
               ) : user?._id ? (
                 <>
-                  <div id="balance" className="title">
-                    <div
-                      style={{ display: 'inline' }}
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                    }}
+                  >
+                    <Chip
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleBalanceClick(e);
+                    }}
+                      color="error"
+                      variant="outlined"
+                      label={
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 0.5, // Adjust spacing between icon and text
+                          }}
+                        >
+                          <AccountBalanceWallet
+                            sx={{
+                              width: '18px',
+                              height: '18px',
+                              color: '#ff0000', // Adjust color to match your theme
+                            }}
+                          />
+                          {isHovered ? (
+                            <Typography variant="body2">
+                              ${((balance * solPrice) || 0).toFixed(numDecimals)}
+                            </Typography>
+                          ) : (
+                            <Typography variant="body2">
+                              <CountUp
+                                start={balance}
+                                end={balance}
+                                separator=","
+                                decimal="."
+                                decimals={numDecimals}
+                                duration={4.5}
+                                redraw={true}
+                                preserveValue={true}
+                                onEnd={() => setOldBalance(balance)}
+                              />
+                            </Typography>
+                          )}
+                        </Box>
+                      }
                       onMouseEnter={() => setIsHovered(true)}
                       onMouseLeave={() => setIsHovered(false)}
-                    >
-                      {isHovered
-                        ? `$${(balance * solPrice).toFixed(numDecimals)}`
-                        : (
-                          <CountUp
-                            start={balance}
-                            end={balance}
-                            separator=","
-                            decimal="."
-                            decimals={numDecimals}
-                            duration={4.5}
-                            redraw={true}
-                            preserveValue={true}
-                            onEnd={() => setOldBalance(balance)}
-                          />
-                        )}
-                    </div>
-
-                    <Button
-                      id="wallet-btn"
-                      style={{ minWidth: '32px', maxHeight: '33px', borderRadius: 1 }}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handleBalanceClick(e);
-                      }}
-                    >
-                      <AccountBalanceWallet
-                        style={{
-                          position: 'relative',
-                          zIndex: 1,
-                          width: '18px',
-                          height: '18px',
-                          margin: '0 5px 0 10px'
-                        }}
-                      />
-                      <span
-                        id="wallet-text"
-                        style={{
-                          position: 'relative',
-                          zIndex: 1,
-                          fontSize: '0.6em',
-                          paddingRight: '10px'
-                        }}
-                      >
-                        Wallet
-                      </span>
-                    </Button>
-                  </div>
+                    />
+                  </Box>
 
                   <Box
                     component="a"
@@ -1036,31 +1018,28 @@ function SiteWrapper({ children }) {
                       e.preventDefault();
                       handleNotificationsClick(e);
                     }}
-                    id="btn_notifications"
-                    onMouseEnter={() => handleMouseEnter(3)}
-                    onMouseLeave={handleMouseLeave}
+                    id="btn_notifications_mobile"
                     sx={{
                       display: 'inline-flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       cursor: 'pointer',
-                      transition: 'color 0.3s ease',
-                      '& svg': {
-                        color: hoverTabIndex === 3 ? 'red' : 'inherit',
-                        transition: 'color 0.3s ease'
+                      color: '#ffffff',
+                      mx: 1.5,
+                      '&:hover': {
+                        color: '#ff3030',
                       }
                     }}
                   >
                     <Badge
-                      badgeContent={
-                        unreadNotificationsCount > 10 ? '9+' : unreadNotificationsCount
-                      }
+                      badgeContent={unreadNotificationsCount > 10 ? '9+' : unreadNotificationsCount}
                       color="error"
                       sx={{
                         '& .MuiBadge-badge': {
                           fontSize: '10px',
                           height: '16px',
-                          minWidth: '16px'
+                          minWidth: '16px',
+                          backgroundColor: '#ff3030'
                         }
                       }}
                     >
@@ -1073,6 +1052,15 @@ function SiteWrapper({ children }) {
                     aria-haspopup="true"
                     onClick={handleOpenProfileMenu}
                     className="profile-menu"
+                    sx={{
+                      padding: '4px',
+                      minWidth: 'auto',
+                      borderRadius: '50%',
+                      ml: 1,
+                      '&:hover': {
+                        backgroundColor: 'rgba(255, 255, 255, 0.05)'
+                      }
+                    }}
                   >
                     <Avatar
                       src={user.avatar}
@@ -1084,46 +1072,53 @@ function SiteWrapper({ children }) {
                       username={user.username}
                       className="avatar"
                       darkMode={isDarkMode}
+                      sx={{ width: 38, height: 38 }}
                     />
-                    <ArrowDropDown />
+                    <ArrowDropDown sx={{ color: '#ffffff' }} />
                   </Button>
 
                   <Menu
                     anchorEl={anchorElProfile}
                     open={Boolean(anchorElProfile)}
                     onClose={handleCloseProfileMenu}
-                    transitionDuration={0}
+                    transitionDuration={200}
                     anchorOrigin={{
                       vertical: 'bottom',
-                      horizontal: 'center',
+                      horizontal: 'right',
                     }}
                     transformOrigin={{
                       vertical: 'top',
-                      horizontal: 'center',
+                      horizontal: 'right',
                     }}
                     PaperProps={{
                       sx: {
-                        background: 'rgba(0, 0, 0, 0.2)',
+                        background: 'rgba(20, 20, 25, 0.95)',
                         backdropFilter: 'blur(10px)',
                         WebkitBackdropFilter: 'blur(10px)',
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                        '@supports not (backdrop-filter: blur(10px))': {
-                          background: 'rgba(0, 0, 0, 0.4)',
-                        },
-                        color: '#fff',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        borderRadius: '8px',
+                        minWidth: '180px',
+                        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5)',
+                        mt: 1,
                         '& .MuiMenuItem-root': {
-                          textTransform: 'none',
-                          color: 'inherit',
+                          py: 1,
+                          px: 2,
+                          fontSize: '14px',
+                          fontWeight: 500,
+                          color: '#ffffff',
+                          transition: 'all 0.2s ease',
                           '&:hover': {
-                            backgroundColor: '#D32F2F',
-                            color: '#fff',
+                            backgroundColor: '#ff3030',
+                            color: '#ffffff',
                           },
                         },
                         '& .MuiListItemIcon-root': {
-                          color: 'inherit',
+                          color: '#ffffff',
+                          minWidth: '36px',
                         },
                         '& .MuiDivider-root': {
-                          borderColor: 'rgba(255,255,255,0.2)',
+                          borderColor: 'rgba(255, 255, 255, 0.1)',
+                          my: 0.5,
                         },
                       },
                     }}
@@ -1133,67 +1128,86 @@ function SiteWrapper({ children }) {
                   >
                     <MenuItem onClick={handleOpenProfileModal}>
                       <ListItemIcon>
-                        <PersonOutline />
+                        <PersonOutline fontSize="small" />
                       </ListItemIcon>
-                      <ListItemText>PROFILE</ListItemText>
+                      <ListItemText primary="PROFILE" />
                     </MenuItem>
                     <Divider />
                     <MenuItem className="desktop-only" onClick={handlePortfolio}>
                       <ListItemIcon>
-                        <ListTwoTone />
+                        <ListTwoTone fontSize="small" />
                       </ListItemIcon>
-                      <ListItemText>PORTFOLIO</ListItemText>
+                      <ListItemText primary="PORTFOLIO" />
                     </MenuItem>
                     <MenuItem onClick={handleOpenSettingsModal}>
                       <ListItemIcon>
-                        <Settings />
+                        <Settings fontSize="small" />
                       </ListItemIcon>
-                      <ListItemText>SETTINGS</ListItemText>
+                      <ListItemText primary="SETTINGS" />
                     </MenuItem>
                     <MenuItem onClick={handleOpenHowToPlayModal}>
                       <ListItemIcon>
-                        <Help />
+                        <Help fontSize="small" />
                       </ListItemIcon>
-                      <ListItemText>HOW IT WORKS</ListItemText>
+                      <ListItemText primary="HOW IT WORKS" />
                     </MenuItem>
                     <MenuItem onClick={handleOpenEliteSubscriptionModal}>
                       <ListItemIcon>
-                        <Star fontSize="small" />
+                        <Star fontSize="small" sx={{ color: '#ffd700' }} />
                       </ListItemIcon>
-                      <ListItemText>ELITE</ListItemText>
+                      <ListItemText primary="ELITE" />
                     </MenuItem>
                     <MenuItem onClick={() => setShowBonusModal(true)}>
                       <ListItemIcon>
                         <FontAwesomeIcon icon={faCoins} style={{ color: '#ffd700' }} />
-
                       </ListItemIcon>
-                      <ListItemText>BONUS</ListItemText>
+                      <ListItemText primary="BONUS" />
                     </MenuItem>
                     <Divider />
-                    <MenuItem
+                    {/* <MenuItem
                       onClick={() => {
                         window.open('https://raydium.io/swap/?inputMint=sol&outputMint=BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump', '_blank');
                       }}
+                      sx={{ color: '#ffffff' }}
                     >
                       <ListItemIcon>
-                        <MonetizationOn fontSize="small" />
+                        <MonetizationOn fontSize="small" sx={{ color: '#ffd700' }} />
                       </ListItemIcon>
-                      <ListItemText>BUY $RPS 🚀</ListItemText>
-                    </MenuItem>
+                      <ListItemText primary="BUY $RPS 🚀" />
+                    </MenuItem> */}
                     <MenuItem
                       onClick={() => {
                         handleLogout(true);
                       }}
+                      sx={{ color: '#ffffff' }}
                     >
                       <ListItemIcon>
                         <ExitToApp fontSize="small" />
                       </ListItemIcon>
-                      <ListItemText>LOG OUT</ListItemText>
+                      <ListItemText primary="LOG OUT" />
                     </MenuItem>
                   </Menu>
                 </>
               ) : (
-                <Button id="btn-login" onClick={handleOpenLoginModal}>
+                <Button
+                  id="btn-login"
+                  onClick={handleOpenLoginModal}
+                  variant="contained"
+                  sx={{
+                    backgroundColor: '#ff3030',
+                    color: '#ffffff',
+                    fontWeight: 600,
+                    px: 3,
+                    py: 1,
+                    borderRadius: '4px',
+                    '&:hover': {
+                      backgroundColor: '#d42020',
+                    },
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                  }}
+                >
                   Login
                 </Button>
               )}
@@ -1222,6 +1236,7 @@ function SiteWrapper({ children }) {
                 '@supports not (backdrop-filter: blur(10px))': {
                   background: 'rgba(0, 0, 0, 0.4)',
                 },
+                borderRadius: '16px',
                 color: '#fff',
                 width: 320,
                 maxWidth: '90vw',
@@ -1370,6 +1385,7 @@ function SiteWrapper({ children }) {
                 '@supports not (backdrop-filter: blur(10px))': {
                   background: 'rgba(0, 0, 0, 0.4)',
                 },
+                borderRadius: '16px',
                 color: '#fff', // Preserve text color
                 p: 2, // Preserve padding
                 '& .MuiPaper-root': {
@@ -1422,7 +1438,7 @@ function SiteWrapper({ children }) {
                     </Typography>
                     <ul style={{ paddingLeft: '1rem', marginBottom: '0.5rem' }}>
                       <li>RTB fees awarded to the Host (0% - 15% returned to bankroll)</li>
-                      <li>1% towards platform fees</li>
+                      <li>5% (2.5% for Black Elite members) towards platform fees</li>
                     </ul>
                     <Typography variant="body2" sx={{ mb: 1 }}>
                       For example, if you win{' '}

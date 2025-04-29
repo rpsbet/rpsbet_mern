@@ -19,6 +19,7 @@ import {
   useMediaQuery
 } from '@mui/material';
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { Close as CloseIcon } from '@mui/icons-material'
 import SportsSoccerIcon from "@mui/icons-material/SportsSoccer";
 import CasinoIcon from "@mui/icons-material/Casino";
 import CardGiftcard from "@mui/icons-material/CardGiftcard";
@@ -26,11 +27,8 @@ import QuestionMark from "@mui/icons-material/QuestionMark";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
-import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXTwitter, faTelegram } from "@fortawesome/free-brands-svg-icons";
-import EmailIcon from "@mui/icons-material/Email";
 
 function HowToPlayModal({ modalIsOpen, closeModal }) {
   const CONTRACT_ADDRESS = 'BBDULAQQBG1UYBK9ay7hSf1Arfhme4jnugxwzjbipump';
@@ -122,21 +120,23 @@ function HowToPlayModal({ modalIsOpen, closeModal }) {
             <QuestionMark sx={{ fontSize: '1.5rem', color: '#ffd700' }} />
             How It Works
           </Typography>
-          <Button
-            variant="text"
-            onClick={closeModal}
-            sx={{
-              color: '#ff4d4d',
-              fontSize: '1.5rem',
-              minWidth: 'auto',
-              '&:hover': {
-                color: '#ff7878',
-                background: 'rgba(255, 77, 77, 0.1)',
-              },
-            }}
-          >
-            ×
-          </Button>
+         
+            <Button
+              onClick={closeModal}
+              sx={{
+                position: 'absolute',
+                top: 10,
+                right: 10,
+                minWidth: 'auto',
+                p: 1,
+                bgcolor: 'rgba(0,0,0,0.5)',
+                color: 'white',
+                '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' },
+                borderRadius: '50%',
+              }}
+            >
+              <CloseIcon />
+            </Button>
         </Box>
 
         {/* ACCORDIONS */}
@@ -221,71 +221,71 @@ function HowToPlayModal({ modalIsOpen, closeModal }) {
               </>
             ),
           },
-          {
-            title: '💰 $RPS Token',
-            content: (
-              <>
-                <List dense>
-                  <ListItem sx={{ py: 1 }}>
-                    <ListItemIcon>
-                      <CheckCircleIcon sx={{ color: '#4caf50' }} />
-                    </ListItemIcon>
-                    <Typography sx={{ color: '#ffffff', fontWeight: 600 }}>
-                      Holders earn <strong>10% of platform fees</strong>! 💸
-                    </Typography>
-                  </ListItem>
-                  <ListItem sx={{ py: 1 }}>
-                    <ListItemIcon>
-                      <LockOpenIcon sx={{ color: '#2196f3' }} />
-                    </ListItemIcon>
-                    <Typography sx={{ color: '#ffffff', fontWeight: 600 }}>
-                      Unlock <strong>all AI models</strong> with <strong>2.5M $RPS</strong>. 🔓
-                    </Typography>
-                  </ListItem>
-                </List>
+          // {
+          //   title: '💰 $RPS Token',
+          //   content: (
+          //     <>
+          //       <List dense>
+          //         <ListItem sx={{ py: 1 }}>
+          //           <ListItemIcon>
+          //             <CheckCircleIcon sx={{ color: '#4caf50' }} />
+          //           </ListItemIcon>
+          //           <Typography sx={{ color: '#ffffff', fontWeight: 600 }}>
+          //             Holders earn <strong>10% of platform fees</strong>! 💸
+          //           </Typography>
+          //         </ListItem>
+          //         <ListItem sx={{ py: 1 }}>
+          //           <ListItemIcon>
+          //             <LockOpenIcon sx={{ color: '#2196f3' }} />
+          //           </ListItemIcon>
+          //           <Typography sx={{ color: '#ffffff', fontWeight: 600 }}>
+          //             Unlock <strong>all AI models</strong> with <strong>2.5M $RPS</strong>. 🔓
+          //           </Typography>
+          //         </ListItem>
+          //       </List>
 
-                <Box sx={{ mt: 2, textAlign: 'center' }}>
-                  <Typography sx={{ fontWeight: 600, color: '#ffffff', mb: 1 }}>
-                    🔗 Contract Address
-                  </Typography>
-                  <Tooltip
-                    title="Copied!"
-                    open={copiedTooltipOpen}
-                    disableFocusListener
-                    disableHoverListener
-                    disableTouchListener
-                    placement="top"
-                    arrow
-                  >
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: 1,
-                        color: '#2196f3',
-                        p: 1,
-                        borderRadius: 1,
-                        background: 'rgba(255, 255, 255, 0.05)',
-                        '&:hover': {
-                          background: 'rgba(255, 255, 255, 0.1)',
-                          color: '#42a5f5',
-                        },
-                      }}
-                      onClick={handleCopyAddress}
-                    >
-                      <ContentCopyIcon fontSize="small" />
-                      <Link underline="none" sx={{ color: 'inherit' }}>
-                        {shortenAddress(CONTRACT_ADDRESS)}
-                      </Link>
-                    </Typography>
-                  </Tooltip>
-                </Box>
-              </>
-            ),
-          },
+          //       <Box sx={{ mt: 2, textAlign: 'center' }}>
+          //         <Typography sx={{ fontWeight: 600, color: '#ffffff', mb: 1 }}>
+          //           🔗 Contract Address
+          //         </Typography>
+          //         <Tooltip
+          //           title="Copied!"
+          //           open={copiedTooltipOpen}
+          //           disableFocusListener
+          //           disableHoverListener
+          //           disableTouchListener
+          //           placement="top"
+          //           arrow
+          //         >
+          //           <Typography
+          //             variant="body2"
+          //             sx={{
+          //               cursor: 'pointer',
+          //               display: 'flex',
+          //               alignItems: 'center',
+          //               justifyContent: 'center',
+          //               gap: 1,
+          //               color: '#2196f3',
+          //               p: 1,
+          //               borderRadius: 1,
+          //               background: 'rgba(255, 255, 255, 0.05)',
+          //               '&:hover': {
+          //                 background: 'rgba(255, 255, 255, 0.1)',
+          //                 color: '#42a5f5',
+          //               },
+          //             }}
+          //             onClick={handleCopyAddress}
+          //           >
+          //             <ContentCopyIcon fontSize="small" />
+          //             <Link underline="none" sx={{ color: 'inherit' }}>
+          //               {shortenAddress(CONTRACT_ADDRESS)}
+          //             </Link>
+          //           </Typography>
+          //         </Tooltip>
+          //       </Box>
+          //     </>
+          //   ),
+          // },
           {
             title: '🎮 Games',
             content: (
@@ -388,7 +388,7 @@ function HowToPlayModal({ modalIsOpen, closeModal }) {
             title: '💸 Fees',
             content: (
               <Typography variant="body2" sx={{ color: '#ffffff', fontWeight: 600 }}>
-                💸 <strong>1% fee</strong> on all transactions except tipping & loans.
+                💸 <strong>5% fee (2.5% for Black Elite members)</strong> on all transactions except tipping & loans.
               </Typography>
             ),
           },

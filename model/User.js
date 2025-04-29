@@ -88,6 +88,10 @@ const UserSchema = new Schema({
     type: Number,
     default: 0
   },
+  credits: {
+    type: Number,
+    default: 0
+  },
   totalWagered: {
     type: Number,
     default: 0

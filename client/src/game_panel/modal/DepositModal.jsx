@@ -8,7 +8,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import { getCustomTheme } from '../../config/theme';
 import Summary from '../CreateGame/Summary';
 import { errorMsgBar, successMsgBar } from '../../redux/Notification/notification.actions';
-
+import { AccountBalanceWallet } from '@mui/icons-material';
 // FIX #1: Import and set Buffer for browser usage
 import { Buffer } from 'buffer';
 if (typeof window !== 'undefined') {
@@ -41,7 +41,7 @@ import {
   Divider,
 } from '@mui/material';
 
-import { Warning, Info, AccountBalanceWallet } from '@mui/icons-material';
+import { Warning, Info, AccountBalanceWalle, Close as CloseIcon } from '@mui/icons-material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBolt, faGasPump } from '@fortawesome/free-solid-svg-icons';
 import { convertToCurrency } from '../../util/conversion';
@@ -201,21 +201,32 @@ function DepositModal({ modalIsOpen, closeModal, balance, account }) {
             top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
-            color: isDarkMode ? '#fff' : '#000', // Preserve text color conditional
-            width: '90vw',
-            maxHeight: '80vh',
+            width: { xs: '90vw', sm: '80vw', md: '60vw', lg: '50vw' },
+            maxHeight: '90vh',
             overflowY: 'auto',
-            borderRadius: 2,
-            boxShadow: 24,
-            p: 3,
-            // Glassmorphism styles (default dark mode colors)
-            background: 'rgba(0, 0, 0, 0.2)',
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)', // For Safari
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            // Fallback for browsers without backdrop-filter
-            '@supports not (backdrop-filter: blur(10px))': {
-              background: 'rgba(0, 0, 0, 0.4)',
+            borderRadius: 3,
+            p: { xs: 2, sm: 3, md: 4 },
+            // Glassmorphism
+            background: 'rgba(30, 30, 30, 0.3)',
+            backdropFilter: 'blur(15px)',
+            WebkitBackdropFilter: 'blur(15px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
+            // Fallback
+            '@supports not (backdrop-filter: blur(15px))': {
+              background: 'rgba(30, 30, 30, 0.6)',
+            },
+            scrollbarWidth: 'thin',
+            scrollbarColor: 'rgba(255,255,255,0.2) transparent',
+            '&::-webkit-scrollbar': {
+              width: '8px',
+            },
+            '&::-webkit-scrollbar-track': {
+              background: 'transparent',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: 'rgba(255,255,255,0.2)',
+              borderRadius: '4px',
             },
           }}
         >
@@ -228,8 +239,21 @@ function DepositModal({ modalIsOpen, closeModal, balance, account }) {
               <AccountBalanceWallet sx={{ mr: 1 }} />
               DEPOSIT (SOL)
             </Typography>
-            <Button variant="text" color="error" onClick={closeModal}>
-              ×
+            <Button
+              onClick={closeModal}
+              sx={{
+                position: 'absolute',
+                top: 10,
+                right: 10,
+                minWidth: 'auto',
+                p: 1,
+                bgcolor: 'rgba(0,0,0,0.5)',
+                color: 'white',
+                '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' },
+                borderRadius: '50%',
+              }}
+            >
+              <CloseIcon />
             </Button>
           </Box>
 
@@ -259,9 +283,35 @@ function DepositModal({ modalIsOpen, closeModal, balance, account }) {
 
               {/* Preset Buttons */}
               <Box sx={{ display: 'flex', justifyContent: 'center', my: 2 }}>
-                <ButtonGroup variant="outlined" color="error" sx={{ mb: 1 }}>
+                <ButtonGroup
+                  variant="outlined"
+                  color="error"
+                  sx={{
+                    mb: 1,
+                    gap: 1,
+                    '& .MuiButton-root': {
+                      borderColor: 'error.main', // Ensure consistent border color
+                      '&:not(:last-child)': {
+                        borderRightColor: 'error.main', // Prevent transparent right border
+                      },
+                      // Reset border-radius to allow ButtonGroup defaults
+                      borderRadius: 0,
+                      '&:first-of-type': {
+                        borderTopLeftRadius: 8,
+                        borderBottomLeftRadius: 8,
+                      },
+                      '&:last-of-type': {
+                        borderTopRightRadius: 8,
+                        borderBottomRightRadius: 8,
+                      },
+                    },
+                  }}
+                >
                   {presetSolAmounts.map((preset) => (
-                    <Button key={preset} onClick={() => handlePresetClick(preset)}>
+                    <Button
+                      key={preset}
+                      onClick={() => handlePresetClick(preset)}
+                    >
                       {preset}
                     </Button>
                   ))}

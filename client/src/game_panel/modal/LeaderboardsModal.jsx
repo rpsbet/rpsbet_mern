@@ -17,7 +17,7 @@ import {
   useMediaQuery,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import { Sort as SortIcon } from '@mui/icons-material';
+import { Sort as SortIcon, Close as CloseIcon } from '@mui/icons-material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faList } from '@fortawesome/free-solid-svg-icons';
 
@@ -265,28 +265,39 @@ function LeaderboardsModal({
         BackdropProps={{ style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' } }}
       >
         <Box
-          sx={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            color: isDarkMode ? '#fff' : '#000', // Preserve text color conditional
-            width: isMobile ? '95vw' : '90vw',
-            height: isMobile ? '95vh' : '80vh',
-            overflowY: 'auto',
-            borderRadius: 2,
-            boxShadow: 24,
-            p: 3,
-            // Glassmorphism styles (default dark mode colors)
-            background: 'rgba(0, 0, 0, 0.2)',
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)', // For Safari
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            // Fallback for browsers without backdrop-filter
-            '@supports not (backdrop-filter: blur(10px))': {
-              background: 'rgba(0, 0, 0, 0.4)',
-            },
-          }}
+         sx={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: { xs: '90vw', sm: '80vw', md: '75vw', lg: '70vw' },
+          maxHeight: '90vh',
+          overflowY: 'auto',
+          borderRadius: 3,
+          p: { xs: 2, sm: 3, md: 4 },
+          // Glassmorphism
+          background: 'rgba(30, 30, 30, 0.3)',
+          backdropFilter: 'blur(15px)',
+          WebkitBackdropFilter: 'blur(15px)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
+          // Fallback
+          '@supports not (backdrop-filter: blur(15px))': {
+            background: 'rgba(30, 30, 30, 0.6)',
+          },
+          scrollbarWidth: 'thin',
+          scrollbarColor: 'rgba(255,255,255,0.2) transparent',
+          '&::-webkit-scrollbar': {
+            width: '8px',
+          },
+          '&::-webkit-scrollbar-track': {
+            background: 'transparent',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            background: 'rgba(255,255,255,0.2)',
+            borderRadius: '4px',
+          },
+        }}
         >
           {/* HEADER */}
           <Box
@@ -305,12 +316,20 @@ function LeaderboardsModal({
               LEADERBOARDS
             </Typography>
             <Button
-              variant="text"
-              color="error"
               onClick={closeModal}
-              sx={{ fontSize: '1.25rem' }}
+              sx={{
+                position: 'absolute',
+                top: 10,
+                right: 10,
+                minWidth: 'auto',
+                p: 1,
+                bgcolor: 'rgba(0,0,0,0.5)',
+                color: 'white',
+                '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' },
+                borderRadius: '50%',
+              }}
             >
-              ×
+              <CloseIcon />
             </Button>
           </Box>
           <Box

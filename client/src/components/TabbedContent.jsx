@@ -1,4 +1,6 @@
+// TabbedContent.jsx
 import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
+import { useSelector } from 'react-redux';
 import {
   Tabs,
   Tab,
@@ -6,13 +8,19 @@ import {
   Box,
   Chip,
   Paper,
+  Typography,
+  Avatar,
+  Badge,
 } from '@mui/material';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faDice, faClock, faBolt } from '@fortawesome/free-solid-svg-icons';
+import { yellow, blue, grey } from '@mui/material/colors';
+import Lottie from 'react-lottie';
+import progress from '../game_panel/LottieAnimations/progress.json';
+import cat from '../game_panel/LottieAnimations/blob.json';
 import Moment from 'moment';
-
-// Statically import the most common game component (assuming RPS is default)
+import { motion } from 'framer-motion';
 import RPS from '../game_panel/JoinGame/RPS';
-
-// Lazy-load other components
 const QuickShoot = lazy(() => import('../game_panel/JoinGame/QuickShoot'));
 const Custom = lazy(() => import('../game_panel/JoinGame/Custom'));
 const RoomHistory = lazy(() => import('./RoomHistory'));
@@ -48,7 +56,7 @@ function TabbedContent(props) {
     rank,
     strategies,
     betting,
-    result,
+    result: initialResult,
     ai_mode,
     user_id,
     bankroll,
@@ -80,7 +88,11 @@ function TabbedContent(props) {
     changeBgColorQs,
   } = props;
 
-  // Local state (unchanged)
+  // Fetch is_betting from Redux
+  const is_betting = useSelector((state) => state.logic.is_betting);
+
+  // Local state for result
+  const [result, setResult] = useState(initialResult || '');
   const [selectedTab, setSelectedTab] = useState(0);
   const [numToShow, setNumToShow] = useState(10);
   const [showPlayerModal, setShowPlayerModal] = useState(false);
@@ -90,7 +102,7 @@ function TabbedContent(props) {
   const [activeTabs, setActiveTabs] = useState([0, 1]);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 767);
 
-  // Effects (unchanged)
+  // Effects
   useEffect(() => {
     if (
       !roomHistory ||
@@ -112,7 +124,11 @@ function TabbedContent(props) {
     attachUserLinkListeners();
   }, [roomInfo?.room_history]);
 
-  // Handlers (unchanged)
+  useEffect(() => {
+    setResult(initialResult || '');
+  }, [initialResult]);
+
+  // Handlers
   const handleResize = useCallback(() => {
     setIsMobile(window.innerWidth < 767);
   }, []);
@@ -131,9 +147,6 @@ function TabbedContent(props) {
     setShowPlayerModal(true);
   }, []);
 
-  const handleClosePlayerModalLocal = useCallback(() => {
-    setShowPlayerModal(false);
-  }, []);
 
   const handleTabChange = useCallback((event, newValue) => {
     setSelectedTab(newValue);
@@ -151,61 +164,232 @@ function TabbedContent(props) {
     });
   }, []);
 
+  // Callback to update result
+  const handleResultChange = useCallback(
+    (newResult, newBetting) => {
+      setResult(newResult);
+      onChangeState({ result: newResult, betting: newBetting });
+    },
+    [onChangeState]
+  );
+
+  // Glassmorphism style
+  const glassmorphismStyle = {
+    background: 'rgba(255, 255, 255, 0.1)',
+    backdropFilter: 'blur(12px)',
+    WebkitBackdropFilter: 'blur(12px)',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
+    boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)',
+    '@supports not (backdrop-filter: blur(12px))': {
+      background: 'rgba(255, 255, 255, 0.2)',
+    },
+  };
+
+  // Result Display Component
+  const renderResultDisplay = () => (
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <Box
+        sx={{
+          ...glassmorphismStyle,
+          p: isMobile ? 1 : 1.5,
+          mt: isMobile ? 4 : 0,
+          borderRadius: '12px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+          zIndex: 10,
+          minWidth: isMobile ? '100%' : '200px',
+          background:
+            is_betting
+              ? 'linear-gradient(45deg, rgba(33, 150, 243, 0.2), rgba(33, 150, 243, 0.4))'
+              : 'rgba(255, 255, 255, 0.1)',
+          transition: 'background 0.3s ease',
+          width: isMobile ? '100%' : 'auto',
+          boxSizing: 'border-box',
+        }}
+      >
+        {result !== '' ? (
+          <Chip
+            label={
+              <Typography
+                variant={isMobile ? 'body2' : 'body1'}
+                sx={{ color: '#fff', fontWeight: 400 }}
+              >
+                {result}
+              </Typography>
+            }
+            sx={{
+              bgcolor: is_betting ? 'rgba(33, 150, 243, 0.5)' : 'rgba(255, 255, 255, 0.2)',
+              color: '#fff',
+              borderRadius: '16px',
+              flexGrow: 1,
+              height: isMobile ? 28 : 32,
+              '& .MuiChip-label': { px: 1 },
+            }}
+          />
+        ) : is_betting ? (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexGrow: 1 }}>
+            <Box sx={{ width: isMobile ? '40px' : '50px' }}>
+              <Lottie
+                options={{
+                  loop: isLowGraphics ? false : true,
+                  autoplay: isLowGraphics ? false : true,
+                  animationData: progress,
+                }}
+              />
+            </Box>
+            <Typography
+              variant={isMobile ? 'caption' : 'body2'}
+              sx={{
+                color: '#fff',
+                fontWeight: 400,
+                textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)',
+              }}
+            >
+              Betting...
+            </Typography>
+          </Box>
+        ) : (
+          <Typography
+            variant={isMobile ? 'caption' : 'body2'}
+            sx={{
+              color: '#fff',
+              fontWeight: 400,
+              textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)',
+              flexGrow: 1,
+              textAlign: 'center',
+            }}
+          >
+            Waiting for bet
+          </Typography>
+        )}
+        <Badge
+          badgeContent={
+            is_betting ? (
+              <FontAwesomeIcon icon={faBolt} style={{ color: yellow[500], fontSize: '12px' }} />
+            ) : null
+          }
+          sx={{
+            '& .MuiBadge-badge': {
+              right: -8,
+              top: 8,
+              bgcolor: 'rgba(0, 0, 0, 0.5)',
+              borderRadius: '50%',
+              p: 0.5,
+            },
+          }}
+        >
+          <Avatar
+            sx={{
+              width: isMobile ? 28 : 32,
+              height: isMobile ? 28 : 32,
+              bgcolor: is_betting ? blue[500] : grey[700],
+              transition: 'background-color 0.3s ease',
+            }}
+          >
+            <FontAwesomeIcon
+              icon={is_betting ? faDice : faClock}
+              style={{ fontSize: isMobile ? '14px' : '16px', color: '#fff' }}
+            />
+          </Avatar>
+        </Badge>
+      </Box>
+    </motion.div>
+  );
+
   // Renderers
+  // Replace the current loading skeleton in the renderTabContent function (case 0)
+  // with this professional loading progress bar
+
   const renderTabContent = (tabIndex) => {
     switch (tabIndex) {
       case 0: {
         // "Play" Tab
         if (!roomInfo || !roomInfo.game_type) {
           return (
-            <Box square="true" className="join-game-panel">
+            <Box
+              square="true"
+              className="join-game-panel"
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                height: '400px',
+                width: '100%',
+                background: 'rgba(0, 0, 0, 0.2)',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+                borderRadius: '12px',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+              }}
+            >
               <Box
-                className="game-page loading-skeleton"
-                sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 3,
+                  width: '100%',
+                  maxWidth: '300px',
+                }}
               >
-                <Box
-                  className="game-contents"
-                  sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
-                >
-                  <Skeleton
-                    variant="rectangular"
-                    sx={{ width: '100%', height: 60 }}
-                  />
-                  <Box
-                    className="game-info-panel"
-                    sx={{
-                      position: 'relative',
-                      paddingBottom: '90px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 2,
+                {/* Cat Lottie Animation */}
+                <Box sx={{ filter: 'invert(1) scale(-1)', width: '120px', height: '120px' }}>
+                  <Lottie
+                    options={{
+                      loop: isLowGraphics ? false : true,
+                      autoplay: isLowGraphics ? false : true,
+                      animationData: cat,
+                      
+                      rendererSettings: {
+                        preserveAspectRatio: 'xMidYMid slice'
+                      }
                     }}
-                  >
-                    <Skeleton
-                      variant="text"
-                      sx={{ width: '20%', height: 30 }}
-                    />
-                    <Skeleton
-                      variant="text"
-                      sx={{ width: '80%', height: 30 }}
-                    />
-                    <Skeleton
-                      variant="text"
-                      sx={{ width: '60%', height: 100 }}
-                    />
-                    <Skeleton
-                      variant="text"
-                      sx={{ width: '80%', height: 30 }}
-                    />
-                    <Skeleton
-                      variant="text"
-                      sx={{ width: '10%', height: 90 }}
-                    />
-                    <Skeleton
-                      variant="text"
-                      sx={{ width: '20%', height: 90 }}
-                    />
-                  </Box>
+                  />
+                </Box>
+
+                {/* Loading Text */}
+                <Typography
+                  variant="h6"
+                  sx={{
+                    color: '#fff',
+                    fontWeight: 500,
+                    textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
+                    mb: 1
+                  }}
+                >
+                  Loading game...
+                </Typography>
+
+                {/* Pulsing Dots */}
+                <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
+                  {[0, 1, 2].map((i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0.3, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{
+                        duration: 0.8,
+                        repeat: Infinity,
+                        repeatType: "reverse",
+                        delay: i * 0.2
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          width: '8px',
+                          height: '8px',
+                          borderRadius: '50%',
+                          backgroundColor: '#D32F2F',
+                        }}
+                      />
+                    </motion.div>
+                  ))}
                 </Box>
               </Box>
             </Box>
@@ -216,9 +400,16 @@ function TabbedContent(props) {
           <Paper
             square
             variant="inherit"
-            sx={{ backgroundColor: 'transparent' }}
+            sx={{ backgroundColor: 'transparent', position: 'relative', mb: 1 }}
             className="join-game-panel"
           >
+            {/* Result Display for Mobile */}
+            {isMobile && (
+              <Box sx={{ mb: 2, px: 2 }}>
+                {renderResultDisplay()}
+              </Box>
+            )}
+
             {roomInfo.game_type === 'RPS' ? (
               <RPS
                 changeBgColor={changeBgColor}
@@ -257,6 +448,7 @@ function TabbedContent(props) {
                 is_private={roomInfo.is_private}
                 actionList={actionList}
                 getRoomData={getRoomData}
+                onResultChange={handleResultChange}
               />
             ) : roomInfo.game_type === 'Quick Shoot' ? (
               <Suspense fallback={<Skeleton variant="rectangular" width="100%" height={300} />}>
@@ -296,6 +488,7 @@ function TabbedContent(props) {
                   pr={roomInfo.pr}
                   actionList={actionList}
                   getRoomData={getRoomData}
+                  onResultChange={handleResultChange}
                 />
               </Suspense>
             ) : (
@@ -332,6 +525,7 @@ function TabbedContent(props) {
                   pr={roomInfo.pr}
                   actionList={actionList}
                   getRoomData={getRoomData}
+                  onResultChange={handleResultChange}
                 />
               </Suspense>
             )}
@@ -389,7 +583,7 @@ function TabbedContent(props) {
     }
   };
 
-  // Mobile Layout (unchanged except for Suspense wrapping)
+  // Mobile Layout
   if (isMobile) {
     return (
       <div className="tabs-container">
@@ -401,7 +595,7 @@ function TabbedContent(props) {
           indicatorColor="error"
         >
           <Tab label="Play" />
-          <Tab label="Chart" />
+          <Tab label="Trade" />
           <Tab label="History" />
           <Tab label="Comments" />
         </Tabs>
@@ -416,7 +610,7 @@ function TabbedContent(props) {
     );
   }
 
-  // Desktop Layout (unchanged except for Suspense wrapping)
+  // Desktop Layout
   return (
     <div>
       <Box
@@ -432,9 +626,10 @@ function TabbedContent(props) {
           '@supports not (backdrop-filter: blur(10px))': {
             background: 'rgba(0, 0, 0, 0.4)',
           },
-          padding: '20px 10px',
+          padding: '10px',
           marginTop: '5px',
           display: 'flex',
+          alignItems: 'center',
           gap: '16px',
           flexWrap: 'wrap',
         }}
@@ -452,6 +647,10 @@ function TabbedContent(props) {
             />
           );
         })}
+        {/* Result Display for Desktop */}
+        <Box sx={{ marginLeft: 'auto' }}>
+          {renderResultDisplay()}
+        </Box>
       </Box>
 
       <Box>

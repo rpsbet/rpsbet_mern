@@ -365,13 +365,7 @@ const BankTable = (props) => {
   // ------------------- RENDER -------------------
   return (
     <ThemeProvider theme={theme}>
-      <Box
-        sx={{
-          background: '#080808',
-          borderRadius: '0.3em',
-          p: '20px',
-        }}
-      >
+    
         {/* Filter & Sort UI */}
         <FilterSortContainer className="desktop-only">
           <div className="filters">
@@ -958,7 +952,6 @@ const BankTable = (props) => {
             )}
           </PreviousLoansContainer>
         )}
-      </Box>
     </ThemeProvider>
   );
 };

@@ -52,7 +52,7 @@ function EliteSubscriptionModal({ open, onClose, isLowGraphics, user }) {
 
   // Memoize hasSufficientBalance results
   const sufficientBalance = useMemo(() => {
-    const subscriptionAmounts = { red: 0.1, black: 1.0 };
+    const subscriptionAmounts = { red: 0.1, black: 0.4 };
     return {
       red: user?.balance >= subscriptionAmounts.red,
       black: user?.balance >= subscriptionAmounts.black,
@@ -96,7 +96,7 @@ function EliteSubscriptionModal({ open, onClose, isLowGraphics, user }) {
       return (
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <Typography variant="h4" component="div" sx={{ fontWeight: 'bold', display: 'flex', alignItems: 'center', textDecoration: 'line-through' }}>
-            0.1 <Typography component="span" sx={{ fontSize: '1rem', ml: 0.5 }}>SOL</Typography>
+            0.2 <Typography component="span" sx={{ fontSize: '1rem', ml: 0.5 }}>SOL</Typography>
           </Typography>
           <Typography variant="h4" component="div" sx={{ fontWeight: 'bold', color: '#d81719' }}>
             FREE 1st MONTH
@@ -107,7 +107,7 @@ function EliteSubscriptionModal({ open, onClose, isLowGraphics, user }) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center' }}>
         <Typography variant="h4" component="div" sx={{ fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>
-          {type === 'red' ? '0.1' : '1.0'} <Typography component="span" sx={{ fontSize: '1rem', ml: 0.5 }}>SOL</Typography>
+          {type === 'red' ? '0.1' : '0.4'} <Typography component="span" sx={{ fontSize: '1rem', ml: 0.5 }}>SOL</Typography>
         </Typography>
         <Typography sx={{ alignSelf: 'flex-end', ml: 1, color: 'text.secondary' }}>/month</Typography>
       </Box>
@@ -289,13 +289,13 @@ function EliteSubscriptionModal({ open, onClose, isLowGraphics, user }) {
                       <ListItemIcon sx={{ minWidth: '36px' }}>
                         <CheckCircleIcon sx={{ color: '#d81719' }} />
                       </ListItemIcon>
-                      <ListItemText primary="2 Game Houses a Time" />
+                      <ListItemText primary="150 Game Creation Credits per month" />
                     </ListItem>
                     <ListItem sx={{ py: 1 }}>
                       <ListItemIcon sx={{ minWidth: '36px' }}>
                         <CheckCircleIcon sx={{ color: '#d81719' }} />
                       </ListItemIcon>
-                      <ListItemText primary="1 SOL in Loan creation" />
+                      <ListItemText primary="1 SOL limit in Loan creation" />
                     </ListItem>
                     <ListItem sx={{ py: 1 }}>
                       <ListItemIcon sx={{ minWidth: '36px' }}>
@@ -416,13 +416,13 @@ function EliteSubscriptionModal({ open, onClose, isLowGraphics, user }) {
                       <ListItemIcon sx={{ minWidth: '36px' }}>
                         <CheckCircleIcon sx={{ color: '#000000' }} />
                       </ListItemIcon>
-                      <ListItemText primary="20 Game Houses a Time" primaryTypographyProps={{ fontWeight: 'medium' }} />
+                      <ListItemText primary="800 Game Creation Credits per month" primaryTypographyProps={{ fontWeight: 'medium' }} />
                     </ListItem>
                     <ListItem sx={{ py: 1 }}>
                       <ListItemIcon sx={{ minWidth: '36px' }}>
                         <CheckCircleIcon sx={{ color: '#000000' }} />
                       </ListItemIcon>
-                      <ListItemText primary="10 SOL in Loan creation" primaryTypographyProps={{ fontWeight: 'medium' }} />
+                      <ListItemText primary="10 SOL limit in Loan creation" primaryTypographyProps={{ fontWeight: 'medium' }} />
                     </ListItem>
                     <ListItem sx={{ py: 1 }}>
                       <ListItemIcon sx={{ minWidth: '36px' }}>

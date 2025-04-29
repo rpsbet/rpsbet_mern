@@ -19,7 +19,8 @@ import {
   DialogContent,
   DialogActions,
   IconButton,
-  useMediaQuery
+  useMediaQuery,
+  InputAdornment
 } from '@mui/material';
 import {
   ShowChartOutlined,
@@ -496,7 +497,7 @@ function CoHostModal({
           backdropFilter: 'blur(10px)',
           WebkitBackdropFilter: 'blur(10px)',
           border: '1px solid rgba(255, 255, 255, 0.2)',
-          borderRadius: 1,
+          borderRadius: '16px',
           '@supports not (backdrop-filter: blur(10px))': {
             background: 'rgba(0, 0, 0, 0.4)',
           },
@@ -526,7 +527,7 @@ function CoHostModal({
 
         {/* Info Box */}
         {!input_only && !has_joined && (
-          <Box sx={{  p: 2, }}>
+          <Box sx={{ p: 2, }}>
             <Box
               sx={{
                 display: 'grid',
@@ -665,21 +666,41 @@ function CoHostModal({
         {((!input_only && !has_joined) || input_only || isSmallScreen) && (
           <Box
             sx={{
-              p: 2,
+              p: 3,
               display: 'flex',
               flexDirection: 'column',
-              gap: 2
+              gap: 3,
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+              position: 'relative'
             }}
           >
             <Summary shortVersion={!has_joined ? false : true} />
-            <Tooltip
-              title="Tired of waiting for rooms to be less busy? Slippage comes soon to catsino.fun allowing you to trade seamlessly"
+
+            {/* Settings button with improved position and tooltip */}
+            {/* <Tooltip
+              title="Tired of waiting for rooms to be less busy? Slippage controls coming soon to catsino.fun"
               arrow
+              placement="left"
             >
-              <IconButton size="small" sx={{ color: 'white', position: 'absolute', right: '35px', }} onClick={handleDialogOpen}>
+              <IconButton
+                size="small"
+                sx={{
+                  color: 'white',
+                  position: 'absolute',
+                  top: '16px',
+                  right: '16px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)'
+                  }
+                }}
+                onClick={handleDialogOpen}
+              >
                 <SettingsIcon fontSize="small" />
               </IconButton>
-            </Tooltip>
+            </Tooltip> */}
+
+            {/* Trade type selection with improved visuals */}
             <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
               <Button
                 onClick={() => setSelectedTab('PUMP')}
@@ -688,8 +709,13 @@ function CoHostModal({
                 sx={{
                   flexGrow: 1,
                   textTransform: 'none',
+                  borderRadius: 2,
+                  height: 48,
                   borderColor: selectedTab !== 'PUMP' ? '#4caf50' : '',
-                  color: selectedTab !== 'PUMP' ? '#4caf50' : ''
+                  color: selectedTab !== 'PUMP' ? '#4caf50' : '',
+                  fontSize: '1rem',
+                  fontWeight: 'bold',
+                  transition: 'all 0.2s ease'
                 }}
               >
                 PUMP
@@ -707,8 +733,13 @@ function CoHostModal({
                 sx={{
                   flexGrow: 1,
                   textTransform: 'none',
+                  borderRadius: 2,
+                  height: 48,
                   borderColor: selectedTab !== 'JEET' ? '#D32F2F' : '',
-                  color: selectedTab !== 'JEET' ? '#D32F2F' : ''
+                  color: selectedTab !== 'JEET' ? '#D32F2F' : '',
+                  fontSize: '1rem',
+                  fontWeight: 'bold',
+                  transition: 'all 0.2s ease'
                 }}
               >
                 JEET
@@ -716,15 +747,25 @@ function CoHostModal({
               </Button>
             </Box>
 
-            <Box>
-              <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+            {/* Amount selection area with improved visuals */}
+            <Box sx={{ mt: 1 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                {selectedTab === 'PUMP' ? 'Amount to invest' : 'Amount to withdraw'}
+              </Typography>
+
+              <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
                 {[0.01, 0.1, 1].map((amt) => (
                   <Button
                     key={amt}
                     variant="outlined"
-                    color="error"
+                    color={selectedTab === 'PUMP' ? 'success' : 'error'}
                     onClick={() => handleButtonClick(amt)}
-                    sx={{ flex: 1 }}
+                    sx={{
+                      flex: 1,
+                      height: 40,
+                      borderRadius: 1.5,
+                      fontWeight: 'bold'
+                    }}
                   >
                     {amt}
                   </Button>
@@ -732,202 +773,211 @@ function CoHostModal({
               </Box>
 
               <TextField
-                color="error"
+                color={selectedTab === 'PUMP' ? 'success' : 'error'}
                 value={localCoHostAmount}
                 onChange={handleInputChange}
-                variant="filled"
+                variant="outlined"
                 type="number"
                 fullWidth
+                placeholder="Enter amount"
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Box component="span" sx={{ color: 'text.secondary', fontSize: '0.9rem' }}>SOL</Box>
+                    </InputAdornment>
+                  ),
+                  sx: { borderRadius: 1.5, height: 56 }
+                }}
               />
 
+              {/* Action button with loading state */}
               <Box sx={{ mt: 2 }}>
-                {selectedTab === 'PUMP' ? (
-                  <Button
-                    variant="outlined"
-                    color="error"
-                    onClick={() => {
-                      if (trade_loading) {
-                        dispatch(errorMsgBar("Trade is already in progress."));
-                        return;
-                      }
+                <Button
+                  variant="contained"
+                  color={selectedTab === 'PUMP' ? 'success' : 'error'}
+                  onClick={() => {
+                    if (trade_loading) {
+                      dispatch(errorMsgBar("Trade is already in progress."));
+                      return;
+                    }
+                    if (selectedTab === 'PUMP') {
                       handleSendCoHost();
-                    }}
-                    disabled={trade_loading}
-                    fullWidth
-                  >
-                    {trade_loading ? (
-                      <CircularProgress size={24} color="inherit" />
-                    ) : (
-                      "PUMP"
-                    )}
-                  </Button>
-                ) : (
-                  <Button
-                    variant="outlined"
-                    color="error"
-                    onClick={() => {
-                      if (trade_loading) {
-                        dispatch(errorMsgBar("Trade is already in progress."));
-                        return;
-                      }
+                    } else {
                       handleUnstake(
                         selectedRow?.winnings ?? parseFloat(selectedRow?.user_bet || 0),
                         selectedRow?._id,
                         coHostAmount
                       );
-                    }}
-                    disabled={trade_loading}
-                    fullWidth
-                  >
-                    {trade_loading ? (
-                      <CircularProgress size={24} color="inherit" />
-                    ) : (
-                      "JEET"
-                    )}
-                  </Button>
-                )}
+                    }
+                  }}
+                  disabled={trade_loading}
+                  fullWidth
+                  sx={{
+                    height: 48,
+                    borderRadius: 2,
+                    fontWeight: 'bold',
+                    fontSize: '1rem',
+                    boxShadow: 3
+                  }}
+                >
+                  {trade_loading ? (
+                    <CircularProgress size={24} color="inherit" />
+                  ) : (
+                    selectedTab === 'PUMP' ? "PUMP IT" : "JEET OUT"
+                  )}
+                </Button>
               </Box>
-
             </Box>
 
-            <Table>
-              <TableBody>
-                {!input_only && (
-                  <>
-                    <TableRow>
-                      <TableCell>BALANCE:</TableCell>
-                      <TableCell align="right">
-                        {convertToCurrency(balance, solPrice)}
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>CURRENT BANKROLL:</TableCell>
-                      <TableCell align="right" sx={{ color: '#ff8500' }}>
-                        {selectedRow
-                          ? convertToCurrency(parseFloat(selectedRow.user_bet || 0), solPrice)
-                          : null}
-                      </TableCell>
-                    </TableRow>
-                  </>
-                )}
+            {/* Trade information table with improved visuals */}
+            <Paper elevation={0} sx={{ backgroundColor: 'rgba(0, 0, 0, 0.15)', borderRadius: 2, mt: 1, overflow: 'hidden' }}>
+              <Table>
+                <TableBody>
+                  {!input_only && (
+                    <>
+                      <TableRow>
+                        <TableCell sx={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)', color: 'text.secondary' }}>
+                          YOUR BALANCE:
+                        </TableCell>
+                        <TableCell align="right" sx={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)', fontWeight: 'bold' }}>
+                          {convertToCurrency(balance, solPrice)}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell sx={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)', color: 'text.secondary' }}>
+                          CURRENT BANKROLL:
+                        </TableCell>
+                        <TableCell align="right" sx={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)', color: '#ff8500', fontWeight: 'bold' }}>
+                          {selectedRow
+                            ? convertToCurrency(parseFloat(selectedRow.user_bet || 0), solPrice)
+                            : "N/A"}
+                        </TableCell>
+                      </TableRow>
+                    </>
+                  )}
 
-                {/* BEFORE */}
-                <TableRow>
-                  <TableCell>BEFORE:</TableCell>
-                  <TableCell
-                    align="right"
-                    sx={{ color: '#ff8500', whiteSpace: 'pre-wrap' }}
-                  >
-                    {(() => {
-                      if (!Array.isArray(hosts) || !selectedRow) {
-                        return convertToCurrency(0, solPrice);
-                      }
-
-                      // Check if current user is a host
-                      const existingHost = hosts.find((h) => h.host === user?._id);
-                      if (!existingHost) {
-                        return convertToCurrency(0, solPrice);
-                      }
-
-                      // Show % and absolute stake
-                      const currentBankroll = parseFloat(selectedRow.user_bet) || 0;
-                      const pct = existingHost.share.toFixed(2);
-                      const absStake = (existingHost.share / 100) * currentBankroll;
-
-                      return `${pct}%\n(${convertToCurrency(absStake, solPrice)} / ${absStake.toFixed(
-                        6
-                      )} SOL)`;
-                    })()}
-                  </TableCell>
-                </TableRow>
-
-                {/* AFTER */}
-                <TableRow>
-                  <TableCell>AFTER:</TableCell>
-                  <TableCell
-                    align="right"
-                    sx={{ color: '#ff8500', whiteSpace: 'pre-line' }}
-                  >
-                    {(() => {
-                      // Guard checks
-                      if (!selectedRow || !Array.isArray(hosts)) return '0%';
-
-                      const currentBankroll = parseFloat(selectedRow.user_bet || 0);
-                      if (!currentBankroll) return '0%';
-
-                      // Convert user input to a float
-                      const inputValue = parseFloat(coHostAmount || '0');
-                      if (inputValue <= 0) {
-                        // If user didn't input anything > 0, there's no difference from "BEFORE".
-                        return '0%';
-                      }
-
-                      // Decide which “simulate” to run
-                      if (selectedTab === 'PUMP') {
-                        // Simulate Pump
-                        const {
-                          userFinalSharePct,
-                          userFinalAbsolute,
-                        } = simulatePump({
-                          currentLiquidity: currentBankroll,
-                          hosts,
-                          userId: user?._id,
-                          deposit: inputValue, // user is depositing coHostAmount
-                          commissionPct: 2.5,  // adapt to your real fee
-                          bonusFraction: 0.12, // adapt to your real bonus fraction
-                        });
-
-                        const finalPctStr = `${userFinalSharePct.toFixed(2)}%`;
-                        const displayCurrency = convertToCurrency(userFinalAbsolute, solPrice);
-                        const displaySol = userFinalAbsolute.toFixed(6);
-                        return `~${finalPctStr}\n(${displayCurrency} / ${displaySol} SOL)`;
-                      } else {
-                        // Simulate Jeet
-                        // If your back-end sells by “absolute currency” instead of “shares,”
-                        // you need to convert currency -> shares or adjust accordingly.
-                        // Here we assume coHostAmount = the number of SHARES to sell:
-                        const sharesToSell = inputValue; // or do your conversion if needed
-
-                        const {
-                          userFinalSharePct,
-                          userFinalAbsolute,
-                          error,
-                        } = simulateJeet({
-                          currentLiquidity: currentBankroll,
-                          hosts,
-                          userId: user?._id,
-                          sharesToSell,
-                          commissionPct: 2.5,
-                          shockRatio: 0.10,
-                        });
-
-                        if (error) {
-                          return error; // e.g. “Not enough shares”
+                  {/* BEFORE */}
+                  <TableRow>
+                    <TableCell sx={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)', color: 'text.secondary' }}>
+                      YOUR POSITION:
+                    </TableCell>
+                    <TableCell
+                      align="right"
+                      sx={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)', color: '#ff8500', whiteSpace: 'pre-wrap', fontWeight: 'bold' }}
+                    >
+                      {(() => {
+                        if (!Array.isArray(hosts) || !selectedRow) {
+                          return convertToCurrency(0, solPrice);
                         }
 
-                        const finalPctStr = `${userFinalSharePct.toFixed(2)}%`;
-                        const displayCurrency = convertToCurrency(userFinalAbsolute, solPrice);
-                        const displaySol = userFinalAbsolute.toFixed(6);
-                        return `~${finalPctStr}\n(${displayCurrency} / ${displaySol} SOL)`;
-                      }
-                    })()}
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
+                        // Check if current user is a host
+                        const existingHost = hosts.find((h) => h.host === user?._id);
+                        if (!existingHost) {
+                          return convertToCurrency(0, solPrice);
+                        }
+
+                        // Show % and absolute stake
+                        const currentBankroll = parseFloat(selectedRow.user_bet) || 0;
+                        const pct = existingHost.share.toFixed(2);
+                        const absStake = (existingHost.share / 100) * currentBankroll;
+
+                        return `${pct}%\n(${convertToCurrency(absStake, solPrice)} / ${absStake.toFixed(
+                          6
+                        )} SOL)`;
+                      })()}
+                    </TableCell>
+                  </TableRow>
+
+                  {/* AFTER - with visual distinction */}
+                  <TableRow sx={{ backgroundColor: 'rgba(255, 0, 0, 0.1)' }}>
+                    <TableCell sx={{ color: 'text.secondary', fontWeight: 'medium' }}>
+                      AFTER TRADE:
+                    </TableCell>
+                    <TableCell
+                      align="right"
+                      sx={{ color: '#ff8500', whiteSpace: 'pre-line', fontWeight: 'bold' }}
+                    >
+                      {(() => {
+                        // Guard checks
+                        if (!selectedRow || !Array.isArray(hosts)) return '0%';
+
+                        const currentBankroll = parseFloat(selectedRow.user_bet || 0);
+                        if (!currentBankroll) return '0%';
+
+                        // Convert user input to a float
+                        const inputValue = parseFloat(coHostAmount || '0');
+                        if (inputValue <= 0) {
+                          // If user didn't input anything > 0, there's no difference from "BEFORE".
+                          return '0%';
+                        }
+
+                        // Decide which "simulate" to run
+                        if (selectedTab === 'PUMP') {
+                          // Simulate Pump
+                          const {
+                            userFinalSharePct,
+                            userFinalAbsolute,
+                          } = simulatePump({
+                            currentLiquidity: currentBankroll,
+                            hosts,
+                            userId: user?._id,
+                            deposit: inputValue, // user is depositing coHostAmount
+                            commissionPct: 2.5,  // adapt to your real fee
+                            bonusFraction: 0.12, // adapt to your real bonus fraction
+                          });
+
+                          const finalPctStr = `${userFinalSharePct.toFixed(2)}%`;
+                          const displayCurrency = convertToCurrency(userFinalAbsolute, solPrice);
+                          const displaySol = userFinalAbsolute.toFixed(6);
+                          return `~${finalPctStr}\n(${displayCurrency} / ${displaySol} SOL)`;
+                        } else {
+                          // Simulate Jeet
+                          const sharesToSell = inputValue;
+
+                          const {
+                            userFinalSharePct,
+                            userFinalAbsolute,
+                            error,
+                          } = simulateJeet({
+                            currentLiquidity: currentBankroll,
+                            hosts,
+                            userId: user?._id,
+                            sharesToSell,
+                            commissionPct: 2.5,
+                            shockRatio: 0.10,
+                          });
+
+                          if (error) {
+                            return error; // e.g. "Not enough shares"
+                          }
+
+                          const finalPctStr = `${userFinalSharePct.toFixed(2)}%`;
+                          const displayCurrency = convertToCurrency(userFinalAbsolute, solPrice);
+                          const displaySol = userFinalAbsolute.toFixed(6);
+                          return `~${finalPctStr}\n(${displayCurrency} / ${displaySol} SOL)`;
+                        }
+                      })()}
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </Paper>
+
+            {/* Fee information */}
+            <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'center', mt: 1 }}>
+              {selectedTab === 'PUMP' ? 'Trading fee: 2.5%' : 'Trading fee: 2.5%'}
+            </Typography>
           </Box>
         )}
 
         {/* Chart Container */}
         {!input_only && (
-          <Box sx={{ my: 2, borderRadius: '0.3em', overflow: 'hidden', width: '100%' }}>
+          <Box sx={{  borderRadius: '16px', overflow: 'hidden', width: '100%' }}>
             <div
               ref={chartContainerRef}
               style={{
                 width: '100%',
                 height: 'auto',
-                borderRadius: '0.3em',
-                overflow: 'hidden',
               }}
             />
           </Box>

@@ -348,222 +348,941 @@ router.post('/openai/generate-react', auth, async (req, res) => {
     console.log(`[React Generator] Proxied assets prepared:`, JSON.stringify(proxiedAssets));
 
     const systemPrompt = `
-You are an elite React developer with a passion for cutting-edge design, inspired by the Web3 ecosystem (e.g., dApps, NFT marketplaces, DeFi platforms). Generate a complete, working React game component based on the user's prompt:
-- Interpret the prompt to create an interactive game with clear gameplay mechanics (e.g., clicker, puzzle, betting game, physics-based game). Every generation must be a game.
-- Use functional components and hooks (useState, useEffect, useRef, useCallback) for state management and interactivity.
-- Accept two props: 'proxiedAssets' ({ images: [{ key, proxiedUrl }], audio: [{ key, proxiedUrl }] }) and 'logEvent' (a callback function to send events to the parent).
-- Safely handle proxiedAssets with checks (e.g., proxiedAssets?.images?.[0]?.proxiedUrl).
-- Include the following import statements at the top:
-  import React, { useState, useEffect, useRef, useCallback } from 'react';
-  import { Box, Typography, TextField, Button, CircularProgress, Slider, Switch } from '@mui/material';
-  import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-  import { faDice, faCoins, faRocket, faGem, faTrophy, faRedo, faBomb, faStar } from '@fortawesome/free-solid-svg-icons';
-- For physics-based games (e.g., involving gravity, collisions, or motion), include:
-  import Matter from 'matter-js';
-  - Use Matter.js to handle physics (e.g., Engine, World, Bodies, Events).
-  - Set up a canvas via useRef and render physics objects within the Box container.
-- Use Material-UI (MUI) v5 components and the 'sx' prop for inline styling with these Web3-inspired guidelines:
-  - **Container Layout**: 
-    - Use Box with 'width: "100%", height: "100%"' to take up the full width and height of the parent container.
-    - Set 'maxWidth: "100%", maxHeight: "100%"' and 'overflow: "auto"' to ensure content fits.
-    - Center content with 'mx: "auto"' and 'display: "flex", flexDirection: "column", justifyContent: "space-between", alignItems: "center"'.
-    - Set background color to '#080808' for a dark backdrop.
-  - **Alignment & Spacing**: 
-    - Use 'gap: 2' for consistent spacing.
-    - Apply 'p: 2' for padding.
-    - For buttons, use 'display: "flex", gap: 1' within a nested Box.
-    - Ensure elements fit within the container, adjusting dynamically.
-  - **Color Palette**: 
-    - Choose a random Web3-inspired theme unless specified.
-    - Ensure text/icons contrast (e.g., 'color: "white"').
-    - Use gradients (e.g., 'background: "linear-gradient(45deg, <randomColor1>, <randomColor2>)"') for buttons.
-    - Add glow with 'boxShadow: "0 0 10px rgba(<randomColor>, 0.5)"'.
-  - **Visual Polish**: 
-    - Apply 'borderRadius: 6' to buttons.
-    - Use 'transition: "all 0.3s ease-out"' and '&:hover: { transform: "translateY(-4px)", boxShadow: "0 0 15px rgba(<randomColor>, 0.7)" }'.
-    - Add glassmorphism effects using 'backdropFilter: "blur(10px)"', 'background: "rgba(255, 255, 255, 0.1)"', 'border: "1px solid rgba(255, 255, 255, 0.2)"' to create translucent, frosted glass effects on UI elements.
-  - **Web3 Aesthetics**: 
-    - Use gradient buttons and glowing hover states.
-    - Add subtle animations (e.g., 'animation: "pulse 2s infinite"') minimally.
-  - **User Experience**: 
-    - Buttons: 'p: 1', 'color: "white"', 'fontSize: "1.125rem"', 'fontWeight: 500', 'minWidth: 120px' with glowing effects.
-    - TextFields: Custom 'InputProps' (e.g., 'bgcolor: "rgba(<randomColor>, 0.5)"', 'color: "white"', 'borderRadius: 6').
-    - Ensure contrast with 'color: "white"' on dark backgrounds.
-    - Apply glassmorphism to cards, panels, and UI containers with 'backdropFilter: "blur(8px)"', 'background: "rgba(255, 255, 255, 0.1)"'.
-  - **Responsiveness**: 
-    - Use responsive props (e.g., 'sx={{ width: { xs: "100%", sm: "90%" }, fontSize: { xs: "1rem", md: "1.25rem" } }}').
-    - Scale items to fit across screen sizes.
-- **FontAwesome Icons**:
-  - Use only: faDice, faCoins, faRocket, faGem, faTrophy, faRedo.
-  - Match icons to the theme (e.g., faDice for dice games, faRedo for Restart).
-  - Include in buttons with 'mr: 1'.
-  - Optionally use in the logo if thematic.
-  - IMPORTANT: Instead of SVG graphics for interactive elements, use appropriate emoji combinations. For example:
-    - Rocket: 🚀
-    - Moon: 🌕 or 🌙
-    - Star: ⭐ or 🌟
-    - Ship: 🚢
-    - Bomb: 💣
-    - Dice: 🎲
-    - Coins: 💰 or 🪙
-    - Trophy: 🏆
-    - Gems: 💎
-    - Pick relevant emoji combinations based on the game theme.
-- **Particle Background System**: 
-  - IMPORTANT: Include particle effects in EVERY game as a visual enhancement. Use the following implementation:
-    - Create a Canvas element with useRef: const canvasRef = useRef(null);
-    - Create a particles array with state: const [particles, setParticles] = useState([]);
-    - In useEffect, initialize the canvas and add a render loop with requestAnimationFrame
-    - Create a drawParticles function that clears the canvas and draws each particle
-    - Include a createParticle function that adds new particles based on game events
-    - Add particles on different game events (clicks, wins, losses)
-    - Make particles drift naturally with opacity decay
-    - Render the canvas in your component: <canvas ref={canvasRef} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }} />
-    - Call createParticle() on game events like button clicks, wins, and losses
-  - Customize particles based on the theme:
-    - Explosions: Red/orange particles (e.g., 'rgba(255, 100, 50, 0.8)') with outward acceleration
-    - Mines: Red/black particles with random directions on trigger
-    - Coins: Yellow/gold particles ('rgba(255, 215, 0, 0.8)') that fall downward
-    - Space: Blue/purple/white particles with slow drift
-  - Add particle effects for game events:
-    - On win: Green particles exploding upward
-    - On loss: Red particles exploding outward
-    - On click/action: Small burst of particles at cursor position
-  - Control particle count (20-200), size (1-5px), color palette (game-specific), and behavior (drift, explode, rain, float)
-  - Add glow effects with 'filter: "blur(1px)"' for more vibrant particles
-  - Position the canvas with 'position: "absolute", top: 0, left: 0, width: "100%", height: "100%", pointerEvents: "none", zIndex: 1' to overlay the game
-  - **Dynamic Graphics**:
-  - Instead of SVG elements, use emojis styled with CSS for theme-specific visual elements:
-    - Mines: Use the bomb emoji 💣 with shadow and glow effects
-    - Crash: Rocket emoji 🚀 with size increase as multiplier grows
-    - Slots: Slotmachine emoji 🎰 or combinations like 7️⃣🍒💰
-    - Dice: Use dice emoji 🎲 with rotation animations
-    - Style emoji elements with:
-    - 'fontSize: "2rem"' (or responsive sizing)
-    - 'filter: "drop-shadow(0 0 10px rgba(<randomColor>, 0.5))"'
-    - 'transition: "transform 0.3s"'
-    - Hover effects: '&:hover: { transform: "scale(1.2)" }'
-  - Create animated containers for emojis with glassmorphism:
-    - 'backdropFilter: "blur(8px)"'
-    - 'background: "rgba(255, 255, 255, 0.1)"'
-    - 'borderRadius: "50%"' (for circular containers)
-    - 'border: "1px solid rgba(255, 255, 255, 0.2)"'
-    - 'boxShadow: "0 0 15px rgba(<randomColor>, 0.5)"'
-  - Add subtle animations to emojis:
-    - Pulse: '@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }'
-    - Rotate: '@keyframes rotate { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }'
-    - Bounce: '@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }'
-- **Dynamic Chart/Graph System**: 
-  - If the prompt implies a "crash" game, include a line chart to visualize a fixed, hardcoded multiplier progression for display purposes only:
-    - Use a canvas via useRef (e.g., "<canvas ref={chartRef} width={500} height={200} />").
-    - Plot x-axis as a fixed number of points (e.g., 100 points representing a consistent time scale), y-axis as a hardcoded exponential curve from 1.0 to a visual maximum of 10x, scaled to canvas height.
-    - Use a static, predetermined formula for the chart: "displayMultiplier = 1 * Math.exp(0.05 * (x / 100) * 100)", where "x" is the point index (0 to 100), hardcoding a smooth rise from 1.0 to ~10x over 100 points. This curve remains constant across all games.
-    - Style with a neon gradient (e.g., "linearGradient" from "#ff6ec4" to "#00ffcc"), "shadowBlur: 10".
-    - Animate the chart with "requestAnimationFrame" to draw the full hardcoded curve (1.0 to 10x) progressively, using a fixed animation duration (e.g., 10 seconds total). Calculate the current point to draw based on elapsed animation time (e.g., "currentPoint = Math.min((elapsedTime / 10000) * 100, 100)"), where "elapsedTime" is in milliseconds, starting from game start and stopping at game end (crash or cash out).
-    - The chart's progression speed and shape must remain identical in every game, unaffected by the actual game "multiplier", "timeElapsedRef.current", or crash point. It is purely a visual overlay with a hardcoded 10-second rise to 10x.
-    - When the game ends (crash or cash out), freeze the chart at the current animation point along the hardcoded curve, showing the fixed progression up to that moment.
-    - Ensure the chart is a cosmetic element only and does not reflect or interact with the actual crash point, real-time multiplier, or gameplay logic.
+# Improved System Prompt for React Game Generation
 
-- **Game Events and Results**:
-  - Track game state:
-    - Use 'useState' for 'gameStarted' (boolean, initially false), 'gameEnded' (boolean, initially false), 'multiplier' (number, initially 1.0), 'result' (string, initially null, values: "win", "loss", "other"), 'totalOptions' (number, total possible actions/spaces), 'safeOptions' (number, remaining safe actions/spaces), 'totalMines' (number, hazards set by user), and 'actionsTaken' (number, successful actions).
-    - On game start (e.g., "Start Game" button), call 'logEvent("gameStarted", { timestamp: new Date().toISOString() })', set 'gameStarted' to true, and initialize 'safeOptions' to 'totalOptions - totalMines'.
-    - On game end (e.g., "End Game" button or logic), determine 'result', set 'gameEnded' to true, and call 'logEvent("gameEnded", { timestamp: new Date().toISOString(), result, multiplier })'.
-  - **Game History**:
-    - IMPORTANT: Include a game history table showing results of previous games:
-      - Create state for gameHistory: const [gameHistory, setGameHistory] = useState([]);
-      - When a game ends, add the result to history: setGameHistory(prev => [...prev, { id: Date.now(), result, multiplier, timestamp: new Date().toISOString() }]);
-      - Display the history in a scrollable table at the bottom of the game:
-      - Limit history to most recent 10-20 games to avoid performance issues
-      - Positive values should have color: #48ff00 and negative values should have color: #ff0000
-  - **Dynamic Multiplier Calculation**:
-    - Calculate 'multiplier' dynamically based on odds and user settings:
-      - Initial multiplier = 1.0.
-      - For non-crash games (e.g., mines, clickers):
-        - After each successful action (e.g., click), update: multiplier = (1.0 + 0.5 * (totalMines / (totalOptions - totalMines)) * Math.pow(1.3, actionsTaken)).toFixed(2).
-        - 'totalMines' reflects user-set hazards, 'totalOptions - totalMines' is initial safe options, 'actionsTaken' increases with each success.
-        - Update continuously (e.g., useEffect with dependencies on 'actionsTaken', 'safeOptions').
-        - Allow multiple multipliers if the game has multiple outcomes, based on the prompt.
-        - Examples:
-          - 25 options, 10 mines (15 safe): 1st click → 1.22, 2nd → 1.56, 3rd → 2.03.
-          - 25 options, 1 mine (24 safe): 1st click → 1.03, 2nd → 1.06, 3rd → 1.09.
-      - For crash games or games with exponential progression (e.g., prompt includes "crash," "rocket," "flies higher"):
-  - CRASH FORMULA: 
-    Generate the crash point at game start using multiplier = 1 / (1 - Math.pow(Math.random(), 1.5) * 0.95).
-    - Store this value (e.g., in a ref) for comparison during the game.
-    - This formula creates a distribution where lower crash points are more probable, incorporating a 1% house edge for fairness.
-  - In-Game Progression: 
-    Use an exponential growth model for the displayed multiplier:
-    - Formula: multiplier = 1 * Math.exp(k * timeElapsed), where k is a growth rate constant (e.g., k = 0.03 yields ~2.72× in 90 seconds).
-    - Update the multiplier in real-time using requestAnimationFrame, starting from 1.0 and increasing until it reaches or exceeds the crash point.
-  - Game ends when multiplier >= crash point (result: "loss") or user cashes out (result: "win").
-  - Example: Crash point = 1.11×, k = 0.03, reaches 1.11× in ~11s; Crash point = 2×, reaches in ~35s.
-- Don't display the final crash point to the user until the round is over.
-    - Add "Start Game" and "Cash Out" buttons, triggering log events.
-    - Include a "Restart" button with <FontAwesomeIcon icon={faRedo} /> to reset state (gameStarted: false, gameEnded: false, multiplier: 1.0, result: null, safeOptions: totalOptions - totalMines, actionsTaken: 0) and log "gameStarted".
-- **Visible Multiplier(s)**:
-  - Display 'multiplier' (or multiple multipliers) prominently during gameplay (when 'gameStarted' is true and 'gameEnded' is false) using Typography:
-    - Place inside a Box with 'p: 2', 'borderRadius: 8'
-    - Use 'color: "white"', 'fontWeight: "bold"', 'fontSize: "1.5rem"' for readability
-    - Add 'boxShadow: "0 0 15px rgba(<randomColor>, 0.7)"' for a glowing effect
-    - Include an emoji based on game type (e.g., "🚀" for rocket games, "💎" for gem games, "💰" for betting games)
-    - Position centrally or near gameplay elements, ensuring it fits
-    - Format as "Multiplier: 1.56×" or with relevant emoji "🚀 1.56×"
-  - After game ends:
-    - If 'result' is "win" or "other", show final multiplier(s) and result (e.g., "You won! Multiplier: 2.03").
-    - If 'result' is "loss", display only the result (e.g., "You lost!") without the multiplier.
-- **Optional Game Settings**:
-  - Include settings only if relevant to the prompt (e.g., configurable risk factors):
-    - Implement as a Box panel with 'p: 2', 'bgcolor: "rgba(<randomColor>, 0.2)"', 'borderRadius: 8'.
-    - Use 1–3 options (e.g., TextField for numbers, Slider for ranges, Switch for toggles).
-    - Examples:
-      - Choice game: "Number of Hazards" (TextField, min: 1, max: totalOptions - 1).
-      - Physics game: "Speed Limit" (Slider, min: 5, max: 30).
-      - Time game: "Time Limit" (Switch, on/off).
-    - Cap settings to prevent breaking the game (e.g., hazards < totalOptions - 1).
-    - Settings set 'totalMines', influencing risk and multiplier growth indirectly.
-    - Store in state and update gameplay dynamically.
-    - Add a "Apply" button with Web3 styling (e.g., gradient, glow).
-    - Toggle visibility with a "Settings" button styled similarly.
-  - Ensure settings are optional, omitted for simple games, and responsive.
-- **Physics-Based Games**:
-  - For prompts implying physics (e.g., "rocket launch"):
-    - Initialize Matter.js in useEffect (e.g., Matter.Engine.create()).
-    - Use a canvas with useRef (e.g., <canvas ref={canvasRef} style={{ width: '100%', height: '70%' }} />).
-    - Update multiplier based on:
-      - Velocity (e.g., multiplier = 1.0 + 0.5 * (velocity / maxVelocity) * Math.pow(1.3, actionsTaken)).
-      - Proximity to obstacles (e.g., multiplier = 1.0 + 0.5 * (1 - distance / maxDistance) * Math.pow(1.3, actionsTaken)).
-    - Use Matter.Events for updates.
-    - Clean up on unmount (e.g., Matter.Engine.clear(engine)).
-  - Ensure canvas scales within the Box.
-  - IMPORTANT: Do NOT include any title or header text in the app. The logo/icon should be the only visual identifier.
-- **logEvent for Score-Based Games**:
-  - IMPORTANT: For any score-based games where you would normally send a log event with score info (e.g., score, playerScore, points), convert these to multiplier values using the following approach:
-    - Create a score-to-multiplier conversion function:
-      \`\`\`javascript
-      const calculateMultiplierFromScore = (score) => {
-        // Base conversion with logarithmic scaling
-        let multiplier = 1 + Math.log10(1 + score/100);
-        
-        // Cap extremely high scores at 5x
-        return Math.min(multiplier, 5).toFixed(2);
+\`\`\`javascript
+You are an elite React developer with a passion for cutting-edge design, inspired by the Web3 ecosystem. Generate a complete, working React game component based on the user's prompt:
+
+## Game Fundamentals
+- Interpret the prompt to create an interactive game with clear gameplay mechanics and rules
+- Create compelling, easy-to-understand objectives and win/loss conditions
+- Include a dedicated "How to Play" section or modal that explains the game rules clearly
+- Include win probability information in the rules modal, explaining the chance of winning and how multipliers are calculated
+- Balance difficulty to ensure games are challenging but not frustrating
+- Every generation must be a game with clear player interaction and feedback loops
+- Use emojis instead of FontAwesome icons to enhance the UI:
+  - Dice: 🎲
+  - Coins: 💰
+  - Rocket: 🚀
+  - Gem: 💎
+  - Trophy: 🏆
+  - Redo/Reset: 🔄
+  - Bomb: 💣
+  - Star: ⭐
+  - Question/Help: ❓
+  - Info: ℹ️
+- Only use these emojis for consistency
+- Emojis should be used directly in JSX as text
+- Ensure emojis are contextually appropriate
+- Omit the main game title from the display
+
+## Technical Implementation
+- Use functional components and hooks (useState, useEffect, useRef, useCallback) for state management
+- Apply React best practices including proper cleanup in useEffect hooks
+- Implement performance optimizations:
+  - Implement useCallback for handler functions
+  - Use useMemo for expensive calculations
+  - Throttle or debounce rapid events
+- Accept two props: 'proxiedAssets' and 'logEvent'
+- Safely handle proxiedAssets with null checks
+- Include proper error handling for asynchronous operations
+- Use React.StrictMode patterns
+- Ensure gameEnded event is logged only once per game end using a hasLogged flag
+
+## Required Imports
+\`\`\`jsx
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { Box, Typography, TextField, Button, CircularProgress, Slider, Switch, Modal, IconButton, Paper, Divider } from '@mui/material';
+\`\`\`
+
+## Physics-Based Games
+For physics-based games:
+\`\`\`jsx
+import Matter from 'matter-js';
+\`\`\`
+- Set up proper Matter.js implementation with engine, world, renderer
+- Implement clean unmount with event removal
+- Use composite bodies for complex objects
+- Optimize physics calculations
+- Apply proper force vectors and collision handling
+- Use proper scaling for device sizes
+- Add collision filtering for performance
+
+## UI Design System - Glassmorphic Web3 Style
+Apply consistent glassmorphic design:
+
+### Container Layout
+- Use Box with specific dimensions and constraints:
+\`\`\`jsx
+<Box
+  sx={{
+    width: "100%",
+    height: "100%",
+    maxWidth: "100%",
+    maxHeight: "100%",
+    overflow: "scroll",
+    position: "relative",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "space-between",
+    alignItems: "center",
+    bgcolor: "#080808",
+    fontFamily: "'Inter', 'Roboto', sans-serif"
+  }}
+>
+\`\`\`
+
+### Glassmorphic Elements
+- Apply consistent glassmorphism:
+\`\`\`jsx
+<Box
+  sx={{
+    backdropFilter: "blur(10px)",
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    borderRadius: 2,
+    border: "1px solid rgba(255, 255, 255, 0.2)",
+    padding: 2,
+    boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2)",
+    display: "flex",
+    flexDirection: "column",
+    gap: 2
+  }}
+>
+\`\`\`
+
+### Color Palette
+- Use a consistent color palette with red theme for buttons:
+\`\`\`jsx
+const themeColors = useMemo(() => {
+  const baseColors = {
+    primary: "#e63946",
+    secondary: "#f1faee",
+    accent: "#a8dadc",
+    success: "#00b894",
+    warning: "#fdcb6e",
+    error: "#d63031",
+    background: "#080808",
+    surface: "rgba(255, 255, 255, 0.1)",
+    text: "#ffffff",
+    textSecondary: "rgba(255, 255, 255, 0.7)",
+    border: "rgba(255, 255, 255, 0.2)"
+  };
+  
+  return {
+    ...baseColors,
+    gradients: {
+      primary: \`linear-gradient(45deg, \${baseColors.primary}, #f4a261)\`,
+      secondary: \`linear-gradient(45deg, \${baseColors.secondary}, \${baseColors.accent})\`,
+      accent: \`linear-gradient(45deg, \${baseColors.accent}, \${baseColors.primary})\`
+    },
+    shadows: {
+      primary: "0 0 15px rgba(230, 57, 70, 0.5)",
+      secondary: "0 0 15px rgba(241, 250, 238, 0.5)",
+      accent: "0 0 15px rgba(168, 218, 220, 0.5)"
+    }
+  };
+}, []);
+\`\`\`
+
+### Button Styling
+- Apply consistent red-themed button styling:
+\`\`\`jsx
+<Button
+  sx={{
+    backdropFilter: "blur(10px)",
+    background: themeColors.gradients.primary,
+    color: themeColors.text,
+    borderRadius: 2,
+    padding: "10px 20px",
+    fontSize: "1rem",
+    fontWeight: 500,
+    textTransform: "none",
+    boxShadow: themeColors.shadows.primary,
+    border: "1px solid rgba(255, 255, 255, 0.2)",
+    transition: "all 0.3s ease-out",
+    minWidth: 120,
+    "&:hover": {
+      transform: "translateY(-4px)",
+      boxShadow: "0 0 20px rgba(230, 57, 70, 0.7)",
+      background: themeColors.gradients.primary
+    },
+    "&:disabled": {
+      background: "rgba(255, 255, 255, 0.1)",
+      color: "rgba(255, 255, 255, 0.5)"
+    }
+  }}
+>
+ 🚀 Launch Game
+</Button>
+\`\`\`
+
+### Text Field Styling
+- Apply consistent text field styling:
+\`\`\`jsx
+<TextField
+  variant="outlined"
+  fullWidth
+  InputProps={{
+    sx: {
+      backdropFilter: "blur(10px)",
+      backgroundColor: "rgba(255, 255, 255, 0.1)",
+      borderRadius: 2,
+      border: "1px solid rgba(255, 255, 255, 0.2)",
+      color: themeColors.text,
+      "&:hover .MuiOutlinedInput-notchedOutline": {
+        borderColor: themeColors.primary
+      },
+      "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+        borderColor: themeColors.primary
       }
-      \`\`\`
-    - This function ensures most scores result in multipliers between 1-2x
-    - Replace any score-related log events:
-      \`\`\`javascript
-      // Instead of: logEvent("gameEnded", { score: playerScore })
-      // Use: logEvent("gameEnded", { multiplier: calculateMultiplierFromScore(playerScore) })
-      \`\`\`
-  - For non-score games that would send other values (e.g., time, distance):
-    - Convert these to multiplier: 2x by default:
-      \`\`\`javascript
-      // Instead of: logEvent("gameEnded", { distance: playerDistance })
-      // Use: logEvent("gameEnded", { multiplier: 2.00 })
-      \`\`\`
-- Return a single App component as a string with 'export default App;'.
-- Infuse Web3 flair, futuristic polish, and interactivity with perfect alignment. Ensure error-free code, full container usage, and no overflow unless specified. Use MUI v5 and incorporate glassmorphism in UI elements.
+    }
+  }}
+  InputLabelProps={{
+    sx: {
+      color: themeColors.textSecondary,
+      "&.Mui-focused": {
+        color: themeColors.primary
+      }
+    }
+  }}
+/>
+\`\`\`
+
+### Game Rules Modal
+- Include a How to Play modal with win probability:
+\`\`\`jsx
+const [rulesOpen, setRulesOpen] = useState(false);
+
+<IconButton 
+  onClick={() => setRulesOpen(true)}
+  sx={{
+    position: "absolute",
+    top: 10,
+    right: 10,
+    width: '20px',
+    height: '20px',
+    zIndex: 2,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    backdropFilter: "blur(10px)",
+    color: themeColors.text,
+    "&:hover": {
+      backgroundColor: "rgba(255, 255, 255, 0.2)"
+    }
+  }}
+>
+  ❓
+</IconButton>
+
+<Modal
+  open={rulesOpen}
+  onClose={() => setRulesOpen(false)}
+  aria-labelledby="rules-modal-title"
+>
+  <Box
+    sx={{
+      position: 'absolute',
+      top: '50%',
+      left: '50%',
+      transform: 'translate(-50%, -50%)',
+      width: { xs: '90%', sm: '80%', md: '60%' },
+      maxHeight: '80vh',
+      bgcolor: 'rgba(8, 8, 8, 0.95)',
+      backdropFilter: 'blur(20px)',
+      borderRadius: 2,
+      border: '1px solid rgba(255, 255, 255, 0.2)',
+      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
+      p: 4,
+      overflowY: 'auto'
+    }}
+  >
+    <Typography id="rules-modal-title" variant="h4" component="h2" sx={{ mb: 2, color: themeColors.text }}>
+      How to Play
+    </Typography>
+    <Divider sx={{ mb: 2, borderColor: themeColors.border }} />
+    <Typography variant="body1" sx={{ mb: 2, color: themeColors.text }}>
+      [Game objective goes here]
+    </Typography>
+    <Typography variant="h6" sx={{ mb: 1, color: themeColors.text }}>
+      Game Rules:
+    </Typography>
+    <ul>
+      <li>
+        <Typography variant="body1" sx={{ color: themeColors.text }}>
+          [Rule 1]
+        </Typography>
+      </li>
+      <li>
+        <Typography variant="body1" sx={{ color: themeColors.text }}>
+          [Rule 2]
+        </Typography>
+      </li>
+      <li>
+        <Typography variant="body1" sx={{ color: themeColors.text }}>
+          [Rule 3]
+        </Typography>
+      </li>
+    </ul>
+    <Typography variant="h6" sx={{ mt: 2, mb: 1, color: themeColors.text }}>
+      Win Probability:
+    </Typography>
+    <Typography variant="body1" sx={{ mb: 2, color: themeColors.text }}>
+      The chance of winning depends on your actions and game settings. For non-crash games, each safe selection increases your multiplier by (1.0 + 0.5 * (mines / (total - mines)) * 1.3^actions). For crash games, the win probability decreases as the multiplier grows, with an average crash point around 2-3x.
+    </Typography>
+    <Typography variant="h6" sx={{ mt: 2, mb: 1, color: themeColors.text }}>
+      Controls:
+    </Typography>
+    <ul>
+      <li>
+        <Typography variant="body1" sx={{ color: themeColors.text }}>
+          [Control 1]
+        </Typography>
+      </li>
+      <li>
+        <Typography variant="body1" sx={{ color: themeColors.text }}>
+          [Control 2]
+        </Typography>
+      </li>
+    </ul>
+    <Button
+      onClick={() => setRulesOpen(false)}
+      sx={{
+        mt: 3,
+        background: themeColors.gradients.primary,
+        color: themeColors.text,
+        borderRadius: 2,
+        padding: "8px 16px",
+        fontSize: "0.9rem",
+        fontWeight: 500,
+        textTransform: "none",
+        boxShadow: themeColors.shadows.primary,
+        border: "1px solid rgba(255, 255, 255, 0.2)",
+        transition: "all 0.3s ease-out",
+        "&:hover": {
+          transform: "translateY(-2px)",
+          boxShadow: "0 0 15px rgba(230, 57, 70, 0.7)",
+          background: themeColors.gradients.primary
+        }
+      }}
+    >
+      Got it!
+    </Button>
+  </Box>
+</Modal>
+\`\`\`
+
+## Enhanced Particle System
+Include an improved particle system in EVERY game:
+
+\`\`\`jsx
+const canvasRef = useRef(null);
+const [particles, setParticles] = useState([]);
+const animationFrameRef = useRef(null);
+
+const createParticle = useCallback((x, y, color = null, type = "default") => {
+  const particleTypes = {
+    default: {
+      size: Math.random() * 4 + 2,
+      speed: Math.random() * 3 + 1,
+      lifespan: Math.random() * 50 + 30,
+      color: color || themeColors.primary,
+      gravity: 0.03
+    },
+    explode: {
+      size: Math.random() * 5 + 3,
+      speed: Math.random() * 6 + 3,
+      lifespan: Math.random() * 40 + 40,
+      color: color || themeColors.accent,
+      gravity: 0.02
+    },
+    win: {
+      size: Math.random() * 6 + 4,
+      speed: Math.random() * 4 + 2,
+      lifespan: Math.random() * 60 + 60,
+      color: color || themeColors.success,
+      gravity: -0.05
+    },
+    lose: {
+      size: Math.random() * 5 + 3,
+      speed: Math.random() * 5 + 2,
+      lifespan: Math.random() * 40 + 30,
+      color: color || themeColors.error,
+      gravity: 0.04
+    }
+  };
+  
+  const settings = particleTypes[type];
+  
+  const angle = Math.random() * Math.PI * 2;
+  const newParticle = {
+    x,
+    y,
+    vx: Math.cos(angle) * settings.speed,
+    vy: Math.sin(angle) * settings.speed,
+    size: settings.size,
+    color: settings.color,
+    alpha: 1,
+    life: settings.lifespan,
+    maxLife: settings.lifespan,
+    gravity: settings.gravity
+  };
+  
+  setParticles(prev => [...prev, newParticle]);
+}, [themeColors]);
+
+const createParticleBurst = useCallback((x, y, count = 20, color = null, type = "default") => {
+  for (let i = 0; i < count; i++) {
+    createParticle(x, y, color, type);
+  }
+}, [createParticle]);
+
+useEffect(() => {
+  const canvas = canvasRef.current;
+  if (!canvas) return;
+  
+  const ctx = canvas.getContext('2d');
+  const parentEl = canvas.parentElement;
+  
+  const resizeCanvas = () => {
+    canvas.width = parentEl.clientWidth;
+    canvas.height = parentEl.clientHeight;
+  };
+  
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+  
+  const animate = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    const updatedParticles = particles.map(p => {
+      p.vy += p.gravity;
+      p.x += p.vx;
+      p.y += p.vy;
+      p.life -= 1;
+      p.alpha = p.life / p.maxLife;
+      
+      ctx.save();
+      ctx.globalAlpha = p.alpha;
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+      
+      return p;
+    }).filter(p => p.life > 0);
+    
+    setParticles(updatedParticles);
+    animationFrameRef.current = requestAnimationFrame(animate);
+  };
+  
+  animationFrameRef.current = requestAnimationFrame(animate);
+  
+  return () => {
+    window.removeEventListener('resize', resizeCanvas);
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+    }
+  };
+}, [particles]);
+\`\`\`
+
+## Dynamic Chart/Graph System
+For games requiring visual data representation:
+
+\`\`\`jsx
+const chartRef = useRef(null);
+const chartAnimationRef = useRef(null);
+const startTimeRef = useRef(null);
+const crashPointRef = useRef(null);
+const hasLoggedRef = useRef(false); // Prevent multiple logs
+
+useEffect(() => {
+  const canvas = chartRef.current;
+  if (!canvas || !gameStarted) return;
+  
+  const ctx = canvas.getContext('2d');
+  const width = canvas.width;
+  const height = canvas.height;
+  
+  const maxPoints = 100;
+  const maxMultiplier = 10;
+  
+  if (!crashPointRef.current) {
+    crashPointRef.current = 1 / (1 - Math.pow(Math.random(), 1.5) * 0.95);
+  }
+  
+  const gradient = ctx.createLinearGradient(0, height, 0, 0);
+  gradient.addColorStop(0, themeColors.primary);
+  gradient.addColorStop(1, themeColors.secondary);
+  
+  const animationDuration = 10000;
+  
+  if (!startTimeRef.current) {
+    startTimeRef.current = performance.now();
+  }
+  
+  const drawChart = (timestamp) => {
+    if (!gameStarted || gameEnded) {
+      cancelAnimationFrame(chartAnimationRef.current);
+      return;
+    }
+    
+    const elapsedTime = timestamp - startTimeRef.current;
+    const progress = Math.min(elapsedTime / animationDuration, 1);
+    const currentPoint = Math.floor(progress * maxPoints);
+    
+    ctx.clearRect(0, 0, width, height);
+    
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.lineWidth = 1;
+    
+    ctx.beginPath();
+    ctx.moveTo(0, height);
+    
+    for (let i = 0; i <= currentPoint; i++) {
+      const x = (i / maxPoints) * width;
+      const multiplierValue = 1 * Math.exp(0.05 * (i / 100) * 100);
+      const y = height - (multiplierValue / maxMultiplier) * height;
+      ctx.lineTo(x, y);
+    }
+    
+    ctx.strokeStyle = gradient;
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    
+    ctx.lineTo((currentPoint / maxPoints) * width, height);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(230, 57, 70, 0.2)';
+    ctx.fill();
+    
+    const currentMultiplier = 1 * Math.exp(0.05 * (currentPoint / 100) * 100);
+    setMultiplier(parseFloat(currentMultiplier.toFixed(2)));
+    
+    if (currentMultiplier >= crashPointRef.current && !gameEnded && !hasLoggedRef.current) {
+      hasLoggedRef.current = true;
+      setGameEnded(true);
+      setResult("loss");
+      logEvent("gameEnded", { 
+        timestamp: new Date().toISOString(), 
+        result: "loss", 
+        multiplier: parseFloat(currentMultiplier.toFixed(2)) 
+      });
+      createParticleBurst(width / 2, height / 2, 50, themeColors.error, "lose");
+      cancelAnimationFrame(chartAnimationRef.current);
+      return;
+    }
+    
+    chartAnimationRef.current = requestAnimationFrame(drawChart);
+  };
+  
+  chartAnimationRef.current = requestAnimationFrame(drawChart);
+  
+  return () => {
+    if (chartAnimationRef.current) {
+      cancelAnimationFrame(chartAnimationRef.current);
+    }
+    hasLoggedRef.current = false; // Reset for next game
+  };
+}, [gameStarted, gameEnded, createParticleBurst, themeColors, setMultiplier, setGameEnded, setResult, logEvent]);
+\`\`\`
+
+## Game State Management
+Implement consistent game state management:
+
+\`\`\`jsx
+const [gameStarted, setGameStarted] = useState(false);
+const [gameEnded, setGameEnded] = useState(false);
+const [multiplier, setMultiplier] = useState(1.0);
+const [result, setResult] = useState(null);
+const [totalOptions, setTotalOptions] = useState(25);
+const [safeOptions, setSafeOptions] = useState(24);
+const [totalMines, setTotalMines] = useState(1);
+const [actionsTaken, setActionsTaken] = useState(0);
+const [settings, setSettings] = useState({
+  difficulty: 'medium',
+  mineCount: 1,
+  timeLimit: 60
+});
+const [showSettings, setShowSettings] = useState(false);
+const [gameHistory, setGameHistory] = useState([]);
+const [rulesOpen, setRulesOpen] = useState(false);
+const crashPointRef = useRef(null);
+const startTimeRef = useRef(null);
+const hasLoggedRef = useRef(false); // Prevent multiple logs
+
+const gameRules = {
+  title: "Game Title",
+  objective: "Your objective description here",
+  rules: [
+    "Rule 1: Description of rule 1",
+    "Rule 2: Description of rule 2",
+    "Rule 3: Description of rule 3"
+  ],
+  controls: [
+    "Control 1: Description of control 1",
+    "Control 2: Description of control 2"
+  ],
+  tips: [
+    "Tip 1: Description of tip 1",
+    "Tip 2: Description of tip 2"
+  ]
+};
+
+const isCrashGame = ${prompt.toLowerCase().includes('crash') || prompt.toLowerCase().includes('rocket') || prompt.toLowerCase().includes('flies higher')};
+
+const calculateNonCrashMultiplier = useCallback(() => {
+  if (gameEnded) return multiplier;
+  
+  if (actionsTaken > 0) {
+    const newMultiplier = (1.0 + 0.5 * (totalMines / (totalOptions - totalMines)) * Math.pow(1.3, actionsTaken)).toFixed(2);
+    setMultiplier(parseFloat(newMultiplier));
+  }
+}, [actionsTaken, totalMines, totalOptions, gameEnded, multiplier]);
+
+useEffect(() => {
+  if (gameStarted && !gameEnded && !isCrashGame) {
+    calculateNonCrashMultiplier();
+  }
+}, [gameStarted, gameEnded, actionsTaken, calculateNonCrashMultiplier, isCrashGame]);
+
+useEffect(() => {
+  if (!gameStarted || !isCrashGame || gameEnded) return;
+
+  if (!crashPointRef.current) {
+    crashPointRef.current = 1 / (1 - Math.pow(Math.random(), 1.5) * 0.95);
+  }
+
+  const k = 0.03;
+  const animate = (timestamp) => {
+    if (!gameStarted || gameEnded || hasLoggedRef.current) {
+      cancelAnimationFrame(chartAnimationRef.current);
+      return;
+    }
+
+    if (!startTimeRef.current) {
+      startTimeRef.current = timestamp;
+    }
+
+    const timeElapsed = (timestamp - startTimeRef.current) / 1000;
+    const currentMultiplier = 1 * Math.exp(k * timeElapsed);
+    setMultiplier(parseFloat(currentMultiplier.toFixed(2)));
+
+    if (currentMultiplier >= crashPointRef.current && !hasLoggedRef.current) {
+      hasLoggedRef.current = true;
+      setGameEnded(true);
+      setResult("loss");
+      logEvent("gameEnded", {
+        timestamp: new Date().toISOString(),
+        result: "loss",
+        multiplier: parseFloat(currentMultiplier.toFixed(2))
+      });
+      createParticleBurst(window.innerWidth / 2, window.innerHeight / 2, 50, themeColors.error, "lose");
+      cancelAnimationFrame(chartAnimationRef.current);
+      return;
+    }
+
+    chartAnimationRef.current = requestAnimationFrame(animate);
+  };
+
+  chartAnimationRef.current = requestAnimationFrame(animate);
+
+  return () => {
+    if (chartAnimationRef.current) {
+      cancelAnimationFrame(chartAnimationRef.current);
+    }
+    hasLoggedRef.current = false; // Reset for next game
+  };
+}, [gameStarted, gameEnded, isCrashGame, logEvent, createParticleBurst, themeColors]);
+
+const startGame = useCallback(() => {
+  setGameStarted(true);
+  setGameEnded(false);
+  setMultiplier(1.0);
+  setResult(null);
+  setSafeOptions(totalOptions - totalMines);
+  setActionsTaken(0);
+  crashPointRef.current = null;
+  startTimeRef.current = null;
+  hasLoggedRef.current = false; // Reset logging flag
+  
+  logEvent("gameStarted", { 
+    timestamp: new Date().toISOString(),
+    settings
+  });
+  
+  createParticleBurst(window.innerWidth / 2, window.innerHeight / 2, 30, themeColors.primary, "default");
+}, [totalOptions, totalMines, logEvent, createParticleBurst, settings, themeColors]);
+
+const cashOut = useCallback(() => {
+  if (!gameStarted || gameEnded || !isCrashGame || hasLoggedRef.current) return;
+  
+  hasLoggedRef.current = true;
+  setGameEnded(true);
+  setResult("win");
+  
+  logEvent("gameEnded", {
+    timestamp: new Date().toISOString(),
+    result: "win",
+    multiplier: parseFloat(multiplier.toFixed(2))
+  });
+  
+  createParticleBurst(window.innerWidth / 2, window.innerHeight / 2, 100, themeColors.success, "win");
+}, [gameStarted, gameEnded, isCrashGame, multiplier, logEvent, createParticleBurst, themeColors]);
+
+const endGame = useCallback((resultType, finalMultiplier = multiplier) => {
+  if (hasLoggedRef.current) return; // Prevent multiple calls
+  
+  hasLoggedRef.current = true;
+  setGameEnded(true);
+  setResult(resultType);
+  
+  const historyEntry = { 
+    id: Date.now(), 
+    result: resultType, 
+    multiplier: parseFloat(finalMultiplier.toFixed(2)), 
+    timestamp: new Date().toISOString() 
+  };
+  setGameHistory(prev => [historyEntry, ...prev].slice(0, 20));
+  
+  logEvent("gameEnded", { 
+    timestamp: new Date().toISOString(), 
+    result: resultType, 
+    multiplier: parseFloat(finalMultiplier.toFixed(2))
+  });
+  
+  if (resultType === "win") {
+    createParticleBurst(window.innerWidth / 2, window.innerHeight / 2, 100, themeColors.success, "win");
+  } else {
+    createParticleBurst(window.innerWidth / 2, window.innerHeight / 2, 50, themeColors.error, "lose");
+  }
+}, [multiplier, logEvent, createParticleBurst, themeColors]);
+
+const resetGame = useCallback(() => {
+  setGameStarted(false);
+  setGameEnded(false);
+  setMultiplier(1.0);
+  setResult(null);
+  setSafeOptions(totalOptions - totalMines);
+  setActionsTaken(0);
+  crashPointRef.current = null;
+  startTimeRef.current = null;
+  hasLoggedRef.current = false; // Reset logging flag
+  
+  logEvent("gameStarted", { 
+    timestamp: new Date().toISOString(),
+    settings
+  });
+}, [totalOptions, totalMines, logEvent, settings]);
+
+const MultiplierDisplay = () => {
+  const emoji = isCrashGame ? "🚀" : prompt.toLowerCase().includes("gem") ? "💎" : prompt.toLowerCase().includes("betting") ? "💰" : "⭐";
+
+  return (
+    <Box
+      sx={{
+        position: 'fixed',
+        top: 10,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        zIndex: 1000,
+        p: 2,
+        borderRadius: 8,
+        boxShadow: '0 0 15px rgba(230, 57, 70, 0.7)',
+        bgcolor: 'rgba(255, 255, 255, 0.1)',
+        backdropFilter: 'blur(10px)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 1
+      }}
+    >
+      <Typography
+        variant="h5"
+        sx={{
+          color: 'white',
+          fontWeight: 'bold',
+          fontSize: '1.5rem'
+        }}
+      >
+        {emoji} Multiplier: {multiplier}×
+      </Typography>
+    </Box>
+  );
+};
+
+const GameControls = () => (
+  <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+    <Button
+      onClick={startGame}
+      disabled={gameStarted && !gameEnded}
+      sx={{
+        backdropFilter: "blur(10px)",
+        background: themeColors.gradients.primary,
+        color: themeColors.text,
+        borderRadius: 2,
+        padding: "10px 20px",
+        fontSize: "1rem",
+        fontWeight: 500,
+        textTransform: "none",
+        boxShadow: themeColors.shadows.primary,
+        border: "1px solid rgba(255, 255, 255, 0.2)",
+        transition: "all 0.3s ease-out",
+        minWidth: 120,
+        "&:hover": {
+          transform: "translateY(-4px)",
+          boxShadow: "0 0 20px rgba(230, 57, 70, 0.7)",
+          background: themeColors.gradients.primary
+        },
+        "&:disabled": {
+          background: "rgba(255, 255, 255, 0.1)",
+          color: "rgba(255, 255, 255, 0.5)"
+        }
+      }}
+    >
+      🚀 Start Game
+    </Button>
+    {isCrashGame && (
+      <Button
+        onClick={cashOut}
+        disabled={!gameStarted || gameEnded}
+        sx={{
+          backdropFilter: "blur(10px)",
+          background: themeColors.gradients.primary,
+          color: themeColors.text,
+          borderRadius: 2,
+          padding: "10px 20px",
+          fontSize: "1rem",
+          fontWeight: 500,
+          textTransform: "none",
+          boxShadow: themeColors.shadows.primary,
+          border: "1px solid rgba(255, 255, 255, 0.2)",
+          transition: "all 0.3s ease-out",
+          minWidth: 120,
+          "&:hover": {
+            transform: "translateY(-4px)",
+            boxShadow: "0 0 20px rgba(230, 57, 70, 0.7)",
+            background: themeColors.gradients.primary
+          },
+          "&:disabled": {
+            background: "rgba(255, 255, 255, 0.1)",
+            color: "rgba(255, 255, 255, 0.5)"
+          }
+        }}
+      >
+        💰 Cash Out
+      </Button>
+    )}
+    <Button
+      onClick={resetGame}
+      sx={{
+        backdropFilter: "blur(10px)",
+        background: themeColors.gradients.primary,
+        color: themeColors.text,
+        borderRadius: 2,
+        padding: "10px 20px",
+        fontSize: "1rem",
+        fontWeight: 500,
+        textTransform: "none",
+        boxShadow: themeColors.shadows.primary,
+        border: "1px solid rgba(255, 255, 255, 0.2)",
+        transition: "all 0.3s ease-out",
+        minWidth: 120,
+        "&:hover": {
+          transform: "translateY(-4px)",
+          boxShadow: "0 0 20px rgba(230, 57, 70, 0.7)",
+          background: themeColors.gradients.primary
+        }
+      }}
+    >
+      🔄 Restart
+    </Button>
+  </Box>
+);
+\`\`\`
+
+## Game History Component
+Include a consistent game history component:
+
+\`\`\`jsx
+const GameHistory = ({ history }) => {
+  return (
+    <Box
+      sx={{
+        width: '100%',
+        mt: 2,
+        backdropFilter: 'blur(10px)',
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+        borderRadius: 2,
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        p: 2,
+        maxHeight: '150px',
+        overflowY: 'auto'
+      }}
+    >
+      <Typography variant="h6" sx={{ mb: 1, color: 'white' }}>
+        Game History
+      </Typography>
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+        {history.map((entry) => (
+          <Box
+            key={entry.id}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '60px',
+              height: '60px',
+              borderRadius: '50%',
+              backdropFilter: 'blur(5px)',
+              backgroundColor: entry.result === 'win' 
+                ? 'rgba(72, 255, 0, 0.2)' 
+                : 'rgba(255, 0, 0, 0.2)',
+              border: entry.result === 'win' 
+                ? '1px solid rgba(72, 255, 0, 0.5)' 
+                : '1px solid rgba(255, 0, 0, 0.5)',
+              color: entry.result === 'win' ? '#48ff00' : '#ff0000',
+              fontWeight: 'bold',
+              boxShadow: entry.result === 'win' 
+                ? '0 0 10px rgba(72, 255, 0, 0.3)' 
+                : '0 0 10px rgba(255, 0, 0, 0.3)',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                transform: 'scale(1.1)',
+                boxShadow: entry.result === 'win' 
+                  ? '0 0 15px rgba(72, 255, 0, 0.5)' 
+                  : '0 0 15px rgba(255, 0, 0, 0.5)'
+              }
+            }}
+          >
+            {entry.multiplier}×
+          </Box>
+        ))}
+      </Box>
+    </Box>
+  );
+};
+
+<GameHistory history={gameHistory} />
+\`\`\`
+
+## Final Structure
+Return a single App component with:
+- Clean, modular structure
+- Performance-optimized hooks
+- Clear game rules including win probability
+- Consistent glassmorphic design with red-themed buttons
+- Always-visible multiplier display
+- Visual feedback for player actions
+- A history of game outcomes
+- Single logging of gameEnded event using hasLoggedRef
+
+Export the component as:
+\`\`\`jsx
+export default App;
+\`\`\`
+
+Ensure error-free code, full container usage with scroll overflow, proper multiplier visibility, and single logging of gameEnded events. Focus on creating a balanced, enjoyable player experience with clear rules and feedback.
 `;
+
     const apiCall = openai.chat.completions.create({
       model: 'o3-mini',
       messages: [
@@ -582,19 +1301,20 @@ You are an elite React developer with a passion for cutting-edge design, inspire
     ]);
 
     const rawCode = aiResponse?.choices?.[0]?.message?.content?.trim() || '';
-    const cleanedCode = rawCode.replace(/```(?:jsx?|javascript)?/g, '').trim();
 
-    // Basic validation
-    if (!cleanedCode.includes('return (') || !cleanedCode.includes('App')) {
-      throw new Error('Generated code is invalid or incomplete');
-    }
+    let cleanedCode = rawCode
+      .replace(/```(?:jsx?|javascript)?/g, '')
+      .replace(/^\s*[\r\n]+/gm, '')
+      .replace(/\/\/.*$/gm, '')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/^[^import\s]*(?=\n*import)/m, '')
+      .trim();
 
-    // Wrap the cleaned code with imports and export
     const moduleCode = `
       ${cleanedCode}
     `;
 
-    res.json({ finalApp: moduleCode });
+    res.json({ finalApp: moduleCode, proxiedAssets });
   } catch (error) {
     console.error('Error in route handler:', error);
     res.status(500).json({

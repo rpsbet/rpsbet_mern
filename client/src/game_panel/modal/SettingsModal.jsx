@@ -28,6 +28,7 @@ import {
   Add,
   Remove,
   Settings,
+  Close as CloseIcon
 } from '@mui/icons-material';
 
 import {
@@ -108,8 +109,21 @@ const SettingsModal = ({ modalIsOpen, closeModal }) => {
             <Settings sx={{ mr: 1 }} />
             SETTINGS
           </Typography>
-          <Button variant="text" color="error" onClick={closeModal}>
-            ×
+          <Button
+            onClick={closeModal}
+            sx={{
+              position: 'absolute',
+              top: 10,
+              right: 10,
+              minWidth: 'auto',
+              p: 1,
+              bgcolor: 'rgba(0,0,0,0.5)',
+              color: 'white',
+              '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' },
+              borderRadius: '50%',
+            }}
+          >
+            <CloseIcon />
           </Button>
         </Box>
 

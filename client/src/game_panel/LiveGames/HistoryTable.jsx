@@ -13,6 +13,8 @@ import { Tooltip, Skeleton, Box, Typography } from '@mui/material';
 import PlayerModal from '../modal/PlayerModal';
 import { convertToCurrency } from '../../util/conversion';
 import Avatar from '../../components/Avatar';
+import { ThemeProvider } from '@mui/material/styles';
+import { getCustomTheme } from '../../config/theme';
 
 // Helper function for "time ago"
 const customFromNow = (date) => {
@@ -23,6 +25,8 @@ const customFromNow = (date) => {
   if (duration.asHours() < 24) return `${Math.round(duration.asHours())}h ago`;
   return `${Math.round(duration.asDays())}d ago`;
 };
+
+const theme = getCustomTheme();
 
 // Rebuilds the 'from now' for each log
 const updateFromNow = (history) =>
@@ -372,73 +376,75 @@ function HistoryTable({
   );
 
   return (
-    <Box className="overflowX">
-      <Box className="table main-history-table">
-        {historyState?.length === 0 && (
-          <Box className="dont-have-game-msg" sx={{ width: '100%' }}>
-            <Skeleton variant="rectangular" sx={{ width: '100%', height: 10 }} />
-          </Box>
-        )}
+    <ThemeProvider theme={theme}>
 
-        {uniqueHistory.map((row, key) => {
-          const isUserInvolved =
-            row.creator?._id === effectiveUserId || row.joined_user?._id === effectiveUserId;
+      <Box className="overflowX">
+        <Box className="table main-history-table">
+          {historyState?.length === 0 && (
+            <Box className="dont-have-game-msg" sx={{ width: '100%' }}>
+              <Skeleton variant="rectangular" sx={{ width: '100%', height: 10 }} />
+            </Box>
+          )}
 
-          return (
-            <Box
-            key={row._id}
-            className={`table-row ${isUserInvolved ? 'history-background' : ''} ${
-              key < 50 ? 'slide-in' : ''
-            }`}
-            sx={{
-              animationDelay: `${key * 0.1}s`,
-              filter: row.status !== 'open' ? 'opacity(60%)' : 'none',
-              // Glassmorphism styles (default dark mode colors)
-              background: 'rgba(0, 0, 0, 0.2)',
-              backdropFilter: 'blur(10px)',
-              WebkitBackdropFilter: 'blur(10px)', // For Safari
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              borderRadius: '8px',
-              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-              // Fallback for browsers without backdrop-filter
-              '@supports not (backdrop-filter: blur(10px))': {
-                background: 'rgba(0, 0, 0, 0.4)',
-              },
-              // Hover effect for interactivity
-              '&:hover': {
-                background: 'rgba(0, 0, 0, 0.3)',
-                boxShadow: '0 6px 12px rgba(0, 0, 0, 0.15)',
-              },
-              // Adjust history-background for slight differentiation
-              '&.history-background': {
-                background: 'rgba(0, 0, 0, 0.25)',
-                '@supports not (backdrop-filter: blur(10px))': {
-                  background: 'rgba(0, 0, 0, 0.45)',
-                },
-              },
-            }}
-          >
-              <Box>
-                <Box className="table-cell" sx={{ padding: '10px' }}>
-                  <div className="desktop-only">{row.finalMsg || '...'}</div>
-                  <div className="mobile-only">{row.finalMsg || '...'}</div>
-                </Box>
+          {uniqueHistory.map((row, key) => {
+            const isUserInvolved =
+              row.creator?._id === effectiveUserId || row.joined_user?._id === effectiveUserId;
 
-                <Box className="table-cell row-copy" sx={{ p: '10px' }}>
-                  <Tooltip
-                    title={copiedRowId === row._id ? 'COPIED ID!' : 'COPY BET ID'}
-                    placement="top"
-                  >
-                    <Box
-                      component="a"
-                      sx={{ padding: '5px', cursor: 'pointer' }}
-                      onClick={() => copyToClipboard(row._id)}
+            return (
+              <Box
+                key={row._id}
+                className={`table-row ${isUserInvolved ? 'history-background' : ''} ${key < 50 ? 'slide-in' : ''
+                  }`}
+                sx={{
+                  animationDelay: `${key * 0.1}s`,
+                  filter: row.status !== 'open' ? 'opacity(60%)' : 'none',
+                  // Glassmorphism styles (default dark mode colors)
+                  background: 'rgba(0, 0, 0, 0.2)',
+                  backdropFilter: 'blur(10px)',
+                  WebkitBackdropFilter: 'blur(10px)', // For Safari
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: '8px',
+                  color: '#fff',
+                  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                  // Fallback for browsers without backdrop-filter
+                  '@supports not (backdrop-filter: blur(10px))': {
+                    background: 'rgba(0, 0, 0, 0.4)',
+                  },
+                  // Hover effect for interactivity
+                  '&:hover': {
+                    background: 'rgba(0, 0, 0, 0.3)',
+                    boxShadow: '0 6px 12px rgba(0, 0, 0, 0.15)',
+                  },
+                  // Adjust history-background for slight differentiation
+                  '&.history-background': {
+                    background: 'rgba(0, 0, 0, 0.25)',
+                    '@supports not (backdrop-filter: blur(10px))': {
+                      background: 'rgba(0, 0, 0, 0.45)',
+                    },
+                  },
+                }}
+              >
+                <Box>
+                  <Box className="table-cell" sx={{ padding: '10px' }}>
+                    <div className="desktop-only">{row.finalMsg || '...'}</div>
+                    <div className="mobile-only">{row.finalMsg || '...'}</div>
+                  </Box>
+
+                  <Box className="table-cell row-copy" sx={{ p: '10px' }}>
+                    <Tooltip
+                      title={copiedRowId === row._id ? 'COPIED ID!' : 'COPY BET ID'}
+                      placement="top"
                     >
-                      <FileCopyIcon sx={{ width: 12 }} />
-                    </Box>
-                  </Tooltip>
-                   
-                  {/* {row.from_now && row.from_now.split('').map((char, i) => (
+                      <Box
+                        component="a"
+                        sx={{ padding: '5px', cursor: 'pointer' }}
+                        onClick={() => copyToClipboard(row._id)}
+                      >
+                        <FileCopyIcon sx={{ width: 12 }} />
+                      </Box>
+                    </Tooltip>
+
+                    {/* {row.from_now && row.from_now.split('').map((char, i) => (
                     <Box
                       component="span"
                       key={i}
@@ -449,21 +455,23 @@ function HistoryTable({
                   ))}
                    
                   <FontAwesomeIcon icon={faStopwatch} /> */}
+                  </Box>
                 </Box>
               </Box>
-            </Box>
-          );
-        })}
-      </Box>
+            );
+          })}
+        </Box>
 
-      {showPlayerModal && (
-        <PlayerModal
-          modalIsOpen={showPlayerModal}
-          closeModal={handleClosePlayerModal}
-          selectedCreator={selectedCreator}
-        />
-      )}
-    </Box>
+        {showPlayerModal && (
+          <PlayerModal
+            modalIsOpen={showPlayerModal}
+            closeModal={handleClosePlayerModal}
+            selectedCreator={selectedCreator}
+          />
+        )}
+      </Box>
+    </ThemeProvider>
+
   );
 }
 

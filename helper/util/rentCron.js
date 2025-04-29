@@ -440,7 +440,7 @@ async function distributeHoldersPool() {
 
 cron.schedule('0 0 * * *', async () => {
   await checkRentalPayments();
-  await distributeHoldersPool();
+  // await distributeHoldersPool();
 });
 
 // Export an object containing the function

@@ -29,7 +29,7 @@ import { getRank } from '../../util/getRank';
 import {
   Warning,
   Info,
-  FiberManualRecord,
+  Close as CloseIcon,
   AccountBalanceWallet,
 } from '@mui/icons-material';
 
@@ -180,21 +180,32 @@ function WithdrawModal(props) {
             top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
-            color: isDarkMode ? '#fff' : '#000', // Preserve text color conditional
-            width: '90vw',
-            maxHeight: '80vh',
+            width: { xs: '90vw', sm: '80vw', md: '60vw', lg: '50vw' },
+            maxHeight: '90vh',
             overflowY: 'auto',
-            borderRadius: 2,
-            boxShadow: 24,
-            p: 3,
-            // Glassmorphism styles (default dark mode colors)
-            background: 'rgba(0, 0, 0, 0.2)',
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)', // For Safari
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            // Fallback for browsers without backdrop-filter
-            '@supports not (backdrop-filter: blur(10px))': {
-              background: 'rgba(0, 0, 0, 0.4)',
+            borderRadius: 3,
+            p: { xs: 2, sm: 3, md: 4 },
+            // Glassmorphism
+            background: 'rgba(30, 30, 30, 0.3)',
+            backdropFilter: 'blur(15px)',
+            WebkitBackdropFilter: 'blur(15px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
+            // Fallback
+            '@supports not (backdrop-filter: blur(15px))': {
+              background: 'rgba(30, 30, 30, 0.6)',
+            },
+            scrollbarWidth: 'thin',
+            scrollbarColor: 'rgba(255,255,255,0.2) transparent',
+            '&::-webkit-scrollbar': {
+              width: '8px',
+            },
+            '&::-webkit-scrollbar-track': {
+              background: 'transparent',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: 'rgba(255,255,255,0.2)',
+              borderRadius: '4px',
             },
           }}
         >
@@ -207,8 +218,21 @@ function WithdrawModal(props) {
               <AccountBalanceWallet sx={{ mr: 1 }} />
               WITHDRAW SOL
             </Typography>
-            <Button variant="text" color="error" onClick={closeModal}>
-              ×
+            <Button
+              onClick={closeModal}
+              sx={{
+                position: 'absolute',
+                top: 10,
+                right: 10,
+                minWidth: 'auto',
+                p: 1,
+                bgcolor: 'rgba(0,0,0,0.5)',
+                color: 'white',
+                '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' },
+                borderRadius: '50%',
+              }}
+            >
+              <CloseIcon />
             </Button>
           </Box>
 
@@ -233,7 +257,28 @@ function WithdrawModal(props) {
             </Divider>
 
             <Box sx={{ display: 'flex', justifyContent: 'center', my: 2 }}>
-              <ButtonGroup variant="outlined" color="error">
+              <ButtonGroup
+                variant="outlined"
+                color="error"
+                sx={{
+                  gap: 1,
+                  '& .MuiButton-root': {
+                    borderColor: 'error.main', // Ensure consistent border color
+                    borderRadius: 0, // Reset border-radius for grouped buttons
+                    '&:not(:last-child)': {
+                      borderRightColor: 'error.main', // Prevent transparent right border
+                    },
+                    '&:first-of-type': {
+                      borderTopLeftRadius: 8, // Match theme's borderRadius
+                      borderBottomLeftRadius: 8,
+                    },
+                    '&:last-of-type': {
+                      borderTopRightRadius: 8,
+                      borderBottomRightRadius: 8,
+                    },
+                  },
+                }}
+              >
                 <Button onClick={() => handleMultiplier(0.5)}>1/2x</Button>
                 <Button onClick={() => handleMultiplier(2)}>2x</Button>
                 <Button onClick={handleMax}>MAX</Button>
