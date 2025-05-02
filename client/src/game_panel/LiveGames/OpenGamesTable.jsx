@@ -268,14 +268,14 @@ function OpenGamesTable(props) {
           variant={filter === 'RECENTLY GRADUATED' ? 'filled' : 'outlined'}
           clickable
         />
-        <Chip
+        {/* <Chip
           icon={<ExitToAppIcon sx={{ p: 0.5 }} />}
           label="RECENTLY WD / DP"
           onClick={() => handleFilterChange('RECENTLY WD / DP')}
           color={filter === 'RECENTLY WD / DP' ? 'error' : 'default'}
           variant={filter === 'RECENTLY WD / DP' ? 'filled' : 'outlined'}
           clickable
-        />
+        /> */}
       </Box>
 
       {filter === 'RECENTLY WD / DP' ? (

@@ -229,7 +229,7 @@ function RPS(props) {
           bet_amount: parseFloat(bet_amount),
           selected_rps: chosenRps,
         });
-
+console.log("resultData", resultData)
         let style;
         if (resultData.betResult === 1) {
           playSound && playSound('win');

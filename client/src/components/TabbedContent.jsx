@@ -86,6 +86,7 @@ function TabbedContent(props) {
     borderColor,
     updateSelectedQs,
     changeBgColorQs,
+    account
   } = props;
 
   // Fetch is_betting from Redux
@@ -543,6 +544,7 @@ function TabbedContent(props) {
               selectedRow={roomInfo}
               balance={balance}
               user={user}
+              account={account}
               togglePopup={togglePopup}
               handleClose={handleCloseCoHostModal}
               handleSendCoHost={handleSendCoHost}

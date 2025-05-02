@@ -2,59 +2,56 @@ const cron = require('node-cron');
 const {
   Connection,
   PublicKey,
-  LAMPORTS_PER_SOL
+  LAMPORTS_PER_SOL,
+  SystemProgram,
+  Transaction,
+  Keypair,
 } = require('@solana/web3.js');
+const bs58 = require('bs58');
 
 const User = require('../../model/User');
-const Transaction = require('../../model/Transaction');
-const Notification = require('../../model/Notification'); // If needed for your notifications
-const axios = require('axios');
+const GameTransaction = require('../../model/Transaction');
+const Notification = require('../../model/Notification');
+const Room = require('../../model/Room');
+const GameType = require('../../model/GameType');
 const moment = require('moment');
 
 const saveDocumentWithRetry = require('./retrySave');
 const socketController = require('../../socketController');
 
-// Replace with your actual environment variables
 const provider = new Connection(process.env.PROVIDER_URL, 'confirmed');
-
-const depositConfirmationThreshold = 6; // e.g. 6 confirmations
+const depositConfirmationThreshold = 6;
 let isProcessing = false;
 
-/**
- * The function that checks confirmations for pending or in-process transactions.
- */
 async function checkConfirmations(io) {
   try {
-    if (isProcessing) return; // Prevent overlap
+    if (isProcessing) return;
     isProcessing = true;
 
-    const pendingTransactions = await Transaction.find({ status: 'pending' });
+    // Store socket.io instance
+    let socketio = io;
 
-    // If you need socket.io, store it
-    if (io) {
-      socketio = io;
-    }
+    // --- Process Pending Deposits ---
+    const pendingDeposits = await GameTransaction.find({
+      status: 'pending',
+      description: { $regex: '^(Joined|Pumped)', $options: 'i' }
+    });
 
-    // -------------- PROCESS PENDING (NATIVE SOL) --------------
-    for (const transaction of pendingTransactions) {
+    for (const transaction of pendingDeposits) {
       const txSignature = transaction.hash;
-      // 1) Fetch transaction details from Solana
       const txInfo = await provider.getTransaction(txSignature, { commitment: 'confirmed' });
       if (!txInfo || !txInfo.slot || !txInfo.meta) {
-        // Not found or incomplete; skip this iteration
         continue;
       }
 
-      // 2) Check confirmations
-      const currentSlot = await provider.getSlot('confirmed'); 
+      const currentSlot = await provider.getSlot('confirmed');
       const confirmationCount = currentSlot - txInfo.slot;
 
       if (confirmationCount < depositConfirmationThreshold) {
-        // Not enough confirmations yet
         continue;
       }
 
-      const adminWallet = process.env.adminWallet; // e.g. "A4cwo8Q7rm..."
+      const adminWallet = process.env.adminWallet;
       const adminPubkey = new PublicKey(adminWallet);
 
       const adminIndex = txInfo.transaction.message.accountKeys.findIndex((acc) =>
@@ -65,45 +62,33 @@ async function checkConfirmations(io) {
         continue;
       }
 
-      // 4) Get preBalance & postBalance for the admin wallet
       const preBalLamports = txInfo.meta.preBalances[adminIndex];
       const postBalLamports = txInfo.meta.postBalances[adminIndex];
-
-      // 5) The lamports difference => deposit
       const depositLamports = postBalLamports - preBalLamports;
       const depositSOL = depositLamports / LAMPORTS_PER_SOL;
 
-      // 6) Compare depositSOL with transaction.amount (within epsilon)
       const epsilon = 0.00001;
       const amountDiff = Math.abs(depositSOL - transaction.amount);
 
       if (amountDiff <= epsilon) {
-        // The deposit matches => finalize
         const user = await User.findById(transaction.user);
         if (!user) {
           console.error('User not found for transaction:', transaction._id);
           continue;
         }
 
-        // Mark transaction completed
         transaction.status = 'completed';
-        // If you want to store the actual deposit amount found on-chain:
         transaction.amount = depositSOL;
+        // user.balance += depositSOL;
 
-        // Update user’s balance
-        user.balance += depositSOL;
-
-        // ------------- REFERRAL LOGIC -------------
+        // Referral Logic
         let referralOwner = null;
         if (user.referralUsername) {
           referralOwner = await User.findOne({ username: user.referralUsername });
         }
 
         if (referralOwner) {
-          // e.g. 1% referral
           const referralReward = depositSOL * 0.01;
-        
-          // Upsert the reward record
           const idx = referralOwner.rewards.findIndex((r) => r.user.equals(user._id));
           if (idx !== -1) {
             referralOwner.rewards[idx].amount += referralReward;
@@ -111,25 +96,23 @@ async function checkConfirmations(io) {
             referralOwner.rewards.push({ user: user._id, amount: referralReward });
           }
           referralOwner.balance += referralReward;
-          user.balance -= referralReward;
-        
-          // Create a new transaction for the referral owner’s reward
-          const referralTx = new Transaction({
+          // user.balance -= referralReward;
+
+          const referralTx = new GameTransaction({
             user: referralOwner._id,
             amount: referralReward,
             description: `Referral rewards from ${user.username}.`,
-            room: ''
+            room: '',
           });
-        
-          // Prepare referral notification
+
           const notificationRef = new Notification({
             from: user._id,
             to: referralOwner._id,
             amount: referralReward,
             room: '',
-            message: `Received SOL in referral rewards`
+            message: `Received SOL in referral rewards`,
           });
-        
+
           const notificationDataRef = {
             message: notificationRef.message,
             username: user.username,
@@ -141,60 +124,190 @@ async function checkConfirmations(io) {
             created_at: moment().format('YYYY-MM-DD HH:mm'),
             created_at_str: moment().format('LLL'),
             updated_at: moment().format('YYYY-MM-DD HH:mm'),
-            is_read: false
+            is_read: false,
           };
-        
-          try {
-            await saveDocumentWithRetry(referralOwner);
-            await saveDocumentWithRetry(referralTx);
-            await saveDocumentWithRetry(notificationRef);
-            socketController.sendNotification(referralOwner._id, notificationDataRef);
-            socketController.newTransaction(referralOwner._id, referralTx);
-          } catch (error) {
-            console.error('Error saving referral data:', error);
-          }
+
+          await saveDocumentWithRetry(referralOwner);
+          await saveDocumentWithRetry(referralTx);
+          await saveDocumentWithRetry(notificationRef);
+          socketController.sendNotification(referralOwner._id, notificationDataRef);
+          socketController.newTransaction(referralTx);
         }
 
-        // ------------- USER NOTIFICATION -------------
-        const notification = new Notification({
-          from: user._id,
-          to: user._id,
-          amount: depositSOL,
-          room: '',
-          message: `Deposit successful, received`
-        });
+        // User Notification for Deposit
+        // const notification = new Notification({
+        //   from: user._id,
+        //   to: user._id,
+        //   amount: depositSOL,
+        //   room: '',
+        //   message: `Deposit successful, received`,
+        // });
 
-        const notificationData = {
-          message: notification.message,
-          username: user.username,
-          avatar: user.avatar,
-          accessory: user.accessory,
-          elite: user.elite,
-          rank: user.totalWagered,
-          amount: depositSOL,
-          created_at: moment().format('YYYY-MM-DD HH:mm'),
-          created_at_str: moment().format('LLL'),
-          updated_at: moment().format('YYYY-MM-DD HH:mm'),
-          is_read: false
-        };
+        // const notificationData = {
+        //   message: notification.message,
+        //   username: user.username,
+        //   avatar: user.avatar,
+        //   accessory: user.accessory,
+        //   elite: user.elite,
+        //   rank: user.totalWagered,
+        //   amount: depositSOL,
+        //   created_at: moment().format('YYYY-MM-DD HH:mm'),
+        //   created_at_str: moment().format('LLL'),
+        //   updated_at: moment().format('YYYY-MM-DD HH:mm'),
+        //   is_read: false,
+        // };
 
-        try {
-          await saveDocumentWithRetry(transaction);
-          await saveDocumentWithRetry(user);
-          await saveDocumentWithRetry(notification);
-          socketController.sendNotification(user._id, notificationData);
-          socketController.newTransaction(transaction);
-        } catch (error) {
-          console.log("transaction", transaction)
-          console.log("user", user._id)
-          console.log("notification", notification)
-          console.error('Error saving deposit data:', error);
-        }
-
-        
+        await saveDocumentWithRetry(transaction);
+        await saveDocumentWithRetry(user);
+        // await saveDocumentWithRetry(notification);
+        // socketController.sendNotification(user._id, notificationData);
+        socketController.newTransaction(transaction);
+      } else {
+        console.log(
+          `Deposit mismatch. On-chain deposit: ${depositSOL}, expected: ${transaction.amount}`
+        );
       }
     }
 
+    // --- Process Pending Withdrawals (Winnings) ---
+    const pendingWithdrawals = await GameTransaction.find({
+      status: 'pending',
+      $or: [
+        { description: { $regex: '^winnings', $options: 'i' } },
+        { description: { $regex: '^jeeted', $options: 'i' } },
+      ],
+    });
+
+    for (const withdrawal of pendingWithdrawals) {
+      const user = await User.findById(withdrawal.user);
+      if (!user) {
+        console.error('User not found for withdrawal:', withdrawal._id);
+        continue;
+      }
+
+      const room = await Room.findById(withdrawal.room)
+        .populate({
+          path: 'game_type',
+          model: GameType,
+          select: 'game_type_name short_name',
+        });
+      if (!room) {
+        console.error('Room not found for withdrawal:', withdrawal.room);
+        continue;
+      }
+
+      // Validate connectedAccount
+      let toPubkey;
+      try {
+        toPubkey = new PublicKey(withdrawal.connectedAccount);
+      } catch (error) {
+        console.error('Invalid connectedAccount for withdrawal:', withdrawal._id, error);
+        continue;
+      }
+
+      // Load admin wallet secret
+      let walletKey = process.env.wk;
+      if (!walletKey) {
+        console.error('Admin wallet secret not set in env');
+        continue;
+      }
+
+      let secretKey;
+      try {
+        secretKey = bs58.decode(walletKey);
+      } catch (error) {
+        console.error('Failed to decode walletKey:', error);
+        continue;
+      }
+
+      if (secretKey.length !== 64) {
+        console.error('Invalid secret key size. Must be 64 bytes.');
+        continue;
+      }
+
+      const walletKeyPair = Keypair.fromSecretKey(secretKey);
+
+      // Convert amount to lamports
+      const lamports = Math.floor(withdrawal.amount * LAMPORTS_PER_SOL);
+
+      // Get a fresh blockhash
+      const { blockhash, lastValidBlockHeight } = await provider.getLatestBlockhash();
+
+      // Build the transaction
+      const transaction = new Transaction({
+        recentBlockhash: blockhash,
+        feePayer: walletKeyPair.publicKey,
+      }).add(
+        SystemProgram.transfer({
+          fromPubkey: walletKeyPair.publicKey,
+          toPubkey,
+          lamports,
+        })
+      );
+
+      // Send and confirm the transaction
+      let signature;
+      try {
+        signature = await provider.sendTransaction(transaction, [walletKeyPair]);
+        await provider.confirmTransaction({
+          signature,
+          blockhash,
+          lastValidBlockHeight,
+        });
+      } catch (err) {
+        console.error('Error sending withdrawal transaction:', err);
+        continue;
+      }
+
+      console.log(
+        `Withdrawal transaction sent: https://explorer.solana.com/tx/${signature}`
+      );
+
+      // Update transaction
+      withdrawal.status = 'completed';
+      withdrawal.hash = signature;
+      await saveDocumentWithRetry(withdrawal);
+
+
+      // Notify user of withdrawal
+      const notification = new Notification({
+        from: user._id,
+        to: user._id,
+        amount: withdrawal.amount,
+        room: withdrawal.room,
+        message: `Winnings sent to your wallet`,
+      });
+
+      const notificationData = {
+        message: notification.message,
+        username: user.username,
+        avatar: user.avatar,
+        accessory: user.accessory,
+        elite: user.elite,
+        rank: user.totalWagered,
+        amount: withdrawal.amount,
+        created_at: moment().format('YYYY-MM-DD HH:mm'),
+        created_at_str: moment().format('LLL'),
+        updated_at: moment().format('YYYY-MM-DD HH:mm'),
+        is_read: false,
+      };
+
+      // Fetch and send updated Solana balance
+      let solBalance;
+      try {
+        const solBalLamports = await provider.getBalance(toPubkey);
+        solBalance = solBalLamports / LAMPORTS_PER_SOL;
+        socketController.sendBalanceUpdate(user._id, { solanaBalance: solBalance });
+      } catch (balanceError) {
+        console.error('Failed to fetch Solana balance for withdrawal:', balanceError);
+        // Continue even if balance fetch fails
+      }
+
+      await saveDocumentWithRetry(notification);
+      await saveDocumentWithRetry(withdrawal);
+      socketController.sendNotification(user._id, notificationData);
+      socketController.newTransaction(withdrawal);
+    }
   } catch (error) {
     console.error('Error checking confirmations:', error);
   } finally {
@@ -202,9 +315,9 @@ async function checkConfirmations(io) {
   }
 }
 
-// Run every 15 seconds
-cron.schedule('*/15 * * * * *', checkConfirmations);
+// Run every 10 seconds
+cron.schedule('*/10 * * * * *', () => checkConfirmations());
 
 module.exports = {
-  checkConfirmations
+  checkConfirmations,
 };

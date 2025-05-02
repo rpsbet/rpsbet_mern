@@ -436,7 +436,6 @@ const SettingsRef = ({
               filename: 'app.jsx',
             }).code;
             transpiledCode = `${babelHelpers}\n${transpiledCode}`;
-            console.log('[Transpiled Code]', transpiledCode);
           } catch (babelError) {
             console.error('[Babel Transpile Error]', babelError);
             throw new Error(`Babel transpilation failed: ${babelError.message}`);

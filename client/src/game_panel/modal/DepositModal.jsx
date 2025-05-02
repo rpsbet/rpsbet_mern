@@ -146,7 +146,7 @@ function DepositModal({ modalIsOpen, closeModal, balance, account }) {
       await connection.confirmTransaction(signature);
 
       // 6) Notify backend of successful deposit
-      const result = await axios.post('/stripe/deposit_successed', {
+      const result = await axios.post('/stripe/sol_deposit', {
         account,
         amount: numAmount,
         txtHash: signature,

@@ -36,7 +36,6 @@ import { useSelector, useDispatch } from 'react-redux'; // Add Redux hooks
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from '../util/Api';
 import LoadingOverlay from 'react-loading-overlay';
-import CountUp from 'react-countup';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXTwitter, faTelegram, faYoutube, faTiktok } from '@fortawesome/free-brands-svg-icons';
 import { faCoins } from '@fortawesome/free-solid-svg-icons';
@@ -56,19 +55,11 @@ import {
   StorefrontOutlined as StorefrontOutlinedIcon,
   LeaderboardOutlined,
   NotificationsOutlined,
-  Inventory2Outlined,
-  AccountBalanceWalletOutlined,
-  SavingsOutlined,
-  AttachMoneyOutlined,
-  MoneyOffCsredOutlined,
-  Dashboard
 } from '@mui/icons-material';
 import socketIOClient from 'socket.io-client';
 import Moment from 'moment';
 import Avatar from '../components/Avatar';
 import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
-import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import EmailIcon from "@mui/icons-material/Email";
 
 import {
   acCalculateRemainingLoans,
@@ -93,13 +84,13 @@ import { ConflictDialog } from './modal/ConfirmAlerts.jsx';
 import {
   setRoomList,
   addChatLog,
-  getMyHistory,
   addNewTransaction,
   addNewNotification,
   updateOnlineUserList,
   selectMainTab,
   globalChatReceived,
-  setGlobalChat,
+  setSolanaAccount,
+  setSolanaBalance,
   updateBetResult,
   getNotifications,
   readNotifications,
@@ -130,11 +121,6 @@ const DeListItemModal = lazy(() => import('./modal/DeListItemModal'));
 const DeListLoanModal = lazy(() => import('./modal/DeListLoanModal'));
 const GamePasswordModal = lazy(() => import('./modal/GamePasswordModal'));
 const LoginModal = lazy(() => import('./modal/LoginModal'));
-const SignupModal = lazy(() => import('./modal/SignupModal'));
-const DepositModal = lazy(() => import('./modal/DepositModal'));
-const WithdrawModal = lazy(() => import('./modal/WithdrawModal'));
-const InventoryModal = lazy(() => import('./modal/InventoryModal'));
-const VaultModal = lazy(() => import('./modal/VaultModal'));
 const EliteSubscriptionModal = lazy(() => import('./modal/EliteSubscriptionModal'));
 
 // Remove PropTypes override
@@ -203,7 +189,7 @@ function SiteWrapper({ children }) {
   const user = useSelector((state) => state.auth.user);
   const userName = useSelector((state) => state.auth.userName);
   const balance = useSelector((state) => state.auth.balance);
-  const betResult = useSelector((state) => state.logic.betResult);
+  const solanaBalance = useSelector((state) => state.logic.solanaBalance);
   const solPrice = useSelector((state) => state.logic.solPrice);
   const socket = useSelector((state) => state.auth.socket);
   const transactions = useSelector((state) => state.auth.transactions);
@@ -215,6 +201,7 @@ function SiteWrapper({ children }) {
   const showCookieConsent = useSelector((state) => state.auth.showCookieConsent);
   const remainingLoans = useSelector((state) => state.loanReducer.remainingLoans);
   const connectedAccount = useSelector((state) => state.auth.connectedAccount);
+  const account = useSelector((state) => state.logic.account);
 
 
   // Local state
@@ -225,7 +212,6 @@ function SiteWrapper({ children }) {
       : `http://${window.location.hostname}:5001`
   );
 
-  const [oldBalance, setOldBalance] = useState(balance);
   const [hoverTabIndex, setHoverTabIndex] = useState(-1);
   const [anchorElProfile, setAnchorElProfile] = useState(null);
   const [anchorElNotifications, setAnchorElNotifications] = useState(null);
@@ -238,11 +224,6 @@ function SiteWrapper({ children }) {
   const [showBankModal, setShowBankModal] = useState(false);
   const [showLeaderboardsModal, setShowLeaderboardsModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [showSignupModal, setShowSignupModal] = useState(false);
-  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
-  const [showDepositModal, setShowDepositModal] = useState(currentPath === '/deposit/' || currentPath === '/deposit');
-  const [showInventoryModal, setShowInventoryModal] = useState(false);
-  const [showVaultModal, setShowVaultModal] = useState(false);
   const [showNegativeBalanceDialog, setShowNegativeBalanceDialog] = useState(false);
   const [walletConflictOpen, setWalletConflictOpen] = useState(false);
   const [isLive, setIsLive] = useState(false);
@@ -258,8 +239,6 @@ function SiteWrapper({ children }) {
   const [highlightedRooms, setHighlightedRooms] = useState(new Set());
   const [eliteModalOpen, setEliteModalOpen] = useState(false);
   const [walletAddress, setWalletAddress] = useState(connectedAccount);
-  const [solanaBalance, setSolanaBalance] = useState(0);
-  const [account, setAccount] = useState(null);
   const [showAllGameLogs, setShowAllGameLogs] = useState(false);
   const [selectedCreator, setSelectedCreator] = useState(null);
   const [isRestrictedCountry, setIsRestrictedCountry] = useState(false);
@@ -271,8 +250,8 @@ function SiteWrapper({ children }) {
   const intervalRef = useRef(null);
   const isUnmountedRef = useRef(false);
 
-  // Initialize app on mount
-  useEffect(() => {
+   // Initialize app on mount
+   useEffect(() => {
     isUnmountedRef.current = false;
 
     const doMount = async () => {
@@ -292,10 +271,6 @@ function SiteWrapper({ children }) {
       } catch (error) {
         console.error('Mount error:', error);
       }
-
-      // intervalRef.current = setInterval(() => {
-      //   updateReminderTime();
-      // }, 3000);
 
       loadSolanaWallet();
 
@@ -323,13 +298,25 @@ function SiteWrapper({ children }) {
   useEffect(() => {
     const newSocket = socketIOClient(endpoint, {
       transports: ['websocket'],
-      withCredentials: true, // Required for CORS with credentials
+      withCredentials: true,
     });
-
-    // Socket event handlers
+  
+    // Promise to wait for socket connection
+    const waitForConnection = new Promise((resolve, reject) => {
+      newSocket.on('connect', () => {
+        console.log('Socket connected:', newSocket.id);
+        resolve();
+      });
+      newSocket.on('connect_error', (error) => {
+        console.error('Socket connection error:', error);
+        reject(error);
+      });
+    });
+  
+    // Set up event listeners
     const handleOnlineStatusUpdated = data => dispatch(updateOnlineUserList(data.user_list));
     newSocket.on('ONLINE_STATUS_UPDATED', handleOnlineStatusUpdated);
-
+  
     let lastGlobalChat = null;
     const handleGlobalChat = data => {
       if (
@@ -344,18 +331,25 @@ function SiteWrapper({ children }) {
       dispatch(globalChatReceived(data));
     };
     newSocket.on('GLOBAL_CHAT_RECEIVED', handleGlobalChat);
-
+  
     const handleUpdatedRoomList = data => {
       dispatch(setRoomList(data));
       dispatch(endLoading());
     };
     newSocket.on('ROOMS_UPDATED', handleUpdatedRoomList);
-
+  
     const handleRoomEnded = data => dispatch(removeRoomFromList(data.roomId));
     newSocket.on('ROOM_ENDED', handleRoomEnded);
-
-    dispatch(setSocket(newSocket));
-
+  
+    // Wait for connection before dispatching socket
+    waitForConnection
+      .then(() => {
+        dispatch(setSocket(newSocket));
+      })
+      .catch(error => {
+        console.error('Failed to connect socket:', error);
+      });
+  
     return () => {
       newSocket.off('GLOBAL_CHAT_RECEIVED', handleGlobalChat);
       newSocket.off('ROOMS_UPDATED', handleUpdatedRoomList);
@@ -364,6 +358,22 @@ function SiteWrapper({ children }) {
       newSocket.disconnect();
     };
   }, [dispatch, endpoint]);
+
+  
+  const fetchSolanaBalance = useCallback(async (walletAddress) => {
+    try {
+      const response = await axios.get('/stripe/get_provider_url');
+      const providerUrl = response.data.providerUrl;
+      const solanaConnection = new Connection(providerUrl, 'confirmed');
+      const solBalLamports = await solanaConnection.getBalance(new PublicKey(walletAddress));
+      const solBalance = solBalLamports / LAMPORTS_PER_SOL;
+      dispatch(setSolanaBalance({ solanaBalance: solBalance }));
+      return solBalance;
+    } catch (error) {
+      console.error('Failed to fetch Solana balance:', error);
+      return null;
+    }
+  }, [dispatch]);
 
   // Handle user-specific socket events
   useEffect(() => {
@@ -414,31 +424,51 @@ function SiteWrapper({ children }) {
     const handleBetResult = data => dispatch(updateBetResult(data));
     socket.on('UPDATE_BET_RESULT', handleBetResult);
 
-    // Notification events
     const handleSendNotification = data => {
-      if (!isMuted || !notificationSounds) {
-        notificationSoundRef.current?.play();
+    console.log('Received SEND_NOTIFICATION:', data);
+    if (!isMuted || !notificationSounds) {
+      notificationSoundRef.current?.play();
+    }
+    if (isNotificationsAllowed && window.Notification) {
+      const options = { body: data.message, silent: false };
+      if (Notification.permission === 'granted') {
+        new Notification('New Notification', options);
+      } else if (Notification.permission !== 'denied') {
+        Notification.requestPermission().then(permission => {
+          if (permission === 'granted') {
+            dispatch(setNotificationsAllowed(true));
+            new Notification('New Notification', options);
+          }
+        });
       }
-      if (isNotificationsAllowed && window.Notification) {
-        const options = { body: data.message, silent: false };
-        if (Notification.permission === 'granted') {
-          new Notification('New Notification', options);
-        } else if (Notification.permission !== 'denied') {
-          Notification.requestPermission().then(permission => {
-            if (permission === 'granted') {
-              dispatch(setNotificationsAllowed(true));
-              new Notification('New Notification', options);
-            }
-          });
-        }
-      }
-      dispatch(addNewNotification(data));
-    };
-    socket.on('SEND_NOTIFICATION', handleSendNotification);
+    }
+    dispatch(addNewNotification(data));
+  };
+  socket.on('SEND_NOTIFICATION', handleSendNotification);
 
-    // Transaction events
-    const handleAddTransaction = data => dispatch(addNewTransaction(data));
-    socket.on('NEW_TRANSACTION', handleAddTransaction);
+  const handleAddTransaction = async (data) => {
+    console.log('Received NEW_TRANSACTION:', data);
+    dispatch(addNewTransaction(data));
+    if (
+      connectedAccount &&
+      data.user === user._id &&
+      data.status === 'completed' &&
+      (data.description.startsWith('Joined') || data.description.startsWith('Pumped'))
+    ) {
+      console.log(`Fetching Solana balance for connectedAccount ${connectedAccount} due to transaction`);
+      await fetchSolanaBalance(connectedAccount);
+    }
+  };
+  socket.on('NEW_TRANSACTION', handleAddTransaction);
+
+  const handleBalanceUpdate = (data) => {
+    console.log('Received UPDATE_SOLANA_BALANCE:', data);
+    if (data.solanaBalance !== undefined) {
+      dispatch(setSolanaBalance({ solanaBalance: data.solanaBalance }));
+    }
+  };
+  socket.on('UPDATE_SOLANA_BALANCE', handleBalanceUpdate);
+
 
     // Unread message count
     const handleUnreadCount = countData => dispatch(setUnreadMessageCount(countData));
@@ -450,9 +480,20 @@ function SiteWrapper({ children }) {
       socket.off('UPDATE_BET_RESULT', handleBetResult);
       socket.off('SEND_NOTIFICATION', handleSendNotification);
       socket.off('NEW_TRANSACTION', handleAddTransaction);
+      socket.off('UPDATE_SOLANA_BALANCE', handleBalanceUpdate);
       socket.off('SET_UNREAD_MESSAGE_COUNT', handleUnreadCount);
     };
-  }, [dispatch, socket, user, isMuted, notificationSounds, isNotificationsAllowed, location.pathname]);
+  }, [
+    dispatch,
+    socket,
+    user,
+    isMuted,
+    notificationSounds,
+    isNotificationsAllowed,
+    location.pathname,
+    connectedAccount,
+    fetchSolanaBalance
+  ]);
 
   // Utility functions
   const handleClickOutside = useCallback(() => {
@@ -468,13 +509,12 @@ function SiteWrapper({ children }) {
 
       await notificationSoundRef.current.load();
       await needALoanRef.current.load();
-
     } catch (error) {
       console.log('Audio initialization error:', error);
     }
   }, []);
 
-  // Wallet functionality
+
   const loadSolanaWallet = useCallback(async () => {
     try {
       if (window.solana && window.solana.isPhantom) {
@@ -488,24 +528,18 @@ function SiteWrapper({ children }) {
           return;
         }
 
-        const response = await axios.get('/stripe/get_provider_url');
-        const providerUrl = response.data.providerUrl;
-        const solanaConnection = new Connection(providerUrl, 'confirmed');
-        const solBalLamports = await solanaConnection.getBalance(new PublicKey(wAddress));
-        const solBalance = solBalLamports / LAMPORTS_PER_SOL;
-
         setWalletAddress(wAddress);
-        setAccount({ publicKey: new PublicKey(wAddress) });
-        setSolanaBalance(solBalance);
+        dispatch(setSolanaAccount({ publicKey: new PublicKey(wAddress) }));
+        await fetchSolanaBalance(wAddress);
       }
     } catch (error) {
       console.error('Failed to connect Phantom or fetch SOL balance:', error);
     }
-  }, [dispatch, user]);
+  }, [dispatch, user, fetchSolanaBalance]);
 
   const disconnectWeb3 = useCallback(() => {
     setWalletAddress(null);
-    setSolanaBalance(0);
+    dispatch(setSolanaBalance(null));
     dispatch(disconnectWalletAddress());
   }, [dispatch]);
 
@@ -566,25 +600,7 @@ function SiteWrapper({ children }) {
   const handleCloseEliteSubscriptionModal = () => {
     setEliteModalOpen(false);
   };
-  const handleOpenDepositModal = () => {
-    setShowDepositModal(true);
-    setAnchorElProfile(null);
-  };
 
-  const handleCloseDepositModal = () => setShowDepositModal(false);
-
-  const handleOpenWithdrawModal = () => {
-    setShowWithdrawModal(true);
-    setAnchorElProfile(null);
-  };
-
-  const handleCloseWithdrawModal = () => setShowWithdrawModal(false);
-
-  const handleOpenInventoryModal = () => setShowInventoryModal(true);
-  const handleCloseInventoryModal = () => setShowInventoryModal(false);
-
-  const handleOpenVaultModal = () => setShowVaultModal(true);
-  const handleCloseVaultModal = () => setShowVaultModal(false);
   const handleOpenDebtsModal = () => setShowDebtsModal(true);
   const handleCloseDebtsModal = () => setShowDebtsModal(false);
   const handleOpenSettingsModal = () => setShowSettingsModal(true);
@@ -860,7 +876,7 @@ function SiteWrapper({ children }) {
             <div className="header_action_panel">
               {user ? (
                 <>
-                  <Box
+                  {/* <Box
                     component="a"
                     href="#"
                     className="desktop-only action-icon"
@@ -882,7 +898,7 @@ function SiteWrapper({ children }) {
                     }}
                   >
                     <AccountBalanceOutlined fontSize="medium" />
-                  </Box>
+                  </Box> */}
 
                   <Box
                     component="a"
@@ -986,21 +1002,11 @@ function SiteWrapper({ children }) {
                           />
                           {isHovered ? (
                             <Typography variant="body2">
-                              ${((balance * solPrice) || 0).toFixed(numDecimals)}
+                              ${((solanaBalance * solPrice) || 0).toFixed(numDecimals)}
                             </Typography>
                           ) : (
                             <Typography variant="body2">
-                              <CountUp
-                                start={balance}
-                                end={balance}
-                                separator=","
-                                decimal="."
-                                decimals={numDecimals}
-                                duration={4.5}
-                                redraw={true}
-                                preserveValue={true}
-                                onEnd={() => setOldBalance(balance)}
-                              />
+                             {solanaBalance}
                             </Typography>
                           )}
                         </Box>
@@ -1208,7 +1214,7 @@ function SiteWrapper({ children }) {
                     letterSpacing: '0.5px',
                   }}
                 >
-                  Login
+                  CONNECT
                 </Button>
               )}
             </div>
@@ -1543,65 +1549,6 @@ function SiteWrapper({ children }) {
               ALL TRANSACTIONS
             </Button>
 
-            <Box
-              sx={{
-                mt: 2,
-                display: 'grid',
-                gridTemplateColumns: '1fr', // Single column for the first row (Vault)
-                gap: 1,
-              }}
-            >
-              {/* Vault Button - Full Width */}
-              <Button
-                color="error"
-                variant="outlined"
-                onClick={handleOpenVaultModal}
-                startIcon={<SavingsOutlined />}
-                sx={{ '&:hover': { backgroundColor: 'error.main', color: '#fff' } }}
-              >
-                Vault
-              </Button>
-
-              {/* Second Row: Deposit and Debts/Withdraw */}
-              <Box
-                sx={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(2, 1fr)', // Two columns for Deposit and Debts/Withdraw
-                  gap: 1,
-                }}
-              >
-                <Button
-                  color="error"
-                  variant="outlined"
-                  onClick={handleOpenDepositModal}
-                  startIcon={<AccountBalanceWalletOutlined />}
-                  sx={{ '&:hover': { backgroundColor: 'error.main', color: '#fff' } }}
-                >
-                  Deposit
-                </Button>
-                {remainingLoans > 0 ? (
-                  <Button
-                    color="error"
-                    variant="outlined"
-                    onClick={handleOpenDebtsModal}
-                    startIcon={<MoneyOffCsredOutlined />}
-                    sx={{ '&:hover': { backgroundColor: 'error.main', color: '#fff' } }}
-                  >
-                    {convertToCurrency(remainingLoans, solPrice)} IN DEBT
-                  </Button>
-                ) : (
-                  <Button
-                    color="error"
-                    variant="outlined"
-                    onClick={handleOpenWithdrawModal}
-                    startIcon={<AttachMoneyOutlined />}
-                    sx={{ '&:hover': { backgroundColor: 'error.main', color: '#fff' } }}
-                  >
-                    Withdraw
-                  </Button>
-                )}
-              </Box>
-            </Box>
             {connectedAccount ? (
               <Box sx={{ mt: 2 }}>
                 <input id="wallet-address" type="text" value={connectedAccount} readOnly />
@@ -1749,56 +1696,7 @@ function SiteWrapper({ children }) {
             />
           </Suspense>
         )}
-        {showSignupModal && (
-          <Suspense fallback={<Typography>Loading Signup...</Typography>}>
-            <SignupModal
-              modalIsOpen={showSignupModal}
-              closeModal={handleCloseSignupModal}
-              openLoginModal={handleOpenLoginModal}
-            />
-          </Suspense>
-        )}
-        {showDepositModal && (
-          <Suspense fallback={<Typography>Loading Deposit...</Typography>}>
-            <DepositModal
-              modalIsOpen={showDepositModal}
-              closeModal={handleCloseDepositModal}
-              web3={null}
-              loadSolanaWallet={loadSolanaWallet}
-              balance={solanaBalance}
-              account={account}
-            />
-          </Suspense>
-        )}
-        {showInventoryModal && (
-          <Suspense fallback={<Typography>Loading Inventory...</Typography>}>
-            <InventoryModal
-              modalIsOpen={showInventoryModal}
-              closeModal={handleCloseInventoryModal}
-            />
-          </Suspense>
-        )}
-        {showVaultModal && (
-          <Suspense fallback={<Typography>Loading Vault...</Typography>}>
-            <VaultModal
-              modalIsOpen={showVaultModal}
-              closeModal={handleCloseVaultModal}
-              conversionRate={solPrice}
-              isDarkMode={isDarkMode}
-            />
-          </Suspense>
-        )}
-        {showWithdrawModal && (
-          <Suspense fallback={<Typography>Loading Withdraw...</Typography>}>
-            <WithdrawModal
-              modalIsOpen={showWithdrawModal}
-              closeModal={handleCloseWithdrawModal}
-              balance={balance}
-              web3={null}
-              account={account}
-            />
-          </Suspense>
-        )}
+      
         <Suspense fallback={''}>
           <ListItemModal />
         </Suspense>

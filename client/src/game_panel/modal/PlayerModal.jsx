@@ -13,10 +13,10 @@ import {
   Chip,
   Typography,
   ThemeProvider,
+  CircularProgress,
 } from '@mui/material';
 import { FileCopy as FileCopyIcon, Info as InfoIcon, Link as LinkIcon, Close as CloseIcon } from '@mui/icons-material';
-import LoadingOverlay from 'react-loading-overlay';
-import styled from 'styled-components';
+import { Connection, Transaction, PublicKey } from '@solana/web3.js';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faMoneyBill,
@@ -32,8 +32,8 @@ import axios from '../../util/Api';
 // Redux actions
 import { setUserInfo } from '../../redux/Auth/user.actions';
 import { setCurrentOfferTargetInfo } from '../../redux/Loan/loan.action';
-import { openOfferLoanModal, errorMsgBar } from '../../redux/Notification/notification.actions';
-import { setChatRoomInfo, addNewTransaction } from '../../redux/Logic/logic.actions';
+import { openOfferLoanModal, errorMsgBar, successMsgBar } from '../../redux/Notification/notification.actions';
+import { setChatRoomInfo, addNewTransaction, setSolanaBalance } from '../../redux/Logic/logic.actions';
 import { acGetCustomerInfo, getSpendingHabit } from '../../redux/Customer/customer.action';
 import { queryProducts } from '../../redux/Item/item.action';
 import { convertToCurrency } from '../../util/conversion';
@@ -48,7 +48,7 @@ function PlayerModal({ modalIsOpen, closeModal, selectedCreator }) {
   // Redux state
   const isDarkMode = useSelector((state) => state.auth.isDarkMode);
   const userInfo = useSelector((state) => state.auth.user);
-  const balance = useSelector((state) => state.auth.balance);
+  const balance = useSelector((state) => state.logic.solanaBalance);
   const solPrice = useSelector((state) => state.logic.solPrice);
   const isLowGraphics = useSelector((state) => state.auth.isLowGraphics);
   const onlineUserList = useSelector((state) => state.logic.onlineUserList);
@@ -142,7 +142,7 @@ function PlayerModal({ modalIsOpen, closeModal, selectedCreator }) {
       case 'good':
         return { color: 'rgb(3 221 255)', title: 'SEASONED CZAR', message: 'Spending habits are commendable.', progress: 80 };
       case 'average':
-        return { color: '#ffc107', title: 'UNCONSCIOUS COMPETENT', message: 'Doing fine, but the bitch is comfortable.', progress: 60 };
+        return { color: '#ffc107', title: 'UN innenCONSCIOUS COMPETENT', message: 'Doing fine, but the bitch is comfortable.', progress: 60 };
       case 'bad':
         return { color: '#fd7e14', title: 'PEASANT PUPPET', message: 'They need to revisit their spending strategy.', progress: 40 };
       case 'very bad':
@@ -173,39 +173,137 @@ function PlayerModal({ modalIsOpen, closeModal, selectedCreator }) {
   const handleSendTip = async () => {
     try {
       const tipAmtNum = parseFloat(tipAmount || 0);
-      if (tipAmtNum <= 0) {
-        dispatch(errorMsgBar('R U FURR-REAL? TIP AMOUNT MUST BE MORE THAN 0!'));
+      if (isNaN(tipAmtNum) || tipAmtNum <= 0) {
+        dispatch(errorMsgBar('Please enter a valid SOL amount.'));
         return;
       }
       if (tipAmtNum > balance) {
-        dispatch(errorMsgBar('NOT ENUFF FUNDS AT THIS MEOWMENT'));
+        dispatch(errorMsgBar('Insufficient Balance'));
         return;
       }
+      if (!window.solana || !window.solana.isConnected) {
+        dispatch(errorMsgBar('Wallet not connected. Please connect your wallet.'));
+        return;
+      }
+  
       setIsLoading(true);
-      const result = await axios.post('/game/tip/', {
+  
+      // Get the connected wallet address
+      let senderPubkey;
+      try {
+        senderPubkey = new PublicKey(await window.solana.publicKey.toString());
+        console.log('Connected wallet:', senderPubkey.toBase58());
+      } catch (e) {
+        console.error('Failed to get sender wallet:', e.message);
+        setIsLoading(false);
+        dispatch(errorMsgBar('Failed to access wallet address'));
+        return;
+      }
+  
+      // 1. Request prepared transaction from backend
+      const prepareResponse = await axios.post('/game/tip', {
         amount: tipAmtNum,
         addressTo: creatorId,
         message,
+        senderWallet: senderPubkey.toBase58(),
+        prepare: true,
       });
+  
+      if (!prepareResponse.data.success || !prepareResponse.data.transaction) {
+        console.error('Prepare response failed:', prepareResponse.data);
+        setIsLoading(false);
+        dispatch(errorMsgBar(prepareResponse.data.message || 'Failed to prepare transaction'));
+        return;
+      }
+  
+      // 2. Initialize Solana connection
+      const connection = new Connection(process.env.REACT_APP_PROVIDER_URL || 'https://api.mainnet-beta.solana.com', 'confirmed');
+      console.log('Frontend provider URL:', process.env.REACT_APP_PROVIDER_URL || 'https://api.mainnet-beta.solana.com');
+  
+      // 3. Deserialize transaction
+      const transaction = Transaction.from(Buffer.from(prepareResponse.data.transaction, 'base64'));
+      console.log('Deserialized transaction:', {
+        feePayer: transaction.feePayer.toBase58(),
+        recentBlockhash: transaction.recentBlockhash,
+        instructions: transaction.instructions.map((ix) => ({
+          programId: ix.programId.toBase58(),
+          keys: ix.keys.map((key) => key.pubkey.toBase58()),
+          data: ix.data.toString('hex'),
+        })),
+      });
+  
+      // 4. Validate sender wallet
+      if (transaction.feePayer.toBase58() !== senderPubkey.toBase58()) {
+        console.error('Wallet mismatch:', {
+          transactionFeePayer: transaction.feePayer.toBase58(),
+          connectedWallet: senderPubkey.toBase58(),
+        });
+        setIsLoading(false);
+        dispatch(errorMsgBar('Connected wallet does not match transaction sender'));
+        return;
+      }
+  
+      // 5. Sign and send transaction via Phantom
+      console.log('Requesting wallet signature...');
+      const signedTransaction = await window.solana.signAndSendTransaction(transaction);
+      const txtHash = signedTransaction.signature;
+      console.log('Transaction signature:', txtHash);
+  
+      // 6. Confirm transaction
+      await connection.confirmTransaction(
+        {
+          signature: txtHash,
+          blockhash: prepareResponse.data.blockhash,
+          lastValidBlockHeight: prepareResponse.data.lastValidBlockHeight,
+        },
+        'confirmed'
+      );
+      console.log('Transaction confirmed');
+  
+      // 7. Notify backend of successful tip
+      const result = await axios.post('/game/tip', {
+        amount: tipAmtNum,
+        addressTo: creatorId,
+        message,
+        txtHash,
+      });
+  
       if (result.data.success) {
-        dispatch(errorMsgBar(result.data.message));
+        dispatch(successMsgBar(result.data.message));
         dispatch(addNewTransaction(result.data.newTransaction));
+  
+        // 8. Update Solana balance
+        try {
+          const solBalLamports = await connection.getBalance(senderPubkey);
+          const solanaBalance = solBalLamports / LAMPORTS_PER_SOL;
+          dispatch(setSolanaBalance({ solanaBalance }));
+        } catch (balanceError) {
+          console.error('Failed to fetch Solana balance:', balanceError);
+        }
+  
         setIsLoading(false);
         closeModal();
       } else {
         setIsLoading(false);
-        dispatch(errorMsgBar(result.data.message));
+        dispatch(errorMsgBar(result.data.message || 'Failed to record tip'));
       }
     } catch (err) {
       setIsLoading(false);
-      dispatch(errorMsgBar('FAILED TRANSACTION'));
+      let errorMessage = 'Failed to process transaction';
+      if (err.message.includes('blockhash')) {
+        errorMessage = 'Invalid or expired blockhash';
+      } else if (err.message.includes('signature')) {
+        errorMessage = 'Transaction signature verification failed';
+      } else if (err.message.includes('lamports')) {
+        errorMessage = 'Insufficient funds for transaction';
+      } else if (err.message.includes('rejected')) {
+        errorMessage = 'Transaction rejected by wallet';
+      } else {
+        errorMessage = err.message || 'Failed to process transaction';
+      }
+      dispatch(errorMsgBar(errorMessage));
+      console.error('Error sending tip:', err.message, err.stack);
     }
-  };
-
-  // Lend Logic
-  const handleOpenOfferModal = () => {
-    dispatch(openOfferLoanModal());
-    closeModal();
   };
 
   // Chat Logic
@@ -222,16 +320,6 @@ function PlayerModal({ modalIsOpen, closeModal, selectedCreator }) {
 
   return (
     <>
-      {isLoading && (
-        <LoadingOverlay
-          active={isLoading}
-          spinner
-          text="Sending Tip..."
-          styles={{
-            wrapper: { position: 'fixed', width: '100%', top: '0', left: '0', height: '100vh', zIndex: '99' },
-          }}
-        />
-      )}
       <ThemeProvider theme={theme}>
         <Modal open={modalIsOpen || false} onClose={closeModal}>
           <Box
@@ -240,18 +328,16 @@ function PlayerModal({ modalIsOpen, closeModal, selectedCreator }) {
               top: '50%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
-              color: '#fff', // Preserve text color conditional
+              color: '#fff',
               maxHeight: '90vh',
               overflowY: 'auto',
               borderRadius: 2,
               boxShadow: 24,
               p: 3,
-              // Glassmorphism styles (default dark mode colors)
               background: 'rgba(0, 0, 0, 0.2)',
               backdropFilter: 'blur(10px)',
-              WebkitBackdropFilter: 'blur(10px)', // For Safari
+              WebkitBackdropFilter: 'blur(10px)',
               border: '1px solid rgba(255, 255, 255, 0.2)',
-              // Fallback for browsers without backdrop-filter
               '@supports not (backdrop-filter: blur(10px))': {
                 background: 'rgba(0, 0, 0, 0.4)',
               },
@@ -309,7 +395,7 @@ function PlayerModal({ modalIsOpen, closeModal, selectedCreator }) {
                       variant="body2"
                       sx={{ display: 'flex', justifyContent: 'space-evenly', alignItems: 'center' }}
                     >
-                      {isOnline ? 'online' : 'offline'}&nbsp;
+                      {isOnline ? 'online' : 'offline'}
                       <i className={`online-status${isOnline ? ' online' : ''}`} />
                     </Typography>
                   </Box>
@@ -379,35 +465,6 @@ function PlayerModal({ modalIsOpen, closeModal, selectedCreator }) {
                       </Grid>
                     )}
                   </Box>
-                  {/* <MarketplaceContainer>
-                    <Typography variant="h6" sx={{ mt: 2 }}>
-                      INVENTORY
-                    </Typography>
-                    {productArray && productArray.length > 0 ? (
-                      <ProductGrid>
-                        {productArray.map((row) => (
-                          <ProductCard key={row._id}>
-                            {row.image && renderLottieAnimation(row.image, isLowGraphics) ? (
-                              <Box sx={{ width: 80, height: 80 }}>
-                                {renderLottieAnimation(row.image, isLowGraphics)}
-                              </Box>
-                            ) : (
-                              <ProductImage src={row.image} alt={row.productName} />
-                            )}
-                            <ProductInfo>
-                              <Typography variant="h6" sx={{ fontSize: '1rem', color: '#fff', textAlign: 'center' }}>
-                                {row.productName}
-                              </Typography>
-                            </ProductInfo>
-                          </ProductCard>
-                        ))}
-                      </ProductGrid>
-                    ) : (
-                      <ProductGrid>
-                        <Typography variant="body2">No items found.</Typography>
-                      </ProductGrid>
-                    )}
-                  </MarketplaceContainer> */}
                 </Box>
               )}
               {/* Tab 1: Stats */}
@@ -437,9 +494,21 @@ function PlayerModal({ modalIsOpen, closeModal, selectedCreator }) {
             {/* Footer */}
             {userInfo._id !== creatorId && (
               <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 3 }}>
-                <Button color="error" variant="outlined" onClick={handleTip}>
-                  Tip&nbsp;<FontAwesomeIcon icon={faMoneyBill} />
-                </Button>
+                {/* <Button
+                  color="error"
+                  variant="outlined"
+                  onClick={handleTip}
+                  disabled={isLoading}
+                  startIcon={
+                    isLoading ? (
+                      <CircularProgress size={20} color="inherit" />
+                    ) : (
+                      <FontAwesomeIcon icon={faMoneyBill} />
+                    )
+                  }
+                >
+                  {isLoading ? 'Tipping...' : 'Tip'}
+                </Button> */}
                 <Button color="error" variant="outlined" onClick={handleOpenChat}>
                   DM&nbsp;<FontAwesomeIcon icon={faEnvelope} />
                 </Button>
@@ -453,6 +522,7 @@ function PlayerModal({ modalIsOpen, closeModal, selectedCreator }) {
         isTipModalOpen={isTipModalOpen}
         handleCloseTipModal={handleCloseTipModal}
         isDarkMode={isDarkMode}
+        isLoading={isLoading}
         theme={theme}
         closeModal={closeModal}
         handleTipAmountChange={handleTipAmountChange}

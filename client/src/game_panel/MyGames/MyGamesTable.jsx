@@ -935,7 +935,7 @@ function MyGamesTable() {
           )}
         </Box>
       )}
-      <Dialog open={isCoHostModalOpen} onClose={handleCloseCoHostModal}>
+      {/* <Dialog open={isCoHostModalOpen} onClose={handleCloseCoHostModal}>
         <CoHostModal
           isDarkMode={isDarkMode}
           coHostAmount={coHostAmount}
@@ -950,7 +950,7 @@ function MyGamesTable() {
           input_only={false}
           solPrice={solPrice}
         />
-      </Dialog>
+      </Dialog> */}
       <Dialog
         open={isPayoutModalOpen}
         onClose={handleClosePayoutModal}

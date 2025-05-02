@@ -388,9 +388,8 @@ function MainPage() {
             <EliteSubscriptionModal user={user} isLowGraphics={isLowGraphics} open={openModal} onClose={() => setOpenModal(false)} />
           </Suspense>
       {/* Marketplace and P2P Lending Toggles */}
-      {isMobile && selectedMobileTab === 'marketplace' && (
+      {/* {isMobile && selectedMobileTab === 'marketplace' && (
         <Box sx={{ p: '30px' }}>
-          {/* CENTRAL BANK */}
           <Box sx={{ textAlign: 'center', mb: 2 }}>
             <Button
               color="error"
@@ -416,7 +415,7 @@ function MainPage() {
           </Box>
 
         </Box>
-      )}
+      )} */}
 
       <Box className="main-panel" style={{ overflowX: 'hidden' }}>
         <h2 className="main-title">{getActiveTabText()}</h2>
@@ -512,7 +511,7 @@ function MainPage() {
             {selectedMobileTab === 'my_games' && 'YOUR GAMES'}
           </Button>
 
-          <Button
+          {/* <Button
             className={`mobile-tab-marketplace ${selectedMobileTab === 'marketplace' ? 'active' : ''}`}
             onClick={() => setSelectedMobileTab('marketplace')}
           >
@@ -566,7 +565,7 @@ function MainPage() {
               />
             </svg>
             {selectedMobileTab === 'marketplace' && 'BANK'}
-          </Button>
+          </Button> */}
 
           <Button
             className={`mobile-tab-chat ${selectedMobileTab === 'chat' ? 'active' : ''}`}

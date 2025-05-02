@@ -7,9 +7,6 @@ const auth = require('../middleware/auth');
 const { v4: uuidv4 } = require('uuid');
 const Comment = require('../model/Comment');
 const { OpenAI } = require('openai');
-const React = require('react');
-const ReactDOMServer = require('react-dom/server');
-
 // Instead of Configuration/OpenAIApi, we create an instance of OpenAI directly:
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -24,7 +21,7 @@ const GameLog = require('../model/GameLog');
 const Receipt = require('../model/Receipt');
 const Message = require('../model/Message');
 const Notification = require('../model/Notification');
-const Transaction = require('../model/Transaction');
+const  GameTransanction = require('../model/Transaction');
 const System = require('../model/SystemSetting');
 const RpsBetItem = require('../model/RpsBetItem');
 const QsBetItem = require('../model/QsBetItem');
@@ -50,10 +47,7 @@ const {
 const { wallet, connection } = require('../helper/util/config');
 const { createAmmPool } = require('../helper/util/createPool');
 const { createMarket } = require('../helper/util/createMarket');
-const { addLiquidity } = require('../helper/util/addLiquidity');
-// const { getWalletTokenAccount } = require('./util');
-const { getAccount, getAssociatedTokenAddress } = require('@solana/spl-token');
-const { Market } = require('@project-serum/serum');
+const { Connection, PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } = require('@solana/web3.js');
 const { revokeMintAndFreezeAuthorities } = require('../helper/util/authority');
 const { distributeTokens } = require('../helper/util/distributeTokens');
 
@@ -132,7 +126,7 @@ router.get('/recently-closed', async (req, res) => {
       });
     } else {
       res.json({
-        
+
         success: true,
         message: 'No recently closed rooms found.',
       });
@@ -2141,7 +2135,7 @@ router.post('/rooms', auth, async (req, res) => {
 
     // Consolidate validations
     const user_bet = parseFloat(bet_amount);
-    
+
     // Existing validation checks
     if (isWithdrawing) {
       return res.json({
@@ -2186,9 +2180,9 @@ router.post('/rooms', auth, async (req, res) => {
     }
 
     if (username.includes('BOT')) {
-      return res.json({ 
-        success: false, 
-        message: 'DO NOT HAVE PURRMISSION' 
+      return res.json({
+        success: false,
+        message: 'DO NOT HAVE PURRMISSION'
       });
     }
 
@@ -2206,27 +2200,6 @@ router.post('/rooms', auth, async (req, res) => {
       });
     }
 
-    // New elite room limit check
-    const eliteRoomLimits = {
-      red: 2,
-      black: 20
-    };
-
-    if (elite in eliteRoomLimits) {
-      const userOpenRooms = await Room.countDocuments({
-        creator: _id,
-        status: 'open'
-      });
-
-      if (userOpenRooms >= eliteRoomLimits[elite]) {
-        return res.json({
-          success: false,
-          message: `Room limit reached for ${elite} elite status (${eliteRoomLimits[elite]} rooms). Close existing rooms to create new ones.`
-        });
-      }
-    }
-
-    // Fetch necessary data in parallel
     const [roomCount, gameTypeDoc, commissionDoc] = await Promise.all([
       Room.countDocuments({}),
       GameType.findOne({ game_type_id: parseInt(game_type) }),
@@ -2303,7 +2276,7 @@ router.post('/rooms', auth, async (req, res) => {
       game_result: -3000,
     });
 
-    const newTransaction = new Transaction({
+    const newTransaction = new GameTransanction({
       user: req.user,
       amount: -amountAfterFee,
       description: 'created ' + (name || `${gameTypeDoc.short_name}-${room_number}`),
@@ -2562,8 +2535,9 @@ router.post('/end_game', auth, async (req, res) => {
       accessory,
       elite,
       totalWagered,
+      accounts, // Add accounts to destructure for connectedAccount validation
     } = req.user;
-    const { room_id: roomId } = req.body;
+    const { room_id: roomId, connectedAccount } = req.body; // Include connectedAccount from req.body
 
     const timeDifference = (new Date() - new Date(updated_at)) / 1000; // Difference in seconds
     if (timeDifference <= 1.5) {
@@ -2589,6 +2563,14 @@ router.post('/end_game', auth, async (req, res) => {
       });
     }
 
+    // Validate connectedAccount
+    if (!connectedAccount || !accounts || !accounts.includes(connectedAccount)) {
+      return res.json({
+        success: false,
+        message: 'Connected account is missing or not authorized.',
+      });
+    }
+
     const roomInfo = await Room.findOne({ _id: roomId })
       .populate({ path: 'creator', model: User, select: 'username _id' })
       .populate({ path: 'game_type', model: GameType, select: 'short_name' })
@@ -2606,29 +2588,81 @@ router.post('/end_game', auth, async (req, res) => {
 
     const tenSecondsAgo = new Date(Date.now() - 500);
     if (roomInfo.updated_at > tenSecondsAgo) {
-      responseData = {
+      return res.json({
         success: false,
         message: 'ROOM TOO BUSY, TRY AGAIN LATER',
         betResult: -1200,
-      };
-      return responseData;
+      });
     }
 
     roomInfo.status = 'finished';
     await saveDocumentWithRetry(roomInfo);
 
-    const strategyKey = roomInfo.selectedStrategy
-      .replace(/[\s-]/g, '')
-      .toLowerCase();
     const hostUpdates = [];
+    const gameTransactions = []; // To store pending GameTransanction documents
 
     for (const hostData of roomInfo.hosts) {
       const hostId = hostData.host;
-      const host = await User.findById(hostId).select('balance updated_at');
+      const host = await User.findById(hostId).select('updated_at accounts'); // Include accounts for validation
       if (!host) continue;
 
       const amount = (hostData.share / 100) * parseFloat(roomInfo.user_bet);
-      host.balance += amount;
+
+      // Replace direct balance update with Solana transaction logic
+      if (amount > 0 && connectedAccount) {
+        // Validate deposit transaction (check both pending and completed)
+        const depositTransaction = await GameTransanction.findOne({
+          user: hostId,
+          room: roomId,
+          status: { $in: ['pending', 'completed'] },
+          description: { $regex: '^(Pumped)', $options: 'i' },
+        });
+
+        if (!depositTransaction) {
+          console.warn(
+            `No valid deposit (pending or completed) for user ${hostId}, room ${roomId}`,
+          );
+          return res.json({
+            success: false,
+            message:
+              'No valid SOL deposit found within the last 15 minutes for this room. Please wait for your deposit to process and try again.',
+            betResult: -1000,
+          });
+        }
+
+        // Validate connectedAccount as a Solana address
+        try {
+          const address = connectedAccount.trim(); // Remove whitespace
+          console.log(
+            'connectedAccount',
+            address,
+            'Type:',
+            typeof address,
+            'Length:',
+            address.length,
+          );
+          new PublicKey(address);
+        } catch (error) {
+          console.error('PublicKey error:', error.message);
+          return res.json({
+            success: false,
+            message: 'Invalid Solana wallet address',
+          });
+        }
+
+        // Create a pending GameTransaction for the winnings
+        const newGameTransaction = new GameTransanction({
+          user: hostId,
+          amount: amount,
+          description: `Rugged ${roomInfo.name}`, // Adapted for end_game
+          room: roomId,
+          room_name: roomInfo.name,
+          status: 'pending',
+          connectedAccount: connectedAccount,
+        });
+        gameTransactions.push(saveDocumentWithRetry(newGameTransaction));
+      }
+
       host.updated_at = new Date();
       hostUpdates.push(saveDocumentWithRetry(host));
 
@@ -2651,7 +2685,7 @@ router.post('/end_game', auth, async (req, res) => {
       socket.sendNotification(hostId, notificationData);
     }
 
-    await Promise.all(hostUpdates);
+    await Promise.all([...hostUpdates, ...gameTransactions]);
 
     const newGameLog = new GameLog({
       room: roomInfo._id,
@@ -2663,11 +2697,14 @@ router.post('/end_game', auth, async (req, res) => {
       game_result: -100,
     });
 
-    const newTransactionC = new Transaction({
+    // Update the original GameTransanction to reflect the new logic
+    const newTransactionC = new GameTransanction({
       user: userId,
       amount: (roomInfo.hosts[0].share / 100) * parseFloat(roomInfo.user_bet),
       description: `Rugged ${roomInfo.name}`,
       room: roomId,
+      status: 'pending',
+      connectedAccount: connectedAccount,
     });
 
     await Promise.all([
@@ -3019,13 +3056,13 @@ router.post('/pump', auth, async (req, res) => {
       is_read: false,
     };
 
-    const newTransaction = new Transaction({
-      created_at: now,
-      user: req.user._id,
-      amount: -amountAfterFee,
-      description: `Pumped ${room.name}`,
-      room: room._id,
-    });
+    // const newTransaction = new Transaction({
+    //   created_at: now,
+    //   user: req.user._id,
+    //   amount: -amountAfterFee,
+    //   description: `Pumped ${room.name}`,
+    //   room: room._id,
+    // });
 
     // Candle generation (using liquidity before and after the pump)
     const timeBucket = Math.floor(new Date(now).getTime() / (60 * 1000));
@@ -3093,7 +3130,7 @@ router.post('/pump', auth, async (req, res) => {
         saveDocumentWithRetry(tempNotification),
         saveDocumentWithRetry(room),
         saveDocumentWithRetry(req.user),
-        saveDocumentWithRetry(newTransaction),
+        // saveDocumentWithRetry(newTransaction),
       ]);
 
       if (socket) {
@@ -3122,7 +3159,7 @@ router.post('/pump', auth, async (req, res) => {
       return res.json({
         success: true,
         balance: req.user.balance,
-        newTransaction,
+        // newTransaction,
       });
     } catch (error) {
       console.error('Error saving game log:', error);
@@ -3317,18 +3354,56 @@ router.post('/jeet', auth, async (req, res) => {
     roomInfo.updated_at = moment(new Date()).format('YYYY-MM-DD HH:mm');
 
     // 13) Credit the seller’s account with the withdrawn funds
-    req.user.balance += amountAfterFee;
+
     req.user.totalTraded += valueBeforeFee;
     req.user.tradingProfit += amountAfterFee;
 
-    // 14) Record the transaction
-    const newTransaction = new Transaction({
-      created_at: now,
-      user: userId,
-      amount: amountAfterFee,
-      description: `Jeeted ${roomInfo.name}`,
-      room: roomId,
-    });
+
+    if (amountAfterFee > 0 && req.body.connectedAccount) {
+      // Validate deposit transaction (check both pending and completed)
+      const depositTransaction = await  GameTransanction.findOne({
+        user: req.user._id,
+        room: roomId,
+        status: { $in: ['pending', 'completed'] },
+        description: { $regex: '^(Pumped)', $options: 'i' },
+      });
+
+      console.log('depositTransaction', depositTransaction);
+
+      if (!depositTransaction) {
+        console.warn(
+          `No valid deposit (pending or completed) for user ${req.user._id}, room ${roomId}`
+        );
+        return {
+          success: false,
+          message:
+            'No valid SOL deposit found within the last 15 minutes for this room. Please wait for your deposit to process and try again.',
+          betResult: -1000,
+        };
+      }
+
+      // Validate connectedAccount as a Solana address
+      try {
+        const address = req.body.connectedAccount.trim(); // Remove whitespace
+        console.log("req.body.connectedAccount", address, "Type:", typeof address, "Length:", address.length);
+        new PublicKey(address);
+      } catch (error) {
+        console.error("PublicKey error:", error.message);
+        throw new Error('Invalid Solana wallet address');
+      }
+
+      // Create a pending GameTransaction for the winnings
+      const newGameTransaction = new  GameTransanction({
+        user: req.user._id,
+        amount: amountAfterFee,
+        description: `Jeeted ${roomInfo.name}`,
+        room: roomId,
+        room_name: roomInfo.name,
+        status: 'pending',
+        connectedAccount: req.body.connectedAccount,
+      });
+      await saveDocumentWithRetry(newGameTransaction);
+    }
 
     // 15) Prepare candle data for chart updates
     const timeBucket = Math.floor(new Date(now).getTime() / (60 * 1000));
@@ -3427,7 +3502,7 @@ router.post('/jeet', auth, async (req, res) => {
       saveDocumentWithRetry(tempNotification),
       saveDocumentWithRetry(roomInfo),
       saveDocumentWithRetry(req.user),
-      saveDocumentWithRetry(newTransaction),
+      // saveDocumentWithRetry(newTransaction),
     ]);
 
     if (socket) {
@@ -3455,7 +3530,6 @@ router.post('/jeet', auth, async (req, res) => {
     return res.json({
       success: true,
       balance: req.user.balance,
-      newTransaction,
     });
   } catch (err) {
     console.error('ERROR in jeet endpoint:', err);
@@ -3745,7 +3819,7 @@ router.post('/getGlobalChatLogs', async (req, res) => {
         options: { lean: true }
       })
       .lean()
-     
+
 
     const chatLogs = results.map(chat => ({
       sender: chat.sender?.username || '',
@@ -3770,8 +3844,8 @@ router.post('/getGlobalChatLogs', async (req, res) => {
         time: moment(chat.replyTo[0].created_at).format('hh:mm')
       } : null
     }));
-    return res.json({ 
-      success: true, 
+    return res.json({
+      success: true,
       chatLogs: chatLogs.reverse() // Simply add .reverse() here
     });
   } catch (error) {
@@ -3799,7 +3873,7 @@ router.get('/candles/:room', async (req, res) => {
       });
     }
 
-    let transactions = await Transaction.find({ room: room }).sort({
+    let transactions = await  GameTransanction.find({ room: room }).sort({
       updated_at: 1,
     });
     // Start liquidity at 0 so the first candle open is 0.
@@ -3934,102 +4008,256 @@ router.post('/editPayout', auth, async (req, res) => {
 
 router.post('/tip', auth, async (req, res) => {
   try {
-    const toAddress = req.body.addressTo;
-    const userToTip = await User.findOne({ _id: toAddress });
+    const { addressTo, amount, message, txtHash, prepare, senderWallet } = req.body;
+    const tipAmount = parseFloat(amount);
 
+    // Validate input
+    if (!addressTo || isNaN(tipAmount) || tipAmount <= 0) {
+      console.error('Invalid input:', { addressTo, amount });
+      return res.json({ success: false, message: 'Invalid input: addressTo and amount are required' });
+    }
+
+    // Find sender and recipient
+    const userToTip = await User.findOne({ _id: addressTo });
     if (!userToTip) {
-      return res.json({
-        success: false,
-        message: 'PURR-SON NOT FOUND',
-      });
+      console.error('Recipient not found:', addressTo);
+      return res.json({ success: false, message: 'Recipient user not found' });
     }
 
-    if (parseFloat(userToTip.totalWagered) < 500) {
-      return res.json({
-        success: false,
-        message: 'CANNOT TIP THIS USER, THEIR RANK IS TOO LOW',
-      });
-    }
-
-    const now = moment().format('LLL');
-    const userBalance = req.user.balance;
     if (req.user.username.includes('BOT')) {
-      return res.json({
-        success: false,
-        message: 'DO NOT HAVE PURRMISSION',
-      });
+      return res.json({ success: false, message: 'Bots cannot send tips' });
     }
-
-    if (user.isWithdrawing) {
-      return res.json({
-        success: false,
-        error: 'WITHDRAWAL IN PROGRESS. Please wait until it completes.'
-      });
-    }
-
-    const tipAmount = parseFloat(req.body.amount); // Parse amount as a float
-
-    if (isNaN(tipAmount) || tipAmount <= 0) {
-      return res.json({
-        success: false,
-        message: 'IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!',
-      });
+    if (req.user.isWithdrawing) {
+      return res.json({ success: false, message: 'Withdrawal in progress' });
     }
     if (req.user.dailyWithdrawals > 4.269) {
+      return res.json({ success: false, message: 'Daily tip limit exceeded' });
+    }
+
+    if (!userToTip.accounts || userToTip.accounts.length === 0) {
+      console.error('Recipient has no accounts:', addressTo);
+      return res.json({ success: false, message: 'Recipient wallet not connected' });
+    }
+
+    const recipientWallet = userToTip.accounts[0];
+    console.log('Recipient wallet:', recipientWallet);
+
+    // Initialize Solana connection
+    const providerUrl = process.env.PROVIDER_URL;
+    if (!providerUrl || typeof providerUrl !== 'string' || !providerUrl.startsWith('http')) {
+      console.error('Invalid PROVIDER_URL:', providerUrl);
+      return res.json({ success: false, message: 'Invalid Solana provider URL configuration' });
+    }
+    console.log('Provider URL:', providerUrl);
+    const connection = new Connection(providerUrl, 'confirmed');
+
+    // Handle transaction preparation
+    if (prepare) {
+      // Validate sender wallet
+      if (!senderWallet) {
+        console.error('Sender wallet not provided');
+        return res.json({ success: false, message: 'Sender wallet address required' });
+      }
+
+      let senderPubkey, recipientPubkey;
+      try {
+        senderPubkey = new PublicKey(senderWallet);
+        recipientPubkey = new PublicKey(recipientWallet);
+        console.log('Sender pubkey:', senderPubkey.toBase58());
+        console.log('Recipient pubkey:', recipientPubkey.toBase58());
+      } catch (e) {
+        console.error('Invalid wallet address:', e.message);
+        return res.json({ success: false, message: `Invalid wallet address: ${e.message}` });
+      }
+
+      // Validate database balance
+      req.user.balance = req.user.balance || 0;
+      if (req.user.balance < tipAmount) {
+        console.error('Insufficient database balance:', { userId: req.user._id, balance: req.user.balance, tipAmount });
+        return res.json({ success: false, message: 'Insufficient funds in account' });
+      }
+
+      // Check sender's on-chain balance
+      const senderBalance = await connection.getBalance(senderPubkey);
+      const lamports = Math.floor(tipAmount * LAMPORTS_PER_SOL);
+      const feeEstimate = 5000; // Approximate fee in lamports
+      console.log('Sender balance (lamports):', senderBalance);
+      console.log('Required lamports (initial):', lamports + feeEstimate);
+
+      // Check recipient account status
+      const recipientAccountInfo = await connection.getAccountInfo(recipientPubkey);
+      console.log('Recipient account exists:', !!recipientAccountInfo);
+
+      const transaction = new Transaction();
+      let requiredLamports = lamports + feeEstimate;
+
+      // Handle recipient account creation or funding
+      const rentExemptionAmount = await connection.getMinimumBalanceForRentExemption(0);
+      console.log('Rent exemption amount (lamports):', rentExemptionAmount);
+
+      if (!recipientAccountInfo) {
+        // Recipient account doesn't exist; add createAccount instruction
+        requiredLamports += rentExemptionAmount;
+        if (senderBalance < requiredLamports) {
+          console.error('Insufficient balance for tip, fee, and account creation:', {
+            senderBalance,
+            required: requiredLamports,
+          });
+          return res.json({
+            success: false,
+            message: `Insufficient sender balance to create recipient account (requires ~${(requiredLamports / LAMPORTS_PER_SOL).toFixed(6)} SOL)`,
+          });
+        }
+
+        transaction.add(
+          SystemProgram.createAccount({
+            fromPubkey: senderPubkey,
+            newAccountPubkey: recipientPubkey,
+            lamports: rentExemptionAmount,
+            space: 0,
+            programId: SystemProgram.programId,
+          })
+        );
+      } else if (recipientAccountInfo.lamports < rentExemptionAmount) {
+        // Recipient account exists but is underfunded; add funding instruction
+        const additionalLamports = rentExemptionAmount - recipientAccountInfo.lamports;
+        requiredLamports += additionalLamports;
+        console.log('Additional lamports needed for recipient:', additionalLamports);
+        if (senderBalance < requiredLamports) {
+          console.error('Insufficient balance for tip, fee, and recipient funding:', {
+            senderBalance,
+            required: requiredLamports,
+          });
+          return res.json({
+            success: false,
+            message: `Insufficient sender balance to fund recipient account (requires ~${(requiredLamports / LAMPORTS_PER_SOL).toFixed(6)} SOL)`,
+          });
+        }
+
+        transaction.add(
+          SystemProgram.transfer({
+            fromPubkey: senderPubkey,
+            toPubkey: recipientPubkey,
+            lamports: additionalLamports,
+          })
+        );
+      }
+
+      // Add transfer instruction for the tip amount
+      transaction.add(
+        SystemProgram.transfer({
+          fromPubkey: senderPubkey,
+          toPubkey: recipientPubkey,
+          lamports,
+        })
+      );
+
+      // Set recent blockhash and fee payer
+      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+      transaction.recentBlockhash = blockhash;
+      transaction.feePayer = senderPubkey;
+      console.log('Blockhash:', blockhash);
+      console.log('Last valid block height:', lastValidBlockHeight);
+
+      // Simulate transaction
+      const simulation = await connection.simulateTransaction(transaction);
+      if (simulation.value.err) {
+        const errorMessage = typeof simulation.value.err === 'object' ? JSON.stringify(simulation.value.err) : simulation.value.err;
+        console.error('Simulation failed:', errorMessage);
+        return res.json({ success: false, message: `Transaction simulation failed: ${errorMessage}` });
+      }
+      console.log('Simulation logs:', simulation.value.logs);
+
+      // Serialize transaction
+      const serializedTransaction = transaction.serialize({ requireAllSignatures: false });
       return res.json({
-        success: false,
-        message: 'UNABLE TO TIP TODAY, PLEASE CHECK BACK TOMORROW!',
+        success: true,
+        transaction: serializedTransaction.toString('base64'),
+        blockhash,
+        lastValidBlockHeight,
       });
     }
 
-    // Initialize balance fields if they are undefined
+    // Handle post-confirmation processing
+    if (!txtHash) {
+      console.error('Transaction hash missing');
+      return res.json({ success: false, message: 'Transaction hash required' });
+    }
+
+    // Verify transaction with retries
+    let signatureResult;
+    const maxRetries = 3;
+    let retryCount = 0;
+    while (retryCount < maxRetries) {
+      try {
+        signatureResult = await connection.confirmTransaction(
+          {
+            signature: txtHash,
+            blockhash: (await connection.getLatestBlockhash()).blockhash,
+            lastValidBlockHeight: (await connection.getLatestBlockhash()).lastValidBlockHeight,
+          },
+          'confirmed',
+          { timeout: 30000 }
+        );
+        if (signatureResult.value.err) {
+          throw new Error(`Transaction failed: ${JSON.stringify(signatureResult.value.err)}`);
+        }
+        console.log('Transaction confirmed:', txtHash);
+        break;
+      } catch (error) {
+        retryCount++;
+        console.warn(`Confirmation attempt ${retryCount} failed:`, error.message);
+        if (retryCount === maxRetries) {
+          console.error('Transaction verification failed after retries:', error);
+          return res.json({ success: false, message: `Blockchain transaction failed: ${error.message}` });
+        }
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+      }
+    }
+
+    // Check for duplicate transaction
+    const usedTransactions = await GameTransanction.find({ hash: txtHash });
+    if (usedTransactions.length > 0) {
+      console.error('Duplicate transaction:', txtHash);
+      return res.json({ success: false, message: 'Transaction already used' });
+    }
+
+    // Update database and send notifications
+    const now = moment().format('LLL');
     userToTip.balance = userToTip.balance || 0;
-    req.user.balance = req.user.balance || 0;
+    userToTip.balance += tipAmount;
+    req.user.balance -= tipAmount;
 
-    if (userBalance < tipAmount) {
-      return res.json({
-        success: false,
-        message: 'NOT ENUFF FUNDS AT THIS MEOWMENT',
-      });
-    }
-
-    // Create a default description
-    let description = `Received Tip from ${req.user.username}`;
-
-    if (req.body.message) {
-      description = `${req.body.message} (Tip from ${req.user.username})`;
-    }
-
-    const newTransactionC = new Transaction({
+    const newTransactionC = new GameTransanction({
       created_at: now,
-      user: req.user,
+      user: req.user._id,
       amount: -tipAmount,
       description: `Tipped ${userToTip.username}`,
+      hash: txtHash,
     });
 
-    const newTransactionJ = new Transaction({
+    const newTransactionJ = new GameTransanction({
       created_at: now,
       user: userToTip._id,
       amount: tipAmount,
-      description,
+      description: message ? `${message} (Tip from ${req.user.username})` : `Received Tip from ${req.user.username}`,
+      hash: txtHash,
     });
 
-    let tipMessage = req.body.message ? `"${req.body.message}"` : ''; // Add quotes only if a message exists
-
-    let notification = new Notification({
+    const notification = new Notification({
       from: req.user._id,
       to: userToTip._id,
       room: '',
-      message: tipMessage ? `Tipped you — "${tipMessage}"` : 'Tipped you',
+      message: message ? `Tipped you — "${message}"` : 'Tipped you',
       amount: tipAmount,
       is_read: false,
     });
 
-    let notificationC = new Notification({
-      from: userToTip,
+    const notificationC = new Notification({
+      from: userToTip._id,
       to: req.user._id,
       room: '',
-      message: tipMessage ? `You Tipped ${tipMessage}` : `You Tipped`,
+      message: message ? `You Tipped ${message}` : 'You Tipped',
       amount: -tipAmount,
       is_read: false,
     });
@@ -4042,10 +4270,11 @@ router.post('/tip', auth, async (req, res) => {
       accessory: req.user.accessory,
       elite: req.user.elite,
       rank: req.user.totalWagered,
-      created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
-      created_at_str: moment(new Date()).format('LLL'),
-      updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+      created_at: moment().format('YYYY-MM-DD HH:mm'),
+      created_at_str: moment().format('LLL'),
+      updated_at: moment().format('YYYY-MM-DD HH:mm'),
     };
+
     const notificationDataC = {
       message: notificationC.message,
       amount: -tipAmount,
@@ -4054,23 +4283,10 @@ router.post('/tip', auth, async (req, res) => {
       accessory: userToTip.accessory,
       elite: userToTip.elite,
       rank: userToTip.totalWagered,
-      created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
-      created_at_str: moment(new Date()).format('LLL'),
-      updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+      created_at: moment().format('YYYY-MM-DD HH:mm'),
+      created_at_str: moment().format('LLL'),
+      updated_at: moment().format('YYYY-MM-DD HH:mm'),
     };
-
-    try {
-      await saveDocumentWithRetry(notification);
-      await saveDocumentWithRetry(notificationC);
-      socket.sendNotification(userToTip._id, notificationData);
-      socket.sendNotification(req.user._id, notificationDataC);
-    } catch (error) {
-      console.error('Error saving tip notification:', error);
-    }
-
-    // Update balances and save transactions
-    userToTip.balance += tipAmount;
-    req.user.balance -= tipAmount;
 
     try {
       await Promise.all([
@@ -4078,23 +4294,26 @@ router.post('/tip', auth, async (req, res) => {
         saveDocumentWithRetry(req.user),
         saveDocumentWithRetry(newTransactionC),
         saveDocumentWithRetry(newTransactionJ),
+        saveDocumentWithRetry(notification),
+        saveDocumentWithRetry(notificationC),
       ]);
+      socket.sendNotification(userToTip._id, notificationData);
+      socket.sendNotification(req.user._id, notificationDataC);
+      console.log('Database updated and notifications sent');
     } catch (error) {
-      console.error('Error saving documents:', error);
+      console.error('Error saving documents or notifications:', error);
+      return res.json({ success: false, message: 'Failed to save transaction data' });
     }
 
     return res.json({
       success: true,
       balance: req.user.balance,
       newTransaction: newTransactionC,
-      message: 'Tip has been sent. 💸 Yipeee!',
+      message: 'Tip has been sent on the blockchain. 💸 Yipeee!',
     });
   } catch (e) {
-    console.log('ERROR in tip_request', e);
-    return res.json({
-      success: false,
-      message: 'Failed to initiate tip',
-    });
+    console.error('ERROR in tip_request:', e.message, e.stack);
+    return res.json({ success: false, message: `Failed to initiate tip: ${e.message}` });
   }
 });
 
@@ -4165,7 +4384,7 @@ router.get('/transactions', async (req, res) => {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    const transactions = await Transaction.find({
+    const transactions = await  GameTransanction.find({
       description: { $regex: `^${descriptionPrefix}`, $options: 'i' },
       created_at: { $gte: thirtyDaysAgo },
     })

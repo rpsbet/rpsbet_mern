@@ -5,7 +5,7 @@ const Chat = require('./model/Chat');
 const User = require('./model/User');
 const moment = require('moment');
 
-// Socket connection manager module pattern - avoid using global variables
+// Socket connection manager module pattern
 function createSocketManager() {
   const socketConnections = new Map();
   
@@ -29,26 +29,35 @@ function createSocketManager() {
     },
     
     getSocket(userId) {
-      return socketConnections.get(userId);
+      const socket = socketConnections.get(userId);
+      return socket;
     },
     
     hasSocket(userId) {
-      return socketConnections.has(userId);
+      const hasSocket = socketConnections.has(userId);
+      return hasSocket;
     },
     
     getAllConnectedUserIds() {
-      return Array.from(socketConnections.keys());
+      const userIds = Array.from(socketConnections.keys());
+      return userIds;
     },
     
     getSocketCount() {
-      return socketConnections.size;
+      const count = socketConnections.size;
+      return count;
     },
     
     send(msgType, toUserId, data) {
       const socket = this.getSocket(toUserId);
       if (socket) {
-        socket.emit(msgType, data);
-        return true;
+        try {
+          socket.emit(msgType, data);
+          return true;
+        } catch (error) {
+          console.error(`Error emitting ${msgType} to user ${toUserId}:`, error);
+          return false;
+        }
       }
       return false;
     }
@@ -66,6 +75,7 @@ const socketManager = createSocketManager();
  */
 async function globalChatSend(io, data) {
   try {
+    console.log('Processing GLOBAL_CHAT_SEND:', data);
     const {
       sender,
       senderId,
@@ -80,7 +90,6 @@ async function globalChatSend(io, data) {
       replyTo,
     } = data;
     
-    // Prepare replyTo data if it exists
     let formattedReplyTo = null;
     if (replyTo) {
       formattedReplyTo = {
@@ -92,11 +101,11 @@ async function globalChatSend(io, data) {
         elite: replyTo.elite,
         message: replyTo.message,
         messageType: replyTo.messageType,
-        time: moment(replyTo.created_at).format('HH:mm'), // Using 24-hour format for consistency
+        time: moment(replyTo.created_at).format('HH:mm'),
       };
+      console.log('Formatted replyTo:', formattedReplyTo);
     }
     
-    // Create and save the chat message
     const chat = new Chat({
       sender: senderId,
       message,
@@ -111,9 +120,9 @@ async function globalChatSend(io, data) {
     });
     
     const savedChat = await chat.save();
+    console.log(`Saved chat message: ${savedChat._id}`);
     
-    // Emit the saved chat to all connected clients
-    io.sockets.emit('GLOBAL_CHAT_RECEIVED', {
+    const chatData = {
       sender,
       senderId,
       message,
@@ -124,7 +133,8 @@ async function globalChatSend(io, data) {
       rank,
       replyTo: formattedReplyTo,
       time: moment(savedChat.created_at).format('HH:mm')
-    });
+    };
+    io.sockets.emit('GLOBAL_CHAT_RECEIVED', chatData);
   } catch (error) {
     console.error('Error in globalChatSend:', error);
   }
@@ -136,62 +146,70 @@ async function globalChatSend(io, data) {
  * @returns {SocketIO.Server} - Configured Socket.IO server
  */
 function setupSocketIO(server) {
-  const io = socket_io(server);
+  const io = socket_io(server, {
+    cors: {
+      origin: '*',
+      methods: ['GET', 'POST']
+    },
+    pingTimeout: 60000,
+    pingInterval: 25000
+  });
   
   io.on('connection', async (socket) => {
-    // Error handling for socket connection
     socket.on('connect_error', (error) => {
-      console.error('Socket connection error:', error);
+      console.error(`Socket ${socket.id} connect_error:`, error);
     });
     
     socket.on('error', (err) => {
-      console.error('Socket error:', err);
+      console.error(`Socket ${socket.id} error:`, err);
     });
     
-    // Store user connection
     socket.on('STORE_CLIENT_USER_ID', async (data) => {
       try {
         const userId = data.user_id;
-        if (!userId) return;
+        if (!userId) {
+          console.warn(`Received STORE_CLIENT_USER_ID with no user_id, socket: ${socket.id}`);
+          return;
+        }
         
-        // Update user's last_seen timestamp
         await User.updateOne(
           { _id: userId }, 
           { last_seen: new Date() }
         );
         
-        // Store socket connection
-        socketManager.addSocket(userId, socket);
+        // Check if user already has a socket and disconnect old one if necessary
+        const existingSocket = socketManager.getSocket(userId);
+        if (existingSocket && existingSocket.id !== socket.id) {
+          existingSocket.disconnect(true);
+        }
         
-        // Broadcast updated online users list
+        socketManager.addSocket(userId, socket);
         broadcastOnlineUsers(io);
       } catch (error) {
-        console.error('Error in STORE_CLIENT_USER_ID:', error);
+        console.error(`Error in STORE_CLIENT_USER_ID for socket ${socket.id}:`, error);
       }
     });
     
-    // Handle chat messages
     socket.on('GLOBAL_CHAT_SEND', (data) => {
       globalChatSend(io, data);
     });
     
     socket.on('SEND_CHAT', async (data) => {
       try {
-        // Forward message to recipient
-        socketManager.send('SEND_CHAT', data.to, data);
-        
-        // Save message to database
+        const sent = socketManager.send('SEND_CHAT', data.to, data);
         const message = new Message(data);
         await message.save();
       } catch (error) {
-        console.error('Error in SEND_CHAT:', error);
+        console.error(`Error in SEND_CHAT for socket ${socket.id}:`, error);
       }
     });
     
-    // Handle message read status
     socket.on('READ_MESSAGE', async (data) => {
       try {
-        if (!data.from || !data.to) return;
+        if (!data.from || !data.to) {
+          console.warn(`Invalid READ_MESSAGE data from socket ${socket.id}:`, data);
+          return;
+        }
         
         await Message.updateMany(
           {
@@ -202,14 +220,16 @@ function setupSocketIO(server) {
           { $set: { is_read: true } }
         );
       } catch (error) {
-        console.error('Error in READ_MESSAGE:', error);
+        console.error(`Error in READ_MESSAGE for socket ${socket.id}:`, error);
       }
     });
     
-    // Handle unread message count requests
     socket.on('REQUEST_UNREAD_MESSAGE_COUNT', async (data) => {
       try {
-        if (!data.to) return;
+        if (!data.to) {
+          console.warn(`Invalid REQUEST_UNREAD_MESSAGE_COUNT data from socket ${socket.id}:`, data);
+          return;
+        }
         
         const count = await Message.countDocuments({
           to: data.to,
@@ -218,27 +238,29 @@ function setupSocketIO(server) {
         
         socket.emit('SET_UNREAD_MESSAGE_COUNT', count);
       } catch (error) {
-        console.error('Error in REQUEST_UNREAD_MESSAGE_COUNT:', error);
+        console.error(`Error in REQUEST_UNREAD_MESSAGE_COUNT for socket ${socket.id}:`, error);
       }
     });
     
-    // Rock-Paper-Scissors game event
     socket.on('RPS_1', (data) => {
       socket.broadcast.emit('RPS_1', data);
     });
     
-    // Handle game state
     socket.on('INITIAL_STATE', (data) => {
       const roomId = data.roomId;
       if (roomId) {
         socket.to(roomId).emit('INITIAL_STATE', data);
+      } else {
+        console.warn(`No roomId in INITIAL_STATE from socket ${socket.id}`);
       }
     });
     
-    // Handle disconnection
     socket.on('disconnect', () => {
       const userId = socketManager.removeSocketByInstance(socket);
-      broadcastOnlineUsers(io);
+      if (userId) {
+        console.log(`Broadcasting online users update after disconnect of user ${userId}`);
+        broadcastOnlineUsers(io);
+      }
     });
   });
   
@@ -250,8 +272,9 @@ function setupSocketIO(server) {
  * @param {SocketIO.Server} io - Socket.io server instance
  */
 function broadcastOnlineUsers(io) {
+  const userList = socketManager.getAllConnectedUserIds();
   io.sockets.emit('ONLINE_STATUS_UPDATED', {
-    user_list: socketManager.getAllConnectedUserIds()
+    user_list: userList
   });
 }
 
@@ -260,24 +283,34 @@ module.exports = {
   socketio: setupSocketIO,
   globalChatSend,
   
-  // Utility methods for direct messaging
   playSound: (toUserId, data) => {
-    return socketManager.send('PLAY_SOUND', toUserId, data);
+    const sent = socketManager.send('PLAY_SOUND', toUserId, data);
+    return sent;
   },
   
   sendMessage: (toUserId, data) => {
-    return socketManager.send('SEND_CHAT', toUserId, data);
+    const sent = socketManager.send('SEND_CHAT', toUserId, data);
+    return sent;
   },
   
   sendNotification: (toUserId, data) => {
-    return socketManager.send('SEND_NOTIFICATION', toUserId, data);
+    const userId = toUserId.toString ? toUserId.toString() : toUserId; // Convert to string if possible
+    const sent = socketManager.send('SEND_NOTIFICATION', userId, data);
+    return sent;
+  },
+
+  newTransaction: (transaction) => {
+    const userId = transaction?.user?._id?.toString() || transaction?.user?.toString();
+    if (userId) {
+      const sent = socketManager.send('NEW_TRANSACTION', userId, transaction);
+      return sent;
+    }
+    console.warn('newTransaction failed: No valid userId in transaction');
+    return false;
   },
   
-  newTransaction: (transaction) => {
-    const userId = transaction?.user?._id;
-    if (userId) {
-      return socketManager.send('NEW_TRANSACTION', userId, transaction);
-    }
-    return false;
+  sendBalanceUpdate: (toUserId, data) => {
+    const sent = socketManager.send('UPDATE_SOLANA_BALANCE', toUserId, data);
+    return sent;
   }
 };

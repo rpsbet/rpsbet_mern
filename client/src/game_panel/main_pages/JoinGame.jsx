@@ -11,7 +11,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import Moment from 'moment';
 import { useParams } from 'react-router-dom'; 
 import { Button, Drawer, Box } from '@mui/material';
-
+import { sendSolDeposit } from '../../util/solana';
 import {
   toggleDrawer,
 } from '../../redux/Auth/user.actions';
@@ -90,7 +90,7 @@ function JoinGame() {
     creator_avatar,
     creator_accessory,
     username,
-    accessory,
+    account,
     connectedAccount,
     user_balance,
     ai_mode,
@@ -101,7 +101,6 @@ function JoinGame() {
     loading: propsLoading,
     isDarkMode,
     isLowGraphics,
-    is_betting,
     solPrice,
   } = useSelector((state) => ({
     auth: state.auth.isAuthenticated,
@@ -129,6 +128,7 @@ function JoinGame() {
     isLowGraphics: state.auth.isLowGraphics,
     is_betting: state.logic.is_betting,
     solPrice: state.logic.solPrice,
+    account: state.logic.account,
   }));
 
   // Local state - group related state to reduce re-renders
@@ -395,20 +395,65 @@ function JoinGame() {
     dispatch(toggleDrawer(!isDrawerOpen));
   }, [dispatch, isDrawerOpen]);
 
-  // Handle bet placement
-  const join = useCallback(
-    async (betInfo) => {
-      return await dispatch(
+const join = useCallback(
+  async (betInfo) => {
+    // Set betting state to true
+    setGameState(prev => ({ ...prev, betting: true }));
+
+    try {
+      let betResult;
+
+      if (roomInfo.game_type !== 'Custom') {
+        // Process Solana deposit for non-Custom game types
+        const depositResult = await sendSolDeposit(
+          dispatch,
+          betInfo.bet_amount,
+          roomInfo._id,
+          roomInfo.name,
+          'join',
+          account,
+          user_balance,
+          () => {
+            // On success, no additional action needed here
+          },
+          () => {
+            setGameState(prev => ({ ...prev, betting: false }));
+          }
+        );
+
+        if (!depositResult.success) {
+          setGameState(prev => ({ ...prev, betting: false }));
+          return { success: false };
+        }
+      }
+
+      // Place bet
+      betResult = await dispatch(
         bet3({
           _id: roomInfo._id,
+          connectedAccount,
           user: user_id,
           game_type: roomInfo.game_type,
           ...betInfo,
-        }),
+        })
       );
-    },
-    [dispatch, roomInfo, user_id],
-  );
+      setGameState(prev => ({ ...prev, betting: false }));
+
+      if (betResult.status === 'success') {
+        return betResult;
+      } else {
+        dispatch(errorMsgBar(betResult.message || 'Failed to place bet.'));
+        return betResult;
+      }
+    } catch (error) {
+      console.error('Error in join:', error);
+      dispatch(errorMsgBar('Error processing bet.'));
+      setGameState(prev => ({ ...prev, betting: false }));
+      return { success: false };
+    }
+  },
+  [dispatch, roomInfo, user_id, connectedAccount, account, user_balance]
+);
 
   // Handle background color change for RPS
   const changeBgColor = useCallback(async (resultVal) => {
@@ -515,12 +560,12 @@ function JoinGame() {
       );
       
       if (result.success) {
-        dispatch(addNewTransaction(result.newTransaction));
         await dispatch(getRoomList({ game_type: roomInfo.game_type }));
       } else {
         dispatch(errorMsgBar(result.message));
       }
     } catch (error) {
+      console.log("error", error)
       dispatch(errorMsgBar('ROOM TOO BUSY, TRY AGAIN LATER'));
     }
   }, [gameState.coHostAmount, user_balance, roomInfo._id, connectedAccount, dispatch]);
@@ -718,6 +763,7 @@ function JoinGame() {
             borderColor={gameState.borderColor}
             updateSelectedQs={updateSelectedQs}
             qsbetitems={qsbetitems}
+            account={account}
             qs_game_type={roomInfo.qs_game_type}
             selected_qs_position={gameState.selected_qs_position}
           />
@@ -751,6 +797,7 @@ function JoinGame() {
                 handleSendCoHost={handleSendCoHost}
                 handleCoHostAmountChange={handleCoHostAmountChange}
                 has_joined={true}
+                account={account}
                 input_only={true}
               />
             </Suspense>

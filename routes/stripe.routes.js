@@ -594,9 +594,9 @@ const getJWTToken = async (email, password) => {
 // **************************************** //
 // ************* WEB3 SOLANA ******************** //
 // **************************************** //
-router.post('/deposit_successed', auth, async (req, res) => {
+router.post('/sol_deposit', auth, async (req, res) => {
   try {
-    let { amount, txtHash, account } = req.body;
+    let { amount, txtHash, account, room_id, room_name, type } = req.body;
 
     if (!req.user?._id) {
       throw new Error('User not authenticated');
@@ -638,12 +638,15 @@ router.post('/deposit_successed', auth, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Deposit amount is invalid.' });
     }
 
+    console.log("room", room_id)
     // Create a new transaction record
     const newTransaction = new gameTransaction({
       user: currentUser._id,
       amount: numericAmount,
-      description: 'SOL deposit',
+      description: type === 'join' ? `Joined ${room_name}` : `Pumped ${room_name}`,
       hash: txtHash,
+      room: room_id,
+      name: room_name,
       status: 'pending'
     });
     await newTransaction.save();
@@ -669,10 +672,10 @@ router.post('/deposit_successed', auth, async (req, res) => {
       success: true,
       balance: currentUser.balance,
       newTransaction,
-      message: `Deposit received! Confirmation is pending.`
+      message: `Finalizing...`
     });
   } catch (err) {
-    console.log('Error in deposit_successed:', err);
+    console.log('Error in sol_deposit:', err);
     return res.json({
       success: false,
       message: err.message || 'An unexpected error occurred',

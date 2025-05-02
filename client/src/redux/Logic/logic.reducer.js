@@ -9,7 +9,8 @@ import {
   ROOMINFO_LOADED,
   START_LOADING,
   END_LOADING,
-  UPDATE_GAME_STATE,
+  SET_SOLANA_ACCOUNT,
+  SET_SOLANA_BALANCE,
   START_BET,
   END_BET,
   ROOMS_LOADED,
@@ -149,7 +150,7 @@ const initialState = {
     avatar: '',
     rank: 0,
     accessory: '',
-    elite:  '',
+    elite: '',
     username: '',
     chatLogs: [],
     hasMore: true,
@@ -166,7 +167,9 @@ const initialState = {
   onlineUserList: [],
   creator_prompt: '',
   selectedMainTabIndex: 0,
-  globalChatList: []
+  globalChatList: [],
+  account: null,
+  solanaBalance: 0
 };
 export default function (state = initialState, action) {
   const { type, payload } = action;
@@ -175,6 +178,16 @@ export default function (state = initialState, action) {
       return {
         ...state,
         tokenPrice: payload,
+      };
+    case SET_SOLANA_BALANCE:
+      return {
+        ...state,
+        solanaBalance: action.payload.solanaBalance,
+      };
+    case SET_SOLANA_ACCOUNT:
+      return {
+        ...state,
+        account: action.payload, // Store account
       };
     case SET_SOL_TO_USD_PRICE:
       return {

@@ -291,12 +291,12 @@ function EliteSubscriptionModal({ open, onClose, isLowGraphics, user }) {
                       </ListItemIcon>
                       <ListItemText primary="150 Game Creation Credits per month" />
                     </ListItem>
-                    <ListItem sx={{ py: 1 }}>
+                    {/* <ListItem sx={{ py: 1 }}>
                       <ListItemIcon sx={{ minWidth: '36px' }}>
                         <CheckCircleIcon sx={{ color: '#d81719' }} />
                       </ListItemIcon>
                       <ListItemText primary="1 SOL limit in Loan creation" />
-                    </ListItem>
+                    </ListItem> */}
                     <ListItem sx={{ py: 1 }}>
                       <ListItemIcon sx={{ minWidth: '36px' }}>
                         <CheckCircleIcon sx={{ color: '#d81719' }} />
@@ -418,12 +418,12 @@ function EliteSubscriptionModal({ open, onClose, isLowGraphics, user }) {
                       </ListItemIcon>
                       <ListItemText primary="800 Game Creation Credits per month" primaryTypographyProps={{ fontWeight: 'medium' }} />
                     </ListItem>
-                    <ListItem sx={{ py: 1 }}>
+                    {/* <ListItem sx={{ py: 1 }}>
                       <ListItemIcon sx={{ minWidth: '36px' }}>
                         <CheckCircleIcon sx={{ color: '#000000' }} />
                       </ListItemIcon>
                       <ListItemText primary="10 SOL limit in Loan creation" primaryTypographyProps={{ fontWeight: 'medium' }} />
-                    </ListItem>
+                    </ListItem> */}
                     <ListItem sx={{ py: 1 }}>
                       <ListItemIcon sx={{ minWidth: '36px' }}>
                         <CheckCircleIcon sx={{ color: '#000000' }} />
@@ -551,12 +551,12 @@ function EliteSubscriptionModal({ open, onClose, isLowGraphics, user }) {
                   </ListItemIcon>
                   <ListItemText primary="All active game houses" />
                 </ListItem>
-                <ListItem sx={{ py: 0.5 }}>
+                {/* <ListItem sx={{ py: 0.5 }}>
                   <ListItemIcon sx={{ minWidth: '32px' }}>
                     <CancelIcon fontSize="small" sx={{ color: '#d81719' }} />
                   </ListItemIcon>
                   <ListItemText primary="Any loan creation services" />
-                </ListItem>
+                </ListItem> */}
                 <ListItem sx={{ py: 0.5 }}>
                   <ListItemIcon sx={{ minWidth: '32px' }}>
                     <CancelIcon fontSize="small" sx={{ color: '#d81719' }} />

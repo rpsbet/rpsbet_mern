@@ -19,6 +19,7 @@ import {
   StepLabel,
   Paper,
 } from '@mui/material';
+import { sendSolDeposit } from '../../util/solana';
 import { ArrowForward, ArrowBack, Info } from '@mui/icons-material';
 import { getRank } from '../../util/getRank';
 import axios from '../../util/Api';
@@ -82,14 +83,14 @@ function CreateGame() {
   // Redux state selectors
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
   const connectedAccount = useSelector((state) => state.auth.connectedAccount);
-  const balance = useSelector((state) => state.auth.balance);
+  const balance = useSelector((state) => state.logic.solanaBalance);
   const user = useSelector((state) => state.auth.user);
   const gameTypeList = useSelector((state) => state.logic.gameTypeList);
   const solPrice = useSelector((state) => state.logic.solPrice);
   const strategies = useSelector((state) => state.logic.strategies);
   const isDrawerOpen = useSelector((state) => state.auth.isDrawerOpen);
   const isDarkMode = useSelector((state) => state.auth.isDarkMode);
-  const isLowGraphics = useSelector((state) => state.auth.isLowGraphics);
+  const account = useSelector((state) => state.logic.account);
   const theme = getCustomTheme(isDarkMode);
 
   // Component state
@@ -389,68 +390,96 @@ function CreateGame() {
   };
 
   // Create room with image upload
-  const createRoomWithImage = async () => {
+  const createRoomWithDeposit = async () => {
     setCreatingRoom(true);
-
-    const saveImage = (imageSrc) => {
-      return new Promise((resolve, reject) => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.src = imageSrc;
-
-        img.onload = () => {
-          const maxWidth = 250;
-          let width = img.width;
-          let height = img.height;
-
-          if (width > maxWidth) {
-            height *= maxWidth / width;
-            width = maxWidth;
-          }
-
-          canvas.width = width;
-          canvas.height = height;
-          ctx.imageSmoothingEnabled = true;
-          ctx.imageSmoothingQuality = 'high';
-          ctx.drawImage(img, 0, 0, width, height);
-
-          canvas.toBlob((blob) => {
-            if (blob) {
-              resolve(blob);
-            } else {
-              reject('Failed to generate image Blob.');
-            }
-          }, 'image/png');
-        };
-
-        img.onerror = (error) => {
-          reject('Error processing image: ' + error);
-        };
-      });
-    };
-
+  
+    // Step 1: Trigger SOL deposit
+    const depositResult = await sendSolDeposit(
+      dispatch,
+      betAmount,
+      null, // room_id (null since room isn't created yet)
+      name, // room_name
+      'create_game', // type
+      account,
+      localBalance,
+      () => {
+        console.log('Deposit successful');
+      },
+      () => {
+        console.error('Deposit failed');
+        setCreatingRoom(false);
+      }
+    );
+  
+    if (!depositResult.success) {
+      console.error('Deposit failed, aborting room creation');
+      return;
+    }
+  
+    // Step 2: Proceed with image upload and room creation
+    await createRoomWithImage();
+  };
+  
+  const createRoomWithImage = async () => {
     try {
+      const saveImage = (imageSrc) => {
+        return new Promise((resolve, reject) => {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.src = imageSrc;
+  
+          img.onload = () => {
+            const maxWidth = 250;
+            let width = img.width;
+            let height = img.height;
+  
+            if (width > maxWidth) {
+              height *= maxWidth / width;
+              width = maxWidth;
+            }
+  
+            canvas.width = width;
+            canvas.height = height;
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            ctx.drawImage(img, 0, 0, width, height);
+  
+            canvas.toBlob((blob) => {
+              if (blob) {
+                resolve(blob);
+              } else {
+                reject('Failed to generate image Blob.');
+              }
+            }, 'image/png');
+          };
+  
+          img.onerror = (error) => {
+            reject('Error processing image: ' + error);
+          };
+        });
+      };
+  
       const resizedBlob = await saveImage(image);
       const formData = new FormData();
       formData.append('file', resizedBlob, 'resized-image.png');
-
+  
       const response = await axios.post('/game/upload-to-pinata', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
-
+  
       if (response.status !== 200) {
         throw new Error('Server responded with non-200 status.');
       }
-
+  
       const { success, imageUrl, message } = response.data;
       if (!success || !imageUrl) {
         throw new Error(message || 'Upload failed, no imageUrl received.');
       }
-
+  
       const fullState = {
         game_type: gameType,
         game_mode: gameMode,
@@ -483,7 +512,7 @@ function CreateGame() {
         description,
         rps_game_type: rpsGameType,
       };
-
+  
       await dispatch(createRoom(fullState, navigate));
     } catch (error) {
       console.error('[Front-end] Error uploading/resizing image:', error);
@@ -492,22 +521,13 @@ function CreateGame() {
       setCreatingRoom(false);
     }
   };
-
-  // Room creation handlers
-  const onCreateRoom = () => {
-    if (localStorage.getItem('hideConfirmModal') === 'true') {
-      createRoomWithImage();
-    } else {
-      setOpenDialog(true);
-    }
-  };
-
+  
   const handleConfirm = async () => {
     if (skipConfirm) {
       localStorage.setItem('hideConfirmModal', 'true');
     }
     setOpenDialog(false);
-    createRoomWithImage();
+    await createRoomWithDeposit();
   };
 
   const handleCancel = () => {
@@ -757,7 +777,7 @@ function CreateGame() {
             color='error'
             isDarkMode={isDarkMode}
             isActive={true}
-            onClick={onCreateRoom}
+            onClick={createRoomWithDeposit}
             sx={{ borderRadius: '8px', textTransform: 'none' }}
           >
             Create Room

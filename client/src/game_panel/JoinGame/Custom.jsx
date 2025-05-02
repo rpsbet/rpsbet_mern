@@ -1,4 +1,3 @@
-// Custom.jsx
 import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
@@ -96,6 +95,7 @@ import {
   validateBetAmount,
   validateBankroll,
 } from '../modal/betValidations';
+import { sendSolDeposit } from '../../util/solana'; // Import sendSolDeposit
 
 function Custom(props) {
   const dispatch = useDispatch();
@@ -111,6 +111,9 @@ function Custom(props) {
     is_betting,
     solPrice,
     isLowGraphics,
+    connectedAccount,
+    account,
+    user_id: reduxUserId,
   } = useSelector((state) => ({
     socket: state.auth.socket,
     isAuthenticated: state.auth.isAuthenticated,
@@ -127,6 +130,9 @@ function Custom(props) {
     elite: state.logic.curRoomInfo.elite,
     username: state.logic.curRoomInfo.username,
     isLowGraphics: state.auth.isLowGraphics,
+    connectedAccount: state.auth.connectedAccount,
+    account: state.logic.account,
+    user_id: state.auth.user._id,
   }));
 
   // Extract remaining props from parent component
@@ -149,7 +155,7 @@ function Custom(props) {
     selectedCreator,
     betting,
     result,
-    onResultChange, // New callback prop
+    onResultChange,
   } = props;
 
   // Local state
@@ -178,6 +184,7 @@ function Custom(props) {
   const isMobile = useMediaQuery('(max-width: 768px)');
   const isComponentMountedRef = useRef(false);
   const gameContainerRef = useRef(null);
+  const hasDepositedRef = useRef(false); // Track if deposit has been made for the current game
 
   useEffect(() => {
     bankrollRef.current = bankroll;
@@ -308,6 +315,46 @@ function Custom(props) {
     }
   }, [socket, roomInfo._id, handleSocketData, handleSocketData2]);
 
+  const processSolDeposit = useCallback(async () => {
+    if (hasDepositedRef.current) {
+      console.log('[Custom] Deposit already processed for this game, skipping.');
+      return true;
+    }
+
+    try {
+      const depositResult = await sendSolDeposit(
+        dispatch,
+        parseFloat(bet_amount),
+        roomInfo._id,
+        roomInfo.name,
+        'join',
+        account,
+        balance,
+        () => {
+          hasDepositedRef.current = true;
+        },
+        () => {
+          console.error('[Custom] Solana deposit failed');
+          onChangeState({ betting: false });
+        }
+      );
+
+      if (!depositResult.success) {
+        console.error('[Custom] Deposit failed:', depositResult.message);
+        dispatch({ type: 'ERROR_MSG_BAR', payload: depositResult.message || 'Deposit failed.' });
+        onChangeState({ betting: false });
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('[Custom] Error processing deposit:', error);
+      dispatch({ type: 'ERROR_MSG_BAR', payload: 'Error processing deposit.' });
+      onChangeState({ betting: false });
+      return false;
+    }
+  }, [dispatch, bet_amount, roomInfo._id, account, balance, onChangeState]);
+
   const joinGame = useCallback(
     async (result, multiplier) => {
       onChangeState({ result: '' });
@@ -336,21 +383,25 @@ function Custom(props) {
       }
 
       const formattedResult = (
-        <span style={{ color: amount >= 0 ? '#00ff3a' : '#ff0000', fontSize: '1.2rem', // Updated font size to match QuickShoot
-          fontWeight: 'bold',
-          textShadow: '0 0 10px rgba(0,0,0,0.5)', }}>
+        <span
+          style={{
+            color: amount >= 0 ? '#00ff3a' : '#ff0000',
+            fontSize: '1.2rem',
+            fontWeight: 'bold',
+            textShadow: '0 0 10px rgba(0,0,0,0.5)',
+          }}
+        >
           {sign} {currencyElement}
         </span>
       );
 
-      // Update result via callback
       onResultChange(formattedResult, false);
       onChangeState({
-        // Remove result from onChangeState
         gameResult: resultData.betResult,
       });
 
       setGameStartedCount((prev) => prev + 1);
+      hasDepositedRef.current = false; // Reset deposit flag after game ends
     },
     [bet_amount, join, onChangeState, solPrice, playSound, onResultChange]
   );
@@ -392,18 +443,30 @@ function Custom(props) {
         setGameStartedCount((prev) => prev + 1);
         setIsGameActive(true);
         console.log('Game started, resetting interaction state. Count:', gameStartedCount + 1);
-        onResultChange('', true); // Set betting state
+        onResultChange('', true);
+
+        // Process Solana deposit on game start
+        openConfirmBetDialog('ARE YOU SURE YOU WANT TO JOIN THIS GAME?', async () => {
+          const depositSuccess = await processSolDeposit();
+          if (!depositSuccess) {
+            setIsGameActive(false);
+            onResultChange('Deposit failed, please try again.', false);
+          }
+        });
       } else if (eventType === 'gameEnded') {
         setIsGameActive(false);
         const { result, multiplier } = data;
         const validResults = ['win', 'loss', 'other'];
-        if (validResults.includes(result) && gameStartedCount > 0) {
+        if (validResults.includes(result) && gameStartedCount > 0 && hasDepositedRef.current) {
           console.log('Processing game result:', result, 'Multiplier:', multiplier);
           onBtnBetClick(result, result === 'win' ? multiplier : undefined);
+        } else {
+          console.log('[Custom] Skipping bet placement: No deposit made or invalid state');
+          hasDepositedRef.current = false;
         }
       }
     },
-    [gameStartedCount, onBtnBetClick, playSound, onResultChange]
+    [gameStartedCount, onBtnBetClick, playSound, onResultChange, processSolDeposit]
   );
 
   // Load and transpile the gameCode
@@ -411,7 +474,6 @@ function Custom(props) {
     if (roomInfo.gameCode && Physics && !isPhysicsLoading) {
       let isMounted = true;
       setComponentError(null);
-      console.log('[Custom] Raw gameCode:', roomInfo.gameCode);
 
       const processGameCode = async () => {
         try {
@@ -426,7 +488,6 @@ function Custom(props) {
             .replace(/export\s+[\w\s]*?\s*;?/g, '')
             .replace(/import\s*\(\s*['"][^'"]+['"]\s*\)\s*;?/g, '')
             .trim();
-          console.log('[Custom] Cleaned Code:', cleanedCode);
 
           const babelHelpers = `
             function _defineProperty(obj, key, value) {
@@ -507,7 +568,6 @@ function Custom(props) {
               filename: 'app.jsx',
             }).code;
             transpiledCode = `${babelHelpers}\n${transpiledCode}`;
-            console.log('[Custom] Transpiled Code:', transpiledCode);
           } catch (babelError) {
             console.error('[Custom] Babel Transpile Error:', babelError);
             throw new Error(`Babel transpilation failed: ${babelError.message}`);
@@ -738,7 +798,8 @@ function Custom(props) {
   }, [propIsPasswordCorrect, isPasswordCorrect]);
 
   useEffect(() => {
-    if (isPasswordCorrect) {
+    if (isPasswordCorrect && hasDepositedRef.current) {
+      // Only proceed with bet if deposit was successful
       joinGame(gameResult);
     }
   }, [isPasswordCorrect, joinGame, gameResult]);
@@ -917,7 +978,7 @@ function Custom(props) {
                         top: 0,
                         left: 0,
                         right: 0,
-                        bottom: 0,
+                        bottom: '0px',
                         zIndex: 4,
                         display: 'flex',
                         alignItems: 'center',

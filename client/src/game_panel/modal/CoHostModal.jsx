@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { sendSolDeposit } from '../../util/solana';
 import { useSelector, useDispatch } from 'react-redux';
 import Moment from 'moment';
 import {
@@ -60,6 +61,7 @@ function CoHostModal({
   solPrice,
   input_only,
   handleCoHostAmountChange,
+  account
 }) {
   const dispatch = useDispatch();
   const socket = useSelector((state) => state.auth.socket);
@@ -81,6 +83,7 @@ function CoHostModal({
   const chartContainerRef = useRef(null);
   const chartInstanceRef = useRef(null);
   const candlestickSeriesRef = useRef(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const isSmallScreen = useMediaQuery('(max-width:1024px)');
@@ -445,34 +448,107 @@ function CoHostModal({
     debouncedHandleButtonClick(value);
   };
 
-  const handleUnstake = async (winnings, room_id, stakeAmount) => {
-    try {
-      // 1) Parse and validate stakeAmount
-      const parsedStake = parseFloat(stakeAmount);
-      if (isNaN(parsedStake) || parsedStake <= 0) {
-        dispatch(errorMsgBar('R U FURR-REAL? AMOUNT IS INVALID!'));
+  const handleSendCoHostWithDeposit = useCallback(
+    async () => {
+      if (isProcessing || trade_loading) {
+        dispatch(errorMsgBar('Trade is already in progress.'));
         return;
       }
 
-      const parsedWinnings = parseFloat(winnings);
-      if (isNaN(parsedWinnings)) {
-        dispatch(errorMsgBar('Invalid winnings value'));
+      const amount = parseFloat(coHostAmount);
+      if (isNaN(amount) || amount <= 0) {
+        dispatch(errorMsgBar('Invalid amount to invest.'));
         return;
       }
 
-      const parsedBalance = parseFloat(balance);
-      if (parsedStake >= parsedWinnings) {
-        dispatch(errorMsgBar('NOT ENUFF EQUUITY AT THIS MEOWMENT'));
+      setIsProcessing(true);
+
+      try {
+        // Call sendSolDeposit for non-Custom games
+        const depositResult = await sendSolDeposit(
+          dispatch,
+          amount,
+          selectedRow._id,
+          selectedRow.name,
+          'pump',
+          account,
+          balance,
+          () => { }, // Success callback (empty for now)
+          () => {
+            setIsProcessing(false);
+          } // Failure callback
+        );
+
+        if (!depositResult.success) {
+          setIsProcessing(false);
+          return;
+        }
+
+        // Proceed with original handleSendCoHost
+        await handleSendCoHost();
+      } catch (error) {
+        console.error('Error in handleSendCoHostWithDeposit:', error);
+        dispatch(errorMsgBar('Error processing trade.'));
+      } finally {
+        setIsProcessing(false);
+      }
+    },
+    [
+      dispatch,
+      coHostAmount,
+      selectedRow.game_type,
+      selectedRow._id,
+      selectedRow.name,
+      account,
+      balance,
+      handleSendCoHost,
+      isProcessing,
+      trade_loading,
+    ]
+  );
+
+  // Handle JEET OUT (no sendSolDeposit)
+  const handleUnstake = useCallback(
+    async (winnings, room_id, stakeAmount) => {
+      if (isProcessing || trade_loading) {
+        dispatch(errorMsgBar('Trade is already in progress.'));
         return;
       }
 
-      await dispatch(jeetGame(room_id, parsedStake));
-      await dispatch(getMyGames({ game_type: 'All', status: 'open', sort: 'desc' }));
-    } catch (error) {
-      console.error('Error unstaking from room:', error);
-    }
-  };
+      setIsProcessing(true);
 
+      try {
+        // Validate inputs
+        const parsedStake = parseFloat(stakeAmount);
+        if (isNaN(parsedStake) || parsedStake <= 0) {
+          dispatch(errorMsgBar('Invalid amount to withdraw.'));
+          return;
+        }
+
+        const parsedWinnings = parseFloat(winnings);
+        if (isNaN(parsedWinnings)) {
+          dispatch(errorMsgBar('Invalid winnings value.'));
+          return;
+        }
+
+        const parsedBalance = parseFloat(balance);
+        if (parsedStake >= parsedWinnings) {
+          dispatch(errorMsgBar('Not enough equity to withdraw.'));
+          return;
+        }
+
+        // Dispatch jeetGame
+        await dispatch(jeetGame(room_id, parsedStake));
+        await dispatch(getMyGames({ game_type: 'All', status: 'open', sort: 'desc' }));
+      } catch (error) {
+        console.error('Error unstaking from room:', error);
+        dispatch(errorMsgBar('Error processing withdrawal.'));
+      } finally {
+        setIsProcessing(false);
+      }
+    },
+    [dispatch, balance, isProcessing, trade_loading]
+  );
 
   const theme = getCustomTheme(isDarkMode ? 'dark' : 'light');
 
@@ -796,12 +872,12 @@ function CoHostModal({
                   variant="contained"
                   color={selectedTab === 'PUMP' ? 'success' : 'error'}
                   onClick={() => {
-                    if (trade_loading) {
+                    if (isProcessing || trade_loading) {
                       dispatch(errorMsgBar("Trade is already in progress."));
                       return;
                     }
                     if (selectedTab === 'PUMP') {
-                      handleSendCoHost();
+                      handleSendCoHostWithDeposit();
                     } else {
                       handleUnstake(
                         selectedRow?.winnings ?? parseFloat(selectedRow?.user_bet || 0),
@@ -810,7 +886,7 @@ function CoHostModal({
                       );
                     }
                   }}
-                  disabled={trade_loading}
+                  disabled={isProcessing || trade_loading}
                   fullWidth
                   sx={{
                     height: 48,
@@ -820,7 +896,7 @@ function CoHostModal({
                     boxShadow: 3
                   }}
                 >
-                  {trade_loading ? (
+                  {isProcessing || trade_loading ? (
                     <CircularProgress size={24} color="inherit" />
                   ) : (
                     selectedTab === 'PUMP' ? "PUMP IT" : "JEET OUT"
@@ -972,7 +1048,7 @@ function CoHostModal({
 
         {/* Chart Container */}
         {!input_only && (
-          <Box sx={{  borderRadius: '16px', overflow: 'hidden', width: '100%' }}>
+          <Box sx={{ borderRadius: '16px', overflow: 'hidden', width: '100%' }}>
             <div
               ref={chartContainerRef}
               style={{

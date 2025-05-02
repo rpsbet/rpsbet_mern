@@ -18,13 +18,18 @@ const TransactionSchema = new Schema({
     type: String,
     default: ''
   },
+  room_name: {
+    type: String,
+    default: ''
+  },
   hash: {
     type: String
   },
   status: {
     type: String,
     default: '',
-  },  
+  },
+  connectedAccount: { type: String },
   created_at: {
     type: Date,
     default: Date.now

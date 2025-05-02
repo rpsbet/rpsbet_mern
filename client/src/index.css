@@ -337,11 +337,6 @@ a:hover {
   font-size: 40px;
 }
 
-div.table .table-cell button.btn_join {
-  width: 130px;
-  height: 34px;
-}
-
 div.table .table-cell button.btn_join img {
   width: 12px;
   margin-right: 4px;
@@ -511,10 +506,6 @@ h4.game_header {
   /* Remove box-shadow */
 }
 
-div.table.my-chat-table .table-cell button.btn_join {
-  width: 80px;
-}
-
 .bet-amounts {
   text-align: center;
   align-items: baseline;
@@ -600,6 +591,10 @@ div.table.my-chat-table .table-cell button.btn_join {
 /*********** TABLES ****************/
 /***********************************/
 
+.table-cell {
+  color: #fff !important;
+}
+
 .main-panel div.table .table-row {
   padding: 1em;
 }
@@ -649,7 +644,7 @@ td {
 
 #ai_mode {
   border: 1px solid #fe3b3b;
-  border-radius: 0.3em;
+  border-radius: 8px;
   color: #ff8a8a;
   font-size: 0.5em !important;
   padding: 2px 4px;

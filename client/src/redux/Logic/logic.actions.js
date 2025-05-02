@@ -27,7 +27,8 @@ import {
   RPSBETITEMS_LOADED,
   QSBETITEMS_LOADED,
   ROOMS_LOADED,
-  UPDATE_BET_RESULT,
+  SET_SOLANA_ACCOUNT,
+  SET_SOLANA_BALANCE,
   UPDATE_BANKROLL,
   UPDATE_BANKROLL_QS,
   MSG_SUCCESS,
@@ -44,7 +45,6 @@ import {
   SET_NOTIFICATIONS_ROOM_INFO,
   HISTORY_LOADED,
   NEW_TRANSACTION,
-  SET_BALANCE,
   ONLINE_USER_LIST_UPDATED,
   MSG_WARNING,
   SELECT_MAIN_TAB,
@@ -55,7 +55,6 @@ import {
   SET_GLOBAL_CHAT,
   SET_HIGHLIGHTED_ROOMS,
   CLEAR_HIGHLIGHTED_ROOMS,
-  TRANSACTION_CANDLES_ERROR
 } from '../types';
 import axios from '../../util/Api';
 
@@ -355,6 +354,17 @@ export const setHighlightedRooms = (rooms) => ({
   payload: rooms, // typically an array of IDs
 });
 
+export const setSolanaAccount = (account) => ({
+  type: SET_SOLANA_ACCOUNT,
+  payload: account,
+});
+
+export const setSolanaBalance = (solanaBalance) => ({
+  type: SET_SOLANA_BALANCE,
+  payload: solanaBalance,
+});
+
+
 export const clearHighlightedRooms = () => ({
   type: CLEAR_HIGHLIGHTED_ROOMS,
 });
@@ -385,7 +395,7 @@ export const bet3 = bet_info => async dispatch => {
     dispatch({ type: END_BET });
     
     if (res.data.success) {
-      dispatch({ type: NEW_TRANSACTION, payload: res.data.newTransaction });
+      // dispatch({ type: NEW_TRANSACTION, payload: res.data.newTransaction });
       return {
         status: 'success',
         betResult: res.data.betResult,
@@ -939,9 +949,9 @@ export const pumpGame = (amount, rowId, connectedAccount) => async dispatch => {
   dispatch({ type: TRADE_LOADING, payload: true });
   try {
     const result = await axios.post('/game/pump/', { amount, rowId, connectedAccount });
-    if (result.data.success) {
-      dispatch({ type: MSG_SUCCESS, payload: "YOU BOUGHT SOME %!" });
-    }
+    // if (result.data.success) {
+    //   dispatch({ type: MSG_SUCCESS, payload: "YOU BOUGHT SOME %!" });
+    // }
     return result.data;
   } catch (e) {
     dispatch({ type: MSG_ERROR, payload: 'UNABLE TO CO-HOST' });
@@ -970,8 +980,8 @@ export const jeetGame = (room_id, stake_amount, callback) => async (dispatch, ge
           pageNumber: 1,
         },
       });
-      dispatch({ type: NEW_TRANSACTION, payload: res.data.newTransaction });
-      dispatch({ type: MSG_SUCCESS, payload: "YOU SOLD SOME %!" });
+      // dispatch({ type: NEW_TRANSACTION, payload: res.data.newTransaction });
+      // dispatch({ type: MSG_SUCCESS, payload: "YOU SOLD SOME %!" });
 
       if (callback) callback(null, res.data);
     } else {

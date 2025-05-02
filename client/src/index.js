@@ -97,7 +97,7 @@ root.render(
       <SnackbarProvider
         maxSnack={10}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-        autoHideDuration={3000}
+        autoHideDuration={1000}
         style={{ transform: 'translateY(-90px)' }}
       >
         <BrowserRouter>

@@ -1,5 +1,4 @@
-// TipModal.jsx
-import React from 'react';
+import React, { forwardRef } from 'react';
 import {
   Modal,
   Box,
@@ -11,26 +10,32 @@ import {
   TableBody,
   TableRow,
   TableCell,
+  CircularProgress,
 } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMoneyBill } from '@fortawesome/free-solid-svg-icons';
 import { Warning as WarningIcon, Close as CloseIcon } from '@mui/icons-material';
-import { convertToCurrency } from '../../util/conversion'; // Adjust path if needed
+import { convertToCurrency } from '../../util/conversion';
 
-export default function TipModal({
-  isTipModalOpen,
-  handleCloseTipModal,
-  isDarkMode,
-  theme,
-  closeModal,
-  handleTipAmountChange,
-  tipAmount,
-  handleMessageChange,
-  message,
-  balance,
-  solPrice,
-  handleSendTip,
-}) {
+const TipModal = (
+  {
+    isTipModalOpen,
+    handleCloseTipModal,
+    isDarkMode,
+    theme,
+    closeModal,
+    handleTipAmountChange,
+    tipAmount,
+    handleMessageChange,
+    message,
+    balance,
+    solPrice,
+    handleSendTip,
+    isLoading,
+    setIsLoading,
+  },
+  ref
+) => {
   return (
     <Modal open={isTipModalOpen || false} onClose={handleCloseTipModal}>
       <ThemeProvider theme={theme}>
@@ -40,21 +45,20 @@ export default function TipModal({
             top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
-            color: '#fff', // Preserve text color conditional
+            color: '#fff',
             overflowY: 'auto',
             borderRadius: 2,
             boxShadow: 24,
             p: 3,
-            // Glassmorphism styles (default dark mode colors)
             background: 'rgba(0, 0, 0, 0.2)',
             backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)', // For Safari
+            WebkitBackdropFilter: 'blur(10px)',
             border: '1px solid rgba(255, 255, 255, 0.2)',
-            // Fallback for browsers without backdrop-filter
             '@supports not (backdrop-filter: blur(10px))': {
               background: 'rgba(0, 0, 0, 0.4)',
             },
           }}
+          ref={ref}
         >
           {/* Header */}
           <Box>
@@ -95,11 +99,7 @@ export default function TipModal({
             </Box>
 
             {/* Body */}
-            <Box
-              sx={{
-                mb: 2,
-              }}
-            >
+            <Box sx={{ mb: 2 }}>
               <TextField
                 color="error"
                 label="Amount"
@@ -141,7 +141,6 @@ export default function TipModal({
                         balance - (parseFloat(tipAmount) || 0),
                         solPrice,
                       )}
-                      &nbsp;
                       {balance - (parseFloat(tipAmount) || 0) < 0 && (
                         <WarningIcon sx={{ fontSize: 16 }} />
                       )}
@@ -170,13 +169,26 @@ export default function TipModal({
 
             {/* Footer Buttons */}
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-              <Button color="error" variant="outlined" onClick={handleSendTip}>
-                Send Tip
+              <Button
+                color="error"
+                variant="outlined"
+                onClick={handleSendTip}
+                disabled={isLoading}
+                startIcon={
+                  isLoading ? (
+                    <CircularProgress size={20} color="inherit" />
+                  ) : (
+                    <FontAwesomeIcon icon={faMoneyBill} />
+                  )
+                }
+              >
+                {isLoading ? 'Sending...' : 'Send Tip'}
               </Button>
               <Button
                 color="error"
                 variant="outlined"
                 onClick={handleCloseTipModal}
+                disabled={isLoading}
               >
                 Cancel
               </Button>
@@ -186,4 +198,6 @@ export default function TipModal({
       </ThemeProvider>
     </Modal>
   );
-}
+};
+
+export default React.forwardRef(TipModal);
